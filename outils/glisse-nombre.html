@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Glisse nombre — Paul Hermann (avec ×10 / ÷10)</title>
+  <title>Glisse nombre</title>
   <style>
     :root{ --cell:82px; --gap:8px; --headH:44px }
     *{box-sizing:border-box}
@@ -34,7 +34,6 @@
     .digit{width:100%; height:100%; border:0; outline:none; background:transparent; text-align:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; caret-color:#2563eb}
     .digit::placeholder{color:#bfbfbf}
 
-    /* Zéros fantômes (affichage) -> noirs pour correspondre aux chiffres saisis */
     .ghost{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#000; pointer-events:none}
 
     #status{margin-top:10px; font-weight:800}
@@ -43,22 +42,23 @@
 <body>
   <main class="app">
     <header class="card">
-      <h1>Glisse nombre — Paul Hermann</h1>
+      <h1>Glisse nombre</h1>
       <div class="controls">
         <button class="btn" id="resetBtn">Réinitialiser</button>
         <button class="btn" id="times10">×10</button>
         <button class="btn" id="div10">÷10</button>
         <div class="seg" id="zerosSeg">
-          <button data-mode="none" class="active">Zéros : Aucun</button>
-          <button data-mode="needed">Zéros : Nécessaires</button>
-          <button data-mode="all">Zéros : Partout</button>
+          <button data-mode="none" class="active">Zéros : Aucun</button>
+          <button data-mode="needed">Zéros : Nécessaires</button>
+          <button data-mode="all">Zéros : Partout</button>
         </div>
-        <button class="btn" id="exitZerosBtn" title="Trous pendant débordement">Trous sortie : vide</button>
+        <button class="btn" id="exitZerosBtn" title="Gestion des sorties">Gestion de la sortie</button>
       </div>
     </header>
 
     <section class="card">
       <div class="grid" id="grid">
+        <!-- en-têtes -->
         <div class="head"><div class="lbl"><span>Centaines</span><span>de milliers</span></div></div>
         <div class="head"><div class="lbl"><span>Dizaines</span><span>de milliers</span></div></div>
         <div class="head"><div class="lbl"><span>Milliers</span></div></div>
@@ -72,26 +72,26 @@
         <div class="head"><div class="lbl"><span>Dix</span><span>millièmes</span></div></div>
         <div class="head"><div class="lbl"><span>Cent</span><span>millièmes</span></div></div>
 
-        <!-- 0..5 = entiers, 6 virgule, 7..11 décimaux -->
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c00" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c0" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c1" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c2" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c3" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c4" /></div>
+        <!-- cellules -->
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c00" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c0" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c1" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c2" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c3" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c4" /></div>
         <div class="cell comma"><span>,</span></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c6" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c7" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c8" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c9" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c10" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c6" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c7" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c8" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c9" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c10" /></div>
       </div>
-      <div id="status">Opération cumulée : ×1</div>
+      <div id="status">×1</div>
     </section>
   </main>
 
   <script>
-    const ids=["c00","c0","c1","c2","c3","c4",null,"c6","c7","c8","c9","c10"]; // 12 colonnes, 6 int, virgule, 5 décimales
+    const ids=["c00","c0","c1","c2","c3","c4",null,"c6","c7","c8","c9","c10"];
     const INT=[0,1,2,3,4,5];
     const DEC=[7,8,9,10,11];
     const UNITS=5;
@@ -106,27 +106,27 @@
     const exitZerosBtn=document.getElementById('exitZerosBtn');
     const status=document.getElementById('status');
 
-    // État
-    let zeroMode='none'; // 'none' | 'needed' | 'all'
-    let exp10=0;         // cumul ×10/÷10
-    let exitZeros=false; // remplir les trous pendant débordement ?
-    const leftStack=[];  // ce qui sort à gauche (×10)
-    const rightStack=[]; // ce qui sort à droite (÷10)
-    let overflowSide=null; // 'left' | 'right' | null (côté d'origine)
+    let zeroMode='none';
+    let exp10=0;
+    let exitZeros=false;
+    const leftStack=[];
+    const rightStack=[];
+    let overflowSide=null;
 
-    // Helpers
     function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
     function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
     function focusMove(delta){
-      const active=document.activeElement; if(!active||!active.classList.contains('digit')) return;
-      let idx=indexOfInput(active); if(idx<0) return; idx=Math.min(order.length-1, Math.max(0, idx+delta));
+      const active=document.activeElement;
+      if(!active||!active.classList.contains('digit')) return;
+      let idx=indexOfInput(active);
+      if(idx<0) return;
+      idx=Math.min(order.length-1, Math.max(0, idx+delta));
       inputs[idx].focus(); inputs[idx].select();
     }
     function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
     function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
     function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
 
-    // Zéros d'affichage
     function applyZeroMode(){
       clearGhosts();
       const raw=readRaw();
@@ -143,7 +143,6 @@
       }
     }
 
-    // Zéros pendant débordement (affichage seulement) du côté d'origine
     function ensureExitZeros(){
       if(!exitZeros || !overflowSide) return;
       const raw=readRaw();
@@ -152,7 +151,6 @@
       else if(overflowSide==='right'){ for(const i of DEC){ if(raw[i]==='') addGhost(i); } }
     }
 
-    // Décalages ×10 / ÷10 (sur le contenu saisi)
     function shift(dir){
       const prev=readRaw();
       const next=prev.slice();
@@ -172,7 +170,6 @@
         if(leftStack.length){ next[first]=leftStack.pop(); }
       }
 
-      // Côté d'origine du débordement (une seule fois) et extinction au retour
       if(overflowSide===null){
         if(leftStack.length>0 && rightStack.length===0) overflowSide='left';
         else if(rightStack.length>0 && leftStack.length===0) overflowSide='right';
@@ -198,25 +195,30 @@
 
     function updateStatus(){
       let label='×1';
-      if(exp10!==0){ const n=Math.abs(exp10); if(n<=6){ const pow=Math.pow(10,n); label=(exp10>0?'×'+pow:'÷'+pow); } else { label=(exp10>0?'×10^'+n:'÷10^'+n); } }
-      status.textContent='Opération cumulée : '+label;
+      if(exp10!==0){
+        const n=Math.abs(exp10);
+        if(n<=6){
+          const pow=Math.pow(10,n);
+          label=(exp10>0?'×'+pow:'÷'+pow);
+        } else {
+          label=(exp10>0?'×10^'+n:'÷10^'+n);
+        }
+      }
+      status.textContent=label;
     }
 
-    // Saisie stricte 1 chiffre/case + navigation
     inputs.forEach(inp=>{
       inp.addEventListener('beforeinput',function(e){ if(e.inputType==='insertText' || e.inputType==='insertFromPaste'){ var ch=(e.data||'').replace(/[^0-9]/g,''); if(ch==='') e.preventDefault(); }});
       inp.addEventListener('input',function(e){ var v=sanitizeToDigit(e.target.value); e.target.value=v; if(v!=='') focusMove(+1); applyZeroMode(); ensureExitZeros(); });
       inp.addEventListener('keydown',function(e){ if(e.key==='ArrowLeft'){ e.preventDefault(); focusMove(-1); } if(e.key==='ArrowRight'){ e.preventDefault(); focusMove(+1); } if(e.key==='Backspace' && e.target.value===''){ e.preventDefault(); focusMove(-1); } });
     });
 
-    // Boutons
     zerosSeg.addEventListener('click',function(e){ const b=e.target.closest('button'); if(!b) return; zerosSeg.querySelectorAll('button').forEach(function(x){x.classList.remove('active')}); b.classList.add('active'); zeroMode=b.dataset.mode; applyZeroMode(); ensureExitZeros(); });
     resetBtn.addEventListener('click',resetAll);
     times10.addEventListener('click',function(){ shift('left'); });
     div10.addEventListener('click',function(){ shift('right'); });
-    exitZerosBtn.addEventListener('click',function(){ exitZeros=!exitZeros; exitZerosBtn.textContent = exitZeros ? 'Trous sortie : 0' : 'Trous sortie : vide'; applyZeroMode(); ensureExitZeros(); });
+    exitZerosBtn.addEventListener('click',function(){ exitZeros=!exitZeros; exitZerosBtn.textContent = "Gestion de la sortie"; applyZeroMode(); ensureExitZeros(); });
 
-    // Init
     updateStatus();
     inputs[0].focus();
   </script>
