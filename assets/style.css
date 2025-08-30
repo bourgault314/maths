@@ -1,0 +1,23 @@
+
+/* Style minimal, propre et responsive */
+:root { --maxw: 900px; --pad: 16px; }
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, sans-serif; line-height: 1.6; margin: 0; color: #222; }
+header { background: #f5f7fb; border-bottom: 1px solid #e6e8ee; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: var(--pad); }
+nav a { margin-right: 12px; text-decoration: none; color: #1a73e8; }
+nav a:hover { text-decoration: underline; }
+main { padding: var(--pad) 0; }
+h1, h2, h3 { line-height: 1.25; }
+.card { border: 1px solid #e6e8ee; border-radius: 10px; padding: 16px; background: #fff; }
+.grid { display: grid; gap: 16px; }
+@media (min-width: 720px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+.btn { display: inline-block; padding: 10px 14px; border: 1px solid #1a73e8; color: #1a73e8; border-radius: 8px; text-decoration: none; }
+.btn:hover { background: #eaf2ff; }
+footer { border-top: 1px solid #e6e8ee; background: #fafbfe; color: #555; }
+code, kbd { background: #f2f4f8; padding: 2px 6px; border-radius: 6px; }
+input, select, button { font: inherit; padding: 10px; border: 1px solid #d7dbe5; border-radius: 8px; }
+label { display: block; margin-bottom: 6px; font-weight: 600; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.result { font-size: 1.25rem; font-weight: 700; }
+.small { color: #666; font-size: .95rem; }
