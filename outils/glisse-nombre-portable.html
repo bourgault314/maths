@@ -7,8 +7,9 @@
   <style>
     :root{
       --gap: 8px;
-      --cell: clamp(38px, calc((100vw - 32px - 11*var(--gap)) / 12), 78px);
-      --headH: clamp(28px, calc(var(--cell)*0.52), 40px);
+      /* Ces valeurs seront écrasées par le calcul JS au chargement */
+      --cell: 60px;
+      --headH: 32px;
     }
 
     *{box-sizing:border-box}
@@ -73,7 +74,7 @@
       gap:var(--gap);
       justify-content:center;
       margin-top:12px;
-      /* +2px de marge pour éviter le pile-poil qui fait sauter une colonne */
+      /* +2px de slack pour éviter le pile-poil */
       min-width: calc(12*var(--cell) + 11*var(--gap) + 2px);
     }
     .head{
@@ -119,14 +120,6 @@
       caret-color:#2563eb;
     }
 
-    /* Ajustement paysage mobile : calcul sur vmin pour robustesse */
-    @media (orientation: landscape) and (max-width: 900px){
-      :root{
-        --gap: 6px;
-        --cell: clamp(28px, calc((100vmin - 20px - 11*var(--gap)) / 12), 68px);
-      }
-    }
-
     @media (max-width:420px){
       .btn, .seg button{ padding:6px 9px }
       .head .lbl{ line-height:1.0; letter-spacing:0 }
@@ -139,7 +132,7 @@
   </style>
 </head>
 <body>
-  <main class="app">
+  <main class="app" id="app">
     <form class="card" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" onsubmit="return false;">
       <h1>Glisse nombre</h1>
       <div class="controls">
@@ -205,6 +198,7 @@
     const exitZerosBtn=document.getElementById('exitZerosBtn');
     const status=document.getElementById('status');
     const grid=document.getElementById('grid');
+    const app=document.getElementById('app');
 
     // État
     let zeroMode='none'; // 'none' | 'needed' | 'all'
@@ -215,18 +209,43 @@
     let overflowSide=null; // 'left' | 'right' | null
     let compact=false;     // libellés compacts auto < 420px
 
-    // Helpers
-    function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
-    function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
-    function focusMove(delta){
-      const active=document.activeElement; if(!active||!active.classList.contains('digit')) return;
-      let idx=indexOfInput(active); if(idx<0) return;
-      idx=Math.min(order.length-1, Math.max(0, idx+delta));
-      inputs[idx].focus(); inputs[idx].select();
+    // ---------- SIZING ROBUSTE (portrait/paysage iOS) ----------
+    function calcCell(){
+      const cs = getComputedStyle(document.documentElement);
+      const gap = parseFloat(cs.getPropertyValue('--gap')) || 8;
+
+      // largeur utile : largeur de .app et largeur de visualViewport (la plus petite des deux)
+      const vv = window.visualViewport;
+      const vvWidth = vv ? vv.width : window.innerWidth;
+      const usable = Math.min(app.clientWidth, vvWidth);
+
+      // on enlève ~36px de padding/marges internes (carte + paddings)
+      const inner = Math.max(0, usable - 36);
+
+      // 12 colonnes et 11 interstices
+      const cells = 12;
+      const totalGaps = 11 * gap;
+
+      // bornes de confort
+      const MIN = 36;  // ne pas descendre trop bas en paysage
+      const MAX = 78;  // lisible mais pas géant
+
+      let c = Math.floor((inner - totalGaps) / cells);
+      c = Math.max(MIN, Math.min(MAX, c));
+
+      document.documentElement.style.setProperty('--cell', c + 'px');
+      const head = Math.max(28, Math.min(40, Math.round(c * 0.52)));
+      document.documentElement.style.setProperty('--headH', head + 'px');
     }
-    function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
-    function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
-    function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
+
+    function autoCompact(){
+      const w = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
+      const should = w < 420;
+      if(should !== compact){
+        compact = should;
+        renderLabels(compact);
+      }
+    }
 
     // Libellés: normal vs compact
     const labelsNormal = [
@@ -266,16 +285,20 @@
       });
       grid.classList.toggle('compact', !!useCompact);
     }
-    function autoCompact(){
-      const w = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
-      const should = w < 420;
-      if(should !== compact){
-        compact = should;
-        renderLabels(compact);
-      }
-    }
 
-    // Zéros d'affichage
+    // ---------- ZÉROS D'AFFICHAGE ----------
+    function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
+    function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
+    function focusMove(delta){
+      const active=document.activeElement; if(!active||!active.classList.contains('digit')) return;
+      let idx=indexOfInput(active); if(idx<0) return;
+      idx=Math.min(order.length-1, Math.max(0, idx+delta));
+      inputs[idx].focus(); inputs[idx].select();
+    }
+    function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
+    function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
+    function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
+
     function applyZeroMode(){
       clearGhosts();
       const raw=readRaw();
@@ -321,7 +344,7 @@
         const lost=prev[first]; if(lost!=='') leftStack.push(lost);
         for(const i of orderLinear){
           const nxt=(i+1===COMMA)?COMMA+1:(i+1);
-          next[i]=(nxt<ids.length)?prev[nxt]:''; // décale vers la gauche (×10)
+          next[i]=(nxt<ids.length)?prev[nxt]:''; // ×10
         }
         if(rightStack.length){ next[last]=rightStack.pop(); }
       } else {
@@ -330,7 +353,7 @@
         for(let k=orderLinear.length-1;k>=0;k--){
           const i=orderLinear[k];
           const prv=(i-1===COMMA)?UNITS:(i-1);
-          next[i]=(prv>=0)?prev[prv]:''; // décale vers la droite (÷10)
+          next[i]=(prv>=0)?prev[prv]:''; // ÷10
         }
         if(leftStack.length){ next[first]=leftStack.pop(); }
       }
@@ -355,7 +378,6 @@
       zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
       exp10=0; overflowSide=null; leftStack.length=0; rightStack.length=0;
       updateStatus();
-      // focus seulement si non tactile (évite l'ouverture du clavier + décalages en paysage)
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       if(!isTouch) { inputs[0].focus(); }
     }
@@ -411,16 +433,34 @@
     });
 
     // Init
+    function initLayoutWatchers(){
+      // calc initial
+      calcCell();
+      // visual viewport (iOS) : changements de barre d’URL/clavier
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize', calcCell);
+        window.visualViewport.addEventListener('scroll', calcCell);
+      }
+      // fenêtre + orientation
+      window.addEventListener('resize', calcCell);
+      window.addEventListener('orientationchange', ()=>setTimeout(calcCell, 50));
+      // si la carte change de taille (rare), on recalcule
+      if('ResizeObserver' in window){
+        const ro = new ResizeObserver(calcCell);
+        ro.observe(app);
+      }
+      // labels responsives
+      renderLabels(false);
+      autoCompact();
+      window.addEventListener('resize', autoCompact);
+      window.addEventListener('orientationchange', ()=>setTimeout(autoCompact, 50));
+    }
+
     updateStatus();
-    // Évite l'autofocus sur mobile (clavier qui s'ouvre au chargement)
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if(!isTouch) { inputs[0].focus(); }
 
-    // Labels responsives
-    renderLabels(false);
-    autoCompact();
-    window.addEventListener('resize', autoCompact);
-    window.addEventListener('orientationchange', ()=>setTimeout(autoCompact, 50));
+    initLayoutWatchers();
   </script>
 </body>
 </html>
