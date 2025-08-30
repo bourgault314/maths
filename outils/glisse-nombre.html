@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Glisse-nombre – ×÷ 10/100/1000</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <a href="/outils/">⬅ Outils</a>
+        <span>🔢 Glisse-nombre</span>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container card">
+      <h1>Glisse-nombre</h1>
+      <p>Multiplie ou divise par 10, 100, 1000 (sans erreurs d’arrondi) en déplaçant la virgule.</p>
+
+      <div class="grid">
+        <div>
+          <label for="entrée">Nombre</label>
+          <input id="entrée" type="text" inputmode="decimal" placeholder="ex. 3,5 ou 3.5" />
+        </div>
+        <div>
+          <label for="opération">Opération</label>
+          <select id="opération">
+            <option value="mul10">× 10</option>
+            <option value="mul100">× 100</option>
+            <option value="mul1000">× 1000</option>
+            <option value="div10">÷ 10</option>
+            <option value="div100">÷ 100</option>
+            <option value="div1000">÷ 1000</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="calculer">Calculer</button>
+        <button id="effacer" type="button">Effacer</button>
+      </div>
+
+      <p id="sortie" class="result" style="margin-top:16px"></p>
+      <p id="explication" class="small"></p>
+
+      <hr />
+      <h2>Exemples</h2>
+      <div class="row">
+        <button class="ex" data-v="3,5" data-op="mul10">3,5 × 10</button>
+        <button class="ex" data-v="0,062" data-op="mul1000">0,062 × 1000</button>
+        <button class="ex" data-v="-12,03" data-op="div100">−12,03 ÷ 100</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  function normalizeInput(str) {
+    str = (str || '').trim().replace(/\s+/g, '');
+    str = str.replace(',', '.');
+    if (!/^[-+]?\d*(?:\.\d*)?$/.test(str) || str === '' || str === '+' || str === '-') return null;
+    let sign = '';
+    if (str[0] === '-' || str[0] === '+') { sign = str[0] === '-' ? '-' : ''; str = str.slice(1); }
+    if (str === '' || str === '.') str = '0';
+    if (str.startsWith('.')) str = '0' + str;
+    let [intPart, fracPart=''] = str.split('.');
+    intPart = intPart.replace(/^0+(?=\d)/, '');
+    fracPart = fracPart.replace(/0+$/, '');
+    if (fracPart.length === 0) return sign + (intPart === '' ? '0' : intPart);
+    return sign + (intPart === '' ? '0' : intPart) + '.' + fracPart;
+  }
+  function shiftDecimal(numStr, steps) {
+    let sign = '';
+    if (numStr.startsWith('-')) { sign = '-'; numStr = numStr.slice(1); }
+    let [intPart, fracPart=''] = numStr.split('.');
+    const digits = intPart + fracPart;
+    let dotIndex = intPart.length;
+    let newIndex = dotIndex + steps;
+    if (newIndex <= 0) {
+      return sign + '0.' + '0'.repeat(-newIndex) + (digits.replace(/^0+/, '') || '0');
+    }
+    if (newIndex >= digits.length) {
+      return sign + digits + '0'.repeat(newIndex - digits.length);
+    }
+    const left = digits.slice(0, newIndex);
+    const right = digits.slice(0+newIndex);
+    let res = sign + left + (right ? '.' + right : '');
+    if (res.includes('.')) {
+      res = res.replace(/\.?0+$/, '').replace(/^(-?)\./, '$10.');
+    }
+    res = res.replace(/^-?0+(?=\d)/, (m)=>m.startsWith('-')?'-':'') ;
+    return res;
+  }
+  function stepsFromOp(op) {
+    switch(op) {
+      case 'mul10': return 1; case 'mul100': return 2; case 'mul1000': return 3;
+      case 'div10': return -1; case 'div100': return -2; case 'div1000': return -3;
+      default: return 0;
+    }
+  }
+  function formatFr(x) { return x.replace('.', ','); }
+  const entrée = document.getElementById('entrée');
+  const opération = document.getElementById('opération');
+  const sortie = document.getElementById('sortie');
+  const explication = document.getElementById('explication');
+  function expliquer(op, steps) {
+    const sens = steps > 0 ? 'droite' : 'gauche';
+    const n = Math.abs(steps);
+    const quoi = n===1 ? 'un rang' : (n===2?'deux rangs':'trois rangs');
+    return (steps>0)
+      ? `On multiplie par ${10**n} ⇒ on déplace la virgule de ${quoi} vers la ${sens}.`
+      : `On divise par ${10**n} ⇒ on déplace la virgule de ${quoi} vers la ${sens}.`;
+  }
+  function calculer() {
+    const norm = normalizeInput(entrée.value);
+    if (norm === null) { sortie.textContent = '⚠️ Nombre invalide'; explication.textContent = ''; return; }
+    const s = stepsFromOp(opération.value);
+    const res = shiftDecimal(norm, s);
+    sortie.textContent = formatFr(res);
+    explication.textContent = expliquer(opération.value, s);
+  }
+  document.getElementById('calculer').addEventListener('click', calculer);
+  document.getElementById('effacer').addEventListener('click', ()=>{ entrée.value=''; sortie.textContent=''; explication.textContent=''; });
+  document.querySelectorAll('.ex').forEach(b=> b.addEventListener('click', ()=>{ entrée.value=b.dataset.v; opération.value=b.dataset.op; calculer(); }));
+  </script>
+</body>
+</html>

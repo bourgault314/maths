@@ -1,0 +1,27 @@
+:root { --maxw: 1000px; --pad: 16px; --radius: 16px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #1f2430; background: #fbfcfe; }
+a { color: #1a73e8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+header { background: #f5f7fb; border-bottom: 1px solid #e6e8ee; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: var(--pad); }
+nav { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+nav a.brand { font-weight: 800; color: #111; margin-right: 8px; }
+main { padding: 24px 0; }
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(1, 1fr); }
+.grid-3 { grid-template-columns: repeat(1, 1fr); }
+@media (min-width: 720px) { .grid-2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+.card { background: #fff; border: 1px solid #e6e8ee; border-radius: var(--radius); padding: 18px; }
+.card h3 { margin-top: 0; }
+footer { border-top: 1px solid #e6e8ee; background: #fafbfe; color: #555; }
+.btn { display: inline-block; padding: 10px 14px; border-radius: 10px; border: 1px solid #1a73e8; }
+.badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #eef3ff; border: 1px solid #dbe7ff; font-size: 12px; }
+section h2 { margin-top: 0; }
+.hero { display: grid; gap: 12px; align-items: center; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .hero { grid-template-columns: 1.5fr 1fr; } }
+ul.clean { padding-left: 18px; }
+.small { color: #666; font-size: .95rem; }
+kbd, code { background: #f2f4f8; padding: 2px 6px; border-radius: 6px; }
