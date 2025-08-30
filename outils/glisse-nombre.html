@@ -1,383 +1,226 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gliss-unité – conversions</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
-<style>
-  :root{ --accent:#1283ff; --accent-dark:#0b67c6; --bg:#fbfbfe; --panel:#fff; --ink:#1b1b1b; --border:#d5d7de }
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:1100px;margin:16px auto;padding:0 12px}
-  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
-  .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-weight:900}
-  .btn{border:none;background:var(--accent);color:#fff;font-weight:900;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent)}
-  .btn.secondary{background:#6b7280}
-  .btn:active{transform:translateY(1px)}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Glisse nombre</title>
+  <style>
+    :root{ --cell:82px; --gap:8px; --headH:44px }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:20px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#f7f7f7; color:#0b0b0b; display:flex; justify-content:center; padding:28px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility}
+    .app{width:min(1200px,100%)}
 
-  .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
-  .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px}
+    .card{background:#fff; border:2px solid #444; border-radius:16px; padding:18px; margin-bottom:18px; box-shadow:0 4px 12px rgba(0,0,0,.12)}
+    h1{margin:0 0 10px; font-size:30px}
 
-  .inner{position:relative;margin-top:4px}
-  .head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;position:relative;z-index:1}
+    .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .btn{padding:10px 16px; font-size:18px; border:2px solid #444; border-radius:10px; background:#efefef; cursor:pointer}
+    .btn.primary{background:#2563eb; color:#fff; border-color:#2563eb}
 
-  /* curseur légèrement plus haut */
-  .cursor{
-    position:absolute;left:0;top:-21px;bottom:-3px;width:calc((100% - 6px*6)/7);
-    transform:translateX(var(--x,0));
-    background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
-    border:3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
-    border-radius:12px;pointer-events:none;transition:transform .12s ease;z-index:0
-  }
-  .cursor::before{
-    content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-    border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.15))
-  }
-  .cursor::after{content:"";position:absolute;top:0;right:-3px;width:3px;bottom:0;background:color-mix(in srgb, var(--accent-dark) 70%, transparent);border-radius:2px}
+    .seg{display:flex; border:2px solid #444; border-radius:10px; overflow:hidden}
+    .seg button{padding:10px 14px; font-weight:600; border:0; background:#e9e9e9; cursor:pointer}
+    .seg button+button{border-left:2px solid #444}
+    .seg .active{background:#0ea5e9; color:#fff}
 
-  .unitBtn{background:color-mix(in srgb, var(--accent) 12%, #fff);border:2px solid var(--accent);border-radius:8px;padding:8px 4px;text-align:center;font-weight:900;cursor:pointer}
-  .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
+    .grid{display:grid; grid-template-columns:repeat(12,var(--cell)); gap:var(--gap); justify-content:center; margin-top:16px}
+    .head{height:var(--headH); text-align:center; font-weight:800; background:#e5e5e5; border-radius:10px; user-select:none; padding:2px 4px; display:flex; align-items:center; justify-content:center}
+    .head .lbl{display:flex; flex-direction:column; line-height:1.05; font-size:13px; letter-spacing:.1px}
 
-  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:78px;display:flex;align-items:center;justify-content:center}
-  .slots{margin-top:20px;display:flex;gap:0;width:calc(100% - 12px);}
-  .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:900;font-size:1.45rem;line-height:1.45rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px}
-  .slots[data-slots="2"] .digit:nth-child(2),
-  .slots[data-slots="3"] .digit:nth-child(2),
-  .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
+    .cell{height:var(--cell); border:2px solid #444; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; position:relative; overflow:hidden}
+    .comma{background:#e0f2fe}
+    .comma span{font-size:32px; font-weight:900; color:#2563eb}
 
-  .result{margin-top:12px;padding:10px;border-radius:10px;background:#f2f6ff;border:1px solid #d7e6ff;font-weight:900;font-size:1.2rem}
+    .digit{width:100%; height:100%; border:0; outline:none; background:transparent; text-align:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; caret-color:#2563eb}
+    .digit::placeholder{color:#bfbfbf}
 
-  /* Repères kL / L / mL (mode couplé) */
-  .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:3;pointer-events:none}
-  .sub-lab{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black)}
+    .ghost{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#000; pointer-events:none}
 
-  /* marque les zéros auto pour pouvoir les purger proprement */
-  .ghost0{}
-</style>
+    #status{margin-top:10px; font-weight:800}
+  </style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="left">
-      <label for="kind"><strong>Grandeur :</strong></label>
-      <select id="kind">
-        <option value="length" selected>Longueur (m)</option>
-        <option value="mass">Masse (g)</option>
-        <option value="volL">Volume (L)</option>
-        <option value="area">Aire (m²)</option>
-        <option value="volM3">Volume (m³)</option>
-        <option value="cross">L ↔ m³</option>
-      </select>
-      <button class="btn" id="toggleShow">Afficher</button>
-      <button class="btn secondary" id="reset">Remise à zéro</button>
-    </div>
-  </div>
-
-  <div class="board">
-    <div class="title" id="title">CONVERSIONS – Longueur (m)</div>
-
-    <div class="inner" id="inner">
-      <div class="cursor" id="cursor"></div>
-      <div class="head" id="head"></div>
-
-      <!-- Repères couplés -->
-      <div class="subhead" id="subhead">
-        <div class="sub-lab" id="labKL">kL</div>
-        <div class="sub-lab" id="labL">L</div>
-        <div class="sub-lab" id="labML">mL</div>
+  <main class="app">
+    <header class="card">
+      <h1>Glisse nombre</h1>
+      <div class="controls">
+        <button class="btn" id="resetBtn">Réinitialiser</button>
+        <button class="btn" id="times10">×10</button>
+        <button class="btn" id="div10">÷10</button>
+        <div class="seg" id="zerosSeg">
+          <button data-mode="none" class="active">Zéros : Aucun</button>
+          <button data-mode="needed">Zéros : Nécessaires</button>
+          <button data-mode="all">Zéros : Partout</button>
+        </div>
+        <button class="btn" id="exitZerosBtn" title="Gestion des sorties">Gestion de la sortie</button>
       </div>
+    </header>
 
-      <div class="grid" id="grid"></div>
-    </div>
+    <section class="card">
+      <div class="grid" id="grid">
+        <!-- en-têtes -->
+        <div class="head"><div class="lbl"><span>Centaines</span><span>de milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Dizaines</span><span>de milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Centaines</span></div></div>
+        <div class="head"><div class="lbl"><span>Dizaines</span></div></div>
+        <div class="head"><div class="lbl"><span>Unités</span></div></div>
+        <div class="head"><div class="lbl"><span>,</span></div></div>
+        <div class="head"><div class="lbl"><span>Dixièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Centièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Millièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Dix</span><span>millièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Cent</span><span>millièmes</span></div></div>
 
-    <div class="result" id="result" style="display:none;"></div>
-  </div>
-</div>
+        <!-- cellules -->
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c00" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c0" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c1" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c2" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c3" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c4" /></div>
+        <div class="cell comma"><span>,</span></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c6" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c7" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c8" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c9" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c10" /></div>
+      </div>
+      <div id="status">×1</div>
+    </section>
+  </main>
 
-<script>
-(function(){
-  const THEMES = {
-    length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'],
-    volL:['#06b6d4','#0a8aa3'],   area:['#f59e0b','#b77207'],
-    volM3:['#7c3aed','#5a27b0'],  cross:['#db2777','#a81d5a'],
-  };
-  const SCHEMAS = {
-    length:{label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], base:'m',  slots:1},
-    mass:  {label:'Masse (g)',    units:['kg','hg','dag','g','dg','cg','mg'],  base:'g',  slots:1},
-    volL:  {label:'Volume (L)',   units:['kL','hL','daL','L','dL','cL','mL'],   base:'L',  slots:1},
-    area:  {label:'Aire (m²)',    units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], base:'m²', slots:2},
-    volM3: {label:'Volume (m³)',  units:['km³','hm³','dam³','m³','dm³','cm³','mm³'],  base:'m³', slots:3},
-    cross: {label:'Litres ↔ mètres cubes', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], base:'m³', slots:3},
-  };
+  <script>
+    const ids=["c00","c0","c1","c2","c3","c4",null,"c6","c7","c8","c9","c10"];
+    const INT=[0,1,2,3,4,5];
+    const DEC=[7,8,9,10,11];
+    const UNITS=5;
+    const COMMA=6;
+    const order=[0,1,2,3,4,5,7,8,9,10,11];
 
-  const kindSel = document.getElementById('kind');
-  const titleEl = document.getElementById('title');
-  const head    = document.getElementById('head');
-  const grid    = document.getElementById('grid');
-  const inner   = document.getElementById('inner');
-  const cursor  = document.getElementById('cursor');
-  const btnTog  = document.getElementById('toggleShow');
-  const btnRst  = document.getElementById('reset');
-  const result  = document.getElementById('result');
+    const inputs=order.map(i=>document.getElementById(ids[i]));
+    const zerosSeg=document.getElementById('zerosSeg');
+    const resetBtn=document.getElementById('resetBtn');
+    const times10=document.getElementById('times10');
+    const div10=document.getElementById('div10');
+    const exitZerosBtn=document.getElementById('exitZerosBtn');
+    const status=document.getElementById('status');
 
-  const subhead = document.getElementById('subhead');
-  const labKL   = document.getElementById('labKL');
-  const labL    = document.getElementById('labL');
-  const labML   = document.getElementById('labML');
+    let zeroMode='none';
+    let exp10=0;
+    let exitZeros=false;
+    const leftStack=[];
+    const rightStack=[];
+    let overflowSide=null;
 
-  let schema = SCHEMAS.length;
-  let targetIdx = 3;
-  let isShown = false;
-  let inputs = [];
-  let savedStudent = null;
+    function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
+    function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
+    function focusMove(delta){
+      const active=document.activeElement;
+      if(!active||!active.classList.contains('digit')) return;
+      let idx=indexOfInput(active);
+      if(idx<0) return;
+      idx=Math.min(order.length-1, Math.max(0, idx+delta));
+      inputs[idx].focus(); inputs[idx].select();
+    }
+    function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
+    function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
+    function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
 
-  function setTheme(kind){
-    const [c,cd] = THEMES[kind];
-    document.documentElement.style.setProperty('--accent', c);
-    document.documentElement.style.setProperty('--accent-dark', cd);
-  }
+    function applyZeroMode(){
+      clearGhosts();
+      const raw=readRaw();
+      const hasInt=INT.some(i=>raw[i]!=='' );
+      const hasDec=DEC.some(i=>raw[i]!=='' );
+      function addGhost(i){ const cell=document.getElementById(ids[i]).parentElement; const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g); }
+      if(zeroMode==='all'){
+        for(const i of INT){ if(raw[i]==='') addGhost(i); }
+        for(const i of DEC){ if(raw[i]==='') addGhost(i); }
+      } else if(zeroMode==='needed'){
+        if(hasDec){ for(const i of DEC){ if(raw[i]!=='' ) break; addGhost(i); } }
+        if(hasInt){ let lastInt=-1; for(const i of INT){ if(raw[i]!=='' ) lastInt=i; } for(let i=lastInt+1; i<=UNITS; i++){ addGhost(i); } }
+        else if(hasDec){ addGhost(UNITS); }
+      }
+    }
 
-  function rebuild(){
-    const kind = kindSel.value;
-    schema = SCHEMAS[kind];
-    setTheme(kind);
-    titleEl.textContent = `CONVERSIONS – ${schema.label}`;
+    function ensureExitZeros(){
+      if(!exitZeros || !overflowSide) return;
+      const raw=readRaw();
+      function addGhost(i){ const cell=document.getElementById(ids[i]).parentElement; if(!cell.querySelector('.ghost')){ const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g);} }
+      if(overflowSide==='left'){ for(const i of INT){ if(raw[i]==='') addGhost(i); } }
+      else if(overflowSide==='right'){ for(const i of DEC){ if(raw[i]==='') addGhost(i); } }
+    }
 
-    head.innerHTML=''; grid.innerHTML=''; inputs=[];
-    schema.units.forEach((u,i)=>{
-      const b=document.createElement('div');
-      b.className='unitBtn'; b.textContent=u;
-      b.addEventListener('click', ()=>setTarget(i,true));
-      head.appendChild(b);
+    function shift(dir){
+      const prev=readRaw();
+      const next=prev.slice();
+      const orderLinear=[0,1,2,3,4,5,7,8,9,10,11];
+      const first=orderLinear[0];
+      const last =orderLinear[orderLinear.length-1];
+
+      if(dir==='left'){
+        exp10++;
+        const lost=prev[first]; if(lost!=='') leftStack.push(lost);
+        for(const i of orderLinear){ const nxt=(i+1===COMMA)?COMMA+1:(i+1); next[i]=(nxt<ids.length)?prev[nxt]:''; }
+        if(rightStack.length){ next[last]=rightStack.pop(); }
+      } else {
+        exp10--;
+        const lost=prev[last]; if(lost!=='') rightStack.push(lost);
+        for(let k=orderLinear.length-1;k>=0;k--){ const i=orderLinear[k]; const prv=(i-1===COMMA)?UNITS:(i-1); next[i]=(prv>=0)?prev[prv]:''; }
+        if(leftStack.length){ next[first]=leftStack.pop(); }
+      }
+
+      if(overflowSide===null){
+        if(leftStack.length>0 && rightStack.length===0) overflowSide='left';
+        else if(rightStack.length>0 && leftStack.length===0) overflowSide='right';
+      }
+      if(leftStack.length===0 && rightStack.length===0) overflowSide=null;
+
+      writeRaw(next);
+      applyZeroMode();
+      ensureExitZeros();
+      updateStatus();
+    }
+
+    function resetAll(){
+      inputs.forEach(i=>i.value='');
+      clearGhosts();
+      zeroMode='none';
+      zerosSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
+      exp10=0; overflowSide=null; leftStack.length=0; rightStack.length=0;
+      updateStatus();
+      inputs[0].focus();
+    }
+
+    function updateStatus(){
+      let label='×1';
+      if(exp10!==0){
+        const n=Math.abs(exp10);
+        if(n<=6){
+          const pow=Math.pow(10,n);
+          label=(exp10>0?'×'+pow:'÷'+pow);
+        } else {
+          label=(exp10>0?'×10^'+n:'÷10^'+n);
+        }
+      }
+      status.textContent=label;
+    }
+
+    inputs.forEach(inp=>{
+      inp.addEventListener('beforeinput',function(e){ if(e.inputType==='insertText' || e.inputType==='insertFromPaste'){ var ch=(e.data||'').replace(/[^0-9]/g,''); if(ch==='') e.preventDefault(); }});
+      inp.addEventListener('input',function(e){ var v=sanitizeToDigit(e.target.value); e.target.value=v; if(v!=='') focusMove(+1); applyZeroMode(); ensureExitZeros(); });
+      inp.addEventListener('keydown',function(e){ if(e.key==='ArrowLeft'){ e.preventDefault(); focusMove(-1); } if(e.key==='ArrowRight'){ e.preventDefault(); focusMove(+1); } if(e.key==='Backspace' && e.target.value===''){ e.preventDefault(); focusMove(-1); } });
     });
 
-    subhead.style.display = (kind==='cross')?'block':'none';
+    zerosSeg.addEventListener('click',function(e){ const b=e.target.closest('button'); if(!b) return; zerosSeg.querySelectorAll('button').forEach(function(x){x.classList.remove('active')}); b.classList.add('active'); zeroMode=b.dataset.mode; applyZeroMode(); ensureExitZeros(); });
+    resetBtn.addEventListener('click',resetAll);
+    times10.addEventListener('click',function(){ shift('left'); });
+    div10.addEventListener('click',function(){ shift('right'); });
+    exitZerosBtn.addEventListener('click',function(){ exitZeros=!exitZeros; exitZerosBtn.textContent = "Gestion de la sortie"; applyZeroMode(); ensureExitZeros(); });
 
-    schema.units.forEach((u,i)=>{
-      const cell=document.createElement('div'); cell.className='cell';
-      const wrap=document.createElement('div');
-      wrap.className='slots'; wrap.dataset.slots=String(schema.slots);
-      wrap.style.setProperty('--S', schema.slots);
-      const slots=[];
-      for(let s=0;s<schema.slots;s++){
-        const inp=document.createElement('input');
-        inp.className='digit'; inp.maxLength=1; inp.inputMode='numeric';
-        inp.addEventListener('input', ()=>{
-          const m=inp.value.match(/[0-9]/); inp.value=m?m[0]:'';
-          if(isShown){ completeZerosInTable(); updateResult(); }
-          if(inp.value){ const [ci,si]=findIndex(inp); focusNext(ci,si); }
-        });
-        inp.addEventListener('keydown',(e)=>{
-          const [ci,si]=findIndex(inp);
-          if(e.key==='ArrowLeft'){ e.preventDefault(); focusPrev(ci,si); }
-          else if(e.key==='ArrowRight'){ e.preventDefault(); focusNext(ci,si); }
-          else if(e.key==='Backspace' && inp.value===''){ e.preventDefault(); focusPrev(ci,si); }
-          else if(/^[0-9]$/.test(e.key)){ e.preventDefault(); inp.value=e.key; focusNext(ci,si); if(isShown){ completeZerosInTable(); updateResult(); } }
-        });
-        inp.addEventListener('focus', ()=>inp.select());
-        wrap.appendChild(inp); slots.push(inp);
-      }
-      cell.appendChild(wrap); grid.appendChild(cell); inputs.push(slots);
-    });
-
-    setTarget(schema.units.indexOf(schema.base),false);
-    positionCoupleLabels();
-    if(isShown){ completeZerosInTable(); updateResult(); }
-  }
-
-  /* Repères kL/L/mL centrés sur la SOUS-CASE DROITE */
-  function positionCoupleLabels(){
-    if(kindSel.value!=='cross') return;
-    const getCenter = (ci,si)=>{
-      const el = inputs?.[ci]?.[si]; if(!el) return 0;
-      const r = el.getBoundingClientRect();
-      const base = inner.getBoundingClientRect();
-      return (r.left - base.left) + r.width/2;
-    };
-    const last = schema.slots-1; // sous-case droite
-    const nudge = 3;
-    labKL.style.left = (getCenter(3,last) + nudge) + 'px'; // m³ → kL
-    labL .style.left = (getCenter(4,last) + nudge) + 'px'; // dm³ → L
-    labML.style.left = (getCenter(5,last) + nudge) + 'px'; // cm³ → mL
-  }
-  window.addEventListener('resize', positionCoupleLabels);
-
-  function findIndex(inp){
-    for(let ci=0;ci<inputs.length;ci++){
-      const si=inputs[ci].indexOf(inp);
-      if(si!==-1) return [ci,si];
-    } return [-1,-1];
-  }
-  function focusNext(ci,si){ if(si<schema.slots-1) inputs[ci][si+1].focus(); else if(ci<inputs.length-1) inputs[ci+1][0].focus(); }
-  function focusPrev(ci,si){ if(si>0) inputs[ci][si-1].focus(); else if(ci>0) inputs[ci-1][schema.slots-1].focus(); }
-
-  function setTarget(i,refresh){
-    targetIdx=i;
-    const colW = head.clientWidth/7;
-    cursor.style.setProperty('--x', `${i*colW}px`);
-    positionCoupleLabels();
-    if(isShown && refresh){ completeZerosInTable(); updateResult(); }
-  }
-
-  /* --------- COMPLÉTION DES ZÉROS (robuste) ---------
-     - purge d'abord les zéros auto .ghost0
-     - S=1 : targetStart..first-1
-     - S=2 (aire) : cible→1 zéro (droite) + colonnes entre complètes + zéros avant le chiffre dans sa colonne
-     - S=3 (m³) : cible→1 zéro (droite) + colonnes entre complètes + ne rien ajouter dans la colonne du chiffre
-     - si la cible est la même colonne que le 1er chiffre → ne rien compléter
-  ----------------------------------------------------- */
-  function completeZerosInTable(){
-    const S = schema.slots;
-    const total = schema.units.length * S;
-    const slot = (k)=> inputs[Math.floor(k/S)][k%S];
-
-    // (0) purger anciens zéros auto
-    for(let k=0;k<total;k++){
-      const el = slot(k);
-      if(el.classList.contains('ghost0')){ el.value=''; el.classList.remove('ghost0'); }
-    }
-
-    // repérer 1er et dernier chiffre saisi par l'utilisateur
-    let first=-1, last=-1;
-    for(let k=0;k<total;k++){
-      const v = slot(k).value.trim();
-      if(/^[0-9]$/.test(v)){ if(first===-1) first=k; last=k; }
-    }
-    if(first===-1) return;
-
-    const SLOTS = schema.slots;
-    const targetStart = targetIdx * SLOTS;
-    const tgtEnd      = targetStart + (SLOTS-1);
-    const colFirst    = Math.floor(first / SLOTS);
-    const siFirst     = first % SLOTS;
-
-    // cible = même colonne que le 1er chiffre → ne rien compléter
-    if(colFirst === targetIdx) return;
-
-    if (targetStart < first){
-      // --- CIBLE À GAUCHE ---
-      if (SLOTS === 1){
-        for(let k=targetStart; k<first; k++){
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-        return;
-      }
-
-      // (1) colonne cible → 1 zéro à droite
-      {
-        const kTargetRightmost = targetStart + (SLOTS - 1);
-        const el = slot(kTargetRightmost);
-        if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-      }
-
-      // (2) colonnes intermédiaires → tout compléter
-      for (let c = targetIdx + 1; c < colFirst; c++){
-        for (let si = 0; si < SLOTS; si++){
-          const k = c*SLOTS + si;
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-      }
-
-      // (3) colonne du 1er chiffre
-      if (SLOTS === 2){
-        for (let si = 0; si < siFirst; si++){
-          const k = colFirst*SLOTS + si;
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-      }
-      // SLOTS === 3 : ne rien ajouter dans sa colonne
-
-    } else {
-      // --- CIBLE À DROITE ---
-      const end = Math.max(last, tgtEnd);
-      for(let k=first; k<=end; k++){
-        const el = slot(k); if(el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-      }
-    }
-  }
-
-  function saveStudent(){ savedStudent = inputs.map(col=>col.map(inp=>inp.value)); }
-  function restoreStudent(){
-    if(!savedStudent) return;
-    for(let i=0;i<inputs.length;i++)
-      for(let s=0;s<inputs[i].length;s++){
-        inputs[i][s].value=savedStudent[i][s];
-        inputs[i][s].classList.remove('ghost0');
-      }
-  }
-
-  /* Lecture → valeur dans l’unité cible */
-  function valueInTarget(){
-    const S=schema.slots, baseIdx=schema.units.indexOf(schema.base);
-    let sum=0;
-    for(let ci=0;ci<schema.units.length;ci++){
-      let colVal=0;
-      for(let si=0;si<S;si++){
-        const ch=inputs[ci][si].value.trim();
-        colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0);
-      }
-      const pow=(baseIdx-ci)*S;   // vers l’unité de base
-      sum += colVal * Math.pow(10, pow);
-    }
-    const powToTarget=(baseIdx-targetIdx)*S;
-    return sum * Math.pow(10, -powToTarget);
-  }
-
-  /* ---- Décimales minimales nécessaires (anti-arrondis) ----
-     On scanne les colonnes qui contiennent AU MOINS un chiffre saisi (non .ghost0).
-     Si une colonne est à droite de la cible, on augmente le minimum d’autant de sous-cases. */
-  function minFractionDigitsForTarget(){
-    const S = schema.slots;
-    let minFrac = 0;
-    for(let ci=0; ci<inputs.length; ci++){
-      let hasUserDigit = false;
-      for(let si=0; si<S; si++){
-        const el = inputs[ci][si];
-        const v  = el.value.trim();
-        if(/^[0-9]$/.test(v) && !el.classList.contains('ghost0')){
-          hasUserDigit = true; break;
-        }
-      }
-      if(hasUserDigit){
-        const delta = (ci - targetIdx) * S; // nb de sous-cases à droite de la cible
-        if(delta > minFrac) minFrac = delta;
-      }
-    }
-    return minFrac; // 0 si rien à droite, sinon 1,2,3...
-  }
-
-  function updateResult(){
-    const u = schema.units[targetIdx];
-    const val = valueInTarget();
-
-    // décimales minimales requises selon la position des chiffres saisis
-    const minFrac = minFractionDigitsForTarget();
-
-    // formatage FR sans arrondi intempestif
-    const s = val.toLocaleString('fr-FR', {
-      minimumFractionDigits: minFrac,
-      maximumFractionDigits: Math.max(minFrac, 12)
-    });
-
-    result.textContent = `${s} ${u}`;
-  }
-
-  document.getElementById('toggleShow').addEventListener('click', ()=>{
-    if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display=''; btnTog.textContent='Masquer'; isShown=true; }
-    else{ restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null; }
-  });
-  document.getElementById('reset').addEventListener('click', ()=>{
-    inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); }));
-    setTarget(schema.units.indexOf(schema.base),false);
-    result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null;
-  });
-  kindSel.addEventListener('change', rebuild);
-
-  setTheme('length'); rebuild();
-})();
-</script>
+    updateStatus();
+    inputs[0].focus();
+  </script>
 </body>
 </html>
