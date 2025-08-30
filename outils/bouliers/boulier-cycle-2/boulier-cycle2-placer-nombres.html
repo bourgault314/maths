@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boulier 5+5 + Exerciseur “Placer le nombre”</title>
+<style>
+  :root{
+    --rows: 10;
+    --beads-per-row: 10;
+    --bead-size: 24px;
+    --bead-gap: 5px;
+    --frame-thickness: 14px;
+    --rod-thickness: 5px;
+
+    --color-group-a: #d7263d;
+    --color-group-b: #f8f8f8;
+    --color-bead-shadow: rgba(0,0,0,.25);
+    --color-wood: #e2c48a;
+    --color-wood-dark: #a88348;
+
+    --bg: #fffdf8;
+    --text: #1b1b1b;
+    --ui: #f3f1ea;
+    --accent: #0f6cf9;
+    --ok: #0f9d58;
+    --err: #d93025;
+  }
+
+  html,body{height:100%;background:var(--bg);color:var(--text);margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .app{max-width:980px;margin:14px auto;padding:0 12px}
+
+  .topbar{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 12px
+  }
+  .btn{
+    border:none;background:var(--accent);color:#fff;font-weight:700;
+    padding:8px 12px;border-radius:10px;cursor:pointer;
+    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:.95rem
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.secondary{background:#6b7280}
+
+  .exercise{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    background:var(--ui); padding:10px 12px; border-radius:12px; margin-bottom:10px
+  }
+  .exercise .target{
+    font-weight:800; font-size:1.1rem; background:#fff; padding:6px 10px; border-radius:10px; min-width:3ch; text-align:center;
+    box-shadow: inset 0 1px 0 rgba(0,0,0,.05);
+  }
+  .feedback{min-height:1.4em; font-weight:700}
+  .feedback.ok{ color:var(--ok) }
+  .feedback.err{ color:var(--err) }
+
+  .score{
+    margin-left:auto; display:flex; gap:12px; align-items:center; font-weight:800
+  }
+  .score .good{ color:var(--ok) }
+  .score .bad{ color:var(--err) }
+
+  .abacus{
+    position:relative;aspect-ratio: 10 / 6.6;width:100%;
+    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
+    border-radius:14px;box-shadow:0 10px 26px rgba(0,0,0,.12);
+    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
+  }
+  .abacus::before, .abacus::after{
+    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c)
+  }
+  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:14px 14px 0 0}
+  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 14px}
+
+  .row{position:relative;height: calc(100% / var(--rows));}
+  .rod{
+    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
+    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.2);
+  }
+  .bead{
+    position:absolute;top:50%;transform:translate(-50%,-50%);
+    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
+    box-shadow: 0 3px 6px var(--color-bead-shadow), inset 0 3px 6px rgba(255,255,255,.55);
+    border:1px solid rgba(0,0,0,.12);cursor:pointer; user-select:none;
+    transition:left .18s cubic-bezier(.2,.65,.35,1), transform .06s ease;
+  }
+  .bead:active{transform:translate(-50%,-50%) scale(.98)}
+  .groupA{ background: radial-gradient(circle at 35% 30%, #ef6a79, var(--color-group-a)); }
+  .groupB{ background: radial-gradient(circle at 35% 30%, #ffffff, var(--color-group-b)); }
+
+  /* Gros feedback */
+  .overlay{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:8rem;font-weight:900;color:white;text-shadow:0 0 30px rgba(0,0,0,.7);
+    pointer-events:none;opacity:0;transition:opacity .2s ease;
+  }
+  .overlay.show{opacity:1;}
+  .overlay.ok{color:var(--ok);}
+  .overlay.err{color:var(--err);}
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn" id="newNumber">Nouveau nombre</button>
+        <button class="btn" id="set100">Mettre 100</button>
+        <button class="btn" id="check">Vérifier</button>
+        <button class="btn secondary" id="reset">Remise à zéro</button>
+      </div>
+      <div class="score" id="score">
+        <span class="good">✅ : <span id="goodCount">0</span></span>
+        <span class="bad">❌ : <span id="badCount">0</span></span>
+      </div>
+    </div>
+
+    <div class="exercise" id="exercise">
+      <div>Place ce nombre sur le boulier :</div>
+      <div class="target" id="target">—</div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="abacus" id="abacus" aria-label="Boulier 5+5"></div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+<script>
+(function(){
+  const rows = +getCss('--rows', 10);
+  const N = +getCss('--beads-per-row', 10);
+
+  const abacus   = document.getElementById('abacus');
+  const resetBtn = document.getElementById('reset');
+  const newBtn   = document.getElementById('newNumber');
+  const checkBtn = document.getElementById('check');
+  const set100Btn= document.getElementById('set100');
+
+  const targetEl = document.getElementById('target');
+  const feedback = document.getElementById('feedback');
+  const goodEl   = document.getElementById('goodCount');
+  const badEl    = document.getElementById('badCount');
+  const overlay  = document.getElementById('overlay');
+
+  const state = Array.from({length: rows}, () => 0);
+  let target = null;
+  let goodCount = 0, badCount = 0;
+  let scoredForTarget = false;
+  let advancing = false;
+
+  const rowEls = [];
+  for(let r=0;r<rows;r++){
+    const row = el('div','row'); row.dataset.row=r;
+    row.appendChild(el('div','rod'));
+    const topHalf = r < Math.floor(rows/2);
+    for(let j=1;j<=N;j++){
+      const cls = topHalf ? (j<=5?'groupA':'groupB') : (j<=5?'groupB':'groupA');
+      const bead = el('div','bead '+cls);
+      bead.dataset.index = j;
+      bead.addEventListener('click', () => onBeadClick(r, j));
+      row.appendChild(bead);
+    }
+    abacus.appendChild(row);
+    rowEls.push(row);
+  }
+
+  function onBeadClick(r, j){
+    if(advancing) return;
+    const c = state[r], leftCount = N - c;
+    state[r] = (j <= leftCount) ? (N - j + 1) : (N - j);
+    state[r] = clamp(state[r], 0, N);
+    layoutRow(r);
+  }
+
+  function layoutRow(r){
+    const row = rowEls[r], c = state[r];
+    const size = +getCss('--bead-size',24), gap  = +getCss('--bead-gap',5), pad  = 10;
+    const leftStart  = pad + size/2, rightStart = row.clientWidth - pad - size/2;
+    [...row.querySelectorAll('.bead')].forEach(b=>{
+      const j = +b.dataset.index;
+      b.style.left = (j <= N - c)
+        ? leftStart  + (j-1)*(size+gap)+"px"
+        : rightStart - (N-j)*(size+gap)+"px";
+    });
+  }
+
+  function layoutAll(){ for(let r=0;r<rows;r++) layoutRow(r); }
+  function currentTotal(){ return state.reduce((a,b)=>a+b,0); }
+  function clearFeedback(){ feedback.textContent=''; feedback.className='feedback'; }
+  function updateScore(){ goodEl.textContent = goodCount; badEl.textContent = badCount; }
+  function resetAbacus(){ state.fill(0); layoutAll(); }
+  function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function newTarget(){
+    target = randomInt(0,100);
+    targetEl.textContent = String(target);
+    clearFeedback();
+    resetAbacus();
+    scoredForTarget = false;
+    advancing = false;
+  }
+
+  newBtn.addEventListener('click', newTarget);
+
+  set100Btn.addEventListener('click', ()=>{
+    state.fill(N); layoutAll();
+  });
+
+  function showOverlay(ok){
+    overlay.textContent = ok ? "✅" : "❌";
+    overlay.className = "overlay show " + (ok?"ok":"err");
+    setTimeout(()=> overlay.className="overlay", 800);
+  }
+
+  checkBtn.addEventListener('click', ()=>{
+    if(advancing) return;
+    if(target === null){
+      feedback.textContent = "Clique d’abord sur “Nouveau nombre”.";
+      feedback.className = 'feedback err';
+      return;
+    }
+    const val = currentTotal();
+    if(val === target){
+      if(!scoredForTarget){ goodCount++; updateScore(); scoredForTarget = true; }
+      feedback.textContent = "OK ✅"; feedback.className = 'feedback ok';
+      showOverlay(true);
+      advancing = true; setTimeout(()=>{ newTarget(); }, 1000);
+    }else{
+      badCount++; updateScore();
+      feedback.textContent = `Ce n’est pas bon (${val}) — essaie encore.`; feedback.className = 'feedback err';
+      showOverlay(false);
+    }
+  });
+
+  resetBtn.addEventListener('click', ()=>{ resetAbacus(); clearFeedback(); });
+
+  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(layoutAll,60); });
+
+  function getCss(varname, fallback){ const v=getComputedStyle(document.documentElement).getPropertyValue(varname); return parseFloat(v)||fallback; }
+  function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+
+  layoutAll(); newTarget();
+})();
+</script>
+</body>
+</html>
