@@ -1,56 +1,224 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Glisse-nombre</title><link rel="stylesheet" href="../assets/style.css"/></head>
-<body>
-<header><div class="wrapper"><nav class="nav">
-  <a class="brand" href="../">Maths</a>
-  <a href="../outils/">Outils</a>
-  <a href="../6e/">6e</a>
-  <a href="../5e/">5e</a>
-  <a href="../4e/">4e</a>
-  <a href="../3e/">3e</a>
-  <a href="../clubmat/">Clubmat</a>
-</nav></div></header>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Glisse nombre — Paul Hermann (avec ×10 / ÷10)</title>
+  <style>
+    :root{ --cell:82px; --gap:8px; --headH:44px }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font:20px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#f7f7f7; color:#0b0b0b; display:flex; justify-content:center; padding:28px; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility}
+    .app{width:min(1200px,100%)}
 
-<main><div class="wrapper">
-  <div class="card">
-    <h1>Glisse-nombre</h1>
-    <p>Multiplie ou divise par 10, 100, 1000 en déplaçant la virgule (sans erreurs d’arrondi).</p>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-      <div><label for="in">Nombre</label><input id="in" type="text" inputmode="decimal" placeholder="ex. 3,5 ou 3.5"/></div>
-      <div><label for="op">Opération</label>
-        <select id="op">
-          <option value="1">×10</option><option value="2">×100</option><option value="3">×1000</option>
-          <option value="-1">÷10</option><option value="-2">÷100</option><option value="-3">÷1000</option>
-        </select></div>
-    </div>
-    <div class="row mt"><button id="go">Calculer</button><button id="clr" type="button">Effacer</button></div>
-    <p id="out" class="result mt"></p><p id="exp" class="small"></p>
-    <hr class="mt"/>
-    <div class="row">
-      <button class="btn-chip ex" data-v="3,5" data-s="1">3,5 × 10</button>
-      <button class="btn-chip ex" data-v="0,062" data-s="3">0,062 × 1000</button>
-      <button class="btn-chip ex" data-v="-12,03" data-s="-2">−12,03 ÷ 100</button>
-    </div>
-  </div>
-</div></main>
-<footer><div class='wrapper'>© 2025 — Site pédagogique</div></footer>
-<script>
-function norm(s){s=(s||'').trim().replace(/\s+/g,'').replace(',','.');if(!/^[-+]?\d*(?:\.\d*)?$/.test(s)||s===''||s==='+'||s==='-')return null;
-let sign='';if(s[0]==='-'||s[0]==='+'){sign=s[0]==='-'?'-':'';s=s.slice(1);}if(s===''||s==='.')s='0';if(s.startsWith('.'))s='0'+s;
-let parts=s.split('.');let i=parts[0];let f=(parts[1]||'');i=i.replace(/^0+(?=\d)/,'');f=f.replace(/0+$/,'');return f.length?sign+(i===''?'0':i)+'.'+f:sign+(i===''?'0':i);}
-function shift(x,k){let sign='';if(x.startsWith('-')){sign='-';x=x.slice(1);}let parts=x.split('.');let i=parts[0];let f=(parts[1]||'');let d=i+f;let idx=i.length+k;
-if(idx<=0)return sign+'0.'+'0'.repeat(-idx)+(d.replace(/^0+/,'')||'0');if(idx>=d.length)return sign+d+'0'.repeat(idx-d.length);
-let L=d.slice(0,idx),R=d.slice(idx);let r=sign+L+(R?'.'+R:'');if(r.includes('.'))r=r.replace(/\.?0+$/,'').replace(/^(-?)\./,'$10.');
-return r.replace(/^-?0+(?=\d)/,function(m){return m.startsWith('-')?'-':''});}
-function fmtFr(x){return x.replace('.',',');}
-const IN=document.getElementById('in'), OP=document.getElementById('op'), OUT=document.getElementById('out'), EXP=document.getElementById('exp');
-function explain(k){var s=k>0?'droite':'gauche'; var n=Math.abs(k); var w=n===1?'un rang':(n===2?'deux rangs':'trois rangs'); var facteur=Math.pow(10,n);
-return (k>0)?('On multiplie par '+facteur+' ⇒ décaler la virgule de '+w+' vers la '+s+'.'):('On divise par '+facteur+' ⇒ décaler la virgule de '+w+' vers la '+s+'.');}
-function run(){const v=norm(IN.value); if(v===null){OUT.textContent='⚠️ Nombre invalide'; EXP.textContent=''; return;}
-const k=parseInt(OP.value,10); const r=shift(v,k); OUT.textContent=fmtFr(r); EXP.textContent=explain(k);}
-document.getElementById('go').addEventListener('click',run);
-document.getElementById('clr').addEventListener('click',function(){IN.value='';OUT.textContent='';EXP.textContent='';});
-document.querySelectorAll('.ex').forEach(function(b){b.addEventListener('click',function(){IN.value=b.dataset.v;OP.value=b.dataset.s;run();});});
-</script>
-</body></html>
+    .card{background:#fff; border:2px solid #444; border-radius:16px; padding:18px; margin-bottom:18px; box-shadow:0 4px 12px rgba(0,0,0,.12)}
+    h1{margin:0 0 10px; font-size:30px}
+
+    .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .btn{padding:10px 16px; font-size:18px; border:2px solid #444; border-radius:10px; background:#efefef; cursor:pointer}
+    .btn.primary{background:#2563eb; color:#fff; border-color:#2563eb}
+
+    .seg{display:flex; border:2px solid #444; border-radius:10px; overflow:hidden}
+    .seg button{padding:10px 14px; font-weight:600; border:0; background:#e9e9e9; cursor:pointer}
+    .seg button+button{border-left:2px solid #444}
+    .seg .active{background:#0ea5e9; color:#fff}
+
+    .grid{display:grid; grid-template-columns:repeat(12,var(--cell)); gap:var(--gap); justify-content:center; margin-top:16px}
+    .head{height:var(--headH); text-align:center; font-weight:800; background:#e5e5e5; border-radius:10px; user-select:none; padding:2px 4px; display:flex; align-items:center; justify-content:center}
+    .head .lbl{display:flex; flex-direction:column; line-height:1.05; font-size:13px; letter-spacing:.1px}
+
+    .cell{height:var(--cell); border:2px solid #444; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; position:relative; overflow:hidden}
+    .comma{background:#e0f2fe}
+    .comma span{font-size:32px; font-weight:900; color:#2563eb}
+
+    .digit{width:100%; height:100%; border:0; outline:none; background:transparent; text-align:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; caret-color:#2563eb}
+    .digit::placeholder{color:#bfbfbf}
+
+    /* Zéros fantômes (affichage) -> noirs pour correspondre aux chiffres saisis */
+    .ghost{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:800 34px/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#000; pointer-events:none}
+
+    #status{margin-top:10px; font-weight:800}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="card">
+      <h1>Glisse nombre — Paul Hermann</h1>
+      <div class="controls">
+        <button class="btn" id="resetBtn">Réinitialiser</button>
+        <button class="btn" id="times10">×10</button>
+        <button class="btn" id="div10">÷10</button>
+        <div class="seg" id="zerosSeg">
+          <button data-mode="none" class="active">Zéros : Aucun</button>
+          <button data-mode="needed">Zéros : Nécessaires</button>
+          <button data-mode="all">Zéros : Partout</button>
+        </div>
+        <button class="btn" id="exitZerosBtn" title="Trous pendant débordement">Trous sortie : vide</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="grid" id="grid">
+        <div class="head"><div class="lbl"><span>Centaines</span><span>de milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Dizaines</span><span>de milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Milliers</span></div></div>
+        <div class="head"><div class="lbl"><span>Centaines</span></div></div>
+        <div class="head"><div class="lbl"><span>Dizaines</span></div></div>
+        <div class="head"><div class="lbl"><span>Unités</span></div></div>
+        <div class="head"><div class="lbl"><span>,</span></div></div>
+        <div class="head"><div class="lbl"><span>Dixièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Centièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Millièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Dix</span><span>millièmes</span></div></div>
+        <div class="head"><div class="lbl"><span>Cent</span><span>millièmes</span></div></div>
+
+        <!-- 0..5 = entiers, 6 virgule, 7..11 décimaux -->
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c00" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c0" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c1" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c2" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c3" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c4" /></div>
+        <div class="cell comma"><span>,</span></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c6" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c7" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c8" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c9" /></div>
+        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" pattern="[0-9]" id="c10" /></div>
+      </div>
+      <div id="status">Opération cumulée : ×1</div>
+    </section>
+  </main>
+
+  <script>
+    const ids=["c00","c0","c1","c2","c3","c4",null,"c6","c7","c8","c9","c10"]; // 12 colonnes, 6 int, virgule, 5 décimales
+    const INT=[0,1,2,3,4,5];
+    const DEC=[7,8,9,10,11];
+    const UNITS=5;
+    const COMMA=6;
+    const order=[0,1,2,3,4,5,7,8,9,10,11];
+
+    const inputs=order.map(i=>document.getElementById(ids[i]));
+    const zerosSeg=document.getElementById('zerosSeg');
+    const resetBtn=document.getElementById('resetBtn');
+    const times10=document.getElementById('times10');
+    const div10=document.getElementById('div10');
+    const exitZerosBtn=document.getElementById('exitZerosBtn');
+    const status=document.getElementById('status');
+
+    // État
+    let zeroMode='none'; // 'none' | 'needed' | 'all'
+    let exp10=0;         // cumul ×10/÷10
+    let exitZeros=false; // remplir les trous pendant débordement ?
+    const leftStack=[];  // ce qui sort à gauche (×10)
+    const rightStack=[]; // ce qui sort à droite (÷10)
+    let overflowSide=null; // 'left' | 'right' | null (côté d'origine)
+
+    // Helpers
+    function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
+    function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
+    function focusMove(delta){
+      const active=document.activeElement; if(!active||!active.classList.contains('digit')) return;
+      let idx=indexOfInput(active); if(idx<0) return; idx=Math.min(order.length-1, Math.max(0, idx+delta));
+      inputs[idx].focus(); inputs[idx].select();
+    }
+    function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
+    function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
+    function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
+
+    // Zéros d'affichage
+    function applyZeroMode(){
+      clearGhosts();
+      const raw=readRaw();
+      const hasInt=INT.some(i=>raw[i]!=='' );
+      const hasDec=DEC.some(i=>raw[i]!=='' );
+      function addGhost(i){ const cell=document.getElementById(ids[i]).parentElement; const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g); }
+      if(zeroMode==='all'){
+        for(const i of INT){ if(raw[i]==='') addGhost(i); }
+        for(const i of DEC){ if(raw[i]==='') addGhost(i); }
+      } else if(zeroMode==='needed'){
+        if(hasDec){ for(const i of DEC){ if(raw[i]!=='' ) break; addGhost(i); } }
+        if(hasInt){ let lastInt=-1; for(const i of INT){ if(raw[i]!=='' ) lastInt=i; } for(let i=lastInt+1; i<=UNITS; i++){ addGhost(i); } }
+        else if(hasDec){ addGhost(UNITS); }
+      }
+    }
+
+    // Zéros pendant débordement (affichage seulement) du côté d'origine
+    function ensureExitZeros(){
+      if(!exitZeros || !overflowSide) return;
+      const raw=readRaw();
+      function addGhost(i){ const cell=document.getElementById(ids[i]).parentElement; if(!cell.querySelector('.ghost')){ const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g);} }
+      if(overflowSide==='left'){ for(const i of INT){ if(raw[i]==='') addGhost(i); } }
+      else if(overflowSide==='right'){ for(const i of DEC){ if(raw[i]==='') addGhost(i); } }
+    }
+
+    // Décalages ×10 / ÷10 (sur le contenu saisi)
+    function shift(dir){
+      const prev=readRaw();
+      const next=prev.slice();
+      const orderLinear=[0,1,2,3,4,5,7,8,9,10,11];
+      const first=orderLinear[0];
+      const last =orderLinear[orderLinear.length-1];
+
+      if(dir==='left'){
+        exp10++;
+        const lost=prev[first]; if(lost!=='') leftStack.push(lost);
+        for(const i of orderLinear){ const nxt=(i+1===COMMA)?COMMA+1:(i+1); next[i]=(nxt<ids.length)?prev[nxt]:''; }
+        if(rightStack.length){ next[last]=rightStack.pop(); }
+      } else {
+        exp10--;
+        const lost=prev[last]; if(lost!=='') rightStack.push(lost);
+        for(let k=orderLinear.length-1;k>=0;k--){ const i=orderLinear[k]; const prv=(i-1===COMMA)?UNITS:(i-1); next[i]=(prv>=0)?prev[prv]:''; }
+        if(leftStack.length){ next[first]=leftStack.pop(); }
+      }
+
+      // Côté d'origine du débordement (une seule fois) et extinction au retour
+      if(overflowSide===null){
+        if(leftStack.length>0 && rightStack.length===0) overflowSide='left';
+        else if(rightStack.length>0 && leftStack.length===0) overflowSide='right';
+      }
+      if(leftStack.length===0 && rightStack.length===0) overflowSide=null;
+
+      writeRaw(next);
+      applyZeroMode();
+      ensureExitZeros();
+      updateStatus();
+    }
+
+    function resetAll(){
+      inputs.forEach(i=>i.value='');
+      clearGhosts();
+      zeroMode='none';
+      zerosSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
+      exp10=0; overflowSide=null; leftStack.length=0; rightStack.length=0;
+      updateStatus();
+      inputs[0].focus();
+    }
+
+    function updateStatus(){
+      let label='×1';
+      if(exp10!==0){ const n=Math.abs(exp10); if(n<=6){ const pow=Math.pow(10,n); label=(exp10>0?'×'+pow:'÷'+pow); } else { label=(exp10>0?'×10^'+n:'÷10^'+n); } }
+      status.textContent='Opération cumulée : '+label;
+    }
+
+    // Saisie stricte 1 chiffre/case + navigation
+    inputs.forEach(inp=>{
+      inp.addEventListener('beforeinput',function(e){ if(e.inputType==='insertText' || e.inputType==='insertFromPaste'){ var ch=(e.data||'').replace(/[^0-9]/g,''); if(ch==='') e.preventDefault(); }});
+      inp.addEventListener('input',function(e){ var v=sanitizeToDigit(e.target.value); e.target.value=v; if(v!=='') focusMove(+1); applyZeroMode(); ensureExitZeros(); });
+      inp.addEventListener('keydown',function(e){ if(e.key==='ArrowLeft'){ e.preventDefault(); focusMove(-1); } if(e.key==='ArrowRight'){ e.preventDefault(); focusMove(+1); } if(e.key==='Backspace' && e.target.value===''){ e.preventDefault(); focusMove(-1); } });
+    });
+
+    // Boutons
+    zerosSeg.addEventListener('click',function(e){ const b=e.target.closest('button'); if(!b) return; zerosSeg.querySelectorAll('button').forEach(function(x){x.classList.remove('active')}); b.classList.add('active'); zeroMode=b.dataset.mode; applyZeroMode(); ensureExitZeros(); });
+    resetBtn.addEventListener('click',resetAll);
+    times10.addEventListener('click',function(){ shift('left'); });
+    div10.addEventListener('click',function(){ shift('right'); });
+    exitZerosBtn.addEventListener('click',function(){ exitZeros=!exitZeros; exitZerosBtn.textContent = exitZeros ? 'Trous sortie : 0' : 'Trous sortie : vide'; applyZeroMode(); ensureExitZeros(); });
+
+    // Init
+    updateStatus();
+    inputs[0].focus();
+  </script>
+</body>
+</html>
