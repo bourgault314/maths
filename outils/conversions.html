@@ -227,7 +227,7 @@
      - S=1 : targetStart..first-1
      - S=2 (aire) : cible→1 zéro (droite) + colonnes entre complètes + zéros avant le chiffre dans sa colonne
      - S=3 (m³) : cible→1 zéro (droite) + colonnes entre complètes + ne rien ajouter dans la colonne du chiffre
-     - **NOUVEAU** : si la cible est la **même colonne** que le 1er chiffre → **ne rien compléter**.
+     - si la cible est la même colonne que le 1er chiffre → ne rien compléter
   ----------------------------------------------------- */
   function completeZerosInTable(){
     const S = schema.slots;
@@ -248,17 +248,18 @@
     }
     if(first===-1) return;
 
-    const targetStart = targetIdx * S;
-    const tgtEnd      = targetStart + (S-1);
-    const colFirst    = Math.floor(first / S);
-    const siFirst     = first % S;
+    const SLOTS = schema.slots;
+    const targetStart = targetIdx * SLOTS;
+    const tgtEnd      = targetStart + (SLOTS-1);
+    const colFirst    = Math.floor(first / SLOTS);
+    const siFirst     = first % SLOTS;
 
-    // *** nouveau : cible dans la même colonne que le 1er chiffre → on ne complète rien
+    // cible = même colonne que le 1er chiffre → ne rien compléter
     if(colFirst === targetIdx) return;
 
     if (targetStart < first){
       // --- CIBLE À GAUCHE ---
-      if (S === 1){
+      if (SLOTS === 1){
         for(let k=targetStart; k<first; k++){
           const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
         }
@@ -267,27 +268,27 @@
 
       // (1) colonne cible → 1 zéro à droite
       {
-        const kTargetRightmost = targetStart + (S - 1);
+        const kTargetRightmost = targetStart + (SLOTS - 1);
         const el = slot(kTargetRightmost);
         if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
       }
 
       // (2) colonnes intermédiaires → tout compléter
       for (let c = targetIdx + 1; c < colFirst; c++){
-        for (let si = 0; si < S; si++){
-          const k = c*S + si;
+        for (let si = 0; si < SLOTS; si++){
+          const k = c*SLOTS + si;
           const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
         }
       }
 
       // (3) colonne du 1er chiffre
-      if (S === 2){
+      if (SLOTS === 2){
         for (let si = 0; si < siFirst; si++){
-          const k = colFirst*S + si;
+          const k = colFirst*SLOTS + si;
           const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
         }
       }
-      // S===3 : rien à ajouter dans sa colonne
+      // SLOTS === 3 : ne rien ajouter dans sa colonne
 
     } else {
       // --- CIBLE À DROITE ---
@@ -325,16 +326,43 @@
     return sum * Math.pow(10, -powToTarget);
   }
 
-  function formatFixedFr(n, minFrac){
-    return n.toFixed(minFrac).replace('.',',');
+  /* ---- Décimales minimales nécessaires (anti-arrondis) ----
+     On scanne les colonnes qui contiennent AU MOINS un chiffre saisi (non .ghost0).
+     Si une colonne est à droite de la cible, on augmente le minimum d’autant de sous-cases. */
+  function minFractionDigitsForTarget(){
+    const S = schema.slots;
+    let minFrac = 0;
+    for(let ci=0; ci<inputs.length; ci++){
+      let hasUserDigit = false;
+      for(let si=0; si<S; si++){
+        const el = inputs[ci][si];
+        const v  = el.value.trim();
+        if(/^[0-9]$/.test(v) && !el.classList.contains('ghost0')){
+          hasUserDigit = true; break;
+        }
+      }
+      if(hasUserDigit){
+        const delta = (ci - targetIdx) * S; // nb de sous-cases à droite de la cible
+        if(delta > minFrac) minFrac = delta;
+      }
+    }
+    return minFrac; // 0 si rien à droite, sinon 1,2,3...
   }
 
   function updateResult(){
-    const baseIdx=schema.units.indexOf(schema.base);
-    const minFrac = Math.max(0,(baseIdx-targetIdx)*schema.slots);
     const u = schema.units[targetIdx];
     const val = valueInTarget();
-    result.textContent = `${formatFixedFr(val,minFrac)} ${u}`;
+
+    // décimales minimales requises selon la position des chiffres saisis
+    const minFrac = minFractionDigitsForTarget();
+
+    // formatage FR sans arrondi intempestif
+    const s = val.toLocaleString('fr-FR', {
+      minimumFractionDigits: minFrac,
+      maximumFractionDigits: Math.max(minFrac, 12)
+    });
+
+    result.textContent = `${s} ${u}`;
   }
 
   document.getElementById('toggleShow').addEventListener('click', ()=>{
