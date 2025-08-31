@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Boulier 5+5 compact — responsive</title>
+<style>
+  :root{
+    --rows: 10;
+    --beads-per-row: 10;
+
+    /* Ces deux variables seront mises à jour par JS selon la place dispo */
+    --bead-size: 24px;  /* valeur de secours */
+    --bead-gap: 5px;    /* valeur de secours */
+
+    --frame-thickness: 14px;
+    --rod-thickness: 5px;
+
+    --color-group-a: #d7263d;
+    --color-group-b: #f8f8f8;
+    --color-bead-shadow: rgba(0,0,0,.25);
+    --color-wood: #e2c48a;
+    --color-wood-dark: #a88348;
+
+    --bg: #fffdf8;
+    --text: #1b1b1b;
+    --ui: #f3f1ea;
+    --accent: #0f6cf9;
+  }
+
+  html,body{height:100%;background:var(--bg);color:var(--text);margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .app{max-width:980px;margin:14px auto;padding:0 12px}
+
+  .toolbar{
+    display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 10px;flex-wrap:wrap
+  }
+  .value-box{
+    display:none;gap:8px;align-items:center;background:var(--ui);
+    padding:6px 10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05) inset;
+  }
+  .value-box.show{display:flex}
+  .value-box label{font-weight:600;font-size:.95rem}
+  .value-box input{
+    width:120px;font-size:1.3rem;font-weight:800;text-align:right;border:none;background:transparent;outline:none
+  }
+  .btn{
+    border:none;background:var(--accent);color:#fff;font-weight:700;
+    padding:10px 14px;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:1rem
+  }
+  .btn:active{transform:translateY(1px)}
+
+  /* Le cadre s’adapte en largeur; la hauteur suit l’aspect-ratio
+     mais la taille des perles est recalculée pour exploiter au mieux la place */
+  .abacus{
+    position:relative;aspect-ratio: 10 / 6.6;width:100%;
+    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
+    border-radius:14px;box-shadow:0 10px 26px rgba(0,0,0,.12);
+    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
+    overflow:hidden;
+  }
+  .abacus::before, .abacus::after{
+    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c)
+  }
+  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:14px 14px 0 0}
+  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 14px}
+
+  .row{position:relative;height: calc(100% / var(--rows));}
+  .rod{
+    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
+    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.2);
+  }
+
+  .bead{
+    position:absolute;top:50%;transform:translate(-50%,-50%);
+    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
+    box-shadow: 0 3px 6px var(--color-bead-shadow), inset 0 3px 6px rgba(255,255,255,.55);
+    border:1px solid rgba(0,0,0,.12);cursor:pointer; user-select:none;
+    transition:left .18s cubic-bezier(.2,.65,.35,1), transform .06s ease;
+    touch-action:manipulation;
+  }
+  .bead:active{transform:translate(-50%,-50%) scale(.98)}
+  .groupA{ background: radial-gradient(circle at 35% 30%, #ef6a79, var(--color-group-a)); }
+  .groupB{ background: radial-gradient(circle at 35% 30%, #ffffff, var(--color-group-b)); }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="toolbar">
+      <div class="value-box" id="valueBox">
+        <label for="total">Valeur :</label>
+        <input id="total" type="text" value="0" readonly aria-live="polite" />
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" id="toggleValue">Afficher la valeur</button>
+        <button class="btn" id="set100">Mettre 100</button>
+        <button class="btn" id="reset">Remise à zéro</button>
+      </div>
+    </div>
+
+    <div class="abacus" id="abacus" aria-label="Boulier 5+5"></div>
+  </div>
+
+<script>
+(function(){
+  const rows = +css('--rows', 10);
+  const N = +css('--beads-per-row', 10);
+
+  const abacus   = document.getElementById('abacus');
+  const totalBox = document.getElementById('total');
+  const valueBox = document.getElementById('valueBox');
+  const toggleBtn= document.getElementById('toggleValue');
+  const resetBtn = document.getElementById('reset');
+  const set100Btn= document.getElementById('set100');
+
+  const state = Array.from({length: rows}, () => 0);
+  let revealed = false;
+
+  const rowEls = [];
+  for(let r=0;r<rows;r++){
+    const row = el('div','row'); row.dataset.row=r;
+    row.appendChild(el('div','rod'));
+    const topHalf = r < Math.floor(rows/2);
+    for(let j=1;j<=N;j++){
+      const cls = topHalf ? (j<=5?'groupA':'groupB') : (j<=5?'groupB':'groupA');
+      const bead = el('div','bead '+cls);
+      bead.dataset.index = j;
+      bead.addEventListener('click', () => onBeadClick(r, j));
+      row.appendChild(bead);
+    }
+    abacus.appendChild(row);
+    rowEls.push(row);
+  }
+
+  function onBeadClick(r, j){
+    const c = state[r];
+    const leftCount = N - c;
+    state[r] = (j <= leftCount) ? (N - j + 1) : (N - j);
+    state[r] = clamp(state[r], 0, N);
+    layoutRow(r);
+    renderTotal();
+  }
+
+  // --- Mise en page d'une rangée avec taille dynamique ---
+  function layoutRow(r){
+    const row = rowEls[r];
+    const size = +css('--bead-size',24);
+    const gap  = +css('--bead-gap',5);
+    const pad  = Math.max(8, Math.round(size*0.35)); // marges latérales proportionnelles
+    const leftStart  = pad + size/2;
+    const rightStart = row.clientWidth - pad - size/2;
+    const c = state[r];
+
+    const beads = row.querySelectorAll('.bead');
+    beads.forEach(b=>{
+      const j = +b.dataset.index;
+      b.style.left = (j <= N - c)
+        ? (leftStart  + (j-1)*(size+gap)) + "px"
+        : (rightStart - (N-j)*(size+gap)) + "px";
+    });
+  }
+
+  function layoutAll(){ for(let r=0;r<rows;r++) layoutRow(r); renderTotal(); }
+  function currentTotal(){ return state.reduce((a,b)=>a+b,0); }
+
+  function renderTotal(){
+    if(revealed){
+      valueBox.classList.add('show');
+      totalBox.value = String(currentTotal());
+    }else{
+      valueBox.classList.remove('show');
+    }
+  }
+
+  toggleBtn.addEventListener('click', ()=>{
+    revealed = !revealed;
+    toggleBtn.textContent = revealed ? 'Masquer la valeur' : 'Afficher la valeur';
+    renderTotal();
+  });
+  resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); });
+  set100Btn.addEventListener('click', ()=>{ state.fill(N); layoutAll(); });
+
+  // --------- CALCUL RESPONSIVE des tailles ----------
+  const ro = new ResizeObserver(()=>recalcSizes());
+  ro.observe(abacus);
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize', throttle(recalcSizes, 60), {passive:true});
+    visualViewport.addEventListener('scroll',  throttle(recalcSizes, 60), {passive:true});
+  }
+  window.addEventListener('orientationchange', ()=>setTimeout(recalcSizes, 60));
+  window.addEventListener('resize', throttle(recalcSizes, 60));
+
+  function recalcSizes(){
+    const padX = 2*parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-thickness')) + 16; // padding interne approx.
+    const padY = 2*parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-thickness')) + 12;
+
+    const w = Math.max(0, abacus.clientWidth  - padX);
+    const h = Math.max(0, abacus.clientHeight - padY);
+
+    // Gap provisoire pour calcul : ~18% de la perle, mini 3px
+    // On résout size à partir de la contrainte horizontale ET verticale
+    // Horiz: N*size + (N-1)*gap <= w  avec gap = 0.18*size
+    //  => size <= w / (N + 0.18*(N-1))
+    const sizeFromW = w / (N + 0.18*(N-1));
+
+    // Vertic: size <= (h/rows) - marge
+    const sizeFromH = (h/rows) - 6;
+
+    let size = Math.floor(Math.max(14, Math.min(sizeFromW, sizeFromH)));
+    let gap  = Math.max(3, Math.round(size*0.18));
+
+    // Publier dans les variables CSS pour que tout suive
+    setCss('--bead-size', size + 'px');
+    setCss('--bead-gap',  gap  + 'px');
+
+    layoutAll();
+  }
+
+  // utils
+  function css(varname, fallback){ const v=getComputedStyle(document.documentElement).getPropertyValue(varname); return parseFloat(v)||fallback; }
+  function setCss(name, value){ document.documentElement.style.setProperty(name, value); }
+  function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+  function throttle(fn, t){ let p=0, id; return (...args)=>{ const n=Date.now(); if(n-p>t){ p=n; fn(...args);} else { clearTimeout(id); id=setTimeout(()=>{ p=Date.now(); fn(...args); }, t-(n-p)); } }; }
+
+  // Init
+  recalcSizes();        // calcule tailles + layout
+})();
+</script>
+</body>
+</html>
