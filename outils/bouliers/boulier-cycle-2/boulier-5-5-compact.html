@@ -3,16 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Boulier 5+5 compact — responsive</title>
+<title>Boulier 5+5 compact</title>
 <style>
   :root{
     --rows: 10;
     --beads-per-row: 10;
-
-    /* Ces deux variables seront mises à jour par JS selon la place dispo */
-    --bead-size: 24px;  /* valeur de secours */
-    --bead-gap: 5px;    /* valeur de secours */
-
+    --bead-size: 24px;
+    --bead-gap: 5px;
     --frame-thickness: 14px;
     --rod-thickness: 5px;
 
@@ -32,7 +29,7 @@
   .app{max-width:980px;margin:14px auto;padding:0 12px}
 
   .toolbar{
-    display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 10px;flex-wrap:wrap
+    display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 10px;flex-wrap:wrap;
   }
   .value-box{
     display:none;gap:8px;align-items:center;background:var(--ui);
@@ -45,13 +42,21 @@
   }
   .btn{
     border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:10px 14px;border-radius:12px;cursor:pointer;
-    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:1rem
+    padding:8px 12px;border-radius:10px;cursor:pointer;
+    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:.95rem
   }
   .btn:active{transform:translateY(1px)}
 
-  /* Le cadre s’adapte en largeur; la hauteur suit l’aspect-ratio
-     mais la taille des perles est recalculée pour exploiter au mieux la place */
+  /* === WRAPPER DE MISE À L’ÉCHELLE (pour mobile) === */
+  #fitAbacus{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    height:auto;          /* on fixe la hauteur par JS après le scale */
+  }
+  /* on réduit/aggrandit le boulier autour du haut-centre sans casser les positions */
+  #abacus{ transform-origin: top center; }
+
   .abacus{
     position:relative;aspect-ratio: 10 / 6.6;width:100%;
     background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
@@ -78,7 +83,7 @@
     box-shadow: 0 3px 6px var(--color-bead-shadow), inset 0 3px 6px rgba(255,255,255,.55);
     border:1px solid rgba(0,0,0,.12);cursor:pointer; user-select:none;
     transition:left .18s cubic-bezier(.2,.65,.35,1), transform .06s ease;
-    touch-action:manipulation;
+    z-index:2;
   }
   .bead:active{transform:translate(-50%,-50%) scale(.98)}
   .groupA{ background: radial-gradient(circle at 35% 30%, #ef6a79, var(--color-group-a)); }
@@ -92,20 +97,24 @@
         <label for="total">Valeur :</label>
         <input id="total" type="text" value="0" readonly aria-live="polite" />
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="display:flex; gap:8px;">
         <button class="btn" id="toggleValue">Afficher la valeur</button>
         <button class="btn" id="set100">Mettre 100</button>
         <button class="btn" id="reset">Remise à zéro</button>
       </div>
     </div>
 
-    <div class="abacus" id="abacus" aria-label="Boulier 5+5"></div>
+    <!-- WRAPPER d’ajustement pour mobile -->
+    <div id="fitAbacus">
+      <div class="abacus" id="abacus" aria-label="Boulier 5+5"></div>
+    </div>
   </div>
 
 <script>
+/* ======= Ton code d'origine, inchangé (positions/logique identiques) ======= */
 (function(){
-  const rows = +css('--rows', 10);
-  const N = +css('--beads-per-row', 10);
+  const rows = +getCss('--rows', 10);
+  const N = +getCss('--beads-per-row', 10);
 
   const abacus   = document.getElementById('abacus');
   const totalBox = document.getElementById('total');
@@ -142,22 +151,18 @@
     renderTotal();
   }
 
-  // --- Mise en page d'une rangée avec taille dynamique ---
   function layoutRow(r){
-    const row = rowEls[r];
-    const size = +css('--bead-size',24);
-    const gap  = +css('--bead-gap',5);
-    const pad  = Math.max(8, Math.round(size*0.35)); // marges latérales proportionnelles
+    const row = rowEls[r], c = state[r];
+    const size = +getCss('--bead-size',24);
+    const gap  = +getCss('--bead-gap',5);
+    const pad  = 10;
     const leftStart  = pad + size/2;
     const rightStart = row.clientWidth - pad - size/2;
-    const c = state[r];
-
-    const beads = row.querySelectorAll('.bead');
-    beads.forEach(b=>{
+    [...row.querySelectorAll('.bead')].forEach(b=>{
       const j = +b.dataset.index;
       b.style.left = (j <= N - c)
-        ? (leftStart  + (j-1)*(size+gap)) + "px"
-        : (rightStart - (N-j)*(size+gap)) + "px";
+        ? leftStart  + (j-1)*(size+gap)+"px"
+        : rightStart - (N-j)*(size+gap)+"px";
     });
   }
 
@@ -178,54 +183,64 @@
     toggleBtn.textContent = revealed ? 'Masquer la valeur' : 'Afficher la valeur';
     renderTotal();
   });
+
   resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); });
-  set100Btn.addEventListener('click', ()=>{ state.fill(N); layoutAll(); });
 
-  // --------- CALCUL RESPONSIVE des tailles ----------
-  const ro = new ResizeObserver(()=>recalcSizes());
-  ro.observe(abacus);
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize', throttle(recalcSizes, 60), {passive:true});
-    visualViewport.addEventListener('scroll',  throttle(recalcSizes, 60), {passive:true});
-  }
-  window.addEventListener('orientationchange', ()=>setTimeout(recalcSizes, 60));
-  window.addEventListener('resize', throttle(recalcSizes, 60));
+  set100Btn.addEventListener('click', ()=>{
+    state.fill(N); layoutAll();
+  });
 
-  function recalcSizes(){
-    const padX = 2*parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-thickness')) + 16; // padding interne approx.
-    const padY = 2*parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-thickness')) + 12;
+  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(layoutAll,60); });
 
-    const w = Math.max(0, abacus.clientWidth  - padX);
-    const h = Math.max(0, abacus.clientHeight - padY);
-
-    // Gap provisoire pour calcul : ~18% de la perle, mini 3px
-    // On résout size à partir de la contrainte horizontale ET verticale
-    // Horiz: N*size + (N-1)*gap <= w  avec gap = 0.18*size
-    //  => size <= w / (N + 0.18*(N-1))
-    const sizeFromW = w / (N + 0.18*(N-1));
-
-    // Vertic: size <= (h/rows) - marge
-    const sizeFromH = (h/rows) - 6;
-
-    let size = Math.floor(Math.max(14, Math.min(sizeFromW, sizeFromH)));
-    let gap  = Math.max(3, Math.round(size*0.18));
-
-    // Publier dans les variables CSS pour que tout suive
-    setCss('--bead-size', size + 'px');
-    setCss('--bead-gap',  gap  + 'px');
-
-    layoutAll();
-  }
-
-  // utils
-  function css(varname, fallback){ const v=getComputedStyle(document.documentElement).getPropertyValue(varname); return parseFloat(v)||fallback; }
-  function setCss(name, value){ document.documentElement.style.setProperty(name, value); }
+  function getCss(varname, fallback){ const v=getComputedStyle(document.documentElement).getPropertyValue(varname); return parseFloat(v)||fallback; }
   function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
   function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
-  function throttle(fn, t){ let p=0, id; return (...args)=>{ const n=Date.now(); if(n-p>t){ p=n; fn(...args);} else { clearTimeout(id); id=setTimeout(()=>{ p=Date.now(); fn(...args); }, t-(n-p)); } }; }
 
-  // Init
-  recalcSizes();        // calcule tailles + layout
+  layoutAll();
+})();
+</script>
+
+<!-- ======= AJOUT MINIMAL : mise à l’échelle pour faire rentrer sur mobile ======= -->
+<script>
+(function fitAbacusInit(){
+  const wrap = document.getElementById('fitAbacus');
+  const el   = document.getElementById('abacus');
+
+  function fitAbacus(){
+    if(!el || !wrap) return;
+    // taille naturelle du boulier
+    const previous = el.style.transform;
+    el.style.transform = 'none';
+    const rect = el.getBoundingClientRect();
+
+    // place dispo à l’écran
+    const vpW   = document.documentElement.clientWidth;
+    const vpH   = window.innerHeight || document.documentElement.clientHeight;
+    const toolH = (document.querySelector('.toolbar')?.offsetHeight || 0);
+
+    const maxW = vpW - 16;         // marges latérales
+    const maxH = vpH - toolH - 24; // sous la barre d’outils
+
+    // facteur d’échelle (on ne grossit pas au-delà de 1)
+    const sW = Math.min(1, maxW / rect.width);
+    const sH = Math.min(1, maxH / rect.height);
+    const s  = Math.max(0.55, Math.min(sW, sH)); // borne basse évite trop petit
+
+    el.style.transform = `scale(${s})`;
+    wrap.style.height  = (rect.height * s) + 'px';
+
+    // si avant il y avait un transform (ex. au tout premier appel), pas grave
+    if(!previous) { /* noop */ }
+  }
+
+  // au chargement et aux changements d’écran
+  window.addEventListener('resize', fitAbacus);
+  window.addEventListener('orientationchange', () => setTimeout(fitAbacus, 50));
+  if (window.visualViewport){
+    visualViewport.addEventListener('resize', fitAbacus, {passive:true});
+  }
+  // premier ajustement
+  window.addEventListener('load', () => setTimeout(fitAbacus, 0));
 })();
 </script>
 </body>
