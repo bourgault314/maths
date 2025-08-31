@@ -56,8 +56,16 @@
     height:var(--headH); text-align:center; font-weight:800; background:#ececec;
     border-radius:14px; padding:0 6px; display:flex; align-items:center; justify-content:center
   }
-  .head .lbl{ display:flex; flex-direction:column; font-size:12px; line-height:1.05 }
-  .head .lbl span{ white-space:nowrap; }
+  /* Taille de police liée à la cellule + autoriser 2 lignes propres */
+  .head .lbl{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:clamp(10px, calc(var(--cell)*0.18), 12px);
+    line-height:1.06;
+    text-wrap:balance;
+  }
+  .head .lbl span{ /* plus de nowrap : permet le retour à la ligne entre mots */
+    display:block;
+  }
 
   .cell{
     height:var(--cell); border:1.5px solid #4a4a4a; border-radius:10px;
@@ -128,8 +136,8 @@
   const status=document.getElementById('status');
   const euclid=document.getElementById('euclid');
 
-  // Libellés depuis "Centaines de milliards" jusqu'à "Unités"
-  const ALL_LABELS = [
+  /* Libellés (long) et (compact) */
+  const LABELS_LONG = [
     ['Centaines','de milliards'],
     ['Dizaines','de milliards'],
     ['Milliards'],
@@ -143,15 +151,28 @@
     ['Dizaines'],
     ['Unités']
   ];
+  const LABELS_SHORT = [
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliards'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Millions'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliers'],
+    ['Cent.'],
+    ['Diz.'],
+    ['Unités']
+  ];
 
-  // État
-  let COLS=10;
-  let ids=[], order=[], inputs=[];
+  /* État */
+  let COLS=10, ids=[], order=[], inputs=[];
   let zeroMode='none', exp10=0;
   const leftStack=[], rightStack=[];
   let overflowSide=null;
 
-  // ------- Helpers UI -------
+  /* Helpers scroll */
   function getScrollParent(el){
     let p=el.parentElement;
     while(p){
@@ -172,6 +193,7 @@
       scroller.scrollBy({ left: delta, behavior: 'smooth' });
     }
   }
+
   function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
   function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
   function focusMove(d){
@@ -182,7 +204,7 @@
     ensureVisible(inputs[i].parentElement);
   }
 
-  // ------- Sizing robuste -------
+  /* Sizing cellule + hauteur d’entête dynamique */
   function calcCell(){
     const root=document.documentElement;
     const cs=getComputedStyle(root);
@@ -195,7 +217,10 @@
     let c=Math.floor((inner - (COLS-1)*gap)/COLS);
     c=Math.max(MIN, Math.min(MAX, c));
     root.style.setProperty('--cell', c+'px');
-    root.style.setProperty('--headH', Math.max(28, Math.min(40, Math.round(c*0.52)))+'px');
+
+    // plus de hauteur d’entête quand cellules petites OU colonnes nombreuses
+    const ratio = (c<50 || COLS>=10) ? 0.66 : 0.52;
+    root.style.setProperty('--headH', Math.round(Math.max(28, Math.min(48, c*ratio)))+'px');
   }
   function initLayoutWatchers(){
     calcCell();
@@ -208,13 +233,17 @@
     if('ResizeObserver' in window){ new ResizeObserver(calcCell).observe(app); }
   }
 
-  // ------- Grille dynamique -------
+  /* Choix du set de libellés */
+  function useCompactLabels(){ return COLS>=10 || Math.min(window.innerWidth, document.documentElement.clientWidth||window.innerWidth) < 420; }
+
+  /* Grille dynamique */
   function buildGrid(n){
     COLS=Math.max(6, Math.min(12, n|0));
     grid.style.setProperty('--cols', COLS);
     grid.innerHTML='';
 
-    const labels = ALL_LABELS.slice(ALL_LABELS.length - COLS); // on garde les COLS derniers (Unités à droite)
+    const all = useCompactLabels() ? LABELS_SHORT : LABELS_LONG;
+    const labels = all.slice(all.length - COLS); // on garde les COLS derniers (Unités à droite)
 
     // En-têtes
     labels.forEach(parts=>{
@@ -229,19 +258,17 @@
     for(let i=0;i<COLS;i++){
       const cell=document.createElement('div'); cell.className='cell';
       const inp=document.createElement('input'); inp.className='digit'; inp.maxLength=1; inp.inputMode='numeric';
-      const id='c'+i; inp.id=id;
-      inp.setAttribute('aria-label', labels[i].join(' '));
-      cell.appendChild(inp); grid.appendChild(cell);
-      ids.push(id);
+      const id='c'+i; inp.id=id; inp.setAttribute('aria-label', labels[i].join(' '));
+      cell.appendChild(inp); grid.appendChild(cell); ids.push(id);
     }
 
     inputs=order.map(i=>document.getElementById(ids[i]));
     attachInputHandlers();
-    resetAll();        // propre à chaque rebuild
-    calcCell();        // recalcule la taille
+    resetAll();
+    calcCell();
   }
 
-  // ------- Zéros d'affichage -------
+  /* Zéros d’affichage */
   function clearGhosts(){ grid.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
   function addGhost(i){
     const cell=document.getElementById(ids[i]).parentElement;
@@ -260,11 +287,11 @@
       order.forEach(i=>{ if(raw[i]==='') addGhost(i); });
     } else if(zeroMode==='needed' && hasAny){
       let last=-1; for(let i=0;i<order.length;i++){ if(raw[i]!=='') last=i; }
-      for(let i=last+1;i<order.length;i++) addGhost(i);  // complète jusqu'aux unités
+      for(let i=last+1;i<order.length;i++) addGhost(i);
     }
   }
 
-  // ------- ×10 / ÷10 + reste -------
+  /* ×10 / ÷10 + reste */
   function updateStatus(){
     let label='×1';
     if(exp10!==0){
@@ -320,7 +347,7 @@
     if(!isTouch && inputs[0]){ inputs[0].focus(); ensureVisible(inputs[0].parentElement); }
   }
 
-  // ------- Handlers -------
+  /* Handlers */
   function attachInputHandlers(){
     inputs.forEach(inp=>{
       inp.addEventListener('beforeinput',e=>{
@@ -358,9 +385,12 @@
   div10.addEventListener('click', ()=>shift('right'));
   colSelect.addEventListener('change', ()=>buildGrid(parseInt(colSelect.value,10)));
 
-  // ------- Init -------
-  buildGrid(parseInt(colSelect.value,10));
-  initLayoutWatchers();
+  /* Init */
+  function rebuild(){ buildGrid(parseInt(colSelect.value,10)); }
+  rebuild(); initLayoutWatchers();
+  // recompacte si on tourne le tel
+  window.addEventListener('resize', rebuild);
+  window.addEventListener('orientationchange', ()=>setTimeout(rebuild, 60));
 })();
 </script>
 </body>
