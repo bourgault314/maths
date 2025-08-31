@@ -1,33 +1,112 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Outils</title><link rel="stylesheet" href="../assets/style.css"/></head>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Outils – Bourgault</title>
+<style>
+  :root{
+    --bg:#f7f7f7; --fg:#0b0b0b; --card:#fff; --border:#444;
+    --primary:#2563eb; --primary-100:#dbeafe; --muted:#666;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; font:18px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:var(--bg); color:var(--fg);
+    display:flex; justify-content:center;
+    padding:clamp(12px,3vw,28px);
+    padding-left:max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .wrap{ width:min(1100px,100%); }
+  header{ margin-bottom:16px; }
+  h1{ margin:0 0 6px; font-weight:900; font-size:clamp(22px,3.6vw,34px) }
+  p.lead{ margin:.25rem 0 0; color:var(--muted); font-size:clamp(14px,2.4vw,18px) }
+  p.back{ margin:0 0 10px; }
+  p.back a{ color:var(--primary); font-weight:700; text-decoration:none; }
+
+  .grid{ display:grid; gap:14px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  @media (max-width: 760px){ .grid{ grid-template-columns:1fr; } }
+
+  a.card{
+    display:block; text-decoration:none; color:inherit;
+    background:var(--card); border:1.5px solid var(--border); border-radius:16px;
+    padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06);
+    transition:transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+    min-height:132px;
+  }
+  a.card:hover{ transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,.10); border-color:#222; }
+  .kicker{ display:inline-block; font-weight:800; background:var(--primary-100); padding:4px 8px; border-radius:10px; font-size:clamp(12px,2.2vw,13px) }
+  .title{ margin:10px 0 6px; font-weight:900; font-size:clamp(18px,2.8vw,22px) }
+  .desc{ margin:0; color:#444; font-size:clamp(14px,2.4vw,16px) }
+  .pillrow{ margin-top:10px; display:flex; gap:8px; flex-wrap:wrap }
+  .pill{ border:1px dashed #999; border-radius:999px; padding:4px 10px; font-size:13px; color:#333; }
+
+  footer{ margin-top:16px; color:#666; font-size:14px }
+</style>
+</head>
 <body>
+  <main class="wrap">
+    <header>
+      <p class="back"><a href="maths">← Retour à Maths</a></p>
+      <h1>Outils pédagogiques</h1>
+      <p class="lead">Choisis un outil ci-dessous. Optimisés pour téléphone et ordinateur.</p>
+    </header>
 
-<header><div class="wrapper"><nav class="nav">
-  <a class="brand" href="../">Maths</a>
-  <a href="../outils/">Outils</a>
-</nav></div></header>
+    <section class="grid">
+      <!-- Décimaux -->
+      <a class="card" href="glisse-nombres-decimaux.html">
+        <span class="kicker">Nombres décimaux</span>
+        <div class="title">Glisse-nombres (décimaux)</div>
+        <p class="desc">Partie entière + virgule + 5 décimales. ×10/÷10, modes de zéros, “gestion de la sortie”.</p>
+        <div class="pillrow">
+          <span class="pill">12 colonnes</span>
+          <span class="pill">Virgule</span>
+          <span class="pill">Mobile OK</span>
+        </div>
+      </a>
 
-<main><div class="wrapper">
+      <!-- Entiers flex -->
+      <a class="card" href="glisse-entiers-flex.html">
+        <span class="kicker">École • Entiers</span>
+        <div class="title">Glisse-entiers (colonnes 6 → 12)</div>
+        <p class="desc">Choisis 6 à 12 colonnes. ÷10 affiche le <strong>reste</strong> (division euclidienne).</p>
+        <div class="pillrow">
+          <span class="pill">Sélecteur 6–12</span>
+          <span class="pill">Sans virgule</span>
+          <span class="pill">Quotient + reste</span>
+        </div>
+      </a>
 
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));">
-  <div class="card center">
-    <h3>Glisse‑nombre</h3>
-    <p class="small">× / ÷ 10 · 100 · 1000</p>
-    <p><a class="btn-chip" href="glisse-nombre-portable.html">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Boulier</h3>
-    <p class="small">Cycle 2 · Cycle 3 · Soroban</p>
-    <p><a class="btn-chip" href="bouliers/">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Convertisseur</h3>
-    <p class="small">Unités (volumes, etc.)</p>
-    <p><a class="btn-chip" href="conversions.html">Ouvrir</a></p>
-  </div>
-</section>
+      <!-- Conversions -->
+      <a class="card" href="conversions.html">
+        <span class="kicker">Mesures</span>
+        <div class="title">Conversions</div>
+        <p class="desc">Convertir des unités (longueur, masse, …). Interface simple et adaptée mobile.</p>
+        <div class="pillrow">
+          <span class="pill">Pratique</span>
+          <span class="pill">Rapide</span>
+        </div>
+      </a>
 
-</div></main>
-<footer><div class='wrapper'>© 2025 — Site pédagogique</div></footer>
-</body></html>
+      <!-- Bouliers -->
+      <a class="card" href="bouliers/">
+        <span class="kicker">Ateliers</span>
+        <div class="title">Bouliers</div>
+        <p class="desc">Accès aux activités dans le dossier <code>bouliers</code>.</p>
+        <div class="pillrow">
+          <span class="pill">Manipuler</span>
+          <span class="pill">Découvrir</span>
+        </div>
+      </a>
+    </section>
+
+    <footer>
+      <p>© 2025 — Bourgault Gwenaël</p>
+    </footer>
+  </main>
+</body>
+</html>

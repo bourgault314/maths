@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Glisse-entiers (flexible)</title>
+<style>
+  :root{ --gap:8px; --cell:60px; --headH:32px; }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font:18px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    background:#f7f7f7; color:#0b0b0b;
+    display:flex; justify-content:center;
+    padding: clamp(12px, 3vw, 28px);
+    padding-left:max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+
+  .app{ width:min(1100px,100%); overflow-x:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding-right:max(10px, env(safe-area-inset-right)); }
+  .card{ background:#fff; border:1.5px solid #444; border-radius:16px; padding:18px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,.10) }
+  h1{ margin:0 0 8px; font-weight:900; font-size:clamp(20px,3.2vw,28px) }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px }
+  .btn{
+    border:1.5px solid #444; background:#f2f2f2; border-radius:12px; padding:8px 12px;
+    font-size:clamp(16px,2.8vw,18px); font-weight:700; cursor:pointer; line-height:1
+  }
+  .seg{ display:flex; border:1.5px solid #444; border-radius:12px; overflow:hidden }
+  .seg button{ padding:8px 12px; font-weight:700; border:0; background:#e9e9e9; cursor:pointer; font-size:clamp(16px,2.6vw,18px) }
+  .seg button+button{ border-left:1.5px solid #444 }
+  .seg .active{ background:#0ea5e9; color:#fff }
+
+  .picker{ display:flex; align-items:center; gap:8px; padding:6px 10px; border:1.5px solid #444; border-radius:12px; background:#fafafa; font-weight:700 }
+  .picker select{ font-size:16px; padding:6px 8px; border-radius:10px; border:1px solid #bbb; }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(var(--cols,12), var(--cell));
+    gap:var(--gap); justify-content:center; margin-top:12px;
+    min-width: calc(var(--cols,12)*var(--cell) + (var(--cols,12)-1)*var(--gap) + 6px);
+    scroll-padding-right:24px;
+  }
+  .head{
+    height:var(--headH); text-align:center; font-weight:800; background:#ececec;
+    border-radius:14px; user-select:none; padding:0 6px; display:flex; align-items:center; justify-content:center
+  }
+  .head .lbl{ display:flex; flex-direction:column; font-size:clamp(10px, calc(var(--cell)*0.15), 12px); line-height:1.05 }
+
+  .cell{
+    height:var(--cell); border:1.5px solid #4a4a4a; border-radius: clamp(8px, calc(var(--cell)*0.16), 12px);
+    display:flex; align-items:center; justify-content:center; background:#fff; position:relative; overflow:hidden
+  }
+  .digit{
+    width:100%; height:100%; border:0; outline:none; background:transparent; text-align:center;
+    font:800 clamp(16px, calc(var(--cell)*0.40), 30px)/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; caret-color:#2563eb
+  }
+  .digit::placeholder{ color:#bfbfbf }
+  button, input, select { font-size:16px; touch-action:manipulation; }
+
+  .ghost{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font:800 clamp(16px, calc(var(--cell)*0.40), 30px)/1 system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#000; pointer-events:none
+  }
+
+  #status{ margin-top:8px; font-weight:800; font-size:clamp(14px, 2.2vw, 18px) }
+  #euclid{ margin-top:4px; font-weight:700; font-size:clamp(13px, 2.2vw, 16px); color:#333 }
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <form class="card" onsubmit="return false;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <h1>Glisse-entiers (flexible)</h1>
+
+    <div class="controls">
+      <div class="picker">
+        Colonnes :
+        <select id="colCount">
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+
+      <button class="btn" id="resetBtn" type="button">Réinitialiser</button>
+      <button class="btn" id="times10" type="button">×10</button>
+      <button class="btn" id="div10" type="button">÷10</button>
+
+      <div class="seg" id="zerosSeg" role="group" aria-label="Affichage des zéros">
+        <button data-mode="none" class="active" type="button">Zéros : Aucun</button>
+        <button data-mode="needed" type="button">Zéros : Nécessaires</button>
+        <button data-mode="all" type="button">Zéros : Partout</button>
+      </div>
+    </div>
+
+    <section class="card" style="z-index:1;">
+      <div class="grid" id="grid" style="--cols:12"></div>
+      <div id="status">×1</div>
+      <div id="euclid"></div>
+    </section>
+  </form>
+</main>
+
+<script>
+(() => {
+  const app = document.getElementById('app');
+  const grid = document.getElementById('grid');
+  const colSelect = document.getElementById('colCount');
+  const resetBtn = document.getElementById('resetBtn');
+  const times10 = document.getElementById('times10');
+  const div10 = document.getElementById('div10');
+  const zerosSeg = document.getElementById('zerosSeg');
+  const status = document.getElementById('status');
+  const euclid = document.getElementById('euclid');
+
+  const ALL_LABELS = [
+    ['Centaines','de milliards'],
+    ['Dizaines','de milliards'],
+    ['Milliards'],
+    ['Centaines','de millions'],
+    ['Dizaines','de millions'],
+    ['Millions'],
+    ['Centaines','de milliers'],
+    ['Dizaines','de milliers'],
+    ['Milliers'],
+    ['Centaines'],
+    ['Dizaines'],
+    ['Unités']
+  ];
+
+  let COLS=6, ids=[], order=[], inputs=[];
+  let zeroMode='none', exp10=0;
+  const leftStack=[], rightStack=[];
+  let overflowSide=null;
+
+  function buildGrid(n){
+    COLS = Math.max(6, Math.min(12, n|0));
+    grid.style.setProperty('--cols', COLS);
+    grid.innerHTML='';
+    const labels = ALL_LABELS.slice(ALL_LABELS.length - COLS);
+
+    labels.forEach(parts=>{
+      const head=document.createElement('div');
+      head.className='head';
+      const lbl=document.createElement('div');
+      lbl.className='lbl';
+      lbl.innerHTML = parts.map(t=>`<span>${t}</span>`).join('');
+      head.appendChild(lbl);
+      grid.appendChild(head);
+    });
+
+    ids=[]; order=Array.from({length:COLS},(_,i)=>i);
+    for(let i=0;i<COLS;i++){
+      const cell=document.createElement('div'); cell.className='cell';
+      const inp=document.createElement('input');
+      const id='c'+i; inp.id=id; inp.className='digit';
+      inp.maxLength=1; inp.setAttribute('inputmode','numeric');
+      inp.setAttribute('autocomplete','off');
+      inp.setAttribute('aria-label', labels[i].join(' '));
+      cell.appendChild(inp); grid.appendChild(cell);
+      ids.push(id);
+    }
+    inputs=order.map(i=>document.getElementById(ids[i]));
+    attachInputHandlers();
+    resetAll();
+    calcCell();
+  }
+
+  function calcCell(){
+    const root=document.documentElement;
+    const cs=getComputedStyle(root);
+    const gap=parseFloat(cs.getPropertyValue('--gap'))||8;
+    const vv=window.visualViewport;
+    const vvWidth=vv?vv.width:window.innerWidth;
+    const usable=Math.min(app.clientWidth,vvWidth);
+    const inner=Math.max(0,usable-36);
+    const MIN=36,MAX=78;
+    let c=Math.floor((inner-(COLS-1)*gap)/COLS);
+    c=Math.max(MIN,Math.min(MAX,c));
+    root.style.setProperty('--cell', c+'px');
+    root.style.setProperty('--headH', Math.max(28, Math.min(40, Math.round(c*0.52)))+'px');
+  }
+  function initLayoutWatchers(){
+    calcCell();
+    if(window.visualViewport){
+      visualViewport.addEventListener('resize', calcCell);
+      visualViewport.addEventListener('scroll', calcCell);
+    }
+    window.addEventListener('resize', calcCell);
+    window.addEventListener('orientationchange', ()=>setTimeout(calcCell,50));
+    if('ResizeObserver' in window){ new ResizeObserver(calcCell).observe(app); }
+  }
+
+  function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
+  function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
+  function focusMove(d){
+    const a=document.activeElement; if(!a||!a.classList.contains('digit')) return;
+    let i=indexOfInput(a); if(i<0) return;
+    i=Math.min(order.length-1, Math.max(0,i+d));
+    inputs[i].focus(); inputs[i].select();
+  }
+  function readRaw(){ return order.map(i=>document.getElementById(ids[i]).value||''); }
+  function writeRaw(arr){ order.forEach(i=>{ document.getElementById(ids[i]).value=arr[i]||''; }); }
+  function clearGhosts(){ grid.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
+  function addGhost(i){
+    const cell=document.getElementById(ids[i]).parentElement;
+    if(!cell.querySelector('.ghost')){
+      const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g);
+    }
+  }
+
+  function applyZeroMode(){
+    clearGhosts();
+    const raw=readRaw(); const hasAny=raw.some(v=>v!=='');
+    if(zeroMode==='all'){ order.forEach(i=>{ if(raw[i]==='') addGhost(i); }); }
+    else if(zeroMode==='needed' && hasAny){
+      let last=-1; for(let i=0;i<order.length;i++){ if(raw[i]!=='') last=i; }
+      for(let i=last+1;i<order.length;i++) addGhost(i);
+    }
+  }
+  function ensureExitZeros(){
+    if(!overflowSide) return;
+    const raw=readRaw();
+    if(overflowSide==='left'){ for(let i=0;i<order.length;i++){ if(raw[i]==='') addGhost(i); else break; } }
+    if(overflowSide==='right'){ for(let i=order.length-1;i>=0;i--){ if(raw[i]==='') addGhost(i); else break; } }
+  }
+
+  function shift(dir){
+    const prev=readRaw(); const next=prev.slice();
+    const first=0,last=order.length-1;
+    if(dir==='left'){
+      exp10++;
+      const lost=prev[first]; if(lost!=='') leftStack.push(lost);
+      for(let i=first;i<=last;i++){ next[i]=(i+1<=last)?prev[i+1]:''; }
+      if(rightStack.length){ next[last]=rightStack.pop(); }
+    } else {
+      exp10--;
+      const lost=prev[last]; if(lost!=='') rightStack.push(lost);
+      for(let i=last;i>=first;i--){ next[i]=(i-1>=first)?prev[i-1]:''; }
+      if(leftStack.length){ next[first]=leftStack.pop(); }
+    }
+    if(overflowSide===null){
+      if(leftStack.length>0&&rightStack.length===0) overflowSide='left';
+      else if(rightStack.length>0&&leftStack.length===0) overflowSide='right';
+    }
+    if(leftStack.length===0&&rightStack.length===0) overflowSide=null;
+    writeRaw(next); applyZeroMode(); ensureExitZeros();
+    updateStatus(); updateEuclid();
+  }
+
+  function resetAll(){
+    inputs.forEach(i=>i.value='');
+    clearGhosts();
+    zeroMode='none';
+    zerosSeg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
+    exp10=0; overflowSide=null; leftStack.length=0; rightStack.length=0;
+    updateStatus(); updateEuclid();
+    const isTouch='ontouchstart' in window||navigator.maxTouchPoints>0;
+    if(!isTouch&&inputs[0]) inputs[0].focus();
+  }
+
+  function updateStatus(){
+    let label='×1';
+    if(exp10!==0){
+      const n=Math.abs(exp10);
+      label = n<=6 ? (exp10>0 ? '×'+(10**n) : '÷'+(10**n)) : (exp10>0 ? '×10^'+n : '÷10^'+n);
+    }
+    status.textContent=label;
+  }
+  function updateEuclid(){
+    const k=rightStack.length;
+    if(k===0){ euclid.textContent=''; return; }
+    const remainder=rightStack.slice().reverse().join('');
+    const divisor=(k<=6)?String(10**k):`10^${k}`;
+    euclid.textContent=`÷ ${divisor} — reste ${remainder}`;
+  }
+
+  function attachInputHandlers(){
+    inputs.forEach(inp=>{
+      inp.addEventListener('focus',()=>{ inp.setAttribute('autocomplete','off'); });
+      inp.addEventListener('beforeinput',e=>{
+        if(e.inputType==='insertText'||e.inputType==='insertFromPaste'){
+          const ch=(e.data||'').replace(/[^0-9]/g,''); if(ch==='') e.preventDefault();
+        }
+      });
+      inp.addEventListener('input',e=>{
+        const v=sanitizeToDigit(e.target.value); e.target.value=v;
+        if(v!=='') focusMove(+1);
+        applyZeroMode(); ensureExitZeros();
+      });
+      inp.addEventListener('keydown',e=>{
+        if(e.key==='ArrowLeft'){ e.preventDefault(); focusMove(-1); }
+        if(e.key==='ArrowRight'){ e.preventDefault(); focusMove(+1); }
+        if(e.key==='Backspace'&&e.target.value===''){ e.preventDefault(); focusMove(-1); }
+      });
+    });
+  }
+
+  zerosSeg.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    zerosSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); zeroMode=b.dataset.mode;
+    applyZeroMode(); ensureExitZeros();
+  });
+  resetBtn.addEventListener('click',resetAll);
+  times10.addEventListener('click',()=>shift('left'));
+  div10.addEventListener('click',()=>shift('right'));
+  colSelect.addEventListener('change',()=>{ buildGrid(parseInt(colSelect.value,10)); });
+
+  // Init
+  colSelect.value='6'; buildGrid(6);
+  updateStatus(); updateEuclid();
+  initLayoutWatchers();
+})();
+</script>
+</body>
+</html>
