@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<title>Bandes — Générateur PRO v3.1 (A4 paysage)</title>
+<title>Bandes — Générateur PRO v3.4 (A4 paysage)</title>
 <style>
   :root { --page-w: 297mm; --page-h: 210mm; }
   *{ box-sizing:border-box; }
@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-<header>Générateur PRO v3.1 — Bandes (A4 paysage). Imprime en “Taille réelle / 100 %”.</header>
+<header>Générateur PRO v3.4 — Bandes (A4 paysage). Imprime en “Taille réelle / 100 %”.</header>
 <main>
   <section class="controls">
     <form id="form">
@@ -50,14 +50,14 @@
             <input type="number" id="gapV" step="0.1" value="7">
           </div>
           <div>
-            <label>Décalage vertical global RECTO (mm)</label>
+            <label>Recto: décalage vertical global (mm)</label>
             <input type="number" id="rectoOffY" step="0.1" value="0">
           </div>
         </div>
         <div class="row">
           <div>
-            <label>Décalage horizontal global RECTO (mm)</label>
-            <input type="number" id="rectoOffX" step="0.1" value="0">
+            <label>Recto: décalage horizontal global (mm)</label>
+            <input type="number" id="rectoOffX" step="0.1" value="2">
           </div>
           <div>
             <label>Masquer le texte (garder pointillés)</label>
@@ -128,16 +128,7 @@
             <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
           </div>
         </div>
-        <div class="row">
-          <div>
-            <label>Décalage verso horizontal (mm)</label>
-            <input type="number" id="offX" step="0.1" value="0">
-          </div>
-          <div>
-            <label>Décalage verso vertical (mm)</label>
-            <input type="number" id="offY" step="0.1" value="0">
-          </div>
-        </div>
+        <!-- AUCUN offset verso -->
       </fieldset>
 
       <fieldset>
@@ -191,7 +182,7 @@ function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWm
   return g;
 }
 
-function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffY, rectoOffX, versoOff, hideText}){
+function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffY, rectoOffX, hideText}){
   const page = document.createElement("div");
   page.className = "page";
 
@@ -200,12 +191,12 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
   svg.setAttribute("width", mm(W)); svg.setAttribute("height", mm(H));
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 
-  // Centrage auto + offsets
   const safeLen = Math.min(Math.max(10, bandLen), W - 2);
-  const baseLeft = (W - safeLen)/2;
-  const left = baseLeft + (unity ? (versoOff?.x||0) : (rectoOffX||0));
+
+  // IMPORTANT : offsets recto n'agissent QUE sur les pages fractions (unity=false)
+  const left = (W - safeLen)/2 + (unity ? 0 : (rectoOffX||0));
   const totalH = 3*bandHeight + 2*gapV;
-  const top = (H - totalH)/2 + (unity ? (versoOff?.y||0) : (rectoOffY||0));
+  const top = (H - totalH)/2 + (unity ? 0 : (rectoOffY||0));
 
   const y2 = top;
   const y3 = y2 + bandHeight + gapV;
@@ -229,7 +220,6 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
         svg.appendChild(t);
       }
     }else{
-      // séparations (toujours visibles)
       for(let k=1;k<denom;k++){
         const x = left + safeLen * k / denom;
         const sep = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -239,7 +229,6 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
         sep.setAttribute("stroke-dasharray", dash);
         svg.appendChild(sep);
       }
-      // fractions
       if(hideText !== "yes"){
         for(let k=0;k<denom;k++){
           const cx = left + safeLen*(k+0.5)/denom;
@@ -276,9 +265,6 @@ function generate(){
 
   const mode = document.getElementById("mode").value;
   const includeUnit = document.getElementById("includeUnit").value === "yes";
-  const offX = parseFloat(document.getElementById("offX").value)||0;
-  const offY = parseFloat(document.getElementById("offY").value)||0;
-  const versoOff = {x: offX, y: offY};
 
   const preview = document.getElementById("preview");
   preview.innerHTML = "";
@@ -287,27 +273,27 @@ function generate(){
 
   if(mode==="recto"){
     if(includeUnit){
-      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, versoOff:{x:0,y:0}, hideText});
+      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, hideText});
       push(pU);
     }
     for(const d of denoms){
-      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, versoOff, hideText});
+      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, hideText});
       push(p);
     }
   }else if(mode==="verso"){
     for(const d of denoms){
-      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, versoOff, hideText});
+      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, hideText});
       push(p);
     }
   }else{ // interleaved
     if(includeUnit){
-      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, versoOff:{x:0,y:0}, hideText});
+      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, hideText});
       push(pU);
     }
     for(const d of denoms){
-      const pV = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, versoOff, hideText});
+      const pV = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, hideText});
       push(pV);
-      const pR = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, versoOff, hideText});
+      const pR = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, hideText});
       push(pR);
     }
   }
