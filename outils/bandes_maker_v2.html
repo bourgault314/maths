@@ -13,7 +13,7 @@
   
   main{ display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:14px; }
   
-  /* STYLE DES CONTRÔLES */
+  /* STYLE DES CONTRÔLES (Fixe la hauteur totale) */
   .controls { 
       height: calc(100vh - 28px); 
       display: flex; 
@@ -50,8 +50,19 @@
 
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
   button{ padding:9px 10px; font-weight:600; font-size:14px; cursor:pointer; }
-  .preview{ background:#f6f7f9; border:1px solid #e2e3e6; border-radius:8px; padding:10px; overflow:auto; height: calc(100vh - 132px); }
+  
+  /* FIX UI: La zone d'aperçu prend la hauteur totale (alignée sur les contrôles) */
+  .preview{ 
+    background:#f6f7f9; 
+    border:1px solid #e2e3e6; 
+    border-radius:8px; 
+    padding:10px; 
+    overflow:auto; 
+    height: calc(100vh - 28px); 
+  }
+  
   .page{ width: var(--page-w); height: var(--page-h); background:white; margin: 0 auto 10px; position: relative; border: 1px dashed #cfd6e3; display:flex; align-items:center; justify-content:center; }
+  
   @media print{
     header, .controls { display:none !important; }
     main{ display:block; padding:0; }
@@ -70,7 +81,6 @@
       <fieldset id="actions-fieldset">
         <legend>Actions</legend>
         <div class="actions">
-          <button type="button" id="gen">Générer</button>
           <button type="button" id="print">Imprimer / Export PDF</button>
         </div>
       </fieldset>
@@ -159,6 +169,7 @@
               <div>
                 <label>Pointillés (motif, ex: 3,3)</label>
                 <input type="text" id="dash" value="3,3">
+                <p style="font-size: 11px; margin: 5px 0 0;">(Mettre '0' ou vide pour un trait plein)</p>
               </div>
             </div>
             <div class="row">
@@ -181,17 +192,30 @@
                 <input type="number" id="barW" step="0.01" value="0.10">
               </div>
             </div>
-            <label>Texte des fractions</label>
+            
+            <label>Contenu des parts</label>
             <select id="textMode">
               <option value="numeric" selected>Écriture fractionnaire (1/2, 1/4)</option>
-              <option value="empty">Vide (pas de texte)</option>
+              <option value="percentage">Pourcentage (X %)</option>
+              <option value="minutes">Temps (X min)</option>
               <option value="letters">En lettres (Un demi, Un tiers...)</option>
+              <option value="empty">Vide (pas de texte)</option>
             </select>
-            <label>Orientation du texte (mode "En lettres")</label>
+            
+            <label>Orientation du texte (mode "En lettres" uniquement)</label>
             <select id="textOrientation">
               <option value="auto" selected>Automatique (Vertical)</option>
               <option value="horizontal">Horizontal (Risque de débordement)</option>
             </select>
+
+            <label>Unité / Verso (Texte)</label>
+            <select id="unitMode">
+                <option value="custom" selected>Texte personnalisé</option>
+                <option value="percent">100 %</option>
+                <option value="minutes">60 min</option>
+            </select>
+            <input type="text" id="customText" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px;">
+
             <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
             <input type="text" id="denoms" value="2,3,4,5,6,8,10">
           </fieldset>
@@ -243,19 +267,33 @@ const denomToLetters = {
 
 // Couleurs de fond pédagogiques (Alternance Clair/Foncé Agréable)
 const denomColors = {
-    1: '#fff',
-    2: '#ffb3b3', // Clair (Rose)
-    3: '#6699ff', // Foncé (Bleu)
-    4: '#b3ffc6', // Clair (Vert)
-    5: '#ff9966', // Foncé (Orange)
-    6: '#e0b3ff', // Clair (Mauve)
-    7: '#99ccff', // Foncé (Bleu clair/Cyan)
-    8: '#ccff99', // Clair (Vert lime)
-    9: '#ffccff', // Foncé (Magenta)
-    10: '#ffffb3', // Clair (Jaune)
-    11: '#cc99ff', // Foncé (Violet)
-    12: '#99ffff', // Clair (Cyan pâle)
+    1: '#fff', 2: '#ffb3b3', 3: '#6699ff', 4: '#b3ffc6', 5: '#ff9966', 
+    6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
+    11: '#cc99ff', 12: '#99ffff',
 };
+
+// Fonction pour générer le contenu textuel non-fractionnaire (pourcentage, temps)
+function textContent(d, textMode){
+    if (textMode === 'percentage') {
+        const val = 1 / d * 100;
+        let valStr = Number(val.toFixed(2));
+        return `${valStr} %`;
+    } else if (textMode === 'minutes') {
+        const val = 1 / d * 60;
+        if (Number.isInteger(val)) {
+             return `${val} min`;
+        }
+        return `${val.toFixed(1)} min`;
+    }
+    return ''; 
+}
+
+// Fonction pour déterminer le texte de l'unité
+function getUnityText(unitMode, customText) {
+    if (unitMode === 'percent') return '100 %';
+    if (unitMode === 'minutes') return '60 min';
+    return customText;
+}
 
 function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWmm, textMode, textOrientation){
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
@@ -278,10 +316,20 @@ function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWm
     t.textContent = denomToLetters[d] || ("1/"+d); 
     
     // Rotation conditionnelle pour les fractions (pas pour l'unité)
-    if (d > 1 && textOrientation !== 'horizontal') {
+    if (d > 1 && textOrientation === 'auto') {
         t.setAttribute("transform", `rotate(90, ${cx}, ${cy})`);
     }
 
+    g.appendChild(t);
+  } else if (textMode === "percentage" || textMode === "minutes") {
+    // Nouveaux modes simples
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", cx); 
+    t.setAttribute("y", cy); 
+    t.setAttribute("font-size", sizePt+"pt");
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","middle");
+    t.textContent = textContent(d, textMode); 
     g.appendChild(t);
   } else { // textMode === "numeric"
     const n = document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -312,7 +360,7 @@ function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWm
   return g;
 }
 
-function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders}){
+function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders, unitMode, customText}){
   const page = document.createElement("div");
   page.className = "page";
 
@@ -336,6 +384,10 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
   const ys = [y1, y3, y2];
   
   const fillColor = (colorMode === 'colored' && denomColors[denom]) ? denomColors[denom] : 'white';
+  
+  // Utiliser le dash (motif pointillé)
+  const sepDash = dash.trim() === '0' || dash.trim() === '' ? '0' : dash;
+
 
   for(const y0 of ys){
     const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
@@ -353,11 +405,7 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
       t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
       t.setAttribute("font-size", labelPt+"pt"); 
       
-      if (textMode === 'letters') {
-          t.textContent = denomToLetters[1] || "1"; 
-      } else {
-          t.textContent = "1"; 
-      }
+      t.textContent = getUnityText(unitMode, customText);
       svg.appendChild(t);
     }else{
       // LIGNES DE SÉPARATION (Bordures intérieures)
@@ -369,7 +417,7 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
             sep.setAttribute("y1", y0); sep.setAttribute("y2", y0 + bandHeight);
             sep.setAttribute("stroke","black"); 
             sep.setAttribute("stroke-width", mm(dotW));
-            sep.setAttribute("stroke-dasharray", dash);
+            sep.setAttribute("stroke-dasharray", sepDash); // Utilisation du motif
             svg.appendChild(sep);
           }
       }
@@ -412,6 +460,8 @@ function generate(){
   const textOrientation = document.getElementById("textOrientation").value; 
   const colorMode = document.getElementById("colorMode").value; 
   const innerBorders = document.getElementById("innerBorders").value; 
+  const unitMode = document.getElementById("unitMode").value;
+  const customText = document.getElementById("customText").value || '1 unité';
 
   const offX = parseFloat(document.getElementById("offX").value)||0;
   const offY = parseFloat(document.getElementById("offY").value)||0;
@@ -422,10 +472,10 @@ function generate(){
 
   const push = (el)=>preview.appendChild(el);
 
-  const draw = (d, u) => drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:u, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders});
+  const draw = (d, u) => drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:u, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders, unitMode, customText});
 
 
-  // Mode NORMAL
+  // Logique de génération par mode
   if(mode==="recto"){
     if(includeUnit){
       const pU = draw(1, true); 
@@ -436,9 +486,15 @@ function generate(){
       push(p);
     }
   }else if(mode==="verso"){
+    // Unité uniquement si elle est dans la liste ou si on veut l'inclure seule
+    if (includeUnit && !denoms.includes(1)) {
+        const pU = draw(1, true);
+        push(pU);
+    }
     for(const d of denoms){
-      const p = draw(d, true); 
-      push(p);
+        if (d === 1) continue;
+        const p = draw(d, true); 
+        push(p);
     }
   }else{ // interleaved
     if(includeUnit){
@@ -446,6 +502,7 @@ function generate(){
       push(pU);
     }
     for(const d of denoms){
+      if (d === 1) continue;
       const pV = draw(d, true); 
       push(pV);
       const pR = draw(d, false); 
@@ -454,9 +511,35 @@ function generate(){
   }
 }
 
-document.getElementById("gen").addEventListener("click", generate);
 document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
-window.addEventListener("load", generate);
+
+// Gérer l'affichage du champ de texte personnalisé
+document.getElementById('unitMode').addEventListener('change', (e) => {
+    document.getElementById('customText').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    generate();
+});
+
+// Gérer tous les changements qui nécessitent une régénération (y compris les champs texte qui ne déclenchent pas 'change' sur 'input')
+document.getElementById('form').addEventListener('change', (e) => {
+    generate();
+});
+
+// Écouter spécifiquement l'entrée sur les champs numériques ou de texte pour la mise à jour en direct (ou presque)
+document.getElementById('form').addEventListener('input', (e) => {
+    const targetId = e.target.id;
+    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customText', 'dash', 'rectoOffX', 'rectoOffY', 'offX', 'offY'].includes(targetId)) {
+        generate();
+    }
+});
+
+
+// Générer au chargement
+window.addEventListener("load", () => {
+    // Rétablir l'état initial des contrôles
+    document.getElementById('customText').style.display = document.getElementById('unitMode').value === 'custom' ? 'block' : 'none';
+    // Lancer la première génération
+    generate();
+});
 </script>
 </body>
 </html>
