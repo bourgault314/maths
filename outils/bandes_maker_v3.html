@@ -30,7 +30,6 @@
   legend{ padding:0 6px; font-weight:600; }
   
   /* CORRECTION FINALE D'ESPACEMENT/ALIGNEMENT (Compact et uniforme) */
-  /* J'ai réintroduit l'alignement vertical correct en utilisant padding/margin plus standard */
   label{ 
       display:block; 
       font-size:13px; 
@@ -82,7 +81,7 @@
             <legend>Dimensions</legend>
             <div class="row">
               <div>
-                <label>Longueur de la bande (mm)</label>
+                <label>Longueur bande (mm)</label>
                 <input type="number" id="bandLen" step="0.1" value="210">
               </div>
               <div>
@@ -121,17 +120,7 @@
           </fieldset>
     
           <fieldset>
-            <legend>Style & fractions</legend>
-            <div class="row">
-              <div>
-                <label>Taille de l'écriture (pt)</label>
-                <input type="number" id="labelPt" step="1" value="12">
-              </div>
-              <div>
-                <label>Pointillés (motif, ex: 3,3)</label>
-                <input type="text" id="dash" value="3,3">
-              </div>
-            </div>
+            <legend>Style des bandes</legend>
             <div class="row">
               <div>
                 <label>Épaisseur contour (mm)</label>
@@ -144,7 +133,7 @@
             </div>
             <div class="row">
                 <div>
-                    <label>Bordures intérieures (lignes verticales)</label>
+                    <label>Bordures intérieures</label>
                     <select id="innerBorders">
                         <option value="visible" selected>Visibles</option>
                         <option value="hidden">Masquées (bandes vierges)</option>
@@ -158,13 +147,27 @@
                     </select>
                 </div>
             </div>
+          </fieldset>
+          
+          <fieldset>
+            <legend>Ajustements fraction</legend>
             <div class="row">
               <div>
-                <label>Espacement haut (numérateur ↔ barre)</label>
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPt" step="1" value="12">
+              </div>
+              <div>
+                <label>Pointillés (motif, ex: 3,3)</label>
+                <input type="text" id="dash" value="3,3">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Espacement numérateur ↔ barre</label>
                 <input type="number" id="gapTop" step="0.01" value="0.40">
               </div>
               <div>
-                <label>Espacement bas (barre ↔ dénominateur)</label>
+                <label>Espacement dénominateur ↔ barre</label>
                 <input type="number" id="gapBottom" step="0.01" value="0.60">
               </div>
             </div>
