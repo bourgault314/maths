@@ -2,18 +2,51 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<title>Bandes — Générateur PRO v3.4 (A4 paysage)</title>
+<title>Générateur PRO — Fractions</title>
 <style>
   :root { --page-w: 297mm; --page-h: 210mm; }
   *{ box-sizing:border-box; }
   body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
+  
+  /* EN-TÊTE ET NOM FINAL (SIMPLIFIÉ) */
   header{ padding:10px 14px; background:#111; color:#fff; font-size:14px; }
-  main{ display:grid; grid-template-columns: 380px 1fr; gap:14px; padding:14px; }
+  
+  main{ display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:14px; }
+  
+  /* STYLE DES CONTRÔLES */
+  .controls { 
+      height: calc(100vh - 28px); 
+      display: flex; 
+      flex-direction: column; 
+  }
+  #settings-scroll-area {
+      flex-grow: 1; 
+      overflow-y: auto; 
+      padding-right: 8px; 
+      padding-top: 10px; 
+  }
+  
   fieldset{ border:1px solid #ddd; border-radius:8px; margin:0 0 10px 0; }
   legend{ padding:0 6px; font-weight:600; }
-  label{ display:block; font-size:13px; margin:8px 0 4px; }
-  input, select{ width:100%; padding:8px; font-size:14px; }
+  
+  /* CORRECTION FINALE D'ESPACEMENT/ALIGNEMENT (Compact et uniforme) */
+  label{ 
+      display:block; 
+      font-size:13px; 
+      margin: 0; 
+      padding-top: 8px; 
+      padding-bottom: 2px; 
+      line-height: 1.2; 
+  }
+
   .row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row > div {
+      display: flex;
+      flex-direction: column; 
+  }
+  
+  input, select{ width:100%; padding:8px; font-size:14px; }
+
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
   button{ padding:9px 10px; font-weight:600; font-size:14px; cursor:pointer; }
   .preview{ background:#f6f7f9; border:1px solid #e2e3e6; border-radius:8px; padding:10px; overflow:auto; height: calc(100vh - 132px); }
@@ -28,117 +61,155 @@
 </style>
 </head>
 <body>
-<header>Générateur PRO v3.4 — Bandes (A4 paysage). Imprime en “Taille réelle / 100 %”.</header>
+<header>GÉNÉRATEUR PRO — FRACTIONS | Imprimer en Recto-Verso bord long</header>
 <main>
   <section class="controls">
     <form id="form">
-      <fieldset>
-        <legend>Dimensions</legend>
-        <div class="row">
-          <div>
-            <label>Longueur horizontale (mm)</label>
-            <input type="number" id="bandLen" step="0.1" value="210">
-          </div>
-          <div>
-            <label>Hauteur d'une bande (mm)</label>
-            <input type="number" id="bandHeight" step="0.1" value="55">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Écart vertical entre bandes (mm)</label>
-            <input type="number" id="gapV" step="0.1" value="7">
-          </div>
-          <div>
-            <label>Recto: décalage vertical global (mm)</label>
-            <input type="number" id="rectoOffY" step="0.1" value="0">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Recto: décalage horizontal global (mm)</label>
-            <input type="number" id="rectoOffX" step="0.1" value="-2">
-          </div>
-          <div>
-            <label>Masquer le texte (garder pointillés)</label>
-            <select id="hideText"><option value="no" selected>non</option><option value="yes">oui</option></select>
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Style & fractions</legend>
-        <div class="row">
-          <div>
-            <label>Taille des nombres (pt)</label>
-            <input type="number" id="labelPt" step="1" value="12">
-          </div>
-          <div>
-            <label>Pointillés (motif, ex: 3,3)</label>
-            <input type="text" id="dash" value="3,3">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Épaisseur contour (mm)</label>
-            <input type="number" id="frameW" step="0.01" value="0.10">
-          </div>
-          <div>
-            <label>Épaisseur pointillés (mm)</label>
-            <input type="number" id="dotW" step="0.01" value="0.10">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Espacement haut (numérateur ↔ barre)</label>
-            <input type="number" id="gapTop" step="0.01" value="0.40">
-          </div>
-          <div>
-            <label>Espacement bas (barre ↔ dénominateur)</label>
-            <input type="number" id="gapBottom" step="0.01" value="0.60">
-          </div>
-        </div>
-        <div class="row">
-          <div>
-            <label>Longueur barre fraction (%)</label>
-            <input type="number" id="barRatio" step="1" value="80">
-          </div>
-          <div>
-            <label>Épaisseur barre fraction (mm)</label>
-            <input type="number" id="barW" step="0.01" value="0.10">
-          </div>
-        </div>
-        <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
-        <input type="text" id="denoms" value="2,3,4,5,6,8,10">
-      </fieldset>
-
-      <fieldset>
-        <legend>Recto / Verso</legend>
-        <div class="row">
-          <div>
-            <label>Mode</label>
-            <select id="mode">
-              <option value="recto" selected>Recto (fractions)</option>
-              <option value="verso">Verso (unités)</option>
-              <option value="interleaved">Intercalé (Unité + Fraction par d)</option>
-            </select>
-          </div>
-          <div>
-            <label>Page 1 = Unité ?</label>
-            <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
-          </div>
-        </div>
-        <!-- AUCUN offset verso -->
-      </fieldset>
-
-      <fieldset>
+    
+      <fieldset id="actions-fieldset">
         <legend>Actions</legend>
         <div class="actions">
           <button type="button" id="gen">Générer</button>
           <button type="button" id="print">Imprimer / Export PDF</button>
         </div>
       </fieldset>
-    </form>
+
+      <div id="settings-scroll-area">
+          
+          <fieldset>
+            <legend>Dimensions</legend>
+            <div class="row">
+              <div>
+                <label>Longueur de la bande (mm)</label>
+                <input type="number" id="bandLen" step="0.1" value="210">
+              </div>
+              <div>
+                <label>Hauteur de la bande (mm)</label>
+                <input type="number" id="bandHeight" step="0.1" value="55">
+              </div>
+            </div>
+            <div>
+              <label>Écart vertical entre les bandes (mm)</label>
+              <input type="number" id="gapV" step="0.1" value="7">
+            </div>
+          </fieldset>
+    
+          <fieldset>
+            <legend>Décalages / Alignement (mm)</legend>
+            <div class="row">
+              <div>
+                <label>Décalage horizontal RECTO</label>
+                <input type="number" id="rectoOffX" step="0.1" value="-2">
+              </div>
+              <div>
+                <label>Décalage vertical RECTO</label>
+                <input type="number" id="rectoOffY" step="0.1" value="0">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Décalage horizontal VERSO</label>
+                <input type="number" id="offX" step="0.1" value="0">
+              </div>
+              <div>
+                <label>Décalage vertical VERSO</label>
+                <input type="number" id="offY" step="0.1" value="0">
+              </div>
+            </div>
+          </fieldset>
+    
+          <fieldset>
+            <legend>Style & fractions</legend>
+            <div class="row">
+              <div>
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPt" step="1" value="12">
+              </div>
+              <div>
+                <label>Pointillés (motif, ex: 3,3)</label>
+                <input type="text" id="dash" value="3,3">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Épaisseur contour (mm)</label>
+                <input type="number" id="frameW" step="0.01" value="0.10">
+              </div>
+              <div>
+                <label>Épaisseur pointillés (mm)</label>
+                <input type="number" id="dotW" step="0.01" value="0.10">
+              </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Bordures intérieures (lignes verticales)</label>
+                    <select id="innerBorders">
+                        <option value="visible" selected>Visibles</option>
+                        <option value="hidden">Masquées (bandes vierges)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Style des fonds</label>
+                    <select id="colorMode">
+                        <option value="white" selected>Uniforme (Blanc)</option>
+                        <option value="colored">Couleurs Pédagogiques</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Espacement haut (numérateur ↔ barre)</label>
+                <input type="number" id="gapTop" step="0.01" value="0.40">
+              </div>
+              <div>
+                <label>Espacement bas (barre ↔ dénominateur)</label>
+                <input type="number" id="gapBottom" step="0.01" value="0.60">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Longueur barre fraction (%)</label>
+                <input type="number" id="barRatio" step="1" value="80">
+              </div>
+              <div>
+                <label>Épaisseur barre fraction (mm)</label>
+                <input type="number" id="barW" step="0.01" value="0.10">
+              </div>
+            </div>
+            <label>Texte des fractions</label>
+            <select id="textMode">
+              <option value="numeric" selected>Écriture fractionnaire (1/2, 1/4)</option>
+              <option value="empty">Vide (pas de texte)</option>
+              <option value="letters">En lettres (Un demi, Un tiers...)</option>
+            </select>
+            <label>Orientation du texte (mode "En lettres")</label>
+            <select id="textOrientation">
+              <option value="auto" selected>Automatique (Vertical)</option>
+              <option value="horizontal">Horizontal (Risque de débordement)</option>
+            </select>
+            <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
+            <input type="text" id="denoms" value="2,3,4,5,6,8,10">
+          </fieldset>
+    
+          <fieldset>
+            <legend>Recto / Verso</legend>
+            <div class="row">
+              <div>
+                <label>Mode</label>
+                <select id="mode">
+                  <option value="recto" selected>Recto (fractions)</option>
+                  <option value="verso">Verso (unités)</option>
+                  <option value="interleaved">Intercalé (Unité + Fraction par d)</option>
+                </select>
+              </div>
+              <div>
+                <label>Page 1 = Unité ?</label>
+                <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
+              </div>
+            </div>
+          </fieldset>
+          
+      </div> </form>
   </section>
 
   <section class="preview" id="preview"></section>
@@ -149,40 +220,94 @@ const W = 297; // mm (A4 paysage)
 const H = 210; // mm
 function mm(v){ return v + "mm"; }
 
-function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWmm){
+// Tableau de conversion des dénominateurs en lettres
+const denomToLetters = {
+    1: "Une unité",
+    2: "Un demi",
+    3: "Un tiers",
+    4: "Un quart",
+    5: "Un cinquième",
+    6: "Un sixième",
+    7: "Un septième", 
+    8: "Un huitième",
+    9: "Un neuvième", 
+    10: "Un dixième",
+    11: "Un onzième", 
+    12: "Un douzième", 
+};
+
+// Couleurs de fond pédagogiques (Alternance Clair/Foncé Agréable)
+const denomColors = {
+    1: '#fff',
+    2: '#ffb3b3', // Clair (Rose)
+    3: '#6699ff', // Foncé (Bleu)
+    4: '#b3ffc6', // Clair (Vert)
+    5: '#ff9966', // Foncé (Orange)
+    6: '#e0b3ff', // Clair (Mauve)
+    7: '#99ccff', // Foncé (Bleu clair/Cyan)
+    8: '#ccff99', // Clair (Vert lime)
+    9: '#ffccff', // Foncé (Magenta)
+    10: '#ffffb3', // Clair (Jaune)
+    11: '#cc99ff', // Foncé (Violet)
+    12: '#99ffff', // Clair (Cyan pâle)
+};
+
+function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWmm, textMode, textOrientation){
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   const sizePx = sizePt * 96/72;
   const gapTop = sizePx * (gapTopRatio ?? 0.40);
   const gapBottom = sizePx * (gapBottomRatio ?? 0.60);
   const halfBar = sizePx * ((barRatio ?? 80) / 200);
 
-  const n = document.createElementNS("http://www.w3.org/2000/svg","text");
-  n.setAttribute("x", cx); n.setAttribute("y", cy - gapTop);
-  n.setAttribute("font-size", sizePt+"pt");
-  n.setAttribute("text-anchor","middle");
-  n.setAttribute("dominant-baseline","middle");
-  n.textContent = "1";
+  if(textMode === "empty"){
+    return g; 
+  }
 
-  const dd = document.createElementNS("http://www.w3.org/2000/svg","text");
-  dd.setAttribute("x", cx); dd.setAttribute("y", cy + gapBottom);
-  dd.setAttribute("font-size", sizePt+"pt");
-  dd.setAttribute("text-anchor","middle");
-  dd.setAttribute("dominant-baseline","middle");
-  dd.textContent = String(d);
+  if(textMode === "letters"){
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", cx); 
+    t.setAttribute("y", cy); 
+    t.setAttribute("font-size", sizePt+"pt");
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","middle");
+    t.textContent = denomToLetters[d] || ("1/"+d); 
+    
+    // Rotation conditionnelle pour les fractions (pas pour l'unité)
+    if (d > 1 && textOrientation !== 'horizontal') {
+        t.setAttribute("transform", `rotate(90, ${cx}, ${cy})`);
+    }
 
-  const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-  line.setAttribute("x1", cx - halfBar);
-  line.setAttribute("x2", cx + halfBar);
-  line.setAttribute("y1", cy);
-  line.setAttribute("y2", cy);
-  line.setAttribute("stroke","black");
-  line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
+    g.appendChild(t);
+  } else { // textMode === "numeric"
+    const n = document.createElementNS("http://www.w3.org/2000/svg","text");
+    n.setAttribute("x", cx); n.setAttribute("y", cy - gapTop);
+    n.setAttribute("font-size", sizePt+"pt");
+    n.setAttribute("text-anchor","middle");
+    n.setAttribute("dominant-baseline","middle");
+    n.textContent = "1";
 
-  g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+    const dd = document.createElementNS("http://www.w3.org/2000/svg","text");
+    dd.setAttribute("x", cx); dd.setAttribute("y", cy + gapBottom);
+    dd.setAttribute("font-size", sizePt+"pt");
+    dd.setAttribute("text-anchor","middle");
+    dd.setAttribute("dominant-baseline","middle");
+    dd.textContent = String(d);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", cx - halfBar);
+    line.setAttribute("x2", cx + halfBar);
+    line.setAttribute("y1", cy);
+    line.setAttribute("y2", cy);
+    line.setAttribute("stroke","black");
+    line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
+
+    g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+  }
+
   return g;
 }
 
-function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffY, rectoOffX, hideText}){
+function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders}){
   const page = document.createElement("div");
   page.className = "page";
 
@@ -192,49 +317,62 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 
   const safeLen = Math.min(Math.max(10, bandLen), W - 2);
-
-  // IMPORTANT : offsets recto n'agissent QUE sur les pages fractions (unity=false)
-  const left = (W - safeLen)/2 + (unity ? 0 : (rectoOffX||0));
+  
+  const baseLeft = (W - safeLen)/2;
+  const left = baseLeft + (unity ? versoOff.x : rectoOffX);
+  
   const totalH = 3*bandHeight + 2*gapV;
-  const top = (H - totalH)/2 + (unity ? 0 : (rectoOffY||0));
-
+  const baseTop = (H - totalH)/2;
+  const top = baseTop + (unity ? versoOff.y : rectoOffY);
+  
   const y2 = top;
   const y3 = y2 + bandHeight + gapV;
   const y1 = y3 + bandHeight + gapV;
   const ys = [y1, y3, y2];
+  
+  const fillColor = (colorMode === 'colored' && denomColors[denom]) ? denomColors[denom] : 'white';
 
   for(const y0 of ys){
     const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
     rect.setAttribute("x", left); rect.setAttribute("y", y0);
     rect.setAttribute("width", safeLen); rect.setAttribute("height", bandHeight);
-    rect.setAttribute("fill","none"); rect.setAttribute("stroke","black");
+    rect.setAttribute("fill", fillColor); 
+    rect.setAttribute("stroke","black");
     rect.setAttribute("stroke-width", mm(frameW));
     svg.appendChild(rect);
 
     if(unity){
-      if(hideText !== "yes"){
-        const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-        t.setAttribute("x", left + safeLen/2); t.setAttribute("y", y0 + bandHeight/2);
-        t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
-        t.setAttribute("font-size", labelPt+"pt"); t.textContent = "1";
-        svg.appendChild(t);
+      // Texte Unité (horizontal, sans rotation)
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", left + safeLen/2); t.setAttribute("y", y0 + bandHeight/2);
+      t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
+      t.setAttribute("font-size", labelPt+"pt"); 
+      
+      if (textMode === 'letters') {
+          t.textContent = denomToLetters[1] || "1"; 
+      } else {
+          t.textContent = "1"; 
       }
+      svg.appendChild(t);
     }else{
-      for(let k=1;k<denom;k++){
-        const x = left + safeLen * k / denom;
-        const sep = document.createElementNS("http://www.w3.org/2000/svg","line");
-        sep.setAttribute("x1", x); sep.setAttribute("x2", x);
-        sep.setAttribute("y1", y0); sep.setAttribute("y2", y0 + bandHeight);
-        sep.setAttribute("stroke","black"); sep.setAttribute("stroke-width", mm(dotW));
-        sep.setAttribute("stroke-dasharray", dash);
-        svg.appendChild(sep);
+      // LIGNES DE SÉPARATION (Bordures intérieures)
+      if (innerBorders === 'visible') {
+          for(let k=1;k<denom;k++){
+            const x = left + safeLen * k / denom;
+            const sep = document.createElementNS("http://www.w3.org/2000/svg","line");
+            sep.setAttribute("x1", x); sep.setAttribute("x2", x);
+            sep.setAttribute("y1", y0); sep.setAttribute("y2", y0 + bandHeight);
+            sep.setAttribute("stroke","black"); 
+            sep.setAttribute("stroke-width", mm(dotW));
+            sep.setAttribute("stroke-dasharray", dash);
+            svg.appendChild(sep);
+          }
       }
-      if(hideText !== "yes"){
-        for(let k=0;k<denom;k++){
-          const cx = left + safeLen*(k+0.5)/denom;
-          const cy = y0 + bandHeight/2;
-          svg.appendChild(fracSVG(cx, cy, labelPt, denom, gapTop, gapBottom, barRatio, barW));
-        }
+      // TEXTE DE LA FRACTION
+      for(let k=0;k<denom;k++){
+        const cx = left + safeLen*(k+0.5)/denom;
+        const cy = y0 + bandHeight/2;
+        svg.appendChild(fracSVG(cx, cy, labelPt, denom, gapTop, gapBottom, barRatio, barW, textMode, textOrientation));
       }
     }
   }
@@ -249,9 +387,9 @@ function generate(){
   const bandLen = parseFloat(document.getElementById("bandLen").value);
   const bandHeight = parseFloat(document.getElementById("bandHeight").value);
   const gapV = parseFloat(document.getElementById("gapV").value);
-  const rectoOffY = parseFloat(document.getElementById("rectoOffY").value)||0;
+  
   const rectoOffX = parseFloat(document.getElementById("rectoOffX").value)||0;
-  const hideText = document.getElementById("hideText").value;
+  const rectoOffY = parseFloat(document.getElementById("rectoOffY").value)||0;
 
   const denoms = parseDenoms(document.getElementById("denoms").value);
   const labelPt = parseFloat(document.getElementById("labelPt").value);
@@ -264,36 +402,48 @@ function generate(){
   const barW = parseFloat(document.getElementById("barW").value);
 
   const mode = document.getElementById("mode").value;
-  const includeUnit = document.getElementById("includeUnit").value === "yes";
+  const includeUnit = document.getElementById("includeUnit").value === "yes"; 
+  const textMode = document.getElementById("textMode").value; 
+  const textOrientation = document.getElementById("textOrientation").value; 
+  const colorMode = document.getElementById("colorMode").value; 
+  const innerBorders = document.getElementById("innerBorders").value; 
+
+  const offX = parseFloat(document.getElementById("offX").value)||0;
+  const offY = parseFloat(document.getElementById("offY").value)||0;
+  const versoOff = {x: offX, y: offY};
 
   const preview = document.getElementById("preview");
   preview.innerHTML = "";
 
   const push = (el)=>preview.appendChild(el);
 
+  const draw = (d, u) => drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:u, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders});
+
+
+  // Mode NORMAL
   if(mode==="recto"){
     if(includeUnit){
-      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, hideText});
+      const pU = draw(1, true); 
       push(pU);
     }
     for(const d of denoms){
-      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, hideText});
+      const p = draw(d, false); 
       push(p);
     }
   }else if(mode==="verso"){
     for(const d of denoms){
-      const p = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, hideText});
+      const p = draw(d, true); 
       push(p);
     }
   }else{ // interleaved
     if(includeUnit){
-      const pU = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:1, unity:true, rectoOffY, rectoOffX, hideText});
+      const pU = draw(1, true); 
       push(pU);
     }
     for(const d of denoms){
-      const pV = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:true, rectoOffY, rectoOffX, hideText});
+      const pV = draw(d, true); 
       push(pV);
-      const pR = drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:false, rectoOffY, rectoOffX, hideText});
+      const pR = draw(d, false); 
       push(pR);
     }
   }
