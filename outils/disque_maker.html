@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Générateur PRO — Disques de Fractions</title>
+<style>
+  :root { --page-w: 297mm; --page-h: 210mm; }
+  *{ box-sizing:border-box; }
+  body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
+  
+  /* EN-TÊTE ET NOM FINAL (SIMPLIFIÉ) */
+  header{ padding:10px 14px; background:#111; color:#fff; font-size:14px; }
+  
+  main{ display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:14px; }
+  
+  /* STYLE DES CONTRÔLES */
+  .controls { 
+      height: calc(100vh - 28px); 
+      display: flex; 
+      flex-direction: column; 
+  }
+  #settings-scroll-area {
+      flex-grow: 1; 
+      overflow-y: auto; 
+      padding-right: 8px; 
+      padding-top: 10px; 
+  }
+  
+  fieldset{ border:1px solid #ddd; border-radius:8px; margin:0 0 10px 0; }
+  legend{ padding:0 6px; font-weight:600; }
+  
+  /* ALIGNEMENT (Taille restaurée à 13px) */
+  label{ 
+      display:block; 
+      font-size:13px; 
+      margin: 0; 
+      padding-top: 8px; 
+      padding-bottom: 2px; 
+      line-height: 1.2; 
+  }
+
+  /* Pour les éléments qui sont côte à côte */
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row > div {
+      display: flex;
+      flex-direction: column; 
+  }
+  
+  input, select{ width:100%; padding:8px; font-size:14px; }
+
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  button{ padding:9px 10px; font-weight:600; font-size:14px; cursor:pointer; }
+  
+  /* FIX UI: La zone d'aperçu prend la hauteur totale (alignée sur les contrôles) */
+  .preview{ 
+    background:#f6f7f9; 
+    border:1px solid #e2e3e6; 
+    border-radius:8px; 
+    padding:10px; 
+    overflow:auto; 
+    height: calc(100vh - 28px); 
+  }
+  
+  .page{ width: var(--page-w); height: var(--page-h); background:white; margin: 0 auto 10px; position: relative; border: 1px dashed #cfd6e3; }
+
+  /* Style spécifique aux disques */
+  .disc-container {
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+  }
+  
+  @media print{
+    header, .controls { display:none !important; }
+    main{ display:block; padding:0; }
+    .preview{ border:none; padding:0; height:auto; }
+    .page{ break-after: page; page-break-after: always; border:none; margin:0; }
+    @page { size: A4 landscape; margin: 0; }
+  }
+</style>
+</head>
+<body>
+<header>GÉNÉRATEUR PRO — DISQUES DE FRACTIONS | Imprimer en Recto-Verso bord long</header>
+<main>
+  <section class="controls">
+    <form id="form">
+    
+      <fieldset id="actions-fieldset">
+        <legend>Actions</legend>
+        <div class="actions">
+          <button type="button" id="print">Imprimer / Export PDF</button>
+        </div>
+      </fieldset>
+
+      <div id="settings-scroll-area">
+          
+          <fieldset>
+            <legend>Disposition / Dimensions (A4 paysage)</legend>
+            <div class="row">
+              <div>
+                <label>Disques par ligne</label>
+                <input type="number" id="N_cols" step="1" min="1" value="4">
+              </div>
+              <div>
+                <label>Disques par colonne</label>
+                <input type="number" id="N_rows" step="1" min="1" value="3">
+              </div>
+            </div>
+            <div>
+              <label>Écart minimum entre les disques (mm)</label>
+              <input type="number" id="discGap" step="0.1" value="5">
+              <p style="font-size: 11px; margin: 5px 0 0;">(Le diamètre est calculé automatiquement pour s'ajuster)</p>
+            </div>
+          </fieldset>
+    
+          <fieldset>
+            <legend>Décalages / Alignement (mm)</legend>
+            <div class="row">
+              <div>
+                <label>Décalage horizontal RECTO</label>
+                <input type="number" id="rectoOffX" step="0.1" value="0">
+              </div>
+              <div>
+                <label>Décalage vertical RECTO</label>
+                <input type="number" id="rectoOffY" step="0.1" value="0">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Décalage horizontal VERSO</label>
+                <input type="number" id="offX" step="0.1" value="0">
+              </div>
+              <div>
+                <label>Décalage vertical VERSO</label>
+                <input type="number" id="offY" step="0.1" value="0">
+              </div>
+            </div>
+          </fieldset>
+    
+          <fieldset>
+            <legend>Style des disques</legend>
+            <div class="row">
+              <div>
+                <label>Épaisseur contour (mm)</label>
+                <input type="number" id="frameW" step="0.01" value="0.10">
+              </div>
+              <div>
+                <label>Épaisseur lignes (mm)</label>
+                <input type="number" id="dotW" step="0.01" value="0.10">
+              </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Lignes de séparation</label>
+                    <select id="innerBorders">
+                        <option value="visible" selected>Visibles</option>
+                        <option value="hidden">Masquées (disques vierges)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Style des fonds</label>
+                    <select id="colorMode">
+                        <option value="white" selected>Uniforme (Blanc)</option>
+                        <option value="colored">Couleurs Pédagogiques</option>
+                    </select>
+                </div>
+            </div>
+          </fieldset>
+          
+          <fieldset>
+            <legend>Ajustements écriture / divisions</legend>
+            <div class="row">
+              <div>
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPt" step="1" value="10">
+              </div>
+              <div>
+                <label>Distance texte/centre (%)</label>
+                <input type="number" id="textDistRatio" step="1" value="60">
+              </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Style des divisions</label>
+                    <select id="dashStyle">
+                        <option value="3,3" selected>Pointillés</option>
+                        <option value="0">Traits pleins</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Taille barre fraction (%)</label>
+                    <input type="number" id="barRatio" step="1" value="70">
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label>Épaisseur de la barre (mm)</label>
+                    <input type="number" id="barW" step="0.01" value="0.15">
+                </div>
+                <div>
+                    <label>Orientation du texte</label>
+                    <select id="textOrientation">
+                        <option value="aligned_rayon">Uniforme (Standard / Pointant Extérieur)</option>
+                        <option value="aligned_rayon_inversed" selected>Uniforme (Inversé / Pointant Centre)</option>
+                        <option value="polygonal">Polygonal (Aligné sur la corde)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <label>Contenu des parts</label>
+            <select id="textMode">
+                <option value="numeric" selected>Écriture fractionnaire (1/d) avec barre</option>
+                <option value="degrees">Angle en degrés (X °)</option>
+                <option value="percentage">Pourcentage (X % ou X.XX %)</option>
+                <option value="minutes">Temps (X min ou X.X min)</option>
+                <option value="letters">En lettres (un demi, un tiers...)</option>
+                <option value="empty">Vide (pas de texte)</option>
+            </select>
+            
+            <label>Unité / Verso (Texte)</label>
+            <select id="unitMode">
+                <option value="custom" selected>Texte personnalisé</option>
+                <option value="degrees">360 degrés</option>
+                <option value="percent">100 %</option>
+                <option value="minutes">60 min</option>
+            </select>
+            <input type="text" id="customText" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px;">
+
+            <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
+            <input type="text" id="denoms" value="2,3,4,5,6,8,10">
+          </fieldset>
+    
+          <fieldset>
+            <legend>Recto / Verso (Génération par page)</legend>
+            <div class="row">
+              <div>
+                <label>Mode de génération</label>
+                <select id="mode">
+                  <option value="recto" selected>Recto (Fractions)</option>
+                  <option value="verso">Verso (Unités/Texte)</option>
+                  <option value="interleaved">Intercalé (Unité (V) puis Fraction (R) par d)</option>
+                </select>
+              </div>
+              <div>
+                <label>Inclure l'unité (d=1) ?</label>
+                <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
+              </div>
+            </div>
+          </fieldset>
+          
+      </div> </form>
+  </section>
+
+  <section class="preview" id="preview"></section>
+</main>
+
+<script>
+const W = 297; // mm (A4 paysage)
+const H = 210; // mm
+function mm(v){ return v + "mm"; }
+const RADIAN = Math.PI / 180;
+
+// Tableau de conversion des dénominateurs en lettres
+const denomToLetters = {
+    1: "Une unité", 
+    2: "un demi", 
+    3: "un tiers", 
+    4: "un quart", 
+    5: "un cinquième",
+    6: "un sixième", 
+    7: "un septième", 
+    8: "un huitième", 
+    9: "un neuvième", 
+    10: "un dixième", 
+    11: "un onzième", 
+    12: "un douzième", 
+};
+
+// Couleurs de fond pédagogiques
+const denomColors = {
+    1: '#fff', 2: '#ffb3b3', 3: '#6699ff', 4: '#b3ffc6', 5: '#ff9966', 
+    6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
+    11: '#cc99ff', 12: '#99ffff',
+};
+
+// Fonction de dessin d'une fraction (Numérateur / Barre / Dénominateur)
+function fracSVG(x, y, d, sizePt, barRatio, barWmm){
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    
+    const sizePx = sizePt * 96/72;
+    const padding = sizePx * 0.15; 
+    const halfBar = sizePx * (barRatio ?? 70) / 200;
+    
+    // 1. Numérateur (1)
+    const n = document.createElementNS("http://www.w3.org/2000/svg","text");
+    n.setAttribute("x", x); n.setAttribute("y", y - padding);
+    n.setAttribute("font-size", sizePt+"pt");
+    n.setAttribute("text-anchor","middle");
+    n.setAttribute("dominant-baseline","baseline");
+    n.textContent = "1";
+
+    // 2. Dénominateur (d)
+    const dd = document.createElementNS("http://www.w3.org/2000/svg","text");
+    dd.setAttribute("x", x); dd.setAttribute("y", y + padding);
+    dd.setAttribute("font-size", sizePt+"pt");
+    dd.setAttribute("text-anchor","middle");
+    dd.setAttribute("dominant-baseline","hanging");
+    dd.textContent = String(d);
+
+    // 3. Barre de fraction
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", x - halfBar);
+    line.setAttribute("x2", x + halfBar);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke","black");
+    line.setAttribute("stroke-width", mm(barWmm ?? 0.15));
+
+    g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+    return g;
+}
+
+// Fonction pour générer le contenu textuel non-fractionnaire
+function textContent(d, textMode){
+    if (textMode === 'percentage') {
+        const val = 1 / d * 100;
+        let valStr = Number(val.toFixed(2));
+        return `${valStr} %`;
+    } else if (textMode === 'minutes') {
+        const val = 1 / d * 60;
+        if (Number.isInteger(val)) {
+             return `${val} min`;
+        }
+        return `${val.toFixed(1)} min`;
+    } else if (textMode === 'degrees') {
+        const val = 360 / d;
+        return `${Number(val.toFixed(1))} °`;
+    } else if (textMode === 'letters') {
+        return denomToLetters[d] || ("1/"+d);
+    }
+    return ''; 
+}
+
+
+// Fonction de dessin de texte dans une part de disque
+function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio, barWmm, textOrientation){
+  const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+  
+  if(textMode === "empty"){
+    return g; 
+  }
+
+  const sectorAngle = 360 / d;
+  const dist = r * (textDistRatio / 100); 
+  
+  let x, y, rotation;
+  
+  // Angle de la bissectrice (rayon central de la part) par rapport à l'axe X positif (en haut = -90)
+  const bisectriceAngle = (k * sectorAngle + sectorAngle / 2) - 90; 
+
+  if (textOrientation === 'polygonal') {
+      // FIX V20: Alignement Polygonal / Sur la Corde 
+      
+      const A_start = (k * sectorAngle - 90); 
+      const A_end = ((k + 1) * sectorAngle - 90);
+
+      // 1. Calcul des coordonnées aux extrémités de la corde à la distance 'dist'
+      const x1 = cx + dist * Math.cos(A_start * RADIAN);
+      const y1 = cy + dist * Math.sin(A_start * RADIAN);
+      const x2 = cx + dist * Math.cos(A_end * RADIAN);
+      const y2 = cy + dist * Math.sin(A_end * RADIAN);
+
+      // 2. Le centre du texte est le milieu de cette corde
+      x = (x1 + x2) / 2;
+      y = (y1 + y2) / 2;
+      
+      // 3. La rotation est la tangente à la corde, donc perpendiculaire à la bissectrice
+      rotation = bisectriceAngle + 90; 
+      
+      
+  } else {
+      // Uniforme (Standard ou Inversé) : position sur la bissectrice (à distance 'dist')
+      x = cx + dist * Math.cos(bisectriceAngle * RADIAN);
+      y = cy + dist * Math.sin(bisectriceAngle * RADIAN);
+
+      if (textOrientation === 'aligned_rayon') {
+          // Uniforme / Pointant Extérieur
+          rotation = textMode === "numeric" ? bisectriceAngle + 90 : bisectriceAngle + 180;
+          
+      } else { // aligned_rayon_inversed (Pointant Centre)
+          // Uniforme / Pointant Centre
+          rotation = textMode === "numeric" ? bisectriceAngle + 270 : bisectriceAngle;
+      }
+  }
+
+  
+  // 4. Génération du contenu (Fraction ou Texte simple)
+  if (textMode === "numeric") {
+    
+    const fractionGroup = fracSVG(x, y, d, sizePt, barRatio, barWmm);
+    
+    // Application de la rotation sur la fraction
+    fractionGroup.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
+    
+    g.appendChild(fractionGroup);
+
+  } else { 
+    // Mode Lettres, Pourcentage, Minutes, Degrés (texte simple)
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x); 
+    t.setAttribute("y", y); 
+    t.setAttribute("font-size", sizePt+"pt");
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","middle");
+    t.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
+    
+    t.textContent = textContent(d, textMode);
+    g.appendChild(t);
+  }
+
+  return g;
+}
+
+// Fonction pour déterminer le texte de l'unité
+function getUnityText(unitMode, customText) {
+    if (unitMode === 'percent') return '100 %';
+    if (unitMode === 'minutes') return '60 min';
+    if (unitMode === 'degrees') return '360 °';
+    return customText;
+}
+
+// Fonction de dessin du disque (unité ou fractionné)
+function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barWmm, textOrientation, unitMode) {
+  const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+  
+  const fillColor = (colorMode === 'colored' && denomColors[d]) ? denomColors[d] : 'white';
+
+  // 1. Cercle de fond (Contour)
+  const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
+  circle.setAttribute("fill", fillColor); 
+  circle.setAttribute("stroke","black");
+  circle.setAttribute("stroke-width", mm(frameW));
+  g.appendChild(circle);
+
+  // 2. Divisions (sauf pour l'unité ou si masquées)
+  if (!unity) {
+    // LIGNES DE SÉPARATION (Bordures intérieures)
+    if (innerBorders === 'visible') {
+        for (let k = 0; k < d; k++) {
+          const angle = k * (360 / d) - 90; 
+          
+          const x2 = cx + r * Math.cos(angle * RADIAN);
+          const y2 = cy + r * Math.sin(angle * RADIAN);
+
+          const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+          line.setAttribute("x1", cx); line.setAttribute("y1", cy);
+          line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+          line.setAttribute("stroke","black");
+          line.setAttribute("stroke-width", mm(dotW));
+          line.setAttribute("stroke-dasharray", dash);
+          g.appendChild(line);
+        }
+    }
+    // TEXTE DE LA FRACTION dans chaque part
+    if (textMode !== 'empty') {
+      for (let k = 0; k < d; k++) {
+        g.appendChild(textInSector(cx, cy, r, d, k, labelPt, textMode, textDistRatio, barRatio, barWmm, textOrientation));
+      }
+    }
+  }
+
+  // 3. Texte Unité (au centre)
+  if (unity) {
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", cx); t.setAttribute("y", cy);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
+    t.setAttribute("font-size", labelPt * 1.5 +"pt"); 
+    t.textContent = getUnityText(unitMode, customText);
+    g.appendChild(t);
+  }
+
+  return g;
+}
+
+function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, ...opts}){
+  const page = document.createElement("div");
+  page.className = "page";
+  page.style.width = mm(W);
+  page.style.height = mm(H);
+
+  const totalSlots = N_cols * N_rows;
+  
+  if (totalSlots === 0 || discs.length === 0) {
+      page.innerHTML = `<div style="text-align:center; padding-top: 10mm; font-size: 14pt; color: #888;">Configuration de disques (Lignes/Colonnes) invalide.</div>`;
+      return page;
+  }
+  
+  // CALCUL du diamètre des disques pour qu'ils rentrent tous
+  const maxDiscDiameterW = (W - (N_cols + 1) * discGap) / N_cols;
+  const maxDiscDiameterH = (H - (N_rows + 1) * discGap) / N_rows;
+  const discDiameter = Math.min(maxDiscDiameterW, maxDiscDiameterH);
+
+  if (discDiameter < 10) {
+     page.innerHTML = `<div style="text-align:center; padding-top: 10mm; font-size: 14pt; color: #888;">Les disques sont trop petits. Réduisez le nombre de lignes/colonnes ou l'écart. (Diamètre calculé: ${discDiameter.toFixed(1)}mm)</div>`;
+     return page;
+  }
+  
+  const radius = discDiameter / 2;
+  const unitSize = discDiameter + discGap;
+
+  // Espace inutilisé à distribuer pour le centrage
+  const totalUsedW = N_cols * unitSize + discGap;
+  const totalUsedH = N_rows * unitSize + discGap;
+  
+  let startX = (W - totalUsedW) / 2;
+  let startY = (H - totalUsedH) / 2;
+  
+  // Appliquer les offsets
+  const currentOffset = discs[0].unity ? versoOff : {x: rectoOffX, y: rectoOffY};
+  startX += currentOffset.x;
+  startY += currentOffset.y;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  svg.setAttribute("width", mm(W)); svg.setAttribute("height", mm(H));
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  discs.forEach((disc, index) => {
+    const i = index % N_cols;
+    const j = Math.floor(index / N_cols);
+    
+    // Centre du disque
+    const cx = startX + i * unitSize + radius + discGap;
+    const cy = startY + j * unitSize + radius + discGap;
+    
+    const discEl = discSVG(radius, cx, cy, disc.denom, disc.unity, opts.labelPt, opts.dash, opts.frameW, opts.dotW, opts.textMode, opts.colorMode, opts.innerBorders, opts.customText, opts.textDistRatio, opts.barRatio, opts.barW, opts.textOrientation, opts.unitMode);
+    svg.appendChild(discEl);
+  });
+  
+  page.appendChild(svg);
+  return page;
+}
+
+function parseDenoms(s){ return s.split(",").map(v=>parseInt(v.trim(),10)).filter(v=>!isNaN(v) && v > 0); }
+
+function generate(){
+  // Récupération des paramètres
+  const N_cols = parseInt(document.getElementById("N_cols").value);
+  const N_rows = parseInt(document.getElementById("N_rows").value);
+  const discGap = parseFloat(document.getElementById("discGap").value);
+  const rectoOffX = parseFloat(document.getElementById("rectoOffX").value)||0;
+  const rectoOffY = parseFloat(document.getElementById("rectoOffY").value)||0;
+  const denoms = parseDenoms(document.getElementById("denoms").value);
+  const labelPt = parseFloat(document.getElementById("labelPt").value);
+  const dashStyle = document.getElementById("dashStyle").value; 
+  const dash = dashStyle;
+  const frameW = parseFloat(document.getElementById("frameW").value);
+  const dotW = parseFloat(document.getElementById("dotW").value);
+  const barRatio = parseFloat(document.getElementById("barRatio").value);
+  const barW = parseFloat(document.getElementById("barW").value);
+  const textDistRatio = parseFloat(document.getElementById("textDistRatio").value);
+  const textOrientation = document.getElementById("textOrientation").value;
+  const mode = document.getElementById("mode").value;
+  const includeUnit = document.getElementById("includeUnit").value === "yes"; 
+  const textMode = document.getElementById("textMode").value; 
+  const unitMode = document.getElementById("unitMode").value;
+  const colorMode = document.getElementById("colorMode").value; 
+  const innerBorders = document.getElementById("innerBorders").value; 
+  const customText = document.getElementById("customText").value || '1 unité';
+
+  const offX = parseFloat(document.getElementById("offX").value)||0;
+  const offY = parseFloat(document.getElementById("offY").value)||0;
+  const versoOff = {x: offX, y: offY};
+
+  const preview = document.getElementById("preview");
+  preview.innerHTML = "";
+  const push = (el)=>preview.appendChild(el);
+  
+  const totalDiscsPerPage = N_cols * N_rows;
+  if (totalDiscsPerPage === 0 || isNaN(N_cols) || isNaN(N_rows)) {
+     preview.innerHTML = `<div style="text-align:center; padding-top: 10mm; font-size: 14pt; color: #888;">Veuillez spécifier un nombre valide de Disques par ligne et par colonne.</div>`;
+     return;
+  }
+
+  const discOptions = { N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barW, textOrientation, unitMode };
+
+  // Logique de génération par page
+  const generatePage = (denom, unity) => {
+    const discs = Array(totalDiscsPerPage).fill(null).map(() => ({denom: denom, unity: unity}));
+    return drawPage(discs, discOptions);
+  };
+  
+  // Page d'unité (d=1)
+  if(includeUnit && (mode === "recto" || mode === "interleaved")){
+    const pU = generatePage(1, true); 
+    push(pU);
+  }
+  
+  for(const d of denoms){
+      if (d === 1) continue; 
+      
+      if (mode === "verso" || mode === "interleaved") {
+          // Verso (unité)
+          const pV = generatePage(d, true); 
+          push(pV);
+      }
+      if (mode === "recto" || mode === "interleaved") {
+          // Recto (fraction)
+          const pR = generatePage(d, false); 
+          push(pR);
+      }
+  }
+
+  // Cas spécial: Si seul le mode VERSO est sélectionné, l'unité doit être générée ici
+  if (mode === "verso" && includeUnit) {
+     const pU = generatePage(1, true); 
+     push(pU);
+  }
+}
+
+document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
+
+// Gérer l'affichage du champ de texte personnalisé
+document.getElementById('unitMode').addEventListener('change', (e) => {
+    document.getElementById('customText').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    generate();
+});
+
+// Gérer tous les changements qui nécessitent une régénération (y compris les champs texte qui ne déclenchent pas 'change' sur 'input')
+document.getElementById('form').addEventListener('change', (e) => {
+    generate();
+});
+
+// Écouter spécifiquement l'entrée sur les champs numériques ou de texte pour la mise à jour en direct (ou presque)
+document.getElementById('form').addEventListener('input', (e) => {
+    const targetId = e.target.id;
+    if (['N_cols', 'N_rows', 'discGap', 'denoms', 'customText'].includes(targetId)) {
+        generate();
+    }
+});
+
+
+// Générer au chargement
+window.addEventListener("load", () => {
+    // Rétablir l'état initial des contrôles
+    document.getElementById('customText').style.display = document.getElementById('unitMode').value === 'custom' ? 'block' : 'none';
+    // Lancer la première génération
+    generate();
+});
+</script>
+</body>
+</html>
