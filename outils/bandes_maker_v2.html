@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<title>Générateur PRO — Fractions</title>
+<title>Générateur PRO — Fractions (Bandes)</title>
 <style>
   :root { --page-w: 297mm; --page-h: 210mm; }
   *{ box-sizing:border-box; }
@@ -141,7 +141,7 @@
       <div id="settings-scroll-area">
           
           <fieldset>
-            <legend>Dimensions</legend>
+            <legend>Style/Dimensions Communs</legend>
             <div class="row">
               <div>
                 <label>Longueur bande (mm)</label>
@@ -155,6 +155,13 @@
             <div>
               <label>Écart vertical entre les bandes (mm)</label>
               <input type="number" id="gapV" step="0.1" value="7">
+            </div>
+            <div>
+                <label>Style des fonds</label>
+                <select id="colorMode">
+                    <option value="white" selected>Uniforme (Blanc)</option>
+                    <option value="colored">Couleurs Pédagogiques</option>
+                </select>
             </div>
           </fieldset>
     
@@ -181,123 +188,248 @@
               </div>
             </div>
           </fieldset>
+
+          <fieldset>
+            <legend>Dénominateurs</legend>
+            <label>Dénominateurs (ex: 1,2,3,4,5,6,8,10)</label>
+            <input type="text" id="denoms" value="1,2,3,4,5,6,8,10">
+            <p style="font-size: 11px; margin: 5px 0 0;">(Le '1' inclut ou exclut la bande unité)</p>
+          </fieldset>
     
           <fieldset>
-            <legend>Style des bandes</legend>
+            <legend>Style RECTO (Première Face)</legend>
+            
             <div class="row">
               <div>
                 <label>Épaisseur contour (mm)</label>
-                <input type="number" id="frameW" step="0.01" value="0.10">
+                <input type="number" id="frameWRecto" step="0.01" value="0.10">
               </div>
               <div>
-                <label>Épaisseur pointillés (mm)</label>
-                <input type="number" id="dotW" step="0.01" value="0.10">
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPtRecto" step="1" value="12">
               </div>
             </div>
+
             <div class="row">
-                <div>
-                    <label>Bordures intérieures</label>
-                    <select id="innerBorders">
-                        <option value="visible" selected>Visibles</option>
-                        <option value="hidden">Masquées (bandes vierges)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Style des fonds</label>
-                    <select id="colorMode">
-                        <option value="white" selected>Uniforme (Blanc)</option>
-                        <option value="colored">Couleurs Pédagogiques</option>
-                    </select>
-                </div>
+              <div>
+                <label>Bordures intérieures</label>
+                <select id="innerBordersRecto">
+                    <option value="visible" selected>Visibles</option>
+                    <option value="hidden">Masquées (bandes vierges)</option>
+                </select>
+              </div>
+              <div>
+                <label>Orientation du texte</label>
+                <select id="textOrientationRecto">
+                  <option value="auto" selected>Automatique (Vertical pour En lettres)</option>
+                  <option value="vertical">Vertical (90°)</option>
+                  <option value="horizontal">Horizontal (0°)</option>
+                </select>
+              </div>
             </div>
             
             <div class="row">
               <div>
-                <label>Taille de l'écriture (pt)</label>
-                <input type="number" id="labelPt" step="1" value="12">
+                <label>Épaisseur pointillés (mm)</label>
+                <input type="number" id="dotWRecto" step="0.01" value="0.10">
               </div>
               <div>
                 <label>Pointillés (motif, ex: 3,3)</label>
-                <input type="text" id="dash" value="3,3">
+                <input type="text" id="dashRecto" value="3,3">
                 <p style="font-size: 11px; margin: 5px 0 0;">(Mettre '0' ou vide pour un trait plein)</p>
               </div>
             </div>
-          </fieldset>
-          
-          <fieldset>
-            <legend>Ajustements fraction</legend>
+            
+            <label style="font-weight: 600; margin-top: 10px;">Style des fractions (d>1, d=1)</label>
             <div class="row">
               <div>
                 <label>Espacement numérateur ↔ barre</label>
-                <input type="number" id="gapTop" step="0.01" value="0.40">
+                <input type="number" id="gapTopRecto" step="0.01" value="-0.42">
               </div>
               <div>
                 <label>Espacement dénominateur ↔ barre</label>
-                <input type="number" id="gapBottom" step="0.01" value="0.60">
+                <input type="number" id="gapBottomRecto" step="0.01" value="0.2">
               </div>
             </div>
             <div class="row">
               <div>
-                <label>Longueur barre (%)</label> <input type="number" id="barRatio" step="1" value="80">
+                <label>Longueur barre (%)</label> 
+                <input type="number" id="barRatioRecto" step="1" value="80">
               </div>
               <div>
-                <label>Épaisseur barre (mm)</label> <input type="number" id="barW" step="0.01" value="0.10">
+                <label>Épaisseur barre (mm)</label> 
+                <input type="number" id="barWRecto" step="0.01" value="0.10">
               </div>
             </div>
             
-            <label>Contenu des parts (d>1)</label>
-            <select id="textMode">
+            <label style="font-weight: 600; margin-top: 10px;">Contenus RECTO</label>
+            <label>Contenu des parts RECTO (d>1)</label>
+            <select id="contentRecto"> 
               <option value="numeric" selected>Écriture fractionnaire (1/2, 1/4)</option>
+              <option value="numeric_unit">Écriture fractionnaire avec unité (1/2 u)</option>
               <option value="decimal">Décimal (0,5, 0,25)</option>
+              <option value="decimal_unit">Décimal avec unité (0,5 u)</option>
               <option value="percentage">Pourcentage (X %)</option>
               <option value="minutes">Temps (X min)</option>
+              <option value="hours_fractional">Temps (1/d h)</option> 
               <option value="letters">En lettres (Un demi, Un tiers...)</option>
               <option value="empty">Vide (pas de texte)</option>
             </select>
             
-            <label>Orientation du texte (Tous les modes)</label>
-            <select id="textOrientation">
-              <option value="auto" selected>Automatique (Vertical pour En lettres, Horizontal sinon)</option>
-              <option value="vertical">Vertical (90°)</option>
-              <option value="horizontal">Horizontal (0°)</option>
-            </select>
-
-            <label>Contenu de la bande UNITÉ (d=1)</label>
-            <select id="unitMode">
-                <option value="custom" selected>Texte personnalisé (utilise champ ci-dessous)</option>
-                <option value="one">1</option>
-                <option value="one-on-one">1/1</option>
+            <label>Contenu de la bande UNITÉ (d=1) - RECTO</label>
+            <select id="unitModeRecto"> 
+                <option value="numeric_one">1 (Unité numérique)</option>
+                <option value="unit" selected>1 unité</option> 
+                <option value="one-on-one">1/1 (Fraction)</option>
                 <option value="percent">100 %</option>
                 <option value="minutes">60 min</option>
+                <option value="hours_unit">1 heure</option> 
+                <option value="degrees_unit">360 degrés</option> 
+                <option value="custom">Texte personnalisé</option>
+                <option value="empty">Vide (pas de texte)</option>
             </select>
-            <input type="text" id="customText" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px;">
-            
-            <div id="unitPartDisplayContainer">
-                <label>Affichage des parts (d>1) avec unité</label>
-                <select id="unitPartDisplay">
-                    <option value="standalone" selected>Unité seule (ex: 1 u | 1/4)</option>
-                    <option value="fractional">Unité fractionnée (ex: 1 u | 1/4 u)</option>
-                </select>
-            </div>
+            <input type="text" id="customTextRecto" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px; display: none;">
 
-            <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
-            <input type="text" id="denoms" value="2,3,4,5,6,8,10">
           </fieldset>
     
           <fieldset>
-            <legend>Recto / Verso</legend>
+            <legend>Style VERSO (Double-Face)</legend>
+            
+            <label>Structure des bandes (d>1)</label>
+            <select id="versoStructureDgt1">
+                <option value="unit_center" selected>Unité au centre (Non divisée)</option>
+                <option value="segmented">Divisée en d parts (Fractionnée)</option>
+            </select>
+
+            <label style="font-weight: 600; margin-top: 10px;">Paramètres de style VERSO</label>
             <div class="row">
               <div>
-                <label>Mode</label>
-                <select id="mode">
-                  <option value="recto">Recto (fractions)</option>
-                  <option value="verso">Verso (unités)</option>
-                  <option value="interleaved">Intercalé (Unité + Fraction par d)</option>
-                  <option value="recto-verso" selected>Recto-Verso consécutif (Fraction x2)</option>
+                <label>Épaisseur contour (mm)</label>
+                <input type="number" id="frameWVerso" step="0.01" value="0.10">
+              </div>
+              <div>
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPtVerso" step="1" value="12">
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Bordures intérieures (Séparations)</label>
+                <select id="innerBordersVerso">
+                    <option value="visible" selected>Visibles</option>
+                    <option value="hidden">Masquées (bandes vierges)</option>
                 </select>
               </div>
               <div>
-                <label>Inclure la bande unité ?</label> <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
+                <label>Orientation du texte</label>
+                <select id="textOrientationVerso">
+                  <option value="auto" selected>Automatique (Vertical pour En lettres)</option>
+                  <option value="vertical">Vertical (90°)</option>
+                  <option value="horizontal">Horizontal (0°)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div>
+                <label>Épaisseur pointillés (mm)</label>
+                <input type="number" id="dotWVerso" step="0.01" value="0.10">
+              </div>
+              <div>
+                <label>Pointillés (motif, ex: 3,3)</label>
+                <input type="text" id="dashVerso" value="3,3">
+                <p style="font-size: 11px; margin: 5px 0 0;">(Mettre '0' ou vide pour un trait plein)</p>
+              </div>
+            </div>
+            
+            <label>Style des fractions (d>1, d=1)</label>
+            <div class="row">
+              <div>
+                <label>Espacement numérateur ↔ barre</label>
+                <input type="number" id="gapTopVerso" step="0.01" value="-0.42">
+              </div>
+              <div>
+                <label>Espacement dénominateur ↔ barre</label>
+                <input type="number" id="gapBottomVerso" step="0.01" value="0.2">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Longueur barre (%)</label> 
+                <input type="number" id="barRatioVerso" step="1" value="80">
+              </div>
+              <div>
+                <label>Épaisseur barre (mm)</label> 
+                <input type="number" id="barWVerso" step="0.01" value="0.10">
+              </div>
+            </div>
+
+            
+            <label style="font-weight: 600; margin-top: 10px;">Contenus VERSO</label>
+            
+            <label>Contenu de la bande UNITÉ (d=1) - VERSO</label>
+            <select id="unitModeVersoD1">
+                <option value="same_as_recto" selected>Identique au Recto</option>
+                <option value="numeric_one">1 (Unité numérique)</option>
+                <option value="unit">1 unité</option>
+                <option value="one-on-one">1/1 (Fraction)</option>
+                <option value="percent">100 %</option>
+                <option value="minutes">60 min</option>
+                <option value="hours_unit">1 heure</option>
+                <option value="degrees_unit">360 degrés</option>
+                <option value="custom">Texte personnalisé</option>
+                <option value="empty">Vide (pas de texte)</option>
+            </select>
+            <input type="text" id="customTextVersoD1" value="1 unité (Verso D=1)" placeholder="Ex: 1 unité (Verso D=1)" style="margin-top: 5px; display: none;">
+
+            
+            <div id="segmentedVersoOptions" style="display: none;">
+                <label>Contenu des parts VERSO (d>1) [Fractionnée]</label>
+                <select id="contentVersoDgt1">
+                    <option value="same_as_recto" selected>Identique au Recto</option>
+                    <option value="numeric">Écriture fractionnaire (1/2, 1/4)</option>
+                    <option value="numeric_unit">Écriture fractionnaire avec unité (1/2 u)</option>
+                    <option value="decimal">Décimal (0,5, 0,25)</option>
+                    <option value="decimal_unit">Décimal avec unité (0,5 u)</option>
+                    <option value="percentage">Pourcentage (X %)</option>
+                    <option value="minutes">Temps (X min)</option>
+                    <option value="hours_fractional">Temps (1/d h)</option>
+                    <option value="letters">En lettres (Un demi, Un tiers...)</option>
+                    <option value="empty">Vide (pas de texte)</option>
+                </select>
+            </div>
+
+            <div id="unitCenterVersoOptions">
+                <label>Contenu d'unité VERSO (d>1 & Non divisé)</label>
+                <select id="unitModeVersoDgt1">
+                    <option value="unit" selected>1 unité</option> <option value="numeric_one">1 (Unité numérique)</option>
+                    <option value="one-on-one">1/1 (Fraction)</option>
+                    <option value="percent">100 %</option>
+                    <option value="minutes">60 min</option>
+                    <option value="hours_unit">1 heure</option>
+                    <option value="degrees_unit">360 degrés</option>
+                    <option value="custom">Texte personnalisé</option>
+                    <option value="empty">Vide (pas de texte)</option>
+                </select>
+                <input type="text" id="customTextVersoDgt1" value="1 unité (Verso D>1)" placeholder="Ex: 1 unité (Verso D>1)" style="margin-top: 5px; display: none;">
+            </div>
+          </fieldset>
+          
+          <fieldset>
+            <legend>Mode d'impression (Séquence)</legend>
+            <div class="row">
+              <div>
+                <label>Séquence de bandes</label>
+                <select id="mode">
+                  <option value="recto_only">Recto Seul (Fractions)</option>
+                  <option value="verso_only">Verso Seul (Unités/Autres)</option>
+                  <option value="recto_verso_alternating" selected>Recto / Verso Alterné (R/V pour chaque d)</option> 
+                </select>
+              </div>
+              <div style="visibility: hidden;"> 
+                <label>&nbsp;</label>
+                <select disabled><option></option></select>
               </div>
             </div>
           </fieldset>
@@ -314,18 +446,9 @@ const H = 210; // mm
 function mm(v){ return v + "mm"; }
 
 const denomToLetters = {
-    1: "Une unité",
-    2: "Un demi",
-    3: "Un tiers",
-    4: "Un quart",
-    5: "Un cinquième",
-    6: "Un sixième",
-    7: "Un septième", 
-    8: "Un huitième",
-    9: "Un neuvième", 
-    10: "Un dixième",
-    11: "Un onzième", 
-    12: "Un douzième", 
+    1: "Une unité", 2: "Un demi", 3: "Un tiers", 4: "Un quart", 5: "Un cinquième", 
+    6: "Un sixième", 7: "Un septième", 8: "Un huitième", 9: "Un neuvième", 
+    10: "Un dixième", 11: "Un onzième", 12: "Un douzième", 
 };
 
 const denomColors = {
@@ -335,187 +458,228 @@ const denomColors = {
 };
 
 /**
- * Extrait le suffixe d'unité du texte personnalisé (ex: "1 heure" -> "h")
+ * Détermine le symbole d'unité à utiliser pour les segments d>1
+ * en se basant UNIQUEMENT sur le contentMode des segments.
  */
-function getUnitySuffix(customText) {
-    // Supprime "1" ou "1 " ou "1" en début de chaîne
-    const suffix = customText.replace(/^1\s*/i, '').trim();
-    if (suffix.length > 2 && suffix.toLowerCase().includes('unité')) return 'u';
-    // Utiliser le suffixe tel quel (h, min, etc.)
-    return suffix || 'u'; 
+function getUnitSymbolFromContentMode(contentMode) {
+    if (contentMode === 'numeric_unit' || contentMode === 'decimal_unit') return 'u';
+    if (contentMode === 'hours_fractional') return 'h';
+    return ''; 
 }
 
-
 /**
- * Récupère le texte de la part fractionnaire (d>1) pour les modes non-numeric
+ * Récupère le texte de la part fractionnaire (d>1) pour les modes non-fractionnaires.
  */
-function getTextContent(d, textMode, unitPartDisplay, customText){
+function getTextContent(d, contentMode, segmentUnitSymbol){
     const val = 1 / d;
     let partText = '';
-
-    if (textMode === 'percentage') {
+    
+    if (contentMode === 'percentage') {
         let valStr = Number((val * 100).toFixed(2));
-        partText = `${valStr} %`;
-    } else if (textMode === 'minutes') {
+        partText = `${valStr.toString().replace('.', ',')} %`; 
+    } else if (contentMode === 'minutes') {
         const minVal = val * 60;
-        if (Number.isInteger(minVal)) {
-             partText = `${minVal} min`;
-        } else {
-            partText = `${minVal.toFixed(1)} min`;
+        if (Number.isInteger(minVal)) { partText = `${minVal} min`; } 
+        else { partText = `${minVal.toFixed(1)} min`; }
+    } else if (contentMode === 'decimal' || contentMode === 'decimal_unit') { 
+        const formatter = new Intl.NumberFormat('fr-FR', { 
+            minimumFractionDigits: 1, 
+            maximumFractionDigits: 3 
+        });
+        partText = formatter.format(val).replace(/(\.0+)?$/, '');
+        
+        // Applique le suffixe d'unité uniquement pour decimal_unit
+        if (contentMode === 'decimal_unit' && segmentUnitSymbol !== '') { 
+            return `${partText} ${segmentUnitSymbol}`;
         }
-    } else if (textMode === 'decimal') {
-        // Remplacement du point par la virgule pour le format français
-        partText = val.toFixed(3).replace(/\.?0+$/, '').replace('.', ','); 
-    } else if (textMode === 'numeric') {
-        return ''; 
-    } else { 
+        return partText;
+        
+    } else if (contentMode === 'letters') {
+         return denomToLetters[d] || ("1/"+d);
+    } else {
         return '';
-    }
-
-    // Ajout de l'unité fractionnée si mode décimal et option activée
-    const isDecimalFractional = (textMode === 'decimal' && unitPartDisplay === 'fractional');
-
-    if (isDecimalFractional) {
-        const unitySuffix = getUnitySuffix(customText); 
-        return `${partText} ${unitySuffix}`;
-    }
+    } 
 
     return partText;
 }
 
 /**
- * Récupère le texte de la bande UNITE (d=1)
+ * Récupère le texte de la bande UNITE.
+ * * @param {string} currentUnitMode Mode d'unité sélectionné (ex: 'unit', 'custom')
+ * @param {string} currentCustomText Texte personnalisé pour ce mode.
+ * @param {string} rectoUnitMode Mode d'unité du recto D=1 (pour l'option 'same_as_recto' de D=1 Verso).
+ * @param {string} rectoCustomText Texte personnalisé du recto D=1 (pour l'option 'same_as_recto' de D=1 Verso).
+ * @returns {string} Le texte final à afficher.
  */
-function getUnityText(unitMode, customText) {
-    if (unitMode === 'one') return '1'; 
-    if (unitMode === 'one-on-one') return 'fraction'; // Signal pour utiliser fracSVG (1/1)
-    if (unitMode === 'percent') return '100 %';
-    if (unitMode === 'minutes') return '60 min';
-    return customText; // 'custom' mode
+function getUnityText(currentUnitMode, currentCustomText, rectoUnitMode, rectoCustomText) {
+    let finalMode = currentUnitMode;
+    let finalCustomText = currentCustomText;
+    
+    // Gérer l'option 'Identique au Recto'. Cette option n'existe que pour D=1 Verso.
+    if (currentUnitMode === 'same_as_recto') {
+        finalMode = rectoUnitMode;
+        finalCustomText = rectoCustomText;
+    }
+
+    if (finalMode === 'numeric_one') return '1';
+    if (finalMode === 'unit') return '1 unité'; 
+    if (finalMode === 'one-on-one') return 'fraction'; // Signal pour utiliser fracSVG (1/1)
+    if (finalMode === 'percent') return '100 %';
+    if (finalMode === 'minutes') return '60 min';
+    if (finalMode === 'hours_unit') return '1 heure'; 
+    if (finalMode === 'degrees_unit') return '360 °';
+    if (finalMode === 'empty') return ''; 
+    return finalCustomText; // 'custom' mode
 }
 
 /**
  * Détermine la rotation à appliquer au texte.
  */
-function getRotation(textMode, textOrientation) {
+function getRotation(contentMode, textOrientation) {
     let rotation = 0;
-    
-    if (textOrientation === 'horizontal') {
-        rotation = 0;
-    } else if (textOrientation === 'vertical') {
-        rotation = 90;
-    } else { // auto
-        if (textMode === 'letters') {
-            rotation = 90; 
-        } else {
-            rotation = 0; 
-        }
+    if (textOrientation === 'horizontal') { rotation = 0; } 
+    else if (textOrientation === 'vertical') { rotation = 90; } 
+    else { // auto
+        if (contentMode === 'letters') { rotation = 90; } 
+        else { rotation = 0; }
     }
-    
     return rotation;
 }
 
 /**
  * Génère le groupe SVG pour une part de fraction (y compris la barre horizontale)
+ * Le paramètre isUnitD1 indique si c'est la bande 1/1 (D=1) ou un segment D>1.
  */
-function fracSVG(cx, cy, sizePt, d, gapTopRatio, gapBottomRatio, barRatio, barWmm, textMode, textOrientation, unitPartDisplay, customText, isUnitD1 = false){
-  const g = document.createElementNS("http://www.w3.org/2000/svg","g");
-  
-  if(textMode === "empty" && !isUnitD1){
-    return g; 
-  }
-  
-  const sizePx = sizePt * 96/72;
-  const gapTop = sizePx * (gapTopRatio ?? 0.40);
-  const gapBottom = sizePx * (gapBottomRatio ?? 0.60);
-  const barRatioFloat = (barRatio ?? 80);
-  const halfBar = sizePx * (barRatioFloat / 200);
-
-  const rotation = getRotation(textMode, textOrientation);
-  const rotationTransform = rotation !== 0 ? `rotate(${rotation}, ${cx}, ${cy})` : '';
-
-  // CAS 1: Mode Fractionnaire CLASSIQUE (Barre horizontale) ou 1/1
-  const isClassicFraction = (textMode === 'numeric');
-  
-  if(isClassicFraction || isUnitD1){ 
+function fracSVG(cx, cy, sizePt, d, gapTop, gapBottom, barRatio, barWmm, contentMode, textOrientation, segmentUnitSymbol, isUnitD1 = false){
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     
-    const num = isUnitD1 ? "1" : "1";
-    const denom = isUnitD1 ? "1" : String(d);
+    if(contentMode === "empty" && !isUnitD1){
+        return g;
+    } 
+
+    const isFractionalContent = contentMode === 'numeric' || contentMode === 'numeric_unit' || contentMode === 'hours_fractional' || (isUnitD1 && contentMode === 'one-on-one');
     
-    // Numérateur (toujours centré sur cx)
-    const n = document.createElementNS("http://www.w3.org/2000/svg","text");
-    n.setAttribute("x", cx); n.setAttribute("y", cy - gapTop);
-    n.setAttribute("font-size", sizePt+"pt");
-    n.setAttribute("text-anchor","middle");
-    n.setAttribute("dominant-baseline","middle");
-    n.textContent = num;
+    const pxPerMM = 96/25.4;
+    const gapTopPx = gapTop * pxPerMM; 
+    const gapBottomPx = gapBottom * pxPerMM; 
+
+    const sizePx = sizePt * 96/72;
+    const barRatioFloat = (barRatio ?? 80);
+    const halfBar = sizePx * (barRatioFloat / 200);
     
-    // Dénominateur (toujours centré sur cx)
-    const dd = document.createElementNS("http://www.w3.org/2000/svg","text");
-    dd.setAttribute("x", cx); 
-    dd.setAttribute("y", cy + gapBottom);
-    dd.setAttribute("font-size", sizePt+"pt");
-    dd.setAttribute("text-anchor", "middle"); // Centré
-    dd.setAttribute("dominant-baseline","middle");
-    dd.textContent = denom;
+    const rotation = getRotation(contentMode, textOrientation);
+    const rotationTransform = rotation !== 0 ? `rotate(${rotation}, ${cx}, ${cy})` : '';
 
-    // Barre de fraction
-    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1", cx - halfBar);
-    line.setAttribute("x2", cx + halfBar);
-    line.setAttribute("y1", cy);
-    line.setAttribute("y2", cy);
-    line.setAttribute("stroke","black");
-    line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
-
-    g.appendChild(n); 
-    g.appendChild(dd); 
-    g.appendChild(line);
-
-    // L'unité doit être alignée sur la barre de fraction (cy) et positionnée à droite.
-    if(textMode === 'numeric' && unitPartDisplay === 'fractional' && !isUnitD1){
-        const unitySuffix = getUnitySuffix(customText); 
+    // CAS 1: Mode Fractionnaire (1/d, 1/d u, 1/d h, 1/1)
+    if(isFractionalContent){
         
-        // Calculer l'offset à droite du num/denom centrés.
-        const barWidth = sizePx * (barRatioFloat / 100);
-        const startX = cx + barWidth/2 + (sizePt * 0.2); // 0.2 pt d'espace
+        const num = isUnitD1 ? "1" : "1";
+        const denomStr = isUnitD1 ? "1" : String(d);
         
-        // Ajout du suffixe d'unité
-        const uText = document.createElementNS("http://www.w3.org/2000/svg","text");
-        uText.setAttribute("x", startX); 
-        uText.setAttribute("y", cy); // Alignement vertical sur la barre de fraction
-        uText.setAttribute("font-size", sizePt+"pt");
-        uText.setAttribute("text-anchor","start"); 
-        uText.setAttribute("dominant-baseline","middle"); // Important pour l'alignement sur cy
-        uText.textContent = unitySuffix;
-        g.appendChild(uText);
+        // Numérateur
+        const n = document.createElementNS("http://www.w3.org/2000/svg","text");
+        n.setAttribute("x", cx); n.setAttribute("y", cy + gapTopPx); 
+        n.setAttribute("font-size", sizePt+"pt");
+        n.setAttribute("text-anchor","middle");
+        n.setAttribute("dominant-baseline","baseline");
+        n.setAttribute("transform", rotationTransform); 
+        n.textContent = num;
+
+        // Dénominateur
+        const dd = document.createElementNS("http://www.w3.org/2000/svg","text");
+        dd.setAttribute("x", cx); dd.setAttribute("y", cy - gapBottomPx); 
+        dd.setAttribute("font-size", sizePt+"pt");
+        dd.setAttribute("text-anchor","middle");
+        dd.setAttribute("dominant-baseline","hanging");
+        dd.setAttribute("transform", rotationTransform); 
+        dd.textContent = denomStr;
+        
+        // Barre de fraction
+        const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+        line.setAttribute("x1", cx - halfBar); line.setAttribute("x2", cx + halfBar);
+        line.setAttribute("y1", cy); line.setAttribute("y2", cy);
+        line.setAttribute("stroke","black");
+        line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
+        line.setAttribute("transform", rotationTransform); 
+
+        g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+
+        // Ajout de l'unité (pour hours_fractional ou numeric_unit)
+        const isHoursFractional = contentMode === 'hours_fractional';
+        const isNumericUnit = contentMode === 'numeric_unit' && !isUnitD1;
+        
+        if(isHoursFractional || isNumericUnit){
+            const unitText = document.createElementNS("http://www.w3.org/2000/svg","text");
+            // Le suffixe doit être 'h' ou 'u'
+            const unitSuffix = isHoursFractional ? 'h' : segmentUnitSymbol; 
+            
+            const startX = cx + halfBar + sizePt * 0.05; 
+            
+            unitText.setAttribute("x", startX); unitText.setAttribute("y", cy);
+            unitText.setAttribute("font-size", sizePt+"pt");
+            unitText.setAttribute("text-anchor","start");
+            unitText.setAttribute("dominant-baseline","middle");
+            unitText.setAttribute("transform", rotationTransform); 
+            unitText.textContent = unitSuffix; 
+            g.appendChild(unitText);
+        }
+
+        return g;
     }
     
-    if(rotationTransform) g.setAttribute("transform", rotationTransform);
+    // CAS 2: Mode Texte Simple (Decimal, Pourcentage, Temps-Minutes, En lettres)
+    
+    const text = getTextContent(d, contentMode, segmentUnitSymbol); 
+    
+    if (text) {
+        const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+        t.setAttribute("x", cx); t.setAttribute("y", cy);
+        t.setAttribute("font-size", sizePt+"pt");
+        t.setAttribute("text-anchor","middle");
+        t.setAttribute("dominant-baseline","middle");
+        t.setAttribute("transform", rotationTransform); 
+        t.textContent = text;
+        g.appendChild(t);
+    }
+    
+    return g;
+}
 
-  } else { 
-    // CAS 2: Modes Texte Simple (letters, decimal, percentage, minutes, etc.)
+/**
+ * Fonction qui génère le contenu de la bande UNITE (D=1 ou Verso D>1 en mode "Unité au centre").
+ */
+function unitSVG(cx, cy, sizePt, unitMode, customText, barWmm, gapTop, gapBottom, rectoUnitMode, rectoCustomText, textOrientation){ 
+    const text = getUnityText(unitMode, customText, rectoUnitMode, rectoCustomText);
+    
+    // Cas spécial: 1/1 (fraction)
+    if(text === 'fraction'){
+        // 'numeric' est le contentMode de fracSVG qui gère l'affichage fractionnaire
+        return fracSVG(cx, cy, sizePt, 1, gapTop, gapBottom, 80, barWmm, 'numeric', textOrientation, '', true); 
+    }
+    
+    // Cas général: Texte simple
+    if (!text) {
+        return document.createElementNS("http://www.w3.org/2000/svg","g"); 
+    }
+
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-    t.setAttribute("x", cx); 
-    t.setAttribute("y", cy); 
+    
+    const rotation = getRotation('numeric', textOrientation); 
+    const rotationTransform = rotation !== 0 ? `rotate(${rotation}, ${cx}, ${cy})` : '';
+
+    t.setAttribute("x", cx); t.setAttribute("y", cy);
     t.setAttribute("font-size", sizePt+"pt");
     t.setAttribute("text-anchor","middle");
     t.setAttribute("dominant-baseline","middle");
-    
-    if (textMode === "letters") {
-        t.textContent = denomToLetters[d] || ("1/"+d);
-    } else {
-        t.textContent = getTextContent(d, textMode, unitPartDisplay, customText);
-    }
-    
-    if(rotationTransform) t.setAttribute("transform", rotationTransform);
+    t.setAttribute("transform", rotationTransform); 
+    t.textContent = text;
     g.appendChild(t);
-  }
-
-  return g;
+    return g;
 }
 
-function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom, unity, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders, unitMode, customText, unitPartDisplay}){
+
+function drawPage({bandLen, bandHeight, gapV, denom, isVerso, contentMode, colorMode, rectoStyles, versoStyles, rectoUnitInfo, versoUnitInfo}){
   const page = document.createElement("div");
   page.className = "page";
 
@@ -526,74 +690,98 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
 
   const safeLen = Math.min(Math.max(10, bandLen), W - 2);
   
-  const bandOffset = unity ? versoOff : {x: rectoOffX, y: rectoOffY};
+  // LOGIQUE DE SÉLECTION DU STYLE R/V
+  const styles = isVerso ? versoStyles : rectoStyles;
+  const unitInfo = isVerso ? versoUnitInfo : rectoUnitInfo; // unitInfo contient D=1 et D>1 (pour Verso unit_center)
+  const offset = isVerso ? {x: styles.offX, y: styles.offY} : {x: styles.rectoOffX, y: styles.rectoOffY};
   
   // LOGIQUE DE CENTRAGE DU CONTENU DANS LA PAGE A4 (MM)
   const baseLeft = (W - safeLen)/2;
-  const left = baseLeft + bandOffset.x;
+  const left = baseLeft + offset.x;
   
   const totalH = 3*bandHeight + 2*gapV;
   const baseTop = (H - totalH)/2;
-  const top = baseTop + bandOffset.y; 
+  const top = baseTop + offset.y; 
   
   const y2 = top;
   const y3 = y2 + bandHeight + gapV;
   const y1 = y3 + bandHeight + gapV;
-  const ys = [y1, y3, y2];
+  const ys = [y1, y3, y2]; 
   
+  // COULEUR (basée sur le paramètre commun colorMode)
   const fillColor = (colorMode === 'colored' && denomColors[denom]) ? denomColors[denom] : 'white';
   
-  const sepDash = dash.trim() === '0' || dash.trim() === '' ? '0' : dash;
+  const sepDash = styles.dash.trim() === '0' || styles.dash.trim() === '' ? '0' : styles.dash;
 
+  // DÉTERMINATION DU SYMBOLE D'UNITÉ POUR LES SEGMENTS D>1 (BASÉ SUR LE contentMode D>1, INDÉPENDANT DU D=1)
+  const segmentUnitSymbol = getUnitSymbolFromContentMode(contentMode);
 
   for(const y0 of ys){
+    // 1. DESSIN DE LA BANDE (Contour et Fond)
     const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
     rect.setAttribute("x", left); rect.setAttribute("y", y0);
     rect.setAttribute("width", safeLen); rect.setAttribute("height", bandHeight);
     rect.setAttribute("fill", fillColor); 
     rect.setAttribute("stroke","black");
-    rect.setAttribute("stroke-width", mm(frameW));
+    rect.setAttribute("stroke-width", mm(styles.frameW));
     svg.appendChild(rect);
 
-    if(unity){
-      const unityText = getUnityText(unitMode, customText);
-      
-      if(unityText === 'fraction'){
-          // Si unité est 1/1, utiliser fracSVG en mode d=1
-          const cx = left + safeLen/2;
-          const cy = y0 + bandHeight/2;
-          svg.appendChild(fracSVG(cx, cy, labelPt, 1, gapTop, gapBottom, barRatio, barW, 'numeric', textOrientation, unitPartDisplay, customText, true));
+    // D=1 (bande blanche) est TOUJOURS rendue comme une unité, que ce soit Recto ou Verso.
+    // D>1 (bande colorée) est rendue comme une unité SI c'est le Verso et que la structure est "unit_center".
+    const isD1 = denom === 1;
+    const renderAsUnitMode = isD1 || (isVerso && versoStyles.versoStructureDgt1 === 'unit_center');
 
+    if(renderAsUnitMode){
+      // 2. CONTENU: Bande unité (d=1) ou Verso non divisé (d>1)
+      const cx = left + safeLen/2;
+      const cy = y0 + bandHeight/2;
+      
+      let unitMode, customText;
+      
+      if(isD1) {
+          // Utilise les infos UNITÉ D=1
+          unitMode = isVerso ? unitInfo.unitModeD1 : rectoUnitInfo.unitMode;
+          customText = isVerso ? unitInfo.customTextD1 : rectoUnitInfo.customText;
       } else {
-          // Si unité est personnalisée, simple, ou en pourcentage/minutes
-          const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-          t.setAttribute("x", left + safeLen/2); t.setAttribute("y", y0 + bandHeight/2);
-          t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","middle");
-          t.setAttribute("font-size", labelPt+"pt"); 
-          t.textContent = unityText;
-          svg.appendChild(t);
+          // Utilise les infos UNITÉ D>1 (pour Verso uniquement)
+          unitMode = unitInfo.unitModeDgt1;
+          customText = unitInfo.customTextDgt1;
       }
+
+      // unitSVG est appelé. On passe toujours les infos Recto D=1 pour que l'option 
+      // 'same_as_recto' fonctionne correctement pour D=1 Verso (et D=1 Verso seulement).
+      svg.appendChild(unitSVG(
+        cx, cy, styles.labelPt, 
+        unitMode, customText, 
+        styles.barW, styles.gapTop, styles.gapBottom, 
+        rectoUnitInfo.unitMode, rectoUnitInfo.customText, 
+        styles.textOrientation
+      ));
       
     }else{
-      // Bandes divisées (Recto)
-      if (innerBorders === 'visible') {
+      // 3. CONTENU: Bandes divisées (Recto d>1 OU Verso d>1 segmented)
+      
+      // Affichage conditionnel des lignes de séparation (Divisions)
+      if (styles.innerBorders === 'visible') {
           for(let k=1;k<denom;k++){
             const x = left + safeLen * k / denom;
             const sep = document.createElementNS("http://www.w3.org/2000/svg","line");
             sep.setAttribute("x1", x); sep.setAttribute("x2", x);
             sep.setAttribute("y1", y0); sep.setAttribute("y2", y0 + bandHeight);
             sep.setAttribute("stroke","black"); 
-            sep.setAttribute("stroke-width", mm(dotW));
+            sep.setAttribute("stroke-width", mm(styles.dotW));
             sep.setAttribute("stroke-dasharray", sepDash); 
             svg.appendChild(sep);
           }
       }
-      
+
+      // Dessin des parts (texte)
       for(let k=0;k<denom;k++){
         const cx = left + safeLen*(k+0.5)/denom;
         const cy = y0 + bandHeight/2;
-        // isUnitD1=false ici car ce n'est pas la bande unité
-        svg.appendChild(fracSVG(cx, cy, labelPt, denom, gapTop, gapBottom, barRatio, barW, textMode, textOrientation, unitPartDisplay, customText, false));
+        
+        // fracSVG utilise le contentMode et le segmentUnitSymbol dérivé du contentMode D>1
+        svg.appendChild(fracSVG(cx, cy, styles.labelPt, denom, styles.gapTop, styles.gapBottom, styles.barRatio, styles.barW, contentMode, styles.textOrientation, segmentUnitSymbol, false));
       }
     }
   }
@@ -602,126 +790,182 @@ function drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTo
   return page;
 }
 
-function parseDenoms(s){ return s.split(",").map(v=>parseInt(v.trim(),10)).filter(v=>!isNaN(v)); }
+/**
+ * Lit la liste des dénominateurs et détermine s'il faut inclure la bande unité (1).
+ */
+function parseDenoms(s){ 
+    const allNumbers = s.split(",").map(v=>parseInt(v.trim(),10)).filter(v=>!isNaN(v) && v > 0).sort((a, b) => a - b);
+    const denomsList = allNumbers.filter(d => d > 1); 
+    const includeUnit = allNumbers.includes(1); 
+    return { denomsList, includeUnit };
+}
 
 function generate(){
-  const bandLen = parseFloat(document.getElementById("bandLen").value);
-  const bandHeight = parseFloat(document.getElementById("bandHeight").value);
-  const gapV = parseFloat(document.getElementById("gapV").value);
+  const form = document.getElementById('form');
   
-  const rectoOffX = parseFloat(document.getElementById("rectoOffX").value)||0;
-  const rectoOffY = parseFloat(document.getElementById("rectoOffY").value)||0;
-
-  let denoms = parseDenoms(document.getElementById("denoms").value).filter(d => d > 1).sort((a, b) => a - b);
+  // Paramètres Communs
+  const bandLen = parseFloat(form.bandLen.value);
+  const bandHeight = parseFloat(form.bandHeight.value);
+  const gapV = parseFloat(form.gapV.value);
+  const colorMode = form.colorMode.value; 
+  const { denomsList: denoms, includeUnit } = parseDenoms(form.denoms.value);
   
-  const labelPt = parseFloat(document.getElementById("labelPt").value);
-  const dash = document.getElementById("dash").value;
+  // --- PARAMÈTRES RECTO ---
+  const rectoStyles = {
+      frameW: parseFloat(form.frameWRecto.value),
+      labelPt: parseFloat(form.labelPtRecto.value),
+      innerBorders: form.innerBordersRecto.value,
+      dotW: parseFloat(form.dotWRecto.value),
+      dash: form.dashRecto.value,
+      gapTop: parseFloat(form.gapTopRecto.value),
+      gapBottom: parseFloat(form.gapBottomRecto.value),
+      barRatio: parseFloat(form.barRatioRecto.value),
+      barW: parseFloat(form.barWRecto.value),
+      textOrientation: form.textOrientationRecto.value,
+      rectoOffX: parseFloat(form.rectoOffX.value)||0,
+      rectoOffY: parseFloat(form.rectoOffY.value)||0,
+  };
+  const contentRecto = form.contentRecto.value;
+  const rectoUnitInfo = {
+      unitMode: form.unitModeRecto.value,
+      customText: form.customTextRecto.value || '1 unité',
+  };
+
+  // --- PARAMÈTRES VERSO ---
+  const versoStyles = {
+      frameW: parseFloat(form.frameWVerso.value),
+      labelPt: parseFloat(form.labelPtVerso.value),
+      innerBorders: form.innerBordersVerso.value,
+      dotW: parseFloat(form.dotWVerso.value),
+      dash: form.dashVerso.value,
+      gapTop: parseFloat(form.gapTopVerso.value),
+      gapBottom: parseFloat(form.gapBottomVerso.value),
+      barRatio: parseFloat(form.barRatioVerso.value),
+      barW: parseFloat(form.barWVerso.value),
+      textOrientation: form.textOrientationVerso.value,
+      offX: parseFloat(form.offX.value)||0,
+      offY: parseFloat(form.offY.value)||0,
+      versoStructureDgt1: form.versoStructureDgt1.value,
+  };
   
-  const frameW = parseFloat(document.getElementById("frameW").value);
-  const dotW = parseFloat(document.getElementById("dotW").value);
-  const gapTop = parseFloat(document.getElementById("gapTop").value);
-  const gapBottom = parseFloat(document.getElementById("gapBottom").value);
-  const barRatio = parseFloat(document.getElementById("barRatio").value);
-  const barW = parseFloat(document.getElementById("barW").value);
+  const contentVersoSelected = form.contentVersoDgt1.value;
+  const contentVersoDgt1 = contentVersoSelected === 'same_as_recto' ? contentRecto : contentVersoSelected;
 
-  const mode = document.getElementById("mode").value;
-  const includeUnit = document.getElementById("includeUnit").value === "yes"; 
-  const textMode = document.getElementById("textMode").value; 
-  const textOrientation = document.getElementById("textOrientation").value; 
-  const colorMode = document.getElementById("colorMode").value; 
-  const innerBorders = document.getElementById("innerBorders").value; 
-  
-  const unitMode = document.getElementById("unitMode").value; 
-  const customText = document.getElementById("customText").value || '1 unité';
-  const unitPartDisplay = document.getElementById("unitPartDisplay").value; 
+  // Récupération des deux sets de paramètres d'unité pour le VERSO
+  const versoUnitInfo = {
+      // D=1 (bande blanche)
+      unitModeD1: form.unitModeVersoD1.value,
+      customTextD1: form.customTextVersoD1.value || '1 unité (Verso D=1)',
+      // D>1 (bandes colorées, mode "Unité au centre")
+      unitModeDgt1: form.unitModeVersoDgt1.value, // NE PEUT PAS ÊTRE 'same_as_recto'
+      customTextDgt1: form.customTextVersoDgt1.value || '1 unité (Verso D>1)',
+  };
 
-  const offX = parseFloat(document.getElementById("offX").value)||0;
-  const offY = parseFloat(document.getElementById("offY").value)||0;
-  const versoOff = {x: offX, y: offY};
 
+  const mode = form.mode.value;
   const preview = document.getElementById("preview");
   preview.innerHTML = "";
 
   const push = (el)=>preview.appendChild(el);
 
-  const draw = (d, u) => drawPage({bandLen, bandHeight, gapV, labelPt, dash, frameW, dotW, gapTop, gapBottom, barRatio, barW, denom:d, unity:u, rectoOffX, rectoOffY, versoOff, textMode, textOrientation, colorMode, innerBorders, unitMode, customText, unitPartDisplay});
+  // Fonction utilitaire pour générer une page avec le style R ou V
+  const draw = (d, isVerso) => {
+      const isD1 = d === 1;
+      
+      let contentMode = '';
+      
+      if(isVerso){
+          // Si D>1 et mode segmented, on utilise contentVersoDgt1 pour les segments.
+          if(!isD1 && versoStyles.versoStructureDgt1 === 'segmented'){
+             contentMode = contentVersoDgt1;
+          }
+          // Si D=1 ou D>1/unit_center, contentMode n'est pas utilisé (unitSVG prend le relais).
+      } else {
+          // Recto D>1
+          if(!isD1){
+             contentMode = contentRecto;
+          }
+      }
+      
+      
+      return drawPage({
+          bandLen, bandHeight, gapV, denom: d, isVerso, 
+          contentMode, // Utilisé uniquement pour D>1 et non-unité
+          colorMode, 
+          rectoStyles: rectoStyles, 
+          versoStyles: versoStyles, 
+          rectoUnitInfo: rectoUnitInfo, 
+          versoUnitInfo: versoUnitInfo, // Contient D1 et D>1
+      });
+  };
 
 
   // Logique de génération par mode
-  if(mode==="recto"){
-    if(includeUnit){
-      const pU = draw(1, true); 
-      push(pU);
-    }
-    for(const d of denoms){
-      const p = draw(d, false); 
-      push(p);
-    }
-  }else if(mode==="verso"){
-    for(const d of denoms){
-      const p = draw(d, true); 
-      push(p);
-    }
-    if (includeUnit){
-        const pU = draw(1, true);
-        push(pU);
-    }
-  }else if(mode==="interleaved"){
-    if(includeUnit){
-      const pU = draw(1, true); 
-      push(pU);
-    }
-    for(const d of denoms){
-      const pV = draw(d, true);  
-      push(pV);
-      const pR = draw(d, false); 
-      push(pR);
-    }
-  } else if (mode === "recto-verso") {
-    // Nouveau mode: Fraction x2
-    if(includeUnit){
-      const pU = draw(1, true); // L'unité est toujours générée seule (avec texte unité)
-      push(pU);
-    }
-    for(const d of denoms){
-        // Page 1 (Recto)
-        const pR1 = draw(d, false); 
-        push(pR1);
-        // Page 2 (Verso - Même contenu pour recto-verso)
-        const pR2 = draw(d, false); 
-        push(pR2);
-    }
+  
+  if (mode === "recto_verso_alternating") {
+      if(includeUnit){
+          push(draw(1, false)); // Unité Recto (D=1)
+          push(draw(1, true));  // Unité Verso (D=1)
+      }
+      for(const d of denoms){
+          push(draw(d, false)); // Fraction Recto (D>1)
+          push(draw(d, true));  // Fraction Verso (D>1)
+      }
+  } 
+  
+  else if(mode==="recto_only"){
+      if(includeUnit){ push(draw(1, false)); }
+      for(const d of denoms){ push(draw(d, false)); }
+  }
+  
+  else if(mode==="verso_only"){
+      if(includeUnit){ push(draw(1, true)); }
+      for(const d of denoms){ push(draw(d, true)); }
   }
 }
 
 document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
 
-// Gérer l'affichage du champ de texte personnalisé et de l'unité fractionnée
+// Gérer l'affichage du champ de texte personnalisé et l'affichage conditionnel du Verso
 function updateUI() {
-    const unitMode = document.getElementById('unitMode').value;
-    const textMode = document.getElementById('textMode').value;
-    const includeUnit = document.getElementById('includeUnit').value;
-    const unitPartDisplayContainer = document.getElementById('unitPartDisplayContainer');
+    const form = document.getElementById('form');
     
-    // 1. Affichage du champ de texte personnalisé
-    document.getElementById('customText').style.display = unitMode === 'custom' ? 'block' : 'none';
+    // 1. Affichage des champs de texte personnalisés (D=1 Recto)
+    form.customTextRecto.style.display = form.unitModeRecto.value === 'custom' ? 'block' : 'none';
     
-    // 2. Affichage conditionnel de l'option "Unité fractionnée" (seulement pour numeric et decimal)
-    const isFractionCompatible = (textMode === 'numeric' || textMode === 'decimal');
-    const isUnitIncluded = includeUnit === 'yes';
+    // 2. Affichage des champs de texte personnalisés (D=1 Verso)
+    form.customTextVersoD1.style.display = form.unitModeVersoD1.value === 'custom' ? 'block' : 'none';
 
-    if (isUnitIncluded && isFractionCompatible) {
-        unitPartDisplayContainer.style.display = 'block';
+    // 3. Affichage des options VERSO conditionnelles D>1
+    const versoStructureDgt1 = form.versoStructureDgt1.value;
+    const segmentedVersoOptions = document.getElementById('segmentedVersoOptions');
+    const unitCenterVersoOptions = document.getElementById('unitCenterVersoOptions');
+    
+    const isRenderedAsUnitDgt1 = (versoStructureDgt1 === 'unit_center');
+
+    if (isRenderedAsUnitDgt1) {
+        // En mode "Unité au centre" (Non divisée), on affiche la sélection d'unité D>1
+        segmentedVersoOptions.style.display = 'none';
+        unitCenterVersoOptions.style.display = 'block';
+        // 4. Affichage du champ de texte personnalisé (D>1 Verso - Unité au centre)
+        form.customTextVersoDgt1.style.display = form.unitModeVersoDgt1.value === 'custom' ? 'block' : 'none';
     } else {
-        unitPartDisplayContainer.style.display = 'none';
+        // En mode "Divisée en d parts" (Fractionnée), on affiche la sélection de contenu des parts D>1
+        segmentedVersoOptions.style.display = 'block';
+        unitCenterVersoOptions.style.display = 'none';
     }
     
-    // Initialisation du texte personnalisé (Réglage de base)
-    const customTextInput = document.getElementById('customText');
-    if (!customTextInput.value.trim()) { 
-        customTextInput.value = '1 unité'; 
+    // 5. Cacher/Afficher les paramètres de fraction du Verso si la structure est "Non divisée"
+    // Ces paramètres sont utilisés uniquement pour le mode 'segmented'
+    const versoFracParamsDivs = document.querySelectorAll('.row:has(#gapTopVerso), .row:has(#barRatioVerso)');
+    if (versoStructureDgt1 === 'unit_center') {
+        versoFracParamsDivs.forEach(el => el.style.display = 'none');
+    } else {
+        versoFracParamsDivs.forEach(el => el.style.display = 'grid'); // Rétablit le grid
     }
-        
+
+
+    // Régénère l'aperçu
     generate();
 }
 
@@ -730,13 +974,13 @@ document.getElementById('form').addEventListener('change', updateUI);
 document.getElementById('form').addEventListener('input', (e) => {
     const targetId = e.target.id;
     // On ne régénère qu'après l'input sur les champs numériques/texte
-    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customText', 'dash', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPt', 'gapTop', 'gapBottom', 'barRatio', 'barW'].includes(targetId)) {
-        generate();
+    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customTextRecto', 'customTextVersoD1', 'customTextVersoDgt1', 'dashRecto', 'dashVerso', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPtRecto', 'labelPtVerso', 'gapTopRecto', 'gapBottomRecto', 'barRatioRecto', 'barWRecto', 'dotWRecto', 'dotWVerso', 'gapTopVerso', 'gapBottomVerso', 'barRatioVerso', 'barWVerso'].includes(targetId)) {
+        updateUI(); 
     }
 });
 
 
-// Générer au chargement
+// Initialisation : on charge l'interface et génère l'aperçu
 window.addEventListener("load", updateUI);
 </script>
 </body>
