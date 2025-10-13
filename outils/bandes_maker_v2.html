@@ -241,7 +241,7 @@
             
             <label style="font-weight: 600; margin-top: 10px;">Style des fractions (d>1, d=1)</label>
             <div style="font-size: 11px; padding: 5px 0;">
-                (Longueur et épaisseur de barre sont maintenant fixées.)
+                (Longueur barre: 80%, Épaisseur barre: 0.10mm, Espacements auto.)
             </div>
             
             <label style="font-weight: 600; margin-top: 10px;">Contenus RECTO</label>
@@ -251,10 +251,10 @@
                 <option value="numeric_one">1 (Unité numérique)</option>
                 <option value="unit" selected>1 unité</option> 
                 <option value="one-on-one">1/1 (Fraction)</option>
-                <option value="percent">100 %</option>
-                <option value="minutes">60 min</option>
+                <option value="percent">100%</option>
+                <option value="minutes">60min</option>
                 <option value="hours_unit">1 heure</option> 
-                <option value="degrees_unit">360 degrés</option> 
+                <option value="degrees_unit">360°</option> 
                 <option value="custom">Texte personnalisé</option>
                 <option value="empty">Vide (pas de texte)</option>
             </select>
@@ -326,17 +326,10 @@
             </div>
             
             <label>Style des fractions (d>1, d=1)</label>
-            <div class="row">
-              <div>
-                <label>Longueur barre (%)</label> 
-                <input type="number" id="barRatioVerso" step="1" value="80">
-              </div>
-              <div>
-                <label>Épaisseur barre (mm)</label> 
-                <input type="number" id="barWVerso" step="0.01" value="0.10">
-              </div>
+            <div style="font-size: 11px; padding: 5px 0;">
+                (Longueur barre: 80%, Épaisseur barre: 0.10mm, Espacements auto.)
             </div>
-
+            
             
             <label style="font-weight: 600; margin-top: 10px;">Contenus VERSO</label>
             
@@ -346,10 +339,10 @@
                 <option value="numeric_one">1 (Unité numérique)</option>
                 <option value="unit">1 unité</option>
                 <option value="one-on-one">1/1 (Fraction)</option>
-                <option value="percent">100 %</option>
-                <option value="minutes">60 min</option>
+                <option value="percent">100%</option>
+                <option value="minutes">60min</option>
                 <option value="hours_unit">1 heure</option>
-                <option value="degrees_unit">360 degrés</option>
+                <option value="degrees_unit">360°</option>
                 <option value="custom">Texte personnalisé</option>
                 <option value="empty">Vide (pas de texte)</option>
             </select>
@@ -377,10 +370,10 @@
                 <select id="unitModeVersoDgt1">
                     <option value="unit" selected>1 unité</option> <option value="numeric_one">1 (Unité numérique)</option>
                     <option value="one-on-one">1/1 (Fraction)</option>
-                    <option value="percent">100 %</option>
-                    <option value="minutes">60 min</option>
+                    <option value="percent">100%</option>
+                    <option value="minutes">60min</option>
                     <option value="hours_unit">1 heure</option>
-                    <option value="degrees_unit">360 degrés</option>
+                    <option value="degrees_unit">360°</option>
                     <option value="custom">Texte personnalisé</option>
                     <option value="empty">Vide (pas de texte)</option>
                 </select>
@@ -429,6 +422,12 @@ const denomColors = {
     6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
     11: '#cc99ff', 12: '#99ffff',
 };
+
+// VALEURS DE STYLE DE FRACTION FIXES
+const FIXED_BAR_RATIO = 80;
+// CORRECTION: Changement du nom de la variable pour supprimer l'espace illégal
+const FIXED_BAR_WMM = 0.10; 
+
 
 /**
  * Détermine le symbole d'unité à utiliser pour les segments d>1
@@ -541,7 +540,7 @@ function fracSVG(cx, cy, sizePt, d, barRatio, barWmm, contentMode, textOrientati
     const gapAboveBar = sizePt * 0.20; 
     const gapBelowBar = sizePt * 0.00; 
     
-    const barRatioFloat = (barRatio ?? 80);
+    const barRatioFloat = (barRatio ?? FIXED_BAR_RATIO);
     const sizePx = sizePt * 96/72; // Conversion pt -> px (approximatif pour le ratio)
     const halfBar = sizePx * (barRatioFloat / 200);
 
@@ -579,7 +578,8 @@ function fracSVG(cx, cy, sizePt, d, barRatio, barWmm, contentMode, textOrientati
         line.setAttribute("x1", cx - halfBar); line.setAttribute("x2", cx + halfBar);
         line.setAttribute("y1", cy); line.setAttribute("y2", cy);
         line.setAttribute("stroke","black");
-        line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
+        // CORRECTION: Utilisation de la variable corrigée
+        line.setAttribute("stroke-width", mm(barWmm ?? FIXED_BAR_WMM));
         line.setAttribute("transform", rotationTransform); 
 
         g.appendChild(n); g.appendChild(dd); g.appendChild(line);
@@ -634,7 +634,8 @@ function unitSVG(cx, cy, sizePt, unitMode, customText, barWmm, rectoUnitMode, re
     // Cas spécial: 1/1 (fraction)
     if(text === 'fraction'){
         // fracSVG utilise désormais ses propres valeurs hardcodées pour les gaps
-        return fracSVG(cx, cy, sizePt, 1, 80, barWmm, 'numeric', textOrientation, '', true); 
+        // CORRECTION: Utilisation de la variable corrigée
+        return fracSVG(cx, cy, sizePt, 1, FIXED_BAR_RATIO, FIXED_BAR_WMM, 'numeric', textOrientation, '', true); 
     }
     
     // Cas général: Texte simple
@@ -758,7 +759,7 @@ function drawPage({bandLen, bandHeight, gapV, denom, isVerso, contentMode, color
           cx, cy, 
           styles.labelPt, 
           denom, 
-          styles.barRatio, styles.barW, 
+          styles.barRatio, styles.barW, // Ces valeurs sont les FIXED pour le Verso/Recto
           contentMode, styles.textOrientation, 
           segmentUnitSymbol, 
           false
@@ -798,9 +799,9 @@ function generate(){
       innerBorders: form.innerBordersRecto.value,
       dotW: parseFloat(form.dotWRecto.value),
       dash: form.dashRecto.value,
-      // Paramètres de fraction fixés (valeurs par défaut du Recto)
-      barRatio: 80,  // Valeur par défaut
-      barW: 0.10,   // Valeur par défaut
+      // Paramètres de fraction fixés
+      barRatio: FIXED_BAR_RATIO,
+      barW: FIXED_BAR_WMM, // CORRECTION: Utilisation de la variable corrigée
       
       textOrientation: form.textOrientationRecto.value,
       rectoOffX: parseFloat(form.rectoOffX.value)||0,
@@ -819,9 +820,9 @@ function generate(){
       innerBorders: form.innerBordersVerso.value,
       dotW: parseFloat(form.dotWVerso.value),
       dash: form.dashVerso.value,
-      // Paramètres de fraction Verso (conservés)
-      barRatio: parseFloat(form.barRatioVerso.value),
-      barW: parseFloat(form.barWVerso.value),
+      // Paramètres de fraction fixés (même pour le verso)
+      barRatio: FIXED_BAR_RATIO,
+      barW: FIXED_BAR_WMM, // CORRECTION: Utilisation de la variable corrigée
       
       textOrientation: form.textOrientationVerso.value,
       offX: parseFloat(form.offX.value)||0,
@@ -933,15 +934,8 @@ function updateUI() {
         unitCenterVersoOptions.style.display = 'none';
     }
     
-    // 5. Cacher/Afficher les paramètres de fraction du Verso si la structure est "Non divisée"
-    // Ces paramètres (barre ratio et épaisseur) ne sont utiles que pour les bandes divisées.
-    const versoFracParamsDivs = document.querySelectorAll('.row:has(#barRatioVerso)');
-    if (versoStructureDgt1 === 'unit_center') {
-        versoFracParamsDivs.forEach(el => el.style.display = 'none');
-    } else {
-        versoFracParamsDivs.forEach(el => el.style.display = 'grid'); // Rétablit le grid
-    }
-
+    // Les paramètres de fraction Verso ont été supprimés du HTML/DOM.
+    // L'ancienne logique pour cacher/afficher ces paramètres n'est plus nécessaire.
 
     // Régénère l'aperçu
     generate();
@@ -951,8 +945,8 @@ function updateUI() {
 document.getElementById('form').addEventListener('change', updateUI);
 document.getElementById('form').addEventListener('input', (e) => {
     const targetId = e.target.id;
-    // La liste des champs d'écoute a été mise à jour (retrait de barRatioRecto et barWRecto)
-    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customTextRecto', 'customTextVersoD1', 'customTextVersoDgt1', 'dashRecto', 'dashVerso', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPtRecto', 'labelPtVerso', 'dotWRecto', 'dotWVerso', 'barRatioVerso', 'barWVerso'].includes(targetId)) {
+    // On ne régénère qu'après l'input sur les champs numériques/texte
+    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customTextRecto', 'customTextVersoD1', 'customTextVersoDgt1', 'dashRecto', 'dashVerso', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPtRecto', 'labelPtVerso', 'dotWRecto', 'dotWVerso'].includes(targetId)) {
         updateUI(); 
     }
 });
