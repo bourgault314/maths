@@ -294,6 +294,7 @@
                   <option value="recto" selected>Recto (Fractions)</option>
                   <option value="verso">Verso (Unités/Texte)</option>
                   <option value="interleaved">Intercalé (Unité (V) puis Fraction (R) par d)</option>
+                  <option value="recto-verso">Recto-Verso consécutif (Fraction x2)</option>
                 </select>
               </div>
               <div>
@@ -646,31 +647,50 @@ function generate(){
     return drawPage(discs, discOptions);
   };
   
-  // Page d'unité (d=1)
-  if(includeUnit && (mode === "recto" || mode === "interleaved")){
-    const pU = generatePage(1, true); 
-    push(pU);
-  }
   
-  for(const d of denoms){
-      if (d === 1) continue; 
-      
-      if (mode === "verso" || mode === "interleaved") {
-          // Verso (unité)
-          const pV = generatePage(d, true); 
-          push(pV);
-      }
-      if (mode === "recto" || mode === "interleaved") {
-          // Recto (fraction)
-          const pR = generatePage(d, false); 
-          push(pR);
-      }
-  }
-
-  // Cas spécial: Si seul le mode VERSO est sélectionné, l'unité doit être générée ici
-  if (mode === "verso" && includeUnit) {
-     const pU = generatePage(1, true); 
-     push(pU);
+  if (mode === "recto") {
+    if (includeUnit) {
+      const pU = generatePage(1, true); 
+      push(pU);
+    }
+    for (const d of denoms) {
+      const pR = generatePage(d, false); 
+      push(pR);
+    }
+  } else if (mode === "verso") {
+    for (const d of denoms) {
+      const pV = generatePage(d, true); 
+      push(pV);
+    }
+    if (includeUnit) {
+        const pU = generatePage(1, true);
+        push(pU);
+    }
+  } else if (mode === "interleaved") {
+    if (includeUnit) {
+      const pU = generatePage(1, true); 
+      push(pU);
+    }
+    for (const d of denoms) {
+      const pV = generatePage(d, true);  
+      push(pV);
+      const pR = generatePage(d, false); 
+      push(pR);
+    }
+  } else if (mode === "recto-verso") {
+    // Nouveau mode: Fraction x2
+    if (includeUnit) {
+      const pU = generatePage(1, true); // L'unité est toujours générée seule (avec texte unité)
+      push(pU);
+    }
+    for (const d of denoms) {
+      // Page 1 (Recto)
+      const pR1 = generatePage(d, false); 
+      push(pR1);
+      // Page 2 (Verso - Même contenu pour recto-verso)
+      const pR2 = generatePage(d, false); 
+      push(pR2);
+    }
   }
 }
 
