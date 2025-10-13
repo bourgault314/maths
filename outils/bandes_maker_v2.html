@@ -172,7 +172,7 @@
             </div>
             <div class="row">
               <div>
-                <label>Décalage horizontal VERSO</label> 
+                <label>Décalage horizontal VERSO</label>
                 <input type="number" id="offX" step="0.1" value="0">
               </div>
               <div>
@@ -238,12 +238,10 @@
             </div>
             <div class="row">
               <div>
-                <label>Longueur barre fraction (%)</label>
-                <input type="number" id="barRatio" step="1" value="80">
+                <label>Longueur barre (%)</label> <input type="number" id="barRatio" step="1" value="80">
               </div>
               <div>
-                <label>Épaisseur barre fraction (mm)</label>
-                <input type="number" id="barW" step="0.01" value="0.10">
+                <label>Épaisseur barre (mm)</label> <input type="number" id="barW" step="0.01" value="0.10">
               </div>
             </div>
             
@@ -292,15 +290,14 @@
               <div>
                 <label>Mode</label>
                 <select id="mode">
-                  <option value="recto" selected>Recto (fractions)</option>
+                  <option value="recto">Recto (fractions)</option>
                   <option value="verso">Verso (unités)</option>
                   <option value="interleaved">Intercalé (Unité + Fraction par d)</option>
-                  <option value="recto-verso">Recto-Verso consécutif (Fraction x2)</option>
+                  <option value="recto-verso" selected>Recto-Verso consécutif (Fraction x2)</option>
                 </select>
               </div>
               <div>
-                <label>Inclure la bande unité (d=1) ?</label>
-                <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
+                <label>Inclure la bande unité ?</label> <select id="includeUnit"><option value="yes" selected>oui</option><option value="no">non</option></select>
               </div>
             </div>
           </fieldset>
