@@ -8,36 +8,8 @@
   *{ box-sizing:border-box; }
   body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
   
-  /* EN-TÊTE ET NOM FINAL */
-  header{ 
-      padding:10px 14px; 
-      background:#111; 
-      color:#fff; 
-      font-size:14px; 
-      display: flex;
-      justify-content: space-between; 
-      align-items: center;
-      flex-shrink: 0; 
-  }
-  header #return-link {
-      color: #ccc;
-      text-decoration: none;
-      font-weight: 500;
-      margin-right: auto; 
-  }
-  header #return-link:hover {
-      color: #fff;
-      text-decoration: underline;
-  }
-  header span {
-      flex-grow: 1;
-      text-align: center;
-      white-space: nowrap; 
-  }
-  header div {
-      width: auto; 
-      margin-left: auto; 
-  }
+  /* EN-TÊTE ET NOM FINAL (SIMPLIFIÉ) */
+  header{ padding:10px 14px; background:#111; color:#fff; font-size:14px; }
   
   /* Correction du bug de défilement (hauteur main ajustée) */
   main{ 
@@ -93,7 +65,7 @@
     background:#f6f7f9; 
     border:1px solid #e2e3e6; 
     border-radius:8px; 
-    padding:10px; 
+    padding:4px; 
     overflow:auto; 
     height: 100%; 
   }
@@ -112,7 +84,6 @@
     transform: scale(0.85); 
     transform-origin: top left;
   }
-
   /* Style spécifique aux disques */
   .disc-container {
     display: inline-block;
@@ -122,7 +93,7 @@
   
   @media print{
     header, .controls { display:none !important; }
-    main{ display:block; padding:0; height:auto; }
+    main{ display:block; padding:0; height:auto; } 
     .preview{ border:none; padding:0; height:auto; }
     /* Annulation du zoom et de la marge pour l'impression 1:1 */
     .page{ break-after: page; page-break-after: always; border:none; margin:0; transform: none; }
@@ -131,11 +102,7 @@
 </style>
 </head>
 <body>
-<header>
-    <a href="https://bourgault314.github.io/maths/outils/" id="return-link">← Index des outils</a>
-    <span>GÉNÉRATEUR PRO — DISQUES DE FRACTIONS | Imprimer en Recto-Verso bord long</span>
-    <div style="width: auto; margin-left: auto;"></div> 
-</header>
+<header>GÉNÉRATEUR PRO — DISQUES DE FRACTIONS | Imprimer en Recto-Verso bord long</header>
 <main>
   <section class="controls">
     <form id="form">
@@ -272,6 +239,14 @@
                 <option value="empty">Vide (pas de texte)</option>
             </select>
             
+            <div id="unitPartDisplayContainer">
+                <label>Affichage des parts (d>1) avec unité</label>
+                <select id="unitPartDisplay">
+                    <option value="standalone" selected>Unité seule (ex: 1 u | 1/4)</option>
+                    <option value="fractional">Unité fractionnée (ex: 1 u | 1/4 u)</option>
+                </select>
+            </div>
+            
             <label>Unité / Verso (Texte)</label>
             <select id="unitMode">
                 <option value="custom" selected>Texte personnalisé</option>
@@ -294,8 +269,7 @@
                   <option value="recto" selected>Recto (Fractions)</option>
                   <option value="verso">Verso (Unités/Texte)</option>
                   <option value="interleaved">Intercalé (Unité (V) puis Fraction (R) par d)</option>
-                  <option value="recto-verso">Recto-Verso consécutif (Fraction x2)</option>
-                </select>
+                  <option value="recto-verso-fraction">Recto Fraction / Verso Fraction (Double-Face)</option> </select>
               </div>
               <div>
                 <label>Inclure l'unité (d=1) ?</label>
@@ -339,8 +313,20 @@ const denomColors = {
     11: '#cc99ff', 12: '#99ffff',
 };
 
+/**
+ * Extrait le suffixe d'unité du texte personnalisé (ex: "1 heure" -> "h")
+ */
+function getUnitySuffix(customText) {
+    // Supprime "1" ou "1 " ou "1" en début de chaîne
+    const suffix = customText.replace(/^1\s*/i, '').trim();
+    if (suffix.length > 2 && suffix.toLowerCase().includes('unité')) return 'u';
+    // Utiliser le suffixe tel quel (h, min, etc.)
+    return suffix || 'u'; 
+}
+
+
 // Fonction de dessin d'une fraction (Numérateur / Barre / Dénominateur)
-function fracSVG(x, y, d, sizePt, barRatio, barWmm){
+function fracSVG(x, y, d, sizePt, barRatio, barWmm, unitPartDisplay, customText){
     const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     
     const sizePx = sizePt * 96/72;
@@ -373,6 +359,24 @@ function fracSVG(x, y, d, sizePt, barRatio, barWmm){
     line.setAttribute("stroke-width", mm(barWmm ?? 0.15));
 
     g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+
+    // 4. Ajout de l'unité fractionnée
+    if(unitPartDisplay === 'fractional'){
+        const unitySuffix = getUnitySuffix(customText); 
+        
+        // Offset simple du suffixe pour ne pas impacter le calcul de rotation du groupe.
+        const startX = x + sizePx * 0.4; 
+        
+        const uText = document.createElementNS("http://www.w3.org/2000/svg","text");
+        uText.setAttribute("x", startX); 
+        uText.setAttribute("y", y); // Alignement vertical sur la barre de fraction
+        uText.setAttribute("font-size", sizePt+"pt");
+        uText.setAttribute("text-anchor","start"); 
+        uText.setAttribute("dominant-baseline","middle"); 
+        uText.textContent = unitySuffix;
+        g.appendChild(uText);
+    }
+
     return g;
 }
 
@@ -399,7 +403,7 @@ function textContent(d, textMode){
 
 
 // Fonction de dessin de texte dans une part de disque
-function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio, barWmm, textOrientation){
+function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio, barWmm, textOrientation, unitPartDisplay, customText){
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   
   if(textMode === "empty"){
@@ -415,7 +419,6 @@ function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio
   const bisectriceAngle = (k * sectorAngle + sectorAngle / 2) - 90; 
 
   if (textOrientation === 'polygonal') {
-      // FIX V20: Alignement Polygonal / Sur la Corde 
       
       const A_start = (k * sectorAngle - 90); 
       const A_end = ((k + 1) * sectorAngle - 90);
@@ -453,7 +456,8 @@ function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio
   // 4. Génération du contenu (Fraction ou Texte simple)
   if (textMode === "numeric") {
     
-    const fractionGroup = fracSVG(x, y, d, sizePt, barRatio, barWmm);
+    // Passage des paramètres de l'unité fractionnée
+    const fractionGroup = fracSVG(x, y, d, sizePt, barRatio, barWmm, unitPartDisplay, customText);
     
     // Application de la rotation sur la fraction
     fractionGroup.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
@@ -486,7 +490,7 @@ function getUnityText(unitMode, customText) {
 }
 
 // Fonction de dessin du disque (unité ou fractionné)
-function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barWmm, textOrientation, unitMode) {
+function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barWmm, textOrientation, unitMode, unitPartDisplay) {
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   
   const fillColor = (colorMode === 'colored' && denomColors[d]) ? denomColors[d] : 'white';
@@ -521,7 +525,7 @@ function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, col
     // TEXTE DE LA FRACTION dans chaque part
     if (textMode !== 'empty') {
       for (let k = 0; k < d; k++) {
-        g.appendChild(textInSector(cx, cy, r, d, k, labelPt, textMode, textDistRatio, barRatio, barWmm, textOrientation));
+        g.appendChild(textInSector(cx, cy, r, d, k, labelPt, textMode, textDistRatio, barRatio, barWmm, textOrientation, unitPartDisplay, customText));
       }
     }
   }
@@ -539,7 +543,8 @@ function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, col
   return g;
 }
 
-function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, ...opts}){
+// Signature mise à jour pour inclure useVersoOffset (nouvel argument explicite)
+function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, useVersoOffset, ...opts}){
   const page = document.createElement("div");
   page.className = "page";
   page.style.width = mm(W);
@@ -572,8 +577,8 @@ function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOf
   let startX = (W - totalUsedW) / 2;
   let startY = (H - totalUsedH) / 2;
   
-  // Appliquer les offsets
-  const currentOffset = discs[0].unity ? versoOff : {x: rectoOffX, y: rectoOffY};
+  // NOUVELLE LOGIQUE D'OFFSET: utilisation de useVersoOffset
+  const currentOffset = useVersoOffset ? versoOff : {x: rectoOffX, y: rectoOffY};
   startX += currentOffset.x;
   startY += currentOffset.y;
 
@@ -590,7 +595,7 @@ function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOf
     const cx = startX + i * unitSize + radius + discGap;
     const cy = startY + j * unitSize + radius + discGap;
     
-    const discEl = discSVG(radius, cx, cy, disc.denom, disc.unity, opts.labelPt, opts.dash, opts.frameW, opts.dotW, opts.textMode, opts.colorMode, opts.innerBorders, opts.customText, opts.textDistRatio, opts.barRatio, opts.barW, opts.textOrientation, opts.unitMode);
+    const discEl = discSVG(radius, cx, cy, disc.denom, disc.unity, opts.labelPt, opts.dash, opts.frameW, opts.dotW, opts.textMode, opts.colorMode, opts.innerBorders, opts.customText, opts.textDistRatio, opts.barRatio, opts.barW, opts.textOrientation, opts.unitMode, opts.unitPartDisplay);
     svg.appendChild(discEl);
   });
   
@@ -624,6 +629,7 @@ function generate(){
   const colorMode = document.getElementById("colorMode").value; 
   const innerBorders = document.getElementById("innerBorders").value; 
   const customText = document.getElementById("customText").value || '1 unité';
+  const unitPartDisplay = document.getElementById("unitPartDisplay").value;
 
   const offX = parseFloat(document.getElementById("offX").value)||0;
   const offY = parseFloat(document.getElementById("offY").value)||0;
@@ -639,90 +645,100 @@ function generate(){
      return;
   }
 
-  const discOptions = { N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barW, textOrientation, unitMode };
+  const discOptions = { N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barW, textOrientation, unitMode, unitPartDisplay };
 
   // Logique de génération par page
-  const generatePage = (denom, unity) => {
+  // La fonction génère maintenant l'intention de décalage (useVersoOffset)
+  const generatePage = (denom, unity, useVersoOffset = false) => {
     const discs = Array(totalDiscsPerPage).fill(null).map(() => ({denom: denom, unity: unity}));
-    return drawPage(discs, discOptions);
+    return drawPage(discs, {...discOptions, useVersoOffset: useVersoOffset});
   };
   
+  // Page d'unité (d=1)
+  if(includeUnit && (mode === "recto" || mode === "interleaved")){
+    // L'unité est la page Recto pour le mode Recto. L'offset doit être Recto.
+    const pU = generatePage(1, true, false); 
+    push(pU);
+  }
   
-  if (mode === "recto") {
-    if (includeUnit) {
-      const pU = generatePage(1, true); 
-      push(pU);
-    }
-    for (const d of denoms) {
-      const pR = generatePage(d, false); 
-      push(pR);
-    }
-  } else if (mode === "verso") {
-    for (const d of denoms) {
-      const pV = generatePage(d, true); 
-      push(pV);
-    }
-    if (includeUnit) {
-        const pU = generatePage(1, true);
-        push(pU);
-    }
-  } else if (mode === "interleaved") {
-    if (includeUnit) {
-      const pU = generatePage(1, true); 
-      push(pU);
-    }
-    for (const d of denoms) {
-      const pV = generatePage(d, true);  
-      push(pV);
-      const pR = generatePage(d, false); 
-      push(pR);
-    }
-  } else if (mode === "recto-verso") {
-    // Nouveau mode: Fraction x2
-    if (includeUnit) {
-      const pU = generatePage(1, true); // L'unité est toujours générée seule (avec texte unité)
-      push(pU);
-    }
-    for (const d of denoms) {
-      // Page 1 (Recto)
-      const pR1 = generatePage(d, false); 
-      push(pR1);
-      // Page 2 (Verso - Même contenu pour recto-verso)
-      const pR2 = generatePage(d, false); 
-      push(pR2);
-    }
+  for(const d of denoms){
+      if (d === 1) continue; 
+      
+      if (mode === "verso") {
+          // Verso (unité) doit utiliser l'offset Verso.
+          const pV = generatePage(d, true, true); 
+          push(pV);
+      }
+      if (mode === "recto") {
+          // Recto (fraction) doit utiliser l'offset Recto.
+          const pR = generatePage(d, false, false); 
+          push(pR);
+      }
+      if (mode === "interleaved") {
+          // Verso (unité) doit utiliser l'offset Verso.
+          const pV = generatePage(d, true, true); 
+          push(pV);
+          // Recto (fraction) doit utiliser l'offset Recto.
+          const pR = generatePage(d, false, false); 
+          push(pR);
+      }
+      // NOUVELLE LOGIQUE POUR L'OPTION DEMANDÉE
+      if (mode === "recto-verso-fraction") {
+          // Page 1: Recto Fraction -> utilise Recto Offsets (useVersoOffset = false)
+          const pR = generatePage(d, false, false); 
+          push(pR);
+          
+          // Page 2: Verso Fraction -> utilise Verso Offsets (useVersoOffset = true)
+          const pV = generatePage(d, false, true); 
+          push(pV);
+      }
+  }
+
+  // Cas spécial: Si seul le mode VERSO est sélectionné, l'unité doit être générée ici
+  if (mode === "verso" && includeUnit) {
+     // La page unité ici fait partie du Verso, donc useVersoOffset=true
+     const pU = generatePage(1, true, true); 
+     push(pU);
   }
 }
 
 document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
 
-// Gérer l'affichage du champ de texte personnalisé
-document.getElementById('unitMode').addEventListener('change', (e) => {
-    document.getElementById('customText').style.display = e.target.value === 'custom' ? 'block' : 'none';
+// Gérer l'affichage du champ de texte personnalisé et de l'unité fractionnée
+function updateUI() {
+    const unitMode = document.getElementById('unitMode').value;
+    const textMode = document.getElementById('textMode').value;
+    const unitPartDisplayContainer = document.getElementById('unitPartDisplayContainer');
+    
+    // 1. Affichage du champ de texte personnalisé
+    document.getElementById('customText').style.display = unitMode === 'custom' ? 'block' : 'none';
+    
+    // 2. Affichage conditionnel de l'option "Unité fractionnée" (seulement pour numeric)
+    const isFractionCompatible = (textMode === 'numeric');
+
+    if (isFractionCompatible) {
+        unitPartDisplayContainer.style.display = 'block';
+    } else {
+        unitPartDisplayContainer.style.display = 'none';
+    }
+        
     generate();
-});
+}
 
 // Gérer tous les changements qui nécessitent une régénération (y compris les champs texte qui ne déclenchent pas 'change' sur 'input')
-document.getElementById('form').addEventListener('change', (e) => {
-    generate();
-});
+document.getElementById('form').addEventListener('change', updateUI);
 
 // Écouter spécifiquement l'entrée sur les champs numériques ou de texte pour la mise à jour en direct (ou presque)
 document.getElementById('form').addEventListener('input', (e) => {
     const targetId = e.target.id;
-    if (['N_cols', 'N_rows', 'discGap', 'denoms', 'customText'].includes(targetId)) {
+    if (['N_cols', 'N_rows', 'discGap', 'denoms', 'customText', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPt', 'textDistRatio', 'barRatio', 'barW'].includes(targetId)) {
         generate();
     }
 });
 
 
 // Générer au chargement
-window.addEventListener("load", () => {
-    // Rétablir l'état initial des contrôles
-    document.getElementById('customText').style.display = document.getElementById('unitMode').value === 'custom' ? 'block' : 'none';
-    // Lancer la première génération
-    generate();
-});
+window.addEventListener("load", updateUI);
 </script>
 </body>
 </html>
