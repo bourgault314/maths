@@ -241,7 +241,7 @@
             
             <label style="font-weight: 600; margin-top: 10px;">Style des fractions (d>1, d=1)</label>
             <div style="font-size: 11px; padding: 5px 0;">
-                (Longueur barre: 80%, Épaisseur barre: 0.10mm, Espacements auto.)
+                (Longueur et épaisseur de barre sont maintenant fixées.)
             </div>
             
             <label style="font-weight: 600; margin-top: 10px;">Contenus RECTO</label>
@@ -326,10 +326,17 @@
             </div>
             
             <label>Style des fractions (d>1, d=1)</label>
-            <div style="font-size: 11px; padding: 5px 0;">
-                (Longueur barre: 80%, Épaisseur barre: 0.10mm, Espacements auto.)
+            <div class="row">
+              <div>
+                <label>Longueur barre (%)</label> 
+                <input type="number" id="barRatioVerso" step="1" value="80">
+              </div>
+              <div>
+                <label>Épaisseur barre (mm)</label> 
+                <input type="number" id="barWVerso" step="0.01" value="0.10">
+              </div>
             </div>
-            
+
             
             <label style="font-weight: 600; margin-top: 10px;">Contenus VERSO</label>
             
@@ -422,11 +429,6 @@ const denomColors = {
     6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
     11: '#cc99ff', 12: '#99ffff',
 };
-
-// VALEURS DE STYLE DE FRACTION FIXES
-const FIXED_BAR_RATIO = 80;
-const FIXED_BAR_WM M = 0.10;
-
 
 /**
  * Détermine le symbole d'unité à utiliser pour les segments d>1
@@ -539,7 +541,7 @@ function fracSVG(cx, cy, sizePt, d, barRatio, barWmm, contentMode, textOrientati
     const gapAboveBar = sizePt * 0.20; 
     const gapBelowBar = sizePt * 0.00; 
     
-    const barRatioFloat = (barRatio ?? FIXED_BAR_RATIO);
+    const barRatioFloat = (barRatio ?? 80);
     const sizePx = sizePt * 96/72; // Conversion pt -> px (approximatif pour le ratio)
     const halfBar = sizePx * (barRatioFloat / 200);
 
@@ -577,7 +579,7 @@ function fracSVG(cx, cy, sizePt, d, barRatio, barWmm, contentMode, textOrientati
         line.setAttribute("x1", cx - halfBar); line.setAttribute("x2", cx + halfBar);
         line.setAttribute("y1", cy); line.setAttribute("y2", cy);
         line.setAttribute("stroke","black");
-        line.setAttribute("stroke-width", mm(barWmm ?? FIXED_BAR_WM M));
+        line.setAttribute("stroke-width", mm(barWmm ?? 0.10));
         line.setAttribute("transform", rotationTransform); 
 
         g.appendChild(n); g.appendChild(dd); g.appendChild(line);
@@ -632,7 +634,7 @@ function unitSVG(cx, cy, sizePt, unitMode, customText, barWmm, rectoUnitMode, re
     // Cas spécial: 1/1 (fraction)
     if(text === 'fraction'){
         // fracSVG utilise désormais ses propres valeurs hardcodées pour les gaps
-        return fracSVG(cx, cy, sizePt, 1, FIXED_BAR_RATIO, FIXED_BAR_WM M, 'numeric', textOrientation, '', true); 
+        return fracSVG(cx, cy, sizePt, 1, 80, barWmm, 'numeric', textOrientation, '', true); 
     }
     
     // Cas général: Texte simple
@@ -756,7 +758,7 @@ function drawPage({bandLen, bandHeight, gapV, denom, isVerso, contentMode, color
           cx, cy, 
           styles.labelPt, 
           denom, 
-          styles.barRatio, styles.barW, // Ces valeurs sont les FIXED pour le Verso/Recto
+          styles.barRatio, styles.barW, 
           contentMode, styles.textOrientation, 
           segmentUnitSymbol, 
           false
@@ -796,9 +798,9 @@ function generate(){
       innerBorders: form.innerBordersRecto.value,
       dotW: parseFloat(form.dotWRecto.value),
       dash: form.dashRecto.value,
-      // Paramètres de fraction fixés
-      barRatio: FIXED_BAR_RATIO,
-      barW: FIXED_BAR_WM M,
+      // Paramètres de fraction fixés (valeurs par défaut du Recto)
+      barRatio: 80,  // Valeur par défaut
+      barW: 0.10,   // Valeur par défaut
       
       textOrientation: form.textOrientationRecto.value,
       rectoOffX: parseFloat(form.rectoOffX.value)||0,
@@ -817,9 +819,9 @@ function generate(){
       innerBorders: form.innerBordersVerso.value,
       dotW: parseFloat(form.dotWVerso.value),
       dash: form.dashVerso.value,
-      // Paramètres de fraction fixés (même pour le verso)
-      barRatio: FIXED_BAR_RATIO,
-      barW: FIXED_BAR_WM M,
+      // Paramètres de fraction Verso (conservés)
+      barRatio: parseFloat(form.barRatioVerso.value),
+      barW: parseFloat(form.barWVerso.value),
       
       textOrientation: form.textOrientationVerso.value,
       offX: parseFloat(form.offX.value)||0,
@@ -931,8 +933,15 @@ function updateUI() {
         unitCenterVersoOptions.style.display = 'none';
     }
     
-    // Les paramètres de fraction Verso ont été supprimés du HTML/DOM.
-    // L'ancienne logique pour cacher/afficher ces paramètres n'est plus nécessaire.
+    // 5. Cacher/Afficher les paramètres de fraction du Verso si la structure est "Non divisée"
+    // Ces paramètres (barre ratio et épaisseur) ne sont utiles que pour les bandes divisées.
+    const versoFracParamsDivs = document.querySelectorAll('.row:has(#barRatioVerso)');
+    if (versoStructureDgt1 === 'unit_center') {
+        versoFracParamsDivs.forEach(el => el.style.display = 'none');
+    } else {
+        versoFracParamsDivs.forEach(el => el.style.display = 'grid'); // Rétablit le grid
+    }
+
 
     // Régénère l'aperçu
     generate();
@@ -942,8 +951,8 @@ function updateUI() {
 document.getElementById('form').addEventListener('change', updateUI);
 document.getElementById('form').addEventListener('input', (e) => {
     const targetId = e.target.id;
-    // La liste des champs d'écoute a été mise à jour (retrait de tous les réglages de barre de fraction)
-    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customTextRecto', 'customTextVersoD1', 'customTextVersoDgt1', 'dashRecto', 'dashVerso', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPtRecto', 'labelPtVerso', 'dotWRecto', 'dotWVerso'].includes(targetId)) {
+    // La liste des champs d'écoute a été mise à jour (retrait de barRatioRecto et barWRecto)
+    if (['bandLen', 'bandHeight', 'gapV', 'denoms', 'customTextRecto', 'customTextVersoD1', 'customTextVersoDgt1', 'dashRecto', 'dashVerso', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'labelPtRecto', 'labelPtVerso', 'dotWRecto', 'dotWVerso', 'barRatioVerso', 'barWVerso'].includes(targetId)) {
         updateUI(); 
     }
 });
