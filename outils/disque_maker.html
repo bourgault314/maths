@@ -8,14 +8,22 @@
   *{ box-sizing:border-box; }
   body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
   
-  /* EN-TÊTE ET NOM FINAL (SIMPLIFIÉ) */
+  /* EN-TÊTE */
   header{ padding:10px 14px; background:#111; color:#fff; font-size:14px; }
   
-  main{ display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:14px; }
+  /* STRUCTURE PRINCIPALE (FIX VERTICALE) */
+  main{ 
+      display:grid; 
+      grid-template-columns: 360px 1fr; 
+      gap:7px; 
+      /* Fix pour que main prenne la hauteur restante sous le header */
+      height: calc(100vh - 46px); 
+      padding:14px; 
+  }
   
-  /* STYLE DES CONTRÔLES */
+  /* STYLE DES CONTRÔLES (FIX VERTICALE) */
   .controls { 
-      height: calc(100vh - 28px); 
+      height: 100%; /* Prend 100% de la hauteur disponible dans main */
       display: flex; 
       flex-direction: column; 
   }
@@ -24,12 +32,13 @@
       overflow-y: auto; 
       padding-right: 8px; 
       padding-top: 10px; 
+      -webkit-overflow-scrolling: touch; 
   }
   
   fieldset{ border:1px solid #ddd; border-radius:8px; margin:0 0 10px 0; }
   legend{ padding:0 6px; font-weight:600; }
   
-  /* ALIGNEMENT (Taille restaurée à 13px) */
+  /* ALIGNEMENT */
   label{ 
       display:block; 
       font-size:13px; 
@@ -47,21 +56,35 @@
   }
   
   input, select{ width:100%; padding:8px; font-size:14px; }
+  input[type=number]{-moz-appearance: textfield;}
 
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
   button{ padding:9px 10px; font-weight:600; font-size:14px; cursor:pointer; }
   
-  /* FIX UI: La zone d'aperçu prend la hauteur totale (alignée sur les contrôles) */
+  /* ZONE D'APERÇU (FIX VERTICALE ET ALIGNEMENT GAUCHE) */
   .preview{ 
     background:#f6f7f9; 
     border:1px solid #e2e3e6; 
     border-radius:8px; 
     padding:10px; 
-    overflow:auto; 
-    height: calc(100vh - 28px); 
+    overflow-y:auto; 
+    overflow-x:auto; 
+    height: 100%; /* Prend 100% de la hauteur disponible dans main */
+    text-align: left; 
   }
   
-  .page{ width: var(--page-w); height: var(--page-h); background:white; margin: 0 auto 10px; position: relative; border: 1px dashed #cfd6e3; }
+  /* PAGES A4 (FIX ALIGNEMENT GAUCHE ET ESPACEMENT) */
+  .page{ 
+      width: var(--page-w); 
+      height: var(--page-h); 
+      background:white; 
+      margin: 0 0 4mm 0; /* Alignement à gauche (0 auto devient 0 0) et réduit l'écart bas */
+      position: relative; 
+      border: 1px dashed #cfd6e3; 
+      /* Zoom pour visualiser la page A4 entière */
+      transform: scale(0.85); 
+      transform-origin: top left;
+  }
 
   /* Style spécifique aux disques */
   .disc-container {
@@ -72,9 +95,10 @@
   
   @media print{
     header, .controls { display:none !important; }
-    main{ display:block; padding:0; }
+    main{ display:block; padding:0; height:auto; }
     .preview{ border:none; padding:0; height:auto; }
-    .page{ break-after: page; page-break-after: always; border:none; margin:0; }
+    /* Annulation du zoom et de la marge pour l'impression 1:1 */
+    .page{ break-after: page; page-break-after: always; border:none; margin:0; transform: none; }
     @page { size: A4 landscape; margin: 0; }
   }
 </style>
@@ -150,6 +174,16 @@
               </div>
             </div>
             <div class="row">
+              <div>
+                <label>Taille de l'écriture (pt)</label>
+                <input type="number" id="labelPt" step="1" value="10">
+              </div>
+              <div>
+                <label>Motif pointillé (ex: 3,3; 0=plein)</label>
+                <input type="text" id="dashStyle" value="3,3" placeholder="ex: 3,3 ou 0">
+              </div>
+            </div>
+            <div class="row">
                 <div>
                     <label>Lignes de séparation</label>
                     <select id="innerBorders">
@@ -168,29 +202,16 @@
           </fieldset>
           
           <fieldset>
-            <legend>Ajustements écriture / divisions</legend>
+            <legend>Ajustements écriture / contenu</legend>
             <div class="row">
-              <div>
-                <label>Taille de l'écriture (pt)</label>
-                <input type="number" id="labelPt" step="1" value="10">
-              </div>
               <div>
                 <label>Distance texte/centre (%)</label>
                 <input type="number" id="textDistRatio" step="1" value="60">
               </div>
-            </div>
-            <div class="row">
-                <div>
-                    <label>Style des divisions</label>
-                    <select id="dashStyle">
-                        <option value="3,3" selected>Pointillés</option>
-                        <option value="0">Traits pleins</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Taille barre fraction (%)</label>
-                    <input type="number" id="barRatio" step="1" value="70">
-                </div>
+              <div>
+                <label>Taille barre fraction (%)</label>
+                <input type="number" id="barRatio" step="1" value="70">
+              </div>
             </div>
             <div class="row">
                 <div>
@@ -210,6 +231,7 @@
             <label>Contenu des parts</label>
             <select id="textMode">
                 <option value="numeric" selected>Écriture fractionnaire (1/d) avec barre</option>
+                <option value="decimal">Décimal (0,5, 0,25)</option>
                 <option value="degrees">Angle en degrés (X °)</option>
                 <option value="percentage">Pourcentage (X % ou X.XX %)</option>
                 <option value="minutes">Temps (X min ou X.X min)</option>
@@ -226,6 +248,13 @@
             </select>
             <input type="text" id="customText" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px;">
 
+            <div id="unitPartDisplayContainer" style="display: none;">
+                <label>Affichage des parts (d>1) avec unité</label>
+                <select id="unitPartDisplay">
+                    <option value="standalone" selected>Unité seule (ex: 1 u | 1/4)</option>
+                    <option value="fractional">Unité fractionnée (ex: 1 u | 1/4 u)</option>
+                </select>
+            </div>
             <label>Dénominateurs (ex: 2,3,4,5,6,8,10)</label>
             <input type="text" id="denoms" value="2,3,4,5,6,8,10">
           </fieldset>
@@ -283,13 +312,21 @@ const denomColors = {
     11: '#cc99ff', 12: '#99ffff',
 };
 
+// Fonction pour extraire le suffixe de l'unité (ex: 'unité' -> 'u')
+function getUnitySuffix(customText) {
+    const suffix = customText.replace(/^1\s*/i, '').trim();
+    if (suffix.length > 2 && suffix.toLowerCase().includes('unité')) return 'u';
+    return suffix || 'u'; 
+}
+
 // Fonction de dessin d'une fraction (Numérateur / Barre / Dénominateur)
-function fracSVG(x, y, d, sizePt, barRatio, barWmm){
+function fracSVG(x, y, d, sizePt, barRatio, barWmm, customText, unitPartDisplay){
     const g = document.createElementNS("http://www.w3.org/2000/svg","g");
     
     const sizePx = sizePt * 96/72;
     const padding = sizePx * 0.15; 
-    const halfBar = sizePx * (barRatio ?? 70) / 200;
+    const barRatioFloat = barRatio ?? 70;
+    const halfBar = sizePx * barRatioFloat / 200;
     
     // 1. Numérateur (1)
     const n = document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -317,33 +354,69 @@ function fracSVG(x, y, d, sizePt, barRatio, barWmm){
     line.setAttribute("stroke-width", mm(barWmm ?? 0.15));
 
     g.appendChild(n); g.appendChild(dd); g.appendChild(line);
+
+    // RESTORATION: Affichage du suffixe d'unité (ex: 'u')
+    if(unitPartDisplay === 'fractional' && d > 1){
+        const unitySuffix = getUnitySuffix(customText); 
+        const barWidth = sizePx * barRatioFloat / 100;
+        const startX = x + barWidth/2 + (sizePt * 0.2); 
+        
+        const uText = document.createElementNS("http://www.w3.org/2000/svg","text");
+        uText.setAttribute("x", startX); 
+        uText.setAttribute("y", y); 
+        uText.setAttribute("font-size", sizePt+"pt");
+        uText.setAttribute("text-anchor","start"); 
+        uText.setAttribute("dominant-baseline","middle"); 
+        uText.textContent = unitySuffix;
+        g.appendChild(uText);
+    }
+    // FIN RESTORATION
+    
     return g;
 }
 
 // Fonction pour générer le contenu textuel non-fractionnaire
-function textContent(d, textMode){
-    if (textMode === 'percentage') {
-        const val = 1 / d * 100;
-        let valStr = Number(val.toFixed(2));
-        return `${valStr} %`;
+function textContent(d, textMode, customText, unitPartDisplay){
+    const val = 1 / d;
+    let partText = '';
+    
+    if (textMode === 'decimal') {
+        partText = val.toFixed(3).replace(/\.?0+$/, '').replace('.', ','); 
+    } else if (textMode === 'percentage') {
+        let valStr = Number((val * 100).toFixed(2));
+        partText = `${valStr} %`;
     } else if (textMode === 'minutes') {
-        const val = 1 / d * 60;
-        if (Number.isInteger(val)) {
-             return `${val} min`;
+        const minVal = val * 60;
+        if (Number.isInteger(minVal)) {
+             partText = `${minVal} min`;
+        } else {
+            partText = `${minVal.toFixed(1)} min`;
         }
-        return `${val.toFixed(1)} min`;
     } else if (textMode === 'degrees') {
-        const val = 360 / d;
-        return `${Number(val.toFixed(1))} °`;
+        const degVal = 360 / d;
+        partText = `${Number(degVal.toFixed(1))} °`;
     } else if (textMode === 'letters') {
         return denomToLetters[d] || ("1/"+d);
+    } else {
+        return ''; 
     }
-    return ''; 
+    
+    // RESTORATION: Ajout du suffixe d'unité pour les modes compatibles
+    const isUnitFractional = (unitPartDisplay === 'fractional');
+    if (isUnitFractional && d > 1) {
+        if (textMode !== 'degrees' && textMode !== 'percentage' && textMode !== 'minutes') {
+            const unitySuffix = getUnitySuffix(customText); 
+            return `${partText} ${unitySuffix}`;
+        }
+    }
+    // FIN RESTORATION
+
+    return partText;
 }
 
 
 // Fonction de dessin de texte dans une part de disque
-function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio, barWmm, textOrientation){
+function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio, barWmm, textOrientation, customText, unitPartDisplay){
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   
   if(textMode === "empty"){
@@ -359,36 +432,28 @@ function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio
   const bisectriceAngle = (k * sectorAngle + sectorAngle / 2) - 90; 
 
   if (textOrientation === 'polygonal') {
-      // FIX V20: Alignement Polygonal / Sur la Corde 
-      
       const A_start = (k * sectorAngle - 90); 
       const A_end = ((k + 1) * sectorAngle - 90);
 
-      // 1. Calcul des coordonnées aux extrémités de la corde à la distance 'dist'
       const x1 = cx + dist * Math.cos(A_start * RADIAN);
       const y1 = cy + dist * Math.sin(A_start * RADIAN);
       const x2 = cx + dist * Math.cos(A_end * RADIAN);
       const y2 = cy + dist * Math.sin(A_end * RADIAN);
 
-      // 2. Le centre du texte est le milieu de cette corde
       x = (x1 + x2) / 2;
       y = (y1 + y2) / 2;
       
-      // 3. La rotation est la tangente à la corde, donc perpendiculaire à la bissectrice
       rotation = bisectriceAngle + 90; 
       
       
   } else {
-      // Uniforme (Standard ou Inversé) : position sur la bissectrice (à distance 'dist')
       x = cx + dist * Math.cos(bisectriceAngle * RADIAN);
       y = cy + dist * Math.sin(bisectriceAngle * RADIAN);
 
       if (textOrientation === 'aligned_rayon') {
-          // Uniforme / Pointant Extérieur
           rotation = textMode === "numeric" ? bisectriceAngle + 90 : bisectriceAngle + 180;
           
-      } else { // aligned_rayon_inversed (Pointant Centre)
-          // Uniforme / Pointant Centre
+      } else { 
           rotation = textMode === "numeric" ? bisectriceAngle + 270 : bisectriceAngle;
       }
   }
@@ -397,15 +462,13 @@ function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio
   // 4. Génération du contenu (Fraction ou Texte simple)
   if (textMode === "numeric") {
     
-    const fractionGroup = fracSVG(x, y, d, sizePt, barRatio, barWmm);
+    const fractionGroup = fracSVG(x, y, d, sizePt, barRatio, barWmm, customText, unitPartDisplay); // Passes new params
     
-    // Application de la rotation sur la fraction
     fractionGroup.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
     
     g.appendChild(fractionGroup);
 
   } else { 
-    // Mode Lettres, Pourcentage, Minutes, Degrés (texte simple)
     const t = document.createElementNS("http://www.w3.org/2000/svg","text");
     t.setAttribute("x", x); 
     t.setAttribute("y", y); 
@@ -414,7 +477,7 @@ function textInSector(cx, cy, r, d, k, sizePt, textMode, textDistRatio, barRatio
     t.setAttribute("dominant-baseline","middle");
     t.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
     
-    t.textContent = textContent(d, textMode);
+    t.textContent = textContent(d, textMode, customText, unitPartDisplay); // Passes new params
     g.appendChild(t);
   }
 
@@ -430,7 +493,7 @@ function getUnityText(unitMode, customText) {
 }
 
 // Fonction de dessin du disque (unité ou fractionné)
-function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barWmm, textOrientation, unitMode) {
+function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barWmm, textOrientation, unitMode, unitPartDisplay) {
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   
   const fillColor = (colorMode === 'colored' && denomColors[d]) ? denomColors[d] : 'white';
@@ -465,7 +528,7 @@ function discSVG(r, cx, cy, d, unity, labelPt, dash, frameW, dotW, textMode, col
     // TEXTE DE LA FRACTION dans chaque part
     if (textMode !== 'empty') {
       for (let k = 0; k < d; k++) {
-        g.appendChild(textInSector(cx, cy, r, d, k, labelPt, textMode, textDistRatio, barRatio, barWmm, textOrientation));
+        g.appendChild(textInSector(cx, cy, r, d, k, labelPt, textMode, textDistRatio, barRatio, barWmm, textOrientation, customText, unitPartDisplay)); // Passes new params
       }
     }
   }
@@ -510,11 +573,11 @@ function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOf
   const unitSize = discDiameter + discGap;
 
   // Espace inutilisé à distribuer pour le centrage
-  const totalUsedW = N_cols * unitSize + discGap;
-  const totalUsedH = N_rows * unitSize + discGap;
-  
-  let startX = (W - totalUsedW) / 2;
-  let startY = (H - totalUsedH) / 2;
+  const totalUsedW = N_cols * unitSize;
+  const totalUsedH = N_rows * unitSize;
+
+  let startX = (W - totalUsedW) / 2 + discGap / 2;
+  let startY = (H - totalUsedH) / 2 + discGap / 2;
   
   // Appliquer les offsets
   const currentOffset = discs[0].unity ? versoOff : {x: rectoOffX, y: rectoOffY};
@@ -531,10 +594,10 @@ function drawPage(discs, {N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOf
     const j = Math.floor(index / N_cols);
     
     // Centre du disque
-    const cx = startX + i * unitSize + radius + discGap;
-    const cy = startY + j * unitSize + radius + discGap;
+    const cx = startX + i * unitSize + radius;
+    const cy = startY + j * unitSize + radius;
     
-    const discEl = discSVG(radius, cx, cy, disc.denom, disc.unity, opts.labelPt, opts.dash, opts.frameW, opts.dotW, opts.textMode, opts.colorMode, opts.innerBorders, opts.customText, opts.textDistRatio, opts.barRatio, opts.barW, opts.textOrientation, opts.unitMode);
+    const discEl = discSVG(radius, cx, cy, disc.denom, disc.unity, opts.labelPt, opts.dash, opts.frameW, opts.dotW, opts.textMode, opts.colorMode, opts.innerBorders, opts.customText, opts.textDistRatio, opts.barRatio, opts.barW, opts.textOrientation, opts.unitMode, opts.unitPartDisplay); // Passes new param
     svg.appendChild(discEl);
   });
   
@@ -554,7 +617,7 @@ function generate(){
   const denoms = parseDenoms(document.getElementById("denoms").value);
   const labelPt = parseFloat(document.getElementById("labelPt").value);
   const dashStyle = document.getElementById("dashStyle").value; 
-  const dash = dashStyle;
+  const dash = dashStyle; 
   const frameW = parseFloat(document.getElementById("frameW").value);
   const dotW = parseFloat(document.getElementById("dotW").value);
   const barRatio = parseFloat(document.getElementById("barRatio").value);
@@ -565,6 +628,7 @@ function generate(){
   const includeUnit = document.getElementById("includeUnit").value === "yes"; 
   const textMode = document.getElementById("textMode").value; 
   const unitMode = document.getElementById("unitMode").value;
+  const unitPartDisplay = document.getElementById("unitPartDisplay") ? document.getElementById("unitPartDisplay").value : 'standalone'; // RESTORATION
   const colorMode = document.getElementById("colorMode").value; 
   const innerBorders = document.getElementById("innerBorders").value; 
   const customText = document.getElementById("customText").value || '1 unité';
@@ -583,7 +647,8 @@ function generate(){
      return;
   }
 
-  const discOptions = { N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barW, textOrientation, unitMode };
+  // Passes new param: unitPartDisplay
+  const discOptions = { N_cols, N_rows, discGap, rectoOffX, rectoOffY, versoOff, labelPt, dash, frameW, dotW, textMode, colorMode, innerBorders, customText, textDistRatio, barRatio, barW, textOrientation, unitMode, unitPartDisplay };
 
   // Logique de génération par page
   const generatePage = (denom, unity) => {
@@ -617,25 +682,52 @@ function generate(){
      const pU = generatePage(1, true); 
      push(pU);
   }
+  
+  updateUI();
 }
+
+// RESTORATION: Fonction pour gérer l'affichage conditionnel des options
+function updateUI() {
+    const unitMode = document.getElementById('unitMode').value;
+    const textMode = document.getElementById('textMode').value;
+    const includeUnit = document.getElementById('includeUnit').value;
+    const unitPartDisplayContainer = document.getElementById('unitPartDisplayContainer');
+    const customTextInput = document.getElementById('customText');
+    
+    // 1. Affichage du champ de texte personnalisé
+    customTextInput.style.display = unitMode === 'custom' ? 'block' : 'none';
+    
+    // 2. Affichage conditionnel de l'option "Unité fractionnée" 
+    const isFractionCompatible = (textMode === 'numeric' || textMode === 'decimal');
+    const isUnitIncluded = includeUnit === 'yes';
+
+    if (unitPartDisplayContainer) {
+        if (isUnitIncluded && isFractionCompatible && textMode !== 'empty') {
+            unitPartDisplayContainer.style.display = 'block';
+        } else {
+            unitPartDisplayContainer.style.display = 'none';
+        }
+    }
+}
+// FIN RESTORATION
 
 document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
 
-// Gérer l'affichage du champ de texte personnalisé
+// Gérer l'affichage du champ de texte personnalisé et la régénération
 document.getElementById('unitMode').addEventListener('change', (e) => {
-    document.getElementById('customText').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    updateUI();
     generate();
 });
 
-// Gérer tous les changements qui nécessitent une régénération (y compris les champs texte qui ne déclenchent pas 'change' sur 'input')
+// Gérer tous les changements qui nécessitent une régénération (selects, radios, etc.)
 document.getElementById('form').addEventListener('change', (e) => {
     generate();
 });
 
-// Écouter spécifiquement l'entrée sur les champs numériques ou de texte pour la mise à jour en direct (ou presque)
+// Écouter spécifiquement l'entrée sur les champs numériques ou de texte pour la mise à jour en direct
 document.getElementById('form').addEventListener('input', (e) => {
     const targetId = e.target.id;
-    if (['N_cols', 'N_rows', 'discGap', 'denoms', 'customText'].includes(targetId)) {
+    if (['N_cols', 'N_rows', 'discGap', 'denoms', 'customText', 'labelPt', 'dashStyle', 'rectoOffX', 'rectoOffY', 'offX', 'offY', 'frameW', 'dotW', 'barRatio', 'barW', 'textDistRatio'].includes(targetId)) {
         generate();
     }
 });
@@ -643,9 +735,11 @@ document.getElementById('form').addEventListener('input', (e) => {
 
 // Générer au chargement
 window.addEventListener("load", () => {
-    // Rétablir l'état initial des contrôles
-    document.getElementById('customText').style.display = document.getElementById('unitMode').value === 'custom' ? 'block' : 'none';
-    // Lancer la première génération
+    const customTextInput = document.getElementById('customText');
+    if (!customTextInput.value.trim()) { 
+        customTextInput.value = '1 unité'; 
+    }
+    updateUI();
     generate();
 });
 </script>
