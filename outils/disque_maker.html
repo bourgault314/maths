@@ -504,7 +504,7 @@ function fracSVG(x, y, d, sizePt, contentMode){
     dd.setAttribute("font-size", sizePt+"pt");
     dd.setAttribute("text-anchor","middle");
     dd.setAttribute("dominant-baseline","hanging");
-    dd.textContent = String(d);
+    dd.textContent = (d === 1 && contentMode === FRAC_ONE_ON_ONE) ? "1" : String(d);
 
     // 3. Barre de fraction
     const line = document.createElementNS("http://www.w3.org/2000/svg","line");
@@ -553,11 +553,11 @@ function textContent(d, textMode){
 
     if (textMode === 'percentage') {
         let valStr = Number((val * 100).toFixed(2));
-        return `${valStr.toString().replace('.', ',')} %`; 
+        return `${valStr.toString().replace('.', ',')}%`; // MODIFIED: No space before %
     } else if (textMode === 'minutes') {
         const minVal = val * 60;
-        if (Number.isInteger(minVal)) { return `${minVal} min`; } 
-        else { return `${minVal.toFixed(1).replace('.', ',')} min`; }
+        if (Number.isInteger(minVal)) { return `${minVal}min`; } // MODIFIED: No space before min
+        else { return `${minVal.toFixed(1).replace('.', ',')}min`; } // MODIFIED: No space before min
     } else if (textMode === 'degrees') {
         const valDeg = 360 / d;
         
@@ -570,14 +570,14 @@ function textContent(d, textMode){
             degText = decimalFormatter.format(valDeg).replace(/(\.0+)?$/, '');
         }
         
-        return `${degText} °`;
+        return `${degText}°`; // MODIFIED: No space before °
     } else if (textMode === 'letters') {
         return denomToLetters[d] || ("1/"+d);
     } else if (textMode === 'decimal' || textMode === 'decimal_unit') { 
         let partText = decimalFormatter.format(val).replace(/(\.0+)?$/, '');
         
         if (textMode === 'decimal_unit' && unitSymbol !== '') { 
-            return `${partText} ${unitSymbol}`;
+            return `${partText}${unitSymbol}`; // MODIFIED: No space before unitSymbol (u)
         }
         return partText;
     }
@@ -588,11 +588,10 @@ function textContent(d, textMode){
 function textInSector(cx, cy, r, d, k, styles, contentMode, textDistRatio){
   const g = document.createElementNS("http://www.w3.org/2000/svg","g");
   
-  if(contentMode === "empty"){
+  if (contentMode === "empty") {
     return g; 
   }
   
-  // Récupère uniquement les styles non hardcodés pour la fraction
   const { labelPt, textOrientation } = styles; 
 
   const sectorAngle = 360 / d;
@@ -604,6 +603,7 @@ function textInSector(cx, cy, r, d, k, styles, contentMode, textDistRatio){
   const bisectriceAngle = (k * sectorAngle + sectorAngle / 2) - 90; 
 
   if (textOrientation === 'polygonal') {
+      // Mode Polygonal (Aligné sur la corde) - AUCUN CHANGEMENT ICI
       const A_start = (k * sectorAngle - 90); 
       const A_end = ((k + 1) * sectorAngle - 90);
 
@@ -617,46 +617,66 @@ function textInSector(cx, cy, r, d, k, styles, contentMode, textDistRatio){
       rotation = bisectriceAngle + 90; 
       
   } else {
+      // Modes Uniformes (aligned_rayon et aligned_rayon_inversed)
+      
+      // Calcul du centre du texte le long de la bissectrice
       x = cx + dist * Math.cos(bisectriceAngle * RADIAN);
       y = cy + dist * Math.sin(bisectriceAngle * RADIAN);
 
-      // Determine rotation based on orientation mode
-      let isFractionalOrHours = (contentMode === "numeric" || contentMode === "numeric_unit" || contentMode === "hours_fractional");
+      const isFractionalOrHours = (contentMode === "numeric" || contentMode === "numeric_unit" || contentMode === "hours_fractional" || contentMode === FRAC_ONE_ON_ONE);
 
-      if (textOrientation === 'aligned_rayon') {
-          // Aligné sur le rayon, pointant Extérieur (Fraction: 90/270, Texte: 180/0)
-          rotation = bisectriceAngle;
-          if(isFractionalOrHours){
-            rotation += 90; // Vertical
-          } else {
-            rotation += 180; // Horizontal, basculé à 180 pour lecture extérieure
-          }
-          
-      } else { // aligned_rayon_inversed (Pointant Centre)
-          // Aligné sur le rayon, pointant Centre (Fraction: 270/90, Texte: 0/180)
-          rotation = bisectriceAngle;
-          if(isFractionalOrHours){
-            rotation += 270; // Vertical (l'opposé de 90)
-          } 
-          // Sinon, rotation 0 (lecture normale) ou 180 si angle > 90 et < 270 (non implémenté ici, on laisse le 0 par défaut)
+      // --- NOUVELLE LOGIQUE DE ROTATION RADIALE UNIFORME ---
+      
+      let baseAngleForAlignment; // L'angle relatif au rayon pour l'alignement du contenu (0, 90, 180, 270)
+      
+      if (isFractionalOrHours) {
+          // Fraction: Barres Perpendiculaires (90 ou 270)
+          baseAngleForAlignment = (textOrientation === 'aligned_rayon') ? 90 : 270;
+      } else {
+          // Texte Simple: Parallèle au Rayon (0 ou 180)
+          baseAngleForAlignment = (textOrientation === 'aligned_rayon') ? 0 : 180;
       }
       
-      // Fix rotation quand le texte est à l'envers
-      if(rotation > 90 && rotation < 270){
-        rotation += 180;
+      // 1. Détermination de la moitié du disque (pour la correction de lisibilité)
+      // L'angle normalisé du rayon: 0=12h, 90=3h, 180=6h, 270=9h
+      let normalizedBisectrice = (bisectriceAngle + 90 + 360) % 360; 
+      
+      // La moitié inférieure du disque va de 90° à 270° (3h à 9h)
+      const isLowerHalf = normalizedBisectrice > 90 && normalizedBisectrice < 270;
+
+      // 2. Pré-Correction pour le Sens Radial (Direction)
+      // Si on est en bas, la correction de lisibilité de 180° va inverser le sens radial (outward -> inward).
+      // Pour forcer le maintien du sens radial, nous devons inverser l'angle d'alignement du contenu AVANT d'appliquer la correction de lisibilité.
+      if (isLowerHalf) {
+          if (isFractionalOrHours) {
+              // Inverse 90 <-> 270
+              baseAngleForAlignment = (baseAngleForAlignment === 90) ? 270 : 90;
+          } else {
+              // Inverse 0 <-> 180
+              baseAngleForAlignment = (baseAngleForAlignment === 0) ? 180 : 0;
+          }
       }
-      if(rotation > 360) rotation -= 360;
-      if(rotation < 0) rotation += 360;
+      
+      // 3. Rotation initiale
+      rotation = bisectriceAngle + baseAngleForAlignment;
+
+      // 4. Correction de Lisibilité (180° flip)
+      // Ceci est appliqué pour que le texte soit lisible, quelle que soit la direction radiale finale.
+      if (isLowerHalf) {
+          rotation += 180;
+      }
+      
+      // --- FIN LOGIQUE DE ROTATION RADIALE UNIFORME CORRIGÉE ---
   }
   
   const rotationTransform = `rotate(${rotation}, ${x}, ${y})`;
 
   // Détermine si le rendu est fractionnaire (avec barre)
-  const useFractionalRendering = (contentMode === "numeric" || contentMode === "numeric_unit" || contentMode === "hours_fractional");
+  const useFractionalRendering = (contentMode === "numeric" || contentMode === "numeric_unit" || contentMode === "hours_fractional" || contentMode === FRAC_ONE_ON_ONE);
 
-  // 4. Génération du contenu (Fraction ou Texte simple)
+  // 5. Génération du contenu (Fraction ou Texte simple)
   if (useFractionalRendering) {
-    // Appel à fracSVG sans les 4 paramètres de style de fraction retirés
+    // Appel à fracSVG
     const fractionGroup = fracSVG(x, y, d, labelPt, contentMode); 
     fractionGroup.setAttribute("transform", rotationTransform);
     g.appendChild(fractionGroup);
@@ -723,11 +743,10 @@ function discSVG(r, cx, cy, d, contentMode, commonStyles, currentStyles, rectoUn
         
         if (unitText === FRAC_ONE_ON_ONE) {
              // Affichage de 1/1 en tant que fraction (utilisation des styles Recto/Verso courants)
-             // Appel à fracSVG sans les 4 paramètres de style de fraction retirés
              const fracGroup = fracSVG(
                  cx, cy, 1, // d=1 pour 1/1
                  currentStyles.labelPt * 1.5, // 1.5x plus grand que la taille de base des segments
-                 'numeric' // Ne pas ajouter de suffixe (u/h)
+                 FRAC_ONE_ON_ONE // Ajout du marqueur pour que fracSVG utilise le d=1
              );
              g.appendChild(fracGroup);
 
