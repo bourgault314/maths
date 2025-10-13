@@ -44,7 +44,6 @@
       display:grid; 
       grid-template-columns: 360px 1fr; 
       gap:14px; 
-      padding:14px; 
       height: calc(100vh - 46px); 
   }
   
@@ -263,18 +262,6 @@
             </div>
             
             <label style="font-weight: 600; margin-top: 10px;">Contenus RECTO</label>
-            <label>Contenu des parts RECTO (d>1)</label>
-            <select id="contentRecto"> 
-              <option value="numeric" selected>Écriture fractionnaire (1/2, 1/4)</option>
-              <option value="numeric_unit">Écriture fractionnaire avec unité (1/2 u)</option>
-              <option value="decimal">Décimal (0,5, 0,25)</option>
-              <option value="decimal_unit">Décimal avec unité (0,5 u)</option>
-              <option value="percentage">Pourcentage (X %)</option>
-              <option value="minutes">Temps (X min)</option>
-              <option value="hours_fractional">Temps (1/d h)</option> 
-              <option value="letters">En lettres (Un demi, Un tiers...)</option>
-              <option value="empty">Vide (pas de texte)</option>
-            </select>
             
             <label>Contenu de la bande UNITÉ (d=1) - RECTO</label>
             <select id="unitModeRecto"> 
@@ -290,7 +277,19 @@
             </select>
             <input type="text" id="customTextRecto" value="1 unité" placeholder="Ex: 1 unité" style="margin-top: 5px; display: none;">
 
-          </fieldset>
+            <label>Contenu des parts RECTO (d>1)</label>
+            <select id="contentRecto"> 
+              <option value="numeric" selected>Écriture fractionnaire (1/2, 1/4)</option>
+              <option value="numeric_unit">Écriture fractionnaire avec unité (1/2 u)</option>
+              <option value="decimal">Décimal (0,5, 0,25)</option>
+              <option value="decimal_unit">Décimal avec unité (0,5 u)</option>
+              <option value="percentage">Pourcentage (X %)</option>
+              <option value="minutes">Temps (X min)</option>
+              <option value="hours_fractional">Temps (1/d h)</option> 
+              <option value="letters">En lettres (Un demi, Un tiers...)</option>
+              <option value="empty">Vide (pas de texte)</option>
+            </select>
+            </fieldset>
     
           <fieldset>
             <legend>Style VERSO (Double-Face)</legend>
