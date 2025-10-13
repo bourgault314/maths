@@ -101,7 +101,7 @@
     width: var(--page-w); 
     height: var(--page-h); 
     background:white; 
-    /* Rétablit l'espace minimal entre les pages (1mm) */
+    /* Espace minimal entre les pages */
     margin: 0 0 1mm 0; 
     position: relative; 
     border: 1px dashed #cfd6e3; 
@@ -295,6 +295,7 @@
                   <option value="recto" selected>Recto (fractions)</option>
                   <option value="verso">Verso (unités)</option>
                   <option value="interleaved">Intercalé (Unité + Fraction par d)</option>
+                  <option value="recto-verso">Recto-Verso consécutif (Fraction x2)</option>
                 </select>
               </div>
               <div>
@@ -661,14 +662,14 @@ function generate(){
     }
   }else if(mode==="verso"){
     for(const d of denoms){
-        const p = draw(d, true); 
-        push(p);
+      const p = draw(d, true); 
+      push(p);
     }
     if (includeUnit){
         const pU = draw(1, true);
         push(pU);
     }
-  }else{ // interleaved
+  }else if(mode==="interleaved"){
     if(includeUnit){
       const pU = draw(1, true); 
       push(pU);
@@ -678,6 +679,20 @@ function generate(){
       push(pV);
       const pR = draw(d, false); 
       push(pR);
+    }
+  } else if (mode === "recto-verso") {
+    // Nouveau mode: Fraction x2
+    if(includeUnit){
+      const pU = draw(1, true); // L'unité est toujours générée seule (avec texte unité)
+      push(pU);
+    }
+    for(const d of denoms){
+        // Page 1 (Recto)
+        const pR1 = draw(d, false); 
+        push(pR1);
+        // Page 2 (Verso - Même contenu pour recto-verso)
+        const pR2 = draw(d, false); 
+        push(pR2);
     }
   }
 }
