@@ -8,22 +8,59 @@
   *{ box-sizing:border-box; }
   body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; }
   
-  /* EN-TÊTE ET NOM FINAL (SIMPLIFIÉ) */
-  header{ padding:10px 14px; background:#111; color:#fff; font-size:14px; }
+  /* EN-TÊTE ET NOM FINAL */
+  header{ 
+      padding:10px 14px; 
+      background:#111; 
+      color:#fff; 
+      font-size:14px; 
+      display: flex;
+      justify-content: space-between; 
+      align-items: center;
+      flex-shrink: 0; 
+  }
+  header #return-link {
+      color: #ccc;
+      text-decoration: none;
+      font-weight: 500;
+      margin-right: auto; 
+  }
+  header #return-link:hover {
+      color: #fff;
+      text-decoration: underline;
+  }
+  header span {
+      flex-grow: 1;
+      text-align: center;
+      white-space: nowrap; 
+  }
+  header div {
+      width: auto; 
+      margin-left: auto; 
+  }
   
-  main{ display:grid; grid-template-columns: 360px 1fr; gap:14px; padding:14px; }
+  /* Correction du bug de défilement (hauteur main ajustée) */
+  main{ 
+      display:grid; 
+      grid-template-columns: 360px 1fr; 
+      gap:14px; 
+      padding:14px; 
+      height: calc(100vh - 46px); 
+  }
   
-  /* STYLE DES CONTRÔLES */
+  /* STYLE DES CONTRÔLES (Fixe la hauteur totale) */
   .controls { 
-      height: calc(100vh - 28px); 
+      height: 100%; 
       display: flex; 
       flex-direction: column; 
   }
+  /* Correction de l'overflow pour le menu principal */
   #settings-scroll-area {
       flex-grow: 1; 
       overflow-y: auto; 
       padding-right: 8px; 
       padding-top: 10px; 
+      -webkit-overflow-scrolling: touch; 
   }
   
   fieldset{ border:1px solid #ddd; border-radius:8px; margin:0 0 10px 0; }
@@ -58,10 +95,23 @@
     border-radius:8px; 
     padding:10px; 
     overflow:auto; 
-    height: calc(100vh - 28px); 
+    height: 100%; 
   }
   
-  .page{ width: var(--page-w); height: var(--page-h); background:white; margin: 0 auto 10px; position: relative; border: 1px dashed #cfd6e3; }
+  /* FIX CLÉ: Nouvelle mise en page des pages A4 (alignement top-left pour l'aperçu) */
+  .page{ 
+    width: var(--page-w); 
+    height: var(--page-h); 
+    background:white; 
+    /* Espace minimal entre les pages */
+    margin: 0 0 1mm 0; 
+    position: relative; 
+    border: 1px dashed #cfd6e3; 
+    
+    /* Zoom pour visualiser la page A4 entière */
+    transform: scale(0.85); 
+    transform-origin: top left;
+  }
 
   /* Style spécifique aux disques */
   .disc-container {
@@ -72,15 +122,20 @@
   
   @media print{
     header, .controls { display:none !important; }
-    main{ display:block; padding:0; }
+    main{ display:block; padding:0; height:auto; }
     .preview{ border:none; padding:0; height:auto; }
-    .page{ break-after: page; page-break-after: always; border:none; margin:0; }
+    /* Annulation du zoom et de la marge pour l'impression 1:1 */
+    .page{ break-after: page; page-break-after: always; border:none; margin:0; transform: none; }
     @page { size: A4 landscape; margin: 0; }
   }
 </style>
 </head>
 <body>
-<header>GÉNÉRATEUR PRO — DISQUES DE FRACTIONS | Imprimer en Recto-Verso bord long</header>
+<header>
+    <a href="https://bourgault314.github.io/maths/outils/" id="return-link">← Index des outils</a>
+    <span>GÉNÉRATEUR PRO — DISQUES DE FRACTIONS | Imprimer en Recto-Verso bord long</span>
+    <div style="width: auto; margin-left: auto;"></div> 
+</header>
 <main>
   <section class="controls">
     <form id="form">
