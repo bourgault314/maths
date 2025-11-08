@@ -4,29 +4,29 @@
     <meta charset="UTF-8">
     <title>Générateur de Cartes (Nombres)</title>
     <style>
-        /* ... (tous les styles de l'interface, inchangés) ... */
+        /* ---------- STYLE DE L'INTERFACE (PANNEAU DE CONTRÔLE) ---------- */
         body {
-            <style>
-      .topbar-nav { 
-        display:flex; align-items:center; gap:12px; margin-bottom:10px; 
-        max-width: 1200px; /* Doit être le même que .settings-panel */
-        margin-left: auto; margin-right: auto;
-      }
-      .topbar-nav .back {
-        display:inline-block; padding:8px 12px; border:1.5px solid #2563eb; color:#fff; background:#2563eb;
-        border-radius:12px; text-decoration:none; font-weight:800;
-      }
-    </style>
-    <div class="topbar-nav">
-      <a class="back" href="index.html">← Retour aux outils</a>
-    </div>
-    <div class="settings-panel">
-      <h1>Générateur de Cartes</h1>
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f0f4f8;
             margin: 0;
-            padding: 20px;
+            /* On garde un peu de padding en haut pour le bouton retour */
+            padding: 20px 20px 0 20px; 
         }
+        
+        /* ##### AJOUT DU STYLE POUR LE BOUTON RETOUR ##### */
+        .topbar-nav { 
+            display:flex; align-items:center; gap:12px; 
+            margin-bottom:20px; /* Marge pour le séparer du panneau */
+            max-width: 1200px; /* Doit être le même que .settings-panel */
+            margin-left: auto; margin-right: auto;
+        }
+        .topbar-nav .back {
+            display:inline-block; padding:8px 12px; border:1.5px solid #2563eb; color:#fff; background:#2563eb;
+            border-radius:12px; text-decoration:none; font-weight:800;
+        }
+        /* ##### FIN DE L'AJOUT ##### */
+
+
         .settings-panel {
             max-width: 1200px; 
             margin: 0 auto 20px auto;
@@ -98,7 +98,7 @@
         #generate-button { background-color: #007bff; color: white; }
         #print-button { background-color: #28a745; color: white; display: none; }
 
-        /* ... (styles de la grille, inchangés) ... */
+        /* ---------- DÉFINITION DES CARTES ET DE LA GRILLE ---------- */
         :root {
             --card-width: 63mm;
             --card-height: 88mm;
@@ -112,11 +112,15 @@
             --font-size-recto: 48px;
             --font-size-verso-base: 16px;
         }
+
+        /* ---------- STYLES POUR L'APERÇU ÉCRAN ---------- */
         #preview-area {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            /* Padding en bas pour ne pas être collé au bord */
+            padding-bottom: 20px; 
         }
         .page-a4 {
             width: 210mm;
@@ -131,7 +135,7 @@
             gap: var(--gutter) var(--gutter);
         }
 
-        /* ... (styles des cartes, inchangés) ... */
+        /* ---------- STYLES COMMUNS DES CARTES ---------- */
         .card {
             box-sizing: border-box; 
             width: var(--card-width);
@@ -141,6 +145,7 @@
             display: flex;
             overflow-y: auto;
         }
+
         .recto {
             background: white;
             justify-content: center;
@@ -148,6 +153,7 @@
             font-size: var(--font-size-recto);
             font-weight: bold;
         }
+
         .verso {
             flex-direction: column;
             padding: 3mm;
@@ -181,6 +187,7 @@
             padding-top: 2%;
             word-break: break-all;
         }
+        
         .verso.hide-decomp .decomposition { display: none; }
         .verso.hide-divisors .divisors { display: none; }
 
@@ -190,7 +197,6 @@
 
         .verso.style-full {
             background-color: var(--color);
-            /* ##### CORRECTION IMPRESSION COULEUR ##### */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -199,7 +205,6 @@
         }
         .verso.style-band .category {
             background-color: var(--color);
-            /* ##### CORRECTION IMPRESSION COULEUR ##### */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -210,9 +215,13 @@
 
         /* ---------- STYLES POUR L'IMPRESSION ---------- */
         @media print {
-            body > .settings-panel, body > #print-button { display: none; }
+            body > .topbar-nav, /* Cacher le bouton retour à l'impression */
+            body > .settings-panel, 
+            body > #print-button { 
+                display: none; 
+            }
             body { padding: 0; background-color: white; }
-            #preview-area { gap: 0; }
+            #preview-area { gap: 0; padding-bottom: 0; }
             .page-a4 {
                 width: 210mm;
                 height: 297mm;
@@ -234,6 +243,10 @@
     </style>
 </head>
 <body>
+
+    <div class="topbar-nav">
+      <a class="back" href="index.html">← Retour aux outils</a>
+    </div>
 
     <div class="settings-panel">
         <h1>Générateur de Cartes</h1>
@@ -309,7 +322,7 @@
 
     <script>
         // =========================================================
-        //  Logique du jeu
+        //  Logique du jeu (inchangée)
         // =========================================================
 
         function isPrime(n) {
@@ -415,7 +428,7 @@
         }
 
         // =========================================================
-        //  Générateur de pages
+        //  Générateur de pages (inchangé)
         // =========================================================
         
         const previewArea = document.getElementById('preview-area');
@@ -580,5 +593,4 @@
 
     </script>
 </body>
-
 </html>
