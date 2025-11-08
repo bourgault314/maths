@@ -9,23 +9,19 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f0f4f8;
             margin: 0;
-            /* On garde un peu de padding en haut pour le bouton retour */
             padding: 20px 20px 0 20px; 
         }
         
-        /* ##### AJOUT DU STYLE POUR LE BOUTON RETOUR ##### */
         .topbar-nav { 
             display:flex; align-items:center; gap:12px; 
-            margin-bottom:20px; /* Marge pour le séparer du panneau */
-            max-width: 1200px; /* Doit être le même que .settings-panel */
+            margin-bottom:20px; 
+            max-width: 1200px; 
             margin-left: auto; margin-right: auto;
         }
         .topbar-nav .back {
             display:inline-block; padding:8px 12px; border:1.5px solid #2563eb; color:#fff; background:#2563eb;
             border-radius:12px; text-decoration:none; font-weight:800;
         }
-        /* ##### FIN DE L'AJOUT ##### */
-
 
         .settings-panel {
             max-width: 1200px; 
@@ -119,7 +115,6 @@
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            /* Padding en bas pour ne pas être collé au bord */
             padding-bottom: 20px; 
         }
         .page-a4 {
@@ -179,6 +174,7 @@
             text-align: center;
             color: #777777;
             padding-top: 2%;
+            word-break: break-all;
         }
         .verso .divisors {
             font-size: calc(var(--font-size-verso-base) * 0.8);
@@ -215,7 +211,7 @@
 
         /* ---------- STYLES POUR L'IMPRESSION ---------- */
         @media print {
-            body > .topbar-nav, /* Cacher le bouton retour à l'impression */
+            body > .topbar-nav, 
             body > .settings-panel, 
             body > #print-button { 
                 display: none; 
@@ -265,7 +261,6 @@
             <select id="layout-select">
                 <option value="3x3">Grandes (3x3 / page)</option>
                 <option value="4x4">Moyennes (4x4 / page)</option>
-                <option value="5x5">Petites (5x5 / page)</option>
             </select>
         </div>
 
@@ -322,7 +317,7 @@
 
     <script>
         // =========================================================
-        //  Logique du jeu (inchangée)
+        //  Logique du jeu
         // =========================================================
 
         function isPrime(n) {
@@ -428,7 +423,7 @@
         }
 
         // =========================================================
-        //  Générateur de pages (inchangé)
+        //  Générateur de pages (Logique de calcul corrigée)
         // =========================================================
         
         const previewArea = document.getElementById('preview-area');
@@ -449,48 +444,51 @@
         function updateCSSVars() {
             const docEl = document.documentElement;
             
-            const layout = layoutSelect.value;
-            if (layout === '3x3') {
-                currentLayout = {
-                    cardsPerPage: 9, cols: 3, rows: 3,
-                    cardWidth: 63, cardHeight: 88, gutter: 5,
-                    versoOrder: [2, 1, 0, 5, 4, 3, 8, 7, 6]
-                };
-            } else if (layout === '4x4') {
-                currentLayout = {
-                    cardsPerPage: 16, cols: 4, rows: 4,
-                    cardWidth: 49.5, cardHeight: 71.25, gutter: 4,
-                    versoOrder: [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]
-                };
-            } else if (layout === '5x5') {
-                currentLayout = {
-                    cardsPerPage: 25, cols: 5, rows: 5,
-                    cardWidth: 38.8, cardHeight: 56.2, gutter: 4,
-                    versoOrder: [4, 3, 2, 1, 0, 9, 8, 7, 6, 5, 14, 13, 12, 11, 10, 19, 18, 17, 16, 15, 24, 23, 22, 21, 20]
-                };
-            }
-            
-            const marginX = (210 - (currentLayout.cols * currentLayout.cardWidth) - ((currentLayout.cols - 1) * currentLayout.gutter)) / 2;
-            const marginY = (297 - (currentLayout.rows * currentLayout.cardHeight) - ((currentLayout.rows - 1) * currentLayout.gutter)) / 2;
+            const PAGE_W = 210;
+            const PAGE_H = 297;
+            const LAYOUT_MARGIN_X = 5.5; 
+            const LAYOUT_MARGIN_Y = 11.5; 
+            const GUTTER = 5; 
 
-            docEl.style.setProperty('--card-width', `${currentLayout.cardWidth}mm`);
-            docEl.style.setProperty('--card-height', `${currentLayout.cardHeight}mm`);
-            docEl.style.setProperty('--gutter', `${currentLayout.gutter}mm`);
-            docEl.style.setProperty('--grid-cols', currentLayout.cols);
-            docEl.style.setProperty('--grid-rows', currentLayout.rows);
-            docEl.style.setProperty('--margin-x', `${marginX}mm`);
-            docEl.style.setProperty('--margin-y', `${marginY}mm`);
+            const layout = layoutSelect.value;
+            let cols, rows, cardsPerPage, versoOrder;
+
+            if (layout === '3x3') {
+                cols = 3; rows = 3; cardsPerPage = 9;
+                versoOrder = [2, 1, 0, 5, 4, 3, 8, 7, 6];
+            } else if (layout === '4x4') {
+                cols = 4; rows = 4; cardsPerPage = 16;
+                versoOrder = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12];
+            }
+
+            const totalGutterX = (cols - 1) * GUTTER;
+            const totalGutterY = (rows - 1) * GUTTER;
+            
+            const cardWidth = (PAGE_W - (2 * LAYOUT_MARGIN_X) - totalGutterX) / cols;
+            const cardHeight = (PAGE_H - (2 * LAYOUT_MARGIN_Y) - totalGutterY) / rows;
+
+            docEl.style.setProperty('--card-width', `${cardWidth}mm`);
+            docEl.style.setProperty('--card-height', `${cardHeight}mm`);
+            docEl.style.setProperty('--gutter', `${GUTTER}mm`);
+            docEl.style.setProperty('--grid-cols', cols);
+            docEl.style.setProperty('--grid-rows', rows);
+            docEl.style.setProperty('--margin-x', `${LAYOUT_MARGIN_X}mm`);
+            docEl.style.setProperty('--margin-y', `${LAYOUT_MARGIN_Y}mm`);
             
             docEl.style.setProperty('--font-size-recto', `${fontRectoInput.value}px`);
             docEl.style.setProperty('--font-size-verso-base', `${fontVersoInput.value}px`);
 
             docEl.style.setProperty('--decalage-x', `${decalageXInput.value}mm`);
             docEl.style.setProperty('--decalage-y', `${decalageYInput.value}mm`);
+
+            currentLayout.cardsPerPage = cardsPerPage;
+            currentLayout.versoOrder = versoOrder;
         }
         
+        // ##### CORRECTION DE LA FAUTE DE FRAPPE ICI #####
         decalageXInput.addEventListener('input', updateCSSVars);
         decalageYInput.addEventListener('input', updateCSSVars);
-        layoutSelect.addEventListener('change', updateCSSVars);
+        layoutSelect.addEventListener('change', updateCSSVars); // Le 's' est bien supprimé
         fontRectoInput.addEventListener('input', updateCSSVars);
         fontVersoInput.addEventListener('input', updateCSSVars);
         
@@ -498,7 +496,8 @@
 
 
         function generatePages() {
-            updateCSSVars();
+            // J'enlève l'appel redondant ici, les "addEventListener" sont suffisants
+            // updateCSSVars(); 
             
             previewArea.innerHTML = ''; 
 
@@ -513,6 +512,10 @@
                 return;
             }
 
+            // On s'assure que les variables de layout sont à jour AVANT de les utiliser
+            // C'est utile si l'utilisateur change un champ (ex: police) SANS re-changer le layout
+            updateCSSVars(); 
+            
             const allCardsData = [];
             for (let n = min; n <= max; n++) {
                 allCardsData.push({
@@ -582,10 +585,13 @@
             
             const divisorsText = info.divisors.join(', ');
 
+            // On remplace le premier ": " par ":<br>" pour le saut de ligne
+            const decompText = info.decomposition.replace(': ', ':<br>');
+
             card.innerHTML = `
                 <div class="category">${info.category}</div>
                 <div class="justification">${info.justification}</div>
-                <div class="decomposition">${info.decomposition}</div>
+                <div class="decomposition">${decompText}</div>
                 <div class="divisors">Diviseurs: ${divisorsText}</div>
             `;
             return card;
