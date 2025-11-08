@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Outils pédagogiques</title>
 <style>
-  :root{ --bg:#f7f7f7; --fg:#0b0b0b; --card:#fff; --border:#444; --primary:#2563eb; }
+  :root{
+    --bg:#f7f7f7; --fg:#0b0b0b; --card:#fff; --border:#ddd; --primary:#2563eb;
+    /* Ajout de couleurs pour les accents */
+    --c1: #3b82f6; /* blue */
+    --c2: #16a34a; /* green */
+    --c3: #ea580c; /* orange */
+    --c4: #ca8a04; /* yellow */
+    --c5: #9333ea; /* purple */
+    --c6: #db2777; /* pink */
+    --c7: #e11d48; /* rose */
+  }
   *{box-sizing:border-box}
   html,body{height:100%} html{-webkit-text-size-adjust:100%}
   body{
@@ -28,13 +38,34 @@
 
   a.card{
     display:block; text-decoration:none; color:inherit;
-    background:var(--card); border:1.5px solid var(--border); border-radius:16px;
+    background:var(--card); 
+    border:1.5px solid var(--border);
+    /* AMÉLIORATION : Ajout d'un accent de couleur */
+    border-top: 6px solid var(--border);
+    border-radius:16px;
     padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06);
     transition:transform .08s ease, box-shadow .08s ease, border-color .08s ease;
     min-height:112px;
   }
-  a.card:hover{ transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,.10); border-color:#222; }
-  .title{ margin:0 0 6px; font-weight:900; font-size:clamp(18px,2.8vw,22px) }
+  a.card:hover{ 
+    transform:translateY(-2px); 
+    box-shadow:0 4px 16px rgba(0,0,0,.10); 
+    border-color: #555;
+  }
+  /* On applique les couleurs d'accent au survol */
+  a.card[data-color="1"]:hover{ border-top-color: var(--c1); }
+  a.card[data-color="2"]:hover{ border-top-color: var(--c2); }
+  a.card[data-color="3"]:hover{ border-top-color: var(--c3); }
+  a.card[data-color="4"]:hover{ border-top-color: var(--c4); }
+  a.card[data-color="5"]:hover{ border-top-color: var(--c5); }
+  a.card[data-color="6"]:hover{ border-top-color: var(--c6); }
+  a.card[data-color="7"]:hover{ border-top-color: var(--c7); }
+
+  .title{ 
+    margin:0 0 6px; font-weight:900; font-size:clamp(18px,2.8vw,22px);
+    /* AMÉLIORATION : Espace pour l'emoji */
+    display:flex; align-items:center; gap: 10px;
+  }
   .desc{ margin:0; color:#444; font-size:clamp(14px,2.4vw,16px) }
 
   footer{ margin-top:16px; color:#666; font-size:14px }
@@ -43,8 +74,6 @@
 <body>
   <main class="wrap">
     <div class="topbar">
-      <!-- IMPORTANT : si cette page est dans un sous-dossier (ex: /maths/outils/), ../ renvoie bien vers /maths/ -->
-      <!-- Si tu as mis CET index directement dans /maths/, remplace ../ par ./ -->
       <a class="back" href="../">← Retour à Maths</a>
     </div>
 
@@ -54,34 +83,38 @@
     </header>
 
     <section class="grid">
-      <a class="card" href="glisse-nombres-decimaux.html">
-        <div class="title">Glisse-nombres (décimaux)</div>
+      <a class="card" href="cartes_premiers_1_100.html" data-color="7">
+        <div class="title">🃏 Générateur de Cartes</div>
+        <p class="desc">Nombres premiers, composés, diviseurs, etc. (1-100 ou plus).</p>
+      </a>
+
+      <a class="card" href="glisse-nombres-decimaux.html" data-color="1">
+        <div class="title">↔️ Glisse-nombres (décimaux)</div>
         <p class="desc">Manipuler la virgule, ×10 / ÷10, zéros d’affichage, sortie.</p>
       </a>
 
-      <a class="card" href="glisse-entiers-flex.html">
-        <div class="title">Glisse-entiers (flexible)</div>
+      <a class="card" href="glisse-entiers-flex.html" data-color="2">
+        <div class="title">🔢 Glisse-entiers (flexible)</div>
         <p class="desc">Entiers avec 6 à 12 colonnes. ÷10 indique aussi le reste.</p>
       </a>
 
-      <a class="card" href="conversions.html">
-        <div class="title">Conversions</div>
+      <a class="card" href="conversions.html" data-color="3">
+        <div class="title">⚖️ Conversions</div>
         <p class="desc">Convertir rapidement des unités (longueur, masse, …).</p>
       </a>
 
-      <a class="card" href="bouliers/">
-        <div class="title">Bouliers</div>
+      <a class="card" href="bouliers/" data-color="4">
+        <div class="title">🧮 Bouliers</div>
         <p class="desc">Ateliers et activités autour du boulier.</p>
       </a>
 
-      <!-- ★ NOUVEL OUTIL -->
-      <a class="card" href="bandes_maker_v2.html">
-        <div class="title">Bandes maker</div>
+      <a class="card" href="bandes_maker_v2.html" data-color="5">
+        <div class="title">📏 Bandes maker</div>
         <p class="desc">Générateur de bandes (fractions)</p>
       </a>
 
-      <a class="card" href="disque_maker.html">
-        <div class="title">Disques maker</div>
+      <a class="card" href="disque_maker.html" data-color="6">
+        <div class="title">⭕️ Disques maker</div>
         <p class="desc">Générateur de disques (fractions) </p>
       </a>
     </section>
@@ -91,8 +124,8 @@
   <script>
     // Petit secours : si le bouton « Retour à Maths » mène à une 404 selon l’endroit où tu poses ce fichier,
     // dé-commente l’une de ces lignes :
-    // document.querySelector('.back').setAttribute('href','/maths/');     // vers /maths à la racine du site
-    // document.querySelector('.back').setAttribute('href','./');          // si l’index est lui-même dans /maths/
+    // document.querySelector('.back').setAttribute('href','/maths/');    // vers /maths à la racine du site
+    // document.querySelector('.back').setAttribute('href','./');         // si l’index est lui-même dans /maths/
   </script>
 </body>
 </html>
