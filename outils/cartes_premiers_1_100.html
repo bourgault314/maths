@@ -6,6 +6,22 @@
     <style>
         /* ... (tous les styles de l'interface, inchangés) ... */
         body {
+            <style>
+      .topbar-nav { 
+        display:flex; align-items:center; gap:12px; margin-bottom:10px; 
+        max-width: 1200px; /* Doit être le même que .settings-panel */
+        margin-left: auto; margin-right: auto;
+      }
+      .topbar-nav .back {
+        display:inline-block; padding:8px 12px; border:1.5px solid #2563eb; color:#fff; background:#2563eb;
+        border-radius:12px; text-decoration:none; font-weight:800;
+      }
+    </style>
+    <div class="topbar-nav">
+      <a class="back" href="index.html">← Retour aux outils</a>
+    </div>
+    <div class="settings-panel">
+      <h1>Générateur de Cartes</h1>
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f0f4f8;
             margin: 0;
@@ -564,4 +580,5 @@
 
     </script>
 </body>
+
 </html>
