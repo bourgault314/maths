@@ -174,7 +174,7 @@
             text-align: center;
             color: #777777;
             padding-top: 2%;
-            word-break: break-all;
+            word-break: break-all; 
         }
         .verso .divisors {
             font-size: calc(var(--font-size-verso-base) * 0.8);
@@ -372,10 +372,12 @@
             return "Décomposition : " + f.join(' \u00D7 ');
         }
 
+        // ##### FONCTION GETINFO (MODIFIÉE) #####
         function getInfo(n) {
             const f = getFactors(n);
             const divisors = getDivisors(n); 
             
+            // Cas 1: Le nombre est 1
             if (n === 1) {
                 return {
                     category: "Composé",
@@ -385,6 +387,7 @@
                     divisors: divisors
                 };
             }
+            // Cas 2: Le nombre est Premier
             if (isPrime(n)) {
                 return {
                     category: "Premier",
@@ -395,22 +398,30 @@
                 };
             }
             
-            let justification = "A plus de deux diviseurs.";
+            // Cas 3: Le nombre est Composé (on rentre ici SEULEMENT si n > 1 et !isPrime)
+            let justification = "A plus de deux diviseurs."; // Justification par défaut
+
+            // On applique les règles de la plus spécifique à la plus générale
             if (n % 10 === 0) {
-                justification = "Se termine par 0, donc divisible par 10.";
+                // MODIF 1: Vocabulaire
+                justification = "Le chiffre des unités est 0, donc divisible par 10.";
             } else if (n % 2 === 0) {
-                justification = "Pair, donc divisible par 2.";
+                justification = "Pair, donc divisible par 2."; // Correct
             } else if (n % 5 === 0) {
-                justification = "Se termine par 5, donc divisible par 5.";
-            } else {
-                const { expr, sum } = sumExpr(n);
-                if (n % 9 === 0) {
-                    justification = `Somme des chiffres : ${expr}, donc divisible par 9.`;
-                } else if (n % 3 === 0) {
-                    justification = `Somme des chiffres : ${expr}, donc divisible par 3.`;
-                } else if (f.length >= 2) {
-                    justification = `${n} = ${f[0]} \u00D7 ${n / f[0]}.`;
-                }
+                // MODIF 2: Vocabulaire
+                justification = "Le chiffre des unités est 5, donc divisible par 5.";
+            } else if (n === 9) {
+                // MODIF 3: Cas spécial pour 9
+                justification = "9 = 3 \u00D7 3, donc 3 divise 9.";
+            } else if (n % 9 === 0) {
+                const { expr } = sumExpr(n);
+                justification = `Somme des chiffres : ${expr}, donc divisible par 9.`;
+            } else if (n % 3 === 0) {
+                const { expr } = sumExpr(n);
+                justification = `Somme des chiffres : ${expr}, donc divisible par 3.`;
+            } else if (f.length >= 2) {
+                // MODIF 4: Justification par défaut (pour 49, 77, 91...)
+                justification = `${n} = ${f[0]} \u00D7 ${n / f[0]}, donc ${f[0]} divise ${n}.`;
             }
             
             return {
@@ -485,10 +496,9 @@
             currentLayout.versoOrder = versoOrder;
         }
         
-        // ##### CORRECTION DE LA FAUTE DE FRAPPE ICI #####
         decalageXInput.addEventListener('input', updateCSSVars);
         decalageYInput.addEventListener('input', updateCSSVars);
-        layoutSelect.addEventListener('change', updateCSSVars); // Le 's' est bien supprimé
+        layoutSelect.addEventListener('change', updateCSSVars);
         fontRectoInput.addEventListener('input', updateCSSVars);
         fontVersoInput.addEventListener('input', updateCSSVars);
         
@@ -496,8 +506,7 @@
 
 
         function generatePages() {
-            // J'enlève l'appel redondant ici, les "addEventListener" sont suffisants
-            // updateCSSVars(); 
+            updateCSSVars();
             
             previewArea.innerHTML = ''; 
 
@@ -511,10 +520,6 @@
                 alert("Le nombre de début doit être inférieur au nombre de fin.");
                 return;
             }
-
-            // On s'assure que les variables de layout sont à jour AVANT de les utiliser
-            // C'est utile si l'utilisateur change un champ (ex: police) SANS re-changer le layout
-            updateCSSVars(); 
             
             const allCardsData = [];
             for (let n = min; n <= max; n++) {
@@ -587,12 +592,15 @@
 
             // On remplace le premier ": " par ":<br>" pour le saut de ligne
             const decompText = info.decomposition.replace(': ', ':<br>');
+            const justificationText = info.justification.replace(': ', ':<br>');
+            const divisorsFullText = `Diviseurs: ${divisorsText}`.replace(': ', ':<br>');
+
 
             card.innerHTML = `
                 <div class="category">${info.category}</div>
-                <div class="justification">${info.justification}</div>
+                <div class="justification">${justificationText}</div>
                 <div class="decomposition">${decompText}</div>
-                <div class="divisors">Diviseurs: ${divisorsText}</div>
+                <div class="divisors">${divisorsFullText}</div>
             `;
             return card;
         }
