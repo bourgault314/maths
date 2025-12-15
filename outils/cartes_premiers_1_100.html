@@ -4,97 +4,129 @@
     <meta charset="UTF-8">
     <title>Générateur de Cartes (Nombres)</title>
     <style>
-        /* ---------- STYLE DE L'INTERFACE (PANNEAU DE CONTRÔLE) ---------- */
+        /* =========================================================
+           1. STYLE DE L'INTERFACE
+           ========================================================= */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f4f8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
             margin: 0;
-            padding: 20px 20px 0 20px; 
+            padding: 20px; 
+            color: #333;
         }
         
         .topbar-nav { 
             display:flex; align-items:center; gap:12px; 
             margin-bottom:20px; 
-            max-width: 1200px; 
+            max-width: 1250px; 
             margin-left: auto; margin-right: auto;
         }
         .topbar-nav .back {
-            display:inline-block; padding:8px 12px; border:1.5px solid #2563eb; color:#fff; background:#2563eb;
-            border-radius:12px; text-decoration:none; font-weight:800;
+            display:inline-block; padding:8px 16px; 
+            background:#2563eb; color:#fff; 
+            border-radius:8px; text-decoration:none; font-weight:600;
+            font-size: 14px;
+            transition: background 0.2s;
         }
+        .topbar-nav .back:hover { background: #1d4ed8; }
 
+        /* MENU CONFIGURATION */
         .settings-panel {
-            max-width: 1200px; 
-            margin: 0 auto 20px auto;
-            padding: 20px;
+            max-width: 1250px; 
+            margin: 0 auto 25px auto;
+            padding: 20px 25px;
             background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-            border: 1px solid #ddd;
+            gap: 25px;
+            align-items: flex-start;
         }
+        
         .settings-panel h1 {
             width: 100%;
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
             padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            color: #333;
+            border-bottom: 2px solid #f3f4f6;
+            color: #111827;
+            font-size: 20px;
         }
+
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
         .control-group label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .control-group input[type="number"],
-        .control-group select {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
+
+        .row-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
-        .control-group input[type="number"] {
-            width: 70px;
+
+        input[type="number"], select {
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 15px;
+            color: #374151;
+            background-color: #fff;
         }
-        .control-group .small-input {
-            width: 50px;
-            padding: 8px;
-            margin-left: 5px;
+        input[type="number"] { width: 70px; }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .checkbox-group {
             display: flex;
             align-items: center;
-            height: 40px; 
-            margin-top: 5px;
+        }
+        .checkbox-group input {
+            width: 16px; height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
         }
         .checkbox-group label {
-            margin-left: 8px;
-            user-select: none;
+            text-transform: none;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0;
         }
+
         .action-buttons {
+            margin-left: auto; 
             display: flex;
-            gap: 10px;
-            margin-left: auto;
+            gap: 12px;
+            align-self: flex-end;
         }
         button {
             padding: 10px 20px;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 600;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
         }
-        #generate-button { background-color: #007bff; color: white; }
-        #print-button { background-color: #28a745; color: white; display: none; }
+        #generate-button { background-color: #2563eb; color: white; }
+        #print-button { background-color: #059669; color: white; display: none; }
 
-        /* ---------- DÉFINITION DES CARTES ET DE LA GRILLE ---------- */
+
+        /* =========================================================
+           2. CONFIGURATION PAGE A4
+           ========================================================= */
         :root {
             --card-width: 63mm;
             --card-height: 88mm;
@@ -109,13 +141,12 @@
             --font-size-verso-base: 16px;
         }
 
-        /* ---------- STYLES POUR L'APERÇU ÉCRAN ---------- */
         #preview-area {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            padding-bottom: 20px; 
+            padding-bottom: 40px; 
         }
         .page-a4 {
             width: 210mm;
@@ -123,99 +154,144 @@
             box-sizing: border-box;
             background: white;
             padding: var(--margin-y) var(--margin-x);
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
             display: grid;
             grid-template-columns: repeat(var(--grid-cols), var(--card-width));
             grid-template-rows: repeat(var(--grid-rows), var(--card-height));
             gap: var(--gutter) var(--gutter);
         }
 
-        /* ---------- STYLES COMMUNS DES CARTES ---------- */
+        /* =========================================================
+           3. STYLE CARTES
+           ========================================================= */
         .card {
             box-sizing: border-box; 
             width: var(--card-width);
             height: var(--card-height);
-            border: 0.6pt solid #999999;
+            border: 1px solid #9ca3af; 
             overflow: hidden;
-            display: flex;
-            overflow-y: auto;
+            position: relative;
         }
 
         .recto {
             background: white;
+            display: flex;
             justify-content: center;
             align-items: center;
             font-size: var(--font-size-recto);
-            font-weight: bold;
+            font-weight: 700;
+            color: #111;
         }
 
         .verso {
-            flex-direction: column;
-            padding: 3mm;
-            justify-content: space-around;
-        }
-        .verso .category {
-            font-size: var(--font-size-verso-base);
-            font-weight: bold;
-            text-align: center;
-            padding-bottom: 2%;
-        }
-        .verso .justification {
-            font-size: calc(var(--font-size-verso-base) * 0.9);
-            text-align: center;
-            flex-grow: 1;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            padding: 0; 
+            background-color: white; 
+        }
+
+        /* En-tête */
+        .verso-header {
+            flex: 0 0 18%; 
+            display: flex;
             justify-content: center;
-            padding: 2%;
-        }
-        .verso .decomposition {
-            font-size: calc(var(--font-size-verso-base) * 0.8);
+            align-items: center;
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: calc(var(--font-size-verso-base) * 1.2);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            background-color: var(--color); 
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
             text-align: center;
-            color: #777777;
-            padding-top: 2%;
-            word-break: break-all; 
+            line-height: 1.1;
+            padding: 0 4px;
         }
-        .verso .divisors {
-            font-size: calc(var(--font-size-verso-base) * 0.8);
+
+        /* Corps */
+        .verso-body {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            padding: 4px 8px;
+            gap: 10px; 
+        }
+
+        .info-block {
             text-align: center;
-            color: #555;
-            padding-top: 2%;
-            word-break: break-all;
+            width: 100%;
         }
         
-        .verso.hide-decomp .decomposition { display: none; }
-        .verso.hide-divisors .divisors { display: none; }
+        .label {
+            display: block;
+            font-size: calc(var(--font-size-verso-base) * 0.6);
+            text-transform: uppercase;
+            color: #6b7280; 
+            margin-bottom: 3px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .content {
+            font-size: calc(var(--font-size-verso-base) * 0.85);
+            color: #1f2937;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .criteria-list li {
+            margin-bottom: 3px;
+        }
 
-        /* --- LOGIQUE DES STYLES DE COULEUR --- */
-        .verso.premier { --color: #D9EAF7; } 
-        .verso.compose { --color: #FFF1DA; } 
-
-        .verso.style-full {
-            background-color: var(--color);
+        .math-strong {
+            font-weight: 700;
+            color: #000;
+            font-size: calc(var(--font-size-verso-base) * 1.05);
+        }
+        
+        /* Pied de page */
+        .verso-footer {
+            flex: 0 0 auto; 
+            padding: 5px 4px;
+            background-color: #f9fafb;
+            border-top: 1px dashed #d1d5db;
+            text-align: center;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .verso.style-band {
-            background-color: white;
-        }
-        .verso.style-band .category {
-            background-color: var(--color);
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .verso.style-white {
-            background-color: white;
+        .divisors-list {
+            font-size: calc(var(--font-size-verso-base) * 0.8);
+            color: #4b5563;
+            font-weight: 600;
         }
 
+        /* Couleurs */
+        .verso.premier { --color: #dbeafe; } 
+        .verso.compose { --color: #ffedd5; } 
 
-        /* ---------- STYLES POUR L'IMPRESSION ---------- */
+        .verso.style-full { background-color: var(--color); }
+        .verso.style-full .verso-header { border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .verso.style-full .verso-footer { background-color: rgba(255,255,255,0.4); border-top: 1px solid rgba(0,0,0,0.05); }
+        
+        .verso.style-white { background-color: white; }
+        .verso.style-white .verso-header { background-color: white; border-bottom: 2px solid #374151; }
+
+        .hide-decomp .block-decomp { display: none; }
+        .hide-divisors .verso-footer { display: none; }
+
+        /* =========================================================
+           5. IMPRESSION
+           ========================================================= */
         @media print {
             body > .topbar-nav, 
             body > .settings-panel, 
-            body > #print-button { 
-                display: none; 
-            }
+            body > #print-button { display: none; }
             body { padding: 0; background-color: white; }
             #preview-area { gap: 0; padding-bottom: 0; }
             .page-a4 {
@@ -231,11 +307,7 @@
                 transform: translate(var(--decalage-x), var(--decalage-y));
             }
         }
-        @page {
-            size: A4;
-            margin: 0;
-        }
-
+        @page { size: A4; margin: 0; }
     </style>
 </head>
 <body>
@@ -248,76 +320,76 @@
         <h1>Générateur de Cartes</h1>
         
         <div class="control-group">
-            <label for="range-min">Plage de Nombres :</label>
-            <div>
-                <input type="number" id="range-min" value="1" min="1">
-                <span> à </span>
-                <input type="number" id="range-max" value="100" min="1">
+            <label>Nombres & Disposition</label>
+            <div class="row-inputs">
+                <input type="number" id="range-min" value="2" min="1" placeholder="Min">
+                <span>à</span>
+                <input type="number" id="range-max" value="100" min="1" placeholder="Max">
             </div>
-        </div>
-
-        <div class="control-group">
-            <label for="layout-select">Taille des cartes (Grille) :</label>
-            <select id="layout-select">
+            <select id="layout-select" style="margin-top: 5px;">
                 <option value="3x3">Grandes (3x3 / page)</option>
                 <option value="4x4">Moyennes (4x4 / page)</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label for="style-select">Style du Verso :</label>
+            <label>Style & Police</label>
             <select id="style-select">
-                <option value="style-full">Full Pastel</option>
                 <option value="style-band">Bandeau en-tête</option>
-                <option value="style-white">Fond Blanc</option>
+                <option value="style-full">Tout Coloré</option>
+                <option value="style-white">Minimaliste (N&B)</option>
             </select>
+            <div class="row-inputs" style="margin-top: 5px;">
+                <label style="font-weight:500; font-size:12px;">Recto:</label>
+                <input type="number" id="font-recto-size" value="48" step="1">
+                <label style="font-weight:500; font-size:12px;">Verso:</label>
+                <input type="number" id="font-verso-size" value="16" step="1">
+            </div>
         </div>
         
         <div class="control-group">
-            <label>Taille Police (px) :</label>
-            <div>
-                <label for="font-recto-size">Recto:</label>
-                <input type="number" id="font-recto-size" value="48" step="1" class="small-input">
-                <label for="font-verso-size" style="margin-left: 10px;">Verso:</label>
-                <input type="number" id="font-verso-size" value="16" step="1" class="small-input">
+            <label>Infos Pédagogiques</label>
+            <div class="options-container">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="use-powers">
+                    <label for="use-powers">Puissances (ex: 2²)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-squares">
+                    <label for="show-squares">Carrés Parfaits (&radic;)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-decomp" checked>
+                    <label for="show-decomp">Décomposition</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-divisors" checked>
+                    <label for="show-divisors">Liste diviseurs</label>
+                </div>
             </div>
         </div>
 
         <div class="control-group">
-            <label>Décalage Verso (mm) :</label>
-            <div>
-                <label for="decalage-x">X:</label>
-                <input type="number" id="decalage-x" value="0" step="0.5" class="small-input">
-                <label for="decalage-y" style="margin-left: 10px;">Y:</label>
-                <input type="number" id="decalage-y" value="0" step="0.5" class="small-input">
+            <label>Calibrage (mm)</label>
+            <div class="row-inputs">
+                <label style="font-weight:500; font-size:12px;">X:</label>
+                <input type="number" id="decalage-x" value="0" step="0.5">
+                <label style="font-weight:500; font-size:12px;">Y:</label>
+                <input type="number" id="decalage-y" value="0" step="0.5">
             </div>
         </div>
-
-        <div class="control-group">
-            <label>Options d'affichage (Verso) :</label>
-            <div class="checkbox-group">
-                <input type="checkbox" id="show-decomp" checked>
-                <label for="show-decomp">Afficher la décomposition</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="show-divisors">
-                <label for="show-divisors">Afficher la liste des diviseurs</label>
-            </div>
-        </div>
-
 
         <div class="action-buttons">
-            <button id="generate-button">Générer l'aperçu</button>
-            <button id="print-button">Imprimer / Générer PDF</button>
+            <button id="generate-button">Générer</button>
+            <button id="print-button">Imprimer</button>
         </div>
     </div>
 
-    <div id="preview-area">
-        </div>
+    <div id="preview-area"></div>
 
     <script>
         // =========================================================
-        //  Logique du jeu
+        //  LOGIQUE MATHÉMATIQUE
         // =========================================================
 
         function isPrime(n) {
@@ -368,188 +440,213 @@
             return Array.from(divisors).sort((a, b) => a - b);
         }
 
-        function joinFactors(f) {
-            return "Décomposition : " + f.join(' \u00D7 ');
+        function formatDecomposition(factors, usePowers) {
+            if (!usePowers) return factors.join(' \u00D7 ');
+            const counts = {};
+            factors.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+            const parts = [];
+            Object.keys(counts).sort((a,b) => a-b).forEach(base => {
+                const count = counts[base];
+                parts.push(count === 1 ? base : `${base}<sup>${count}</sup>`);
+            });
+            return parts.join(' \u00D7 ');
         }
 
-        // ##### FONCTION GETINFO (MODIFIÉE) #####
-        function getInfo(n) {
+        // =========================================================
+        //  NOUVELLE LOGIQUE
+        // =========================================================
+        function getInfo(n, usePowers, showSquares) {
             const f = getFactors(n);
             const divisors = getDivisors(n); 
-            
-            // Cas 1: Le nombre est 1
+            let decompStr = formatDecomposition(f, usePowers);
+
+            // Est-ce un carré parfait ?
+            let squareData = null;
+            if (showSquares) {
+                const sqrt = Math.sqrt(n);
+                if (Number.isInteger(sqrt)) {
+                    // VERSION SIMPLE SANS CSS COMPLIQUÉ
+                    squareData = {
+                        root: sqrt,
+                        formatted: `Oui : &radic;${n} = ${sqrt}`
+                    };
+                }
+            }
+
+            // --- CAS 1 : UNITÉ ---
             if (n === 1) {
                 return {
-                    category: "Composé",
+                    displayCat: "Cas Particulier", 
                     cssClass: "compose",
-                    justification: "A un seul diviseur (1).",
-                    decomposition: joinFactors(f),
-                    divisors: divisors
-                };
-            }
-            // Cas 2: Le nombre est Premier
-            if (isPrime(n)) {
-                return {
-                    category: "Premier",
-                    cssClass: "premier",
-                    justification: "A seulement 1 et lui-même comme diviseurs.",
-                    decomposition: "Décomposition : " + n,
+                    justification: ["Le nombre 1 est l'unité."],
+                    squareData: squareData,
+                    decomposition: "Pas de facteurs premiers", 
                     divisors: divisors
                 };
             }
             
-            // Cas 3: Le nombre est Composé (on rentre ici SEULEMENT si n > 1 et !isPrime)
-            let justification = "A plus de deux diviseurs."; // Justification par défaut
+            // --- CAS 2 : NOMBRE PREMIER ---
+            if (isPrime(n)) {
+                return {
+                    displayCat: "Premier",
+                    cssClass: "premier",
+                    justification: ["N'a que deux diviseurs : 1 et lui-même."],
+                    squareData: squareData, 
+                    decomposition: `Lui-même : ${n}`,
+                    divisors: divisors
+                };
+            }
+            
+            // --- CAS 3 : NOMBRE COMPOSÉ ---
+            let justifications = [];
 
-            // On applique les règles de la plus spécifique à la plus générale
+            // 1. Critère Terminaison
             if (n % 10 === 0) {
-                // MODIF 1: Vocabulaire
-                justification = "Le chiffre des unités est 0, donc divisible par 10.";
-            } else if (n % 2 === 0) {
-                justification = "Pair, donc divisible par 2."; // Correct
-            } else if (n % 5 === 0) {
-                // MODIF 2: Vocabulaire
-                justification = "Le chiffre des unités est 5, donc divisible par 5.";
-            } else if (n === 9) {
-                // MODIF 3: Cas spécial pour 9
-                justification = "9 = 3 \u00D7 3, donc 3 divise 9.";
-            } else if (n % 9 === 0) {
-                const { expr } = sumExpr(n);
-                justification = `Somme des chiffres : ${expr}, donc divisible par 9.`;
+                justifications.push(`Le chiffre des unités est 0 : Divisible par 10, 5 et 2.`);
+            } else {
+                if (n % 5 === 0) justifications.push(`Le chiffre des unités est 5 : Divisible par 5.`);
+                if (n % 2 === 0) justifications.push(`Le chiffre des unités est pair : Divisible par 2.`);
+            }
+
+            // 2. Critère Somme (Gestion Vocabulaire "Nombre/Chiffre")
+            const { expr, sum } = sumExpr(n);
+            
+            if (n % 9 === 0) {
+                if (n < 10) {
+                    justifications.push(`C'est un nombre de la table de 9.`);
+                } else {
+                    justifications.push(`Somme des chiffres : ${expr}. Donc divisible par 9 et par 3.`);
+                }
             } else if (n % 3 === 0) {
-                const { expr } = sumExpr(n);
-                justification = `Somme des chiffres : ${expr}, donc divisible par 3.`;
-            } else if (f.length >= 2) {
-                // MODIF 4: Justification par défaut (pour 49, 77, 91...)
-                justification = `${n} = ${f[0]} \u00D7 ${n / f[0]}, donc ${f[0]} divise ${n}.`;
+                if (n < 10) {
+                    justifications.push(`C'est un nombre de la table de 3.`);
+                } else {
+                    justifications.push(`Somme des chiffres : ${expr}. Donc divisible par 3.`);
+                }
+            }
+
+            // 4. Cas "Sans critère évident"
+            if (justifications.length === 0) {
+                 const smallestFactor = f[0];
+                 const otherPart = n / smallestFactor;
+                 justifications.push(`Pas de critère évident, mais ${n} = ${smallestFactor} \u00D7 ${otherPart}.`);
+                 justifications.push(`Donc divisible par ${smallestFactor} et ${otherPart}.`);
             }
             
             return {
-                category: "Composé",
+                displayCat: "Composé",
                 cssClass: "compose",
-                justification: justification,
-                decomposition: joinFactors(f),
+                justification: justifications,
+                squareData: squareData, // On passe l'objet carré ici
+                decomposition: decompStr,
                 divisors: divisors
             };
         }
 
         // =========================================================
-        //  Générateur de pages (Logique de calcul corrigée)
+        //  INTERFACE ET GÉNÉRATION
         // =========================================================
         
         const previewArea = document.getElementById('preview-area');
         const generateBtn = document.getElementById('generate-button');
         const printBtn = document.getElementById('print-button');
         
-        const decalageXInput = document.getElementById('decalage-x');
-        const decalageYInput = document.getElementById('decalage-y');
-        const layoutSelect = document.getElementById('layout-select'); 
-        const fontRectoInput = document.getElementById('font-recto-size'); 
-        const fontVersoInput = document.getElementById('font-verso-size'); 
+        // Inputs
+        const inputs = {
+            rangeMin: document.getElementById('range-min'),
+            rangeMax: document.getElementById('range-max'),
+            layout: document.getElementById('layout-select'),
+            style: document.getElementById('style-select'),
+            fontRecto: document.getElementById('font-recto-size'),
+            fontVerso: document.getElementById('font-verso-size'),
+            decalageX: document.getElementById('decalage-x'),
+            decalageY: document.getElementById('decalage-y'),
+            usePowers: document.getElementById('use-powers'),
+            showSquares: document.getElementById('show-squares'),
+            showDecomp: document.getElementById('show-decomp'),
+            showDivisors: document.getElementById('show-divisors')
+        };
 
         let currentLayout = {};
 
         generateBtn.addEventListener('click', generatePages);
         printBtn.addEventListener('click', () => window.print());
+        
+        // Mettre à jour CSS dynamiquement
+        Object.values(inputs).forEach(el => {
+            el.addEventListener('input', updateCSSVars);
+            el.addEventListener('change', updateCSSVars);
+        });
 
         function updateCSSVars() {
             const docEl = document.documentElement;
+            const layout = inputs.layout.value;
+            let cols = (layout === '3x3') ? 3 : 4;
+            let rows = (layout === '3x3') ? 3 : 4;
             
-            const PAGE_W = 210;
-            const PAGE_H = 297;
-            const LAYOUT_MARGIN_X = 5.5; 
-            const LAYOUT_MARGIN_Y = 11.5; 
-            const GUTTER = 5; 
-
-            const layout = layoutSelect.value;
-            let cols, rows, cardsPerPage, versoOrder;
-
-            if (layout === '3x3') {
-                cols = 3; rows = 3; cardsPerPage = 9;
-                versoOrder = [2, 1, 0, 5, 4, 3, 8, 7, 6];
-            } else if (layout === '4x4') {
-                cols = 4; rows = 4; cardsPerPage = 16;
-                versoOrder = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12];
-            }
+            const PAGE_W = 210, PAGE_H = 297, GUTTER = 5;
+            const MARGIN_X = 5.5, MARGIN_Y = 11.5; 
 
             const totalGutterX = (cols - 1) * GUTTER;
             const totalGutterY = (rows - 1) * GUTTER;
             
-            const cardWidth = (PAGE_W - (2 * LAYOUT_MARGIN_X) - totalGutterX) / cols;
-            const cardHeight = (PAGE_H - (2 * LAYOUT_MARGIN_Y) - totalGutterY) / rows;
+            const cardWidth = (PAGE_W - (2 * MARGIN_X) - totalGutterX) / cols;
+            const cardHeight = (PAGE_H - (2 * MARGIN_Y) - totalGutterY) / rows;
 
             docEl.style.setProperty('--card-width', `${cardWidth}mm`);
             docEl.style.setProperty('--card-height', `${cardHeight}mm`);
             docEl.style.setProperty('--gutter', `${GUTTER}mm`);
             docEl.style.setProperty('--grid-cols', cols);
             docEl.style.setProperty('--grid-rows', rows);
-            docEl.style.setProperty('--margin-x', `${LAYOUT_MARGIN_X}mm`);
-            docEl.style.setProperty('--margin-y', `${LAYOUT_MARGIN_Y}mm`);
             
-            docEl.style.setProperty('--font-size-recto', `${fontRectoInput.value}px`);
-            docEl.style.setProperty('--font-size-verso-base', `${fontVersoInput.value}px`);
+            docEl.style.setProperty('--font-size-recto', `${inputs.fontRecto.value}px`);
+            docEl.style.setProperty('--font-size-verso-base', `${inputs.fontVerso.value}px`);
 
-            docEl.style.setProperty('--decalage-x', `${decalageXInput.value}mm`);
-            docEl.style.setProperty('--decalage-y', `${decalageYInput.value}mm`);
+            docEl.style.setProperty('--decalage-x', `${inputs.decalageX.value}mm`);
+            docEl.style.setProperty('--decalage-y', `${inputs.decalageY.value}mm`);
 
-            currentLayout.cardsPerPage = cardsPerPage;
-            currentLayout.versoOrder = versoOrder;
+            currentLayout.cardsPerPage = cols * rows;
+            if (layout === '3x3') currentLayout.versoOrder = [2, 1, 0, 5, 4, 3, 8, 7, 6];
+            else currentLayout.versoOrder = [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12];
         }
-        
-        decalageXInput.addEventListener('input', updateCSSVars);
-        decalageYInput.addEventListener('input', updateCSSVars);
-        layoutSelect.addEventListener('change', updateCSSVars);
-        fontRectoInput.addEventListener('input', updateCSSVars);
-        fontVersoInput.addEventListener('input', updateCSSVars);
         
         updateCSSVars();
 
-
         function generatePages() {
             updateCSSVars();
-            
             previewArea.innerHTML = ''; 
 
-            const min = parseInt(document.getElementById('range-min').value);
-            const max = parseInt(document.getElementById('range-max').value);
-            const style = document.getElementById('style-select').value;
-            const showDecomp = document.getElementById('show-decomp').checked;
-            const showDivisors = document.getElementById('show-divisors').checked; 
-
-            if (min > max) {
-                alert("Le nombre de début doit être inférieur au nombre de fin.");
-                return;
-            }
+            const min = parseInt(inputs.rangeMin.value);
+            const max = parseInt(inputs.rangeMax.value);
+            const style = inputs.style.value;
+            
+            if (min > max) { alert("Erreur min/max"); return; }
             
             const allCardsData = [];
             for (let n = min; n <= max; n++) {
-                allCardsData.push({
-                    number: n,
-                    info: getInfo(n)
+                allCardsData.push({ 
+                    number: n, 
+                    info: getInfo(n, inputs.usePowers.checked, inputs.showSquares.checked) 
                 });
             }
 
             const cardsPerPage = currentLayout.cardsPerPage;
-            const versoOrder = currentLayout.versoOrder;
-
             for (let i = 0; i < allCardsData.length; i += cardsPerPage) {
                 const pageChunk = allCardsData.slice(i, i + cardsPerPage);
                 
+                // RECTO
                 const rectoPage = createPageElement('recto');
                 for(let j = 0; j < cardsPerPage; j++) {
-                    if (pageChunk[j]) {
-                        rectoPage.appendChild(createRectoCard(pageChunk[j].number));
-                    } else {
-                        rectoPage.appendChild(createEmptyCard());
-                    }
+                    rectoPage.appendChild(pageChunk[j] ? createRectoCard(pageChunk[j].number) : createEmptyCard());
                 }
                 previewArea.appendChild(rectoPage);
 
+                // VERSO
                 const versoPage = createPageElement('verso');
                 for(let j = 0; j < cardsPerPage; j++) {
-                    const reorderedIndex = versoOrder[j];
-                    if (pageChunk[reorderedIndex]) {
-                        versoPage.appendChild(createVersoCard(pageChunk[reorderedIndex].info, style, showDecomp, showDivisors));
+                    const idx = currentLayout.versoOrder[j];
+                    if (pageChunk[idx]) {
+                        versoPage.appendChild(createVersoCard(pageChunk[idx].info, style));
                     } else {
                         versoPage.appendChild(createEmptyCard());
                     }
@@ -558,8 +655,6 @@
             }
             printBtn.style.display = 'inline-block';
         }
-
-        // --- Fonctions "utilitaires" de création d'éléments ---
 
         function createPageElement(type) {
             const page = document.createElement('div');
@@ -570,6 +665,7 @@
         function createEmptyCard() {
             const card = document.createElement('div');
             card.className = 'card';
+            card.style.border = "none";
             return card;
         }
 
@@ -580,31 +676,58 @@
             return card;
         }
 
-        function createVersoCard(info, style, showDecomp, showDivisors) {
+        function createVersoCard(info, style) {
             const card = document.createElement('div');
-            
+            const showDecomp = inputs.showDecomp.checked;
+            const showDivisors = inputs.showDivisors.checked;
+
             let classes = `card verso ${info.cssClass} ${style}`;
             if (!showDecomp) classes += ' hide-decomp';
             if (!showDivisors) classes += ' hide-divisors';
             card.className = classes;
             
-            const divisorsText = info.divisors.join(', ');
+            // 1. Liste des preuves
+            let justificationsHtml = "";
+            info.justification.forEach(line => {
+                justificationsHtml += `<li>${line}</li>`;
+            });
 
-            // On remplace le premier ": " par ":<br>" pour le saut de ligne
-            const decompText = info.decomposition.replace(': ', ':<br>');
-            const justificationText = info.justification.replace(': ', ':<br>');
-            const divisorsFullText = `Diviseurs: ${divisorsText}`.replace(': ', ':<br>');
+            // 2. Bloc Carré Parfait
+            let squareBlockHtml = "";
+            if (info.squareData) {
+                squareBlockHtml = `
+                    <div class="info-block">
+                        <span class="label">Carré Parfait</span>
+                        <span class="content">${info.squareData.formatted}</span>
+                    </div>
+                `;
+            }
 
-
+            // ORDRE : PREUVE -> DECOMP -> CARRÉ
             card.innerHTML = `
-                <div class="category">${info.category}</div>
-                <div class="justification">${justificationText}</div>
-                <div class="decomposition">${decompText}</div>
-                <div class="divisors">${divisorsFullText}</div>
+                <div class="verso-header">${info.displayCat}</div>
+                <div class="verso-body">
+                    <div class="info-block">
+                        <span class="label">Preuve</span>
+                        <ul class="criteria-list content">
+                            ${justificationsHtml}
+                        </ul>
+                    </div>
+                    
+                    <div class="info-block block-decomp">
+                        <span class="label">Décomposition</span>
+                        <span class="content math-strong">${info.decomposition}</span>
+                    </div>
+
+                    ${squareBlockHtml}
+                </div>
+                <div class="verso-footer">
+                    <span class="label">Tous les diviseurs</span>
+                    <div class="divisors-list">{ ${info.divisors.join(', ')} }</div>
+                </div>
             `;
             return card;
         }
-
     </script>
 </body>
 </html>
