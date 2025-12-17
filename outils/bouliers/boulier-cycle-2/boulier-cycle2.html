@@ -75,7 +75,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between; /* Clé pour séparer GAUCHE / DROITE */
-            padding: 0 2%; /* Petit espace sur les côtés */
+            padding: 0; /* ZÉRO MARGE : Les billes touchent le bois */
             box-sizing: border-box;
         }
 
@@ -101,17 +101,17 @@
         /* Zone cliquable large pour faciliter la manipulation au doigt */
         .click-zone {
             cursor: pointer;
-            padding: 5px 1px; 
+            padding: 5px 0; /* ZÉRO ESPACE horizontal entre les billes */
             transition: transform 0.1s;
         }
-        .click-zone:hover { transform: scale(1.1); }
+        .click-zone:hover { transform: scale(1.1); z-index: 10; }
 
         /* La perle visuelle */
         .bead {
             width: 4vh; height: 4vh; /* Taille responsive */
             border-radius: 50%;
+            /* Volume conservé */
             box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), 2px 2px 5px rgba(255,255,255,0.2);
-            /* Pas de margin ici, c'est géré par le parent pour être collé */
         }
 
         /* Couleurs */
