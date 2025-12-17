@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercice Rekenrek - Avec Outils</title>
+    <title>Exercice Rekenrek - Réaliste</title>
     <style>
         body {
             margin: 0; padding: 0;
@@ -16,7 +16,7 @@
             color: white;
         }
 
-        /* --- ENTÊTE (Consigne + Score) --- */
+        /* --- ENTÊTE --- */
         .game-header {
             width: 90%; max-width: 1000px;
             display: flex; justify-content: space-between; align-items: center;
@@ -33,26 +33,32 @@
 
         /* --- LE BOULIER --- */
         .rekenrek-board {
-            height: 60vh; /* Ajusté pour laisser place aux boutons */
+            height: 60vh; 
             aspect-ratio: 1.6/1;
             background-color: #111;
+            
+            /* CADRE BOIS */
             border-left: 25px solid #d2b48c;
             border-right: 25px solid #d2b48c;
             border-radius: 8px;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            
             display: flex; flex-direction: column; justify-content: space-evenly;
             padding: 10px 0; position: relative;
         }
 
         .row {
             position: relative; width: 100%; height: 9%;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 2%; box-sizing: border-box;
+            display: flex; align-items: center; 
+            justify-content: space-between; /* Sépare gauche et droite */
+            padding: 0; /* ZÉRO MARGE : Les billes touchent le bord */
+            box-sizing: border-box;
         }
 
         .wire {
             position: absolute; left: 0; right: 0; top: 50%;
-            height: 4px; background-color: #9ca3af; z-index: 0; margin: 0 -2px;
+            height: 4px; background-color: #9ca3af; z-index: 0; 
+            margin: 0 -2px; /* Pour s'incruster dans le bois */
         }
 
         .bead-group {
@@ -60,17 +66,22 @@
             transition: all 0.3s ease-out;
         }
         
-        .click-zone { cursor: pointer; padding: 5px 1px; transition: transform 0.1s; }
-        .click-zone:hover { transform: scale(1.1); }
+        .click-zone { 
+            cursor: pointer; 
+            padding: 5px 0; /* ZÉRO ESPACE horizontal entre les billes */
+            transition: transform 0.1s; 
+        }
+        .click-zone:hover { transform: scale(1.1); z-index: 10; }
 
         .bead {
             width: 3.5vh; height: 3.5vh; border-radius: 50%;
+            /* RETOUR DU VOLUME (Ombres) */
             box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), 2px 2px 5px rgba(255,255,255,0.2);
         }
         .bead.blue { background-color: #3b82f6; }
         .bead.red { background-color: #dc2626; }
 
-        /* --- ZONE DE CONTRÔLE --- */
+        /* --- CONTRÔLES --- */
         .controls {
             margin-top: 15px;
             display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -83,7 +94,6 @@
         .msg-success { color: #4ade80; }
         .msg-error { color: #f87171; }
 
-        /* Rangée bouton PRINCIPAL (Vérifier) */
         .action-row { display: flex; gap: 15px; margin-bottom: 5px; }
 
         button.main-btn {
@@ -96,7 +106,6 @@
         #btn-check { background-color: #2563eb; color: white; box-shadow: 0 4px 0 #1e40af; }
         #btn-next { background-color: #059669; color: white; box-shadow: 0 4px 0 #047857; display: none; }
 
-        /* Rangée boutons OUTILS (0, 50, 100) */
         .tools-row { display: flex; gap: 15px; }
 
         button.tool-btn {
@@ -106,8 +115,8 @@
         }
         button.tool-btn:active { transform: translateY(3px); box-shadow: none; }
 
-        .btn-reset { background-color: #dc2626; box-shadow: 0 4px 0 #991b1b; } /* Rouge */
-        .btn-preset { background-color: #4b5563; box-shadow: 0 4px 0 #374151; } /* Gris/Bleuté */
+        .btn-reset { background-color: #dc2626; box-shadow: 0 4px 0 #991b1b; } 
+        .btn-preset { background-color: #4b5563; box-shadow: 0 4px 0 #374151; }
 
     </style>
 </head>
@@ -141,14 +150,12 @@
     </div>
 
     <script>
-        // --- VARIABLES ---
         let targetNumber = 0;
         let scoreGood = 0;
         let scoreBad = 0;
         let isLevelSolved = false;
         let state = Array(10).fill(0);
 
-        // --- DOM ---
         const board = document.getElementById('board');
         const targetDisplay = document.getElementById('target-display');
         const feedbackDisplay = document.getElementById('feedback');
@@ -157,32 +164,24 @@
         const displayGood = document.getElementById('score-good');
         const displayBad = document.getElementById('score-bad');
 
-        // --- INIT ---
         window.onload = nextLevel;
 
-        // --- NOUVEAU NIVEAU ---
         function nextLevel() {
             targetNumber = Math.floor(Math.random() * 100) + 1;
             targetDisplay.textContent = targetNumber;
-            
-            // Reset visuel
             state = Array(10).fill(0);
             isLevelSolved = false;
             feedbackDisplay.textContent = "";
             btnCheck.style.display = "inline-block";
             btnNext.style.display = "none";
-            
             drawBoard();
         }
 
-        // --- VÉRIFICATION ---
         function checkAnswer() {
             if (isLevelSolved) return;
-
             const currentSum = state.reduce((a, b) => a + b, 0);
 
             if (currentSum === targetNumber) {
-                // Gagné
                 isLevelSolved = true;
                 scoreGood++;
                 displayGood.textContent = scoreGood;
@@ -191,7 +190,6 @@
                 btnCheck.style.display = "none";
                 btnNext.style.display = "inline-block";
             } else {
-                // Perdu
                 scoreBad++;
                 displayBad.textContent = scoreBad;
                 feedbackDisplay.className = "feedback-msg msg-error";
@@ -203,9 +201,8 @@
             }
         }
 
-        // --- OUTILS DE MANIPULATION ---
         function resetBoard() {
-            if (isLevelSolved) return; // Bloqué si fini
+            if (isLevelSolved) return;
             state = Array(10).fill(0);
             drawBoard();
         }
@@ -224,7 +221,6 @@
             drawBoard();
         }
 
-        // --- MOTEUR GRAPHIQUE ---
         function drawBoard() {
             board.innerHTML = '';
             for (let i = 0; i < 10; i++) {
@@ -271,7 +267,6 @@
         }
 
         function getBeadColor(rowIndex, beadIndex) {
-            // Inversion des couleurs à partir de la ligne 5 (index 5)
             if (rowIndex < 5) {
                 return beadIndex < 5 ? 'blue' : 'red';
             } else {
