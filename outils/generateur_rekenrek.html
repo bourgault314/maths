@@ -2,11 +2,11 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Rekenrek (Prêt à imprimer)</title>
+    <title>Générateur Rekenrek (Couleurs Verso)</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
         :root {
-            /* Largeur augmentée à 95mm */
+            /* Largeur 95mm */
             --card-width: 95mm; 
             --card-height: 55mm; 
             
@@ -20,7 +20,7 @@
             background-color: #e5e7eb;
             margin: 0;
             padding: 20px;
-            /* Force l'impression des couleurs sur certains navigateurs récents */
+            /* Force l'impression des couleurs */
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
         }
@@ -47,7 +47,6 @@
             width: 210mm; height: 297mm;
             background: white;
             padding-top: var(--margin-top);
-            /* Centrage horizontal */
             padding-left: calc((210mm - (2 * var(--card-width)) - var(--gap-grid)) / 2);
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -127,7 +126,7 @@
             box-shadow: inset -1px -1px 2px rgba(0,0,0,0.6), 1px 1px 2px rgba(255,255,255,0.3);
         }
 
-        /* Couleurs */
+        /* Couleurs Billes */
         .bead.blue { background-color: #3b82f6 !important; } 
         .bead.red { background-color: #dc2626 !important; }  
 
@@ -154,18 +153,25 @@
             height: 30%; display: flex; justify-content: center; align-items: center;
             font-size: 14pt; font-family: 'Comic Sans MS', sans-serif; text-align: center;
         }
-        .verso-bottom { height: 15%; background-color: #1f2937 !important; }
+        
+        /* COULEURS BANDEAU BAS (VERSO) */
+        .verso-bottom { height: 15%; }
+        
+        .verso-bottom.green { background-color: #10b981 !important; } /* Vert (0-9) */
+        .verso-bottom.blue  { background-color: #3b82f6 !important; } /* Bleu (10-29) */
+        .verso-bottom.red   { background-color: #ef4444 !important; } /* Rouge (30-69) */
+        .verso-bottom.black { background-color: #1f2937 !important; } /* Noir (70+) */
 
-        /* --- STYLES SPÉCIFIQUES IMPRESSION (CRITIQUE) --- */
+
+        /* --- STYLES SPÉCIFIQUES IMPRESSION --- */
         @media print {
             @page {
                 size: A4;
-                margin: 0; /* Supprime les marges de l'imprimante */
+                margin: 0;
             }
             body { 
                 padding: 0; 
                 background: none;
-                /* Propriétés indispensables pour les couleurs */
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
@@ -179,8 +185,6 @@
                 height: 297mm;
             }
             #preview-area { gap: 0; }
-            
-            /* Force l'affichage des backgrounds même si l'option est décochée */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -191,9 +195,9 @@
 <body>
 
     <div class="settings-panel">
-        <h2>Générateur Rekenrek (Large & Espacé)</h2>
-        <label>De : <input type="number" id="min" value="45"></label>
-        <label>À : <input type="number" id="max" value="53"></label>
+        <h2>Générateur Rekenrek (Couleurs Verso)</h2>
+        <label>De : <input type="number" id="min" value="1"></label>
+        <label>À : <input type="number" id="max" value="80"></label>
         <button onclick="generate()">Générer les cartes</button>
         <button onclick="window.print()" style="background-color: #059669;">Imprimer</button>
     </div>
@@ -242,7 +246,7 @@
             return str;
         }
 
-        // --- LOGIQUE COULEURS ---
+        // --- LOGIQUE COULEURS BILLES ---
         function getBeadColorClass(rowIndex, beadIndex) {
             if (rowIndex < 5) { // Top 50 : Bleu / Rouge
                 return beadIndex < 5 ? 'blue' : 'red';
@@ -302,6 +306,7 @@
             return card;
         }
 
+        // --- LOGIQUE CRÉATION VERSO ---
         function createVerso(n) {
             const card = document.createElement('div');
             card.className = 'card verso';
@@ -309,13 +314,25 @@
             const units = n % 10;
             const text = numberToText(n);
 
+            // DÉTERMINATION DE LA COULEUR DU BAS SELON VOS RÈGLES
+            let bandColorClass = 'black'; // Par défaut
+            if (n <= 9) {
+                bandColorClass = 'green';
+            } else if (n >= 10 && n <= 29) {
+                bandColorClass = 'blue';
+            } else if (n >= 30 && n <= 69) {
+                bandColorClass = 'red';
+            } else if (n >= 70) {
+                bandColorClass = 'black';
+            }
+
             card.innerHTML = `
                 <div class="verso-top">
                     <div class="tens-box">${tens}</div>
                     <div class="units-box">${units}</div>
                 </div>
                 <div class="verso-middle"><span>${text}</span></div>
-                <div class="verso-bottom"></div>
+                <div class="verso-bottom ${bandColorClass}"></div>
             `;
             return card;
         }
