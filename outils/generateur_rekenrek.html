@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Rekenrek (Orthographe Corrigée)</title>
+    <title>Générateur Rekenrek</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
         :root {
@@ -10,7 +10,7 @@
             --card-width: 95mm; 
             --card-height: 55mm; 
             
-            /* Marges ajustées */
+            /* Marges ajustées pour 8 cartes */
             --margin-top: 15mm;
             --gap-grid: 5mm; 
         }
@@ -20,23 +20,32 @@
             background-color: #e5e7eb;
             margin: 0;
             padding: 20px;
-            /* Force l'impression des couleurs */
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
         }
 
         /* Interface */
         .settings-panel {
-            max-width: 800px; margin: 0 auto 20px auto; padding: 20px;
+            max-width: 900px; margin: 0 auto 20px auto; padding: 20px;
             background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 15px;
         }
+
+        .settings-panel h2 {
+            width: 100%; margin: 0 0 10px 0; padding-bottom: 10px;
+            border-bottom: 1px solid #eee; font-size: 1.5rem; color: #333;
+        }
+
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        
         button {
             background-color: #2563eb; color: white; border: none; padding: 10px 20px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; margin-left: auto;
         }
         button:hover { background-color: #1d4ed8; }
-        input[type="number"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px; font-size: 16px;}
+        
+        input[type="number"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 70px; font-size: 16px;}
+        label { font-weight: 500; color: #555; }
 
         /* Zone d'impression */
         #preview-area {
@@ -52,6 +61,7 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
             
+            /* Grille FIXE 2 colonnes x 4 lignes = 8 cartes */
             display: grid;
             grid-template-columns: repeat(2, var(--card-width));
             grid-template-rows: repeat(4, var(--card-height));
@@ -73,14 +83,10 @@
 
         /* RECTO (BOULIER) */
         .recto {
-            background-color: #111 !important; /* Force le noir */
-            
-            /* CADRE BOIS */
+            background-color: #111 !important; 
             border-left: 7mm solid #d2b48c;  
             border-right: 7mm solid #d2b48c; 
-            
             padding: 2mm 0; 
-            
             display: flex;
             flex-direction: column;
             justify-content: space-evenly; 
@@ -111,38 +117,32 @@
             z-index: 1; align-items: center;
         }
 
-        .group-active, .group-inactive { 
-            display: flex; 
-            align-items: center; 
-        }
+        .group-active, .group-inactive { display: flex; align-items: center; }
         
         .bead {
-            /* TAILLE 4mm */
+            /* TAILLE 4mm (Parfait pour 8 cartes/page) */
             width: 4mm; height: 4mm; 
             border-radius: 50%; 
             margin: 0; 
-            
-            /* Ombres réalistes */
+            /* Style réaliste */
             box-shadow: inset -1px -1px 2px rgba(0,0,0,0.6), 1px 1px 2px rgba(255,255,255,0.3);
         }
 
-        /* Couleurs Billes */
         .bead.blue { background-color: #3b82f6 !important; } 
         .bead.red { background-color: #dc2626 !important; }  
 
-
-        /* --- VERSO (NOMBRE) --- */
+        /* VERSO (NOMBRE) */
         .verso {
             display: flex; flex-direction: column;
             background: white; 
             border: 1px solid #ccc; 
         }
 
-        /* DÉFINITION DES THÈMES DE COULEUR */
-        .verso.theme-green { --theme-color: #10b981; } /* Vert (0-9) */
-        .verso.theme-blue  { --theme-color: #3b82f6; } /* Bleu (10-29) */
-        .verso.theme-red   { --theme-color: #ef4444; } /* Rouge (30-69) */
-        .verso.theme-black { --theme-color: #1f2937; } /* Noir (70+) */
+        /* COULEURS THÈMES */
+        .verso.theme-green { --theme-color: #10b981; }
+        .verso.theme-blue  { --theme-color: #3b82f6; }
+        .verso.theme-red   { --theme-color: #ef4444; }
+        .verso.theme-black { --theme-color: #1f2937; }
 
         .verso-top {
             height: 55%; display: flex; 
@@ -151,9 +151,8 @@
         
         .tens-box {
             width: 50%; 
-            background-color: #fbbf24 !important; /* Jaune */
+            background-color: #fbbf24 !important; 
             border-right: 3px solid var(--theme-color) !important;
-            
             display: flex; justify-content: center; align-items: center;
             font-size: 32pt; font-weight: bold; font-family: 'Comic Sans MS', sans-serif; color: #000;
         }
@@ -174,42 +173,35 @@
             background-color: var(--theme-color) !important;
         }
 
-
-        /* --- STYLES SPÉCIFIQUES IMPRESSION --- */
+        /* STYLES IMPRESSION */
         @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
+            @page { size: A4; margin: 0; }
             body { 
-                padding: 0; 
-                background: none;
+                padding: 0; background: none;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
             }
             .settings-panel { display: none; }
             .page-a4 { 
-                margin: 0; 
-                box-shadow: none; 
-                page-break-after: always; 
-                width: 210mm; 
-                height: 297mm;
+                margin: 0; box-shadow: none; page-break-after: always; 
+                width: 210mm; height: 297mm;
             }
             #preview-area { gap: 0; }
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="settings-panel">
-        <h2>Générateur Rekenrek (Orthographe & Couleurs)</h2>
-        <label>De : <input type="number" id="min" value="1"></label>
-        <label>À : <input type="number" id="max" value="80"></label>
+        <h2>Générateur Rekenrek</h2>
+        
+        <div class="input-group">
+            <label>De : <input type="number" id="min" value="0"></label>
+            <label>À : <input type="number" id="max" value="99"></label>
+        </div>
+        
         <button onclick="generate()">Générer les cartes</button>
         <button onclick="window.print()" style="background-color: #059669;">Imprimer</button>
     </div>
@@ -227,53 +219,40 @@
             let d = Math.floor(n/10);
             let unit = n % 10;
 
-            // 0 à 9
             if (n < 10) return u[n];
-            // 10 à 19
             if (n >= 10 && n < 20) return teens[n-10];
             
-            // 20 à 69
             if (n >= 20 && n < 70) {
                 str = tens[d];
-                if (unit === 1) str += "-et-un"; // AJOUTE LE TRAIT D'UNION : vingt-et-un
+                if (unit === 1) str += "-et-un";
                 else if (unit > 0) str += "-" + u[unit];
                 return str;
             }
-            
-            // 70 à 79
             if (n >= 70 && n < 80) {
                 str = "soixante";
-                if (unit === 1) str += "-et-onze"; // AJOUTE LE TRAIT D'UNION : soixante-et-onze
+                if (unit === 1) str += "-et-onze";
                 else if (unit === 0) str += "-dix";
                 else str += "-" + teens[unit];
                 return str;
             }
-            
-            // 80 à 89
             if (n >= 80 && n < 90) {
                 str = "quatre-vingt";
-                if (unit > 0) str += "-" + u[unit]; // 81 : quatre-vingt-un (pas de 'et')
+                if (unit > 0) str += "-" + u[unit];
                 else str += "s";
                 return str;
             }
-            
-            // 90 à 99
             if (n >= 90) {
                 str = "quatre-vingt";
                 if (unit === 0) str += "-dix";
-                else str += "-" + teens[unit]; // 91 : quatre-vingt-onze
+                else str += "-" + teens[unit];
                 return str;
             }
             return str;
         }
 
-        // --- LOGIQUE COULEURS BILLES ---
         function getBeadColorClass(rowIndex, beadIndex) {
-            if (rowIndex < 5) { // Top 50 : Bleu / Rouge
-                return beadIndex < 5 ? 'blue' : 'red';
-            } else { // Bottom 50 : Rouge / Bleu
-                return beadIndex < 5 ? 'red' : 'blue';
-            }
+            if (rowIndex < 5) return beadIndex < 5 ? 'blue' : 'red';
+            else return beadIndex < 5 ? 'red' : 'blue';
         }
 
         function createBead(colorClass) {
@@ -311,13 +290,12 @@
 
                 for (let j = 0; j < 10; j++) {
                     const color = getBeadColorClass(i, j);
-                    const bead = createBead(color);
+                    // Création correcte de l'élément perle
+                    const bead = document.createElement('div');
+                    bead.className = `bead ${color}`;
 
-                    if (j < activeCount) {
-                        groupActive.appendChild(bead);
-                    } else {
-                        groupInactive.appendChild(bead);
-                    }
+                    if (j < activeCount) groupActive.appendChild(bead);
+                    else groupInactive.appendChild(bead);
                 }
                 container.appendChild(groupActive);
                 container.appendChild(groupInactive);
@@ -327,29 +305,19 @@
             return card;
         }
 
-        // --- LOGIQUE CRÉATION VERSO ---
         function createVerso(n) {
             const card = document.createElement('div');
-            
             const tens = Math.floor(n / 10);
             const units = n % 10;
             const text = numberToText(n);
 
-            // DÉTERMINATION DU THÈME DE COULEUR
-            let themeClass = 'theme-black'; // Par défaut
-            if (n <= 9) {
-                themeClass = 'theme-green';
-            } else if (n >= 10 && n <= 29) {
-                themeClass = 'theme-blue';
-            } else if (n >= 30 && n <= 69) {
-                themeClass = 'theme-red';
-            } else if (n >= 70) {
-                themeClass = 'theme-black';
-            }
+            let themeClass = 'theme-black';
+            if (n <= 9) themeClass = 'theme-green';
+            else if (n >= 10 && n <= 29) themeClass = 'theme-blue';
+            else if (n >= 30 && n <= 69) themeClass = 'theme-red';
+            else if (n >= 70) themeClass = 'theme-black';
             
-            // On applique la classe de thème sur la carte entière
             card.className = `card verso ${themeClass}`;
-
             card.innerHTML = `
                 <div class="verso-top">
                     <div class="tens-box">${tens}</div>
@@ -375,8 +343,6 @@
             // FIXE : 8 cartes par page
             const cardsPerPage = 8; 
             const cols = 2; 
-
-            // Mappage verso
             const versoMap = [1, 0, 3, 2, 5, 4, 7, 6];
 
             for(let i=0; i<allNumbers.length; i+=cardsPerPage) {
