@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Rekenrek (Large & Espacé)</title>
+    <title>Générateur Rekenrek (Prêt à imprimer)</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
         :root {
-            /* On augmente la largeur à 95mm (max pour A4 marges comprises) */
+            /* Largeur augmentée à 95mm */
             --card-width: 95mm; 
             --card-height: 55mm; 
             
-            /* Marges ajustées pour que ça rentre */
+            /* Marges ajustées */
             --margin-top: 15mm;
             --gap-grid: 5mm; 
         }
@@ -20,6 +20,9 @@
             background-color: #e5e7eb;
             margin: 0;
             padding: 20px;
+            /* Force l'impression des couleurs sur certains navigateurs récents */
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
         }
 
         /* Interface */
@@ -44,7 +47,7 @@
             width: 210mm; height: 297mm;
             background: white;
             padding-top: var(--margin-top);
-            /* Calcul précis pour centrer avec les nouvelles dimensions */
+            /* Centrage horizontal */
             padding-left: calc((210mm - (2 * var(--card-width)) - var(--gap-grid)) / 2);
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -71,9 +74,9 @@
 
         /* RECTO (BOULIER) */
         .recto {
-            background-color: #111; 
+            background-color: #111 !important; /* Force le noir */
             
-            /* CADRE BOIS - Un peu plus large pour l'esthétique */
+            /* CADRE BOIS */
             border-left: 7mm solid #d2b48c;  
             border-right: 7mm solid #d2b48c; 
             
@@ -97,7 +100,7 @@
         .wire {
             position: absolute; left: 0; right: 0; top: 50%;
             height: 2px;
-            background: #9ca3af; 
+            background: #9ca3af !important; 
             z-index: 0;
             margin: 0 -1px; 
         }
@@ -115,18 +118,18 @@
         }
         
         .bead {
-            /* TAILLE RÉDUITE : 4mm */
+            /* TAILLE 4mm */
             width: 4mm; height: 4mm; 
             border-radius: 50%; 
-            margin: 0; /* Toujours collées entre elles */
+            margin: 0; 
             
             /* Ombres réalistes */
             box-shadow: inset -1px -1px 2px rgba(0,0,0,0.6), 1px 1px 2px rgba(255,255,255,0.3);
         }
 
         /* Couleurs */
-        .bead.blue { background-color: #3b82f6; } 
-        .bead.red { background-color: #dc2626; }  
+        .bead.blue { background-color: #3b82f6 !important; } 
+        .bead.red { background-color: #dc2626 !important; }  
 
         /* VERSO (NOMBRE) */
         .verso {
@@ -137,7 +140,8 @@
             height: 55%; display: flex; border-bottom: 2px solid #000;
         }
         .tens-box {
-            width: 50%; background-color: #fbbf24; border-right: 2px solid #000;
+            width: 50%; background-color: #fbbf24 !important; /* Force le jaune */
+            border-right: 2px solid #000;
             display: flex; justify-content: center; align-items: center;
             font-size: 32pt; font-weight: bold; font-family: 'Comic Sans MS', sans-serif; color: #000;
         }
@@ -150,14 +154,37 @@
             height: 30%; display: flex; justify-content: center; align-items: center;
             font-size: 14pt; font-family: 'Comic Sans MS', sans-serif; text-align: center;
         }
-        .verso-bottom { height: 15%; background-color: #1f2937; }
+        .verso-bottom { height: 15%; background-color: #1f2937 !important; }
 
-        /* IMPRESSION */
+        /* --- STYLES SPÉCIFIQUES IMPRESSION (CRITIQUE) --- */
         @media print {
-            body { padding: 0; background: none; }
+            @page {
+                size: A4;
+                margin: 0; /* Supprime les marges de l'imprimante */
+            }
+            body { 
+                padding: 0; 
+                background: none;
+                /* Propriétés indispensables pour les couleurs */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
             .settings-panel { display: none; }
-            .page-a4 { margin: 0; box-shadow: none; page-break-after: always; width: 210mm; height: 297mm; }
+            .page-a4 { 
+                margin: 0; 
+                box-shadow: none; 
+                page-break-after: always; 
+                width: 210mm; 
+                height: 297mm;
+            }
             #preview-area { gap: 0; }
+            
+            /* Force l'affichage des backgrounds même si l'option est décochée */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
