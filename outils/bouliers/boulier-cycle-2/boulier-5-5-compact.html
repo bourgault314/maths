@@ -2,248 +2,263 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Boulier 5+5 compact</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Boulier Rekenrek - Version Finale</title>
 <style>
-  :root{
-    --rows: 10;
-    --beads-per-row: 10;
-    --bead-size: 24px;
-    --bead-gap: 5px;
-    --frame-thickness: 14px;
-    --rod-thickness: 5px;
-
-    --color-group-a: #d7263d;
-    --color-group-b: #f8f8f8;
-    --color-bead-shadow: rgba(0,0,0,.25);
-    --color-wood: #e2c48a;
-    --color-wood-dark: #a88348;
-
-    --bg: #fffdf8;
-    --text: #1b1b1b;
-    --ui: #f3f1ea;
+  :root {
+    --bg: #1a1a1a;
+    --wood: #b08d57;
+    --rod: #888;
+    --ui: #2a2a2a;
     --accent: #0f6cf9;
+    --bead-white: #ffffff;
+    --bead-blue: #2196f3;
   }
 
-  html,body{height:100%;background:var(--bg);color:var(--text);margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:980px;margin:14px auto;padding:0 12px}
-
-  .toolbar{
-    display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 10px;flex-wrap:wrap;
-  }
-  .value-box{
-    display:none;gap:8px;align-items:center;background:var(--ui);
-    padding:6px 10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05) inset;
-  }
-  .value-box.show{display:flex}
-  .value-box label{font-weight:600;font-size:.95rem}
-  .value-box input{
-    width:120px;font-size:1.3rem;font-weight:800;text-align:right;border:none;background:transparent;outline:none
-  }
-  .btn{
-    border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:8px 12px;border-radius:10px;cursor:pointer;
-    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:.95rem
-  }
-  .btn:active{transform:translateY(1px)}
-
-  /* === WRAPPER DE MISE À L’ÉCHELLE (pour mobile) === */
-  #fitAbacus{
-    width:100%;
-    display:flex;
-    justify-content:center;
-    height:auto;          /* on fixe la hauteur par JS après le scale */
-  }
-  /* on réduit/aggrandit le boulier autour du haut-centre sans casser les positions */
-  #abacus{ transform-origin: top center; }
-
-  .abacus{
-    position:relative;aspect-ratio: 18 / 6.6;width:100%;
-    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
-    border-radius:14px;box-shadow:0 10px 26px rgba(0,0,0,.12);
-    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
-    overflow:hidden;
-  }
-  .abacus::before, .abacus::after{
-    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
-    background:linear-gradient(#caa367,#9a733c)
-  }
-  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:14px 14px 0 0}
-  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 14px}
-
-  .row{position:relative;height: calc(100% / var(--rows));}
-  .rod{
-    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
-    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.2);
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background: var(--bg); color: white; font-family: sans-serif;
+    overflow: hidden; touch-action: none;
   }
 
-  .bead{
-    position:absolute;top:50%;transform:translate(-50%,-50%);
-    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
-    box-shadow: 0 3px 6px var(--color-bead-shadow), inset 0 3px 6px rgba(255,255,255,.55);
-    border:1px solid rgba(0,0,0,.12);cursor:pointer; user-select:none;
-    transition:left .18s cubic-bezier(.2,.65,.35,1), transform .06s ease;
-    z-index:2;
+  /* Toolbar sans barres verticales, espaces uniformes */
+  .toolbar {
+    position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 65px;
+    background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
+    justify-content: center; gap: 30px; z-index: 1000; padding: 5px 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
-  .bead:active{transform:translate(-50%,-50%) scale(.98)}
-  .groupA{ background: radial-gradient(circle at 35% 30%, #ef6a79, var(--color-group-a)); }
-  .groupB{ background: radial-gradient(circle at 35% 30%, #ffffff, var(--color-group-b)); }
+
+  .toolbar-group {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .btn {
+    border: none; background: #444; color: white; padding: 8px 12px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
+  }
+  .btn.active { background: var(--accent); outline: 2px solid white; }
+  .btn-clear { background: #722; }
+
+  #main-container {
+    position: relative; width: 100vw; height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; 
+  }
+
+  /* Valeur descendue pour ne pas être cachée par la barre du haut */
+  #total-display { 
+    font-size: 46px; font-weight: bold; color: var(--accent); 
+    z-index: 600; min-height: 60px; margin-top: 40px; margin-bottom: 5px;
+  }
+
+  #abacus-frame {
+    position: relative; width: 820px; z-index: 10;
+    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
+    pointer-events: none;
+  }
+
+  .row { position: relative; height: 56px; width: 100%; pointer-events: auto; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+
+  #cache-curtain {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 0;
+    background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
+    display: none; cursor: ew-resize;
+  }
+  #cache-curtain::before { 
+    content: "↔"; position: absolute; left: -15px; top: 50%; 
+    background: #444; border-radius: 50%; width: 30px; height: 30px; 
+    display: flex; align-items: center; justify-content: center; font-weight: bold;
+  }
+
+  .bead {
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    top: 50%; transform: translateY(-50%); z-index: 5;
+    cursor: grab; touch-action: none;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+  }
+  .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
+  .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
+  .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); }
+
+  #draw-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
+  #draw-layer.active { pointer-events: auto; cursor: crosshair; }
+  
+  .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
+  .color-dot.active { border-color: white; transform: scale(1.1); }
 </style>
 </head>
 <body>
-  <div class="app">
-    <div class="toolbar">
-      <div class="value-box" id="valueBox">
-        <label for="total">Valeur :</label>
-        <input id="total" type="text" value="0" readonly aria-live="polite" />
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn" id="toggleValue">Afficher la valeur</button>
-        <button class="btn" id="set100">Mettre 100</button>
-        <button class="btn" id="reset">Remise à zéro</button>
-      </div>
-    </div>
 
-    <!-- WRAPPER d’ajustement pour mobile -->
-    <div id="fitAbacus">
-      <div class="abacus" id="abacus" aria-label="Boulier 5+5"></div>
-    </div>
+<div class="toolbar">
+  <div class="toolbar-group">
+    <input type="range" id="row-range" min="1" max="10" value="10" style="width:80px">
+    <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
   </div>
 
+  <div class="toolbar-group">
+    <button class="btn" onclick="allTo(0)">0</button>
+    <button class="btn" onclick="set50()">50</button>
+    <button class="btn" onclick="allTo(10)">100</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
+    <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
+    <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
+  </div>
+
+  <div class="toolbar-group" style="gap:10px">
+    <button class="btn" id="btn-pen" onclick="togglePen()">✏️ Stylo</button>
+    <div class="color-dot active" style="background:#0f6cf9" onclick="setCol('#0f6cf9', this)"></div>
+    <div class="color-dot" style="background:#ffeb3b" onclick="setCol('#ffeb3b', this)"></div>
+    <div class="color-dot" style="background:#f44336" onclick="setCol('#f44336', this)"></div>
+    <button class="btn btn-clear" onclick="clearDraw()">Effacer</button>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="total-display"></div>
+  <div id="abacus-frame">
+    <div id="cache-curtain"></div>
+  </div>
+  <canvas id="draw-layer"></canvas>
+</div>
+
 <script>
-/* ======= Ton code d'origine, inchangé (positions/logique identiques) ======= */
-(function(){
-  const rows = +getCss('--rows', 10);
-  const N = +getCss('--beads-per-row', 10);
+  const frame = document.getElementById('abacus-frame');
+  const canvas = document.getElementById('draw-layer');
+  const ctx = canvas.getContext('2d');
+  const totalDiv = document.getElementById('total-display');
+  const cache = document.getElementById('cache-curtain');
+  
+  let rowsCount = 10;
+  let showVal = false, isPen = false, isBlue = false, isCache = false;
+  let penCol = '#0f6cf9';
+  let states = Array.from({length: 10}, () => 0); 
 
-  const abacus   = document.getElementById('abacus');
-  const totalBox = document.getElementById('total');
-  const valueBox = document.getElementById('valueBox');
-  const toggleBtn= document.getElementById('toggleValue');
-  const resetBtn = document.getElementById('reset');
-  const set100Btn= document.getElementById('set100');
+  const BEAD_W = 38, GAP = 2, FRAME_W = 820;
 
-  const state = Array.from({length: rows}, () => 0);
-  let revealed = false;
+  function init() {
+    const curCacheWidth = cache.style.width;
+    frame.innerHTML = '';
+    frame.appendChild(cache);
+    cache.onpointerdown = startCacheDrag;
+    if (isCache) cache.style.width = curCacheWidth || "120px";
 
-  const rowEls = [];
-  for(let r=0;r<rows;r++){
-    const row = el('div','row'); row.dataset.row=r;
-    row.appendChild(el('div','rod'));
-    const topHalf = r < Math.floor(rows/2);
-    for(let j=1;j<=N;j++){
-      const cls = topHalf ? (j<=5?'groupA':'groupB') : (j<=5?'groupB':'groupA');
-      const bead = el('div','bead '+cls);
-      bead.dataset.index = j;
-      bead.addEventListener('click', () => onBeadClick(r, j));
-      row.appendChild(bead);
+    for (let r = 0; r < rowsCount; r++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.dataset.row = r;
+      row.innerHTML = `<div class="rod"></div>`;
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
+        bead.dataset.idx = b;
+        bead.onpointerdown = startDrag;
+        row.appendChild(bead);
+      }
+      frame.appendChild(row);
     }
-    abacus.appendChild(row);
-    rowEls.push(row);
+    resizeCanvas();
+    updateBeads(false);
   }
 
-  function onBeadClick(r, j){
-    const c = state[r];
-    const leftCount = N - c;
-    state[r] = (j <= leftCount) ? (N - j + 1) : (N - j);
-    state[r] = clamp(state[r], 0, N);
-    layoutRow(r);
-    renderTotal();
+  function toggleCache() {
+    isCache = !isCache;
+    cache.style.display = isCache ? 'block' : 'none';
+    if(isCache && !cache.style.width) cache.style.width = "120px";
+    document.getElementById('btn-cache').classList.toggle('active', isCache);
   }
 
-  function layoutRow(r){
-    const row = rowEls[r], c = state[r];
-    const size = +getCss('--bead-size',24);
-    const gap  = +getCss('--bead-gap',5);
-    const pad  = 10;
-    const leftStart  = pad + size/2;
-    const rightStart = row.clientWidth - pad - size/2;
-    [...row.querySelectorAll('.bead')].forEach(b=>{
-      const j = +b.dataset.index;
-      b.style.left = (j <= N - c)
-        ? leftStart  + (j-1)*(size+gap)+"px"
-        : rightStart - (N-j)*(size+gap)+"px";
+  function startCacheDrag(e) {
+    e.preventDefault();
+    cache.setPointerCapture(e.pointerId);
+    const onMove = (ev) => {
+      const rect = frame.getBoundingClientRect();
+      let newW = rect.right - ev.clientX;
+      cache.style.width = Math.max(0, Math.min(FRAME_W, newW)) + "px";
+    };
+    cache.onpointermove = onMove;
+    cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
+  }
+
+  function toggleColorMode() {
+    isBlue = !isBlue;
+    document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
+    document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue));
+  }
+
+  let activeDrag = null;
+  function startDrag(e) {
+    if (isPen) return;
+    const bead = e.target;
+    const rowIdx = parseInt(bead.parentElement.dataset.row);
+    const beadIdx = parseInt(bead.dataset.idx);
+    bead.setPointerCapture(e.pointerId);
+    activeDrag = { rowIdx, beadIdx, rowEl: bead.parentElement, startX: e.clientX };
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
+    const dx = e.clientX - startX;
+    const beads = rowEl.querySelectorAll('.bead');
+    if (beadIdx >= states[rowIdx]) { 
+      for (let i = states[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true);
+    } else {
+      for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false);
+    }
+  });
+
+  function moveVisual(b, idx, dx, fromRight) {
+    let base = fromRight ? (FRAME_W - (10 - idx) * (BEAD_W + GAP)) : (idx * (BEAD_W + GAP));
+    let pos = base + dx;
+    let min = idx * (BEAD_W + GAP), max = FRAME_W - (10 - idx) * (BEAD_W + GAP);
+    b.style.transition = 'none';
+    b.style.left = Math.max(min, Math.min(max, pos)) + "px";
+  }
+
+  window.addEventListener('pointerup', (e) => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl } = activeDrag;
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
+    if (beadIdx >= states[rowIdx]) { if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
+    else { if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    activeDrag = null; updateBeads(true);
+  });
+
+  function updateBeads(animate) {
+    document.querySelectorAll('.row').forEach((row, r) => {
+      const bds = row.querySelectorAll('.bead');
+      bds.forEach((b, i) => {
+        b.style.transition = animate ? 'left 0.25s cubic-bezier(0.2, 0, 1, 1)' : 'none';
+        if (i < states[r]) b.style.left = (i * (BEAD_W + GAP)) + "px";
+        else b.style.left = (FRAME_W - (10 - i) * (BEAD_W + GAP)) + "px";
+      });
     });
+    totalDiv.innerText = showVal ? states.reduce((a, b) => a + b, 0) : "";
   }
 
-  function layoutAll(){ for(let r=0;r<rows;r++) layoutRow(r); renderTotal(); }
-  function currentTotal(){ return state.reduce((a,b)=>a+b,0); }
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.lineCap = 'round'; ctx.lineWidth = 4; }
+  canvas.onpointerdown = (e) => { if (isPen) { drawing = true; ctx.beginPath(); ctx.strokeStyle = penCol; ctx.moveTo(e.clientX, e.clientY); } };
+  canvas.onpointermove = (e) => { if (isPen && drawing) { ctx.lineTo(e.clientX, e.clientY); ctx.stroke(); } };
+  canvas.onpointerup = () => drawing = false;
+  let drawing = false;
 
-  function renderTotal(){
-    if(revealed){
-      valueBox.classList.add('show');
-      totalBox.value = String(currentTotal());
-    }else{
-      valueBox.classList.remove('show');
-    }
-  }
+  function allTo(n) { states.fill(n); updateBeads(true); }
+  function set50() { for(let i=0; i<10; i++) states[i] = (i < 5) ? 10 : 0; updateBeads(true); }
+  function toggleVal() { showVal = !showVal; document.getElementById('btn-val').classList.toggle('active', showVal); updateBeads(false); }
+  function togglePen() { isPen = !isPen; canvas.classList.toggle('active', isPen); document.getElementById('btn-pen').classList.toggle('active', isPen); }
+  function setCol(c, el) { penCol = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+  function clearDraw() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-  toggleBtn.addEventListener('click', ()=>{
-    revealed = !revealed;
-    toggleBtn.textContent = revealed ? 'Masquer la valeur' : 'Afficher la valeur';
-    renderTotal();
-  });
-
-  resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); });
-
-  set100Btn.addEventListener('click', ()=>{
-    state.fill(N); layoutAll();
-  });
-
-  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(layoutAll,60); });
-
-  function getCss(varname, fallback){ const v=getComputedStyle(document.documentElement).getPropertyValue(varname); return parseFloat(v)||fallback; }
-  function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
-  function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
-
-  layoutAll();
-})();
-</script>
-
-<!-- ======= AJOUT MINIMAL : mise à l’échelle pour faire rentrer sur mobile ======= -->
-<script>
-(function fitAbacusInit(){
-  const wrap = document.getElementById('fitAbacus');
-  const el   = document.getElementById('abacus');
-
-  function fitAbacus(){
-    if(!el || !wrap) return;
-    // taille naturelle du boulier
-    const previous = el.style.transform;
-    el.style.transform = 'none';
-    const rect = el.getBoundingClientRect();
-
-    // place dispo à l’écran
-    const vpW   = document.documentElement.clientWidth;
-    const vpH   = window.innerHeight || document.documentElement.clientHeight;
-    const toolH = (document.querySelector('.toolbar')?.offsetHeight || 0);
-
-    const maxW = vpW - 16;         // marges latérales
-    const maxH = vpH - toolH - 24; // sous la barre d’outils
-
-    // facteur d’échelle (on ne grossit pas au-delà de 1)
-    const sW = Math.min(1, maxW / rect.width);
-    const sH = Math.min(1, maxH / rect.height);
-    const s  = Math.max(0.55, Math.min(sW, sH)); // borne basse évite trop petit
-
-    el.style.transform = `scale(${s})`;
-    wrap.style.height  = (rect.height * s) + 'px';
-
-    // si avant il y avait un transform (ex. au tout premier appel), pas grave
-    if(!previous) { /* noop */ }
-  }
-
-  // au chargement et aux changements d’écran
-  window.addEventListener('resize', fitAbacus);
-  window.addEventListener('orientationchange', () => setTimeout(fitAbacus, 50));
-  if (window.visualViewport){
-    visualViewport.addEventListener('resize', fitAbacus, {passive:true});
-  }
-  // premier ajustement
-  window.addEventListener('load', () => setTimeout(fitAbacus, 0));
-})();
+  document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
+  window.onresize = resizeCanvas;
+  init();
 </script>
 </body>
 </html>
-
-
