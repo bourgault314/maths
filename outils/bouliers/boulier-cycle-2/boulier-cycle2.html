@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Version Finale Pro</title>
+<title>Boulier Rekenrek - Version Finale Gold</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -39,7 +39,7 @@
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 60px);
     display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; /* Aligné en haut pour le mobile paysage */
+    justify-content: flex-start;
     overflow: hidden;
   }
 
@@ -65,17 +65,20 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* LE CACHE - Poignée déplacée sur le bois */
+  /* LE CACHE - DERNIÈRE CORRECTION */
   #cache-curtain {
-    position: absolute; right: 0; top: 0; bottom: 0; width: 0;
-    background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
+    position: absolute; 
+    right: -4px; /* <-- DÉCALAGE: On pousse le rideau de 4px à droite pour que la bordure soit sur le bois */
+    top: 0; bottom: 0; width: 0;
+    background: #000; z-index: 20; 
+    border-left: 4px solid #444; /* La fameuse bande grise */
+    pointer-events: auto;
     display: none; cursor: ew-resize;
   }
   
-  /* On place la poignée à "0" pour qu'elle commence APRES le rail des billes, sur le bois */
   #cache-curtain::before { 
     content: "↔"; position: absolute; 
-    left: 2px; /* Se range sur le montant en bois à droite */
+    left: 2px; /* La poignée reste bien sur le bois */
     top: 50%; 
     background: #444; border-radius: 50%; width: 44px; height: 44px; 
     display: flex; align-items: center; justify-content: center; 
@@ -182,7 +185,6 @@
 
   function autoScale() {
     const availableW = window.innerWidth - 20;
-    // On augmente la marge pour l'iPad paysage (70px de sécurité)
     const availableH = window.innerHeight - topBar.offsetHeight - 70; 
 
     const contentW = 880; 
@@ -193,7 +195,7 @@
     const sW = availableW / contentW;
     const sH = availableH / contentH;
     
-    currentScale = Math.min(1, sW, sH) * 0.96; // Scale un peu plus petit pour l'iPad
+    currentScale = Math.min(1, sW, sH) * 0.96;
 
     scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
@@ -248,8 +250,11 @@
   function startCacheDrag(e) { e.preventDefault(); cache.setPointerCapture(e.pointerId);
     cache.onpointermove = (ev) => { 
       const rect = frame.getBoundingClientRect(); 
-      // Calcul du cache : la souris définit la bordure gauche du rideau noir
-      cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; 
+      // Calcul corrigé pour tenir compte du décalage de 4px
+      const actualFrameW = FRAME_W * currentScale;
+      // On ajoute 4px au calcul pour compenser le décalage à droite
+      const xOffset = (ev.clientX - rect.left) / currentScale + 4;
+      cache.style.width = Math.max(0, Math.min(FRAME_W, FRAME_W - xOffset)) + "px"; 
     };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
