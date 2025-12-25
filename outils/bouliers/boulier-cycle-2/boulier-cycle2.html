@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek Pro - Stabilité Totale</title>
+<title>Boulier Rekenrek - Fix Paysage Final</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -21,52 +21,49 @@
     overflow: hidden; touch-action: none;
   }
 
-  /* Barre d'outils épurée et centrée */
   .toolbar {
-    position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 60px;
+    position: relative; height: auto; min-height: 60px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
-    justify-content: center; gap: 30px; z-index: 1000; padding: 5px 20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    justify-content: center; gap: 20px; z-index: 1000; padding: 5px 15px;
   }
 
-  .toolbar-group { display: flex; align-items: center; gap: 12px; }
+  .toolbar-group { display: flex; align-items: center; gap: 8px; }
 
   .btn {
-    border: none; background: #444; color: white; padding: 8px 14px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
+    border: none; background: #444; color: white; padding: 7px 10px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
   }
   .btn.active { background: var(--accent); outline: 2px solid white; }
-  .btn-clear { background: #722; }
 
   #main-container {
-    position: relative; width: 100vw; height: 100vh;
+    position: relative; width: 100vw; 
+    height: calc(100vh - 65px); /* Toute la zone sous la barre */
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center;
+    justify-content: center; overflow: hidden;
   }
 
-  /* LE SCALER : Gère l'adaptation sans déformer le contenu interne */
   #scaler {
-    position: absolute; left: 50%; width: 880px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: center center;
     pointer-events: none;
   }
 
   #total-display { 
-    font-size: 46px; font-weight: bold; color: var(--accent); 
-    min-height: 60px; margin-top: 20px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    font-size: 42px; font-weight: bold; color: var(--accent); 
+    height: 50px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    display: flex; align-items: center; justify-content: center;
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur 820px strictement respectée */
+    position: relative; width: 820px; 
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: auto; box-sizing: content-box;
+    background: transparent;
   }
 
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* CACHE : Positionné pour ne jamais masquer les billes à droite */
   #cache-curtain {
     position: absolute; right: 0; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
@@ -74,13 +71,10 @@
   }
   
   #cache-curtain::before { 
-    content: "↔"; position: absolute; 
-    left: -12px; /* Positionné sur le montant bois/début de tige */
-    top: 50%; 
+    content: "↔"; position: absolute; left: -10px; top: 50%; 
     background: #444; border-radius: 50%; width: 44px; height: 44px; 
     display: flex; align-items: center; justify-content: center; 
     font-weight: bold; font-size: 20px; color: white; transform: translateY(-50%);
-    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
   }
 
   .bead {
@@ -102,10 +96,10 @@
 </head>
 <body>
 
-<div class="toolbar">
+<div class="toolbar" id="top-bar">
   <div class="toolbar-group">
-    <input type="range" id="row-range" min="1" max="10" value="10" style="width:70px">
-    <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
+    <input type="range" id="row-range" min="1" max="10" value="10" style="width:60px">
+    <span id="row-val" style="font-weight:bold; font-size:14px; color:var(--accent)">10</span>
   </div>
   <div class="toolbar-group">
     <button class="btn" onclick="allTo(0)">0</button>
@@ -127,13 +121,13 @@
 </div>
 
 <div id="main-container">
+  <canvas id="draw-layer"></canvas>
   <div id="scaler">
     <div id="total-display"></div>
     <div id="abacus-frame">
       <div id="cache-curtain"></div>
     </div>
   </div>
-  <canvas id="draw-layer"></canvas>
 </div>
 
 <script>
@@ -143,6 +137,7 @@
   const ctx = canvas.getContext('2d');
   const totalDiv = document.getElementById('total-display');
   const cache = document.getElementById('cache-curtain');
+  const topBar = document.getElementById('top-bar');
   
   let rowsCount = 10, showVal = false, isPen = false, isBlue = false, isCache = false, currentScale = 1;
   let penCol = '#0f6cf9', states = Array.from({length: 10}, () => 0); 
@@ -172,31 +167,20 @@
     updateBeads(false);
   }
 
-  // --- AUTO-SCALE ÉQUILIBRÉ ---
   function autoScale() {
-    const toolbarH = document.querySelector('.toolbar').offsetHeight;
     const availableW = window.innerWidth - 40;
-    const availableH = window.innerHeight - toolbarH - 60; // Marge de sécurité
+    const availableH = window.innerHeight - topBar.offsetHeight - 20;
 
     const contentW = 880; 
-    const contentH = 100 + (56 * rowsCount);
+    const contentH = 50 + (56 * rowsCount) + 10; // Total display + Abacus rows + padding
 
     const sW = availableW / contentW;
     const sH = availableH / contentH;
     
-    // Sur ordinateur, on évite de réduire si seule la hauteur est un problème
-    // On ne réduit l'échelle que si l'élément sort vraiment de l'écran.
+    // On prend le plus petit des deux pour que ça tienne en largeur ET hauteur
     currentScale = Math.min(1, sW, sH);
-    
-    // Si on est sur un grand écran (ordinateur), on force le maintien de la largeur
-    if (window.innerWidth > 1024) {
-        currentScale = Math.min(1, sH); // On ne suit que la contrainte de hauteur
-    }
 
-    scaler.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
-    scaler.style.top = `calc(50% + ${toolbarH/2}px)`;
-    scaler.style.left = `50%`;
-    
+    scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
   }
 
@@ -252,7 +236,13 @@
 
   function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
   function startCacheDrag(e) { e.preventDefault(); cache.setPointerCapture(e.pointerId);
-    cache.onpointermove = (ev) => { const rect = frame.getBoundingClientRect(); cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; };
+    cache.onpointermove = (ev) => { 
+      const rect = frame.getBoundingClientRect(); 
+      // Calcul du mouvement corrigé par l'échelle réelle affichée
+      const actualFrameW = FRAME_W * currentScale;
+      const xOffset = (ev.clientX - rect.left) / currentScale;
+      cache.style.width = Math.max(0, Math.min(FRAME_W, FRAME_W - xOffset)) + "px"; 
+    };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
@@ -261,8 +251,7 @@
     ctx.lineCap = 'round'; 
   }
 
-  // --- DESSIN ULTRA-PRÉCIS ---
-  let drawing = false;
+  let drawing = false, activeDrag = null;
   canvas.onpointerdown = (e) => { 
     if (!isPen) return;
     drawing = true; 
@@ -274,13 +263,11 @@
     if (isPen && drawing) { 
       const rect = canvas.getBoundingClientRect();
       ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); 
-      // Épaisseur dynamique selon largeur écran
       ctx.lineWidth = window.innerWidth < 1024 ? 2.5 : 4;
       ctx.stroke(); 
     } 
   };
   canvas.onpointerup = () => drawing = false;
-  let activeDrag = null;
 
   function allTo(n) { states.fill(n); updateBeads(true); }
   function set50() { for(let i=0; i<10; i++) states[i] = (i < 5) ? 10 : 0; updateBeads(true); }
