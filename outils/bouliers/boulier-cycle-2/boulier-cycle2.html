@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Version Finale Multi-Support</title>
+<title>Boulier Rekenrek - Version Finale Certifiée</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -21,7 +21,7 @@
     overflow: hidden; touch-action: none;
   }
 
-  /* Toolbar centrée avec espaces uniformes */
+  /* Toolbar équilibrée */
   .toolbar {
     position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 60px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
@@ -44,9 +44,9 @@
     justify-content: center;
   }
 
-  /* LE SCALER : Pour ajuster la taille sur iPad et Téléphone sans déformer les billes */
+  /* LE SCALER : Ajustement millimétré pour iPad */
   #scaler {
-    position: absolute; left: 50%; width: 880px; /* 820 + 30 + 30 */
+    position: absolute; left: 50%; width: 880px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: center center;
     pointer-events: none;
@@ -58,7 +58,7 @@
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur verrouillée */
+    position: relative; width: 820px; 
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: auto; box-sizing: content-box;
   }
@@ -156,7 +156,6 @@
       row.innerHTML = `<div class="rod"></div>`;
       for (let b = 0; b < 10; b++) {
         const bead = document.createElement('div');
-        // Inversion des couleurs 5+5
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
         bead.dataset.idx = b; bead.onpointerdown = startDrag;
@@ -172,18 +171,20 @@
     const toolbar = document.querySelector('.toolbar');
     const toolbarH = toolbar ? toolbar.offsetHeight : 65;
     const availableW = window.innerWidth - 40;
-    const availableH = window.innerHeight - toolbarH - 30;
+    // On augmente la marge de sécurité verticale de 30px à 50px pour l'iPad
+    const availableH = window.innerHeight - toolbarH - 50; 
 
     const contentW = 880; 
-    const contentH = 80 + (56 * rowsCount);
+    const contentH = 100 + (56 * rowsCount); // 100px pour laisser plus d'espace au display
 
     const sW = availableW / contentW;
     const sH = availableH / contentH;
-    currentScale = Math.min(1, sW, sH) * 0.98;
+    
+    // Facteur de réduction légèrement plus fort (0.94 au lieu de 0.98) pour garantir que tout rentre
+    currentScale = Math.min(1, sW, sH) * 0.94;
 
     scaler.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
     
-    // Positionne le centre du boulier au milieu de la zone sous la toolbar
     const zoneCenterY = toolbarH + (availableH / 2) + 15;
     scaler.style.top = `${zoneCenterY}px`;
     scaler.style.left = `50%`;
