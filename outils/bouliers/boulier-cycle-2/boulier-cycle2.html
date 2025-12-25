@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Rekenrek Pro - Version Finale Multi-Support</title>
+<title>Boulier Rekenrek - Version Grand Écran</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -13,7 +13,7 @@
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
     background: var(--bg); color: white; font-family: sans-serif;
-    overflow: hidden; touch-action: none; /* Empêche le défilement pendant le dessin */
+    overflow: hidden; touch-action: none;
   }
 
   .toolbar {
@@ -26,13 +26,12 @@
     box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
-  .toolbar-group { display: flex; align-items: center; gap: 10px; }
+  .toolbar-group { display: flex; align-items: center; gap: 8px; }
 
-  /* Curseur Lignes */
-  input[type=range] { -webkit-appearance: none; width: 85px; background: transparent; margin-left: 5px; }
+  input[type=range] { -webkit-appearance: none; width: 80px; background: transparent; }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%;
-    background: var(--accent); margin-top: -9px; border: 2px solid white;
+    background: var(--accent); cursor: pointer; margin-top: -9px; border: 2px solid white;
   }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #444; border-radius: 4px; }
 
@@ -41,6 +40,7 @@
     border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
+  .btn-fullscreen { background: #555; }
 
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 60px);
@@ -48,16 +48,16 @@
     justify-content: flex-start; overflow: hidden;
   }
 
-  /* ESPACE PC OPTIMISÉ (130px) */
   #scaler {
     margin-top: 130px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: top center; pointer-events: none;
   }
 
+  /* VALEUR PLUS GROSSE (64px) */
   #total-display { 
-    font-size: 42px; font-weight: bold; color: var(--accent); 
-    height: 50px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    font-size: 64px; font-weight: bold; color: var(--accent); 
+    height: 70px; margin-bottom: 10px; text-shadow: 0 2px 6px black;
     display: flex; align-items: center;
   }
 
@@ -70,7 +70,6 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* CACHE : Rangé sur le bois à droite */
   #cache-curtain {
     position: absolute; right: -30px; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 5px solid #444; 
@@ -93,18 +92,17 @@
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
   .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); }
 
-  /* Calque de dessin */
   #draw-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500; pointer-events: none; }
   #draw-layer.active { pointer-events: auto; cursor: crosshair; }
   
+  /* Palette de couleurs avec BLANC */
   .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
-  .color-dot.active { border-color: white; transform: scale(1.1); }
+  .color-dot.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 5px white; }
 
-  /* ADAPTATION MOBILE PAYSAGE */
   @media (orientation: landscape) and (max-height: 500px) {
-    .toolbar { padding-left: 80px; } /* Evite l'encoche */
+    .toolbar { padding-left: 80px; } 
     #scaler { margin-top: 5px; } 
-    #total-display { font-size: 28px; height: 32px; }
+    #total-display { font-size: 32px; height: 35px; }
     .row { height: 45px; }
   }
 </style>
@@ -125,13 +123,14 @@
     <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
+    <button class="btn btn-fullscreen" onclick="toggleFullScreen()">🖥️</button>
   </div>
   <div class="toolbar-group" style="gap:10px">
-    <button class="btn" id="btn-pen" onclick="togglePen()">✏️ Stylo</button>
+    <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
     <div class="color-dot active" style="background:#0f6cf9" onclick="setCol('#0f6cf9', this)"></div>
-    <div class="color-dot" style="background:#ffeb3b" onclick="setCol('#ffeb3b', this)"></div>
+    <div class="color-dot" style="background:#ffffff" onclick="setCol('#ffffff', this)"></div>
     <div class="color-dot" style="background:#f44336" onclick="setCol('#f44336', this)"></div>
-    <button class="btn btn-clear" onclick="clearDraw()">Effacer</button>
+    <button class="btn" style="background:#722" onclick="clearDraw()">🗑️</button>
   </div>
 </div>
 
@@ -185,18 +184,16 @@
   function autoScale() {
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
-    const margin = isLand ? 40 : 180; 
+    const margin = isLand ? 40 : 250; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
-
     const rowH = isLand ? 45 : 56;
-    const contentH = (isLand ? 32 : 50) + (rowH * rowsCount);
+    const contentH = (isLand ? 35 : 80) + (rowH * rowsCount);
 
-    currentScale = Math.min(1, availableW / 880, availableH / contentH);
+    currentScale = Math.min(1.2, availableW / 880, availableH / contentH);
     scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
   }
 
-  // --- MOUVEMENT BILLES ---
   function startDrag(e) {
     if (isPen) return;
     const bead = e.target;
@@ -225,7 +222,8 @@
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl } = activeDrag;
-    const currentPos = parseFloat(rowEl.querySelectorAll('.bead')[beadIdx].style.left);
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
     if (beadIdx >= states[rowIdx]) { if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
     else { if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
     activeDrag = null; updateBeads(true);
@@ -247,16 +245,9 @@
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
-  // --- DESSIN : VERSION UNIVERSELLE SANS OFFSET ---
-  function resizeCanvas() { 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight; 
-    ctx.lineCap = 'round'; 
-  }
-
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.lineCap = 'round'; }
   let drawing = false, activeDrag = null;
 
-  // Gestion combinée Souris + Tactile
   const getPos = (e) => {
     if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
     return { x: e.clientX, y: e.clientY };
@@ -286,6 +277,14 @@
   canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDraw(e); }, {passive: false});
   canvas.addEventListener('touchend', () => drawing = false);
 
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) { document.exitFullscreen(); }
+    }
+  }
+
   function allTo(n) { states.fill(n); updateBeads(true); }
   function set50() { for(let i=0; i<10; i++) states[i] = (i < 5) ? 10 : 0; updateBeads(true); }
   function toggleVal() { showVal = !showVal; document.getElementById('btn-val').classList.toggle('active', showVal); updateBeads(false); }
@@ -295,7 +294,7 @@
   function toggleColorMode() { isBlue = !isBlue; document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu"; document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue)); }
 
   document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
-  window.addEventListener('resize', () => { resizeCanvas(); autoScale(); });
+  window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
   init();
 </script>
 </body>
