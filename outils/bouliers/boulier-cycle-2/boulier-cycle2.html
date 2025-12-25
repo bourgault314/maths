@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Version Grand Écran</title>
+<title>Boulier Rekenrek Pro - Version Ordinateur Stable</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -19,10 +19,7 @@
   .toolbar {
     position: relative; width: 100%; min-height: 55px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
-    justify-content: center; gap: 15px; z-index: 1000; 
-    padding: 5px 20px;
-    padding-left: max(20px, env(safe-area-inset-left));
-    padding-right: max(20px, env(safe-area-inset-right));
+    justify-content: center; gap: 15px; z-index: 1000; padding: 5px 20px;
     box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
@@ -40,24 +37,23 @@
     border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
-  .btn-fullscreen { background: #555; }
 
   #main-container {
-    position: relative; width: 100%; height: calc(100vh - 60px);
+    position: relative; width: 100%; height: calc(100vh - 65px);
     display: flex; flex-direction: column; align-items: center;
     justify-content: flex-start; overflow: hidden;
   }
 
+  /* SCALER : Marge de 100px pour écrire au dessus sur PC */
   #scaler {
-    margin-top: 130px; 
+    margin-top: 100px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: top center; pointer-events: none;
   }
 
-  /* VALEUR PLUS GROSSE (64px) */
   #total-display { 
     font-size: 64px; font-weight: bold; color: var(--accent); 
-    height: 70px; margin-bottom: 10px; text-shadow: 0 2px 6px black;
+    height: 70px; margin-bottom: 5px; text-shadow: 0 2px 6px black;
     display: flex; align-items: center;
   }
 
@@ -70,16 +66,18 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
+  /* CACHE : Rangé à l'extrémité gauche de la barre marron droite */
   #cache-curtain {
     position: absolute; right: -30px; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 5px solid #444; 
     pointer-events: auto; display: none; cursor: ew-resize;
   }
   #cache-curtain::before { 
-    content: "↔"; position: absolute; left: -20px; top: 50%; 
+    content: "↔"; position: absolute; left: -22px; top: 50%; 
     background: #444; border-radius: 50%; width: 44px; height: 44px; 
     display: flex; align-items: center; justify-content: center; 
     font-weight: bold; font-size: 20px; color: white; transform: translateY(-50%);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
   }
 
   .bead {
@@ -95,7 +93,6 @@
   #draw-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500; pointer-events: none; }
   #draw-layer.active { pointer-events: auto; cursor: crosshair; }
   
-  /* Palette de couleurs avec BLANC */
   .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 5px white; }
 
@@ -123,7 +120,7 @@
     <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
-    <button class="btn btn-fullscreen" onclick="toggleFullScreen()">🖥️</button>
+    <button class="btn" onclick="toggleFullScreen()">🖥️</button>
   </div>
   <div class="toolbar-group" style="gap:10px">
     <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
@@ -184,12 +181,17 @@
   function autoScale() {
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
-    const margin = isLand ? 40 : 250; 
+    
+    // On réduit la marge de sécurité sur PC pour éviter le rétrécissement
+    const margin = isLand ? 40 : 100; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
     const rowH = isLand ? 45 : 56;
-    const contentH = (isLand ? 35 : 80) + (rowH * rowsCount);
+    const contentH = (isLand ? 35 : 100) + (rowH * rowsCount);
 
-    currentScale = Math.min(1.2, availableW / 880, availableH / contentH);
+    // Sur PC, on autorise un scale plus grand (jusqu'à 1.25) pour garder la largeur
+    const maxScale = (window.innerWidth > 1024) ? 1.25 : 1.1;
+    currentScale = Math.min(maxScale, availableW / 880, availableH / contentH);
+    
     scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
   }
@@ -259,7 +261,7 @@
     const pos = getPos(e);
     ctx.beginPath();
     ctx.strokeStyle = penCol;
-    ctx.lineWidth = window.innerWidth < 800 ? 2 : 4;
+    ctx.lineWidth = window.innerWidth < 800 ? 2.5 : 4;
     ctx.moveTo(pos.x, pos.y);
   };
 
@@ -281,7 +283,7 @@
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
     } else {
-      if (document.exitFullscreen) { document.exitFullscreen(); }
+        if (document.exitFullscreen) document.exitFullscreen();
     }
   }
 
