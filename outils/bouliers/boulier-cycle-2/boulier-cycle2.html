@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Boulier Rekenrek - Correction Finale Paysage</title>
+<title>Boulier Rekenrek - Correction Finale</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -24,41 +24,47 @@
   .toolbar {
     position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 60px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
-    justify-content: center; gap: 15px; z-index: 1000; padding: 5px 10px;
+    justify-content: center; gap: 25px; z-index: 1000; padding: 5px 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
-  .toolbar-group { display: flex; align-items: center; gap: 8px; }
+  .toolbar-group { display: flex; align-items: center; gap: 10px; }
 
   .btn {
-    border: none; background: #444; color: white; padding: 6px 10px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+    border: none; background: #444; color: white; padding: 8px 12px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
   }
   .btn.active { background: var(--accent); outline: 2px solid white; }
   .btn-clear { background: #722; }
 
   #main-container {
     position: relative; width: 100vw; height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center;
+    background: var(--bg);
   }
 
-  /* LE SCALER : Réduit l'ensemble pour que rien ne sorte de l'écran */
+  /* LE SCALER : Positionné de manière absolue pour éviter les décalages de centrage */
   #scaler {
-    display: flex; flex-direction: column; align-items: center;
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 30px); /* Ajusté pour laisser la place à la toolbar */
+    width: 820px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transform-origin: center center;
-    transition: transform 0.1s ease;
+    pointer-events: none;
   }
 
   #total-display { 
     font-size: 46px; font-weight: bold; color: var(--accent); 
-    min-height: 50px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    min-height: 60px; margin-bottom: 10px; text-shadow: 0 2px 4px black;
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur fixe 820px */
+    position: relative; width: 820px;
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
-    pointer-events: none;
+    pointer-events: auto;
+    background: transparent;
   }
 
   .row { position: relative; height: 56px; width: 100%; pointer-events: auto; }
@@ -82,6 +88,7 @@
     top: 50%; transform: translateY(-50%); z-index: 5;
     cursor: grab; touch-action: none;
     box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+    margin: 0; padding: 0; border: none;
   }
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
@@ -98,8 +105,8 @@
 
 <div class="toolbar">
   <div class="toolbar-group">
-    <input type="range" id="row-range" min="1" max="10" value="10" style="width:60px">
-    <span id="row-val" style="font-weight:bold; font-size:14px; color:var(--accent)">10</span>
+    <input type="range" id="row-range" min="1" max="10" value="10" style="width:70px">
+    <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
   </div>
   <div class="toolbar-group">
     <button class="btn" onclick="allTo(0)">0</button>
@@ -155,7 +162,6 @@
       row.innerHTML = `<div class="rod"></div>`;
       for (let b = 0; b < 10; b++) {
         const bead = document.createElement('div');
-        // Logique 5+5
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
         bead.dataset.idx = b; bead.onpointerdown = startDrag;
@@ -168,26 +174,22 @@
   }
 
   function autoScale() {
-    const abacusFullWidth = 820 + 60; // Largeur 820px
+    const abacusFullWidth = 820 + 60;
     const margin = 20;
     const availableW = window.innerWidth - margin;
     const toolbarH = document.querySelector('.toolbar').offsetHeight;
-    const availableH = window.innerHeight - toolbarH - 20;
+    const availableH = window.innerHeight - toolbarH - 30;
 
     const scaleW = availableW / abacusFullWidth;
-    // Hauteur du bloc total (Valeur + Lignes) sans modification de style
-    const currentAbacusH = 60 + (56 * rowsCount); 
+    // Hauteur totale fixe : Display (60) + Lignes (56*N) + Sécurité
+    const currentAbacusH = 70 + (56 * rowsCount); 
     const scaleH = availableH / currentAbacusH;
 
     currentScale = Math.min(1, scaleW, scaleH);
-    scaler.style.transform = `scale(${currentScale})`;
+    scaler.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
     
-    // Remontée automatique si paysage mobile
-    if(window.innerHeight < 500) {
-        scaler.style.marginTop = "30px";
-    } else {
-        scaler.style.marginTop = "0";
-    }
+    // On recentre dynamiquement sous la barre
+    scaler.style.top = `calc(50% + ${toolbarH/2}px)`;
     resizeCanvas();
   }
 
