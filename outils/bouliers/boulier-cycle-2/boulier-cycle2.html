@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Version Universelle Stable</title>
+<title>Boulier Rekenrek Pro - Stabilité Totale</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -21,18 +21,19 @@
     overflow: hidden; touch-action: none;
   }
 
+  /* Barre d'outils épurée et centrée */
   .toolbar {
     position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 60px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
-    justify-content: center; gap: 15px; z-index: 1000; padding: 5px 15px;
+    justify-content: center; gap: 30px; z-index: 1000; padding: 5px 20px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
-  .toolbar-group { display: flex; align-items: center; gap: 8px; }
+  .toolbar-group { display: flex; align-items: center; gap: 12px; }
 
   .btn {
-    border: none; background: #444; color: white; padding: 7px 10px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+    border: none; background: #444; color: white; padding: 8px 14px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
   }
   .btn.active { background: var(--accent); outline: 2px solid white; }
   .btn-clear { background: #722; }
@@ -43,6 +44,7 @@
     justify-content: center;
   }
 
+  /* LE SCALER : Gère l'adaptation sans déformer le contenu interne */
   #scaler {
     position: absolute; left: 50%; width: 880px; 
     display: flex; flex-direction: column; align-items: center;
@@ -52,11 +54,11 @@
 
   #total-display { 
     font-size: 46px; font-weight: bold; color: var(--accent); 
-    min-height: 60px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    min-height: 60px; margin-top: 20px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
   }
 
   #abacus-frame {
-    position: relative; width: 820px; 
+    position: relative; width: 820px; /* Largeur 820px strictement respectée */
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: auto; box-sizing: content-box;
   }
@@ -64,16 +66,21 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
+  /* CACHE : Positionné pour ne jamais masquer les billes à droite */
   #cache-curtain {
     position: absolute; right: 0; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
     display: none; cursor: ew-resize;
   }
+  
   #cache-curtain::before { 
-    content: "↔"; position: absolute; left: -25px; top: 50%; 
-    background: #444; border-radius: 50%; width: 50px; height: 50px; 
+    content: "↔"; position: absolute; 
+    left: -12px; /* Positionné sur le montant bois/début de tige */
+    top: 50%; 
+    background: #444; border-radius: 50%; width: 44px; height: 44px; 
     display: flex; align-items: center; justify-content: center; 
-    font-weight: bold; font-size: 24px; color: white; transform: translateY(-50%);
+    font-weight: bold; font-size: 20px; color: white; transform: translateY(-50%);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
   }
 
   .bead {
@@ -97,8 +104,8 @@
 
 <div class="toolbar">
   <div class="toolbar-group">
-    <input type="range" id="row-range" min="1" max="10" value="10" style="width:60px">
-    <span id="row-val" style="font-weight:bold; font-size:14px; color:var(--accent)">10</span>
+    <input type="range" id="row-range" min="1" max="10" value="10" style="width:70px">
+    <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
   </div>
   <div class="toolbar-group">
     <button class="btn" onclick="allTo(0)">0</button>
@@ -110,7 +117,7 @@
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
   </div>
-  <div class="toolbar-group" style="gap:10px">
+  <div class="toolbar-group" style="gap:12px">
     <button class="btn" id="btn-pen" onclick="togglePen()">✏️ Stylo</button>
     <div class="color-dot active" style="background:#0f6cf9" onclick="setCol('#0f6cf9', this)"></div>
     <div class="color-dot" style="background:#ffeb3b" onclick="setCol('#ffeb3b', this)"></div>
@@ -147,7 +154,7 @@
     frame.innerHTML = '';
     frame.appendChild(cache);
     cache.onpointerdown = startCacheDrag;
-    if (isCache) cache.style.width = curWidth || "120px";
+    if (isCache) cache.style.width = curWidth || "0px";
 
     for (let r = 0; r < rowsCount; r++) {
       const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
@@ -165,27 +172,29 @@
     updateBeads(false);
   }
 
+  // --- AUTO-SCALE ÉQUILIBRÉ ---
   function autoScale() {
-    const toolbar = document.querySelector('.toolbar');
-    const toolbarH = toolbar ? toolbar.offsetHeight : 65;
+    const toolbarH = document.querySelector('.toolbar').offsetHeight;
     const availableW = window.innerWidth - 40;
-    
-    // Correction iPad : On augmente encore la marge de sécurité (80px au lieu de 50px)
-    const availableH = window.innerHeight - toolbarH - 80; 
+    const availableH = window.innerHeight - toolbarH - 60; // Marge de sécurité
 
     const contentW = 880; 
-    const contentH = 120 + (56 * rowsCount); // 120px pour Display + marges
+    const contentH = 100 + (56 * rowsCount);
 
     const sW = availableW / contentW;
     const sH = availableH / contentH;
     
-    // Facteur plus conservateur pour l'iPad
-    currentScale = Math.min(1, sW, sH) * 0.92;
+    // Sur ordinateur, on évite de réduire si seule la hauteur est un problème
+    // On ne réduit l'échelle que si l'élément sort vraiment de l'écran.
+    currentScale = Math.min(1, sW, sH);
+    
+    // Si on est sur un grand écran (ordinateur), on force le maintien de la largeur
+    if (window.innerWidth > 1024) {
+        currentScale = Math.min(1, sH); // On ne suit que la contrainte de hauteur
+    }
 
     scaler.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
-    
-    const zoneCenterY = toolbarH + (availableH / 2) + 20;
-    scaler.style.top = `${zoneCenterY}px`;
+    scaler.style.top = `calc(50% + ${toolbarH/2}px)`;
     scaler.style.left = `50%`;
     
     resizeCanvas();
@@ -223,8 +232,7 @@
   window.addEventListener('pointerup', (e) => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl } = activeDrag;
-    const beads = rowEl.querySelectorAll('.bead');
-    const currentPos = parseFloat(beads[beadIdx].style.left);
+    const currentPos = parseFloat(rowEl.querySelectorAll('.bead')[beadIdx].style.left);
     if (beadIdx >= states[rowIdx]) { if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
     else { if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
     activeDrag = null; updateBeads(true);
@@ -248,34 +256,31 @@
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
-  // --- CORRECTION DESSIN MOBILE (OFFSET ET ÉPAISSEUR) ---
   function resizeCanvas() { 
-    canvas.width = window.innerWidth; 
-    canvas.height = window.innerHeight; 
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
     ctx.lineCap = 'round'; 
   }
 
+  // --- DESSIN ULTRA-PRÉCIS ---
   let drawing = false;
   canvas.onpointerdown = (e) => { 
     if (!isPen) return;
     drawing = true; 
     const rect = canvas.getBoundingClientRect();
-    ctx.beginPath(); 
-    ctx.strokeStyle = penCol; 
-    // Utilisation des coordonnées relatives au canevas pour supprimer l'offset
+    ctx.beginPath(); ctx.strokeStyle = penCol; 
     ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top); 
   };
-
   canvas.onpointermove = (e) => { 
     if (isPen && drawing) { 
       const rect = canvas.getBoundingClientRect();
       ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); 
-      // Épaisseur adaptative : plus fine sur mobile
-      ctx.lineWidth = window.innerWidth < 600 ? 2.5 : 4;
+      // Épaisseur dynamique selon largeur écran
+      ctx.lineWidth = window.innerWidth < 1024 ? 2.5 : 4;
       ctx.stroke(); 
     } 
   };
   canvas.onpointerup = () => drawing = false;
+  let activeDrag = null;
 
   function allTo(n) { states.fill(n); updateBeads(true); }
   function set50() { for(let i=0; i<10; i++) states[i] = (i < 5) ? 10 : 0; updateBeads(true); }
