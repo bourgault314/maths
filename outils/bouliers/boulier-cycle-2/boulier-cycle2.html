@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek Pro - Version Largeur Fixe</title>
+<title>Boulier Rekenrek Pro - Version Équilibre</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -27,7 +27,7 @@
 
   input[type=range] { -webkit-appearance: none; width: 80px; background: transparent; }
   input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%;
+    -webkit-appearance: none; height: 26px; width: 24px; border-radius: 50%;
     background: var(--accent); cursor: pointer; margin-top: -9px; border: 2px solid white;
   }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #444; border-radius: 4px; }
@@ -45,9 +45,9 @@
     justify-content: flex-start; overflow: hidden;
   }
 
-  /* Marge réduite à 45px pour laisser de la place aux 10 lignes sans rétrécir */
+  /* Marge de 65px pour un équilibre parfait entre écriture et espace bas */
   #scaler {
-    margin-top: 45px; 
+    margin-top: 65px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: top center; pointer-events: none;
   }
@@ -182,14 +182,16 @@
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
     
-    // Marge de sécurité réduite sur PC (40px)
-    const margin = isLand ? 40 : 40; 
+    // Marge de sécurité pour le bas (plus d'espace pour la 10eme ligne)
+    const margin = isLand ? 40 : 100; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
     const rowH = isLand ? 45 : 56;
-    const contentH = (isLand ? 35 : 100) + (rowH * rowsCount);
+    
+    // On augmente artificiellement la hauteur du contenu pour forcer une légère réduction si besoin
+    const contentH = (isLand ? 35 : 130) + (rowH * rowsCount);
 
-    // On autorise un scale plus généreux sur PC pour verrouiller la largeur
-    const maxScale = (window.innerWidth > 1024) ? 1.35 : 1.1;
+    // Sur PC on verrouille la largeur
+    const maxScale = (window.innerWidth > 1024) ? 1.2 : 1.1;
     currentScale = Math.min(maxScale, availableW / 880, availableH / contentH);
     
     scaler.style.transform = `scale(${currentScale})`;
