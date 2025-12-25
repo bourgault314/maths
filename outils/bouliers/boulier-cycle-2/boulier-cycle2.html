@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek Pro - Version Ordinateur Stable</title>
+<title>Boulier Rekenrek Pro - Version Icone Plein Ecran</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -34,7 +34,8 @@
 
   .btn {
     border: none; background: #444; color: white; padding: 8px 12px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
 
@@ -44,16 +45,16 @@
     justify-content: flex-start; overflow: hidden;
   }
 
-  /* SCALER : Marge de 100px pour écrire au dessus sur PC */
+  /* Marge de 70px pour l'écriture au-dessus du boulier */
   #scaler {
-    margin-top: 100px; 
+    margin-top: 70px; 
     display: flex; flex-direction: column; align-items: center;
     transform-origin: top center; pointer-events: none;
   }
 
   #total-display { 
     font-size: 64px; font-weight: bold; color: var(--accent); 
-    height: 70px; margin-bottom: 5px; text-shadow: 0 2px 6px black;
+    height: 75px; margin-bottom: 5px; text-shadow: 0 2px 6px black;
     display: flex; align-items: center;
   }
 
@@ -66,7 +67,6 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* CACHE : Rangé à l'extrémité gauche de la barre marron droite */
   #cache-curtain {
     position: absolute; right: -30px; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 5px solid #444; 
@@ -120,7 +120,7 @@
     <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
-    <button class="btn" onclick="toggleFullScreen()">🖥️</button>
+    <button class="btn" onclick="toggleFullScreen()" title="Plein écran">⛶</button>
   </div>
   <div class="toolbar-group" style="gap:10px">
     <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
@@ -181,17 +181,12 @@
   function autoScale() {
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
-    
-    // On réduit la marge de sécurité sur PC pour éviter le rétrécissement
-    const margin = isLand ? 40 : 100; 
+    const margin = isLand ? 40 : 80; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
     const rowH = isLand ? 45 : 56;
-    const contentH = (isLand ? 35 : 100) + (rowH * rowsCount);
-
-    // Sur PC, on autorise un scale plus grand (jusqu'à 1.25) pour garder la largeur
+    const contentH = (isLand ? 35 : 120) + (rowH * rowsCount);
     const maxScale = (window.innerWidth > 1024) ? 1.25 : 1.1;
     currentScale = Math.min(maxScale, availableW / 880, availableH / contentH);
-    
     scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
   }
