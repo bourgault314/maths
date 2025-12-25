@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Boulier Rekenrek - Final Landscape Fix</title>
+<title>Boulier Rekenrek - Fix Paysage Mobile</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -55,7 +55,7 @@
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur maintenue */
+    position: relative; width: 820px; /* Largeur 820px maintenue */
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: none;
   }
@@ -73,7 +73,6 @@
     background: #444; border-radius: 50%; width: 50px; height: 50px; 
     display: flex; align-items: center; justify-content: center; 
     font-weight: bold; font-size: 24px; color: white;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.5);
     transform: translateY(-50%);
   }
 
@@ -94,11 +93,12 @@
   .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: white; transform: scale(1.1); }
 
-  /* FIX PAYSAGE MOBILE : Réduction des hauteurs pour tout faire tenir */
+  /* NOUVEAU : Réduction drastique des hauteurs en paysage mobile */
   @media (orientation: landscape) and (max-height: 500px) {
-    .toolbar { min-height: 45px; padding: 2px 10px; gap: 8px; }
-    .row { height: 45px; } /* On compresse les rangées en paysage */
-    #total-display { font-size: 32px; min-height: 35px; margin-top: 5px; }
+    .toolbar { min-height: 42px; padding: 2px 10px; }
+    #total-display { font-size: 30px; min-height: 32px; margin-top: 5px; }
+    .row { height: 38px; } /* Lignes très fines pour tout faire tenir */
+    .bead { width: 32px; height: 32px; }
     #cache-curtain::before { width: 40px; height: 40px; left: -20px; font-size: 18px; }
   }
 </style>
@@ -164,7 +164,7 @@
       row.innerHTML = `<div class="rod"></div>`;
       for (let b = 0; b < 10; b++) {
         const bead = document.createElement('div');
-        // Inversion des couleurs après la 5ème ligne
+        // Inversion des couleurs 5+5
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
         bead.dataset.idx = b; bead.onpointerdown = startDrag;
@@ -177,27 +177,27 @@
   }
 
   function autoScale() {
-    const abacusFullWidth = 820 + 60; // Wood blocks + Frame
-    const margin = 20;
-    const availableW = window.innerWidth - margin;
+    const abacusFullWidth = 820 + 60; // Wood Blocks
+    const availableW = window.innerWidth - 30;
     
     const toolbarH = document.querySelector('.toolbar').offsetHeight;
-    const availableH = window.innerHeight - toolbarH - 10;
+    const availableH = window.innerHeight - toolbarH;
 
     const scaleW = availableW / abacusFullWidth;
     
-    // On détecte la hauteur d'une rangée (45px en paysage via CSS, sinon 56px)
+    // On recalcule la hauteur réelle avec marge de sécurité
     const isLandscape = window.innerHeight < 500;
-    const rowH = isLandscape ? 45 : 56;
-    const currentAbacusH = totalDiv.offsetHeight + (rowH * rowsCount) + 10;
-    const scaleH = availableH / currentAbacusH;
+    const rowH = isLandscape ? 38 : 56;
+    // Hauteur totale = Titre (60) + (Lignes * Hauteur) + Marge (60)
+    const totalNeededH = 60 + (rowH * rowsCount) + 60; 
+    const scaleH = availableH / totalNeededH;
 
     currentScale = Math.min(1, scaleW, scaleH);
     scaler.style.transform = `scale(${currentScale})`;
     
-    // Remontée automatique en mode paysage
+    // Remontée plus haute en paysage pour éviter que ça ne touche le bas
     if(isLandscape) {
-        scaler.style.marginTop = "25px";
+        scaler.style.marginTop = "35px";
     } else {
         scaler.style.marginTop = "0";
     }
@@ -236,7 +236,8 @@
   window.addEventListener('pointerup', (e) => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl } = activeDrag;
-    const currentPos = parseFloat(rowEl.querySelectorAll('.bead')[beadIdx].style.left);
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
     if (beadIdx >= states[rowIdx]) { if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
     else { if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
     activeDrag = null; updateBeads(true);
