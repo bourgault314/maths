@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Boulier Rekenrek - Cache Ergonomique</title>
+<title>Boulier Rekenrek - Final Landscape Fix</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -52,11 +52,10 @@
   #total-display { 
     font-size: 46px; font-weight: bold; color: var(--accent); 
     min-height: 50px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
-    margin-top: 10px;
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur 820px maintenue */
+    position: relative; width: 820px; /* Largeur maintenue */
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: none;
   }
@@ -64,14 +63,11 @@
   .row { position: relative; height: 56px; width: 100%; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* LE CACHE - POIGNÉE AGRANDIE POUR LE MOBILE */
   #cache-curtain {
     position: absolute; right: 0; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
     display: none; cursor: ew-resize;
   }
-  
-  /* La poignée "↔" est maintenant beaucoup plus grosse pour le doigt */
   #cache-curtain::before { 
     content: "↔"; position: absolute; left: -25px; top: 50%; 
     background: #444; border-radius: 50%; width: 50px; height: 50px; 
@@ -98,9 +94,11 @@
   .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: white; transform: scale(1.1); }
 
+  /* FIX PAYSAGE MOBILE : Réduction des hauteurs pour tout faire tenir */
   @media (orientation: landscape) and (max-height: 500px) {
+    .toolbar { min-height: 45px; padding: 2px 10px; gap: 8px; }
+    .row { height: 45px; } /* On compresse les rangées en paysage */
     #total-display { font-size: 32px; min-height: 35px; margin-top: 5px; }
-    .toolbar { min-height: 40px; padding: 2px 10px; gap: 10px; }
     #cache-curtain::before { width: 40px; height: 40px; left: -20px; font-size: 18px; }
   }
 </style>
@@ -179,20 +177,30 @@
   }
 
   function autoScale() {
-    const abacusFullWidth = 820 + 60; // Wood + Frame
-    const margin = 30;
+    const abacusFullWidth = 820 + 60; // Wood blocks + Frame
+    const margin = 20;
     const availableW = window.innerWidth - margin;
+    
     const toolbarH = document.querySelector('.toolbar').offsetHeight;
-    const availableH = window.innerHeight - toolbarH - 20;
+    const availableH = window.innerHeight - toolbarH - 10;
 
     const scaleW = availableW / abacusFullWidth;
-    const currentAbacusH = totalDiv.offsetHeight + (56 * rowsCount) + 20;
+    
+    // On détecte la hauteur d'une rangée (45px en paysage via CSS, sinon 56px)
+    const isLandscape = window.innerHeight < 500;
+    const rowH = isLandscape ? 45 : 56;
+    const currentAbacusH = totalDiv.offsetHeight + (rowH * rowsCount) + 10;
     const scaleH = availableH / currentAbacusH;
 
     currentScale = Math.min(1, scaleW, scaleH);
     scaler.style.transform = `scale(${currentScale})`;
-    if(window.innerHeight < 500) scaler.style.marginTop = "30px";
-    else scaler.style.marginTop = "0";
+    
+    // Remontée automatique en mode paysage
+    if(isLandscape) {
+        scaler.style.marginTop = "25px";
+    } else {
+        scaler.style.marginTop = "0";
+    }
     resizeCanvas();
   }
 
@@ -247,15 +255,8 @@
   }
 
   function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
-  
-  function startCacheDrag(e) { 
-    e.preventDefault(); 
-    cache.setPointerCapture(e.pointerId);
-    cache.onpointermove = (ev) => { 
-      const rect = frame.getBoundingClientRect(); 
-      // Calcul du mouvement du cache avec correction d'échelle
-      cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; 
-    };
+  function startCacheDrag(e) { e.preventDefault(); cache.setPointerCapture(e.pointerId);
+    cache.onpointermove = (ev) => { const rect = frame.getBoundingClientRect(); cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
