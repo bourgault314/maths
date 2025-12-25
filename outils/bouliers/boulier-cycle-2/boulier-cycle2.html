@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Version Finale Certifiée</title>
+<title>Boulier Rekenrek - Fix Paysage Haut</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -16,7 +16,7 @@
   }
 
   body, html { 
-    margin: 0; padding: 0; width: 100%; height: 100dvh; 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
     background: var(--bg); color: white; font-family: sans-serif;
     overflow: hidden; touch-action: none;
   }
@@ -36,16 +36,16 @@
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
 
-  /* Zone principale qui prend tout le reste de l'écran */
+  /* Zone principale : on aligne vers le HAUT (flex-start) */
   #main-container {
-    position: relative; width: 100%; height: calc(100dvh - 60px);
+    position: relative; width: 100%; height: calc(100vh - 60px);
     display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; /* Aligne en haut */
     overflow: hidden;
   }
 
-  /* LE SCALER : On le place en haut avec une petite marge */
   #scaler {
-    margin-top: 10px;
+    margin-top: 5px; /* Très peu d'espace avec le haut */
     display: flex; flex-direction: column; align-items: center;
     transform-origin: top center;
     pointer-events: none;
@@ -53,7 +53,7 @@
 
   #total-display { 
     font-size: 38px; font-weight: bold; color: var(--accent); 
-    height: 45px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    height: 45px; margin-bottom: 2px; text-shadow: 0 2px 4px black;
     display: flex; align-items: center;
   }
 
@@ -94,11 +94,12 @@
   .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: white; transform: scale(1.1); }
 
-  /* Mode Paysage Serré */
+  /* Mode Paysage Mobile : on réduit tout au minimum verticalement */
   @media (orientation: landscape) and (max-height: 450px) {
-    #total-display { font-size: 24px; height: 30px; }
-    .row { height: 50px; }
+    #total-display { font-size: 24px; height: 28px; margin-top: 0; }
+    .row { height: 48px; }
     .toolbar { min-height: 40px; padding: 2px; }
+    #scaler { margin-top: 2px; }
   }
 </style>
 </head>
@@ -177,16 +178,17 @@
 
   function autoScale() {
     const availableW = window.innerWidth - 20;
-    const availableH = window.innerHeight - topBar.offsetHeight - 20;
+    const availableH = window.innerHeight - topBar.offsetHeight - 10;
 
     const contentW = 880; 
     const isSmallLandscape = window.innerHeight < 450;
-    const rH = isSmallLandscape ? 50 : 56;
-    const contentH = (isSmallLandscape ? 30 : 50) + (rH * rowsCount);
+    const rH = isSmallLandscape ? 48 : 56;
+    const contentH = (isSmallLandscape ? 28 : 50) + (rH * rowsCount);
 
     const sW = availableW / contentW;
     const sH = availableH / contentH;
     
+    // On réduit l'échelle pour être sûr que ça tienne
     currentScale = Math.min(1, sW, sH) * 0.98;
 
     scaler.style.transform = `scale(${currentScale})`;
