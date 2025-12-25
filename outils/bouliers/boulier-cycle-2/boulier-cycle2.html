@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Boulier Rekenrek - Correction Ultime</title>
+<title>Boulier Rekenrek - Version Pro Universelle</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -16,26 +16,27 @@
     overflow: hidden; touch-action: none;
   }
 
+  /* Toolbar : Protection Encoche iPhone & Centrage PC */
   .toolbar {
     position: relative; width: 100%; min-height: 55px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
-    justify-content: center; gap: 15px; z-index: 1000; padding: 5px 20px;
+    justify-content: center; gap: 20px; z-index: 1000; padding: 5px 20px;
     box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
-  .toolbar-group { display: flex; align-items: center; gap: 8px; }
+  .toolbar-group { display: flex; align-items: center; gap: 10px; }
 
-  /* Curseur amélioré pour le tactile */
-  input[type=range] { -webkit-appearance: none; width: 90px; background: transparent; cursor: pointer; }
+  /* Sélecteur tactile large */
+  input[type=range] { -webkit-appearance: none; width: 90px; background: transparent; }
   input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
-    background: var(--accent); margin-top: -10px; border: 2px solid white;
+    -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%;
+    background: var(--accent); margin-top: -9px; border: 2px solid white;
   }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #444; border-radius: 4px; }
 
   .btn {
-    border: none; background: #444; color: white; padding: 7px 12px;
-    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;
+    border: none; background: #444; color: white; padding: 8px 12px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
 
@@ -45,8 +46,10 @@
     justify-content: flex-start; overflow: hidden;
   }
 
+  /* Gestion de l'espace au-dessus du boulier */
   #scaler {
-    margin-top: 60px; display: flex; flex-direction: column; align-items: center;
+    margin-top: 90px; /* Grand espace pour écrire sur ordinateur */
+    display: flex; flex-direction: column; align-items: center;
     transform-origin: top center; pointer-events: none;
   }
 
@@ -65,6 +68,7 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
+  /* Cache calé à l'extrémité du bois */
   #cache-curtain {
     position: absolute; right: -30px; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 4px solid #444; 
@@ -87,17 +91,18 @@
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
   .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); }
 
-  #draw-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
+  /* Stylo Fixe : Supprime tout décalage */
+  #draw-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500; pointer-events: none; }
   #draw-layer.active { pointer-events: auto; cursor: crosshair; }
   
   .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: white; transform: scale(1.1); }
 
-  /* CORRECTION PAYSAGE IPHONE */
-  @media (orientation: landscape) {
-    .toolbar { padding-left: 60px; gap: 10px; } /* On dégage l'encoche */
+  /* --- RÉGLAGES SPÉCIFIQUES TÉLÉPHONE PAYSAGE --- */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .toolbar { padding-left: 80px; gap: 10px; min-height: 45px; }
+    #scaler { margin-top: 5px; } /* On réduit l'espace pour sauver la 10ème ligne */
     #total-display { font-size: 28px; height: 32px; }
-    #scaler { margin-top: 5px; } 
     .row { height: 45px; }
   }
 </style>
@@ -129,7 +134,6 @@
 </div>
 
 <div id="main-container">
-  <canvas id="draw-layer"></canvas>
   <div id="scaler">
     <div id="total-display"></div>
     <div id="abacus-frame">
@@ -137,6 +141,7 @@
     </div>
   </div>
 </div>
+<canvas id="draw-layer"></canvas>
 
 <script>
   const frame = document.getElementById('abacus-frame');
@@ -177,9 +182,13 @@
 
   function autoScale() {
     const availableW = window.innerWidth - 30;
-    const availableH = window.innerHeight - topBar.offsetHeight - 50;
-    const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
-    const contentH = (isLand ? 32 : 110) + ((isLand ? 45 : 56) * rowsCount);
+    const isLandPhone = window.innerWidth > window.innerHeight && window.innerHeight < 500;
+    const margin = isLandPhone ? 40 : 150; // Marge de sécurité
+    const availableH = window.innerHeight - topBar.offsetHeight - margin;
+
+    const rowH = isLandPhone ? 45 : 56;
+    const contentH = (isLandPhone ? 32 : 50) + (rowH * rowsCount);
+
     currentScale = Math.min(1, availableW / 880, availableH / contentH);
     scaler.style.transform = `scale(${currentScale})`;
     resizeCanvas();
@@ -235,22 +244,25 @@
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
-  // --- DESSIN ULTRA-STABLE (FIX PAYSAGE) ---
-  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.lineCap = 'round'; }
-  
+  // --- DESSIN : FIX ABSOLU ---
+  function resizeCanvas() { 
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+    ctx.lineCap = 'round'; 
+  }
+
   let drawing = false, activeDrag = null;
   canvas.onpointerdown = (e) => { 
     if (!isPen) return;
     drawing = true; 
-    const r = canvas.getBoundingClientRect();
-    ctx.beginPath(); ctx.strokeStyle = penCol; 
-    ctx.lineWidth = window.innerWidth < 800 ? 1.8 : 4; // Plus fin en paysage mobile
-    ctx.moveTo(e.clientX - r.left, e.clientY - r.top); 
+    ctx.beginPath(); 
+    ctx.strokeStyle = penCol; 
+    ctx.lineWidth = window.innerWidth < 800 ? 2 : 4;
+    ctx.moveTo(e.clientX, e.clientY); 
   };
   canvas.onpointermove = (e) => { 
     if (isPen && drawing) { 
-      const r = canvas.getBoundingClientRect();
-      ctx.lineTo(e.clientX - r.left, e.clientY - r.top); 
+      ctx.lineTo(e.clientX, e.clientY); 
       ctx.stroke(); 
     } 
   };
@@ -265,7 +277,7 @@
   function toggleColorMode() { isBlue = !isBlue; document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu"; document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue)); }
 
   document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
-  window.addEventListener('resize', () => { resizeCanvas(); autoScale(); });
+  window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
   init();
 </script>
 </body>
