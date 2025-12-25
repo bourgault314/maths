@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Boulier Rekenrek - Multi-Support</title>
+<title>Boulier Rekenrek - Cache Ergonomique</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -21,7 +21,6 @@
     overflow: hidden; touch-action: none;
   }
 
-  /* Toolbar adaptative */
   .toolbar {
     position: absolute; top: 0; left: 0; right: 0; height: auto; min-height: 60px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
@@ -38,27 +37,26 @@
   .btn.active { background: var(--accent); outline: 2px solid white; }
   .btn-clear { background: #722; }
 
-  /* Conteneur principal */
   #main-container {
     position: relative; width: 100vw; height: 100vh;
     display: flex; flex-direction: column; align-items: center;
     justify-content: center;
   }
 
-  /* LE SCALER : Permet de réduire tout le bloc sans changer le code interne */
   #scaler {
     display: flex; flex-direction: column; align-items: center;
     transform-origin: center center;
-    transition: transform 0.2s ease;
+    transition: transform 0.1s ease;
   }
 
   #total-display { 
     font-size: 46px; font-weight: bold; color: var(--accent); 
     min-height: 50px; margin-bottom: 5px; text-shadow: 0 2px 4px black;
+    margin-top: 10px;
   }
 
   #abacus-frame {
-    position: relative; width: 820px; /* Largeur préservée */
+    position: relative; width: 820px; /* Largeur 820px maintenue */
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: none;
   }
@@ -66,15 +64,21 @@
   .row { position: relative; height: 56px; width: 100%; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
+  /* LE CACHE - POIGNÉE AGRANDIE POUR LE MOBILE */
   #cache-curtain {
     position: absolute; right: 0; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 20; border-left: 4px solid #444; pointer-events: auto;
     display: none; cursor: ew-resize;
   }
+  
+  /* La poignée "↔" est maintenant beaucoup plus grosse pour le doigt */
   #cache-curtain::before { 
-    content: "↔"; position: absolute; left: -15px; top: 50%; 
-    background: #444; border-radius: 50%; width: 30px; height: 30px; 
-    display: flex; align-items: center; justify-content: center; font-weight: bold;
+    content: "↔"; position: absolute; left: -25px; top: 50%; 
+    background: #444; border-radius: 50%; width: 50px; height: 50px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-weight: bold; font-size: 24px; color: white;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+    transform: translateY(-50%);
   }
 
   .bead {
@@ -83,16 +87,22 @@
     cursor: grab; touch-action: none;
     box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
   }
+  /* Inversion des couleurs 5+5 */
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
   .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); }
 
-  /* Canvas plein écran pour le dessin */
   #draw-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
   #draw-layer.active { pointer-events: auto; cursor: crosshair; }
   
   .color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
   .color-dot.active { border-color: white; transform: scale(1.1); }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    #total-display { font-size: 32px; min-height: 35px; margin-top: 5px; }
+    .toolbar { min-height: 40px; padding: 2px 10px; gap: 10px; }
+    #cache-curtain::before { width: 40px; height: 40px; left: -20px; font-size: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -156,6 +166,7 @@
       row.innerHTML = `<div class="rod"></div>`;
       for (let b = 0; b < 10; b++) {
         const bead = document.createElement('div');
+        // Inversion des couleurs après la 5ème ligne
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
         bead.dataset.idx = b; bead.onpointerdown = startDrag;
@@ -167,20 +178,21 @@
     updateBeads(false);
   }
 
-  // --- NOUVEAU : AUTO-SCALING POUR IPAD ET MOBILE ---
   function autoScale() {
-    const abacusFullWidth = 820 + 60; // Frame + Wood blocks
-    const margin = 20;
+    const abacusFullWidth = 820 + 60; // Wood + Frame
+    const margin = 30;
     const availableW = window.innerWidth - margin;
-    const availableH = window.innerHeight - 100; // Espace sous la toolbar
+    const toolbarH = document.querySelector('.toolbar').offsetHeight;
+    const availableH = window.innerHeight - toolbarH - 20;
 
     const scaleW = availableW / abacusFullWidth;
-    // Hauteur estimée : Valeur (60) + Boulier (56 * rowsCount)
-    const currentAbacusH = 60 + (56 * rowsCount);
+    const currentAbacusH = totalDiv.offsetHeight + (56 * rowsCount) + 20;
     const scaleH = availableH / currentAbacusH;
 
     currentScale = Math.min(1, scaleW, scaleH);
     scaler.style.transform = `scale(${currentScale})`;
+    if(window.innerHeight < 500) scaler.style.marginTop = "30px";
+    else scaler.style.marginTop = "0";
     resizeCanvas();
   }
 
@@ -196,7 +208,6 @@
   window.addEventListener('pointermove', (e) => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
-    // On ajuste le déplacement dx par le facteur de scale
     const dx = (e.clientX - startX) / currentScale;
     const beads = rowEl.querySelectorAll('.bead');
     if (beadIdx >= states[rowIdx]) { 
@@ -236,8 +247,15 @@
   }
 
   function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
-  function startCacheDrag(e) { e.preventDefault(); cache.setPointerCapture(e.pointerId);
-    cache.onpointermove = (ev) => { const rect = frame.getBoundingClientRect(); cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; };
+  
+  function startCacheDrag(e) { 
+    e.preventDefault(); 
+    cache.setPointerCapture(e.pointerId);
+    cache.onpointermove = (ev) => { 
+      const rect = frame.getBoundingClientRect(); 
+      // Calcul du mouvement du cache avec correction d'échelle
+      cache.style.width = Math.max(0, Math.min(FRAME_W, (rect.right - ev.clientX)/currentScale)) + "px"; 
+    };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
