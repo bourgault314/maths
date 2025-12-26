@@ -6,11 +6,11 @@
     <title>Bouliers - Menu</title>
     <link rel="stylesheet" href="../../assets/style.css"/>
     <style>
-        /* Styles pour améliorer l'esthétique et l'homogénéité */
         body {
             background-color: #f8fafc;
             color: #334155;
             font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
         }
         .header-nav {
             padding: 1rem 0;
@@ -35,47 +35,42 @@
             gap: 2rem;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
-        .card {
+        /* Transformation de la carte en lien complet */
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 3rem 2rem;
+            border-radius: 16px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s ease;
             text-align: center;
         }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .card-link:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #2563eb;
         }
-        .card h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.5rem;
+        .card-link h3 {
+            margin: 0;
+            font-size: 1.6rem;
             color: #1e293b;
+            transition: color 0.2s;
         }
-        .card p {
+        .card-link:hover h3 {
+            color: #2563eb;
+        }
+        .card-link p {
+            margin-top: 0.75rem;
             color: #64748b;
-            margin-bottom: 1.5rem;
             font-weight: 500;
-        }
-        .btn-chip {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-chip:hover {
-            background: #1d4ed8;
+            font-size: 1rem;
         }
         footer {
             margin-top: 4rem;
             padding: 2rem 0;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
         }
     </style>
 </head>
@@ -95,30 +90,26 @@
 <main>
     <div class="wrapper">
         <section class="grid">
-            <div class="card">
+            <a href="rekenrek/" class="card-link">
                 <h3>Rekenrek</h3>
                 <p>Cycle 2 · Cycle 3</p>
-                <a class="btn-chip" href="rekenrek/">Ouvrir</a>
-            </div>
+            </a>
 
-            <div class="card">
+            <a href="boulier_montessori/" class="card-link">
                 <h3>Boulier Montessori</h3>
                 <p>Cycle 3 · Cycle 4</p>
-                <a class="btn-chip" href="boulier_montessori/">Ouvrir</a>
-            </div>
+            </a>
 
-            <div class="card">
+            <a href="soroban/" class="card-link">
                 <h3>Soroban</h3>
                 <p>Cycle 3 · Cycle 4</p>
-                <a class="btn-chip" href="soroban/">Ouvrir</a>
-            </div>
+            </a>
         </section>
     </div>
 </main>
 
 <footer>
-    <div class="wrapper">
-        </div>
+    <div class="wrapper"></div>
 </footer>
 
 </body>
