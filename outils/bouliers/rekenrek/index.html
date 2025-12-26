@@ -19,7 +19,7 @@
             margin-bottom: 3rem;
         }
         .back-link {
-            text-decoration: none;
+            text-decoration: none; /* Pas de soulignement */
             color: #64748b;
             font-weight: 500;
             display: flex;
@@ -29,15 +29,15 @@
         }
         .back-link:hover {
             color: #2563eb;
+            text-decoration: none;
         }
         .grid {
             display: grid;
             gap: 2rem;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
-        /* La carte entière est maintenant le lien */
         .card-link {
-            text-decoration: none;
+            text-decoration: none; /* Pas de soulignement */
             color: inherit;
             display: block;
             background: white;
@@ -52,6 +52,7 @@
             transform: translateY(-8px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             border-color: #2563eb;
+            text-decoration: none;
         }
         .card-link h3 {
             margin: 0;
