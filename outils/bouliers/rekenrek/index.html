@@ -6,11 +6,11 @@
     <title>Rekenrek - Menu</title>
     <link rel="stylesheet" href="../../../assets/style.css"/>
     <style>
-        /* Style cohérent avec le menu précédent */
         body {
             background-color: #f8fafc;
             color: #334155;
             font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
         }
         .header-nav {
             padding: 1rem 0;
@@ -35,37 +35,37 @@
             gap: 2rem;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
-        .card {
+        /* La carte entière est maintenant le lien */
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
             background: white;
-            padding: 2.5rem 1.5rem;
-            border-radius: 12px;
+            padding: 3rem 2rem;
+            border-radius: 16px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s ease;
             text-align: center;
         }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        .card-link:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #2563eb;
         }
-        .card h3 {
-            margin: 0 0 1.5rem 0;
-            font-size: 1.4rem;
+        .card-link h3 {
+            margin: 0;
+            font-size: 1.5rem;
             color: #1e293b;
-            line-height: 1.2;
+            transition: color 0.2s;
         }
-        .btn-chip {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 0.6rem 2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
+        .card-link:hover h3 {
+            color: #2563eb;
         }
-        .btn-chip:hover {
-            background: #1d4ed8;
+        .card-link p {
+            margin-top: 1rem;
+            color: #64748b;
+            font-size: 0.95rem;
         }
         footer { margin-top: 4rem; }
     </style>
@@ -86,20 +86,20 @@
 <main>
     <div class="wrapper">
         <section class="grid">
-            <div class="card">
+            <a href="rekenrek.html" class="card-link">
                 <h3>Rekenrek</h3>
-                <a class="btn-chip" href="rekenrek.html">Ouvrir</a>
-            </div>
+                <p>Ouvrir l'outil interactif</p>
+            </a>
 
-            <div class="card">
+            <a href="lecture_de_nombres.html" class="card-link">
                 <h3>Lecture de nombres</h3>
-                <a class="btn-chip" href="lecture_de_nombres.html">Ouvrir</a>
-            </div>
+                <p>S'exercer à lire les quantités</p>
+            </a>
 
-            <div class="card">
+            <a href="pousser_des_nombres.html" class="card-link">
                 <h3>Pousser des nombres</h3>
-                <a class="btn-chip" href="pousser_des_nombres.html">Ouvrir</a>
-            </div>
+                <p>Manipuler pour construire les nombres</p>
+            </a>
         </section>
     </div>
 </main>
