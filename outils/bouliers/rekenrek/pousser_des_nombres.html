@@ -9,13 +9,15 @@
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
     --neutral: #444;
-    /* Couleurs par défaut (Rouge) */
-    --bead-main: #ff5f5f; --bead-dark: #a00;
+    /* Billes principales (Rouges) */
+    --bead-main: #ff5f5f; --bead-main-dark: #a00;
+    /* Billes secondaires (Blanches par défaut) */
+    --bead-sec: #ffffff; --bead-sec-dark: #bbb;
   }
 
-  /* Thème Bleu */
+  /* Thème : Secondaire devient Bleu */
   body.theme-blue {
-    --bead-main: #3498db; --bead-dark: #2980b9;
+    --bead-sec: #3498db; --bead-sec-dark: #2980b9;
   }
 
   body, html { 
@@ -44,9 +46,7 @@
   }
 
   #scaler { display: flex; flex-direction: column; align-items: center; transform-origin: center center; }
-
   #game-layout { display: flex; align-items: center; justify-content: center; gap: 40px; }
-
   .control-panel { display: flex; flex-direction: column; align-items: center; gap: 20px; }
 
   #target-display {
@@ -56,8 +56,7 @@
     min-width: 150px; text-align: center;
   }
   
-  /* Ajustement de la taille du texte si c'est en lettres */
-  #target-display.text-mode { font-size: 30px; min-width: 300px; }
+  #target-display.text-mode { font-size: 30px; min-width: 350px; }
 
   #abacus-frame {
     position: relative; width: 820px;
@@ -75,9 +74,8 @@
     cursor: grab;
   }
   
-  /* Couleurs utilisant les variables CSS */
-  .bead.color-main { background: radial-gradient(circle at 30% 30%, var(--bead-main), var(--bead-dark)); }
-  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+  .bead.color-main { background: radial-gradient(circle at 30% 30%, var(--bead-main), var(--bead-main-dark)); }
+  .bead.color-sec { background: radial-gradient(circle at 30% 30%, var(--bead-sec), var(--bead-sec-dark)); }
 
   #feedback { height: 80px; font-size: 48px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; justify-content: center; }
 
@@ -87,12 +85,11 @@
     box-shadow: 0 6px 0 #0a4eb3; min-width: 250px; transition: background 0.2s;
   }
   .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #0a4eb3; }
-  
   .btn-success { background: var(--success) !important; box-shadow: 0 6px 0 #2e7d32 !important; }
 
   select, .btn-small {
     background: #444; color: white; border: none; padding: 10px;
-    border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
+    border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
   }
   
   .btn-listen {
@@ -117,10 +114,10 @@
       <option value="voice">Vocal (Oral)</option>
     </select>
 
-    <button class="btn-small" onclick="toggleTheme()">🎨 Rouge / Bleu</button>
+    <button class="btn-small" onclick="toggleTheme()">🎨 Blanc / Bleu</button>
   </div>
   
-  <div style="font-weight: bold; font-size: 20px; color: #aaa;">REKENREK CONSTRUCTEUR</div>
+  <div style="font-weight: bold; font-size: 18px; color: #aaa;">REKENREK CONSTRUCTEUR</div>
   
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -130,19 +127,15 @@
 
 <div id="main-container">
   <div id="scaler">
-    
     <div id="game-layout">
       <div id="abacus-frame"></div>
-
       <div class="control-panel">
         <button id="btn-listen" class="btn-listen" style="display:none;" onclick="repeatVoice()">🔊 Écouter</button>
         <div id="target-display">?</div>
         <button class="btn-main" id="btn-action" onclick="handleAction()">Commencer</button>
       </div>
     </div>
-
     <div id="feedback"></div>
-
   </div>
 </div>
 
@@ -181,12 +174,7 @@
     
     const rowCount = currentRange === 10 ? 1 : (currentRange === 20 ? 2 : 10);
     const layout = document.getElementById('game-layout');
-    
-    if (currentRange === 100) {
-      layout.style.flexDirection = "row";
-    } else {
-      layout.style.flexDirection = "column";
-    }
+    layout.style.flexDirection = (currentRange === 100) ? "row" : "column";
 
     states = Array(rowCount).fill(0);
     frame.innerHTML = '';
@@ -196,8 +184,8 @@
       row.innerHTML = '<div class="rod"></div>';
       for (let b = 0; b < 10; b++) {
         const bead = document.createElement('div');
-        const isRedSide = (r < 5) ? (b < 5) : (b >= 5);
-        bead.className = `bead ${isRedSide ? 'color-main' : 'white'}`;
+        const isMainSide = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isMainSide ? 'color-main' : 'color-sec'}`;
         bead.dataset.idx = b;
         bead.onpointerdown = startDrag;
         row.appendChild(bead);
@@ -222,17 +210,28 @@
     const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingts", "quatre-vingt-dix"];
     
     if (n <= 16) return units[n];
-    if (n < 20) return "dix-" + units[n-10];
+    if (n < 20) return "dix-sept-dix-huit-dix-neuf".split("-")[n-17] ? "dix-" + units[n-10] : units[n];
+    
     if (n < 70) {
       let t = Math.floor(n / 10), u = n % 10;
       if (u === 0) return tens[t];
       return tens[t] + (u === 1 ? "-et-un" : "-" + units[u]);
     }
-    if (n < 80) return "soixante-" + numberToFrench(n - 60);
-    if (n < 100) {
-      if (n === 80) return "quatre-vingts";
-      return "quatre-vingt-" + numberToFrench(n - 80);
+    
+    if (n < 80) { // Zone 70-79 (Orthographe rectifiée : traits d'union partout)
+      let u = n - 60;
+      if (u === 10) return "soixante-dix";
+      if (u === 11) return "soixante-et-onze";
+      return "soixante-" + (u <= 16 ? units[u] : "dix-" + units[u-10]);
     }
+    
+    if (n < 100) { // Zone 80-99
+      if (n === 80) return "quatre-vingts";
+      let u = n - 80;
+      let suffix = (u <= 16) ? units[u] : "dix-" + units[u-10];
+      return "quatre-vingt-" + suffix;
+    }
+    
     if (n === 100) return "cent";
     return n;
   }
@@ -274,7 +273,6 @@
     updateBeads(true);
   }
 
-  // --- GLISSER-DÉPOSER ---
   let activeDrag = null;
 
   function startDrag(e) {
@@ -339,7 +337,6 @@
       feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! Bonne réponse. ✅</span>";
       actionBtn.innerText = "Suivant 🔄";
       actionBtn.classList.add('btn-success');
-      // Afficher le chiffre en mode vocal si gagné
       if(document.getElementById('display-mode').value === 'voice') targetDiv.innerText = targetNumber;
     } else {
       badScore++;
