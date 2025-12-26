@@ -1,33 +1,125 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Bouliers</title><link rel="stylesheet" href="../../assets/style.css"/></head>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Bouliers - Menu</title>
+    <link rel="stylesheet" href="../../assets/style.css"/>
+    <style>
+        /* Styles pour améliorer l'esthétique et l'homogénéité */
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .header-nav {
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+            margin-bottom: 3rem;
+        }
+        .back-link {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #2563eb;
+        }
+        .grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+        .card p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+        .btn-chip {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-chip:hover {
+            background: #1d4ed8;
+        }
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+    </style>
+</head>
 <body>
 
-<header><div class="wrapper"><nav class="nav">
-  <a class="brand" href="../../">Maths</a>
-  <a href="../../outils/">Outils</a>
-</nav></div></header>
+<header class="header-nav">
+    <div class="wrapper">
+        <nav>
+            <a href="../" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Retour aux outils
+            </a>
+        </nav>
+    </div>
+</header>
 
-<main><div class="wrapper">
+<main>
+    <div class="wrapper">
+        <section class="grid">
+            <div class="card">
+                <h3>C</h3>
+                <p>Cycle 2 · Cycle 3</p>
+                <a class="btn-chip" href="boulier-cycle-2/">Ouvrir</a>
+            </div>
 
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));">
-  <div class="card center">
-    <h3>Cycle 2</h3>
-    <p class="small">Boulier · Placer des nombres · Add./Soustr.</p>
-    <p><a class="btn-chip" href="boulier-cycle-2/">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Cycle 3</h3>
-    <p class="small">Boulier · Placer des nombres · Add./Soustr.</p>
-    <p><a class="btn-chip" href="boulier-cycle-3/">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Soroban</h3>
-    <p class="small">Outils Soroban</p>
-    <p><a class="btn-chip" href="soroban/">Ouvrir</a></p>
-  </div>
-</section>
+            <div class="card">
+                <h3>Boulier Montessori</h3>
+                <p>Cycle 3 · Cycle 4</p>
+                <a class="btn-chip" href="boulier-cycle-3/">Ouvrir</a>
+            </div>
 
-</div></main>
-<footer><div class='wrapper'>© 2025 — Site pédagogique</div></footer>
-</body></html>
+            <div class="card">
+                <h3>Soroban</h3>
+                <p>Cycle 3 · Cycle 4</p>
+                <a class="btn-chip" href="soroban/">Ouvrir</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer>
+    <div class="wrapper">
+        </div>
+</footer>
+
+</body>
+</html>
