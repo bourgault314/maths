@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Rekenrek Flash - Version XL Stable</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
+    --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+  }
+
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background: var(--bg); color: white; font-family: sans-serif;
+    overflow: hidden; touch-action: none;
+  }
+
+  .toolbar {
+    position: relative; width: 100%; min-height: 60px;
+    background: var(--ui); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
+  }
+
+  .toolbar-group { display: flex; align-items: center; gap: 15px; }
+
+  .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
+  .score-good { color: var(--success); }
+  .score-bad { color: var(--error); }
+
+  .speed-control { display: flex; align-items: center; gap: 10px; background: #333; padding: 5px 15px; border-radius: 30px; }
+  input[type=range] { -webkit-appearance: none; width: 120px; background: transparent; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--accent); border: 2px solid white; margin-top: -7px;
+  }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #555; border-radius: 2px; }
+
+  #main-container {
+    position: relative; width: 100%; height: calc(100vh - 60px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; overflow: hidden;
+  }
+
+  #scaler { display: flex; flex-direction: column; align-items: center; transform-origin: center center; }
+
+  #game-layout { display: flex; align-items: center; justify-content: center; gap: 40px; }
+
+  #abacus-frame {
+    position: relative; width: 820px;
+    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
+    box-sizing: content-box; background: transparent;
+    visibility: hidden;
+  }
+
+  .row { position: relative; height: 56px; width: 100%; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+  
+  .bead {
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    top: 50%; transform: translateY(-50%); z-index: 5;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+  }
+  .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
+  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+
+  #feedback { height: 75px; font-size: 48px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  .keypad { display: grid; gap: 12px; width: 700px; justify-content: center; margin-top: 5px; }
+  .grid-10 { grid-template-columns: repeat(6, 1fr); }
+  .grid-20 { grid-template-columns: repeat(7, 1fr); }
+
+  .key {
+    background: #444; border: none; color: white; height: 80px; min-width: 80px;
+    border-radius: 12px; font-size: 32px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 5px 0 #222;
+  }
+  .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #222; }
+  .key.correct { background: var(--success) !important; box-shadow: 0 5px 0 #2e7d32; }
+  .key.wrong { background: var(--error) !important; box-shadow: 0 5px 0 #c62828; }
+
+  #input-zone { display: none; flex-direction: column; align-items: center; gap: 20px; }
+  #input-val {
+    width: 200px; height: 120px; font-size: 72px; font-weight: bold;
+    text-align: center; border-radius: 20px; border: 6px solid #444;
+    background: #000; color: var(--accent); outline: none;
+  }
+  .btn-check {
+    background: var(--accent); color: white; border: none; padding: 20px 40px;
+    border-radius: 15px; font-size: 30px; font-weight: bold; cursor: pointer;
+    width: 100%; box-shadow: 0 5px 0 #0a4eb3;
+  }
+
+  .btn-main {
+    background: var(--accent); color: white; border: none; padding: 25px 60px;
+    border-radius: 70px; font-size: 34px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 8px 0 #0a4eb3; min-width: 300px;
+  }
+  .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #0a4eb3; }
+  .btn-main:disabled { background: #555; box-shadow: none; cursor: wait; }
+
+  select {
+    background: #444; color: white; border: none; padding: 12px;
+    border-radius: 8px; font-weight: bold; font-size: 22px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-group">
+    <select id="mode-select" onchange="updateMode()">
+      <option value="10">Mode 0-10</option>
+      <option value="20" selected>Mode 0-20</option>
+      <option value="100">Mode 0-100</option>
+    </select>
+    <div class="speed-control">
+      <span style="font-size: 22px;">⏱️</span>
+      <input type="range" id="speed-slider" min="500" max="8000" step="500" value="2000" oninput="updateSpeedLabel()">
+      <span id="speed-label" style="font-weight: bold; min-width: 50px;">2.0s</span>
+    </div>
+  </div>
+  <div style="font-weight: bold; font-size: 28px; color: var(--accent);">REKENREK FLASH</div>
+  <div class="score-board">
+    <span class="score-good">✅ <span id="count-good">0</span></span>
+    <span class="score-bad">❌ <span id="count-bad">0</span></span>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="scaler">
+    <div id="game-layout">
+      <div id="abacus-frame"></div>
+      <div class="control-panel">
+        <button class="btn-main" id="btn-action" onclick="handleMainButton()">👁️ Montrer</button>
+        <div id="input-zone">
+          <input type="number" id="input-val" placeholder="?" min="0" max="100" inputmode="numeric">
+          <button class="btn-check" onclick="submitInput()">Valider</button>
+        </div>
+      </div>
+    </div>
+    <div id="feedback"></div>
+    <div id="keypad" class="keypad"></div>
+  </div>
+</div>
+
+<script>
+  let currentRange = 20, targetNumber = -1, goodScore = 0, badScore = 0;
+  let gameState = "IDLE"; let flashTimer = null;
+  
+  const frame = document.getElementById('abacus-frame');
+  const keypad = document.getElementById('keypad');
+  const inputZone = document.getElementById('input-zone');
+  const actionBtn = document.getElementById('btn-action');
+  const feedback = document.getElementById('feedback');
+  const speedSlider = document.getElementById('speed-slider');
+  const speedLabel = document.getElementById('speed-label');
+
+  function updateSpeedLabel() { speedLabel.innerText = (speedSlider.value / 1000).toFixed(1) + "s"; }
+
+  function updateMode() {
+    currentRange = parseInt(document.getElementById('mode-select').value);
+    resetTurn(); buildUI(); autoScale();
+  }
+
+  function buildUI() {
+    frame.innerHTML = '';
+    const rowCount = currentRange === 10 ? 1 : (currentRange === 20 ? 2 : 10);
+    const layout = document.getElementById('game-layout');
+    
+    if (currentRange === 100) {
+      layout.style.flexDirection = "row";
+      inputZone.style.display = 'flex'; keypad.style.display = 'none';
+    } else {
+      layout.style.flexDirection = "column";
+      inputZone.style.display = 'none'; keypad.style.display = 'grid';
+    }
+
+    for (let r = 0; r < rowCount; r++) {
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = '<div class="rod"></div>';
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'}`;
+        row.appendChild(bead);
+      }
+      frame.appendChild(row);
+    }
+
+    if (currentRange <= 20) {
+      keypad.innerHTML = '';
+      keypad.className = `keypad ${currentRange === 10 ? 'grid-10' : 'grid-20'}`;
+      for (let i = 0; i <= currentRange; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'key'; btn.innerText = i;
+        btn.onclick = () => checkAnswer(i, btn);
+        keypad.appendChild(btn);
+      }
+    }
+  }
+
+  function handleMainButton() {
+    if (gameState === "WON") { startNewTurn(); }
+    else if (gameState === "IDLE") { startNewTurn(); }
+    else if (gameState === "WAITING") { startFlash(); }
+  }
+
+  function startNewTurn() {
+    if (flashTimer) clearTimeout(flashTimer);
+    resetTurnUI();
+    targetNumber = Math.floor(Math.random() * (currentRange + 1));
+    const rows = document.querySelectorAll('.row');
+    let remaining = targetNumber;
+    rows.forEach((row) => {
+      const beads = row.querySelectorAll('.bead');
+      const activeInRow = Math.min(10, remaining);
+      remaining -= activeInRow;
+      beads.forEach((b, bIdx) => {
+        if (bIdx < activeInRow) b.style.left = (bIdx * 40) + "px";
+        else b.style.left = (820 - (10 - bIdx) * 40) + "px";
+      });
+    });
+    startFlash();
+  }
+
+  function startFlash() {
+    if (flashTimer) clearTimeout(flashTimer);
+    frame.style.visibility = "visible";
+    actionBtn.disabled = true;
+    actionBtn.innerText = "👁️ Regarde...";
+    flashTimer = setTimeout(() => {
+      const hasError = feedback.innerText.includes("encore");
+      if (gameState !== "WON" && !hasError) { frame.style.visibility = "hidden"; }
+      actionBtn.disabled = false;
+      actionBtn.innerText = "👀 Revoir";
+      gameState = "WAITING";
+      if (currentRange === 100) document.getElementById('input-val').focus();
+    }, parseInt(speedSlider.value)); 
+  }
+
+  function checkAnswer(val, element) {
+    if (targetNumber === -1 || gameState === "WON") return;
+    if (val === targetNumber) {
+      if (flashTimer) clearTimeout(flashTimer);
+      gameState = "WON"; goodScore++;
+      document.getElementById('count-good').innerText = goodScore;
+      feedback.innerHTML = "<span style='color:var(--success)'>Bonne réponse ! ✅</span>";
+      if (element) element.classList.add('correct');
+      frame.style.visibility = "visible";
+      actionBtn.innerText = "🔄 Suivant"; actionBtn.disabled = false;
+    } else {
+      badScore++;
+      document.getElementById('count-bad').innerText = badScore;
+      feedback.innerHTML = "<span style='color:var(--error)'>Essaie encore ! ❌</span>";
+      frame.style.visibility = "visible"; 
+      if (element) {
+        element.classList.add('wrong');
+        setTimeout(() => element.classList.remove('wrong'), 800);
+      }
+    }
+  }
+
+  function submitInput() {
+    const val = parseInt(document.getElementById('input-val').value);
+    if (!isNaN(val)) checkAnswer(val, null);
+  }
+
+  document.getElementById('input-val').addEventListener('keypress', (e) => { if (e.key === 'Enter') submitInput(); });
+
+  function resetTurnUI() {
+    feedback.innerText = ""; actionBtn.innerText = "👁️ Montrer"; actionBtn.disabled = false;
+    document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
+    document.getElementById('input-val').value = ''; frame.style.visibility = "hidden";
+    gameState = "IDLE";
+  }
+
+  function resetTurn() { targetNumber = -1; resetTurnUI(); }
+
+  function autoScale() {
+    const availableW = window.innerWidth - 40;
+    const availableH = window.innerHeight - 80;
+    // On resserre les dimensions de référence pour agrandir le rendu
+    const contentW = currentRange === 100 ? 1220 : 920;
+    const contentH = currentRange === 100 ? 680 : 640;
+    const scale = Math.min(1.4, availableW / contentW, availableH / contentH);
+    document.getElementById('scaler').style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('resize', autoScale);
+  updateMode();
+</script>
+</body>
+</html>
