@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Rekenrek Comparateur - Standardisé</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
+    --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+  }
+
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background: var(--bg); color: white; font-family: sans-serif;
+    overflow: hidden; touch-action: none;
+  }
+
+  .toolbar {
+    position: relative; width: 100%; min-height: 65px;
+    background: var(--ui); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
+  }
+
+  .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
+  .score-good { color: var(--success); }
+  .score-bad { color: var(--error); }
+
+  #main-container {
+    position: relative; width: 100%; height: calc(100vh - 65px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; overflow: hidden;
+  }
+
+  #scaler { display: flex; flex-direction: column; align-items: center; transform-origin: center center; }
+
+  #comparison-zone { display: flex; align-items: center; gap: 20px; }
+  .abacus-container { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+  .abacus-label { font-size: 80px; font-weight: bold; color: var(--accent); height: 90px; text-shadow: 0 4px 10px black; }
+
+  .abacus-frame {
+    position: relative; width: 820px;
+    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
+    box-sizing: content-box; background: transparent;
+  }
+
+  .curtain {
+    position: absolute; right: -30px; top: 0; bottom: 0;
+    background: #050505; border-left: 5px solid #333;
+    z-index: 100; width: 0; pointer-events: none;
+    transition: width 0.2s ease-in;
+  }
+
+  .row { position: relative; height: 50px; width: 100%; overflow: hidden; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+  
+  .bead {
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    top: 50%; transform: translateY(-50%); z-index: 5;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+  }
+  .bead.draggable { cursor: grab; }
+  .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
+  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+
+  .comp-buttons { display: flex; flex-direction: column; gap: 15px; }
+  .btn-comp {
+    width: 90px; height: 90px; font-size: 50px; font-weight: bold;
+    background: #333; border: 4px solid #555; color: white; border-radius: 15px;
+    cursor: pointer; box-shadow: 0 6px 0 #111;
+  }
+  .btn-comp:active { transform: translateY(4px); box-shadow: 0 2px 0 #111; }
+  .btn-comp.selected { background: var(--accent); border-color: white; }
+
+  #feedback { height: 80px; font-size: 48px; font-weight: bold; margin-top: 15px; }
+  .btn-next {
+    background: var(--accent); color: white; border: none; padding: 20px 50px;
+    border-radius: 60px; font-size: 28px; font-weight: bold; cursor: pointer;
+    visibility: hidden; box-shadow: 0 6px 0 #0a4eb3;
+  }
+
+  select {
+    background: #444; color: white; border: none; padding: 12px;
+    border-radius: 8px; font-weight: bold; font-size: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-group">
+    <select id="mode-select" onchange="initGame()">
+      <option value="10" id="opt-10">Mode 10</option>
+      <option value="20" selected>Mode 20</option>
+      <option value="100">Mode 100</option>
+    </select>
+    <select id="level-select" onchange="checkLevelMode(); initGame();">
+      <option value="1">Niv 1: Rangement + Cache</option>
+      <option value="2">Niv 2: Rangement Simple</option>
+      <option value="3">Niv 3: Chiffres + Aide</option>
+      <option value="4">Niv 4: Désordre Tiges</option>
+      <option value="5">Niv 5: Expert (Écart ±2 + Cache)</option>
+    </select>
+  </div>
+  <div style="font-weight: bold; font-size: 26px; color: var(--accent);">REKENREK COMPARATEUR</div>
+  <div class="score-board">
+    <span class="score-good">✅ <span id="count-good">0</span></span>
+    <span class="score-bad">❌ <span id="count-bad">0</span></span>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="scaler">
+    <div id="comparison-zone">
+      <div class="abacus-container">
+        <div id="label-a" class="abacus-label"></div>
+        <div id="frame-a" class="abacus-frame" data-side="a">
+          <div id="curtain-a" class="curtain"></div>
+        </div>
+      </div>
+      <div class="comp-buttons">
+        <button class="btn-comp" onclick="checkAnswer('>')">></button>
+        <button class="btn-comp" onclick="checkAnswer('=')">=</button>
+        <button class="btn-comp" onclick="checkAnswer('<')"><</button>
+      </div>
+      <div class="abacus-container">
+        <div id="label-b" class="abacus-label"></div>
+        <div id="frame-b" class="abacus-frame" data-side="b">
+          <div id="curtain-b" class="curtain"></div>
+        </div>
+      </div>
+    </div>
+    <div id="feedback"></div>
+    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant 🔄</button>
+  </div>
+</div>
+
+<script>
+  let valA, valB, lastA = -1, lastB = -1, scoreGood = 0, scoreBad = 0;
+  let isAnswered = false, currentScale = 1;
+  let statesA = [], statesB = [];
+
+  const frameA = document.getElementById('frame-a');
+  const frameB = document.getElementById('frame-b');
+  const labelA = document.getElementById('label-a');
+  const labelB = document.getElementById('label-b');
+  const curtainA = document.getElementById('curtain-a');
+  const curtainB = document.getElementById('curtain-b');
+  const feedback = document.getElementById('feedback');
+  const btnNext = document.getElementById('btn-next');
+
+  function checkLevelMode() {
+    const level = parseInt(document.getElementById('level-select').value);
+    const modeSelect = document.getElementById('mode-select');
+    const opt10 = document.getElementById('opt-10');
+    if (level >= 4) {
+      opt10.disabled = true;
+      if (modeSelect.value == "10") modeSelect.value = "20";
+    } else {
+      opt10.disabled = false;
+    }
+  }
+
+  function initGame() {
+    const mode = parseInt(document.getElementById('mode-select').value);
+    const level = parseInt(document.getElementById('level-select').value);
+    const rowCount = mode === 10 ? 1 : (mode === 20 ? 2 : 10);
+    
+    isAnswered = false; feedback.innerText = ""; btnNext.style.visibility = "hidden";
+    document.querySelectorAll('.btn-comp').forEach(b => b.classList.remove('selected'));
+
+    // LOGIQUE DE PROXIMITÉ
+    do {
+      valA = Math.floor(Math.random() * (mode + 1));
+      let diffRange = (level === 5) ? 2 : (mode === 100 ? 10 : 3);
+      let offset = Math.floor(Math.random() * (diffRange * 2 + 1)) - diffRange;
+      valB = Math.max(0, Math.min(mode, valA + offset));
+    } while (valA === lastA && valB === lastB);
+    
+    lastA = valA; lastB = valB;
+    statesA = Array(rowCount).fill(0); statesB = Array(rowCount).fill(0);
+
+    buildAbacus(frameA, rowCount, level === 3, 'a');
+    buildAbacus(frameB, rowCount, level === 3, 'b');
+
+    curtainA.style.width = "0"; curtainB.style.width = "0";
+
+    if (level === 1) {
+      setAbacus(frameA, valA, 'standard'); setAbacus(frameB, valB, 'standard');
+      curtainA.style.width = "435px"; curtainB.style.width = "435px";
+    } else if (level === 2) {
+      setAbacus(frameA, valA, 'standard'); setAbacus(frameB, valB, 'standard');
+    } else if (level === 3) {
+      labelA.innerText = valA; labelB.innerText = valB;
+    } else if (level === 4) {
+      setAbacus(frameA, valA, 'disordered'); setAbacus(frameB, valB, 'disordered');
+    } else if (level === 5) {
+      setAbacus(frameA, valA, 'scattered'); setAbacus(frameB, valB, 'scattered');
+      curtainA.style.width = "435px"; curtainB.style.width = "435px";
+    }
+
+    if(level !== 3) { labelA.innerText = ""; labelB.innerText = ""; }
+    autoScale();
+  }
+
+  function buildAbacus(frame, rowCount, isDraggable, side) {
+    frame.querySelectorAll('.row').forEach(r => r.remove());
+    for (let r = 0; r < rowCount; r++) {
+      const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
+      row.innerHTML = '<div class="rod"></div>';
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'} ${isDraggable ? 'draggable' : ''}`;
+        bead.style.left = (820 - (10 - b) * 40) + "px"; 
+        if (isDraggable) bead.onpointerdown = (e) => startDrag(e, side);
+        row.appendChild(bead);
+      }
+      frame.appendChild(row);
+    }
+  }
+
+  function setAbacus(frame, total, type) {
+    const rows = Array.from(frame.querySelectorAll('.row'));
+    let remaining = total;
+    let rowValues = Array(rows.length).fill(0);
+
+    if (type === 'standard') {
+      rows.forEach((row, i) => {
+        let take = Math.min(10, remaining); remaining -= take;
+        rowValues[i] = take;
+      });
+    } else if (type === 'disordered') {
+      let indices = rows.map((_, i) => i).sort(() => Math.random() - 0.5);
+      indices.forEach(i => { let take = Math.min(10, remaining); rowValues[i] = take; remaining -= take; });
+    } else if (type === 'scattered') {
+      while(remaining > 0) {
+        let r = Math.floor(Math.random() * rows.length);
+        if(rowValues[r] < 10) { rowValues[r]++; remaining--; }
+      }
+    }
+
+    rows.forEach((row, i) => {
+      let val = rowValues[i];
+      row.querySelectorAll('.bead').forEach((b, idx) => {
+        // APPLICATION STRICTE DE L'ESPACEMENT 40PX
+        b.style.left = (idx < val) ? (idx * 40) + "px" : (820 - (10 - idx) * 40) + "px";
+      });
+    });
+  }
+
+  function checkAnswer(choice) {
+    if (isAnswered) return;
+    const correct = valA > valB ? '>' : (valA < valB ? '<' : '=');
+    document.querySelectorAll('.btn-comp').forEach(b => { if (b.innerText === choice) b.classList.add('selected'); });
+    if (choice === correct) {
+      scoreGood++; document.getElementById('count-good').innerText = scoreGood;
+      feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! ✅</span>";
+    } else {
+      scoreBad++; document.getElementById('count-bad').innerText = scoreBad;
+      feedback.innerHTML = `<span style='color:var(--error)'>Erreur, c'était ${correct} ❌</span>`;
+    }
+    isAnswered = true; btnNext.style.visibility = "visible";
+    curtainA.style.width = "0"; curtainB.style.width = "0";
+  }
+
+  function nextQuestion() { initGame(); }
+
+  let activeDrag = null;
+  function startDrag(e, side) {
+    const bead = e.target; bead.setPointerCapture(e.pointerId);
+    activeDrag = { side, rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
+  }
+  window.addEventListener('pointermove', (e) => {
+    if (!activeDrag) return;
+    const { side, rowIdx, beadIdx, rowEl, startX } = activeDrag;
+    const state = side === 'a' ? statesA : statesB;
+    const dx = (e.clientX - startX) / currentScale;
+    const beads = rowEl.querySelectorAll('.bead');
+    if (beadIdx >= state[rowIdx]) { for (let i = state[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true); }
+    else { for (let i = beadIdx; i < state[rowIdx]; i++) moveVisual(beads[i], i, dx, false); }
+  });
+  function moveVisual(b, idx, dx, fromRight) {
+    let base = fromRight ? (820 - (10 - idx) * 40) : (idx * 40);
+    b.style.transition = 'none';
+    b.style.left = Math.max(idx * 40, Math.min(820 - (10 - idx) * 40, base + dx)) + "px";
+  }
+  window.addEventListener('pointerup', () => {
+    if (!activeDrag) return;
+    const { side, rowIdx, beadIdx, rowEl } = activeDrag;
+    const state = side === 'a' ? statesA : statesB;
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
+    if (beadIdx >= state[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) state[rowIdx] = beadIdx + 1; }
+    else { if (currentPos > 410 - ((10-beadIdx)*5)) state[rowIdx] = beadIdx; }
+    activeDrag = null; updateBeadsVisual(side);
+  });
+  function updateBeadsVisual(side) {
+    const state = side === 'a' ? statesA : statesB;
+    const frame = side === 'a' ? frameA : frameB;
+    frame.querySelectorAll('.row').forEach((row, r) => {
+      row.querySelectorAll('.bead').forEach((b, i) => {
+        b.style.transition = 'left 0.2s ease-out';
+        b.style.left = (i < state[r]) ? (i * 40) + "px" : (820 - (10 - i) * 40) + "px";
+      });
+    });
+  }
+
+  function autoScale() {
+    const availableW = window.innerWidth - 40;
+    const availableH = window.innerHeight - 80;
+    const contentW = 1800; 
+    const mode = parseInt(document.getElementById('mode-select').value);
+    const contentH = mode === 100 ? 780 : 650;
+    currentScale = Math.min(1.0, availableW / contentW, availableH / contentH);
+    document.getElementById('scaler').style.transform = `scale(${currentScale})`;
+  }
+
+  window.addEventListener('resize', autoScale);
+  initGame();
+</script>
+</body>
+</html>
