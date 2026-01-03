@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Tables de multiplication</title>
+<style>
+  :root {
+    --bg: #0f1115; --wood: #8d6e63; --rod: #666; --ui: #1b1d22;
+    --accent: #2196f3; --success: #4caf50; --error: #f44336;
+    --bead-red: radial-gradient(circle at 30% 30%, #ff5252, #a00);
+    --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
+    --bead-size: 62px;
+    --frame-w: 1250px;
+  }
+  body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #448aff, #0d47a1); }
+
+  
+html, body { 
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: var(--bg); color: white; font-family: sans-serif;
+  overflow: hidden; touch-action: none;
+  display: flex; flex-direction: column;
+}
+
+  /* TOOLBAR : FORCE LA LARGEUR TOTALE */
+  
+.toolbar {
+  min-height: 55px; width: 100vw; background: var(--ui);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+  padding: 10px 12px; box-sizing: border-box;
+  position: relative; z-index: 2000; border-bottom: 1px solid #333;
+
+  flex-shrink: 0;
+}
+
+  
+#main-container {
+  display: flex; flex-direction: row; align-items: stretch; justify-content: flex-start;
+  background: var(--bg); width: 100%;
+  flex: 1; min-height: 0;
+}
+
+  /* LISTE GAUCHE : CENTRAGE HORIZONTAL GARANTI */
+  
+#history-column {
+  width: 180px; display: flex; flex-direction: column; align-items: stretch;
+  height: 100%; border-right: 2px solid #222; flex-shrink: 0;
+  padding: 15px 10px 10px; box-sizing: border-box;
+  overflow-y: auto; background: var(--bg);
+}
+  
+.history-entry {
+  width: 100%;
+  display: flex; align-items: center;
+  padding: 6px 8px; box-sizing: border-box;
+  font-weight: 900; color: var(--accent);
+}
+
+  /* ZONE DE JEU COLLÉE EN HAUT */
+  
+/* ZONE DE JEU COLLÉE EN HAUT (SCALE SUR LE CONTENU, PAS SUR LE WRAPPER) */
+#scaler {
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  flex-grow: 1; min-width: 0;
+  margin-top: 0;
+}
+#scaler-content {
+  display: flex; flex-direction: column; align-items: center;
+  transform-origin: top center;
+}
+
+  /* FEEDBACK SANS DÉPLACEMENT */
+  #feedback-area { height: 120px; width: 100%; display: flex; justify-content: center; position: relative; }
+  .feedback-content { font-size: 95px; opacity: 0; transition: opacity 0.2s; z-index: 100; position: absolute; top: 0px; }
+
+  
+/* Feedback (validé / erreur) un peu plus bas sur Niv 2-4 */
+body.level-2 .feedback-content,
+body.level-3 .feedback-content,
+body.level-4 .feedback-content{ top: 14px; }
+#task-display { font-size: 140px; font-weight: 900; color: var(--accent); margin: 0; line-height: 1; }
+  
+  /* POSITION COMPACTE POUR NIV 2-4 */
+  .task-centered { margin-top: 30px !important; }
+
+  #game-layout { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 5px; }
+
+  /* BOULIER GÉANT */
+  .abacus-container { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+  .abacus-frame {
+    position: relative; width: var(--frame-w);
+    border-left: 35px solid var(--wood); border-right: 35px solid var(--wood);
+    box-sizing: content-box; background: var(--bg);
+  }
+    /* Masque au-dessus des montants en bois : évite les ombres/lignes parasites */
+  .abacus-frame::before, .abacus-frame::after{
+    content: \"\"; position: absolute; top: 0; bottom: 0;
+    width: 36px; background: var(--wood);
+    pointer-events: none; z-index: 30;
+  }
+  .abacus-frame::before{ left: -35px; }
+  .abacus-frame::after{ right: -35px; }
+
+.row { position: relative; height: 75px; width: 100%; border-bottom: none; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); }
+  
+  .bead {
+    position: absolute; width: var(--bead-size); height: var(--bead-size); border-radius: 50%; top: 6px; z-index: 5;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.55); cursor: pointer;
+  }
+  .bead.red { background: var(--bead-red); }
+  .bead.white { background: var(--bead-alt); }
+
+  /* COMMANDES */
+  .controls-group { display: flex; flex-direction: column; align-items: center; width: 340px; }
+  #feedback-right { display:none; width:100%; text-align:center; font-weight:900; font-size:26px; margin: 0 0 10px 0; }
+  
+  #input-val {
+    width: 220px; height: 135px; font-size: 100px; font-weight: bold;
+    text-align: center; border-radius: 20px; border: 6px solid #333;
+    background: #000; color: var(--accent); outline: none; margin-bottom: 10px;
+  }
+  .btn-check {
+    background: var(--accent); color: white; border: none; width: 100%; height: 95px;
+    border-radius: 15px; font-size: 34px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #1565c0;
+  }
+
+  .btn-ui { background: #2a2a2a; color: white; border: 1px solid #444; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+  #end-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000;
+  }
+
+.toolbar-title {
+  font-weight: 900; font-size: 26px; color: white;
+  flex: 1 1 240px; text-align: center; white-space: nowrap;
+}
+
+/* Ajustements par niveau */
+body.level-1 #feedback-area { height: 130px; }
+body.level-1 #task-display { margin-top: -8px; }
+body.level-1 #game-layout { margin-top: 8px; gap: 12px; }
+body.level-1 .history-entry { justify-content: flex-start; font-size: 44px; text-align: left; }
+
+body.level-2 #history-column { width: 280px; }
+body.level-2 .history-entry {
+  justify-content: flex-start; font-size: 24px; text-align: left;
+  white-space: nowrap;
+}
+
+/* Responsive : éviter que le sélecteur de table disparaisse (surtout au Niv 1 avec le bouton couleur) */
+@media (max-width: 900px) {
+  .toolbar { justify-content: center; }
+  .toolbar-title { order: 3; flex-basis: 100%; white-space: normal; font-size: 22px; }
+  .btn-ui { padding: 8px 10px; }
+}
+
+
+  /* Ajustements spécifiques demandés */
+  body.level-1 .history-entry { justify-content: center; text-align: center; }
+  body.level-1 #history-column { overflow-y: hidden; padding: 8px 6px 6px; font-size: clamp(22px, 4.2vh, 44px); }
+  body.level-1 .history-entry { padding: 2px 0; line-height: 1.05; }
+
+  body.level-2 #feedback-right, body.level-3 #feedback-right, body.level-4 #feedback-right {
+    display: none; height: 0; margin: 0; padding: 0;
+  }
+
+  /* --- Niv 1 : inversion question / vérifier --- */
+  #task-bar{ display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
+  #btn-check-top{ display:none; }
+  #task-mini{ display:none; }
+
+  body.level-1 #task-display{ display:none; }
+  body.level-1 #btn-check-top{ display:none; }
+  body.level-1 #btn-check-bottom{ display:block; }
+  body.level-1 #task-mini{
+    display:block;
+    font-size: 92px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    margin: 0 0 8px 0;
+    text-align: center;
+  }
+
+  /* Petit ajustement demandé : garder un gros boulier, mais mieux caler la séparation visuelle */
+  body.level-1 #scaler-content{ padding-left: 18px; box-sizing: border-box; }
+
+  /* Niv 1 : abaissement visuel du bloc (calcul / ? / vérifier) sans changer le layout (donc sans modifier le scale) */
+body.level-1 .controls-group{ position: relative; top: 36px; }
+</style>
+</head>
+<body>
+
+<div id="end-overlay">
+  <div style="font-size: 85px; color: var(--success); font-weight: 900; margin-bottom: 40px; text-align: center;">TERMINÉ ! 🌟</div>
+  <div style="display: flex; gap: 30px;">
+    <button class="btn-ui" style="padding: 25px 50px; font-size: 26px;" onclick="resetGame()">Recommencer</button>
+    <button id="btn-next-step" class="btn-ui" style="padding: 25px 50px; font-size: 26px; background: var(--success);" onclick="handleEndButton()">Niveau Suivant ➔</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; align-items:center;">
+    <select id="table-select" class="btn-ui" onchange="resetGame()">
+      <option value="0">Table de 0</option><option value="1">Table de 1</option>
+      <option value="2">Table de 2</option><option value="3" selected>Table de 3</option>
+      <option value="4">Table de 4</option><option value="5">Table de 5</option>
+      <option value="6">Table de 6</option><option value="7">Table de 7</option>
+      <option value="8">Table de 8</option><option value="9">Table de 9</option>
+      <option value="10">Table de 10</option>
+      <option value="11">Table de 11</option>
+      <option value="12">Table de 12</option>
+    </select>
+    <select id="level-select" class="btn-ui" onchange="resetGame()">
+      <option value="1">Niveau 1</option>
+      <option value="2">Niveau 2</option>
+      <option value="3">Niveau 3</option>
+      <option value="4">Niveau 4</option>
+    </select>
+    <button id="btn-color" class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🎨 Couleur</button>
+</div>
+  <div class="toolbar-title">TABLES DE MULTIPLICATION</div>
+  <div style="display: flex; gap: 20px; align-items: center; flex-shrink:0;">
+    <span style="color:var(--success); font-weight:bold; font-size:30px;">✅ <span id="count-good">0</span></span>
+    <span style="color:var(--error); font-weight:bold; font-size:30px;">❌ <span id="count-bad">0</span></span>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="history-column"></div>
+  <div id="scaler">
+    <div id="scaler-content">
+<div id="feedback-area"><div id="feedback-icon" class="feedback-content"></div></div>
+    <div id="task-bar"><div id="task-display">...</div><button id="btn-check-top" class="btn-check btn-check-top" onclick="checkAnswer()">VÉRIFIER</button></div>
+    <div id="game-layout">
+      <div id="abacus-zone" class="abacus-container">
+        <div id="frame-main" class="abacus-frame"></div>
+        <div id="frame-extra" class="abacus-frame" style="display:none; margin-top:5px;"></div>
+        <button id="btn-ext" class="btn-ui" style="margin-top:10px;" onclick="toggleExtension()">➕ Lignes 11-12</button>
+      </div>
+      <div class="controls-group">
+        <div id="feedback-right"></div>
+        <div id="task-mini" class="task-mini"></div>
+        <input type="number" id="input-val" placeholder="?" inputmode="numeric">
+        <button id="btn-check-bottom" class="btn-check" onclick="checkAnswer()">VÉRIFIER</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let table = 3, level = 1, currentStep = 0, goodScore = 0, badScore = 0;
+  let states = Array(12).fill(0); let questions = [];
+  const beadW = 62, frameW = 1250, marginBead = 2;
+
+  function isExtensionOn() {
+    const fExtra = document.getElementById('frame-extra');
+    return fExtra && fExtra.style.display !== "none";
+  }
+
+  function syncExtensionButtonLabel() {
+    const fExtra = document.getElementById('frame-extra');
+    const btn = document.getElementById('btn-ext');
+    if (!fExtra || !btn) return;
+    btn.innerText = (fExtra.style.display === "none") ? "➕ Lignes 11-12" : "➖ Masquer";
+  }
+
+  function computeMaxFactor() {
+    // Capacité "instrument" : 120 (12 lignes × 10 billes).
+    // Niveau 1 sans extension : 100 (10 lignes visibles).
+    let maxValue = 120;
+    if (level === 1) maxValue = isExtensionOn() ? 120 : 100;
+
+    if (table === 0) return 12;
+    return Math.min(12, Math.floor(maxValue / table));
+  }
+
+  function abacusTotal() {
+    const rows = (isExtensionOn() ? 12 : 10);
+    let total = 0;
+    for (let r = 0; r < rows; r++) total += (states[r] || 0);
+    return total;
+  }
+
+
+  function rebuildQuestions(keepProgress=false) {
+    const prevStep = currentStep;
+    const maxFactor = computeMaxFactor();
+    questions = [];
+    for (let i = 0; i <= maxFactor; i++) questions.push(i);
+    if (level === 4) questions.sort(() => Math.random() - 0.5);
+    if (keepProgress) currentStep = Math.min(prevStep, questions.length);
+  }
+
+
+  function resetGame() {
+    document.getElementById('end-overlay').style.display = "none";
+    table = parseInt(document.getElementById('table-select').value);
+    level = parseInt(document.getElementById('level-select').value);
+    document.body.classList.remove('level-1','level-2','level-3','level-4');
+    document.body.classList.add(`level-${level}`);
+    currentStep = 0; goodScore = 0; badScore = 0; states.fill(0);
+    document.getElementById('count-good').innerText = "0";
+    document.getElementById('count-bad').innerText = "0";
+    document.getElementById('feedback-icon').style.opacity = "0";
+    const fr = document.getElementById('feedback-right'); if (fr) { fr.style.display = "none"; fr.textContent = ""; }
+    document.getElementById('history-column').innerHTML = "";
+    // Extension : on conserve l'état si tu l'as activée (utile pour aller jusqu'à 120).
+    // Mais si on n'est pas au niveau 1, on la masque.
+    const fExtra = document.getElementById('frame-extra');
+    if (level !== 1) { fExtra.style.display = "none"; }
+    // Pour les tables 11 et 12 au niveau 1, l'extension est indispensable (sinon 110/120 impossible).
+    if (level === 1 && table >= 11) { fExtra.style.display = "block"; }
+    syncExtensionButtonLabel();
+
+    const history = document.getElementById('history-column');
+    history.style.display = (level <= 2) ? "flex" : "none";
+    
+    document.getElementById('btn-color').style.display = (level === 1) ? "inline-block" : "none";
+
+    const task = document.getElementById('task-display');
+    if (level > 1) task.classList.add('task-centered');
+    else task.classList.remove('task-centered');
+
+    document.getElementById('abacus-zone').style.display = (level === 1) ? "flex" : "none";
+
+    rebuildQuestions(false);
+
+    buildAbacus(); nextQuestion();
+  }
+
+  function handleEndButton() {
+    if (level < 4) { 
+        document.getElementById('level-select').value = level + 1; 
+    } else {
+      let nextT = (table >= 12) ? 0 : table + 1;
+      document.getElementById('table-select').value = nextT;
+      document.getElementById('level-select').value = 1;
+    }
+    resetGame();
+  }
+
+  function triggerFeedback(isCorrect, msg) {
+    const icon = isCorrect ? "✅" : "❌";
+    const color = isCorrect ? "var(--success)" : "var(--error)";
+
+    // ✅ Feedback visuel EN HAUT (tous niveaux, y compris Niv 1)
+    const fi = document.getElementById('feedback-icon');
+    if (fi) {
+      fi.innerHTML = icon;
+      fi.style.color = color;
+      fi.style.opacity = "1";
+      setTimeout(() => fi.style.opacity = "0", 1200);
+    }
+
+    // Message court (utile surtout au Niv 1)
+    const fr = document.getElementById('feedback-right');
+    if (fr) {
+      if (level === 1 && msg) {
+        fr.textContent = msg;
+        fr.style.color = color;
+        fr.style.display = "block";
+        clearTimeout(fr._t);
+        fr._t = setTimeout(() => { fr.style.display = "none"; }, 1500);
+      } else {
+        fr.style.display = "none";
+        fr.textContent = "";
+      }
+    }
+  }
+
+  function buildAbacus() {
+    const fMain = document.getElementById('frame-main'); const fExtra = document.getElementById('frame-extra');
+    fMain.innerHTML = ''; fExtra.innerHTML = '';
+    for (let r = 0; r < 12; r++) {
+      const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
+      row.innerHTML = '<div class="rod"></div>';
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5 || (r >= 10)) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'}`;
+        bead.dataset.idx = b; bead.onpointerdown = startDrag;
+        row.appendChild(bead);
+      }
+      if (r < 10) fMain.appendChild(row); else fExtra.appendChild(row);
+    }
+    updateBeads(false);
+  }
+
+  function checkAnswer() {
+    let q = questions[currentStep], correct = q * table;
+
+    // Niveau 1 : saisie au clavier (le boulier sert d'aide)
+    if (level === 1) {
+      const raw = (document.getElementById('input-val').value || '').trim();
+      // Ne pas accepter vide, même si la réponse est 0
+      const val = (raw === '') ? NaN : parseInt(raw, 10);
+
+      const ab = abacusTotal();
+
+      if (Number.isFinite(val) && val === correct && ab === correct) {
+        goodScore++; document.getElementById('count-good').innerText = goodScore;
+        triggerFeedback(true, "");
+        const entry = document.createElement('div'); entry.className = 'history-entry';
+        entry.innerText = `${correct}`;
+        document.getElementById('history-column').appendChild(entry);
+        currentStep++; setTimeout(nextQuestion, 600);
+      } else {
+        badScore++; document.getElementById('count-bad').innerText = badScore;
+        triggerFeedback(false, "Vérifie ton boulier.");
+        document.getElementById('input-val').value = "";
+      }
+      return;
+    }
+
+
+    // Niveaux 2-4 : saisie au clavier
+    let val = parseInt(document.getElementById('input-val').value);
+    if (val === correct) {
+      goodScore++; document.getElementById('count-good').innerText = goodScore;
+      triggerFeedback(true, "");
+      if (level <= 2) {
+        const entry = document.createElement('div'); entry.className = 'history-entry';
+        entry.innerText = `${q} × ${table} = ${correct}`;
+        document.getElementById('history-column').appendChild(entry);
+      }
+      currentStep++; setTimeout(nextQuestion, 600);
+    } else {
+      badScore++; document.getElementById('count-bad').innerText = badScore;
+      triggerFeedback(false, "Réessaie !");
+      document.getElementById('input-val').value = "";
+    }
+  }
+
+  function toggleExtension() {
+    const fExtra = document.getElementById('frame-extra');
+    fExtra.style.display = (fExtra.style.display === "none") ? "block" : "none";
+    syncExtensionButtonLabel();
+    // Ajuste la liste des questions si on passe à 12 lignes (ou inversement)
+    rebuildQuestions(true);
+    autoScale();
+  }
+
+  
+  function showEndOverlay() {
+    const ov = document.getElementById('end-overlay');    const history = document.getElementById('history-column');
+    const sidebarW = (level <= 2 && history && history.style.display !== "none") ? history.offsetWidth : 0;
+
+    // On noircit l'écran, mais on laisse la "table" visible à gauche (Niv 1 & 2).
+    ov.style.position = "fixed";
+    ov.style.top = "0px";
+    ov.style.height = "100%";
+    if (level <= 2) {
+      ov.style.left = sidebarW + "px";
+      ov.style.width = `calc(100% - ${sidebarW}px)`;
+    } else {
+      ov.style.left = "0px";
+      ov.style.width = "100%";
+    }
+    ov.style.display = "flex";
+  }
+
+function nextQuestion() {
+    if (currentStep >= questions.length) { 
+      document.getElementById('btn-next-step').innerText = (level === 4) ? "Table Suivante ➔" : "Niveau Suivant ➔";
+      showEndOverlay();
+      return;
+    }
+    document.getElementById('task-display').innerText = `${questions[currentStep]} × ${table}`;
+    const tm = document.getElementById('task-mini');
+    if (tm) tm.innerText = `${questions[currentStep]} × ${table}`;
+    document.getElementById('input-val').value = ""; document.getElementById('input-val').focus();
+    autoScale();
+  }
+
+  let activeDrag = null;
+  function startDrag(e) {
+    const bead = e.target;
+    bead.setPointerCapture(e.pointerId);
+    const now = performance.now();
+    activeDrag = {
+      rowIdx: parseInt(bead.parentElement.dataset.row),
+      beadIdx: parseInt(bead.dataset.idx),
+      rowEl: bead.parentElement,
+      startX: e.clientX,
+      lastX: e.clientX,
+      lastT: now,
+      vx: 0
+    };
+  }
+  window.addEventListener('pointermove', (e) => {
+    if (!activeDrag) return;
+
+    const scale = (window.currentScale || 1);
+    const now = performance.now();
+
+    // Vitesse (pour l'effet "lancer" quand on fait un geste franc)
+    const dt = now - activeDrag.lastT;
+    if (dt > 0) {
+      activeDrag.vx = ((e.clientX - activeDrag.lastX) / scale) / dt; // px/ms
+      activeDrag.lastX = e.clientX;
+      activeDrag.lastT = now;
+    }
+
+    const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
+    const dx = (e.clientX - startX) / scale;
+
+    const beads = rowEl.querySelectorAll('.bead');
+    if (beadIdx >= states[rowIdx]) { for (let i = states[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true); }
+    else { for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false); }
+  });
+  function moveVisual(b, idx, dx, fromRight) {
+    let base = fromRight ? (frameW - (10 - idx) * beadW - marginBead) : (idx * beadW + marginBead);
+    b.style.transition = 'none'; b.style.left = Math.max(idx * beadW + marginBead, Math.min(frameW - (10 - idx) * beadW - marginBead, base + dx)) + "px";
+  }
+  window.addEventListener('pointerup', () => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl, vx } = activeDrag;
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
+
+    // Positions cibles (gauche / droite) pour cette bille
+    const targetL = beadIdx * beadW + marginBead;
+    const targetR = frameW - (10 - beadIdx) * beadW - marginBead;
+    const travel = Math.max(1, (targetR - targetL));
+
+    // Règles :
+    // - Par défaut, il faut accompagner (on valide seulement si on est très proche de la fin).
+    // - Si geste franc ("lancer"), on autorise le déplacement même un peu avant la fin.
+    const SNAP_RATIO = 0.88;          // proche de la fin = snap immédiat
+    const FLING_V = 0.75;             // px/ms (plus haut = plus exigeant)
+    const MIN_FLING_PROGRESS = 0.18;  // évite les déclenchements accidentels
+
+    let useAnim = false;
+
+    if (beadIdx >= states[rowIdx]) {
+      // déplacement de droite -> gauche (activer)
+      const progress = (targetR - currentPos) / travel; // 0 au départ, 1 à l'arrivée
+      if (progress >= SNAP_RATIO) {
+        states[rowIdx] = beadIdx + 1;
+        useAnim = false; // snap direct
+      } else if (vx < -FLING_V && progress >= MIN_FLING_PROGRESS) {
+        states[rowIdx] = beadIdx + 1;
+        useAnim = true;  // "lancé" : petite glisse rapide
+      } else {
+        useAnim = (Math.abs(vx) >= FLING_V); // retour animé uniquement si geste franc
+      }
+    } else {
+      // déplacement de gauche -> droite (désactiver)
+      const progress = (currentPos - targetL) / travel; // 0 au départ, 1 à l'arrivée
+      if (progress >= SNAP_RATIO) {
+        states[rowIdx] = beadIdx;
+        useAnim = false; // snap direct
+      } else if (vx > FLING_V && progress >= MIN_FLING_PROGRESS) {
+        states[rowIdx] = beadIdx;
+        useAnim = true;  // "lancé" : petite glisse rapide
+      } else {
+        useAnim = (Math.abs(vx) >= FLING_V);
+      }
+    }
+
+    activeDrag = null;
+    updateBeads(useAnim);
+  });function updateBeads(animate) {
+    document.querySelectorAll('.row').forEach((row, r) => {
+      row.querySelectorAll('.bead').forEach((b, i) => {
+        b.style.transition = animate ? 'left 0.09s linear' : 'none';
+        b.style.left = (i < states[r]) ? (i * beadW + marginBead) + "px" : (frameW - (10 - i) * beadW - marginBead) + "px";
+      });
+    });
+  }
+
+  
+
+function autoScale() {
+  const toolbarH = document.querySelector('.toolbar')?.offsetHeight || 55;
+  const history = document.getElementById('history-column');
+  const sidebarW = (level <= 2 && history && history.style.display !== "none") ? history.offsetWidth : 0;
+
+  const content = document.getElementById('scaler-content');
+  if (!content) return;
+
+  // Dimensions "réelles" (non influencées par le scale CSS)
+  const measuredW = content.offsetWidth || 1;
+  const measuredH = content.offsetHeight || 1;
+
+  // Garde le rendu du Niv 1 tel que tu l'aimes (base identique), mais s'adapte si on affiche les lignes 11-12
+  const baseW = (level === 1) ? 2000 : 950;
+  const baseH = (level === 1) ? 1100 : 700;
+
+  const tW = Math.max(measuredW, baseW);
+  const tH = Math.max(measuredH, baseH);
+
+  const availableW = window.innerWidth - sidebarW - 20;
+  const availableH = window.innerHeight - toolbarH - 20;
+
+  const scale = Math.min(1.0, availableW / tW, availableH / tH);
+  window.currentScale = scale;
+  content.style.transform = `scale(${scale})`;
+}
+
+
+  window.onresize = autoScale; document.getElementById('input-val').onkeydown = (e) => { if(e.key === 'Enter') checkAnswer(); };
+resetGame();
+</script>
+</body>
+</html>
