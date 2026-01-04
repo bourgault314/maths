@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Rekenrek - Le Voisin (Suivant/Précédent)</title>
+<style>
+  :root {
+    --bg: #1a1a1a; 
+    --wood: #b08d57; 
+    --rod: #888; --ui: #2a2a2a;
+    --accent: #0f6cf9; --success: #4caf50; --error: #f44336; --warning: #ff9800;
+    --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
+    --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
+  }
+
+  body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); }
+
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background: var(--bg); color: white; font-family: sans-serif;
+    overflow: hidden; touch-action: none;
+  }
+
+  /* --- SUPPRESSION DES FLÈCHES (SPINNERS) DANS L'INPUT --- */
+  /* Pour Chrome, Safari, Edge, Opera */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  /* Pour Firefox */
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+  /* ------------------------------------------------------- */
+
+  .toolbar {
+    position: relative; width: 100%; min-height: 60px;
+    background: var(--ui); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
+  }
+
+  .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
+  .score-good { color: var(--success); }
+  .score-bad { color: var(--error); }
+
+  #main-container {
+    position: relative; width: 100%; height: calc(100vh - 65px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; overflow: hidden;
+  }
+
+  #scaler { 
+    display: flex; flex-direction: column; align-items: center; 
+    transform-origin: center center; 
+    margin-top: 10px; 
+  }
+
+  #game-layout { 
+    display: flex; align-items: center; justify-content: center; gap: 40px; 
+    transition: all 0.3s;
+  }
+
+  .interaction-column {
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+
+  /* Carte de la consigne */
+  #task-card {
+    background: #333; padding: 15px 30px; border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border: 2px solid #555; min-width: 300px;
+  }
+  #task-number { font-size: 80px; font-weight: 900; color: white; line-height: 1; }
+  #task-instruction { font-size: 26px; font-weight: bold; margin-top: 10px; color: var(--accent); text-transform: uppercase; text-align: center; }
+
+  .abacus-frame {
+    position: relative; width: 820px;
+    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
+    box-sizing: content-box; background: transparent;
+  }
+
+  .abacus-frame::before, .abacus-frame::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+    background: var(--wood); z-index: 20; pointer-events: none;
+  }
+  .abacus-frame::before { left: -30px; }
+  .abacus-frame::after { right: -30px; }
+
+  .row { position: relative; height: 56px; width: 100%; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+  
+  .bead {
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    top: 50%; transform: translateY(-50%); z-index: 5;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  .bead.red { background: var(--bead-red); }
+  .bead.white { background: var(--bead-alt); }
+
+  #feedback { height: 60px; font-size: 42px; font-weight: bold; margin-top: 10px; transition: transform 0.2s; }
+
+  #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+
+  #input-val {
+    width: 220px; height: 100px; font-size: 70px; font-weight: bold;
+    text-align: center; border-radius: 20px; border: 6px solid #444;
+    background: #000; color: var(--accent); outline: none;
+  }
+
+  .btn-next {
+    background: var(--success); color: white; border: none; padding: 18px 55px;
+    border-radius: 60px; font-size: 28px; font-weight: bold; cursor: pointer;
+    visibility: hidden; box-shadow: 0 8px 0 #1b5e20; margin-top: 20px;
+  }
+
+  select, .btn-ui {
+    background: #444; color: white; border: none; padding: 10px;
+    border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
+  }
+
+  .hidden-abacus { opacity: 0.03; pointer-events: none; }
+  .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-group">
+    <select id="level-select" onchange="initGame()">
+      <optgroup label="Nombres 0-10">
+        <option value="1">Niveau 1 : Manipulation</option>
+        <option value="2">Niveau 2 : Outil Libre</option>
+        <option value="3">Niveau 3 : Mental</option>
+      </optgroup>
+      <optgroup label="Nombres 10-20">
+        <option value="4">Niveau 4 : Manipulation</option>
+        <option value="5">Niveau 5 : Outil Libre</option>
+        <option value="6">Niveau 6 : Mental</option>
+      </optgroup>
+      <optgroup label="Nombres 0-100">
+        <option value="7">Niveau 7 : Manipulation</option>
+        <option value="8">Niveau 8 : Outil Libre</option>
+        <option value="9">Niveau 9 : Mental</option>
+      </optgroup>
+    </select>
+    <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
+  </div>
+  
+  <div style="font-weight: bold; font-size: 24px; color: white;">LE VOISIN</div>
+  
+  <div class="score-board">
+    <span class="score-good">✅ <span id="count-good">0</span></span>
+    <span class="score-bad">❌ <span id="count-bad">0</span></span>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="scaler">
+    
+    <div id="game-layout">
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div id="abacus-frame" class="abacus-frame"></div>
+        <button id="btn-reveal" class="reveal-btn" onclick="revealAbacus()" style="display:none">👁️ Besoin d'une aide visuelle ?</button>
+      </div>
+      
+      <div class="interaction-column" id="interaction-zone">
+        <div id="task-card">
+            <div id="task-number">?</div>
+            <div id="task-instruction">...</div>
+        </div>
+
+        <div id="input-zone">
+          <input type="number" id="input-val" placeholder="?" inputmode="numeric">
+          <button class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px; width:100%;" onclick="checkAction()">Vérifier</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="feedback"></div>
+    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant ➔</button>
+  </div>
+</div>
+
+<script>
+  let startNum = -1, targetNum = -1, direction = 0; 
+  let goodScore = 0, badScore = 0, isAnswered = false;
+  let currentScale = 1, states = []; 
+  let deck = [];
+  
+  const BEAD_W = 38;
+  const frame = document.getElementById('abacus-frame');
+  const taskNumDiv = document.getElementById('task-number');
+  const taskInstDiv = document.getElementById('task-instruction');
+  const inputVal = document.getElementById('input-val');
+  const btnNext = document.getElementById('btn-next');
+  const feedback = document.getElementById('feedback');
+  const layout = document.getElementById('game-layout');
+  const interactionZone = document.getElementById('interaction-zone');
+
+  // --- Deck System ---
+  function buildDeck(min, max) {
+    deck = [];
+    for(let i = min; i <= max; i++) deck.push(i);
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+  function drawCard(min, max) {
+    if (deck.length === 0 || deck[0] < min || deck[0] > max) buildDeck(min, max);
+    return deck.pop();
+  }
+
+  function initGame() {
+    const level = parseInt(document.getElementById('level-select').value);
+    isAnswered = false; feedback.innerText = ""; feedback.style.transform = "scale(1)";
+    btnNext.style.visibility = "hidden"; inputVal.value = "";
+    document.getElementById('btn-reveal').style.display = "none";
+    frame.classList.remove('hidden-abacus');
+
+    let min, max;
+    if (level <= 3) { min = 0; max = 10; }
+    else if (level <= 6) { min = 10; max = 20; }
+    else { min = 0; max = 100; }
+
+    startNum = drawCard(min, max);
+    
+    if (startNum === 0) direction = 1;
+    else if (startNum === max || startNum === 100) direction = -1;
+    else direction = Math.random() > 0.5 ? 1 : -1;
+
+    targetNum = startNum + direction;
+
+    taskNumDiv.innerText = startNum;
+    taskInstDiv.innerText = direction === 1 ? "Donne le nombre suivant" : "Donne le nombre précédent";
+    taskInstDiv.style.color = direction === 1 ? "#4caf50" : "#ff9800"; 
+
+    let rowCount = (level <= 3) ? 1 : (level <= 6 ? 2 : 10);
+    states = Array(rowCount).fill(0);
+
+    buildAbacus(rowCount);
+
+    // --- Gestion Layout ---
+    if (level >= 7) {
+        layout.style.flexDirection = 'row';
+        interactionZone.style.marginTop = '0px'; 
+    } else {
+        layout.style.flexDirection = 'column';
+        interactionZone.style.marginTop = '20px';
+    }
+    
+    // --- Gestion des Niveaux ---
+    const isManip = (level === 1 || level === 4 || level === 7);
+    const isLibre = (level === 2 || level === 5 || level === 8);
+    const isMental = (level === 3 || level === 6 || level === 9);
+
+    if (isManip) {
+        // Niveau 1/4/7 : Boulier initialisé à StartNum.
+        setNumberOnAbacus(startNum, rowCount);
+    } else {
+        // Niveau 2/5/8 (Libre) ou Mental : Boulier à 0.
+        setNumberOnAbacus(0, rowCount); 
+        if (isMental) {
+            frame.classList.add('hidden-abacus');
+            document.getElementById('btn-reveal').style.display = "block";
+        }
+    }
+    
+    // Toujours focus sur l'input car l'élève doit toujours écrire
+    setTimeout(() => inputVal.focus(), 100);
+    autoScale();
+  }
+
+  function checkAction() {
+    const level = parseInt(document.getElementById('level-select').value);
+    const isMental = (level === 3 || level === 6 || level === 9);
+    
+    const valInput = parseInt(inputVal.value);
+    
+    if (isNaN(valInput)) return; // Pas de réponse = on ne fait rien
+
+    // 1. Vérification de la valeur écrite
+    if (valInput !== targetNum) {
+        badScore++; document.getElementById('count-bad').innerText = badScore;
+        feedback.innerHTML = "Essaie encore ! ❌";
+        feedback.style.color = "var(--error)";
+        return;
+    }
+
+    // 2. Si ce n'est pas du mental, on vérifie AUSSI le boulier
+    if (!isMental) {
+        const currentBeads = states.reduce((a, b) => a + b, 0);
+        if (currentBeads !== targetNum) {
+            feedback.innerHTML = "Réponse juste, mais...<br>Vérifie ton boulier 🧮";
+            feedback.style.color = "var(--warning)";
+            return;
+        }
+    }
+
+    // 3. Si tout est bon (Ecrit + Boulier ou Ecrit seul en mental)
+    goodScore++; document.getElementById('count-good').innerText = goodScore;
+    feedback.innerHTML = "Bravo ! ✅";
+    feedback.style.color = "var(--success)";
+    feedback.style.transform = "scale(1.2)";
+    
+    // On montre la solution sur le boulier pour l'aspect pédagogique
+    setNumberOnAbacus(targetNum, states.length);
+    frame.classList.remove('hidden-abacus');
+    
+    isAnswered = true; btnNext.style.visibility = "visible";
+  }
+
+  function buildAbacus(rowCount) {
+    frame.innerHTML = '';
+    for (let r = 0; r < rowCount; r++) {
+      const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
+      row.innerHTML = '<div class="rod"></div>';
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'}`;
+        bead.dataset.idx = b;
+        bead.onpointerdown = startDrag;
+        row.appendChild(bead);
+      }
+      frame.appendChild(row);
+    }
+    updateBeads(false);
+  }
+
+  function setNumberOnAbacus(num, rowCount) {
+    let rem = num;
+    for (let r = 0; r < rowCount; r++) {
+        let take = Math.min(10, rem);
+        states[r] = take;
+        rem -= take;
+    }
+    updateBeads(true); 
+  }
+
+  function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
+
+  // --- MOTEUR PHYSIQUE ---
+  let activeDrag = null;
+  function startDrag(e) {
+    if (isAnswered) return;
+    const bead = e.target; bead.setPointerCapture(e.pointerId);
+    activeDrag = { rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
+  }
+  window.addEventListener('pointermove', (e) => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
+    const dx = (e.clientX - startX) / currentScale;
+    const beads = rowEl.querySelectorAll('.bead');
+    if (beadIdx >= states[rowIdx]) { for (let i = states[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true); }
+    else { for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false); }
+  });
+  function moveVisual(b, idx, dx, fromRight) {
+    let base = fromRight ? (820 - (10 - idx) * BEAD_W) : (idx * BEAD_W);
+    b.style.transition = 'none';
+    b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
+  }
+  window.addEventListener('pointerup', () => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl } = activeDrag;
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
+    if (beadIdx >= states[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
+    else { if (currentPos > 410 - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    activeDrag = null; updateBeads(true);
+  });
+  function updateBeads(animate) {
+    frame.querySelectorAll('.row').forEach((row, r) => {
+      row.querySelectorAll('.bead').forEach((b, i) => {
+        b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
+        b.style.left = (i < states[r]) ? (i * BEAD_W) + "px" : (820 - (10 - i) * BEAD_W) + "px";
+      });
+    });
+  }
+
+  function nextQuestion() { initGame(); }
+
+  function autoScale() {
+    const availableW = window.innerWidth - 40;
+    const availableH = window.innerHeight - 80;
+    const level = parseInt(document.getElementById('level-select').value);
+    
+    // Adaptation taille contenu selon layout
+    const contentW = level >= 7 ? 1300 : 920; 
+    const contentH = level >= 7 ? 850 : 800;
+    
+    currentScale = Math.min(1.0, availableW / contentW, availableH / contentH);
+    document.getElementById('scaler').style.transform = `scale(${currentScale})`;
+  }
+
+  window.addEventListener('resize', autoScale);
+  inputVal.onkeydown = (e) => { if(e.key === 'Enter') checkAction(); };
+  initGame();
+</script>
+</body>
+</html>
