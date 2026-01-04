@@ -6,12 +6,16 @@
 <title>Tables de multiplication</title>
 <style>
   :root {
-    --bg: #0f1115; --wood: #8d6e63; --rod: #666; --ui: #1b1d22;
+    --bg: #0f1115; 
+    --wood: #b08d57;
+    --rod: #666; --ui: #1b1d22;
     --accent: #2196f3; --success: #4caf50; --error: #f44336;
     --bead-red: radial-gradient(circle at 30% 30%, #ff5252, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
-    --bead-size: 62px;
-    --frame-w: 1250px;
+    
+    /* CORRECTION : On aère le tout */
+    --bead-size: 55px; 
+    --frame-w: 1240px; /* Plus large */
   }
   body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #448aff, #0d47a1); }
 
@@ -23,7 +27,6 @@ html, body {
   display: flex; flex-direction: column;
 }
 
-  /* TOOLBAR : FORCE LA LARGEUR TOTALE */
   
 .toolbar {
   min-height: 55px; width: 100vw; background: var(--ui);
@@ -42,7 +45,6 @@ html, body {
   flex: 1; min-height: 0;
 }
 
-  /* LISTE GAUCHE : CENTRAGE HORIZONTAL GARANTI */
   
 #history-column {
   width: 180px; display: flex; flex-direction: column; align-items: stretch;
@@ -58,9 +60,6 @@ html, body {
   font-weight: 900; color: var(--accent);
 }
 
-  /* ZONE DE JEU COLLÉE EN HAUT */
-  
-/* ZONE DE JEU COLLÉE EN HAUT (SCALE SUR LE CONTENU, PAS SUR LE WRAPPER) */
 #scaler {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
   flex-grow: 1; min-width: 0;
@@ -71,49 +70,47 @@ html, body {
   transform-origin: top center;
 }
 
-  /* FEEDBACK SANS DÉPLACEMENT */
   #feedback-area { height: 120px; width: 100%; display: flex; justify-content: center; position: relative; }
   .feedback-content { font-size: 95px; opacity: 0; transition: opacity 0.2s; z-index: 100; position: absolute; top: 0px; }
 
   
-/* Feedback (validé / erreur) un peu plus bas sur Niv 2-4 */
 body.level-2 .feedback-content,
 body.level-3 .feedback-content,
 body.level-4 .feedback-content{ top: 14px; }
 #task-display { font-size: 140px; font-weight: 900; color: var(--accent); margin: 0; line-height: 1; }
   
-  /* POSITION COMPACTE POUR NIV 2-4 */
   .task-centered { margin-top: 30px !important; }
 
   #game-layout { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 5px; }
 
-  /* BOULIER GÉANT */
   .abacus-container { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
   .abacus-frame {
     position: relative; width: var(--frame-w);
-    border-left: 35px solid var(--wood); border-right: 35px solid var(--wood);
+    border-left: 40px solid var(--wood); border-right: 40px solid var(--wood);
     box-sizing: content-box; background: var(--bg);
   }
-    /* Masque au-dessus des montants en bois : évite les ombres/lignes parasites */
+  
   .abacus-frame::before, .abacus-frame::after{
-    content: \"\"; position: absolute; top: 0; bottom: 0;
-    width: 36px; background: var(--wood);
+    content: ""; position: absolute; top: 0; bottom: 0;
+    width: 40px; background: var(--wood);
     pointer-events: none; z-index: 30;
   }
-  .abacus-frame::before{ left: -35px; }
-  .abacus-frame::after{ right: -35px; }
+  .abacus-frame::before{ left: -40px; }
+  .abacus-frame::after{ right: -40px; }
 
-.row { position: relative; height: 75px; width: 100%; border-bottom: none; }
+  /* CORRECTION : Hauteur de ligne augmentée pour réduire la densité (82px au lieu de 75px) */
+  .row { position: relative; height: 82px; width: 100%; border-bottom: none; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); }
   
   .bead {
-    position: absolute; width: var(--bead-size); height: var(--bead-size); border-radius: 50%; top: 6px; z-index: 5;
+    position: absolute; width: var(--bead-size); height: var(--bead-size); border-radius: 50%; 
+    top: 50%; transform: translateY(-50%);
+    z-index: 5;
     box-shadow: inset -3px -3px 8px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.55); cursor: pointer;
   }
   .bead.red { background: var(--bead-red); }
   .bead.white { background: var(--bead-alt); }
 
-  /* COMMANDES */
   .controls-group { display: flex; flex-direction: column; align-items: center; width: 340px; }
   #feedback-right { display:none; width:100%; text-align:center; font-weight:900; font-size:26px; margin: 0 0 10px 0; }
   
@@ -139,7 +136,6 @@ body.level-4 .feedback-content{ top: 14px; }
   flex: 1 1 240px; text-align: center; white-space: nowrap;
 }
 
-/* Ajustements par niveau */
 body.level-1 #feedback-area { height: 130px; }
 body.level-1 #task-display { margin-top: -8px; }
 body.level-1 #game-layout { margin-top: 8px; gap: 12px; }
@@ -151,15 +147,12 @@ body.level-2 .history-entry {
   white-space: nowrap;
 }
 
-/* Responsive : éviter que le sélecteur de table disparaisse (surtout au Niv 1 avec le bouton couleur) */
 @media (max-width: 900px) {
   .toolbar { justify-content: center; }
   .toolbar-title { order: 3; flex-basis: 100%; white-space: normal; font-size: 22px; }
   .btn-ui { padding: 8px 10px; }
 }
 
-
-  /* Ajustements spécifiques demandés */
   body.level-1 .history-entry { justify-content: center; text-align: center; }
   body.level-1 #history-column { overflow-y: hidden; padding: 8px 6px 6px; font-size: clamp(22px, 4.2vh, 44px); }
   body.level-1 .history-entry { padding: 2px 0; line-height: 1.05; }
@@ -168,7 +161,6 @@ body.level-2 .history-entry {
     display: none; height: 0; margin: 0; padding: 0;
   }
 
-  /* --- Niv 1 : inversion question / vérifier --- */
   #task-bar{ display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
   #btn-check-top{ display:none; }
   #task-mini{ display:none; }
@@ -186,11 +178,9 @@ body.level-2 .history-entry {
     text-align: center;
   }
 
-  /* Petit ajustement demandé : garder un gros boulier, mais mieux caler la séparation visuelle */
   body.level-1 #scaler-content{ padding-left: 18px; box-sizing: border-box; }
-
-  /* Niv 1 : abaissement visuel du bloc (calcul / ? / vérifier) sans changer le layout (donc sans modifier le scale) */
-body.level-1 .controls-group{ position: relative; top: 36px; }
+  /* CORRECTION : On descend le bloc central (input) encore plus bas (65px) */
+  body.level-1 .controls-group{ position: relative; top: 65px; }
 </style>
 </head>
 <body>
@@ -221,7 +211,7 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
       <option value="3">Niveau 3</option>
       <option value="4">Niveau 4</option>
     </select>
-    <button id="btn-color" class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🎨 Couleur</button>
+    <button id="btn-color" class="btn-ui" onclick="toggleColorMode()">🔵 Bleu</button>
 </div>
   <div class="toolbar-title">TABLES DE MULTIPLICATION</div>
   <div style="display: flex; gap: 20px; align-items: center; flex-shrink:0;">
@@ -256,7 +246,17 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
 <script>
   let table = 3, level = 1, currentStep = 0, goodScore = 0, badScore = 0;
   let states = Array(12).fill(0); let questions = [];
-  const beadW = 62, frameW = 1250, marginBead = 2;
+  let isBlue = false;
+  
+  // CORRECTION : Taille billes 55px (légère réduction pour aérer) et Cadre 1240px
+  const beadW = 55, marginBead = 0;
+  const frameW = 1240; 
+
+  function toggleColorMode() {
+    isBlue = !isBlue;
+    document.body.classList.toggle('blue-mode');
+    document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
+  }
 
   function isExtensionOn() {
     const fExtra = document.getElementById('frame-extra');
@@ -271,8 +271,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
   }
 
   function computeMaxFactor() {
-    // Capacité "instrument" : 120 (12 lignes × 10 billes).
-    // Niveau 1 sans extension : 100 (10 lignes visibles).
     let maxValue = 120;
     if (level === 1) maxValue = isExtensionOn() ? 120 : 100;
 
@@ -310,11 +308,9 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
     document.getElementById('feedback-icon').style.opacity = "0";
     const fr = document.getElementById('feedback-right'); if (fr) { fr.style.display = "none"; fr.textContent = ""; }
     document.getElementById('history-column').innerHTML = "";
-    // Extension : on conserve l'état si tu l'as activée (utile pour aller jusqu'à 120).
-    // Mais si on n'est pas au niveau 1, on la masque.
+    
     const fExtra = document.getElementById('frame-extra');
     if (level !== 1) { fExtra.style.display = "none"; }
-    // Pour les tables 11 et 12 au niveau 1, l'extension est indispensable (sinon 110/120 impossible).
     if (level === 1 && table >= 11) { fExtra.style.display = "block"; }
     syncExtensionButtonLabel();
 
@@ -349,7 +345,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
     const icon = isCorrect ? "✅" : "❌";
     const color = isCorrect ? "var(--success)" : "var(--error)";
 
-    // ✅ Feedback visuel EN HAUT (tous niveaux, y compris Niv 1)
     const fi = document.getElementById('feedback-icon');
     if (fi) {
       fi.innerHTML = icon;
@@ -358,7 +353,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
       setTimeout(() => fi.style.opacity = "0", 1200);
     }
 
-    // Message court (utile surtout au Niv 1)
     const fr = document.getElementById('feedback-right');
     if (fr) {
       if (level === 1 && msg) {
@@ -395,12 +389,9 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
   function checkAnswer() {
     let q = questions[currentStep], correct = q * table;
 
-    // Niveau 1 : saisie au clavier (le boulier sert d'aide)
     if (level === 1) {
       const raw = (document.getElementById('input-val').value || '').trim();
-      // Ne pas accepter vide, même si la réponse est 0
       const val = (raw === '') ? NaN : parseInt(raw, 10);
-
       const ab = abacusTotal();
 
       if (Number.isFinite(val) && val === correct && ab === correct) {
@@ -419,7 +410,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
     }
 
 
-    // Niveaux 2-4 : saisie au clavier
     let val = parseInt(document.getElementById('input-val').value);
     if (val === correct) {
       goodScore++; document.getElementById('count-good').innerText = goodScore;
@@ -441,7 +431,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
     const fExtra = document.getElementById('frame-extra');
     fExtra.style.display = (fExtra.style.display === "none") ? "block" : "none";
     syncExtensionButtonLabel();
-    // Ajuste la liste des questions si on passe à 12 lignes (ou inversement)
     rebuildQuestions(true);
     autoScale();
   }
@@ -451,7 +440,6 @@ body.level-1 .controls-group{ position: relative; top: 36px; }
     const ov = document.getElementById('end-overlay');    const history = document.getElementById('history-column');
     const sidebarW = (level <= 2 && history && history.style.display !== "none") ? history.offsetWidth : 0;
 
-    // On noircit l'écran, mais on laisse la "table" visible à gauche (Niv 1 & 2).
     ov.style.position = "fixed";
     ov.style.top = "0px";
     ov.style.height = "100%";
@@ -499,10 +487,9 @@ function nextQuestion() {
     const scale = (window.currentScale || 1);
     const now = performance.now();
 
-    // Vitesse (pour l'effet "lancer" quand on fait un geste franc)
     const dt = now - activeDrag.lastT;
     if (dt > 0) {
-      activeDrag.vx = ((e.clientX - activeDrag.lastX) / scale) / dt; // px/ms
+      activeDrag.vx = ((e.clientX - activeDrag.lastX) / scale) / dt; 
       activeDrag.lastX = e.clientX;
       activeDrag.lastT = now;
     }
@@ -524,41 +511,35 @@ function nextQuestion() {
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
 
-    // Positions cibles (gauche / droite) pour cette bille
     const targetL = beadIdx * beadW + marginBead;
     const targetR = frameW - (10 - beadIdx) * beadW - marginBead;
     const travel = Math.max(1, (targetR - targetL));
 
-    // Règles :
-    // - Par défaut, il faut accompagner (on valide seulement si on est très proche de la fin).
-    // - Si geste franc ("lancer"), on autorise le déplacement même un peu avant la fin.
-    const SNAP_RATIO = 0.88;          // proche de la fin = snap immédiat
-    const FLING_V = 0.75;             // px/ms (plus haut = plus exigeant)
-    const MIN_FLING_PROGRESS = 0.18;  // évite les déclenchements accidentels
+    const SNAP_RATIO = 0.88;          
+    const FLING_V = 0.75;             
+    const MIN_FLING_PROGRESS = 0.18;  
 
     let useAnim = false;
 
     if (beadIdx >= states[rowIdx]) {
-      // déplacement de droite -> gauche (activer)
-      const progress = (targetR - currentPos) / travel; // 0 au départ, 1 à l'arrivée
+      const progress = (targetR - currentPos) / travel; 
       if (progress >= SNAP_RATIO) {
         states[rowIdx] = beadIdx + 1;
-        useAnim = false; // snap direct
+        useAnim = false; 
       } else if (vx < -FLING_V && progress >= MIN_FLING_PROGRESS) {
         states[rowIdx] = beadIdx + 1;
-        useAnim = true;  // "lancé" : petite glisse rapide
+        useAnim = true;  
       } else {
-        useAnim = (Math.abs(vx) >= FLING_V); // retour animé uniquement si geste franc
+        useAnim = (Math.abs(vx) >= FLING_V); 
       }
     } else {
-      // déplacement de gauche -> droite (désactiver)
-      const progress = (currentPos - targetL) / travel; // 0 au départ, 1 à l'arrivée
+      const progress = (currentPos - targetL) / travel; 
       if (progress >= SNAP_RATIO) {
         states[rowIdx] = beadIdx;
-        useAnim = false; // snap direct
+        useAnim = false; 
       } else if (vx > FLING_V && progress >= MIN_FLING_PROGRESS) {
         states[rowIdx] = beadIdx;
-        useAnim = true;  // "lancé" : petite glisse rapide
+        useAnim = true;  
       } else {
         useAnim = (Math.abs(vx) >= FLING_V);
       }
@@ -585,11 +566,9 @@ function autoScale() {
   const content = document.getElementById('scaler-content');
   if (!content) return;
 
-  // Dimensions "réelles" (non influencées par le scale CSS)
   const measuredW = content.offsetWidth || 1;
   const measuredH = content.offsetHeight || 1;
 
-  // Garde le rendu du Niv 1 tel que tu l'aimes (base identique), mais s'adapte si on affiche les lignes 11-12
   const baseW = (level === 1) ? 2000 : 950;
   const baseH = (level === 1) ? 1100 : 700;
 
