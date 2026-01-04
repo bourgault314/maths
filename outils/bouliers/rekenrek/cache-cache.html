@@ -8,7 +8,11 @@
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+    --bead-white: #ffffff;
   }
+
+  /* Mode Bleu */
+  body.blue-mode { --bead-white: #2196f3; }
 
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -22,6 +26,8 @@
     justify-content: space-between; padding: 0 20px; box-sizing: border-box;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
   }
+  
+  .toolbar-group { display: flex; align-items: center; gap: 15px; }
 
   .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
   .score-good { color: var(--success); }
@@ -43,16 +49,22 @@
     box-sizing: content-box; background: transparent;
   }
 
-  /* RIDEAU : Décalé à 415px pour laisser respirer la 10ème bille */
+  #abacus-frame::before, #abacus-frame::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+    background: var(--wood); z-index: 20; pointer-events: none;
+  }
+  #abacus-frame::before { left: -30px; }
+  #abacus-frame::after { right: -30px; }
+
   #curtain {
     position: absolute; right: -30px; top: 0; bottom: 0;
-    background: #050505; border-left: 5px solid #333; /* Trait gris plus net mais plus loin */
+    background: #050505; border-left: 5px solid #333;
     z-index: 100; width: 0;
     display: flex; align-items: center; justify-content: center;
     pointer-events: none;
   }
 
-  .row { position: relative; height: 56px; width: 100%; overflow: hidden; }
+  .row { position: relative; height: 56px; width: 100%; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
   
   .bead {
@@ -61,7 +73,10 @@
     box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
   }
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
-  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+  .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
+  
+  /* Ajustement bille blanche en mode bleu */
+  body.blue-mode .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #0d47a1); }
 
   #feedback { height: 80px; font-size: 48px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
@@ -100,9 +115,9 @@
   .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #0a4eb3; }
   .btn-success { background: var(--success) !important; box-shadow: 0 8px 0 #2e7d32 !important; }
 
-  select {
+  select, .btn-small {
     background: #444; color: white; border: none; padding: 12px;
-    border-radius: 8px; font-weight: bold; font-size: 22px; cursor: pointer;
+    border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
   }
 </style>
 </head>
@@ -115,8 +130,9 @@
       <option value="20" selected>Cache-Cache 20</option>
       <option value="100">Cache-Cache 100</option>
     </select>
+    <button class="btn-small" onclick="toggleColorMode()">🔵 Bleu</button>
   </div>
-  <div style="font-weight: bold; font-size: 28px; color: var(--accent); letter-spacing: 1px;">REKENREK CACHE-CACHE</div>
+  <div style="font-weight: bold; font-size: 28px; color: white;">REKENREK CACHE-CACHE</div>
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
     <span class="score-bad">❌ <span id="count-bad">0</span></span>
@@ -145,6 +161,7 @@
 <script>
   let currentRange = 20, targetNumber = -1, lastNumber = -1, goodScore = 0, badScore = 0;
   let gameState = "IDLE"; 
+  let isBlue = false;
   
   const frame = document.getElementById('abacus-frame');
   const curtain = document.getElementById('curtain');
@@ -152,6 +169,14 @@
   const inputZone = document.getElementById('input-zone');
   const actionBtn = document.getElementById('btn-action');
   const feedback = document.getElementById('feedback');
+  
+  const BEAD_W = 38;
+
+  function toggleColorMode() { 
+      isBlue = !isBlue; 
+      document.body.classList.toggle('blue-mode');
+      document.querySelector('.btn-small[onclick="toggleColorMode()"]').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
+  }
 
   function updateMode() {
     currentRange = parseInt(document.getElementById('mode-select').value);
@@ -191,7 +216,8 @@
         const bead = document.createElement('div');
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'}`;
-        bead.style.left = (820 - (10 - b) * 40) + "px"; 
+        // Position initiale tout à droite (masqué)
+        bead.style.left = (820 - (10 - b) * BEAD_W) + "px"; 
         row.appendChild(bead);
       }
       frame.appendChild(row);
@@ -240,14 +266,13 @@
       const activeInRow = Math.min(10, remainingVisible);
       remainingVisible -= activeInRow;
       beads.forEach((b, bIdx) => {
-        if (bIdx < activeInRow) b.style.left = (bIdx * 40) + "px";
-        else b.style.left = (820 - (10 - bIdx) * 40) + "px";
+        if (bIdx < activeInRow) b.style.left = (bIdx * BEAD_W) + "px";
+        else b.style.left = (820 - (10 - bIdx) * BEAD_W) + "px";
       });
     });
 
     curtain.style.transition = "width 0.2s ease-in";
-    // REGLAGE FINAL : 820px + 30px bois - 415px visibilité = 435px de rideau
-    curtain.style.width = "435px";
+    curtain.style.width = "420px";
   }
 
   function checkAnswer(val, element) {
@@ -261,7 +286,7 @@
       if (element) element.classList.add('correct');
       curtain.style.transition = "width 0.5s ease-out";
       curtain.style.width = "0px";
-      actionBtn.innerText = "Suivant 🔄";
+      actionBtn.innerText = "Suivant ➔";
       actionBtn.classList.add('btn-success');
     } else {
       badScore++;
