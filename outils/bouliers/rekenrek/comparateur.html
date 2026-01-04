@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Rekenrek Comparateur - Final V26</title>
+<title>Rekenrek Comparateur - Final V27</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
@@ -218,7 +218,7 @@
   <div id="overlay-feedback">
     <div id="feedback-text">✅</div>
     <button id="btn-next-overlay" onclick="forceNextQuestion()">
-      Suivant ➔
+      Suivant
     </button>
   </div>
 
@@ -326,7 +326,8 @@
     feedbackText.innerText = "✅"; 
     feedbackText.style.fontSize = "100px";
     feedbackText.style.color = "var(--success)";
-    btnNextOverlay.innerText = "Suivant ➔";
+    // Plus de flèche ici
+    btnNextOverlay.innerText = "Suivant";
     btnNextOverlay.onclick = forceNextQuestion;
 
     clearDraw(); 
@@ -471,7 +472,7 @@
       isAnswered = true;
       overlay.style.display = "flex";
       
-      // Timer automatique : 1 seconde (Rapidité)
+      // Timer automatique : 1 seconde
       autoNextTimer = setTimeout(initGame, 1000);
 
     } else {
@@ -489,10 +490,14 @@
       
       // Si niveau max atteint
       if (currentLevel >= 5) {
-          feedbackText.innerText = "CHAMPION ! 🏆";
+          feedbackText.innerText = "JEU TERMINÉ ! 🏆";
           feedbackText.style.fontSize = "60px";
-          btnNextOverlay.innerText = "Rejouer";
-          btnNextOverlay.onclick = () => location.reload();
+          btnNextOverlay.innerText = "Rejouer"; // Plus de flèche
+          // Au clic, on remet tout à zéro
+          btnNextOverlay.onclick = () => {
+              document.getElementById('level-select').value = 1;
+              manualLevelChange(); // Cette fonction reset le score et relance le jeu
+          };
           overlay.style.display = "flex";
           return;
       }
