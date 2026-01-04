@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Le Challenge Calcul - Boss Final V19</title>
+<title>Le Challenge Calcul - Boss Final V21</title>
 <style>
   :root {
     --bg: #1a1a1a; 
@@ -14,7 +14,6 @@
     --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
     
-    /* Variable pour la largeur uniforme du "Cadran" */
     --panel-width: 300px;
   }
 
@@ -30,7 +29,7 @@
   input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   input[type=number] { -moz-appearance: textfield; }
 
-  /* --- TOOLBAR (Re-grossie) --- */
+  /* TOOLBAR */
   .toolbar {
     position: relative; width: 100%; min-height: 60px;
     background: var(--ui); display: flex; align-items: center; 
@@ -44,11 +43,9 @@
   .timer-display { color: #fff; background: #444; padding: 6px 15px; border-radius: 15px; border: 1px solid #666; font-family: monospace; font-size: 20px; }
   .score-good { color: var(--success); }
   
-  /* BOUTONS MENU (Taille confortable) */
   .btn-ui { 
     background: #444; color: white; border: none; 
-    padding: 10px 15px; /* Plus grand */
-    border-radius: 8px; font-weight: 600; font-size: 18px; /* Plus lisible */
+    padding: 10px 15px; border-radius: 8px; font-weight: 600; font-size: 18px; 
     cursor: pointer; transition: 0.2s;
   }
   .btn-ui:hover { background: #555; }
@@ -56,8 +53,7 @@
   
   select { 
     background: #444; color: white; border: none; 
-    padding: 10px 12px; /* Plus grand */
-    border-radius: 8px; font-weight: 600; font-size: 18px; /* Plus lisible */
+    padding: 10px 12px; border-radius: 8px; font-weight: 600; font-size: 18px; 
     max-width: 220px; 
   }
   select:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -76,14 +72,12 @@
     margin-top: 10px; 
   }
 
-  /* LAYOUT */
   #game-layout { 
     display: flex; align-items: center; justify-content: center; gap: 40px; 
     margin-top: 20px;
     flex-direction: column; 
   }
 
-  /* BOULIER */
   .abacus-frame {
     position: relative; width: 820px;
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
@@ -108,19 +102,13 @@
   .bead.red { background: var(--bead-red); }
   .bead.white { background: var(--bead-alt); }
 
-  /* ZONE CONTROLE (Le "Cadran") */
   .control-panel { 
     display: flex; flex-direction: column; align-items: center; gap: 12px; 
     width: auto;
   }
   
-  /* ELEMENTS UNIFORMES (Largeur fixe) */
-  .uniform-width {
-      width: var(--panel-width);
-      box-sizing: border-box;
-  }
+  .uniform-width { width: var(--panel-width); box-sizing: border-box; }
 
-  /* QUESTION (Calcul) */
   #task-display {
     font-size: 65px; font-weight: 900; 
     color: var(--calc-color);
@@ -128,36 +116,38 @@
     background: #333; padding: 10px 0; border-radius: 18px;
     border: 2px solid #555;
     display: flex; align-items: center; justify-content: center; gap: 15px;
-    height: 90px; /* Hauteur fixe pour l'harmonie */
+    height: 90px;
   }
   .operator { color: var(--calc-color); }
 
-  /* INPUT */
   #input-val {
-    height: 90px; /* Même hauteur que la question */
+    height: 90px;
     font-size: 65px; font-weight: bold;
     text-align: center; border-radius: 18px; border: 5px solid #444;
     background: #000; color: var(--calc-color); outline: none;
   }
 
-  /* BOUTON */
   #btn-action {
     background: var(--accent); 
-    border: none; 
-    height: 70px; /* Bien visible */
-    font-size: 26px; /* Gros texte */
+    border: none; height: 70px; font-size: 26px;
     color: white; border-radius: 12px; font-weight: bold; cursor: pointer;
     box-shadow: 0 5px 0 rgba(0,0,0,0.3);
     transition: background 0.2s, transform 0.1s;
   }
   #btn-action:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
 
-  #feedback { height: 45px; font-size: 28px; font-weight: bold; min-height: 45px; display:flex; align-items:center; justify-content:center;}
+  /* FEEDBACK OVERLAY (FLASH) */
+  #flash-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 180px; font-weight: 900;
+    pointer-events: none; z-index: 4000;
+    opacity: 0; transition: opacity 0.2s;
+    text-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
 
   .hidden-abacus { opacity: 0.05; pointer-events: none; }
   .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 8px; }
 
-  /* WIN SCREEN */
   #win-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.95); z-index: 5000;
@@ -215,6 +205,7 @@
 </div>
 
 <div id="main-container">
+  <div id="flash-overlay"></div>
   <div id="scaler">
     
     <div id="game-layout">
@@ -224,14 +215,9 @@
       </div>
       
       <div class="control-panel" id="side-panel">
-        
         <div id="task-display" class="uniform-width">...</div>
-        
         <input type="number" id="input-val" class="uniform-width" placeholder="?" inputmode="numeric">
-        
         <button id="btn-action" class="uniform-width" onclick="handleMainAction()">Vérifier</button>
-        
-        <div id="feedback"></div>
       </div>
     </div>
 
@@ -249,7 +235,7 @@
 
 <script>
   let n1 = 0, n2 = 0, targetRes = 0, opSign = '+';
-  let goodScore = 0, isAnswered = false, gameFinished = false;
+  let goodScore = 0, gameFinished = false;
   let currentScale = 1, states = []; 
   let deck = [];
   let goalScore = 20;
@@ -271,7 +257,7 @@
   const taskDiv = document.getElementById('task-display');
   const inputVal = document.getElementById('input-val');
   const btnAction = document.getElementById('btn-action');
-  const feedback = document.getElementById('feedback');
+  const flashOverlay = document.getElementById('flash-overlay');
   const layout = document.getElementById('game-layout');
   const scaler = document.getElementById('scaler');
 
@@ -315,7 +301,6 @@
       const lvlSel = document.getElementById('level-select');
       const optLvl1 = document.getElementById('opt-lvl-1');
 
-      // Si Mul, Div ou Boss -> Force 100 et Desactive Niveau 1
       if (['mul', 'div', 'mix_md', 'boss'].includes(op)) {
           sizeSel.value = "100";
           sizeSel.disabled = true; 
@@ -445,8 +430,6 @@
         document.getElementById('timer').innerText = isBossMode ? formatTime(BOSS_TIME) : "00:00";
     }
 
-    isAnswered = false; 
-    feedback.innerText = ""; 
     inputVal.value = "";
     document.getElementById('btn-reveal').style.display = "none";
     frame.classList.remove('hidden-abacus');
@@ -497,8 +480,14 @@
   }
 
   function handleMainAction() {
-    if (isAnswered) nextQuestion();
-    else checkAction();
+    checkAction();
+  }
+
+  function showFlash(icon, color) {
+      flashOverlay.innerHTML = icon;
+      flashOverlay.style.color = color;
+      flashOverlay.style.opacity = 1;
+      setTimeout(() => { flashOverlay.style.opacity = 0; }, 600);
   }
 
   function checkAction() {
@@ -508,31 +497,22 @@
     if (isNaN(valInput)) return;
 
     if (valInput !== targetRes) {
-        feedback.innerHTML = "Essaie encore ! ❌";
-        feedback.style.color = "var(--error)";
+        showFlash("❌", "var(--error)");
         return;
     }
 
+    // SUCCÈS RAPIDE
     goodScore++; 
     document.getElementById('count-good').innerText = goodScore;
     
-    feedback.innerHTML = "Bravo ! ✅";
-    feedback.style.color = "var(--success)";
+    showFlash("✅", "var(--success)");
     
-    const level = parseInt(document.getElementById('level-select').value);
-    if (level !== 2 && targetRes <= 100) {
-        setNumberOnAbacus(targetRes, states.length);
-        frame.classList.remove('hidden-abacus');
-    }
-    
-    isAnswered = true;
-    
+    // PASSAGE IMMEDIAT A LA SUITE (FLUX CONTINU)
     if (goodScore >= goalScore) {
         stopTimer();
         gameOver("BRAVO ! 🎉", "Tu as vaincu le Boss !");
     } else {
-        btnAction.innerText = "Suivant ➔";
-        btnAction.style.background = "var(--success)";
+        initGame(); // Recharge tout de suite
     }
   }
 
@@ -548,11 +528,6 @@
       
       setTimeout(() => { document.getElementById('win-screen').style.display = 'flex'; }, 500);
       btnAction.innerText = "Terminé";
-  }
-
-  function nextQuestion() {
-      if (gameFinished) return;
-      initGame();
   }
 
   function buildAbacus(rowCount) {
@@ -587,7 +562,7 @@
 
   let activeDrag = null;
   function startDrag(e) {
-    if (isAnswered || isPen) return; 
+    if (isPen) return; 
     const bead = e.target; bead.setPointerCapture(e.pointerId);
     activeDrag = { rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
   }
