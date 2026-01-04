@@ -6,27 +6,24 @@
 <title>Tables de multiplication</title>
 <style>
   :root {
-    /* --- THEME GRIS UNIFIÉ (Comme Boss Final & Comparateur) --- */
-    --bg: #1a1a1a; 
-    --ui: #2a2a2a;
+    /* --- THEME GRIS FONCÉ (Standardisé) --- */
+    --bg: #1a1a1a;       /* Le gris foncé du Comparateur */
+    --ui: #2a2a2a;       /* La barre d'outils du Comparateur */
     --wood: #b08d57;
     --rod: #888;
     
-    /* Couleurs standardisées */
     --accent: #0f6cf9; 
     --success: #4caf50; 
     --error: #f44336;
     
-    /* Billes */
     --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
     
-    /* Paramètres inchangés */
+    /* --- DIMENSIONS SPÉCIFIQUES TABLES (Inchangées) --- */
     --bead-size: 55px; 
     --frame-w: 1240px; 
   }
   
-  /* Mode Bleu ajusté */
   body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); }
 
   
@@ -43,8 +40,9 @@ html, body {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
   padding: 10px 12px; box-sizing: border-box;
-  position: relative; z-index: 2000; border-bottom: 1px solid #333;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5); /* Ombre ajoutée pour cohérence */
+  position: relative; z-index: 2000; 
+  border-bottom: 1px solid #333;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   flex-shrink: 0;
 }
 
@@ -58,7 +56,9 @@ html, body {
   
 #history-column {
   width: 180px; display: flex; flex-direction: column; align-items: stretch;
-  height: 100%; border-right: 2px solid #333; flex-shrink: 0;
+  height: 100%; 
+  border-right: 2px solid #333; /* Bordure sombre */
+  flex-shrink: 0;
   padding: 15px 10px 10px; box-sizing: border-box;
   overflow-y: auto; background: var(--bg);
 }
@@ -130,12 +130,11 @@ body.level-4 .feedback-content{ top: 14px; }
   }
   .btn-check {
     background: var(--accent); color: white; border: none; width: 100%; height: 95px;
-    border-radius: 15px; font-size: 34px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #0a4eb3;
+    border-radius: 15px; font-size: 34px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #1565c0;
   }
 
   .btn-ui { background: #444; color: white; border: 1px solid #555; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   
-  /* Selecteurs style unifié */
   select { background: #444; color: white; border: 1px solid #555; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
 
   #end-overlay {
