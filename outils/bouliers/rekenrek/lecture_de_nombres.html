@@ -169,6 +169,7 @@
   let currentRange = 20, targetNumber = -1, goodScore = 0, badScore = 0;
   let gameState = "IDLE"; let flashTimer = null;
   let isBlue = false;
+  let deck = []; // PAQUET DE CARTES
   
   const frame = document.getElementById('abacus-frame');
   const keypad = document.getElementById('keypad');
@@ -190,7 +191,39 @@
 
   function updateMode() {
     currentRange = parseInt(document.getElementById('mode-select').value);
-    resetTurn(); buildUI(); autoScale();
+    resetGame(); // Reset complet (score + deck)
+  }
+
+  // --- MOTEUR DECK (Anti-Répétition) ---
+  function buildDeck(max) {
+    deck = [];
+    for(let i = 0; i <= max; i++) {
+        deck.push(i);
+    }
+    // Mélange de Fisher-Yates
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawCard(max) {
+    // Si deck vide ou si la carte du dessus est hors limite (changement de mode), on refait
+    if (deck.length === 0 || deck[0] > max) {
+        buildDeck(max);
+    }
+    return deck.pop();
+  }
+  // -------------------------------------
+
+  function resetGame() {
+    goodScore = 0; badScore = 0;
+    document.getElementById('count-good').innerText = "0";
+    document.getElementById('count-bad').innerText = "0";
+    buildDeck(currentRange);
+    resetTurn(); 
+    buildUI(); 
+    autoScale();
   }
 
   function buildUI() {
@@ -239,7 +272,10 @@
   function startNewTurn() {
     if (flashTimer) clearTimeout(flashTimer);
     resetTurnUI();
-    targetNumber = Math.floor(Math.random() * (currentRange + 1));
+    
+    // UTILISATION DU DECK ICI
+    targetNumber = drawCard(currentRange);
+
     const rows = document.querySelectorAll('.row');
     let remaining = targetNumber;
     rows.forEach((row) => {
@@ -318,6 +354,8 @@
   }
 
   window.addEventListener('resize', autoScale);
+  // Initialisation du deck au chargement
+  buildDeck(currentRange);
   updateMode();
 </script>
 </body>
