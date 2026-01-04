@@ -6,23 +6,31 @@
 <title>Tables de multiplication</title>
 <style>
   :root {
-    --bg: #0f1115; 
-    --wood: #b08d57;
-    --rod: #666; --ui: #1b1d22;
-    --accent: #2196f3; --success: #4caf50; --error: #f44336;
+    /* --- MODIFICATION COULEURS (Thème Clair) --- */
+    --bg: #f3f4f6;       /* Fond Gris clair */
+    --wood: #a08050;     /* Bois un peu plus chaud */
+    --rod: #94a3b8;      /* Tiges gris métal */
+    --ui: #1e293b;       /* Toolbar sombre (comme l'index) */
+    
+    --accent: #2563eb; 
+    --success: #16a34a; 
+    --error: #dc2626;
+    
     --bead-red: radial-gradient(circle at 30% 30%, #ff5252, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
     
-    /* CORRECTION : On aère le tout */
+    /* --- DIMENSIONS INCHANGÉES --- */
     --bead-size: 55px; 
-    --frame-w: 1240px; /* Plus large */
+    --frame-w: 1240px;
   }
   body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #448aff, #0d47a1); }
 
   
 html, body { 
   margin: 0; padding: 0; width: 100%; height: 100%;
-  background: var(--bg); color: white; font-family: sans-serif;
+  background: var(--bg); 
+  color: #334155; /* Texte foncé pour aller sur le fond clair */
+  font-family: sans-serif;
   overflow: hidden; touch-action: none;
   display: flex; flex-direction: column;
 }
@@ -33,9 +41,11 @@ html, body {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
   padding: 10px 12px; box-sizing: border-box;
-  position: relative; z-index: 2000; border-bottom: 1px solid #333;
-
+  position: relative; z-index: 2000; 
+  border-bottom: 1px solid #334155;
+  color: white; /* Texte toolbar en blanc */
   flex-shrink: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
   
@@ -48,9 +58,11 @@ html, body {
   
 #history-column {
   width: 180px; display: flex; flex-direction: column; align-items: stretch;
-  height: 100%; border-right: 2px solid #222; flex-shrink: 0;
+  height: 100%; 
+  border-right: 2px solid #e2e8f0; /* Bordure plus douce */
+  flex-shrink: 0;
   padding: 15px 10px 10px; box-sizing: border-box;
-  overflow-y: auto; background: var(--bg);
+  overflow-y: auto; background: white; /* Fond blanc pour l'historique */
 }
   
 .history-entry {
@@ -58,6 +70,7 @@ html, body {
   display: flex; align-items: center;
   padding: 6px 8px; box-sizing: border-box;
   font-weight: 900; color: var(--accent);
+  border-bottom: 1px solid #f1f5f9;
 }
 
 #scaler {
@@ -87,26 +100,26 @@ body.level-4 .feedback-content{ top: 14px; }
   .abacus-frame {
     position: relative; width: var(--frame-w);
     border-left: 40px solid var(--wood); border-right: 40px solid var(--wood);
-    box-sizing: content-box; background: var(--bg);
+    box-sizing: content-box; background: transparent; /* Transparent pour voir le fond gris */
   }
   
   .abacus-frame::before, .abacus-frame::after{
     content: ""; position: absolute; top: 0; bottom: 0;
     width: 40px; background: var(--wood);
     pointer-events: none; z-index: 30;
+    box-shadow: inset 2px 0 5px rgba(0,0,0,0.2);
   }
   .abacus-frame::before{ left: -40px; }
   .abacus-frame::after{ right: -40px; }
 
-  /* CORRECTION : Hauteur de ligne augmentée pour réduire la densité (82px au lieu de 75px) */
   .row { position: relative; height: 82px; width: 100%; border-bottom: none; }
-  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); }
+  .rod { position: absolute; width: 100%; height: 6px; background: var(--rod); top: 50%; transform: translateY(-50%); border-radius: 3px; }
   
   .bead {
     position: absolute; width: var(--bead-size); height: var(--bead-size); border-radius: 50%; 
     top: 50%; transform: translateY(-50%);
     z-index: 5;
-    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.55); cursor: pointer;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.4); cursor: pointer;
   }
   .bead.red { background: var(--bead-red); }
   .bead.white { background: var(--bead-alt); }
@@ -116,19 +129,38 @@ body.level-4 .feedback-content{ top: 14px; }
   
   #input-val {
     width: 220px; height: 135px; font-size: 100px; font-weight: bold;
-    text-align: center; border-radius: 20px; border: 6px solid #333;
-    background: #000; color: var(--accent); outline: none; margin-bottom: 10px;
+    text-align: center; border-radius: 20px; 
+    /* Input blanc avec bordure grise */
+    border: 6px solid #cbd5e1;
+    background: #ffffff; 
+    color: #1e293b; 
+    outline: none; margin-bottom: 10px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
   }
   .btn-check {
     background: var(--accent); color: white; border: none; width: 100%; height: 95px;
     border-radius: 15px; font-size: 34px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #1565c0;
   }
 
-  .btn-ui { background: #2a2a2a; color: white; border: 1px solid #444; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .btn-ui { 
+    background: rgba(255,255,255,0.1); 
+    color: white; 
+    border: 1px solid rgba(255,255,255,0.2); 
+    padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; 
+  }
+  /* Pour les select dans la barre sombre */
+  select.btn-ui { background-color: #334155; }
+
+  /* Bouton d'extension (sur fond clair) */
+  #btn-ext {
+      background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1;
+      margin-top: 10px; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;
+  }
 
   #end-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000;
+    background: rgba(15, 23, 42, 0.95); /* Bleu très sombre opaque */
+    display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 3000;
   }
 
 .toolbar-title {
@@ -179,7 +211,7 @@ body.level-2 .history-entry {
   }
 
   body.level-1 #scaler-content{ padding-left: 18px; box-sizing: border-box; }
-  /* CORRECTION : On descend le bloc central (input) encore plus bas (65px) */
+  
   body.level-1 .controls-group{ position: relative; top: 65px; }
 </style>
 </head>
@@ -230,7 +262,7 @@ body.level-2 .history-entry {
       <div id="abacus-zone" class="abacus-container">
         <div id="frame-main" class="abacus-frame"></div>
         <div id="frame-extra" class="abacus-frame" style="display:none; margin-top:5px;"></div>
-        <button id="btn-ext" class="btn-ui" style="margin-top:10px;" onclick="toggleExtension()">➕ Lignes 11-12</button>
+        <button id="btn-ext" onclick="toggleExtension()">➕ Lignes 11-12</button>
       </div>
       <div class="controls-group">
         <div id="feedback-right"></div>
@@ -248,7 +280,6 @@ body.level-2 .history-entry {
   let states = Array(12).fill(0); let questions = [];
   let isBlue = false;
   
-  // CORRECTION : Taille billes 55px (légère réduction pour aérer) et Cadre 1240px
   const beadW = 55, marginBead = 0;
   const frameW = 1240; 
 
