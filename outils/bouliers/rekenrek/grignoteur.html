@@ -3,515 +3,287 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Le Grignoteur (Soustraction)</title>
+<title>Le Grignoteur</title>
 <style>
   :root {
-    --bg: #1a1a1a; 
-    --wood: #b08d57; 
-    --rod: #888; --ui: #2a2a2a;
-    --accent: #0f6cf9; --success: #4caf50; --error: #f44336; --warning: #ff9800;
-    --calc-color: #ff9800; /* Orange */
+    --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
+    --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+    --calc-color: #ff9800;
     --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
-    --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
+    --bead-white: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
   }
-
-  body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); }
-
-  body, html { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
-    background: var(--bg); color: white; font-family: sans-serif;
-    overflow: hidden; touch-action: none;
-  }
-
-  input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  input[type=number] { -moz-appearance: textfield; }
-
-  /* TOOLBAR */
-  .toolbar {
-    position: relative; width: 100%; min-height: 60px;
-    background: var(--ui); display: flex; align-items: center; 
-    justify-content: space-between; padding: 0 20px; box-sizing: border-box;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000;
-  }
-
+  body.blue-mode { --bead-white: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+  input[type=number] { -moz-appearance: textfield; -webkit-appearance: none; margin: 0; }
+  
+  .toolbar { position: relative; width: 100%; min-height: 60px; background: var(--ui); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
   .toolbar-group { display: flex; align-items: center; gap: 10px; }
-
   .app-title { font-weight: bold; font-size: 24px; color: white; text-transform: uppercase; letter-spacing: 1px; }
-
   .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
   .score-good { color: var(--success); }
   .score-bad { color: var(--error); }
+  .btn-ui { background: #444; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; }
+  .btn-ui.active { background: var(--accent); color: white; border: 1px solid white; }
+  select { background: #444; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 18px; }
 
-  .btn-ui.active { background: var(--accent); color: white; border: 1px solid white; box-shadow: 0 0 10px var(--accent); }
-
-  #main-container {
-    position: relative; width: 100%; height: calc(100vh - 65px);
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; overflow: hidden;
-    z-index: 5; 
-  }
-
-  #scaler { 
-    display: flex; flex-direction: column; align-items: center; 
-    transform-origin: center center; 
-    margin-top: 10px; 
-  }
-
-  #task-display {
-    font-size: 90px; font-weight: 900; 
-    color: var(--calc-color);
-    margin-bottom: 10px; text-shadow: 0 4px 10px black;
-    background: #333; padding: 10px 50px; border-radius: 20px;
-    border: 2px solid #555;
-    min-height: 110px; 
-    display: flex; align-items: center; justify-content: center; gap: 20px;
-  }
+  #main-container { position: relative; width: 100%; height: calc(100vh - 65px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; }
+  #scaler { display: flex; flex-direction: column; align-items: center; transform-origin: center center; margin-top: 10px; }
   
+  #task-display { font-size: 90px; font-weight: 900; color: var(--calc-color); margin-bottom: 10px; text-shadow: 0 4px 10px black; background: #333; padding: 10px 50px; border-radius: 20px; border: 2px solid #555; min-height: 110px; display: flex; align-items: center; justify-content: center; gap: 20px; }
   .operator { font-size: 80px; margin-top: -10px; color: var(--calc-color); }
-
+  
   #game-layout { display: flex; align-items: center; justify-content: center; gap: 30px; }
-
-  .abacus-frame {
-    position: relative; width: 820px;
-    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
-    box-sizing: content-box; background: transparent;
-  }
-
-  .abacus-frame::before, .abacus-frame::after {
-    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
-    background: var(--wood); z-index: 20; pointer-events: none;
-  }
-  .abacus-frame::before { left: -30px; }
-  .abacus-frame::after { right: -30px; }
-
-  .row { position: relative; height: 56px; width: 100%; }
-  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
-  
-  .bead {
-    position: absolute; width: 38px; height: 38px; border-radius: 50%;
-    top: 50%; transform: translateY(-50%); z-index: 5;
-    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
-    cursor: pointer;
-  }
-  .bead.red { background: var(--bead-red); }
-  .bead.white { background: var(--bead-alt); }
-
-  #feedback { height: 60px; font-size: 42px; font-weight: bold; margin-top: 5px; transition: transform 0.2s; }
-
-  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 0px; }
-  
-  #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-
-  #input-val {
-    width: 220px; height: 90px; font-size: 65px; font-weight: bold;
-    text-align: center; border-radius: 20px; border: 6px solid #444;
-    background: #000; color: var(--calc-color); outline: none;
-  }
-
-  select, .btn-ui {
-    background: #444; color: white; border: none; padding: 10px;
-    border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
-  }
-
-  /* BOUTON ACTION UNIQUE */
-  #btn-action {
-    background: var(--accent); 
-    border: none; height: 55px; font-size: 20px; width: 100%;
-    color: white; border-radius: 8px; font-weight: bold; cursor: pointer;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
-    transition: background 0.2s, transform 0.1s;
-  }
+  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  #input-val { width: 220px; height: 90px; font-size: 65px; font-weight: bold; text-align: center; border-radius: 20px; border: 6px solid #444; background: #000; color: var(--calc-color); outline: none; }
+  #btn-action { background: var(--accent); border: none; height: 55px; font-size: 20px; width: 100%; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: 0.2s; }
   #btn-action:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
 
+  .abacus-frame { position: relative; width: 820px; border-left: 30px solid var(--wood); border-right: 30px solid var(--wood); box-sizing: content-box; }
+  .abacus-frame::before, .abacus-frame::after { content: ""; position: absolute; top: 0; bottom: 0; width: 30px; background: var(--wood); z-index: 20; pointer-events: none; }
+  .abacus-frame::before { left: -30px; } .abacus-frame::after { right: -30px; }
+  .row { position: relative; height: 56px; width: 100%; }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+  .bead { position: absolute; width: 38px; height: 38px; border-radius: 50%; top: 50%; transform: translateY(-50%); z-index: 5; box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5); cursor: pointer; }
+  .bead.red { background: var(--bead-red); } .bead.white { background: var(--bead-white); }
+  
   .hidden-abacus { opacity: 0.03; pointer-events: none; }
   .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 10px; }
+  #feedback { height: 60px; font-size: 42px; font-weight: bold; margin-top: 5px; }
 
-  /* CALQUE DE DESSIN */
-  #draw-layer {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 1000; pointer-events: none; 
-  }
-  #draw-layer.active {
-    pointer-events: auto; 
-    cursor: crosshair;
-  }
+  #draw-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; pointer-events: none; }
+  #draw-layer.active { pointer-events: auto; cursor: crosshair; }
 </style>
 </head>
 <body>
-
 <div class="toolbar">
   <div class="toolbar-group">
-    <select id="mode-select" onchange="updateMode()">
-      <option value="20">Boulier 20</option>
-      <option value="100">Boulier 100</option>
-    </select>
-    <select id="level-select" onchange="initGame()">
-      <option value="1">Niveau 1 : Guidé</option>
-      <option value="2">Niveau 2 : Libre</option>
-      <option value="3">Niveau 3 : Mental</option>
-    </select>
+    <select id="mode-select" onchange="updateMode()"><option value="20">Boulier 20</option><option value="100">Boulier 100</option></select>
+    <select id="level-select" onchange="initGame()"><option value="1">Niveau 1 : Guidé</option><option value="2">Niveau 2 : Libre</option><option value="3">Niveau 3 : Mental</option></select>
     <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
     <button id="btn-pen" class="btn-ui" onclick="togglePen()">✏️</button>
     <button class="btn-ui" onclick="clearDraw()">🧽</button>
   </div>
-  
   <div class="app-title">LE GRIGNOTEUR</div>
-
-  <div class="score-board">
-    <span class="score-good">✅ <span id="count-good">0</span></span>
-    <span class="score-bad">❌ <span id="count-bad">0</span></span>
-  </div>
+  <div class="score-board"><span class="score-good">✅ <span id="count-good">0</span></span><span class="score-bad">❌ <span id="count-bad">0</span></span></div>
 </div>
-
 <div id="main-container">
   <div id="scaler">
-    
     <div id="task-display">...</div>
-
     <div id="game-layout">
       <div style="display:flex; flex-direction:column; align-items:center;">
         <div id="abacus-frame" class="abacus-frame"></div>
         <button id="btn-reveal" class="reveal-btn" onclick="revealAbacus()" style="display:none">👁️ Besoin d'une aide visuelle ?</button>
       </div>
-      
       <div class="control-panel" id="side-panel">
         <div id="input-zone">
-          <input type="number" id="input-val" placeholder="?" inputmode="numeric">
-          <button id="btn-action" class="btn-ui" onclick="handleMainAction()">Vérifier</button>
+          <input type="number" id="input-val" placeholder="?">
+          <button id="btn-action" onclick="handleMainAction()">Vérifier</button>
         </div>
       </div>
     </div>
-
     <div id="feedback"></div>
   </div>
 </div>
-
 <canvas id="draw-layer"></canvas>
-
 <script>
-  let n1 = 0, n2 = 0, targetRes = 0;
-  let goodScore = 0, badScore = 0, isAnswered = false;
-  let currentScale = 1, states = []; 
-  let deck = [];
-  
-  // DESSIN
-  let isPen = false;
-  const canvas = document.getElementById('draw-layer');
-  const ctx = canvas.getContext('2d');
-  
-  const BEAD_W = 38;
-  const frame = document.getElementById('abacus-frame');
-  const taskDiv = document.getElementById('task-display');
-  const inputVal = document.getElementById('input-val');
-  const btnAction = document.getElementById('btn-action');
-  const feedback = document.getElementById('feedback');
-  const layout = document.getElementById('game-layout');
-  const sidePanel = document.getElementById('side-panel');
-  const scaler = document.getElementById('scaler');
+  let n1=0, n2=0, targetRes=0, states=[], deck=[], isAnswered=false;
+  let goodScore=0, badScore=0;
+  const frame = document.getElementById('abacus-frame'), BEAD_W=38;
+  const canvas = document.getElementById('draw-layer'), ctx = canvas.getContext('2d');
+  let isPen = false, drawing = false;
 
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#ffffff'; 
-    ctx.lineWidth = 4;
-  }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#fff'; ctx.lineWidth=4; }
+  window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-  function togglePen() {
-    isPen = !isPen;
-    const btn = document.getElementById('btn-pen');
-    if (isPen) {
-        btn.classList.add('active');
-        canvas.classList.add('active');
-    } else {
-        btn.classList.remove('active');
-        canvas.classList.remove('active');
-    }
-  }
+  function togglePen() { isPen = !isPen; document.getElementById('btn-pen').classList.toggle('active', isPen); canvas.classList.toggle('active', isPen); }
+  function clearDraw() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+  canvas.addEventListener('mousedown', (e) => { if(!isPen)return; drawing=true; ctx.beginPath(); ctx.moveTo(e.clientX, e.clientY); });
+  canvas.addEventListener('mousemove', (e) => { if(!drawing||!isPen)return; ctx.lineTo(e.clientX, e.clientY); ctx.stroke(); });
+  canvas.addEventListener('mouseup', () => drawing=false);
+  canvas.addEventListener('touchstart', (e) => { if(!isPen)return; drawing=true; ctx.beginPath(); ctx.moveTo(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  canvas.addEventListener('touchmove', (e) => { if(!drawing||!isPen)return; e.preventDefault(); ctx.lineTo(e.touches[0].clientX, e.touches[0].clientY); ctx.stroke(); }, {passive:false});
+  canvas.addEventListener('touchend', () => drawing=false);
 
-  function clearDraw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  let drawing = false;
-  const getPos = (e) => {
-    if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    return { x: e.clientX, y: e.clientY };
-  }
-  const startDraw = (e) => {
-    if (!isPen) return;
-    drawing = true;
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-  };
-  const moveDraw = (e) => {
-    if (!drawing || !isPen) return;
-    e.preventDefault(); 
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  };
-  const endDraw = () => drawing = false;
-
-  canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('mousemove', moveDraw);
-  canvas.addEventListener('mouseup', endDraw);
-  canvas.addEventListener('touchstart', startDraw, {passive: false});
-  canvas.addEventListener('touchmove', moveDraw, {passive: false});
-  canvas.addEventListener('touchend', endDraw);
-
-  function updateMode() {
-    deck = [];
-    goodScore = 0; badScore = 0;
-    document.getElementById('count-good').innerText = "0";
-    document.getElementById('count-bad').innerText = "0";
-    clearDraw(); 
-    initGame();
-  }
-
-  // --- LOGIQUE LE GRIGNOTEUR (SOUSTRACTION) ---
   function buildDeck(mode) {
     deck = [];
     if (mode === 20) {
-        // Start n1 entre 11 et 16 (pour permettre 16-7)
-        // Max subtract 7.
-        for (let a = 11; a <= 16; a++) {
-            let u = a % 10;
-            // On veut b > u (pour casser la dizaine) et b <= 7
-            for (let b = 2; b <= 7; b++) {
-                if (b > u) {
-                    deck.push([a, b]);
-                }
-            }
-        }
-        // Double pour volume
-        let temp = [...deck];
-        deck = deck.concat(temp);
-
+      // Pour Boulier 20 : n1 de 11 à 16. Unités de n2 (u2) doivent grignoter u1.
+      // u2 va de 2 à 7. u2 > u1.
+      // On génère TOUTES les combinaisons possibles pour éviter les séries bizarres.
+      for(let start=11; start<=16; start++) {
+          let u1 = start % 10;
+          for(let sub=2; sub<=7; sub++) {
+              if (sub > u1 && (start - sub) >= 4) { // On garde un résultat raisonnable
+                  deck.push([start, sub]);
+              }
+          }
+      }
+      // On triple le deck pour avoir de la durée
+      deck = [...deck, ...deck, ...deck];
     } else {
-        // Mode 100
-        for (let i = 0; i < 25; i++) {
-            let a = Math.floor(Math.random() * 80) + 12; // Start > 10
-            let u = a % 10;
+      // Boulier 100 avec Soustraction de Dizaines possible
+      for(let i=0; i<30; i++) {
+        // 1. On choisit n1 (ex: 62)
+        // Il faut que u1 permette un grignotage (u1 doit être < 7 pour qu'on puisse trouver un u2 entre 2 et 7 qui est > u1)
+        let a = Math.floor(Math.random() * 80) + 20; 
+        let u1 = a % 10;
+        if (u1 >= 7) a -= (u1 - Math.floor(Math.random()*5)); // Force u1 petit (0-4)
+        u1 = a % 10;
+
+        // 2. On choisit u2 (l'unité à soustraire) qui doit être > u1 et <= 7
+        let possibleU2 = [];
+        for(let u=2; u<=7; u++) { if(u > u1) possibleU2.push(u); }
+        
+        if(possibleU2.length > 0) {
+            let u2 = possibleU2[Math.floor(Math.random()*possibleU2.length)];
             
-            // On force u petit pour le grignotage
-            if (u > 6) { // Ajustement si on va jusqu'à -7, u peut être 6
-                 a = a - (u - Math.floor(Math.random()*4)); 
-            }
+            // 3. On choisit les dizaines à soustraire (d2)
+            // n2 doit être inférieur à n1
+            // n2 = (d2 * 10) + u2
+            let maxTens = Math.floor((a - u2) / 10);
+            let d2 = Math.floor(Math.random() * (maxTens + 1)); // Peut être 0 (juste unités) ou plus
             
-            u = a % 10;
-            // b > u et b <= 7
-            let possibleBs = [];
-            for(let b=2; b<=7; b++){
-                if(b > u) possibleBs.push(b);
-            }
-            
-            if(possibleBs.length > 0) {
-                let b = possibleBs[Math.floor(Math.random()*possibleBs.length)];
-                deck.push([a, b]);
-            }
+            let b = d2 * 10 + u2;
+            if (b > 0) deck.push([a, b]);
         }
+      }
     }
-    
-    // Mélange
+    // Mélange Fisher-Yates
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
   }
 
-  function drawCard(mode) {
-    if (deck.length === 0) buildDeck(mode);
-    return deck.pop();
-  }
-
+  function updateMode() { deck=[]; goodScore=0; badScore=0; document.getElementById('count-good').innerText="0"; document.getElementById('count-bad').innerText="0"; clearDraw(); initGame(); }
+  
   function initGame() {
     const mode = parseInt(document.getElementById('mode-select').value);
     const level = parseInt(document.getElementById('level-select').value);
-    
-    // Reset État
-    isAnswered = false; 
-    feedback.innerText = ""; feedback.style.transform = "scale(1)";
-    inputVal.value = "";
-    document.getElementById('btn-reveal').style.display = "none";
+    isAnswered=false; document.getElementById('feedback').innerText=""; 
+    document.getElementById('input-val').value=""; 
+    document.getElementById('btn-reveal').style.display="none";
     frame.classList.remove('hidden-abacus');
-
-    // Reset Bouton
-    btnAction.innerText = "Vérifier";
-    btnAction.style.background = "var(--accent)"; 
     
-    const pair = drawCard(mode);
-    n1 = pair[0];
-    n2 = pair[1];
-    targetRes = n1 - n2;
+    document.getElementById('btn-action').innerText = "Vérifier";
+    document.getElementById('btn-action').style.background = "var(--accent)";
 
-    taskDiv.innerHTML = `<span>${n1}</span> <span class="operator">-</span> <span>${n2}</span>`;
+    if(deck.length===0) buildDeck(mode);
+    const card = deck.pop();
+    n1 = card[0]; n2 = card[1]; targetRes = n1 - n2;
 
-    let rowCount = (mode === 20) ? 2 : 10;
-    states = Array(rowCount).fill(0);
-
-    buildAbacus(rowCount);
-
-    // --- Gestion Niveaux ---
-    if (level === 1) {
-        setNumberOnAbacus(n1, rowCount);
-    } else {
-        setNumberOnAbacus(0, rowCount);
-        if (level === 3) {
-            frame.classList.add('hidden-abacus');
-            document.getElementById('btn-reveal').style.display = "block";
-        }
+    document.getElementById('task-display').innerHTML = `<span>${n1}</span> <span class="operator">-</span> <span>${n2}</span>`;
+    
+    let rows = (mode===20)?2:10;
+    states = Array(rows).fill(0);
+    buildAbacus(rows);
+    
+    if(level===1) setAbacus(n1, rows);
+    else {
+        setAbacus(0, rows);
+        if(level===3) { frame.classList.add('hidden-abacus'); document.getElementById('btn-reveal').style.display="block"; }
     }
-
-    if (mode === 100) {
-        layout.style.flexDirection = 'row';
-        sidePanel.style.marginTop = '0px';
-        scaler.style.marginTop = '15px'; // Collé au menu
-    } else {
-        layout.style.flexDirection = 'column';
-        sidePanel.style.marginTop = '5px';
-        scaler.style.marginTop = '10px';
-    }
-
-    setTimeout(() => inputVal.focus(), 100);
-    autoScale();
+    
+    if(mode===100) { document.getElementById('game-layout').style.flexDirection='row'; document.getElementById('side-panel').style.marginTop='0'; document.getElementById('scaler').style.marginTop='15px'; }
+    else { document.getElementById('game-layout').style.flexDirection='column'; document.getElementById('side-panel').style.marginTop='5px'; document.getElementById('scaler').style.marginTop='10px'; }
+    
+    autoScale(); setTimeout(()=>document.getElementById('input-val').focus(),100);
   }
 
-  function handleMainAction() {
-    if (isAnswered) {
-        nextQuestion();
-    } else {
-        checkAction();
-    }
-  }
+  function handleMainAction() { if(isAnswered) initGame(); else check(); }
 
-  function checkAction() {
-    const level = parseInt(document.getElementById('level-select').value);
-    const valInput = parseInt(inputVal.value);
-    
-    if (isNaN(valInput)) return;
-
-    if (valInput !== targetRes) {
-        badScore++; document.getElementById('count-bad').innerText = badScore;
-        feedback.innerHTML = "Essaie encore ! ❌";
-        feedback.style.color = "var(--error)";
+  function check() {
+    let v = parseInt(document.getElementById('input-val').value);
+    if(isNaN(v)) return;
+    if(v !== targetRes) {
+        badScore++; document.getElementById('count-bad').innerText=badScore;
+        document.getElementById('feedback').innerHTML="Essaie encore ! ❌";
+        document.getElementById('feedback').style.color="var(--error)";
         return;
     }
-
-    if (level !== 3) {
-        const currentBeads = states.reduce((a, b) => a + b, 0);
-        if (currentBeads !== targetRes) {
-            feedback.innerHTML = "Réponse juste, mais...<br>Vérifie ton boulier 🧮";
-            feedback.style.color = "#ff9800";
-            return;
+    // Check Boulier (sauf mental)
+    if(parseInt(document.getElementById('level-select').value) !== 3) {
+        let beads = states.reduce((a,b)=>a+b,0);
+        // Niveau 1 & 2 : Pour une soustraction, le boulier doit montrer le RESTE
+        if(beads !== targetRes) {
+             document.getElementById('feedback').innerHTML="Réponse juste, mais...<br>Le boulier doit montrer le reste 🧮";
+             document.getElementById('feedback').style.color="var(--warning)";
+             return;
         }
     }
-
-    goodScore++; document.getElementById('count-good').innerText = goodScore;
-    feedback.innerHTML = "Bravo ! ✅";
-    feedback.style.color = "var(--success)";
-    feedback.style.transform = "scale(1.2)";
+    goodScore++; document.getElementById('count-good').innerText=goodScore;
+    document.getElementById('feedback').innerHTML="Bravo ! ✅";
+    document.getElementById('feedback').style.color="var(--success)";
     
-    // Montre le résultat final sur le boulier
-    setNumberOnAbacus(targetRes, states.length);
+    setAbacus(targetRes, states.length);
     frame.classList.remove('hidden-abacus');
     
-    // ETAT SUIVANT
-    isAnswered = true;
-    btnAction.innerText = "Suivant ➔";
-    btnAction.style.background = "var(--success)";
+    isAnswered=true;
+    document.getElementById('btn-action').innerText = "Suivant ➔";
+    document.getElementById('btn-action').style.background = "var(--success)";
   }
 
-  function buildAbacus(rowCount) {
-    frame.innerHTML = '';
-    for (let r = 0; r < rowCount; r++) {
-      const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
-      row.innerHTML = '<div class="rod"></div>';
-      for (let b = 0; b < 10; b++) {
-        const bead = document.createElement('div');
-        const standardRed = (b < 5);
-        bead.className = `bead ${standardRed ? 'red' : 'white'}`;
-        bead.dataset.idx = b;
-        bead.onpointerdown = startDrag;
-        row.appendChild(bead);
-      }
-      frame.appendChild(row);
+  function buildAbacus(rows) {
+    frame.innerHTML="";
+    for(let r=0; r<rows; r++) {
+        let row = document.createElement('div'); row.className='row'; row.dataset.r=r;
+        row.innerHTML='<div class="rod"></div>';
+        for(let i=0; i<10; i++) {
+            let b=document.createElement('div');
+            b.className = `bead ${(i<5)?'red':'white'}`;
+            b.dataset.i=i;
+            b.onpointerdown=startDrag;
+            row.appendChild(b);
+        }
+        frame.appendChild(row);
     }
     updateBeads(false);
   }
 
-  function setNumberOnAbacus(num, rowCount) {
-    let rem = num;
-    for (let r = 0; r < rowCount; r++) {
-        let take = Math.min(10, rem);
-        states[r] = take;
-        rem -= take;
-    }
-    updateBeads(true); 
+  function setAbacus(num, rows) {
+    let rem=num;
+    for(let r=0; r<rows; r++) { let n=Math.min(10,rem); states[r]=n; rem-=n; }
+    updateBeads(true);
   }
-
-  function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
-
-  let activeDrag = null;
-  function startDrag(e) {
-    if (isAnswered || isPen) return; 
-    const bead = e.target; bead.setPointerCapture(e.pointerId);
-    activeDrag = { rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
-  }
-  window.addEventListener('pointermove', (e) => {
-    if (!activeDrag) return;
-    const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
-    const dx = (e.clientX - startX) / currentScale;
-    const beads = rowEl.querySelectorAll('.bead');
-    if (beadIdx >= states[rowIdx]) { for (let i = states[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true); }
-    else { for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false); }
-  });
-  function moveVisual(b, idx, dx, fromRight) {
-    let base = fromRight ? (820 - (10 - idx) * BEAD_W) : (idx * BEAD_W);
-    b.style.transition = 'none';
-    b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
-  }
-  window.addEventListener('pointerup', () => {
-    if (!activeDrag) return;
-    const { rowIdx, beadIdx, rowEl } = activeDrag;
-    const beads = rowEl.querySelectorAll('.bead');
-    const currentPos = parseFloat(beads[beadIdx].style.left);
-    if (beadIdx >= states[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
-    else { if (currentPos > 410 - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
-    activeDrag = null; updateBeads(true);
-  });
-  function updateBeads(animate) {
-    frame.querySelectorAll('.row').forEach((row, r) => {
-      row.querySelectorAll('.bead').forEach((b, i) => {
-        b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
-        b.style.left = (i < states[r]) ? (i * BEAD_W) + "px" : (820 - (10 - i) * BEAD_W) + "px";
-      });
+  
+  function updateBeads(anim) {
+    Array.from(frame.children).forEach((row, r) => {
+        Array.from(row.querySelectorAll('.bead')).forEach((b, i) => {
+            b.style.transition = anim ? 'left 0.2s' : 'none';
+            b.style.left = (i < states[r]) ? (i*38)+'px' : (820-(10-i)*38)+'px';
+        });
     });
   }
 
-  function nextQuestion() { initGame(); }
-
-  function autoScale() {
-    const availableW = window.innerWidth - 40;
-    const availableH = window.innerHeight - 80;
-    const mode = parseInt(document.getElementById('mode-select').value);
-    
-    // Zoom forcé en mode 20
-    const contentW = mode === 100 ? 1300 : 880; 
-    const contentH = mode === 100 ? 850 : 700;
-    
-    currentScale = Math.min(1.0, availableW / contentW, availableH / contentH);
-    document.getElementById('scaler').style.transform = `scale(${currentScale})`;
+  let drag=null;
+  function startDrag(e) { if(isAnswered||isPen)return; let b=e.target; b.setPointerCapture(e.pointerId); drag={r:parseInt(b.parentElement.dataset.r), i:parseInt(b.dataset.i), el:b.parentElement, x:e.clientX}; }
+  window.addEventListener('pointermove', (e)=>{
+    if(!drag)return; 
+    let dx=(e.clientX-drag.x)/currentScale, beads=drag.el.querySelectorAll('.bead');
+    if(drag.i >= states[drag.r]) { for(let k=states[drag.r]; k<=drag.i; k++) moveVis(beads[k], k, dx, true); }
+    else { for(let k=drag.i; k<states[drag.r]; k++) moveVis(beads[k], k, dx, false); }
+  });
+  window.addEventListener('pointerup', ()=>{
+    if(!drag)return; 
+    let beads=drag.el.querySelectorAll('.bead'), pos=parseFloat(beads[drag.i].style.left);
+    if(drag.i>=states[drag.r]) { if(pos < 410+drag.i*5) states[drag.r]=drag.i+1; }
+    else { if(pos > 410-(10-drag.i)*5) states[drag.r]=drag.i; }
+    drag=null; updateBeads(true);
+  });
+  function moveVis(b, i, dx, fromRight) {
+    let base = fromRight ? (820-(10-i)*38) : (i*38);
+    b.style.transition='none'; b.style.left = Math.max(i*38, Math.min(820-(10-i)*38, base+dx))+'px';
   }
 
-  window.addEventListener('resize', autoScale);
-  inputVal.onkeydown = (e) => { if(e.key === 'Enter') handleMainAction(); };
-  updateMode(); 
+  function autoScale() {
+    let w=window.innerWidth, h=window.innerHeight;
+    let mw=(document.getElementById('mode-select').value==100)?1300:880;
+    let mh=(document.getElementById('mode-select').value==100)?850:700;
+    currentScale = Math.min(1, (w-40)/mw, (h-80)/mh);
+    document.getElementById('scaler').style.transform = `scale(${currentScale})`;
+  }
+  document.getElementById('input-val').onkeydown = (e)=>{ if(e.key==='Enter') handleMainAction(); };
+  updateMode();
 </script>
 </body>
 </html>
