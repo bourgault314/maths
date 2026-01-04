@@ -3,11 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Rekenrek Comparateur - V14 Réparé</title>
+<title>Rekenrek Comparateur - Final V26</title>
 <style>
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+    --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
+    --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
+  }
+
+  body.blue-mode { 
+    --bead-alt: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); 
   }
 
   body, html { 
@@ -21,8 +27,10 @@
     position: relative; width: 100%; min-height: 60px;
     background: var(--ui); display: flex; align-items: center; 
     justify-content: space-between; padding: 0 20px; box-sizing: border-box;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000;
   }
+
+  .toolbar-left { display: flex; gap: 10px; align-items: center; }
 
   .app-title { font-weight: bold; font-size: 24px; color: white; text-transform: uppercase; letter-spacing: 1px; }
   .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
@@ -34,11 +42,19 @@
     border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
   }
 
+  .btn-tool {
+    background: #444; color: white; border: 1px solid #555; padding: 8px 12px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;
+  }
+  .btn-tool:hover { background: #555; }
+  .btn-tool.active { background: var(--accent); border-color: white; }
+
   /* CONTAINER PRINCIPAL */
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 65px);
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; overflow: hidden;
+    z-index: 5;
   }
 
   #scaler { 
@@ -58,7 +74,6 @@
     display: flex; align-items: center; 
   }
   
-  /* CHIFFRES FLOTTANTS (NIV 3) */
   .abacus-label { 
     position: absolute; top: -110px; left: 0; width: 100%;
     font-size: 90px; font-weight: 900; color: white; 
@@ -83,7 +98,7 @@
   .curtain {
     position: absolute; right: -30px; top: 0; bottom: 0;
     background: #111; border-left: 5px solid #333;
-    z-index: 500; /* Z-Index très haut pour être sûr d'être au dessus */
+    z-index: 500; 
     width: 0; pointer-events: none;
     transition: width 0.3s ease-out;
   }
@@ -98,8 +113,8 @@
   }
   .bead.draggable { cursor: grab; }
   .bead.draggable:active { cursor: grabbing; }
-  .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
-  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+  .bead.red { background: var(--bead-red); }
+  .bead.white { background: var(--bead-alt); }
 
   /* BOUTONS COMPARAISON */
   .comp-buttons { 
@@ -117,15 +132,15 @@
   .btn-comp.selected-ok { background: var(--success); border-color: #fff; box-shadow: 0 8px 0 #1b5e20; }
   .btn-comp.selected-bad { background: var(--error); border-color: #fff; box-shadow: 0 8px 0 #b71c1c; }
 
-  /* OVERLAY */
+  /* OVERLAY (FEEDBACK) */
   #overlay-feedback {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.90); border-radius: 20px;
+    background: rgba(0, 0, 0, 0.90); border-radius: 30px;
     padding: 30px 50px; display: none; flex-direction: column; align-items: center; gap: 15px;
     z-index: 5000; border: 2px solid white; box-shadow: 0 0 40px rgba(0,0,0,0.8);
   }
   
-  #feedback-text { font-size: 50px; font-weight: 800; color: white; white-space: nowrap; margin-bottom: 10px;}
+  #feedback-text { font-size: 100px; font-weight: 900; color: var(--success); line-height: 1; margin-bottom: 20px; text-align: center;}
   
   #btn-next-overlay {
     background: var(--success); color: white; border: none; padding: 15px 50px;
@@ -135,24 +150,34 @@
   }
   #btn-next-overlay:active { transform: translateY(4px); box-shadow: 0 3px 0 #1b5e20; }
 
+  /* CANVAS DESSIN */
+  #draw-layer {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 1000; pointer-events: none; 
+  }
+  #draw-layer.active { pointer-events: auto; cursor: crosshair; }
+
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <div style="display:flex; gap:10px;">
-    <select id="mode-select" onchange="initGame()">
+  <div class="toolbar-left">
+    <select id="mode-select" onchange="manualLevelChange()">
       <option value="10" id="opt-10">Mode 10</option>
       <option value="20" selected>Mode 20</option>
       <option value="100">Mode 100</option>
     </select>
-    <select id="level-select" onchange="checkLevelMode(); initGame();">
-      <option value="1">Niveau 1</option>
-      <option value="2">Niveau 2</option>
-      <option value="3">Niveau 3</option>
-      <option value="4">Niveau 4</option>
-      <option value="5">Niveau 5</option>
+    <select id="level-select" onchange="manualLevelChange()">
+      <option value="1">Niv 1: Rangement + Cache</option>
+      <option value="2">Niv 2: Rangement + Pièges</option>
+      <option value="3">Niv 3: Mental (Chiffres)</option>
+      <option value="4">Niv 4: Désordre (Proches)</option>
+      <option value="5">Niv 5: Expert (Cache + Désordre)</option>
     </select>
+    <button class="btn-tool" onclick="toggleColorMode()" id="btn-color">🔵 Bleu</button>
+    <button class="btn-tool" onclick="togglePen()" id="btn-pen">✏️</button>
+    <button class="btn-tool" onclick="clearDraw()">🧽</button>
   </div>
   
   <div class="app-title">COMPARATEUR</div>
@@ -191,13 +216,15 @@
   </div>
 
   <div id="overlay-feedback">
-    <div id="feedback-text">Bonne réponse !</div>
-    <button id="btn-next-overlay" onclick="nextQuestion()">
+    <div id="feedback-text">✅</div>
+    <button id="btn-next-overlay" onclick="forceNextQuestion()">
       Suivant ➔
     </button>
   </div>
 
 </div>
+
+<canvas id="draw-layer"></canvas>
 
 <script>
   let valA, valB, lastA = -1, lastB = -1;
@@ -205,6 +232,8 @@
   let isAnswered = false;
   let currentScale = 1;
   let statesA = [], statesB = [];
+  let isBlue = false;
+  let autoNextTimer = null;
 
   const BEAD_W = 38; 
   
@@ -216,6 +245,50 @@
   const curtainB = document.getElementById('curtain-b');
   const overlay = document.getElementById('overlay-feedback');
   const feedbackText = document.getElementById('feedback-text');
+  const btnNextOverlay = document.getElementById('btn-next-overlay');
+
+  // --- DESSIN ---
+  let isPen = false;
+  const canvas = document.getElementById('draw-layer');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function togglePen() {
+    isPen = !isPen;
+    const btn = document.getElementById('btn-pen');
+    if (isPen) { btn.classList.add('active'); canvas.classList.add('active'); } 
+    else { btn.classList.remove('active'); canvas.classList.remove('active'); }
+  }
+  function clearDraw() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+  let drawing = false;
+  const getPos = (e) => {
+    if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+  const startDraw = (e) => { if (!isPen) return; drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); };
+  const moveDraw = (e) => { if (!drawing || !isPen) return; e.preventDefault(); const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); };
+  const endDraw = () => drawing = false;
+
+  canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', moveDraw); canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive: false}); canvas.addEventListener('touchmove', moveDraw, {passive: false}); canvas.addEventListener('touchend', endDraw);
+
+  // --- MODE BLEU ---
+  function toggleColorMode() {
+    isBlue = !isBlue;
+    document.body.classList.toggle('blue-mode');
+    document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
+  }
+
+  // --- JEU ---
 
   function checkLevelMode() {
     const level = parseInt(document.getElementById('level-select').value);
@@ -230,30 +303,47 @@
     }
   }
 
+  // Fonction appelée quand l'utilisateur change manuellement le niveau ou le mode
+  function manualLevelChange() {
+      scoreGood = 0; scoreBad = 0;
+      document.getElementById('count-good').innerText = 0;
+      document.getElementById('count-bad').innerText = 0;
+      checkLevelMode();
+      initGame();
+  }
+
   function initGame() {
     const mode = parseInt(document.getElementById('mode-select').value);
     const level = parseInt(document.getElementById('level-select').value);
     const rowCount = mode === 10 ? 1 : (mode === 20 ? 2 : 10);
     
+    // Reset
     isAnswered = false; 
+    clearTimeout(autoNextTimer);
     overlay.style.display = "none";
+    
+    // Reset message standard
+    feedbackText.innerText = "✅"; 
+    feedbackText.style.fontSize = "100px";
+    feedbackText.style.color = "var(--success)";
+    btnNextOverlay.innerText = "Suivant ➔";
+    btnNextOverlay.onclick = forceNextQuestion;
+
+    clearDraw(); 
     document.querySelectorAll('.btn-comp').forEach(b => {
         b.classList.remove('selected-ok', 'selected-bad');
     });
 
-    // --- GÉNÉRATION NOMBRES ---
     do {
       valA = Math.floor(Math.random() * (mode + 1));
-      valB = Math.floor(Math.random() * (mode + 1)); 
+      valB = Math.floor(Math.random() * (mode + 1));
 
-      if (level === 2) {
-          // Niveau 2 : Aléatoire pur (Juste éviter la répétition de question)
-      }
-      else if (level === 3) {
-          // Niveau 3 : Intelligent
+      // LOGIQUE DES NIVEAUX
+      if (level === 2 || level === 3) {
+          // NIVEAU 2 & 3 : Hasard + Cas Difficiles
           if (Math.random() < 0.4) { 
               const trapType = Math.floor(Math.random() * 4); 
-              if (trapType === 0) valB = valA;
+              if (trapType === 0) valB = valA; 
               else if (trapType === 1) valB = valA + (Math.random()>0.5 ? 1 : -1);
               else if (trapType === 2 && mode >= 20) { 
                   let u = valA % 10; let d = Math.floor(valA / 10);
@@ -267,11 +357,12 @@
           }
       } 
       else if (level === 1 || level === 4 || level === 5) {
-          // Proximité forcée
+          // NIVEAUX PROXIMITE
           let diffRange = (level === 5) ? 2 : 4; 
           let offset = Math.floor(Math.random() * (diffRange * 2 + 1)) - diffRange;
           valB = Math.max(0, Math.min(mode, valA + offset));
       }
+      
       valB = Math.max(0, Math.min(mode, valB));
     } while ((valA === lastA && valB === lastB)); 
     
@@ -282,14 +373,12 @@
     buildAbacus(frameA, rowCount, interactive, 'a');
     buildAbacus(frameB, rowCount, interactive, 'b');
 
-    // RESET VISUEL
     curtainA.style.width = "0"; curtainB.style.width = "0";
     labelA.innerText = ""; labelB.innerText = "";
 
-    // APPLICATION NIVEAUX
+    // CONFIGURATION VISUELLE
     if (level === 1) {
       setAbacus(frameA, valA, 'standard'); setAbacus(frameB, valB, 'standard');
-      // LE CACHE EST ACTIVÉ ICI :
       curtainA.style.width = "435px"; curtainB.style.width = "435px";
     } 
     else if (level === 2) {
@@ -303,7 +392,6 @@
     } 
     else if (level === 5) {
       setAbacus(frameA, valA, 'scattered'); setAbacus(frameB, valB, 'scattered');
-      // LE CACHE EST ACTIVÉ ICI AUSSI :
       curtainA.style.width = "435px"; curtainB.style.width = "435px";
     }
 
@@ -311,8 +399,6 @@
   }
 
   function buildAbacus(frame, rowCount, isDraggable, side) {
-    // CORRECTION MAJEURE : On ne vide pas innerHTML (sinon on tue le rideau)
-    // On enlève seulement les rangées précédentes
     frame.querySelectorAll('.row').forEach(r => r.remove());
 
     for (let r = 0; r < rowCount; r++) {
@@ -374,13 +460,19 @@
       scoreGood++; document.getElementById('count-good').innerText = scoreGood;
       if(btnClicked) btnClicked.classList.add('selected-ok');
       
-      feedbackText.innerText = "Bonne réponse !";
-      feedbackText.style.color = "var(--success)";
-      
+      // LEVEL UP AUTOMATIQUE (20 bonnes réponses)
+      if (scoreGood >= 20) {
+          handleLevelUp();
+          return;
+      }
+
       curtainA.style.width = "0"; curtainB.style.width = "0";
       
       isAnswered = true;
-      setTimeout(() => { overlay.style.display = "flex"; }, 300);
+      overlay.style.display = "flex";
+      
+      // Timer automatique : 1 seconde (Rapidité)
+      autoNextTimer = setTimeout(initGame, 1000);
 
     } else {
       scoreBad++; document.getElementById('count-bad').innerText = scoreBad;
@@ -392,14 +484,52 @@
     }
   }
 
-  function nextQuestion() { initGame(); }
+  function handleLevelUp() {
+      const currentLevel = parseInt(document.getElementById('level-select').value);
+      
+      // Si niveau max atteint
+      if (currentLevel >= 5) {
+          feedbackText.innerText = "CHAMPION ! 🏆";
+          feedbackText.style.fontSize = "60px";
+          btnNextOverlay.innerText = "Rejouer";
+          btnNextOverlay.onclick = () => location.reload();
+          overlay.style.display = "flex";
+          return;
+      }
 
-  // --- DRAG (NIV 3) ---
+      // Sinon passage niveau suivant
+      feedbackText.innerText = "NIVEAU SUIVANT ! 🚀";
+      feedbackText.style.fontSize = "50px";
+      feedbackText.style.color = "var(--accent)";
+      btnNextOverlay.style.display = "none"; // On cache le bouton, c'est auto
+      overlay.style.display = "flex";
+
+      // Pause pour lire le message
+      setTimeout(() => {
+          document.getElementById('level-select').value = currentLevel + 1;
+          btnNextOverlay.style.display = "flex"; // Réafficher pour la suite
+          manualLevelChange(); // Reset score et start
+      }, 1500);
+  }
+
+  function forceNextQuestion() { 
+      if(autoNextTimer) clearTimeout(autoNextTimer);
+      initGame(); 
+  }
+
+  // --- DRAG & DROP (Niveau 3) ---
   let activeDrag = null;
   function startDrag(e, side) {
+    if (isPen) return; 
     const bead = e.target; 
     bead.setPointerCapture(e.pointerId);
-    activeDrag = { side, rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
+    activeDrag = { 
+        side, 
+        rowIdx: parseInt(bead.parentElement.dataset.row), 
+        beadIdx: parseInt(bead.dataset.idx), 
+        rowEl: bead.parentElement, 
+        startX: e.clientX 
+    };
   }
   
   window.addEventListener('pointermove', (e) => {
@@ -464,6 +594,11 @@
   }
 
   window.addEventListener('resize', autoScale);
+  // Support Touche Entrée
+  document.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && isAnswered) forceNextQuestion();
+  });
+
   initGame(); 
 </script>
 </body>
