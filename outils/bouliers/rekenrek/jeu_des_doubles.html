@@ -6,61 +6,68 @@
 <title>Rekenrek - Le Jeu des Doubles Pro</title>
 <style>
   :root {
-    /* Un noir profond unique pour éviter les démarcations */
-    --bg: #0d0d0d; 
-    --wood: #8d6e63; --rod: #666; --ui: #1a1a1a;
-    --accent: #2196f3; --success: #4caf50; --error: #f44336;
-    --bead-red: radial-gradient(circle at 30% 30%, #ff5252, #a00);
+    --bg: #1a1a1a; 
+    --wood: #b08d57; 
+    --rod: #888; --ui: #2a2a2a;
+    --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+    --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
   }
 
-  body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #448aff, #0d47a1); }
+  body.blue-mode { --bead-alt: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1); }
 
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
-    background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif;
+    background: var(--bg); color: white; font-family: sans-serif;
     overflow: hidden; touch-action: none;
   }
 
-  /* BARRE D'OUTILS ÉPURÉE */
   .toolbar {
-    height: 65px; background: var(--ui); display: flex; align-items: center; 
-    justify-content: space-between; padding: 0 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 1000;
+    position: relative; width: 100%; min-height: 60px;
+    background: var(--ui); display: flex; align-items: center; 
+    justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
   }
 
-  .score-board { display: flex; gap: 25px; font-weight: bold; font-size: 24px; }
+  .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
   .score-good { color: var(--success); }
   .score-bad { color: var(--error); }
 
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 65px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; overflow: hidden;
   }
 
   #scaler { display: flex; flex-direction: column; align-items: center; transform-origin: center center; }
 
-  /* AFFICHAGE DES NOMBRES (SANS FOND GRIS DISCORDANT) */
   #task-display {
-    font-size: 85px; font-weight: 900; color: var(--accent);
-    margin-bottom: 20px; text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+    font-size: 80px; font-weight: bold; color: var(--accent);
+    margin-bottom: 20px; text-shadow: 0 4px 10px black;
+    background: rgba(255,255,255,0.05); padding: 10px 40px; border-radius: 20px;
     min-height: 100px; display: flex; align-items: center; justify-content: center;
   }
 
   #game-layout { display: flex; align-items: center; justify-content: center; gap: 40px; }
 
-  /* ABAQUE (SANS LIGNES DE DÉMARCATION) */
   .abacus-frame {
     position: relative; width: 820px;
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
-    box-sizing: content-box; background: var(--bg); /* Même noir que le fond */
+    box-sizing: content-box; background: transparent;
   }
 
-  .row { position: relative; height: 54px; width: 100%; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .abacus-frame::before, .abacus-frame::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+    background: var(--wood); z-index: 20; pointer-events: none;
+  }
+  .abacus-frame::before { left: -30px; }
+  .abacus-frame::after { right: -30px; }
+
+  .row { position: relative; height: 56px; width: 100%; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
   
   .bead {
-    position: absolute; width: 44px; height: 44px; border-radius: 50%;
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
     top: 50%; transform: translateY(-50%); z-index: 5;
     box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
     cursor: pointer;
@@ -68,23 +75,25 @@
   .bead.red { background: var(--bead-red); }
   .bead.white { background: var(--bead-alt); }
 
-  /* PANNEAU DE CONTRÔLE */
-  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+  
+  /* Zone input centrée verticalement comme sur Presque-Doubles */
+  #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
   #input-val {
     width: 200px; height: 110px; font-size: 75px; font-weight: bold;
-    text-align: center; border-radius: 20px; border: 5px solid #333;
+    text-align: center; border-radius: 20px; border: 6px solid #444;
     background: #000; color: var(--accent); outline: none;
   }
 
-  /* KEYPAD */
-  .keypad { display: grid; gap: 12px; width: 680px; justify-content: center; }
+  .keypad { display: grid; gap: 12px; width: 700px; justify-content: center; margin-top: 10px; }
   .key {
-    background: #2a2a2a; border: none; color: white; height: 75px; min-width: 75px;
-    border-radius: 15px; font-size: 30px; font-weight: bold; cursor: pointer;
-    box-shadow: 0 5px 0 #000; transition: transform 0.1s;
+    background: #444; border: none; color: white; height: 80px; min-width: 80px;
+    border-radius: 12px; font-size: 32px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 5px 0 #222;
   }
-  .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #000; }
-  .key.correct { background: var(--success) !important; box-shadow: 0 5px 0 #1b5e20; animation: pop 0.4s ease; }
+  .key:active { transform: translateY(3px); box-shadow: 0 2px 0 #222; }
+  .key.correct { background: var(--success) !important; box-shadow: 0 5px 0 #2e7d32; }
 
   #feedback { height: 80px; font-size: 48px; font-weight: bold; margin-top: 10px; transition: transform 0.3s; }
 
@@ -94,26 +103,19 @@
     visibility: hidden; box-shadow: 0 8px 0 #1b5e20; margin-top: 20px;
   }
 
-  /* STYLISATION DES MENUS ET BOUTONS UI */
   select, .btn-ui {
-    background: #2a2a2a; color: white; border: 1px solid #444; padding: 10px 15px;
-    border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer;
+    background: #444; color: white; border: none; padding: 12px;
+    border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
   }
 
   .hidden-abacus { opacity: 0.03; pointer-events: none; }
-  .reveal-btn { font-size: 16px; color: #666; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 15px; }
-
-  @keyframes pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
+  .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 15px; }
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <div style="display:flex; gap:12px;">
+  <div class="toolbar-group">
     <select id="level-select" onchange="initGame()">
       <optgroup label="Doubles 0-10">
         <option value="1">Niveau 1 : Visuel</option>
@@ -131,10 +133,10 @@
         <option value="9">Niveau 9 : Mental</option>
       </optgroup>
     </select>
-    <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🎨 Couleurs</button>
+    <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
   </div>
   
-  <div style="font-weight: 900; font-size: 26px; color: white; letter-spacing: 1px;">REKENREK DES DOUBLES</div>
+  <div style="font-weight: bold; font-size: 24px; color: white;">JEU DES DOUBLES</div>
   
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -153,27 +155,50 @@
       </div>
       
       <div class="control-panel" id="side-panel">
-        <div id="input-zone" style="display:flex; flex-direction:column; gap:12px;">
+        <div id="input-zone">
           <input type="number" id="input-val" placeholder="?" inputmode="numeric">
-          <button class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px;" onclick="checkInput()">Vérifier</button>
+          <button class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px; width:100%;" onclick="checkInput()">Vérifier</button>
         </div>
       </div>
     </div>
 
     <div id="feedback"></div>
     <div id="keypad" class="keypad" style="grid-template-columns: repeat(7, 1fr);"></div>
-    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant 🔄</button>
+    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant ➔</button>
   </div>
 </div>
 
 <script>
   let targetNum = -1, goodScore = 0, badScore = 0, isAnswered = false;
   let currentScale = 1, states = []; 
+  let deck = [];
 
   const frame = document.getElementById('abacus-frame');
   const inputVal = document.getElementById('input-val');
   const btnNext = document.getElementById('btn-next');
   const feedback = document.getElementById('feedback');
+  
+  const BEAD_W = 38;
+
+  // --- LOGIQUE DECK ---
+  function buildDeck(min, max) {
+    deck = [];
+    for(let i = min; i <= max; i++) {
+        deck.push(i);
+    }
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawCard(min, max) {
+    if (deck.length === 0 || (deck[0] < min || deck[0] > max)) {
+        buildDeck(min, max);
+    }
+    return deck.pop();
+  }
+  // --------------------
 
   function initGame() {
     const level = parseInt(document.getElementById('level-select').value);
@@ -187,7 +212,8 @@
     else if (level <= 6) { min = 11; max = 20; }
     else { min = 21; max = 50; }
 
-    targetNum = Math.floor(Math.random() * (max - min + 1)) + min;
+    targetNum = drawCard(min, max);
+
     let rowCount = (level <= 3) ? 2 : (level <= 6 ? 4 : 10);
     states = Array(rowCount).fill(0);
     
@@ -198,6 +224,7 @@
     if (level === 1 || level === 4 || level === 7) setDoubleOnAbacus(targetNum, rowCount);
     else if (isMental) { frame.classList.add('hidden-abacus'); document.getElementById('btn-reveal').style.display = "block"; }
 
+    // --- CORRECTION LAYOUT (identique à Presque-Doubles) ---
     if (level <= 3) {
       document.getElementById('keypad').style.display = 'grid';
       document.getElementById('side-panel').style.display = 'none';
@@ -205,6 +232,13 @@
     } else {
       document.getElementById('keypad').style.display = 'none';
       document.getElementById('side-panel').style.display = 'flex';
+      const layout = document.getElementById('game-layout');
+      
+      // Niv 4-6 (10-20) : Disposition COLONNE (Boulier au-dessus, Input en dessous)
+      // Niv 7-9 (20-50) : Disposition LIGNE (Boulier à gauche, Input à droite car boulier très haut)
+      if (level >= 7) layout.style.flexDirection = "row";
+      else layout.style.flexDirection = "column"; 
+      
       setTimeout(() => inputVal.focus(), 100);
     }
     autoScale();
@@ -257,24 +291,20 @@
     if (isAnswered) return;
     if (val === targetNum * 2) {
       goodScore++; document.getElementById('count-good').innerText = goodScore;
-      feedback.innerHTML = "EXCELLENT ! ⭐";
-      feedback.style.color = "var(--success)";
-      feedback.style.transform = "scale(1.3)";
+      feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! ✅</span>";
       if (element) element.classList.add('correct');
       frame.classList.remove('hidden-abacus');
       setDoubleOnAbacus(targetNum, states.length);
       isAnswered = true; btnNext.style.visibility = "visible";
     } else {
       badScore++; document.getElementById('count-bad').innerText = badScore;
-      feedback.innerHTML = "Réessaie encore ! ❌";
-      feedback.style.color = "var(--error)";
+      feedback.innerHTML = "<span style='color:var(--error)'>Essaie encore ! ❌</span>";
     }
   }
 
   function checkInput() { checkAnswer(parseInt(inputVal.value), null); }
   function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
 
-  // --- LOGIQUE DE GLISSE ORIGINALE RÉTABLIE ---
   let activeDrag = null;
   function startDrag(e) {
     if (isAnswered) return;
@@ -292,9 +322,9 @@
   });
 
   function moveVisual(b, idx, dx, fromRight) {
-    let base = fromRight ? (820 - (10 - idx) * 44) : (idx * 44);
+    let base = fromRight ? (820 - (10 - idx) * BEAD_W) : (idx * BEAD_W);
     b.style.transition = 'none';
-    b.style.left = Math.max(idx * 44, Math.min(820 - (10 - idx) * 44, base + dx)) + "px";
+    b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
   }
 
   window.addEventListener('pointerup', () => {
@@ -310,24 +340,26 @@
   function updateBeads(animate) {
     frame.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
-        b.style.transition = animate ? 'left 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28)' : 'none';
-        b.style.left = (i < states[r]) ? (i * 44) + "px" : (820 - (10 - i) * 44) + "px";
+        b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
+        b.style.left = (i < states[r]) ? (i * BEAD_W) + "px" : (820 - (10 - i) * BEAD_W) + "px";
       });
     });
   }
 
   function nextQuestion() { initGame(); }
 
+  /* CORRECTION : ZOOM CALQUÉ SUR PRESQUE-DOUBLES */
   function autoScale() {
-    const avW = window.innerWidth - 40;
-    const avH = window.innerHeight - 110;
+    const availableW = window.innerWidth - 40;
+    const availableH = window.innerHeight - 80;
     const level = parseInt(document.getElementById('level-select').value);
-    const contentW = (level >= 7) ? 1350 : 1050;
-    currentScale = Math.min(1.0, avW / contentW, avH / 850);
+    const contentW = (level >= 7) ? 1300 : 920;
+    const contentH = (level >= 7) ? 850 : 800;
+    currentScale = Math.min(1.0, availableW / contentW, availableH / contentH);
     document.getElementById('scaler').style.transform = `scale(${currentScale})`;
   }
 
-  window.onresize = autoScale;
+  window.addEventListener('resize', autoScale);
   inputVal.onkeydown = (e) => { if(e.key === 'Enter') isAnswered ? nextQuestion() : checkInput(); };
   initGame();
 </script>
