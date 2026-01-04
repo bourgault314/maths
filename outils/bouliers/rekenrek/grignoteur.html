@@ -275,44 +275,39 @@
   }
 
   // --- LOGIQUE LE GRIGNOTEUR (SOUSTRACTION) ---
-  // Critères : 
-  // 1. On doit casser la dizaine (Unités de n1 < n2)
-  // 2. n2 doit être compris entre 2 et 6 (Exclus 7, 8, 9)
   function buildDeck(mode) {
     deck = [];
     if (mode === 20) {
-        // Start n1 entre 11 et 15 (car 16-6=10 pas de cassure, 17-6=11 pas de cassure)
-        // Max subtract is 6.
-        for (let a = 11; a <= 15; a++) {
+        // Start n1 entre 11 et 16 (pour permettre 16-7)
+        // Max subtract 7.
+        for (let a = 11; a <= 16; a++) {
             let u = a % 10;
-            // On veut b > u (pour casser la dizaine) et b <= 6
-            for (let b = 2; b <= 6; b++) {
+            // On veut b > u (pour casser la dizaine) et b <= 7
+            for (let b = 2; b <= 7; b++) {
                 if (b > u) {
                     deck.push([a, b]);
                 }
             }
         }
-        // Pour avoir du volume, on double le deck
+        // Double pour volume
         let temp = [...deck];
         deck = deck.concat(temp);
 
     } else {
-        // Mode 100 : n1 quelconque, n2 entre 2 et 6, cassure de dizaine.
+        // Mode 100
         for (let i = 0; i < 25; i++) {
             let a = Math.floor(Math.random() * 80) + 12; // Start > 10
             let u = a % 10;
             
-            // On veut u petit (0, 1, 2, 3, 4) pour pouvoir grignoter
-            if (u > 4) {
-                 // Si u est grand (ex: 8), il faut b > 8 pour casser, or max b=6. Impossible.
-                 // Donc on force u à être petit.
-                 a = a - (u - Math.floor(Math.random()*4)); // Ramène u vers 0-3
+            // On force u petit pour le grignotage
+            if (u > 6) { // Ajustement si on va jusqu'à -7, u peut être 6
+                 a = a - (u - Math.floor(Math.random()*4)); 
             }
             
             u = a % 10;
-            // b doit être > u et b <= 6
+            // b > u et b <= 7
             let possibleBs = [];
-            for(let b=2; b<=6; b++){
+            for(let b=2; b<=7; b++){
                 if(b > u) possibleBs.push(b);
             }
             
@@ -364,10 +359,8 @@
 
     // --- Gestion Niveaux ---
     if (level === 1) {
-        // Niveau 1 : Le nombre de départ est posé. L'élève doit enlever n2.
         setNumberOnAbacus(n1, rowCount);
     } else {
-        // Niveau 2 & 3 : Départ à 0. L'élève construit puis enlève.
         setNumberOnAbacus(0, rowCount);
         if (level === 3) {
             frame.classList.add('hidden-abacus');
@@ -378,7 +371,7 @@
     if (mode === 100) {
         layout.style.flexDirection = 'row';
         sidePanel.style.marginTop = '0px';
-        scaler.style.marginTop = '85px'; 
+        scaler.style.marginTop = '15px'; // Collé au menu
     } else {
         layout.style.flexDirection = 'column';
         sidePanel.style.marginTop = '5px';
@@ -412,7 +405,6 @@
 
     if (level !== 3) {
         const currentBeads = states.reduce((a, b) => a + b, 0);
-        // Au niveau 1 et 2, le boulier doit montrer le RÉSULTAT final (les billes restantes)
         if (currentBeads !== targetRes) {
             feedback.innerHTML = "Réponse juste, mais...<br>Vérifie ton boulier 🧮";
             feedback.style.color = "#ff9800";
