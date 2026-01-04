@@ -6,15 +6,16 @@
 <title>Rekenrek Constructeur - Version Pro</title>
 <style>
   :root {
-    --bg: #1a1a1a; 
-    --wood: #b08d57;
-    --rod: #888; --ui: #2a2a2a;
+    --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
     --neutral: #444;
+    /* Billes principales (Rouges) */
     --bead-main: #ff5f5f; --bead-main-dark: #a00;
+    /* Billes secondaires (Blanches par défaut) */
     --bead-sec: #ffffff; --bead-sec-dark: #bbb;
   }
 
+  /* Thème : Secondaire devient Bleu */
   body.theme-blue {
     --bead-sec: #3498db; --bead-sec-dark: #2980b9;
   }
@@ -119,10 +120,11 @@
       <option value="letters">Lettres</option>
       <option value="voice">Vocal (Oral)</option>
     </select>
-    <button class="btn-small" onclick="toggleTheme()">🔵 Bleu</button>
+
+    <button class="btn-small" onclick="toggleTheme()">🎨 Blanc / Bleu</button>
   </div>
   
-  <div style="font-weight: bold; font-size: 18px; color: white;">REKENREK CONSTRUCTEUR</div>
+  <div style="font-weight: bold; font-size: 18px; color: #aaa;">REKENREK CONSTRUCTEUR</div>
   
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -150,6 +152,7 @@
   let currentScale = 1;
   let gameState = "IDLE";
   let isBlue = false;
+  let deck = []; // PAQUET DE CARTES
 
   const frame = document.getElementById('abacus-frame');
   const targetDiv = document.getElementById('target-display');
@@ -160,15 +163,35 @@
   const BEAD_W = 38, GAP = 0, FRAME_W = 820;
 
   function toggleTheme() {
-    isBlue = !isBlue;
     document.body.classList.toggle('theme-blue');
-    document.querySelector('.btn-small[onclick="toggleTheme()"]').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
   }
 
   function updateMode() {
     currentRange = parseInt(document.getElementById('mode-select').value);
     resetGame();
   }
+
+  // --- MOTEUR DECK (Anti-Répétition) ---
+  function buildDeck(max) {
+    deck = [];
+    for(let i = 0; i <= max; i++) {
+        deck.push(i);
+    }
+    // Mélange de Fisher-Yates
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawCard(max) {
+    // Si deck vide ou carte hors limites (changement de mode), on rebat
+    if (deck.length === 0 || deck[0] > max) {
+        buildDeck(max);
+    }
+    return deck.pop();
+  }
+  // -------------------------------------
 
   function resetGame() {
     gameState = "IDLE";
@@ -180,6 +203,9 @@
     actionBtn.classList.remove('btn-success');
     listenBtn.style.display = 'none';
     
+    // Initialisation du deck pour la nouvelle plage
+    buildDeck(currentRange);
+
     const rowCount = currentRange === 10 ? 1 : (currentRange === 20 ? 2 : 10);
     const layout = document.getElementById('game-layout');
     layout.style.flexDirection = (currentRange === 100) ? "row" : "column";
@@ -257,7 +283,9 @@
 
   function newChallenge() {
     gameState = "ACTIVE";
-    targetNumber = Math.floor(Math.random() * (currentRange + 1));
+    // UTILISATION DU DECK AU LIEU DE RANDOM
+    targetNumber = drawCard(currentRange);
+
     const mode = document.getElementById('display-mode').value;
     
     targetDiv.classList.remove('text-mode');
@@ -343,7 +371,6 @@
       goodScore++;
       document.getElementById('count-good').innerText = goodScore;
       feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! Bonne réponse. ✅</span>";
-      // Correction : Flèche droite pour Suivant
       actionBtn.innerText = "Suivant ➔";
       actionBtn.classList.add('btn-success');
       if(document.getElementById('display-mode').value === 'voice') targetDiv.innerText = targetNumber;
@@ -364,6 +391,7 @@
   }
 
   window.addEventListener('resize', autoScale);
+  buildDeck(currentRange); // Init Deck au démarrage
   updateMode();
 </script>
 </body>
