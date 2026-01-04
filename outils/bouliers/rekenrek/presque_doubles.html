@@ -8,7 +8,9 @@
   :root {
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
+    --bead-alt: #ffffff;
   }
+  body.blue-mode { --bead-alt: #2196f3; }
 
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -42,7 +44,7 @@
     min-height: 100px; display: flex; align-items: center; justify-content: center;
   }
 
-  #game-layout { display: flex; align-items: center; justify-content: center; gap: 30px; }
+  #game-layout { display: flex; align-items: center; justify-content: center; gap: 40px; }
 
   .abacus-frame {
     position: relative; width: 820px;
@@ -50,20 +52,33 @@
     box-sizing: content-box; background: transparent;
   }
 
-  .row { position: relative; height: 48px; width: 100%; overflow: hidden; }
+  .abacus-frame::before, .abacus-frame::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+    background: var(--wood); z-index: 20; pointer-events: none;
+  }
+  .abacus-frame::before { left: -30px; }
+  .abacus-frame::after { right: -30px; }
+
+  .row { position: relative; height: 56px; width: 100%; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
   
   .bead {
     position: absolute; width: 38px; height: 38px; border-radius: 50%;
     top: 50%; transform: translateY(-50%); z-index: 5;
     box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+    cursor: pointer;
   }
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
-  .bead.white { background: radial-gradient(circle at 30% 30%, #ffffff, #bbb); }
+  .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-alt), #bbb); }
+  body.blue-mode .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-alt), #0d47a1); }
 
-  #feedback { height: 70px; font-size: 42px; font-weight: bold; margin-top: 5px; }
+  #feedback { height: 70px; font-size: 42px; font-weight: bold; margin-top: 10px; }
 
-  .control-panel { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+  /* Centrage Vertical */
+  .control-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+  
+  #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
   #input-val {
     width: 200px; height: 110px; font-size: 75px; font-weight: bold;
     text-align: center; border-radius: 20px; border: 6px solid #444;
@@ -81,16 +96,19 @@
   .key.correct { background: var(--success) !important; box-shadow: 0 5px 0 #2e7d32; }
 
   .btn-next {
-    background: var(--accent); color: white; border: none; padding: 18px 55px;
+    background: var(--success); color: white; border: none; padding: 18px 55px;
     border-radius: 60px; font-size: 28px; font-weight: bold; cursor: pointer;
-    visibility: hidden; box-shadow: 0 8px 0 #0a4eb3;
-    margin-top: 30px;
+    visibility: hidden; box-shadow: 0 8px 0 #1b5e20;
+    margin-top: 20px;
   }
 
-  select {
+  select, .btn-ui {
     background: #444; color: white; border: none; padding: 10px;
     border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
   }
+
+  .hidden-abacus { opacity: 0.03; pointer-events: none; }
+  .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 15px; }
 </style>
 </head>
 <body>
@@ -114,8 +132,9 @@
         <option value="9">Niveau 9 : Mental</option>
       </optgroup>
     </select>
+    <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
   </div>
-  <div style="font-weight: bold; font-size: 24px; color: #fff;">REKENREK : PRESQUE-DOUBLES</div>
+  <div style="font-weight: bold; font-size: 24px; color: #fff;">PRESQUE-DOUBLES</div>
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
     <span class="score-bad">❌ <span id="count-bad">0</span></span>
@@ -126,17 +145,21 @@
   <div id="scaler">
     <div id="task-display">Prêt ?</div>
     <div id="game-layout">
-      <div id="abacus-frame" class="abacus-frame"></div>
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div id="abacus-frame" class="abacus-frame"></div>
+        <button id="btn-reveal" class="reveal-btn" onclick="revealAbacus()" style="display:none">👁️ Besoin d'une aide visuelle ?</button>
+      </div>
+      
       <div class="control-panel" id="side-panel">
         <div id="input-zone">
           <input type="number" id="input-val" placeholder="?" inputmode="numeric">
-          <button class="key" style="width:100%; background:var(--accent); margin-top:10px;" onclick="checkInput()">Vérifier</button>
+          <button class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px; width:100%;" onclick="checkInput()">Vérifier</button>
         </div>
       </div>
     </div>
     <div id="feedback"></div>
     <div id="keypad" class="keypad grid-20"></div>
-    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant 🔄</button>
+    <button id="btn-next" class="btn-next" onclick="nextQuestion()">Suivant ➔</button>
   </div>
 </div>
 
@@ -144,6 +167,8 @@
   let n1 = -1, n2 = -1, lastSum = -1, goodScore = 0, badScore = 0;
   let currentScale = 1, isAnswered = false;
   let states = []; 
+  let deck = [];
+  const BEAD_W = 38;
 
   const frame = document.getElementById('abacus-frame');
   const taskDiv = document.getElementById('task-display');
@@ -152,35 +177,55 @@
   const keypad = document.getElementById('keypad');
   const sidePanel = document.getElementById('side-panel');
 
+  // --- LOGIQUE DECK ---
+  function buildDeck(min, max) {
+    deck = [];
+    for(let i = min; i <= max; i++) {
+        deck.push(i);
+    }
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawCard(min, max) {
+    if (deck.length === 0 || (deck[0] < min || deck[0] > max)) {
+        buildDeck(min, max);
+    }
+    return deck.pop();
+  }
+  // --------------------
+
   function initGame() {
     const level = parseInt(document.getElementById('level-select').value);
     isAnswered = false; feedback.innerText = ""; btnNext.style.visibility = "hidden";
     document.getElementById('input-val').value = "";
+    document.getElementById('btn-reveal').style.display = "none";
+    frame.classList.remove('hidden-abacus');
 
     let min, max;
     if (level <= 3) { min = 1; max = 9; }
     else if (level <= 6) { min = 11; max = 19; }
     else { min = 21; max = 49; }
 
-    do {
-      n1 = Math.floor(Math.random() * (max - min + 1)) + min;
-      n2 = n1 + 1;
-    } while (n1 + n2 === lastSum);
-    lastSum = n1 + n2;
+    n1 = drawCard(min, max);
+    n2 = n1 + 1;
+    // On mélange parfois l'ordre (n+n+1 ou n+1+n) pour varier l'affichage
+    if(Math.random() > 0.5) [n1, n2] = [n2, n1];
 
     let rowCount = (level <= 3) ? 2 : (level <= 6 ? 4 : 10);
     states = Array(rowCount).fill(0);
+    
     taskDiv.innerText = `${n1} + ${n2}`;
 
     buildAbacus(rowCount);
     
     if (level === 1 || level === 4 || level === 7) {
         setAlmostDoubleOnAbacus(n1, n2, rowCount);
-        frame.style.visibility = "visible";
     } else if (level === 3 || level === 6 || level === 9) {
-        frame.style.visibility = "hidden";
-    } else {
-        frame.style.visibility = "visible";
+        frame.classList.add('hidden-abacus');
+        document.getElementById('btn-reveal').style.display = "block";
     }
 
     if (level <= 3) {
@@ -191,6 +236,7 @@
       const layout = document.getElementById('game-layout');
       if (level >= 7) layout.style.flexDirection = "row";
       else layout.style.flexDirection = "column";
+      setTimeout(() => document.getElementById('input-val').focus(), 100);
     }
     autoScale();
   }
@@ -204,12 +250,13 @@
         const bead = document.createElement('div');
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'}`;
-        bead.style.left = (820 - (10 - b) * 40) + "px"; 
+        bead.dataset.idx = b;
         bead.onpointerdown = startDrag;
         row.appendChild(bead);
       }
       frame.appendChild(row);
     }
+    updateBeads(false);
   }
 
   function setAlmostDoubleOnAbacus(num1, num2, rowCount) {
@@ -245,8 +292,10 @@
       goodScore++; document.getElementById('count-good').innerText = goodScore;
       feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! ✅</span>";
       if (element) element.classList.add('correct');
+      
       setAlmostDoubleOnAbacus(n1, n2, rowCount);
-      frame.style.visibility = "visible"; 
+      frame.classList.remove('hidden-abacus');
+      
       isAnswered = true; btnNext.style.visibility = "visible";
     } else {
       badScore++; document.getElementById('count-bad').innerText = badScore;
@@ -258,7 +307,10 @@
     const val = parseInt(document.getElementById('input-val').value);
     if (!isNaN(val)) checkAnswer(val, null);
   }
+  
+  function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
 
+  // --- MOTEUR PHYSIQUE COMPLET ---
   let activeDrag = null;
   function startDrag(e) {
     if (isAnswered) return;
@@ -274,9 +326,9 @@
     else { for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false); }
   });
   function moveVisual(b, idx, dx, fromRight) {
-    let base = fromRight ? (820 - (10 - idx) * 40) : (idx * 40);
+    let base = fromRight ? (820 - (10 - idx) * BEAD_W) : (idx * BEAD_W);
     b.style.transition = 'none';
-    b.style.left = Math.max(idx * 40, Math.min(820 - (10 - idx) * 40, base + dx)) + "px";
+    b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
   }
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
@@ -292,7 +344,7 @@
     frame.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
         b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
-        b.style.left = (i < states[r]) ? (i * 40) + "px" : (820 - (10 - i) * 40) + "px";
+        b.style.left = (i < states[r]) ? (i * BEAD_W) + "px" : (820 - (10 - i) * BEAD_W) + "px";
       });
     });
   }
