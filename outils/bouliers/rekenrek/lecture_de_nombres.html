@@ -6,9 +6,7 @@
 <title>Rekenrek Flash - Version XL Stable</title>
 <style>
   :root {
-    --bg: #1a1a1a; 
-    --wood: #b08d57;
-    --rod: #888; --ui: #2a2a2a;
+    --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
     --bead-white: #ffffff;
   }
@@ -191,7 +189,7 @@
 
   function updateMode() {
     currentRange = parseInt(document.getElementById('mode-select').value);
-    resetGame(); // Reset complet (score + deck)
+    resetGame();
   }
 
   // --- MOTEUR DECK (Anti-Répétition) ---
@@ -208,11 +206,14 @@
   }
 
   function drawCard(max) {
-    // Si deck vide ou si la carte du dessus est hors limite (changement de mode), on refait
-    if (deck.length === 0 || deck[0] > max) {
-        buildDeck(max);
+    if (deck.length === 0) buildDeck(max);
+    let card = deck.pop();
+    // Sécurité si changement de mode en cours de route
+    while (card > max) {
+        if(deck.length === 0) buildDeck(max);
+        card = deck.pop();
     }
-    return deck.pop();
+    return card;
   }
   // -------------------------------------
 
@@ -220,7 +221,7 @@
     goodScore = 0; badScore = 0;
     document.getElementById('count-good').innerText = "0";
     document.getElementById('count-bad').innerText = "0";
-    buildDeck(currentRange);
+    buildDeck(currentRange); // Nouveau paquet
     resetTurn(); 
     buildUI(); 
     autoScale();
@@ -314,8 +315,7 @@
       feedback.innerHTML = "<span style='color:var(--success)'>Bonne réponse ! ✅</span>";
       if (element) element.classList.add('correct');
       frame.style.visibility = "visible";
-      // Correction : Flèche droite
-      actionBtn.innerText = "Suivant ➔"; actionBtn.disabled = false;
+      actionBtn.innerText = "🔄 Suivant"; actionBtn.disabled = false;
     } else {
       badScore++;
       document.getElementById('count-bad').innerText = badScore;
@@ -354,8 +354,7 @@
   }
 
   window.addEventListener('resize', autoScale);
-  // Initialisation du deck au chargement
-  buildDeck(currentRange);
+  buildDeck(currentRange); // Init Deck au chargement
   updateMode();
 </script>
 </body>
