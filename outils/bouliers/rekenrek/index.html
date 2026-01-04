@@ -2,172 +2,276 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Rekenrek - Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Atelier Rekenrek - Menu Principal</title>
     <link rel="stylesheet" href="../../../assets/style.css"/>
     <style>
+        :root {
+            --primary: #2563eb;
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
         body {
-            background-color: #f8fafc;
-            color: #334155;
-            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
+            padding-bottom: 4rem;
         }
+
+        /* HEADER */
         .header-nav {
-            padding: 1rem 0;
-            border-bottom: 1px solid #e2e8f0;
-            background: white;
-            margin-bottom: 3rem;
-        }
-        .back-link {
-            text-decoration: none;
-            color: #64748b;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: color 0.2s;
-        }
-        .back-link:hover {
-            color: #2563eb;
-            text-decoration: none;
-        }
-        .grid {
-            display: grid;
-            gap: 2rem;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            padding-bottom: 3rem;
-        }
-        .card-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            background: white;
-            padding: 2.5rem 1.5rem;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.25s ease;
+            /* Un dégradé sombre et élégant qui va avec tout */
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 2.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        .card-link:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            border-color: #2563eb;
-            text-decoration: none;
+
+        .header-content { max-width: 1200px; margin: 0 auto; position: relative;}
+
+        .header-title h1 { margin: 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+        .header-title p { 
+            margin: 0.8rem 0 0; 
+            color: #94a3b8; 
+            font-size: 1.2rem; 
+            font-weight: 500; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
         }
-        .card-link h3 {
-            margin: 0;
-            font-size: 1.4rem;
-            color: #1e293b;
+
+        .back-link {
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #cbd5e1; text-decoration: none; font-weight: 600;
             transition: color 0.2s;
         }
-        .card-link:hover h3 {
-            color: #2563eb;
+        .back-link:hover { color: white; }
+        
+        /* Pour mobile, on ajuste le retour */
+        @media (max-width: 768px) {
+            .back-link { position: relative; top: auto; transform: none; display: block; margin-bottom: 1rem;}
         }
+
+        /* CONTAINER */
+        .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* SECTIONS */
+        .section-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.6rem; font-weight: 700; color: #334155;
+            margin: 3.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #cbd5e1;
+        }
+        .badge {
+            font-size: 0.8rem; background: #e2e8f0; color: #475569;
+            padding: 4px 12px; border-radius: 20px; vertical-align: middle; font-weight: 600;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        /* CARDS */
+        .card-link {
+            text-decoration: none;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid white;
+            padding: 1.5rem;
+            display: flex; flex-direction: column;
+            transition: all 0.2s ease;
+            position: relative; overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Barre de couleur latérale */
+        .card-link::before {
+            content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+            background: #cbd5e1; transition: width 0.2s;
+        }
+
+        /* Couleurs sémantiques */
+        .cat-bases .card-link::before { background: #3b82f6; } /* Bleu */
+        .cat-add .card-link::before { background: #f59e0b; }   /* Orange */
+        .cat-sub .card-link::before { background: #ef4444; }   /* Rouge */
+        .cat-mult .card-link::before { background: #8b5cf6; }  /* Violet */
+        .cat-tools .card-link::before { background: #64748b; } /* Gris */
+
+        .card-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+            border-color: #cbd5e1;
+        }
+        .card-link:hover::before { width: 10px; }
+
+        .icon-box { font-size: 2.5rem; margin-bottom: 1rem; }
+
+        .card-link h3 {
+            margin: 0; font-size: 1.3rem; color: var(--text-main); font-weight: 700;
+        }
+
         .card-link p {
-            margin-top: 0.75rem;
-            color: #64748b;
-            font-size: 0.9rem;
+            margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;
         }
-        footer { margin-top: 2rem; }
+
+        footer { text-align: center; margin-top: 5rem; color: #94a3b8; font-size: 0.9rem; padding-bottom: 2rem; }
+
     </style>
 </head>
 <body>
 
 <header class="header-nav">
-    <div class="wrapper">
+    <div class="header-content">
         <nav>
             <a href="../" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Retour aux bouliers
+                Retour
             </a>
         </nav>
+        <div class="header-title">
+            <h1>Atelier Rekenrek</h1>
+            <p>Concret • Pictural • Abstrait</p>
+        </div>
     </div>
 </header>
 
-<main>
-    <div class="wrapper">
-        <section class="grid">
-            <a href="rekenrek.html" class="card-link">
-                <h3>Rekenrek</h3>
-                <p>Ouvrir l'outil interactif</p>
-            </a>
+<main class="wrapper">
 
-            <a href="lecture_de_nombres.html" class="card-link">
-                <h3>Lecture de nombres</h3>
-                <p>S'exercer à lire les quantités</p>
-            </a>
+    <h2 class="section-title">🔢 Numération & Manipulation <span class="badge">Les bases</span></h2>
+    <section class="grid cat-bases">
+        <a href="rekenrek.html" class="card-link">
+            <div class="icon-box">🧮</div>
+            <h3>Rekenrek Libre</h3>
+            <p>L'outil interactif pour manipuler librement.</p>
+        </a>
 
-            <a href="pousser_des_nombres.html" class="card-link">
-                <h3>Pousser des nombres</h3>
-                <p>Construire des nombres par manipulation</p>
-            </a>
+        <a href="lecture_de_nombres.html" class="card-link">
+            <div class="icon-box">👁️</div>
+            <h3>Lecture de nombres</h3>
+            <p>Reconnaître rapidement une quantité ("Subitizing").</p>
+        </a>
 
-            <a href="cache-cache.html" class="card-link">
-                <h3>Cache-cache</h3>
-                <p>Trouver le nombre de billes cachées</p>
-            </a>
+        <a href="pousser_des_nombres.html" class="card-link">
+            <div class="icon-box">👆</div>
+            <h3>Pousser des nombres</h3>
+            <p>Construire un nombre demandé en déplaçant les billes.</p>
+        </a>
 
-            <a href="comparateur.html" class="card-link">
-                <h3>Comparateur</h3>
-                <p>Comparer deux quantités sur le boulier</p>
-            </a>
+        <a href="comparateur.html" class="card-link">
+            <div class="icon-box">⚖️</div>
+            <h3>Comparateur</h3>
+            <p>Comparer deux quantités : Plus grand, plus petit ou égal ?</p>
+        </a>
 
-            <a href="jeu_des_doubles.html" class="card-link">
-                <h3>Jeu des doubles</h3>
-                <p>Travailler la mémorisation des doubles</p>
-            </a>
+        <a href="suivant_precedent.html" class="card-link">
+            <div class="icon-box">↔️</div>
+            <h3>Les Voisins</h3>
+            <p>Trouver le nombre précédent et le nombre suivant.</p>
+        </a>
 
-            <a href="presque_doubles.html" class="card-link">
-                <h3>Presque doubles</h3>
-                <p>Utiliser les doubles pour calculer</p>
-            </a>
-             <a href="tables.html" class="card-link">
-                <h3>Les tables de multiplication</h3>
-                <p>Apprenez-les autrement !</p>
-            </a>
-               </a>
-             <a href="suivant_precedent.html" class="card-link">
-                <h3>Les voisins</h3>
-                <p>Nombre suivant et nombre précédent</p>
-            </a>
-              <a href="pont_dizaine.html" class="card-link">
-                <h3>Pont vers la dizaine suivante</h3>
-                <p>Passer à la dizaine suivante</p>
-            </a>
-            </a>
-              <a href="force_5.html" class="card-link">
-                <h3>Sommes avec 5</h3>
-                <p>Passer à la dizaine suivante</p>
-            </a>
-            </a>
-              <a href="grignoteur.html" class="card-link">
-                <h3>Manger un nombre !</h3>
-                <p>Passer à la dizaine inférieure</p>
-            </a>
-            </a>
-              <a href="ajouter9_ajouter8.html" class="card-link">
-                <h3>Ajouter 9 ou 8 facilement</h3>
-                <p>Utilise l'astuce !</p>
-            </a>
-            </a>
-              <a href="enlever9_enlever8.html" class="card-link">
-                <h3>Enlever 9 ou 8 facilement</h3>
-                <p>Utilise l'astuce !</p>
-            </a>
-            <a href="boss_final.html" class="card-link">
-                <h3>Le BOSS final</h3>
-                <p>Calcul chronométré</p>
-            </a>
-             <a href="generateur_rekenrek_cartes.html" class="card-link">
-                <h3>Générateur de cartes</h3>
-                <p>Pour impression</p>
-            </a>
-        </section>
-    </div>
+        <a href="cache-cache.html" class="card-link">
+            <div class="icon-box">🙈</div>
+            <h3>Cache-cache</h3>
+            <p>Trouver le nombre de billes cachées (Compléments).</p>
+        </a>
+    </section>
+
+
+    <h2 class="section-title">➕ Stratégies d'Addition</h2>
+    <section class="grid cat-add">
+        <a href="force_5.html" class="card-link">
+            <div class="icon-box">🖐️</div>
+            <h3>Force 5</h3>
+            <p>Calculer en utilisant le repère de 5.</p>
+        </a>
+
+        <a href="pont_dizaine.html" class="card-link">
+            <div class="icon-box">🌉</div>
+            <h3>Le Pont</h3>
+            <p>Passer à la dizaine supérieure (Compléments à 10).</p>
+        </a>
+
+        <a href="ajouter9_ajouter8.html" class="card-link">
+            <div class="icon-box">🚀</div>
+            <h3>Ajouter 8 ou 9</h3>
+            <p>Technique rapide : Faire +10 puis enlever 1 ou 2.</p>
+        </a>
+    </section>
+
+
+    <h2 class="section-title">➖ Stratégies de Soustraction</h2>
+    <section class="grid cat-sub">
+        <a href="grignoteur.html" class="card-link">
+            <div class="icon-box">🦖</div>
+            <h3>Le Grignoteur</h3>
+            <p>Soustraire en reculant (Passage de la dizaine).</p>
+        </a>
+
+        <a href="enlever9_enlever8.html" class="card-link">
+            <div class="icon-box">📉</div>
+            <h3>Enlever 8 ou 9</h3>
+            <p>Technique rapide : Enlever 10 puis remettre 1 ou 2.</p>
+        </a>
+    </section>
+
+
+    <h2 class="section-title">✖️ Doubles & Multiplication</h2>
+    <section class="grid cat-mult">
+        <a href="jeu_des_doubles.html" class="card-link">
+            <div class="icon-box">🍒</div>
+            <h3>Jeu des doubles</h3>
+            <p>Mémoriser les doubles (1+1, 2+2...).</p>
+        </a>
+
+        <a href="presque_doubles.html" class="card-link">
+            <div class="icon-box">🤏</div>
+            <h3>Presque doubles</h3>
+            <p>Calculer 6+7 en utilisant les doubles (6+6+1).</p>
+        </a>
+
+        <a href="tables.html" class="card-link">
+            <div class="icon-box">📚</div>
+            <h3>Tables de multiplication</h3>
+            <p>Visualiser les tables sur le boulier.</p>
+        </a>
+    </section>
+
+
+    <h2 class="section-title">🏆 Défis & Outils Prof</h2>
+    <section class="grid cat-tools">
+        <a href="boss_final.html" class="card-link">
+            <div class="icon-box">⏱️</div>
+            <h3>Le BOSS Final</h3>
+            <p>Le défi ultime chronométré mélangeant toutes les opérations.</p>
+        </a>
+
+        <a href="generateur_rekenrek_cartes.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur de Cartes</h3>
+            <p>Créer des fiches PDF à imprimer (Flashcards).</p>
+        </a>
+    </section>
+
 </main>
 
-<footer></footer>
+<footer>
+    <p>Outils pédagogiques Rekenrek</p>
+</footer>
 
 </body>
 </html>
