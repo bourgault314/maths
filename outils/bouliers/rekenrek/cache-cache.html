@@ -11,7 +11,6 @@
     --bead-white: #ffffff;
   }
 
-  /* Mode Bleu */
   body.blue-mode { --bead-white: #2196f3; }
 
   body, html { 
@@ -74,8 +73,6 @@
   }
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
-  
-  /* Ajustement bille blanche en mode bleu */
   body.blue-mode .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #0d47a1); }
 
   #feedback { height: 80px; font-size: 48px; font-weight: bold; margin: 10px 0; display: flex; align-items: center; justify-content: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
@@ -159,9 +156,10 @@
 </div>
 
 <script>
-  let currentRange = 20, targetNumber = -1, lastNumber = -1, goodScore = 0, badScore = 0;
+  let currentRange = 20, targetNumber = -1, goodScore = 0, badScore = 0;
   let gameState = "IDLE"; 
   let isBlue = false;
+  let deck = []; // Le paquet de cartes
   
   const frame = document.getElementById('abacus-frame');
   const curtain = document.getElementById('curtain');
@@ -183,15 +181,34 @@
     resetGame();
   }
 
+  // --- LOGIQUE DECK ---
+  function buildDeck() {
+    deck = [];
+    for(let i = 0; i <= currentRange; i++) {
+        deck.push(i);
+    }
+    // Mélange de Fisher-Yates
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  function drawCard() {
+    if (deck.length === 0) buildDeck(); // Rebat les cartes si fini
+    return deck.pop();
+  }
+  // --------------------
+
   function resetGame() {
     gameState = "IDLE";
     targetNumber = -1;
-    lastNumber = -1;
     feedback.innerText = "";
     actionBtn.innerText = "Commencer";
     actionBtn.classList.remove('btn-success');
     curtain.style.transition = "none";
     curtain.style.width = "0px";
+    buildDeck(); // Nouveau paquet au reset
     buildUI();
     autoScale();
   }
@@ -216,7 +233,6 @@
         const bead = document.createElement('div');
         const isRed = (r < 5) ? (b < 5) : (b >= 5);
         bead.className = `bead ${isRed ? 'red' : 'white'}`;
-        // Position initiale tout à droite (masqué)
         bead.style.left = (820 - (10 - b) * BEAD_W) + "px"; 
         row.appendChild(bead);
       }
@@ -249,12 +265,8 @@
     document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
     document.getElementById('input-val').value = '';
 
-    let newTarget;
-    do {
-      newTarget = Math.floor(Math.random() * (currentRange + 1));
-    } while (newTarget === lastNumber);
-    lastNumber = newTarget;
-    targetNumber = newTarget;
+    // Tirage via le Deck
+    targetNumber = drawCard();
     
     let visibleNumber = currentRange - targetNumber;
     
