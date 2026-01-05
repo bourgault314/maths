@@ -12,70 +12,50 @@
       --ink:#0f172a;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--ink);
-      height:100vh;
-      overflow:hidden;
-      display:flex
-    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex}
     aside{
-      width:240px;
+      width:300px;min-width:260px;max-width:380px;
       background:var(--panel);
       border-right:1px solid var(--border);
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      padding:16px 14px;
+      display:flex;flex-direction:column;gap:12px;
     }
     .title{
-      font-weight:800;
+      font-weight:950;
       letter-spacing:.2px;
-      font-size:16px;
-      padding:8px 10px;
+      font-size:18px;
+      padding:10px 12px;
       border:1px solid var(--border);
-      border-radius:12px;
+      border-radius:14px;
       background:#f8fafc;
     }
-    .btns{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    button{
-      appearance:none;
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:700;
-      cursor:pointer;
-      text-align:left;
-      transition:transform .05s ease, box-shadow .15s ease, border-color .15s ease;
-      box-shadow:0 1px 0 rgba(0,0,0,.03);
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    button:active{transform:translateY(1px)}
-    button:hover{border-color:#94a3b8}
-    button[aria-current="true"]{
-      border-color:#334155;
-      box-shadow:0 4px 14px rgba(15,23,42,.10);
-    }
-    .dot{
-      width:12px;height:12px;border-radius:999px;flex:0 0 auto;
-      border:1px solid rgba(0,0,0,.15);
-    }
-    .spacer{flex:1}
-    main{flex:1; padding:0; }
-    iframe{
+    .btns{display:flex;flex-direction:column;gap:10px}
+    .nav-btn{
+      appearance:none;border:none;cursor:pointer;
       width:100%;
-      height:100%;
+      padding:14px 12px;
+      border-radius:14px;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-align:left;
+      background:var(--btn,#2563eb);
+      color:white;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      transform:translateY(0);
+      transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .nav-btn:hover{filter:brightness(1.02)}
+    .nav-btn:active{transform:translateY(1px)}
+    .nav-btn .sub{font-weight:800;opacity:.9;font-size:12px}
+    .nav-btn.inactive{opacity:.55;box-shadow:none}
+    .nav-btn.active{outline:3px solid rgba(37,99,235,.25); opacity:1}
+    .spacer{flex:1}
+    main{flex:1;min-width:0;height:100vh}
+    iframe{
+      width:100%;height:100%;
       border:0;
-      background:#fff;
+      background:white;
     }
   </style>
 </head>
@@ -83,7 +63,7 @@
   <aside>
     <div class="title">Menu</div>
 
-    <div id="btns" class="btns"></div>
+    <div class="btns" id="btns"></div>
 
     <div class="spacer"></div>
   </aside>
@@ -93,12 +73,12 @@
   </main>
 
   <script>
-    // Liste des pages à charger (les espaces dans les noms sont encodés en %20)
+    // Liste des pages à charger (espaces encodés en %20)
     const pages = [
-      { id: "cache",  label: "Cache-cache",                 src: "cache%20cache.html",               color: "#ef4444" },
-      { id: "barre",  label: "Cache-cache barre",           src: "cache%20cache%20barre.html",       color: "#f97316" },
-      { id: "gen1",   label: "Lecture 0–100 (Générateur)",   src: "lecture_0_100_generateur.html",    color: "#2563eb" },
-      { id: "gen2",   label: "Lecture 0–100 (Générateur 2)", src: "lecture_0_100_generateur2.html",   color: "#16a34a" },
+      { id: "cache", label: "Cache-cache",               sub: "cache cache.html",               src: "cache%20cache.html",               btn: "#ef4444" },
+      { id: "barre", label: "Cache-cache barre",         sub: "cache cache barre.html",         src: "cache%20cache%20barre.html",       btn: "#f97316" },
+      { id: "gen1",  label: "Lecture 0–100",             sub: "lecture_0_100_generateur.html",  src: "lecture_0_100_generateur.html",    btn: "#2563eb" },
+      { id: "gen2",  label: "Lecture 0–100 (variante)",  sub: "lecture_0_100_generateur2.html", src: "lecture_0_100_generateur2.html",   btn: "#16a34a" },
     ];
 
     const btns = document.getElementById("btns");
@@ -108,24 +88,27 @@
       const p = pages.find(x => x.id === id) || pages[0];
       [...btns.querySelectorAll("button")].forEach(b => {
         const active = b.dataset.id === p.id;
-        b.setAttribute("aria-current", active ? "true" : "false");
+        b.classList.toggle("active", active);
+        b.classList.toggle("inactive", !active);
+        b.style.setProperty("--btn", b.dataset.btn);
       });
       frame.src = p.src;
       location.hash = p.id;
       document.title = "Menu";
     }
 
-    // Génère les boutons
     pages.forEach(p => {
       const b = document.createElement("button");
       b.type = "button";
+      b.className = "nav-btn";
       b.dataset.id = p.id;
-      b.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.label}</span>`;
+      b.dataset.btn = p.btn;
+      b.style.setProperty("--btn", p.btn);
+      b.innerHTML = `<div>${p.label}</div><div class="sub">${p.sub}</div>`;
       b.addEventListener("click", () => setActive(p.id));
       btns.appendChild(b);
     });
 
-    // Démarrage (hash optionnel)
     const fromHash = (location.hash || "").replace("#","").trim();
     setActive(pages.some(p => p.id === fromHash) ? fromHash : pages[0].id);
 
