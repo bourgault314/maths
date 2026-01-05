@@ -30,7 +30,19 @@
       display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     }
     .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
-    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
+    
+    /* --- CORRECTION TOGGLE --- */
+    .corr-toggle{
+      display:flex; align-items:center; gap:8px;
+      margin-top:10px;
+      font-size:12px; font-weight:900;
+      color:#334155;
+      user-select:none;
+      cursor:pointer;
+    }
+    .corr-toggle input{ transform:scale(1.05); cursor:pointer; }
+    .corr-text{ letter-spacing:.3px; }
+.sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
     .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
     
     .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
@@ -169,6 +181,8 @@
 <aside>
   <div class="sb-header">
     <h2 class="sb-title" data-i18n="title">Lecture Nombres</h2>
+    <label class="corr-toggle"><input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)"><span class="corr-text">👁️ CORRECTION</span></label>
+
   </div>
   
   <div class="sb-scroll">
@@ -538,6 +552,8 @@ function renderPages(sizeSelect) {
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
   
+  
+  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
   const theme = document.getElementById('beadColor').value;
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
@@ -562,7 +578,7 @@ function renderPages(sizeSelect) {
         // 1. BOULIER
         const topPart = document.createElement('div');
         topPart.className = 'part-boulier';
-        topPart.innerHTML = getRekenrekSvg(item.val, item.showBead, theme, item.max);
+        topPart.innerHTML = getRekenrekSvg(item.val, (item.showBead || isCorr), theme, item.max);
         cell.appendChild(topPart);
         
         // 2. BAS : DEUX CASES (Chiffre | Mot)
@@ -575,7 +591,7 @@ function renderPages(sizeSelect) {
         // Ajustement largeur
         digitBox.style.flex = "1"; 
         
-        if(item.showNum) {
+        if(item.showNum || isCorr) {
             digitBox.innerHTML = `<span class="val-digit">${item.val}</span>`;
         } else {
             digitBox.innerHTML = `<div class="empty-zone"></div>`;
@@ -587,7 +603,7 @@ function renderPages(sizeSelect) {
         wordBox.className = 'sub-box';
         wordBox.style.flex = "2.2"; // Plus large
 
-        if(item.showWord) {
+        if(item.showWord || isCorr) {
             wordBox.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
         } else {
             // SUPPRESSION DE LA LIGNE GRISE ICI : Juste empty-zone vide
@@ -653,7 +669,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
                   if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
                   else fill = (i < 5) ? '#e5e7eb' : 'white';
               } else {
-                  fill = 'white';
+                  fill = (i < 5) ? '#e5e7eb' : 'white';
               }
               str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
               cx += d_tight; 
