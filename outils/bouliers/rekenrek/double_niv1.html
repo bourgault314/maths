@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>REKENREK — DOUBLES NIVEAU 1</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --sub: #94a3b8;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --accent: #2563eb;
+      --border: #cbd5e1;
+      --grid-line: #d9d9d9; 
+      --ok: #16a34a;
+      
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 10mm;
+      
+      --cols: 5;
+      --rows: 6;
+    }
+    
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
+
+    /* --- SIDEBAR --- */
+    aside {
+      width: 360px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .sb-header { padding: 18px 20px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; letter-spacing: -0.5px; text-transform: uppercase; }
+    
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; }
+    
+    .section { }
+    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; }
+    
+    .control { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+    .control label { flex: 1; color: #334155; }
+    
+    select, input[type="number"] {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-weight: 600; color: var(--ink); outline: none;
+      width: 140px; background: #fff; cursor: pointer; transition: border 0.2s;
+    }
+    select:hover, input:hover { border-color: var(--accent); }
+    input[type="checkbox"] { width: auto; transform: scale(1.3); cursor: pointer; accent-color: var(--accent); margin-right: 0; }
+    
+    .flags { display: flex; gap: 10px; }
+    .flag-btn { font-size: 14px; font-weight: 800; cursor: pointer; opacity: 0.5; transition: all 0.2s; border: 1px solid transparent; border-radius: 6px; padding: 6px 12px; background:#f1f5f9; color: #64748b; }
+    .flag-btn.active { opacity: 1; border-color: var(--accent); background: var(--accent); color: white; box-shadow: 0 2px 5px rgba(37,99,235,0.2); }
+
+    .mix-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; background: #f1f5f9; padding: 10px; border-radius: 8px; }
+    .mix-col { display: flex; flex-direction: column; align-items: center; }
+    .mix-col span { font-size: 9px; color: #64748b; margin-bottom: 4px; font-weight: bold; }
+    .mix-col input { width: 100%; text-align: center; padding: 6px; font-size: 12px; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; transition: transform 0.1s, opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn-new { background: var(--accent); }
+    .btn-print { background: #10b981; }
+
+    /* --- PAGE PREVIEW --- */
+    main { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; align-items: flex-start; background: #e2e8f0; }
+    
+    .page {
+      width: var(--page-w); height: var(--page-h);
+      background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      position: relative; flex-shrink: 0;
+    }
+    .page-inner { position: absolute; inset: var(--page-margin); display: flex; flex-direction: column; }
+    
+    .header { margin-bottom: 6mm; padding-bottom: 2mm; }
+    .header h1 { margin: 0 0 4px 0; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; color: var(--ink); }
+    .header p { margin: 0; font-size: 15px; color: var(--sub); font-family: 'Verdana', sans-serif; font-weight: 500; }
+
+    .grid {
+      flex: 1; display: grid;
+      grid-template-columns: repeat(var(--cols), 1fr);
+      grid-template-rows: repeat(var(--rows), 1fr);
+      border-top: 0.6px solid var(--grid-line); 
+      border-left: 0.6px solid var(--grid-line);
+    }
+    .cell {
+      border-right: 0.6px solid var(--grid-line); 
+      border-bottom: 0.6px solid var(--grid-line);
+      position: relative; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; padding: 2px;
+    }
+
+    .rotate-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .rr-svg { width: 100%; height: 100%; overflow: visible; }
+    
+    .op-line { font-size: 19px; font-weight: 900; white-space: nowrap; font-family: system-ui; }
+    .op-col { font-family: 'Courier New', monospace; font-size: 22px; font-weight: 900; line-height: 1.1; text-align: right; padding-right: 15px; }
+    .op-col .bar { height: 2px; background: #000; margin: 4px 0; width: 100%; }
+
+    .num-val { font-size: 34px; font-weight: 900; }
+    .u-69 { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
+
+    .corr-ellipse {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%; height: 70%; 
+      border: 2px solid var(--ok);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .corr-text {
+      position: absolute;
+      bottom: 2px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #000;
+      background: rgba(255,255,255,0.85);
+      z-index: 6;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    @media print {
+      @page { size: A4; margin: 0; } 
+      body { display: block; background: white; height: auto; overflow: visible; }
+      aside { display: none !important; }
+      main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; }
+      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-header">
+    <h2 class="sb-title" data-i18n="title_main">Doubles Niv.1</h2>
+  </div>
+  
+  <div class="sb-scroll">
+    <div class="actions">
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_new">NOUVEAU TIRAGE</button>
+      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_layout">Mise en page</div>
+      <div class="control">
+        <label data-i18n="lbl_grid">Grille</label>
+        <select id="gridSize" onchange="updateMaxTargets(); startGen()">
+          <option value="5x6">30 cases (5x6)</option>
+          <option value="4x6">24 cases (4x6)</option>
+          <option value="4x5">20 cases (4x5)</option>
+          <option value="4x4">16 cases (4x4)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_lang">Langue</label>
+        <div class="flags">
+          <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
+          <div class="flag-btn" onclick="setLang('en', this)">EN</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_content">Contenu</div>
+      <div class="control">
+        <label data-i18n="lbl_correct">Nb. Justes</label>
+        <input type="number" id="targetCount" value="11" min="1" max="30" onchange="startGen()">
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_trap_style">Difficulté</label>
+        <select id="trapStyle" onchange="startGen()">
+          <option value="easy" selected data-i18n="opt_easy">Facile (Pièges Voisins)</option>
+          <option value="hard" data-i18n="opt_hard">Difficile (Calcul)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_display">Affichage</label>
+        <select id="dispType" onchange="toggleMix(); startGen()">
+          <option value="rr" data-i18n="opt_rr">Boulier (100%)</option>
+          <option value="op" data-i18n="opt_op">Opérations (100%)</option>
+          <option value="num" data-i18n="opt_num">Nombres (100%)</option>
+          <option value="mix" data-i18n="opt_mix">Mélange (Auto)</option>
+        </select>
+      </div>
+      <div id="mixPanel" style="display:none;">
+        <div class="mix-group">
+          <div class="mix-col"><span data-i18n="mix_b">Boulier</span><input type="number" id="ratB" value="40" oninput="calcRatio('B')"></div>
+          <div class="mix-col"><span data-i18n="mix_o">Opér.</span><input type="number" id="ratO" value="30" oninput="calcRatio('O')"></div>
+          <div class="mix-col"><span data-i18n="mix_n">Nombre</span><input type="number" id="ratN" value="30" disabled style="background:transparent; color:#64748b;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_style">Style</div>
+      <div class="control">
+        <label data-i18n="lbl_opstyle">Opérations</label>
+        <select id="opLayout" onchange="renderOnly()">
+          <option value="line" data-i18n="opt_line">En ligne</option>
+          <option value="col" data-i18n="opt_col">En colonne</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_beads">Billes</label>
+        <select id="beadColor" onchange="renderOnly()">
+          <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
+          <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_letters">Lettres (R)</label>
+        <input type="checkbox" id="showLetters" onchange="renderOnly()">
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_rot">Rotation</label>
+        <input type="checkbox" id="doRot" onchange="renderOnly()">
+      </div>
+      <div class="control">
+        <label style="color:var(--ok); font-weight:800;" data-i18n="lbl_corr">Correction</label>
+        <input type="checkbox" id="doCorr" onchange="renderOnly()">
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main>
+  <div class="page">
+    <div class="page-inner">
+      <div class="header">
+        <div>
+          <h1 id="h-title">REKENREK — DOUBLES NIVEAU 1</h1>
+          <p id="h-sub">Marque les doubles et écris l'égalité.</p>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const i18n = {
+  fr: {
+    title_main: "Doubles Niv.1",
+    btn_new: "NOUVEAU TIRAGE",
+    btn_print: "IMPRIMER",
+    sec_layout: "Mise en page",
+    lbl_grid: "Grille",
+    lbl_lang: "Langue",
+    sec_content: "Contenu",
+    lbl_correct: "Nb. Justes",
+    lbl_trap_style: "Difficulté",
+    opt_easy: "Facile (Pièges Voisins)",
+    opt_hard: "Difficile (Calcul)",
+    lbl_display: "Affichage",
+    opt_rr: "Boulier (100%)",
+    opt_op: "Opérations (100%)",
+    opt_num: "Nombres (100%)",
+    opt_mix: "Mélange (Auto)",
+    mix_b: "Boulier",
+    mix_o: "Opér.",
+    mix_n: "Nombre",
+    sec_style: "Style",
+    lbl_opstyle: "Opérations",
+    opt_line: "En ligne",
+    opt_col: "En colonne",
+    lbl_beads: "Billes",
+    opt_red: "Rouge / Blanc",
+    opt_blue: "Rouge / Bleu",
+    lbl_letters: "Lettres (Rekenrek)",
+    lbl_rot: "Rotation",
+    lbl_corr: "Correction",
+    page_title: "REKENREK — DOUBLES NIVEAU 1",
+    page_sub: "Marque les doubles et écris l'égalité."
+  },
+  en: {
+    title_main: "Doubles Lvl.1",
+    btn_new: "SHUFFLE",
+    btn_print: "PRINT",
+    sec_layout: "Layout",
+    lbl_grid: "Grid",
+    lbl_lang: "Language",
+    sec_content: "Content",
+    lbl_correct: "Correct Count",
+    lbl_trap_style: "Difficulty",
+    opt_easy: "Easy (Neighbor Traps)",
+    opt_hard: "Hard (Calculation)",
+    lbl_display: "Display",
+    opt_rr: "Rekenrek (100%)",
+    opt_op: "Operations (100%)",
+    opt_num: "Numbers (100%)",
+    opt_mix: "Mixed (Auto)",
+    mix_b: "Beads",
+    mix_o: "Ops",
+    mix_n: "Num",
+    sec_style: "Style",
+    lbl_opstyle: "Operations",
+    opt_line: "Linear",
+    opt_col: "Column",
+    lbl_beads: "Beads",
+    opt_red: "Red / White",
+    opt_blue: "Red / Blue",
+    lbl_letters: "Letters (Rekenrek)",
+    lbl_rot: "Rotation",
+    lbl_corr: "Answer Key",
+    page_title: "REKENREK — DOUBLES LEVEL 1",
+    page_sub: "Mark the doubles and write the equation."
+  }
+};
+
+let currentLang = 'fr';
+let state = { data: [] };
+
+window.onload = function() {
+  calcRatio('B');
+  updateMaxTargets();
+  startGen();
+  updateLangUI();
+};
+
+function setLang(l, el) {
+  currentLang = l;
+  document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateLangUI();
+  const dict = i18n[currentLang];
+  document.getElementById('h-title').innerText = dict.page_title;
+  document.getElementById('h-sub').innerText = dict.page_sub;
+}
+
+function updateLangUI() {
+  const dict = i18n[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key]) el.innerText = dict[key];
+  });
+}
+
+function updateMaxTargets() {
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  const total = cols * rows;
+  const inp = document.getElementById('targetCount');
+  inp.max = total;
+  if(parseInt(inp.value) > total) inp.value = total;
+}
+
+function calcRatio(src) {
+  let b = parseInt(document.getElementById('ratB').value)||0;
+  let o = parseInt(document.getElementById('ratO').value)||0;
+  if(b < 0) b = 0; if(o < 0) o = 0;
+  if(b + o > 100) { if(src === 'B') o = 100 - b; else b = 100 - o; }
+  let n = 100 - b - o;
+  document.getElementById('ratB').value = b;
+  document.getElementById('ratO').value = o;
+  document.getElementById('ratN').value = n;
+  if(document.getElementById('dispType').value === 'mix') startGen();
+}
+
+function toggleMix() {
+  const t = document.getElementById('dispType').value;
+  document.getElementById('mixPanel').style.display = (t === 'mix') ? 'block' : 'none';
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function startGen() {
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+  const totalSlots = cols * rows;
+  const targetCount = parseInt(document.getElementById('targetCount').value) || 11;
+  const trapStyle = document.getElementById('trapStyle').value; 
+  
+  const dispType = document.getElementById('dispType').value;
+  const rB = parseInt(document.getElementById('ratB').value);
+  const rO = parseInt(document.getElementById('ratO').value);
+
+  state.data = [];
+  let targets = [];
+
+  // --- 1. GENERATION CIBLES (PAIRES ou Doubles Cachés en Hard) ---
+  const fullDecks = Math.floor(targetCount / 11);
+  const remainder = targetCount % 11;
+
+  const createTarget = (baseVal) => {
+      let a, b;
+      
+      if (trapStyle === 'easy') {
+          // Facile : Double visuel STRICT (3+3)
+          a = baseVal; b = baseVal;
+      } else {
+          // Difficile : Double caché (Calcul)
+          // La somme doit être égale au double de baseVal
+          let sum = baseVal * 2; 
+          
+          let minA = Math.max(0, sum - 10);
+          let maxA = Math.min(sum, 10);
+          
+          let attempts = 0;
+          do {
+              a = Math.floor(Math.random() * (maxA - minA + 1)) + minA;
+              b = sum - a;
+              attempts++;
+          } while (a === b && attempts < 10 && maxA > minA);
+      }
+      
+      if(Math.random()>0.5) [a,b] = [b,a];
+      return { a, b, isTarget: true };
+  };
+
+  // Deck doubles 0..10
+  for(let d=0; d<fullDecks; d++) {
+    for(let i=0; i<=10; i++) targets.push(createTarget(i));
+  }
+
+  if(remainder > 0) {
+    let partialDeck = [];
+    for(let i=0; i<=10; i++) partialDeck.push(i);
+    partialDeck = shuffle(partialDeck);
+    for(let k=0; k<remainder; k++) {
+      targets.push(createTarget(partialDeck[k]));
+    }
+  }
+
+  // --- 2. GENERATION PIÈGES ---
+  let extras = [];
+  const slotsRemaining = totalSlots - targets.length;
+  const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+
+  for(let k=0; k<slotsRemaining; k++) {
+    let a, b;
+    
+    if (trapStyle === 'easy') {
+        // FACILE : Pièges = VOISINS (n et n+1)
+        // Somme impaire, visuellement trompeur
+        let r = rand(0, 9); 
+        a = r; 
+        b = r + 1;
+    } else {
+        // DIFFICILE : Pièges = Somme Impaire Aléatoire (Calcul nécessaire)
+        // Pas forcément voisins, juste pas un double.
+        if (Math.random() > 0.5) {
+            a = rand(0, 5) * 2;
+            b = rand(0, 4) * 2 + 1;
+        } else {
+            a = rand(0, 4) * 2 + 1;
+            b = rand(0, 5) * 2;
+        }
+    }
+    
+    // Type d'affichage
+    let type = 'rr';
+    if(dispType !== 'mix') {
+        type = dispType;
+    } else {
+        const roll = Math.random() * 100;
+        if(roll < rB) type = 'rr';
+        else if(roll < rB + rO) type = 'op';
+        else type = 'num';
+    }
+    
+    // Random swap
+    if(Math.random()>0.5) [a,b] = [b,a];
+
+    extras.push({ a: a, b: b, isTarget: false, type: type });
+  }
+
+  // --- 3. FUSION ---
+  targets.forEach(t => {
+      let type = 'rr';
+      if(dispType !== 'mix') {
+          type = dispType;
+      } else {
+          const roll = Math.random() * 100;
+          if(roll < rB) type = 'rr';
+          else if(roll < rB + rO) type = 'op';
+          else type = 'num';
+      }
+      t.type = type;
+  });
+
+  let fullSet = targets.concat(extras);
+  fullSet = shuffle(fullSet);
+
+  fullSet.forEach(item => {
+    state.data.push({
+      ...item,
+      angle: Math.random() * 360
+    });
+  });
+  
+  renderOnly();
+}
+
+function renderOnly() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  
+  const doRot = document.getElementById('doRot').checked;
+  const doCorr = document.getElementById('doCorr').checked;
+  const showLetters = document.getElementById('showLetters').checked;
+  const opLayout = document.getElementById('opLayout').value;
+  const theme = document.getElementById('beadColor').value;
+  const dict = i18n[currentLang];
+
+  document.getElementById('h-title').innerText = dict.page_title;
+  document.getElementById('h-sub').innerText = dict.page_sub;
+
+  state.data.forEach(item => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    
+    const wrap = document.createElement('div');
+    wrap.className = 'rotate-wrap';
+    if(doRot) wrap.style.transform = `rotate(${item.angle}deg)`;
+    
+    let html = '';
+    
+    if(item.type === 'rr') {
+      html = getSvg(item.a, item.b, theme, showLetters);
+    } 
+    else if(item.type === 'op') {
+      if(opLayout === 'col') {
+         html = `<div class="op-col"><div>${item.a}</div><div>+ ${item.b}</div><div class="bar"></div></div>`;
+      } else {
+         html = `<div class="op-line">${item.a} + ${item.b} =</div>`;
+      }
+    } 
+    else if(item.type === 'num') {
+      let val = item.a + item.b;
+      let displayVal = val;
+      if(val === 6 || val === 9) {
+        displayVal = `<span class="u-69">${val}</span>`;
+      }
+      html = `<div class="num-val">${displayVal}</div>`;
+    }
+    
+    wrap.innerHTML = html;
+    cell.appendChild(wrap);
+
+    if(doCorr && item.isTarget) {
+      const el = document.createElement('div');
+      el.className = 'corr-ellipse';
+      cell.appendChild(el);
+      const txt = document.createElement('div');
+      txt.className = 'corr-text';
+      
+      let sum = item.a + item.b;
+      if (Math.abs(item.a - item.b) > 0) {
+          // Si c'est un double caché (Difficile), on montre la transfo
+          let half = sum / 2;
+          txt.innerText = `${half} + ${half} = ${sum}`;
+      } else {
+          // Double standard
+          txt.innerText = `${item.a} + ${item.b} = ${item.a+item.b}`;
+      }
+      
+      cell.appendChild(txt);
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+function getSvg(a, b, theme, showLetters) {
+  const W = 100, H = 100;
+  const yTop = 44; 
+  const yBot = 56;
+  
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}">`;
+  const letters = "REKENREK"; 
+
+  const drawLine = (n, y) => {
+    let str = "";
+    const r = 4.0; 
+    const spacing = 8.5; 
+    
+    // MODIF : DÉCALAGE VERS LA DROITE
+    // Anciennement 11.75 (centrage mathématique).
+    // On pousse à 13.5 pour compenser l'impression visuelle "trop à gauche".
+    const startX = 13.5; 
+
+    let cx = startX;
+    
+    for(let i=0; i < n; i++) {
+      let isFirst5 = (i % 10) < 5;
+      let colMain = '#ef4444'; 
+      let colSec = (theme === 'blue') ? '#3b82f6' : '#ffffff'; 
+      let fill = isFirst5 ? colMain : colSec;
+      
+      str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#111827" stroke-width="0.5" />`;
+      
+      if(showLetters && i < 8) {
+        let txtCol = (fill === '#ffffff') ? 'black' : 'white';
+        str += `<text x="${cx}" y="${y}" font-size="3.5" font-family="Arial, sans-serif" font-weight="900" fill="${txtCol}" text-anchor="middle" dominant-baseline="central">${letters[i]}</text>`;
+      }
+      cx += spacing;
+    }
+    return str;
+  };
+  
+  svg += drawLine(a, yTop);
+  svg += drawLine(b, yBot);
+  svg += `</svg>`;
+  return svg;
+}
+</script>
+</body>
+</html>
