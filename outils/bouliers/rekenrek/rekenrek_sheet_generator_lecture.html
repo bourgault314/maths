@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Suite — 4 outils</title>
+  <title>Menu</title>
   <style>
     :root{
       --bg:#e2e8f0;
@@ -12,77 +12,80 @@
       --ink:#0f172a;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      height:100vh;
+      overflow:hidden;
+      display:flex
+    }
     aside{
-      width:300px;min-width:260px;max-width:380px;
+      width:240px;
       background:var(--panel);
       border-right:1px solid var(--border);
-      padding:16px 14px;
-      display:flex;flex-direction:column;gap:12px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
     .title{
-      font-weight:900;letter-spacing:.3px;
-      font-size:14px;text-transform:uppercase;
-      padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:16px;
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
       background:#f8fafc;
     }
-    .btns{display:flex;flex-direction:column;gap:10px}
-    .nav-btn{
-      appearance:none;border:none;cursor:pointer;
-      width:100%;
-      padding:14px 12px;
-      border-radius:14px;
-      font-weight:900;
-      letter-spacing:.2px;
+    .btns{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:700;
+      cursor:pointer;
       text-align:left;
-      background:var(--btn,#2563eb);
-      color:white;
-      box-shadow:0 8px 18px rgba(0,0,0,.12);
-      transform:translateY(0);
-      transition:transform .08s ease, filter .12s ease, opacity .12s ease;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      transition:transform .05s ease, box-shadow .15s ease, border-color .15s ease;
+      box-shadow:0 1px 0 rgba(0,0,0,.03);
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
-    .nav-btn:hover{filter:brightness(1.02)}
-    .nav-btn:active{transform:translateY(1px)}
-    .nav-btn .sub{font-weight:800;opacity:.9;font-size:12px}
-    .nav-btn.inactive{opacity:.55;box-shadow:none}
-    .nav-btn.active{outline:3px solid rgba(37,99,235,.25); opacity:1}
+    button:active{transform:translateY(1px)}
+    button:hover{border-color:#94a3b8}
+    button[aria-current="true"]{
+      border-color:#334155;
+      box-shadow:0 4px 14px rgba(15,23,42,.10);
+    }
+    .dot{
+      width:12px;height:12px;border-radius:999px;flex:0 0 auto;
+      border:1px solid rgba(0,0,0,.15);
+    }
     .spacer{flex:1}
-    .hint{
-      font-size:12px;line-height:1.25;color:#475569;
-      padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;
-    }
-    main{flex:1;min-width:0;height:100vh}
+    main{flex:1; padding:0; }
     iframe{
-      width:100%;height:100%;
+      width:100%;
+      height:100%;
       border:0;
-      background:white;
-    }
-    @media print{
-      /* On imprime depuis l'outil affiché, pas depuis ce menu */
-      aside{display:none!important}
-      body{display:block;overflow:visible;height:auto}
-      main{height:auto}
-      iframe{display:none}
+      background:#fff;
     }
   </style>
 </head>
 <body>
   <aside>
-    <div class="title">Menu — 4 fichiers</div>
+    <div class="title">Menu</div>
 
-    <div class="btns" id="btns"></div>
+    <div id="btns" class="btns"></div>
 
     <div class="spacer"></div>
-
-    <div class="hint">
-      ⚠️ Cette page ne “fusionne” pas le code : elle <b>charge</b> les 4 fichiers.<br>
-      Mets ce fichier <b>dans le même dossier</b> que :
-      <br>• <code>cache cache.html</code>
-      <br>• <code>cache cache barre.html</code>
-      <br>• <code>lecture_0_100_generateur.html</code>
-      <br>• <code>lecture_0_100_generateur2.html</code>
-    </div>
   </aside>
 
   <main>
@@ -90,7 +93,7 @@
   </main>
 
   <script>
-    // ⚠️ Fichiers (avec espaces) : on encode les espaces en %20 pour être sûr.
+    // Liste des pages à charger (les espaces dans les noms sont encodés en %20)
     const pages = [
       { id: "cache",  label: "Cache-cache",                 src: "cache%20cache.html",               color: "#ef4444" },
       { id: "barre",  label: "Cache-cache barre",           src: "cache%20cache%20barre.html",       color: "#f97316" },
@@ -105,24 +108,24 @@
       const p = pages.find(x => x.id === id) || pages[0];
       [...btns.querySelectorAll("button")].forEach(b => {
         const active = b.dataset.id === p.id;
-        b.classList.toggle("active", active);
-        b.classList.toggle("inactive", !active);
+        b.setAttribute("aria-current", active ? "true" : "false");
       });
       frame.src = p.src;
-      document.title = "Suite — " + p.label;
-      if (location.hash !== "#" + p.id) location.hash = p.id;
+      location.hash = p.id;
+      document.title = "Menu";
     }
 
+    // Génère les boutons
     pages.forEach(p => {
       const b = document.createElement("button");
-      b.className = "nav-btn inactive";
-      b.style.setProperty("--btn", p.color);
+      b.type = "button";
       b.dataset.id = p.id;
-      b.innerHTML = `<span>${p.label}</span><span class="sub">Ouvrir</span>`;
+      b.innerHTML = `<span class="dot" style="background:${p.color}"></span><span>${p.label}</span>`;
       b.addEventListener("click", () => setActive(p.id));
       btns.appendChild(b);
     });
 
+    // Démarrage (hash optionnel)
     const fromHash = (location.hash || "").replace("#","").trim();
     setActive(pages.some(p => p.id === fromHash) ? fromHash : pages[0].id);
 
