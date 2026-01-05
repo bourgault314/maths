@@ -3,1510 +3,599 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — Générateur de fiches</title>
+  <title>REKENREK — DOUBLES NIVEAU 1</title>
   <style>
-    :root{
-      --ink:#0f172a;
-      --muted:#64748b;
-      --bg:#f6f7fb;
-      --panel:#ffffff;
-      --border:rgba(15,23,42,.12);
-      --accent:#0ea5e9;
-      --ok:#10b981;
+    :root {
+      --ink: #1e293b;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --accent: #2563eb;
+      --border: #cbd5e1;
+      --grid-line: #94a3b8; /* Gris acier */
+      --ok: #16a34a;
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 10mm;
+      --cols: 5;
+      --rows: 6;
+    }
+    
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
 
-      --page-w:210mm;
-      --page-h:297mm;
-      --page-margin:12mm;
-
-      --cols:5;
-      --rows:6;
-      --cell-border:#d9d9d9;
-    }
-    *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg);
-      color:var(--ink);
-    }
-
-    /* Top bar */
-    .topbar{
-      position:sticky;
-      top:0;
-      z-index:20;
-      background:rgba(255,255,255,.92);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom:1px solid rgba(0,0,0,.08);
-      padding:12px 16px;
-    }
-    .toprow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .tabs{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .tab{
-      border:1px solid rgba(0,0,0,.14);
-      background:#fff;
-      color:var(--ink);
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:950;
-      cursor:pointer;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .tab.on{
-      border-color: rgba(14,165,233,.55);
-      box-shadow: 0 0 0 3px rgba(14,165,233,.16);
-    }
-    .actions{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .btn{
-      border:1px solid rgba(0,0,0,.14);
-      background:#fff;
-      color:var(--ink);
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:950;
-      cursor:pointer;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn.primary{
-      border-color: transparent;
-      background: var(--accent);
-      color:#082f49;
-    }
-    .btn.good{
-      border-color: transparent;
-      background: var(--ok);
-      color:#052e22;
-    }
-    .btn.toggle.on{
-      border-color: rgba(16,185,129,.55);
-      box-shadow: 0 0 0 3px rgba(16,185,129,.16);
+    /* --- SIDEBAR --- */
+    aside {
+      width: 320px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     }
 
-    /* Layout */
-    .app{
-      display:grid;
-      grid-template-columns: 330px 1fr;
-      gap:16px;
-      padding:16px;
-      align-items:start;
+    .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; letter-spacing: -0.5px; text-transform: uppercase; }
+    
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .section { }
+    .sec-title { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; }
+    
+    .control { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+    .control label { flex: 1; color: #334155; }
+    
+    select, input[type="number"] {
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-weight: 600; color: var(--ink); outline: none;
+      width: 130px; background: #fff; cursor: pointer;
     }
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.05);
-      position:sticky;
-      top: 76px;
-      height: calc(100vh - 92px);
-      overflow:auto;
-    }
-    .panel h2{
-      margin:0 0 10px 0;
-      font-size:13px;
-      letter-spacing:.2px;
-      text-transform:uppercase;
-      color: var(--muted);
-    }
-    .section{
-      padding:12px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      background: rgba(255,255,255,.7);
-      margin-bottom: 12px;
-    }
-    .section h3{
-      margin:0 0 10px 0;
-      font-size:12px;
-      text-transform:uppercase;
-      color: var(--muted);
-      letter-spacing:.25px;
-    }
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin:10px 0 0 0;
-      font-size:14px;
-      font-weight:950;
-    }
-    select, input[type="number"], input[type="text"]{
-      width: 175px;
-      padding:10px 10px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--ink);
-      font-weight:950;
-      outline:none;
-    }
-    input[type="number"]{ width: 90px; }
+    select:hover { border-color: var(--accent); }
+    input[type="checkbox"] { width: auto; transform: scale(1.3); cursor: pointer; accent-color: var(--accent); margin-right: 0; }
+    
+    /* Flags */
+    .flags { display: flex; gap: 10px; }
+    .flag-btn { font-size: 20px; cursor: pointer; opacity: 0.4; transition: opacity 0.2s, transform 0.2s; border: 2px solid transparent; border-radius: 50%; padding: 2px; }
+    .flag-btn.active { opacity: 1; transform: scale(1.1); border-color: var(--border); background: #f1f5f9; }
 
-    /* Mix ratio */
-    .mixline{
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:8px;
-      align-items:end;
-      width: 175px;
-    }
-    .mixcell{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      align-items:stretch;
-    }
-    .mixlbl{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:950;
-      text-align:center;
-      letter-spacing:.2px;
-    }
-    .mixcell input[type="number"]{
-      width:100%;
-      padding:10px 10px;
-      border-radius:12px;
-    }
+    /* Mix inputs */
+    .mix-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; background: #f1f5f9; padding: 8px; border-radius: 8px; }
+    .mix-col { display: flex; flex-direction: column; align-items: center; }
+    .mix-col span { font-size: 9px; color: #64748b; margin-bottom: 2px; font-weight: bold; }
+    .mix-col input { width: 100%; text-align: center; padding: 4px; font-size: 12px; }
 
-    /* Tables mix checkboxes */
-    .checkgrid{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:8px;
-      margin-top:10px;
-    }
-    .check{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      font-weight:900;
-      font-size:13px;
-      color:#111827;
-      padding:8px 8px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#fff;
-      justify-content:center;
-      user-select:none;
-    }
-    .check input{ width:auto; }
+    /* ACTIONS */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .btn { padding: 10px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; transition: transform 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-new { background: var(--accent); }
+    .btn-print { background: #10b981; }
 
-    /* Preview */
-    .previewWrap{
-      display:flex;
-      justify-content:center;
-      align-items:flex-start;
-      padding-bottom:16px;
+    /* --- PAGE PREVIEW --- */
+    main { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; align-items: flex-start; background: #e2e8f0; }
+    
+    .page {
+      width: var(--page-w); height: var(--page-h);
+      background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      position: relative; flex-shrink: 0;
     }
-    .page{
-      width: var(--page-w);
-      height: var(--page-h);
-      background:#fff;
-      border-radius:10px;
-      box-shadow: 0 18px 45px rgba(0,0,0,.10);
-      border: 1px solid rgba(0,0,0,.06);
-      position:relative;
-      overflow:hidden;
-    }
-    .page-inner{
-      position:absolute;
-      left: var(--page-margin);
-      right: var(--page-margin);
-      top: var(--page-margin);
-      bottom: var(--page-margin);
-      display:flex;
-      flex-direction:column;
-      gap:10mm;
-    }
-    .title h1{
-      margin:0;
-      font-size:18px;
-      letter-spacing:.3px;
-    }
-    .title p{
-      margin:2mm 0 0 0;
-      font-size:13px;
-      color:#111827;
-    }
-    .grid{
-      flex:1;
-      display:grid;
+    .page-inner { position: absolute; inset: var(--page-margin); display: flex; flex-direction: column; }
+    
+    .header { margin-bottom: 6mm; border-bottom: 2px solid #000; padding-bottom: 2mm; display: flex; justify-content: space-between; align-items: flex-end; }
+    .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; color: #000; }
+    .header p { margin: 0; font-size: 14px; color: #111; font-weight: 600; }
+
+    /* GRILLE */
+    .grid {
+      flex: 1; display: grid;
       grid-template-columns: repeat(var(--cols), 1fr);
       grid-template-rows: repeat(var(--rows), 1fr);
+      border-top: 1px solid var(--grid-line); 
+      border-left: 1px solid var(--grid-line);
     }
-    .cell{
-      border: 0.6px solid var(--cell-border);
-      position:relative;
-      overflow:hidden;
-    }
-    .cell svg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-    }
-    .eq{
-      position:absolute;
-      left:0; right:0;
-      bottom: 3mm;
-      text-align:center;
-      font-weight: 1000;
-      font-size: 11px;
-      color:#111827;
-      text-shadow: 0 1px 0 rgba(255,255,255,.9);
-      pointer-events:none;
-      user-select:none;
-      white-space:nowrap;
+    .cell {
+      border-right: 1px solid var(--grid-line); 
+      border-bottom: 1px solid var(--grid-line);
+      position: relative; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; padding: 2px;
     }
 
-    /* Operation (horizontal) */
-    .op, .num{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform: translate(-50%,-50%);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 6mm 4mm;
-      font-weight: 1000;
-      color:#111827;
-      user-select:none;
-      pointer-events:none;
-      text-align:center;
-      width: 100%;
+    /* --- ITEMS --- */
+    .rotate-wrap { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .rr-svg { width: 100%; height: 100%; overflow: visible; }
+    
+    .op-line { font-size: 18px; font-weight: 900; white-space: nowrap; font-family: system-ui; }
+    .op-col { font-family: 'Courier New', monospace; font-size: 22px; font-weight: 900; line-height: 1.1; text-align: right; padding-right: 15px; }
+    .op-col .bar { height: 2px; background: #000; margin: 4px 0; width: 100%; }
+
+    .num-val { font-size: 32px; font-weight: 900; }
+    .u-69 { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+
+    /* Correction */
+    .corr-ellipse {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%; height: 70%; 
+      border: 2px solid var(--ok);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 5;
     }
-    .op .expr, .num .value{
-      font-size: 17px;
-      letter-spacing:.2px;
-      background: rgba(255,255,255,.80);
-      padding: 6px 10px;
-      border-radius: 12px;
-      display:inline-block;
-      transform-origin: 50% 50%;
-    }
-    .num .value{
-      font-size: 22px;
-      padding: 8px 14px;
-      min-width: 44px;
+    .corr-text {
+      position: absolute;
+      bottom: 2px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #000;
+      background: rgba(255,255,255,0.85);
+      z-index: 6;
+      border-radius: 4px;
+      pointer-events: none;
     }
 
-    /* Operation (column) */
-    .opcol{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform: translate(-50%,-50%);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      user-select:none;
-      pointer-events:none;
-      font-weight:1000;
-      color:#111827;
-      width: 100%;
-    }
-    .opcol .box{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 17px;
-      line-height: 1.25;
-      min-width: 62px;
-      text-align:right;
-      padding: 6px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.80);
-      transform-origin: 50% 50%;
-    }
-    .opcol .row2{
-      display:flex;
-      justify-content:flex-end;
-      gap: 8px;
-    }
-    .opcol .line{
-      height: 2px;
-      background:#111827;
-      margin: 5px 0;
-      opacity:.85;
-      border-radius: 2px;
-    }
-
-    /* mark 6/9 in rotated mode */
-    .mark69{
-      text-decoration: underline;
-      text-decoration-thickness: 2.2px;
-      text-underline-offset: 3px;
-    }
-
-    @media print{
-      .topbar, .panel{ display:none !important; }
-      body{ background:#fff; }
-      .app{ grid-template-columns: 1fr; padding:0; }
-      .previewWrap{ padding:0; }
-      .page{ box-shadow:none; border:none; border-radius:0; }
+    /* --- IMPRESSION CORRIGÉE --- */
+    @media print {
+      @page { size: A4; margin: 0; } /* Force le format A4 sans marges navigateur */
+      
+      body { 
+        display: block; 
+        background: white; 
+        height: auto; 
+        overflow: visible; 
+      }
+      
+      aside { display: none !important; } /* Cache le menu */
+      
+      main { 
+        padding: 0; 
+        margin: 0; 
+        display: block; 
+        overflow: visible; 
+        height: auto; 
+      }
+      
+      .page {
+        margin: 0 auto;
+        box-shadow: none;
+        border: none;
+        width: 210mm;
+        height: 297mm;
+        overflow: hidden;
+        page-break-after: always;
+      }
+      
+      /* Assure l'impression des couleurs de fond (billes) */
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="toprow">
-    <div class="tabs">
-      <button class="tab on" id="tabDoubles">Doubles</button>
-      <button class="tab" id="tabNear">Presque doubles</button>
-      <button class="tab" id="tabBig">Grands doubles</button>
-      <button class="tab" id="tabTables">Tables</button>
-    </div>
+<aside>
+  <div class="sb-header">
+    <h2 class="sb-title" data-i18n="title_main">Doubles Niv.1</h2>
+  </div>
+  
+  <div class="sb-scroll">
     <div class="actions">
-      <button class="btn primary" id="btnNew">Nouvelle fiche</button>
-      <button class="btn toggle" id="btnCorrection">Correction : OFF</button>
-      <button class="btn good" id="btnPrint">Imprimer / PDF</button>
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_new">NOUVEAU TIRAGE</button>
+      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_layout">Mise en page</div>
+      <div class="control">
+        <label data-i18n="lbl_grid">Grille</label>
+        <select id="gridSize" onchange="updateMaxTargets(); startGen()">
+          <option value="5x6">30 cases (5x6)</option>
+          <option value="4x6">24 cases (4x6)</option>
+          <option value="4x5">20 cases (4x5)</option>
+          <option value="4x4">16 cases (4x4)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_lang">Langue</label>
+        <div class="flags">
+          <div class="flag-btn active" onclick="setLang('fr', this)">🇫🇷</div>
+          <div class="flag-btn" onclick="setLang('en', this)">🇬🇧</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_content">Contenu</div>
+      
+      <div class="control">
+        <label data-i18n="lbl_correct">Nb. Justes</label>
+        <input type="number" id="targetCount" value="11" min="1" max="30" onchange="startGen()">
+      </div>
+
+      <div class="control">
+        <label data-i18n="lbl_display">Affichage</label>
+        <select id="dispType" onchange="toggleMix(); renderOnly()">
+          <option value="rr" data-i18n="opt_rr">Boulier (100%)</option>
+          <option value="op" data-i18n="opt_op">Opérations (100%)</option>
+          <option value="num" data-i18n="opt_num">Nombres (100%)</option>
+          <option value="mix" data-i18n="opt_mix">Mélange (Auto)</option>
+        </select>
+      </div>
+      
+      <div id="mixPanel" style="display:none;">
+        <div class="mix-group">
+          <div class="mix-col"><span data-i18n="mix_b">Boulier</span><input type="number" id="ratB" value="40" oninput="calcRatio('B')"></div>
+          <div class="mix-col"><span data-i18n="mix_o">Opér.</span><input type="number" id="ratO" value="30" oninput="calcRatio('O')"></div>
+          <div class="mix-col"><span data-i18n="mix_n">Nombre</span><input type="number" id="ratN" value="30" disabled style="background:transparent; color:#64748b;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="sec_style">Style</div>
+      <div class="control">
+        <label data-i18n="lbl_opstyle">Opérations</label>
+        <select id="opLayout" onchange="renderOnly()">
+          <option value="line" data-i18n="opt_line">En ligne</option>
+          <option value="col" data-i18n="opt_col">En colonne</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_beads">Billes</label>
+        <select id="beadColor" onchange="renderOnly()">
+          <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
+          <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
+        </select>
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_letters">Lettres (R)</label>
+        <input type="checkbox" id="showLetters" onchange="renderOnly()">
+      </div>
+      <div class="control">
+        <label data-i18n="lbl_rot">Rotation</label>
+        <input type="checkbox" id="doRot" onchange="renderOnly()">
+      </div>
+      <div class="control">
+        <label style="color:var(--ok); font-weight:800;" data-i18n="lbl_corr">Correction</label>
+        <input type="checkbox" id="doCorr" onchange="renderOnly()">
+      </div>
     </div>
   </div>
-</div>
+</aside>
 
-<div class="app">
-  <aside class="panel">
-    <h2>Réglages</h2>
-
-    <div class="section">
-      <h3>Consigne</h3>
-      <div class="row">
-        <div>Langue</div>
-        <select id="lang">
-          <option value="fr" selected>🇫🇷 Français</option>
-          <option value="en">🇬🇧 English</option>
-        </select>
+<main>
+  <div class="page">
+    <div class="page-inner">
+      <div class="header">
+        <h1 id="h-title">REKENREK — DOUBLES NIVEAU 1</h1>
+        <p id="h-sub">Entoure les doubles et complète l'égalité.</p>
       </div>
+      <div class="grid" id="grid"></div>
     </div>
-
-    <div class="section">
-      <h3>Damier</h3>
-      <div class="row">
-        <div>Nombre de cases</div>
-        <select id="gridSize">
-          <option value="5x6" selected>30 (5 × 6)</option>
-          <option value="4x6">24 (4 × 6)</option>
-          <option value="5x4">20 (5 × 4)</option>
-          <option value="4x4">16 (4 × 4)</option>
-          <option value="4x3">12 (4 × 3)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="section">
-      <h3>Affichage</h3>
-
-      <div class="row">
-        <div>Orientation</div>
-        <select id="orientation">
-          <option value="upright" selected>Droit</option>
-          <option value="rot">Tourné</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div>Type</div>
-        <select id="display">
-          <option value="rr" selected>Boulier</option>
-          <option value="op">Opération</option>
-          <option value="num">Nombre</option>
-          <option value="mix">Mélange</option>
-        </select>
-      </div>
-
-      <div class="row" id="mixRow" style="display:none;">
-        <div>Ratio (%)</div>
-        <div class="mixline">
-          <div class="mixcell">
-            <div class="mixlbl">B</div>
-            <input id="mixB" type="number" min="0" max="100" value="50">
-          </div>
-          <div class="mixcell">
-            <div class="mixlbl">O</div>
-            <input id="mixO" type="number" min="0" max="100" value="50">
-          </div>
-          <div class="mixcell">
-            <div class="mixlbl">N</div>
-            <input id="mixN" type="number" min="0" max="100" value="0">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section" id="opsSection" style="display:none;">
-      <h3>Résultats</h3>
-
-      <div class="row">
-        <div>Résultat affiché</div>
-        <select id="showResult">
-          <option value="blank" selected>Non</option>
-          <option value="given">Oui</option>
-        </select>
-      </div>
-
-      <div class="row" id="qualityModeRow" style="display:none;">
-        <div>Réglage</div>
-        <select id="qualityMode">
-          <option value="percent" selected>% erreurs</option>
-          <option value="count">Nb justes</option>
-        </select>
-      </div>
-
-      <div class="row" id="wrongRow" style="display:none;">
-        <div>% erreurs</div>
-        <input id="wrongPct" type="number" min="0" max="80" value="35" />
-      </div>
-
-      <div class="row" id="correctRow" style="display:none;">
-        <div>Nb justes</div>
-        <input id="correctCount" type="number" min="0" max="30" value="10" />
-      </div>
-    </div>
-
-    <div class="section" id="tablesSection" style="display:none;">
-      <h3>Tables</h3>
-
-      <div class="row">
-        <div>Table</div>
-        <select id="tablePick">
-          <option value="2" selected>2</option>
-          <option value="3">3</option><option value="4">4</option><option value="5">5</option>
-          <option value="6">6</option><option value="7">7</option><option value="8">8</option>
-          <option value="9">9</option><option value="10">10</option><option value="11">11</option>
-          <option value="12">12</option>
-          <option value="mix">Mélange…</option>
-        </select>
-      </div>
-
-      <div id="mixTables" style="display:none;">
-        <div class="checkgrid" id="mixChecks"></div>
-      </div>
-
-      <div class="row">
-        <div>Multiplicateurs</div>
-        <select id="multRange">
-          <option value="0-10">0 → 10</option>
-          <option value="0-12" selected>0 → 12</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div>Répéter</div>
-        <select id="repeatK">
-          <option value="1" selected>x1</option>
-          <option value="2">x2</option>
-          <option value="3">x3</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div>Question</div>
-        <select id="qStyle">
-          <option value="calc" selected>Calcul (a×b=)</option>
-          <option value="ans">Réponse (…=a×b)</option>
-        </select>
-      </div>
-    </div>
-
-  </aside>
-
-  <main class="previewWrap">
-    <div class="page">
-      <div class="page-inner">
-        <div class="title">
-          <h1 id="title">REKENREK</h1>
-          <p id="subtitle">—</p>
-        </div>
-        <div class="grid" id="grid"></div>
-      </div>
-    </div>
-  </main>
-</div>
+  </div>
+</main>
 
 <script>
-(function(){
-  // UI
-  const tabDoubles = document.getElementById('tabDoubles');
-  const tabNear = document.getElementById('tabNear');
-  const tabBig = document.getElementById('tabBig');
-  const tabTables = document.getElementById('tabTables');
+// --- DICTIONNAIRE DE LANGUE ---
+const i18n = {
+  fr: {
+    title_main: "Doubles Niv.1",
+    btn_new: "NOUVEAU TIRAGE",
+    btn_print: "IMPRIMER",
+    sec_layout: "Mise en page",
+    lbl_grid: "Grille",
+    lbl_lang: "Langue",
+    sec_content: "Contenu",
+    lbl_correct: "Nb. Justes",
+    lbl_display: "Affichage",
+    opt_rr: "Boulier (100%)",
+    opt_op: "Opérations (100%)",
+    opt_num: "Nombres (100%)",
+    opt_mix: "Mélange (Auto)",
+    mix_b: "Boulier",
+    mix_o: "Opér.",
+    mix_n: "Nombre",
+    sec_style: "Style",
+    lbl_opstyle: "Opérations",
+    opt_line: "En ligne",
+    opt_col: "En colonne",
+    lbl_beads: "Billes",
+    opt_red: "Rouge / Blanc",
+    opt_blue: "Rouge / Bleu",
+    lbl_letters: "Lettres (Rekenrek)",
+    lbl_rot: "Rotation",
+    lbl_corr: "Correction",
+    page_title: "REKENREK — DOUBLES NIVEAU 1",
+    page_sub: "Entoure les doubles et complète l'égalité."
+  },
+  en: {
+    title_main: "Doubles Lvl.1",
+    btn_new: "SHUFFLE",
+    btn_print: "PRINT",
+    sec_layout: "Layout",
+    lbl_grid: "Grid",
+    lbl_lang: "Language",
+    sec_content: "Content",
+    lbl_correct: "Correct Count",
+    lbl_display: "Display",
+    opt_rr: "Rekenrek (100%)",
+    opt_op: "Operations (100%)",
+    opt_num: "Numbers (100%)",
+    opt_mix: "Mixed (Auto)",
+    mix_b: "Beads",
+    mix_o: "Ops",
+    mix_n: "Num",
+    sec_style: "Style",
+    lbl_opstyle: "Operations",
+    opt_line: "Linear",
+    opt_col: "Column",
+    lbl_beads: "Beads",
+    opt_red: "Red / White",
+    opt_blue: "Red / Blue",
+    lbl_letters: "Letters (Rekenrek)",
+    lbl_rot: "Rotation",
+    lbl_corr: "Answer Key",
+    page_title: "REKENREK — DOUBLES LEVEL 1",
+    page_sub: "Circle the doubles and complete the equation."
+  }
+};
 
-  const btnNew = document.getElementById('btnNew');
-  const btnCorrection = document.getElementById('btnCorrection');
-  const btnPrint = document.getElementById('btnPrint');
+let currentLang = 'fr';
+let state = { data: [] };
 
-  const langSel = document.getElementById('lang');
-  const gridSizeSel = document.getElementById('gridSize');
-  const orientationSel = document.getElementById('orientation');
-  const displaySel = document.getElementById('display');
+// INIT
+window.onload = function() {
+  calcRatio('B');
+  updateMaxTargets();
+  startGen();
+  updateLangUI();
+};
 
-  const mixRow = document.getElementById('mixRow');
-  const mixB = document.getElementById('mixB');
-  const mixO = document.getElementById('mixO');
-  const mixN = document.getElementById('mixN');
+function setLang(l, el) {
+  currentLang = l;
+  document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateLangUI();
+  // Mise à jour explicite du titre et sous-titre
+  const dict = i18n[currentLang];
+  document.getElementById('h-title').innerText = dict.page_title;
+  document.getElementById('h-sub').innerText = dict.page_sub;
+}
 
-  const opsSection = document.getElementById('opsSection');
-  const showResultSel = document.getElementById('showResult');
-  const qualityModeRow = document.getElementById('qualityModeRow');
-  const qualityModeSel = document.getElementById('qualityMode');
-  const wrongRow = document.getElementById('wrongRow');
-  const wrongPct = document.getElementById('wrongPct');
-  const correctRow = document.getElementById('correctRow');
-  const correctCount = document.getElementById('correctCount');
+function updateLangUI() {
+  const dict = i18n[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(dict[key]) el.innerText = dict[key];
+  });
+}
 
-  const tablesSection = document.getElementById('tablesSection');
-  const tablePick = document.getElementById('tablePick');
-  const multRange = document.getElementById('multRange');
-  const repeatK = document.getElementById('repeatK');
-  const qStyle = document.getElementById('qStyle');
-  const mixTablesWrap = document.getElementById('mixTables');
-  const mixChecks = document.getElementById('mixChecks');
+function updateMaxTargets() {
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  const total = cols * rows;
+  const inp = document.getElementById('targetCount');
+  inp.max = total;
+  if(parseInt(inp.value) > total) inp.value = total;
+}
 
-  const title = document.getElementById('title');
-  const subtitle = document.getElementById('subtitle');
-  const grid = document.getElementById('grid');
+// HELPERS RATIO
+function calcRatio(src) {
+  let b = parseInt(document.getElementById('ratB').value)||0;
+  let o = parseInt(document.getElementById('ratO').value)||0;
+  if(b < 0) b = 0; if(o < 0) o = 0;
+  if(b + o > 100) { if(src === 'B') o = 100 - b; else b = 100 - o; }
+  let n = 100 - b - o;
+  document.getElementById('ratB').value = b;
+  document.getElementById('ratO').value = o;
+  document.getElementById('ratN').value = n;
+  
+  if(document.getElementById('dispType').value === 'mix') renderOnly();
+}
 
-  // State
-  let tool = 'doubles';      // doubles | near | big | tables
-  let correction = false;
-  let sheet = null;
+function toggleMix() {
+  const t = document.getElementById('dispType').value;
+  document.getElementById('mixPanel').style.display = (t === 'mix') ? 'block' : 'none';
+}
 
-  // Seeded RNG
-  function mulberry32(a){
-    return function(){
-      let t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// GENERATION DECK DE CARTES (0-10)
+function startGen() {
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+  const totalSlots = cols * rows;
+  const targetCount = parseInt(document.getElementById('targetCount').value) || 11;
+
+  state.data = [];
+  let targets = [];
+
+  // Logique JEU DE CARTES : 
+  // 1. On crée un pool de cibles selon la demande
+  // Si targetCount = 5 -> On tire 5 cartes au hasard dans [0..10]
+  // Si targetCount = 15 -> On prend [0..10] (11) + 4 cartes hasard dans [0..10]
+  
+  // Combien de decks complets ?
+  const fullDecks = Math.floor(targetCount / 11);
+  const remainder = targetCount % 11;
+
+  // Ajout des decks complets
+  for(let d=0; d<fullDecks; d++) {
+    for(let i=0; i<=10; i++) targets.push({ a: i, b: i, isTarget: true });
+  }
+
+  // Ajout du reste (tirage au sort sans remise dans un nouveau deck)
+  if(remainder > 0) {
+    let partialDeck = [];
+    for(let i=0; i<=10; i++) partialDeck.push(i);
+    partialDeck = shuffle(partialDeck);
+    for(let k=0; k<remainder; k++) {
+      let val = partialDeck[k];
+      targets.push({ a: val, b: val, isTarget: true });
     }
   }
-  function randInt(rng,a,b){ return Math.floor(rng()*(b-a+1))+a; }
-  function shuffle(rng, arr){
-    for(let i=arr.length-1;i>0;i--){
-      const j = Math.floor(rng()*(i+1));
-      [arr[i],arr[j]] = [arr[j],arr[i]];
-    }
-    return arr;
+
+  // 2. LE RESTE DE LA GRILLE (PIÈGES)
+  let extras = [];
+  const slotsRemaining = totalSlots - targets.length;
+  const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+
+  for(let k=0; k<slotsRemaining; k++) {
+    // Piège : a != b
+    let a = rand(0, 10);
+    let b;
+    do { b = rand(0, 10); } while(b === a);
+    extras.push({ a: a, b: b, isTarget: false });
   }
 
-  // 6/9 markers when rotated
-  // Règle : on souligne uniquement quand le nombre est "tout seul" (mode Nombre),
-  // et uniquement si la valeur est exactement 6 ou 9 (pas dans un calcul, pas dans un nombre à plusieurs chiffres).
-  function setPlainText(el, str){
-    el.textContent = String(str);
-  }
-  function setStandaloneNumber(el, value){
-    const cfg = sheet ? sheet.cfg : getConfig();
-    const v = Number(value);
-    if(cfg.orientation === 'rot' && (v === 6 || v === 9)){
-      el.innerHTML = `<span class="mark69">${v}</span>`;
-    }else{
-      el.textContent = String(value);
-    }
-  }
-  }
+  // 3. FUSION ET MELANGE
+  let fullSet = targets.concat(extras);
+  fullSet = shuffle(fullSet);
 
-  function parseGridSize(){
-    const v = gridSizeSel.value; // "5x6"
-    const m = v.match(/^(\d+)x(\d+)$/);
-    let cols = 5, rows = 6;
-    if(m){
-      cols = parseInt(m[1],10);
-      rows = parseInt(m[2],10);
-    }
-    const N = cols*rows;
-    document.documentElement.style.setProperty('--cols', String(cols));
-    document.documentElement.style.setProperty('--rows', String(rows));
-    return {cols, rows, N};
-  }
-
-  function clampPct(x){
-    x = Number(x);
-    if(!Number.isFinite(x)) x = 0;
-    x = Math.round(x);
-    if(x < 0) x = 0;
-    if(x > 100) x = 100;
-    return x;
-  }
-
-  // Ratio: any field can be edited; we keep sum=100 by adjusting one other field.
-  // Rule: keep the "next" field fixed, adjust the remaining one.
-  function normalizeMix(changed){
-    let b = clampPct(mixB.value);
-    let o = clampPct(mixO.value);
-    let n = clampPct(mixN.value);
-
-    if(changed === 'B'){
-      // keep O, compute N
-      n = 100 - b - o;
-      if(n < 0){
-        n = 0;
-        o = 100 - b;
-        if(o < 0){ o = 0; b = 100; }
-      }
-    }else if(changed === 'O'){
-      // keep B, compute N
-      n = 100 - b - o;
-      if(n < 0){
-        n = 0;
-        b = 100 - o;
-        if(b < 0){ b = 0; o = 100; }
-      }
-    }else if(changed === 'N'){
-      // keep B, compute O
-      o = 100 - b - n;
-      if(o < 0){
-        o = 0;
-        b = 100 - n;
-        if(b < 0){ b = 0; n = 100; }
-      }
-    }else{
-      // default: compute N from B & O
-      n = 100 - b - o;
-      if(n < 0){
-        n = 0;
-        o = 100 - b;
-        if(o < 0){ o = 0; b = 100; }
-      }
-    }
-
-    // Final clamp and force sum=100 via N
-    b = clampPct(b); o = clampPct(o);
-    n = 100 - b - o;
-    if(n < 0){
-      n = 0;
-      o = 100 - b;
-      if(o < 0){ o = 0; b = 100; }
-      n = 100 - b - o;
-    }
-
-    mixB.value = String(b);
-    mixO.value = String(o);
-    mixN.value = String(n);
-  }
-
-  function selectedMixTables(){
-    // returns array of ints (2..12) from checked boxes
-    const arr = [];
-    const inputs = mixChecks.querySelectorAll('input[type="checkbox"]');
-    inputs.forEach(inp => {
-      if(inp.checked) arr.push(parseInt(inp.value,10));
+  // 4. ATTRIBUTION DES TYPES VISUELS
+  fullSet.forEach(item => {
+    state.data.push({
+      ...item,
+      angle: Math.random() * 360,
+      roll: Math.random() * 100
     });
-    return arr;
-  }
+  });
+  
+  renderOnly();
+}
 
-  function getConfig(){
-    const {cols, rows, N} = parseGridSize();
-    const lang = langSel.value; // fr|en
-    const orientation = orientationSel.value; // upright|rot
-    const display = displaySel.value; // rr|op|num|mix
+// RENDER
+function renderOnly() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  
+  const doRot = document.getElementById('doRot').checked;
+  const doCorr = document.getElementById('doCorr').checked;
+  const showLetters = document.getElementById('showLetters').checked;
+  const opLayout = document.getElementById('opLayout').value;
+  const theme = document.getElementById('beadColor').value;
+  const dispType = document.getElementById('dispType').value;
+  
+  // Mise à jour de la langue pour titre/consigne lors d'un simple rendu
+  const dict = i18n[currentLang];
+  document.getElementById('h-title').innerText = dict.page_title;
+  document.getElementById('h-sub').innerText = dict.page_sub;
 
-    normalizeMix(null);
-    const bPct = clampPct(mixB.value);
-    const oPct = clampPct(mixO.value);
-    const nPct = clampPct(mixN.value);
+  const rB = parseInt(document.getElementById('ratB').value);
+  const rO = parseInt(document.getElementById('ratO').value);
 
-    const showResult = showResultSel.value; // blank|given
-    const qualityMode = qualityModeSel.value; // percent|count
-
-    let wrong = Number(wrongPct.value)||35;
-    if(wrong<0) wrong=0;
-    if(wrong>80) wrong=80;
-    wrongPct.value = String(Math.round(wrong));
-
-    let cCount = Number(correctCount.value)||10;
-    if(cCount<0) cCount=0;
-    if(cCount>30) cCount=30;
-    correctCount.value = String(Math.round(cCount));
-
-    // tables
-    const pick = tablePick.value; // "2".."12" or "mix"
-    const tables = (pick==='mix') ? selectedMixTables() : [parseInt(pick,10)];
-    const range = multRange.value; // "0-10" | "0-12"
-    const repK = parseInt(repeatK.value,10);
-    const style = qStyle.value; // calc|ans
-
-    return {
-      cols, rows, N,
-      lang,
-      orientation,
-      display,
-      mix: {bPct, oPct, nPct},
-      showResult,
-      qualityMode,
-      wrongRate: (Math.max(0, Math.min(80, wrong)))/100,
-      correctCount: Math.max(0, Math.min(30, cCount)),
-      tables: {tables, range, repK, style, pick}
-    };
-  }
-
-  function updatePanel(){
-    const cfg = getConfig();
-
-    tablesSection.style.display = (tool==='tables') ? 'block' : 'none';
-
-    // Show mix checks for tables only if Mélange…
-    mixTablesWrap.style.display = (tool==='tables' && cfg.tables.pick==='mix') ? 'block' : 'none';
-
-    // Mix row
-    mixRow.style.display = (cfg.display==='mix') ? 'flex' : 'none';
-
-    // Ops section: show if operations are used in chosen display
-    let usesOps = false;
-    if(cfg.display==='op') usesOps = true;
-    if(cfg.display==='mix' && cfg.mix.oPct>0) usesOps = true;
-    opsSection.style.display = usesOps ? 'block' : 'none';
-
-    const wantsResults = (usesOps && cfg.showResult==='given');
-    qualityModeRow.style.display = wantsResults ? 'flex' : 'none';
-    wrongRow.style.display = (wantsResults && cfg.qualityMode==='percent') ? 'flex' : 'none';
-    correctRow.style.display = (wantsResults && cfg.qualityMode==='count') ? 'flex' : 'none';
-  }
-
-  function wrongResult(rng, correct, minV, maxV){
-    let w = correct;
-    let tries = 0;
-    while(w===correct && tries<25){
-      const delta = randInt(rng,-3,3);
-      w = correct + (delta===0 ? 1 : delta);
-      if(w<minV || w>maxV) w = randInt(rng,minV,maxV);
-      tries++;
-    }
-    if(w===correct) w = (correct===minV) ? correct+1 : correct-1;
-    return w;
-  }
-
-  function isTargetItem(item){
-    if(tool==='tables') return false;
-
-    if(tool==='doubles'){
-      if(item.rep==='rr') return item.a === item.b;
-      if(item.rep==='op'){
-        if(item.opKind==='mul2') return true;
-        if(item.opKind==='mul') return (item.a===2 || item.b===2);
-        return false;
-      }
-      if(item.rep==='num') return (typeof item.value==='number' && item.value>=2 && item.value<=20 && item.value%2===0);
-      return false;
+  state.data.forEach(item => {
+    let type = 'rr';
+    if(dispType !== 'mix') {
+      type = dispType;
+    } else {
+      if(item.roll < rB) type = 'rr';
+      else if(item.roll < rB + rO) type = 'op';
+      else type = 'num';
     }
 
-    if(tool==='big'){
-      if(item.rep==='rr') return item.a === item.b;
-      if(item.rep==='op'){
-        if(item.opKind==='mul2') return true;
-        if(item.opKind==='mul') return (item.a===2 || item.b===2);
-        return false;
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    
+    const wrap = document.createElement('div');
+    wrap.className = 'rotate-wrap';
+    if(doRot) wrap.style.transform = `rotate(${item.angle}deg)`;
+    
+    let html = '';
+    
+    // BOULIER
+    if(type === 'rr') {
+      html = getSvg(item.a, item.b, theme, showLetters);
+    } 
+    // OPERATION
+    else if(type === 'op') {
+      const forcedLayout = (dispType === 'mix') ? 'line' : opLayout;
+      if(forcedLayout === 'col') {
+         html = `<div class="op-col"><div>${item.a}</div><div>+ ${item.b}</div><div class="bar"></div></div>`;
+      } else {
+         html = `<div class="op-line">${item.a} + ${item.b} =</div>`;
       }
-      if(item.rep==='num') return (typeof item.value==='number' && item.value>=22 && item.value<=96 && item.value%2===0);
-      return false;
+    } 
+    // NOMBRE
+    else if(type === 'num') {
+      let val = item.a + item.b;
+      let displayVal = val;
+      if(doRot && (val === 6 || val === 9)) {
+        displayVal = `<span class="u-69">${val}</span>`;
+      }
+      html = `<div class="num-val">${displayVal}</div>`;
+    }
+    
+    wrap.innerHTML = html;
+    cell.appendChild(wrap);
+
+    // CORRECTION
+    if(doCorr && item.isTarget) {
+      const el = document.createElement('div');
+      el.className = 'corr-ellipse';
+      cell.appendChild(el);
+      
+      const txt = document.createElement('div');
+      txt.className = 'corr-text';
+      txt.innerText = `${item.a} + ${item.b} = ${item.a+item.b}`;
+      cell.appendChild(txt);
     }
 
-    // near
-    if(item.rep==='rr') return Math.abs(item.a - item.b) === 1;
-    if(item.rep==='op') return item.opKind==='add' && Math.abs(item.a - item.b) === 1;
-    if(item.rep==='num') return (typeof item.value==='number' && item.value>=3 && item.value<=19 && item.value%2===1);
-    return false;
-  }
+    grid.appendChild(cell);
+  });
+}
 
-  function decideRep(rng, cfg){
-    if(cfg.display==='rr') return 'rr';
-    if(cfg.display==='op') return 'op';
-    if(cfg.display==='num') return 'num';
-    // mix among rr/op/num by percentages
-    const pB = cfg.mix.bPct;
-    const pO = cfg.mix.oPct;
-    const r = Math.floor(rng()*100); // 0..99
-    if(r < pB) return 'rr';
-    if(r < pB + pO) return 'op';
-    return 'num';
-  }
+// DESSIN BOULIER - STYLE v17 EXACT
+function getSvg(a, b, theme, showLetters) {
+  const W = 100, H = 100;
+  const yTop = 44; 
+  const yBot = 56;
+  
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}">`;
+  const letters = "REKENREK"; 
 
-  function angleFor(rng, cfg){
-    if(cfg.orientation==='upright') return 0;
-    // Mode tourné : orientation aléatoire sur 360° pour TOUS les outils (y compris Grands doubles & Tables).
-    return rng()*360;
-  }
+  const drawLine = (n, y) => {
+    let str = "";
+    // TAILLE EXACTE DU FICHIER v17
+    const r = 4.0; 
+    const spacing = 8.5; 
+    const leftMargin = 6; 
 
-  function enforceOperationQuality(rng, cfg, items){
-    const ops = items.filter(it => it.rep==='op');
-    if(ops.length===0) return;
-    if(cfg.showResult!=='given') return;
-
-    const maxV = 500;
-
-    if(cfg.qualityMode==='count'){
-      const K = Math.max(0, Math.min(cfg.correctCount, ops.length));
-      const idx = [...Array(ops.length).keys()];
-      shuffle(rng, idx);
-      const correctSet = new Set(idx.slice(0, K));
-
-      ops.forEach((it, i) => {
-        const correct = it.correct;
-        if(correctSet.has(i)){
-          it.given = correct;
-        }else{
-          it.given = wrongResult(rng, correct, 0, maxV);
-        }
-      });
-    }else{
-      ops.forEach(it => {
-        const correct = it.correct;
-        const makeWrong = rng() < cfg.wrongRate;
-        it.given = makeWrong ? wrongResult(rng, correct, 0, maxV) : correct;
-      });
-    }
-  }
-
-  function buildSheet(){
-    const cfg = getConfig();
-    const seed = (crypto.getRandomValues(new Uint32Array(1))[0]) >>> 0;
-    const rng = mulberry32(seed);
-    const items = [];
-    const N = cfg.N;
-
-    if(tool==='doubles'){
-      // targets 1..10
-      for(let n=1;n<=10 && items.length<N;n++){
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        if(rep==='rr') items.push({rep:'rr', a:n, b:n, angle});
-        else if(rep==='op'){
-          const swap = rng()<0.5;
-          items.push({rep:'op', opKind:'mul2', n, correct:n*2, given:null, angle, swap});
-        }else items.push({rep:'num', value:2*n, angle, meta:{n}});
-      }
-      // traps
-      while(items.length < N){
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        if(rep==='rr'){
-          const a = randInt(rng,1,10), b = randInt(rng,1,10);
-          if(a===b) continue;
-          items.push({rep:'rr', a, b, angle});
-        }else if(rep==='op'){
-          const a = randInt(rng,1,10), b = randInt(rng,1,10);
-          if(a===2 || b===2) continue;
-          items.push({rep:'op', opKind:'mul', a, b, correct:a*b, given:null, angle});
-        }else{
-          const v = randInt(rng,1,19);
-          if(v%2===0) continue;
-          items.push({rep:'num', value:v, angle});
-        }
-      }
-      enforceOperationQuality(rng, cfg, items);
-      return {tool, cfg, seed, items: shuffle(rng, items)};
-    }
-
-    if(tool==='near'){
-      // targets 1-2 .. 9-10
-      for(let n=1;n<=9 && items.length<N;n++){
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        const flip = rng()<0.5;
-        const a = flip ? n : n+1;
-        const b = flip ? n+1 : n;
-        if(rep==='rr') items.push({rep:'rr', a, b, angle});
-        else if(rep==='op') items.push({rep:'op', opKind:'add', a, b, correct:a+b, given:null, column:true, angle});
-        else items.push({rep:'num', value:a+b, angle, meta:{a,b}});
-      }
-      // traps
-      while(items.length < N){
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        if(rep==='rr'){
-          const a = randInt(rng,1,10), b = randInt(rng,1,10);
-          if(Math.abs(a-b)===1) continue;
-          items.push({rep:'rr', a, b, angle});
-        }else if(rep==='op'){
-          const a = randInt(rng,1,10), b = randInt(rng,1,10);
-          if(Math.abs(a-b)===1) continue;
-          items.push({rep:'op', opKind:'add', a, b, correct:a+b, given:null, column:true, angle});
-        }else{
-          const v = randInt(rng,4,18);
-          if(v%2===1) continue;
-          items.push({rep:'num', value:v, angle});
-        }
-      }
-      enforceOperationQuality(rng, cfg, items);
-      return {tool, cfg, seed, items: shuffle(rng, items)};
-    }
-
-    if(tool==='big'){
-      // big doubles 11..48: spot-style: a lot of targets + traps
-      const pool = [];
-      for(let n=11;n<=48;n++) pool.push(n);
-      shuffle(rng, pool);
-
-      const targetCount = Math.max(10, Math.min(18, Math.floor(N*0.45)));
-      for(let i=0;i<targetCount && i<pool.length && items.length<N;i++){
-        const n = pool[i];
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        if(rep==='rr') items.push({rep:'rr', a:n, b:n, angle});
-        else if(rep==='op'){
-          const swap = rng()<0.5;
-          items.push({rep:'op', opKind:'mul2', n, correct:n*2, given:null, angle, swap});
-        }else items.push({rep:'num', value:2*n, angle, meta:{n}});
+    let cx = leftMargin;
+    
+    for(let i=0; i < n; i++) {
+      let isFirst5 = (i % 10) < 5;
+      
+      // COULEUR EXACTE DU FICHIER v17 (#ef4444)
+      let colMain = '#ef4444'; 
+      let colSec = (theme === 'blue') ? '#3b82f6' : '#ffffff'; 
+      let fill = isFirst5 ? colMain : colSec;
+      
+      str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#111827" stroke-width="0.5" />`;
+      
+      if(showLetters && i < 8) {
+        let txtCol = (fill === '#ffffff') ? 'black' : 'white';
+        // dominant-baseline="central" pour un centrage vertical parfait
+        str += `<text x="${cx}" y="${y}" font-size="3.5" font-family="Arial, sans-serif" font-weight="900" fill="${txtCol}" text-anchor="middle" dominant-baseline="central">${letters[i]}</text>`;
       }
 
-      while(items.length < N){
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-
-        if(rep==='rr'){
-          const a = randInt(rng,11,48), b = randInt(rng,11,48);
-          if(a===b) continue;
-          items.push({rep:'rr', a, b, angle});
-        }else if(rep==='op'){
-          // avoid factor 2 in traps
-          const a = randInt(rng,3,12), b = randInt(rng,3,12);
-          if(a===2 || b===2) continue;
-          const prod = a*b;
-          if(prod<20 || prod>180) continue;
-          items.push({rep:'op', opKind:'mul', a, b, correct:prod, given:null, angle});
-        }else{
-          const v = randInt(rng,23,95);
-          if(v%2===0) continue;
-          items.push({rep:'num', value:v, angle});
-        }
-      }
-
-      enforceOperationQuality(rng, cfg, items);
-      return {tool, cfg, seed, items: shuffle(rng, items)};
+      cx += spacing;
     }
-
-    if(tool==='tables'){
-      // Determine tables set
-      let tables = cfg.tables.tables;
-      if(!tables || tables.length===0){
-        tables = [2,3,4,5,6,7,8,9,10]; // fallback
-      }
-
-      // multipliers 0..10 or 0..12
-      const end = (cfg.tables.range==='0-12') ? 12 : 10;
-      const mults = [];
-      for(let m=0;m<=end;m++) mults.push(m);
-
-      // base list: for each repeat, list all combos, then shuffle
-      const base = [];
-      for(let k=0;k<cfg.tables.repK;k++){
-        for(const t of tables){
-          for(const m of mults){
-            base.push({t, m});
-          }
-        }
-      }
-      shuffle(rng, base);
-
-      // pick N combos; if not enough, pad randomly
-      const picks = base.slice(0, N);
-      while(picks.length < N){
-        picks.push({t: tables[randInt(rng,0,tables.length-1)], m: mults[randInt(rng,0,mults.length-1)]});
-      }
-
-      for(let i=0;i<N;i++){
-        const {t, m} = picks[i];
-        const rep = decideRep(rng, cfg);
-        const angle = angleFor(rng, cfg);
-        const product = t*m;
-
-        if(rep==='rr'){
-          items.push({rep:'rr1', k:product, angle, table:t, mult:m, product, style: cfg.tables.style});
-        }else if(rep==='op'){
-          const swap = rng()<0.5;
-          items.push({rep:'op', opKind:'mulTable', a:t, b:m, correct:product, given:null, angle, swap, style: cfg.tables.style});
-        }else{
-          items.push({rep:'num', value: product, angle, meta:{a:t,b:m,style:cfg.tables.style}});
-        }
-      }
-
-      enforceOperationQuality(rng, cfg, items);
-      return {tool, cfg, seed, items};
-    }
-
-    return {tool, cfg, seed, items: []};
-  }
-
-  // --- Drawing helpers ---
-  function beadFill(globalIndex){
-    // Convention demandée : après 50, on inverse Rouge/Blanc (et on ré-inverse à 100, etc.).
-    const gi = Math.max(0, Math.floor(Number(globalIndex)||0));
-    const block = Math.floor(gi / 50) % 2;   // 0: normal, 1: inversé
-    const pos10 = gi % 10;
-    const firstFiveIsRed = (pos10 < 5);
-    const red = '#ef4444', white = '#ffffff';
-    if(block === 0){
-      return firstFiveIsRed ? red : white;
-    }else{
-      return firstFiveIsRed ? white : red;
-    }
-  }
-
-  // Draw stacked rows of max 10 beads, beads touch horizontally.
-  // If constantRowsLimit is given, radius is computed as if totalRows=constantRowsLimit (more consistent).
-  function stackedGeometry(totalRows, constantRowsLimit=null, alignLeft=false){
-    const rows = Math.max(1, totalRows);
-    const useRows = constantRowsLimit ? Math.max(rows, constantRowsLimit) : rows;
-
-    // Budget un peu plus large pour gagner en lisibilité (et on garde une marge pour la rotation).
-    const budgetW = 86;
-    const budgetH = 86;
-
-    // Horizontal: 10 billes collées => largeur = 20r
-    const rW = budgetW/20;
-
-    // Vertical: rows*(2r) + (rows-1)*vgap ; vgap petit pour éviter les "trous"
-    const vgapFactor = 0.15;
-    const rH = budgetH / (rows*(2 + vgapFactor) + 1.0);
-
-    const r = Math.min(4.0, Math.max(1.9, Math.min(rW, rH)));
-
-    const gapH = 0;                // billes collées
-    const vgap = vgapFactor*r;     // petit espace entre lignes
-    const stepY = 2*r + vgap;
-
-    const maxCols = 10;
-    const rowWidth = maxCols*(2*r) + (maxCols-1)*gapH;
-
-    // Centré ou ancré à gauche (activation)
-    const startX = alignLeft
-      ? (-46 + r)                 // bloc vers la gauche, reste dans la vue même si on tourne
-      : (-rowWidth/2 + r);
-
-    return {r, gapH, vgap, stepY, startX, maxCols};
-  }
-
-  function drawStackedRowGroup(g, k, startY, geom, baseIndex){
-    const rows = Math.ceil(k/10);
-    const base = (baseIndex || 0);
-    for(let row=0; row<rows; row++){
-      const remaining = k - row*10;
-      const count = Math.min(10, remaining);
-      const y = startY + row*geom.stepY;
-      for(let i=0;i<count;i++){
-        const cx = geom.startX + i*(2*geom.r + geom.gapH);
-        const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-        c.setAttribute('cx', cx);
-        c.setAttribute('cy', y);
-        c.setAttribute('r', geom.r);
-        c.setAttribute('fill', beadFill(base + row*10 + i));
-        c.setAttribute('stroke', '#111827');
-        c.setAttribute('stroke-width', (geom.r>=2.2) ? '0.65' : '0.35');
-        g.appendChild(c);
-      }
-    }
-    return rows;
-  }
-
-  function renderRrTwoRows(item){
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 100 100');
-
-    const a = item.a||0, b = item.b||0;
-
-    // For big doubles (and generally >10), we stack by tens.
-    const stackMode = (tool==='big') || (a>10) || (b>10);
-    const angle = item.angle || 0;
-
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('transform', `translate(50 50) rotate(${angle})`);
-
-    if(!stackMode){
-      // Classic (single line per branch)
-      const maxK = Math.max(a,b);
-      const r = Math.min(4.0, 41 / Math.max(10, maxK));
-      const gap = 0.0;
-      const w=maxK*(2*r) + Math.max(0, maxK-1)*gap;
-      const startX=-w/2 + r;
-      const yTop=-6.0;
-      const yBot= 6.0;
-
-      function drawRow(k, y){
-        for(let i=0;i<k;i++){
-          const cx=startX + i*(2*r+gap);
-          const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-          c.setAttribute('cx', cx);
-          c.setAttribute('cy', y);
-          c.setAttribute('r', r);
-          c.setAttribute('fill', beadFill(row*10 + i));
-          c.setAttribute('stroke', '#111827');
-          c.setAttribute('stroke-width', (r>=2.2) ? '0.65' : '0.35');
-          g.appendChild(c);
-        }
-      }
-      drawRow(a, yTop);
-      drawRow(b, yBot);
-    }else{
-      // Stacked by 10 beads per line.
-      // Grands doubles : ancrage à gauche (activation) + taille assez constante.
-      const rowsTop = Math.max(1, Math.ceil(a/10));
-      const rowsBot = Math.max(1, Math.ceil(b/10));
-      const totalRows = rowsTop + rowsBot + 1;
-
-      const alignLeft = (tool==='big'); // demandé : grands doubles vers la gauche
-      const geom = stackedGeometry(totalRows, (tool==='big') ? 11 : null, alignLeft);
-
-      const gapRows = 1;
-      const branchGap = geom.stepY * gapRows;
-
-      const topStartY = -branchGap/2 - (rowsTop-1)*geom.stepY;
-      const botStartY = +branchGap/2;
-
-      // baseIndex séparé par branche (convention : inversion après 50 à l'intérieur de chaque branche)
-      drawStackedRowGroup(g, a, topStartY, geom, 0);
-      drawStackedRowGroup(g, b, botStartY, geom, 0);
-    }
-
-    svg.appendChild(g);
-
-    if(correction && isTargetItem(item)){
-      const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
-      e.setAttribute('cx','50'); e.setAttribute('cy','50');
-      e.setAttribute('rx','40'); e.setAttribute('ry','30');
-      e.setAttribute('fill','none');
-      e.setAttribute('stroke','#0f766e');
-      e.setAttribute('stroke-width','2.6');
-      svg.appendChild(e);
-    }
-    return svg;
-  }
-
-  function renderRrSingleRow(item){
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 100 100');
-
-    const k = item.k || 0;
-    const angle = item.angle || 0;
-
-    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-    g.setAttribute('transform', `translate(50 50) rotate(${angle})`);
-
-    // Stack by 10 so it fits and stays readable.
-    // Tables: assume worst-case 12×12=144 => 15 rows.
-    const rows = Math.max(1, Math.ceil(k/10));
-    const geom = stackedGeometry(rows, (tool==='tables') ? 15 : null, true);
-
-    const startY = - (rows-1)*geom.stepY/2;
-    drawStackedRowGroup(g, k, startY, geom, 0);
-
-    svg.appendChild(g);
-    return svg;
-  }
-
-  function renderOp(item){
-    const cfg = sheet.cfg;
-    const wantGiven = (cfg.showResult==='given');
-    const showRes = correction ? true : wantGiven;
-    const resValue = correction ? item.correct : (item.given ?? null);
-    const angle = item.angle || 0;
-
-    // horizontal multiplication
-    if(item.opKind==='mul2' || item.opKind==='mul' || item.opKind==='mulTable'){
-      const op=document.createElement('div');
-      op.className='op';
-
-      const expr=document.createElement('div');
-      expr.className='expr';
-      expr.style.transform = `rotate(${angle}deg)`;
-
-      if(item.opKind==='mul2'){
-        const left = item.swap ? 2 : item.n;
-        const right = item.swap ? item.n : 2;
-        setPlainText(expr, showRes ? `${left} × ${right} = ${resValue}` : `${left} × ${right} =`);
-      }else if(item.opKind==='mulTable'){
-        const a = item.a, b = item.b;
-        if(item.style==='ans'){
-          setPlainText(expr, showRes ? `${resValue} = ${a} × ${b}` : `… = ${a} × ${b}`);
-        }else{
-          setPlainText(expr, showRes ? `${a} × ${b} = ${resValue}` : `${a} × ${b} =`);
-        }
-      }else{
-        setPlainText(expr, showRes ? `${item.a} × ${item.b} = ${resValue}` : `${item.a} × ${item.b} =`);
-      }
-
-      op.appendChild(expr);
-      return op;
-    }
-
-    // column addition (near doubles)
-    const wrap=document.createElement('div');
-    wrap.className='opcol';
-
-    const box=document.createElement('div');
-    box.className='box';
-    box.style.transform = `rotate(${angle}deg)`;
-
-    const r1=document.createElement('div');
-    setPlainText(r1, String(item.a));
-
-    const r2=document.createElement('div');
-    r2.className='row2';
-    const sign=document.createElement('span');
-    sign.textContent = '+';
-    const n2=document.createElement('span');
-    setPlainText(n2, String(item.b));
-    r2.appendChild(sign);
-    r2.appendChild(n2);
-
-    const line=document.createElement('div');
-    line.className='line';
-
-    const r3=document.createElement('div');
-    if(showRes){ setPlainText(r3, String(resValue)); } else { r3.textContent=''; }
-
-    box.appendChild(r1);
-    box.appendChild(r2);
-    box.appendChild(line);
-    box.appendChild(r3);
-
-    wrap.appendChild(box);
-    return wrap;
-  }
-
-  function renderNum(item){
-    const angle = item.angle || 0;
-    const wrap=document.createElement('div');
-    wrap.className='num';
-
-    const v=document.createElement('div');
-    v.className='value';
-    v.style.transform = `rotate(${angle}deg)`;
-    setStandaloneNumber(v, item.value);
-
-    wrap.appendChild(v);
-    return wrap;
-  }
-
-  function renderCell(item){
-    const cell=document.createElement('div');
-    cell.className='cell';
-
-    if(item.rep==='rr'){
-      cell.appendChild(renderRrTwoRows(item));
-    }else if(item.rep==='rr1'){
-      cell.appendChild(renderRrSingleRow(item));
-    }else{
-      const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('viewBox','0 0 100 100');
-      if(correction && isTargetItem(item)){
-        const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
-        e.setAttribute('cx','50'); e.setAttribute('cy','50');
-        e.setAttribute('rx','40'); e.setAttribute('ry','30');
-        e.setAttribute('fill','none');
-        e.setAttribute('stroke','#0f766e');
-        e.setAttribute('stroke-width','2.6');
-        svg.appendChild(e);
-      }
-      cell.appendChild(svg);
-
-      if(item.rep==='op') cell.appendChild(renderOp(item));
-      if(item.rep==='num') cell.appendChild(renderNum(item));
-    }
-
-    // Correction text at bottom
-    if(correction){
-      const eq=document.createElement('div');
-      eq.className='eq';
-
-      if(tool!=='tables' && !isTargetItem(item)){
-        // no text for traps in spot tools
-      }else{
-        let txt = "";
-
-        if(tool==='doubles' || tool==='big'){
-          let n = null, value = null;
-          if(item.rep==='rr'){ n = item.a; value = 2*n; }
-          else if(item.rep==='op'){
-            if(item.opKind==='mul2') { n=item.n; value=2*n; }
-            else if(item.opKind==='mul'){ if(item.a===2){n=item.b; value=2*n;} else if(item.b===2){n=item.a; value=2*n;} }
-          }
-          else if(item.rep==='num'){ value=item.value; n = value/2; }
-          if(n!==null && value!==null) txt = `2 x ${n} = ${value}`;
-        }
-        else if(tool==='near'){
-          let a=null,b=null,sum=null;
-          if(item.rep==='rr' || item.rep==='op'){ a=item.a; b=item.b; sum=a+b; }
-          else if(item.rep==='num'){ sum=item.value; a=(sum-1)/2; b=a+1; }
-          if(a!==null && b!==null && sum!==null){
-            const lo=Math.min(a,b), hi=Math.max(a,b);
-            txt = `${lo} + ${hi} = ${sum}`;
-          }
-        }
-        else if(tool==='tables'){
-          let a=null,b=null,prod=null;
-          if(item.rep==='rr1'){ a=item.table; b=item.mult; prod=item.product; }
-          else if(item.rep==='op'){ a=item.a; b=item.b; prod=item.correct; }
-          else if(item.rep==='num'){ a=item.meta.a; b=item.meta.b; prod=item.value; }
-          if(a!==null && b!==null && prod!==null) txt = `${a} x ${b} = ${prod}`;
-        }
-
-        if(txt){
-          setPlainText(eq, txt);
-          cell.appendChild(eq);
-        }
-      }
-    }
-
-    return cell;
-  }
-
-  function consigneText(cfg){
-    const fr = cfg.lang==='fr';
-    const disp = cfg.display;
-
-    if(tool==='tables'){
-      // Show either the selected table or "Tables mélangées"
-      const tLabel = (cfg.tables.pick==='mix') ? (fr ? "Tables mélangées" : "Mixed tables") : (fr ? `Table de ${cfg.tables.tables[0]}` : `Table of ${cfg.tables.tables[0]}`);
-      if(fr){
-        return (cfg.tables.style==='ans')
-          ? `${tLabel} — Complète. (Ex : 42 = 6 × 7)`
-          : `${tLabel} — Calcule. (Ex : 6 × 7 = 42)`;
-      }else{
-        return (cfg.tables.style==='ans')
-          ? `${tLabel} — Complete. (Ex: 42 = 6 × 7)`
-          : `${tLabel} — Calculate. (Ex: 6 × 7 = 42)`;
-      }
-    }
-
-    if(tool==='near'){
-      if(fr){
-        return (disp==='num')
-          ? "Entoure les presque doubles (+1). Écris l’addition. (Ex : 15 → 7 + 8)"
-          : "Entoure les presque doubles (+1). Écris l’addition. (Ex : 7 + 8 = 15)";
-      }else{
-        return (disp==='num')
-          ? "Circle the near doubles (+1). Write the addition. (Ex: 15 → 7 + 8)"
-          : "Circle the near doubles (+1). Write the addition. (Ex: 7 + 8 = 15)";
-      }
-    }
-
-    // doubles + big doubles
-    if(fr){
-      return (disp==='num')
-        ? "Entoure les doubles. Écris l’équation. (Ex : 14 → 2 × 7)"
-        : "Entoure les doubles. Écris l’équation. (Ex : 2 × 3 = 6)";
-    }else{
-      return (disp==='num')
-        ? "Circle the doubles. Write the equation. (Ex: 14 → 2 × 7)"
-        : "Circle the doubles. Write the equation. (Ex: 2 × 3 = 6)";
-    }
-  }
-
-  function updateTexts(){
-    const cfg = getConfig();
-    if(tool==='doubles') title.textContent = "REKENREK — Doubles";
-    else if(tool==='near') title.textContent = "REKENREK — Presque doubles";
-    else if(tool==='big') title.textContent = "REKENREK — Grands doubles (11–48)";
-    else title.textContent = "REKENREK — Tables";
-    subtitle.textContent = consigneText(cfg);
-  }
-
-  function renderSheet(){
-    updatePanel();
-    normalizeMix(null);
-
-    if(!sheet || sheet.tool!==tool){
-      sheet = buildSheet();
-    }else{
-      parseGridSize();
-    }
-
-    updateTexts();
-
-    grid.innerHTML='';
-    for(const item of sheet.items){
-      grid.appendChild(renderCell(item));
-    }
-
-    tabDoubles.classList.toggle('on', tool==='doubles');
-    tabNear.classList.toggle('on', tool==='near');
-    tabBig.classList.toggle('on', tool==='big');
-    tabTables.classList.toggle('on', tool==='tables');
-
-    btnCorrection.classList.toggle('on', correction);
-    btnCorrection.textContent = "Correction : " + (correction ? "ON" : "OFF");
-  }
-
-  function newSheet(){
-    sheet = buildSheet();
-    renderSheet();
-  }
-
-  // Mix tables checkboxes build (2..12), default checked 2..10
-  function buildMixChecks(){
-    mixChecks.innerHTML = "";
-    for(let t=2;t<=12;t++){
-      const lab = document.createElement('label');
-      lab.className = "check";
-      const inp = document.createElement('input');
-      inp.type = "checkbox";
-      inp.value = String(t);
-      inp.checked = (t<=10);
-      inp.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-      const span = document.createElement('span');
-      span.textContent = String(t);
-      lab.appendChild(inp);
-      lab.appendChild(span);
-      mixChecks.appendChild(lab);
-    }
-  }
-  buildMixChecks();
-
-  // Events
-  tabDoubles.addEventListener('click', ()=>{ tool='doubles'; sheet=null; renderSheet(); });
-  tabNear.addEventListener('click', ()=>{ tool='near'; sheet=null; renderSheet(); });
-  tabBig.addEventListener('click', ()=>{ tool='big'; sheet=null; renderSheet(); });
-  tabTables.addEventListener('click', ()=>{ tool='tables'; sheet=null; renderSheet(); });
-
-  btnNew.addEventListener('click', newSheet);
-  btnCorrection.addEventListener('click', ()=>{ correction=!correction; renderSheet(); });
-  btnPrint.addEventListener('click', ()=>window.print());
-
-  // Option changes => regenerate
-  langSel.addEventListener('change', ()=>{ renderSheet(); });
-  gridSizeSel.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  orientationSel.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  displaySel.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-
-  mixB.addEventListener('change', ()=>{ normalizeMix('B'); sheet=null; renderSheet(); });
-  mixO.addEventListener('change', ()=>{ normalizeMix('O'); sheet=null; renderSheet(); });
-  mixN.addEventListener('change', ()=>{ normalizeMix('N'); sheet=null; renderSheet(); });
-
-  showResultSel.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  qualityModeSel.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  wrongPct.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  correctCount.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-
-  tablePick.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  multRange.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  repeatK.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-  qStyle.addEventListener('change', ()=>{ sheet=null; renderSheet(); });
-
-  // Init
-  normalizeMix(null);
-  renderSheet();
-})();
+    return str;
+  };
+  
+  svg += drawLine(a, yTop);
+  svg += drawLine(b, yBot);
+  svg += `</svg>`;
+  return svg;
+}
 </script>
 </body>
 </html>
