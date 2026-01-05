@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>REKENREK — GÉNÉRATEUR FINAL</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --accent: #2563eb;
+      --border: #cbd5e1;
+      --grid-line: #94a3b8; 
+      
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 10mm;
+      
+      --cols: 3; 
+      --rows: 4;
+    }
+    
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
+
+    /* --- SIDEBAR --- */
+    aside {
+      width: 340px; background: var(--panel); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
+    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 10px; }
+    
+    .control { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+    .control label { flex: 1; color: #334155; }
+    
+    select, input[type="number"] {
+      padding: 8px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-weight: 600; width: 100%; outline: none; background: #fff;
+    }
+    select:hover, input:hover { border-color: var(--accent); }
+
+    /* LANGUE */
+    .flags { display: flex; gap: 10px; margin-bottom: 10px; }
+    .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
+    .flag-btn.active { opacity: 1; background: var(--accent); color: white; border-color: var(--accent); }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
+    .btn-new { background: var(--accent); }
+    .btn-print { background: #10b981; }
+
+    /* --- MAIN --- */
+    main { flex: 1; overflow: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; background: #e2e8f0; }
+    
+    .page {
+      width: var(--page-w); height: var(--page-h);
+      background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      position: relative; flex-shrink: 0;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; }
+
+    .page-inner { 
+      position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin);
+      display: flex; flex-direction: column; 
+    }
+
+    .grid {
+      flex: 1; 
+      display: grid;
+      grid-template-columns: repeat(var(--cols), 1fr);
+      grid-template-rows: repeat(var(--rows), 1fr);
+      border: 2px solid var(--ink);
+      gap: 0; 
+      min-height: 0; 
+    }
+    
+    .cell {
+      border: 1px solid var(--grid-line);
+      display: flex; flex-direction: column;
+      padding: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ZONE 1: Boulier (Haut) */
+    .part-boulier {
+      flex: 1; 
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px dashed #cbd5e1;
+      margin-bottom: 2px;
+      overflow: hidden; 
+      padding: 2px;
+      min-height: 0;
+    }
+    .rr-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+    /* ZONE 2: Bas (Chiffre | Mot) */
+    .part-bottom {
+      flex: 0 0 50px; 
+      display: flex; gap: 3px;
+    }
+    
+    .sub-box {
+      flex: 1; 
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid #e2e8f0; border-radius: 6px;
+      background: #fdfdfd;
+      position: relative;
+    }
+    
+    /* MODIFICATION ICI : Couleur noire forcée (#000000) au lieu de var(--accent) */
+    .val-digit { 
+        font-size: 28px; 
+        font-weight: 900; 
+        color: #000000; /* Noir pur */
+        font-family: 'Segoe UI', sans-serif; 
+    }
+    
+    /* Couleur noire pour le texte */
+    .val-word { 
+        font-size: 16px; 
+        font-weight: 700; 
+        color: #000000; 
+        font-style: italic; 
+        text-align: center; 
+        font-family: 'Georgia', serif; 
+        line-height: 1.1; 
+        padding: 2px; 
+    }
+    
+    .empty-zone { width: 100%; height: 100%; }
+
+    /* --- AJUSTEMENTS SPÉCIFIQUES --- */
+    /* Mode 2x4 (8 cases) */
+    .grid[data-size="2x4"] .part-bottom { flex: 0 0 50px; } 
+    .grid[data-size="2x4"] .val-digit { font-size: 28px; } 
+
+    /* Mode 3x5 (15 cases) */
+    .grid[data-size="3x5"] .part-bottom { flex: 0 0 40px; }
+    .grid[data-size="3x5"] .val-digit { font-size: 24px; }
+    .grid[data-size="3x5"] .val-word { font-size: 13px; }
+
+    /* Mode 4x5 (20 cases) */
+    .grid[data-size="4x5"] .part-bottom { flex: 0 0 35px; }
+    .grid[data-size="4x5"] .val-digit { font-size: 22px; }
+    .grid[data-size="4x5"] .val-word { font-size: 11px; }
+
+    @media print {
+      @page { size: A4; margin: 0; } 
+      body { display: block; background: white; height: auto; overflow: visible; }
+      aside { display: none !important; }
+      main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; }
+      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; }
+      .grid { border: 2px solid #000; }
+      .cell { border: 1px solid #999; page-break-inside: avoid; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-header">
+    <h2 class="sb-title" data-i18n="title">Lecture Nombres</h2>
+  </div>
+  
+  <div class="sb-scroll">
+    <div class="section">
+        <div class="sec-title" data-i18n="lang">Langue</div>
+        <div class="flags">
+            <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
+            <div class="flag-btn" onclick="setLang('en', this)">EN</div>
+        </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="layout">Mise en page</div>
+      <div class="control" style="flex-direction:column; align-items:flex-start;">
+        <label style="margin-bottom:5px;" data-i18n="grid">Grille</label>
+        <select id="gridSize" onchange="startGen()">
+          <option value="4x5">20 cases (4x5)</option>
+          <option value="3x5">15 cases (3x5)</option>
+          <option value="3x4" selected>12 cases (3x4)</option>
+          <option value="2x4">8 cases (2x4)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="content">Contenu</div>
+      
+      <div class="control" style="flex-direction:column; align-items:flex-start;">
+        <label style="margin-bottom:5px;" data-i18n="order">Ordre</label>
+        <select id="orderMode" onchange="toggleInputs(); startGen()">
+          <option value="random" data-i18n="ord_random">Aléatoire (1 Page)</option>
+          <option value="seq" data-i18n="ord_seq">Séquentiel (Multi-pages)</option>
+        </select>
+      </div>
+
+      <div id="seqInputs" class="control" style="display:none; gap:5px;">
+        <div style="flex:1">
+            <label style="font-size:10px; display:block; margin-bottom:2px;">Début</label>
+            <input type="number" id="seqStart" value="0" min="0" max="100" style="width:100%" onchange="startGen()">
+        </div>
+        <div style="flex:1">
+            <label style="font-size:10px; display:block; margin-bottom:2px;">Fin</label>
+            <input type="number" id="seqEnd" value="20" min="1" max="100" style="width:100%" onchange="startGen()">
+        </div>
+      </div>
+
+      <div id="randInputs" class="control" style="flex-direction:column; align-items:flex-start;">
+        <label style="margin-bottom:5px;" data-i18n="range">Plage</label>
+        <select id="rangeSel" onchange="startGen()">
+          <option value="10">0 - 10</option>
+          <option value="20">0 - 20</option>
+          <option value="100">0 - 100</option>
+        </select>
+      </div>
+      
+      <div class="sec-title" style="margin-top:15px;" data-i18n="exercise">Exercice</div>
+      <div class="control" style="display:block;">
+        <select id="gameMode" onchange="updateDesc(); startGen()" style="height:auto; padding:10px;">
+          <optgroup label="2 Indices (Facile)">
+            <option value="chiffre" selected data-i18n="mode_digit">1️⃣ Trouver le Chiffre</option>
+            <option value="mot" data-i18n="mode_word">abc Trouver le Mot</option>
+            <option value="color" data-i18n="mode_color">🎨 Coloriage</option>
+          </optgroup>
+          <optgroup label="1 Indice (Difficile)">
+            <option value="only_bead" data-i18n="mode_bead_only">🧮 Boulier seul (faire le reste)</option>
+            <option value="only_num" data-i18n="mode_num_only">1️⃣ Chiffres seuls (faire le reste)</option>
+            <option value="only_word" data-i18n="mode_word_only">abc Mot seul (faire le reste)</option>
+          </optgroup>
+          <optgroup label="Autres">
+            <option value="mixte" data-i18n="mode_mix">🔥 Mixte (Expert)</option>
+            <option value="modele" data-i18n="mode_model">👀 Modèle (Tout affiché)</option>
+            <option value="dictionary" style="font-weight:bold; color:var(--accent);" data-i18n="mode_dict">📚 Dictionnaire (Tout)</option>
+          </optgroup>
+        </select>
+        <div style="font-size:11px; color:#64748b; margin-top:8px; line-height:1.3; font-style:italic;" id="descMode"></div>
+      </div>
+    </div>
+    
+    <div class="section">
+       <div class="sec-title">Style</div>
+       <div class="control" style="flex-direction:column; align-items:flex-start;">
+        <label style="margin-bottom:5px;" data-i18n="color">Couleur Billes</label>
+        <select id="beadColor" onchange="renderPages()">
+          <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
+          <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">MÉLANGER</button>
+      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    </div>
+  </div>
+</aside>
+
+<main id="mainArea">
+</main>
+
+<script>
+const i18n = {
+    fr: {
+        title: "Lecture Nombres",
+        lang: "Langue",
+        layout: "Mise en page",
+        grid: "Grille",
+        content: "Contenu",
+        order: "Ordre",
+        ord_random: "Aléatoire (1 Page)",
+        ord_seq: "Séquentiel (Multi-pages)",
+        range: "Plage (pour aléatoire)",
+        exercise: "Exercice",
+        mode_digit: "1️⃣ Trouver le Chiffre",
+        mode_word: "abc Trouver le Mot",
+        mode_color: "🎨 Coloriage / Entourer",
+        mode_bead_only: "🧮 Boulier seul (faire le reste)",
+        mode_num_only: "1️⃣ Chiffres seuls (faire le reste)",
+        mode_word_only: "abc Mot seul (faire le reste)",
+        mode_mix: "🔥 Mixte (Expert)",
+        mode_model: "👀 Modèle (Tout affiché)",
+        mode_dict: "📚 Dictionnaire (Tout)",
+        color: "Couleur Billes",
+        opt_red: "Rouge / Blanc",
+        opt_blue: "Rouge / Bleu",
+        btn_mix: "GÉNÉRER / MÉLANGER",
+        btn_print: "IMPRIMER",
+        desc_digit: "Boulier et mot donnés. L'élève écrit le chiffre.",
+        desc_word: "Boulier et chiffre donnés. L'élève écrit le mot.",
+        desc_color: "Le nombre est écrit. L'élève doit colorier les billes.",
+        desc_bead_only: "Seul le boulier est affiché. L'élève écrit le chiffre et le mot.",
+        desc_num_only: "Seul le chiffre est donné. L'élève colorie et écrit le mot.",
+        desc_word_only: "Seul le mot est donné. L'élève colorie et écrit le chiffre.",
+        desc_mix: "Un seul indice est donné au hasard. L'élève complète le reste.",
+        desc_model: "Tout est rempli. Idéal pour une leçon ou correction.",
+        desc_dict: "Génère TOUS les nombres de 0 à 100 dans l'ordre."
+    },
+    en: {
+        title: "Reading Numbers",
+        lang: "Language",
+        layout: "Layout",
+        grid: "Grid",
+        content: "Content",
+        order: "Order",
+        ord_random: "Random (1 Page)",
+        ord_seq: "Sequential (Multi-page)",
+        range: "Range (for random)",
+        exercise: "Mode",
+        mode_digit: "1️⃣ Find the Digit",
+        mode_word: "abc Find the Word",
+        mode_color: "🎨 Coloring",
+        mode_bead_only: "🧮 Beads only (Do rest)",
+        mode_num_only: "1️⃣ Digits only (Do rest)",
+        mode_word_only: "abc Word only (Do rest)",
+        mode_mix: "🔥 Mixed (Expert)",
+        mode_model: "👀 Model (Show All)",
+        mode_dict: "📚 Dictionary (All)",
+        color: "Bead Color",
+        opt_red: "Red / White",
+        opt_blue: "Red / Blue",
+        btn_mix: "GENERATE / SHUFFLE",
+        btn_print: "PRINT",
+        desc_digit: "Rekenrek and word shown. Student writes the digit.",
+        desc_word: "Rekenrek and digit shown. Student writes the word.",
+        desc_color: "Number written. Student colors the beads.",
+        desc_bead_only: "Only Beads shown. Student writes digit and word.",
+        desc_num_only: "Only Digit shown. Student colors and writes word.",
+        desc_word_only: "Only Word shown. Student colors and writes digit.",
+        desc_mix: "Only one random clue shown. Student completes the rest.",
+        desc_model: "Everything is filled. Good for lessons or keys.",
+        desc_dict: "Generates ALL numbers from 0 to 100 in order."
+    }
+};
+
+let currentLang = 'fr';
+
+function setLang(l, el) {
+    currentLang = l;
+    document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    updateUI();
+    startGen(); 
+}
+
+function updateUI() {
+    const dict = i18n[currentLang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(dict[key]) el.innerText = dict[key];
+    });
+    updateDesc();
+}
+
+function toggleInputs() {
+    const mode = document.getElementById('orderMode').value;
+    if(mode === 'seq') {
+        document.getElementById('seqInputs').style.display = 'flex';
+        document.getElementById('randInputs').style.display = 'none';
+    } else {
+        document.getElementById('seqInputs').style.display = 'none';
+        document.getElementById('randInputs').style.display = 'flex';
+    }
+}
+
+function numberToText(n) {
+    if (currentLang === 'en') return numberToTextEn(n);
+    return numberToTextFr(n);
+}
+
+function numberToTextFr(n) {
+    const units = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize"];
+    const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante", "quatre-vingt", "quatre-vingt"];
+    
+    if (n <= 16) return units[n];
+    if (n < 20) return "dix-" + units[n-10];
+    if (n === 20) return "vingt";
+    if (n === 71) return "soixante-et-onze";
+    if (n === 80) return "quatre-vingts";
+    if (n === 100) return "cent";
+    
+    let t = Math.floor(n / 10);
+    let u = n % 10;
+    
+    let str = "";
+    if (t === 7 || t === 9) {
+        str = tens[t-1];
+        if (t === 7 && u === 1) return "soixante-et-onze";
+        if (t === 9 && u === 1) return "quatre-vingt-onze";
+        str += "-" + numberToTextFr(10 + u);
+    } else {
+        str = tens[t];
+        if (u === 1) str += "-et-un";
+        else if (u > 0) str += "-" + units[u];
+    }
+    return str;
+}
+
+function numberToTextEn(n) {
+    const units = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+    const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    
+    if (n < 20) return units[n];
+    if (n === 100) return "one hundred";
+    
+    let t = Math.floor(n / 10);
+    let u = n % 10;
+    
+    let str = tens[t];
+    if (u > 0) str += "-" + units[u];
+    return str;
+}
+
+let state = [];
+
+window.onload = function() {
+    updateUI();
+    toggleInputs();
+    startGen();
+};
+
+function updateDesc() {
+    const mode = document.getElementById('gameMode').value;
+    const desc = document.getElementById('descMode');
+    const dict = i18n[currentLang];
+    
+    if(mode === 'chiffre') desc.innerText = dict.desc_digit;
+    else if(mode === 'mot') desc.innerText = dict.desc_word;
+    else if(mode === 'color') desc.innerText = dict.desc_color;
+    else if(mode === 'only_bead') desc.innerText = dict.desc_bead_only;
+    else if(mode === 'only_num') desc.innerText = dict.desc_num_only;
+    else if(mode === 'only_word') desc.innerText = dict.desc_word_only;
+    else if(mode === 'mixte') desc.innerText = dict.desc_mix;
+    else if(mode === 'dictionary') desc.innerText = dict.desc_dict;
+    else desc.innerText = dict.desc_model;
+}
+
+function startGen() {
+  const sizeSelect = document.getElementById('gridSize').value;
+  const [cols, rows] = sizeSelect.split('x').map(Number);
+  
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+  
+  const orderMode = document.getElementById('orderMode').value; 
+  const gameMode = document.getElementById('gameMode').value;
+  
+  state = [];
+  
+  let maxValForLayout = 100;
+
+  // Mode Dictionnaire : Séquentiel forcé 0-100
+  if (gameMode === 'dictionary') {
+      maxValForLayout = 100;
+      for(let i=0; i<=100; i++) {
+          state.push(createItem(i, maxValForLayout, 'modele'));
+      }
+  } 
+  else if (orderMode === 'seq') {
+      let start = parseInt(document.getElementById('seqStart').value) || 0;
+      let end = parseInt(document.getElementById('seqEnd').value) || 20;
+      if (start < 0) start = 0;
+      if (end > 100) end = 100;
+      if (end < start) end = start;
+      
+      maxValForLayout = end;
+
+      for(let i=start; i<=end; i++) {
+          state.push(createItem(i, maxValForLayout, gameMode));
+      }
+  } else {
+      const rangeSel = parseInt(document.getElementById('rangeSel').value);
+      maxValForLayout = rangeSel;
+      
+      const itemsPerPage = cols * rows;
+      let pool = [];
+      while(pool.length < itemsPerPage) {
+          for(let i=0; i<=rangeSel; i++) pool.push(i);
+      }
+      pool = pool.sort(() => Math.random() - 0.5).slice(0, itemsPerPage);
+      
+      state = pool.map(val => createItem(val, maxValForLayout, gameMode));
+  }
+  
+  renderPages(sizeSelect);
+}
+
+function createItem(val, maxVal, mode) {
+    let showBead = true, showNum = true, showWord = true;
+
+    if (mode === 'modele') {
+        // tout visible
+    } 
+    else if (mode === 'chiffre') {
+        showBead = true; showNum = false; showWord = true;
+    }
+    else if (mode === 'mot') {
+        showBead = true; showNum = true; showWord = false;
+    }
+    else if (mode === 'color') {
+        showBead = false; showNum = true; showWord = true;
+    }
+    else if (mode === 'only_bead') {
+        showBead = true; showNum = false; showWord = false;
+    }
+    else if (mode === 'only_num') {
+        showBead = false; showNum = true; showWord = false;
+    }
+    else if (mode === 'only_word') {
+        showBead = false; showNum = false; showWord = true;
+    }
+    else if (mode === 'mixte') {
+        const rand = Math.floor(Math.random() * 3); 
+        if (rand === 0) { showBead = true; showNum = false; showWord = false; }
+        else if (rand === 1) { showBead = false; showNum = true; showWord = false; }
+        else { showBead = false; showNum = false; showWord = true; }
+    }
+
+    return {
+      val: val,
+      max: maxVal,
+      showBead: showBead,
+      showNum: showNum,
+      showWord: showWord
+    };
+}
+
+function renderPages(sizeSelect) {
+  const main = document.getElementById('mainArea');
+  main.innerHTML = ''; 
+  
+  const theme = document.getElementById('beadColor').value;
+  const [cols, rows] = sizeSelect.split('x').map(Number);
+  const itemsPerPage = cols * rows;
+  
+  for (let i = 0; i < state.length; i += itemsPerPage) {
+      const chunk = state.slice(i, i + itemsPerPage);
+      
+      const page = document.createElement('div');
+      page.className = 'page';
+      
+      const inner = document.createElement('div');
+      inner.className = 'page-inner';
+      
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.setAttribute('data-size', sizeSelect);
+      
+      chunk.forEach(item => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        
+        // 1. BOULIER
+        const topPart = document.createElement('div');
+        topPart.className = 'part-boulier';
+        topPart.innerHTML = getRekenrekSvg(item.val, item.showBead, theme, item.max);
+        cell.appendChild(topPart);
+        
+        // 2. BAS : DEUX CASES (Chiffre | Mot)
+        const botPart = document.createElement('div');
+        botPart.className = 'part-bottom';
+        
+        // Zone Chiffre (Gauche - 30%)
+        const digitBox = document.createElement('div');
+        digitBox.className = 'sub-box';
+        // Ajustement largeur
+        digitBox.style.flex = "1"; 
+        
+        if(item.showNum) {
+            digitBox.innerHTML = `<span class="val-digit">${item.val}</span>`;
+        } else {
+            digitBox.innerHTML = `<div class="empty-zone"></div>`;
+        }
+        botPart.appendChild(digitBox);
+        
+        // Zone Mot (Droite - 70%)
+        const wordBox = document.createElement('div');
+        wordBox.className = 'sub-box';
+        wordBox.style.flex = "2.2"; // Plus large
+
+        if(item.showWord) {
+            wordBox.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
+        } else {
+            // SUPPRESSION DE LA LIGNE GRISE ICI : Juste empty-zone vide
+            wordBox.innerHTML = `<div class="empty-zone"></div>`;
+        }
+        botPart.appendChild(wordBox);
+
+        cell.appendChild(botPart);
+        grid.appendChild(cell);
+      });
+      
+      inner.appendChild(grid);
+      page.appendChild(inner);
+      main.appendChild(page);
+  }
+}
+
+function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
+  let W = 140; 
+  let H, rows, r, spacingY, startY;
+  
+  let layoutType = 100;
+  if (maxValSetting <= 10) layoutType = 10;
+  else if (maxValSetting <= 20) layoutType = 20;
+  
+  if (layoutType === 100) {
+      H = 160; 
+      rows = 10;
+      r = 4; 
+      spacingY = 12; 
+      startY = 20;
+  } else if (layoutType === 20) {
+      H = 60; 
+      rows = 2;
+      r = 5.5; 
+      spacingY = 20; 
+      startY = 20;
+  } else {
+      H = 40; 
+      rows = 1;
+      r = 5.5;
+      spacingY = 0;
+      startY = 20;
+  }
+  
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+
+  const drawLine = (y, valOnLine, hiddenMode, rowId) => {
+      let str = "";
+      str += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+      
+      const d_active = (layoutType === 100) ? 8.2 : 11.2; 
+      const d_tight = (layoutType === 100) ? 7.8 : 10.8; 
+      let startX = 15; 
+      
+      const inverted = (layoutType === 100 && rowId >= 5);
+
+      if (hiddenMode) {
+          let cx = startX;
+          for(let i=0; i<10; i++) {
+              let fill;
+              if (layoutType === 100) {
+                  if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
+                  else fill = (i < 5) ? '#e5e7eb' : 'white';
+              } else {
+                  fill = 'white';
+              }
+              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
+              cx += d_tight; 
+          }
+      } else {
+          let cx = startX;
+          for(let i=0; i<valOnLine; i++) {
+             let isFirstFive = (i < 5);
+             let colMain = '#dc2626'; 
+             let colSec = (theme === 'blue') ? '#2563eb' : '#f8fafc'; 
+             
+             let fill;
+             if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
+             else fill = isFirstFive ? colMain : colSec;
+
+             let stroke = (fill === '#f8fafc' || fill === '#ffffff' || fill === 'white') ? '#333' : 'none';
+
+             str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1" />`;
+             cx += d_active;
+          }
+      }
+      return str;
+  };
+
+  for(let row = 0; row < rows; row++) {
+      let y = startY + (row * spacingY);
+      
+      if (!isVisible) {
+          svg += drawLine(y, 0, true, row);
+      } else {
+          let fullRows = Math.floor(n / 10);
+          let remainder = n % 10;
+          
+          let valOnThisRow = 0;
+          if (row < fullRows) valOnThisRow = 10;
+          else if (row === fullRows) valOnThisRow = remainder;
+          
+          if(valOnThisRow > 0) {
+              svg += drawLine(y, valOnThisRow, false, row);
+          } else {
+              svg += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
+          }
+      }
+  }
+  
+  svg += `</svg>`;
+  return svg;
+}
+</script>
+</body>
+</html>
