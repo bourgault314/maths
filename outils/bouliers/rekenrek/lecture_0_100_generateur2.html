@@ -36,6 +36,11 @@
     
     .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
     .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 10px; }
+
+    /* CORRECTION */
+    .corr-toggle { display: flex; align-items: center; gap: 10px; background: #eff6ff; padding: 12px; border-radius: 8px; border: 2px solid #bfdbfe; cursor: pointer; }
+    .corr-toggle input { width: 20px; height: 20px; cursor: pointer; }
+    .corr-text { font-weight: 800; color: var(--accent); font-size: 14px; }
     
     .control { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
     .control label { flex: 1; color: #334155; }
@@ -180,6 +185,10 @@
   </div>
   
   <div class="sb-scroll">
+    <div class="section">
+      <label class="corr-toggle"><input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)"><span class="corr-text">👁️ CORRECTION</span></label>
+    </div>
+
     <div class="section">
         <div class="sec-title" data-i18n="lang">Langue</div>
         <div class="flags">
@@ -532,6 +541,7 @@ function renderPages(sizeSelect) {
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
   
+  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
   const theme = document.getElementById('beadColor').value;
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
@@ -556,13 +566,13 @@ function renderPages(sizeSelect) {
         // 1. BOULIER
         const topPart = document.createElement('div');
         topPart.className = 'part-boulier';
-        topPart.innerHTML = getRekenrekSvg(item.val, item.showBead, theme, item.max);
+        topPart.innerHTML = getRekenrekSvg(item.val, (item.showBead || isCorr), theme, item.max);
         cell.appendChild(topPart);
         
         // 2. MOTS
         const midPart = document.createElement('div');
         midPart.className = 'part-word';
-        if(item.showWord) {
+        if(item.showWord || isCorr) {
             midPart.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
         } else {
             midPart.innerHTML = `<div class="empty-zone"></div>`;
@@ -577,7 +587,7 @@ function renderPages(sizeSelect) {
         const boxUnits = document.createElement('div');
         boxUnits.className = 'box-units';
 
-        if(item.showNum) {
+        if(item.showNum || isCorr) {
             let tens = Math.floor(item.val / 10);
             let units = item.val % 10;
             boxTens.innerText = tens;
@@ -648,7 +658,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
                   if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
                   else fill = (i < 5) ? '#e5e7eb' : 'white';
               } else {
-                  fill = 'white';
+                  fill = (i < 5) ? '#e5e7eb' : 'white';
               }
               str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
               cx += d_tight; 
