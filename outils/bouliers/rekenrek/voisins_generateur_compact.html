@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Voisins — Générateur</title>
+  <style>
+    :root{
+      --ink:#111827;
+      --bg:#f8fafc;
+      --panel:#ffffff;
+      --accent:#2563eb;
+      --border:#cbd5e1;
+      --grid-line:#94a3b8;
+
+      --page-w:210mm;
+      --page-h:297mm;
+      --page-margin:10mm;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Segoe UI',system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      display:flex;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    /* --- SIDEBAR --- */
+    aside{
+      width:280px;
+      background:var(--panel);
+      border-right:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      z-index:10;
+      box-shadow:2px 0 10px rgba(0,0,0,.05);
+    }
+    .sb-header{padding:10px 12px;border-bottom:1px solid var(--border);background:#fff;}
+    .sb-title{font-size:16px;font-weight:800;color:var(--accent);margin:0;text-transform:uppercase;}
+
+    .sb-toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .lang-btn{
+      border:1px solid var(--border);
+      background:#fff;
+      color:#0f172a;
+      font-weight:900;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      line-height:1;
+    }
+    .lang-btn:hover{border-color:var(--accent);}
+    .corr-toggle{
+      display:flex;align-items:center;gap:8px;
+      margin-top:6px;
+      font-size:12px;font-weight:900;
+      color:#334155;
+      user-select:none;
+      cursor:pointer;
+    }
+    .corr-toggle input{transform:scale(1.05);cursor:pointer;}
+    .corr-text{letter-spacing:.3px;}
+
+    .sb-scroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:14px;}
+    .section{border-bottom:1px solid #f1f5f9;padding-bottom:10px;}
+    .sec-title{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;margin-bottom:6px;}
+    .control{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:700;gap:8px;}
+    .control label{flex:1;color:#334155;}
+    select,input[type="number"]{
+      padding:6px 7px;
+      border:1px solid var(--border);
+      border-radius:6px;
+      font-size:12px;
+      font-weight:700;
+      width:100%;
+      outline:none;
+      background:#fff;
+    }
+    select:hover,input:hover{border-color:var(--accent);}
+
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;}
+    .btn{padding:9px 10px;border:none;border-radius:8px;font-weight:800;cursor:pointer;color:#fff;font-size:12px;}
+    .btn-new{background:var(--accent);}
+    .btn-print{background:#10b981;}
+
+    /* --- MAIN --- */
+    main{
+      flex:1;
+      overflow:auto;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:20px;
+      background:#e2e8f0;
+    }
+
+    .page{
+      width:var(--page-w);
+      height:var(--page-h);
+      background:#fff;
+      box-shadow:0 10px 30px rgba(0,0,0,.15);
+      position:relative;
+      flex-shrink:0;
+      page-break-after:always;
+    }
+    .page:last-child{page-break-after:auto;}
+    .page-inner{
+      position:absolute;
+      top:var(--page-margin);
+      bottom:var(--page-margin);
+      left:var(--page-margin);
+      right:var(--page-margin);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .grid{
+      flex:1;
+      display:grid;
+      grid-template-columns:repeat(var(--cols),1fr);
+      grid-template-rows:repeat(var(--rows),1fr);
+      border:2px solid var(--ink);
+      gap:0;
+      min-height:0;
+    }
+
+    .cell{
+      border:1px solid var(--grid-line);
+      display:flex;
+      flex-direction:column;
+      padding:3px;
+      overflow:hidden;
+    }
+
+    .part-boulier{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start; /* collé à gauche */
+      border-bottom:none;
+      margin-bottom:2px;
+      padding:2px;
+      min-height:0;
+      overflow:hidden;
+    }
+    .rr-svg{width:100%;height:100%;display:block;overflow:visible;}
+
+    .part-number{
+      flex:0 0 34px;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      margin-bottom:2px;
+    }
+    .number-box{
+      flex:0 0 calc((100% - 3px)/2);
+      max-width:calc((100% - 3px)/2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #e2e8f0;
+      border-radius:6px;
+      background:#fff;
+    }
+
+    .part-neighbors{
+      flex:0 0 50px;
+      display:flex;
+      gap:3px;
+    }
+    .neighbor{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .neighbor-label{
+      font-size:10px;
+      font-weight:900;
+      color:#000;
+      text-align:center;
+      letter-spacing:.2px;
+      line-height:1;
+      padding-top:1px;
+    }
+    .neighbor-box{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid #e2e8f0;
+      border-radius:6px;
+      background:#fff;
+      position:relative;
+    }
+
+    .val-main{
+      font-size:28px;
+      font-weight:900;
+      color:#000;
+      font-family:'Segoe UI',system-ui,sans-serif;
+    }
+    .val-small{
+      font-size:22px;
+      font-weight:900;
+      color:#000;
+      font-family:'Segoe UI',system-ui,sans-serif;
+    }
+    .empty-zone{width:100%;height:100%;}
+
+    /* ajustements selon la taille */
+    .grid[data-size="2x4"] .part-number{flex:0 0 34px;}
+    .grid[data-size="2x4"] .part-neighbors{flex:0 0 52px;}
+    .grid[data-size="2x4"] .val-main{font-size:28px;}
+    .grid[data-size="2x4"] .val-small{font-size:22px;}
+
+    .grid[data-size="3x5"] .part-number{flex:0 0 30px;}
+    .grid[data-size="3x5"] .part-neighbors{flex:0 0 44px;}
+    .grid[data-size="3x5"] .val-main{font-size:24px;}
+    .grid[data-size="3x5"] .val-small{font-size:19px;}
+    .grid[data-size="3x5"] .neighbor-label{font-size:9px;}
+
+    .grid[data-size="4x5"] .part-number{flex:0 0 28px;}
+    .grid[data-size="4x5"] .part-neighbors{flex:0 0 40px;}
+    .grid[data-size="4x5"] .val-main{font-size:22px;}
+    .grid[data-size="4x5"] .val-small{font-size:17px;}
+    .grid[data-size="4x5"] .neighbor-label{font-size:9px;}
+
+    @media print{
+      @page{size:A4;margin:0;}
+      body{display:block;background:#fff;height:auto;overflow:visible;}
+      aside{display:none!important;}
+      main{padding:0;margin:0;display:block;overflow:visible;height:auto;}
+      .page{margin:0 auto;box-shadow:none;border:none;width:210mm;height:297mm;overflow:hidden;page-break-after:always;}
+      .grid{border:2px solid #000;}
+      .cell{border:1px solid #999;page-break-inside:avoid;}
+      *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-header">
+    <div class="sb-toprow">
+      <h2 class="sb-title" id="sbTitle">Voisins</h2>
+      <button class="lang-btn" id="langBtn" type="button" title="English">EN</button>
+    </div>
+    <label class="corr-toggle">
+      <input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)">
+      <span class="corr-text" id="corrText">👁️ CORRECTION</span>
+    </label>
+  </div>
+
+  <div class="sb-scroll">
+    <div class="section">
+      <div class="sec-title" id="secLayout">Mise en page</div>
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblGrid">Grille</label>
+        <select id="gridSize" onchange="startGen()">
+          <option id="optGrid45" value="4x5">20 cases (4x5)</option>
+          <option id="optGrid35" value="3x5">15 cases (3x5)</option>
+          <option id="optGrid34" value="3x4" selected>12 cases (3x4)</option>
+          <option id="optGrid24" value="2x4">8 cases (2x4)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" id="secContent">Contenu</div>
+
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblOrder">Ordre</label>
+        <select id="orderMode" onchange="toggleInputs(); startGen()">
+          <option id="optOrderRandom" value="random" selected>Aléatoire (1 page)</option>
+          <option id="optOrderSeq" value="seq">Séquentiel (multi-pages)</option>
+        </select>
+      </div>
+
+      <div id="seqInputs" class="control" style="display:none;gap:5px;">
+        <div style="flex:1">
+          <label style="font-size:10px;display:block;margin-bottom:2px;" id="lblStart">Début</label>
+          <input type="number" id="seqStart" value="0" min="0" max="100" style="width:100%" onchange="startGen()">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:10px;display:block;margin-bottom:2px;" id="lblEnd">Fin</label>
+          <input type="number" id="seqEnd" value="20" min="1" max="100" style="width:100%" onchange="startGen()">
+        </div>
+      </div>
+
+      <div id="randInputs" class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblRange">Plage</label>
+        <select id="rangeSel" onchange="startGen()">
+          <option value="10">0 - 10</option>
+          <option value="20">0 - 20</option>
+          <option value="100" selected>0 - 100</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" id="secExercise">Exercice</div>
+
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblType">Type</label>
+        <select id="modeSel" onchange="updateDesc(); startGen()">
+          <option id="optTypeA" value="A" selected>Nombre donné → écrire précédent & suivant</option>
+          <option id="optTypeB" value="B">Précédent donné → trouver nombre & suivant</option>
+          <option id="optTypeC" value="C">Suivant donné → trouver nombre & précédent</option>
+          <option id="optTypeD" value="D">Un seul voisin donné (gauche/droite au hasard)</option>
+          <option id="optTypeE" value="E">Mixte (Nombre donné + voisin donné)</option>
+          <option id="optTypeModel" value="MODELE">Modèle (tout affiché)</option>
+        </select>
+        <div id="descMode" style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.25;font-style:italic;"></div>
+      </div>
+
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblClue">Indice principal (si “Nombre donné”)</label>
+        <select id="clueSel" onchange="updateDesc(); startGen()">
+          <option id="optClueMix" value="mix" selected>Mixte (boulier ou chiffre)</option>
+          <option id="optClueBead" value="bead">Boulier</option>
+          <option id="optClueDigit" value="digit">Chiffre</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" id="secStyle">Style</div>
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <label style="margin-bottom:5px;" id="lblBeadColor">Couleur billes</label>
+        <select id="beadColor" onchange="renderPages(document.getElementById('gridSize').value)">
+          <option id="optBeadRB" value="blue" selected>Rouge / Bleu</option>
+          <option id="optBeadRW" value="red">Rouge / Blanc</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-new" id="btnShuffle" onclick="startGen()">MÉLANGER</button>
+      <button class="btn btn-print" id="btnPrint" onclick="window.print()">IMPRIMER</button>
+    </div>
+  </div>
+</aside>
+
+<main id="mainArea"></main>
+
+<script>
+
+let lang = "fr";
+const I18N = {
+  fr: {
+    pageTitle: "Voisins — Générateur",
+    title: "Voisins",
+    correction: "CORRECTION",
+
+    secLayout: "Mise en page",
+    secContent: "Contenu",
+    secExercise: "Exercice",
+    secStyle: "Style",
+
+    grid: "Grille",
+    order: "Ordre",
+    orderRandom: "Aléatoire (1 page)",
+    orderSeq: "Séquentiel (multi-pages)",
+    start: "Début",
+    end: "Fin",
+    range: "Plage",
+
+    type: "Type",
+    typeA: "Nombre donné → écrire précédent & suivant",
+    typeB: "Précédent donné → trouver nombre & suivant",
+    typeC: "Suivant donné → trouver nombre & précédent",
+    typeD: "Un seul voisin donné (gauche/droite au hasard)",
+    typeE: "Mixte (Nombre donné + voisin donné)",
+    typeModel: "Modèle (tout affiché)",
+
+    descA: "Le nombre est donné (boulier OU chiffre). L'élève complète précédent et suivant.",
+    descB: "Le précédent est donné. L'élève trouve le nombre et le suivant.",
+    descC: "Le suivant est donné. L'élève trouve le nombre et le précédent.",
+    descD: "Un seul voisin est donné (gauche ou droite). L'élève complète le reste.",
+    descE: "Mélange : parfois le nombre est donné, parfois un seul voisin.",
+    descModel: "Tout est affiché (utile pour correction / exemple).",
+    suffixBead: " Indice principal : boulier.",
+    suffixDigit: " Indice principal : chiffre.",
+    suffixMix: " Indice principal : mixte.",
+
+    clue: "Indice principal (si “Nombre donné”)",
+    clueMix: "Mixte (boulier ou chiffre)",
+    clueBead: "Boulier",
+    clueDigit: "Chiffre",
+
+    beadColor: "Couleur billes",
+    beadRB: "Rouge / Bleu",
+    beadRW: "Rouge / Blanc",
+
+    grid45: "20 cases (4x5)",
+    grid35: "15 cases (3x5)",
+    grid34: "12 cases (3x4)",
+    grid24: "8 cases (2x4)",
+
+    shuffle: "MÉLANGER",
+    print: "IMPRIMER",
+
+    previous: "Précédent",
+    next: "Suivant",
+
+    langBtnTo: "EN",
+    langBtnTitle: "English"
+  },
+  en: {
+    pageTitle: "Neighbors — Generator",
+    title: "Neighbors",
+    correction: "ANSWER KEY",
+
+    secLayout: "Layout",
+    secContent: "Content",
+    secExercise: "Exercise",
+    secStyle: "Style",
+
+    grid: "Grid",
+    order: "Order",
+    orderRandom: "Random (1 page)",
+    orderSeq: "Sequential (multi-pages)",
+    start: "Start",
+    end: "End",
+    range: "Range",
+
+    type: "Type",
+    typeA: "Number given → write previous & next",
+    typeB: "Previous given → find number & next",
+    typeC: "Next given → find number & previous",
+    typeD: "Only one neighbor given (left/right randomly)",
+    typeE: "Mixed (number given + one neighbor)",
+    typeModel: "Model (everything shown)",
+
+    descA: "The number is given (abacus OR digit). The student fills in previous and next.",
+    descB: "The previous number is given. The student finds the number and the next.",
+    descC: "The next number is given. The student finds the number and the previous.",
+    descD: "Only one neighbor is given (left or right). The student completes the rest.",
+    descE: "Mixed: sometimes the number is given, sometimes only one neighbor.",
+    descModel: "Everything is shown (useful for an example / answer key).",
+    suffixBead: " Main clue: abacus.",
+    suffixDigit: " Main clue: digit.",
+    suffixMix: " Main clue: mixed.",
+
+    clue: "Main clue (if “Number given”)",
+    clueMix: "Mixed (abacus or digit)",
+    clueBead: "Abacus",
+    clueDigit: "Digit",
+
+    beadColor: "Bead colors",
+    beadRB: "Red / Blue",
+    beadRW: "Red / White",
+
+    grid45: "20 cells (4x5)",
+    grid35: "15 cells (3x5)",
+    grid34: "12 cells (3x4)",
+    grid24: "8 cells (2x4)",
+
+    shuffle: "SHUFFLE",
+    print: "PRINT",
+
+    previous: "Previous",
+    next: "Next",
+
+    langBtnTo: "FR",
+    langBtnTitle: "Français"
+  }
+};
+
+function tr(key){
+  return (I18N[lang] && I18N[lang][key]) ? I18N[lang][key] : key;
+}
+
+function applyLang(newLang){
+  lang = newLang;
+  document.documentElement.lang = lang;
+  document.title = tr("pageTitle");
+
+  // Header
+  const sbTitle = document.getElementById("sbTitle");
+  if(sbTitle) sbTitle.textContent = tr("title");
+  const corrText = document.getElementById("corrText");
+  if(corrText) corrText.textContent = "👁️ " + tr("correction");
+
+  const langBtn = document.getElementById("langBtn");
+  if(langBtn){
+    langBtn.textContent = tr("langBtnTo");
+    langBtn.title = tr("langBtnTitle");
+  }
+
+  // Sections
+  const ids = ["secLayout","secContent","secExercise","secStyle","lblGrid","lblOrder","lblStart","lblEnd","lblRange","lblType","lblClue","lblBeadColor","btnShuffle","btnPrint",
+               "optOrderRandom","optOrderSeq","optGrid45","optGrid35","optGrid34","optGrid24","optTypeA","optTypeB","optTypeC","optTypeD","optTypeE","optTypeModel",
+               "optClueMix","optClueBead","optClueDigit","optBeadRB","optBeadRW"];
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const map = {
+      secLayout:"secLayout", secContent:"secContent", secExercise:"secExercise", secStyle:"secStyle",
+      lblGrid:"grid", lblOrder:"order", lblStart:"start", lblEnd:"end", lblRange:"range",
+      lblType:"type", lblClue:"clue", lblBeadColor:"beadColor",
+      btnShuffle:"shuffle", btnPrint:"print",
+      optOrderRandom:"orderRandom", optOrderSeq:"orderSeq",
+      optGrid45:"grid45", optGrid35:"grid35", optGrid34:"grid34", optGrid24:"grid24",
+      optTypeA:"typeA", optTypeB:"typeB", optTypeC:"typeC", optTypeD:"typeD", optTypeE:"typeE", optTypeModel:"typeModel",
+      optClueMix:"clueMix", optClueBead:"clueBead", optClueDigit:"clueDigit",
+      optBeadRB:"beadRB", optBeadRW:"beadRW"
+    };
+    const key = map[id];
+    if(key) el.textContent = tr(key);
+  });
+
+  // Refresh description + page rendering (labels Précédent/Suivant)
+  updateDesc();
+  renderPages(document.getElementById('gridSize').value);
+}
+
+let state = [];
+
+window.onload = function(){
+  const lb = document.getElementById('langBtn');
+  if(lb){ lb.addEventListener('click', ()=>applyLang(lang === 'fr' ? 'en' : 'fr')); }
+  // default: FR (texts already in FR)
+  document.title = tr('pageTitle');
+  updateDesc();
+  toggleInputs();
+  startGen();
+};
+
+function toggleInputs(){
+  const mode = document.getElementById('orderMode').value;
+  document.getElementById('seqInputs').style.display = (mode === 'seq') ? 'flex' : 'none';
+  document.getElementById('randInputs').style.display = (mode === 'seq') ? 'none' : 'flex';
+}
+
+function updateDesc(){
+  const mode = document.getElementById('modeSel').value;
+  const clue = document.getElementById('clueSel').value;
+  let t = "";
+  if(mode === "A") t = tr("descA");
+  else if(mode === "B") t = tr("descB");
+  else if(mode === "C") t = tr("descC");
+  else if(mode === "D") t = tr("descD");
+  else if(mode === "E") t = tr("descE");
+  else if(mode === "MODELE") t = tr("descModel");
+
+  if(mode === "A" || mode === "E"){
+    if(clue === "bead") t += tr("suffixBead");
+    else if(clue === "digit") t += tr("suffixDigit");
+    else t += tr("suffixMix");
+  }
+  document.getElementById('descMode').innerText = t;
+}
+
+function startGen(){
+  const sizeSelect = document.getElementById('gridSize').value;
+  const [cols, rows] = sizeSelect.split('x').map(Number);
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+
+  const orderMode = document.getElementById('orderMode').value;
+  const modeSel = document.getElementById('modeSel').value;
+  const clueSel = document.getElementById('clueSel').value;
+
+  let maxValForLayout = 100;
+  let values = [];
+
+  if(orderMode === "seq"){
+    let start = parseInt(document.getElementById('seqStart').value, 10);
+    let end = parseInt(document.getElementById('seqEnd').value, 10);
+    if(isNaN(start)) start = 0;
+    if(isNaN(end)) end = start;
+    if(end < start) end = start;
+
+    maxValForLayout = end;
+
+    // On évite les bords : pas de -1 et pas de (fin+1)
+    const lo = Math.max(0, start);
+    const hi = Math.min(100, end);
+    for(let n = lo; n <= hi; n++){
+      if(n <= 0) continue;
+      if(n >= hi) continue;
+      if(n >= 100) continue;
+      values.push(n);
+    }
+    if(values.length===0){
+      const fallback = Math.min(Math.max(1, lo+1), 99);
+      values = [fallback];
+    }
+  } else {
+    const rangeSel = parseInt(document.getElementById('rangeSel').value, 10);
+    maxValForLayout = rangeSel;
+
+    const itemsPerPage = cols * rows;
+    const lo = 1;
+    const hi = Math.max(1, rangeSel - 1);
+
+    let pool = [];
+    while(pool.length < itemsPerPage){
+      for(let n = lo; n <= hi; n++) pool.push(n);
+    }
+    pool = pool.sort(() => Math.random() - 0.5).slice(0, itemsPerPage);
+    values = pool;
+  }
+
+  state = values.map(n => createItem(n, maxValForLayout, modeSel, clueSel));
+  renderPages(sizeSelect);
+}
+
+function createItem(n, maxVal, mode, clueSel){
+  const isModel = (mode === "MODELE");
+  const prev = n - 1;
+  const next = n + 1;
+
+  let showPrev = false;
+  let showNext = false;
+  let showDigit = false;
+  let showBead = false;
+
+  const pickClue = () => {
+    if(clueSel === "bead") return "bead";
+    if(clueSel === "digit") return "digit";
+    return (Math.random() < 0.5) ? "bead" : "digit";
+  };
+
+  if(isModel){
+    showPrev = true; showNext = true; showDigit = true; showBead = true;
+  } else if(mode === "A"){
+    const clue = pickClue();
+    if(clue === "bead"){ showBead = true; showDigit = false; }
+    else { showBead = false; showDigit = true; }
+  } else if(mode === "B"){
+    showPrev = true;
+  } else if(mode === "C"){
+    showNext = true;
+  } else if(mode === "D"){
+    if(Math.random() < 0.5) showPrev = true;
+    else showNext = true;
+  } else if(mode === "E"){
+    if(Math.random() < 0.5){
+      const clue = pickClue();
+      if(clue === "bead"){ showBead = true; showDigit = false; }
+      else { showBead = false; showDigit = true; }
+    } else {
+      if(Math.random() < 0.5) showPrev = true;
+      else showNext = true;
+    }
+  }
+
+  return { n, prev, next, max:maxVal, showBead, showDigit, showPrev, showNext };
+}
+
+function renderPages(sizeSelect){
+  const main = document.getElementById('mainArea');
+  main.innerHTML = "";
+
+  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
+  const theme = document.getElementById('beadColor').value;
+  const [cols, rows] = sizeSelect.split('x').map(Number);
+  const itemsPerPage = cols * rows;
+
+  for(let i = 0; i < state.length; i += itemsPerPage){
+    const chunk = state.slice(i, i + itemsPerPage);
+
+    const page = document.createElement('div');
+    page.className = 'page';
+
+    const inner = document.createElement('div');
+    inner.className = 'page-inner';
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    grid.setAttribute('data-size', sizeSelect);
+
+    chunk.forEach(item => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      const top = document.createElement('div');
+      top.className = 'part-boulier';
+      top.innerHTML = getRekenrekSvg(item.n, (item.showBead || isCorr), theme, item.max);
+      cell.appendChild(top);
+
+      const mid = document.createElement('div');
+      mid.className = 'part-number';
+      const nb = document.createElement('div');
+      nb.className = 'number-box';
+      if(item.showDigit || isCorr) nb.innerHTML = `<span class="val-main">${item.n}</span>`;
+      else nb.innerHTML = `<div class="empty-zone"></div>`;
+      mid.appendChild(nb);
+      cell.appendChild(mid);
+
+      const bot = document.createElement('div');
+      bot.className = 'part-neighbors';
+
+      const left = document.createElement('div');
+      left.className = 'neighbor';
+      left.innerHTML = `<div class="neighbor-label">${tr("previous")}</div>`;
+      const lb = document.createElement('div');
+      lb.className = 'neighbor-box';
+      if(item.showPrev || isCorr) lb.innerHTML = `<span class="val-small">${item.prev}</span>`;
+      else lb.innerHTML = `<div class="empty-zone"></div>`;
+      left.appendChild(lb);
+
+      const right = document.createElement('div');
+      right.className = 'neighbor';
+      right.innerHTML = `<div class="neighbor-label">${tr("next")}</div>`;
+      const rb = document.createElement('div');
+      rb.className = 'neighbor-box';
+      if(item.showNext || isCorr) rb.innerHTML = `<span class="val-small">${item.next}</span>`;
+      else rb.innerHTML = `<div class="empty-zone"></div>`;
+      right.appendChild(rb);
+
+      bot.appendChild(left);
+      bot.appendChild(right);
+
+      cell.appendChild(bot);
+      grid.appendChild(cell);
+    });
+
+    inner.appendChild(grid);
+    page.appendChild(inner);
+    main.appendChild(page);
+  }
+}
+
+/* --- REKENREK SVG : repris tel quel (avec gris sur les 5 premières billes en mode coloriage 0-10 / 0-20) --- */
+function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
+  let W = 140;
+  let H, rows, r, spacingY, startY;
+
+  let layoutType = 100;
+  if (maxValSetting <= 10) layoutType = 10;
+  else if (maxValSetting <= 20) layoutType = 20;
+
+  if (layoutType === 100) {
+      H = 160;
+      rows = 10;
+      r = 4;
+      spacingY = 12;
+      startY = 20;
+  } else if (layoutType === 20) {
+      H = 60;
+      rows = 2;
+      r = 5.5;
+      spacingY = 20;
+      startY = 20;
+  } else {
+      H = 40;
+      rows = 1;
+      r = 5.5;
+      spacingY = 0;
+      startY = 20;
+  }
+
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+
+  const drawLine = (y, valOnLine, hiddenMode, rowId) => {
+      let str = "";
+      str += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+
+      const d_active = (layoutType === 100) ? 8.2 : 11.2;
+      const d_tight = (layoutType === 100) ? 7.8 : 10.8;
+      let startX = 15;
+
+      const inverted = (layoutType === 100 && rowId >= 5);
+
+      if (hiddenMode) {
+          let cx = startX;
+          for(let i=0; i<10; i++) {
+              let fill;
+              if (layoutType === 100) {
+                  if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
+                  else fill = (i < 5) ? '#e5e7eb' : 'white';
+              } else {
+                  fill = (i < 5) ? '#e5e7eb' : 'white';
+              }
+              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
+              cx += d_tight;
+          }
+      } else {
+          let cx = startX;
+          for(let i=0; i<valOnLine; i++) {
+             let isFirstFive = (i < 5);
+             let colMain = '#dc2626';
+             let colSec = (theme === 'blue') ? '#2563eb' : '#f8fafc';
+
+             let fill;
+             if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
+             else fill = isFirstFive ? colMain : colSec;
+
+             let stroke = (fill === '#f8fafc' || fill === '#ffffff' || fill === 'white') ? '#333' : 'none';
+             str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1" />`;
+             cx += d_active;
+          }
+      }
+      return str;
+  };
+
+  for(let row = 0; row < rows; row++) {
+      let y = startY + (row * spacingY);
+
+      if (!isVisible) {
+          svg += drawLine(y, 0, true, row);
+      } else {
+          let fullRows = Math.floor(n / 10);
+          let remainder = n % 10;
+
+          let valOnThisRow = 0;
+          if (row < fullRows) valOnThisRow = 10;
+          else if (row === fullRows) valOnThisRow = remainder;
+
+          if(valOnThisRow > 0) {
+              svg += drawLine(y, valOnThisRow, false, row);
+          } else {
+              svg += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
+          }
+      }
+  }
+
+  svg += `</svg>`;
+  return svg;
+}
+</script>
+</body>
+</html>
