@@ -184,7 +184,12 @@ function getSvg(vis, target, isColoringMode, theme) {
       svg += `<rect x="${sX}" y="${sY - r - 2}" width="${135 - sX}" height="${r*2 + 4}" fill="#000" />`;
       if (fR < rows - 1) {
           let lastY = stY + (rows-1)*spY + r + 2;
-          svg += `<rect x="5" y="${sY + spY/2}" width="130" height="${lastY - (sY + spY/2)}" fill="#000" />`;
+          let nextMaskY = sY + spY/2;
+// Sur la cible 100, un micro-jour peut apparaître (anti-aliasing) entre les 2 rectangles noirs.
+// On chevauche très légèrement le 2e cache pour supprimer le trait blanc.
+if (target === 100) nextMaskY -= 1;
+
+svg += `<rect x="5" y="${nextMaskY}" width="130" height="${lastY - nextMaskY}" fill="#000" />`;
       }
   }
   return svg + `</svg>`;
