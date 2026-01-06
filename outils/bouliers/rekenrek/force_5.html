@@ -148,9 +148,9 @@
       <option value="100">Boulier 100</option>
     </select>
     <select id="tens-select" onchange="updateMode()">
-      <option value="1">Niveau 1 : Sans dizaine</option>
-      <option value="2" selected>Niveau 2 : Avec dizaine</option>
-    </select>
+      <option value="1">Sans retenue (unités)</option>
+      <option value="2" selected>Avec retenue (unités)</option>
+</select>
     <select id="level-select" onchange="initGame()">
       <option value="1">Niveau 1 : Guidé</option>
       <option value="2">Niveau 2 : Libre</option>
@@ -283,8 +283,8 @@
   function buildDeck(mode, tensLevel) {
   deck = [];
     if (mode === 20) {
-        // Niveau 1 : 5 + (1..4) => ne passe jamais la dizaine
-        // Niveau 2 : version actuelle (passe la dizaine)
+        // Sans retenue : 5 + (1..4) => pas de retenue sur les unités
+        // Avec retenue : version actuelle (retenue sur les unités)
         const allowed = (tensLevel === 1) ? [1, 2, 3, 4] : [5, 6, 7, 8, 9, 15];
         for (let k = 0; k < 4; k++) {
             for (let b of allowed) {
@@ -295,8 +295,8 @@
         const starts = [5, 15, 25, 35, 45, 55, 65, 75, 85];
         for (let s0 of starts) {
             let possibleBs = [];
-            // Niveau 1 : unités <= 4 => pas de passage de dizaine (5 + 0..4)
-            // Niveau 2 : unités >= 5 => passage de dizaine (5 + 5..9)
+            // Niveau 1 : unités <= 4 => pas de retenue (5 + 0..4)
+            // Niveau 2 : unités >= 5 => retenue (5 + 5..9)
             for (let b = 1; b <= (100 - s0); b++) {
                 const unit = b % 10;
                 if (tensLevel === 1) {
