@@ -147,6 +147,10 @@
       <option value="20">Boulier 20</option>
       <option value="100">Boulier 100</option>
     </select>
+    <select id="tens-select" onchange="updateMode()">
+      <option value="1">Niveau 1 : Sans dizaine</option>
+      <option value="2" selected>Niveau 2 : Avec dizaine</option>
+    </select>
     <select id="level-select" onchange="initGame()">
       <option value="1">Niveau 1 : Guidé</option>
       <option value="2">Niveau 2 : Libre</option>
@@ -276,29 +280,35 @@
   }
 
   // --- LOGIQUE FORCE 5 STRICTE ---
-  function buildDeck(mode) {
-    deck = [];
+  function buildDeck(mode, tensLevel) {
+  deck = [];
     if (mode === 20) {
-        const allowed = [5, 6, 7, 8, 9, 15];
-        for(let k=0; k<4; k++) {
+        // Niveau 1 : 5 + (1..4) => ne passe jamais la dizaine
+        // Niveau 2 : version actuelle (passe la dizaine)
+        const allowed = (tensLevel === 1) ? [1, 2, 3, 4] : [5, 6, 7, 8, 9, 15];
+        for (let k = 0; k < 4; k++) {
             for (let b of allowed) {
                 deck.push([5, b]);
             }
         }
     } else {
         const starts = [5, 15, 25, 35, 45, 55, 65, 75, 85];
-        for (let s of starts) {
+        for (let s0 of starts) {
             let possibleBs = [];
-            for(let b = 5; b <= (100-s); b++) {
-                let unit = b % 10;
-                if(unit >= 5) {
-                    possibleBs.push(b);
+            // Niveau 1 : unités <= 4 => pas de passage de dizaine (5 + 0..4)
+            // Niveau 2 : unités >= 5 => passage de dizaine (5 + 5..9)
+            for (let b = 1; b <= (100 - s0); b++) {
+                const unit = b % 10;
+                if (tensLevel === 1) {
+                    if (unit <= 4) possibleBs.push(b);
+                } else {
+                    if (unit >= 5) possibleBs.push(b);
                 }
             }
-            if(possibleBs.length > 0) {
-                for(let k=0; k<4; k++) {
-                    let randB = possibleBs[Math.floor(Math.random() * possibleBs.length)];
-                    deck.push([s, randB]);
+            if (possibleBs.length > 0) {
+                for (let k = 0; k < 4; k++) {
+                    const randB = possibleBs[Math.floor(Math.random() * possibleBs.length)];
+                    deck.push([s0, randB]);
                 }
             }
         }
@@ -307,10 +317,11 @@
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
+
   }
 
-  function drawCard(mode) {
-    if (deck.length === 0) buildDeck(mode);
+  function drawCard(mode, tensLevel) {
+    if (deck.length === 0) buildDeck(mode, tensLevel);
     return deck.pop();
   }
 
@@ -329,7 +340,8 @@
     btnAction.innerText = "Vérifier";
     btnAction.style.background = "var(--accent)"; // Bleu
     
-    const pair = drawCard(mode);
+    const tensLevel = parseInt(document.getElementById('tens-select').value);
+    const pair = drawCard(mode, tensLevel);
     n1 = pair[0];
     n2 = pair[1];
     targetSum = n1 + n2;
