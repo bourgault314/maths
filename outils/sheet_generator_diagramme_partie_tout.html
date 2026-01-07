@@ -75,9 +75,13 @@
   <script>
     // Liste des pages à charger (espaces encodés en %20)
     const pages = [
-      { id: "splat_tache_barre",   label: "SPLAT! (tache + barre)", sub: "splat_tache_barre.html",   src: "splat_tache_barre.html",   btn: "#ef4444" },
-      { id: "box_barre_final",     label: "BOX (barre) — final",     sub: "box_barre_final.html",     src: "box_barre_final.html",     btn: "#f97316" },
-      { id: "box_pasbarre_final",  label: "BOX (pas barre) — final", sub: "box_pasbarre_final.html",  src: "box_pasbarre_final.html",  btn: "#2563eb" },
+      { id: "cache", label: "Cache-cache",               sub: "cache cache.html",               src: "cache%20cache.html",               btn: "#ef4444" },
+      { id: "barre", label: "Cache-cache barre",         sub: "cache cache barre.html",         src: "cache%20cache%20barre.html",       btn: "#f97316" },
+      { id: "gen1",  label: "Lecture 0–100",             sub: "lecture_0_100_generateur.html",  src: "lecture_0_100_generateur.html",    btn: "#2563eb" },
+      // 4e possibilité : le gabarit PDF (aucune génération, juste consultation / impression)
+      { id: "gabarit_a3", label: "Gabarits A3 (PDF)",     sub: "gabarits_enquêtes__1__A3.pdf",    src: "gabarits_enqu%C3%AAtes__1__A3.pdf", btn: "#0ea5e9" },
+      { id: "gen2",  label: "Lecture 0–100 (variante)",  sub: "lecture_0_100_generateur2.html", src: "lecture_0_100_generateur2.html",   btn: "#16a34a" },
+      { id: "voisins", label: "Voisins",                  sub: "voisins_generateur_compact.html", src: "voisins_generateur_compact.html", btn: "#7c3aed" },
     ];
 
     const btns = document.getElementById("btns");
