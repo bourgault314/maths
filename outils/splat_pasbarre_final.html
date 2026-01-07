@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BOX LOGIC — L'INTÉGRALE</title>
+  <style>
+    :root {
+      --ink: #1e293b;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      
+      /* Couleurs des Boîtes pour le thème */
+      --bag-a: #334155; /* Boite Noire */
+      --bag-b: #7c3aed; /* Boite Violette */
+      --bag-c: #ea580c; /* Boite Orange */
+      
+      --accent: #7c3aed; /* Violet dominant pour l'UI */
+      --action: #ea580c; /* Orange pour les actions */
+      
+      --border: #e2e8f0;
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 5mm;
+      --cols: 2; 
+      --rows: 4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
+    
+    /* SIDEBAR STYLE "EXPERT COMPACT" AUX COULEURS DES BOITES */
+    aside { width: 300px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 4px 0 20px rgba(0,0,0,0.05); }
+    
+    /* Header stylisé avec les 3 couleurs */
+    .sb-header { 
+        padding: 15px; 
+        border-bottom: 1px solid var(--border); 
+        background: #fff; 
+        border-left: 5px solid var(--bag-b); 
+    }
+    .sb-title { 
+        font-size: 16px; 
+        font-weight: 800; 
+        color: var(--bag-a); 
+        margin: 0; 
+        text-transform: uppercase; 
+        letter-spacing: -0.5px; 
+    }
+    .sb-subtitle {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--bag-c);
+        margin-top: 2px;
+        text-transform: uppercase;
+    }
+    
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+    
+    .control-group { display: flex; flex-direction: column; gap: 4px; }
+    .group-title { 
+        font-size: 10px; 
+        font-weight: 800; 
+        color: var(--bag-b); /* Titres en Violet */
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        border-bottom: 1px solid #f1f5f9; 
+        padding-bottom: 3px; 
+        margin-bottom: 3px; 
+    }
+    
+    select, input { 
+        padding: 6px; 
+        border: 1px solid #cbd5e1; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        font-weight: 600; 
+        width: 100%; 
+        background: #fff; 
+        color: var(--ink);
+    }
+    select:focus { border-color: var(--bag-b); outline: none; }
+
+    .checkbox-grid { display: grid; grid-template-columns: 1fr; gap: 5px; }
+    .check-control { 
+        display: flex; align-items: center; gap: 8px; 
+        background: #f8fafc; 
+        padding: 5px 8px; 
+        border-radius: 4px; 
+        border: 1px solid #e2e8f0; 
+        cursor: pointer; 
+        transition: all 0.2s;
+    }
+    .check-control:hover { background: #f1f5f9; border-color: var(--bag-b); }
+    .check-control input { width: 14px; height: 14px; accent-color: var(--bag-b); }
+    .check-control span { font-size: 11px; font-weight: 600; color: var(--ink); }
+    
+    .actions { padding: 15px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; }
+    .btn { padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-new { background: var(--bag-c); } /* Bouton Générer Orange */
+    .btn-print { background: var(--bag-a); } /* Bouton Imprimer Noir */
+
+    main { flex: 1; overflow: auto; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px; background: #f1f5f9; }
+    .page { width: var(--page-w); height: var(--page-h); background: white; position: relative; flex-shrink: 0; overflow: hidden; page-break-after: always; box-shadow: 0 0 30px rgba(0,0,0,0.1); }
+    .page-inner { position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin); display: flex; flex-direction: column; transform-origin: top center; }
+    .grid { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); gap: 8px; height: 100%; }
+    
+    .card { border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; position: relative; background: #fff; height: 100%; width: 100%; }
+
+    .card-header { 
+        flex: 0 0 36px; background: #f8fafc; border-bottom: 2px solid var(--ink); 
+        display: flex; align-items: center; justify-content: center; padding: 0 5px;
+        text-align: center; font-size: 11px; font-weight: 700; color: var(--ink); line-height: 1.1; 
+    }
+    
+    .card-visual { flex: 1; position: relative; overflow: hidden; }
+    .bag-svg { width: 100%; height: 100%; display: block; }
+    
+    .card-footer { flex: 0 0 50px; border-top: 2px solid var(--ink); display: flex; }
+    .ans-box { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--ink); position: relative; }
+    .ans-box:last-child { border-right: none; }
+    
+    .ans-label { font-size: 9px; text-transform: uppercase; font-weight: 800; text-align: center; padding: 2px; border-bottom: 1px solid #e5e7eb; color: #64748b; background: #f8fafc; }
+    .ans-val { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--ink); }
+    
+    .lbl-total { color: var(--ink); }
+    .lbl-visible { color: #0284c7; }
+    .lbl-a { color: var(--bag-a); } 
+    .lbl-b { color: var(--bag-b); } 
+    .lbl-c { color: var(--bag-c); }
+    .given-val { background-color: #f1f5f9; }
+    
+    .hidden-ctrl { display: none !important; }
+
+    @media print { 
+      @page { size: A4; margin: 0; } 
+      body { display: block; background: white; height: auto; overflow: visible; } 
+      aside { display: none !important; } 
+      main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; background: white; } 
+      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
+      .page-inner { top: 0; bottom: 0; left: 0; right: 0; padding: 5mm; transform: scale(0.98); }
+      .card { border: 2px solid #000; break-inside: avoid; }
+      .card-header { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; border-bottom: 2px solid #000; }
+      .given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-header">
+      <h2 class="sb-title">BOX LOGIC</h2>
+      <div class="sb-subtitle">L'Intégrale</div>
+  </div>
+  <div class="sb-scroll">
+    
+    <div class="control-group">
+        <div class="group-title">Niveau de Progression</div>
+        <select id="progressionLevel" onchange="updateUI(); startGen()">
+            <option value="1" selected>Niv 1 : Le Complément (1 Boîte)</option>
+            <option value="2">Niv 2 : L'Équilibre (2 Identiques)</option>
+            <option value="3">Niv 3 : La Triade (3 Identiques)</option>
+            <option value="4">Niv 4 : Le Duel (2 Différentes)</option>
+            <option value="5">Niv 5 : L'Enquête (3 Boîtes)</option>
+            <option value="6">Niv 6 : Le Système (Sommes)</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <div class="group-title">Objectif de l'exercice</div>
+        <select id="gameType" onchange="startGen()">
+            <option value="detective" selected>Détective (Tout trouver)</option>
+            <option value="architect">Architecte (Trouver le Total)</option>
+            <option value="draw">Dessinateur (Dessiner billes)</option>
+            <option value="hint" id="opt_hint">Coup de Pouce (1 valeur donnée)</option>
+            <option value="mix">MÉLANGE SURPRISE</option>
+        </select>
+    </div>
+
+    <div id="ctrl_hint" class="control-group hidden-ctrl">
+        <div class="group-title">Quel indice donner ?</div>
+        <select id="hintSelect" onchange="startGen()">
+            <option value="random">Hasard</option>
+            <option value="A">La Boîte NOIRE</option>
+            <option value="B">La Boîte VIOLETTE</option>
+            <option value="C">La Boîte ORANGE</option>
+        </select>
+    </div>
+
+    <div id="ctrl_ops" class="control-group hidden-ctrl">
+        <div class="group-title">Opérations Autorisées</div>
+        <div class="checkbox-grid">
+            <label class="check-control">
+                <input type="checkbox" id="chk_plus" checked onchange="startGen()">
+                <span>Addition (+)</span>
+            </label>
+            <label class="check-control">
+                <input type="checkbox" id="chk_minus" checked onchange="startGen()">
+                <span>Soustraction (-)</span>
+            </label>
+            <label class="check-control">
+                <input type="checkbox" id="chk_times" checked onchange="startGen()">
+                <span>Multiplication (×)</span>
+            </label>
+            <label class="check-control">
+                <input type="checkbox" id="chk_div" checked onchange="startGen()">
+                <span>Division (÷)</span>
+            </label>
+        </div>
+    </div>
+
+    <div id="ctrl_struct" class="control-group hidden-ctrl">
+        <div class="group-title">Structure</div>
+        <div class="checkbox-grid">
+            <label class="check-control">
+                <input type="radio" name="struct" value="mix" checked onchange="startGen()">
+                <span>Mix</span>
+            </label>
+            <label class="check-control">
+                <input type="radio" name="struct" value="chain" onchange="startGen()">
+                <span>Chaîne</span>
+            </label>
+            <label class="check-control">
+                <input type="radio" name="struct" value="pivot" onchange="startGen()">
+                <span>Pivot</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <div class="group-title">Total Cible</div>
+        <select id="targetVal" onchange="startGen()">
+            <option value="20">20 (Facile)</option>
+            <option value="40">40 (Moyen)</option>
+            <option value="60" selected>60 (Standard)</option>
+            <option value="80">80 (Difficile)</option>
+            <option value="100">100 (Expert)</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label class="check-control">
+            <input type="checkbox" id="showCorr" onchange="renderPages()">
+            <span>Afficher la Solution</span>
+        </label>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-new" onclick="startGen()">GÉNÉRER</button>
+        <button class="btn btn-print" onclick="window.print()">IMPRIMER</button>
+    </div>
+  </div>
+</aside>
+
+<main id="mainArea"></main>
+
+<script>
+let state = [];
+const COLS = 2; const ROWS = 4; const ITEMS = COLS * ROWS;
+
+const BAGS = [
+    { id: 'A', name: 'NOIRE', color: '#334155' },
+    { id: 'B', name: 'VIOLETTE', color: '#7c3aed' },
+    { id: 'C', name: 'ORANGE', color: '#ea580c' }
+];
+
+
+function boxColorName(id) {
+    if (id === 'A') return 'noire';
+    if (id === 'B') return 'violette';
+    if (id === 'C') return 'orange';
+    return '';
+}
+function boxText(id, withArticle = true) {
+    const c = boxColorName(id);
+    if (!c) return withArticle ? 'la boîte' : 'boîte';
+    return (withArticle ? 'la boîte ' : 'boîte ') + c;
+}
+
+function sentenceCaseAndDot(s) {
+    if (!s) return s;
+    let out = (s.charAt(0).toUpperCase() + s.slice(1)).trim();
+    if (!/[.!?]$/.test(out)) out += '.';
+    return out;
+}
+
+
+function updateUI() {
+    const level = document.getElementById('progressionLevel').value;
+    const ctrlOps = document.getElementById('ctrl_ops');
+    const ctrlStruct = document.getElementById('ctrl_struct');
+    const ctrlHint = document.getElementById('ctrl_hint');
+    const gameTypeSelect = document.getElementById('gameType');
+    const optHint = document.getElementById('opt_hint');
+
+    // Niveaux 4 et 5 utilisent les opérations
+    if (level === '4' || level === '5') {
+        ctrlOps.classList.remove('hidden-ctrl');
+    } else {
+        ctrlOps.classList.add('hidden-ctrl');
+    }
+
+    if (level === '5') {
+        ctrlStruct.classList.remove('hidden-ctrl');
+    } else {
+        ctrlStruct.classList.add('hidden-ctrl');
+    }
+
+    // Gestion du sélecteur d'indice et du mode Coup de Pouce
+    // Niv 1 : Pas de coup de pouce car c'est la réponse
+    // Niv 2 et 3 : Coup de pouce OK, mais pas de choix de boite (toutes identiques)
+    // Niv 4, 5, 6 : Tout OK
+    
+    if (level === '1') {
+        ctrlHint.classList.add('hidden-ctrl');
+        optHint.classList.add('hidden-ctrl');
+        optHint.style.display = "none";
+        // Si on passe au Niv 1 alors qu'on était en Hint, on repasse en Detective
+        if (gameTypeSelect.value === 'hint') gameTypeSelect.value = 'detective';
+    } else if (level === '2' || level === '3') {
+        ctrlHint.classList.add('hidden-ctrl'); // Pas de choix de couleur car identiques
+        optHint.classList.remove('hidden-ctrl');
+        optHint.style.display = "block";
+    } else {
+        ctrlHint.classList.remove('hidden-ctrl');
+        optHint.classList.remove('hidden-ctrl');
+        optHint.style.display = "block";
+    }
+}
+
+function startGen() {
+  const level = document.getElementById('progressionLevel').value;
+  const targetMax = parseInt(document.getElementById('targetVal').value);
+  const selectedGameType = document.getElementById('gameType').value;
+  const hintPref = document.getElementById('hintSelect').value;
+  
+  state = [];
+  for(let i=0; i<ITEMS; i++) {
+      let gameType = selectedGameType;
+      
+      // LOGIQUE DU MELANGE SURPRISE
+      if (selectedGameType === 'mix') {
+          let modes = ['detective', 'architect', 'draw'];
+          if (level !== '1') {
+              modes.push('hint');
+          }
+          gameType = modes[Math.floor(Math.random() * modes.length)];
+      }
+
+      if (level === '1') state.push(genLevel1(targetMax, gameType));
+      else if (level === '2') state.push(genLevel2(targetMax, gameType));
+      else if (level === '3') state.push(genLevel3_Triade(targetMax, gameType));
+      else if (level === '4') state.push(genLevel4_Duel(targetMax, gameType, hintPref)); 
+      else if (level === '5') state.push(genLevel5_Enquete(targetMax, gameType, hintPref));
+      else if (level === '6') state.push(genLevel6_Systeme(targetMax, gameType));
+  }
+  renderPages();
+}
+
+// --- NIV 1 : LE COMPLÉMENT (1 Boite) ---
+function genLevel1(maxTotal, gameType) {
+    const total = Math.floor(Math.random() * (maxTotal - 5)) + 5;
+    const valA = Math.floor(Math.random() * (total - 2)) + 1;
+    const visible = total - valA;
+    let givenVal = 'none';
+    let header = "Combien de billes sont cachées dans la boîte ?";
+
+    if (gameType === 'architect') {
+        givenVal = 'A';
+        header = "Quel est le TOTAL de billes ?";
+    } else if (gameType === 'draw') {
+        givenVal = 'A';
+        header = "DESSINE les billes manquantes.";
+    }
+    
+    return {
+        level: 1, gameType, givenVal,
+        total, visible,
+        valA, valB: null, valC: null,
+        header,
+        bags: [{ id:'A', val: valA, x: 150, y: 100 }],
+        dots: generateDots(visible, [{x:150, y:100, w:100, h:70}]) 
+    };
+}
+
+// --- NIV 2 : L'ÉQUILIBRE (2 Boites Identiques) ---
+function genLevel2(maxTotal, gameType) {
+    const valA = Math.floor(Math.random() * (maxTotal/3)) + 2;
+    const visible = Math.floor(Math.random() * (maxTotal/3));
+    const total = (valA * 2) + visible;
+    
+    let givenVal = 'none';
+    let header = "Les 2 boîtes contiennent le MÊME nombre de billes.";
+
+    // En Niv 2, Coup de Pouce = Donner la valeur d'une boite (donc A)
+    // Mais attention, l'utilisateur ne doit voir qu'une seule case remplie
+    if(gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
+        givenVal = 'A'; 
+    }
+
+    return {
+        level: 2, gameType, givenVal,
+        total, visible,
+        valA, valB: valA, valC: null,
+        header,
+        bags: [ { id:'A', val: valA, x: 90, y: 100 }, { id:'A', val: valA, x: 210, y: 100 } ],
+        dots: generateDots(visible, [{x:90, y:100, w:100, h:70}, {x:210, y:100, w:100, h:70}])
+    };
+}
+
+// --- NIV 3 : LA TRIADE (3 Boites Identiques) ---
+function genLevel3_Triade(maxTotal, gameType) {
+    const valA = Math.floor(Math.random() * (maxTotal/4)) + 2;
+    const visible = Math.floor(Math.random() * (maxTotal/4));
+    const total = (valA * 3) + visible;
+    
+    let givenVal = 'none';
+    let header = "Les 3 boîtes contiennent le MÊME nombre de billes.";
+
+    if(gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
+        givenVal = 'A';
+    }
+
+    return {
+        level: 3, gameType, givenVal,
+        total, visible,
+        valA, valB: valA, valC: valA,
+        header,
+        bags: [
+            { id:'A', val: valA, x: 150, y: 45 },  
+            { id:'A', val: valA, x: 75, y: 155 },
+            { id:'A', val: valA, x: 225, y: 155 }
+        ],
+        dots: generateDots(visible, [
+            {x:150,y:45,w:100,h:70},
+            {x:75,y:155,w:100,h:70},
+            {x:225,y:155,w:100,h:70}
+        ])
+    };
+}
+
+// --- UTILITAIRE : GESTION DES OPERATIONS ---
+function getOpSettings() {
+    const uPlus = document.getElementById('chk_plus').checked;
+    const uMinus = document.getElementById('chk_minus').checked;
+    const uTimes = document.getElementById('chk_times').checked;
+    const uDiv = document.getElementById('chk_div').checked;
+    
+    let allowed = [];
+    if(uPlus) allowed.push('plus');
+    if(uMinus) allowed.push('minus');
+    if(uTimes) allowed.push('times');
+    if(uDiv) allowed.push('div');
+    
+    if(allowed.length === 0) allowed = ['plus']; // Fallback
+    return allowed;
+}
+
+// --- NIV 4 : LE DUEL (2 Boites Différentes) ---
+function genLevel4_Duel(maxTotal, gameType, hintPref) {
+    let allowedOps = getOpSettings();
+    let c1 = BAGS[0]; let c2 = BAGS[1];
+    if(Math.random() > 0.5) { let t = c1; c1 = c2; c2 = t; }
+
+    let baseVal = Math.floor(Math.random() * (maxTotal/3)) + 2;
+    let valSource = baseVal;
+    let valTarget, text;
+
+    let op = allowedOps[Math.floor(Math.random() * allowedOps.length)];
+
+    if(op === 'times') {
+        // FOIS PLUS
+        let k = Math.floor(Math.random()*4)+2; 
+        valTarget = valSource * k;
+        text = `${boxText(c2.id)} contient ${k} fois PLUS de billes que ${boxText(c1.id)}`;
+    } else if (op === 'div') {
+        // FOIS MOINS
+        let k = Math.floor(Math.random()*4)+2; 
+        valTarget = valSource * k;
+        text = `${boxText(c1.id)} contient ${k} fois MOINS de billes que ${boxText(c2.id)}`;
+    } else if (op === 'plus') {
+        // DE PLUS
+        let n = Math.floor(Math.random()*8)+1; 
+        valTarget = valSource + n;
+        text = `${boxText(c2.id)} a ${n} billes de PLUS que ${boxText(c1.id)}`;
+    } else { // minus
+        // DE MOINS
+        let n = Math.floor(Math.random()*8)+1; 
+        valTarget = valSource + n;
+        text = `${boxText(c1.id)} a ${n} billes de MOINS que ${boxText(c2.id)}`;
+    }
+
+    // Mise en forme : majuscule + point final
+    text = sentenceCaseAndDot(text);
+
+    let valA = (c1.id === 'A') ? valSource : valTarget;
+    let valB = (c1.id === 'B') ? valSource : valTarget;
+
+    let hidden = valA + valB;
+    let visible = Math.floor(Math.random() * Math.min(15, maxTotal - hidden)) + 1;
+    if(isNaN(visible) || visible < 0) visible = 0;
+
+    let givenVal = 'none';
+    if (gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
+        if (hintPref === 'random') givenVal = Math.random()>0.5 ? 'A' : 'B';
+        else givenVal = hintPref; 
+    }
+
+    return {
+        level: 4, gameType, givenVal,
+        total: hidden + visible, visible,
+        valA, valB, valC: null,
+        header: text,
+        bags: [ { id:'A', val: valA, x: 90, y: 100 }, { id:'B', val: valB, x: 210, y: 100 } ],
+        dots: generateDots(visible, [{x:90, y:100, w:100, h:70}, {x:210, y:100, w:100, h:70}])
+    };
+}
+
+// --- NIV 5 : L'ENQUÊTE (3 Boites) ---
+function genLevel5_Enquete(maxTotal, gameType, hintPref) {
+    let allowedOps = getOpSettings();
+    let structMode = 'mix';
+    document.getElementsByName('struct').forEach(r => { if(r.checked) structMode = r.value; });
+    let structure = structMode === 'mix' ? (Math.random() > 0.5 ? 'chain' : 'pivot') : structMode;
+
+    let perm = [0, 1, 2].sort(() => Math.random() - 0.5);
+    let c1 = BAGS[perm[0]], c2 = BAGS[perm[1]], c3 = BAGS[perm[2]];
+    
+    let vals = {}, texts = [];
+    let baseVal = Math.floor(Math.random() * (maxTotal/5)) + 2;
+
+    let opsForThis = [
+        allowedOps[Math.floor(Math.random()*allowedOps.length)],
+        allowedOps[Math.floor(Math.random()*allowedOps.length)]
+    ];
+
+    function applyOp(vBase, src, tgt, op) {
+        let val, txt;
+        if(op === 'times') {
+            let k = Math.floor(Math.random()*4)+2; val = vBase * k;
+            txt = `${boxText(tgt.id)} contient ${k} fois PLUS de billes que ${boxText(src.id)}`;
+        } else if (op === 'div') {
+            let k = Math.floor(Math.random()*4)+2; val = vBase * k;
+            txt = `${boxText(src.id)} contient ${k} fois MOINS de billes que ${boxText(tgt.id)}`;
+        } else if (op === 'plus') {
+            let n = Math.floor(Math.random()*8)+1; val = vBase + n;
+            txt = `${boxText(tgt.id)} a ${n} billes de PLUS que ${boxText(src.id)}`;
+        } else { // minus
+            let n = Math.floor(Math.random()*8)+1; val = vBase + n;
+            txt = `${boxText(src.id)} a ${n} billes de MOINS que ${boxText(tgt.id)}`;
+        }
+        return {v: val, t: txt};
+    }
+
+    if(structure === 'pivot') {
+        vals[c1.id] = baseVal;
+        let r2 = applyOp(vals[c1.id], c1, c2, opsForThis[0]); vals[c2.id] = r2.v; texts.push(r2.t);
+        let r3 = applyOp(vals[c1.id], c1, c3, opsForThis[1]); vals[c3.id] = r3.v; texts.push(r3.t);
+    } else {
+        vals[c1.id] = baseVal;
+        let r2 = applyOp(vals[c1.id], c1, c2, opsForThis[0]); vals[c2.id] = r2.v; texts.push(r2.t);
+        let r3 = applyOp(vals[c2.id], c2, c3, opsForThis[1]); vals[c3.id] = r3.v; texts.push(r3.t);
+    }
+
+    let valA = vals['A'], valB = vals['B'], valC = vals['C'];
+    let hidden = valA + valB + valC;
+    let visible = Math.floor(Math.random() * Math.min(15, maxTotal - hidden)) + 1;
+    if(isNaN(visible) || visible < 0) visible = 0;
+    
+    let givenVal = 'none';
+    if (gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
+        if (hintPref === 'random') {
+            const r = Math.random();
+            if(r<0.33) givenVal = 'A'; else if(r<0.66) givenVal = 'B'; else givenVal = 'C';
+        } else { givenVal = hintPref; }
+    }
+    
+    return {
+        level: 5, gameType, givenVal,
+        total: hidden + visible, visible,
+        valA, valB, valC,
+        header: texts.map(sentenceCaseAndDot).join(" "),
+        bags: [
+            { id:'A', val: valA, x: 150, y: 45 },  
+            { id:'B', val: valB, x: 70, y: 155 },
+            { id:'C', val: valC, x: 230, y: 155 }
+        ],
+        dots: generateDots(visible, [
+            {x:150,y:45,w:100,h:70},
+            {x:70,y:155,w:100,h:70},
+            {x:230,y:155,w:100,h:70}
+        ])
+    };
+}
+
+// --- NIV 6 : LE SYSTÈME (Sommes) ---
+function genLevel6_Systeme(maxTotal, gameType) {
+    let remain = maxTotal;
+    let valA = Math.floor(Math.random() * (remain * 0.3)) + 4;
+    let valB = Math.floor(Math.random() * (remain * 0.3)) + 4;
+    let valC = Math.floor(Math.random() * (remain * 0.3)) + 4;
+    
+    let hidden = valA + valB + valC;
+    let visible = Math.floor(Math.random() * Math.min(15, maxTotal - hidden)) + 2;
+    if(isNaN(visible) || visible < 0) visible = 0;
+
+    const pairs = [
+        { v: valA+valB, n: `${boxText('A')} + ${boxText('B')}` },
+        { v: valB+valC, n: `${boxText('B')} + ${boxText('C')}` },
+        { v: valA+valC, n: `${boxText('A')} + ${boxText('C')}` }
+    ].sort(() => Math.random()-0.5);
+
+    let clues = [`${pairs[0].n} = ${pairs[0].v}`, `${pairs[1].n} = ${pairs[1].v}`].map(sentenceCaseAndDot);
+
+    let givenVal = 'none';
+    if (gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
+        const r = Math.random();
+        if(r<0.33) givenVal = 'A'; else if(r<0.66) givenVal = 'B'; else givenVal = 'C';
+    }
+
+    return {
+        level: 6, gameType, givenVal,
+        total: hidden + visible, visible,
+        valA, valB, valC,
+        header: clues.join("  |  "),
+        bags: [ { id:'A', val: valA, x: 150, y: 45 }, { id:'B', val: valB, x: 70, y: 155 }, { id:'C', val: valC, x: 230, y: 155 } ],
+        dots: generateDots(visible, [
+            {x:150,y:45,w:100,h:70},
+            {x:70,y:155,w:100,h:70},
+            {x:230,y:155,w:100,h:70}
+        ])
+    };
+}
+
+// --- MOTEUR GRAPHIQUE 2D VUE DESSUS ---
+function generateDots(count, obstacles) {
+    const W = 300, H = 200, pad = 15;
+    const placed = [];
+    for(let k=0; k<count; k++) {
+        let safe=false, x, y, iter=0;
+        while(!safe && iter<1500) {
+            iter++;
+            x = pad + Math.random()*(W - 2*pad); 
+            y = pad + Math.random()*(H - 2*pad);
+            let hitBag = false;
+            // Collision rectangulaire STRICTE
+            for(let o of obstacles) { 
+                let hw = (o.w/2) + 12; let hh = (o.h/2) + 12;
+                if(x > o.x - hw && x < o.x + hw && y > o.y - hh && y < o.y + hh) hitBag = true;
+            }
+            if(hitBag) continue;
+            let overlap = false;
+            for(let p of placed) { if(Math.sqrt((x-p.x)**2 + (y-p.y)**2) < 14) overlap=true; }
+            if(!overlap) safe=true;
+        }
+        if(safe) placed.push({x,y});
+    }
+    return placed;
+}
+
+function renderPages() {
+  const main = document.getElementById('mainArea');
+  const isCorr = document.getElementById('showCorr').checked;
+  main.innerHTML = '';
+  const page = document.createElement('div'); page.className = 'page';
+  const inner = document.createElement('div'); inner.className = 'page-inner';
+  const grid = document.createElement('div'); grid.className = 'grid';
+
+  state.forEach(item => {
+    const card = document.createElement('div'); card.className = 'card';
+
+    const header = document.createElement('div'); header.className = 'card-header';
+    header.innerText = item.header;
+    card.appendChild(header);
+
+    const visual = document.createElement('div'); visual.className = 'card-visual';
+    visual.innerHTML = getBagSceneSvg(item, isCorr);
+    card.appendChild(visual);
+
+    const footer = document.createElement('div'); footer.className = 'card-footer';
+
+    // LOGIQUE D'AFFICHAGE FOOTER
+    let showTotal = true;
+    if (item.gameType === 'architect') showTotal = false;
+    if (isCorr) showTotal = true;
+
+    // Valeur "Visible" uniquement en correction (sinon case vide pour compter)
+    let showVis = false;
+    if (isCorr) showVis = true;
+
+    // On montre si correction OU si c'est la valeur donnée en indice
+    let showA = (isCorr || item.givenVal === 'A');
+    let showB = (isCorr || item.givenVal === 'B');
+    let showC = (isCorr || item.givenVal === 'C');
+
+    // Total toujours en premier (inchangé)
+    footer.innerHTML += createAnsBox("Total", showTotal ? item.total : "", "lbl-total " + (showTotal && !isCorr ? "given-val" : ""));
+
+    // ORDRE DES CASES (comme demandé) + Visible toujours en dernier
+    if (item.level === 1) {
+        // Niveau 1 : Boîte Noire, puis Visible
+        footer.innerHTML += createAnsBox("Boîte Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
+    }
+    else if (item.level === 2) {
+        // Niveau 2 : Boîte Noire, Boîte Noire, puis Visible
+        let showFirst = showA;
+        let showSecond = isCorr;
+
+        footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorr ? "given-val" : ""));
+        footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
+    }
+    else if (item.level === 3) {
+        // Niveau 3 : Boîte Noire x3, puis Visible
+        let showFirst = showA;
+        let showSecond = isCorr;
+        let showThird = isCorr;
+
+        footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorr ? "given-val" : ""));
+        footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
+        footer.innerHTML += createAnsBox("Boîte Noire", showThird ? item.valA : "", "lbl-a");
+    }
+    else if (item.level === 4) {
+        // Niveau 4 : Violette, Noire, puis Visible
+        footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorr ? "given-val" : ""));
+        footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
+    }
+    else {
+        // Niveaux 5 & 6 : Violette, Noire, Orange, puis Visible
+        footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorr ? "given-val" : ""));
+        footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
+        footer.innerHTML += createAnsBox("Orange", showC ? item.valC : "", "lbl-c " + (showC && !isCorr ? "given-val" : ""));
+    }
+
+    // Visible toujours en dernier
+    footer.innerHTML += createAnsBox("Visible", showVis ? item.visible : "", "lbl-visible");
+
+    card.appendChild(footer);
+    grid.appendChild(card);
+  });
+
+  inner.appendChild(grid); page.appendChild(inner); main.appendChild(page);
+}
+
+function createAnsBox(lbl, val, cls) {
+    // Si val est vide (non défini ou chaine vide), on laisse la case vide (pas de "?")
+    let displayVal = val === "" || val === undefined ? "&nbsp;" : val;
+    return `<div class="ans-box ${cls}"><div class="ans-label">${lbl}</div><div class="ans-val">${displayVal}</div></div>`;
+}
+
+function getBagSceneSvg(item, isCorr) {
+    const W = 300, H = 200;
+    
+    let svg = `<svg class="bag-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+
+    // MODE DESSIN : ON CACHE LES BILLES (sauf correction)
+    let drawPoints = true;
+    if (item.gameType === 'draw' && !isCorr) drawPoints = false;
+
+    // DESSIN DES POINTS (VUE DESSUS)
+    if (drawPoints) {
+        item.dots.forEach(p => {
+            svg += `<circle cx="${p.x+2}" cy="${p.y+2}" r="6" fill="rgba(0,0,0,0.1)" />`;
+            svg += `<circle cx="${p.x}" cy="${p.y}" r="6" fill="#0ea5e9" stroke="#0369a1" stroke-width="1" />`;
+            svg += `<circle cx="${p.x-2}" cy="${p.y-2}" r="2" fill="rgba(255,255,255,0.6)" />`;
+        });
+    } else if (item.gameType === 'draw') {
+        svg += `<rect x="10" y="10" width="${W-20}" height="${H-20}" rx="10" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />`;
+    }
+
+    // DESSIN DES BOITES (VUE DESSUS STRICTE)
+    item.bags.forEach(bag => {
+        let color = '#334155'; // Default Noir
+        let stroke = '#1e293b';
+        
+        if(bag.id==='B') { color = '#7c3aed'; stroke = '#5b21b6'; } // Violet
+        if(bag.id==='C') { color = '#ea580c'; stroke = '#c2410c'; } // Orange
+        // Niv 2 et 3 Uniforme (Tout noir)
+        if(item.level === 2 || item.level === 3) { color = '#334155'; stroke = '#1e293b'; } 
+
+        svg += `<g transform="translate(${bag.x}, ${bag.y}) scale(1.0)">`;
+        
+        // OMBRE PORTEE (Rectangle décalé)
+        svg += `<rect x="-42" y="-32" width="90" height="70" rx="4" fill="rgba(0,0,0,0.15)" />`;
+
+        // BOITE PRINCIPALE
+        svg += `<rect x="-45" y="-35" width="90" height="70" rx="4" fill="${color}" stroke="${stroke}" stroke-width="2" />`;
+        
+        // BORDURE INTERNE (Pour effet "coffret vu de haut")
+        svg += `<rect x="-38" y="-28" width="76" height="56" rx="2" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" />`;
+        
+        // DETAIL CENTRAL (Petit carré ou étiquette)
+        svg += `<rect x="-10" y="-10" width="20" height="20" rx="2" fill="rgba(255,255,255,0.1)" />`;
+
+        svg += `</g>`;
+    });
+    svg += `</svg>`;
+    return svg;
+}
+
+window.onload = function() { updateUI(); startGen(); };
+</script>
+</body>
+</html>

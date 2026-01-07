@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SPLAT! — VERSION FINALE STABLE</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --accent: #2563eb;
+      --splat: #000000;
+      --border: #cbd5e1;
+      --grid-line: #94a3b8; 
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 10mm;
+      --cols: 3; 
+      --rows: 4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
+    
+    /* SIDEBAR */
+    aside { width: 340px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+    .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 8px; }
+    
+    select, input[type="number"] { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; width: 100%; outline: none; background: #fff; }
+    
+    .flags { display: flex; gap: 10px; margin-bottom: 10px; }
+    .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
+    .flag-btn.active { opacity: 1; background: var(--accent); color: white; border-color: var(--accent); }
+    
+    .check-control { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; margin-bottom: 5px; }
+    .check-control input { width: 17px; height: 17px; cursor: pointer; }
+    .check-text { font-size: 12px; font-weight: 700; color: #334155; }
+    
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 10px; }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
+    .btn-new { background: var(--accent); }
+    .btn-print { background: #10b981; }
+
+    /* MAIN PREVIEW */
+    main { flex: 1; overflow: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; background: #e2e8f0; }
+    .page { width: var(--page-w); height: var(--page-h); background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: relative; flex-shrink: 0; page-break-after: always; }
+    .page-inner { position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin); display: flex; flex-direction: column; }
+    
+    /* GRID SYSTEM */
+    .grid { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); border: 2px solid var(--ink); min-height: 0; }
+    .cell { border: 1px solid var(--grid-line); display: flex; flex-direction: column; padding: 4px; position: relative; overflow: hidden; }
+    
+    /* SPLAT AREA */
+    .part-splat { flex: 1; position: relative; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px; overflow: hidden; min-height: 0; }
+    .splat-svg { width: 100%; height: 100%; display: block; }
+
+    /* BAR DIAGRAM */
+    .diagram-container { flex: 0 0 70px; display: flex; flex-direction: column; width: 90%; margin: 0 auto 5px auto; }
+    .row-top { flex: 1; border: 2px solid #334155; border-bottom: none; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; background: #fff; border-radius: 4px 4px 0 0; min-height: 25px; }
+    .row-bottom { flex: 1; display: flex; min-height: 25px; }
+    .part-box { flex: 1; border: 2px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; position: relative; }
+    .part-left { border-radius: 0 0 0 4px; background: white; }
+    .part-right { border-radius: 0 0 4px 0; border-left: none; background-color: #f1f5f9; color: #334155; }
+
+    @media print { 
+      @page { size: A4; margin: 0; } 
+      body { display: block; background: white; height: auto; overflow: visible; } 
+      aside { display: none !important; } 
+      main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; } 
+      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
+      .grid { border: 2px solid #000; } 
+      .part-right { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="sb-header"><h2 class="sb-title" data-i18n="title">Splat! Expert</h2></div>
+  <div class="sb-scroll">
+    <div class="section">
+        <div class="sec-title" data-i18n="lang">Langue</div>
+        <div class="flags">
+            <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
+            <div class="flag-btn" onclick="setLang('en', this)">EN</div>
+        </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="options">Options</div>
+      <label class="check-control"><input type="checkbox" id="showCorr" onchange="renderPages()"><span class="check-text" data-i18n="opt_corr">Correction / Réponses</span></label>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="layout">Mise en page</div>
+      <select id="gridSize" onchange="startGen()">
+          <option value="3x4" selected data-i18n="grid_12">12 cases (3x4)</option>
+          <option value="3x3" data-i18n="grid_9">9 cases (3x3)</option>
+          <option value="2x4" data-i18n="grid_8">8 cases (Grosses)</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <div class="sec-title" data-i18n="content">Contenu</div>
+      <div class="control">
+          <label data-i18n="target">Cible Max</label>
+          <select id="targetVal" onchange="startGen()">
+            <option value="20" selected>20 (Standard)</option>
+            <option value="50">50 (Avancé)</option>
+            <option value="100">100 (Expert)</option>
+          </select>
+      </div>
+      <div class="sec-title" style="margin-top:15px;" data-i18n="exercise">Exercice</div>
+      <select id="gameMode" onchange="startGen()" style="width:100%">
+        <option value="find_hidden" selected data-i18n="mode_hidden">Trouver le caché</option>
+        <option value="construct" data-i18n="mode_draw">Dessiner les points</option>
+        <option value="mix" data-i18n="mode_mix">Mélanger les types</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">MÉLANGER</button>
+      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    </div>
+  </div>
+</aside>
+
+<main id="mainArea"></main>
+
+<script>
+const i18n = {
+    fr: {
+        title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction",
+        layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
+        content: "Contenu", target: "Cible Max", 
+        exercise: "Exercice", mode_hidden: "Trouver le caché", mode_draw: "Dessiner les points", mode_mix: "Mélanger",
+        btn_mix: "MÉLANGER", btn_print: "IMPRIMER"
+    },
+    en: {
+        title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Answer Key",
+        layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
+        content: "Content", target: "Max Target", 
+        exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mixed",
+        btn_mix: "SHUFFLE", btn_print: "PRINT"
+    }
+};
+
+const SPLAT_SHAPES = [
+    "M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z",
+    "M150,40 Q210,30 220,90 Q240,150 160,160 Q90,170 70,110 Q60,50 150,40 Z",
+    "M140,60 C180,20 230,50 220,100 C210,160 160,170 120,150 C70,130 80,70 140,60 Z",
+    "M120,40 C160,10 240,40 230,110 C220,180 140,170 100,160 C60,140 40,80 120,40 Z",
+    "M140,50 Q190,10 230,70 Q250,120 200,160 Q150,180 100,150 Q60,100 80,60 Q100,20 140,50 Z"
+];
+
+let currentLang = 'fr';
+let state = [];
+
+function setLang(l, el) { 
+    currentLang = l; 
+    document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active')); 
+    el.classList.add('active'); 
+    updateUI(); 
+    renderPages(); 
+}
+
+function updateUI() {
+    const dict = i18n[currentLang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if(dict[key]) el.innerText = dict[key];
+    });
+}
+
+// Génération des données (Execute UNIQUEMENT quand on clique sur Mélanger)
+function startGen() {
+  const sizeSelect = document.getElementById('gridSize').value;
+  const [cols, rows] = sizeSelect.split('x').map(Number);
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+  
+  const targetMax = parseInt(document.getElementById('targetVal').value);
+  const gameMode = document.getElementById('gameMode').value;
+  
+  state = [];
+  const totalItems = cols * rows;
+  
+  // Pour éviter trop de répétitions sur les petits nombres
+  let minVal = (targetMax >= 50) ? 20 : 2; 
+
+  for(let i=0; i<totalItems; i++) {
+      let t = Math.floor(Math.random() * (targetMax - minVal)) + minVal; 
+      state.push(createItem(t, gameMode, targetMax));
+  }
+  
+  renderPages();
+}
+
+function createItem(total, mode, maxTarget) {
+    // RÈGLE IMPORTANTE : Max 20 points visibles, peu importe le total.
+    // Si Total = 100, Visible est entre 0 et 20. Caché est entre 80 et 100.
+    let maxVisibleAllowed = Math.min(total, 20);
+    let visible = Math.floor(Math.random() * (maxVisibleAllowed + 1));
+    let hidden = total - visible;
+
+    let actualMode = mode;
+    if (mode === 'mix') {
+        actualMode = Math.random() > 0.5 ? 'find_hidden' : 'construct';
+    }
+
+    let clueGiven = Math.random() > 0.5 ? 'visible' : 'hidden';
+
+    // On fixe la forme/rotation de la tache AVANT de placer les points,
+    // pour garantir que les points ne touchent jamais la tache.
+    const splatShape = Math.floor(Math.random() * SPLAT_SHAPES.length);
+    const splatRot = Math.floor(Math.random() * 360);
+
+    // On calcule les positions des points ICI (à la création) et on les stocke.
+    // Comme ça, ils ne bougeront plus quand on changera l'affichage (correction).
+    const dotsPositions = generateDotPositions(visible, maxTarget, splatShape, splatRot);
+
+    return { 
+        total: total, 
+        visible: visible, 
+        hidden: hidden, 
+        mode: actualMode,
+        clueGiven: clueGiven,
+        splatShape: splatShape,
+        splatRot: splatRot,
+        dots: dotsPositions, // On sauvegarde les coordonées fixes
+        maxTargetContext: maxTarget
+    };
+}
+
+// Fonction utilitaire pour générer les positions une fois pour toutes
+function generateDotPositions(count, maxTarget, splatShape, splatRot) {
+    const W = 300, H = 200;
+    const cX = 150, cY = 100;
+    let dotR = 8;
+    if (maxTarget > 50) dotR = 5; // Un peu plus petits si c'est expert, mais pas trop
+
+    // Test précis: on évite que les points touchent (ou entrent dans) la tache noire.
+    // On teste la forme NON-rotatée, et on "dé-rotate" le point candidat.
+    let canTestSplat = false;
+    let ctx = null;
+    let splatPath = null;
+
+    function rotatePoint(x, y, cx, cy, deg) {
+        const rad = deg * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const dx = x - cx, dy = y - cy;
+        return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
+    }
+
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        ctx = canvas.getContext('2d');
+        splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
+
+        // Zone tampon autour de la tache : si un point tombe "dans le stroke", on le rejette.
+        ctx.lineWidth = (dotR * 2) + 6;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        canTestSplat = !!ctx && !!splatPath;
+    } catch (e) {
+        canTestSplat = false; // fallback (très rare)
+    }
+
+    const placed = [];
+    for (let k=0; k<count; k++) {
+        let safe = false, dX, dY, attempts = 0;
+        while(!safe && attempts < 200) {
+            attempts++;
+            dX = 20 + Math.random() * (W - 40);
+            dY = 20 + Math.random() * (H - 40);
+
+            // Eviter la boite Total (en haut à droite)
+            if (dX > 230 && dY < 70) continue;
+
+            // Eviter la tache noire (précis)
+            if (canTestSplat) {
+                const p = rotatePoint(dX, dY, cX, cY, -splatRot);
+                if (ctx.isPointInPath(splatPath, p.x, p.y)) continue;
+                if (ctx.isPointInStroke(splatPath, p.x, p.y)) continue;
+            } else {
+                // Fallback : évite le centre (approximation)
+                const distCenter = Math.sqrt((dX - cX)**2 + (dY - cY)**2);
+                if (distCenter < 85) continue;
+            }
+
+            // Eviter superposition
+            let overlap = false;
+            for (let p of placed) {
+                const distP = Math.sqrt((dX - p.x)**2 + (dY - p.y)**2);
+                if (distP < (dotR * 2.2)) { overlap = true; break; }
+            }
+            if (!overlap) safe = true;
+        }
+        if (safe) placed.push({x:dX, y:dY});
+    }
+    return { arr: placed, r: dotR };
+}
+
+// Affichage (appelé quand on change une option d'affichage)
+function renderPages() {
+  const main = document.getElementById('mainArea');
+  const isCorr = document.getElementById('showCorr').checked;
+  
+  main.innerHTML = ''; 
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  const itemsPerPage = cols * rows;
+
+  for (let i = 0; i < state.length; i += itemsPerPage) {
+      const chunk = state.slice(i, i + itemsPerPage);
+      const page = document.createElement('div'); page.className = 'page';
+      const inner = document.createElement('div'); inner.className = 'page-inner';
+      const grid = document.createElement('div'); grid.className = 'grid';
+      
+      chunk.forEach(item => {
+        const cell = document.createElement('div'); cell.className = 'cell';
+        
+        let showVisualTotal = false;
+        let showVisualDots = false;
+        let diaTotal = "";
+        let diaLeft = "";
+        let diaRight = "";
+
+        if (item.mode === 'find_hidden') {
+            // MODE: TROUVER LE CACHÉ
+            // Normal: On voit les points, on voit le Total en haut. Tableau vide.
+            // Corr: Tableau rempli.
+            showVisualTotal = true;
+            showVisualDots = true;
+            
+            if (isCorr) {
+                diaTotal = item.total;
+                diaLeft = item.visible;
+                diaRight = item.hidden;
+            } else {
+                // Tout vide pour forcer l'élève à compter et calculer
+                diaTotal = ""; 
+                diaLeft = ""; 
+                diaRight = ""; 
+            }
+
+        } else if (item.mode === 'construct') {
+            // MODE: DESSINER
+            // Normal: Boite Total vide. Pas de points.
+            // Tableau: Total + (Vis OU Caché).
+            // Corr: Points s'affichent. Boite Total se remplit. Tableau complet.
+            
+            if (isCorr) {
+                showVisualTotal = true;
+                showVisualDots = true; // On affiche les points pour montrer la solution !
+                diaTotal = item.total;
+                diaLeft = item.visible;
+                diaRight = item.hidden;
+            } else {
+                showVisualTotal = false;
+                showVisualDots = false; // L'élève doit dessiner
+                
+                diaTotal = item.total; // Le tableau guide l'élève
+                if (item.clueGiven === 'visible') {
+                    diaLeft = item.visible; 
+                    diaRight = "";
+                } else {
+                    diaLeft = "";
+                    diaRight = item.hidden;
+                }
+            }
+        }
+
+        // Construction du SVG avec les données STABLES (item.dots)
+        const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
+        splatPart.innerHTML = getSplatSvg(item, showVisualTotal, showVisualDots);
+        cell.appendChild(splatPart);
+
+        // Diagramme en bas
+        const diag = document.createElement('div'); diag.className = 'diagram-container';
+        diag.innerHTML = `
+            <div class="row-top">${diaTotal}</div>
+            <div class="row-bottom">
+                <div class="part-box part-left">${diaLeft}</div>
+                <div class="part-box part-right">${diaRight}</div>
+            </div>`;
+        
+        cell.appendChild(diag); 
+        grid.appendChild(cell);
+      });
+      
+      inner.appendChild(grid); 
+      page.appendChild(inner); 
+      main.appendChild(page);
+  }
+}
+
+function getSplatSvg(item, showBoxTotal, drawDots) {
+    const W = 300;
+    const H = 200; 
+    const pathData = SPLAT_SHAPES[item.splatShape % SPLAT_SHAPES.length];
+    
+    let svg = `<svg class="splat-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+    
+    // 1. Dessin des points (Utilise les positions pré-calculées dans item.dots)
+    if (drawDots && item.visible > 0) {
+        const pts = item.dots.arr;
+        const r = item.dots.r;
+        for(let p of pts) {
+             svg += `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
+        }
+    }
+    
+    // 2. La Tache (Splat)
+    svg += `<g transform="rotate(${item.splatRot}, 150, 100)">`;
+    svg += `<path d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
+    svg += `</g>`;
+    
+    // 3. La Boîte Total (Flottante)
+    const boxSize = 40;
+    const boxX = W - boxSize - 10;
+    const boxY = 10;
+    
+    svg += `<rect x="${boxX}" y="${boxY}" width="${boxSize}" height="${boxSize}" fill="white" stroke="#334155" stroke-width="2" />`;
+    
+    if (showBoxTotal) {
+        svg += `<text x="${boxX + boxSize/2}" y="${boxY + boxSize/2}" dy="1" font-family="Arial, sans-serif" font-weight="bold" font-size="18" text-anchor="middle" dominant-baseline="middle" fill="#111827">${item.total}</text>`;
+    }
+
+    svg += `</svg>`;
+    return svg;
+}
+
+window.onload = () => { startGen(); updateUI(); };
+</script>
+</body>
+</html>

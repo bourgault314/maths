@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Menu</title>
+  <style>
+    :root{
+      --bg:#e2e8f0;
+      --panel:#ffffff;
+      --border:#cbd5e1;
+      --ink:#0f172a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex}
+    aside{
+      width:300px;min-width:260px;max-width:380px;
+      background:var(--panel);
+      border-right:1px solid var(--border);
+      padding:16px 14px;
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .title{
+      font-weight:950;
+      letter-spacing:.2px;
+      font-size:18px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#f8fafc;
+    }
+    .btns{display:flex;flex-direction:column;gap:10px}
+    .nav-btn{
+      appearance:none;border:none;cursor:pointer;
+      width:100%;
+      padding:14px 12px;
+      border-radius:14px;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-align:left;
+      background:var(--btn,#2563eb);
+      color:white;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      transform:translateY(0);
+      transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .nav-btn:hover{filter:brightness(1.02)}
+    .nav-btn:active{transform:translateY(1px)}
+    .nav-btn .sub{font-weight:800;opacity:.9;font-size:12px}
+    .nav-btn.inactive{opacity:.55;box-shadow:none}
+    .nav-btn.active{outline:3px solid rgba(37,99,235,.25); opacity:1}
+    .spacer{flex:1}
+    main{flex:1;min-width:0;height:100vh}
+    iframe{
+      width:100%;height:100%;
+      border:0;
+      background:white;
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="title">Menu</div>
+
+    <div class="btns" id="btns"></div>
+
+    <div class="spacer"></div>
+  </aside>
+
+  <main>
+    <iframe id="frame" title="Outil"></iframe>
+  </main>
+
+  <script>
+    // Liste des pages à charger (espaces encodés en %20)
+    const pages = [
+      { id: "cache", label: "Cache-cache",               sub: "cache cache.html",               src: "cache%20cache.html",               btn: "#ef4444" },
+      { id: "barre", label: "Cache-cache barre",         sub: "cache cache barre.html",         src: "cache%20cache%20barre.html",       btn: "#f97316" },
+      { id: "gen1",  label: "Lecture 0–100",             sub: "lecture_0_100_generateur.html",  src: "lecture_0_100_generateur.html",    btn: "#2563eb" },
+      { id: "gen2",  label: "Lecture 0–100 (variante)",  sub: "lecture_0_100_generateur2.html", src: "lecture_0_100_generateur2.html",   btn: "#16a34a" },
+      { id: "voisins", label: "Voisins",                  sub: "voisins_generateur_compact.html", src: "voisins_generateur_compact.html", btn: "#7c3aed" },
+    ];
+
+    const btns = document.getElementById("btns");
+    const frame = document.getElementById("frame");
+
+    function setActive(id){
+      const p = pages.find(x => x.id === id) || pages[0];
+      [...btns.querySelectorAll("button")].forEach(b => {
+        const active = b.dataset.id === p.id;
+        b.classList.toggle("active", active);
+        b.classList.toggle("inactive", !active);
+        b.style.setProperty("--btn", b.dataset.btn);
+      });
+      frame.src = p.src;
+      location.hash = p.id;
+      document.title = "Menu";
+    }
+
+    pages.forEach(p => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "nav-btn";
+      b.dataset.id = p.id;
+      b.dataset.btn = p.btn;
+      b.style.setProperty("--btn", p.btn);
+      b.innerHTML = `<div>${p.label}</div><div class="sub">${p.sub}</div>`;
+      b.addEventListener("click", () => setActive(p.id));
+      btns.appendChild(b);
+    });
+
+    const fromHash = (location.hash || "").replace("#","").trim();
+    setActive(pages.some(p => p.id === fromHash) ? fromHash : pages[0].id);
+
+    window.addEventListener("hashchange", () => {
+      const h = (location.hash || "").replace("#","").trim();
+      if (pages.some(p => p.id === h)) setActive(h);
+    });
+  </script>
+</body>
+</html>
