@@ -1,137 +1,124 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Outils pédagogiques</title>
-<style>
-  :root{
-    --bg:#f7f7f7; --fg:#0b0b0b; --card:#fff; --border:#ddd; --primary:#2563eb;
-    /* Ajout de couleurs pour les accents */
-    --c1: #3b82f6; /* blue */
-    --c2: #16a34a; /* green */
-    --c3: #ea580c; /* orange */
-    --c4: #ca8a04; /* yellow */
-    --c5: #9333ea; /* purple */
-    --c6: #db2777; /* pink */
-    --c7: #e11d48; /* rose */
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%} html{-webkit-text-size-adjust:100%}
-  body{
-    margin:0; font:18px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    background:var(--bg); color:var(--fg);
-    display:flex; justify-content:center; padding:clamp(12px,3vw,28px);
-    padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right));
-  }
-  .wrap{ width:min(1100px,100%); }
-  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-  .back{
-    display:inline-block; padding:8px 12px; border:1.5px solid var(--primary); color:#fff; background:var(--primary);
-    border-radius:12px; text-decoration:none; font-weight:800;
-  }
-  h1{ margin:0 0 8px; font-weight:900; font-size:clamp(22px,3.6vw,34px) }
-  p.lead{ margin:.25rem 0 0; color:#555; font-size:clamp(14px,2.4vw,18px) }
-
-  .grid{ display:grid; gap:14px; grid-template-columns: repeat(2, minmax(0,1fr)); margin-top:14px; }
-  @media (max-width: 760px){ .grid{ grid-template-columns:1fr; } }
-
-  a.card{
-    display:block; text-decoration:none; color:inherit;
-    background:var(--card); 
-    border:1.5px solid var(--border);
-    /* AMÉLIORATION : Ajout d'un accent de couleur */
-    border-top: 6px solid var(--border);
-    border-radius:16px;
-    padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06);
-    transition:transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-    min-height:112px;
-  }
-  a.card:hover{ 
-    transform:translateY(-2px); 
-    box-shadow:0 4px 16px rgba(0,0,0,.10); 
-    border-color: #555;
-  }
-  /* On applique les couleurs d'accent au survol */
-  a.card[data-color="1"]:hover{ border-top-color: var(--c1); }
-  a.card[data-color="2"]:hover{ border-top-color: var(--c2); }
-  a.card[data-color="3"]:hover{ border-top-color: var(--c3); }
-  a.card[data-color="4"]:hover{ border-top-color: var(--c4); }
-  a.card[data-color="5"]:hover{ border-top-color: var(--c5); }
-  a.card[data-color="6"]:hover{ border-top-color: var(--c6); }
-  a.card[data-color="7"]:hover{ border-top-color: var(--c7); }
-
-  .title{ 
-    margin:0 0 6px; font-weight:900; font-size:clamp(18px,2.8vw,22px);
-    /* AMÉLIORATION : Espace pour l'emoji */
-    display:flex; align-items:center; gap: 10px;
-  }
-  .desc{ margin:0; color:#444; font-size:clamp(14px,2.4vw,16px) }
-
-  footer{ margin-top:16px; color:#666; font-size:14px }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Menu</title>
+  <style>
+    :root{
+      --bg:#e2e8f0;
+      --panel:#ffffff;
+      --border:#cbd5e1;
+      --ink:#0f172a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex}
+    aside{
+      width:300px;min-width:260px;max-width:380px;
+      background:var(--panel);
+      border-right:1px solid var(--border);
+      padding:16px 14px;
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .title{
+      font-weight:950;
+      letter-spacing:.2px;
+      font-size:18px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#f8fafc;
+    }
+    .btns{display:flex;flex-direction:column;gap:10px}
+    .nav-btn{
+      appearance:none;border:none;cursor:pointer;
+      width:100%;
+      padding:14px 12px;
+      border-radius:14px;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-align:left;
+      background:var(--btn,#2563eb);
+      color:white;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      transform:translateY(0);
+      transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .nav-btn:hover{filter:brightness(1.02)}
+    .nav-btn:active{transform:translateY(1px)}
+    .nav-btn .sub{font-weight:800;opacity:.9;font-size:12px}
+    .nav-btn.inactive{opacity:.55;box-shadow:none}
+    .nav-btn.active{outline:3px solid rgba(37,99,235,.25); opacity:1}
+    .spacer{flex:1}
+    main{flex:1;min-width:0;height:100vh}
+    iframe{
+      width:100%;height:100%;
+      border:0;
+      background:white;
+    }
+  </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="topbar">
-      <a class="back" href="../">← Retour à Maths</a>
-    </div>
+  <aside>
+    <div class="title">Menu</div>
 
-    <header>
-      <h1>Outils pédagogiques</h1>
-      <p class="lead">Choisis un outil ci-dessous.</p>
-    </header>
+    <div class="btns" id="btns"></div>
 
-    <section class="grid">
-      <a class="card" href="cartes_premiers_1_100.html" data-color="7">
-        <div class="title">🃏 Générateur de Cartes</div>
-        <p class="desc">Nombres premiers, composés, diviseurs, etc. (1-100 ou plus).</p>
-      </a>
+    <div class="spacer"></div>
+  </aside>
 
-      <a class="card" href="glisse-nombres-decimaux.html" data-color="1">
-        <div class="title">↔️ Glisse-nombres (décimaux)</div>
-        <p class="desc">Manipuler la virgule, ×10 / ÷10, zéros d’affichage, sortie.</p>
-      </a>
-
-      <a class="card" href="glisse-entiers-flex.html" data-color="2">
-        <div class="title">🔢 Glisse-entiers (flexible)</div>
-        <p class="desc">Entiers avec 6 à 12 colonnes. ÷10 indique aussi le reste.</p>
-      </a>
-
-      <a class="card" href="conversions.html" data-color="3">
-        <div class="title">⚖️ Conversions</div>
-        <p class="desc">Convertir rapidement des unités (longueur, masse, …).</p>
-      </a>
-
-      <a class="card" href="bouliers/" data-color="4">
-        <div class="title">🧮 Bouliers</div>
-        <p class="desc">Ateliers et activités autour du boulier.</p>
-      </a>
-
-      <a class="card" href="bandes_maker_v2.html" data-color="5">
-        <div class="title">📏 Bandes maker</div>
-        <p class="desc">Générateur de bandes (fractions)</p>
-      </a>
-
-      <a class="card" href="disque_maker.html" data-color="6">
-        <div class="title">⭕️ Disques maker</div>
-        <p class="desc">Générateur de disques (fractions) </p>
-      </a>
-      
-      <a class="card" href="sheet_generator_diagramme_partie_tout.html" data-color="1">
-  <div class="title">🧩 Diagrammes partie-tout</div>
-  <p class="desc">Générateur de diagrammes partie-tout avec problèmes (énoncés + schémas).</p>
-</a>
-
-    </section>
-    
+  <main>
+    <iframe id="frame" title="Outil"></iframe>
   </main>
 
   <script>
-    // Petit secours : si le bouton « Retour à Maths » mène à une 404 selon l’endroit où tu poses ce fichier,
-    // dé-commente l’une de ces lignes :
-    // document.querySelector('.back').setAttribute('href','/maths/');    // vers /maths à la racine du site
-    // document.querySelector('.back').setAttribute('href','./');         // si l’index est lui-même dans /maths/
+    // Liste des pages à charger (espaces encodés en %20)
+    const pages = [
+      { id: "cache", label: "Cache-cache",               sub: "cache cache.html",               src: "cache%20cache.html",               btn: "#ef4444" },
+      { id: "barre", label: "Cache-cache barre",         sub: "cache cache barre.html",         src: "cache%20cache%20barre.html",       btn: "#f97316" },
+      { id: "gen1",  label: "Lecture 0–100",             sub: "lecture_0_100_generateur.html",  src: "lecture_0_100_generateur.html",    btn: "#2563eb" },
+      // 4e possibilité : le gabarit PDF (aucune génération, juste consultation / impression)
+      { id: "gabarit_a3", label: "Gabarits A3 (PDF)",     sub: "gabarits_enquêtes__1__A3.pdf",    src: "gabarits_enqu%C3%AAtes__1__A3.pdf", btn: "#0ea5e9" },
+      { id: "gen2",  label: "Lecture 0–100 (variante)",  sub: "lecture_0_100_generateur2.html", src: "lecture_0_100_generateur2.html",   btn: "#16a34a" },
+      { id: "voisins", label: "Voisins",                  sub: "voisins_generateur_compact.html", src: "voisins_generateur_compact.html", btn: "#7c3aed" },
+    ];
+
+    const btns = document.getElementById("btns");
+    const frame = document.getElementById("frame");
+
+    function setActive(id){
+      const p = pages.find(x => x.id === id) || pages[0];
+      [...btns.querySelectorAll("button")].forEach(b => {
+        const active = b.dataset.id === p.id;
+        b.classList.toggle("active", active);
+        b.classList.toggle("inactive", !active);
+        b.style.setProperty("--btn", b.dataset.btn);
+      });
+      frame.src = p.src;
+      location.hash = p.id;
+      document.title = "Menu";
+    }
+
+    pages.forEach(p => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "nav-btn";
+      b.dataset.id = p.id;
+      b.dataset.btn = p.btn;
+      b.style.setProperty("--btn", p.btn);
+      b.innerHTML = `<div>${p.label}</div><div class="sub">${p.sub}</div>`;
+      b.addEventListener("click", () => setActive(p.id));
+      btns.appendChild(b);
+    });
+
+    const fromHash = (location.hash || "").replace("#","").trim();
+    setActive(pages.some(p => p.id === fromHash) ? fromHash : pages[0].id);
+
+    window.addEventListener("hashchange", () => {
+      const h = (location.hash || "").replace("#","").trim();
+      if (pages.some(p => p.id === h)) setActive(h);
+    });
   </script>
 </body>
 </html>
