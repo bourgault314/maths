@@ -220,52 +220,72 @@ function renderPages() {
       inner.appendChild(grid); page.appendChild(inner); main.appendChild(page);
   }
 }
-function getDiagramSvg(visible, target, isColorMode, theme) {
-  let W = 140, H, rows, r, spacingY, startY;
-  if (target === 100) { H = 140; rows = 10; r = 3.6; spacingY = 11; startY = 15; }
-  else if (target === 20) { H = 60; rows = 2; r = 5.5; spacingY = 20; startY = 20; }
-  else { H = 40; rows = 1; r = 5.5; spacingY = 0; startY = 20; }
-  let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
-  const d_tight = (target === 100) ? 7.8 : 10.8;
+
+function getDiagramSvg(vis, target, isColoringMode, theme) {
+  // CONFIG VISUELLE : 21 COLONNES, FORMAT PAYSAGE, MONTANTS MARRONS
+  const totalW = 300; 
+  const frameW = 8;
+  const innerW = totalW - (2 * frameW);
+  const midPt = totalW / 2;
+  
+  const diameter = innerW / 21; 
+  const r = (diameter / 2) - 0.1; 
+  const dT = diameter; 
+
+  let H, rows, spY, stY;
+
+  if (target === 100) {
+      rows = 10;
+      spY = 15; 
+      stY = 15; 
+      H = 165;  
+  } else if (target === 20) {
+      rows = 2;
+      spY = 18; 
+      stY = 16;
+      H = 55;
+  } else {
+      rows = 1;
+      spY = 0;
+      stY = 17.5; 
+      H = 35; 
+  }
+
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${totalW} ${H}">`;
+  
+  const brownColor = "#A07846";
+  svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+  svg += `<rect x="${totalW - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+
   for(let row = 0; row < rows; row++) {
-      let y = startY + (row * spacingY);
-      svg += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.2" />`;
-      let fullRows = Math.floor(visible / 10), remainder = visible % 10;
-      let visOnRow = (row < fullRows) ? 10 : (row === fullRows ? remainder : 0);
-      let startX = 15;
-      if (isColorMode) {
-          for(let i=0; i<10; i++) {
-              let fill = (target === 100) ? (((row>=5)?(i<5):(i>=5)) ? '#ffffff' : '#ccc') : (i < 5 ? '#ccc' : '#ffffff');
-              svg += `<circle cx="${startX + i*d_tight}" cy="${y}" r="${r}" fill="${fill}" stroke="#444" stroke-width="0.8" />`;
+      let y = stY + (row * spY);
+      svg += `<line x1="${frameW}" y1="${y}" x2="${totalW - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.2" />`;
+      
+      let startX = frameW + r; 
+
+      if (isColoringMode) {
+          // MODIF: Si Cible 10, on ne dessine PAS les billes (fil vide).
+          // Si Cible 20 ou 100, on dessine les billes fantômes.
+          if (target !== 10) {
+              for(let i=0; i<10; i++) {
+                  let fill = (i < 5) ? '#ccc' : '#fff'; 
+                  if (target === 100 && row >= 5) fill = (i < 5) ? '#fff' : '#ccc';
+                  svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="0.8" />`;
+              }
           }
       } else {
+          let visOnRow = row < Math.floor(vis/10) ? 10 : (row === Math.floor(vis/10) ? vis%10 : 0);
           for(let i=0; i<visOnRow; i++) {
-             let isF5 = (i < 5), inv = (target === 100 && row >= 5);
-             let fill = inv ? (isF5 ? (theme === 'blue' ? '#2563eb' : '#ffffff') : '#dc2626') : (isF5 ? '#dc2626' : (theme === 'blue' ? '#2563eb' : '#ffffff'));
-             svg += `<circle cx="${startX + i*d_tight}" cy="${y}" r="${r}" fill="${fill}" stroke="${(fill === '#ffffff' || fill === 'white') ? '#444' : 'none'}" stroke-width="0.8" />`;
+              let isF5 = (i < 5), inv = (target === 100 && row >= 5);
+              let fill = inv ? (isF5 ? (theme === 'blue' ? '#2563eb' : '#ffffff') : '#dc2626') : (isF5 ? '#dc2626' : (theme === 'blue' ? '#2563eb' : '#ffffff'));
+              svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="${(fill==='#fff'||fill==='#ffffff')?'#333':'none'}" stroke-width="0.8" />`;
           }
       }
   }
-  if (!isColorMode && visible < target) {
-      let fR = Math.floor(visible / 10), rem = visible % 10;
-      let sX = 15 + (rem * d_tight) + 1.5, sY = startY + (fR * spacingY);
-      
-      // Cache de la ligne courante
-      svg += `<rect x="${sX}" y="${sY - r - 2}" width="${W - sX - 5}" height="${r*2 + 4}" fill="#000" />`;
-      
-      // Cache des lignes suivantes corrigé pour s'arrêter au bon endroit
-      if (fR < rows - 1) {
-          let nextLinesY = sY + (spacingY / 2);
-          // La hauteur du cache est maintenant calculée pour finir exactement après la dernière ligne de billes
-          // (Dernière tige Y + rayon + marge)
-          let lastBeadBottomY = startY + ((rows-1) * spacingY) + r + 2;
-          let cacheHeight = lastBeadBottomY - nextLinesY;
-          
-          let nW = (target === 20) ? (W - sX - 5) : (W - 10);
-          let nX = (target === 20) ? sX : 5;
-          
-          svg += `<rect x="${nX}" y="${nextLinesY}" width="${nW}" height="${cacheHeight}" fill="#000" />`;
-      }
+  
+  // RIDEAU PRÉSENT MÊME EN COLORIAGE (pour tous les targets)
+  if (vis < target) {
+      svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
   }
   return svg + `</svg>`;
 }
