@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — CACHE-CACHE DYNAMIQUE</title>
+  <title>REKENREK — JEU DU RIDEAU (FINAL)</title>
   <style>
     :root {
       --ink: #111827; --bg: #f8fafc; --panel: #ffffff; --accent: #2563eb; --border: #cbd5e1; --grid-line: #94a3b8; 
@@ -97,7 +97,7 @@ function startGen() {
   const gridVal = document.getElementById('gridSize').value;
   const [cols, rows] = gridVal.split('x').map(Number);
   
-  // Mise à jour des variables CSS pour la grille
+  // Paramétrage des CSS variables pour le zoom auto
   document.documentElement.style.setProperty('--cols', cols);
   document.documentElement.style.setProperty('--rows', rows);
 
@@ -132,13 +132,14 @@ function renderPages() {
       chunk.forEach(item => {
         const cell = document.createElement('div'); cell.className = 'cell';
         const top = document.createElement('div'); top.className = 'part-boulier';
-        let isForcedNormal = isCorr ? false : (item.mode === 'color');
-        top.innerHTML = getSvg(item.vis, item.target, isForcedNormal, theme);
+        // Utilisation du moteur graphique avec le correctif "Target 10" et "Rideau forcé"
+        top.innerHTML = getSvg(item.vis, item.target, (item.mode === 'color'), theme);
         cell.appendChild(top);
         
         const bot = document.createElement('div'); bot.className = 'part-bottom';
-        const info = document.createElement('div'); info.className = 'box-info';
+        // CONFIGURATION CLASSIQUE : Grande case (Info) à GAUCHE, Petite case (Réponse) à DROITE
         const ans = document.createElement('div'); ans.className = 'box-ans';
+        const info = document.createElement('div'); info.className = 'box-info';
         
         if (item.mode === 'complement') {
              info.innerHTML = `<span class="val-equation">${item.vis} + ${isCorr ? item.hidden : '&nbsp;&nbsp;'} = ${item.target}</span>`;
@@ -159,20 +160,21 @@ function renderPages() {
              }
         }
         
-        bot.appendChild(info); bot.appendChild(ans); cell.appendChild(bot); grid.appendChild(cell);
+        // ORDRE : Info (Gauche) -> Ans (Droite)
+        bot.appendChild(info); 
+        bot.appendChild(ans); 
+        
+        cell.appendChild(bot); grid.appendChild(cell);
       });
       inner.appendChild(grid); page.appendChild(inner); main.appendChild(page);
   }
 }
+
 function getSvg(vis, target, isColoringMode, theme) {
-  // CETTE FONCTION EST LA REFERENCE VISUELLE (15 CASES).
-  // ELLE NE CHANGE PAS MEME SI LA GRILLE CHANGE.
   const totalW = 300; 
   const frameW = 8;
-  const innerW = totalW - (2 * frameW);
   const midPt = totalW / 2;
-  
-  // CALCUL DIAMETRE : 21 "cases" de largeur
+  const innerW = totalW - (2 * frameW);
   const diameter = innerW / 21; 
   const r = (diameter / 2) - 0.1; 
   const dT = diameter; 
@@ -180,20 +182,11 @@ function getSvg(vis, target, isColoringMode, theme) {
   let H, rows, spY, stY;
 
   if (target === 100) {
-      rows = 10;
-      spY = 15; 
-      stY = 15; 
-      H = 165;  
+      rows = 10; spY = 15; stY = 15; H = 165;  
   } else if (target === 20) {
-      rows = 2;
-      spY = 18; 
-      stY = 16;
-      H = 55;
+      rows = 2; spY = 18; stY = 16; H = 55;
   } else {
-      rows = 1;
-      spY = 0;
-      stY = 17.5; 
-      H = 35; 
+      rows = 1; spY = 0; stY = 17.5; H = 35; 
   }
 
   let svg = `<svg class="rr-svg" viewBox="0 0 ${totalW} ${H}">`;
@@ -209,10 +202,14 @@ function getSvg(vis, target, isColoringMode, theme) {
       let startX = frameW + r; 
 
       if (isColoringMode) {
-          for(let i=0; i<10; i++) {
-              let fill = (i < 5) ? '#ccc' : '#fff'; 
-              if (target === 100 && row >= 5) fill = (i < 5) ? '#fff' : '#ccc';
-              svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="0.8" />`;
+          // Si Cible = 10 : Fil vide (on ne dessine RIEN, l'enfant dessine).
+          // Si Cible != 10 (donc 20 ou 100) : On dessine les billes grises/blanches.
+          if (target !== 10) {
+              for(let i=0; i<10; i++) {
+                  let fill = (i < 5) ? '#ccc' : '#fff'; 
+                  if (target === 100 && row >= 5) fill = (i < 5) ? '#fff' : '#ccc';
+                  svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="0.8" />`;
+              }
           }
       } else {
           let visOnRow = row < Math.floor(vis/10) ? 10 : (row === Math.floor(vis/10) ? vis%10 : 0);
@@ -224,7 +221,9 @@ function getSvg(vis, target, isColoringMode, theme) {
       }
   }
   
-  if (!isColoringMode && vis < target) {
+  // CORRECTION : Le rideau s'affiche SI (il y a des billes cachées) OU (on est en mode coloriage)
+  // Cela garantit que pour 10+0 en coloriage, le rideau est présent.
+  if (vis < target || isColoringMode) {
       svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
   }
   return svg + `</svg>`;
