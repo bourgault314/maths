@@ -489,7 +489,7 @@ function startGen() {
       if (end > 100) end = 100;
       if (end < start) end = start;
       
-      maxValForLayout = end; // Le layout dépend du max de la séquence
+      maxValForLayout = end;
 
       for(let i=start; i<=end; i++) {
           state.push(createItem(i, maxValForLayout, gameMode));
@@ -515,6 +515,7 @@ function createItem(val, maxVal, mode) {
     let showBead = true, showNum = true, showWord = true;
 
     if (mode === 'modele') {
+        // tout visible
     } 
     else if (mode === 'chiffre') {
         showBead = true; showNum = false; showWord = true;
@@ -553,6 +554,7 @@ function createItem(val, maxVal, mode) {
 function renderPages(sizeSelect) {
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
+  
   
   const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
   const theme = document.getElementById('beadColor').value;
@@ -653,13 +655,22 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
   
   let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
+  // AJOUT DE LA BARRE MARRON A GAUCHE UNIQUEMENT (8px de large)
+  const frameW = 8;
+  const brownColor = "#A07846";
+  svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+
   const drawLine = (y, valOnLine, hiddenMode, rowId) => {
       let str = "";
-      str += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+      // La ligne commence maintenant après la barre marron (à frameW)
+      str += `<line x1="${frameW}" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
       
       const d_active = (layoutType === 100) ? 8.2 : 11.2; 
       const d_tight = (layoutType === 100) ? 7.8 : 10.8; 
-      let startX = 15; 
+      
+      // MODIFICATION : Début des billes calé sur la barre (frameW) + rayon (r)
+      // Pour coller parfaitement la bille sans espace
+      let startX = frameW + r; 
       
       const inverted = (layoutType === 100 && rowId >= 5);
 
@@ -712,7 +723,8 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
           if(valOnThisRow > 0) {
               svg += drawLine(y, valOnThisRow, false, row);
           } else {
-              svg += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
+              // Ligne vide (quand on affiche les billes)
+              svg += `<line x1="${frameW}" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
           }
       }
   }
