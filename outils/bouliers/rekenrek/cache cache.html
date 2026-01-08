@@ -132,12 +132,11 @@ function renderPages() {
       chunk.forEach(item => {
         const cell = document.createElement('div'); cell.className = 'cell';
         const top = document.createElement('div'); top.className = 'part-boulier';
-        // Utilisation du moteur graphique avec le correctif "Target 10" et "Rideau forcé"
         top.innerHTML = getSvg(item.vis, item.target, (item.mode === 'color'), theme);
         cell.appendChild(top);
         
         const bot = document.createElement('div'); bot.className = 'part-bottom';
-        // CONFIGURATION CLASSIQUE : Grande case (Info) à GAUCHE, Petite case (Réponse) à DROITE
+        // DISPOSITION : Grande case (Info) à GAUCHE, Petite case (Réponse) à DROITE
         const ans = document.createElement('div'); ans.className = 'box-ans';
         const info = document.createElement('div'); info.className = 'box-info';
         
@@ -160,7 +159,6 @@ function renderPages() {
              }
         }
         
-        // ORDRE : Info (Gauche) -> Ans (Droite)
         bot.appendChild(info); 
         bot.appendChild(ans); 
         
@@ -202,8 +200,8 @@ function getSvg(vis, target, isColoringMode, theme) {
       let startX = frameW + r; 
 
       if (isColoringMode) {
-          // Si Cible = 10 : Fil vide (on ne dessine RIEN, l'enfant dessine).
-          // Si Cible != 10 (donc 20 ou 100) : On dessine les billes grises/blanches.
+          // Si Cible = 10 : Fil vide (on ne dessine RIEN).
+          // Sinon (20, 100) : On dessine les billes grises.
           if (target !== 10) {
               for(let i=0; i<10; i++) {
                   let fill = (i < 5) ? '#ccc' : '#fff'; 
@@ -221,11 +219,10 @@ function getSvg(vis, target, isColoringMode, theme) {
       }
   }
   
-  // CORRECTION : Le rideau s'affiche SI (il y a des billes cachées) OU (on est en mode coloriage)
-  // Cela garantit que pour 10+0 en coloriage, le rideau est présent.
-  if (vis < target || isColoringMode) {
-      svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
-  }
+  // CORRECTIF : Le rideau s'affiche MAINTENANT TOUT LE TEMPS
+  // J'ai supprimé la condition qui le cachait si vis == target
+  svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
+
   return svg + `</svg>`;
 }
 window.onload = () => { updateUI(); startGen(); };
