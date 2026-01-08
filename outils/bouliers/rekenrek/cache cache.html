@@ -7,7 +7,7 @@
   <style>
     :root {
       --ink: #111827; --bg: #f8fafc; --panel: #ffffff; --accent: #2563eb; --border: #cbd5e1; --grid-line: #94a3b8; 
-      --page-w: 210mm; --page-h: 297mm; --page-margin: 10mm; --cols: 3; --rows: 4;
+      --page-w: 210mm; --page-h: 297mm; --page-margin: 10mm; --cols: 3; --rows: 5;
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
@@ -58,7 +58,9 @@
     <div class="section">
       <div class="sec-title" data-i18n="layout">Mise en page</div>
       <select id="gridSize" onchange="startGen()">
-          <option value="4x5">20 cases (4x5)</option><option value="3x5">15 cases (3x5)</option><option value="3x4" selected>12 cases (3x4)</option><option value="2x4">8 cases (2x4)</option>
+          <option value="3x5" selected>15 cases (3x5)</option>
+          <option value="3x4">12 cases (3x4)</option>
+          <option value="2x4">8 cases (2x4)</option>
       </select>
     </div>
     <div class="section">
@@ -92,7 +94,13 @@ function setLang(l, el) { currentLang = l; document.querySelectorAll('.flag-btn'
 function updateUI() { const dict = i18n[currentLang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[key]) el.innerText = dict[key]; }); }
 function toggleInputs() { document.getElementById('seqInputs').style.display = document.getElementById('orderMode').value === 'seq' ? 'flex' : 'none'; }
 function startGen() {
-  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  const gridVal = document.getElementById('gridSize').value;
+  const [cols, rows] = gridVal.split('x').map(Number);
+  
+  // Mise à jour des variables CSS pour la grille
+  document.documentElement.style.setProperty('--cols', cols);
+  document.documentElement.style.setProperty('--rows', rows);
+
   const target = parseInt(document.getElementById('targetVal').value);
   const mode = document.getElementById('gameMode').value;
   state = [];
@@ -108,7 +116,6 @@ function startGen() {
 function createItem(vis, target, mode, index) {
     let actualMode = mode;
     if (mode === 'mix') { const types = ['complement', 'eq', 'color']; actualMode = types[index % 3]; }
-    // Pour coloriage, on décide ici si on montre l'info à gauche ou à droite
     let colorShowSide = Math.random() > 0.5 ? 'left' : 'right';
     return { vis, hidden: target - vis, target, mode: actualMode, colorShowSide };
 }
@@ -158,39 +165,67 @@ function renderPages() {
   }
 }
 function getSvg(vis, target, isColoringMode, theme) {
-  let H = target === 100 ? 150 : (target === 20 ? 60 : 40), rows = target === 100 ? 10 : (target === 20 ? 2 : 1), r = target === 100 ? 3.6 : 5.5, spY = target === 100 ? 12 : 20, stY = 20;
-  let svg = `<svg class="rr-svg" viewBox="0 0 140 ${H}">`;
-  const dT = target === 100 ? 7.8 : 10.8;
+  // CETTE FONCTION EST LA REFERENCE VISUELLE (15 CASES).
+  // ELLE NE CHANGE PAS MEME SI LA GRILLE CHANGE.
+  const totalW = 300; 
+  const frameW = 8;
+  const innerW = totalW - (2 * frameW);
+  const midPt = totalW / 2;
+  
+  // CALCUL DIAMETRE : 21 "cases" de largeur
+  const diameter = innerW / 21; 
+  const r = (diameter / 2) - 0.1; 
+  const dT = diameter; 
+
+  let H, rows, spY, stY;
+
+  if (target === 100) {
+      rows = 10;
+      spY = 15; 
+      stY = 15; 
+      H = 165;  
+  } else if (target === 20) {
+      rows = 2;
+      spY = 18; 
+      stY = 16;
+      H = 55;
+  } else {
+      rows = 1;
+      spY = 0;
+      stY = 17.5; 
+      H = 35; 
+  }
+
+  let svg = `<svg class="rr-svg" viewBox="0 0 ${totalW} ${H}">`;
+  
+  const brownColor = "#A07846";
+  svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+  svg += `<rect x="${totalW - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+
   for(let row = 0; row < rows; row++) {
       let y = stY + (row * spY);
-      svg += `<line x1="5" y1="${y}" x2="135" y2="${y}" stroke="#9ca3af" stroke-width="1.2" />`;
+      svg += `<line x1="${frameW}" y1="${y}" x2="${totalW - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.2" />`;
+      
+      let startX = frameW + r; 
+
       if (isColoringMode) {
           for(let i=0; i<10; i++) {
               let fill = (i < 5) ? '#ccc' : '#fff'; 
               if (target === 100 && row >= 5) fill = (i < 5) ? '#fff' : '#ccc';
-              svg += `<circle cx="${15 + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="0.8" />`;
+              svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="0.8" />`;
           }
       } else {
           let visOnRow = row < Math.floor(vis/10) ? 10 : (row === Math.floor(vis/10) ? vis%10 : 0);
           for(let i=0; i<visOnRow; i++) {
               let isF5 = (i < 5), inv = (target === 100 && row >= 5);
               let fill = inv ? (isF5 ? (theme === 'blue' ? '#2563eb' : '#ffffff') : '#dc2626') : (isF5 ? '#dc2626' : (theme === 'blue' ? '#2563eb' : '#ffffff'));
-              svg += `<circle cx="${15 + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="${(fill==='#fff'||fill==='#ffffff')?'#333':'none'}" stroke-width="0.8" />`;
+              svg += `<circle cx="${startX + i*dT}" cy="${y}" r="${r}" fill="${fill}" stroke="${(fill==='#fff'||fill==='#ffffff')?'#333':'none'}" stroke-width="0.8" />`;
           }
       }
   }
+  
   if (!isColoringMode && vis < target) {
-      let fR = Math.floor(vis / 10), rem = vis % 10, sX = 15 + (rem * dT) + 1.5, sY = stY + (fR * spY);
-      svg += `<rect x="${sX}" y="${sY - r - 2}" width="${135 - sX}" height="${r*2 + 4}" fill="#000" />`;
-      if (fR < rows - 1) {
-          let lastY = stY + (rows-1)*spY + r + 2;
-          let nextMaskY = sY + spY/2;
-// Sur la cible 100, un micro-jour peut apparaître (anti-aliasing) entre les 2 rectangles noirs.
-// On chevauche très légèrement le 2e cache pour supprimer le trait blanc.
-if (target === 100) nextMaskY -= 1;
-
-svg += `<rect x="5" y="${nextMaskY}" width="130" height="${lastY - nextMaskY}" fill="#000" />`;
-      }
+      svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
   }
   return svg + `</svg>`;
 }
