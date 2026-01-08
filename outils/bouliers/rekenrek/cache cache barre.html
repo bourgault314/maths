@@ -89,8 +89,11 @@
     </div>
     <div class="section">
       <div class="sec-title" data-i18n="content">Contenu</div>
-      <div class="control"><label data-i18n="target">Cible</label><select id="targetVal" onchange="startGen()">
-          <option value="10">10</option><option value="20">20</option><option value="100" selected>100</option>
+      <div class="control"><label data-i18n="target">Cible</label>
+      <select id="targetVal" onchange="startGen()">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="100">100</option>
       </select></div>
       <div class="control"><label data-i18n="order">Ordre</label><select id="orderMode" onchange="toggleInputs(); startGen()">
           <option value="random" data-i18n="ord_rand" selected>Aléatoire</option>
@@ -204,10 +207,8 @@ function renderPages() {
             cell.appendChild(eqArea);
         }
         const topPart = document.createElement('div'); topPart.className = 'part-boulier';
-        
-        // Utilisation du moteur graphique "PARFAIT" + Correctifs (Rideau toujours là + Target 10 vide en coloriage)
+        // Utilisation de la nouvelle fonction "parfaite" pour le boulier
         topPart.innerHTML = getDiagramSvg(item.visible, item.target, (item.mode === 'color'), theme);
-        
         cell.appendChild(topPart);
         const diag = document.createElement('div'); diag.className = 'diagram-container';
         let valT = "", valL = "", valR = "";
