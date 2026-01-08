@@ -204,8 +204,10 @@ function renderPages() {
             cell.appendChild(eqArea);
         }
         const topPart = document.createElement('div'); topPart.className = 'part-boulier';
-        // Appel de la fonction "parfaite" corrigée
+        
+        // Utilisation du moteur graphique "PARFAIT" + Correctifs (Rideau toujours là + Target 10 vide en coloriage)
         topPart.innerHTML = getDiagramSvg(item.visible, item.target, (item.mode === 'color'), theme);
+        
         cell.appendChild(topPart);
         const diag = document.createElement('div'); diag.className = 'diagram-container';
         let valT = "", valL = "", valR = "";
@@ -222,6 +224,7 @@ function renderPages() {
   }
 }
 
+// FONCTION BOULIER "PARFAITE" (AVEC CORRECTIFS RIDEAU ET TARGET 10)
 function getDiagramSvg(vis, target, isColoringMode, theme) {
   // CONFIG VISUELLE : 21 COLONNES, FORMAT PAYSAGE, MONTANTS MARRONS
   const totalW = 300; 
@@ -274,10 +277,9 @@ function getDiagramSvg(vis, target, isColoringMode, theme) {
       }
   }
   
-  // CORRECTIF ICI : On affiche le rideau SI (billes cachées) OU (mode coloriage actif)
-  if (vis < target || isColoringMode) {
-      svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
-  }
+  // CORRECTIF : Le rideau s'affiche TOUJOURS (suppression de la condition)
+  svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
+  
   return svg + `</svg>`;
 }
 window.onload = () => { startGen(); updateUI(); };
