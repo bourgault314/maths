@@ -204,6 +204,7 @@ function renderPages() {
             cell.appendChild(eqArea);
         }
         const topPart = document.createElement('div'); topPart.className = 'part-boulier';
+        // Appel de la fonction "parfaite" corrigée
         topPart.innerHTML = getDiagramSvg(item.visible, item.target, (item.mode === 'color'), theme);
         cell.appendChild(topPart);
         const diag = document.createElement('div'); diag.className = 'diagram-container';
@@ -225,9 +226,8 @@ function getDiagramSvg(vis, target, isColoringMode, theme) {
   // CONFIG VISUELLE : 21 COLONNES, FORMAT PAYSAGE, MONTANTS MARRONS
   const totalW = 300; 
   const frameW = 8;
-  const innerW = totalW - (2 * frameW);
   const midPt = totalW / 2;
-  
+  const innerW = totalW - (2 * frameW);
   const diameter = innerW / 21; 
   const r = (diameter / 2) - 0.1; 
   const dT = diameter; 
@@ -235,20 +235,11 @@ function getDiagramSvg(vis, target, isColoringMode, theme) {
   let H, rows, spY, stY;
 
   if (target === 100) {
-      rows = 10;
-      spY = 15; 
-      stY = 15; 
-      H = 165;  
+      rows = 10; spY = 15; stY = 15; H = 165;  
   } else if (target === 20) {
-      rows = 2;
-      spY = 18; 
-      stY = 16;
-      H = 55;
+      rows = 2; spY = 18; stY = 16; H = 55;
   } else {
-      rows = 1;
-      spY = 0;
-      stY = 17.5; 
-      H = 35; 
+      rows = 1; spY = 0; stY = 17.5; H = 35; 
   }
 
   let svg = `<svg class="rr-svg" viewBox="0 0 ${totalW} ${H}">`;
@@ -264,8 +255,8 @@ function getDiagramSvg(vis, target, isColoringMode, theme) {
       let startX = frameW + r; 
 
       if (isColoringMode) {
-          // MODIF: Si Cible 10, on ne dessine PAS les billes (fil vide).
-          // Si Cible 20 ou 100, on dessine les billes fantômes.
+          // Si Cible = 10 : Fil vide (on ne dessine RIEN).
+          // Sinon (20, 100) : On dessine les billes grises.
           if (target !== 10) {
               for(let i=0; i<10; i++) {
                   let fill = (i < 5) ? '#ccc' : '#fff'; 
@@ -283,8 +274,8 @@ function getDiagramSvg(vis, target, isColoringMode, theme) {
       }
   }
   
-  // RIDEAU PRÉSENT MÊME EN COLORIAGE (pour tous les targets)
-  if (vis < target) {
+  // CORRECTIF ICI : On affiche le rideau SI (billes cachées) OU (mode coloriage actif)
+  if (vis < target || isColoringMode) {
       svg += `<rect x="${midPt}" y="0" width="${totalW - frameW - midPt}" height="${H}" fill="#000" />`;
   }
   return svg + `</svg>`;
