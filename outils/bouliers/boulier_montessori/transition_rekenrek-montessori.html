@@ -20,7 +20,8 @@
 
     /* Couleurs Rekenrek */
     --color-red:   #e53935;
-    --color-white: #f5f5f5; /* Un blanc cassé pour bien voir sur le fond */
+    --color-white: #f5f5f5; /* Blanc cassé */
+    --color-blue-alt: #1976d2; /* Bleu pour le mode Rouge/Bleu */
 
     --color-wood: #e2c48a;
     --color-wood-dark: #a88348;
@@ -88,7 +89,6 @@
     font-size: .9rem;
     font-weight: 600;
     cursor: pointer;
-    /* Flèche personnalisée noire */
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2082.2c3.6-3.6%205.4-7.8%205.4-12.8%200-5-1.8-9.3-5.4-12.9z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
     background-position: right .7em top 50%;
@@ -107,6 +107,9 @@
     opacity: 1;
     transform: translateY(1px); 
   }
+  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
+  .btn.toggle.active { background: var(--accent); opacity: 1; }
+  
   .btn.zero-btn {
     font-size: 1rem; padding: 6px 12px; min-width: 30px;
   }
@@ -225,6 +228,7 @@
   }
   body.exporting .bead[style*="rgb(229, 57, 53)"] { background: radial-gradient(circle at 30% 30%, #ff6f60, #e53935) !important; }
   body.exporting .bead[style*="rgb(245, 245, 245)"] { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0) !important; }
+  body.exporting .bead[style*="rgb(25, 118, 210)"] { background: radial-gradient(circle at 30% 30%, #42a5f5, #1976d2) !important; }
 
 </style>
 </head>
@@ -235,15 +239,17 @@
       
       <div class="control-group">
         <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
+        <!-- Bouton Couleur (Rouge/Blanc ou Rouge/Bleu) -->
+        <button class="btn toggle" id="btnColorToggle" title="Changer les couleurs (Blanc/Bleu)">🎨</button>
       </div>
 
       <div class="separator"></div>
 
       <div class="control-group">
-        <!-- Menu Déroulant (Style standard) -->
+        <!-- Menu Déroulant -->
         <select id="valueModeSelect" class="custom-select" title="Changer le mode d'affichage">
           <option value="none" selected>Vide</option>
-          <option value="beads">1 10 100</option>
+          <option value="beads">1 ; 10 ; 100</option>
           <option value="labels">Valeur</option>
         </select>
       </div>
@@ -278,7 +284,7 @@
 <script>
 (function(){
   const N = 10;
-  // Multiplicateurs pour le calcul du total (standard base 10)
+  // Multiplicateurs pour le calcul du total
   const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
   
   // Labels par défaut à gauche
@@ -288,6 +294,7 @@
   let state = [];
   let revealed = true; 
   let valueMode = 'none'; // 'none', 'labels', 'beads'
+  let useBlueColors = false; // Toggle entre Blanc et Bleu pour le 2ème groupe
 
   const appContainer = document.getElementById('appContainer');
   const abacusEl = document.getElementById('abacus');
@@ -299,6 +306,7 @@
   const btnSize = document.getElementById('btnSize');
   const btnExport = document.getElementById('btnExport');
   const valueModeSelect = document.getElementById('valueModeSelect');
+  const btnColorToggle = document.getElementById('btnColorToggle');
 
   function init(){
     updateStructure();
@@ -312,6 +320,14 @@
         btnSize.classList.remove('active');
       }
       updateStructure();
+    });
+
+    // Toggle Couleur (Blanc vs Bleu)
+    btnColorToggle.addEventListener('click', () => {
+      useBlueColors = !useBlueColors;
+      if(useBlueColors) btnColorToggle.classList.add('active');
+      else btnColorToggle.classList.remove('active');
+      updateBeadColors(); // Mise à jour sans tout reconstruire si possible
     });
 
     // Gestion du Menu Déroulant
@@ -365,7 +381,6 @@
     labelsEl.innerHTML = '';
     for(let r=0; r<currentRows; r++) createRow(r);
     
-    // Mettre à jour l'affichage selon le mode actuel
     updateLabelsText();
     updateBeadText();
     
@@ -386,12 +401,8 @@
       const bead = document.createElement('div');
       bead.className = 'bead';
       
-      // COULEURS REKENREK : 5 Rouge, 5 Blanc (pour chaque ligne)
-      if(j <= 5) {
-        bead.style.background = 'var(--color-red)';
-      } else {
-        bead.style.background = 'var(--color-white)';
-      }
+      // Initial color setting
+      setBeadColor(bead, j);
 
       bead.dataset.index = j;
       bead.addEventListener('click', () => onBeadClick(r, j));
@@ -399,20 +410,31 @@
     }
     abacusEl.appendChild(row);
 
-    // Création de l'étiquette (div vide pour structure)
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label-item';
-    
-    // Ajout d'une bordure subtile si début de groupe
     if(isStartOfGroup) labelDiv.classList.add('gap-top');
     labelsEl.appendChild(labelDiv);
   }
 
-  // Met à jour le texte à l'intérieur des billes (Mode: "1 10 100")
+  function setBeadColor(bead, index) {
+    // COULEURS : 5 Rouge, puis 5 Blanc (ou Bleu)
+    if(index <= 5) {
+      bead.style.background = 'var(--color-red)';
+    } else {
+      bead.style.background = useBlueColors ? 'var(--color-blue-alt)' : 'var(--color-white)';
+    }
+  }
+
+  function updateBeadColors() {
+    const allBeads = document.querySelectorAll('.bead');
+    allBeads.forEach(bead => {
+      const idx = parseInt(bead.dataset.index);
+      setBeadColor(bead, idx);
+    });
+  }
+
   function updateBeadText() {
     const rows = abacusEl.children;
-    // Valeurs à afficher dans les billes pour les 4 premières lignes (Unités à Mille)
-    // On peut étendre si besoin, mais standard Montessori souvent jusqu'à 1000 marqué
     const displayValues = ["1", "10", "100", "1 000", "10 000", "100 000", "1M"];
     
     for(let r=0; r<rows.length; r++){
@@ -420,7 +442,6 @@
       const beads = row.querySelectorAll('.bead');
       
       let text = "";
-      // Si le mode est "beads" (1 10 100), on affiche la valeur de la ligne
       if(valueMode === 'beads' && r < displayValues.length) { 
         text = displayValues[r];
       }
@@ -431,7 +452,6 @@
     }
   }
 
-  // Met à jour le texte des étiquettes à gauche (Mode: "Valeur")
   function updateLabelsText(){
     const labelDivs = labelsEl.querySelectorAll('.label-item');
     labelDivs.forEach((div, i) => {
@@ -494,7 +514,6 @@
     }
     valueContainer.classList.remove('hidden-value');
 
-    // Affichage simple formaté (ex: 1 234)
     valueContainer.textContent = total.toLocaleString('fr-FR');
   }
 
