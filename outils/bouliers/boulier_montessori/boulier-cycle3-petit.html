@@ -37,22 +37,21 @@
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
   
   /* Layout Principal */
-  /* Par défaut (sans tableau), on centre et on limite la largeur pour le boulier */
   .app {
     width: 100%;
-    max-width: 850px; /* Largeur confortable pour le boulier seul */
+    max-width: 850px; 
     margin: 10px auto;
     padding: 0 8px; 
     display: flex; 
     flex-direction: column; 
     min-height: 90vh; 
     background: var(--bg);
-    transition: max-width 0.4s ease; /* Transition fluide lors de l'agrandissement */
+    transition: max-width 0.4s ease;
   }
 
-  /* Quand le tableau est affiché, on élargit le conteneur principal */
+  /* Quand le tableau est affiché */
   .app.show-table {
-    max-width: 1300px; /* Assez large pour Boulier + Tableau côte à côte */
+    max-width: 1300px;
   }
 
   /* --- Topbar & Contrôles --- */
@@ -104,38 +103,36 @@
     display: flex;
     flex: 1;
     gap: 30px;
-    align-items: flex-start; /* Aligner en haut */
-    justify-content: center; /* Centrer le tout */
+    align-items: flex-start; 
+    justify-content: center; 
     transition: all 0.3s;
     width: 100%;
   }
 
   /* Colonne Boulier */
   .abacus-column {
-    /* Taille fixe/fluide pour le boulier, il ne doit pas s'étirer à l'infini */
     flex: 0 0 auto; 
     width: 100%;
-    max-width: 800px; /* Ne dépasse pas cette largeur même si .app est grand */
+    max-width: 800px;
     display: flex;
     flex-direction: column;
     align-items: center;
     transition: all 0.3s;
   }
 
-  /* Si le tableau est là, le boulier peut se réduire un peu si manque de place, mais garde sa base */
   .app.show-table .abacus-column {
     width: auto; 
-    flex: 1 1 600px; /* Flex-grow 1, Flex-shrink 1, base 600px */
+    flex: 1 1 600px; 
   }
 
   /* Colonne Tableau */
   .table-column {
-    display: none; /* Caché par défaut */
-    flex: 1 1 400px; /* Flex pour remplir l'espace restant, base 400px */
-    max-width: 500px; /* Pas trop large non plus */
+    display: none; 
+    flex: 1 1 400px;
+    max-width: 500px;
     flex-direction: column;
     align-items: stretch;
-    padding-top: 80px; /* Pour aligner visuellement avec le haut du boulier (sous le compteur) */
+    padding-top: 80px; 
     opacity: 0;
     transform: translateX(20px);
     transition: all 0.4s ease;
@@ -238,7 +235,7 @@
     content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
   }
 
-  /* --- Styles du Tableau de Numération (Refonte) --- */
+  /* --- Styles du Tableau de Numération --- */
   .montessori-table {
     border-collapse: collapse;
     width: 100%;
@@ -247,7 +244,7 @@
     border-radius: 8px;
     overflow: hidden;
     font-family: sans-serif;
-    table-layout: fixed; /* Force des colonnes égales */
+    table-layout: fixed; 
   }
   
   .montessori-table th, .montessori-table td {
@@ -299,7 +296,7 @@
   .text-blue { color: var(--color-blue); }
   .text-red { color: var(--color-red); }
   .text-black { color: #000; }
-  .text-muted { color: #ddd; } /* Pour les zéros non significatifs si on voulait les griser */
+  .text-muted { color: #ddd; } 
 
   /* --- CSS Spécifique Export --- */
   body.exporting .bead {
@@ -615,95 +612,110 @@
     renderTotal();
   }
 
-  // --- RENDU TABLEAU (Logique de colonnes égales) ---
+  // --- RENDU TABLEAU (Amélioré: Pas de zéros non significatifs) ---
   function renderTable(){
     if(!showTable) {
       tableContainer.innerHTML = "";
       return;
     }
 
-    // Structure des Classes (Mille, Unités, Millions si besoin)
-    // On veut afficher : [Millions?] | [Mille] | [Unités]
-    // Peu importe "Petit" ou "Grand", on affiche les colonnes pour que la structure soit stable.
-    // En "Petit" (max 9999), on aura des 0 ou cases vides à gauche, ou on limite l'affichage.
-    // L'utilisateur demande : "rajoute des colonnes à gauche quand je passe au grand"
+    // On prépare toutes les colonnes possibles pour le tableau
+    const allCols = [
+      {label:"1", idx:6, group:"Millions", gClass:"million-class"}, // 1M
+      {label:"100", idx:5, group:"Mille", gClass:"thousand-class"}, // 100k
+      {label:"10", idx:4, group:"Mille", gClass:"thousand-class"},  // 10k
+      {label:"1", idx:3, group:"Mille", gClass:"thousand-class"},   // 1k
+      {label:"100", idx:2, group:"Unités Simples", gClass:"unit-class"}, // 100
+      {label:"10", idx:1, group:"Unités Simples", gClass:"unit-class"},  // 10
+      {label:"1", idx:0, group:"Unités Simples", gClass:"unit-class"}    // 1
+    ];
+
+    // On filtre les colonnes qui ne servent à rien selon la taille (Petit/Grand)
+    // Petit: max idx=3. Grand: max idx=6.
+    // Cependant la consigne "diviser l'espace en 3" suggère de garder la structure visuelle
+    // même si vide. Mais ici, on va adapter aux données affichables.
+    // En fait, pour le tableau Montessori, il vaut mieux afficher la structure complète pertinente.
+    // Pour "Petit", on affiche jusqu'à Millier. Pour "Grand" jusqu'à Million.
     
+    // Découpage en groupes pour l'affichage HTML
     const groups = [];
     
-    // Si Grand (currentRows = 7), on a les Millions (juste l'unité de million 10^6)
+    // Si Grand, on ajoute Millions
     if(currentRows > 6) {
       groups.push({
-        name: "Millions", 
-        class: "million-class", 
-        // Pour équilibrer visuellement, on peut mettre 3 colonnes vides sauf la dernière ?
-        // Ou juste 1 colonne large ? La demande est "diviser l'espace en 3".
-        // On va faire 3 colonnes pour Millions aussi, même si on n'utilise que la première (Unités de M).
-        cols: [
-          {label:"100", idx:-1}, // Inexistant
-          {label:"10", idx:-1},  // Inexistant
-          {label:"1", idx:6}     // 1 000 000
-        ]
+        name: "Millions", class: "million-class", 
+        cols: [{label:"100", idx:-1}, {label:"10", idx:-1}, {label:"1", idx:6}] 
       });
     }
     
-    // Mille (Toujours présent)
-    // 3 colonnes : C D U
+    // Mille
     groups.push({
-      name: "Mille", 
-      class: "thousand-class", 
-      cols: [
-        {label:"100", idx:5}, // 100 000
-        {label:"10", idx:4},  // 10 000
-        {label:"1", idx:3}    // 1 000
-      ]
+      name: "Mille", class: "thousand-class", 
+      cols: [{label:"100", idx:5}, {label:"10", idx:4}, {label:"1", idx:3}]
     });
     
-    // Unités Simples (Toujours présent)
+    // Unités
     groups.push({
-      name: "Unités Simples", 
-      class: "unit-class", 
-      cols: [
-        {label:"100", idx:2}, // 100
-        {label:"10", idx:1},  // 10
-        {label:"1", idx:0}    // 1
-      ]
+      name: "Unités Simples", class: "unit-class", 
+      cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}]
     });
 
-    // Construction HTML Table
+    // 1. Calculer la valeur totale pour savoir quand commencer à afficher
+    // On parcourt de gauche à droite (plus fort poids vers plus faible)
+    // Pour déterminer "hasStarted".
+    let hasStarted = false;
+    let totalVal = 0;
+    // On calcule le max index possible
+    const maxIdx = currentRows - 1;
+    
+    // On va stocker les valeurs à afficher dans un map pour faciliter l'accès
+    const displayValues = {};
+    
+    // On itère de maxIdx à 0
+    for(let i = maxIdx; i >= 0; i--) {
+        const val = state[i];
+        if(val > 0) hasStarted = true;
+        
+        if(hasStarted || i === 0) { // On affiche toujours le dernier 0 si tout est vide
+            displayValues[i] = val;
+        } else {
+            displayValues[i] = ""; // Vide
+        }
+        totalVal += val;
+    }
+    
+    // Si total est 0, seul l'index 0 doit avoir "0". 
+    // La boucle ci-dessus gère ça (i===0).
+    
+    // Construction HTML
     let headerRow1 = ""; 
     let headerRow2 = ""; 
     let valueRow = "";   
     
     groups.forEach(group => {
-      // Entête Classe
       headerRow1 += `<th class="th-class ${group.class}" colspan="3">${group.name}</th>`;
       
-      // Entêtes Rangs & Valeurs
       group.cols.forEach(col => {
-        // En-tête (1, 10, 100)
         headerRow2 += `<th class="th-rank">${col.label}</th>`;
         
-        // Valeur
         let displayVal = "";
         let colorClass = "text-black";
         
-        if(col.idx === -1 || col.idx >= currentRows) {
-          // Hors boulier (ex: centaines de mille en mode Petit) ou inexistant
-          displayVal = ""; 
-        } else {
-          // Valeur réelle
-          const val = state[col.idx];
-          
-          // Couleur ?
-          if(useColors){
-            // Pour déterminer la couleur (V/B/R), on regarde la position dans le groupe de 3
-            // col.label nous donne l'indice : 1=Vert, 10=Bleu, 100=Rouge
-            if(col.label === "1") colorClass = "text-green bg-green-tint";
-            else if(col.label === "10") colorClass = "text-blue bg-blue-tint";
-            else if(col.label === "100") colorClass = "text-red bg-red-tint";
-          }
-          
-          displayVal = revealed ? val : "?";
+        // Si la colonne existe dans le boulier actuel
+        if(col.idx !== -1 && col.idx < currentRows) {
+             // Récupérer la valeur pré-calculée (avec gestion du vide)
+             const val = displayValues[col.idx];
+             
+             if(val !== "") {
+                 displayVal = revealed ? val : "?";
+             }
+             
+             // Couleur
+             if(useColors && displayVal !== ""){
+                if(col.label === "1") colorClass = "text-green bg-green-tint";
+                else if(col.label === "10") colorClass = "text-blue bg-blue-tint";
+                else if(col.label === "100") colorClass = "text-red bg-red-tint";
+             }
         }
         
         valueRow += `<td class="col-digit ${colorClass}">${displayVal}</td>`;
