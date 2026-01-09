@@ -49,6 +49,9 @@
   .btn-tool:hover { background: #555; }
   .btn-tool.active { background: var(--accent); border-color: white; }
 
+  /* Bouton Langue */
+  #btn-lang { background: #333; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+
   /* CONTAINER PRINCIPAL */
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 65px);
@@ -163,6 +166,7 @@
 
 <div class="toolbar">
   <div class="toolbar-left">
+    <button class="btn-tool" id="btn-lang" onclick="toggleLang()">ENG</button>
     <select id="mode-select" onchange="manualLevelChange()">
       <option value="10" id="opt-10">Mode 10</option>
       <option value="20" selected>Mode 20</option>
@@ -180,7 +184,7 @@
     <button class="btn-tool" onclick="clearDraw()">🧽</button>
   </div>
   
-  <div class="app-title">COMPARATEUR</div>
+  <div class="app-title" id="app-title">COMPARATEUR</div>
 
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -234,6 +238,7 @@
   let statesA = [], statesB = [];
   let isBlue = false;
   let autoNextTimer = null;
+  let currentLang = 'fr';
 
   const BEAD_W = 38; 
   
@@ -246,6 +251,46 @@
   const overlay = document.getElementById('overlay-feedback');
   const feedbackText = document.getElementById('feedback-text');
   const btnNextOverlay = document.getElementById('btn-next-overlay');
+
+  // --- TRADUCTIONS ---
+  const i18n = {
+    fr: {
+      langBtn: "ENG",
+      appTitle: "COMPARATEUR",
+      btnBlue: "🔵 Bleu",
+      btnWhite: "⚪ Blanc",
+      modes: ["Mode 10", "Mode 20", "Mode 100"],
+      levels: [
+        "Niv 1: Rangement + Cache",
+        "Niv 2: Rangement + Pièges",
+        "Niv 3: Mental (Chiffres)",
+        "Niv 4: Désordre (Proches)",
+        "Niv 5: Expert (Cache + Désordre)"
+      ],
+      next: "Suivant",
+      replay: "Rejouer",
+      nextLevel: "NIVEAU SUIVANT ! 🚀",
+      gameOver: "JEU TERMINÉ ! 🏆"
+    },
+    en: {
+      langBtn: "FR",
+      appTitle: "COMPARATOR",
+      btnBlue: "🔵 Blue",
+      btnWhite: "⚪ White",
+      modes: ["Mode 10", "Mode 20", "Mode 100"],
+      levels: [
+        "Lvl 1: Ordering + Cover",
+        "Lvl 2: Ordering + Traps",
+        "Lvl 3: Mental (Digits)",
+        "Lvl 4: Disorder (Close)",
+        "Lvl 5: Expert (Cover + Disorder)"
+      ],
+      next: "Next",
+      replay: "Replay",
+      nextLevel: "NEXT LEVEL! 🚀",
+      gameOver: "GAME OVER! 🏆"
+    }
+  };
 
   // --- DESSIN ---
   let isPen = false;
@@ -285,7 +330,45 @@
   function toggleColorMode() {
     isBlue = !isBlue;
     document.body.classList.toggle('blue-mode');
-    document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu";
+    updateLanguageUI(); // Update button text
+  }
+
+  // --- LANGUE ---
+  function toggleLang() {
+    currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+    updateLanguageUI();
+  }
+
+  function updateLanguageUI() {
+    const t = i18n[currentLang];
+    document.getElementById('btn-lang').innerText = t.langBtn;
+    document.getElementById('app-title').innerText = t.appTitle;
+    document.getElementById('btn-color').innerText = isBlue ? t.btnWhite : t.btnBlue;
+    
+    // Update Modes
+    const modeSel = document.getElementById('mode-select');
+    Array.from(modeSel.options).forEach((opt, i) => {
+        if (t.modes[i]) opt.text = t.modes[i];
+    });
+
+    // Update Levels
+    const levelSel = document.getElementById('level-select');
+    Array.from(levelSel.options).forEach((opt, i) => {
+        if (t.levels[i]) opt.text = t.levels[i];
+    });
+
+    // Update Overlay Button (if visible)
+    if (btnNextOverlay.innerText !== "Suivant" && btnNextOverlay.innerText !== "Next" && btnNextOverlay.innerText !== "Replay" && btnNextOverlay.innerText !== "Rejouer") {
+        // Do nothing if it's "next level" text which is handled dynamically
+    } else {
+        // If "Replay" or "Rejouer" context
+        const currentLevel = parseInt(document.getElementById('level-select').value);
+        if (currentLevel >= 5 && scoreGood >= 20) {
+             btnNextOverlay.innerText = t.replay;
+        } else {
+             btnNextOverlay.innerText = t.next;
+        }
+    }
   }
 
   // --- JEU ---
@@ -316,7 +399,8 @@
     const mode = parseInt(document.getElementById('mode-select').value);
     const level = parseInt(document.getElementById('level-select').value);
     const rowCount = mode === 10 ? 1 : (mode === 20 ? 2 : 10);
-    
+    const t = i18n[currentLang];
+
     // Reset
     isAnswered = false; 
     clearTimeout(autoNextTimer);
@@ -326,8 +410,8 @@
     feedbackText.innerText = "✅"; 
     feedbackText.style.fontSize = "100px";
     feedbackText.style.color = "var(--success)";
-    // Plus de flèche ici
-    btnNextOverlay.innerText = "Suivant";
+    
+    btnNextOverlay.innerText = t.next;
     btnNextOverlay.onclick = forceNextQuestion;
 
     clearDraw(); 
@@ -487,12 +571,13 @@
 
   function handleLevelUp() {
       const currentLevel = parseInt(document.getElementById('level-select').value);
+      const t = i18n[currentLang];
       
       // Si niveau max atteint
       if (currentLevel >= 5) {
-          feedbackText.innerText = "JEU TERMINÉ ! 🏆";
+          feedbackText.innerText = t.gameOver;
           feedbackText.style.fontSize = "60px";
-          btnNextOverlay.innerText = "Rejouer"; // Plus de flèche
+          btnNextOverlay.innerText = t.replay; 
           // Au clic, on remet tout à zéro
           btnNextOverlay.onclick = () => {
               document.getElementById('level-select').value = 1;
@@ -503,7 +588,7 @@
       }
 
       // Sinon passage niveau suivant
-      feedbackText.innerText = "NIVEAU SUIVANT ! 🚀";
+      feedbackText.innerText = t.nextLevel;
       feedbackText.style.fontSize = "50px";
       feedbackText.style.color = "var(--accent)";
       btnNextOverlay.style.display = "none"; // On cache le bouton, c'est auto
@@ -559,6 +644,7 @@
     b.style.left = Math.max(minX, Math.min(maxX, base + dx)) + "px";
   }
 
+  // MODIFICATION : Logique stricte (tout ou rien) au relâchement
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
     const { side, rowIdx, beadIdx, rowEl } = activeDrag;
@@ -566,10 +652,14 @@
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
     
+    const targetLeft = beadIdx * BEAD_W;
+    const targetRight = 820 - (10 - beadIdx) * BEAD_W;
+    const snapMargin = BEAD_W * 1; 
+
     if (beadIdx >= state[rowIdx]) { 
-        if (currentPos < 410 + (beadIdx*5)) state[rowIdx] = beadIdx + 1; 
+        if (currentPos <= targetLeft + snapMargin) state[rowIdx] = beadIdx + 1; 
     } else { 
-        if (currentPos > 410 - ((10-beadIdx)*5)) state[rowIdx] = beadIdx; 
+        if (currentPos >= targetRight - snapMargin) state[rowIdx] = beadIdx; 
     }
     
     activeDrag = null; 
@@ -604,7 +694,8 @@
       if(e.key === 'Enter' && isAnswered) forceNextQuestion();
   });
 
-  initGame(); 
+  initGame();
+  updateLanguageUI(); // Init langue
 </script>
 </body>
 </html>
