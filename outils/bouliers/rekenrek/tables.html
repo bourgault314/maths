@@ -7,8 +7,8 @@
 <style>
   :root {
     /* --- THEME GRIS FONCÉ (Standardisé) --- */
-    --bg: #1a1a1a;       /* Le gris foncé du Comparateur */
-    --ui: #2a2a2a;       /* La barre d'outils du Comparateur */
+    --bg: #1a1a1a;       
+    --ui: #2a2a2a;       
     --wood: #b08d57;
     --rod: #888;
     
@@ -19,7 +19,7 @@
     --bead-red: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
     --bead-alt: radial-gradient(circle at 30% 30%, #ffffff, #bbb);
     
-    /* --- DIMENSIONS SPÉCIFIQUES TABLES (Inchangées) --- */
+    /* --- DIMENSIONS SPÉCIFIQUES TABLES --- */
     --bead-size: 55px; 
     --frame-w: 1240px; 
   }
@@ -34,6 +34,15 @@ html, body {
   display: flex; flex-direction: column;
 }
 
+/* SUPPRESSION DES FLÈCHES DANS L'INPUT */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
   
 .toolbar {
   min-height: 55px; width: 100vw; background: var(--ui);
@@ -86,7 +95,10 @@ html, body {
   
 body.level-2 .feedback-content,
 body.level-3 .feedback-content,
-body.level-4 .feedback-content{ top: 14px; }
+body.level-4 .feedback-content,
+body.level-5 .feedback-content,
+body.level-6 .feedback-content { top: 14px; }
+
 #task-display { font-size: 140px; font-weight: 900; color: var(--accent); margin: 0; line-height: 1; text-shadow: 0 4px 10px black; }
   
   .task-centered { margin-top: 30px !important; }
@@ -168,7 +180,12 @@ body.level-2 .history-entry {
   body.level-1 #history-column { overflow-y: hidden; padding: 8px 6px 6px; font-size: clamp(22px, 4.2vh, 44px); }
   body.level-1 .history-entry { padding: 2px 0; line-height: 1.05; }
 
-  body.level-2 #feedback-right, body.level-3 #feedback-right, body.level-4 #feedback-right {
+  /* Masquer feedback droit pour les niveaux > 1 */
+  body.level-2 #feedback-right, 
+  body.level-3 #feedback-right, 
+  body.level-4 #feedback-right,
+  body.level-5 #feedback-right,
+  body.level-6 #feedback-right {
     display: none; height: 0; margin: 0; padding: 0;
   }
 
@@ -176,18 +193,10 @@ body.level-2 .history-entry {
   #btn-check-top{ display:none; }
   #task-mini{ display:none; }
 
-  body.level-1 #task-display{ display:none; }
+  body.level-1 #task-display{ display:block; } /* Rendu visible pour le niveau 1 */
   body.level-1 #btn-check-top{ display:none; }
   body.level-1 #btn-check-bottom{ display:block; }
-  body.level-1 #task-mini{
-    display:block;
-    font-size: 92px;
-    font-weight: 900;
-    color: var(--accent);
-    line-height: 1;
-    margin: 0 0 8px 0;
-    text-align: center;
-  }
+  body.level-1 #task-mini{ display:none; } /* Caché car affiché en haut */
 
   body.level-1 #scaler-content{ padding-left: 18px; box-sizing: border-box; }
   
@@ -207,11 +216,16 @@ body.level-2 .history-entry {
 <div class="toolbar">
   <div style="display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap; align-items:center;">
     <select id="table-select" class="btn-ui" onchange="resetGame()">
-      <option value="0">Table de 0</option><option value="1">Table de 1</option>
-      <option value="2">Table de 2</option><option value="3" selected>Table de 3</option>
-      <option value="4">Table de 4</option><option value="5">Table de 5</option>
-      <option value="6">Table de 6</option><option value="7">Table de 7</option>
-      <option value="8">Table de 8</option><option value="9">Table de 9</option>
+      <option value="0" selected>Table de 0</option>
+      <option value="1">Table de 1</option>
+      <option value="2">Table de 2</option>
+      <option value="3">Table de 3</option>
+      <option value="4">Table de 4</option>
+      <option value="5">Table de 5</option>
+      <option value="6">Table de 6</option>
+      <option value="7">Table de 7</option>
+      <option value="8">Table de 8</option>
+      <option value="9">Table de 9</option>
       <option value="10">Table de 10</option>
       <option value="11">Table de 11</option>
       <option value="12">Table de 12</option>
@@ -221,6 +235,8 @@ body.level-2 .history-entry {
       <option value="2">Niveau 2</option>
       <option value="3">Niveau 3</option>
       <option value="4">Niveau 4</option>
+      <option value="5">Niveau 5</option>
+      <option value="6">Niveau 6 (Mixte)</option>
     </select>
     <button id="btn-color" class="btn-ui" onclick="toggleColorMode()">🔵 Bleu</button>
 </div>
@@ -255,9 +271,10 @@ body.level-2 .history-entry {
 </div>
 
 <script>
-  let table = 3, level = 1, currentStep = 0, goodScore = 0, badScore = 0;
+  let table = 0, level = 1, currentStep = 0, goodScore = 0, badScore = 0;
   let states = Array(12).fill(0); let questions = [];
   let isBlue = false;
+  let currentQType = 'normal'; // 'normal' (4x3=?) ou 'missing' (?x3=12)
   
   const beadW = 55, marginBead = 0;
   const frameW = 1240; 
@@ -301,7 +318,8 @@ body.level-2 .history-entry {
     const maxFactor = computeMaxFactor();
     questions = [];
     for (let i = 0; i <= maxFactor; i++) questions.push(i);
-    if (level === 4) questions.sort(() => Math.random() - 0.5);
+    // Niveau 4, 5, 6 : Ordre aléatoire
+    if (level >= 4) questions.sort(() => Math.random() - 0.5);
     if (keepProgress) currentStep = Math.min(prevStep, questions.length);
   }
 
@@ -310,8 +328,10 @@ body.level-2 .history-entry {
     document.getElementById('end-overlay').style.display = "none";
     table = parseInt(document.getElementById('table-select').value);
     level = parseInt(document.getElementById('level-select').value);
-    document.body.classList.remove('level-1','level-2','level-3','level-4');
+    // Nettoyage des classes
+    document.body.classList.remove('level-1','level-2','level-3','level-4','level-5','level-6');
     document.body.classList.add(`level-${level}`);
+    
     currentStep = 0; goodScore = 0; badScore = 0; states.fill(0);
     document.getElementById('count-good').innerText = "0";
     document.getElementById('count-bad').innerText = "0";
@@ -341,7 +361,7 @@ body.level-2 .history-entry {
   }
 
   function handleEndButton() {
-    if (level < 4) { 
+    if (level < 6) { 
         document.getElementById('level-select').value = level + 1; 
     } else {
       let nextT = (table >= 12) ? 0 : table + 1;
@@ -397,18 +417,20 @@ body.level-2 .history-entry {
   }
 
   function checkAnswer() {
-    let q = questions[currentStep], correct = q * table;
+    let q = questions[currentStep]; 
+    let product = q * table;
 
+    // NIVEAU 1 : AVEC BOULIER
     if (level === 1) {
       const raw = (document.getElementById('input-val').value || '').trim();
       const val = (raw === '') ? NaN : parseInt(raw, 10);
       const ab = abacusTotal();
 
-      if (Number.isFinite(val) && val === correct && ab === correct) {
+      if (Number.isFinite(val) && val === product && ab === product) {
         goodScore++; document.getElementById('count-good').innerText = goodScore;
         triggerFeedback(true, "");
         const entry = document.createElement('div'); entry.className = 'history-entry';
-        entry.innerText = `${correct}`;
+        entry.innerText = `${table} × ${q} = ${product}`;
         document.getElementById('history-column').appendChild(entry);
         currentStep++; setTimeout(nextQuestion, 600);
       } else {
@@ -419,14 +441,20 @@ body.level-2 .history-entry {
       return;
     }
 
-
+    // NIVEAUX MENTAUX (2, 3, 4, 5, 6)
     let val = parseInt(document.getElementById('input-val').value);
-    if (val === correct) {
+    
+    // Définition de la réponse attendue selon le type de question
+    let expected = (currentQType === 'missing') ? q : product;
+
+    if (val === expected) {
       goodScore++; document.getElementById('count-good').innerText = goodScore;
       triggerFeedback(true, "");
+      
+      // Historique (Niveau 2 seulement)
       if (level <= 2) {
         const entry = document.createElement('div'); entry.className = 'history-entry';
-        entry.innerText = `${q} × ${table} = ${correct}`;
+        entry.innerText = `${table} × ${q} = ${product}`;
         document.getElementById('history-column').appendChild(entry);
       }
       currentStep++; setTimeout(nextQuestion, 600);
@@ -463,15 +491,37 @@ body.level-2 .history-entry {
     ov.style.display = "flex";
   }
 
-function nextQuestion() {
+  function nextQuestion() {
     if (currentStep >= questions.length) { 
-      document.getElementById('btn-next-step').innerText = (level === 4) ? "Table Suivante ➔" : "Niveau Suivant ➔";
+      document.getElementById('btn-next-step').innerText = (level === 6) ? "Table Suivante ➔" : "Niveau Suivant ➔";
       showEndOverlay();
       return;
     }
-    document.getElementById('task-display').innerText = `${questions[currentStep]} × ${table}`;
-    const tm = document.getElementById('task-mini');
-    if (tm) tm.innerText = `${questions[currentStep]} × ${table}`;
+    
+    const qVal = questions[currentStep];
+    let displayText = "";
+    
+    // Détermination du type de question
+    if (level === 5) {
+        currentQType = 'missing';
+    } else if (level === 6) {
+        // Niveau 6 : 50% normal, 50% trou
+        currentQType = (Math.random() > 0.5) ? 'normal' : 'missing';
+    } else {
+        currentQType = 'normal';
+    }
+
+    // Affichage formaté
+    if (currentQType === 'missing') {
+        // Format : ? × 3 = 12
+        displayText = `? × ${table} = ${qVal * table}`;
+    } else {
+        // Format : 0 × 1 = ?
+        displayText = `${qVal} × ${table} = ?`;
+    }
+
+    document.getElementById('task-display').innerText = displayText;
+    
     document.getElementById('input-val').value = ""; document.getElementById('input-val').focus();
     autoScale();
   }
@@ -515,58 +565,42 @@ function nextQuestion() {
     let base = fromRight ? (frameW - (10 - idx) * beadW - marginBead) : (idx * beadW + marginBead);
     b.style.transition = 'none'; b.style.left = Math.max(idx * beadW + marginBead, Math.min(frameW - (10 - idx) * beadW - marginBead, base + dx)) + "px";
   }
+
+  // --- LOGIQUE STRICTE (Tout ou Rien) ---
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
-    const { rowIdx, beadIdx, rowEl, vx } = activeDrag;
+    const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
 
     const targetL = beadIdx * beadW + marginBead;
     const targetR = frameW - (10 - beadIdx) * beadW - marginBead;
-    const travel = Math.max(1, (targetR - targetL));
-
-    const SNAP_RATIO = 0.88;          
-    const FLING_V = 0.75;             
-    const MIN_FLING_PROGRESS = 0.18;  
-
-    let useAnim = false;
+    
+    // Tolérance d'un diamètre de bille (55px)
+    const snapMargin = beadW * 1; 
 
     if (beadIdx >= states[rowIdx]) {
-      const progress = (targetR - currentPos) / travel; 
-      if (progress >= SNAP_RATIO) {
+      if (currentPos <= targetL + snapMargin) {
         states[rowIdx] = beadIdx + 1;
-        useAnim = false; 
-      } else if (vx < -FLING_V && progress >= MIN_FLING_PROGRESS) {
-        states[rowIdx] = beadIdx + 1;
-        useAnim = true;  
-      } else {
-        useAnim = (Math.abs(vx) >= FLING_V); 
       }
     } else {
-      const progress = (currentPos - targetL) / travel; 
-      if (progress >= SNAP_RATIO) {
+      if (currentPos >= targetR - snapMargin) {
         states[rowIdx] = beadIdx;
-        useAnim = false; 
-      } else if (vx > FLING_V && progress >= MIN_FLING_PROGRESS) {
-        states[rowIdx] = beadIdx;
-        useAnim = true;  
-      } else {
-        useAnim = (Math.abs(vx) >= FLING_V);
       }
     }
 
     activeDrag = null;
-    updateBeads(useAnim);
-  });function updateBeads(animate) {
+    updateBeads(true);
+  });
+
+  function updateBeads(animate) {
     document.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
-        b.style.transition = animate ? 'left 0.09s linear' : 'none';
+        b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
         b.style.left = (i < states[r]) ? (i * beadW + marginBead) + "px" : (frameW - (10 - i) * beadW - marginBead) + "px";
       });
     });
   }
-
-  
 
 function autoScale() {
   const toolbarH = document.querySelector('.toolbar')?.offsetHeight || 55;
