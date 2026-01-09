@@ -70,11 +70,6 @@
     width: 1px; height: 24px; background: #ccc; margin: 0 4px;
   }
   
-  select {
-    font-size: 0.9rem; padding: 6px 8px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
-    cursor: pointer; color: #333; font-weight: 500;
-  }
-
   /* Boutons */
   .btn{
     border:none;
@@ -97,6 +92,11 @@
     font-size: 1rem; padding: 6px 12px; min-width: 30px;
   }
   .btn.size-toggle { padding: 6px 10px; }
+  
+  /* Boutons Toggle */
+  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
+  .btn.toggle.active { background: var(--accent); box-shadow: 0 2px 5px rgba(15,108,249,.2); opacity: 1; }
+
 
   /* --- Zone Centrale (Split View) --- */
   .main-area {
@@ -221,6 +221,8 @@
     background:linear-gradient(180deg,#c09e6c,#8a6538);
     box-shadow:0 1px 2px rgba(0,0,0,.3);
   }
+  
+  /* Style des billes (Texte possible) */
   .bead{
     position:absolute; top:50%; transform:translate(-50%,-50%);
     width:var(--bead-size); height:var(--bead-size); border-radius:50%;
@@ -228,12 +230,19 @@
     box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
     cursor:pointer; user-select:none; z-index: 10;
     transition:left 0.2s ease-out;
+    
     display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
   .bead.marked::after {
     content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
   }
+  /* Si texte, on cache le marqueur */
+  .bead.has-text.marked::after { display: none; }
 
   /* --- Styles du Tableau de Numération --- */
   .montessori-table {
@@ -321,24 +330,20 @@
         <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨</button>
         <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜</button>
         <button class="btn toggle" id="btnMarker" title="Afficher/Masquer Repère visuel (5)">⚫</button>
-        <!-- Bouton Tableau -->
         <button class="btn toggle" id="btnTable" title="Afficher/Masquer Tableau de Numération">📊</button>
       </div>
 
       <div class="separator"></div>
 
       <div class="control-group">
-        <select id="labelMode">
-          <option value="mult" selected>1x, 10x...</option>
-          <option value="num">1, 10...</option>
-          <option value="name">Unités...</option>
-        </select>
+        <!-- Bouton Valeur (Remplace le menu Select) -->
+        <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
       </div>
 
       <div class="separator"></div>
 
       <div class="control-group">
-        <button class="btn" id="toggleValue" title="Masquer/Afficher la valeur">👁️</button>
+        <button class="btn active" id="toggleValue" title="Masquer/Afficher la valeur">👁️</button>
         <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
         <button class="btn" id="btnExport" title="Sauvegarder en image">📷</button>
       </div>
@@ -350,7 +355,7 @@
       <!-- Colonne Gauche : Boulier -->
       <div class="abacus-column">
         <div class="center-display">
-          <div id="valueContainer" class="value-container hidden-value"></div>
+          <div id="valueContainer" class="value-container"></div>
         </div>
 
         <div class="abacus-wrapper">
@@ -361,9 +366,7 @@
 
       <!-- Colonne Droite : Tableau Montessori -->
       <div class="table-column" id="tableColumn">
-        <div id="tableContainer">
-          <!-- Table générée par JS -->
-        </div>
+        <div id="tableContainer"></div>
       </div>
 
     </div>
@@ -379,19 +382,17 @@
     'var(--color-green)'  // Million
   ];
 
-  const fullLabelData = {
-    num: ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"],
-    name: ["Unités", "Dizaines", "Centaines", "Milliers", "Dix Mille", "Cent Mille", "Million"],
-    mult: ["1 x", "10 x", "100 x", "1 000 x", "10 000 x", "100 000 x", "1 000 000 x"]
-  };
+  // Labels par défaut à gauche
+  const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
 
   let currentRows = 4;
   let state = [];
-  let revealed = false; 
+  let revealed = true; // CHANGEMENT ICI: true par défaut
   let useColors = true;
   let useGroups = true;
   let useMarkers = false;
   let showTable = false; 
+  let showBeadValues = false; // Toggle pour le bouton "Valeur"
 
   const appContainer = document.getElementById('appContainer');
   const abacusEl = document.getElementById('abacus');
@@ -401,7 +402,6 @@
   
   const toggleBtn = document.getElementById('toggleValue');
   const resetBtn = document.getElementById('reset');
-  const labelSelect = document.getElementById('labelMode');
   
   const btnColor = document.getElementById('btnColor');
   const btnGroup = document.getElementById('btnGroup');
@@ -409,11 +409,10 @@
   const btnTable = document.getElementById('btnTable');
   const btnSize = document.getElementById('btnSize');
   const btnExport = document.getElementById('btnExport');
+  const btnLabels = document.getElementById('btnLabels');
 
   function init(){
     updateStructure();
-    
-    labelSelect.addEventListener('change', updateLabelsText);
     
     btnSize.addEventListener('click', () => {
       if(currentRows === 4) {
@@ -445,7 +444,14 @@
       updateBeadMarkers(); 
     });
 
-    // Toggle Tableau
+    // Toggle Valeur
+    btnLabels.addEventListener('click', () => {
+      showBeadValues = !showBeadValues;
+      updateToggleButton(btnLabels, showBeadValues);
+      updateLabelsText(); // Côté gauche
+      updateBeadText();   // Intérieur billes
+    });
+
     btnTable.addEventListener('click', () => {
       showTable = !showTable;
       updateToggleButton(btnTable, showTable);
@@ -455,10 +461,7 @@
       } else {
         appContainer.classList.remove('show-table');
       }
-      // Trigger resize pour ajuster le layout
-      setTimeout(() => {
-        layoutAll();
-      }, 400); 
+      setTimeout(() => { layoutAll(); }, 400); 
     });
 
     toggleBtn.addEventListener('click', ()=>{
@@ -512,6 +515,7 @@
     labelsEl.innerHTML = '';
     for(let r=0; r<currentRows; r++) createRow(r);
     updateLabelsText();
+    updateBeadText();
     layoutAll();
     renderTotal(); 
     renderTable();
@@ -564,12 +568,37 @@
     });
   }
 
+  // Si showBeadValues (Bouton Bleu) : Texte dans billes, Côté vide
+  // Sinon (Bouton Gris) : Billes vides, Texte sur le côté
+  function updateBeadText() {
+    const rows = abacusEl.children;
+    const displayValues = ["1", "10", "100", "1 000"];
+    
+    for(let r=0; r<rows.length; r++){
+      const row = rows[r];
+      const beads = row.querySelectorAll('.bead');
+      
+      let text = "";
+      if(showBeadValues && r < 4) { 
+        text = displayValues[r];
+      }
+
+      beads.forEach(bead => {
+        bead.textContent = text;
+        if(text !== "") bead.classList.add('has-text');
+        else bead.classList.remove('has-text');
+      });
+    }
+  }
+
   function updateLabelsText(){
-    const mode = labelSelect.value;
-    const texts = fullLabelData[mode];
     const labelDivs = labelsEl.querySelectorAll('.label-item');
     labelDivs.forEach((div, i) => {
-      if(texts[i]) div.textContent = texts[i];
+      if(!showBeadValues) { // Si PAS de valeurs dans les billes, on affiche à gauche
+        div.textContent = defaultLabels[i] || "";
+      } else {
+        div.textContent = ""; 
+      }
     });
   }
 
@@ -612,7 +641,6 @@
     renderTotal();
   }
 
-  // --- RENDU TABLEAU (Amélioré: Pas de zéros non significatifs + Filtre Colonnes) ---
   function renderTable(){
     if(!showTable) {
       tableContainer.innerHTML = "";
@@ -620,8 +648,6 @@
     }
 
     const groups = [];
-    
-    // Si Grand, on ajoute Millions
     if(currentRows > 6) {
       groups.push({
         name: "Millions", class: "million-class", 
@@ -629,24 +655,17 @@
       });
     }
     
-    // Mille (Filtrage Petit/Grand)
     const milleCols = [];
     if(currentRows > 5) milleCols.push({label:"100", idx:5}); // 100k
     if(currentRows > 4) milleCols.push({label:"10", idx:4});  // 10k
-    milleCols.push({label:"1", idx:3});                       // 1k (Toujours)
+    milleCols.push({label:"1", idx:3});                       // 1k
     
-    groups.push({
-      name: "Mille", class: "thousand-class", 
-      cols: milleCols
-    });
-    
-    // Unités
+    groups.push({ name: "Mille", class: "thousand-class", cols: milleCols });
     groups.push({
       name: "Unités Simples", class: "unit-class", 
       cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}]
     });
 
-    // Calcul des valeurs à afficher (zéros non significatifs)
     let hasStarted = false;
     const maxIdx = currentRows - 1;
     const displayValues = {};
@@ -663,12 +682,9 @@
     let valueRow = "";   
     
     groups.forEach(group => {
-      // Entête Classe (colspan dynamique selon nb colonnes réelles)
       headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`;
-      
       group.cols.forEach(col => {
         headerRow2 += `<th class="th-rank">${col.label}</th>`;
-        
         let displayVal = "";
         let colorClass = "text-black";
         
@@ -682,7 +698,6 @@
                 else if(col.label === "100") colorClass = "text-red bg-red-tint";
              }
         }
-        
         valueRow += `<td class="col-digit ${colorClass}">${displayVal}</td>`;
       });
     });
