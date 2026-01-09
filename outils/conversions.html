@@ -222,12 +222,11 @@
     if(isShown && refresh){ completeZerosInTable(); updateResult(); }
   }
 
-  /* --------- COMPLÉTION DES ZÉROS (robuste) ---------
-     - purge d'abord les zéros auto .ghost0
-     - S=1 : targetStart..first-1
-     - S=2 (aire) : cible→1 zéro (droite) + colonnes entre complètes + zéros avant le chiffre dans sa colonne
-     - S=3 (m³) : cible→1 zéro (droite) + colonnes entre complètes + ne rien ajouter dans la colonne du chiffre
-     - si la cible est la même colonne que le 1er chiffre → ne rien compléter
+  /* --------- COMPLÉTION DES ZÉROS (CORRIGÉE) ---------
+     Règle : On remplit de zéros toute la plage qui va 
+     de l'unité cible (son slot le plus à droite) 
+     jusqu'à la fin du nombre utilisateur (le slot unité de la colonne du dernier chiffre).
+     Cela garantit que les trous "internes" (ex: dizaines dm3 renseignées mais pas unités) sont comblés.
   ----------------------------------------------------- */
   function completeZerosInTable(){
     const S = schema.slots;
@@ -248,53 +247,25 @@
     }
     if(first===-1) return;
 
-    const SLOTS = schema.slots;
-    const targetStart = targetIdx * SLOTS;
-    const tgtEnd      = targetStart + (SLOTS-1);
-    const colFirst    = Math.floor(first / SLOTS);
-    const siFirst     = first % SLOTS;
+    // Unité cible : on vise le slot "unités" (le plus à droite) de la colonne cible
+    const targetRightSlot = targetIdx * S + (S - 1);
 
-    // cible = même colonne que le 1er chiffre → ne rien compléter
-    if(colFirst === targetIdx) return;
+    // Fin du nombre utilisateur : on vise le slot "unités" de la colonne qui contient le dernier chiffre saisi
+    // Cela permet de compléter "3 dans les dizaines" en "30" automatiquement.
+    const lastUserCol = Math.floor(last / S);
+    const userNumberEnd = lastUserCol * S + (S - 1);
 
-    if (targetStart < first){
-      // --- CIBLE À GAUCHE ---
-      if (SLOTS === 1){
-        for(let k=targetStart; k<first; k++){
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-        return;
-      }
+    // Plage à remplir : du (début utilisateur OU cible) jusqu'à (fin utilisateur OU cible)
+    // On part du min(first, target) pour gérer les cas "vers la gauche" (0,00x)
+    const start = Math.min(first, targetRightSlot);
+    // On va jusqu'au max(userEnd, target) pour gérer les cas "vers la droite" (x000) ou le comblement local
+    const end   = Math.max(userNumberEnd, targetRightSlot);
 
-      // (1) colonne cible → 1 zéro à droite
-      {
-        const kTargetRightmost = targetStart + (SLOTS - 1);
-        const el = slot(kTargetRightmost);
-        if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-      }
-
-      // (2) colonnes intermédiaires → tout compléter
-      for (let c = targetIdx + 1; c < colFirst; c++){
-        for (let si = 0; si < SLOTS; si++){
-          const k = c*SLOTS + si;
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-      }
-
-      // (3) colonne du 1er chiffre
-      if (SLOTS === 2){
-        for (let si = 0; si < siFirst; si++){
-          const k = colFirst*SLOTS + si;
-          const el = slot(k); if (el.value===''){ el.value='0'; el.classList.add('ghost0'); }
-        }
-      }
-      // SLOTS === 3 : ne rien ajouter dans sa colonne
-
-    } else {
-      // --- CIBLE À DROITE ---
-      const end = Math.max(last, tgtEnd);
-      for(let k=first; k<=end; k++){
-        const el = slot(k); if(el.value===''){ el.value='0'; el.classList.add('ghost0'); }
+    for(let k=start; k<=end; k++){
+      const el = slot(k);
+      if(el.value===''){
+        el.value='0';
+        el.classList.add('ghost0');
       }
     }
   }
