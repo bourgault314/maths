@@ -42,7 +42,8 @@
   .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
 
   .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:78px;display:flex;align-items:center;justify-content:center}
-  .slots{margin-top:20px;display:flex;gap:0;width:calc(100% - 12px);}
+  /* Suppression du margin-top pour un centrage vertical parfait */
+  .slots{margin-top:0;display:flex;gap:0;width:calc(100% - 12px);}
   .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:900;font-size:1.45rem;line-height:1.45rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px}
   .slots[data-slots="2"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(2),
@@ -222,12 +223,7 @@
     if(isShown && refresh){ completeZerosInTable(); updateResult(); }
   }
 
-  /* --------- COMPLÉTION DES ZÉROS (CORRIGÉE) ---------
-     Règle : On remplit de zéros toute la plage qui va 
-     de l'unité cible (son slot le plus à droite) 
-     jusqu'à la fin du nombre utilisateur (le slot unité de la colonne du dernier chiffre).
-     Cela garantit que les trous "internes" (ex: dizaines dm3 renseignées mais pas unités) sont comblés.
-  ----------------------------------------------------- */
+  /* --------- COMPLÉTION DES ZÉROS (CORRIGÉE) --------- */
   function completeZerosInTable(){
     const S = schema.slots;
     const total = schema.units.length * S;
@@ -251,14 +247,11 @@
     const targetRightSlot = targetIdx * S + (S - 1);
 
     // Fin du nombre utilisateur : on vise le slot "unités" de la colonne qui contient le dernier chiffre saisi
-    // Cela permet de compléter "3 dans les dizaines" en "30" automatiquement.
     const lastUserCol = Math.floor(last / S);
     const userNumberEnd = lastUserCol * S + (S - 1);
 
-    // Plage à remplir : du (début utilisateur OU cible) jusqu'à (fin utilisateur OU cible)
-    // On part du min(first, target) pour gérer les cas "vers la gauche" (0,00x)
+    // Plage à remplir
     const start = Math.min(first, targetRightSlot);
-    // On va jusqu'au max(userEnd, target) pour gérer les cas "vers la droite" (x000) ou le comblement local
     const end   = Math.max(userNumberEnd, targetRightSlot);
 
     for(let k=start; k<=end; k++){
@@ -297,9 +290,7 @@
     return sum * Math.pow(10, -powToTarget);
   }
 
-  /* ---- Décimales minimales nécessaires (anti-arrondis) ----
-     On scanne les colonnes qui contiennent AU MOINS un chiffre saisi (non .ghost0).
-     Si une colonne est à droite de la cible, on augmente le minimum d’autant de sous-cases. */
+  /* ---- Décimales minimales nécessaires (anti-arrondis) ---- */
   function minFractionDigitsForTarget(){
     const S = schema.slots;
     let minFrac = 0;
@@ -317,22 +308,17 @@
         if(delta > minFrac) minFrac = delta;
       }
     }
-    return minFrac; // 0 si rien à droite, sinon 1,2,3...
+    return minFrac;
   }
 
   function updateResult(){
     const u = schema.units[targetIdx];
     const val = valueInTarget();
-
-    // décimales minimales requises selon la position des chiffres saisis
     const minFrac = minFractionDigitsForTarget();
-
-    // formatage FR sans arrondi intempestif
     const s = val.toLocaleString('fr-FR', {
       minimumFractionDigits: minFrac,
       maximumFractionDigits: Math.max(minFrac, 12)
     });
-
     result.textContent = `${s} ${u}`;
   }
 
