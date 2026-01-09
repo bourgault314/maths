@@ -9,13 +9,10 @@
     --bg: #1a1a1a; --wood: #b08d57; --rod: #888; --ui: #2a2a2a;
     --accent: #0f6cf9; --success: #4caf50; --error: #f44336;
     --neutral: #444;
-    /* Billes principales (Rouges) */
     --bead-main: #ff5f5f; --bead-main-dark: #a00;
-    /* Billes secondaires (Blanches par défaut) */
     --bead-sec: #ffffff; --bead-sec-dark: #bbb;
   }
 
-  /* Thème : Secondaire devient Bleu */
   body.theme-blue {
     --bead-sec: #3498db; --bead-sec-dark: #2980b9;
   }
@@ -99,6 +96,8 @@
     border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
   }
   
+  #btn-lang { background: #333; border: 1px solid #555; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+
   .btn-listen {
     background: #666; font-size: 20px; padding: 10px 20px; border-radius: 50px;
     color: white; border: none; cursor: pointer; margin-bottom: 10px;
@@ -109,10 +108,12 @@
 
 <div class="toolbar">
   <div class="toolbar-group">
+    <button class="btn-small" id="btn-lang" onclick="toggleLang()">ENG</button>
+
     <select id="mode-select" onchange="updateMode()">
-      <option value="10">Mode 0-10</option>
+      <option value="10" selected>Mode 0-10</option>
       <option value="20">Mode 0-20</option>
-      <option value="100" selected>Mode 0-100</option>
+      <option value="100">Mode 0-100</option>
     </select>
     
     <select id="display-mode" onchange="newChallenge()">
@@ -121,10 +122,10 @@
       <option value="voice">Vocal (Oral)</option>
     </select>
 
-    <button class="btn-small" onclick="toggleTheme()">🎨 Blanc / Bleu</button>
+    <button class="btn-small" id="btn-theme" onclick="toggleTheme()">🎨 Blanc / Bleu</button>
   </div>
   
-  <div style="font-weight: bold; font-size: 18px; color: #aaa;">REKENREK CONSTRUCTEUR</div>
+  <div id="app-title" style="font-weight: bold; font-size: 18px; color: #aaa;">REKENREK CONSTRUCTEUR</div>
   
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -147,12 +148,98 @@
 </div>
 
 <script>
-  let currentRange = 100, targetNumber = -1, goodScore = 0, badScore = 0;
+  let currentRange = 10, targetNumber = -1, goodScore = 0, badScore = 0;
   let states = []; 
   let currentScale = 1;
   let gameState = "IDLE";
   let isBlue = false;
-  let deck = []; // PAQUET DE CARTES
+  let deck = []; 
+  let currentLang = 'fr'; 
+
+  // --- AUDIO CONTEXT ---
+  // On utilise l'API Web Audio pour générer des sons sans fichiers externes
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, type, duration, delay=0) {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    
+    // Enveloppe sonore pour éviter le "clic"
+    gain.gain.setValueAtTime(0.01, audioCtx.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + delay + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration);
+  }
+
+  function playSuccessSound() {
+    initAudio();
+    // Accord Majeur (Do - Mi - Sol) joyeux
+    playTone(523.25, 'sine', 0.4, 0);    // C5
+    playTone(659.25, 'sine', 0.4, 0.1);  // E5
+    playTone(783.99, 'sine', 0.6, 0.2);  // G5
+  }
+
+  function playErrorSound() {
+    initAudio();
+    // Son grave type "Buzzer"
+    playTone(150, 'sawtooth', 0.4, 0);
+    playTone(130, 'sawtooth', 0.4, 0.1); // Légère descente
+  }
+
+  // --- TRADUCTIONS ---
+  const i18n = {
+    fr: {
+      title: "REKENREK CONSTRUCTEUR",
+      mode10: "Mode 0-10",
+      mode20: "Mode 0-20",
+      mode100: "Mode 0-100",
+      dispDigits: "Chiffres",
+      dispLetters: "Lettres",
+      dispVoice: "Vocal (Oral)",
+      themeBtn: "🎨 Blanc / Bleu",
+      startBtn: "Commencer",
+      checkBtn: "Vérifier",
+      nextBtn: "Suivant ➔",
+      listenBtn: "🔊 Écouter",
+      goodMsg: "Bravo ! Bonne réponse. ✅",
+      badMsg: "Essaie encore ! ❌",
+      langBtn: "ENG"
+    },
+    en: {
+      title: "REKENREK BUILDER",
+      mode10: "0-10 Mode",
+      mode20: "0-20 Mode",
+      mode100: "0-100 Mode",
+      dispDigits: "Digits",
+      dispLetters: "Words",
+      dispVoice: "Voice (Oral)",
+      themeBtn: "🎨 White / Blue",
+      startBtn: "Start",
+      checkBtn: "Check",
+      nextBtn: "Next ➔",
+      listenBtn: "🔊 Listen",
+      goodMsg: "Well done! Correct. ✅",
+      badMsg: "Try again! ❌",
+      langBtn: "FR"
+    }
+  };
 
   const frame = document.getElementById('abacus-frame');
   const targetDiv = document.getElementById('target-display');
@@ -161,6 +248,43 @@
   const listenBtn = document.getElementById('btn-listen');
   
   const BEAD_W = 38, GAP = 0, FRAME_W = 820;
+
+  function toggleLang() {
+    currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+    updateLanguageUI();
+    if (gameState === "ACTIVE") {
+        const mode = document.getElementById('display-mode').value;
+        if (mode === 'letters') {
+            targetDiv.innerText = numberToText(targetNumber);
+        }
+    }
+  }
+
+  function updateLanguageUI() {
+    const t = i18n[currentLang];
+    document.getElementById('btn-lang').innerText = t.langBtn;
+    document.getElementById('app-title').innerText = t.title;
+    document.getElementById('btn-theme').innerText = t.themeBtn;
+
+    const modeSel = document.getElementById('mode-select');
+    modeSel.options[0].text = t.mode10;
+    modeSel.options[1].text = t.mode20;
+    modeSel.options[2].text = t.mode100;
+
+    const dispSel = document.getElementById('display-mode');
+    dispSel.options[0].text = t.dispDigits;
+    dispSel.options[1].text = t.dispLetters;
+    dispSel.options[2].text = t.dispVoice;
+
+    listenBtn.innerText = t.listenBtn;
+    
+    if (gameState === "IDLE") actionBtn.innerText = t.startBtn;
+    else if (gameState === "ACTIVE") actionBtn.innerText = t.checkBtn;
+    else if (gameState === "WON") actionBtn.innerText = t.nextBtn;
+
+    if (feedback.innerHTML.includes("✅")) feedback.innerHTML = "<span style='color:var(--success)'>" + t.goodMsg + "</span>";
+    if (feedback.innerHTML.includes("❌")) feedback.innerHTML = "<span style='color:var(--error)'>" + t.badMsg + "</span>";
+  }
 
   function toggleTheme() {
     document.body.classList.toggle('theme-blue');
@@ -171,13 +295,11 @@
     resetGame();
   }
 
-  // --- MOTEUR DECK (Anti-Répétition) ---
   function buildDeck(max) {
     deck = [];
     for(let i = 0; i <= max; i++) {
         deck.push(i);
     }
-    // Mélange de Fisher-Yates
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -185,13 +307,11 @@
   }
 
   function drawCard(max) {
-    // Si deck vide ou carte hors limites (changement de mode), on rebat
     if (deck.length === 0 || deck[0] > max) {
         buildDeck(max);
     }
     return deck.pop();
   }
-  // -------------------------------------
 
   function resetGame() {
     gameState = "IDLE";
@@ -199,11 +319,13 @@
     targetDiv.innerText = "?";
     targetDiv.classList.remove('text-mode');
     feedback.innerText = "";
-    actionBtn.innerText = "Commencer";
+    
+    const t = i18n[currentLang];
+    actionBtn.innerText = t.startBtn;
+    
     actionBtn.classList.remove('btn-success');
     listenBtn.style.display = 'none';
     
-    // Initialisation du deck pour la nouvelle plage
     buildDeck(currentRange);
 
     const rowCount = currentRange === 10 ? 1 : (currentRange === 20 ? 2 : 10);
@@ -231,11 +353,17 @@
   }
 
   function handleAction() {
+    initAudio(); // Initialize audio on first user click
     if (gameState === "IDLE" || gameState === "WON") {
       newChallenge();
     } else if (gameState === "ACTIVE") {
       checkAnswer();
     }
+  }
+
+  function numberToText(n) {
+    if (currentLang === 'fr') return numberToFrench(n);
+    return numberToEnglish(n);
   }
 
   function numberToFrench(n) {
@@ -270,10 +398,27 @@
     return n;
   }
 
+  function numberToEnglish(n) {
+    if (n === 0) return "zero";
+    const units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+    const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    
+    if (n < 20) return units[n];
+    
+    if (n < 100) {
+      let t = Math.floor(n / 10), u = n % 10;
+      if (u === 0) return tens[t];
+      return tens[t] + "-" + units[u];
+    }
+    
+    if (n === 100) return "one hundred";
+    return n;
+  }
+
   function speak(text) {
     window.speechSynthesis.cancel();
     const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'fr-FR';
+    msg.lang = (currentLang === 'fr') ? 'fr-FR' : 'en-US';
     window.speechSynthesis.speak(msg);
   }
 
@@ -283,10 +428,10 @@
 
   function newChallenge() {
     gameState = "ACTIVE";
-    // UTILISATION DU DECK AU LIEU DE RANDOM
     targetNumber = drawCard(currentRange);
 
     const mode = document.getElementById('display-mode').value;
+    const t = i18n[currentLang];
     
     targetDiv.classList.remove('text-mode');
     listenBtn.style.display = 'none';
@@ -294,7 +439,7 @@
     if (mode === 'digits') {
       targetDiv.innerText = targetNumber;
     } else if (mode === 'letters') {
-      targetDiv.innerText = numberToFrench(targetNumber);
+      targetDiv.innerText = numberToText(targetNumber);
       targetDiv.classList.add('text-mode');
     } else if (mode === 'voice') {
       targetDiv.innerText = "?";
@@ -303,7 +448,7 @@
     }
 
     feedback.innerText = "";
-    actionBtn.innerText = "Vérifier";
+    actionBtn.innerText = t.checkBtn;
     actionBtn.classList.remove('btn-success');
     states.fill(0);
     updateBeads(true);
@@ -312,6 +457,7 @@
   let activeDrag = null;
 
   function startDrag(e) {
+    initAudio(); // Init audio aussi au drag pour être sûr
     if (gameState === "WON") return;
     const bead = e.target;
     bead.setPointerCapture(e.pointerId);
@@ -346,11 +492,17 @@
     const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
+    
+    const targetLeft = beadIdx * (BEAD_W + GAP);
+    const targetRight = FRAME_W - (10 - beadIdx) * (BEAD_W + GAP);
+    const snapMargin = BEAD_W * 1; 
+
     if (beadIdx >= states[rowIdx]) { 
-      if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; 
+      if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1; 
     } else { 
-      if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; 
+      if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx; 
     }
+    
     activeDrag = null;
     updateBeads(true);
   });
@@ -366,18 +518,22 @@
 
   function checkAnswer() {
     const currentTotal = states.reduce((a, b) => a + b, 0);
+    const t = i18n[currentLang];
+
     if (currentTotal === targetNumber) {
+      playSuccessSound(); // JOUE LE SON GAGNANT
       gameState = "WON";
       goodScore++;
       document.getElementById('count-good').innerText = goodScore;
-      feedback.innerHTML = "<span style='color:var(--success)'>Bravo ! Bonne réponse. ✅</span>";
-      actionBtn.innerText = "Suivant ➔";
+      feedback.innerHTML = "<span style='color:var(--success)'>" + t.goodMsg + "</span>";
+      actionBtn.innerText = t.nextBtn;
       actionBtn.classList.add('btn-success');
       if(document.getElementById('display-mode').value === 'voice') targetDiv.innerText = targetNumber;
     } else {
+      playErrorSound(); // JOUE LE SON ERREUR
       badScore++;
       document.getElementById('count-bad').innerText = badScore;
-      feedback.innerHTML = "<span style='color:var(--error)'>Essaie encore ! ❌</span>";
+      feedback.innerHTML = "<span style='color:var(--error)'>" + t.badMsg + "</span>";
     }
   }
 
@@ -391,8 +547,9 @@
   }
 
   window.addEventListener('resize', autoScale);
-  buildDeck(currentRange); // Init Deck au démarrage
+  buildDeck(currentRange);
   updateMode();
+  updateLanguageUI();
 </script>
 </body>
 </html>
