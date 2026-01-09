@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Boulier Rekenrek</title>
+<!-- Import de html2canvas -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+  /* --- Réinitialisation & Variables --- */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  :root{
+    --bead-size: 28px;
+    --bead-gap: 0px; 
+    --frame-thickness: 14px;
+    --rod-thickness: 4px;
+
+    /* Couleurs Rekenrek */
+    --color-red:   #e53935;
+    --color-white: #f5f5f5; /* Un blanc cassé pour bien voir sur le fond */
+
+    --color-wood: #e2c48a;
+    --color-wood-dark: #a88348;
+
+    --bg: #fffdf8;
+    --text: #1b1b1b;
+    --accent: #0f6cf9; 
+    
+    --btn-off: #9ca3af;
+  }
+
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  
+  /* Layout Principal */
+  .app {
+    width: 100%;
+    max-width: 850px; 
+    margin: 10px auto;
+    padding: 0 8px; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 90vh; 
+    background: var(--bg);
+    transition: max-width 0.4s ease;
+  }
+
+  /* --- Topbar & Contrôles --- */
+  .toolbar{
+    display:flex; flex-wrap:nowrap; gap:8px; align-items:center; justify-content:center;
+    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 8px;
+    overflow-x: auto;
+  }
+  
+  .control-group {
+    display:flex; align-items:center; gap:6px; flex-shrink: 0;
+  }
+  
+  .separator {
+    width: 1px; height: 24px; background: #ccc; margin: 0 4px;
+  }
+  
+  /* Boutons standards */
+  .btn {
+    border:none;
+    background: var(--btn-off); 
+    color:#fff; font-weight:700;
+    padding:6px 10px; border-radius:6px; cursor:pointer;
+    box-shadow:none; font-size:.9rem;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    opacity: 0.9;
+    white-space: nowrap;
+    outline: none;
+  }
+
+  /* Style Menu Déroulant (Look standard) */
+  select.custom-select {
+    appearance: none;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #333;
+    padding: 6px 30px 6px 10px;
+    border-radius: 6px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    /* Flèche personnalisée noire */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2082.2c3.6-3.6%205.4-7.8%205.4-12.8%200-5-1.8-9.3-5.4-12.9z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right .7em top 50%;
+    background-size: .65em auto;
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  select.custom-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(15,108,249,.1);
+  }
+
+  .btn.active, .btn:active {
+    background: var(--accent);
+    box-shadow: 0 2px 5px rgba(15,108,249,.2);
+    opacity: 1;
+    transform: translateY(1px); 
+  }
+  .btn.zero-btn {
+    font-size: 1rem; padding: 6px 12px; min-width: 30px;
+  }
+  .btn.size-toggle { padding: 6px 10px; }
+
+
+  /* --- Zone Centrale --- */
+  .main-area {
+    display: flex;
+    flex: 1;
+    gap: 30px;
+    align-items: flex-start; 
+    justify-content: center; 
+    width: 100%;
+  }
+
+  /* Colonne Boulier */
+  .abacus-column {
+    flex: 0 0 auto; 
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* --- Affichage Valeur (Épuré) --- */
+  .center-display {
+    text-align: center; margin-bottom: 10px; min-height: 4rem;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%;
+  }
+  .value-container {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; /* Grand texte */
+    font-weight: 800;
+    color: #000; /* Noir demandé */
+    line-height: 1;
+    transition: opacity 0.2s;
+  }
+  .hidden-value { opacity: 0; visibility: hidden; }
+
+  /* --- Boulier Layout --- */
+  .abacus-wrapper{
+    display:flex; align-items:flex-start; justify-content: center;
+    width: 100%;
+    overflow-x: auto; padding-bottom: 20px;
+  }
+  .labels{
+    display:flex; flex-direction:column; width: 100px;
+    padding-top: 14px; margin-right: 0; flex-shrink: 0;
+  }
+  .label-item{
+    height: 50px;
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-right: 12px;
+    font-weight:700; font-size:0.95rem; color:#444;
+    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
+    transition: background 0.3s;
+    background-color: transparent; /* Pas de fond gris/blanc spécifique */
+  }
+  /* Style léger pour les labels */
+  .label-item { border-left: 1px solid #e0c088; color: #555; }
+  
+  .gap-top { margin-top: 30px !important; }
+
+  /* --- Boulier --- */
+  .abacus{
+    flex:1; min-width: 320px; position:relative;
+    background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    display: flex; flex-direction: column;
+    padding: 14px 0;
+    border-right: 14px solid #a88348; 
+    border-left: 14px solid #a88348;
+    border-radius: 4px;
+  }
+  .abacus::before, .abacus::after{
+    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c); z-index: 2;
+  }
+  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
+  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
+
+  .row{ position:relative; width:100%; height: 50px; }
+  .row.gap-top::before {
+    content: ""; position: absolute; top: -15px; left: 5%; right: 5%;
+    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
+  }
+  .rod{
+    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
+    background:linear-gradient(180deg,#c09e6c,#8a6538);
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  
+  /* Style des billes */
+  .bead{
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:var(--bead-size); height:var(--bead-size); border-radius:50%;
+    border: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none; z-index: 10;
+    transition:left 0.2s ease-out;
+    
+    display: flex; align-items: center; justify-content: center;
+    color: #000; /* Texte noir demandé */
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .bead:active{transform:translate(-50%,-50%) scale(.95)}
+
+  /* --- CSS Spécifique Export --- */
+  body.exporting .bead {
+    box-shadow: none !important;
+    border: 2px solid rgba(255,255,255,0.3) !important;
+  }
+  body.exporting .bead[style*="rgb(229, 57, 53)"] { background: radial-gradient(circle at 30% 30%, #ff6f60, #e53935) !important; }
+  body.exporting .bead[style*="rgb(245, 245, 245)"] { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0) !important; }
+
+</style>
+</head>
+<body>
+  <div class="app" id="appContainer">
+    
+    <div class="toolbar" data-html2canvas-ignore="false">
+      
+      <div class="control-group">
+        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="control-group">
+        <!-- Menu Déroulant (Style standard) -->
+        <select id="valueModeSelect" class="custom-select" title="Changer le mode d'affichage">
+          <option value="none" selected>Vide</option>
+          <option value="beads">1 10 100</option>
+          <option value="labels">Valeur</option>
+        </select>
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="control-group">
+        <button class="btn active" id="toggleValue" title="Masquer/Afficher le total">👁️</button>
+        <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
+        <button class="btn" id="btnExport" title="Sauvegarder en image">📷</button>
+      </div>
+    </div>
+
+    <!-- Zone Principale -->
+    <div class="main-area">
+      
+      <!-- Colonne Boulier -->
+      <div class="abacus-column">
+        <div class="center-display">
+          <div id="valueContainer" class="value-container">0</div>
+        </div>
+
+        <div class="abacus-wrapper">
+          <div class="labels" id="labelsContainer"></div>
+          <div class="abacus" id="abacus" aria-label="Boulier Rekenrek"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+(function(){
+  const N = 10;
+  // Multiplicateurs pour le calcul du total (standard base 10)
+  const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
+  
+  // Labels par défaut à gauche
+  const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
+
+  let currentRows = 4;
+  let state = [];
+  let revealed = true; 
+  let valueMode = 'none'; // 'none', 'labels', 'beads'
+
+  const appContainer = document.getElementById('appContainer');
+  const abacusEl = document.getElementById('abacus');
+  const labelsEl = document.getElementById('labelsContainer');
+  const valueContainer = document.getElementById('valueContainer');
+  
+  const toggleBtn = document.getElementById('toggleValue');
+  const resetBtn = document.getElementById('reset');
+  const btnSize = document.getElementById('btnSize');
+  const btnExport = document.getElementById('btnExport');
+  const valueModeSelect = document.getElementById('valueModeSelect');
+
+  function init(){
+    updateStructure();
+    
+    btnSize.addEventListener('click', () => {
+      if(currentRows === 4) {
+        currentRows = 7;
+        btnSize.classList.add('active'); 
+      } else {
+        currentRows = 4;
+        btnSize.classList.remove('active');
+      }
+      updateStructure();
+    });
+
+    // Gestion du Menu Déroulant
+    valueModeSelect.addEventListener('change', (e) => {
+      valueMode = e.target.value;
+      updateLabelsText();
+      updateBeadText();
+    });
+
+    toggleBtn.addEventListener('click', ()=>{
+      revealed = !revealed;
+      renderTotal();
+      if(revealed) toggleBtn.classList.add('active');
+      else toggleBtn.classList.remove('active');
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      state.fill(0);
+      layoutAll();
+      renderTotal(); 
+    });
+
+    btnExport.addEventListener('click', async () => {
+      btnExport.classList.add('active');
+      document.body.classList.add('exporting');
+      setTimeout(async () => {
+        try {
+          const canvas = await html2canvas(appContainer, { scale: 2, backgroundColor: '#fffdf8', useCORS: true });
+          const link = document.createElement('a');
+          link.download = 'rekenrek-capture.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (err) { console.error(err); } 
+        finally {
+          document.body.classList.remove('exporting');
+          btnExport.classList.remove('active');
+        }
+      }, 100);
+    });
+    
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(layoutAll, 50);
+    });
+  }
+
+  function updateStructure(){
+    state = Array.from({length: currentRows}, () => 0);
+    abacusEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+    for(let r=0; r<currentRows; r++) createRow(r);
+    
+    // Mettre à jour l'affichage selon le mode actuel
+    updateLabelsText();
+    updateBeadText();
+    
+    layoutAll();
+    renderTotal(); 
+  }
+
+  function createRow(r){
+    const isStartOfGroup = (r === 3 || r === 6);
+    const row = document.createElement('div');
+    row.className = 'row';
+    if(isStartOfGroup) row.classList.add('gap-top');
+    const rod = document.createElement('div');
+    rod.className = 'rod';
+    row.appendChild(rod);
+
+    for(let j=1; j<=N; j++){
+      const bead = document.createElement('div');
+      bead.className = 'bead';
+      
+      // COULEURS REKENREK : 5 Rouge, 5 Blanc (pour chaque ligne)
+      if(j <= 5) {
+        bead.style.background = 'var(--color-red)';
+      } else {
+        bead.style.background = 'var(--color-white)';
+      }
+
+      bead.dataset.index = j;
+      bead.addEventListener('click', () => onBeadClick(r, j));
+      row.appendChild(bead);
+    }
+    abacusEl.appendChild(row);
+
+    // Création de l'étiquette (div vide pour structure)
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'label-item';
+    
+    // Ajout d'une bordure subtile si début de groupe
+    if(isStartOfGroup) labelDiv.classList.add('gap-top');
+    labelsEl.appendChild(labelDiv);
+  }
+
+  // Met à jour le texte à l'intérieur des billes (Mode: "1 10 100")
+  function updateBeadText() {
+    const rows = abacusEl.children;
+    // Valeurs à afficher dans les billes pour les 4 premières lignes (Unités à Mille)
+    // On peut étendre si besoin, mais standard Montessori souvent jusqu'à 1000 marqué
+    const displayValues = ["1", "10", "100", "1 000", "10 000", "100 000", "1M"];
+    
+    for(let r=0; r<rows.length; r++){
+      const row = rows[r];
+      const beads = row.querySelectorAll('.bead');
+      
+      let text = "";
+      // Si le mode est "beads" (1 10 100), on affiche la valeur de la ligne
+      if(valueMode === 'beads' && r < displayValues.length) { 
+        text = displayValues[r];
+      }
+
+      beads.forEach(bead => {
+        bead.textContent = text;
+      });
+    }
+  }
+
+  // Met à jour le texte des étiquettes à gauche (Mode: "Valeur")
+  function updateLabelsText(){
+    const labelDivs = labelsEl.querySelectorAll('.label-item');
+    labelDivs.forEach((div, i) => {
+      if(valueMode === 'labels') { 
+        div.textContent = defaultLabels[i] || "";
+      } else {
+        div.textContent = ""; 
+      }
+    });
+  }
+
+  function onBeadClick(r, j){
+    const currentCount = state[r];
+    if (j > currentCount) state[r] = j;
+    else state[r] = j - 1;
+    layoutRow(r);
+    renderTotal();
+  }
+
+  function layoutRow(r){
+    const row = abacusEl.children[r];
+    if(!row) return;
+    const beads = row.querySelectorAll('.bead');
+    const count = state[r];
+    const rowWidth = row.clientWidth;
+    const beadSize = 28; 
+    const gap = 0;       
+    const padding = 0;   
+    const leftStart = padding + beadSize/2;
+    const rightEnd = rowWidth - padding - beadSize/2;
+
+    beads.forEach(b => {
+      const idx = parseInt(b.dataset.index);
+      if (idx <= count) {
+        const pos = leftStart + (idx - 1) * (beadSize + gap);
+        b.style.left = pos + 'px';
+      } else {
+        const offsetFromEnd = (N - idx) * (beadSize + gap);
+        const pos = rightEnd - offsetFromEnd;
+        b.style.left = pos + 'px';
+      }
+    });
+  }
+
+  function layoutAll(){
+    for(let r=0; r<currentRows; r++) layoutRow(r);
+    renderTotal();
+  }
+
+  function renderTotal(){
+    let total = 0;
+    for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
+    
+    if(total === 0) resetBtn.classList.add('active');
+    else resetBtn.classList.remove('active');
+
+    if(!revealed){
+      valueContainer.classList.add('hidden-value');
+      return;
+    }
+    valueContainer.classList.remove('hidden-value');
+
+    // Affichage simple formaté (ex: 1 234)
+    valueContainer.textContent = total.toLocaleString('fr-FR');
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
