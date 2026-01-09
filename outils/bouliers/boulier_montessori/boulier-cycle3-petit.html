@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Boulier Montessori (Découverte)</title>
+<!-- Import de html2canvas -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
   /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
@@ -27,13 +29,13 @@
     --bg: #fffdf8;
     --text: #1b1b1b;
     --ui: #f3f1ea;
-    --accent: #0f6cf9;
+    --accent: #0f6cf9; /* Bleu principal */
     
-    --btn-off: #9ca3af;
+    --btn-off: #9ca3af; /* Gris pour inactif */
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:850px;margin:10px auto;padding:0 12px; display:flex; flex-direction:column; min-height:90vh;}
+  .app{max-width:850px;margin:10px auto;padding:0 12px; display:flex; flex-direction:column; min-height:90vh; background: var(--bg);}
 
   /* --- Topbar & Contrôles --- */
   .toolbar{
@@ -46,33 +48,38 @@
     display:flex; align-items:center; gap:6px; flex-wrap: wrap;
   }
   
-  /* Selecteur Labels */
   select {
     font-size: 0.95rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
     cursor: pointer; color: #333; font-weight: 500;
   }
 
-  /* Boutons Standard */
+  /* Boutons de base (Gris par défaut) */
   .btn{
-    border:none;background:var(--accent);color:#fff;font-weight:700;
+    border:none;
+    background: var(--btn-off); 
+    color:#fff;font-weight:700;
     padding:8px 14px;border-radius:8px;cursor:pointer;
-    box-shadow:0 4px 8px rgba(15,108,249,.2);font-size:.95rem;
-    transition: transform 0.1s, background-color 0.2s; 
+    box-shadow:none; font-size:.95rem;
+    transition: all 0.2s ease;
     display: flex; align-items: center; justify-content: center; gap: 6px;
+    opacity: 0.9;
   }
-  .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280; box-shadow:0 4px 8px rgba(0,0,0,.15);}
   
-  /* Bouton Zéro Spécifique */
-  .btn.zero-btn {
-    font-size: 1.2rem;
-    padding: 6px 16px;
+  /* État Actif / Bleu */
+  .btn.active, .btn:active {
+    background: var(--accent);
+    box-shadow: 0 4px 8px rgba(15,108,249,.2);
+    opacity: 1;
+    transform: translateY(1px); 
   }
 
-  /* Boutons Toggle (On/Off) */
-  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
-  .btn.toggle.active { background: var(--accent); box-shadow: 0 4px 8px rgba(15,108,249,.2); opacity: 1; }
-
+  /* Bouton Position Départ (Zéro) */
+  .btn.zero-btn {
+    font-size: 1rem;
+    padding: 8px 16px;
+    /* Couleur gérée par JS (gris ou bleu selon valeur) */
+  }
+  
   /* Bouton Taille */
   .btn.size-toggle { padding: 8px 12px; }
 
@@ -90,48 +97,19 @@
     justify-content: center;
     flex-wrap: wrap;
     gap: 0; 
-    /* Transition douce pour l'apparition */
     transition: opacity 0.2s;
   }
-  .hidden-value { 
-    opacity: 0; 
-    visibility: hidden; 
-  }
+  .hidden-value { opacity: 0; visibility: hidden; }
 
-  /* Le BLOC (Groupe de 3 chiffres max) */
   .digit-group {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 10px;       
-    height: 4.5rem;        
-    border-radius: 12px;   
-    margin: 0 6px;         
-    user-select: none;
-    transition: all 0.3s;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 10px; height: 4.5rem; border-radius: 12px; margin: 0 6px; user-select: none; transition: all 0.3s;
   }
+  .digit-group.with-bg { border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+  .digit-group.no-bg { background: transparent !important; border: 1px solid transparent; box-shadow: none; }
 
-  /* Styles de groupe conditionnels */
-  .digit-group.with-bg {
-    border: 1px solid rgba(0,0,0,0.15);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  }
-  .digit-group.no-bg {
-    background: transparent !important;
-    border: 1px solid transparent;
-    box-shadow: none;
-  }
+  .digit-char { font-size: 3rem; font-weight: 800; line-height: 1; margin: 0 1px; transition: color 0.3s; }
 
-  /* Le CHIFFRE individuel */
-  .digit-char {
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1;
-    margin: 0 1px;
-    transition: color 0.3s;
-  }
-
-  /* Fonds des classes */
   .bg-white { background-color: #ffffff; }
   .bg-gray  { background-color: #e0e0e0; }
   .bg-black { background-color: #1b1b1b; border-color: #444; }
@@ -142,7 +120,6 @@
     margin-top: 5px; overflow-x: auto; padding-bottom: 20px;
   }
 
-  /* --- Etiquettes à gauche --- */
   .labels{
     display:flex; flex-direction:column; width: 100px;
     padding-top: 14px; margin-right: 0; 
@@ -204,25 +181,37 @@
     box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
     cursor:pointer; user-select:none; z-index: 10;
     transition:left 0.2s ease-out;
+    display: flex; align-items: center; justify-content: center;
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
+
+  .bead.marked::after {
+    content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
+  }
+
+  /* --- CSS Spécifique Export --- */
+  body.exporting .bead {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 1px 1px 3px rgba(255,255,255,0.4) !important;
+    border: 1px solid rgba(0,0,0,0.2) !important;
+  }
+  body.exporting .overlay { display: none !important; }
 
 </style>
 </head>
 <body>
-  <div class="app">
-    
-    <!-- Zone du haut : Contrôles -->
-    <div class="toolbar">
-      
-      <!-- Groupe 1: Taille & Style -->
+  <div class="app" id="appContainer">
+    <div class="toolbar" data-html2canvas-ignore="false">
       <div class="control-group">
+        <!-- Bouton Taille -->
         <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
+        
+        <!-- Toggles -->
         <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨 Couleurs</button>
         <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜ Groupes</button>
+        <!-- Repère : désactivé par défaut (classe 'active' retirée) -->
+        <button class="btn toggle" id="btnMarker" title="Afficher/Masquer Repère visuel (5)">⚫ Repère</button>
       </div>
 
-      <!-- Groupe 2: Labels -->
       <div class="control-group">
         <select id="labelMode">
           <option value="mult" selected>1x, 10x...</option>
@@ -231,45 +220,34 @@
         </select>
       </div>
 
-      <!-- Groupe 3: Actions -->
       <div class="control-group">
         <button class="btn" id="toggleValue" title="Masquer/Afficher la valeur">👁️</button>
-        <button class="btn secondary zero-btn" id="reset" title="Remise à zéro">0</button>
+        
+        <!-- Bouton Position Départ (Bleu seulement si 0) -->
+        <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">Position de départ</button>
+        
+        <button class="btn" id="btnExport" title="Sauvegarder en image">📷</button>
       </div>
     </div>
 
-    <!-- Zone centrale : Valeur -->
     <div class="center-display">
-      <div id="valueContainer" class="value-container hidden-value">
-        <!-- Généré par JS -->
-      </div>
+      <div id="valueContainer" class="value-container hidden-value"></div>
     </div>
 
-    <!-- Zone basse : Boulier -->
     <div class="abacus-wrapper">
-      <div class="labels" id="labelsContainer">
-        <!-- Généré par JS -->
-      </div>
-      <div class="abacus" id="abacus" aria-label="Boulier Montessori">
-        <!-- Généré par JS -->
-      </div>
+      <div class="labels" id="labelsContainer"></div>
+      <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
     </div>
   </div>
 
 <script>
 (function(){
   const N = 10;
-  
   const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
-  
   const fullColors = [
-    'var(--color-green)', // 1
-    'var(--color-blue)',  // 10
-    'var(--color-red)',   // 100
-    'var(--color-green)', // 1 000
-    'var(--color-blue)',  // 10 000
-    'var(--color-red)',   // 100 000
-    'var(--color-green)'  // 1 000 000
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Unités
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Mille
+    'var(--color-green)'  // Million
   ];
 
   const fullLabelData = {
@@ -278,18 +256,14 @@
     mult: ["1 x", "10 x", "100 x", "1 000 x", "10 000 x", "100 000 x", "1 000 000 x"]
   };
 
-  // État global
   let currentRows = 4;
   let state = [];
-  let revealed = false; // Masqué par défaut comme demandé initialement? Ou on le met visible?
-                        // Dans la v12 "Afficher valeur" suggère que c'est caché.
-                        // Mettons le caché par défaut.
-
-  // Options d'affichage
+  let revealed = false; 
   let useColors = true;
   let useGroups = true;
+  let useMarkers = false; // Désactivé par défaut
 
-  // DOM Elements
+  const appContainer = document.getElementById('appContainer');
   const abacusEl = document.getElementById('abacus');
   const labelsEl = document.getElementById('labelsContainer');
   const valueContainer = document.getElementById('valueContainer');
@@ -299,15 +273,15 @@
   
   const btnColor = document.getElementById('btnColor');
   const btnGroup = document.getElementById('btnGroup');
+  const btnMarker = document.getElementById('btnMarker');
   const btnSize = document.getElementById('btnSize');
+  const btnExport = document.getElementById('btnExport');
 
   function init(){
     updateStructure();
     
-    // Listeners
     labelSelect.addEventListener('change', updateLabelsText);
     
-    // Toggle Size (Petit/Grand)
     btnSize.addEventListener('click', () => {
       if(currentRows === 4) {
         currentRows = 7;
@@ -321,24 +295,27 @@
       updateStructure();
     });
 
-    // Toggle Colors
     btnColor.addEventListener('click', () => {
       useColors = !useColors;
       updateToggleButton(btnColor, useColors);
       renderTotal();
     });
 
-    // Toggle Groups
     btnGroup.addEventListener('click', () => {
       useGroups = !useGroups;
       updateToggleButton(btnGroup, useGroups);
       renderTotal();
     });
 
+    btnMarker.addEventListener('click', () => {
+      useMarkers = !useMarkers;
+      updateToggleButton(btnMarker, useMarkers);
+      updateBeadMarkers(); 
+    });
+
     toggleBtn.addEventListener('click', ()=>{
       revealed = !revealed;
       renderTotal();
-      // On peut ajouter un style au bouton pour montrer qu'il est actif (œil ouvert)
       if(revealed) toggleBtn.classList.add('active');
       else toggleBtn.classList.remove('active');
     });
@@ -346,6 +323,29 @@
     resetBtn.addEventListener('click', ()=>{
       state.fill(0);
       layoutAll();
+      renderTotal(); // Pour mettre à jour l'état du bouton Reset
+    });
+
+    btnExport.addEventListener('click', async () => {
+      btnExport.classList.add('active');
+      document.body.classList.add('exporting');
+      setTimeout(async () => {
+        try {
+          const canvas = await html2canvas(appContainer, {
+            scale: 2, 
+            backgroundColor: '#fffdf8'
+          });
+          const link = document.createElement('a');
+          link.download = 'capture-boulier.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (err) {
+          console.error("Erreur capture :", err);
+        } finally {
+          document.body.classList.remove('exporting');
+          btnExport.classList.remove('active');
+        }
+      }, 50);
     });
     
     let resizeTimer;
@@ -356,35 +356,25 @@
   }
 
   function updateToggleButton(btn, active){
-    if(active){
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    if(active) btn.classList.add('active');
+    else btn.classList.remove('active');
   }
 
   function updateStructure(){
     state = Array.from({length: currentRows}, () => 0);
-    
     abacusEl.innerHTML = '';
     labelsEl.innerHTML = '';
-
-    for(let r=0; r<currentRows; r++){
-      createRow(r);
-    }
-    
+    for(let r=0; r<currentRows; r++) createRow(r);
     updateLabelsText();
     layoutAll();
+    renderTotal(); // Pour l'état initial du bouton reset
   }
 
   function createRow(r){
     const isStartOfGroup = (r === 3 || r === 6);
-    
-    // ROW
     const row = document.createElement('div');
     row.className = 'row';
     if(isStartOfGroup) row.classList.add('gap-top');
-    
     const rod = document.createElement('div');
     rod.className = 'rod';
     row.appendChild(rod);
@@ -394,15 +384,14 @@
       bead.className = 'bead';
       bead.style.background = fullColors[r];
       bead.dataset.index = j;
+      if (useMarkers && j > 5) bead.classList.add('marked');
       bead.addEventListener('click', () => onBeadClick(r, j));
       row.appendChild(bead);
     }
     abacusEl.appendChild(row);
 
-    // LABEL
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label-item';
-    
     if(r < 3) labelDiv.classList.add('label-white'); 
     else if (r < 6) labelDiv.classList.add('label-gray');
     else labelDiv.classList.add('label-black'); 
@@ -414,8 +403,18 @@
     if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
 
     if(isStartOfGroup) labelDiv.classList.add('gap-top');
-    
     labelsEl.appendChild(labelDiv);
+  }
+
+  function updateBeadMarkers() {
+    const allBeads = document.querySelectorAll('.bead');
+    allBeads.forEach(bead => {
+      const j = parseInt(bead.dataset.index);
+      if (j > 5) {
+        if (useMarkers) bead.classList.add('marked');
+        else bead.classList.remove('marked');
+      }
+    });
   }
 
   function updateLabelsText(){
@@ -429,11 +428,8 @@
 
   function onBeadClick(r, j){
     const currentCount = state[r];
-    if (j > currentCount) {
-      state[r] = j;
-    } else {
-      state[r] = j - 1;
-    }
+    if (j > currentCount) state[r] = j;
+    else state[r] = j - 1;
     layoutRow(r);
     renderTotal();
   }
@@ -443,23 +439,19 @@
     if(!row) return;
     const beads = row.querySelectorAll('.bead');
     const count = state[r];
-    
     const rowWidth = row.clientWidth;
     const beadSize = 28; 
     const gap = 0;       
     const padding = 0;   
-
     const leftStart = padding + beadSize/2;
     const rightEnd = rowWidth - padding - beadSize/2;
 
     beads.forEach(b => {
       const idx = parseInt(b.dataset.index);
       if (idx <= count) {
-        // GAUCHE (Active)
         const pos = leftStart + (idx - 1) * (beadSize + gap);
         b.style.left = pos + 'px';
       } else {
-        // DROITE (Inactive)
         const offsetFromEnd = (N - idx) * (beadSize + gap);
         const pos = rightEnd - offsetFromEnd;
         b.style.left = pos + 'px';
@@ -469,17 +461,24 @@
 
   function layoutAll(){
     for(let r=0; r<currentRows; r++) layoutRow(r);
-    renderTotal();
+    renderTotal(); // Important pour mettre à jour l'état du bouton au resize ou init
   }
 
   function renderTotal(){
     // 1. Calcul du total
     let total = 0;
-    for(let r=0; r<currentRows; r++){
-      total += state[r] * fullMultipliers[r];
-    }
+    for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
     
-    // 2. Affichage
+    // Mise à jour de l'état du bouton "Position de départ"
+    // Si total == 0 => Bleu (active)
+    // Sinon => Gris (inactive)
+    if(total === 0) {
+      resetBtn.classList.add('active');
+    } else {
+      resetBtn.classList.remove('active');
+    }
+
+    // 2. Affichage Valeur
     if(!revealed){
       valueContainer.classList.add('hidden-value');
       return;
@@ -489,7 +488,6 @@
     const str = total.toString();
     const len = str.length;
     let html = '';
-    
     let currentGroupIndex = -1;
     
     for(let i=0; i<len; i++){
@@ -497,7 +495,6 @@
       const power = len - 1 - i;
       const groupIndex = Math.floor(power / 3);
       
-      // -- Gestion du Fond --
       let bgClass = '';
       if(useGroups){
         if(groupIndex === 0) bgClass = 'bg-white with-bg';
@@ -507,7 +504,6 @@
         bgClass = 'no-bg';
       }
       
-      // -- Gestion de la Couleur Texte --
       let textColor = '';
       if(useColors){
         const colorIndex = power % 3;
@@ -515,25 +511,18 @@
         else if(colorIndex === 1) textColor = 'var(--color-blue)';
         else textColor = 'var(--color-red)';
       } else {
-        // Noir/Blanc (contraste)
-        if(useGroups && groupIndex >= 2) {
-           textColor = '#f0f0f0';
-        } else {
-           textColor = '#1b1b1b';
-        }
+        if(useGroups && groupIndex >= 2) textColor = '#f0f0f0';
+        else textColor = '#1b1b1b';
       }
       
-      // Construction HTML
       if(groupIndex !== currentGroupIndex){
         if(currentGroupIndex !== -1) html += `</div>`;
         html += `<div class="digit-group ${bgClass}">`;
         currentGroupIndex = groupIndex;
       }
-      
       html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
     }
     if(currentGroupIndex !== -1) html += `</div>`;
-
     valueContainer.innerHTML = html;
   }
 
