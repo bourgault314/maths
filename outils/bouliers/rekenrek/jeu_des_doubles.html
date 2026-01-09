@@ -22,12 +22,24 @@
     overflow: hidden; touch-action: none;
   }
 
+  /* MODIFICATION : Suppression des flèches dans l'input */
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+
   .toolbar {
     position: relative; width: 100%; min-height: 60px;
     background: var(--ui); display: flex; align-items: center; 
     justify-content: space-between; padding: 0 20px; box-sizing: border-box;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
   }
+  
+  .toolbar-group { display: flex; align-items: center; gap: 10px; }
 
   .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
   .score-good { color: var(--success); }
@@ -77,7 +89,6 @@
 
   .control-panel { display: flex; flex-direction: column; align-items: center; gap: 15px; }
   
-  /* Zone input centrée verticalement comme sur Presque-Doubles */
   #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
   #input-val {
@@ -116,22 +127,16 @@
 
 <div class="toolbar">
   <div class="toolbar-group">
+    <!-- MODIFICATION : Menus séparés -->
+    <select id="range-select" onchange="initGame()">
+      <option value="10">Doubles 0-10</option>
+      <option value="20">Doubles 10-20</option>
+      <option value="50">Doubles 20-50</option>
+    </select>
     <select id="level-select" onchange="initGame()">
-      <optgroup label="Doubles 0-10">
-        <option value="1">Niveau 1 : Visuel</option>
-        <option value="2">Niveau 2 : Libre</option>
-        <option value="3">Niveau 3 : Mental</option>
-      </optgroup>
-      <optgroup label="Doubles 10-20">
-        <option value="4">Niveau 4 : Visuel</option>
-        <option value="5">Niveau 5 : Libre</option>
-        <option value="6">Niveau 6 : Mental</option>
-      </optgroup>
-      <optgroup label="Doubles 20-50">
-        <option value="7">Niveau 7 : Visuel</option>
-        <option value="8">Niveau 8 : Libre</option>
-        <option value="9">Niveau 9 : Mental</option>
-      </optgroup>
+      <option value="1">Mode Visuel</option>
+      <option value="2">Mode Libre</option>
+      <option value="3">Mode Mental</option>
     </select>
     <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
   </div>
@@ -180,7 +185,6 @@
   
   const BEAD_W = 38;
 
-  // --- LOGIQUE DECK ---
   function buildDeck(min, max) {
     deck = [];
     for(let i = min; i <= max; i++) {
@@ -198,45 +202,62 @@
     }
     return deck.pop();
   }
-  // --------------------
 
   function initGame() {
-    const level = parseInt(document.getElementById('level-select').value);
+    // MODIFICATION : Lecture des deux menus séparés
+    const rangeMode = parseInt(document.getElementById('range-select').value);
+    const levelType = parseInt(document.getElementById('level-select').value); // 1, 2 ou 3
+
     isAnswered = false; feedback.innerText = ""; feedback.style.transform = "scale(1)";
     btnNext.style.visibility = "hidden"; inputVal.value = "";
     document.getElementById('btn-reveal').style.display = "none";
     frame.classList.remove('hidden-abacus');
 
-    let min, max;
-    if (level <= 3) { min = 0; max = 10; }
-    else if (level <= 6) { min = 11; max = 20; }
-    else { min = 21; max = 50; }
+    // Configuration selon la plage (Range)
+    let min, max, rowCount;
+    if (rangeMode === 10) { 
+        min = 0; max = 10; 
+        rowCount = 2; // 2 lignes pour 0-10
+    } else if (rangeMode === 20) { 
+        min = 11; max = 20; 
+        rowCount = 4; // 4 lignes pour 10-20
+    } else { 
+        min = 21; max = 50; 
+        rowCount = 10; // 10 lignes pour 20-50
+    }
 
     targetNum = drawCard(min, max);
-
-    let rowCount = (level <= 3) ? 2 : (level <= 6 ? 4 : 10);
     states = Array(rowCount).fill(0);
     
-    const isMental = (level % 3 === 0);
+    const isMental = (levelType === 3);
     document.getElementById('task-display').innerText = isMental ? `Double de ${targetNum}` : `${targetNum} + ${targetNum}`;
 
     buildAbacus(rowCount);
-    if (level === 1 || level === 4 || level === 7) setDoubleOnAbacus(targetNum, rowCount);
-    else if (isMental) { frame.classList.add('hidden-abacus'); document.getElementById('btn-reveal').style.display = "block"; }
 
-    // --- CORRECTION LAYOUT (identique à Presque-Doubles) ---
-    if (level <= 3) {
+    // Configuration selon le type de niveau
+    if (levelType === 1) {
+        // Visuel : On montre les billes
+        setDoubleOnAbacus(targetNum, rowCount);
+    } else if (levelType === 3) {
+        // Mental : On cache le boulier
+        frame.classList.add('hidden-abacus'); 
+        document.getElementById('btn-reveal').style.display = "block"; 
+    }
+    // Niveau 2 (Libre) : Boulier à 0, visible (comportement par défaut)
+
+    // --- LAYOUT ---
+    if (rangeMode === 10) {
+      // Clavier pour les petits nombres
       document.getElementById('keypad').style.display = 'grid';
       document.getElementById('side-panel').style.display = 'none';
-      buildKeypad(20);
+      buildKeypad(20); // Max réponse possible 20
     } else {
+      // Input texte pour les grands nombres
       document.getElementById('keypad').style.display = 'none';
       document.getElementById('side-panel').style.display = 'flex';
       const layout = document.getElementById('game-layout');
       
-      // Niv 4-6 (10-20) : Disposition COLONNE (Boulier au-dessus, Input en dessous)
-      // Niv 7-9 (20-50) : Disposition LIGNE (Boulier à gauche, Input à droite car boulier très haut)
-      if (level >= 7) layout.style.flexDirection = "row";
+      if (rangeMode === 50) layout.style.flexDirection = "row";
       else layout.style.flexDirection = "column"; 
       
       setTimeout(() => inputVal.focus(), 100);
@@ -305,6 +326,7 @@
   function checkInput() { checkAnswer(parseInt(inputVal.value), null); }
   function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
 
+  // --- MOTEUR PHYSIQUE STRICT ---
   let activeDrag = null;
   function startDrag(e) {
     if (isAnswered) return;
@@ -332,8 +354,20 @@
     const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
-    if (beadIdx >= states[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
-    else { if (currentPos > 410 - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    
+    // Cibles et Marge
+    const targetLeft = beadIdx * BEAD_W;
+    const targetRight = 820 - (10 - beadIdx) * BEAD_W;
+    const snapMargin = BEAD_W;
+
+    if (beadIdx >= states[rowIdx]) { 
+        // Vers la gauche
+        if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1; 
+    } else { 
+        // Vers la droite
+        if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx; 
+    }
+    
     activeDrag = null; updateBeads(true);
   });
 
@@ -348,13 +382,14 @@
 
   function nextQuestion() { initGame(); }
 
-  /* CORRECTION : ZOOM CALQUÉ SUR PRESQUE-DOUBLES */
   function autoScale() {
     const availableW = window.innerWidth - 40;
     const availableH = window.innerHeight - 80;
-    const level = parseInt(document.getElementById('level-select').value);
-    const contentW = (level >= 7) ? 1300 : 920;
-    const contentH = (level >= 7) ? 850 : 800;
+    const rangeMode = parseInt(document.getElementById('range-select').value);
+    
+    const contentW = (rangeMode === 50) ? 1300 : 920;
+    const contentH = (rangeMode === 50) ? 850 : 800;
+    
     currentScale = Math.min(1.0, availableW / contentW, availableH / contentH);
     document.getElementById('scaler').style.transform = `scale(${currentScale})`;
   }
