@@ -4,8 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Boulier Rekenrek</title>
-<!-- Import de html2canvas -->
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
   /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
@@ -224,15 +222,12 @@
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
 
-  /* Suppression complète du CSS "Exporting" qui altérait le rendu */
-
 </style>
 </head>
 <body>
   <div class="app" id="appContainer">
     
-    <!-- On ignore la toolbar pour la capture d'écran grâce à data-html2canvas-ignore -->
-    <div class="toolbar" data-html2canvas-ignore="true">
+    <div class="toolbar">
       
       <div class="control-group">
         <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
@@ -258,11 +253,10 @@
       <div class="control-group">
         <button class="btn active" id="toggleValue" title="Masquer/Afficher le total">👁️</button>
         <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
-        <button class="btn" id="btnExport" title="Sauvegarder en image">📷</button>
       </div>
     </div>
 
-    <!-- Zone Principale (Sera capturée) -->
+    <!-- Zone Principale -->
     <div class="main-area">
       
       <!-- Colonne Boulier -->
@@ -310,7 +304,6 @@
   const toggleBtn = document.getElementById('toggleValue');
   const resetBtn = document.getElementById('reset');
   const btnSize = document.getElementById('btnSize');
-  const btnExport = document.getElementById('btnExport');
   const valueModeSelect = document.getElementById('valueModeSelect');
   const btnColorToggle = document.getElementById('btnColorToggle');
   const btnGraphicMode = document.getElementById('btnGraphicMode');
@@ -370,27 +363,7 @@
       renderTotal(); 
     });
 
-    btnExport.addEventListener('click', async () => {
-      btnExport.classList.add('active');
-      // Nous n'ajoutons plus la classe 'exporting' pour garder le style WYSIWYG
-      
-      setTimeout(async () => {
-        try {
-          const canvas = await html2canvas(appContainer, { 
-            scale: 2, 
-            backgroundColor: '#fffdf8', // Fond préservé
-            useCORS: true 
-          });
-          const link = document.createElement('a');
-          link.download = 'rekenrek-capture.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        } catch (err) { console.error(err); } 
-        finally {
-          btnExport.classList.remove('active');
-        }
-      }, 100);
-    });
+    // Suppression de l'event listener pour btnExport
     
     let resizeTimer;
     window.addEventListener('resize', ()=>{
