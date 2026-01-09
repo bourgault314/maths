@@ -64,9 +64,7 @@
     display:flex; align-items:center; gap:6px; flex-shrink: 0; flex-wrap: wrap; justify-content: center;
   }
   
-  .separator {
-    width: 1px; height: 24px; background: #ccc; margin: 0 6px;
-  }
+  /* Separator removed as requested */
 
   /* Boutons */
   .btn{
@@ -150,12 +148,22 @@
   .params-row {
     display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;
     font-size: 0.95rem; font-weight: 600; color: #444;
+    width: 100%;
   }
   .params-row select {
     padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer;
     background: #fff;
   }
   .params-row label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+  /* Manual Input Styles */
+  .manual-input {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    width: 200px;
+  }
 
   /* Affichage de l'opération */
   .ops-display {
@@ -367,18 +375,19 @@
         <button class="btn toggle" id="btnTable" title="Afficher/Masquer Tableau de Numération">📊</button>
       </div>
 
-      <div class="separator"></div>
+      <!-- Separator removed -->
 
       <!-- Groupe 2: Valeur (Toggle) -->
       <div class="control-group">
         <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
       </div>
 
-      <div class="separator"></div>
+      <!-- Separator removed -->
 
       <!-- Groupe 3: Actions + Score -->
       <div class="control-group">
         <button class="btn" id="newOps" title="Générer un nouveau calcul">🎲 Nouveau</button>
+        <button class="btn" id="btnCustom" title="Entrer son propre calcul">✍️ Proposition</button>
         
         <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
         
@@ -398,7 +407,8 @@
         
         <!-- Panneau Paramètres & Enoncé -->
         <div class="exercise-panel">
-          <div class="params-row">
+          <!-- Mode Auto -->
+          <div class="params-row" id="autoControls">
             <label>Opérations :
               <select id="opCount">
                 <option selected>2</option><option>3</option><option>4</option><option>5</option>
@@ -414,6 +424,13 @@
             </label>
             <label><input type="radio" name="opMode" value="add" checked> +</label>
             <label><input type="radio" name="opMode" value="mixed"> ±</label>
+          </div>
+
+          <!-- Mode Manuel (Caché par défaut) -->
+          <div class="params-row" id="manualControls" style="display:none;">
+            <input type="text" id="manualInput" class="manual-input" placeholder="Ex: 12 + 25">
+            <button class="btn active" id="btnValidateCustom">Valider</button>
+            <button class="btn" id="btnCancelCustom">Annuler</button>
           </div>
           
           <!-- Enoncé Graphique -->
@@ -491,6 +508,13 @@
   
   // Jeu
   const newOpsBtn = document.getElementById('newOps');
+  const btnCustom = document.getElementById('btnCustom');
+  const autoControls = document.getElementById('autoControls');
+  const manualControls = document.getElementById('manualControls');
+  const manualInput = document.getElementById('manualInput');
+  const btnValidateCustom = document.getElementById('btnValidateCustom');
+  const btnCancelCustom = document.getElementById('btnCancelCustom');
+
   const actionBtn = document.getElementById('actionBtn'); // Vérifier/Suivant
   const opsDisplay = document.getElementById('opsDisplay');
   const userAnswer = document.getElementById('userAnswer');
@@ -569,8 +593,33 @@
     newOpsBtn.addEventListener('click', () => {
         newOpsBtn.classList.add('active');
         setTimeout(()=>newOpsBtn.classList.remove('active'), 200);
+        // Ensure manual mode is hidden when clicking Random New
+        manualControls.style.display = 'none';
+        autoControls.style.display = 'flex';
         generateNewOps();
     });
+
+    // Manual Mode Handlers
+    btnCustom.addEventListener('click', () => {
+        autoControls.style.display = 'none';
+        manualControls.style.display = 'flex';
+        manualInput.value = '';
+        manualInput.focus();
+    });
+
+    btnCancelCustom.addEventListener('click', () => {
+        manualControls.style.display = 'none';
+        autoControls.style.display = 'flex';
+    });
+
+    btnValidateCustom.addEventListener('click', () => {
+        parseAndStartCustom(manualInput.value);
+    });
+
+    manualInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') parseAndStartCustom(manualInput.value);
+    });
+
 
     opCountSel.addEventListener('change', generateNewOps);
     opStepSel.addEventListener('change', generateNewOps);
@@ -590,6 +639,63 @@
 
   // --- MOTEUR DE JEU ---
   function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function parseAndStartCustom(text){
+    // Regex pour extraire nombres avec signe optionnel
+    const matches = text.match(/[+\-]?\s*\d+/g);
+    
+    if(!matches || matches.length === 0) {
+        alert("Veuillez entrer une opération valide (ex: 12 + 5)");
+        return;
+    }
+
+    const ops = matches.map(m => {
+        const clean = m.replace(/\s+/g, '');
+        return parseInt(clean, 10);
+    });
+
+    let sum = 0;
+    for(let n of ops) sum += n;
+
+    if(sum < 0) {
+        alert("Le résultat ne peut pas être négatif pour cet exercice.");
+        return;
+    }
+
+    const physicalMax = (currentRows === 4) ? 9999 : 9999999;
+    if(sum > physicalMax) {
+        alert("Le résultat dépasse la capacité du boulier (" + physicalMax.toLocaleString('fr-FR') + ").");
+        return;
+    }
+
+    // Appliquer le jeu
+    currentOpsList = ops;
+    targetValue = sum;
+    
+    resetGameUI();
+    
+    // UI Feedback
+    manualControls.style.display = 'none';
+    autoControls.style.display = 'flex';
+  }
+
+  function resetGameUI() {
+    lastResultCorrect = false;
+    isSolved = false;
+    actionBtn.textContent = "Vérifier";
+    actionBtn.classList.remove('success', 'error'); 
+    userAnswer.disabled = false;
+    userAnswer.value = '';
+    userAnswer.focus();
+    
+    renderOpsDisplay();
+    state.fill(0);
+    layoutAll();
+    renderTotal();
+    renderTable();
+    feedbackEl.textContent = '';
+    feedbackEl.style.display = 'none';
+  }
 
   function generateNewOps(){
     const count = parseInt(opCountSel.value);
@@ -639,8 +745,6 @@
             }
             
             // On génère un nombre aléatoire entre 1 et termMax
-            // Pour éviter que ce soit toujours 1, on peut limiter le max à quelque chose de raisonnable
-            // mais ici on respecte strictment la limite.
             const val = randomInt(1, termMax);
             
             current += sign * val;
@@ -663,25 +767,8 @@
 
     targetValue = current;
     currentOpsList = ops; 
-    lastResultCorrect = false;
-    isSolved = false;
     
-    // Reset UI pour "Vérifier"
-    actionBtn.textContent = "Vérifier";
-    actionBtn.classList.remove('success', 'error'); 
-    userAnswer.disabled = false;
-    userAnswer.value = '';
-    userAnswer.focus();
-    
-    renderOpsDisplay();
-    
-    state.fill(0);
-    layoutAll();
-    renderTotal();
-    renderTable();
-    
-    feedbackEl.textContent = '';
-    feedbackEl.style.display = 'none';
+    resetGameUI();
   }
 
   // --- RENDU ENONCÉ ---
@@ -901,9 +988,6 @@
     else state[r] = j - 1;
     layoutRow(r);
     renderTotal();
-    // Le tableau ne montre pas le résultat "live" ici (sauf si on veut tricher ?)
-    // En mode "Opération", le tableau montre l'énoncé. Le résultat s'affiche à la validation.
-    // Donc on ne renderTable() pas ici.
   }
 
   function layoutRow(r){
