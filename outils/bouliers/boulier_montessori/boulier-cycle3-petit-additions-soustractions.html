@@ -3,20 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Montessori (1/10/100/1000) — Exerciseur “Opérations”</title>
+<title>Boulier Montessori – Opérations</title>
 <style>
+  /* --- Réinitialisation & Variables --- */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   :root{
-    --rows: 4;
-    --beads-per-row: 10;
-    --bead-size: 26px;
-    --bead-gap: 6px;
+    --bead-size: 28px;
+    --bead-gap: 0px; 
     --frame-thickness: 14px;
     --rod-thickness: 4px;
 
-    --color-1: #3cb371;     /* unités */
-    --color-10: #40c4ff;    /* dizaines */
-    --color-100: #e53935;   /* centaines */
-    --color-1000: #2e7d32;  /* milliers */
+    /* Couleurs Montessori */
+    --color-green: #3cb371;
+    --color-blue:  #40c4ff;
+    --color-red:   #e53935;
 
     --color-wood: #e2c48a;
     --color-wood-dark: #a88348;
@@ -24,154 +27,425 @@
     --bg: #fffdf8;
     --text: #1b1b1b;
     --ui: #f3f1ea;
-    --accent: #0f6cf9;
-    --ok: #0f9d58;
-    --err: #d93025;
+    --accent: #0f6cf9; /* Bleu principal */
+    --ok: #0f9d58;     /* Vert validation */
+    --err: #d93025;    /* Rouge erreur */
+    
+    --btn-off: #9ca3af; /* Gris pour inactif */
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:820px;margin:12px auto;padding:0 12px}
-
-  .topbar{
-    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 10px
+  
+  /* Layout Principal */
+  .app {
+    width: 100%;
+    max-width: 900px; 
+    margin: 10px auto;
+    padding: 0 8px; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 90vh; 
+    background: var(--bg);
+    transition: max-width 0.4s ease;
   }
+
+  .app.show-table {
+    max-width: 1300px;
+  }
+
+  /* --- Topbar & Contrôles --- */
+  .toolbar{
+    display:flex; flex-wrap:nowrap; gap:12px; align-items:center; justify-content:center;
+    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
+  }
+  
+  .control-group {
+    display:flex; align-items:center; gap:6px; flex-shrink: 0; flex-wrap: wrap; justify-content: center;
+  }
+  
+  .separator {
+    width: 1px; height: 24px; background: #ccc; margin: 0 6px;
+  }
+
+  /* Boutons */
   .btn{
-    border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:8px 12px;border-radius:10px;cursor:pointer;
-    box-shadow:0 5px 12px rgba(15,108,249,.18);font-size:.95rem
+    border:none;
+    background: var(--btn-off); 
+    color:#fff;font-weight:700;
+    padding:6px 12px; border-radius:6px; cursor:pointer;
+    box-shadow:none; font-size:.9rem;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    opacity: 0.9;
+    white-space: nowrap;
   }
-  .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280}
+  
+  /* État Actif / Bleu */
+  .btn.active, .btn:active {
+    background: var(--accent);
+    box-shadow: 0 2px 5px rgba(15,108,249,.2);
+    opacity: 1;
+    transform: translateY(1px); 
+  }
+  
+  .btn.zero-btn {
+    font-size: 1rem; padding: 6px 12px; min-width: 30px;
+  }
 
-  .score{margin-left:auto;display:flex;gap:12px;align-items:center;font-weight:800}
-  .score .good{color:var(--ok)}
-  .score .bad{color:var(--err)}
+  /* Bouton Vérifier */
+  .btn.check-btn { 
+    background: var(--btn-off); /* Gris par défaut */
+    font-size: 1.1rem; 
+    padding: 8px 20px; 
+    min-width: 120px;
+  }
+  
+  /* Erreur (Rouge) */
+  .btn.check-btn.error {
+    background: var(--err);
+    animation: shake 0.4s ease-in-out;
+  }
+  
+  /* Succès (Vert) */
+  .btn.check-btn.success {
+    background: var(--ok);
+  }
 
-  .exercise{
-    display:flex;flex-direction:column;gap:8px;align-items:stretch;
-    background:var(--ui);padding:10px 12px;border-radius:12px;margin-bottom:10px
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
   }
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
-  .select, .radio-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  select{padding:6px 8px;border-radius:8px;border:1px solid #d0d0d0;background:#fff}
-  .ops{
-    width:100%;background:#fff;border:1px solid #e0e0e0;border-radius:10px;
-    padding:6px 8px;font-weight:800
-  }
-  .answer{display:flex;gap:8px;align-items:center}
-  .answer input[type="number"]{
-    width:100px;padding:6px 8px;border:1px solid #d0d0d0;border-radius:8px;font-weight:800;text-align:right;background:#fff;
-    -moz-appearance: textfield; appearance: textfield;
-  }
-  .answer input[type="number"]::-webkit-outer-spin-button,
-  .answer input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
-  .feedback{min-height:1.3em;font-weight:700}
-  .feedback.ok{color:var(--ok)} .feedback.err{color:var(--err)}
 
-  .abacus-wrapper{display:flex;align-items:stretch}
+  .btn.size-toggle { padding: 6px 10px; }
+  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
+  .btn.toggle.active { background: var(--accent); box-shadow: 0 2px 5px rgba(15,108,249,.2); opacity: 1; }
+
+  /* Score (Texte simple sans cadre, collé aux boutons) */
+  .score-display {
+    display: flex; gap: 12px; font-weight: 800; font-size: 1.1rem; align-items: center;
+    margin-left: 8px; /* Petit espacement après le bouton 0 */
+  }
+  .score-item.good { color: var(--ok); }
+  .score-item.bad { color: var(--err); }
+
+
+  /* --- Zone Paramètres Exercice --- */
+  .exercise-panel {
+    background: var(--ui);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    align-self: center;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.03);
+  }
+
+  .params-row {
+    display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;
+    font-size: 0.95rem; font-weight: 600; color: #444;
+  }
+  .params-row select {
+    padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer;
+    background: #fff;
+  }
+  .params-row label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+  /* Affichage de l'opération */
+  .ops-display {
+    font-size: 2rem; font-weight: 800; color: #333;
+    background: #fff; padding: 15px 30px; border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    min-width: 250px; text-align: center;
+    letter-spacing: 1px;
+    min-height: 3.5rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 5px; 
+  }
+
+  /* Eléments de l'opération */
+  .op-part { display: inline-flex; align-items: center; justify-content: center; }
+  .op-number { display: inline-flex; }
+  
+  .digit-group {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 4px; height: 3rem; border-radius: 6px; margin: 0 1px; user-select: none; transition: all 0.3s;
+  }
+  .digit-group.with-bg { border: 1px solid rgba(0,0,0,0.15); }
+  .digit-group.no-bg { background: transparent !important; border: 1px solid transparent; box-shadow: none; }
+  .digit-char { font-size: 2rem; font-weight: 800; line-height: 1; margin: 0 1px; transition: color 0.3s; }
+
+  .answer-row {
+    display: flex; gap: 15px; align-items: center; margin-top: 5px;
+  }
+
+  /* --- Input Réponse Corrigé --- */
+  .answer-input {
+    font-size: 1.6rem; 
+    padding: 8px 14px; 
+    border-radius: 8px; 
+    border: 2px solid var(--accent); /* Bordure bleue par défaut */
+    width: 140px; 
+    text-align: center; 
+    font-weight: 700; 
+    outline: none;
+    -moz-appearance: textfield;
+    
+    /* Force le bleu au focus et invalide les styles par défaut */
+    background-color: #fff;
+    color: #333;
+  }
+  
+  /* Supprime les flèches (spinners) */
+  .answer-input::-webkit-outer-spin-button, 
+  .answer-input::-webkit-inner-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+
+  /* Focus : Reste bleu (var(--accent)), pas de vert */
+  .answer-input:focus { 
+    border-color: var(--accent); 
+    box-shadow: 0 0 0 3px rgba(15,108,249,0.2); 
+  }
+  
+  /* Empêche le vert automatique sur certains navigateurs quand valide */
+  .answer-input:valid {
+    border-color: var(--accent);
+  }
+
+  .feedback { font-weight: 700; min-height: 1.2em; font-size: 1.1rem; display: none; } 
+
+  /* Fonds des classes */
+  .bg-white { background-color: #ffffff; }
+  .bg-gray  { background-color: #e0e0e0; }
+  .bg-black { background-color: #1b1b1b; border-color: #444; }
+
+  /* --- Zone Centrale (Split View) --- */
+  .main-area {
+    display: flex; flex: 1; gap: 30px;
+    align-items: flex-start; justify-content: center; 
+    transition: all 0.3s; width: 100%;
+  }
+
+  /* Colonne Boulier */
+  .abacus-column {
+    flex: 0 0 auto; width: 100%; max-width: 800px;
+    display: flex; flex-direction: column; align-items: center;
+    transition: all 0.3s;
+  }
+  .app.show-table .abacus-column { width: auto; flex: 1 1 600px; }
+
+  /* Colonne Tableau */
+  .table-column {
+    display: none; flex: 1 1 400px; max-width: 500px;
+    flex-direction: column; align-items: stretch;
+    padding-top: 180px; 
+    opacity: 0; transform: translateX(20px); transition: all 0.4s ease;
+  }
+  .app.show-table .table-column { display: flex; opacity: 1; transform: translateX(0); }
+
+  /* --- Boulier Layout --- */
+  .abacus-wrapper{
+    display:flex; align-items:flex-start; justify-content: center;
+    width: 100%; overflow-x: auto; padding-bottom: 20px;
+  }
   .labels{
-    display:flex;flex-direction:column;justify-content:space-around;
-    padding:10px 6px 10px 0;font-weight:700;font-size:1rem;color:#444;
-    background:#f0f0f0;border-radius:10px 0 0 10px;
-    box-shadow:inset -1px 0 2px rgba(0,0,0,.1)
+    display:flex; flex-direction:column; width: 100px;
+    padding-top: 14px; margin-right: 0; flex-shrink: 0;
   }
-  .labels div{flex:1;display:flex;align-items:center;justify-content:center}
+  .label-item{
+    height: 50px; display:flex; align-items:center; justify-content:flex-end;
+    padding-right: 12px; font-weight:700; font-size:0.95rem; color:#444;
+    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
+    transition: background 0.3s;
+  }
+  .label-white { background-color: #ffffff; }
+  .label-gray  { background-color: #e0e0e0; }
+  .label-black { background-color: #1b1b1b; color: #bdbdbd; border-color: #333; }
+  .label-top-rounded { border-top: 1px solid #ccc; border-radius: 6px 0 0 0; }
+  .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
+  .gap-top { margin-top: 30px !important; }
 
+  /* --- Boulier --- */
   .abacus{
-    flex:1;position:relative;aspect-ratio: 10 / 4.5;
-    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
-    border-radius:0 14px 14px 0;box-shadow:0 8px 20px rgba(0,0,0,.1);
-    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
+    flex:1; min-width: 320px; position:relative;
+    background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    display: flex; flex-direction: column;
+    padding: 14px 0;
+    border-right: 14px solid #a88348; border-left: 14px solid #a88348;
+    border-radius: 4px;
   }
   .abacus::before, .abacus::after{
-    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
-    background:linear-gradient(#caa367,#9a733c)
+    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c); z-index: 2;
   }
-  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:0 14px 0 0}
-  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 0}
+  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
+  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
 
-  .row-line{position:relative;height: calc(100% / var(--rows));}
+  .row{ position:relative; width:100%; height: 50px; }
+  .row.gap-top::before {
+    content: ""; position: absolute; top: -15px; left: 5%; right: 5%;
+    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
+  }
   .rod{
-    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
-    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.25)
+    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
+    background:linear-gradient(180deg,#c09e6c,#8a6538); box-shadow:0 1px 2px rgba(0,0,0,.3);
   }
   .bead{
-    position:absolute;top:50%;transform:translate(-50%,-50%);
-    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
-    box-shadow: 0 3px 6px rgba(0,0,0,.25), inset 0 2px 5px rgba(255,255,255,.5);
-    border:1px solid rgba(0,0,0,.1);cursor:pointer; user-select:none;
-    transition:left .18s ease, transform .06s ease;
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:var(--bead-size); height:var(--bead-size); border-radius:50%;
+    border: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none; z-index: 10;
+    transition:left 0.2s ease-out;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 9px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
+  .bead.marked::after {
+    content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
+  }
+  .bead.has-text.marked::after { display: none; }
 
-  .r0 .bead{ background: var(--color-1); }
-  .r1 .bead{ background: var(--color-10); }
-  .r2 .bead{ background: var(--color-100); }
-  .r3 .bead{ background: var(--color-1000); }
+  /* --- Styles du Tableau de Numération (Calcul Posé) --- */
+  .montessori-table {
+    border-collapse: collapse; width: 100%; background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px;
+    overflow: hidden; font-family: sans-serif; table-layout: fixed; 
+  }
+  .montessori-table th, .montessori-table td { text-align: center; border-right: 1px solid #eee; }
+  .montessori-table th:last-child, .montessori-table td:last-child { border-right: none; }
+  .th-class { text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; padding: 8px 0; color: #333; border-bottom: 2px solid #aaa; }
+  .th-class.unit-class { background: #fff; }
+  .th-class.thousand-class { background: #e0e0e0; }
+  .th-class.million-class { background: #1b1b1b; color: #fff; }
+  .th-rank { font-size: 0.9rem; font-weight: 700; padding: 6px 0; border-bottom: 1px solid #ccc; background: #fafafa; color: #555; }
+  
+  .col-digit { font-size: 2rem; font-weight: 800; padding: 12px 0; height: 60px; }
+  
+  /* Ligne de résultat */
+  .result-row td {
+    border-top: 3px solid #333; /* Barre d'opération */
+    background: #f9fff9;
+  }
+  
+  .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); }
+  .bg-blue-tint  { background-color: rgba(64, 196, 255, 0.08); }
+  .bg-red-tint   { background-color: rgba(229, 57, 53, 0.08); }
+  .text-green { color: var(--color-green); }
+  .text-blue { color: var(--color-blue); }
+  .text-red { color: var(--color-red); }
+  .text-black { color: #000; }
 
+  /* Overlay */
   .overlay{
     position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     font-size:8rem;font-weight:900;color:white;text-shadow:0 0 30px rgba(0,0,0,.7);
-    pointer-events:none;opacity:0;transition:opacity .2s ease;
+    pointer-events:none;opacity:0;transition:opacity .2s ease; z-index: 100;
   }
   .overlay.show{opacity:1}
   .overlay.ok{color:var(--ok)}
   .overlay.err{color:var(--err)}
+
 </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button class="btn" id="newOps">Nouvelles opérations</button>
-        <button class="btn secondary" id="reset">Remise à zéro</button>
+  <div class="app" id="appContainer">
+    
+    <div class="toolbar">
+      <!-- Groupe 1: Taille & Style -->
+      <div class="control-group">
+        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
+        <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨</button>
+        <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜</button>
+        <button class="btn toggle" id="btnMarker" title="Afficher/Masquer Repère visuel (5)">⚫</button>
+        <button class="btn toggle" id="btnTable" title="Afficher/Masquer Tableau de Numération">📊</button>
       </div>
-      <div class="score">
-        <span class="good">✅ : <span id="goodCount">0</span></span>
-        <span class="bad">❌ : <span id="badCount">0</span></span>
+
+      <div class="separator"></div>
+
+      <!-- Groupe 2: Valeur (Toggle) -->
+      <div class="control-group">
+        <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Groupe 3: Actions + Score -->
+      <div class="control-group">
+        <button class="btn" id="newOps" title="Générer un nouveau calcul">🎲 Nouveau</button>
+        
+        <!-- Bouton Reset à gauche du score -->
+        <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
+        
+        <!-- Score intégré simple -->
+        <div class="score-display">
+          <span class="score-item good">✅ <span id="goodCount">0</span></span>
+          <span class="score-item bad">❌ <span id="badCount">0</span></span>
+        </div>
       </div>
     </div>
 
-    <div class="exercise">
-      <div class="row">
-        <div class="select">
-          <label for="count">Nb d’opérations :</label>
-          <select id="count">
-            <option>3</option><option selected>5</option><option>6</option><option>7</option><option>8</option>
-          </select>
+    <!-- Zone Principale -->
+    <div class="main-area">
+      
+      <!-- Colonne Gauche : Boulier & Params -->
+      <div class="abacus-column">
+        
+        <!-- Panneau Paramètres & Enoncé -->
+        <div class="exercise-panel">
+          <div class="params-row">
+            <label>Opérations :
+              <select id="opCount">
+                <option selected>2</option><option>3</option><option>4</option><option>5</option>
+              </select>
+            </label>
+            <label>Max :
+              <select id="opStep">
+                <option value="10">10</option>
+                <option value="100" selected>100</option>
+                <option value="1000">1000</option>
+                <option value="5000">Max</option>
+              </select>
+            </label>
+            <label><input type="radio" name="opMode" value="add" checked> +</label>
+            <label><input type="radio" name="opMode" value="mixed"> ±</label>
+          </div>
+          
+          <!-- Enoncé Graphique -->
+          <div class="ops-display" id="opsDisplay">
+            <!-- Généré par JS -->
+          </div>
+          
+          <div class="answer-row">
+            <input type="number" id="userAnswer" class="answer-input" placeholder="?" inputmode="numeric">
+            <!-- Bouton Vérifier -->
+            <button class="btn check-btn" id="actionBtn" title="Valider">Vérifier</button>
+          </div>
+          
+          <!-- Feedback Texte masqué, on utilise l'overlay -->
+          <div class="feedback" id="feedback"></div>
         </div>
-        <div class="select">
-          <label for="maxStep">Pas max :</label>
-          <select id="maxStep">
-            <option value="10">10</option>
-            <option value="50">50</option>
-            <option value="100" selected>100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-            <option value="1000">1000</option>
-            <option value="2000">2000</option>
-          </select>
-        </div>
-        <div class="radio-group">
-          <strong>Type :</strong>
-          <label><input type="radio" name="mode" value="add" checked> Additions</label>
-          <label><input type="radio" name="mode" value="mixed"> Mélange + / −</label>
-        </div>
-        <div class="answer">
-          <label for="typed">Réponse :</label>
-          <input id="typed" type="number" min="0" max="9999" inputmode="numeric" placeholder="0–9999" />
-          <button class="btn" id="check">Vérifier</button>
-        </div>
-      </div>
-      <div class="ops" id="ops">—</div>
-      <div class="feedback" id="feedback"></div>
-    </div>
 
-    <div class="abacus-wrapper">
-      <div class="labels">
-        <div>1</div><div>10</div><div>100</div><div>1000</div>
+        <div class="abacus-wrapper">
+          <div class="labels" id="labelsContainer"></div>
+          <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
+        </div>
       </div>
-      <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
+
+      <!-- Colonne Droite : Tableau Montessori -->
+      <div class="table-column" id="tableColumn">
+        <div id="tableContainer"></div>
+      </div>
+
     </div>
   </div>
 
@@ -179,153 +453,541 @@
 
 <script>
 (function(){
-  const rows=4, N=10, values=[1,10,100,1000];
-  const abacus=document.getElementById('abacus');
-  const newOpsBtn=document.getElementById('newOps');
-  const resetBtn=document.getElementById('reset');
-  const checkBtn=document.getElementById('check');
-  const typedInput=document.getElementById('typed');
-  const countSel=document.getElementById('count');
-  const maxStepSel=document.getElementById('maxStep');
-  const modeRadios=[...document.querySelectorAll('input[name="mode"]')];
+  const N = 10;
+  const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
+  const fullColors = [
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Unités
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Mille
+    'var(--color-green)'  // Million
+  ];
 
-  const opsEl=document.getElementById('ops');
-  const feedback=document.getElementById('feedback');
-  const goodEl=document.getElementById('goodCount');
-  const badEl=document.getElementById('badCount');
-  const overlay=document.getElementById('overlay');
+  const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
 
-  const state=Array.from({length:rows},()=>0);
-  let good=0,bad=0;
-  let advancing=false,scored=false;
-  let opsList=[], target=0;
+  let currentRows = 4;
+  let state = [];
+  
+  // Options Affichage
+  let useColors = true;
+  let useGroups = true;
+  let useMarkers = false;
+  let showTable = false; 
+  let showBeadValues = false; 
 
-  /* --- Construction du boulier --- */
-  const rowEls=[];
-  for(let r=0;r<rows;r++){
-    const row=el('div','row-line r'+r);
-    row.dataset.row=r;
-    row.appendChild(el('div','rod'));
-    for(let j=1;j<=N;j++){
-      const bead=el('div','bead'); bead.dataset.index=j;
-      bead.addEventListener('click',()=>onBeadClick(r,j));
-      row.appendChild(bead);
-    }
-    abacus.appendChild(row); rowEls.push(row);
-  }
+  // Variables Jeu
+  let targetValue = 0;
+  let currentOpsList = [];
+  let goodCount = 0;
+  let badCount = 0;
+  let isSolved = false; 
+  let lastResultCorrect = false;
 
-  function onBeadClick(r,j){
-    if(advancing) return;
-    const c=state[r], left=N-c;
-    state[r]=(j<=left)?(N-j+1):(N-j);
-    state[r]=clamp(state[r],0,N);
-    layoutRow(r);
-  }
-  function layoutRow(r){
-    const row=rowEls[r], c=state[r];
-    const size=26, gap=6, pad=10;
-    const leftStart=pad+size/2, rightStart=row.clientWidth-pad-size/2;
-    [...row.querySelectorAll('.bead')].forEach(b=>{
-      const j=+b.dataset.index;
-      const x=(j<=N-c) ? leftStart+(j-1)*(size+gap) : rightStart-(N-j)*(size+gap);
-      b.style.left = x+"px";
-    });
-  }
-  function layoutAll(){ for(let r=0;r<rows;r++) layoutRow(r); }
-  function currentTotal(){ return state.reduce((s,c,r)=> s + c*values[r], 0); }
-  function resetAbacus(){ state.fill(0); layoutAll(); }
+  const appContainer = document.getElementById('appContainer');
+  const abacusEl = document.getElementById('abacus');
+  const labelsEl = document.getElementById('labelsContainer');
+  const tableContainer = document.getElementById('tableContainer');
+  
+  const resetBtn = document.getElementById('reset');
+  const btnColor = document.getElementById('btnColor');
+  const btnGroup = document.getElementById('btnGroup');
+  const btnMarker = document.getElementById('btnMarker');
+  const btnTable = document.getElementById('btnTable');
+  const btnSize = document.getElementById('btnSize');
+  const btnLabels = document.getElementById('btnLabels');
+  
+  // Jeu
+  const newOpsBtn = document.getElementById('newOps');
+  const actionBtn = document.getElementById('actionBtn'); // Vérifier/Suivant
+  const opsDisplay = document.getElementById('opsDisplay');
+  const userAnswer = document.getElementById('userAnswer');
+  const feedbackEl = document.getElementById('feedback');
+  const goodEl = document.getElementById('goodCount');
+  const badEl = document.getElementById('badCount');
+  const overlay = document.getElementById('overlay');
+  
+  const opCountSel = document.getElementById('opCount');
+  const opStepSel = document.getElementById('opStep');
+  const opModeRadios = document.querySelectorAll('input[name="opMode"]');
 
-  /* --- Génération d'énoncé --- */
-  function randomInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function init(){
+    updateStructure();
+    generateNewOps();
 
-  function generateOps(count, mode, maxStep){
-    let running=0; const list=[];
-    for(let k=0;k<count;k++){
-      let sign=+1;
-      if(mode==='mixed'){
-        if(running<=200) sign=+1;
-        else if(running>=9800) sign=-1;
-        else sign = Math.random()<0.5?+1:-1;
-      }else{
-        sign=+1;
+    btnSize.addEventListener('click', () => {
+      if(currentRows === 4) {
+        currentRows = 7;
+        btnSize.classList.add('active'); 
+        btnSize.title = "Passer au petit boulier";
+      } else {
+        currentRows = 4;
+        btnSize.classList.remove('active');
+        btnSize.title = "Passer au grand boulier";
       }
+      updateStructure();
+      generateNewOps();
+    });
 
-      const upCap  = Math.min(maxStep, 9999 - running);
-      const dnCap  = Math.min(maxStep, running);
-      const step = (sign>0)
-        ? randomInt(1, Math.max(1, upCap))
-        : randomInt(1, Math.max(1, dnCap));
+    btnColor.addEventListener('click', () => {
+      useColors = !useColors;
+      updateToggleButton(btnColor, useColors);
+      renderOpsDisplay(); 
+      renderTable(); 
+    });
 
-      running += sign*step;
-      list.push(sign*step);
+    btnGroup.addEventListener('click', () => {
+      useGroups = !useGroups;
+      updateToggleButton(btnGroup, useGroups);
+      renderOpsDisplay(); 
+    });
+
+    btnMarker.addEventListener('click', () => {
+      useMarkers = !useMarkers;
+      updateToggleButton(btnMarker, useMarkers);
+      updateBeadMarkers(); 
+    });
+
+    // Toggle Valeur
+    btnLabels.addEventListener('click', () => {
+      showBeadValues = !showBeadValues;
+      updateToggleButton(btnLabels, showBeadValues);
+      updateLabelsText(); 
+      updateBeadText();   
+    });
+
+    btnTable.addEventListener('click', () => {
+      showTable = !showTable;
+      updateToggleButton(btnTable, showTable);
+      if(showTable){
+        appContainer.classList.add('show-table');
+        renderTable();
+      } else {
+        appContainer.classList.remove('show-table');
+      }
+      setTimeout(() => layoutAll(), 400); 
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      state.fill(0);
+      layoutAll();
+      renderTotal(); 
+    });
+
+    newOpsBtn.addEventListener('click', () => {
+        newOpsBtn.classList.add('active');
+        setTimeout(()=>newOpsBtn.classList.remove('active'), 200);
+        generateNewOps();
+    });
+
+    opCountSel.addEventListener('change', generateNewOps);
+    opStepSel.addEventListener('change', generateNewOps);
+    opModeRadios.forEach(r => r.addEventListener('change', generateNewOps));
+
+    actionBtn.addEventListener('click', handleAction); 
+    userAnswer.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') handleAction();
+    });
+
+    window.addEventListener('resize', ()=> setTimeout(layoutAll, 50));
+  }
+
+  function updateToggleButton(btn, active){
+    if(active) btn.classList.add('active'); else btn.classList.remove('active');
+  }
+
+  // --- MOTEUR DE JEU ---
+  function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function generateNewOps(){
+    const count = parseInt(opCountSel.value);
+    const maxStep = parseInt(opStepSel.value);
+    let mode = 'add';
+    opModeRadios.forEach(r => { if(r.checked) mode = r.value; });
+
+    const globalMax = (currentRows === 4) ? 9999 : 9999999;
+    
+    let current = 0;
+    const ops = [];
+    let valid = false;
+    let tries = 0;
+
+    while(!valid && tries < 100) {
+        current = 0;
+        ops.length = 0;
+        valid = true;
+        
+        for(let i=0; i<count; i++){
+            let sign = 1;
+            if(mode === 'mixed') {
+                if(current < maxStep) sign = 1; 
+                else sign = Math.random() < 0.5 ? 1 : -1;
+            }
+            let stepMax = maxStep;
+            if(sign === 1) stepMax = Math.min(maxStep, globalMax - current);
+            else stepMax = Math.min(maxStep, current);
+            if(stepMax < 1) stepMax = 1; 
+            
+            const val = randomInt(1, stepMax);
+            current += sign * val;
+            ops.push(sign * val);
+        }
+        if(current <= 0 || current > globalMax) valid = false;
+        tries++;
     }
-    return { list, result: running };
+
+    targetValue = current;
+    currentOpsList = ops; 
+    lastResultCorrect = false;
+    isSolved = false;
+    
+    // Reset UI pour "Vérifier"
+    actionBtn.textContent = "Vérifier";
+    actionBtn.classList.remove('success', 'error'); 
+    userAnswer.disabled = false;
+    userAnswer.focus();
+    
+    renderOpsDisplay();
+    
+    state.fill(0);
+    layoutAll();
+    renderTotal();
+    renderTable();
+    
+    feedbackEl.textContent = '';
+    userAnswer.value = '';
   }
 
-  function formatOps(list){
-    return list.map(v => (v>=0?'+':'−') + Math.abs(v)).join('  ');
+  // --- RENDU ENONCÉ ---
+  function renderOpsDisplay() {
+    if(!currentOpsList || currentOpsList.length === 0) return;
+    let html = "";
+    currentOpsList.forEach((val, index) => {
+        if(index > 0 || val < 0) {
+            const sign = val >= 0 ? "+" : "−";
+            html += `<span class="op-part" style="font-size:1.5rem; margin:0 5px;">${sign}</span>`;
+        }
+        const absVal = Math.abs(val);
+        html += formatNumberHTML(absVal);
+    });
+    html += `<span class="op-part" style="font-size:1.5rem; margin:0 5px;">=</span>`;
+    html += `<span class="op-part" style="font-size:1.5rem;">?</span>`;
+    opsDisplay.innerHTML = html;
   }
 
-  function newSet(){
-    const count=+countSel.value;
-    const mode=modeRadios.find(r=>r.checked).value;
-    const maxStep=+maxStepSel.value;
-
-    let gen;
-    for(let tries=0; tries<60; tries++){
-      gen = generateOps(count, mode, maxStep);
-      if(gen.result>=0 && gen.result<=9999 && gen.result!==0) break;
+  function formatNumberHTML(val) {
+    const str = val.toString();
+    const len = str.length;
+    let html = `<div class="op-number">`;
+    let currentGroupIndex = -1;
+    for(let i=0; i<len; i++){
+      const digit = str[i];
+      const power = len - 1 - i;
+      const groupIndex = Math.floor(power / 3);
+      let bgClass = '';
+      if(useGroups){
+        if(groupIndex === 0) bgClass = 'bg-white with-bg';
+        else if(groupIndex === 1) bgClass = 'bg-gray with-bg';
+        else bgClass = 'bg-black with-bg';
+      } else { bgClass = 'no-bg'; }
+      
+      let textColor = '';
+      if(useColors){
+        const colorIndex = power % 3;
+        if(colorIndex === 0) textColor = 'var(--color-green)';
+        else if(colorIndex === 1) textColor = 'var(--color-blue)';
+        else textColor = 'var(--color-red)';
+      } else {
+        if(useGroups && groupIndex >= 2) textColor = '#f0f0f0'; else textColor = '#1b1b1b';
+      }
+      
+      if(groupIndex !== currentGroupIndex){
+        if(currentGroupIndex !== -1) html += `</div>`;
+        html += `<div class="digit-group ${bgClass}">`;
+        currentGroupIndex = groupIndex;
+      }
+      html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
     }
-    opsList=gen.list; target=gen.result;
-    opsEl.textContent = formatOps(opsList);
-
-    resetAbacus();
-    typedInput.value='';
-    feedback.textContent='';
-    feedback.className='feedback';
-    advancing=false; scored=false;
+    if(currentGroupIndex !== -1) html += `</div>`;
+    html += `</div>`;
+    return html;
   }
 
-  /* --- Feedback central --- */
   function showOverlay(ok){
     overlay.textContent = ok ? "✅" : "❌";
-    overlay.className = "overlay show " + (ok?"ok":"err");
-    setTimeout(()=> overlay.className="overlay", 1000);
+    overlay.className = "overlay show " + (ok ? "ok" : "err");
+    setTimeout(() => overlay.className = "overlay", 1000);
   }
 
-  /* --- Interactions --- */
-  newOpsBtn.addEventListener('click', newSet);
-  resetBtn.addEventListener('click', ()=>{ resetAbacus(); feedback.textContent=''; feedback.className='feedback'; });
-
-  checkBtn.addEventListener('click', ()=>{
-    if(advancing) return;
-    if(!opsList.length){ feedback.textContent='Clique sur “Nouvelles opérations”.'; feedback.className='feedback err'; return; }
-    if(!typedInput.value){ feedback.textContent='Écris ta réponse.'; feedback.className='feedback err'; return; }
-
-    const valAbacus=currentTotal();
-    const valTyped=+typedInput.value;
-    const ok=(valAbacus===target)&&(valTyped===target)&&(valAbacus===valTyped);
-
-    if(ok){
-      if(!scored){ good++; goodEl.textContent=good; scored=true; }
-      feedback.textContent='Oui, bonne réponse ✅'; feedback.className='feedback ok';
-      showOverlay(true);
-      advancing=true; setTimeout(newSet, 1000);
-    }else{
-      bad++; badEl.textContent=bad;
-      feedback.textContent='Non, mauvaise réponse ❌'; feedback.className='feedback err';
-      showOverlay(false);
+  function handleAction(){
+    if(isSolved) {
+        // Mode "Suivant"
+        generateNewOps();
+    } else {
+        // Mode "Vérifier"
+        checkAnswer();
     }
-  });
+  }
 
-  window.addEventListener('resize', layoutAll);
+  function checkAnswer(){
+    const valAbacus = state.reduce((s, c, r) => s + c * fullMultipliers[r], 0);
+    let valInput = userAnswer.value.trim() === "" ? null : parseInt(userAnswer.value);
+    
+    let isCorrect = false;
+    if (valAbacus === targetValue) isCorrect = true;
+    if (valInput !== null && valInput === targetValue) isCorrect = true;
 
-  function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
-  function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+    if(isCorrect){
+        // C'est Gagné !
+        goodCount++; goodEl.textContent = goodCount;
+        showOverlay(true);
+        lastResultCorrect = true;
+        renderTable(); 
+        
+        // Changement d'état du bouton : Vérifier -> Suivant (Vert)
+        isSolved = true;
+        actionBtn.textContent = "Calcul suivant ➡️";
+        actionBtn.classList.add('success'); 
+        userAnswer.disabled = true; 
+        
+    } else {
+        // C'est Perdu !
+        badCount++; badEl.textContent = badCount;
+        
+        // Flash rouge du bouton
+        actionBtn.classList.add('error');
+        setTimeout(() => actionBtn.classList.remove('error'), 400); 
+        
+        showOverlay(false);
+    }
+  }
 
-  /* Init */
-  layoutAll();
-  newSet();
+  // --- LOGIQUE VISUELLE ---
+
+  function updateStructure(){
+    state = Array.from({length: currentRows}, () => 0);
+    abacusEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+    for(let r=0; r<currentRows; r++) createRow(r);
+    updateLabelsText();
+    updateBeadText();
+    layoutAll();
+    renderTotal(); 
+    renderTable();
+  }
+
+  function createRow(r){
+    const isStartOfGroup = (r === 3 || r === 6);
+    const row = document.createElement('div');
+    row.className = 'row';
+    if(isStartOfGroup) row.classList.add('gap-top');
+    const rod = document.createElement('div');
+    rod.className = 'rod';
+    row.appendChild(rod);
+
+    for(let j=1; j<=N; j++){
+      const bead = document.createElement('div');
+      bead.className = 'bead';
+      bead.style.background = fullColors[r];
+      bead.dataset.index = j;
+      if (useMarkers && j > 5) bead.classList.add('marked');
+      bead.addEventListener('click', () => onBeadClick(r, j));
+      row.appendChild(bead);
+    }
+    abacusEl.appendChild(row);
+
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'label-item';
+    if(r < 3) labelDiv.classList.add('label-white'); 
+    else if (r < 6) labelDiv.classList.add('label-gray');
+    else labelDiv.classList.add('label-black'); 
+
+    if(r === 0) labelDiv.classList.add('label-top-rounded');
+    if(r === 2) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 3) labelDiv.classList.add('label-top-rounded');
+    if(r === 5) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
+
+    if(isStartOfGroup) labelDiv.classList.add('gap-top');
+    labelsEl.appendChild(labelDiv);
+  }
+
+  function updateBeadMarkers() {
+    const allBeads = document.querySelectorAll('.bead');
+    allBeads.forEach(bead => {
+      const j = parseInt(bead.dataset.index);
+      if (j > 5) {
+        if (useMarkers) bead.classList.add('marked');
+        else bead.classList.remove('marked');
+      }
+    });
+  }
+
+  function updateBeadText() {
+    const rows = abacusEl.children;
+    const displayValues = ["1", "10", "100", "1 000"];
+    for(let r=0; r<rows.length; r++){
+      const row = rows[r];
+      const beads = row.querySelectorAll('.bead');
+      let text = "";
+      if(showBeadValues && r < 4) text = displayValues[r];
+      beads.forEach(bead => {
+        bead.textContent = text;
+        if(text !== "") bead.classList.add('has-text');
+        else bead.classList.remove('has-text');
+      });
+    }
+  }
+
+  function updateLabelsText(){
+    const labelDivs = labelsEl.querySelectorAll('.label-item');
+    labelDivs.forEach((div, i) => {
+      if(!showBeadValues) div.textContent = defaultLabels[i] || "";
+      else div.textContent = ""; 
+    });
+  }
+
+  function onBeadClick(r, j){
+    const currentCount = state[r];
+    if (j > currentCount) state[r] = j;
+    else state[r] = j - 1;
+    layoutRow(r);
+    renderTotal();
+    renderTable();
+  }
+
+  function layoutRow(r){
+    const row = abacusEl.children[r];
+    if(!row) return;
+    const beads = row.querySelectorAll('.bead');
+    const count = state[r];
+    const rowWidth = row.clientWidth;
+    const beadSize = 28; 
+    const gap = 0;       
+    const padding = 0;   
+    const leftStart = padding + beadSize/2;
+    const rightEnd = rowWidth - padding - beadSize/2;
+
+    beads.forEach(b => {
+      const idx = parseInt(b.dataset.index);
+      if (idx <= count) b.style.left = leftStart + (idx - 1) * (beadSize + gap) + 'px';
+      else {
+        const offsetFromEnd = (N - idx) * (beadSize + gap);
+        b.style.left = rightEnd - offsetFromEnd + 'px';
+      }
+    });
+  }
+
+  function layoutAll(){
+    for(let r=0; r<currentRows; r++) layoutRow(r);
+  }
+
+  function renderTable(){
+    if(!showTable) {
+      tableContainer.innerHTML = "";
+      return;
+    }
+    
+    const groups = [];
+    // Colonne pour le signe opératoire (+/-)
+    groups.push({ name: "", class: "th-empty", cols: [{label:"", idx: -99, width: "30px"}] });
+
+    if(currentRows > 6) {
+      groups.push({ name: "Millions", class: "million-class", cols: [{label:"1", idx:6}] });
+    }
+    const milleCols = [];
+    if(currentRows > 5) milleCols.push({label:"100", idx:5});
+    if(currentRows > 4) milleCols.push({label:"10", idx:4});
+    milleCols.push({label:"1", idx:3});
+    groups.push({ name: "Mille", class: "thousand-class", cols: milleCols });
+    groups.push({ name: "Unités Simples", class: "unit-class", cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}] });
+
+    let headerRow1 = ""; let headerRow2 = "";
+    groups.forEach(group => {
+      if(group.class === 'th-empty') {
+          headerRow1 += `<th style="border:none; width:30px;"></th>`;
+          headerRow2 += `<th style="border:none;"></th>`;
+      } else {
+          headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`;
+          group.cols.forEach(col => headerRow2 += `<th class="th-rank">${col.label}</th>`);
+      }
+    });
+
+    let bodyRows = "";
+    const allCols = [];
+    groups.forEach(g => { if(g.class !== 'th-empty') allCols.push(...g.cols); });
+    
+    currentOpsList.forEach((opVal, index) => {
+        let absVal = Math.abs(opVal);
+        let valStr = absVal.toString();
+        let signSymbol = "";
+        if (index > 0) {
+            signSymbol = (opVal < 0) ? "−" : "+";
+        }
+        
+        let rowHtml = "";
+        rowHtml += `<td style="font-size:1.5rem; font-weight:bold; color:#555; border:none; text-align:center;">${signSymbol}</td>`;
+
+        allCols.forEach((col) => {
+            let p = col.idx;
+            let digit = "";
+            if (absVal >= Math.pow(10, p)) {
+                digit = Math.floor(absVal / Math.pow(10, p)) % 10;
+                if (p >= valStr.length) digit = ""; 
+            } else digit = "";
+            
+            let colorClass = "text-black";
+            if(useColors && digit !== ""){
+                let mod = p % 3;
+                if(mod === 0) colorClass = "text-green";
+                else if(mod === 1) colorClass = "text-blue";
+                else colorClass = "text-red";
+            }
+            rowHtml += `<td class="col-digit ${colorClass}">${digit}</td>`;
+        });
+        bodyRows += `<tr>${rowHtml}</tr>`;
+    });
+    
+    if(lastResultCorrect) {
+        let resStr = Math.abs(targetValue).toString();
+        let rowHtml = `<td style="border-top:3px solid #333; border-right:none;">=</td>`;
+        allCols.forEach(col => {
+            let p = col.idx;
+            let digit = "";
+             if (Math.abs(targetValue) >= Math.pow(10, p)) {
+                 digit = Math.floor(Math.abs(targetValue) / Math.pow(10, p)) % 10;
+                 if (p >= resStr.length) digit = ""; 
+             } else digit = "";
+             
+             let colorClass = "text-black";
+             if(useColors && digit !== "") {
+                 let mod = p % 3;
+                 if(mod === 0) colorClass = "text-green";
+                 else if(mod === 1) colorClass = "text-blue";
+                 else colorClass = "text-red";
+             }
+             rowHtml += `<td class="col-digit ${colorClass}">${digit}</td>`;
+        });
+        bodyRows += `<tr class="result-row">${rowHtml}</tr>`;
+    } else {
+        let rowHtml = `<td style="border-top:3px solid #333; border-right:none;"></td>`;
+        allCols.forEach(col => rowHtml += `<td></td>`);
+        bodyRows += `<tr class="result-row">${rowHtml}</tr>`;
+    }
+
+    tableContainer.innerHTML = `
+      <table class="montessori-table">
+        <thead><tr>${headerRow1}</tr><tr>${headerRow2}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderTotal(){
+    let total = 0;
+    for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
+    if(total === 0) resetBtn.classList.add('active');
+    else resetBtn.classList.remove('active');
+  }
+
+  init();
 })();
 </script>
 </body>
