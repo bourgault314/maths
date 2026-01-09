@@ -612,32 +612,13 @@
     renderTotal();
   }
 
-  // --- RENDU TABLEAU (Amélioré: Pas de zéros non significatifs) ---
+  // --- RENDU TABLEAU (Amélioré: Pas de zéros non significatifs + Filtre Colonnes) ---
   function renderTable(){
     if(!showTable) {
       tableContainer.innerHTML = "";
       return;
     }
 
-    // On prépare toutes les colonnes possibles pour le tableau
-    const allCols = [
-      {label:"1", idx:6, group:"Millions", gClass:"million-class"}, // 1M
-      {label:"100", idx:5, group:"Mille", gClass:"thousand-class"}, // 100k
-      {label:"10", idx:4, group:"Mille", gClass:"thousand-class"},  // 10k
-      {label:"1", idx:3, group:"Mille", gClass:"thousand-class"},   // 1k
-      {label:"100", idx:2, group:"Unités Simples", gClass:"unit-class"}, // 100
-      {label:"10", idx:1, group:"Unités Simples", gClass:"unit-class"},  // 10
-      {label:"1", idx:0, group:"Unités Simples", gClass:"unit-class"}    // 1
-    ];
-
-    // On filtre les colonnes qui ne servent à rien selon la taille (Petit/Grand)
-    // Petit: max idx=3. Grand: max idx=6.
-    // Cependant la consigne "diviser l'espace en 3" suggère de garder la structure visuelle
-    // même si vide. Mais ici, on va adapter aux données affichables.
-    // En fait, pour le tableau Montessori, il vaut mieux afficher la structure complète pertinente.
-    // Pour "Petit", on affiche jusqu'à Millier. Pour "Grand" jusqu'à Million.
-    
-    // Découpage en groupes pour l'affichage HTML
     const groups = [];
     
     // Si Grand, on ajoute Millions
@@ -648,10 +629,15 @@
       });
     }
     
-    // Mille
+    // Mille (Filtrage Petit/Grand)
+    const milleCols = [];
+    if(currentRows > 5) milleCols.push({label:"100", idx:5}); // 100k
+    if(currentRows > 4) milleCols.push({label:"10", idx:4});  // 10k
+    milleCols.push({label:"1", idx:3});                       // 1k (Toujours)
+    
     groups.push({
       name: "Mille", class: "thousand-class", 
-      cols: [{label:"100", idx:5}, {label:"10", idx:4}, {label:"1", idx:3}]
+      cols: milleCols
     });
     
     // Unités
@@ -660,40 +646,25 @@
       cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}]
     });
 
-    // 1. Calculer la valeur totale pour savoir quand commencer à afficher
-    // On parcourt de gauche à droite (plus fort poids vers plus faible)
-    // Pour déterminer "hasStarted".
+    // Calcul des valeurs à afficher (zéros non significatifs)
     let hasStarted = false;
-    let totalVal = 0;
-    // On calcule le max index possible
     const maxIdx = currentRows - 1;
-    
-    // On va stocker les valeurs à afficher dans un map pour faciliter l'accès
     const displayValues = {};
     
-    // On itère de maxIdx à 0
     for(let i = maxIdx; i >= 0; i--) {
         const val = state[i];
         if(val > 0) hasStarted = true;
-        
-        if(hasStarted || i === 0) { // On affiche toujours le dernier 0 si tout est vide
-            displayValues[i] = val;
-        } else {
-            displayValues[i] = ""; // Vide
-        }
-        totalVal += val;
+        if(hasStarted || i === 0) displayValues[i] = val;
+        else displayValues[i] = "";
     }
     
-    // Si total est 0, seul l'index 0 doit avoir "0". 
-    // La boucle ci-dessus gère ça (i===0).
-    
-    // Construction HTML
     let headerRow1 = ""; 
     let headerRow2 = ""; 
     let valueRow = "";   
     
     groups.forEach(group => {
-      headerRow1 += `<th class="th-class ${group.class}" colspan="3">${group.name}</th>`;
+      // Entête Classe (colspan dynamique selon nb colonnes réelles)
+      headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`;
       
       group.cols.forEach(col => {
         headerRow2 += `<th class="th-rank">${col.label}</th>`;
@@ -701,16 +672,10 @@
         let displayVal = "";
         let colorClass = "text-black";
         
-        // Si la colonne existe dans le boulier actuel
         if(col.idx !== -1 && col.idx < currentRows) {
-             // Récupérer la valeur pré-calculée (avec gestion du vide)
              const val = displayValues[col.idx];
+             if(val !== "") displayVal = revealed ? val : "?";
              
-             if(val !== "") {
-                 displayVal = revealed ? val : "?";
-             }
-             
-             // Couleur
              if(useColors && displayVal !== ""){
                 if(col.label === "1") colorClass = "text-green bg-green-tint";
                 else if(col.label === "10") colorClass = "text-blue bg-blue-tint";
