@@ -38,11 +38,15 @@
     border: none; background: #444; color: white; padding: 8px 12px;
     border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
+    white-space: nowrap;
   }
   .btn.active { background: var(--accent); outline: 1px solid white; }
   
   .btn-eraser { background: #444; }
   .btn-eraser:active { background: #666; }
+  
+  /* Style spécifique pour le bouton de langue : plus large pour le texte */
+  #btn-lang { background: #333; border: 1px solid #555; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
 
   #main-container {
     position: relative; width: 100%; height: calc(100vh - 65px);
@@ -50,7 +54,6 @@
     justify-content: flex-start; overflow: hidden;
   }
 
-  /* CORRECTION : Suppression de la marge haute (était 65px) pour coller le boulier en haut et gagner de la place */
   #scaler {
     margin-top: 10px; 
     display: flex; flex-direction: column; align-items: center;
@@ -79,8 +82,9 @@
   .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
+  /* MODIFICATION CACHE : right: 0 (au lieu de -30px) pour commencer à l'intérieur du cadre */
   #cache-curtain {
-    position: absolute; right: -30px; top: 0; bottom: 0; width: 0;
+    position: absolute; right: 0; top: 0; bottom: 0; width: 0;
     background: #000; z-index: 25; border-left: 5px solid #444; 
     pointer-events: auto; display: none; cursor: ew-resize;
   }
@@ -120,11 +124,15 @@
 
 <div class="toolbar" id="top-bar">
   <div class="toolbar-group">
+    <button class="btn" id="btn-lang" onclick="toggleLang()">ENG</button>
+  </div>
+
+  <div class="toolbar-group">
     <input type="range" id="row-range" min="1" max="10" value="10">
     <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
   </div>
   <div class="toolbar-group">
-    <button class="btn" onclick="allTo(0)">0</button>
+    <button class="btn" id="btn-reset" onclick="allTo(0)" style="padding: 8px 15px;">Position de départ</button>
     <button class="btn" onclick="set50()">50</button>
     <button class="btn" onclick="allTo(10)">100</button>
   </div>
@@ -132,14 +140,14 @@
     <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
-    <button class="btn" onclick="toggleFullScreen()" title="Plein écran">⛶</button>
+    <button class="btn" id="btn-full" onclick="toggleFullScreen()" title="Plein écran">⛶</button>
   </div>
   <div class="toolbar-group" style="gap:10px">
     <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
     <div class="color-dot active" style="background:#0f6cf9" onclick="setCol('#0f6cf9', this)"></div>
     <div class="color-dot" style="background:#ffffff" onclick="setCol('#ffffff', this)"></div>
     <div class="color-dot" style="background:#f44336" onclick="setCol('#f44336', this)"></div>
-    <button class="btn btn-eraser" onclick="clearDraw()" title="Effacer tout">🧽</button>
+    <button class="btn btn-eraser" id="btn-eraser" onclick="clearDraw()" title="Effacer tout">🧽</button>
   </div>
 </div>
 
@@ -164,6 +172,30 @@
   
   let rowsCount = 10, showVal = false, isPen = false, isBlue = false, isCache = false, currentScale = 1;
   let penCol = '#0f6cf9', states = Array.from({length: 10}, () => 0); 
+  let currentLang = 'fr'; 
+
+  const i18n = {
+    fr: {
+      btnReset: "Position de départ",
+      btnColorBlue: "🔵 Bleu",
+      btnColorWhite: "⚪ Blanc",
+      btnCache: "🌑 Cache",
+      btnVal: "Valeur",
+      titleFull: "Plein écran",
+      titleEraser: "Effacer tout",
+      langLabel: "ENG" // MODIF: Texte court
+    },
+    en: {
+      btnReset: "Ready Position",
+      btnColorBlue: "🔵 Blue",
+      btnColorWhite: "⚪ White",
+      btnCache: "🌑 Cover",
+      btnVal: "Value",
+      titleFull: "Fullscreen",
+      titleEraser: "Clear all",
+      langLabel: "FR" // MODIF: Texte court
+    }
+  };
 
   const BEAD_W = 38, GAP = 0, FRAME_W = 820;
 
@@ -188,13 +220,13 @@
     }
     autoScale();
     updateBeads(false);
+    updateLanguageUI(); 
   }
 
   function autoScale() {
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
     
-    // CORRECTION : On réduit la marge de sécurité haute pour permettre au boulier de monter et grossir
     const margin = isLand ? 20 : 30; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
     const rowH = isLand ? 45 : 56;
@@ -237,15 +269,27 @@
     const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
-    if (beadIdx >= states[rowIdx]) { if (currentPos < (FRAME_W/2) + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
-    else { if (currentPos > (FRAME_W/2) - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    
+    const targetLeft = beadIdx * (BEAD_W + GAP);
+    const targetRight = FRAME_W - (10 - beadIdx) * (BEAD_W + GAP);
+    
+    // MODIFICATION 2 : Zone d'acceptation réduite à 1 diamètre de bille
+    const snapMargin = BEAD_W * 1; 
+
+    if (beadIdx >= states[rowIdx]) { 
+      if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1;
+    }
+    else { 
+      if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx;
+    }
+    
     activeDrag = null; updateBeads(true);
   });
 
   function updateBeads(animate) {
     document.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
-        b.style.transition = animate ? 'left 0.2s ease-out' : 'none';
+        b.style.transition = animate ? 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' : 'none'; 
         b.style.left = (i < states[r]) ? (i * (BEAD_W + GAP)) + "px" : (FRAME_W - (10 - i) * (BEAD_W + GAP)) + "px";
       });
     });
@@ -253,8 +297,18 @@
   }
 
   function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
-  function startCacheDrag(e) { e.preventDefault(); cache.setPointerCapture(e.pointerId);
-    cache.onpointermove = (ev) => { const rect = frame.getBoundingClientRect(); cache.style.width = Math.max(0, Math.min(FRAME_W + 30, (rect.right - ev.clientX)/currentScale + 30)) + "px"; };
+  
+  // MODIFICATION LOGIQUE CACHE POUR S'ADAPTER AU NOUVEAU STYLE (right: 0)
+  function startCacheDrag(e) { 
+    e.preventDefault(); 
+    cache.setPointerCapture(e.pointerId);
+    cache.onpointermove = (ev) => { 
+        const rect = frame.getBoundingClientRect(); 
+        // Le calcul change car l'ancre est maintenant à 0 (intérieur du cadre)
+        // On ne rajoute plus 30px pour couvrir le bois, on reste dans le cadre
+        let newW = (rect.right - 30 - ev.clientX) / currentScale; 
+        cache.style.width = Math.max(0, Math.min(FRAME_W, newW)) + "px"; 
+    };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
@@ -304,7 +358,32 @@
   function togglePen() { isPen = !isPen; canvas.classList.toggle('active', isPen); document.getElementById('btn-pen').classList.toggle('active', isPen); }
   function setCol(c, el) { penCol = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
   function clearDraw() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-  function toggleColorMode() { isBlue = !isBlue; document.getElementById('btn-color').textContent = isBlue ? "⚪ Blanc" : "🔵 Bleu"; document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue)); }
+  
+  function toggleLang() {
+    currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+    updateLanguageUI();
+  }
+
+  function updateLanguageUI() {
+    const t = i18n[currentLang];
+    document.getElementById('btn-lang').innerText = t.langLabel;
+    document.getElementById('btn-reset').innerText = t.btnReset;
+    document.getElementById('btn-cache').innerText = t.btnCache;
+    document.getElementById('btn-val').innerText = t.btnVal;
+    
+    const colBtn = document.getElementById('btn-color');
+    colBtn.textContent = isBlue ? t.btnColorWhite : t.btnColorBlue;
+
+    document.getElementById('btn-full').title = t.titleFull;
+    document.getElementById('btn-eraser').title = t.titleEraser;
+  }
+
+  function toggleColorMode() { 
+    isBlue = !isBlue; 
+    document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue));
+    const t = i18n[currentLang];
+    document.getElementById('btn-color').textContent = isBlue ? t.btnColorWhite : t.btnColorBlue;
+  }
 
   document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
   window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
