@@ -93,6 +93,22 @@
     .check-control:hover { background: #f1f5f9; border-color: var(--bag-b); }
     .check-control input { width: 14px; height: 14px; accent-color: var(--bag-b); }
     .check-control span { font-size: 11px; font-weight: 600; color: var(--ink); }
+
+    /* CONTROLES RV / CORRECTION */
+    .corr-group { display: flex; gap: 8px; align-items: stretch; }
+    .check-control-box { flex: 1; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 5px 8px; border-radius: 4px; border: 1px solid #e2e8f0; cursor: pointer; }
+    .check-control-box input { width: 14px; height: 14px; accent-color: var(--bag-b); }
+    .check-control-box span { font-size: 11px; font-weight: 600; color: var(--ink); }
+
+    .rv-btn { 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 11px; font-weight: 800; cursor: pointer; 
+        padding: 0 10px; border-radius: 4px; 
+        background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b;
+        transition: all 0.2s;
+    }
+    .rv-btn.active { background: var(--bag-b); color: white; border-color: var(--bag-b); }
+    .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
     .actions { padding: 15px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; }
     .btn { padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; transition: opacity 0.2s; }
@@ -105,6 +121,10 @@
     .page-inner { position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin); display: flex; flex-direction: column; transform-origin: top center; }
     .grid { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); gap: 8px; height: 100%; }
     
+    /* MIROIR POUR LE VERSO */
+    .grid-mirror { direction: rtl; }
+    .grid-mirror .card { direction: ltr; }
+
     .card { border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; position: relative; background: #fff; height: 100%; width: 100%; }
 
     .card-header { 
@@ -125,7 +145,6 @@
       align-items: stretch;
     }
 
-    
     /* BAR MODEL (diagramme en barres) */
     .bar-frame { border: 1px solid var(--ink); 
       border-radius: 10px; 
@@ -204,7 +223,7 @@
     .segment.lbl-a .seg-label { color: var(--bag-a); } 
     .segment.lbl-b .seg-label { color: var(--bag-b); } 
     .segment.lbl-c .seg-label { color: var(--bag-c); }
-.ans-box { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--ink); position: relative; }
+    .ans-box { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--ink); position: relative; }
     .ans-box:last-child { border-right: none; }
     
     .ans-label { font-size: 9px; text-transform: uppercase; font-weight: 800; text-align: center; padding: 2px; border-bottom: 1px solid #e5e7eb; color: #64748b; background: #f8fafc; }
@@ -219,6 +238,12 @@
     
     .hidden-ctrl { display: none !important; }
 
+    /* LABEL EN BAS DE PAGE */
+    .page-label {
+        position: absolute; bottom: -22px; left: 0; right: 0; text-align: center;
+        font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;
+    }
+
     @media print { 
       @page { size: A4; margin: 0; } 
       body { display: block; background: white; height: auto; overflow: visible; } 
@@ -230,6 +255,7 @@
       .card-header { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; border-bottom: 2px solid #000; }
       .given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
       .segment.given-val .seg-val, .bar-total.given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+      .page-label { display: none; }
     }
   </style>
 </head>
@@ -327,10 +353,14 @@
     </div>
 
     <div class="control-group">
-        <label class="check-control">
-            <input type="checkbox" id="showCorr" onchange="renderPages()">
-            <span>Afficher la Solution</span>
-        </label>
+        <div class="corr-group">
+            <label class="check-control-box">
+                <input type="checkbox" id="showCorr" onchange="toggleCorr()">
+                <span>Solution</span>
+            </label>
+            <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
+        </div>
+        <div style="font-size:10px; color:#64748b; margin-top:2px;">*RV = Inverse pour le Verso</div>
     </div>
 
     <div class="actions">
@@ -345,6 +375,7 @@
 <script>
 let state = [];
 const COLS = 2; const ROWS = 4; const ITEMS = COLS * ROWS;
+let isRVMode = false;
 
 const BAGS = [
     { id: 'A', name: 'noire', color: '#334155' },
@@ -373,19 +404,13 @@ function updateUI() {
         ctrlStruct.classList.add('hidden-ctrl');
     }
 
-    // Gestion du sélecteur d'indice et du mode Coup de Pouce
-    // Niv 1 : Pas de coup de pouce car c'est la réponse
-    // Niv 2 et 3 : Coup de pouce OK, mais pas de choix de boite (toutes identiques)
-    // Niv 4, 5, 6 : Tout OK
-    
     if (level === '1') {
         ctrlHint.classList.add('hidden-ctrl');
         optHint.classList.add('hidden-ctrl');
         optHint.style.display = "none";
-        // Si on passe au Niv 1 alors qu'on était en Hint, on repasse en Detective
         if (gameTypeSelect.value === 'hint') gameTypeSelect.value = 'detective';
     } else if (level === '2' || level === '3') {
-        ctrlHint.classList.add('hidden-ctrl'); // Pas de choix de couleur car identiques
+        ctrlHint.classList.add('hidden-ctrl'); 
         optHint.classList.remove('hidden-ctrl');
         optHint.style.display = "block";
     } else {
@@ -393,6 +418,28 @@ function updateUI() {
         optHint.classList.remove('hidden-ctrl');
         optHint.style.display = "block";
     }
+}
+
+function toggleCorr() {
+    const isCorr = document.getElementById('showCorr').checked;
+    const rvBtn = document.getElementById('btnRV');
+    
+    if(isCorr) {
+        rvBtn.classList.remove('disabled');
+    } else {
+        rvBtn.classList.add('disabled');
+        rvBtn.classList.remove('active');
+        isRVMode = false;
+    }
+    renderPages();
+}
+
+function toggleRV(btn) {
+    if(btn.classList.contains('disabled')) return;
+    isRVMode = !isRVMode;
+    if(isRVMode) btn.classList.add('active');
+    else btn.classList.remove('active');
+    renderPages();
 }
 
 function startGen() {
@@ -424,7 +471,7 @@ function startGen() {
   renderPages();
 }
 
-// --- NIV 1 : LE COMPLÉMENT (1 Boite) ---
+// --- GENERATION FUNCTIONS (Unchanged from original) ---
 function genLevel1(maxTotal, gameType) {
     const total = Math.floor(Math.random() * (maxTotal - 5)) + 5;
     const valA = Math.floor(Math.random() * (total - 2)) + 1;
@@ -450,21 +497,16 @@ function genLevel1(maxTotal, gameType) {
     };
 }
 
-// --- NIV 2 : L'ÉQUILIBRE (2 Boites Identiques) ---
 function genLevel2(maxTotal, gameType) {
     const valA = Math.floor(Math.random() * (maxTotal/3)) + 2;
     const visible = Math.floor(Math.random() * (maxTotal/3));
     const total = (valA * 2) + visible;
-    
     let givenVal = 'none';
     let header = "Les 2 boîtes contiennent le MÊME nombre de billes.";
 
-    // En Niv 2, Coup de Pouce = Donner la valeur d'une boite (donc A)
-    // Mais attention, l'utilisateur ne doit voir qu'une seule case remplie
     if(gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
         givenVal = 'A'; 
     }
-
     return {
         level: 2, gameType, givenVal,
         total, visible,
@@ -475,19 +517,16 @@ function genLevel2(maxTotal, gameType) {
     };
 }
 
-// --- NIV 3 : LA TRIADE (3 Boites Identiques) ---
 function genLevel3_Triade(maxTotal, gameType) {
     const valA = Math.floor(Math.random() * (maxTotal/4)) + 2;
     const visible = Math.floor(Math.random() * (maxTotal/4));
     const total = (valA * 3) + visible;
-    
     let givenVal = 'none';
     let header = "Les 3 boîtes contiennent le MÊME nombre de billes.";
 
     if(gameType === 'architect' || gameType === 'hint' || gameType === 'draw') {
         givenVal = 'A';
     }
-
     return {
         level: 3, gameType, givenVal,
         total, visible,
@@ -506,24 +545,20 @@ function genLevel3_Triade(maxTotal, gameType) {
     };
 }
 
-// --- UTILITAIRE : GESTION DES OPERATIONS ---
 function getOpSettings() {
     const uPlus = document.getElementById('chk_plus').checked;
     const uMinus = document.getElementById('chk_minus').checked;
     const uTimes = document.getElementById('chk_times').checked;
     const uDiv = document.getElementById('chk_div').checked;
-    
     let allowed = [];
     if(uPlus) allowed.push('plus');
     if(uMinus) allowed.push('minus');
     if(uTimes) allowed.push('times');
     if(uDiv) allowed.push('div');
-    
-    if(allowed.length === 0) allowed = ['plus']; // Fallback
+    if(allowed.length === 0) allowed = ['plus'];
     return allowed;
 }
 
-// --- NIV 4 : LE DUEL (2 Boites Différentes) ---
 function genLevel4_Duel(maxTotal, gameType, hintPref) {
     let allowedOps = getOpSettings();
     let c1 = BAGS[0]; let c2 = BAGS[1];
@@ -532,34 +567,24 @@ function genLevel4_Duel(maxTotal, gameType, hintPref) {
     let baseVal = Math.floor(Math.random() * (maxTotal/3)) + 2;
     let valSource = baseVal;
     let valTarget, text;
-
     let op = allowedOps[Math.floor(Math.random() * allowedOps.length)];
 
     if(op === 'times') {
-        // FOIS PLUS
-        let k = Math.floor(Math.random()*4)+2; 
-        valTarget = valSource * k;
+        let k = Math.floor(Math.random()*4)+2; valTarget = valSource * k;
         text = `La boîte ${c2.name} contient ${k} fois PLUS de billes que la boîte ${c1.name}.`;
     } else if (op === 'div') {
-        // FOIS MOINS
-        let k = Math.floor(Math.random()*4)+2; 
-        valTarget = valSource * k;
+        let k = Math.floor(Math.random()*4)+2; valTarget = valSource * k;
         text = `La boîte ${c1.name} contient ${k} fois moins de billes que la boîte ${c2.name}.`;
     } else if (op === 'plus') {
-        // DE PLUS
-        let n = Math.floor(Math.random()*8)+1; 
-        valTarget = valSource + n;
+        let n = Math.floor(Math.random()*8)+1; valTarget = valSource + n;
         text = `La boîte ${c2.name} a ${n} billes de PLUS que la boîte ${c1.name}.`;
     } else { // minus
-        // DE MOINS
-        let n = Math.floor(Math.random()*8)+1; 
-        valTarget = valSource + n;
+        let n = Math.floor(Math.random()*8)+1; valTarget = valSource + n;
         text = `La boîte ${c1.name} a ${n} billes de moins que la boîte ${c2.name}.`;
     }
 
     let valA = (c1.id === 'A') ? valSource : valTarget;
     let valB = (c1.id === 'B') ? valSource : valTarget;
-
     let hidden = valA + valB;
     let visible = Math.floor(Math.random() * Math.min(15, maxTotal - hidden)) + 1;
     if(isNaN(visible) || visible < 0) visible = 0;
@@ -569,7 +594,6 @@ function genLevel4_Duel(maxTotal, gameType, hintPref) {
         if (hintPref === 'random') givenVal = Math.random()>0.5 ? 'A' : 'B';
         else givenVal = hintPref; 
     }
-
     return {
         level: 4, gameType, givenVal,
         total: hidden + visible, visible,
@@ -580,7 +604,6 @@ function genLevel4_Duel(maxTotal, gameType, hintPref) {
     };
 }
 
-// --- NIV 5 : L'ENQUÊTE (3 Boites) ---
 function genLevel5_Enquete(maxTotal, gameType, hintPref) {
     let allowedOps = getOpSettings();
     let structMode = 'mix';
@@ -638,7 +661,6 @@ function genLevel5_Enquete(maxTotal, gameType, hintPref) {
             if(r<0.33) givenVal = 'A'; else if(r<0.66) givenVal = 'B'; else givenVal = 'C';
         } else { givenVal = hintPref; }
     }
-    
     return {
         level: 5, gameType, givenVal,
         total: hidden + visible, visible,
@@ -657,13 +679,11 @@ function genLevel5_Enquete(maxTotal, gameType, hintPref) {
     };
 }
 
-// --- NIV 6 : LE SYSTÈME (Sommes) ---
 function genLevel6_Systeme(maxTotal, gameType) {
     let remain = maxTotal;
     let valA = Math.floor(Math.random() * (remain * 0.3)) + 4;
     let valB = Math.floor(Math.random() * (remain * 0.3)) + 4;
     let valC = Math.floor(Math.random() * (remain * 0.3)) + 4;
-    
     let hidden = valA + valB + valC;
     let visible = Math.floor(Math.random() * Math.min(15, maxTotal - hidden)) + 2;
     if(isNaN(visible) || visible < 0) visible = 0;
@@ -678,7 +698,6 @@ function genLevel6_Systeme(maxTotal, gameType) {
         const r = Math.random();
         if(r<0.33) givenVal = 'A'; else if(r<0.66) givenVal = 'B'; else givenVal = 'C';
     }
-
     return {
         level: 6, gameType, givenVal,
         total: hidden + visible, visible,
@@ -693,7 +712,6 @@ function genLevel6_Systeme(maxTotal, gameType) {
     };
 }
 
-// --- MOTEUR GRAPHIQUE 2D VUE DESSUS ---
 function generateDots(count, obstacles) {
     const W = 300, H = 200, pad = 15;
     const placed = [];
@@ -704,7 +722,6 @@ function generateDots(count, obstacles) {
             x = pad + Math.random()*(W - 2*pad); 
             y = pad + Math.random()*(H - 2*pad);
             let hitBag = false;
-            // Collision rectangulaire STRICTE
             for(let o of obstacles) { 
                 let hw = (o.w/2) + 12; let hh = (o.h/2) + 12;
                 if(x > o.x - hw && x < o.x + hw && y > o.y - hh && y < o.y + hh) hitBag = true;
@@ -719,102 +736,131 @@ function generateDots(count, obstacles) {
     return placed;
 }
 
+// Fonction pour construire une page DOM
+function createPageElement(items, isCorrectionPage, mirror) {
+    const page = document.createElement('div'); page.className = 'page';
+    const inner = document.createElement('div'); inner.className = 'page-inner';
+    const grid = document.createElement('div'); 
+    
+    // Application de la classe miroir si nécessaire
+    grid.className = mirror ? 'grid grid-mirror' : 'grid';
+
+    items.forEach(item => {
+        const card = document.createElement('div'); card.className = 'card';
+        
+        const header = document.createElement('div'); header.className = 'card-header';
+        header.innerText = item.header;
+        card.appendChild(header);
+
+        const visual = document.createElement('div'); visual.className = 'card-visual';
+        // On passe isCorrectionPage pour savoir si on affiche les points cachés ou non
+        visual.innerHTML = getBagSceneSvg(item, isCorrectionPage);
+        card.appendChild(visual);
+
+        const footer = document.createElement('div'); footer.className = 'card-footer';
+
+        // LOGIQUE D'AFFICHAGE FOOTER
+        let showTotal = true;
+        if (item.gameType === 'architect') showTotal = false;
+        if (isCorrectionPage) showTotal = true;
+
+        let showVis = false;
+        if (isCorrectionPage) showVis = true;
+
+        let showA = (isCorrectionPage || item.givenVal === 'A');
+        let showB = (isCorrectionPage || item.givenVal === 'B');
+        let showC = (isCorrectionPage || item.givenVal === 'C');
+
+        const totalHtml = createBarTotal("", showTotal ? item.total : "", "lbl-total", (showTotal && !isCorrectionPage));
+
+        let segs = [];
+        segs.push(createBarSeg("Visible", showVis ? item.visible : "", "lbl-visible", false));
+
+        if (item.level === 1) {
+            segs.push(createBarSeg("Boîte Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorrectionPage)));
+        } 
+        else if (item.level === 2) {
+            let showFirst = showA;
+            let showSecond = isCorrectionPage;
+            segs.push(createBarSeg("Boîte Noire", showFirst ? item.valA : "", "lbl-a", (showFirst && !isCorrectionPage)));
+            segs.push(createBarSeg("Boîte Noire", showSecond ? item.valA : "", "lbl-a", false));
+        } 
+        else if (item.level === 3) {
+            let showFirst = showA;
+            let showSecond = isCorrectionPage;
+            let showThird = isCorrectionPage;
+            segs.push(createBarSeg("Boîte Noire", showFirst ? item.valA : "", "lbl-a", (showFirst && !isCorrectionPage)));
+            segs.push(createBarSeg("Boîte Noire", showSecond ? item.valA : "", "lbl-a", false));
+            segs.push(createBarSeg("Boîte Noire", showThird ? item.valA : "", "lbl-a", false));
+        } 
+        else if (item.level === 4) {
+            segs.push(createBarSeg("Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorrectionPage)));
+            segs.push(createBarSeg("Violette", showB ? item.valB : "", "lbl-b", (showB && !isCorrectionPage)));
+        } 
+        else {
+            segs.push(createBarSeg("Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorrectionPage)));
+            segs.push(createBarSeg("Violette", showB ? item.valB : "", "lbl-b", (showB && !isCorrectionPage)));
+            segs.push(createBarSeg("Orange", showC ? item.valC : "", "lbl-c", (showC && !isCorrectionPage)));
+        }
+
+        footer.innerHTML = `<div class="bar-frame">${totalHtml}<div class="bar-row">${segs.join("")}</div></div>`;
+        card.appendChild(footer);
+        grid.appendChild(card);
+    });
+
+    inner.appendChild(grid); 
+    
+    // Label bas de page
+    const label = document.createElement('div');
+    label.className = 'page-label';
+    if(isCorrectionPage) {
+        label.innerText = mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —";
+    } else {
+        label.innerText = "— EXERCICE —";
+    }
+    inner.appendChild(label);
+
+    page.appendChild(inner); 
+    return page;
+}
+
 function renderPages() {
   const main = document.getElementById('mainArea');
   const isCorr = document.getElementById('showCorr').checked;
   main.innerHTML = ''; 
-  const page = document.createElement('div'); page.className = 'page';
-  const inner = document.createElement('div'); inner.className = 'page-inner';
-  const grid = document.createElement('div'); grid.className = 'grid';
-
-  state.forEach(item => {
-    const card = document.createElement('div'); card.className = 'card';
-    
-    const header = document.createElement('div'); header.className = 'card-header';
-    header.innerText = item.header;
-    card.appendChild(header);
-
-    const visual = document.createElement('div'); visual.className = 'card-visual';
-    visual.innerHTML = getBagSceneSvg(item, isCorr);
-    card.appendChild(visual);
-
-    const footer = document.createElement('div'); footer.className = 'card-footer';
-
-    // LOGIQUE D'AFFICHAGE FOOTER
-    let showTotal = true;
-    if (item.gameType === 'architect') showTotal = false;
-    if (isCorr) showTotal = true;
-
-    // Pas de chiffre visible, toujours un espace pour compter
-    let showVis = false;
-    if (isCorr) showVis = true;
-
-    // On montre si correction OU si c'est la valeur donnée en indice
-    let showA = (isCorr || item.givenVal === 'A');
-    let showB = (isCorr || item.givenVal === 'B');
-    let showC = (isCorr || item.givenVal === 'C');
-
-    // Total en haut (barre longue)
-    const totalHtml = createBarTotal("", showTotal ? item.total : "", "lbl-total", (showTotal && !isCorr));
-
-    // Segments en dessous (Visible + boîtes)
-    let segs = [];
-    segs.push(createBarSeg("Visible", showVis ? item.visible : "", "lbl-visible", false));
-
-    if (item.level === 1) {
-        segs.push(createBarSeg("Boîte Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorr)));
-    } 
-    else if (item.level === 2) {
-        // Si c'est un indice (donné), on ne remplit QUE LA PREMIERE
-        let showFirst = showA;
-        // La deuxième est montrée seulement en correction
-        let showSecond = isCorr;
-        segs.push(createBarSeg("Boîte Noire", showFirst ? item.valA : "", "lbl-a", (showFirst && !isCorr)));
-        segs.push(createBarSeg("Boîte Noire", showSecond ? item.valA : "", "lbl-a", false));
-    } 
-    else if (item.level === 3) {
-        // Pareil, si indice donné, on remplit une seule
-        let showFirst = showA;
-        let showSecond = isCorr;
-        let showThird = isCorr;
-        segs.push(createBarSeg("Boîte Noire", showFirst ? item.valA : "", "lbl-a", (showFirst && !isCorr)));
-        segs.push(createBarSeg("Boîte Noire", showSecond ? item.valA : "", "lbl-a", false));
-        segs.push(createBarSeg("Boîte Noire", showThird ? item.valA : "", "lbl-a", false));
-    } 
-    else if (item.level === 4) {
-        segs.push(createBarSeg("Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorr)));
-        segs.push(createBarSeg("Violette", showB ? item.valB : "", "lbl-b", (showB && !isCorr)));
-    } 
-    else {
-        segs.push(createBarSeg("Noire", showA ? item.valA : "", "lbl-a", (showA && !isCorr)));
-        segs.push(createBarSeg("Violette", showB ? item.valB : "", "lbl-b", (showB && !isCorr)));
-        segs.push(createBarSeg("Orange", showC ? item.valC : "", "lbl-c", (showC && !isCorr)));
-    }
-
-    footer.innerHTML = `<div class="bar-frame">${totalHtml}<div class="bar-row">${segs.join("")}</div></div>`;
-    card.appendChild(footer);
-    grid.appendChild(card);
-  });
-  inner.appendChild(grid); page.appendChild(inner); main.appendChild(page);
-}
-
-function createAnsBox(lbl, val, cls) {
-    // Si val est vide (non défini ou chaine vide), on laisse la case vide (pas de "?")
-    let displayVal = val === "" || val === undefined ? "&nbsp;" : val;
-    return `<div class="ans-box ${cls}"><div class="ans-label">${lbl}</div><div class="ans-val">${displayVal}</div></div>`;
+  
+  // Dans Box Logic, ITEMS = 8 et on affiche tout sur une page par défaut.
+  // state contient 8 éléments.
+  
+  if (!isCorr) {
+      // Pas de correction demandée : Juste la page d'exercice
+      main.appendChild(createPageElement(state, false, false));
+  } else {
+      // Correction demandée
+      if (isRVMode) {
+          // MODE RECTO-VERSO : 
+          // Page 1 = Exercice (Normal)
+          // Page 2 = Correction (Miroir Horizontal)
+          main.appendChild(createPageElement(state, false, false));
+          main.appendChild(createPageElement(state, true, true)); 
+      } else {
+          // MODE CLASSIQUE :
+          // Page 1 = Correction (Normale)
+          // Page 2 = Exercice (Normal)
+          main.appendChild(createPageElement(state, true, false));
+          main.appendChild(createPageElement(state, false, false));
+      }
+  }
 }
 
 function createBarTotal(lbl, val, cls, isGiven) {
-    // Si val est vide (non défini ou chaine vide), on laisse la case vide (pas de "?")
     let displayVal = val === "" || val === undefined ? "&nbsp;" : val;
-
-    // Si on ne veut pas afficher le mot "Total" (lbl vide), on ne garde que la valeur centrée
     if (!lbl) {
         return `<div class="bar-total ${cls} ${isGiven ? "given-val" : ""}"><div class="bar-value">${displayVal}</div></div>`;
     }
-
     return `<div class="bar-total ${cls} ${isGiven ? "given-val" : ""}"><div class="bar-label">${lbl}</div><div class="bar-value">${displayVal}</div></div>`;
 }
+
 function createBarSeg(lbl, val, cls, isGiven) {
     let displayVal = val === "" || val === undefined ? "&nbsp;" : val;
     return `<div class="segment ${cls} ${isGiven ? "given-val" : ""}"><div class="seg-label">${lbl}</div><div class="seg-val">${displayVal}</div></div>`;
