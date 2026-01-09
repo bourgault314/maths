@@ -5,18 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Boulier Montessori – Exerciseur</title>
 <style>
+  /* --- Réinitialisation & Variables --- */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   :root{
-    --rows: 4;
-    --beads-per-row: 10;
-    --bead-size: 26px;
-    --bead-gap: 6px;
+    --bead-size: 28px;
+    --bead-gap: 0px; 
     --frame-thickness: 14px;
     --rod-thickness: 4px;
 
-    --color-1: #3cb371;
-    --color-10: #40c4ff;
-    --color-100: #e53935;
-    --color-1000: #2e7d32;
+    /* Couleurs Montessori */
+    --color-green: #3cb371;
+    --color-blue:  #40c4ff;
+    --color-red:   #e53935;
 
     --color-wood: #e2c48a;
     --color-wood-dark: #a88348;
@@ -27,79 +30,190 @@
     --accent: #0f6cf9;
     --ok: #0f9d58;
     --err: #d93025;
+    
+    --btn-off: #9ca3af;
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:760px;margin:14px auto;padding:0 12px}
+  .app{max-width:850px;margin:10px auto;padding:0 12px; display:flex; flex-direction:column; min-height:90vh;}
 
-  .topbar{
-    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 12px
+  /* --- Topbar & Contrôles --- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
   }
+  
+  .control-group {
+    display:flex; align-items:center; gap:8px; flex-wrap: wrap;
+  }
+  
+  /* Selecteur Labels */
+  select {
+    font-size: 0.95rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
+    cursor: pointer; color: #333; font-weight: 500;
+  }
+
+  /* Boutons Standard */
   .btn{
     border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:8px 12px;border-radius:10px;cursor:pointer;
-    box-shadow:0 5px 12px rgba(15,108,249,.18);font-size:.95rem
+    padding:8px 14px;border-radius:8px;cursor:pointer;
+    box-shadow:0 4px 8px rgba(15,108,249,.2);font-size:.95rem;
+    transition: transform 0.1s, background-color 0.2s; 
+    display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280}
+  .btn.secondary{background:#6b7280; box-shadow:0 4px 8px rgba(0,0,0,.15);}
+  .btn.check-btn{background:var(--ok); box-shadow:0 4px 8px rgba(15,157,88,.2);}
+  
+  /* Bouton Zéro Spécifique (pour le "0") */
+  .btn.zero-btn {
+    font-size: 1.2rem;
+    padding: 6px 16px;
+  }
 
-  .score{margin-left:auto;display:flex;gap:12px;align-items:center;font-weight:800}
+  /* Boutons Toggle (On/Off) */
+  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
+  .btn.toggle.active { background: var(--accent); box-shadow: 0 4px 8px rgba(15,108,249,.2); opacity: 1; }
+
+  /* Bouton Taille (Petit/Grand) */
+  .btn.size-toggle { background: #8d6e63; }
+  .btn.size-toggle.active { background: #5d4037; } /* Grand */
+
+  .score{margin-left:auto;display:flex;gap:12px;align-items:center;font-weight:800;font-size:1.1rem;}
   .score .good{color:var(--ok)}
   .score .bad{color:var(--err)}
 
-  .exercise{
-    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
-    background:var(--ui);padding:10px 12px;border-radius:12px;margin-bottom:10px
+  /* --- Zone Exercice --- */
+  .exercise-box {
+    text-align: center; margin-bottom: 10px;
+    background: var(--ui); padding: 15px; border-radius: 12px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
   }
-  .exercise .target{
-    font-weight:800;font-size:1.2rem;background:#fff;padding:6px 10px;border-radius:10px;min-width:4ch;text-align:center;
-    box-shadow:inset 0 1px 0 rgba(0,0,0,.05);
+  .instruction { font-weight: 600; color: #555; margin-bottom: 10px; }
+
+  /* --- Affichage Cible --- */
+  .target-display {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 0; margin: 0 auto;
+    min-height: 5rem;
+    background: #fff; 
+    border-radius: 12px;
+    padding: 5px 15px;
+    width: fit-content;
   }
-  .feedback{min-height:1.4em;font-weight:700}
+  
+  .digit-group {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 10px; height: 4.5rem;
+    border-radius: 12px; 
+    margin: 0 6px; 
+    user-select: none;
+    transition: all 0.3s;
+  }
+
+  .digit-group.with-bg {
+    border: 1px solid rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .digit-group.no-bg {
+    background: transparent !important;
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
+
+  .digit-char {
+    font-size: 3rem; font-weight: 800; line-height: 1; margin: 0 1px;
+    transition: color 0.3s;
+  }
+
+  /* Fonds des classes */
+  .bg-white { background-color: #ffffff; }
+  .bg-gray  { background-color: #e0e0e0; }
+  .bg-black { background-color: #1b1b1b; border-color: #444; }
+
+  .feedback{ font-weight:800; margin-top:10px; min-height:1.5em; font-size: 1.2rem; }
   .feedback.ok{color:var(--ok)}
   .feedback.err{color:var(--err)}
 
-  .abacus-wrapper{display:flex;align-items:stretch}
+  /* --- Boulier Layout --- */
+  .abacus-wrapper{
+    display:flex; align-items:flex-start; justify-content: center;
+    margin-top: 5px; overflow-x: auto; padding-bottom: 20px;
+  }
+
   .labels{
-    display:flex;flex-direction:column;justify-content:space-around;
-    padding:10px 6px 10px 0;font-weight:700;font-size:1rem;color:#444;
-    background:#f0f0f0;border-radius:10px 0 0 10px;
-    box-shadow:inset -1px 0 2px rgba(0,0,0,.1)
+    display:flex; flex-direction:column; 
+    width: 100px;
+    padding-top: 14px; margin-right: 0; 
   }
-  .labels div{flex:1;display:flex;align-items:center;justify-content:center}
 
+  .label-item{
+    height: 50px;
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-right: 12px;
+    font-weight:700; font-size: 0.95rem; color:#444;
+    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
+    transition: background 0.3s;
+  }
+
+  .label-white { background-color: #ffffff; }
+  .label-gray  { background-color: #e0e0e0; }
+  .label-black { background-color: #1b1b1b; color: #bdbdbd; border-color: #333; }
+
+  .label-top-rounded { border-top: 1px solid #ccc; border-radius: 6px 0 0 0; }
+  .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
+  .gap-top { margin-top: 30px !important; }
+
+  /* --- Boulier --- */
   .abacus{
-    flex:1;position:relative;aspect-ratio: 10 / 4.5;
-    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
-    border-radius:0 14px 14px 0;box-shadow:0 8px 20px rgba(0,0,0,.1);
-    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
+    flex:1; min-width: 320px; position:relative;
+    background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    display: flex; flex-direction: column;
+    padding: 14px 0;
+    border-right: 14px solid #a88348; 
+    border-left: 14px solid #a88348;
+    border-radius: 4px;
   }
-  .abacus::before, .abacus::after{
-    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
-    background:linear-gradient(#caa367,#9a733c)
-  }
-  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:0 14px 0 0}
-  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 0}
 
-  .row{position:relative;height:calc(100%/var(--rows))}
-  .rod{
-    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
-    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 2px rgba(0,0,0,.25)
+  .abacus::before, .abacus::after{
+    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c); z-index: 2;
   }
+  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
+  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
+
+  .row{ position:relative; width:100%; height: 50px; }
+  
+  .row.gap-top::before {
+    content: ""; position: absolute; 
+    top: -15px; 
+    left: 5%; right: 5%;
+    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
+  }
+
+  .rod{
+    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
+    background:linear-gradient(180deg,#c09e6c,#8a6538);
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
   .bead{
-    position:absolute;top:50%;transform:translate(-50%,-50%);
-    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
-    box-shadow:0 3px 6px rgba(0,0,0,.25),inset 0 2px 5px rgba(255,255,255,.5);
-    border:1px solid rgba(0,0,0,.1);cursor:pointer;user-select:none;
-    transition:left .18s ease,transform .06s ease
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:var(--bead-size); height:var(--bead-size); border-radius:50%;
+    border: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none; z-index: 10;
+    transition:left 0.2s ease-out;
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
 
-  /* Overlay géant */
+  /* Overlay de succès */
   .overlay{
     position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     font-size:8rem;font-weight:900;color:white;text-shadow:0 0 30px rgba(0,0,0,.7);
-    pointer-events:none;opacity:0;transition:opacity .2s ease;
+    pointer-events:none;opacity:0;transition:opacity .2s ease; z-index: 100;
   }
   .overlay.show{opacity:1}
   .overlay.ok{color:var(--ok)}
@@ -108,29 +222,52 @@
 </head>
 <body>
   <div class="app">
-    <div class="topbar">
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn" id="newNumber">Nouveau nombre</button>
-        <button class="btn" id="check">Vérifier</button>
-        <button class="btn secondary" id="reset">Remise à zéro</button>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      
+      <!-- Groupe 1: Taille & Style -->
+      <div class="control-group">
+        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️ Petit</button>
+        <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨 Couleurs</button>
+        <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜ Groupes</button>
       </div>
+
+      <!-- Groupe 2: Labels -->
+      <div class="control-group">
+        <select id="labelMode">
+          <option value="mult" selected>1x, 10x...</option>
+          <option value="num">1, 10...</option>
+          <option value="name">Unités...</option>
+        </select>
+      </div>
+
+      <!-- Groupe 3: Actions -->
+      <div class="control-group">
+        <button class="btn" id="newNumber">🎲 Nouveau</button>
+        <button class="btn secondary zero-btn" id="reset" title="Remise à zéro">0</button>
+        <button class="btn check-btn" id="check">✅ Vérifier</button>
+      </div>
+
+      <!-- Score -->
       <div class="score">
-        <span class="good">✅ : <span id="goodCount">0</span></span>
-        <span class="bad">❌ : <span id="badCount">0</span></span>
+        <span class="good">✅ <span id="goodCount">0</span></span>
+        <span class="bad">❌ <span id="badCount">0</span></span>
       </div>
     </div>
 
-    <div class="exercise">
-      <div>Place ce nombre sur le boulier :</div>
-      <div class="target" id="target">—</div>
+    <!-- Zone Consigne -->
+    <div class="exercise-box">
+      <div class="instruction">Place ce nombre sur le boulier :</div>
+      <div class="target-display" id="targetContainer">
+        <!-- Généré par JS -->
+      </div>
       <div class="feedback" id="feedback"></div>
     </div>
 
-    <div class="abacus-wrapper">
-      <div class="labels">
-        <div>1</div><div>10</div><div>100</div><div>1000</div>
-      </div>
-      <div class="abacus" id="abacus"></div>
+    <!-- Boulier -->
+    <div class="abacus-wrapper" id="abacusWrapper">
+      <div class="labels" id="labelsContainer"></div>
+      <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
     </div>
   </div>
 
@@ -138,87 +275,333 @@
 
 <script>
 (function(){
-  const rows=4, N=10, values=[1,10,100,1000];
-  const abacus=document.getElementById('abacus');
-  const newBtn=document.getElementById('newNumber');
-  const checkBtn=document.getElementById('check');
-  const resetBtn=document.getElementById('reset');
-  const targetEl=document.getElementById('target');
-  const feedback=document.getElementById('feedback');
-  const goodEl=document.getElementById('goodCount');
-  const badEl=document.getElementById('badCount');
-  const overlay=document.getElementById('overlay');
+  const N = 10;
+  const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
+  const fullColors = [
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Unités
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Mille
+    'var(--color-green)'  // Million
+  ];
 
-  const colors=['var(--color-1)','var(--color-10)','var(--color-100)','var(--color-1000)'];
-  const state=Array.from({length:rows},()=>0);
-  let target=null,goodCount=0,badCount=0,scored=false,advancing=false;
+  const fullLabelData = {
+    num: ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"],
+    name: ["Unités", "Dizaines", "Centaines", "Milliers", "Dix Mille", "Cent Mille", "Million"],
+    mult: ["1 x", "10 x", "100 x", "1 000 x", "10 000 x", "100 000 x", "1 000 000 x"]
+  };
 
-  const rowEls=[];
-  for(let r=0;r<rows;r++){
-    const row=el('div','row');row.dataset.row=r;
-    row.appendChild(el('div','rod'));
-    for(let j=1;j<=N;j++){
-      const bead=el('div','bead');bead.style.background=colors[r];
-      bead.dataset.index=j;
-      bead.addEventListener('click',()=>onBeadClick(r,j));
-      row.appendChild(bead);
-    }
-    abacus.appendChild(row);rowEls.push(row);
-  }
+  // État de l'app
+  let currentRows = 4; // 4 (Petit) ou 7 (Grand)
+  let state = [];
+  let targetValue = 0;
+  let goodCount = 0;
+  let badCount = 0;
+  let hasScored = false;
+  let isAdvancing = false;
 
-  function onBeadClick(r,j){
-    if(advancing) return;
-    const c=state[r], left=N-c;
-    state[r]=(j<=left)?(N-j+1):(N-j);
-    state[r]=Math.max(0,Math.min(N,state[r]));
-    layoutRow(r);
-  }
-  function layoutRow(r){
-    const row=rowEls[r],c=state[r];
-    const size=26,gap=6,pad=10;
-    const leftStart=pad+size/2, rightStart=row.clientWidth-pad-size/2;
-    [...row.querySelectorAll('.bead')].forEach(b=>{
-      const j=+b.dataset.index;
-      b.style.left=(j<=N-c)?leftStart+(j-1)*(size+gap)+"px":rightStart-(N-j)*(size+gap)+"px";
+  // Options d'affichage
+  let useColors = true;
+  let useGroups = true;
+
+  // DOM
+  const abacusEl = document.getElementById('abacus');
+  const labelsEl = document.getElementById('labelsContainer');
+  const targetContainer = document.getElementById('targetContainer');
+  const feedbackEl = document.getElementById('feedback');
+  const goodEl = document.getElementById('goodCount');
+  const badEl = document.getElementById('badCount');
+  const overlay = document.getElementById('overlay');
+  
+  const newBtn = document.getElementById('newNumber');
+  const checkBtn = document.getElementById('check');
+  const resetBtn = document.getElementById('reset');
+  const labelSelect = document.getElementById('labelMode');
+  
+  const btnColor = document.getElementById('btnColor');
+  const btnGroup = document.getElementById('btnGroup');
+  const btnSize = document.getElementById('btnSize');
+
+  function init(){
+    updateStructure();
+    generateNewTarget();
+
+    // Listeners
+    labelSelect.addEventListener('change', updateLabelsText);
+    
+    // Toggle Size (Petit/Grand)
+    btnSize.addEventListener('click', () => {
+      if(currentRows === 4) {
+        currentRows = 7;
+        btnSize.textContent = '↕️ Grand';
+        btnSize.classList.add('active'); 
+      } else {
+        currentRows = 4;
+        btnSize.textContent = '↕️ Petit';
+        btnSize.classList.remove('active');
+      }
+      updateStructure();
+      generateNewTarget();
+    });
+
+    // Toggle Colors
+    btnColor.addEventListener('click', () => {
+      useColors = !useColors;
+      updateToggleButton(btnColor, useColors);
+      renderTargetDisplay(targetValue);
+    });
+
+    // Toggle Groups
+    btnGroup.addEventListener('click', () => {
+      useGroups = !useGroups;
+      updateToggleButton(btnGroup, useGroups);
+      renderTargetDisplay(targetValue);
+    });
+
+    newBtn.addEventListener('click', generateNewTarget);
+    
+    resetBtn.addEventListener('click', ()=>{
+      state.fill(0);
+      layoutAll();
+      feedbackEl.textContent = '';
+      feedbackEl.className = 'feedback';
+    });
+
+    checkBtn.addEventListener('click', checkAnswer);
+
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(layoutAll, 50);
     });
   }
-  function layoutAll(){for(let r=0;r<rows;r++)layoutRow(r);}
-  function currentTotal(){return state.reduce((s,c,r)=>s+c*values[r],0);}
-  function resetAbacus(){state.fill(0);layoutAll();}
 
-  function randomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-  function newTarget(){
-    target=randomInt(0,9999);targetEl.textContent=String(target);
-    resetAbacus();feedback.textContent='';scored=false;advancing=false;
+  function updateToggleButton(btn, active){
+    if(active){
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  }
+
+  // --- LOGIQUE BOULIER ---
+
+  function updateStructure(){
+    state = Array.from({length: currentRows}, () => 0);
+    abacusEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+
+    for(let r=0; r<currentRows; r++){
+      createRow(r);
+    }
+    updateLabelsText();
+    layoutAll();
+  }
+
+  function createRow(r){
+    const isStartOfGroup = (r === 3 || r === 6);
+    
+    // Row
+    const row = document.createElement('div');
+    row.className = 'row';
+    if(isStartOfGroup) row.classList.add('gap-top');
+    const rod = document.createElement('div');
+    rod.className = 'rod';
+    row.appendChild(rod);
+
+    for(let j=1; j<=N; j++){
+      const bead = document.createElement('div');
+      bead.className = 'bead';
+      bead.style.background = fullColors[r];
+      bead.dataset.index = j;
+      bead.addEventListener('click', () => onBeadClick(r, j));
+      row.appendChild(bead);
+    }
+    abacusEl.appendChild(row);
+
+    // Label
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'label-item';
+    
+    if(r < 3) labelDiv.classList.add('label-white'); 
+    else if (r < 6) labelDiv.classList.add('label-gray');
+    else labelDiv.classList.add('label-black'); 
+
+    if(r === 0) labelDiv.classList.add('label-top-rounded');
+    if(r === 2) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 3) labelDiv.classList.add('label-top-rounded');
+    if(r === 5) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
+
+    if(isStartOfGroup) labelDiv.classList.add('gap-top');
+    labelsEl.appendChild(labelDiv);
+  }
+
+  function updateLabelsText(){
+    const mode = labelSelect.value;
+    const texts = fullLabelData[mode];
+    const labelDivs = labelsEl.querySelectorAll('.label-item');
+    labelDivs.forEach((div, i) => {
+      if(texts[i]) div.textContent = texts[i];
+    });
+  }
+
+  function onBeadClick(r, j){
+    if(isAdvancing) return; 
+    const currentCount = state[r];
+    if (j > currentCount) {
+      state[r] = j;
+    } else {
+      state[r] = j - 1;
+    }
+    layoutRow(r);
+  }
+
+  function layoutRow(r){
+    const row = abacusEl.children[r];
+    if(!row) return;
+    const beads = row.querySelectorAll('.bead');
+    const count = state[r];
+    
+    const rowWidth = row.clientWidth;
+    // Taille fixe
+    const beadSize = 28; 
+    const gap = 0;       
+    const padding = 0;   
+
+    const leftStart = padding + beadSize/2;
+    const rightEnd = rowWidth - padding - beadSize/2;
+
+    beads.forEach(b => {
+      const idx = parseInt(b.dataset.index);
+      if (idx <= count) {
+        const pos = leftStart + (idx - 1) * (beadSize + gap);
+        b.style.left = pos + 'px';
+      } else {
+        const offsetFromEnd = (N - idx) * (beadSize + gap);
+        const pos = rightEnd - offsetFromEnd;
+        b.style.left = pos + 'px';
+      }
+    });
+  }
+
+  function layoutAll(){
+    for(let r=0; r<currentRows; r++) layoutRow(r);
+  }
+
+  function currentTotal(){
+    let total = 0;
+    for(let r=0; r<currentRows; r++){
+      total += state[r] * fullMultipliers[r];
+    }
+    return total;
+  }
+
+  // --- LOGIQUE EXERCICE ---
+
+  function randomInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generateNewTarget(){
+    const maxVal = (currentRows === 4) ? 9999 : 9999999;
+    targetValue = randomInt(1, maxVal);
+    
+    state.fill(0);
+    layoutAll();
+    renderTargetDisplay(targetValue);
+    
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback';
+    hasScored = false;
+    isAdvancing = false;
+  }
+
+  function renderTargetDisplay(val){
+    const str = val.toString();
+    const len = str.length;
+    let html = '';
+    
+    let currentGroupIndex = -1;
+    
+    for(let i=0; i<len; i++){
+      const digit = str[i];
+      const power = len - 1 - i;
+      const groupIndex = Math.floor(power / 3);
+      
+      // 1. Fond du Groupe
+      let bgClass = '';
+      if(useGroups){
+        if(groupIndex === 0) bgClass = 'bg-white with-bg';
+        else if(groupIndex === 1) bgClass = 'bg-gray with-bg';
+        else bgClass = 'bg-black with-bg';
+      } else {
+        // Mode "Sans fond" : transparent
+        bgClass = 'no-bg';
+      }
+      
+      // 2. Couleur du Texte
+      let textColor = '';
+      if(useColors){
+        const colorIndex = power % 3;
+        if(colorIndex === 0) textColor = 'var(--color-green)';
+        else if(colorIndex === 1) textColor = 'var(--color-blue)';
+        else textColor = 'var(--color-red)';
+      } else {
+        // Mode Noir et Blanc
+        if(useGroups && groupIndex >= 2) { // 2 = millions
+           textColor = '#f0f0f0';
+        } else {
+           textColor = '#1b1b1b';
+        }
+      }
+      
+      if(groupIndex !== currentGroupIndex){
+        if(currentGroupIndex !== -1) html += `</div>`;
+        html += `<div class="digit-group ${bgClass}">`;
+        currentGroupIndex = groupIndex;
+      }
+      
+      html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
+    }
+    if(currentGroupIndex !== -1) html += `</div>`;
+
+    targetContainer.innerHTML = html;
   }
 
   function showOverlay(ok){
-    overlay.textContent=ok?"✅":"❌";
-    overlay.className="overlay show "+(ok?"ok":"err");
-    setTimeout(()=>overlay.className="overlay",1000);
+    overlay.textContent = ok ? "✅" : "❌";
+    overlay.className = "overlay show " + (ok ? "ok" : "err");
+    setTimeout(() => overlay.className = "overlay", 1000);
   }
 
-  newBtn.addEventListener('click',newTarget);
-  resetBtn.addEventListener('click',()=>{resetAbacus();feedback.textContent='';});
+  function checkAnswer(){
+    if(isAdvancing) return;
 
-  checkBtn.addEventListener('click',()=>{
-    if(advancing)return;
-    if(target===null){feedback.textContent="Clique sur “Nouveau nombre”.";feedback.className="feedback err";return;}
-    const val=currentTotal();
-    if(val===target){
-      if(!scored){goodCount++;goodEl.textContent=goodCount;scored=true;}
-      feedback.textContent="OK ✅";feedback.className="feedback ok";showOverlay(true);
-      advancing=true;setTimeout(newTarget,1000);
-    }else{
-      badCount++;badEl.textContent=badCount;
-      feedback.textContent="❌ Mauvaise réponse";feedback.className="feedback err";showOverlay(false);
+    const val = currentTotal();
+    if(val === targetValue){
+      // Succès
+      if(!hasScored){
+        goodCount++;
+        goodEl.textContent = goodCount;
+        hasScored = true;
+      }
+      feedbackEl.textContent = "Bravo ! C'est la bonne réponse ✅";
+      feedbackEl.className = "feedback ok";
+      showOverlay(true);
+      
+      // Auto-avance
+      isAdvancing = true;
+      setTimeout(generateNewTarget, 1200);
+    } else {
+      // Erreur
+      badCount++;
+      badEl.textContent = badCount;
+      feedbackEl.textContent = "Ce n'est pas ça. Regarde bien les couleurs.";
+      feedbackEl.className = "feedback err";
+      showOverlay(false);
     }
-  });
+  }
 
-  window.addEventListener('resize',()=>layoutAll());
-  function el(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
-
-  layoutAll();newTarget();
+  init();
 })();
 </script>
 </body>
