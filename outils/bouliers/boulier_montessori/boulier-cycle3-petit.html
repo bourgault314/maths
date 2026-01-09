@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Boulier Montessori (Cycle 3)</title>
+<title>Boulier Montessori (Découverte)</title>
 <style>
-  /* Réinitialisation */
+  /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -26,40 +26,60 @@
 
     --bg: #fffdf8;
     --text: #1b1b1b;
+    --ui: #f3f1ea;
     --accent: #0f6cf9;
+    
+    --btn-off: #9ca3af;
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
   .app{max-width:850px;margin:10px auto;padding:0 12px; display:flex; flex-direction:column; min-height:90vh;}
 
-  /* --- Toolbar --- */
+  /* --- Topbar & Contrôles --- */
   .toolbar{
-    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
-    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
     background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
   }
   
   .control-group {
-    display:flex; align-items:center; gap:6px;
+    display:flex; align-items:center; gap:6px; flex-wrap: wrap;
   }
   
+  /* Selecteur Labels */
   select {
     font-size: 0.95rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
     cursor: pointer; color: #333; font-weight: 500;
   }
 
+  /* Boutons Standard */
   .btn{
     border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:8px 16px;border-radius:8px;cursor:pointer;
-    box-shadow:0 4px 10px rgba(15,108,249,.2);font-size:.95rem;
-    transition: transform 0.1s; white-space: nowrap;
+    padding:8px 14px;border-radius:8px;cursor:pointer;
+    box-shadow:0 4px 8px rgba(15,108,249,.2);font-size:.95rem;
+    transition: transform 0.1s, background-color 0.2s; 
+    display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280; box-shadow:0 4px 10px rgba(0,0,0,.15);}
+  .btn.secondary{background:#6b7280; box-shadow:0 4px 8px rgba(0,0,0,.15);}
+  
+  /* Bouton Zéro Spécifique */
+  .btn.zero-btn {
+    font-size: 1.2rem;
+    padding: 6px 16px;
+  }
 
-  /* --- Affichage Valeur (Nouveau Style FUSIONNÉ) --- */
+  /* Boutons Toggle (On/Off) */
+  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
+  .btn.toggle.active { background: var(--accent); box-shadow: 0 4px 8px rgba(15,108,249,.2); opacity: 1; }
+
+  /* Bouton Taille */
+  .btn.size-toggle { padding: 8px 12px; }
+
+  /* --- Affichage Valeur --- */
   .center-display {
-    text-align: center; margin-bottom: 15px; 
+    text-align: center; 
+    margin-bottom: 10px; 
     min-height: 5rem;
     display: flex; align-items: center; justify-content: center;
   }
@@ -69,30 +89,46 @@
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0; /* Pas de gap ici, géré par les marges des groupes */
+    gap: 0; 
+    /* Transition douce pour l'apparition */
+    transition: opacity 0.2s;
   }
-  .hidden-value { visibility: hidden; }
+  .hidden-value { 
+    opacity: 0; 
+    visibility: hidden; 
+  }
 
   /* Le BLOC (Groupe de 3 chiffres max) */
   .digit-group {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 16px;       /* Espace intérieur du bloc */
-    height: 4.5rem;        /* Hauteur du bloc */
-    border-radius: 12px;   /* Coins arrondis du bloc global */
-    border: 1px solid rgba(0,0,0,0.15);
-    margin: 0 6px;         /* Espace ENTRE les blocs (séparation des milliers) */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    padding: 0 10px;       
+    height: 4.5rem;        
+    border-radius: 12px;   
+    margin: 0 6px;         
     user-select: none;
+    transition: all 0.3s;
   }
 
-  /* Le CHIFFRE individuel (sans bordure, juste le texte) */
+  /* Styles de groupe conditionnels */
+  .digit-group.with-bg {
+    border: 1px solid rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .digit-group.no-bg {
+    background: transparent !important;
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
+
+  /* Le CHIFFRE individuel */
   .digit-char {
     font-size: 3rem;
     font-weight: 800;
     line-height: 1;
-    margin: 0 1px; /* Tout petit espace pour éviter que les caractères ne se collent trop */
+    margin: 0 1px;
+    transition: color 0.3s;
   }
 
   /* Fonds des classes */
@@ -103,7 +139,7 @@
   /* --- Boulier Layout --- */
   .abacus-wrapper{
     display:flex; align-items:flex-start; justify-content: center;
-    margin-top: 5px; overflow-x: auto; padding-bottom: 10px;
+    margin-top: 5px; overflow-x: auto; padding-bottom: 20px;
   }
 
   /* --- Etiquettes à gauche --- */
@@ -136,12 +172,13 @@
     box-shadow:0 10px 25px rgba(0,0,0,.15);
     display: flex; flex-direction: column;
     padding: 14px 0;
-    border-right: 14px solid #a88348; border-left: 14px solid #a88348;
+    border-right: 14px solid #a88348; 
+    border-left: 14px solid #a88348;
     border-radius: 4px;
   }
 
   .abacus::before, .abacus::after{
-    content:""; position:absolute; left:-14px; right:-14px; height:var(--frame-thickness);
+    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
     background:linear-gradient(#caa367,#9a733c); z-index: 2;
   }
   .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
@@ -160,7 +197,6 @@
     box-shadow:0 1px 2px rgba(0,0,0,.3);
   }
 
-  /* --- Style des billes --- */
   .bead{
     position:absolute; top:50%; transform:translate(-50%,-50%);
     width:var(--bead-size); height:var(--bead-size); border-radius:50%;
@@ -175,42 +211,48 @@
 </head>
 <body>
   <div class="app">
-    <!-- Toolbar -->
+    
+    <!-- Zone du haut : Contrôles -->
     <div class="toolbar">
+      
+      <!-- Groupe 1: Taille & Style -->
       <div class="control-group">
-        <label for="sizeMode">Taille :</label>
-        <select id="sizeMode">
-          <option value="petit">Petit (4 rangs)</option>
-          <option value="grand">Grand (7 rangs)</option>
-        </select>
+        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
+        <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨 Couleurs</button>
+        <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜ Groupes</button>
       </div>
 
+      <!-- Groupe 2: Labels -->
       <div class="control-group">
-        <label for="labelMode">Labels :</label>
         <select id="labelMode">
+          <option value="mult" selected>1x, 10x...</option>
           <option value="num">1, 10...</option>
           <option value="name">Unités...</option>
-          <option value="mult">1x, 10x...</option>
         </select>
       </div>
 
+      <!-- Groupe 3: Actions -->
       <div class="control-group">
-        <button class="btn" id="toggleValue">Afficher valeur</button>
-        <button class="btn secondary" id="reset">Zéro</button>
+        <button class="btn" id="toggleValue" title="Masquer/Afficher la valeur">👁️</button>
+        <button class="btn secondary zero-btn" id="reset" title="Remise à zéro">0</button>
       </div>
     </div>
 
-    <!-- Affichage central -->
+    <!-- Zone centrale : Valeur -->
     <div class="center-display">
       <div id="valueContainer" class="value-container hidden-value">
         <!-- Généré par JS -->
       </div>
     </div>
 
-    <!-- Boulier -->
+    <!-- Zone basse : Boulier -->
     <div class="abacus-wrapper">
-      <div class="labels" id="labelsContainer"></div>
-      <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
+      <div class="labels" id="labelsContainer">
+        <!-- Généré par JS -->
+      </div>
+      <div class="abacus" id="abacus" aria-label="Boulier Montessori">
+        <!-- Généré par JS -->
+      </div>
     </div>
   </div>
 
@@ -236,30 +278,71 @@
     mult: ["1 x", "10 x", "100 x", "1 000 x", "10 000 x", "100 000 x", "1 000 000 x"]
   };
 
+  // État global
   let currentRows = 4;
   let state = [];
-  let revealed = false;
+  let revealed = false; // Masqué par défaut comme demandé initialement? Ou on le met visible?
+                        // Dans la v12 "Afficher valeur" suggère que c'est caché.
+                        // Mettons le caché par défaut.
 
+  // Options d'affichage
+  let useColors = true;
+  let useGroups = true;
+
+  // DOM Elements
   const abacusEl = document.getElementById('abacus');
   const labelsEl = document.getElementById('labelsContainer');
   const valueContainer = document.getElementById('valueContainer');
   const toggleBtn = document.getElementById('toggleValue');
   const resetBtn = document.getElementById('reset');
   const labelSelect = document.getElementById('labelMode');
-  const sizeSelect = document.getElementById('sizeMode');
+  
+  const btnColor = document.getElementById('btnColor');
+  const btnGroup = document.getElementById('btnGroup');
+  const btnSize = document.getElementById('btnSize');
 
   function init(){
     updateStructure();
     
+    // Listeners
     labelSelect.addEventListener('change', updateLabelsText);
-    sizeSelect.addEventListener('change', () => {
-      currentRows = (sizeSelect.value === 'grand') ? 7 : 4;
+    
+    // Toggle Size (Petit/Grand)
+    btnSize.addEventListener('click', () => {
+      if(currentRows === 4) {
+        currentRows = 7;
+        btnSize.classList.add('active'); 
+        btnSize.title = "Passer au petit boulier";
+      } else {
+        currentRows = 4;
+        btnSize.classList.remove('active');
+        btnSize.title = "Passer au grand boulier";
+      }
       updateStructure();
     });
+
+    // Toggle Colors
+    btnColor.addEventListener('click', () => {
+      useColors = !useColors;
+      updateToggleButton(btnColor, useColors);
+      renderTotal();
+    });
+
+    // Toggle Groups
+    btnGroup.addEventListener('click', () => {
+      useGroups = !useGroups;
+      updateToggleButton(btnGroup, useGroups);
+      renderTotal();
+    });
+
     toggleBtn.addEventListener('click', ()=>{
       revealed = !revealed;
       renderTotal();
+      // On peut ajouter un style au bouton pour montrer qu'il est actif (œil ouvert)
+      if(revealed) toggleBtn.classList.add('active');
+      else toggleBtn.classList.remove('active');
     });
+
     resetBtn.addEventListener('click', ()=>{
       state.fill(0);
       layoutAll();
@@ -270,6 +353,14 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(layoutAll, 50);
     });
+  }
+
+  function updateToggleButton(btn, active){
+    if(active){
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
   }
 
   function updateStructure(){
@@ -318,14 +409,9 @@
 
     if(r === 0) labelDiv.classList.add('label-top-rounded');
     if(r === 2) labelDiv.classList.add('label-bottom-rounded');
-    
     if(r === 3) labelDiv.classList.add('label-top-rounded');
     if(r === 5) labelDiv.classList.add('label-bottom-rounded');
-
-    if(r === 6) {
-      labelDiv.classList.add('label-top-rounded');
-      labelDiv.classList.add('label-bottom-rounded');
-    }
+    if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
 
     if(isStartOfGroup) labelDiv.classList.add('gap-top');
     
@@ -369,9 +455,11 @@
     beads.forEach(b => {
       const idx = parseInt(b.dataset.index);
       if (idx <= count) {
+        // GAUCHE (Active)
         const pos = leftStart + (idx - 1) * (beadSize + gap);
         b.style.left = pos + 'px';
       } else {
+        // DROITE (Inactive)
         const offsetFromEnd = (N - idx) * (beadSize + gap);
         const pos = rightEnd - offsetFromEnd;
         b.style.left = pos + 'px';
@@ -385,68 +473,68 @@
   }
 
   function renderTotal(){
-    // 1. Calcul de la valeur totale
+    // 1. Calcul du total
     let total = 0;
     for(let r=0; r<currentRows; r++){
       total += state[r] * fullMultipliers[r];
     }
     
+    // 2. Affichage
+    if(!revealed){
+      valueContainer.classList.add('hidden-value');
+      return;
+    }
+    valueContainer.classList.remove('hidden-value');
+
     const str = total.toString();
     const len = str.length;
     let html = '';
     
-    // Pour gérer les groupes, on itère et on ouvre/ferme des DIV
-    // On doit savoir quand un groupe change.
     let currentGroupIndex = -1;
     
     for(let i=0; i<len; i++){
       const digit = str[i];
-      // Puissance de 10 associée (ex: 123 -> '1' est power 2, '3' est power 0)
       const power = len - 1 - i;
-      
-      // Groupe de classe : 0=Unités (pow 0,1,2), 1=Mille (pow 3,4,5), 2=Millions...
       const groupIndex = Math.floor(power / 3);
       
-      // Couleur du chiffre
-      const colorIndex = power % 3;
-      let colorVar = '';
-      if(colorIndex === 0) colorVar = 'var(--color-green)';
-      else if(colorIndex === 1) colorVar = 'var(--color-blue)';
-      else colorVar = 'var(--color-red)';
+      // -- Gestion du Fond --
+      let bgClass = '';
+      if(useGroups){
+        if(groupIndex === 0) bgClass = 'bg-white with-bg';
+        else if(groupIndex === 1) bgClass = 'bg-gray with-bg';
+        else bgClass = 'bg-black with-bg';
+      } else {
+        bgClass = 'no-bg';
+      }
       
-      // Si on change de groupe (ou au démarrage)
-      if(groupIndex !== currentGroupIndex){
-        // Si ce n'est pas le tout premier, on ferme le précédent
-        if(currentGroupIndex !== -1) {
-            html += `</div>`;
+      // -- Gestion de la Couleur Texte --
+      let textColor = '';
+      if(useColors){
+        const colorIndex = power % 3;
+        if(colorIndex === 0) textColor = 'var(--color-green)';
+        else if(colorIndex === 1) textColor = 'var(--color-blue)';
+        else textColor = 'var(--color-red)';
+      } else {
+        // Noir/Blanc (contraste)
+        if(useGroups && groupIndex >= 2) {
+           textColor = '#f0f0f0';
+        } else {
+           textColor = '#1b1b1b';
         }
-        
-        // On ouvre le nouveau groupe
-        let bgClass = '';
-        if(groupIndex === 0) bgClass = 'bg-white';
-        else if(groupIndex === 1) bgClass = 'bg-gray';
-        else bgClass = 'bg-black';
-        
+      }
+      
+      // Construction HTML
+      if(groupIndex !== currentGroupIndex){
+        if(currentGroupIndex !== -1) html += `</div>`;
         html += `<div class="digit-group ${bgClass}">`;
         currentGroupIndex = groupIndex;
       }
       
-      // On ajoute le chiffre
-      html += `<span class="digit-char" style="color:${colorVar}">${digit}</span>`;
+      html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
     }
-    
-    // Fermeture du dernier groupe
     if(currentGroupIndex !== -1) html += `</div>`;
 
     valueContainer.innerHTML = html;
-    
-    if(revealed){
-      valueContainer.classList.remove('hidden-value');
-      toggleBtn.textContent = 'Masquer';
-    } else {
-      valueContainer.classList.add('hidden-value');
-      toggleBtn.textContent = 'Afficher';
-    }
   }
 
   init();
