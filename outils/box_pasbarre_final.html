@@ -93,6 +93,22 @@
     .check-control:hover { background: #f1f5f9; border-color: var(--bag-b); }
     .check-control input { width: 14px; height: 14px; accent-color: var(--bag-b); }
     .check-control span { font-size: 11px; font-weight: 600; color: var(--ink); }
+
+    /* CONTROLES RV / CORRECTION */
+    .corr-group { display: flex; gap: 8px; align-items: stretch; }
+    .check-control-box { flex: 1; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 5px 8px; border-radius: 4px; border: 1px solid #e2e8f0; cursor: pointer; }
+    .check-control-box input { width: 14px; height: 14px; accent-color: var(--bag-b); }
+    .check-control-box span { font-size: 11px; font-weight: 600; color: var(--ink); }
+
+    .rv-btn { 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 11px; font-weight: 800; cursor: pointer; 
+        padding: 0 10px; border-radius: 4px; 
+        background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b;
+        transition: all 0.2s;
+    }
+    .rv-btn.active { background: var(--bag-b); color: white; border-color: var(--bag-b); }
+    .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
     .actions { padding: 15px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; }
     .btn { padding: 10px; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; transition: opacity 0.2s; }
@@ -105,6 +121,10 @@
     .page-inner { position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin); display: flex; flex-direction: column; transform-origin: top center; }
     .grid { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); gap: 8px; height: 100%; }
     
+    /* MIROIR POUR LE VERSO */
+    .grid-mirror { direction: rtl; }
+    .grid-mirror .card { direction: ltr; }
+
     .card { border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; position: relative; background: #fff; height: 100%; width: 100%; }
 
     .card-header { 
@@ -132,6 +152,12 @@
     
     .hidden-ctrl { display: none !important; }
 
+    /* LABEL EN BAS DE PAGE */
+    .page-label {
+        position: absolute; bottom: -22px; left: 0; right: 0; text-align: center;
+        font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;
+    }
+
     @media print { 
       @page { size: A4; margin: 0; } 
       body { display: block; background: white; height: auto; overflow: visible; } 
@@ -142,6 +168,7 @@
       .card { border: 2px solid #000; break-inside: avoid; }
       .card-header { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; border-bottom: 2px solid #000; }
       .given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+      .page-label { display: none; }
     }
   </style>
 </head>
@@ -239,10 +266,14 @@
     </div>
 
     <div class="control-group">
-        <label class="check-control">
-            <input type="checkbox" id="showCorr" onchange="renderPages()">
-            <span>Afficher la Solution</span>
-        </label>
+        <div class="corr-group">
+            <label class="check-control-box">
+                <input type="checkbox" id="showCorr" onchange="toggleCorr()">
+                <span>Solution</span>
+            </label>
+            <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
+        </div>
+        <div style="font-size:10px; color:#64748b; margin-top:2px;">*RV = Inverse pour le Verso</div>
     </div>
 
     <div class="actions">
@@ -257,6 +288,7 @@
 <script>
 let state = [];
 const COLS = 2; const ROWS = 4; const ITEMS = COLS * ROWS;
+let isRVMode = false;
 
 const BAGS = [
     { id: 'A', name: 'NOIRE', color: '#334155' },
@@ -326,6 +358,28 @@ function updateUI() {
         optHint.classList.remove('hidden-ctrl');
         optHint.style.display = "block";
     }
+}
+
+function toggleCorr() {
+    const isCorr = document.getElementById('showCorr').checked;
+    const rvBtn = document.getElementById('btnRV');
+    
+    if(isCorr) {
+        rvBtn.classList.remove('disabled');
+    } else {
+        rvBtn.classList.add('disabled');
+        rvBtn.classList.remove('active');
+        isRVMode = false;
+    }
+    renderPages();
+}
+
+function toggleRV(btn) {
+    if(btn.classList.contains('disabled')) return;
+    isRVMode = !isRVMode;
+    if(isRVMode) btn.classList.add('active');
+    else btn.classList.remove('active');
+    renderPages();
 }
 
 function startGen() {
@@ -658,87 +712,117 @@ function generateDots(count, obstacles) {
     return placed;
 }
 
+// FONCTION PRINCIPALE DE RENDU DES PAGES
 function renderPages() {
   const main = document.getElementById('mainArea');
   const isCorr = document.getElementById('showCorr').checked;
   main.innerHTML = '';
-  const page = document.createElement('div'); page.className = 'page';
-  const inner = document.createElement('div'); inner.className = 'page-inner';
-  const grid = document.createElement('div'); grid.className = 'grid';
+  
+  if (!isCorr) {
+      // Juste la page d'exercice
+      main.appendChild(createPageElement(state, false, false));
+  } else {
+      if (isRVMode) {
+          // RV ACTIVÉ : Page 1 = Exo, Page 2 = Corr Miroir
+          main.appendChild(createPageElement(state, false, false));
+          main.appendChild(createPageElement(state, true, true));
+      } else {
+          // RV DÉSACTIVÉ : Page 1 = Corr, Page 2 = Exo
+          main.appendChild(createPageElement(state, true, false));
+          main.appendChild(createPageElement(state, false, false));
+      }
+  }
+}
 
-  state.forEach(item => {
-    const card = document.createElement('div'); card.className = 'card';
+// FONCTION DE CREATION D'UNE PAGE (Exo ou Corr)
+function createPageElement(items, isCorrectionPage, mirror) {
+    const page = document.createElement('div'); page.className = 'page';
+    const inner = document.createElement('div'); inner.className = 'page-inner';
+    const grid = document.createElement('div'); 
+    
+    // Application de la classe miroir si nécessaire
+    grid.className = mirror ? 'grid grid-mirror' : 'grid';
 
-    const header = document.createElement('div'); header.className = 'card-header';
-    header.innerText = item.header;
-    card.appendChild(header);
+    items.forEach(item => {
+        const card = document.createElement('div'); card.className = 'card';
 
-    const visual = document.createElement('div'); visual.className = 'card-visual';
-    visual.innerHTML = getBagSceneSvg(item, isCorr);
-    card.appendChild(visual);
+        const header = document.createElement('div'); header.className = 'card-header';
+        header.innerText = item.header;
+        card.appendChild(header);
 
-    const footer = document.createElement('div'); footer.className = 'card-footer';
+        const visual = document.createElement('div'); visual.className = 'card-visual';
+        // On passe isCorrectionPage pour savoir si on affiche les points cachés ou non
+        visual.innerHTML = getBagSceneSvg(item, isCorrectionPage);
+        card.appendChild(visual);
 
-    // LOGIQUE D'AFFICHAGE FOOTER
-    let showTotal = true;
-    if (item.gameType === 'architect') showTotal = false;
-    if (isCorr) showTotal = true;
+        const footer = document.createElement('div'); footer.className = 'card-footer';
 
-    // Valeur "Visible" uniquement en correction (sinon case vide pour compter)
-    let showVis = false;
-    if (isCorr) showVis = true;
+        // LOGIQUE D'AFFICHAGE FOOTER
+        let showTotal = true;
+        if (item.gameType === 'architect') showTotal = false;
+        if (isCorrectionPage) showTotal = true;
 
-    // On montre si correction OU si c'est la valeur donnée en indice
-    let showA = (isCorr || item.givenVal === 'A');
-    let showB = (isCorr || item.givenVal === 'B');
-    let showC = (isCorr || item.givenVal === 'C');
+        // Valeur "Visible" uniquement en correction (sinon case vide pour compter)
+        let showVis = false;
+        if (isCorrectionPage) showVis = true;
 
-    // Total toujours en premier (inchangé)
-    footer.innerHTML += createAnsBox("Total", showTotal ? item.total : "", "lbl-total " + (showTotal && !isCorr ? "given-val" : ""));
+        // On montre si correction OU si c'est la valeur donnée en indice
+        let showA = (isCorrectionPage || item.givenVal === 'A');
+        let showB = (isCorrectionPage || item.givenVal === 'B');
+        let showC = (isCorrectionPage || item.givenVal === 'C');
 
-    // ORDRE DES CASES (comme demandé) + Visible toujours en dernier
-    if (item.level === 1) {
-        // Niveau 1 : Boîte Noire, puis Visible
-        footer.innerHTML += createAnsBox("Boîte Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
+        // Total toujours en premier
+        footer.innerHTML += createAnsBox("Total", showTotal ? item.total : "", "lbl-total " + (showTotal && !isCorrectionPage ? "given-val" : ""));
+
+        // ORDRE DES CASES (selon le niveau)
+        if (item.level === 1) {
+            footer.innerHTML += createAnsBox("Boîte Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorrectionPage ? "given-val" : ""));
+        }
+        else if (item.level === 2) {
+            let showFirst = showA;
+            let showSecond = isCorrectionPage;
+            footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorrectionPage ? "given-val" : ""));
+            footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
+        }
+        else if (item.level === 3) {
+            let showFirst = showA;
+            let showSecond = isCorrectionPage;
+            let showThird = isCorrectionPage;
+            footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorrectionPage ? "given-val" : ""));
+            footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
+            footer.innerHTML += createAnsBox("Boîte Noire", showThird ? item.valA : "", "lbl-a");
+        }
+        else if (item.level === 4) {
+            footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorrectionPage ? "given-val" : ""));
+            footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorrectionPage ? "given-val" : ""));
+        }
+        else {
+            footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorrectionPage ? "given-val" : ""));
+            footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorrectionPage ? "given-val" : ""));
+            footer.innerHTML += createAnsBox("Orange", showC ? item.valC : "", "lbl-c " + (showC && !isCorrectionPage ? "given-val" : ""));
+        }
+
+        // Visible toujours en dernier
+        footer.innerHTML += createAnsBox("Visible", showVis ? item.visible : "", "lbl-visible");
+
+        card.appendChild(footer);
+        grid.appendChild(card);
+    });
+
+    inner.appendChild(grid); 
+    
+    // Label bas de page
+    const label = document.createElement('div');
+    label.className = 'page-label';
+    if(isCorrectionPage) {
+        label.innerText = mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —";
+    } else {
+        label.innerText = "— EXERCICE —";
     }
-    else if (item.level === 2) {
-        // Niveau 2 : Boîte Noire, Boîte Noire, puis Visible
-        let showFirst = showA;
-        let showSecond = isCorr;
+    inner.appendChild(label);
 
-        footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorr ? "given-val" : ""));
-        footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
-    }
-    else if (item.level === 3) {
-        // Niveau 3 : Boîte Noire x3, puis Visible
-        let showFirst = showA;
-        let showSecond = isCorr;
-        let showThird = isCorr;
-
-        footer.innerHTML += createAnsBox("Boîte Noire", showFirst ? item.valA : "", "lbl-a " + (showFirst && !isCorr ? "given-val" : ""));
-        footer.innerHTML += createAnsBox("Boîte Noire", showSecond ? item.valA : "", "lbl-a");
-        footer.innerHTML += createAnsBox("Boîte Noire", showThird ? item.valA : "", "lbl-a");
-    }
-    else if (item.level === 4) {
-        // Niveau 4 : Violette, Noire, puis Visible
-        footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorr ? "given-val" : ""));
-        footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
-    }
-    else {
-        // Niveaux 5 & 6 : Violette, Noire, Orange, puis Visible
-        footer.innerHTML += createAnsBox("Violette", showB ? item.valB : "", "lbl-b " + (showB && !isCorr ? "given-val" : ""));
-        footer.innerHTML += createAnsBox("Noire", showA ? item.valA : "", "lbl-a " + (showA && !isCorr ? "given-val" : ""));
-        footer.innerHTML += createAnsBox("Orange", showC ? item.valC : "", "lbl-c " + (showC && !isCorr ? "given-val" : ""));
-    }
-
-    // Visible toujours en dernier
-    footer.innerHTML += createAnsBox("Visible", showVis ? item.visible : "", "lbl-visible");
-
-    card.appendChild(footer);
-    grid.appendChild(card);
-  });
-
-  inner.appendChild(grid); page.appendChild(inner); main.appendChild(page);
+    page.appendChild(inner); 
+    return page;
 }
 
 function createAnsBox(lbl, val, cls) {
