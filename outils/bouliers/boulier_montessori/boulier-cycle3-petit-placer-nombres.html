@@ -39,13 +39,13 @@
 
   /* --- Topbar & Contrôles --- */
   .toolbar{
-    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
-    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
     background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
   }
   
   .control-group {
-    display:flex; align-items:center; gap:8px; flex-wrap: wrap;
+    display:flex; align-items:center; gap:6px; flex-wrap: wrap;
   }
   
   /* Selecteur Labels */
@@ -54,7 +54,7 @@
     cursor: pointer; color: #333; font-weight: 500;
   }
 
-  /* Boutons Standard */
+  /* Boutons Standard (Bleu par défaut) */
   .btn{
     border:none;background:var(--accent);color:#fff;font-weight:700;
     padding:8px 14px;border-radius:8px;cursor:pointer;
@@ -63,22 +63,25 @@
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280; box-shadow:0 4px 8px rgba(0,0,0,.15);}
-  .btn.check-btn{background:var(--ok); box-shadow:0 4px 8px rgba(15,157,88,.2);}
   
-  /* Bouton Zéro Spécifique (pour le "0") */
+  /* Bouton Gris (Secondaire) */
+  .btn.secondary{background:#6b7280; box-shadow:0 4px 8px rgba(0,0,0,.15);}
+  
+  /* Bouton Zéro Spécifique */
   .btn.zero-btn {
     font-size: 1.2rem;
     padding: 6px 16px;
   }
 
-  /* Boutons Toggle (On/Off) */
+  /* Boutons Toggle (On/Off pour Couleurs/Groupes) */
   .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
   .btn.toggle.active { background: var(--accent); box-shadow: 0 4px 8px rgba(15,108,249,.2); opacity: 1; }
 
-  /* Bouton Taille (Petit/Grand) */
-  .btn.size-toggle { background: #8d6e63; }
-  .btn.size-toggle.active { background: #5d4037; } /* Grand */
+  /* Bouton Taille (Maintenant Bleu comme les autres) */
+  .btn.size-toggle { 
+    /* Pas de couleur spécifique, hérite de .btn (bleu) */
+    padding: 8px 12px; 
+  }
 
   .score{margin-left:auto;display:flex;gap:12px;align-items:center;font-weight:800;font-size:1.1rem;}
   .score .good{color:var(--ok)}
@@ -86,20 +89,21 @@
 
   /* --- Zone Exercice --- */
   .exercise-box {
-    text-align: center; margin-bottom: 10px;
-    background: var(--ui); padding: 15px; border-radius: 12px;
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    text-align: center; 
+    margin-bottom: 5px; 
   }
-  .instruction { font-weight: 600; color: #555; margin-bottom: 10px; }
+  
+  .instruction { 
+    font-weight: 600; color: #555; margin-bottom: 5px; font-size: 1.1rem;
+  }
 
   /* --- Affichage Cible --- */
   .target-display {
     display: flex; align-items: center; justify-content: center;
     flex-wrap: wrap; gap: 0; margin: 0 auto;
-    min-height: 5rem;
-    background: #fff; 
-    border-radius: 12px;
-    padding: 5px 15px;
+    min-height: 4.5rem;
+    background: transparent;
+    padding: 0;
     width: fit-content;
   }
   
@@ -132,14 +136,15 @@
   .bg-gray  { background-color: #e0e0e0; }
   .bg-black { background-color: #1b1b1b; border-color: #444; }
 
-  .feedback{ font-weight:800; margin-top:10px; min-height:1.5em; font-size: 1.2rem; }
+  .feedback{ font-weight:800; margin-top:5px; min-height:1.5em; font-size: 1.2rem; margin-bottom: 5px;}
   .feedback.ok{color:var(--ok)}
   .feedback.err{color:var(--err)}
 
   /* --- Boulier Layout --- */
   .abacus-wrapper{
     display:flex; align-items:flex-start; justify-content: center;
-    margin-top: 5px; overflow-x: auto; padding-bottom: 20px;
+    margin-top: 0px; 
+    overflow-x: auto; padding-bottom: 20px;
   }
 
   .labels{
@@ -227,7 +232,7 @@
       
       <!-- Groupe 1: Taille & Style -->
       <div class="control-group">
-        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️ Petit</button>
+        <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
         <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨 Couleurs</button>
         <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜ Groupes</button>
       </div>
@@ -245,7 +250,7 @@
       <div class="control-group">
         <button class="btn" id="newNumber">🎲 Nouveau</button>
         <button class="btn secondary zero-btn" id="reset" title="Remise à zéro">0</button>
-        <button class="btn check-btn" id="check">✅ Vérifier</button>
+        <button class="btn" id="check">✅ Vérifier</button>
       </div>
 
       <!-- Score -->
@@ -331,12 +336,10 @@
     btnSize.addEventListener('click', () => {
       if(currentRows === 4) {
         currentRows = 7;
-        btnSize.textContent = '↕️ Grand';
-        btnSize.classList.add('active'); 
+        btnSize.title = "Passer au petit boulier";
       } else {
         currentRows = 4;
-        btnSize.textContent = '↕️ Petit';
-        btnSize.classList.remove('active');
+        btnSize.title = "Passer au grand boulier";
       }
       updateStructure();
       generateNewTarget();
