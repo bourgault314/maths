@@ -28,7 +28,7 @@
     --text: #1b1b1b;
     --ui: #f3f1ea;
     --accent: #0f6cf9;
-    --ok: #0f9d58;
+    --ok: #0f9d58; /* Vert */
     --err: #d93025;
     
     --btn-off: #9ca3af; /* Gris pour inactif */
@@ -71,7 +71,7 @@
     white-space: nowrap;
   }
   
-  /* État Actif / Bleu */
+  /* État Actif / Bleu (pour Toggles & Nouveau) */
   .btn.active, .btn:active {
     background: var(--accent);
     box-shadow: 0 2px 5px rgba(15,108,249,.2);
@@ -79,13 +79,15 @@
     transform: translateY(1px);
   }
 
-  /* Bouton Vérifier (Reste Vert) */
+  /* Bouton Vérifier : Gris par défaut, Vert au clic */
   .btn.check-btn {
-    background:var(--ok); 
-    box-shadow:0 2px 5px rgba(15,157,88,.2);
-    opacity: 1;
+    background: var(--btn-off); /* Gris au repos */
   }
-  .btn.check-btn:active { transform: translateY(1px); }
+  .btn.check-btn:active {
+    background: var(--ok); /* Vert à l'appui */
+    box-shadow: 0 2px 5px rgba(15,157,88,.2);
+    transform: translateY(1px);
+  }
   
   /* Bouton Zéro Spécifique */
   .btn.zero-btn {
@@ -278,7 +280,6 @@
       <!-- Groupe 2: Labels -->
       <div class="control-group">
         <select id="labelMode">
-          <!-- '1x, 10x...' retiré -->
           <option value="num">1, 10...</option>
           <option value="name">Unités...</option>
           <option value="valeur">Valeur</option>
@@ -291,6 +292,7 @@
       <div class="control-group">
         <button class="btn" id="newNumber">🎲 Nouveau</button>
         <button class="btn zero-btn" id="reset" title="Remise à zéro">0</button>
+        <!-- Bouton Vérifier : Gris, Vert au clic -->
         <button class="btn check-btn" id="check">✅ Vérifier</button>
       </div>
 
@@ -332,8 +334,7 @@
   const fullLabelData = {
     num: ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"],
     name: ["Unités", "Dizaines", "Centaines", "Milliers", "Dix Mille", "Cent Mille", "Million"],
-    // mult retiré
-    valeur: ["", "", "", "", "", "", ""] // Vide pour le mode Valeur
+    valeur: ["", "", "", "", "", "", ""] // Vide pour le mode Valeur (side labels)
   };
 
   // État de l'app
@@ -512,11 +513,10 @@
 
   function updateBeadText() {
     const mode = labelSelect.value;
-    const allBeads = document.querySelectorAll('.bead');
+    const rows = abacusEl.children;
     // Valeurs à afficher : 1, 10, 100, 1000 (indices 0, 1, 2, 3)
     const displayValues = ["1", "10", "100", "1 000"];
     
-    const rows = abacusEl.children;
     for(let r=0; r<rows.length; r++){
       const row = rows[r];
       const beads = row.querySelectorAll('.bead');
@@ -553,7 +553,7 @@
       state[r] = j - 1;
     }
     layoutRow(r);
-    renderTotal(); // MAJ bouton zéro
+    renderTotal(); 
   }
 
   function layoutRow(r){
@@ -599,9 +599,9 @@
   function renderTotal() {
       const val = currentTotal();
       if(val === 0) {
-          resetBtn.classList.add('active'); // Bleu si 0
+          resetBtn.classList.add('active'); 
       } else {
-          resetBtn.classList.remove('active'); // Gris si pas 0
+          resetBtn.classList.remove('active');
       }
   }
 
@@ -617,7 +617,7 @@
     
     state.fill(0);
     layoutAll();
-    renderTotal(); // Reset button update
+    renderTotal(); 
     renderTargetDisplay(targetValue);
     
     feedbackEl.textContent = '';
