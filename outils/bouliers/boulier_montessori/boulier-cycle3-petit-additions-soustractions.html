@@ -27,38 +27,53 @@
     --bg: #fffdf8;
     --text: #1b1b1b;
     --ui: #f3f1ea;
-    --accent: #0f6cf9;
-    --ok: #0f9d58;
-    --err: #d93025;
+    --accent: #0f6cf9; /* Bleu principal */
+    --ok: #0f9d58;     /* Vert validation */
+    --err: #d93025;    /* Rouge erreur */
     
     --btn-off: #9ca3af; /* Gris pour inactif */
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:900px;margin:10px auto;padding:0 8px; display:flex; flex-direction:column; min-height:90vh;}
+  
+  /* Layout Principal (Flexible) */
+  .app {
+    width: 100%;
+    max-width: 900px; 
+    margin: 10px auto;
+    padding: 0 8px; 
+    display: flex; 
+    flex-direction: column; 
+    min-height: 90vh; 
+    background: var(--bg);
+    transition: max-width 0.4s ease;
+  }
+
+  .app.show-table {
+    max-width: 1300px;
+  }
 
   /* --- Topbar & Contrôles --- */
   .toolbar{
-    display:flex; flex-wrap:nowrap; gap:8px; align-items:center; justify-content:center;
+    display:flex; flex-wrap:nowrap; gap:12px; align-items:center; justify-content:center;
     margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
-    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 8px;
-    overflow-x: auto;
+    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
   }
   
   .control-group {
-    display:flex; align-items:center; gap:4px; flex-shrink: 0;
+    display:flex; align-items:center; gap:6px; flex-shrink: 0; flex-wrap: wrap; justify-content: center;
   }
   
   .separator {
-    width: 1px; height: 24px; background: #ccc; margin: 0 4px;
+    width: 1px; height: 24px; background: #ccc; margin: 0 6px;
   }
-  
-  /* Boutons Standard (Gris par défaut) */
+
+  /* Boutons */
   .btn{
     border:none;
     background: var(--btn-off); 
     color:#fff;font-weight:700;
-    padding:6px 10px; border-radius:6px; cursor:pointer;
+    padding:6px 12px; border-radius:6px; cursor:pointer;
     box-shadow:none; font-size:.9rem;
     transition: all 0.1s; 
     display: flex; align-items: center; justify-content: center; gap: 4px;
@@ -71,29 +86,50 @@
     background: var(--accent);
     box-shadow: 0 2px 5px rgba(15,108,249,.2);
     opacity: 1;
-    transform: translateY(1px);
+    transform: translateY(1px); 
   }
-
-  /* Bouton Zéro Spécifique */
+  
   .btn.zero-btn {
     font-size: 1rem; padding: 6px 12px; min-width: 30px;
   }
+
+  /* Bouton Vérifier */
+  .btn.check-btn { 
+    background: var(--btn-off); /* Gris par défaut */
+    font-size: 1.1rem; 
+    padding: 8px 20px; 
+    min-width: 120px;
+  }
   
-  /* Boutons Toggle */
+  /* Erreur (Rouge) */
+  .btn.check-btn.error {
+    background: var(--err);
+    animation: shake 0.4s ease-in-out;
+  }
+  
+  /* Succès (Vert) */
+  .btn.check-btn.success {
+    background: var(--ok);
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .btn.size-toggle { padding: 6px 10px; }
   .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
   .btn.toggle.active { background: var(--accent); box-shadow: 0 2px 5px rgba(15,108,249,.2); opacity: 1; }
 
-  /* Bouton Taille */
-  .btn.size-toggle { padding: 6px 10px; }
-
-  /* Score (Texte simple) */
+  /* Score */
   .score-display {
-    display: flex; gap: 8px; font-weight: 800; font-size: 1rem; align-items: center;
+    display: flex; gap: 12px; font-weight: 800; font-size: 1.1rem; align-items: center;
     margin-left: 8px;
-    white-space: nowrap;
   }
   .score-item.good { color: var(--ok); }
   .score-item.bad { color: var(--err); }
+
 
   /* --- Zone Paramètres Exercice --- */
   .exercise-panel {
@@ -149,30 +185,36 @@
     display: flex; gap: 15px; align-items: center; margin-top: 5px;
   }
   
+  /* --- Input Réponse Corrigé --- */
   .answer-input {
-    font-size: 1.6rem; padding: 8px 14px; border-radius: 8px; border: 2px solid var(--accent);
-    width: 140px; text-align: center; font-weight: 700; outline: none;
+    font-size: 1.6rem; 
+    padding: 8px 14px; 
+    border-radius: 8px; 
+    border: 2px solid var(--accent); /* Bordure bleue par défaut */
+    width: 140px; 
+    text-align: center; 
+    font-weight: 700; 
+    outline: none;
     -moz-appearance: textfield;
     background-color: #fff;
     color: #333;
   }
-  .answer-input::-webkit-outer-spin-button, .answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .answer-input:focus { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(15,157,88,0.2); }
-  .answer-input:valid { border-color: var(--accent); }
-
-  /* Bouton Vérifier : Gris, Vert au clic */
-  .btn.check-btn { 
-    background: var(--btn-off); font-size: 1.1rem; padding: 8px 20px; min-width: 120px; 
+  
+  .answer-input::-webkit-outer-spin-button, 
+  .answer-input::-webkit-inner-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
   }
-  .btn.check-btn.success { background: var(--ok); }
-  .btn.check-btn.error { background: var(--err); animation: shake 0.4s ease-in-out; }
-  /* Au clic simple (active), devient Vert */
-  .btn.check-btn:active { background: var(--ok); transform: translateY(1px); box-shadow: 0 2px 5px rgba(15,157,88,.2); }
 
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
+  /* Focus : Reste bleu, pas de vert */
+  .answer-input:focus { 
+    border-color: var(--accent); 
+    box-shadow: 0 0 0 3px rgba(15,108,249,0.2); 
+  }
+  
+  /* Empêche le vert automatique */
+  .answer-input:valid {
+    border-color: var(--accent);
   }
 
   .feedback { font-weight: 700; min-height: 1.2em; font-size: 1.1rem; display: none; } 
@@ -551,11 +593,14 @@
 
   function generateNewOps(){
     const count = parseInt(opCountSel.value);
-    const maxLimit = parseInt(opStepSel.value); 
+    const maxLimit = parseInt(opStepSel.value); // Limite choisie (100, 1000...)
     let mode = 'add';
     opModeRadios.forEach(r => { if(r.checked) mode = r.value; });
 
+    // Le max global physique du boulier (9999 ou 9M)
     const physicalMax = (currentRows === 4) ? 9999 : 9999999;
+    
+    // Le vrai plafond pour ce calcul est le plus petit des deux
     const absoluteLimit = Math.min(maxLimit, physicalMax);
 
     let current = 0;
@@ -571,31 +616,44 @@
         for(let i=0; i<count; i++){
             let sign = 1;
             if(mode === 'mixed') {
+                // Si on est à 0, forcer +, sinon random
                 if(current === 0) sign = 1; 
                 else sign = Math.random() < 0.5 ? 1 : -1;
             }
             
+            // Calculer la valeur max possible pour ce terme
             let termMax;
             if(sign === 1) {
+                // Pour une addition : on ne doit pas dépasser absoluteLimit
                 termMax = absoluteLimit - current;
             } else {
+                // Pour une soustraction : on ne doit pas descendre sous 0
                 termMax = current;
             }
 
+            // Si termMax est trop petit (ex: 0), on ne peut pas générer de terme valide
             if(termMax < 1) {
+                // On essaie de "forcer" un petit nombre si possible, ou on invalide
                 valid = false; 
                 break; 
             }
             
+            // On génère un nombre aléatoire entre 1 et termMax
+            // Pour éviter que ce soit toujours 1, on peut limiter le max à quelque chose de raisonnable
+            // mais ici on respecte strictment la limite.
             const val = randomInt(1, termMax);
             
             current += sign * val;
             ops.push(sign * val);
         }
+        
+        // Vérification finale
         if(current <= 0 || current > absoluteLimit) valid = false;
+        
         tries++;
     }
     
+    // Fallback si échec génération (très rare avec limites correctes)
     if (!valid) {
         targetValue = 1; 
         currentOpsList = [1];
@@ -608,7 +666,7 @@
     lastResultCorrect = false;
     isSolved = false;
     
-    // Reset UI
+    // Reset UI pour "Vérifier"
     actionBtn.textContent = "Vérifier";
     actionBtn.classList.remove('success', 'error'); 
     userAnswer.disabled = false;
@@ -689,8 +747,10 @@
 
   function handleAction(){
     if(isSolved) {
+        // Mode "Suivant"
         generateNewOps();
     } else {
+        // Mode "Vérifier"
         checkAnswer();
     }
   }
@@ -699,7 +759,7 @@
     const valAbacus = state.reduce((s, c, r) => s + c * fullMultipliers[r], 0);
     let valInput = userAnswer.value.trim() === "" ? null : parseInt(userAnswer.value);
     
-    // Validation STRICTE sur l'input
+    // Validation STRICTE : Uniquement l'input utilisateur
     if (valInput === null) {
         feedbackEl.textContent = "Écris une réponse.";
         feedbackEl.style.display = "block";
@@ -708,12 +768,13 @@
     }
 
     if(valInput === targetValue){
+        // Gagné
         goodCount++; goodEl.textContent = goodCount;
         feedbackEl.textContent = "Bravo ! C'est juste. ✅";
         feedbackEl.className = "feedback ok";
         feedbackEl.style.display = "block";
         
-        setAbacusToValue(targetValue); 
+        setAbacusToValue(targetValue); // Correction auto
         showOverlay(true);
         lastResultCorrect = true;
         renderTable(); 
@@ -724,6 +785,7 @@
         userAnswer.disabled = true; 
         
     } else {
+        // Perdu
         badCount++; badEl.textContent = badCount;
         feedbackEl.textContent = "Non, essaie encore !";
         feedbackEl.style.display = "block";
@@ -833,12 +895,15 @@
   }
 
   function onBeadClick(r, j){
+    // Pas de blocage si résolu, on peut explorer
     const currentCount = state[r];
     if (j > currentCount) state[r] = j;
     else state[r] = j - 1;
     layoutRow(r);
     renderTotal();
-    renderTable();
+    // Le tableau ne montre pas le résultat "live" ici (sauf si on veut tricher ?)
+    // En mode "Opération", le tableau montre l'énoncé. Le résultat s'affiche à la validation.
+    // Donc on ne renderTable() pas ici.
   }
 
   function layoutRow(r){
