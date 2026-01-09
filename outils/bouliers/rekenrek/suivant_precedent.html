@@ -23,17 +23,9 @@
   }
 
   /* --- SUPPRESSION DES FLÈCHES (SPINNERS) DANS L'INPUT --- */
-  /* Pour Chrome, Safari, Edge, Opera */
   input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  /* Pour Firefox */
-  input[type=number] {
-    -moz-appearance: textfield;
-  }
-  /* ------------------------------------------------------- */
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
 
   .toolbar {
     position: relative; width: 100%; min-height: 60px;
@@ -41,6 +33,8 @@
     justify-content: space-between; padding: 0 20px; box-sizing: border-box;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 1000;
   }
+  
+  .toolbar-group { display: flex; gap: 10px; align-items: center; }
 
   .score-board { display: flex; gap: 20px; font-weight: bold; font-size: 24px; }
   .score-good { color: var(--success); }
@@ -67,7 +61,6 @@
     display: flex; flex-direction: column; align-items: center; gap: 20px;
   }
 
-  /* Carte de la consigne */
   #task-card {
     background: #333; padding: 15px 30px; border-radius: 20px;
     display: flex; flex-direction: column; align-items: center;
@@ -102,7 +95,7 @@
   .bead.red { background: var(--bead-red); }
   .bead.white { background: var(--bead-alt); }
 
-  #feedback { height: 60px; font-size: 42px; font-weight: bold; margin-top: 10px; transition: transform 0.2s; }
+  #feedback { height: 60px; font-size: 42px; font-weight: bold; margin-top: 10px; transition: transform 0.2s; text-align: center; }
 
   #input-zone { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
 
@@ -123,6 +116,8 @@
     border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;
   }
 
+  #btn-lang { background: #333; border: 1px solid #555; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+
   .hidden-abacus { opacity: 0.03; pointer-events: none; }
   .reveal-btn { font-size: 18px; color: #888; text-decoration: underline; cursor: pointer; background:none; border:none; margin-top: 15px; }
 </style>
@@ -131,6 +126,7 @@
 
 <div class="toolbar">
   <div class="toolbar-group">
+    <button class="btn-ui" id="btn-lang" onclick="toggleLang()">ENG</button>
     <select id="level-select" onchange="initGame()">
       <optgroup label="Nombres 0-10">
         <option value="1">Niveau 1 : Manipulation</option>
@@ -148,10 +144,10 @@
         <option value="9">Niveau 9 : Mental</option>
       </optgroup>
     </select>
-    <button class="btn-ui" onclick="document.body.classList.toggle('blue-mode')">🔵 Bleu</button>
+    <button class="btn-ui" id="btn-theme" onclick="toggleTheme()">🔵 Bleu</button>
   </div>
   
-  <div style="font-weight: bold; font-size: 24px; color: white;">LE VOISIN</div>
+  <div id="app-title" style="font-weight: bold; font-size: 24px; color: white;">LE VOISIN</div>
   
   <div class="score-board">
     <span class="score-good">✅ <span id="count-good">0</span></span>
@@ -176,7 +172,7 @@
 
         <div id="input-zone">
           <input type="number" id="input-val" placeholder="?" inputmode="numeric">
-          <button class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px; width:100%;" onclick="checkAction()">Vérifier</button>
+          <button id="btn-verify" class="btn-ui" style="background:var(--accent); border:none; height:55px; font-size:20px; width:100%;" onclick="checkAction()">Vérifier</button>
         </div>
       </div>
     </div>
@@ -191,6 +187,46 @@
   let goodScore = 0, badScore = 0, isAnswered = false;
   let currentScale = 1, states = []; 
   let deck = [];
+  let currentLang = 'fr';
+  let isBlue = false;
+
+  // --- TRADUCTION ---
+  const i18n = {
+    fr: {
+      langBtn: "ENG",
+      title: "LE VOISIN",
+      btnBlue: "🔵 Bleu",
+      btnWhite: "⚪ Blanc",
+      btnVerify: "Vérifier",
+      btnNext: "Suivant ➔",
+      btnReveal: "👁️ Besoin d'une aide visuelle ?",
+      fBad: "Essaie encore ! ❌",
+      fWarn: "Réponse juste, mais...<br>Vérifie ton boulier 🧮",
+      fGood: "Bravo ! ✅",
+      instNext: "Donne le nombre suivant",
+      instPrev: "Donne le nombre précédent",
+      optGroups: ["Nombres 0-10", "Nombres 10-20", "Nombres 0-100"],
+      levelTypes: ["Manipulation", "Outil Libre", "Mental"],
+      levelPrefix: "Niveau"
+    },
+    en: {
+      langBtn: "FR",
+      title: "THE NEIGHBOR",
+      btnBlue: "🔵 Blue",
+      btnWhite: "⚪ White",
+      btnVerify: "Check",
+      btnNext: "Next ➔",
+      btnReveal: "👁️ Need visual help?",
+      fBad: "Try again! ❌",
+      fWarn: "Correct answer, but...<br>Check your abacus 🧮",
+      fGood: "Well done! ✅",
+      instNext: "Give the next number",
+      instPrev: "Give the previous number",
+      optGroups: ["Numbers 0-10", "Numbers 10-20", "Numbers 0-100"],
+      levelTypes: ["Manipulation", "Free Tool", "Mental"],
+      levelPrefix: "Level"
+    }
+  };
   
   const BEAD_W = 38;
   const frame = document.getElementById('abacus-frame');
@@ -201,6 +237,58 @@
   const feedback = document.getElementById('feedback');
   const layout = document.getElementById('game-layout');
   const interactionZone = document.getElementById('interaction-zone');
+
+  function toggleTheme() {
+    document.body.classList.toggle('blue-mode');
+    isBlue = !isBlue;
+    const t = i18n[currentLang];
+    document.getElementById('btn-theme').innerText = isBlue ? t.btnWhite : t.btnBlue;
+  }
+
+  function toggleLang() {
+    currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+    updateLanguageUI();
+  }
+
+  function updateLanguageUI() {
+    const t = i18n[currentLang];
+    
+    // Static Elements
+    document.getElementById('btn-lang').innerText = t.langBtn;
+    document.getElementById('app-title').innerText = t.title;
+    document.getElementById('btn-theme').innerText = isBlue ? t.btnWhite : t.btnBlue;
+    document.getElementById('btn-verify').innerText = t.btnVerify;
+    document.getElementById('btn-next').innerText = t.btnNext;
+    document.getElementById('btn-reveal').innerText = t.btnReveal;
+
+    // Update Select Options
+    const select = document.getElementById('level-select');
+    const groups = select.getElementsByTagName('optgroup');
+    
+    // Met à jour les labels des groupes
+    for(let i=0; i<groups.length; i++) {
+        if(t.optGroups[i]) groups[i].label = t.optGroups[i];
+        
+        // Met à jour les options
+        const options = groups[i].getElementsByTagName('option');
+        for(let j=0; j<options.length; j++) {
+            const val = parseInt(options[j].value);
+            // Calculer l'index du type de niveau : 1->0, 2->1, 3->2, 4->0...
+            const typeIdx = (val - 1) % 3;
+            options[j].text = `${t.levelPrefix} ${val} : ${t.levelTypes[typeIdx]}`;
+        }
+    }
+
+    // Dynamic Instruction (si une partie est en cours)
+    if(direction !== 0) {
+        taskInstDiv.innerText = (direction === 1) ? t.instNext : t.instPrev;
+    }
+
+    // Dynamic Feedback
+    if(feedback.innerText.includes("✅")) feedback.innerHTML = t.fGood;
+    else if(feedback.innerText.includes("❌")) feedback.innerHTML = t.fBad;
+    else if(feedback.innerText.includes("ton boulier") || feedback.innerText.includes("your abacus")) feedback.innerHTML = t.fWarn;
+  }
 
   // --- Deck System ---
   function buildDeck(min, max) {
@@ -237,7 +325,10 @@
     targetNum = startNum + direction;
 
     taskNumDiv.innerText = startNum;
-    taskInstDiv.innerText = direction === 1 ? "Donne le nombre suivant" : "Donne le nombre précédent";
+    
+    // Consigne via Langue
+    const t = i18n[currentLang];
+    taskInstDiv.innerText = (direction === 1) ? t.instNext : t.instPrev;
     taskInstDiv.style.color = direction === 1 ? "#4caf50" : "#ff9800"; 
 
     let rowCount = (level <= 3) ? 1 : (level <= 6 ? 2 : 10);
@@ -245,7 +336,6 @@
 
     buildAbacus(rowCount);
 
-    // --- Gestion Layout ---
     if (level >= 7) {
         layout.style.flexDirection = 'row';
         interactionZone.style.marginTop = '0px'; 
@@ -254,16 +344,12 @@
         interactionZone.style.marginTop = '20px';
     }
     
-    // --- Gestion des Niveaux ---
     const isManip = (level === 1 || level === 4 || level === 7);
-    const isLibre = (level === 2 || level === 5 || level === 8);
     const isMental = (level === 3 || level === 6 || level === 9);
 
     if (isManip) {
-        // Niveau 1/4/7 : Boulier initialisé à StartNum.
         setNumberOnAbacus(startNum, rowCount);
     } else {
-        // Niveau 2/5/8 (Libre) ou Mental : Boulier à 0.
         setNumberOnAbacus(0, rowCount); 
         if (isMental) {
             frame.classList.add('hidden-abacus');
@@ -271,7 +357,6 @@
         }
     }
     
-    // Toujours focus sur l'input car l'élève doit toujours écrire
     setTimeout(() => inputVal.focus(), 100);
     autoScale();
   }
@@ -279,36 +364,33 @@
   function checkAction() {
     const level = parseInt(document.getElementById('level-select').value);
     const isMental = (level === 3 || level === 6 || level === 9);
+    const t = i18n[currentLang];
     
     const valInput = parseInt(inputVal.value);
     
-    if (isNaN(valInput)) return; // Pas de réponse = on ne fait rien
+    if (isNaN(valInput)) return; 
 
-    // 1. Vérification de la valeur écrite
     if (valInput !== targetNum) {
         badScore++; document.getElementById('count-bad').innerText = badScore;
-        feedback.innerHTML = "Essaie encore ! ❌";
+        feedback.innerHTML = t.fBad;
         feedback.style.color = "var(--error)";
         return;
     }
 
-    // 2. Si ce n'est pas du mental, on vérifie AUSSI le boulier
     if (!isMental) {
         const currentBeads = states.reduce((a, b) => a + b, 0);
         if (currentBeads !== targetNum) {
-            feedback.innerHTML = "Réponse juste, mais...<br>Vérifie ton boulier 🧮";
+            feedback.innerHTML = t.fWarn;
             feedback.style.color = "var(--warning)";
             return;
         }
     }
 
-    // 3. Si tout est bon (Ecrit + Boulier ou Ecrit seul en mental)
     goodScore++; document.getElementById('count-good').innerText = goodScore;
-    feedback.innerHTML = "Bravo ! ✅";
+    feedback.innerHTML = t.fGood;
     feedback.style.color = "var(--success)";
     feedback.style.transform = "scale(1.2)";
     
-    // On montre la solution sur le boulier pour l'aspect pédagogique
     setNumberOnAbacus(targetNum, states.length);
     frame.classList.remove('hidden-abacus');
     
@@ -345,7 +427,6 @@
 
   function revealAbacus() { frame.classList.remove('hidden-abacus'); document.getElementById('btn-reveal').style.display="none"; }
 
-  // --- MOTEUR PHYSIQUE ---
   let activeDrag = null;
   function startDrag(e) {
     if (isAnswered) return;
@@ -365,15 +446,26 @@
     b.style.transition = 'none';
     b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
   }
+  
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
-    if (beadIdx >= states[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
-    else { if (currentPos > 410 - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    
+    const targetLeft = beadIdx * BEAD_W;
+    const targetRight = 820 - (10 - beadIdx) * BEAD_W;
+    const snapMargin = BEAD_W * 1; 
+
+    if (beadIdx >= states[rowIdx]) { 
+      if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1; 
+    } else { 
+      if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx; 
+    }
+
     activeDrag = null; updateBeads(true);
   });
+
   function updateBeads(animate) {
     frame.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
@@ -390,7 +482,6 @@
     const availableH = window.innerHeight - 80;
     const level = parseInt(document.getElementById('level-select').value);
     
-    // Adaptation taille contenu selon layout
     const contentW = level >= 7 ? 1300 : 920; 
     const contentH = level >= 7 ? 850 : 800;
     
@@ -400,6 +491,9 @@
 
   window.addEventListener('resize', autoScale);
   inputVal.onkeydown = (e) => { if(e.key === 'Enter') checkAction(); };
+  
+  // Initialisation correcte au chargement
+  updateLanguageUI();
   initGame();
 </script>
 </body>
