@@ -465,15 +465,30 @@
     b.style.transition = 'none';
     b.style.left = Math.max(idx * BEAD_W, Math.min(820 - (10 - idx) * BEAD_W, base + dx)) + "px";
   }
+  
+  // MODIFICATION : Logique stricte (tout ou rien) au relâchement
   window.addEventListener('pointerup', () => {
     if (!activeDrag) return;
     const { rowIdx, beadIdx, rowEl } = activeDrag;
     const beads = rowEl.querySelectorAll('.bead');
     const currentPos = parseFloat(beads[beadIdx].style.left);
-    if (beadIdx >= states[rowIdx]) { if (currentPos < 410 + (beadIdx*5)) states[rowIdx] = beadIdx + 1; }
-    else { if (currentPos > 410 - ((10-beadIdx)*5)) states[rowIdx] = beadIdx; }
+    
+    // Positions cibles idéales
+    const targetLeft = beadIdx * BEAD_W;
+    const targetRight = 820 - (10 - beadIdx) * BEAD_W;
+    
+    // Marge de tolérance (1 diamètre de bille)
+    const snapMargin = BEAD_W * 1; 
+
+    if (beadIdx >= states[rowIdx]) { 
+        if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1; 
+    } else { 
+        if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx; 
+    }
+
     activeDrag = null; updateBeads(true);
   });
+
   function updateBeads(animate) {
     frame.querySelectorAll('.row').forEach((row, r) => {
       row.querySelectorAll('.bead').forEach((b, i) => {
