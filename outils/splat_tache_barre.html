@@ -36,9 +36,21 @@
     .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
     .flag-btn.active { opacity: 1; background: var(--accent); color: white; border-color: var(--accent); }
     
-    .check-control { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; margin-bottom: 5px; }
+    /* Modified control group for Correction + RV */
+    .corr-group { display: flex; gap: 8px; align-items: stretch; }
+    .check-control { flex: 1; display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; margin-bottom: 0; }
     .check-control input { width: 17px; height: 17px; cursor: pointer; }
     .check-text { font-size: 12px; font-weight: 700; color: #334155; }
+    
+    .rv-btn { 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 12px; font-weight: 800; cursor: pointer; 
+        padding: 0 12px; border-radius: 8px; 
+        background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b;
+        transition: all 0.2s;
+    }
+    .rv-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 10px; }
     .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
@@ -66,6 +78,18 @@
     .part-left { border-radius: 0 0 0 4px; background: white; }
     .part-right { border-radius: 0 0 4px 0; border-left: none; background-color: #f1f5f9; color: #334155; }
 
+    /* MIRROR LOGIC FOR RV */
+    /* Inverser l'ordre des colonnes (Right to Left) pour que le dos corresponde au face */
+    .grid-mirror { direction: rtl; } 
+    /* Mais remettre le contenu de la cellule en sens normal (Left to Right) */
+    .grid-mirror .cell { direction: ltr; }
+
+    /* CORRECTION BADGE ON PAGE */
+    .page-label {
+        position: absolute; bottom: -25px; left: 0; right: 0; text-align: center;
+        font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;
+    }
+
     @media print { 
       @page { size: A4; margin: 0; } 
       body { display: block; background: white; height: auto; overflow: visible; } 
@@ -74,6 +98,7 @@
       .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
       .grid { border: 2px solid #000; } 
       .part-right { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+      .page-label { display: none; } 
     }
   </style>
 </head>
@@ -92,7 +117,16 @@
 
     <div class="section">
       <div class="sec-title" data-i18n="options">Options</div>
-      <label class="check-control"><input type="checkbox" id="showCorr" onchange="renderPages()"><span class="check-text" data-i18n="opt_corr">Correction / Réponses</span></label>
+      <div class="corr-group">
+          <label class="check-control">
+              <input type="checkbox" id="showCorr" onchange="toggleCorr()">
+              <span class="check-text" data-i18n="opt_corr">Correction</span>
+          </label>
+          <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
+      </div>
+      <div style="font-size:10px; color:#64748b; margin-top:5px; line-height:1.2;">
+        *RV = Inverse l'ordre pour impression recto-verso (miroir).
+      </div>
     </div>
 
     <div class="section">
@@ -134,14 +168,14 @@
 <script>
 const i18n = {
     fr: {
-        title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction",
+        title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
         content: "Contenu", target: "Cible Max", 
         exercise: "Exercice", mode_hidden: "Trouver le caché", mode_draw: "Dessiner les points", mode_mix: "Mélanger",
         btn_mix: "MÉLANGER", btn_print: "IMPRIMER"
     },
     en: {
-        title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Answer Key",
+        title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Key + Problem",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
         content: "Content", target: "Max Target", 
         exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mixed",
@@ -159,6 +193,7 @@ const SPLAT_SHAPES = [
 
 let currentLang = 'fr';
 let state = [];
+let isRVMode = false; // Recto-Verso mode
 
 function setLang(l, el) { 
     currentLang = l; 
@@ -176,7 +211,31 @@ function updateUI() {
     });
 }
 
-// Génération des données (Execute UNIQUEMENT quand on clique sur Mélanger)
+function toggleCorr() {
+    const isCorr = document.getElementById('showCorr').checked;
+    const rvBtn = document.getElementById('btnRV');
+    
+    // On active/désactive le bouton RV selon si Correction est cochée
+    if(isCorr) {
+        rvBtn.classList.remove('disabled');
+    } else {
+        rvBtn.classList.add('disabled');
+        // On désactive RV si on enlève la correction
+        rvBtn.classList.remove('active');
+        isRVMode = false;
+    }
+    renderPages();
+}
+
+function toggleRV(btn) {
+    if(btn.classList.contains('disabled')) return;
+    isRVMode = !isRVMode;
+    if(isRVMode) btn.classList.add('active');
+    else btn.classList.remove('active');
+    renderPages();
+}
+
+// Génération des données
 function startGen() {
   const sizeSelect = document.getElementById('gridSize').value;
   const [cols, rows] = sizeSelect.split('x').map(Number);
@@ -201,8 +260,6 @@ function startGen() {
 }
 
 function createItem(total, mode, maxTarget) {
-    // RÈGLE IMPORTANTE : Max 20 points visibles, peu importe le total.
-    // Si Total = 100, Visible est entre 0 et 20. Caché est entre 80 et 100.
     let maxVisibleAllowed = Math.min(total, 20);
     let visible = Math.floor(Math.random() * (maxVisibleAllowed + 1));
     let hidden = total - visible;
@@ -214,13 +271,8 @@ function createItem(total, mode, maxTarget) {
 
     let clueGiven = Math.random() > 0.5 ? 'visible' : 'hidden';
 
-    // On fixe la forme/rotation de la tache AVANT de placer les points,
-    // pour garantir que les points ne touchent jamais la tache.
     const splatShape = Math.floor(Math.random() * SPLAT_SHAPES.length);
     const splatRot = Math.floor(Math.random() * 360);
-
-    // On calcule les positions des points ICI (à la création) et on les stocke.
-    // Comme ça, ils ne bougeront plus quand on changera l'affichage (correction).
     const dotsPositions = generateDotPositions(visible, maxTarget, splatShape, splatRot);
 
     return { 
@@ -231,20 +283,17 @@ function createItem(total, mode, maxTarget) {
         clueGiven: clueGiven,
         splatShape: splatShape,
         splatRot: splatRot,
-        dots: dotsPositions, // On sauvegarde les coordonées fixes
+        dots: dotsPositions, 
         maxTargetContext: maxTarget
     };
 }
 
-// Fonction utilitaire pour générer les positions une fois pour toutes
 function generateDotPositions(count, maxTarget, splatShape, splatRot) {
     const W = 300, H = 200;
     const cX = 150, cY = 100;
     let dotR = 8;
-    if (maxTarget > 50) dotR = 5; // Un peu plus petits si c'est expert, mais pas trop
+    if (maxTarget > 50) dotR = 5;
 
-    // Test précis: on évite que les points touchent (ou entrent dans) la tache noire.
-    // On teste la forme NON-rotatée, et on "dé-rotate" le point candidat.
     let canTestSplat = false;
     let ctx = null;
     let splatPath = null;
@@ -261,16 +310,9 @@ function generateDotPositions(count, maxTarget, splatShape, splatRot) {
         canvas.width = W; canvas.height = H;
         ctx = canvas.getContext('2d');
         splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
-
-        // Zone tampon autour de la tache : si un point tombe "dans le stroke", on le rejette.
         ctx.lineWidth = (dotR * 2) + 6;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-
         canTestSplat = !!ctx && !!splatPath;
-    } catch (e) {
-        canTestSplat = false; // fallback (très rare)
-    }
+    } catch (e) { canTestSplat = false; }
 
     const placed = [];
     for (let k=0; k<count; k++) {
@@ -280,21 +322,17 @@ function generateDotPositions(count, maxTarget, splatShape, splatRot) {
             dX = 20 + Math.random() * (W - 40);
             dY = 20 + Math.random() * (H - 40);
 
-            // Eviter la boite Total (en haut à droite)
             if (dX > 230 && dY < 70) continue;
 
-            // Eviter la tache noire (précis)
             if (canTestSplat) {
                 const p = rotatePoint(dX, dY, cX, cY, -splatRot);
                 if (ctx.isPointInPath(splatPath, p.x, p.y)) continue;
                 if (ctx.isPointInStroke(splatPath, p.x, p.y)) continue;
             } else {
-                // Fallback : évite le centre (approximation)
                 const distCenter = Math.sqrt((dX - cX)**2 + (dY - cY)**2);
                 if (distCenter < 85) continue;
             }
 
-            // Eviter superposition
             let overlap = false;
             for (let p of placed) {
                 const distP = Math.sqrt((dX - p.x)**2 + (dY - p.y)**2);
@@ -307,22 +345,17 @@ function generateDotPositions(count, maxTarget, splatShape, splatRot) {
     return { arr: placed, r: dotR };
 }
 
-// Affichage (appelé quand on change une option d'affichage)
-function renderPages() {
-  const main = document.getElementById('mainArea');
-  const isCorr = document.getElementById('showCorr').checked;
-  
-  main.innerHTML = ''; 
-  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
-  const itemsPerPage = cols * rows;
+// Fonction pour créer un DOM Element Page
+// Paramètre `mirror` : si true, la grille s'inverse horizontalement (pour le verso)
+function createPageElement(chunk, isCorrectionPage, mirror) {
+    const page = document.createElement('div'); page.className = 'page';
+    const inner = document.createElement('div'); inner.className = 'page-inner';
+    const grid = document.createElement('div'); 
+    
+    // Si on doit faire le miroir (pour que le verso colle au recto), on ajoute la classe spéciale
+    grid.className = mirror ? 'grid grid-mirror' : 'grid';
 
-  for (let i = 0; i < state.length; i += itemsPerPage) {
-      const chunk = state.slice(i, i + itemsPerPage);
-      const page = document.createElement('div'); page.className = 'page';
-      const inner = document.createElement('div'); inner.className = 'page-inner';
-      const grid = document.createElement('div'); grid.className = 'grid';
-      
-      chunk.forEach(item => {
+    chunk.forEach(item => {
         const cell = document.createElement('div'); cell.className = 'cell';
         
         let showVisualTotal = false;
@@ -333,55 +366,40 @@ function renderPages() {
 
         if (item.mode === 'find_hidden') {
             // MODE: TROUVER LE CACHÉ
-            // Normal: On voit les points, on voit le Total en haut. Tableau vide.
-            // Corr: Tableau rempli.
             showVisualTotal = true;
             showVisualDots = true;
             
-            if (isCorr) {
+            if (isCorrectionPage) {
                 diaTotal = item.total;
                 diaLeft = item.visible;
                 diaRight = item.hidden;
             } else {
-                // Tout vide pour forcer l'élève à compter et calculer
-                diaTotal = ""; 
-                diaLeft = ""; 
-                diaRight = ""; 
+                diaTotal = ""; diaLeft = ""; diaRight = ""; 
             }
-
         } else if (item.mode === 'construct') {
             // MODE: DESSINER
-            // Normal: Boite Total vide. Pas de points.
-            // Tableau: Total + (Vis OU Caché).
-            // Corr: Points s'affichent. Boite Total se remplit. Tableau complet.
-            
-            if (isCorr) {
+            if (isCorrectionPage) {
                 showVisualTotal = true;
-                showVisualDots = true; // On affiche les points pour montrer la solution !
+                showVisualDots = true; 
                 diaTotal = item.total;
                 diaLeft = item.visible;
                 diaRight = item.hidden;
             } else {
                 showVisualTotal = false;
-                showVisualDots = false; // L'élève doit dessiner
-                
-                diaTotal = item.total; // Le tableau guide l'élève
+                showVisualDots = false; 
+                diaTotal = item.total; 
                 if (item.clueGiven === 'visible') {
-                    diaLeft = item.visible; 
-                    diaRight = "";
+                    diaLeft = item.visible; diaRight = "";
                 } else {
-                    diaLeft = "";
-                    diaRight = item.hidden;
+                    diaLeft = ""; diaRight = item.hidden;
                 }
             }
         }
 
-        // Construction du SVG avec les données STABLES (item.dots)
         const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
         splatPart.innerHTML = getSplatSvg(item, showVisualTotal, showVisualDots);
         cell.appendChild(splatPart);
 
-        // Diagramme en bas
         const diag = document.createElement('div'); diag.className = 'diagram-container';
         diag.innerHTML = `
             <div class="row-top">${diaTotal}</div>
@@ -389,25 +407,66 @@ function renderPages() {
                 <div class="part-box part-left">${diaLeft}</div>
                 <div class="part-box part-right">${diaRight}</div>
             </div>`;
-        
         cell.appendChild(diag); 
         grid.appendChild(cell);
-      });
+    });
+
+    inner.appendChild(grid);
+    
+    // Petit label en bas pour s'y retrouver
+    const label = document.createElement('div');
+    label.className = 'page-label';
+    if(isCorrectionPage) {
+        label.innerText = mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —";
+    } else {
+        label.innerText = "— EXERCICE —";
+    }
+    
+    inner.appendChild(label);
+
+    page.appendChild(inner); 
+    return page;
+}
+
+function renderPages() {
+  const main = document.getElementById('mainArea');
+  const isCorr = document.getElementById('showCorr').checked;
+  
+  main.innerHTML = ''; 
+  const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
+  const itemsPerPage = cols * rows;
+
+  for (let i = 0; i < state.length; i += itemsPerPage) {
+      const chunk = state.slice(i, i + itemsPerPage);
       
-      inner.appendChild(grid); 
-      page.appendChild(inner); 
-      main.appendChild(page);
+      if (!isCorr) {
+          // Cas simple : juste l'exercice
+          main.appendChild(createPageElement(chunk, false, false));
+      } else {
+          // Correction demandée
+          if (isRVMode) {
+              // MODE RECTO-VERSO : 
+              // Page 1 = Exercice (Normal)
+              // Page 2 = Correction (Miroir Horizontal)
+              main.appendChild(createPageElement(chunk, false, false));
+              main.appendChild(createPageElement(chunk, true, true)); 
+          } else {
+              // MODE CLASSIQUE (Lecture écran ou impression séparée) :
+              // Page 1 = Correction (Normale)
+              // Page 2 = Exercice (Normal)
+              main.appendChild(createPageElement(chunk, true, false));
+              main.appendChild(createPageElement(chunk, false, false));
+          }
+      }
   }
 }
 
 function getSplatSvg(item, showBoxTotal, drawDots) {
-    const W = 300;
-    const H = 200; 
+    const W = 300, H = 200;
     const pathData = SPLAT_SHAPES[item.splatShape % SPLAT_SHAPES.length];
     
     let svg = `<svg class="splat-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
     
-    // 1. Dessin des points (Utilise les positions pré-calculées dans item.dots)
     if (drawDots && item.visible > 0) {
         const pts = item.dots.arr;
         const r = item.dots.r;
@@ -416,12 +475,10 @@ function getSplatSvg(item, showBoxTotal, drawDots) {
         }
     }
     
-    // 2. La Tache (Splat)
     svg += `<g transform="rotate(${item.splatRot}, 150, 100)">`;
     svg += `<path d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
     svg += `</g>`;
     
-    // 3. La Boîte Total (Flottante)
     const boxSize = 40;
     const boxX = W - boxSize - 10;
     const boxY = 10;
