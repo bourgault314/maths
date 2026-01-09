@@ -3,194 +3,453 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Boulier Montessori (unités, dizaines, centaines, milliers)</title>
+<title>Boulier Montessori (Cycle 3)</title>
 <style>
+  /* Réinitialisation */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   :root{
-    --rows: 4;
-    --beads-per-row: 10;
-    --bead-size: 26px;
-    --bead-gap: 6px;
+    --bead-size: 28px;
+    --bead-gap: 0px; 
     --frame-thickness: 14px;
     --rod-thickness: 4px;
 
-    --color-1: #3cb371;     /* vert unités */
-    --color-10: #40c4ff;    /* bleu dizaines */
-    --color-100: #e53935;   /* rouge centaines */
-    --color-1000: #2e7d32;  /* vert foncé milliers */
+    /* Couleurs Montessori */
+    --color-green: #3cb371;
+    --color-blue:  #40c4ff;
+    --color-red:   #e53935;
 
     --color-wood: #e2c48a;
     --color-wood-dark: #a88348;
 
     --bg: #fffdf8;
     --text: #1b1b1b;
-    --ui: #f3f1ea;
     --accent: #0f6cf9;
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .app{max-width:760px;margin:14px auto;padding:0 12px}
+  .app{max-width:850px;margin:10px auto;padding:0 12px; display:flex; flex-direction:column; min-height:90vh;}
 
+  /* --- Toolbar --- */
   .toolbar{
-    display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0 12px
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
   }
-  .value-box{
-    display:none;gap:8px;align-items:center;background:var(--ui);
-    padding:6px 10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05) inset;
+  
+  .control-group {
+    display:flex; align-items:center; gap:6px;
   }
-  .value-box.show{display:flex}
-  .value-box label{font-weight:600;font-size:.95rem}
-  .value-box input{
-    width:140px;font-size:1.3rem;font-weight:800;text-align:right;border:none;background:transparent;outline:none
+  
+  select {
+    font-size: 0.95rem; padding: 6px 10px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
+    cursor: pointer; color: #333; font-weight: 500;
   }
+
   .btn{
     border:none;background:var(--accent);color:#fff;font-weight:700;
-    padding:8px 12px;border-radius:10px;cursor:pointer;
-    box-shadow:0 6px 14px rgba(15,108,249,.2);font-size:.95rem
+    padding:8px 16px;border-radius:8px;cursor:pointer;
+    box-shadow:0 4px 10px rgba(15,108,249,.2);font-size:.95rem;
+    transition: transform 0.1s; white-space: nowrap;
   }
   .btn:active{transform:translateY(1px)}
-  .btn.secondary{background:#6b7280}
+  .btn.secondary{background:#6b7280; box-shadow:0 4px 10px rgba(0,0,0,.15);}
 
+  /* --- Affichage Valeur (Nouveau Style FUSIONNÉ) --- */
+  .center-display {
+    text-align: center; margin-bottom: 15px; 
+    min-height: 5rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  .value-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0; /* Pas de gap ici, géré par les marges des groupes */
+  }
+  .hidden-value { visibility: hidden; }
+
+  /* Le BLOC (Groupe de 3 chiffres max) */
+  .digit-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;       /* Espace intérieur du bloc */
+    height: 4.5rem;        /* Hauteur du bloc */
+    border-radius: 12px;   /* Coins arrondis du bloc global */
+    border: 1px solid rgba(0,0,0,0.15);
+    margin: 0 6px;         /* Espace ENTRE les blocs (séparation des milliers) */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    user-select: none;
+  }
+
+  /* Le CHIFFRE individuel (sans bordure, juste le texte) */
+  .digit-char {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0 1px; /* Tout petit espace pour éviter que les caractères ne se collent trop */
+  }
+
+  /* Fonds des classes */
+  .bg-white { background-color: #ffffff; }
+  .bg-gray  { background-color: #e0e0e0; }
+  .bg-black { background-color: #1b1b1b; border-color: #444; }
+
+  /* --- Boulier Layout --- */
   .abacus-wrapper{
-    display:flex;align-items:stretch;
+    display:flex; align-items:flex-start; justify-content: center;
+    margin-top: 5px; overflow-x: auto; padding-bottom: 10px;
   }
+
+  /* --- Etiquettes à gauche --- */
   .labels{
-    display:flex;flex-direction:column;justify-content:space-around;
-    padding:10px 6px 10px 0;font-weight:700;font-size:1rem;color:#444;
-    background:#f0f0f0;border-radius:10px 0 0 10px;
-    box-shadow:inset -1px 0 2px rgba(0,0,0,.1);
+    display:flex; flex-direction:column; width: 100px;
+    padding-top: 14px; margin-right: 0; 
   }
-  .labels div{flex:1;display:flex;align-items:center;justify-content:center}
 
+  .label-item{
+    height: 50px;
+    display:flex; align-items:center; justify-content:flex-end;
+    padding-right: 12px;
+    font-weight:700; font-size:0.95rem; color:#444;
+    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
+    transition: background 0.3s;
+  }
+
+  .label-white { background-color: #ffffff; }
+  .label-gray  { background-color: #e0e0e0; }
+  .label-black { background-color: #1b1b1b; color: #bdbdbd; border-color: #333; }
+
+  .label-top-rounded { border-top: 1px solid #ccc; border-radius: 6px 0 0 0; }
+  .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
+  .gap-top { margin-top: 30px !important; }
+
+  /* --- Boulier --- */
   .abacus{
-    flex:1;position:relative;aspect-ratio: 10 / 4.5;
-    background:linear-gradient(180deg,var(--color-wood) 0%, #efd79d 55%, var(--color-wood) 100%);
-    border-radius:0 14px 14px 0;box-shadow:0 8px 20px rgba(0,0,0,.1);
-    padding: calc(var(--frame-thickness) + 6px) calc(var(--frame-thickness) + 8px);
+    flex:1; min-width: 320px; position:relative;
+    background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    display: flex; flex-direction: column;
+    padding: 14px 0;
+    border-right: 14px solid #a88348; border-left: 14px solid #a88348;
+    border-radius: 4px;
   }
-  .abacus::before, .abacus::after{
-    content:"";position:absolute;left:0;right:0;height:var(--frame-thickness);
-    background:linear-gradient(#caa367,#9a733c)
-  }
-  .abacus::before{top:0;border-bottom:2px solid var(--color-wood-dark);border-radius:0 14px 0 0}
-  .abacus::after{bottom:0;border-top:2px solid var(--color-wood-dark);border-radius:0 0 14px 0}
 
-  .row{position:relative;height: calc(100% / var(--rows));}
-  .rod{
-    position:absolute;left:0;right:0;top:50%;height:var(--rod-thickness);transform:translateY(-50%);
-    background:linear-gradient(180deg,#c19a66,#916c3d);border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.25);
+  .abacus::before, .abacus::after{
+    content:""; position:absolute; left:-14px; right:-14px; height:var(--frame-thickness);
+    background:linear-gradient(#caa367,#9a733c); z-index: 2;
   }
+  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
+  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
+
+  .row{ position:relative; width:100%; height: 50px; }
+  
+  .row.gap-top::before {
+    content: ""; position: absolute; top: -15px; left: 5%; right: 5%;
+    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
+  }
+
+  .rod{
+    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
+    background:linear-gradient(180deg,#c09e6c,#8a6538);
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  /* --- Style des billes --- */
   .bead{
-    position:absolute;top:50%;transform:translate(-50%,-50%);
-    width:var(--bead-size);height:var(--bead-size);border-radius:50%;
-    box-shadow: 0 3px 6px rgba(0,0,0,.25), inset 0 2px 5px rgba(255,255,255,.5);
-    border:1px solid rgba(0,0,0,.1);cursor:pointer; user-select:none;
-    transition:left .18s ease, transform .06s ease;
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:var(--bead-size); height:var(--bead-size); border-radius:50%;
+    border: 1px solid rgba(0,0,0,0.15); 
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none; z-index: 10;
+    transition:left 0.2s ease-out;
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
+
 </style>
 </head>
 <body>
   <div class="app">
+    <!-- Toolbar -->
     <div class="toolbar">
-      <div class="value-box" id="valueBox">
-        <label for="total">Valeur :</label>
-        <input id="total" type="text" value="0" readonly aria-live="polite" />
+      <div class="control-group">
+        <label for="sizeMode">Taille :</label>
+        <select id="sizeMode">
+          <option value="petit">Petit (4 rangs)</option>
+          <option value="grand">Grand (7 rangs)</option>
+        </select>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn" id="toggleValue">Afficher la valeur</button>
-        <button class="btn secondary" id="reset">Remise à zéro</button>
+
+      <div class="control-group">
+        <label for="labelMode">Labels :</label>
+        <select id="labelMode">
+          <option value="num">1, 10...</option>
+          <option value="name">Unités...</option>
+          <option value="mult">1x, 10x...</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <button class="btn" id="toggleValue">Afficher valeur</button>
+        <button class="btn secondary" id="reset">Zéro</button>
       </div>
     </div>
 
-    <div class="abacus-wrapper">
-      <div class="labels">
-        <div>1</div>
-        <div>10</div>
-        <div>100</div>
-        <div>1000</div>
+    <!-- Affichage central -->
+    <div class="center-display">
+      <div id="valueContainer" class="value-container hidden-value">
+        <!-- Généré par JS -->
       </div>
+    </div>
+
+    <!-- Boulier -->
+    <div class="abacus-wrapper">
+      <div class="labels" id="labelsContainer"></div>
       <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
     </div>
   </div>
 
 <script>
 (function(){
-  const rows = 4, N = 10;
-  const values = [1,10,100,1000]; // poids par rangée
+  const N = 10;
+  
+  const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
+  
+  const fullColors = [
+    'var(--color-green)', // 1
+    'var(--color-blue)',  // 10
+    'var(--color-red)',   // 100
+    'var(--color-green)', // 1 000
+    'var(--color-blue)',  // 10 000
+    'var(--color-red)',   // 100 000
+    'var(--color-green)'  // 1 000 000
+  ];
 
-  const abacus   = document.getElementById('abacus');
-  const totalBox = document.getElementById('total');
-  const valueBox = document.getElementById('valueBox');
-  const toggleBtn= document.getElementById('toggleValue');
-  const resetBtn = document.getElementById('reset');
+  const fullLabelData = {
+    num: ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"],
+    name: ["Unités", "Dizaines", "Centaines", "Milliers", "Dix Mille", "Cent Mille", "Million"],
+    mult: ["1 x", "10 x", "100 x", "1 000 x", "10 000 x", "100 000 x", "1 000 000 x"]
+  };
 
-  const colors = ['var(--color-1)','var(--color-10)','var(--color-100)','var(--color-1000)'];
-
-  const state = Array.from({length: rows}, () => 0); // nb de perles à droite
+  let currentRows = 4;
+  let state = [];
   let revealed = false;
 
-  const rowEls = [];
-  for(let r=0;r<rows;r++){
-    const row = el('div','row'); row.dataset.row=r;
-    row.appendChild(el('div','rod'));
-    for(let j=1;j<=N;j++){
-      const bead = el('div','bead');
-      bead.style.background = colors[r];
+  const abacusEl = document.getElementById('abacus');
+  const labelsEl = document.getElementById('labelsContainer');
+  const valueContainer = document.getElementById('valueContainer');
+  const toggleBtn = document.getElementById('toggleValue');
+  const resetBtn = document.getElementById('reset');
+  const labelSelect = document.getElementById('labelMode');
+  const sizeSelect = document.getElementById('sizeMode');
+
+  function init(){
+    updateStructure();
+    
+    labelSelect.addEventListener('change', updateLabelsText);
+    sizeSelect.addEventListener('change', () => {
+      currentRows = (sizeSelect.value === 'grand') ? 7 : 4;
+      updateStructure();
+    });
+    toggleBtn.addEventListener('click', ()=>{
+      revealed = !revealed;
+      renderTotal();
+    });
+    resetBtn.addEventListener('click', ()=>{
+      state.fill(0);
+      layoutAll();
+    });
+    
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(layoutAll, 50);
+    });
+  }
+
+  function updateStructure(){
+    state = Array.from({length: currentRows}, () => 0);
+    
+    abacusEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+
+    for(let r=0; r<currentRows; r++){
+      createRow(r);
+    }
+    
+    updateLabelsText();
+    layoutAll();
+  }
+
+  function createRow(r){
+    const isStartOfGroup = (r === 3 || r === 6);
+    
+    // ROW
+    const row = document.createElement('div');
+    row.className = 'row';
+    if(isStartOfGroup) row.classList.add('gap-top');
+    
+    const rod = document.createElement('div');
+    rod.className = 'rod';
+    row.appendChild(rod);
+
+    for(let j=1; j<=N; j++){
+      const bead = document.createElement('div');
+      bead.className = 'bead';
+      bead.style.background = fullColors[r];
       bead.dataset.index = j;
       bead.addEventListener('click', () => onBeadClick(r, j));
       row.appendChild(bead);
     }
-    abacus.appendChild(row);
-    rowEls.push(row);
+    abacusEl.appendChild(row);
+
+    // LABEL
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'label-item';
+    
+    if(r < 3) labelDiv.classList.add('label-white'); 
+    else if (r < 6) labelDiv.classList.add('label-gray');
+    else labelDiv.classList.add('label-black'); 
+
+    if(r === 0) labelDiv.classList.add('label-top-rounded');
+    if(r === 2) labelDiv.classList.add('label-bottom-rounded');
+    
+    if(r === 3) labelDiv.classList.add('label-top-rounded');
+    if(r === 5) labelDiv.classList.add('label-bottom-rounded');
+
+    if(r === 6) {
+      labelDiv.classList.add('label-top-rounded');
+      labelDiv.classList.add('label-bottom-rounded');
+    }
+
+    if(isStartOfGroup) labelDiv.classList.add('gap-top');
+    
+    labelsEl.appendChild(labelDiv);
+  }
+
+  function updateLabelsText(){
+    const mode = labelSelect.value;
+    const texts = fullLabelData[mode];
+    const labelDivs = labelsEl.querySelectorAll('.label-item');
+    labelDivs.forEach((div, i) => {
+      if(texts[i]) div.textContent = texts[i];
+    });
   }
 
   function onBeadClick(r, j){
-    const c = state[r];
-    const leftCount = N - c;
-    state[r] = (j <= leftCount) ? (N - j + 1) : (N - j);
-    state[r] = Math.max(0, Math.min(N, state[r]));
+    const currentCount = state[r];
+    if (j > currentCount) {
+      state[r] = j;
+    } else {
+      state[r] = j - 1;
+    }
     layoutRow(r);
     renderTotal();
   }
 
   function layoutRow(r){
-    const row = rowEls[r], c = state[r];
-    const size = 26, gap = 6, pad = 10;
-    const leftStart  = pad + size/2;
-    const rightStart = row.clientWidth - pad - size/2;
-    [...row.querySelectorAll('.bead')].forEach(b=>{
-      const j = +b.dataset.index;
-      b.style.left = (j <= N - c)
-        ? leftStart  + (j-1)*(size+gap)+"px"
-        : rightStart - (N-j)*(size+gap)+"px";
+    const row = abacusEl.children[r];
+    if(!row) return;
+    const beads = row.querySelectorAll('.bead');
+    const count = state[r];
+    
+    const rowWidth = row.clientWidth;
+    const beadSize = 28; 
+    const gap = 0;       
+    const padding = 0;   
+
+    const leftStart = padding + beadSize/2;
+    const rightEnd = rowWidth - padding - beadSize/2;
+
+    beads.forEach(b => {
+      const idx = parseInt(b.dataset.index);
+      if (idx <= count) {
+        const pos = leftStart + (idx - 1) * (beadSize + gap);
+        b.style.left = pos + 'px';
+      } else {
+        const offsetFromEnd = (N - idx) * (beadSize + gap);
+        const pos = rightEnd - offsetFromEnd;
+        b.style.left = pos + 'px';
+      }
     });
   }
 
-  function layoutAll(){ for(let r=0;r<rows;r++) layoutRow(r); renderTotal(); }
-  function currentTotal(){ return state.reduce((sum,c,r)=> sum + c*values[r],0); }
+  function layoutAll(){
+    for(let r=0; r<currentRows; r++) layoutRow(r);
+    renderTotal();
+  }
 
   function renderTotal(){
+    // 1. Calcul de la valeur totale
+    let total = 0;
+    for(let r=0; r<currentRows; r++){
+      total += state[r] * fullMultipliers[r];
+    }
+    
+    const str = total.toString();
+    const len = str.length;
+    let html = '';
+    
+    // Pour gérer les groupes, on itère et on ouvre/ferme des DIV
+    // On doit savoir quand un groupe change.
+    let currentGroupIndex = -1;
+    
+    for(let i=0; i<len; i++){
+      const digit = str[i];
+      // Puissance de 10 associée (ex: 123 -> '1' est power 2, '3' est power 0)
+      const power = len - 1 - i;
+      
+      // Groupe de classe : 0=Unités (pow 0,1,2), 1=Mille (pow 3,4,5), 2=Millions...
+      const groupIndex = Math.floor(power / 3);
+      
+      // Couleur du chiffre
+      const colorIndex = power % 3;
+      let colorVar = '';
+      if(colorIndex === 0) colorVar = 'var(--color-green)';
+      else if(colorIndex === 1) colorVar = 'var(--color-blue)';
+      else colorVar = 'var(--color-red)';
+      
+      // Si on change de groupe (ou au démarrage)
+      if(groupIndex !== currentGroupIndex){
+        // Si ce n'est pas le tout premier, on ferme le précédent
+        if(currentGroupIndex !== -1) {
+            html += `</div>`;
+        }
+        
+        // On ouvre le nouveau groupe
+        let bgClass = '';
+        if(groupIndex === 0) bgClass = 'bg-white';
+        else if(groupIndex === 1) bgClass = 'bg-gray';
+        else bgClass = 'bg-black';
+        
+        html += `<div class="digit-group ${bgClass}">`;
+        currentGroupIndex = groupIndex;
+      }
+      
+      // On ajoute le chiffre
+      html += `<span class="digit-char" style="color:${colorVar}">${digit}</span>`;
+    }
+    
+    // Fermeture du dernier groupe
+    if(currentGroupIndex !== -1) html += `</div>`;
+
+    valueContainer.innerHTML = html;
+    
     if(revealed){
-      valueBox.classList.add('show');
-      totalBox.value = String(currentTotal());
-    }else{
-      valueBox.classList.remove('show');
+      valueContainer.classList.remove('hidden-value');
+      toggleBtn.textContent = 'Masquer';
+    } else {
+      valueContainer.classList.add('hidden-value');
+      toggleBtn.textContent = 'Afficher';
     }
   }
 
-  toggleBtn.addEventListener('click', ()=>{
-    revealed = !revealed;
-    toggleBtn.textContent = revealed ? 'Masquer la valeur' : 'Afficher la valeur';
-    renderTotal();
-  });
-
-  resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); });
-
-  let t; window.addEventListener('resize', ()=>{ clearTimeout(t); t=setTimeout(layoutAll,60); });
-
-  function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
-
-  layoutAll();
+  init();
 })();
 </script>
 </body>
