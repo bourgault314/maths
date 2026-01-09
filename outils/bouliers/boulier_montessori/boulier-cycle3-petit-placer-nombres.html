@@ -28,7 +28,7 @@
     --text: #1b1b1b;
     --ui: #f3f1ea;
     --accent: #0f6cf9;
-    --ok: #0f9d58; /* Vert */
+    --ok: #0f9d58;
     --err: #d93025;
     
     --btn-off: #9ca3af; /* Gris pour inactif */
@@ -71,7 +71,7 @@
     white-space: nowrap;
   }
   
-  /* État Actif / Bleu (pour Toggles & Nouveau) */
+  /* État Actif / Bleu */
   .btn.active, .btn:active {
     background: var(--accent);
     box-shadow: 0 2px 5px rgba(15,108,249,.2);
@@ -79,12 +79,12 @@
     transform: translateY(1px);
   }
 
-  /* Bouton Vérifier : Gris par défaut, Vert au clic */
+  /* Bouton Vérifier (Gris, Vert au clic) */
   .btn.check-btn {
-    background: var(--btn-off); /* Gris au repos */
+    background: var(--btn-off);
   }
   .btn.check-btn:active {
-    background: var(--ok); /* Vert à l'appui */
+    background: var(--ok);
     box-shadow: 0 2px 5px rgba(15,157,88,.2);
     transform: translateY(1px);
   }
@@ -280,6 +280,7 @@
       <!-- Groupe 2: Labels -->
       <div class="control-group">
         <select id="labelMode">
+          <!-- '1x, 10x...' supprimé -->
           <option value="num">1, 10...</option>
           <option value="name">Unités...</option>
           <option value="valeur">Valeur</option>
@@ -292,7 +293,7 @@
       <div class="control-group">
         <button class="btn" id="newNumber">🎲 Nouveau</button>
         <button class="btn zero-btn" id="reset" title="Remise à zéro">0</button>
-        <!-- Bouton Vérifier : Gris, Vert au clic -->
+        <!-- Bouton Vérifier : Gris par défaut, devient Vert au clic -->
         <button class="btn check-btn" id="check">✅ Vérifier</button>
       </div>
 
@@ -514,7 +515,6 @@
   function updateBeadText() {
     const mode = labelSelect.value;
     const rows = abacusEl.children;
-    // Valeurs à afficher : 1, 10, 100, 1000 (indices 0, 1, 2, 3)
     const displayValues = ["1", "10", "100", "1 000"];
     
     for(let r=0; r<rows.length; r++){
@@ -522,7 +522,6 @@
       const beads = row.querySelectorAll('.bead');
       
       let text = "";
-      // Si mode Valeur ET on est dans les 4 premières lignes (<=1000)
       if(mode === "valeur" && r < 4) {
         text = displayValues[r];
       }
