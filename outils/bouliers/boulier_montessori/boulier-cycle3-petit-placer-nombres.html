@@ -53,11 +53,6 @@
     width: 1px; height: 24px; background: #ccc; margin: 0 4px;
   }
   
-  select {
-    font-size: 0.9rem; padding: 6px 8px; border-radius: 6px; border: 1px solid #bbb; background: #fff;
-    cursor: pointer; color: #333; font-weight: 500;
-  }
-
   /* Boutons Standard (Gris par défaut) */
   .btn{
     border:none;
@@ -277,14 +272,9 @@
 
       <div class="separator"></div>
 
-      <!-- Groupe 2: Labels -->
+      <!-- Groupe 2: Valeur (Bouton Toggle Unique) -->
       <div class="control-group">
-        <select id="labelMode">
-          <!-- '1x, 10x...' supprimé -->
-          <option value="num">1, 10...</option>
-          <option value="name">Unités...</option>
-          <option value="valeur">Valeur</option>
-        </select>
+        <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
       </div>
 
       <div class="separator"></div>
@@ -332,11 +322,8 @@
     'var(--color-green)'  // Million
   ];
 
-  const fullLabelData = {
-    num: ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"],
-    name: ["Unités", "Dizaines", "Centaines", "Milliers", "Dix Mille", "Cent Mille", "Million"],
-    valeur: ["", "", "", "", "", "", ""] // Vide pour le mode Valeur (side labels)
-  };
+  // Étiquettes par défaut pour le côté gauche
+  const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
 
   // État de l'app
   let currentRows = 4; // 4 (Petit) ou 7 (Grand)
@@ -351,6 +338,7 @@
   let useColors = true;
   let useGroups = true;
   let useMarkers = false; 
+  let showBeadValues = false; // Toggle pour les valeurs DANS les billes (par défaut OFF)
 
   // DOM
   const abacusEl = document.getElementById('abacus');
@@ -364,23 +352,17 @@
   const newBtn = document.getElementById('newNumber');
   const checkBtn = document.getElementById('check');
   const resetBtn = document.getElementById('reset');
-  const labelSelect = document.getElementById('labelMode');
   
   const btnColor = document.getElementById('btnColor');
   const btnGroup = document.getElementById('btnGroup');
   const btnMarker = document.getElementById('btnMarker');
   const btnSize = document.getElementById('btnSize');
+  const btnLabels = document.getElementById('btnLabels');
 
   function init(){
     updateStructure();
     generateNewTarget();
 
-    // Listeners
-    labelSelect.addEventListener('change', () => {
-      updateLabelsText();
-      updateBeadText(); // Met à jour le texte dans les billes
-    });
-    
     // Toggle Size (Petit/Grand)
     btnSize.addEventListener('click', () => {
       if(currentRows === 4) {
@@ -415,6 +397,14 @@
       useMarkers = !useMarkers;
       updateToggleButton(btnMarker, useMarkers);
       updateBeadMarkers(); 
+    });
+
+    // Toggle Valeur
+    btnLabels.addEventListener('click', () => {
+      showBeadValues = !showBeadValues;
+      updateToggleButton(btnLabels, showBeadValues);
+      updateLabelsText(); // Update side labels
+      updateBeadText();   // Update bead text
     });
 
     newBtn.addEventListener('click', () => {
@@ -466,6 +456,8 @@
 
   function createRow(r){
     const isStartOfGroup = (r === 3 || r === 6);
+    
+    // Row
     const row = document.createElement('div');
     row.className = 'row';
     if(isStartOfGroup) row.classList.add('gap-top');
@@ -484,6 +476,7 @@
     }
     abacusEl.appendChild(row);
 
+    // Label
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label-item';
     
@@ -512,8 +505,10 @@
     });
   }
 
+  // GESTION AFFICHAGE VALEURS
+  // Si showBeadValues (Bouton Bleu) : Texte dans billes, Côté vide
+  // Sinon (Bouton Gris) : Billes vides, Texte sur le côté
   function updateBeadText() {
-    const mode = labelSelect.value;
     const rows = abacusEl.children;
     const displayValues = ["1", "10", "100", "1 000"];
     
@@ -522,7 +517,7 @@
       const beads = row.querySelectorAll('.bead');
       
       let text = "";
-      if(mode === "valeur" && r < 4) {
+      if(showBeadValues && r < 4) { // Seulement si activé
         text = displayValues[r];
       }
 
@@ -535,11 +530,13 @@
   }
 
   function updateLabelsText(){
-    const mode = labelSelect.value;
-    const texts = fullLabelData[mode];
     const labelDivs = labelsEl.querySelectorAll('.label-item');
     labelDivs.forEach((div, i) => {
-      if(texts[i] !== undefined) div.textContent = texts[i];
+      if(!showBeadValues) { // Si PAS dans les billes, on affiche à gauche
+        div.textContent = defaultLabels[i] || "";
+      } else {
+        div.textContent = ""; 
+      }
     });
   }
 
