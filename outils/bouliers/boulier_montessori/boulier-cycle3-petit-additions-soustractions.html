@@ -392,10 +392,9 @@
         </div>
       </div>
       
-      <!-- Groupe 4: Export (Nouveau) -->
+      <!-- Groupe 4: Export (Tableau Seulement) -->
       <div class="control-group" style="margin-left: 10px; border-left: 1px solid #ccc; padding-left: 10px;">
-        <button class="btn" id="btnExport" title="Sauvegarder Tout (Boulier + Tableau)">📷 Tout</button>
-        <button class="btn" id="btnExportTable" title="Sauvegarder Tableau + Calcul seulement">📊 Tableau</button>
+        <button class="btn" id="btnExportTable" title="Sauvegarder Tableau + Calcul">📷 Photo</button>
       </div>
 
     </div>
@@ -529,7 +528,6 @@
   const opModeRadios = document.querySelectorAll('input[name="opMode"]');
 
   // Nouveaux boutons export
-  const btnExport = document.getElementById('btnExport');
   const btnExportTable = document.getElementById('btnExportTable');
 
   function init(){
@@ -636,8 +634,8 @@
     });
 
     // --- ECOUTEURS EXPORT ---
-    btnExport.addEventListener('click', () => exportImage(false)); // Tout
-    btnExportTable.addEventListener('click', () => exportImage(true)); // Tableau seul
+    // Uniquement export Tableau (Photo)
+    btnExportTable.addEventListener('click', () => exportImage()); 
 
     window.addEventListener('resize', ()=> setTimeout(layoutAll, 50));
   }
@@ -1119,55 +1117,62 @@
   /* === MOTEUR DE RENDU GRAPHIQUE INTELLIGENT (CANVAS 2D) === */
   /* ========================================================== */
   
-  function exportImage(tableOnly = false) {
-    const scale = 3; // Facteur HD
-    const margin = 30;
-    
-    // 1. Calcul de la géométrie
-    // Dimensions de base du boulier (partie graphique)
-    const abacusWidth = 660; // AGRANDI POUR ETRE REALISTE (LARGEUR 2x10 billes)
-    const labelWidth = 100;
-    const rowHeight = 50;
-    const frameThick = 14;
-    const gapHeight = 30; 
-    const beadSize = 28;
-    
-    // Calcul hauteur boulier
-    let abacusContentHeight = 0;
-    for(let i=0; i<currentRows; i++){
-       abacusContentHeight += rowHeight;
-       if(i===2 || i===5) abacusContentHeight += gapHeight; 
-    }
-    const totalAbacusHeight = abacusContentHeight + frameThick*2; 
-    const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; 
+  function getOpsDisplayWidth() {
+      if(!currentOpsList || currentOpsList.length === 0) return 0;
+      
+      const charW = 18; // REDUIT de 32 à 18
+      const symW = 24;  // REDUIT de 40 à 24
+      
+      let totalW = 0;
+      // 1. Blocks Calculation
+      const blocks = [];
+      currentOpsList.forEach((val, idx) => {
+          if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'});
+          blocks.push({type:'num', val: Math.abs(val)});
+      });
+      blocks.push({type:'sym', val:'='});
+      blocks.push({type:'sym', val:'?'});
 
-    // Dimensions Tableau (Dynamique selon nombre d'opérations)
+      // 2. Width Sum
+      blocks.forEach(b => {
+          if(b.type === 'sym') totalW += symW;
+          else {
+              const str = b.val.toString();
+              totalW += str.length * charW + (Math.floor((str.length-1)/3)*6); // Gap reduit à 6
+          }
+      });
+      // 3. Gaps
+      totalW += (blocks.length-1) * 6; // Gap reduit à 6
+      
+      return totalW;
+  }
+
+  function exportImage() {
+    // Mode "Tableau Seulement" forcé
+    const tableOnly = true; 
+    const scale = 3; 
+    const margin = 80; 
+
+    // Dimensions Tableau
     const tableWidth = 400;
-    const tableGap = 40;
     
-    // Hauteur du tableau : Header + Rows + Result
+    // Hauteur du tableau
     const hHeader1 = 30;
     const hHeader2 = 30;
     const hRow = 60;
     const opCount = currentOpsList.length;
-    // Header + (ops) rows + result row
     const totalTableHeight = hHeader1 + hHeader2 + (opCount * hRow) + hRow; 
 
-    // Dimension Display (Calcul du haut)
-    const displayHeight = 100;
-
-    // Dimensions Totales Canvas
-    let cvsW, cvsH;
+    // Dimension Display REDUITE
+    const displayHeight = 100; // REDUIT de 150 à 100
     
-    if(tableOnly) {
-       cvsW = margin*2 + tableWidth;
-       cvsH = margin*2 + displayHeight + totalTableHeight;
-    } else {
-       cvsW = margin*2 + totalAbacusWidth + tableGap + tableWidth;
-       // La hauteur max entre le boulier et le tableau
-       const maxContentH = Math.max(totalAbacusHeight, totalTableHeight);
-       cvsH = margin*2 + displayHeight + maxContentH;
-    }
+    // Calcul de la largeur nécessaire pour l'opération
+    const opsNeededWidth = getOpsDisplayWidth();
+    
+    // Largeur Canvas : Soit le tableau + marges, soit l'opération + marges (si elle dépasse)
+    let cvsW = Math.max(margin*2 + tableWidth, margin*2 + opsNeededWidth);
+    
+    let cvsH = margin*2 + displayHeight + totalTableHeight;
     
     // Création Canvas
     const canvas = document.createElement('canvas');
@@ -1177,15 +1182,11 @@
     ctx.scale(scale, scale);
 
     // --- FONCTIONS DE DESSIN ---
-
-    // Palette Couleurs
     const C = {
         green: '#3cb371', greenHi: '#66d494',
         blue:  '#40c4ff', blueHi:  '#80d8ff',
         red:   '#e53935', redHi:   '#ff6f60',
-        wood:  '#e2c48a', woodMid: '#f3e5c2', woodDark: '#a88348',
-        rod:   '#c09e6c', rodDark: '#8a6538',
-        bg:    '#fffdf8', text: '#1b1b1b'
+        bg:    '#ffffff', text: '#1b1b1b'
     };
     
     // Fond
@@ -1194,199 +1195,58 @@
 
     // Origines
     const startY = margin + displayHeight;
-    let abacusX = margin;
-    let tableX = tableOnly ? margin : (margin + totalAbacusWidth + tableGap);
     
+    // Centrage du tableau dans le canvas
+    let tableX = (cvsW - tableWidth) / 2;
+    
+    // Centrage de l'opération
+    const displayCenterY = margin + 40; 
+    const displayCenterX = cvsW / 2; // Centré sur tout le canvas
+
     // --- 1. DESSINER LE CALCUL (DISPLAY) ---
-    // Centré au dessus de la zone concernée
-    const displayCenterX = tableX + tableWidth/2;
-    drawOpsDisplayCanvas(ctx, displayCenterX, margin + 40);
+    drawOpsDisplayCanvas(ctx, displayCenterX, displayCenterY);
 
-    // --- 2. DESSINER LE BOULIER (SI PAS TABLE ONLY) ---
-    if(!tableOnly) {
-        drawAbacusCanvas(ctx, abacusX, startY, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C);
-    }
-
-    // --- 3. DESSINER LE TABLEAU ---
+    // --- 2. DESSINER LE TABLEAU ---
     drawTableCanvas(ctx, tableX, startY, tableWidth, hHeader1, hHeader2, hRow, C);
     
     // --- FINALISATION ---
     const link = document.createElement('a');
-    link.download = `boulier_operations_${tableOnly?'table':'complet'}.png`;
+    link.download = `boulier_operations.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
   
-  // -- Dessin Boulier (Isolé) --
-  function drawAbacusCanvas(ctx, x, y, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C) {
-      const frameX = x + labelWidth;
-      const frameW = abacusWidth + frameThick*2;
-      const frameH = totalAbacusHeight;
-      
-      // Ombre portée
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
-      // Fond Bois
-      const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
-      gradWood.addColorStop(0, C.wood); gradWood.addColorStop(0.2, C.woodMid);
-      gradWood.addColorStop(0.8, C.woodMid); gradWood.addColorStop(1, C.wood);
-      ctx.fillStyle = gradWood;
-      ctx.fillRect(frameX, y, frameW, frameH);
-      ctx.restore();
-
-      // Bords (Haut/Bas)
-      const gradFrameV = ctx.createLinearGradient(0, y, 0, y+frameThick);
-      gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
-      ctx.fillStyle = gradFrameV;
-      ctx.beginPath(); ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); ctx.fill();
-      
-      const gradFrameV2 = ctx.createLinearGradient(0, y+frameH-frameThick, 0, y+frameH);
-      gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
-      ctx.fillStyle = gradFrameV2;
-      ctx.beginPath(); ctx.roundRect(frameX, y+frameH-frameThick, frameW, frameThick, [0,0,4,4]); ctx.fill();
-      
-      // Bords Latéraux
-      ctx.fillStyle = C.woodDark;
-      ctx.fillRect(frameX, y, frameThick, frameH); 
-      ctx.fillRect(frameX + frameW - frameThick, y, frameThick, frameH);
-
-      // Contenu
-      let currentY = y + frameThick;
-      for(let r=0; r<currentRows; r++){
-          const isStartGroup = (r===3 || r===6);
-          if(isStartGroup) currentY += gapHeight;
-
-          // Labels
-          const labelX = x; 
-          const labelY = currentY;
-          let labelBg='#fff', labelTxt='#444', borderColor='#ccc';
-          let isLast=(r===2||r===5||r===6), isFirst=(r===0||r===3||r===6);
-          
-          if(r<3) labelBg='#fff'; else if(r<6) labelBg='#e0e0e0'; else { labelBg='#1b1b1b'; labelTxt='#bdbdbd'; borderColor='#333'; }
-          
-          ctx.fillStyle = labelBg;
-          ctx.beginPath();
-          let rad=[0,0,0,0];
-          if(isFirst) rad[0]=6; if(isLast) rad[3]=6;
-          // IMPORTANT: utiliser roundRect pour tout dessiner d'un coup (fond + contour)
-          ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad);
-          ctx.fill();
-          
-          // CONTOURS RÉACTIVÉS (avec roundRect propre pour éviter les trous)
-          // -------------------------------------------------------------
-          // MODIFICATION ICI: 
-          // Au lieu de dessiner le contour pour chaque rangée, on ne dessine
-          // que le contour extérieur du groupe entier (Unités, Mille, Millions).
-          // Cela élimine les lignes horizontales internes.
-          // -------------------------------------------------------------
-          
-          ctx.strokeStyle = borderColor; 
-          ctx.lineWidth = 1;
-          
-          // 1. Bordure GAUCHE (Toujours)
-          ctx.beginPath();
-          ctx.moveTo(labelX, labelY);
-          ctx.lineTo(labelX, labelY + rowHeight);
-          ctx.stroke();
-          
-          // 2. Bordure HAUT (Seulement si premier du groupe)
-          if(isFirst) {
-             ctx.beginPath();
-             // Coin arrondi (approximatif pour stroke)
-             ctx.moveTo(labelX, labelY + 6); // bas du coin
-             ctx.quadraticCurveTo(labelX, labelY, labelX + 6, labelY); // coin
-             ctx.lineTo(labelX + labelWidth, labelY); // ligne haut
-             ctx.stroke();
-          }
-          
-          // 3. Bordure BAS (Seulement si dernier du groupe)
-          if(isLast) {
-             ctx.beginPath();
-             ctx.moveTo(labelX, labelY + rowHeight - 6); // haut du coin
-             ctx.quadraticCurveTo(labelX, labelY + rowHeight, labelX + 6, labelY + rowHeight); // coin
-             ctx.lineTo(labelX + labelWidth, labelY + rowHeight); // ligne bas
-             ctx.stroke();
-          }
-
-          if(!showBeadValues){
-              ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif";
-              ctx.textAlign = "right"; ctx.textBaseline = "middle";
-              ctx.fillText(defaultLabels[r], labelX + labelWidth - 12, labelY + rowHeight/2);
-          }
-
-          // Tiges
-          const rodY = currentY + rowHeight/2;
-          const rodX = frameX + frameThick;
-          const rodW = abacusWidth;
-
-          if(isStartGroup){
-             ctx.beginPath(); ctx.strokeStyle = "rgba(168, 131, 72, 0.4)"; ctx.lineWidth = 1;
-             ctx.setLineDash([5, 5]); ctx.moveTo(frameX, currentY - gapHeight/2); ctx.lineTo(frameX+frameW, currentY - gapHeight/2); ctx.stroke(); ctx.setLineDash([]);
-          }
-
-          const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2);
-          gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
-          ctx.fillStyle = gradRod;
-          ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=2; ctx.shadowOffsetY=1;
-          ctx.fillRect(rodX, rodY-2, rodW, 4);
-          ctx.shadowColor="transparent";
-
-          // Billes
-          const count = state[r];
-          const beadRadius = beadSize/2;
-          const startLeft = rodX + beadRadius;
-          const startRight = rodX + rodW - beadRadius;
-          
-          let bMain, bHi;
-          const colIdx = r % 3;
-          if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; }
-          else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; }
-          else { bMain = C.red; bHi = C.redHi; }
-          
-          for(let j=1; j<=10; j++){
-              let bx;
-              if (j <= count) bx = startLeft + (j - 1) * beadSize;
-              else { const offset = (10 - j) * beadSize; bx = startRight - offset; }
-              drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, showBeadValues ? getBeadText(r) : "");
-          }
-          currentY += rowHeight;
-      }
-  }
-
   // -- Dessin Calcul (Haut) --
   function drawOpsDisplayCanvas(ctx, centerX, y){
       if(!currentOpsList || currentOpsList.length === 0) return;
       
-      // On construit un tableau de "blocs" à dessiner pour mesurer la largeur totale
-      // Blocs = [ {type:'num', val:12}, {type:'sym', val:'+'}, ... ]
       const blocks = [];
       currentOpsList.forEach((val, idx) => {
           if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'});
           blocks.push({type:'num', val: Math.abs(val)});
       });
       blocks.push({type:'sym', val:'='});
-      blocks.push({type:'sym', val:'?'}); // Toujours ? pour l'exercice
+      blocks.push({type:'sym', val:'?'}); 
       
-      const charW = 32; // Largeur approx chiffre
-      const symW = 40;  // Largeur symbole
-      const charH = 60;
+      const charW = 18; // REDUIT de 32 à 18
+      const symW = 24;  // REDUIT de 40 à 24
+      const charH = 40; // REDUIT de 60 à 40
       
-      // Calcul largeur totale
+      // Calcul largeur totale (pour positionner le curseur de départ)
       let totalW = 0;
       blocks.forEach(b => {
           if(b.type === 'sym') totalW += symW;
           else {
               const str = b.val.toString();
-              totalW += str.length * charW + (Math.floor((str.length-1)/3)*10);
+              totalW += str.length * charW + (Math.floor((str.length-1)/3)*6);
           }
       });
-      // Espaces entre blocs
-      totalW += (blocks.length-1) * 10;
+      totalW += (blocks.length-1) * 6;
       
       let curX = centerX - totalW/2;
       
       // Dessin
-      ctx.font = "800 36px sans-serif";
+      ctx.font = "800 22px sans-serif"; // REDUIT de 36px à 22px
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
@@ -1394,22 +1254,17 @@
           if(b.type === 'sym') {
               ctx.fillStyle = '#333';
               ctx.fillText(b.val, curX + symW/2, y);
-              curX += symW + 10;
+              curX += symW + 6;
           } else {
-              // Dessiner nombre (coloré + groupes)
               const str = b.val.toString();
               const len = str.length;
               
-              // On parcourt les chiffres et on dessine les fonds par GROUPES
               let i = 0;
               while(i < len) {
-                  // Trouver la taille du groupe courant (1, 2 ou 3 chiffres)
-                  // Un groupe change quand power change de millier (power/3 change)
                   const startI = i;
                   const startPower = len - 1 - i;
                   const currentGrpIdx = Math.floor(startPower/3);
                   
-                  // Avancer tant qu'on est dans le même groupe
                   let count = 0;
                   while(i < len) {
                       const p = len - 1 - i;
@@ -1418,26 +1273,21 @@
                       i++;
                   }
                   
-                  // Dessiner le fond pour ce groupe entier
                   let bg = null;
                   if(useGroups){
                       if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b';
                   }
                   
                   const groupW = count * charW;
-                  const groupX = curX; // X actuel pour le début du groupe
+                  const groupX = curX; 
                   
                   if(bg){
                      ctx.fillStyle = bg;
                      ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4;
-                     // Fond unique pour tout le groupe
                      ctx.fillRect(groupX, y-charH/2, groupW, charH);
                      ctx.shadowColor="transparent";
-                     // **CORRECTION : SUPPRESSION DU CONTOUR POUR ÉVITER LES LIGNES PARASITES**
-                     // ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.strokeRect(groupX, y-charH/2, groupW, charH);
                   }
                   
-                  // Dessiner les chiffres du groupe
                   for(let k=0; k<count; k++) {
                       const charIndex = startI + k;
                       const digit = str[charIndex];
@@ -1451,15 +1301,13 @@
                           if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0';
                       }
                       ctx.fillStyle = txtCol;
-                      // Centrage vertical standard (y + 4 pour ajustement visuel)
-                      ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 4);
+                      ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 2); // Ajustement y + 2 pour 22px
                   }
                   
-                  // Avancer X pour le prochain groupe (+ espace si pas fini)
                   curX += groupW;
-                  if(i < len) curX += 10; // Espace entre groupes
+                  if(i < len) curX += 6; 
               }
-              curX += 10; // Espace après le bloc nombre
+              curX += 6; 
           }
       });
   }
@@ -1542,7 +1390,7 @@
 
                   // Contenu
                   if(col.i === -99) { // Colonne Signe
-                      ctx.fillStyle = "#555"; ctx.font = "bold 24px sans-serif";
+                      ctx.fillStyle = "#555"; ctx.font = "bold 18px sans-serif";
                       ctx.textAlign = "center"; ctx.textBaseline = "middle";
                       ctx.fillText(sign, curX + cellW/2, curY + hRow/2);
                   } else { // Chiffres
@@ -1566,7 +1414,7 @@
                           if(useColors){
                               if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935";
                           }
-                          ctx.fillStyle = clr; ctx.font = "800 24px sans-serif";
+                          ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; 
                           ctx.textAlign = "center"; ctx.textBaseline = "middle";
                           ctx.fillText(digit, curX + cellW/2, curY + hRow/2);
                       }
@@ -1615,7 +1463,7 @@
                       if(useColors){
                          if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935";
                       }
-                      ctx.fillStyle = clr; ctx.font = "800 24px sans-serif";
+                      ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; 
                       ctx.textAlign = "center"; ctx.textBaseline = "middle";
                       ctx.fillText(digit, curX + cellW/2, resY + hRow/2);
                   }
@@ -1627,29 +1475,6 @@
       // Cadre extérieur
       ctx.strokeStyle = "rgba(0,0,0,0.1)";
       ctx.strokeRect(x, y, w, totalH);
-  }
-  
-  function getBeadText(r){
-      const vals = ["1", "10", "100", "1 000"];
-      return (r < 4) ? vals[r] : "";
-  }
-
-  function drawBead(ctx, x, y, r, colorMain, colorHi, idx, marked, text){
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
-      const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r);
-      grad.addColorStop(0, colorHi); grad.addColorStop(1, colorMain);
-      ctx.fillStyle = grad;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-      ctx.shadowColor = "transparent"; ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 1; ctx.stroke();
-      if(marked && text === ""){
-          ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
-      }
-      if(text !== ""){
-          ctx.fillStyle = "#fff"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 2; ctx.fillText(text, x, y);
-      }
-      ctx.restore();
   }
 
   init();
