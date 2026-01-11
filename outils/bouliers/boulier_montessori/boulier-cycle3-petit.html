@@ -235,6 +235,7 @@
   .th-class.unit-class { background: #fff; } .th-class.thousand-class { background: #e0e0e0; } .th-class.million-class { background: #1b1b1b; color: #fff; }
   .th-rank { font-size: 0.9rem; font-weight: 700; padding: 6px 0; border-bottom: 1px solid #ccc; background: #fafafa; color: #555; }
   .col-digit { font-size: 2rem; font-weight: 800; padding: 12px 0; height: 70px; }
+  /* Modifications pour le fond blanc : on garde les classes CSS au cas où mais on ne les applique plus en JS */
   .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); }
   .bg-blue-tint  { background-color: rgba(64, 196, 255, 0.08); }
   .bg-red-tint   { background-color: rgba(229, 57, 53, 0.08); }
@@ -528,9 +529,10 @@
              // LOGIQUE ? : Si revealed est false, on met "?" si la valeur existe
              if(val !== "") displayVal = revealed ? val : "?";
              if(useColors && displayVal !== "" && displayVal !== "?"){
-                if(col.label === "1") colorClass = "text-green bg-green-tint";
-                else if(col.label === "10") colorClass = "text-blue bg-blue-tint";
-                else if(col.label === "100") colorClass = "text-red bg-red-tint";
+                // MODIFICATION: On applique uniquement la couleur du texte, pas le fond teinté
+                if(col.label === "1") colorClass = "text-green"; 
+                else if(col.label === "10") colorClass = "text-blue"; 
+                else if(col.label === "100") colorClass = "text-red";
              }
         }
         valueRow += `<td class="col-digit ${colorClass}">${displayVal}</td>`;
@@ -709,12 +711,10 @@
           ctx.fillStyle = "#fafafa"; ctx.fillRect(curX, y2, cellW, h2); ctx.strokeRect(curX, y2, cellW, h2);
           ctx.fillStyle = "#555"; ctx.font = "bold 12px sans-serif"; ctx.fillText(c.l, curX+cellW/2, y2+h2/2+4);
           
-          let val="?", cellBg="#fff";
+          let val="?", cellBg="#fff"; // MODIFICATION : Fond blanc forcé
           if(c.i !== -1 && c.i < currentRows){
              if(vals[c.i] !== "") val = revealed ? vals[c.i] : "?"; else val = "";
-             if(useColors && val!=="" && val!=="?"){
-                 if(c.l==="1") cellBg="rgba(60, 179, 113, 0.08)"; else if(c.l==="10") cellBg="rgba(64, 196, 255, 0.08)"; else if(c.l==="100") cellBg="rgba(229, 57, 53, 0.08)";
-             }
+             // SUPPRESSION DE LA LOGIQUE DE FOND TEINTÉ ICI
           } else val="";
           
           ctx.fillStyle = cellBg; ctx.fillRect(curX, y3, cellW, h3); ctx.strokeRect(curX, y3, cellW, h3);
@@ -792,4 +792,3 @@
 </script>
 </body>
 </html>
-
