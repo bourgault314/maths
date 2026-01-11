@@ -815,182 +815,7 @@
     }
 
     // --- 2. DESSINER LE BOULIER ---
-    
-    // Cadre Bois (Fond)
-    const frameX = abacusX + labelWidth;
-    const frameW = abacusWidth + frameThick*2;
-    const frameH = totalAbacusHeight;
-    
-    // Ombre portée du boulier
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.15)";
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetY = 10;
-    
-    // Dégradé Bois Horizontal
-    const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
-    gradWood.addColorStop(0, C.wood);
-    gradWood.addColorStop(0.2, C.woodMid);
-    gradWood.addColorStop(0.8, C.woodMid);
-    gradWood.addColorStop(1, C.wood);
-    
-    ctx.fillStyle = gradWood;
-    ctx.fillRect(frameX, startY, frameW, frameH);
-    ctx.restore();
-
-    // Bords Haut/Bas (Cadre)
-    const gradFrameV = ctx.createLinearGradient(0, startY, 0, startY+frameThick);
-    gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
-    
-    // Bord Haut
-    ctx.fillStyle = gradFrameV;
-    ctx.beginPath(); 
-    ctx.roundRect(frameX-frameThick, startY, frameW+frameThick*2, frameThick, [4,4,0,0]);
-    ctx.fill();
-    
-    // Bord Bas
-    const gradFrameV2 = ctx.createLinearGradient(0, startY+frameH-frameThick, 0, startY+frameH);
-    gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
-    
-    ctx.fillStyle = gradFrameV2;
-    ctx.beginPath();
-    ctx.roundRect(frameX-frameThick, startY+frameH-frameThick, frameW+frameThick*2, frameThick, [0,0,4,4]);
-    ctx.fill();
-    
-    // Bords Latéraux (épais)
-    ctx.fillStyle = C.woodDark;
-    ctx.fillRect(frameX, startY, frameThick, frameH); // Gauche
-    ctx.fillRect(frameX+frameW-frameThick, startY, frameThick, frameH); // Droite
-
-    // -- CONTENU DU BOULIER (Tiges, Billes, Labels) --
-    let currentY = startY + frameThick;
-    
-    for(let r=0; r<currentRows; r++){
-        const isStartGroup = (r===3 || r===6);
-        if(isStartGroup) currentY += gapHeight;
-
-        // -- Labels (Gauche) --
-        const labelX = abacusX;
-        const labelY = currentY;
-        const labelH = rowHeight;
-        
-        // Fond Label (Couleurs et Bordures)
-        let labelBg = '#fff';
-        let labelTxt = '#444';
-        let borderColor = '#ccc';
-        let isLastInGroup = (r===2 || r===5 || r===6);
-        let isFirstInGroup = (r===0 || r===3 || r===6);
-        
-        if(r < 3) labelBg = '#fff';
-        else if(r < 6) labelBg = '#e0e0e0';
-        else { labelBg = '#1b1b1b'; labelTxt='#bdbdbd'; borderColor='#333'; }
-        
-        // Forme Label (Arrondi)
-        ctx.fillStyle = labelBg;
-        ctx.beginPath();
-        let rad = [0,0,0,0];
-        // Arrondis seulement aux extrémités du groupe
-        if(isFirstInGroup) rad[0]=6; // Top-left
-        if(isLastInGroup) rad[3]=6; // Bottom-left
-        
-        ctx.roundRect(labelX, labelY, labelWidth, labelH, rad);
-        ctx.fill();
-        
-        // --- DESSIN DES BORDURES LABEL (Manuellement pour éviter les lignes doubles) ---
-        ctx.strokeStyle = borderColor;
-        ctx.lineWidth = 1;
-        
-        // Bordure Gauche (Toujours)
-        ctx.beginPath(); ctx.moveTo(labelX, labelY); ctx.lineTo(labelX, labelY+labelH); ctx.stroke();
-        
-        // Bordure Haut (Seulement si premier du groupe)
-        if(isFirstInGroup) {
-           ctx.beginPath(); 
-           // Arc pour le coin arrondi
-           // Simplification : Ligne droite qui démarre après l'arrondi (approximatif mais propre)
-           ctx.moveTo(labelX+6, labelY); ctx.lineTo(labelX+labelWidth, labelY); 
-           ctx.stroke();
-           // Coin gauche
-           // ctx.arcTo(...) - On laisse simple pour l'instant, le roundRect a déjà rempli.
-           // On dessine juste la ligne droite du haut pour fermer visuellement
-        }
-        
-        // Bordure Bas (Seulement si dernier du groupe)
-        if(isLastInGroup) {
-           ctx.beginPath();
-           ctx.moveTo(labelX+6, labelY+labelH); ctx.lineTo(labelX+labelWidth, labelY+labelH);
-           ctx.stroke();
-        }
-
-        // Texte Label
-        if(!showBeadValues){
-            ctx.fillStyle = labelTxt;
-            ctx.font = "bold 14px sans-serif";
-            ctx.textAlign = "right";
-            ctx.textBaseline = "middle";
-            ctx.fillText(defaultLabels[r], labelX + labelWidth - 12, labelY + labelH/2);
-        }
-
-        // -- Tiges --
-        const rodY = currentY + rowHeight/2;
-        const rodX = frameX + frameThick;
-        const rodW = abacusWidth;
-        
-        // Ligne pointillée séparatrice (si gap)
-        if(isStartGroup){
-             ctx.beginPath();
-             ctx.strokeStyle = "rgba(168, 131, 72, 0.4)";
-             ctx.lineWidth = 1;
-             ctx.setLineDash([5, 5]);
-             ctx.moveTo(frameX, currentY - gapHeight/2);
-             ctx.lineTo(frameX+frameW, currentY - gapHeight/2);
-             ctx.stroke();
-             ctx.setLineDash([]);
-        }
-
-        const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2);
-        gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
-        
-        ctx.fillStyle = gradRod;
-        ctx.shadowColor = "rgba(0,0,0,0.3)";
-        ctx.shadowBlur = 2;
-        ctx.shadowOffsetY = 1;
-        ctx.fillRect(rodX, rodY-2, rodW, 4);
-        ctx.shadowColor = "transparent";
-
-        // -- Billes --
-        const count = state[r];
-        const innerW = rodW; // Espace disponible pour billes
-        
-        // Calcul position billes
-        const beadRadius = beadSize/2;
-        const startLeft = rodX + beadRadius;
-        const startRight = rodX + innerW - beadRadius;
-        
-        // Couleurs Bille
-        let bMain, bHi;
-        const colIdx = r % 3;
-        if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; }
-        else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; }
-        else { bMain = C.red; bHi = C.redHi; }
-        
-        // Boucle 10 billes
-        for(let j=1; j<=10; j++){
-            let bx;
-            if (j <= count) {
-                // Gauche
-                bx = startLeft + (j - 1) * beadSize;
-            } else {
-                // Droite
-                const offset = (10 - j) * beadSize;
-                bx = startRight - offset;
-            }
-            
-            drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, showBeadValues ? getBeadText(r) : "");
-        }
-        
-        currentY += rowHeight;
-    }
+    drawAbacusCanvas(ctx, abacusX, startY, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C);
 
     // --- 3. DESSINER LE TABLEAU ---
     if(showTable){
@@ -1005,6 +830,141 @@
     link.click();
   }
   
+  // -- Dessin Boulier (Corrigé : Cadre rectangulaire uniforme) --
+  function drawAbacusCanvas(ctx, x, y, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C) {
+      // Zone principale bois (fond derrière les tiges)
+      const frameX = x + labelWidth; // Début du cadre (après les étiquettes)
+      const frameW = abacusWidth + frameThick*2; // Largeur totale incluant les bords
+      const frameH = totalAbacusHeight;
+      
+      // Ombre portée globale
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
+      
+      // Fond Bois (Dégradé Horizontal)
+      const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
+      gradWood.addColorStop(0, C.wood); gradWood.addColorStop(0.2, C.woodMid);
+      gradWood.addColorStop(0.8, C.woodMid); gradWood.addColorStop(1, C.wood);
+      ctx.fillStyle = gradWood;
+      // On dessine le fond principal
+      ctx.fillRect(frameX, y, frameW, frameH);
+      ctx.restore();
+
+      // Bords Verticaux (Gauche et Droite)
+      ctx.fillStyle = C.woodDark;
+      ctx.fillRect(frameX, y, frameThick, frameH); // Gauche
+      ctx.fillRect(frameX + frameW - frameThick, y, frameThick, frameH); // Droite
+
+      // Bords Horizontaux (Haut et Bas) - Superposés aux verticaux pour faire le coin
+      const gradFrameV = ctx.createLinearGradient(0, y, 0, y+frameThick);
+      gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
+      
+      // Haut (Rectangulaire avec coins arrondis seulement en haut)
+      ctx.fillStyle = gradFrameV;
+      ctx.beginPath(); 
+      // On aligne exactement sur frameX pour ne pas dépasser
+      ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); 
+      ctx.fill();
+      
+      const gradFrameV2 = ctx.createLinearGradient(0, y+frameH-frameThick, 0, y+frameH);
+      gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
+      
+      // Bas
+      ctx.fillStyle = gradFrameV2;
+      ctx.beginPath(); 
+      ctx.roundRect(frameX, y+frameH-frameThick, frameW, frameThick, [0,0,4,4]); 
+      ctx.fill();
+      
+      // Contenu
+      let currentY = y + frameThick;
+      for(let r=0; r<currentRows; r++){
+          const isStartGroup = (r===3 || r===6);
+          if(isStartGroup) currentY += gapHeight;
+
+          // Labels
+          const labelX = x; 
+          const labelY = currentY;
+          let labelBg='#fff', labelTxt='#444', borderColor='#ccc';
+          let isLast=(r===2||r===5||r===6), isFirst=(r===0||r===3||r===6);
+          
+          if(r<3) labelBg='#fff'; else if(r<6) labelBg='#e0e0e0'; else { labelBg='#1b1b1b'; labelTxt='#bdbdbd'; borderColor='#333'; }
+          
+          ctx.fillStyle = labelBg;
+          ctx.beginPath();
+          let rad=[0,0,0,0];
+          if(isFirst) rad[0]=6; if(isLast) rad[3]=6;
+          // IMPORTANT: utiliser roundRect pour tout dessiner d'un coup (fond + contour)
+          ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad);
+          ctx.fill();
+          
+          // --- DESSIN DES BORDURES LABEL (Manuellement pour éviter les lignes doubles) ---
+          ctx.strokeStyle = borderColor;
+          ctx.lineWidth = 1;
+          
+          // Bordure Gauche (Toujours)
+          ctx.beginPath(); ctx.moveTo(labelX, labelY); ctx.lineTo(labelX, labelY+rowHeight); ctx.stroke();
+          
+          // Bordure Haut (Seulement si premier du groupe)
+          if(isFirst) {
+             ctx.beginPath(); 
+             // Arc pour le coin arrondi
+             // Simplification : Ligne droite qui démarre après l'arrondi (approximatif mais propre)
+             ctx.moveTo(labelX+6, labelY); ctx.lineTo(labelX+labelWidth, labelY); 
+             ctx.stroke();
+          }
+          
+          // Bordure Bas (Seulement si dernier du groupe)
+          if(isLast) {
+             ctx.beginPath();
+             ctx.moveTo(labelX+6, labelY+rowHeight); ctx.lineTo(labelX+labelWidth, labelY+rowHeight);
+             ctx.stroke();
+          }
+
+          if(!showBeadValues){
+              ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif";
+              ctx.textAlign = "right"; ctx.textBaseline = "middle";
+              ctx.fillText(defaultLabels[r], labelX + labelWidth - 12, labelY + rowHeight/2);
+          }
+
+          // Tiges
+          const rodY = currentY + rowHeight/2;
+          const rodX = frameX + frameThick;
+          const rodW = abacusWidth; // Largeur interne (sans les bords cadre)
+
+          if(isStartGroup){
+             ctx.beginPath(); ctx.strokeStyle = "rgba(168, 131, 72, 0.4)"; ctx.lineWidth = 1;
+             ctx.setLineDash([5, 5]); ctx.moveTo(frameX, currentY - gapHeight/2); ctx.lineTo(frameX+frameW, currentY - gapHeight/2); ctx.stroke(); ctx.setLineDash([]);
+          }
+
+          const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2);
+          gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
+          ctx.fillStyle = gradRod;
+          ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=2; ctx.shadowOffsetY=1;
+          ctx.fillRect(rodX, rodY-2, rodW, 4);
+          ctx.shadowColor="transparent";
+
+          // Billes
+          const count = state[r];
+          const beadRadius = beadSize/2;
+          const startLeft = rodX + beadRadius;
+          const startRight = rodX + rodW - beadRadius;
+          
+          let bMain, bHi;
+          const colIdx = r % 3;
+          if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; }
+          else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; }
+          else { bMain = C.red; bHi = C.redHi; }
+          
+          for(let j=1; j<=10; j++){
+              let bx;
+              if (j <= count) bx = startLeft + (j - 1) * beadSize;
+              else { const offset = (10 - j) * beadSize; bx = startRight - offset; }
+              drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, showBeadValues ? getBeadText(r) : "");
+          }
+          currentY += rowHeight;
+      }
+  }
+
   // -- Helpers de Dessin --
 
   function getBeadText(r){
@@ -1040,7 +1000,7 @@
           ctx.fillStyle = "rgba(0,0,0,0.4)";
           ctx.beginPath();
           // Correction : Centré sur la bille (x,y)
-          ctx.arc(x, y, 2, 0, Math.PI*2); // Retour à la taille originale (rayon 2)
+          ctx.arc(x, y, 2, 0, Math.PI*2); // Rayon 2px (petit)
           ctx.fill();
       }
       
@@ -1058,70 +1018,78 @@
       ctx.restore();
   }
 
+  // -- Dessin Nombre en haut (Corrigé : Groupes unis, Sans traits noirs, espacement serré 32px) --
   function drawNumberDisplay(ctx, total, centerX, y){
       const str = total.toString();
       const len = str.length;
-      const charW = 40;
+      // Rétablissement de l'espacement serré : 32px par caractère
+      const charW = 32;
       const charH = 60;
       const pad = 10;
       
-      // Calcul largeur totale pour centrer
-      // On estime grossièrement
-      const totalW = len * charW + Math.floor((len-1)/3)*10; 
+      // Calcul largeur totale pour centrer (approx)
+      let totalW = len * charW + Math.floor((len-1)/3)*10;
       let curX = centerX - totalW/2;
       
       ctx.font = "800 40px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
-      for(let i=0; i<len; i++){
-          const digit = str[i];
-          const power = len - 1 - i;
-          const groupIndex = Math.floor(power / 3);
-          const colIndex = power % 3;
+      let i = 0;
+      while(i < len) {
+          // Trouver la taille du groupe courant (1, 2 ou 3 chiffres)
+          // Un groupe change quand power change de millier (power/3 change)
+          const startI = i;
+          const startPower = len - 1 - i;
+          const currentGrpIdx = Math.floor(startPower/3);
           
-          // Fond du groupe (si activé)
+          // Avancer tant qu'on est dans le même groupe
+          let count = 0;
+          while(i < len) {
+              const p = len - 1 - i;
+              if(Math.floor(p/3) !== currentGrpIdx) break;
+              count++;
+              i++;
+          }
+          
+          // Dessiner le fond pour ce groupe entier
           let bg = null;
-          let txtCol = '#111';
-          
           if(useGroups){
-             if(groupIndex===0) bg = '#fff';
-             else if(groupIndex===1) bg = '#e0e0e0';
-             else bg = '#1b1b1b';
+              if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b';
           }
           
-          // Couleur texte
-          if(useColors){
-              if(colIndex===0) txtCol = '#3cb371';
-              else if(colIndex===1) txtCol = '#40c4ff';
-              else txtCol = '#e53935';
-          } else {
-              if(useGroups && groupIndex >= 2) txtCol = '#f0f0f0';
-          }
-
-          // Dessin du fond (un rectangle par chiffre pour simplifier, ou par groupe)
-          // Ici on dessine un rect par chiffre pour faire simple, collés
+          const groupW = count * charW;
+          const groupX = curX; // X actuel pour le début du groupe
+          
           if(bg){
-              ctx.fillStyle = bg;
-              // Bords arrondis pour le groupe ?
-              // Simplification : rect simple avec ombre
-              ctx.shadowColor = "rgba(0,0,0,0.1)";
-              ctx.shadowBlur = 4;
-              ctx.fillRect(curX, y - charH/2, charW, charH);
-              ctx.shadowColor = "transparent";
-              
-              // Bordure légère
-              ctx.strokeStyle = "rgba(0,0,0,0.1)";
-              ctx.strokeRect(curX, y - charH/2, charW, charH);
+             ctx.fillStyle = bg;
+             ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4;
+             // Fond unique pour tout le groupe (SANS CONTOUR STROKE)
+             ctx.fillRect(groupX, y-charH/2, groupW, charH);
+             ctx.shadowColor="transparent";
           }
           
-          // Chiffre
-          ctx.fillStyle = txtCol;
-          ctx.fillText(digit, curX + charW/2, y);
+          // Dessiner les chiffres du groupe
+          for(let k=0; k<count; k++) {
+              const charIndex = startI + k;
+              const digit = str[charIndex];
+              const power = len - 1 - charIndex;
+              const colIdx = power % 3;
+              
+              let txtCol='#111';
+              if(useColors){
+                  if(colIdx===0) txtCol='#3cb371'; else if(colIdx===1) txtCol='#40c4ff'; else txtCol='#e53935';
+              } else {
+                  if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0';
+              }
+              ctx.fillStyle = txtCol;
+              // Centrage vertical standard (y + 4 pour ajustement visuel)
+              ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 4);
+          }
           
-          curX += charW;
-          // Espace entre milliers
-          if(colIndex === 0 && i !== len-1) curX += 10;
+          // Avancer X pour le prochain groupe (+ espace si pas fini)
+          curX += groupW;
+          if(i < len) curX += 10; // Espace entre groupes
       }
   }
 
