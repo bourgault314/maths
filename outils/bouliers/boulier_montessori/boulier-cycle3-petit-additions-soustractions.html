@@ -185,6 +185,14 @@
     border: 2px solid var(--accent); width: 140px; text-align: center; 
     font-weight: 700; outline: none; -moz-appearance: textfield; background-color: #fff; color: #333;
   }
+  
+  /* Suppression des flèches (spinners) Chrome/Safari/Edge */
+  .answer-input::-webkit-outer-spin-button,
+  .answer-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
   .answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,108,249,0.2); }
 
   .feedback { font-weight: 700; min-height: 1.2em; font-size: 1.1rem; display: none; } 
@@ -233,7 +241,7 @@
   .th-class.unit-class { background: #fff; } .th-class.thousand-class { background: #e0e0e0; } .th-class.million-class { background: #1b1b1b; color: #fff; }
   .th-rank { font-size: 0.9rem; font-weight: 700; padding: 6px 0; border-bottom: 1px solid #ccc; background: #fafafa; color: #555; }
   .col-digit { font-size: 2rem; font-weight: 800; padding: 12px 0; height: 60px; }
-  .result-row td { border-top: 3px solid #333; background: #f9fff9; }
+  .result-row td { border-top: 3px solid #333; background: #ffffff; } /* MODIF: Fond blanc pour résultat */
   .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); } .bg-blue-tint { background-color: rgba(64, 196, 255, 0.08); } .bg-red-tint { background-color: rgba(229, 57, 53, 0.08); }
   .text-green { color: var(--color-green); } .text-blue { color: var(--color-blue); } .text-red { color: var(--color-red); } .text-black { color: #000; }
 
@@ -450,6 +458,15 @@
 
     actionBtn.addEventListener('click', handleAction); 
     userAnswer.addEventListener('keydown', (e) => { if(e.key === 'Enter') handleAction(); });
+    
+    // NOUVEAU : Effacer le message d'erreur quand on commence à taper (Placé ici correctement dans init)
+    userAnswer.addEventListener('input', () => { 
+        if(!isSolved) {
+            feedbackEl.style.display = 'none'; 
+            actionBtn.classList.remove('error');
+        }
+    });
+
     btnExportTable.addEventListener('click', () => exportImage()); 
     window.addEventListener('resize', ()=> setTimeout(layoutAll, 50));
   }
@@ -589,6 +606,7 @@
         badCount++; badEl.textContent = badCount;
         feedbackEl.textContent = "Non, essaie encore !"; feedbackEl.style.display = "block"; feedbackEl.className = "feedback err";
         actionBtn.classList.add('error'); setTimeout(() => actionBtn.classList.remove('error'), 400); showOverlay(false);
+        // Le message reste affiché tant que l'élève ne change pas sa réponse
     }
   }
 
@@ -810,7 +828,7 @@
       if(currentRows > 6) groups.push({ name: "Millions", gc:"#1b1b1b", tc:"#fff", cols: [{l:"1", i:6}] });
       const milleCols = []; if(currentRows > 5) milleCols.push({l:"100", i:5}); if(currentRows > 4) milleCols.push({l:"10", i:4}); milleCols.push({l:"1", i:3});
       groups.push({ name: "Mille", gc:"#e0e0e0", tc:"#333", cols: milleCols });
-      groups.push({ name: "Unités Simples", gc:"#fff", tc:"#333", cols: [{l:"100", i:2}, {l:"10", i:1}, {l:"1", i:0}] });
+      groups.push({ name: "Unités Simples", gc:"#fff", tc:"#333", cols: [{l:"100", i:2}, {l:"10", i:1}, {l:"10", i:0}] });
 
       const colCount = groups.reduce((acc, g) => acc + g.cols.length, 0); const cellW = w / colCount;
       let curX = x;
@@ -846,7 +864,7 @@
                       let p = col.i; let digit = "";
                       if(absVal >= Math.pow(10, p)){ digit = Math.floor(absVal / Math.pow(10, p)) % 10; if(p >= valStr.length) digit = ""; }
                       if(digit !== ""){
-                          if(useColors){ if(col.l==="1") ctx.fillStyle="rgba(60, 179, 113, 0.08)"; else if(col.l==="10") ctx.fillStyle="rgba(64, 196, 255, 0.08)"; else if(col.l==="100") ctx.fillStyle="rgba(229, 57, 53, 0.08)"; ctx.fillRect(curX, curY, cellW, hRow); }
+                          
                           let clr = "#000"; if(useColors){ if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935"; }
                           ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(digit, curX + cellW/2, curY + hRow/2);
                       }
@@ -859,7 +877,8 @@
 
       const resY = curY;
       ctx.fillStyle = "#333"; ctx.fillRect(x, resY, w, 3);
-      curX = x; ctx.fillStyle = "#f9fff9"; ctx.fillRect(x, resY+3, w, hRow-3);
+      
+      curX = x; ctx.fillStyle = "#ffffff"; ctx.fillRect(x, resY+3, w, hRow-3);
 
       let resVal = Math.abs(targetValue); let resStr = resVal.toString();
       groups.forEach(g => {
