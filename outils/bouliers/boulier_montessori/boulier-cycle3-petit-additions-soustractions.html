@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Boulier Montessori – Opérations</title>
+<title>Boulier Montessori – Opérations (Layout)</title>
 <style>
   /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
@@ -36,146 +36,137 @@
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
   
-  /* Layout Principal (Flexible) */
   .app {
     width: 100%;
-    max-width: 900px; 
+    max-width: 1400px; 
     margin: 10px auto;
     padding: 0 8px; 
     display: flex; 
     flex-direction: column; 
     min-height: 90vh; 
-    background: var(--bg);
-    transition: max-width 0.4s ease;
-  }
-
-  .app.show-table {
-    max-width: 1300px;
   }
 
   /* --- Topbar & Contrôles --- */
   .toolbar{
-    display:flex; flex-wrap:nowrap; gap:12px; align-items:center; justify-content:center;
-    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
-    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 10px;
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;
+    margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
   
-  .control-group {
-    display:flex; align-items:center; gap:6px; flex-shrink: 0; flex-wrap: wrap; justify-content: center;
-  }
+  .control-group { display:flex; align-items:center; gap:4px; flex-wrap: wrap; justify-content: center; }
+  .separator { width: 1px; height: 24px; background: #ccc; margin: 0 4px; }
   
-  /* Boutons */
+  /* --- BOUTONS UNIFORMISÉS --- */
   .btn{
     border:none;
-    background: var(--btn-off); 
-    color:#fff;font-weight:700;
-    padding:6px 12px; border-radius:6px; cursor:pointer;
-    box-shadow:none; font-size:.9rem;
-    transition: all 0.1s; 
-    display: flex; align-items: center; justify-content: center; gap: 4px;
-    opacity: 0.9;
-    white-space: nowrap;
+    background: var(--btn-off); /* GRIS par défaut */
+    color:#fff; font-weight:700;
+    padding:8px 12px; border-radius:6px; cursor:pointer;
+    box-shadow:none; font-size:.95rem;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    opacity: 0.9; white-space: nowrap;
   }
+  .btn:hover { opacity: 1; transform: translateY(-1px); }
   
-  /* État Actif / Bleu */
+  /* État Activé = BLEU */
   .btn.active, .btn:active {
     background: var(--accent);
     box-shadow: 0 2px 5px rgba(15,108,249,.2);
     opacity: 1;
     transform: translateY(1px); 
   }
-  
-  .btn.zero-btn {
-    font-size: 1rem; padding: 6px 12px; min-width: 30px;
-  }
 
-  /* Bouton Vérifier */
+  .btn.zero-btn { font-size: 1.1rem; padding: 8px 14px; min-width: 40px; }
+  .btn.size-toggle { padding: 8px 12px; }
+
+  /* Bouton Vérifier spécifique */
   .btn.check-btn { 
-    background: var(--btn-off); /* Gris par défaut */
-    font-size: 1.1rem; 
-    padding: 8px 20px; 
-    min-width: 120px;
+    background: var(--btn-off); font-size: 1.1rem; padding: 8px 20px; min-width: 120px;
   }
-  
-  /* Erreur (Rouge) */
-  .btn.check-btn.error {
-    background: var(--err);
-    animation: shake 0.4s ease-in-out;
-  }
-  
-  /* Succès (Vert) */
-  .btn.check-btn.success {
-    background: var(--ok);
-  }
+  .btn.check-btn.error { background: var(--err); animation: shake 0.4s ease-in-out; }
+  .btn.check-btn.success { background: var(--ok); }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-  }
-
-  .btn.size-toggle { padding: 6px 10px; }
-  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
-  .btn.toggle.active { background: var(--accent); box-shadow: 0 2px 5px rgba(15,108,249,.2); opacity: 1; }
-
-  /* Score */
-  .score-display {
-    display: flex; gap: 12px; font-weight: 800; font-size: 1.1rem; align-items: center;
-    margin-left: 8px;
-  }
-  .score-item.good { color: var(--ok); }
-  .score-item.bad { color: var(--err); }
-
-
-  /* --- Zone Paramètres Exercice --- */
-  .exercise-panel {
-    background: var(--ui);
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
+  /* --- WORKSPACE (Zone de travail Grid) --- */
+  .workspace {
+    display: grid;
+    gap: 30px;
     width: 100%;
-    max-width: 800px;
-    align-self: center;
+    justify-content: center;
+    /* DÉFAUT : Calcul en haut, Boulier Gauche, Tableau Droite */
+    grid-template-areas: 
+      "calc calc"
+      "abacus table";
+    grid-template-columns: auto auto; 
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    transition: all 0.3s ease;
+  }
+
+  /* --- Gestion des Zones --- */
+  .area-calc   { grid-area: calc;   width: 100%; display: flex; justify-content: center; }
+  .area-abacus { grid-area: abacus; display: flex; justify-content: center; flex-direction: column; align-items: center;}
+  .area-table  { grid-area: table;  display: flex; justify-content: center; min-width: 350px; }
+
+  .hidden { display: none !important; }
+
+  /* --- LOGIQUE DE LAYOUT DYNAMIQUE --- */
+
+  /* Cas : Calcul Caché -> Tableau au-dessus du Boulier */
+  .workspace.layout-vertical-reversed {
+    grid-template-areas:
+      "table"
+      "abacus";
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .workspace.layout-vertical-reversed .area-table { margin-bottom: 20px; }
+
+  /* Cas : Tableau Caché -> Boulier centré */
+  .workspace.no-table {
+    grid-template-areas:
+      "calc"
+      "abacus";
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  /* Cas : Boulier Caché -> Tableau centré */
+  .workspace.no-abacus {
+    grid-template-areas:
+      "calc"
+      "table";
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  /* --- Zone Paramètres Exercice (Calcul) --- */
+  .exercise-panel {
+    background: var(--ui); padding: 15px; border-radius: 12px; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+    width: 100%; max-width: 800px;
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.03);
   }
 
   .params-row {
     display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: center;
-    font-size: 0.95rem; font-weight: 600; color: #444;
-    width: 100%;
+    font-size: 0.95rem; font-weight: 600; color: #444; width: 100%;
   }
-  .params-row select {
-    padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer;
-    background: #fff;
-  }
+  .params-row select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ccc; font-weight: 600; cursor: pointer; background: #fff; }
   .params-row label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
 
-  /* Manual Input Styles */
-  .manual-input {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-    width: 200px;
-  }
+  .manual-input { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; width: 200px; }
 
-  /* Affichage de l'opération */
   .ops-display {
     font-size: 2rem; font-weight: 800; color: #333;
     background: #fff; padding: 15px 30px; border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    min-width: 250px; text-align: center;
-    letter-spacing: 1px;
-    min-height: 3.5rem;
-    display: flex; align-items: center; justify-content: center;
-    flex-wrap: wrap; gap: 5px; 
+    min-width: 250px; text-align: center; letter-spacing: 1px;
+    min-height: 3.5rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; 
   }
 
-  /* Eléments de l'opération */
   .op-part { display: inline-flex; align-items: center; justify-content: center; }
   .op-number { display: inline-flex; }
   
@@ -187,176 +178,67 @@
   .digit-group.no-bg { background: transparent !important; border: 1px solid transparent; box-shadow: none; }
   .digit-char { font-size: 2rem; font-weight: 800; line-height: 1; margin: 0 1px; transition: color 0.3s; }
 
-  .answer-row {
-    display: flex; gap: 15px; align-items: center; margin-top: 5px;
-  }
+  .answer-row { display: flex; gap: 15px; align-items: center; margin-top: 5px; }
   
-  /* --- Input Réponse Corrigé --- */
   .answer-input {
-    font-size: 1.6rem; 
-    padding: 8px 14px; 
-    border-radius: 8px; 
-    border: 2px solid var(--accent); /* Bordure bleue par défaut */
-    width: 140px; 
-    text-align: center; 
-    font-weight: 700; 
-    outline: none;
-    -moz-appearance: textfield;
-    background-color: #fff;
-    color: #333;
+    font-size: 1.6rem; padding: 8px 14px; border-radius: 8px; 
+    border: 2px solid var(--accent); width: 140px; text-align: center; 
+    font-weight: 700; outline: none; -moz-appearance: textfield; background-color: #fff; color: #333;
   }
-  
-  .answer-input::-webkit-outer-spin-button, 
-  .answer-input::-webkit-inner-spin-button { 
-    -webkit-appearance: none; 
-    margin: 0; 
-  }
-
-  /* Focus : Reste bleu, pas de vert */
-  .answer-input:focus { 
-    border-color: var(--accent); 
-    box-shadow: 0 0 0 3px rgba(15,108,249,0.2); 
-  }
-  
-  /* Empêche le vert automatique */
-  .answer-input:valid {
-    border-color: var(--accent);
-  }
+  .answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,108,249,0.2); }
 
   .feedback { font-weight: 700; min-height: 1.2em; font-size: 1.1rem; display: none; } 
+  .score-display { display: flex; gap: 12px; font-weight: 800; font-size: 1.1rem; align-items: center; margin-left: 8px; }
+  .score-item.good { color: var(--ok); } .score-item.bad { color: var(--err); }
 
-  /* Fonds des classes */
-  .bg-white { background-color: #ffffff; }
-  .bg-gray  { background-color: #e0e0e0; }
-  .bg-black { background-color: #1b1b1b; border-color: #444; }
-
-  /* --- Zone Centrale (Split View) --- */
-  .main-area {
-    display: flex; flex: 1; gap: 30px;
-    align-items: flex-start; justify-content: center; 
-    transition: all 0.3s; width: 100%;
-  }
-
-  /* Colonne Boulier */
-  .abacus-column {
-    flex: 0 0 auto; width: 100%; max-width: 800px;
-    display: flex; flex-direction: column; align-items: center;
-    transition: all 0.3s;
-  }
-  .app.show-table .abacus-column { width: auto; flex: 1 1 600px; }
-
-  /* Colonne Tableau */
-  .table-column {
-    display: none; flex: 1 1 400px; max-width: 500px;
-    flex-direction: column; align-items: stretch;
-    padding-top: 180px; 
-    opacity: 0; transform: translateX(20px); transition: all 0.4s ease;
-  }
-  .app.show-table .table-column { display: flex; opacity: 1; transform: translateX(0); }
-
-  /* --- Boulier Layout --- */
-  .abacus-wrapper{
-    display:flex; align-items:flex-start; justify-content: center;
-    width: 100%; overflow-x: auto; padding-bottom: 20px;
-  }
-  .labels{
-    display:flex; flex-direction:column; width: 100px;
-    padding-top: 14px; margin-right: 0; flex-shrink: 0;
-  }
-  .label-item{
-    height: 50px; display:flex; align-items:center; justify-content:flex-end;
-    padding-right: 12px; font-weight:700; font-size:0.95rem; color:#444;
-    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
-    transition: background 0.3s;
-  }
-  .label-white { background-color: #ffffff; }
-  .label-gray  { background-color: #e0e0e0; }
-  .label-black { background-color: #1b1b1b; color: #bdbdbd; border-color: #333; }
-  .label-top-rounded { border-top: 1px solid #ccc; border-radius: 6px 0 0 0; }
-  .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
+  /* Boulier & Table Styles (Identiques) */
+  .bg-white { background-color: #ffffff; } .bg-gray { background-color: #e0e0e0; } .bg-black { background-color: #1b1b1b; border-color: #444; }
+  
+  .abacus-wrapper{ display:flex; align-items:flex-start; justify-content: center; overflow-x: auto; padding-bottom: 20px; }
+  .labels{ display:flex; flex-direction:column; width: 100px; padding-top: 14px; margin-right: 0; flex-shrink: 0; }
+  .label-item{ height: 50px; display:flex; align-items:center; justify-content:flex-end; padding-right: 12px; font-weight:700; font-size:0.95rem; color:#444; border-left: 1px solid #ccc; }
+  .label-white { background-color: #ffffff; } .label-gray { background-color: #e0e0e0; } .label-black { background-color: #1b1b1b; color: #bdbdbd; border-color: #333; }
+  .label-top-rounded { border-top: 1px solid #ccc; border-radius: 6px 0 0 0; } .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
   .gap-top { margin-top: 30px !important; }
 
-  /* --- Boulier --- */
   .abacus{
-    flex:1; min-width: 320px; position:relative;
+    flex: 0 0 auto; min-width: 320px; position:relative;
     background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
-    box-shadow:0 10px 25px rgba(0,0,0,.15);
-    display: flex; flex-direction: column;
-    padding: 14px 0;
-    border-right: 14px solid #a88348; border-left: 14px solid #a88348;
-    border-radius: 4px;
+    box-shadow:0 10px 25px rgba(0,0,0,.15); display: flex; flex-direction: column; padding: 14px 0;
+    border-right: 14px solid #a88348; border-left: 14px solid #a88348; border-radius: 4px;
+    width: 600px; 
   }
-  .abacus::before, .abacus::after{
-    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
-    background:linear-gradient(#caa367,#9a733c); z-index: 2;
-  }
-  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
-  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
+  @media (max-width: 800px) { .abacus { width: 100%; min-width: 280px; } }
 
+  .abacus::before, .abacus::after{ content:""; position:absolute; left: -14px; right: -14px; height:14px; background:linear-gradient(#caa367,#9a733c); z-index: 2; }
+  .abacus::before{top:0; border-radius:4px 4px 0 0} .abacus::after{bottom:0; border-radius:0 0 4px 4px}
   .row{ position:relative; width:100%; height: 50px; }
-  .row.gap-top::before {
-    content: ""; position: absolute; top: -15px; left: 5%; right: 5%;
-    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
-  }
-  .rod{
-    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
-    background:linear-gradient(180deg,#c09e6c,#8a6538); box-shadow:0 1px 2px rgba(0,0,0,.3);
-  }
+  .rod{ position:absolute; left:0; right:0; top:50%; height:4px; transform:translateY(-50%); background:linear-gradient(180deg,#c09e6c,#8a6538); box-shadow:0 1px 2px rgba(0,0,0,.3); }
+  .row.gap-top::before { content: ""; position: absolute; top: -15px; left: 5%; right: 5%; height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3); }
+  
   .bead{
-    position:absolute; top:50%; transform:translate(-50%,-50%);
-    width:var(--bead-size); height:var(--bead-size); border-radius:50%;
-    border: 1px solid rgba(0,0,0,0.15); 
-    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
-    cursor:pointer; user-select:none; z-index: 10;
-    transition:left 0.2s ease-out;
-    display: flex; align-items: center; justify-content: center;
+    position:absolute; top:50%; transform:translate(-50%,-50%); width:var(--bead-size); height:var(--bead-size); border-radius:50%;
+    border: 1px solid rgba(0,0,0,0.15); box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    cursor:pointer; user-select:none; z-index: 10; transition:left 0.2s ease-out; display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 9px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
-  .bead:active{transform:translate(-50%,-50%) scale(.95)}
-  .bead.marked::after {
-    content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
-  }
-  .bead.has-text.marked::after { display: none; }
+  .bead:active{transform:translate(-50%,-50%) scale(.95)} .bead.marked::after { content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block; } .bead.has-text.marked::after { display: none; }
 
-  /* --- Styles du Tableau de Numération --- */
-  .montessori-table {
-    border-collapse: collapse; width: 100%; background: #fff;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px;
-    overflow: hidden; font-family: sans-serif; table-layout: fixed; 
-  }
-  .montessori-table th, .montessori-table td { text-align: center; border-right: 1px solid #eee; }
-  .montessori-table th:last-child, .montessori-table td:last-child { border-right: none; }
+  /* Tableau */
+  .table-container { width: 100%; max-width: 600px; padding-top: 20px; opacity: 0; transform: translateY(10px); animation: fadeIn 0.4s forwards; }
+  @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+  .montessori-table { border-collapse: collapse; width: 100%; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; font-family: sans-serif; table-layout: fixed; }
+  .montessori-table th, .montessori-table td { text-align: center; border-right: 1px solid #eee; } .montessori-table th:last-child, .montessori-table td:last-child { border-right: none; }
   .th-class { text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; padding: 8px 0; color: #333; border-bottom: 2px solid #aaa; }
-  .th-class.unit-class { background: #fff; }
-  .th-class.thousand-class { background: #e0e0e0; }
-  .th-class.million-class { background: #1b1b1b; color: #fff; }
+  .th-class.unit-class { background: #fff; } .th-class.thousand-class { background: #e0e0e0; } .th-class.million-class { background: #1b1b1b; color: #fff; }
   .th-rank { font-size: 0.9rem; font-weight: 700; padding: 6px 0; border-bottom: 1px solid #ccc; background: #fafafa; color: #555; }
-  
   .col-digit { font-size: 2rem; font-weight: 800; padding: 12px 0; height: 60px; }
-  
-  /* Ligne de résultat */
-  .result-row td {
-    border-top: 3px solid #333; /* Barre d'opération */
-    background: #f9fff9;
-  }
-  
-  .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); }
-  .bg-blue-tint  { background-color: rgba(64, 196, 255, 0.08); }
-  .bg-red-tint   { background-color: rgba(229, 57, 53, 0.08); }
-  .text-green { color: var(--color-green); }
-  .text-blue { color: var(--color-blue); }
-  .text-red { color: var(--color-red); }
-  .text-black { color: #000; }
+  .result-row td { border-top: 3px solid #333; background: #f9fff9; }
+  .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); } .bg-blue-tint { background-color: rgba(64, 196, 255, 0.08); } .bg-red-tint { background-color: rgba(229, 57, 53, 0.08); }
+  .text-green { color: var(--color-green); } .text-blue { color: var(--color-blue); } .text-red { color: var(--color-red); } .text-black { color: #000; }
 
-  /* Overlay */
-  .overlay{
-    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    font-size:8rem;font-weight:900;color:white;text-shadow:0 0 30px rgba(0,0,0,.7);
-    pointer-events:none;opacity:0;transition:opacity .2s ease; z-index: 100;
-  }
-  .overlay.show{opacity:1}
-  .overlay.ok{color:var(--ok)}
-  .overlay.err{color:var(--err)}
+  .overlay{ position:fixed;inset:0;display:flex;align-items:center;justify-content:center; font-size:8rem;font-weight:900;color:white;text-shadow:0 0 30px rgba(0,0,0,.7); pointer-events:none;opacity:0;transition:opacity .2s ease; z-index: 100; }
+  .overlay.show{opacity:1} .overlay.ok{color:var(--ok)} .overlay.err{color:var(--err)}
 
 </style>
 </head>
@@ -364,69 +246,59 @@
   <div class="app" id="appContainer">
     
     <div class="toolbar">
-      <!-- Groupe 1: Taille & Style -->
+      <!-- Groupe 1: Config -->
       <div class="control-group">
         <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
-        <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨</button>
-        <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜</button>
-        <button class="btn toggle" id="btnMarker" title="Afficher/Masquer Repère visuel (5)">⚫</button>
-        <button class="btn toggle" id="btnTable" title="Afficher/Masquer Tableau de Numération">📊</button>
+        <button class="btn active" id="btnColor" title="Couleurs">🎨</button>
+        <button class="btn active" id="btnGroup" title="Groupes">⬜</button>
+        <button class="btn" id="btnMarker" title="Repère visuel (5)">⚫</button>
+        <button class="btn" id="btnLabels" title="Valeurs Billes">100</button>
       </div>
-
-      <!-- Groupe 2: Valeur (Toggle) -->
+      <div class="separator"></div>
+      
+      <!-- Groupe 2: Structure (AFFICHAGE) -->
       <div class="control-group">
-        <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
+        <!-- Boutons de Structure (Bleu si actif, Gris si inactif) -->
+        <button class="btn active" id="btnToggleCalc" title="Afficher/Masquer Calcul">➕ Calcul</button>
+        <button class="btn active" id="btnToggleAbacus" title="Afficher/Masquer Boulier">🧮 Boulier</button>
+        <button class="btn" id="btnToggleTable" title="Afficher/Masquer Tableau">📊 Tableau</button>
       </div>
+      <div class="separator"></div>
 
       <!-- Groupe 3: Actions + Score -->
       <div class="control-group">
         <button class="btn" id="newOps" title="Générer un nouveau calcul">🎲 Nouveau</button>
-        <button class="btn" id="btnCustom" title="Entrer son propre calcul">✍️ Proposition</button>
+        <button class="btn" id="btnCustom" title="Entrer son propre calcul">✍️ Prop.</button>
+        <button class="btn zero-btn active" id="reset" title="Remettre à zéro">0</button>
         
-        <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
-        
-        <!-- Score intégré -->
         <div class="score-display">
           <span class="score-item good">✅ <span id="goodCount">0</span></span>
           <span class="score-item bad">❌ <span id="badCount">0</span></span>
         </div>
       </div>
       
-      <!-- Groupe 4: Export (Tableau Seulement) -->
+      <!-- Groupe 4: Export -->
       <div class="control-group" style="margin-left: 10px; border-left: 1px solid #ccc; padding-left: 10px;">
-        <button class="btn" id="btnExportTable" title="Sauvegarder Tableau + Calcul">📷 Photo</button>
+        <button class="btn" id="btnExportTable" title="Sauvegarder">📷</button>
       </div>
 
     </div>
 
-    <!-- Zone Principale -->
-    <div class="main-area">
+    <!-- Zone de travail Grid -->
+    <div class="workspace" id="workspace">
       
-      <!-- Colonne Gauche : Boulier & Params -->
-      <div class="abacus-column">
-        
-        <!-- Panneau Paramètres & Enoncé -->
+      <!-- Zone Calcul (Settings + Display + Input) -->
+      <div class="area-calc" id="areaCalc">
         <div class="exercise-panel">
           <!-- Mode Auto -->
           <div class="params-row" id="autoControls">
-            <label>Opérations :
-              <select id="opCount">
-                <option selected>2</option><option>3</option><option>4</option><option>5</option>
-              </select>
-            </label>
-            <label>Max :
-              <select id="opStep">
-                <option value="100">100</option>
-                <option value="1000" selected>1 000</option>
-                <option value="1000000">1 Million</option>
-                <option value="1000000000">Max</option>
-              </select>
-            </label>
+            <label>Opérations : <select id="opCount"><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
+            <label>Max : <select id="opStep"><option value="100">100</option><option value="1000" selected>1 000</option><option value="1000000">1 Million</option><option value="1000000000">Max</option></select></label>
             <label><input type="radio" name="opMode" value="add" checked> +</label>
             <label><input type="radio" name="opMode" value="mixed"> ±</label>
           </div>
 
-          <!-- Mode Manuel (Caché par défaut) -->
+          <!-- Mode Manuel -->
           <div class="params-row" id="manualControls" style="display:none;">
             <input type="text" id="manualInput" class="manual-input" placeholder="Ex: 12 + 25">
             <button class="btn active" id="btnValidateCustom">Valider</button>
@@ -434,28 +306,28 @@
           </div>
           
           <!-- Enoncé Graphique -->
-          <div class="ops-display" id="opsDisplay">
-            <!-- Généré par JS -->
-          </div>
+          <div class="ops-display" id="opsDisplay"></div>
           
           <div class="answer-row">
             <input type="number" id="userAnswer" class="answer-input" placeholder="?" inputmode="numeric">
-            <!-- Bouton Vérifier -->
             <button class="btn check-btn" id="actionBtn" title="Valider">Vérifier</button>
           </div>
           
           <div class="feedback" id="feedback"></div>
         </div>
+      </div>
 
+      <!-- Zone Boulier -->
+      <div class="area-abacus" id="areaAbacus">
         <div class="abacus-wrapper">
           <div class="labels" id="labelsContainer"></div>
           <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
         </div>
       </div>
 
-      <!-- Colonne Droite : Tableau Montessori -->
-      <div class="table-column" id="tableColumn">
-        <div id="tableContainer"></div>
+      <!-- Zone Tableau -->
+      <div class="area-table" id="areaTable">
+        <div id="tableContainer" class="table-container"></div>
       </div>
 
     </div>
@@ -468,24 +340,27 @@
   const N = 10;
   const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
   const fullColors = [
-    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Unités
-    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Mille
-    'var(--color-green)'  // Million
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   
+    'var(--color-green)'
   ];
-
   const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
 
   let currentRows = 4;
   let state = [];
   
+  // États de Visibilité (Layout)
+  let showCalc = true;
+  let showAbacus = true;
+  let showTable = false; 
+
   // Options Affichage
   let useColors = true;
   let useGroups = true;
   let useMarkers = false;
-  let showTable = false; 
   let showBeadValues = false; 
 
-  // Variables Jeu
+  // Jeu
   let targetValue = 0;
   let currentOpsList = [];
   let goodCount = 0;
@@ -493,20 +368,27 @@
   let isSolved = false; 
   let lastResultCorrect = false;
 
-  const appContainer = document.getElementById('appContainer');
+  // DOM
+  const workspace = document.getElementById('workspace');
+  const areaCalc = document.getElementById('areaCalc');
+  const areaAbacus = document.getElementById('areaAbacus');
+  const areaTable = document.getElementById('areaTable');
+
   const abacusEl = document.getElementById('abacus');
   const labelsEl = document.getElementById('labelsContainer');
   const tableContainer = document.getElementById('tableContainer');
   
+  const btnToggleCalc = document.getElementById('btnToggleCalc');
+  const btnToggleAbacus = document.getElementById('btnToggleAbacus');
+  const btnToggleTable = document.getElementById('btnToggleTable');
+
   const resetBtn = document.getElementById('reset');
   const btnColor = document.getElementById('btnColor');
   const btnGroup = document.getElementById('btnGroup');
   const btnMarker = document.getElementById('btnMarker');
-  const btnTable = document.getElementById('btnTable');
   const btnSize = document.getElementById('btnSize');
   const btnLabels = document.getElementById('btnLabels');
   
-  // Jeu
   const newOpsBtn = document.getElementById('newOps');
   const btnCustom = document.getElementById('btnCustom');
   const autoControls = document.getElementById('autoControls');
@@ -515,7 +397,7 @@
   const btnValidateCustom = document.getElementById('btnValidateCustom');
   const btnCancelCustom = document.getElementById('btnCancelCustom');
 
-  const actionBtn = document.getElementById('actionBtn'); // Vérifier/Suivant
+  const actionBtn = document.getElementById('actionBtn');
   const opsDisplay = document.getElementById('opsDisplay');
   const userAnswer = document.getElementById('userAnswer');
   const feedbackEl = document.getElementById('feedback');
@@ -526,252 +408,142 @@
   const opCountSel = document.getElementById('opCount');
   const opStepSel = document.getElementById('opStep');
   const opModeRadios = document.querySelectorAll('input[name="opMode"]');
-
-  // Nouveaux boutons export
   const btnExportTable = document.getElementById('btnExportTable');
 
   function init(){
     updateStructure();
     generateNewOps();
+    updateLayout();
+    updateButtonStates();
+
+    // Listeners Structure
+    btnToggleCalc.addEventListener('click', () => { showCalc = !showCalc; updateLayout(); updateButtonStates(); });
+    btnToggleAbacus.addEventListener('click', () => { showAbacus = !showAbacus; updateLayout(); updateButtonStates(); });
+    btnToggleTable.addEventListener('click', () => { showTable = !showTable; updateLayout(); updateButtonStates(); });
 
     btnSize.addEventListener('click', () => {
-      if(currentRows === 4) {
-        currentRows = 7;
-        btnSize.classList.add('active'); 
-        btnSize.title = "Passer au petit boulier";
-      } else {
-        currentRows = 4;
-        btnSize.classList.remove('active');
-        btnSize.title = "Passer au grand boulier";
-      }
+      currentRows = (currentRows === 4) ? 7 : 4;
+      updateButtonStates(btnSize, currentRows === 7);
       updateStructure();
       generateNewOps();
     });
 
-    btnColor.addEventListener('click', () => {
-      useColors = !useColors;
-      updateToggleButton(btnColor, useColors);
-      renderOpsDisplay(); 
-      renderTable(); 
-    });
+    btnColor.addEventListener('click', () => { useColors = !useColors; updateButtonStates(btnColor, useColors); renderOpsDisplay(); renderTable(); });
+    btnGroup.addEventListener('click', () => { useGroups = !useGroups; updateButtonStates(btnGroup, useGroups); renderOpsDisplay(); });
+    btnMarker.addEventListener('click', () => { useMarkers = !useMarkers; updateButtonStates(btnMarker, useMarkers); updateBeadMarkers(); });
+    btnLabels.addEventListener('click', () => { showBeadValues = !showBeadValues; updateButtonStates(btnLabels, showBeadValues); updateLabelsText(); updateBeadText(); });
 
-    btnGroup.addEventListener('click', () => {
-      useGroups = !useGroups;
-      updateToggleButton(btnGroup, useGroups);
-      renderOpsDisplay(); 
-    });
-
-    btnMarker.addEventListener('click', () => {
-      useMarkers = !useMarkers;
-      updateToggleButton(btnMarker, useMarkers);
-      updateBeadMarkers(); 
-    });
-
-    // Toggle Valeur
-    btnLabels.addEventListener('click', () => {
-      showBeadValues = !showBeadValues;
-      updateToggleButton(btnLabels, showBeadValues);
-      updateLabelsText(); 
-      updateBeadText();   
-    });
-
-    btnTable.addEventListener('click', () => {
-      showTable = !showTable;
-      updateToggleButton(btnTable, showTable);
-      if(showTable){
-        appContainer.classList.add('show-table');
-        renderTable();
-      } else {
-        appContainer.classList.remove('show-table');
-      }
-      setTimeout(() => layoutAll(), 400); 
-    });
-
-    resetBtn.addEventListener('click', ()=>{
-      state.fill(0);
-      layoutAll();
-      renderTotal(); 
-    });
+    resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); renderTotal(); });
 
     newOpsBtn.addEventListener('click', () => {
-        newOpsBtn.classList.add('active');
-        setTimeout(()=>newOpsBtn.classList.remove('active'), 200);
-        // Ensure manual mode is hidden when clicking Random New
-        manualControls.style.display = 'none';
-        autoControls.style.display = 'flex';
-        generateNewOps();
+        manualControls.style.display = 'none'; autoControls.style.display = 'flex'; generateNewOps();
     });
 
-    // Manual Mode Handlers
-    btnCustom.addEventListener('click', () => {
-        autoControls.style.display = 'none';
-        manualControls.style.display = 'flex';
-        manualInput.value = '';
-        manualInput.focus();
-    });
-
-    btnCancelCustom.addEventListener('click', () => {
-        manualControls.style.display = 'none';
-        autoControls.style.display = 'flex';
-    });
-
-    btnValidateCustom.addEventListener('click', () => {
-        parseAndStartCustom(manualInput.value);
-    });
-
-    manualInput.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') parseAndStartCustom(manualInput.value);
-    });
-
+    btnCustom.addEventListener('click', () => { autoControls.style.display = 'none'; manualControls.style.display = 'flex'; manualInput.value = ''; manualInput.focus(); });
+    btnCancelCustom.addEventListener('click', () => { manualControls.style.display = 'none'; autoControls.style.display = 'flex'; });
+    btnValidateCustom.addEventListener('click', () => parseAndStartCustom(manualInput.value));
+    manualInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') parseAndStartCustom(manualInput.value); });
 
     opCountSel.addEventListener('change', generateNewOps);
     opStepSel.addEventListener('change', generateNewOps);
     opModeRadios.forEach(r => r.addEventListener('change', generateNewOps));
 
     actionBtn.addEventListener('click', handleAction); 
-    userAnswer.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') handleAction();
-    });
-
-    // --- ECOUTEURS EXPORT ---
-    // Uniquement export Tableau (Photo)
+    userAnswer.addEventListener('keydown', (e) => { if(e.key === 'Enter') handleAction(); });
     btnExportTable.addEventListener('click', () => exportImage()); 
-
     window.addEventListener('resize', ()=> setTimeout(layoutAll, 50));
   }
 
-  function updateToggleButton(btn, active){
-    if(active) btn.classList.add('active'); else btn.classList.remove('active');
+  // Uniform Buttons Update
+  function updateButtonStates(specificBtn, isActive){
+    if(specificBtn){
+        if(isActive) specificBtn.classList.add('active'); else specificBtn.classList.remove('active');
+        return;
+    }
+    setBtn(btnToggleCalc, showCalc);
+    setBtn(btnToggleAbacus, showAbacus);
+    setBtn(btnToggleTable, showTable);
+    
+    setBtn(btnSize, currentRows === 7);
+    setBtn(btnColor, useColors);
+    setBtn(btnGroup, useGroups);
+    setBtn(btnMarker, useMarkers);
+    setBtn(btnLabels, showBeadValues);
+  }
+  function setBtn(btn, active){ if(active) btn.classList.add('active'); else btn.classList.remove('active'); }
+
+  // --- Layout Dynamique ---
+  function updateLayout(){
+    if(showCalc) areaCalc.classList.remove('hidden'); else areaCalc.classList.add('hidden');
+    
+    if(showAbacus) { areaAbacus.classList.remove('hidden'); workspace.classList.remove('no-abacus'); }
+    else { areaAbacus.classList.add('hidden'); workspace.classList.add('no-abacus'); }
+
+    if(showTable) { areaTable.classList.remove('hidden'); workspace.classList.remove('no-table'); renderTable(); }
+    else { areaTable.classList.add('hidden'); workspace.classList.add('no-table'); }
+
+    workspace.classList.remove('layout-vertical-reversed');
+    // Cas Spécial : Calcul masqué, mais Table et Boulier visibles -> Table au-dessus
+    if (!showCalc && showTable && showAbacus) {
+       workspace.classList.add('layout-vertical-reversed');
+    }
+    setTimeout(layoutAll, 50);
   }
 
-  // --- MOTEUR DE JEU ---
   function randomInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
 
   function parseAndStartCustom(text){
-    // Regex pour extraire nombres avec signe optionnel
     const matches = text.match(/[+\-]?\s*\d+/g);
-    
-    if(!matches || matches.length === 0) {
-        alert("Veuillez entrer une opération valide (ex: 12 + 5)");
-        return;
-    }
-
-    const ops = matches.map(m => {
-        const clean = m.replace(/\s+/g, '');
-        return parseInt(clean, 10);
-    });
-
-    let sum = 0;
-    for(let n of ops) sum += n;
-
-    if(sum < 0) {
-        alert("Le résultat ne peut pas être négatif pour cet exercice.");
-        return;
-    }
-
+    if(!matches || matches.length === 0) { alert("Opération invalide"); return; }
+    const ops = matches.map(m => parseInt(m.replace(/\s+/g, ''), 10));
+    let sum = 0; for(let n of ops) sum += n;
+    if(sum < 0) { alert("Résultat négatif impossible."); return; }
     const physicalMax = (currentRows === 4) ? 9999 : 9999999;
-    if(sum > physicalMax) {
-        alert("Le résultat dépasse la capacité du boulier (" + physicalMax.toLocaleString('fr-FR') + ").");
-        return;
-    }
-
-    // Appliquer le jeu
-    currentOpsList = ops;
-    targetValue = sum;
-    
+    if(sum > physicalMax) { alert("Dépasse capacité."); return; }
+    currentOpsList = ops; targetValue = sum;
     resetGameUI();
-    
-    // UI Feedback
-    manualControls.style.display = 'none';
-    autoControls.style.display = 'flex';
+    manualControls.style.display = 'none'; autoControls.style.display = 'flex';
   }
 
   function resetGameUI() {
-    lastResultCorrect = false;
-    isSolved = false;
-    actionBtn.textContent = "Vérifier";
-    actionBtn.classList.remove('success', 'error'); 
-    userAnswer.disabled = false;
-    userAnswer.value = '';
-    userAnswer.focus();
-    
-    renderOpsDisplay();
-    state.fill(0);
-    layoutAll();
-    renderTotal();
-    renderTable();
-    feedbackEl.textContent = '';
-    feedbackEl.style.display = 'none';
+    lastResultCorrect = false; isSolved = false;
+    actionBtn.textContent = "Vérifier"; actionBtn.classList.remove('success', 'error'); 
+    userAnswer.disabled = false; userAnswer.value = ''; userAnswer.focus();
+    renderOpsDisplay(); state.fill(0); layoutAll(); renderTotal(); renderTable();
+    feedbackEl.textContent = ''; feedbackEl.style.display = 'none';
   }
 
   function generateNewOps(){
     const count = parseInt(opCountSel.value);
     const maxLimit = parseInt(opStepSel.value); 
-    let mode = 'add';
-    opModeRadios.forEach(r => { if(r.checked) mode = r.value; });
-
+    let mode = 'add'; opModeRadios.forEach(r => { if(r.checked) mode = r.value; });
     const physicalMax = (currentRows === 4) ? 9999 : 9999999;
     const absoluteLimit = Math.min(maxLimit, physicalMax);
 
-    let current = 0;
-    const ops = [];
-    let valid = false;
-    let tries = 0;
-
+    let current = 0; let ops = []; let valid = false; let tries = 0;
     while(!valid && tries < 200) {
-        current = 0;
-        ops.length = 0;
-        valid = true;
-        
+        current = 0; ops.length = 0; valid = true;
         for(let i=0; i<count; i++){
             let sign = 1;
-            if(mode === 'mixed') {
-                if(current === 0) sign = 1; 
-                else sign = Math.random() < 0.5 ? 1 : -1;
-            }
-            
-            let termMax;
-            if(sign === 1) termMax = absoluteLimit - current;
-            else termMax = current;
-
-            if(termMax < 1) {
-                valid = false; 
-                break; 
-            }
-            
+            if(mode === 'mixed') { if(current === 0) sign = 1; else sign = Math.random() < 0.5 ? 1 : -1; }
+            let termMax = (sign === 1) ? absoluteLimit - current : current;
+            if(termMax < 1) { valid = false; break; }
             const val = randomInt(1, termMax);
-            current += sign * val;
-            ops.push(sign * val);
+            current += sign * val; ops.push(sign * val);
         }
-        
         if(current <= 0 || current > absoluteLimit) valid = false;
         tries++;
     }
-    
-    if (!valid) {
-        targetValue = 1; 
-        currentOpsList = [1];
-        opsDisplay.textContent = "1 = ?";
-        return;
-    }
-
-    targetValue = current;
-    currentOpsList = ops; 
-    
-    resetGameUI();
+    if (!valid) { targetValue = 1; currentOpsList = [1]; opsDisplay.textContent = "1 = ?"; return; }
+    targetValue = current; currentOpsList = ops; resetGameUI();
   }
 
-  // --- RENDU ENONCÉ ---
   function renderOpsDisplay() {
     if(!currentOpsList || currentOpsList.length === 0) return;
     let html = "";
     currentOpsList.forEach((val, index) => {
-        if(index > 0 || val < 0) {
-            const sign = val >= 0 ? "+" : "−";
-            html += `<span class="op-part" style="font-size:1.5rem; margin:0 5px;">${sign}</span>`;
-        }
-        const absVal = Math.abs(val);
-        html += formatNumberHTML(absVal);
+        if(index > 0 || val < 0) { const sign = val >= 0 ? "+" : "−"; html += `<span class="op-part" style="font-size:1.5rem; margin:0 5px;">${sign}</span>`; }
+        html += formatNumberHTML(Math.abs(val));
     });
     html += `<span class="op-part" style="font-size:1.5rem; margin:0 5px;">=</span>`;
     html += `<span class="op-part" style="font-size:1.5rem;">?</span>`;
@@ -779,293 +551,146 @@
   }
 
   function formatNumberHTML(val) {
-    const str = val.toString();
-    const len = str.length;
-    let html = `<div class="op-number">`;
-    let currentGroupIndex = -1;
+    const str = val.toString(); const len = str.length;
+    let html = `<div class="op-number">`; let currentGroupIndex = -1;
     for(let i=0; i<len; i++){
-      const digit = str[i];
-      const power = len - 1 - i;
-      const groupIndex = Math.floor(power / 3);
-      let bgClass = '';
-      if(useGroups){
-        if(groupIndex === 0) bgClass = 'bg-white with-bg';
-        else if(groupIndex === 1) bgClass = 'bg-gray with-bg';
-        else bgClass = 'bg-black with-bg';
-      } else { bgClass = 'no-bg'; }
-      
+      const digit = str[i]; const power = len - 1 - i; const groupIndex = Math.floor(power / 3);
+      let bgClass = useGroups ? ((groupIndex===0)?'bg-white with-bg':(groupIndex===1)?'bg-gray with-bg':'bg-black with-bg') : 'no-bg';
       let textColor = '';
       if(useColors){
         const colorIndex = power % 3;
-        if(colorIndex === 0) textColor = 'var(--color-green)';
-        else if(colorIndex === 1) textColor = 'var(--color-blue)';
-        else textColor = 'var(--color-red)';
+        if(colorIndex === 0) textColor = 'var(--color-green)'; else if(colorIndex === 1) textColor = 'var(--color-blue)'; else textColor = 'var(--color-red)';
       } else {
-        if(useGroups && groupIndex >= 2) textColor = '#f0f0f0'; else textColor = '#1b1b1b';
+        textColor = (useGroups && groupIndex >= 2) ? '#f0f0f0' : '#1b1b1b';
       }
-      
-      if(groupIndex !== currentGroupIndex){
-        if(currentGroupIndex !== -1) html += `</div>`;
-        html += `<div class="digit-group ${bgClass}">`;
-        currentGroupIndex = groupIndex;
-      }
+      if(groupIndex !== currentGroupIndex){ if(currentGroupIndex !== -1) html += `</div>`; html += `<div class="digit-group ${bgClass}">`; currentGroupIndex = groupIndex; }
       html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
     }
-    if(currentGroupIndex !== -1) html += `</div>`;
-    html += `</div>`;
-    return html;
+    if(currentGroupIndex !== -1) html += `</div>`; html += `</div>`; return html;
   }
 
   function showOverlay(ok){
-    overlay.textContent = ok ? "✅" : "❌";
-    overlay.className = "overlay show " + (ok ? "ok" : "err");
+    overlay.textContent = ok ? "✅" : "❌"; overlay.className = "overlay show " + (ok ? "ok" : "err");
     setTimeout(() => overlay.className = "overlay", 1000);
   }
 
-  function handleAction(){
-    if(isSolved) {
-        // Mode "Suivant"
-        generateNewOps();
-    } else {
-        // Mode "Vérifier"
-        checkAnswer();
-    }
-  }
+  function handleAction(){ if(isSolved) generateNewOps(); else checkAnswer(); }
 
   function checkAnswer(){
-    const valAbacus = state.reduce((s, c, r) => s + c * fullMultipliers[r], 0);
     let valInput = userAnswer.value.trim() === "" ? null : parseInt(userAnswer.value);
-    
-    // Validation STRICTE : Uniquement l'input utilisateur
-    if (valInput === null) {
-        feedbackEl.textContent = "Écris une réponse.";
-        feedbackEl.style.display = "block";
-        feedbackEl.className = "feedback err";
-        return;
-    }
+    if (valInput === null) { feedbackEl.textContent = "Écris une réponse."; feedbackEl.style.display = "block"; feedbackEl.className = "feedback err"; return; }
 
     if(valInput === targetValue){
-        // Gagné
         goodCount++; goodEl.textContent = goodCount;
-        feedbackEl.textContent = "Bravo ! C'est juste. ✅";
-        feedbackEl.className = "feedback ok";
-        feedbackEl.style.display = "block";
-        
-        setAbacusToValue(targetValue); // Correction auto
-        showOverlay(true);
-        lastResultCorrect = true;
-        renderTable(); 
-        
-        isSolved = true;
-        actionBtn.textContent = "Calcul suivant ➡️";
-        actionBtn.classList.add('success'); 
-        userAnswer.disabled = true; 
-        
+        feedbackEl.textContent = "Bravo ! C'est juste. ✅"; feedbackEl.className = "feedback ok"; feedbackEl.style.display = "block";
+        setAbacusToValue(targetValue); showOverlay(true); lastResultCorrect = true; renderTable(); 
+        isSolved = true; actionBtn.textContent = "Calcul suivant ➡️"; actionBtn.classList.add('success'); userAnswer.disabled = true; 
     } else {
-        // Perdu
         badCount++; badEl.textContent = badCount;
-        feedbackEl.textContent = "Non, essaie encore !";
-        feedbackEl.style.display = "block";
-        feedbackEl.className = "feedback err";
-        
-        actionBtn.classList.add('error');
-        setTimeout(() => actionBtn.classList.remove('error'), 400); 
-        
-        showOverlay(false);
+        feedbackEl.textContent = "Non, essaie encore !"; feedbackEl.style.display = "block"; feedbackEl.className = "feedback err";
+        actionBtn.classList.add('error'); setTimeout(() => actionBtn.classList.remove('error'), 400); showOverlay(false);
     }
   }
 
   function setAbacusToValue(val) {
       let tempVal = Math.abs(val); 
-      for(let r=0; r<currentRows; r++) {
-          let digit = tempVal % 10;
-          state[r] = digit;
-          tempVal = Math.floor(tempVal / 10);
-      }
-      layoutAll();
-      renderTotal();
+      for(let r=0; r<currentRows; r++) { state[r] = tempVal % 10; tempVal = Math.floor(tempVal / 10); }
+      layoutAll(); renderTotal();
   }
-
-  // --- LOGIQUE VISUELLE ---
 
   function updateStructure(){
     state = Array.from({length: currentRows}, () => 0);
-    abacusEl.innerHTML = '';
-    labelsEl.innerHTML = '';
+    abacusEl.innerHTML = ''; labelsEl.innerHTML = '';
     for(let r=0; r<currentRows; r++) createRow(r);
-    updateLabelsText();
-    updateBeadText();
-    layoutAll();
-    renderTotal(); 
-    renderTable();
+    updateLabelsText(); updateBeadText(); layoutAll(); renderTotal(); renderTable();
   }
 
   function createRow(r){
     const isStartOfGroup = (r === 3 || r === 6);
-    const row = document.createElement('div');
-    row.className = 'row';
-    if(isStartOfGroup) row.classList.add('gap-top');
-    const rod = document.createElement('div');
-    rod.className = 'rod';
-    row.appendChild(rod);
+    const row = document.createElement('div'); row.className = 'row'; if(isStartOfGroup) row.classList.add('gap-top');
+    const rod = document.createElement('div'); rod.className = 'rod'; row.appendChild(rod);
 
     for(let j=1; j<=N; j++){
-      const bead = document.createElement('div');
-      bead.className = 'bead';
-      bead.style.background = fullColors[r];
-      bead.dataset.index = j;
+      const bead = document.createElement('div'); bead.className = 'bead'; bead.style.background = fullColors[r]; bead.dataset.index = j;
       if (useMarkers && j > 5) bead.classList.add('marked');
       bead.addEventListener('click', () => onBeadClick(r, j));
       row.appendChild(bead);
     }
     abacusEl.appendChild(row);
 
-    const labelDiv = document.createElement('div');
-    labelDiv.className = 'label-item';
-    if(r < 3) labelDiv.classList.add('label-white'); 
-    else if (r < 6) labelDiv.classList.add('label-gray');
-    else labelDiv.classList.add('label-black'); 
-
-    if(r === 0) labelDiv.classList.add('label-top-rounded');
-    if(r === 2) labelDiv.classList.add('label-bottom-rounded');
-    if(r === 3) labelDiv.classList.add('label-top-rounded');
-    if(r === 5) labelDiv.classList.add('label-bottom-rounded');
+    const labelDiv = document.createElement('div'); labelDiv.className = 'label-item';
+    if(r < 3) labelDiv.classList.add('label-white'); else if (r < 6) labelDiv.classList.add('label-gray'); else labelDiv.classList.add('label-black'); 
+    if(r === 0) labelDiv.classList.add('label-top-rounded'); if(r === 2) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 3) labelDiv.classList.add('label-top-rounded'); if(r === 5) labelDiv.classList.add('label-bottom-rounded');
     if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
-
     if(isStartOfGroup) labelDiv.classList.add('gap-top');
     labelsEl.appendChild(labelDiv);
   }
 
   function updateBeadMarkers() {
-    const allBeads = document.querySelectorAll('.bead');
-    allBeads.forEach(bead => {
+    document.querySelectorAll('.bead').forEach(bead => {
       const j = parseInt(bead.dataset.index);
-      if (j > 5) {
-        if (useMarkers) bead.classList.add('marked');
-        else bead.classList.remove('marked');
-      }
+      if (j > 5) { if (useMarkers) bead.classList.add('marked'); else bead.classList.remove('marked'); }
     });
   }
 
   function updateBeadText() {
-    const rows = abacusEl.children;
-    const displayValues = ["1", "10", "100", "1 000"];
+    const rows = abacusEl.children; const displayValues = ["1", "10", "100", "1 000"];
     for(let r=0; r<rows.length; r++){
-      const row = rows[r];
-      const beads = row.querySelectorAll('.bead');
-      let text = "";
-      if(showBeadValues && r < 4) text = displayValues[r];
-      beads.forEach(bead => {
-        bead.textContent = text;
-        if(text !== "") bead.classList.add('has-text');
-        else bead.classList.remove('has-text');
+      const text = (showBeadValues && r < 4) ? displayValues[r] : "";
+      rows[r].querySelectorAll('.bead').forEach(bead => {
+        bead.textContent = text; if(text !== "") bead.classList.add('has-text'); else bead.classList.remove('has-text');
       });
     }
   }
 
   function updateLabelsText(){
-    const labelDivs = labelsEl.querySelectorAll('.label-item');
-    labelDivs.forEach((div, i) => {
-      if(!showBeadValues) div.textContent = defaultLabels[i] || "";
-      else div.textContent = ""; 
-    });
+    document.querySelectorAll('.label-item').forEach((div, i) => { if(!showBeadValues) div.textContent = defaultLabels[i] || ""; else div.textContent = ""; });
   }
 
   function onBeadClick(r, j){
-    // Pas de blocage si résolu, on peut explorer
-    const currentCount = state[r];
-    if (j > currentCount) state[r] = j;
-    else state[r] = j - 1;
-    layoutRow(r);
-    renderTotal();
+    const currentCount = state[r]; if (j > currentCount) state[r] = j; else state[r] = j - 1;
+    layoutRow(r); renderTotal();
   }
 
   function layoutRow(r){
-    const row = abacusEl.children[r];
-    if(!row) return;
-    const beads = row.querySelectorAll('.bead');
-    const count = state[r];
-    const rowWidth = row.clientWidth;
-    const beadSize = 28; 
-    const gap = 0;       
-    const padding = 0;   
-    const leftStart = padding + beadSize/2;
-    const rightEnd = rowWidth - padding - beadSize/2;
+    const row = abacusEl.children[r]; if(!row) return;
+    const beads = row.querySelectorAll('.bead'); const count = state[r];
+    const rowWidth = row.clientWidth; const beadSize = 28; 
+    const leftStart = beadSize/2; const rightEnd = rowWidth - beadSize/2;
 
     beads.forEach(b => {
       const idx = parseInt(b.dataset.index);
-      if (idx <= count) b.style.left = leftStart + (idx - 1) * (beadSize + gap) + 'px';
-      else {
-        const offsetFromEnd = (N - idx) * (beadSize + gap);
-        b.style.left = rightEnd - offsetFromEnd + 'px';
-      }
+      if (idx <= count) b.style.left = leftStart + (idx - 1) * beadSize + 'px';
+      else b.style.left = rightEnd - (N - idx) * beadSize + 'px';
     });
   }
-
-  function layoutAll(){
-    for(let r=0; r<currentRows; r++) layoutRow(r);
-  }
+  function layoutAll(){ for(let r=0; r<currentRows; r++) layoutRow(r); }
 
   function renderTable(){
-    if(!showTable) {
-      tableContainer.innerHTML = "";
-      return;
-    }
-    
-    const groups = [];
-    groups.push({ name: "", class: "th-empty", cols: [{label:"", idx: -99, width: "30px"}] });
-
-    if(currentRows > 6) {
-      groups.push({ name: "Millions", class: "million-class", cols: [{label:"1", idx:6}] });
-    }
-    const milleCols = [];
-    if(currentRows > 5) milleCols.push({label:"100", idx:5});
-    if(currentRows > 4) milleCols.push({label:"10", idx:4});
-    milleCols.push({label:"1", idx:3});
+    if(!showTable) { tableContainer.innerHTML = ""; return; }
+    const groups = []; groups.push({ name: "", class: "th-empty", cols: [{label:"", idx: -99, width: "30px"}] });
+    if(currentRows > 6) groups.push({ name: "Millions", class: "million-class", cols: [{label:"1", idx:6}] });
+    const milleCols = []; if(currentRows > 5) milleCols.push({label:"100", idx:5}); if(currentRows > 4) milleCols.push({label:"10", idx:4}); milleCols.push({label:"1", idx:3});
     groups.push({ name: "Mille", class: "thousand-class", cols: milleCols });
     groups.push({ name: "Unités Simples", class: "unit-class", cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}] });
 
     let headerRow1 = ""; let headerRow2 = "";
     groups.forEach(group => {
-      if(group.class === 'th-empty') {
-          headerRow1 += `<th style="border:none; width:30px;"></th>`;
-          headerRow2 += `<th style="border:none;"></th>`;
-      } else {
-          headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`;
-          group.cols.forEach(col => headerRow2 += `<th class="th-rank">${col.label}</th>`);
-      }
+      if(group.class === 'th-empty') { headerRow1 += `<th style="border:none; width:30px;"></th>`; headerRow2 += `<th style="border:none;"></th>`; } 
+      else { headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`; group.cols.forEach(col => headerRow2 += `<th class="th-rank">${col.label}</th>`); }
     });
 
-    let bodyRows = "";
-    const allCols = [];
-    groups.forEach(g => { if(g.class !== 'th-empty') allCols.push(...g.cols); });
+    let bodyRows = ""; const allCols = []; groups.forEach(g => { if(g.class !== 'th-empty') allCols.push(...g.cols); });
     
     currentOpsList.forEach((opVal, index) => {
-        let absVal = Math.abs(opVal);
-        let valStr = absVal.toString();
-        let signSymbol = "";
-        if (index > 0) {
-            signSymbol = (opVal < 0) ? "−" : "+";
-        }
-        
-        let rowHtml = "";
-        rowHtml += `<td style="font-size:1.5rem; font-weight:bold; color:#555; border:none; text-align:center;">${signSymbol}</td>`;
-
+        let absVal = Math.abs(opVal); let valStr = absVal.toString(); let signSymbol = (index > 0) ? ((opVal < 0) ? "−" : "+") : "";
+        let rowHtml = `<td style="font-size:1.5rem; font-weight:bold; color:#555; border:none; text-align:center;">${signSymbol}</td>`;
         allCols.forEach((col) => {
-            let p = col.idx;
-            let digit = "";
-            if (absVal >= Math.pow(10, p)) {
-                digit = Math.floor(absVal / Math.pow(10, p)) % 10;
-                if (p >= valStr.length) digit = ""; 
-            } else digit = "";
-            
+            let p = col.idx; let digit = "";
+            if (absVal >= Math.pow(10, p)) { digit = Math.floor(absVal / Math.pow(10, p)) % 10; if (p >= valStr.length) digit = ""; } else digit = "";
             let colorClass = "text-black";
-            if(useColors && digit !== ""){
-                let mod = p % 3;
-                if(mod === 0) colorClass = "text-green";
-                else if(mod === 1) colorClass = "text-blue";
-                else colorClass = "text-red";
-            }
+            if(useColors && digit !== ""){ let mod = p % 3; if(mod === 0) colorClass = "text-green"; else if(mod === 1) colorClass = "text-blue"; else colorClass = "text-red"; }
             rowHtml += `<td class="col-digit ${colorClass}">${digit}</td>`;
         });
         bodyRows += `<tr>${rowHtml}</tr>`;
@@ -1075,20 +700,10 @@
         let resStr = Math.abs(targetValue).toString();
         let rowHtml = `<td style="border-top:3px solid #333; border-right:none;">=</td>`;
         allCols.forEach(col => {
-            let p = col.idx;
-            let digit = "";
-             if (Math.abs(targetValue) >= Math.pow(10, p)) {
-                 digit = Math.floor(Math.abs(targetValue) / Math.pow(10, p)) % 10;
-                 if (p >= resStr.length) digit = ""; 
-             } else digit = "";
-             
+            let p = col.idx; let digit = "";
+             if (Math.abs(targetValue) >= Math.pow(10, p)) { digit = Math.floor(Math.abs(targetValue) / Math.pow(10, p)) % 10; if (p >= resStr.length) digit = ""; } else digit = "";
              let colorClass = "text-black";
-             if(useColors && digit !== "") {
-                 let mod = p % 3;
-                 if(mod === 0) colorClass = "text-green";
-                 else if(mod === 1) colorClass = "text-blue";
-                 else colorClass = "text-red";
-             }
+             if(useColors && digit !== "") { let mod = p % 3; if(mod === 0) colorClass = "text-green"; else if(mod === 1) colorClass = "text-blue"; else colorClass = "text-red"; }
              rowHtml += `<td class="col-digit ${colorClass}">${digit}</td>`;
         });
         bodyRows += `<tr class="result-row">${rowHtml}</tr>`;
@@ -1097,326 +712,143 @@
         allCols.forEach(col => rowHtml += `<td></td>`);
         bodyRows += `<tr class="result-row">${rowHtml}</tr>`;
     }
-
-    tableContainer.innerHTML = `
-      <table class="montessori-table">
-        <thead><tr>${headerRow1}</tr><tr>${headerRow2}</tr></thead>
-        <tbody>${bodyRows}</tbody>
-      </table>
-    `;
+    tableContainer.innerHTML = `<table class="montessori-table"><thead><tr>${headerRow1}</tr><tr>${headerRow2}</tr></thead><tbody>${bodyRows}</tbody></table>`;
   }
 
   function renderTotal(){
-    let total = 0;
-    for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
-    if(total === 0) resetBtn.classList.add('active');
-    else resetBtn.classList.remove('active');
-  }
-
-  /* ========================================================== */
-  /* === MOTEUR DE RENDU GRAPHIQUE INTELLIGENT (CANVAS 2D) === */
-  /* ========================================================== */
-  
-  function getOpsDisplayWidth() {
-      if(!currentOpsList || currentOpsList.length === 0) return 0;
-      
-      const charW = 18; // REDUIT de 32 à 18
-      const symW = 24;  // REDUIT de 40 à 24
-      
-      let totalW = 0;
-      // 1. Blocks Calculation
-      const blocks = [];
-      currentOpsList.forEach((val, idx) => {
-          if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'});
-          blocks.push({type:'num', val: Math.abs(val)});
-      });
-      blocks.push({type:'sym', val:'='});
-      blocks.push({type:'sym', val:'?'});
-
-      // 2. Width Sum
-      blocks.forEach(b => {
-          if(b.type === 'sym') totalW += symW;
-          else {
-              const str = b.val.toString();
-              totalW += str.length * charW + (Math.floor((str.length-1)/3)*6); // Gap reduit à 6
-          }
-      });
-      // 3. Gaps
-      totalW += (blocks.length-1) * 6; // Gap reduit à 6
-      
-      return totalW;
+    let total = 0; for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
+    if(total === 0) resetBtn.classList.add('active'); else resetBtn.classList.remove('active');
   }
 
   function exportImage() {
-    // Mode "Tableau Seulement" forcé
-    const tableOnly = true; 
-    const scale = 3; 
-    const margin = 80; 
-
-    // Dimensions Tableau
+    const tableOnly = true; const scale = 3; const margin = 80; 
     const tableWidth = 400;
-    
-    // Hauteur du tableau
-    const hHeader1 = 30;
-    const hHeader2 = 30;
-    const hRow = 60;
-    const opCount = currentOpsList.length;
+    const hHeader1 = 30; const hHeader2 = 30; const hRow = 60; const opCount = currentOpsList.length;
     const totalTableHeight = hHeader1 + hHeader2 + (opCount * hRow) + hRow; 
-
-    // Dimension Display REDUITE
-    const displayHeight = 100; // REDUIT de 150 à 100
-    
-    // Calcul de la largeur nécessaire pour l'opération
+    const displayHeight = 100; 
     const opsNeededWidth = getOpsDisplayWidth();
-    
-    // Largeur Canvas : Soit le tableau + marges, soit l'opération + marges (si elle dépasse)
     let cvsW = Math.max(margin*2 + tableWidth, margin*2 + opsNeededWidth);
-    
     let cvsH = margin*2 + displayHeight + totalTableHeight;
     
-    // Création Canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = cvsW * scale;
-    canvas.height = cvsH * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-
-    // --- FONCTIONS DE DESSIN ---
-    const C = {
-        green: '#3cb371', greenHi: '#66d494',
-        blue:  '#40c4ff', blueHi:  '#80d8ff',
-        red:   '#e53935', redHi:   '#ff6f60',
-        bg:    '#ffffff', text: '#1b1b1b'
-    };
+    const canvas = document.createElement('canvas'); canvas.width = cvsW * scale; canvas.height = cvsH * scale;
+    const ctx = canvas.getContext('2d'); ctx.scale(scale, scale);
+    const C = { green: '#3cb371', greenHi: '#66d494', blue: '#40c4ff', blueHi: '#80d8ff', red: '#e53935', redHi: '#ff6f60', bg: '#ffffff', text: '#1b1b1b' };
     
-    // Fond
-    ctx.fillStyle = C.bg;
-    ctx.fillRect(0,0,cvsW,cvsH);
-
-    // Origines
+    ctx.fillStyle = C.bg; ctx.fillRect(0,0,cvsW,cvsH);
     const startY = margin + displayHeight;
-    
-    // Centrage du tableau dans le canvas
     let tableX = (cvsW - tableWidth) / 2;
-    
-    // Centrage de l'opération
-    const displayCenterY = margin + 40; 
-    const displayCenterX = cvsW / 2; // Centré sur tout le canvas
+    const displayCenterY = margin + 40; const displayCenterX = cvsW / 2;
 
-    // --- 1. DESSINER LE CALCUL (DISPLAY) ---
     drawOpsDisplayCanvas(ctx, displayCenterX, displayCenterY);
-
-    // --- 2. DESSINER LE TABLEAU ---
     drawTableCanvas(ctx, tableX, startY, tableWidth, hHeader1, hHeader2, hRow, C);
     
-    // --- FINALISATION ---
-    const link = document.createElement('a');
-    link.download = `boulier_operations.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const link = document.createElement('a'); link.download = `boulier_operations.png`;
+    link.href = canvas.toDataURL('image/png'); link.click();
   }
   
-  // -- Dessin Calcul (Haut) --
-  function drawOpsDisplayCanvas(ctx, centerX, y){
-      if(!currentOpsList || currentOpsList.length === 0) return;
-      
+  function getOpsDisplayWidth() {
+      if(!currentOpsList || currentOpsList.length === 0) return 0;
+      const charW = 18; const symW = 24; 
+      let totalW = 0;
       const blocks = [];
       currentOpsList.forEach((val, idx) => {
           if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'});
           blocks.push({type:'num', val: Math.abs(val)});
       });
-      blocks.push({type:'sym', val:'='});
-      blocks.push({type:'sym', val:'?'}); 
-      
-      const charW = 18; // REDUIT de 32 à 18
-      const symW = 24;  // REDUIT de 40 à 24
-      const charH = 40; // REDUIT de 60 à 40
-      
-      // Calcul largeur totale (pour positionner le curseur de départ)
-      let totalW = 0;
+      blocks.push({type:'sym', val:'='}); blocks.push({type:'sym', val:'?'});
       blocks.forEach(b => {
           if(b.type === 'sym') totalW += symW;
-          else {
-              const str = b.val.toString();
-              totalW += str.length * charW + (Math.floor((str.length-1)/3)*6);
-          }
+          else { const str = b.val.toString(); totalW += str.length * charW + (Math.floor((str.length-1)/3)*6); }
       });
       totalW += (blocks.length-1) * 6;
+      return totalW;
+  }
+
+  function drawOpsDisplayCanvas(ctx, centerX, y){
+      if(!currentOpsList || currentOpsList.length === 0) return;
+      const blocks = [];
+      currentOpsList.forEach((val, idx) => { if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'}); blocks.push({type:'num', val: Math.abs(val)}); });
+      blocks.push({type:'sym', val:'='}); blocks.push({type:'sym', val:'?'}); 
       
+      const charW = 18; const symW = 24; const charH = 40; 
+      let totalW = getOpsDisplayWidth();
       let curX = centerX - totalW/2;
-      
-      // Dessin
-      ctx.font = "800 22px sans-serif"; // REDUIT de 36px à 22px
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.font = "800 22px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       
       blocks.forEach(b => {
           if(b.type === 'sym') {
-              ctx.fillStyle = '#333';
-              ctx.fillText(b.val, curX + symW/2, y);
-              curX += symW + 6;
+              ctx.fillStyle = '#333'; ctx.fillText(b.val, curX + symW/2, y); curX += symW + 6;
           } else {
-              const str = b.val.toString();
-              const len = str.length;
-              
+              const str = b.val.toString(); const len = str.length;
               let i = 0;
               while(i < len) {
-                  const startI = i;
-                  const startPower = len - 1 - i;
-                  const currentGrpIdx = Math.floor(startPower/3);
-                  
-                  let count = 0;
-                  while(i < len) {
-                      const p = len - 1 - i;
-                      if(Math.floor(p/3) !== currentGrpIdx) break;
-                      count++;
-                      i++;
-                  }
-                  
+                  const startI = i; const startPower = len - 1 - i; const currentGrpIdx = Math.floor(startPower/3);
+                  let count = 0; while(i < len) { const p = len - 1 - i; if(Math.floor(p/3) !== currentGrpIdx) break; count++; i++; }
                   let bg = null;
-                  if(useGroups){
-                      if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b';
-                  }
-                  
-                  const groupW = count * charW;
-                  const groupX = curX; 
-                  
-                  if(bg){
-                     ctx.fillStyle = bg;
-                     ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4;
-                     ctx.fillRect(groupX, y-charH/2, groupW, charH);
-                     ctx.shadowColor="transparent";
-                  }
-                  
+                  if(useGroups){ if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b'; }
+                  const groupW = count * charW; const groupX = curX; 
+                  if(bg){ ctx.fillStyle = bg; ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4; ctx.fillRect(groupX, y-charH/2, groupW, charH); ctx.shadowColor="transparent"; }
                   for(let k=0; k<count; k++) {
-                      const charIndex = startI + k;
-                      const digit = str[charIndex];
-                      const power = len - 1 - charIndex;
-                      const colIdx = power % 3;
-                      
+                      const charIndex = startI + k; const digit = str[charIndex]; const power = len - 1 - charIndex; const colIdx = power % 3;
                       let txtCol='#111';
-                      if(useColors){
-                          if(colIdx===0) txtCol='#3cb371'; else if(colIdx===1) txtCol='#40c4ff'; else txtCol='#e53935';
-                      } else {
-                          if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0';
-                      }
-                      ctx.fillStyle = txtCol;
-                      ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 2); // Ajustement y + 2 pour 22px
+                      if(useColors){ if(colIdx===0) txtCol='#3cb371'; else if(colIdx===1) txtCol='#40c4ff'; else txtCol='#e53935'; }
+                      else { if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0'; }
+                      ctx.fillStyle = txtCol; ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 2); 
                   }
-                  
-                  curX += groupW;
-                  if(i < len) curX += 6; 
+                  curX += groupW; if(i < len) curX += 6; 
               }
               curX += 6; 
           }
       });
   }
 
-  // -- Dessin Tableau (Opérations) --
   function drawTableCanvas(ctx, x, y, w, h1, h2, hRow, C) {
-      // Background blanc total
-      const opCount = currentOpsList.length;
-      const totalH = h1 + h2 + (opCount * hRow) + hRow; // Header + Rows + Result
+      const opCount = currentOpsList.length; const totalH = h1 + h2 + (opCount * hRow) + hRow; 
+      ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 10; ctx.fillRect(x, y, w, totalH); ctx.shadowColor = "transparent";
       
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 10;
-      ctx.fillRect(x, y, w, totalH);
-      ctx.shadowColor = "transparent";
-      
-      // Définition colonnes
-      let groups = [];
-      groups.push({ name: "", class: "empty", cols: [{l:"", i:-99}] }); // Col Signe
+      let groups = []; groups.push({ name: "", class: "empty", cols: [{l:"", i:-99}] }); 
       if(currentRows > 6) groups.push({ name: "Millions", gc:"#1b1b1b", tc:"#fff", cols: [{l:"1", i:6}] });
-      const milleCols = [];
-      if(currentRows > 5) milleCols.push({l:"100", i:5});
-      if(currentRows > 4) milleCols.push({l:"10", i:4});
-      milleCols.push({l:"1", i:3});
+      const milleCols = []; if(currentRows > 5) milleCols.push({l:"100", i:5}); if(currentRows > 4) milleCols.push({l:"10", i:4}); milleCols.push({l:"1", i:3});
       groups.push({ name: "Mille", gc:"#e0e0e0", tc:"#333", cols: milleCols });
       groups.push({ name: "Unités Simples", gc:"#fff", tc:"#333", cols: [{l:"100", i:2}, {l:"10", i:1}, {l:"1", i:0}] });
 
-      const colCount = groups.reduce((acc, g) => acc + g.cols.length, 0);
-      const cellW = w / colCount;
-
-      // -- HEADERS --
+      const colCount = groups.reduce((acc, g) => acc + g.cols.length, 0); const cellW = w / colCount;
       let curX = x;
-      // H1 (Groupes)
       groups.forEach(g => {
           const gw = g.cols.length * cellW;
-          if(g.class === 'empty'){
-               // Rien
-          } else {
-               ctx.fillStyle = g.gc; ctx.fillRect(curX, y, gw, h1);
-               ctx.strokeStyle = "#ccc"; ctx.strokeRect(curX, y, gw, h1);
-               ctx.fillStyle = g.tc; ctx.font = "bold 10px sans-serif";
-               ctx.textAlign = "center"; ctx.textBaseline = "middle";
-               ctx.fillText(g.name.toUpperCase(), curX + gw/2, y + h1/2);
+          if(g.class !== 'empty'){
+               ctx.fillStyle = g.gc; ctx.fillRect(curX, y, gw, h1); ctx.strokeStyle = "#ccc"; ctx.strokeRect(curX, y, gw, h1);
+               ctx.fillStyle = g.tc; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(g.name.toUpperCase(), curX + gw/2, y + h1/2);
           }
           curX += gw;
       });
-
-      // H2 (Rangs 100, 10, 1)
-      curX = x;
-      const y2 = y + h1;
+      curX = x; const y2 = y + h1;
       groups.forEach(g => {
           g.cols.forEach(col => {
               if(g.class !== 'empty'){
-                  ctx.fillStyle = "#fafafa"; ctx.fillRect(curX, y2, cellW, h2);
-                  ctx.strokeStyle = "#eee"; ctx.strokeRect(curX, y2, cellW, h2);
-                  ctx.fillStyle = "#555"; ctx.font = "bold 12px sans-serif";
-                  ctx.textAlign = "center"; ctx.fillText(col.l, curX + cellW/2, y2 + h2/2 + 4);
+                  ctx.fillStyle = "#fafafa"; ctx.fillRect(curX, y2, cellW, h2); ctx.strokeStyle = "#eee"; ctx.strokeRect(curX, y2, cellW, h2);
+                  ctx.fillStyle = "#555"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.fillText(col.l, curX + cellW/2, y2 + h2/2 + 4);
               }
               curX += cellW;
           });
       });
 
-      // -- BODY (OPÉRATIONS) --
       let curY = y + h1 + h2;
-      
       currentOpsList.forEach((opVal, idx) => {
-          let absVal = Math.abs(opVal);
-          let valStr = absVal.toString();
-          let sign = (idx > 0) ? (opVal<0?"−":"+") : "";
-          
+          let absVal = Math.abs(opVal); let valStr = absVal.toString(); let sign = (idx > 0) ? (opVal<0?"−":"+") : "";
           curX = x;
-          
-          // Colonnes
           groups.forEach(g => {
               g.cols.forEach(col => {
-                  ctx.strokeStyle = "#eee"; 
-                  // Fond par défaut
-                  ctx.fillStyle = "#fff";
-                  ctx.fillRect(curX, curY, cellW, hRow);
-                  ctx.strokeRect(curX, curY, cellW, hRow);
-
-                  // Contenu
-                  if(col.i === -99) { // Colonne Signe
-                      ctx.fillStyle = "#555"; ctx.font = "bold 18px sans-serif";
-                      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                      ctx.fillText(sign, curX + cellW/2, curY + hRow/2);
-                  } else { // Chiffres
-                      let p = col.i;
-                      let digit = "";
-                      if(absVal >= Math.pow(10, p)){
-                          digit = Math.floor(absVal / Math.pow(10, p)) % 10;
-                          if(p >= valStr.length) digit = "";
-                      }
-                      
+                  ctx.strokeStyle = "#eee"; ctx.fillStyle = "#fff"; ctx.fillRect(curX, curY, cellW, hRow); ctx.strokeRect(curX, curY, cellW, hRow);
+                  if(col.i === -99) {
+                      ctx.fillStyle = "#555"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(sign, curX + cellW/2, curY + hRow/2);
+                  } else {
+                      let p = col.i; let digit = "";
+                      if(absVal >= Math.pow(10, p)){ digit = Math.floor(absVal / Math.pow(10, p)) % 10; if(p >= valStr.length) digit = ""; }
                       if(digit !== ""){
-                          // Tint bg
-                          if(useColors){
-                              if(col.l==="1") ctx.fillStyle="rgba(60, 179, 113, 0.08)";
-                              else if(col.l==="10") ctx.fillStyle="rgba(64, 196, 255, 0.08)";
-                              else if(col.l==="100") ctx.fillStyle="rgba(229, 57, 53, 0.08)";
-                              ctx.fillRect(curX, curY, cellW, hRow);
-                          }
-                          // Text Color
-                          let clr = "#000";
-                          if(useColors){
-                              if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935";
-                          }
-                          ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; 
-                          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                          ctx.fillText(digit, curX + cellW/2, curY + hRow/2);
+                          if(useColors){ if(col.l==="1") ctx.fillStyle="rgba(60, 179, 113, 0.08)"; else if(col.l==="10") ctx.fillStyle="rgba(64, 196, 255, 0.08)"; else if(col.l==="100") ctx.fillStyle="rgba(229, 57, 53, 0.08)"; ctx.fillRect(curX, curY, cellW, hRow); }
+                          let clr = "#000"; if(useColors){ if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935"; }
+                          ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(digit, curX + cellW/2, curY + hRow/2);
                       }
                   }
                   curX += cellW;
@@ -1425,56 +857,27 @@
           curY += hRow;
       });
 
-      // -- RESULT ROW --
-      // Toujours dessinée (vide ou pleine)
       const resY = curY;
-      
-      // Barre noir top
-      ctx.fillStyle = "#333";
-      ctx.fillRect(x, resY, w, 3);
-      
-      curX = x;
-      // Fond vert clair pour résultat
-      ctx.fillStyle = "#f9fff9";
-      ctx.fillRect(x, resY+3, w, hRow-3);
+      ctx.fillStyle = "#333"; ctx.fillRect(x, resY, w, 3);
+      curX = x; ctx.fillStyle = "#f9fff9"; ctx.fillRect(x, resY+3, w, hRow-3);
 
-      let resVal = Math.abs(targetValue);
-      let resStr = resVal.toString();
-      
+      let resVal = Math.abs(targetValue); let resStr = resVal.toString();
       groups.forEach(g => {
           g.cols.forEach(col => {
-              // Colonne signe (=)
               if(col.i === -99 && lastResultCorrect) {
-                  ctx.fillStyle = "#333"; ctx.font = "bold 24px sans-serif";
-                  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                  ctx.fillText("=", curX + cellW/2, resY + hRow/2);
-              } 
-              // Chiffres résultat (seulement si correct)
-              else if(col.i !== -99 && lastResultCorrect) {
-                  let p = col.i;
-                  let digit = "";
-                  if(resVal >= Math.pow(10, p)){
-                      digit = Math.floor(resVal / Math.pow(10, p)) % 10;
-                      if(p >= resStr.length) digit = "";
-                  }
-                  
+                  ctx.fillStyle = "#333"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("=", curX + cellW/2, resY + hRow/2);
+              } else if(col.i !== -99 && lastResultCorrect) {
+                  let p = col.i; let digit = "";
+                  if(resVal >= Math.pow(10, p)){ digit = Math.floor(resVal / Math.pow(10, p)) % 10; if(p >= resStr.length) digit = ""; }
                   if(digit !== ""){
-                      let clr = "#000";
-                      if(useColors){
-                         if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935";
-                      }
-                      ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; 
-                      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                      ctx.fillText(digit, curX + cellW/2, resY + hRow/2);
+                      let clr = "#000"; if(useColors){ if(col.l==="1") clr="#3cb371"; else if(col.l==="10") clr="#40c4ff"; else clr="#e53935"; }
+                      ctx.fillStyle = clr; ctx.font = "800 18px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(digit, curX + cellW/2, resY + hRow/2);
                   }
               }
               curX += cellW;
           });
       });
-      
-      // Cadre extérieur
-      ctx.strokeStyle = "rgba(0,0,0,0.1)";
-      ctx.strokeRect(x, y, w, totalH);
+      ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.strokeRect(x, y, w, totalH);
   }
 
   init();
