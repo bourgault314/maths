@@ -897,28 +897,54 @@
           ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad);
           ctx.fill();
           
-          // --- DESSIN DES BORDURES LABEL (Manuellement pour éviter les lignes doubles) ---
-          ctx.strokeStyle = borderColor;
+          // CONTOURS RÉACTIVÉS MAIS CORRIGÉS
+          
+          const R = 6;
+          
+          ctx.beginPath();
+          ctx.strokeStyle = borderColor; 
           ctx.lineWidth = 1;
+
+          // Vertical Line segment
+          let lineY1 = labelY;
+          let lineY2 = labelY + rowHeight;
           
-          // Bordure Gauche (Toujours)
-          ctx.beginPath(); ctx.moveTo(labelX, labelY); ctx.lineTo(labelX, labelY+rowHeight); ctx.stroke();
+          if(isFirst) lineY1 += R;
+          if(isLast) lineY2 -= R;
           
-          // Bordure Haut (Seulement si premier du groupe)
-          if(isFirst) {
-             ctx.beginPath(); 
-             // Arc pour le coin arrondi
-             // Simplification : Ligne droite qui démarre après l'arrondi (approximatif mais propre)
-             ctx.moveTo(labelX+6, labelY); ctx.lineTo(labelX+labelWidth, labelY); 
-             ctx.stroke();
+          // Draw Vertical part
+          ctx.moveTo(labelX, lineY1);
+          ctx.lineTo(labelX, lineY2);
+          
+          // Draw Top Corner + Top Line if first
+          if(isFirst){
+             // From top of vertical line, arc to top, then line to right
+             ctx.moveTo(labelX, lineY1); // ensure start
+             // Arc Top-Left
+             // ctx.arc(x,y,r, startAngle, endAngle)
+             ctx.arc(labelX + R, labelY + R, R, Math.PI, 1.5 * Math.PI);
+             ctx.lineTo(labelX + labelWidth, labelY);
           }
           
-          // Bordure Bas (Seulement si dernier du groupe)
-          if(isLast) {
-             ctx.beginPath();
-             ctx.moveTo(labelX+6, labelY+rowHeight); ctx.lineTo(labelX+labelWidth, labelY+rowHeight);
-             ctx.stroke();
+          // Draw Bottom Corner + Bottom Line if last
+          if(isLast){
+             // From bottom of vertical line, arc to bottom, then line to right
+             ctx.moveTo(labelX, lineY2);
+             // Arc Bottom-Left
+             ctx.arc(labelX + R, labelY + rowHeight - R, R, 0.5 * Math.PI, Math.PI);
+             // Wait, start at 0.5PI (bottom) going to PI (left)? No, moveTo is at left.
+             // We are at labelX, lineY2 (which is bottom-left - R). We need to go down to bottom-left corner.
+             // Correct logic: Arc from Left (PI) to Bottom (0.5 PI).
+             // ctx.arc(x, y, r, startAngle, endAngle, counterclockwise)
+             // Center is (labelX + R, labelY + rowHeight - R)
+             // Start Angle: PI (Left)
+             // End Angle: 0.5 PI (Bottom)
+             // Counterclockwise: Yes (PI -> 0.5 PI is decreasing? No 3.14 -> 1.57. Yes.)
+             ctx.arc(labelX + R, labelY + rowHeight - R, R, Math.PI, 0.5 * Math.PI, true);
+             ctx.lineTo(labelX + labelWidth, labelY + rowHeight);
           }
+          
+          ctx.stroke();
 
           if(!showBeadValues){
               ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif";
