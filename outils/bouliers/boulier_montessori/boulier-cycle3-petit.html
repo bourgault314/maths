@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Boulier Montessori (Découverte)</title>
+<title>Boulier Montessori (Final)</title>
 <style>
   /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
@@ -12,10 +12,6 @@
 
   :root{
     --bead-size: 28px;
-    --bead-gap: 0px; 
-    --frame-thickness: 14px;
-    --rod-thickness: 4px;
-
     /* Couleurs Montessori */
     --color-green: #3cb371;
     --color-blue:  #40c4ff;
@@ -26,163 +22,150 @@
 
     --bg: #fffdf8;
     --text: #1b1b1b;
-    --ui: #f3f1ea;
     --accent: #0f6cf9; /* Bleu principal */
-    
     --btn-off: #9ca3af; /* Gris pour inactif */
   }
 
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
   
-  /* Layout Principal */
   .app {
     width: 100%;
-    max-width: 850px; 
+    max-width: 1400px; 
     margin: 10px auto;
     padding: 0 8px; 
     display: flex; 
     flex-direction: column; 
     min-height: 90vh; 
-    background: var(--bg);
-    transition: max-width 0.4s ease;
-  }
-
-  /* Quand le tableau est affiché */
-  .app.show-table {
-    max-width: 1300px;
   }
 
   /* --- Topbar & Contrôles --- */
   .toolbar{
-    display:flex; flex-wrap:nowrap; gap:8px; align-items:center; justify-content:center;
-    margin-bottom: 5px; padding-bottom: 10px; border-bottom: 1px solid #ddd;
-    background: rgba(255,255,255,0.5); border-radius: 8px; padding: 8px;
-    overflow-x: auto;
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;
+    margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #ddd;
+    background: rgba(255,255,255,0.5); border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
   
-  .control-group {
-    display:flex; align-items:center; gap:4px; flex-shrink: 0;
-  }
+  .control-group { display:flex; align-items:center; gap:4px; }
+  .separator { width: 1px; height: 24px; background: #ccc; margin: 0 4px; }
   
-  .separator {
-    width: 1px; height: 24px; background: #ccc; margin: 0 4px;
-  }
-  
-  /* Boutons */
+  /* --- BOUTONS UNIFORMISÉS --- */
+  /* Gris par défaut (Désactivé) -> Bleu quand .active */
   .btn{
     border:none;
-    background: var(--btn-off); 
-    color:#fff;font-weight:700;
-    padding:6px 10px; border-radius:6px; cursor:pointer;
-    box-shadow:none; font-size:.9rem;
+    background: var(--btn-off); /* GRIS par défaut */
+    color:#fff; font-weight:700;
+    padding:8px 12px; border-radius:6px; cursor:pointer;
+    box-shadow:none; font-size:.95rem;
     transition: all 0.2s ease;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
-    opacity: 0.9;
-    white-space: nowrap;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    opacity: 0.9; white-space: nowrap;
   }
+  .btn:hover { opacity: 1; transform: translateY(-1px); }
+  
+  /* État Activé = BLEU */
   .btn.active, .btn:active {
     background: var(--accent);
     box-shadow: 0 2px 5px rgba(15,108,249,.2);
     opacity: 1;
     transform: translateY(1px); 
   }
-  .btn.zero-btn {
-    font-size: 1rem; padding: 6px 12px; min-width: 30px;
-  }
-  .btn.size-toggle { padding: 6px 10px; }
-  
-  /* Boutons Toggle */
-  .btn.toggle { background: var(--btn-off); box-shadow: none; opacity: 0.9; }
-  .btn.toggle.active { background: var(--accent); box-shadow: 0 2px 5px rgba(15,108,249,.2); opacity: 1; }
 
+  .btn.zero-btn { font-size: 1.1rem; padding: 8px 14px; min-width: 40px; }
+  .btn.size-toggle { padding: 8px 12px; }
 
-  /* --- Zone Centrale (Split View) --- */
-  .main-area {
-    display: flex;
-    flex: 1;
+  /* --- WORKSPACE (Zone de travail Grid) --- */
+  .workspace {
+    display: grid;
     gap: 30px;
-    align-items: flex-start; 
-    justify-content: center; 
-    transition: all 0.3s;
     width: 100%;
+    justify-content: center;
+    /* DÉFAUT : Nombre en haut, Boulier Gauche, Tableau Droite */
+    /* On utilise auto pour que le boulier et le tableau prennent leur place naturelle sans s'écraser */
+    grid-template-areas: 
+      "number number"
+      "abacus table";
+    grid-template-columns: auto auto; 
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    transition: all 0.3s ease;
   }
 
-  /* Colonne Boulier */
-  .abacus-column {
-    flex: 0 0 auto; 
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: all 0.3s;
+  /* --- Gestion des Zones --- */
+  .area-number { grid-area: number; width: 100%; display: flex; justify-content: center; }
+  .area-abacus { grid-area: abacus; display: flex; justify-content: center; flex-direction: column; align-items: center;}
+  .area-table  { grid-area: table;  display: flex; justify-content: center; min-width: 350px; /* Sécurité pour ne pas écraser */ }
+
+  .hidden { display: none !important; }
+
+  /* --- LOGIQUE DE LAYOUT DYNAMIQUE --- */
+
+  /* Cas : Nombre Caché -> Tableau au-dessus du Boulier */
+  .workspace.layout-vertical-reversed {
+    grid-template-areas:
+      "table"
+      "abacus";
+    grid-template-columns: 1fr; /* Une seule colonne centrée */
+    justify-items: center;
+  }
+  .workspace.layout-vertical-reversed .area-table { margin-bottom: 20px; }
+
+  /* Cas : Tableau Caché -> Boulier centré */
+  .workspace.no-table {
+    grid-template-areas:
+      "number"
+      "abacus";
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
-  .app.show-table .abacus-column {
-    width: auto; 
-    flex: 1 1 600px; 
+  /* Cas : Boulier Caché -> Tableau centré */
+  .workspace.no-abacus {
+    grid-template-areas:
+      "number"
+      "table";
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
-  /* Colonne Tableau */
-  .table-column {
-    display: none; 
-    flex: 1 1 400px;
-    max-width: 500px;
-    flex-direction: column;
-    align-items: stretch;
-    padding-top: 80px; 
-    opacity: 0;
-    transform: translateX(20px);
-    transition: all 0.4s ease;
-  }
-  
-  .app.show-table .table-column {
-    display: flex;
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  /* --- Affichage Valeur --- */
+  /* --- Styles Composants --- */
   .center-display {
     text-align: center; margin-bottom: 10px; min-height: 5rem;
     display: flex; align-items: center; justify-content: center;
-    width: 100%;
+    width: 100%; padding: 10px;
+    background: rgba(255,255,255,0.4); border-radius: 12px;
   }
   .value-container {
     display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; 
-    transition: opacity 0.2s;
   }
-  .hidden-value { opacity: 0; visibility: hidden; }
-
+  /* On ne cache plus avec opacity, on remplace le texte */
+  
   .digit-group {
     display: inline-flex; align-items: center; justify-content: center;
-    padding: 0 10px; height: 4.5rem; border-radius: 12px; margin: 0 6px; user-select: none; transition: all 0.3s;
+    padding: 0 10px; height: 5rem; border-radius: 12px; margin: 0 6px; user-select: none; transition: all 0.3s;
   }
   .digit-group.with-bg { border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
   .digit-group.no-bg { background: transparent !important; border: 1px solid transparent; box-shadow: none; }
-  .digit-char { font-size: 3rem; font-weight: 800; line-height: 1; margin: 0 1px; transition: color 0.3s; }
+  
+  .digit-char { 
+    font-size: 3.5rem; font-weight: 800; line-height: 1; margin: 0 2px; transition: color 0.3s; 
+  }
+  /* Style spécifique pour les points d'interrogation */
+  .digit-char.question-mark {
+    color: #999 !important; /* Gris neutre pour le ? */
+    font-family: monospace;
+  }
 
   .bg-white { background-color: #ffffff; }
   .bg-gray  { background-color: #e0e0e0; }
   .bg-black { background-color: #1b1b1b; border-color: #444; }
 
-  /* --- Boulier Layout --- */
-  .abacus-wrapper{
-    display:flex; align-items:flex-start; justify-content: center;
-    width: 100%;
-    overflow-x: auto; padding-bottom: 20px;
-  }
-  .labels{
-    display:flex; flex-direction:column; width: 100px;
-    padding-top: 14px; margin-right: 0; flex-shrink: 0;
-  }
+  /* Boulier */
+  .abacus-wrapper{ display:flex; align-items:flex-start; justify-content: center; overflow-x: auto; padding-bottom: 20px; }
+  .labels{ display:flex; flex-direction:column; width: 100px; padding-top: 14px; margin-right: 0; flex-shrink: 0; }
   .label-item{
-    height: 50px;
-    display:flex; align-items:center; justify-content:flex-end;
-    padding-right: 12px;
-    font-weight:700; font-size:0.95rem; color:#444;
-    border-left: 1px solid #ccc; border-right: none; margin-bottom: 0;
-    transition: background 0.3s;
+    height: 50px; display:flex; align-items:center; justify-content:flex-end; padding-right: 12px;
+    font-weight:700; font-size:0.95rem; color:#444; border-left: 1px solid #ccc;
   }
   .label-white { background-color: #ffffff; }
   .label-gray  { background-color: #e0e0e0; }
@@ -191,36 +174,33 @@
   .label-bottom-rounded { border-bottom: 1px solid #ccc; border-radius: 0 0 0 6px; }
   .gap-top { margin-top: 30px !important; }
 
-  /* --- Boulier --- */
   .abacus{
-    flex:1; min-width: 320px; position:relative;
+    flex: 0 0 auto; min-width: 320px; position:relative;
     background:linear-gradient(90deg, var(--color-wood) 0%, #f3e5c2 20%, #f3e5c2 80%, var(--color-wood) 100%);
     box-shadow:0 10px 25px rgba(0,0,0,.15);
-    display: flex; flex-direction: column;
-    padding: 14px 0;
-    border-right: 14px solid #a88348; 
-    border-left: 14px solid #a88348;
-    border-radius: 4px;
+    display: flex; flex-direction: column; padding: 14px 0;
+    border-right: 14px solid #a88348; border-left: 14px solid #a88348; border-radius: 4px;
+    width: 600px; 
   }
+  @media (max-width: 800px) { .abacus { width: 100%; min-width: 280px; } }
+
   .abacus::before, .abacus::after{
-    content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
+    content:""; position:absolute; left: -14px; right: -14px; height:14px;
     background:linear-gradient(#caa367,#9a733c); z-index: 2;
   }
-  .abacus::before{top:0; border-bottom:1px solid rgba(0,0,0,0.3); border-radius:4px 4px 0 0}
-  .abacus::after{bottom:0; border-top:1px solid rgba(0,0,0,0.3); border-radius:0 0 4px 4px}
+  .abacus::before{top:0; border-radius:4px 4px 0 0}
+  .abacus::after{bottom:0; border-radius:0 0 4px 4px}
 
   .row{ position:relative; width:100%; height: 50px; }
-  .row.gap-top::before {
-    content: ""; position: absolute; top: -15px; left: 5%; right: 5%;
-    height: 1px; background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
-  }
   .rod{
-    position:absolute; left:0; right:0; top:50%; height:var(--rod-thickness); transform:translateY(-50%);
-    background:linear-gradient(180deg,#c09e6c,#8a6538);
-    box-shadow:0 1px 2px rgba(0,0,0,.3);
+    position:absolute; left:0; right:0; top:50%; height:4px; transform:translateY(-50%);
+    background:linear-gradient(180deg,#c09e6c,#8a6538); box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .row.gap-top::before {
+    content: ""; position: absolute; top: -15px; left: 5%; right: 5%; height: 1px; 
+    background: rgba(168, 131, 72, 0.4); border-bottom: 1px dashed rgba(255,255,255,0.3);
   }
   
-  /* Style des billes (Texte possible) */
   .bead{
     position:absolute; top:50%; transform:translate(-50%,-50%);
     width:var(--bead-size); height:var(--bead-size); border-radius:50%;
@@ -228,82 +208,37 @@
     box-shadow: inset -3px -3px 8px rgba(0,0,0,0.25), inset 2px 2px 6px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3);
     cursor:pointer; user-select:none; z-index: 10;
     transition:left 0.2s ease-out;
-    
     display: flex; align-items: center; justify-content: center;
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    color: #fff; font-size: 9px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
   .bead:active{transform:translate(-50%,-50%) scale(.95)}
   .bead.marked::after {
     content: ""; width: 4px; height: 4px; background-color: rgba(0, 0, 0, 0.4); border-radius: 50%; display: block;
   }
-  /* Si texte, on cache le marqueur */
   .bead.has-text.marked::after { display: none; }
 
-  /* --- Styles du Tableau de Numération --- */
+  /* Tableau */
+  .table-container {
+    width: 100%; max-width: 600px; padding-top: 20px;
+    opacity: 0; transform: translateY(10px); animation: fadeIn 0.4s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
   .montessori-table {
-    border-collapse: collapse;
-    width: 100%;
-    background: #fff;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    font-family: sans-serif;
-    table-layout: fixed; 
+    border-collapse: collapse; width: 100%; background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;
+    font-family: sans-serif; table-layout: fixed; 
   }
-  
-  .montessori-table th, .montessori-table td {
-    text-align: center;
-    border-right: 1px solid #eee;
-  }
-  .montessori-table th:last-child, .montessori-table td:last-child {
-    border-right: none;
-  }
-
-  /* En-têtes de Classe (Ligne 1) */
-  .th-class {
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    padding: 8px 0;
-    color: #333;
-    border-bottom: 2px solid #aaa;
-  }
-  .th-class.unit-class { background: #fff; }
-  .th-class.thousand-class { background: #e0e0e0; }
-  .th-class.million-class { background: #1b1b1b; color: #fff; }
-
-  /* En-têtes de Rang (Ligne 2 - 1/10/100) */
-  .th-rank {
-    font-size: 0.9rem;
-    font-weight: 700;
-    padding: 6px 0;
-    border-bottom: 1px solid #ccc;
-    background: #fafafa;
-    color: #555;
-  }
-
-  /* Cellules de Valeur (Ligne 3) */
-  .col-digit {
-    font-size: 2rem;
-    font-weight: 800;
-    padding: 12px 0;
-    height: 70px;
-  }
-  
-  /* Couleurs de fond des colonnes (subtiles) */
+  .montessori-table th, .montessori-table td { text-align: center; border-right: 1px solid #eee; }
+  .montessori-table th:last-child, .montessori-table td:last-child { border-right: none; }
+  .th-class { text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; padding: 8px 0; color: #333; border-bottom: 2px solid #aaa; }
+  .th-class.unit-class { background: #fff; } .th-class.thousand-class { background: #e0e0e0; } .th-class.million-class { background: #1b1b1b; color: #fff; }
+  .th-rank { font-size: 0.9rem; font-weight: 700; padding: 6px 0; border-bottom: 1px solid #ccc; background: #fafafa; color: #555; }
+  .col-digit { font-size: 2rem; font-weight: 800; padding: 12px 0; height: 70px; }
   .bg-green-tint { background-color: rgba(60, 179, 113, 0.08); }
   .bg-blue-tint  { background-color: rgba(64, 196, 255, 0.08); }
   .bg-red-tint   { background-color: rgba(229, 57, 53, 0.08); }
-
-  /* Couleur texte dynamique */
-  .text-green { color: var(--color-green); }
-  .text-blue { color: var(--color-blue); }
-  .text-red { color: var(--color-red); }
-  .text-black { color: #000; }
-  .text-muted { color: #ddd; } 
+  .text-green { color: var(--color-green); } .text-blue { color: var(--color-blue); } .text-red { color: var(--color-red); } .text-black { color: #000; }
 
 </style>
 </head>
@@ -311,51 +246,52 @@
   <div class="app" id="appContainer">
     
     <div class="toolbar" data-html2canvas-ignore="false">
-      
+      <!-- Groupe Config -->
       <div class="control-group">
         <button class="btn size-toggle" id="btnSize" title="Changer la taille">↕️</button>
-        <button class="btn toggle active" id="btnColor" title="Afficher/Masquer Couleurs">🎨</button>
-        <button class="btn toggle active" id="btnGroup" title="Afficher/Masquer Groupes">⬜</button>
-        <button class="btn toggle" id="btnMarker" title="Afficher/Masquer Repère visuel (5)">⚫</button>
-        <button class="btn toggle" id="btnTable" title="Afficher/Masquer Tableau de Numération">📊</button>
+        <button class="btn active" id="btnColor" title="Couleurs">🎨</button>
+        <button class="btn active" id="btnGroup" title="Groupes">⬜</button>
+        <button class="btn" id="btnMarker" title="Repère visuel (5)">⚫</button>
+        <button class="btn" id="btnLabels" title="Valeurs Billes">100</button>
       </div>
-
+      <div class="separator"></div>
+      
+      <!-- Groupe Structure (AFFICHAGE) -->
+      <div class="control-group">
+        <!-- Boutons de Structure Uniformisés (Bleu si actif, Gris si inactif) -->
+        <button class="btn active" id="btnToggleNumber" title="Afficher/Masquer Nombre">🔢 Nombre</button>
+        <button class="btn active" id="btnToggleAbacus" title="Afficher/Masquer Boulier">🧮 Boulier</button>
+        <button class="btn" id="btnToggleTable" title="Afficher/Masquer Tableau">📊 Tableau</button>
+      </div>
       <div class="separator"></div>
 
+      <!-- Groupe Contenu (Œil) -->
       <div class="control-group">
-        <!-- Bouton Valeur (Remplace le menu Select) -->
-        <button class="btn toggle" id="btnLabels" title="Afficher la valeur dans les billes">Valeur</button>
-      </div>
-
-      <div class="separator"></div>
-
-      <div class="control-group">
-        <button class="btn active" id="toggleValue" title="Masquer/Afficher la valeur">👁️</button>
-        <button class="btn zero-btn active" id="reset" title="Remettre tout à droite">0</button>
+        <!-- État initial : Désactivé (Gris) selon la demande -->
+        <button class="btn" id="btnEye" title="Révéler / Masquer les valeurs">👁️</button>
+        <button class="btn zero-btn active" id="reset" title="Remettre à zéro">0</button>
         <button class="btn" id="btnExport" title="Sauvegarder en image">📷</button>
       </div>
     </div>
 
-    <!-- Zone Principale : Contient le boulier ET le tableau (si activé) -->
-    <div class="main-area">
-      
-      <!-- Colonne Gauche : Boulier -->
-      <div class="abacus-column">
+    <div class="workspace" id="workspace">
+      <!-- Zone Nombre -->
+      <div class="area-number" id="areaNumber">
         <div class="center-display">
           <div id="valueContainer" class="value-container"></div>
         </div>
-
+      </div>
+      <!-- Zone Boulier -->
+      <div class="area-abacus" id="areaAbacus">
         <div class="abacus-wrapper">
           <div class="labels" id="labelsContainer"></div>
           <div class="abacus" id="abacus" aria-label="Boulier Montessori"></div>
         </div>
       </div>
-
-      <!-- Colonne Droite : Tableau Montessori -->
-      <div class="table-column" id="tableColumn">
-        <div id="tableContainer"></div>
+      <!-- Zone Tableau -->
+      <div class="area-table" id="areaTable">
+        <div id="tableContainer" class="table-container"></div>
       </div>
-
     </div>
   </div>
 
@@ -364,135 +300,139 @@
   const N = 10;
   const fullMultipliers = [1, 10, 100, 1000, 10000, 100000, 1000000];
   const fullColors = [
-    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Unités
-    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   // Mille
-    'var(--color-green)'  // Million
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   
+    'var(--color-green)', 'var(--color-blue)', 'var(--color-red)',   
+    'var(--color-green)'  
   ];
-
-  // Labels par défaut à gauche
   const defaultLabels = ["1", "10", "100", "1 000", "10 000", "100 000", "1 000 000"];
 
   let currentRows = 4;
   let state = [];
-  let revealed = true; // true par défaut
+  
+  // États de Visibilité (DÉPART)
+  let showNumber = true;
+  let showAbacus = true;
+  let showTable = false; // Tableau désactivé au départ
+  
+  // États de Contenu
+  let revealed = false; // "Œil Désactivé ça veut dire qu'il y a des points d'interrogation"
   let useColors = true;
   let useGroups = true;
   let useMarkers = false;
-  let showTable = false; 
-  let showBeadValues = false; // Toggle pour le bouton "Valeur"
+  let showBeadValues = false;
 
-  const appContainer = document.getElementById('appContainer');
+  // DOM
+  const workspace = document.getElementById('workspace');
+  const areaNumber = document.getElementById('areaNumber');
+  const areaAbacus = document.getElementById('areaAbacus');
+  const areaTable = document.getElementById('areaTable');
+
   const abacusEl = document.getElementById('abacus');
   const labelsEl = document.getElementById('labelsContainer');
   const valueContainer = document.getElementById('valueContainer');
   const tableContainer = document.getElementById('tableContainer');
   
-  const toggleBtn = document.getElementById('toggleValue');
-  const resetBtn = document.getElementById('reset');
+  const btnToggleNumber = document.getElementById('btnToggleNumber');
+  const btnToggleAbacus = document.getElementById('btnToggleAbacus');
+  const btnToggleTable = document.getElementById('btnToggleTable');
   
+  const btnEye = document.getElementById('btnEye');
+  const resetBtn = document.getElementById('reset');
   const btnColor = document.getElementById('btnColor');
   const btnGroup = document.getElementById('btnGroup');
   const btnMarker = document.getElementById('btnMarker');
-  const btnTable = document.getElementById('btnTable');
   const btnSize = document.getElementById('btnSize');
   const btnExport = document.getElementById('btnExport');
   const btnLabels = document.getElementById('btnLabels');
 
   function init(){
     updateStructure();
-    
+    updateLayout();
+    updateButtonStates(); // Applique les couleurs Bleu/Gris aux boutons
+
+    // Listeners Structure
+    btnToggleNumber.addEventListener('click', () => { showNumber = !showNumber; updateLayout(); updateButtonStates(); });
+    btnToggleAbacus.addEventListener('click', () => { showAbacus = !showAbacus; updateLayout(); updateButtonStates(); });
+    btnToggleTable.addEventListener('click', () => { showTable = !showTable; updateLayout(); updateButtonStates(); });
+
+    // Listener Contenu
+    btnEye.addEventListener('click', ()=>{
+      revealed = !revealed;
+      updateButtonStates();
+      renderTotal();
+      renderTable(); 
+    });
+
+    // Config Buttons
     btnSize.addEventListener('click', () => {
-      if(currentRows === 4) {
-        currentRows = 7;
-        btnSize.classList.add('active'); 
-      } else {
-        currentRows = 4;
-        btnSize.classList.remove('active');
-      }
+      currentRows = (currentRows === 4) ? 7 : 4;
+      updateButtonStates(btnSize, currentRows === 7);
       updateStructure();
     });
 
-    btnColor.addEventListener('click', () => {
-      useColors = !useColors;
-      updateToggleButton(btnColor, useColors);
-      renderTotal();
-      renderTable(); 
-    });
+    btnColor.addEventListener('click', () => { useColors = !useColors; updateButtonStates(btnColor, useColors); renderTotal(); renderTable(); });
+    btnGroup.addEventListener('click', () => { useGroups = !useGroups; updateButtonStates(btnGroup, useGroups); renderTotal(); });
+    btnMarker.addEventListener('click', () => { useMarkers = !useMarkers; updateButtonStates(btnMarker, useMarkers); updateBeadMarkers(); });
+    btnLabels.addEventListener('click', () => { showBeadValues = !showBeadValues; updateButtonStates(btnLabels, showBeadValues); updateLabelsText(); updateBeadText(); });
 
-    btnGroup.addEventListener('click', () => {
-      useGroups = !useGroups;
-      updateToggleButton(btnGroup, useGroups);
-      renderTotal();
-    });
-
-    btnMarker.addEventListener('click', () => {
-      useMarkers = !useMarkers;
-      updateToggleButton(btnMarker, useMarkers);
-      updateBeadMarkers(); 
-    });
-
-    // Toggle Valeur
-    btnLabels.addEventListener('click', () => {
-      showBeadValues = !showBeadValues;
-      updateToggleButton(btnLabels, showBeadValues);
-      updateLabelsText(); // Côté gauche
-      updateBeadText();   // Intérieur billes
-    });
-
-    btnTable.addEventListener('click', () => {
-      showTable = !showTable;
-      updateToggleButton(btnTable, showTable);
-      if(showTable){
-        appContainer.classList.add('show-table');
-        renderTable();
-      } else {
-        appContainer.classList.remove('show-table');
-      }
-      setTimeout(() => { layoutAll(); }, 400); 
-    });
-
-    toggleBtn.addEventListener('click', ()=>{
-      revealed = !revealed;
-      renderTotal();
-      renderTable(); 
-      if(revealed) toggleBtn.classList.add('active');
-      else toggleBtn.classList.remove('active');
-    });
-
-    resetBtn.addEventListener('click', ()=>{
-      state.fill(0);
-      layoutAll();
-      renderTotal(); 
-      renderTable();
-    });
-
-    // --- NOUVEAU MOTEUR DE RENDU ---
-    btnExport.addEventListener('click', () => {
-      exportImage();
-    });
+    resetBtn.addEventListener('click', ()=>{ state.fill(0); layoutAll(); renderTotal(); renderTable(); });
+    btnExport.addEventListener('click', () => exportImage());
     
     let resizeTimer;
-    window.addEventListener('resize', ()=>{
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(layoutAll, 50);
-    });
+    window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(layoutAll, 50); });
   }
 
-  function updateToggleButton(btn, active){
-    if(active) btn.classList.add('active');
-    else btn.classList.remove('active');
+  // Gestion centralisée des boutons (Active = Bleu, Inactive = Gris)
+  function updateButtonStates(specificBtn, isActive){
+    if(specificBtn){
+        if(isActive) specificBtn.classList.add('active'); else specificBtn.classList.remove('active');
+        return;
+    }
+    // Mise à jour globale des boutons principaux
+    setBtn(btnToggleNumber, showNumber);
+    setBtn(btnToggleAbacus, showAbacus);
+    setBtn(btnToggleTable, showTable);
+    setBtn(btnEye, revealed);
+    setBtn(btnSize, currentRows === 7);
+  }
+  function setBtn(btn, active){ if(active) btn.classList.add('active'); else btn.classList.remove('active'); }
+
+  // --- Layout Dynamique ---
+  function updateLayout(){
+    if(showNumber) areaNumber.classList.remove('hidden'); else areaNumber.classList.add('hidden');
+    
+    if(showAbacus) {
+      areaAbacus.classList.remove('hidden');
+      workspace.classList.remove('no-abacus');
+    } else {
+      areaAbacus.classList.add('hidden');
+      workspace.classList.add('no-abacus');
+    }
+
+    if(showTable) {
+      areaTable.classList.remove('hidden');
+      workspace.classList.remove('no-table');
+      renderTable(); 
+    } else {
+      areaTable.classList.add('hidden');
+      workspace.classList.add('no-table');
+    }
+
+    workspace.classList.remove('layout-vertical-reversed');
+    // Cas Spécial : Nombre masqué, mais Table et Boulier visibles -> Table au-dessus
+    if (!showNumber && showTable && showAbacus) {
+       workspace.classList.add('layout-vertical-reversed');
+    }
+
+    setTimeout(layoutAll, 50);
   }
 
   function updateStructure(){
     state = Array.from({length: currentRows}, () => 0);
-    abacusEl.innerHTML = '';
-    labelsEl.innerHTML = '';
+    abacusEl.innerHTML = ''; labelsEl.innerHTML = '';
     for(let r=0; r<currentRows; r++) createRow(r);
-    updateLabelsText();
-    updateBeadText();
-    layoutAll();
-    renderTotal(); 
-    renderTable();
+    updateLabelsText(); updateBeadText();
+    layoutAll(); renderTotal(); renderTable();
   }
 
   function createRow(r){
@@ -500,15 +440,11 @@
     const row = document.createElement('div');
     row.className = 'row';
     if(isStartOfGroup) row.classList.add('gap-top');
-    const rod = document.createElement('div');
-    rod.className = 'rod';
-    row.appendChild(rod);
+    const rod = document.createElement('div'); rod.className = 'rod'; row.appendChild(rod);
 
     for(let j=1; j<=N; j++){
       const bead = document.createElement('div');
-      bead.className = 'bead';
-      bead.style.background = fullColors[r];
-      bead.dataset.index = j;
+      bead.className = 'bead'; bead.style.background = fullColors[r]; bead.dataset.index = j;
       if (useMarkers && j > 5) bead.classList.add('marked');
       bead.addEventListener('click', () => onBeadClick(r, j));
       row.appendChild(bead);
@@ -517,154 +453,81 @@
 
     const labelDiv = document.createElement('div');
     labelDiv.className = 'label-item';
-    if(r < 3) labelDiv.classList.add('label-white'); 
-    else if (r < 6) labelDiv.classList.add('label-gray');
-    else labelDiv.classList.add('label-black'); 
-
-    if(r === 0) labelDiv.classList.add('label-top-rounded');
-    if(r === 2) labelDiv.classList.add('label-bottom-rounded');
-    if(r === 3) labelDiv.classList.add('label-top-rounded');
-    if(r === 5) labelDiv.classList.add('label-bottom-rounded');
+    if(r < 3) labelDiv.classList.add('label-white'); else if (r < 6) labelDiv.classList.add('label-gray'); else labelDiv.classList.add('label-black'); 
+    if(r === 0) labelDiv.classList.add('label-top-rounded'); if(r === 2) labelDiv.classList.add('label-bottom-rounded');
+    if(r === 3) labelDiv.classList.add('label-top-rounded'); if(r === 5) labelDiv.classList.add('label-bottom-rounded');
     if(r === 6) { labelDiv.classList.add('label-top-rounded'); labelDiv.classList.add('label-bottom-rounded'); }
-
     if(isStartOfGroup) labelDiv.classList.add('gap-top');
     labelsEl.appendChild(labelDiv);
   }
 
   function updateBeadMarkers() {
-    const allBeads = document.querySelectorAll('.bead');
-    allBeads.forEach(bead => {
+    document.querySelectorAll('.bead').forEach(bead => {
       const j = parseInt(bead.dataset.index);
-      if (j > 5) {
-        if (useMarkers) bead.classList.add('marked');
-        else bead.classList.remove('marked');
-      }
+      if (j > 5) { if (useMarkers) bead.classList.add('marked'); else bead.classList.remove('marked'); }
     });
   }
 
   function updateBeadText() {
     const rows = abacusEl.children;
     const displayValues = ["1", "10", "100", "1 000"];
-    
     for(let r=0; r<rows.length; r++){
-      const row = rows[r];
-      const beads = row.querySelectorAll('.bead');
-      
-      let text = "";
-      if(showBeadValues && r < 4) { 
-        text = displayValues[r];
-      }
-
-      beads.forEach(bead => {
+      const text = (showBeadValues && r < 4) ? displayValues[r] : "";
+      rows[r].querySelectorAll('.bead').forEach(bead => {
         bead.textContent = text;
-        if(text !== "") bead.classList.add('has-text');
-        else bead.classList.remove('has-text');
+        if(text !== "") bead.classList.add('has-text'); else bead.classList.remove('has-text');
       });
     }
   }
 
   function updateLabelsText(){
-    const labelDivs = labelsEl.querySelectorAll('.label-item');
-    labelDivs.forEach((div, i) => {
-      if(!showBeadValues) { 
-        div.textContent = defaultLabels[i] || "";
-      } else {
-        div.textContent = ""; 
-      }
-    });
+    document.querySelectorAll('.label-item').forEach((div, i) => { div.textContent = showBeadValues ? "" : (defaultLabels[i] || ""); });
   }
 
   function onBeadClick(r, j){
     const currentCount = state[r];
-    if (j > currentCount) state[r] = j;
-    else state[r] = j - 1;
-    layoutRow(r);
-    renderTotal();
-    renderTable();
+    if (j > currentCount) state[r] = j; else state[r] = j - 1;
+    layoutRow(r); renderTotal(); renderTable();
   }
 
   function layoutRow(r){
-    const row = abacusEl.children[r];
-    if(!row) return;
+    const row = abacusEl.children[r]; if(!row) return;
     const beads = row.querySelectorAll('.bead');
     const count = state[r];
     const rowWidth = row.clientWidth;
-    const beadSize = 28; 
-    const gap = 0;       
-    const padding = 0;   
-    const leftStart = padding + beadSize/2;
-    const rightEnd = rowWidth - padding - beadSize/2;
-
+    const beadSize = 28; const leftStart = beadSize/2; const rightEnd = rowWidth - beadSize/2;
     beads.forEach(b => {
       const idx = parseInt(b.dataset.index);
-      if (idx <= count) {
-        const pos = leftStart + (idx - 1) * (beadSize + gap);
-        b.style.left = pos + 'px';
-      } else {
-        const offsetFromEnd = (N - idx) * (beadSize + gap);
-        const pos = rightEnd - offsetFromEnd;
-        b.style.left = pos + 'px';
-      }
+      if (idx <= count) b.style.left = (leftStart + (idx - 1) * beadSize) + 'px';
+      else b.style.left = (rightEnd - (N - idx) * beadSize) + 'px';
     });
   }
-
-  function layoutAll(){
-    for(let r=0; r<currentRows; r++) layoutRow(r);
-    renderTotal();
-  }
+  function layoutAll(){ for(let r=0; r<currentRows; r++) layoutRow(r); }
 
   function renderTable(){
-    if(!showTable) {
-      tableContainer.innerHTML = "";
-      return;
-    }
-
     const groups = [];
-    if(currentRows > 6) {
-      groups.push({
-        name: "Millions", class: "million-class", 
-        cols: [{label:"100", idx:-1}, {label:"10", idx:-1}, {label:"1", idx:6}] 
-      });
-    }
-    
+    if(currentRows > 6) groups.push({ name: "Millions", class: "million-class", cols: [{label:"100", idx:-1}, {label:"10", idx:-1}, {label:"1", idx:6}] });
     const milleCols = [];
-    if(currentRows > 5) milleCols.push({label:"100", idx:5}); // 100k
-    if(currentRows > 4) milleCols.push({label:"10", idx:4});  // 10k
-    milleCols.push({label:"1", idx:3});                       // 1k
-    
+    if(currentRows > 5) milleCols.push({label:"100", idx:5});
+    if(currentRows > 4) milleCols.push({label:"10", idx:4});
+    milleCols.push({label:"1", idx:3});
     groups.push({ name: "Mille", class: "thousand-class", cols: milleCols });
-    groups.push({
-      name: "Unités Simples", class: "unit-class", 
-      cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}]
-    });
+    groups.push({ name: "Unités Simples", class: "unit-class", cols: [{label:"100", idx:2}, {label:"10", idx:1}, {label:"1", idx:0}] });
 
-    let hasStarted = false;
-    const maxIdx = currentRows - 1;
-    const displayValues = {};
+    let hasStarted = false; const maxIdx = currentRows - 1; const displayValues = {};
+    for(let i = maxIdx; i >= 0; i--) { const val = state[i]; if(val > 0) hasStarted = true; displayValues[i] = (hasStarted || i === 0) ? val : ""; }
     
-    for(let i = maxIdx; i >= 0; i--) {
-        const val = state[i];
-        if(val > 0) hasStarted = true;
-        if(hasStarted || i === 0) displayValues[i] = val;
-        else displayValues[i] = "";
-    }
-    
-    let headerRow1 = ""; 
-    let headerRow2 = ""; 
-    let valueRow = "";   
-    
+    let headerRow1 = ""; let headerRow2 = ""; let valueRow = "";
     groups.forEach(group => {
       headerRow1 += `<th class="th-class ${group.class}" colspan="${group.cols.length}">${group.name}</th>`;
       group.cols.forEach(col => {
         headerRow2 += `<th class="th-rank">${col.label}</th>`;
-        let displayVal = "";
-        let colorClass = "text-black";
-        
+        let displayVal = ""; let colorClass = "text-black";
         if(col.idx !== -1 && col.idx < currentRows) {
              const val = displayValues[col.idx];
+             // LOGIQUE ? : Si revealed est false, on met "?" si la valeur existe
              if(val !== "") displayVal = revealed ? val : "?";
-             
-             if(useColors && displayVal !== ""){
+             if(useColors && displayVal !== "" && displayVal !== "?"){
                 if(col.label === "1") colorClass = "text-green bg-green-tint";
                 else if(col.label === "10") colorClass = "text-blue bg-blue-tint";
                 else if(col.label === "100") colorClass = "text-red bg-red-tint";
@@ -673,31 +536,17 @@
         valueRow += `<td class="col-digit ${colorClass}">${displayVal}</td>`;
       });
     });
-
-    tableContainer.innerHTML = `
-      <table class="montessori-table">
-        <thead>
-          <tr>${headerRow1}</tr>
-          <tr>${headerRow2}</tr>
-        </thead>
-        <tbody>
-          <tr>${valueRow}</tr>
-        </tbody>
-      </table>
-    `;
+    tableContainer.innerHTML = `<table class="montessori-table"><thead><tr>${headerRow1}</tr><tr>${headerRow2}</tr></thead><tbody><tr>${valueRow}</tr></tbody></table>`;
   }
 
   function renderTotal(){
     let total = 0;
     for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
-    
-    if(total === 0) resetBtn.classList.add('active');
-    else resetBtn.classList.remove('active');
+    if(total === 0) resetBtn.classList.add('active'); else resetBtn.classList.remove('active');
 
-    if(!revealed){
-      valueContainer.classList.add('hidden-value');
-      return;
-    }
+    // MODIFICATION IMPORTANTE :
+    // Si pas révélé, on n'affiche PAS "hidden-value" (invisible).
+    // On affiche des "?" à la place des chiffres.
     valueContainer.classList.remove('hidden-value');
 
     const str = total.toString();
@@ -710,24 +559,16 @@
       const power = len - 1 - i;
       const groupIndex = Math.floor(power / 3);
       
-      let bgClass = '';
-      if(useGroups){
-        if(groupIndex === 0) bgClass = 'bg-white with-bg';
-        else if(groupIndex === 1) bgClass = 'bg-gray with-bg';
-        else bgClass = 'bg-black with-bg';
-      } else {
-        bgClass = 'no-bg';
-      }
+      let bgClass = useGroups ? ((groupIndex === 0) ? 'bg-white with-bg' : (groupIndex === 1) ? 'bg-gray with-bg' : 'bg-black with-bg') : 'no-bg';
       
       let textColor = '';
-      if(useColors){
+      if(useColors && revealed){ // Couleurs seulement si révélé
         const colorIndex = power % 3;
         if(colorIndex === 0) textColor = 'var(--color-green)';
         else if(colorIndex === 1) textColor = 'var(--color-blue)';
         else textColor = 'var(--color-red)';
       } else {
-        if(useGroups && groupIndex >= 2) textColor = '#f0f0f0';
-        else textColor = '#1b1b1b';
+        textColor = (useGroups && groupIndex >= 2) ? '#f0f0f0' : '#1b1b1b';
       }
       
       if(groupIndex !== currentGroupIndex){
@@ -735,536 +576,215 @@
         html += `<div class="digit-group ${bgClass}">`;
         currentGroupIndex = groupIndex;
       }
-      html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
+      
+      // Si révélé : Chiffre. Sinon : Point d'interrogation.
+      if(revealed) {
+          html += `<span class="digit-char" style="color:${textColor}">${digit}</span>`;
+      } else {
+          html += `<span class="digit-char question-mark">?</span>`;
+      }
     }
     if(currentGroupIndex !== -1) html += `</div>`;
     valueContainer.innerHTML = html;
   }
 
-  /* ========================================================== */
-  /* === MOTEUR DE RENDU GRAPHIQUE INTELLIGENT (CANVAS 2D) === */
-  /* ========================================================== */
-  
+  // --- Export Image ---
   function exportImage() {
-    const scale = 3; // Facteur HD
-    const margin = 30;
+    const scale = 3; const margin = 30;
+    const abacusWidth = 660; const labelWidth = 100; const rowHeight = 50; const frameThick = 14; const gapHeight = 30; const beadSize = 28;
+    let abacusContentHeight = 0; for(let i=0; i<currentRows; i++){ abacusContentHeight += rowHeight; if(i===2 || i===5) abacusContentHeight += gapHeight; }
+    const totalAbacusHeight = abacusContentHeight + frameThick*2; const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; 
+    const tableWidth = 400; const tableGap = 40; const displayHeight = 100; const displayMargin = 20;
+
+    let cvsW = margin*2; let cvsH = margin*2;
+    const isVerticalLayout = (!showNumber && showAbacus && showTable);
     
-    // 1. Calcul de la géométrie
-    // Dimensions de base du boulier (partie graphique)
-    const abacusWidth = 660; // AGRANDI POUR ETRE REALISTE (LARGEUR 2x10 billes)
-    const labelWidth = 100;
-    const rowHeight = 50;
-    const frameThick = 14;
-    const gapHeight = 30; // Espace entre classes
-    const beadSize = 28;
-    
-    // Calcul hauteur boulier
-    let abacusContentHeight = 0;
-    for(let i=0; i<currentRows; i++){
-       abacusContentHeight += rowHeight;
-       if(i===2 || i===5) abacusContentHeight += gapHeight; // Fin de classe
+    let currentY = margin;
+    if(showNumber) currentY += displayHeight + displayMargin;
+
+    let contentW = 0; let contentH = 0;
+    if(isVerticalLayout) {
+        if(showTable) { contentH += 150; contentW = Math.max(contentW, tableWidth); }
+        if(showAbacus) { if(showTable) contentH += 40; contentH += totalAbacusHeight; contentW = Math.max(contentW, totalAbacusWidth); }
+    } else {
+        let rowH = 0;
+        if(showAbacus) { contentW += totalAbacusWidth; rowH = Math.max(rowH, totalAbacusHeight); }
+        if(showTable) { if(showAbacus) contentW += tableGap; contentW += tableWidth; rowH = Math.max(rowH, 150); }
+        contentH = rowH;
     }
-    const totalAbacusHeight = abacusContentHeight + frameThick*2; // Haut + Bas
-    const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; // Labels + Cadre
 
-    // Dimensions Tableau
-    const tableWidth = 400;
-    const tableGap = 40;
-    
-    // Dimension Display (Chiffre du haut)
-    const displayHeight = revealed ? 100 : 20;
+    cvsW = Math.max(600, contentW + margin*2); cvsH = currentY + contentH + margin;
+    const canvas = document.createElement('canvas'); canvas.width = cvsW * scale; canvas.height = cvsH * scale;
+    const ctx = canvas.getContext('2d'); ctx.scale(scale, scale);
 
-    // Dimensions Totales Canvas
-    let cvsW = margin*2 + totalAbacusWidth;
-    if(showTable) cvsW += tableGap + tableWidth;
-    
-    let cvsH = margin*2 + displayHeight + totalAbacusHeight;
-    
-    // Création Canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = cvsW * scale;
-    canvas.height = cvsH * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-
-    // --- FONCTIONS DE DESSIN ---
-
-    // Palette Couleurs
     const C = {
-        green: '#3cb371', greenHi: '#66d494',
-        blue:  '#40c4ff', blueHi:  '#80d8ff',
-        red:   '#e53935', redHi:   '#ff6f60',
-        wood:  '#e2c48a', woodMid: '#f3e5c2', woodDark: '#a88348',
-        rod:   '#c09e6c', rodDark: '#8a6538',
-        bg:    '#fffdf8', text: '#1b1b1b'
+        green: '#3cb371', greenHi: '#66d494', blue: '#40c4ff', blueHi: '#80d8ff', red: '#e53935', redHi: '#ff6f60',
+        wood: '#e2c48a', woodMid: '#f3e5c2', woodDark: '#a88348', rod: '#c09e6c', rodDark: '#8a6538', bg: '#fffdf8', text: '#1b1b1b'
     };
     
-    // Fond
-    ctx.fillStyle = C.bg;
-    ctx.fillRect(0,0,cvsW,cvsH);
+    ctx.fillStyle = C.bg; ctx.fillRect(0,0,cvsW,cvsH);
 
-    // Origines
-    const startY = margin + displayHeight;
-    const abacusX = margin;
-    
-    // --- 1. DESSINER LE NOMBRE (DISPLAY) ---
-    if(revealed && renderTotal.toString().length > 0) {
-        let total = 0;
-        for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
-        drawNumberDisplay(ctx, total, cvsW/2, margin + 40);
+    let drawY = margin;
+    if(showNumber) {
+        let total = 0; for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
+        drawNumberDisplay(ctx, total, cvsW/2, drawY + displayHeight/2);
+        drawY += displayHeight + displayMargin;
     }
 
-    // --- 2. DESSINER LE BOULIER ---
-    drawAbacusCanvas(ctx, abacusX, startY, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C);
-
-    // --- 3. DESSINER LE TABLEAU ---
-    if(showTable){
-        drawTable(ctx, abacusX + totalAbacusWidth + tableGap, startY, tableWidth);
+    if(isVerticalLayout) {
+        if(showTable) { drawTable(ctx, (cvsW - tableWidth)/2, drawY, tableWidth); drawY += 190; }
+        if(showAbacus) drawAbacusCanvas(ctx, (cvsW - totalAbacusWidth)/2, drawY, 660, 100, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C);
+    } else {
+        let startX = (cvsW - contentW) / 2;
+        if(showAbacus) { drawAbacusCanvas(ctx, startX, drawY, 660, 100, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C); startX += totalAbacusWidth + tableGap; }
+        if(showTable) drawTable(ctx, startX, drawY, tableWidth);
     }
-    
-    // --- FINALISATION ---
-    // Téléchargement
-    const link = document.createElement('a');
-    link.download = `boulier_montessori_${currentRows}rangs.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+
+    const link = document.createElement('a'); link.download = `boulier_montessori.png`;
+    link.href = canvas.toDataURL('image/png'); link.click();
   }
-  
-  // -- Dessin Boulier (Corrigé : Cadre rectangulaire uniforme) --
-  function drawAbacusCanvas(ctx, x, y, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C) {
-      // Zone principale bois (fond derrière les tiges)
-      const frameX = x + labelWidth; // Début du cadre (après les étiquettes)
-      const frameW = abacusWidth + frameThick*2; // Largeur totale incluant les bords
-      const frameH = totalAbacusHeight;
+
+  function drawNumberDisplay(ctx, total, centerX, y){
+      const str = total.toString(); const len = str.length;
+      const charW = 32; const charH = 60;
+      let totalW = len * charW + Math.floor((len-1)/3)*10;
+      let curX = centerX - totalW/2;
+      ctx.font = "800 40px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       
-      // Ombre portée globale
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
+      let i = 0;
+      while(i < len) {
+          const startI = i; const startPower = len - 1 - i; const currentGrpIdx = Math.floor(startPower/3);
+          let count = 0;
+          while(i < len) { if(Math.floor((len - 1 - i)/3) !== currentGrpIdx) break; count++; i++; }
+          let bg = null;
+          if(useGroups){ if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b'; }
+          const groupW = count * charW;
+          if(bg){ ctx.fillStyle = bg; ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4; ctx.fillRect(curX, y-charH/2, groupW, charH); ctx.shadowColor="transparent"; }
+          
+          for(let k=0; k<count; k++) {
+              if(revealed) {
+                const charIndex = startI + k; const digit = str[charIndex]; const power = len - 1 - charIndex; const colIdx = power % 3;
+                let txtCol='#111';
+                if(useColors){ if(colIdx===0) txtCol='#3cb371'; else if(colIdx===1) txtCol='#40c4ff'; else txtCol='#e53935'; }
+                else { if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0'; }
+                ctx.fillStyle = txtCol; ctx.fillText(digit, curX + (k * charW) + charW/2, y + 4);
+              } else {
+                ctx.fillStyle = '#999'; ctx.fillText("?", curX + (k * charW) + charW/2, y + 4);
+              }
+          }
+          curX += groupW + 10;
+      }
+  }
+
+  function drawTable(ctx, x, y, w){
+      const h1 = 30; const h2 = 30; const h3 = 70; const totalH = h1 + h2 + h3;
+      ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,0.1)"; ctx.shadowBlur = 10;
+      ctx.fillRect(x, y, w, totalH); ctx.shadowColor = "transparent";
       
-      // Fond Bois (Dégradé Horizontal)
+      let colsData = [];
+      if(currentRows > 6){ colsData.push({l:"100", i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"}); colsData.push({l:"10", i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"}); colsData.push({l:"1", i:6, g:"Millions", gc:"#1b1b1b", tc:"#fff"}); }
+      if(currentRows > 5) colsData.push({l:"100", i:5, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      if(currentRows > 4) colsData.push({l:"10", i:4, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      colsData.push({l:"1", i:3, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      colsData.push({l:"100", i:2, g:"Unités", gc:"#fff", tc:"#333"});
+      colsData.push({l:"10", i:1, g:"Unités", gc:"#fff", tc:"#333"});
+      colsData.push({l:"1", i:0, g:"Unités", gc:"#fff", tc:"#333"});
+
+      const cellW = w / colsData.length;
+      let curX = x; let lastGrp = ""; let grpStart = x; let grpCount = 0;
+      
+      const drawGroup = (name, c, tc, start, count) => {
+          ctx.fillStyle = c; ctx.fillRect(start, y, count*cellW, h1); ctx.strokeStyle = "#ccc"; ctx.strokeRect(start, y, count*cellW, h1);
+          ctx.fillStyle = tc; ctx.font = "bold 10px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(name.toUpperCase(), start + (count*cellW)/2, y+h1/2);
+      };
+
+      for(let k=0; k<colsData.length; k++){ const c = colsData[k]; if(c.g !== lastGrp){ if(grpCount>0) drawGroup(lastGrp, colsData[k-1].gc, colsData[k-1].tc, grpStart, grpCount); lastGrp=c.g; grpStart=curX; grpCount=0; } grpCount++; curX+=cellW; }
+      if(grpCount>0) drawGroup(lastGrp, colsData[colsData.length-1].gc, colsData[colsData.length-1].tc, grpStart, grpCount);
+
+      curX = x; const y2=y+h1; const y3=y+h1+h2;
+      let hasStarted = false; const vals = {}; for(let i = currentRows-1; i >= 0; i--) { const v = state[i]; if(v > 0) hasStarted = true; vals[i] = (hasStarted || i===0) ? v : ""; }
+
+      for(let k=0; k<colsData.length; k++){
+          const c = colsData[k];
+          ctx.fillStyle = "#fafafa"; ctx.fillRect(curX, y2, cellW, h2); ctx.strokeRect(curX, y2, cellW, h2);
+          ctx.fillStyle = "#555"; ctx.font = "bold 12px sans-serif"; ctx.fillText(c.l, curX+cellW/2, y2+h2/2+4);
+          
+          let val="?", cellBg="#fff";
+          if(c.i !== -1 && c.i < currentRows){
+             if(vals[c.i] !== "") val = revealed ? vals[c.i] : "?"; else val = "";
+             if(useColors && val!=="" && val!=="?"){
+                 if(c.l==="1") cellBg="rgba(60, 179, 113, 0.08)"; else if(c.l==="10") cellBg="rgba(64, 196, 255, 0.08)"; else if(c.l==="100") cellBg="rgba(229, 57, 53, 0.08)";
+             }
+          } else val="";
+          
+          ctx.fillStyle = cellBg; ctx.fillRect(curX, y3, cellW, h3); ctx.strokeRect(curX, y3, cellW, h3);
+          if(val!==""){
+             let col="#000"; 
+             if(useColors && val!=="?"){ if(c.l==="1") col="#3cb371"; else if(c.l==="10") col="#40c4ff"; else if(c.l==="100") col="#e53935"; }
+             ctx.fillStyle = col; ctx.font = "800 24px sans-serif"; ctx.fillText(val, curX+cellW/2, y3+h3/2);
+          }
+          curX+=cellW;
+      }
+      ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.strokeRect(x, y, w, totalH);
+  }
+
+  function drawAbacusCanvas(ctx, x, y, abacusWidth, labelWidth, h, frameThick, rowHeight, gapHeight, beadSize, C) {
+      const frameX = x + labelWidth; const frameW = abacusWidth + frameThick*2;
       const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
-      gradWood.addColorStop(0, C.wood); gradWood.addColorStop(0.2, C.woodMid);
-      gradWood.addColorStop(0.8, C.woodMid); gradWood.addColorStop(1, C.wood);
-      ctx.fillStyle = gradWood;
-      // On dessine le fond principal
-      ctx.fillRect(frameX, y, frameW, frameH);
-      ctx.restore();
+      gradWood.addColorStop(0, C.wood); gradWood.addColorStop(0.2, C.woodMid); gradWood.addColorStop(0.8, C.woodMid); gradWood.addColorStop(1, C.wood);
+      ctx.fillStyle = gradWood; ctx.fillRect(frameX, y, frameW, h);
+      ctx.fillStyle = C.woodDark; ctx.fillRect(frameX, y, frameThick, h); ctx.fillRect(frameX + frameW - frameThick, y, frameThick, h);
 
-      // Bords Verticaux (Gauche et Droite)
-      ctx.fillStyle = C.woodDark;
-      ctx.fillRect(frameX, y, frameThick, frameH); // Gauche
-      ctx.fillRect(frameX + frameW - frameThick, y, frameThick, frameH); // Droite
-
-      // Bords Horizontaux (Haut et Bas) - Superposés aux verticaux pour faire le coin
-      const gradFrameV = ctx.createLinearGradient(0, y, 0, y+frameThick);
-      gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
+      const gradFrameV = ctx.createLinearGradient(0, y, 0, y+frameThick); gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
+      ctx.fillStyle = gradFrameV; ctx.beginPath(); ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); ctx.fill();
+      const gradFrameV2 = ctx.createLinearGradient(0, y+h-frameThick, 0, y+h); gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
+      ctx.fillStyle = gradFrameV2; ctx.beginPath(); ctx.roundRect(frameX, y+h-frameThick, frameW, frameThick, [0,0,4,4]); ctx.fill();
       
-      // Haut (Rectangulaire avec coins arrondis seulement en haut)
-      ctx.fillStyle = gradFrameV;
-      ctx.beginPath(); 
-      // On aligne exactement sur frameX pour ne pas dépasser
-      ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); 
-      ctx.fill();
-      
-      const gradFrameV2 = ctx.createLinearGradient(0, y+frameH-frameThick, 0, y+frameH);
-      gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
-      
-      // Bas
-      ctx.fillStyle = gradFrameV2;
-      ctx.beginPath(); 
-      ctx.roundRect(frameX, y+frameH-frameThick, frameW, frameThick, [0,0,4,4]); 
-      ctx.fill();
-      
-      // Contenu
       let currentY = y + frameThick;
       for(let r=0; r<currentRows; r++){
           const isStartGroup = (r===3 || r===6);
           if(isStartGroup) currentY += gapHeight;
-
-          // Labels
-          const labelX = x; 
-          const labelY = currentY;
-          let labelBg='#fff', labelTxt='#444', borderColor='#ccc';
-          let isLast=(r===2||r===5||r===6), isFirst=(r===0||r===3||r===6);
+          const labelX = x; const labelY = currentY;
+          let labelBg='#fff', labelTxt='#444';
+          if(r<3) labelBg='#fff'; else if(r<6) labelBg='#e0e0e0'; else { labelBg='#1b1b1b'; labelTxt='#bdbdbd'; }
+          ctx.fillStyle = labelBg; 
+          let rad=[0,0,0,0]; if(r===0||r===3||r===6) rad[0]=6; if(r===2||r===5||r===6) rad[3]=6;
+          ctx.beginPath(); ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad); ctx.fill();
           
-          if(r<3) labelBg='#fff'; else if(r<6) labelBg='#e0e0e0'; else { labelBg='#1b1b1b'; labelTxt='#bdbdbd'; borderColor='#333'; }
-          
-          ctx.fillStyle = labelBg;
-          ctx.beginPath();
-          let rad=[0,0,0,0];
-          if(isFirst) rad[0]=6; if(isLast) rad[3]=6;
-          // IMPORTANT: utiliser roundRect pour tout dessiner d'un coup (fond + contour)
-          ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad);
-          ctx.fill();
-          
-          // CONTOURS RÉACTIVÉS MAIS CORRIGÉS
-          
-          const R = 6;
-          
-          ctx.beginPath();
-          ctx.strokeStyle = borderColor; 
-          ctx.lineWidth = 1;
-
-          // Vertical Line segment
-          let lineY1 = labelY;
-          let lineY2 = labelY + rowHeight;
-          
-          if(isFirst) lineY1 += R;
-          if(isLast) lineY2 -= R;
-          
-          // Draw Vertical part
-          ctx.moveTo(labelX, lineY1);
-          ctx.lineTo(labelX, lineY2);
-          
-          // Draw Top Corner + Top Line if first
-          if(isFirst){
-             // From top of vertical line, arc to top, then line to right
-             ctx.moveTo(labelX, lineY1); // ensure start
-             // Arc Top-Left
-             // ctx.arc(x,y,r, startAngle, endAngle)
-             ctx.arc(labelX + R, labelY + R, R, Math.PI, 1.5 * Math.PI);
-             ctx.lineTo(labelX + labelWidth, labelY);
-          }
-          
-          // Draw Bottom Corner + Bottom Line if last
-          if(isLast){
-             // From bottom of vertical line, arc to bottom, then line to right
-             ctx.moveTo(labelX, lineY2);
-             // Arc Bottom-Left
-             ctx.arc(labelX + R, labelY + rowHeight - R, R, 0.5 * Math.PI, Math.PI);
-             // Wait, start at 0.5PI (bottom) going to PI (left)? No, moveTo is at left.
-             // We are at labelX, lineY2 (which is bottom-left - R). We need to go down to bottom-left corner.
-             // Correct logic: Arc from Left (PI) to Bottom (0.5 PI).
-             // ctx.arc(x, y, r, startAngle, endAngle, counterclockwise)
-             // Center is (labelX + R, labelY + rowHeight - R)
-             // Start Angle: PI (Left)
-             // End Angle: 0.5 PI (Bottom)
-             // Counterclockwise: Yes (PI -> 0.5 PI is decreasing? No 3.14 -> 1.57. Yes.)
-             ctx.arc(labelX + R, labelY + rowHeight - R, R, Math.PI, 0.5 * Math.PI, true);
-             ctx.lineTo(labelX + labelWidth, labelY + rowHeight);
-          }
-          
-          ctx.stroke();
-
           if(!showBeadValues){
-              ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif";
-              ctx.textAlign = "right"; ctx.textBaseline = "middle";
+              ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
               ctx.fillText(defaultLabels[r], labelX + labelWidth - 12, labelY + rowHeight/2);
           }
-
-          // Tiges
-          const rodY = currentY + rowHeight/2;
-          const rodX = frameX + frameThick;
-          const rodW = abacusWidth; // Largeur interne (sans les bords cadre)
-
+          const rodY = currentY + rowHeight/2; const rodX = frameX + frameThick; const rodW = abacusWidth;
           if(isStartGroup){
              ctx.beginPath(); ctx.strokeStyle = "rgba(168, 131, 72, 0.4)"; ctx.lineWidth = 1;
              ctx.setLineDash([5, 5]); ctx.moveTo(frameX, currentY - gapHeight/2); ctx.lineTo(frameX+frameW, currentY - gapHeight/2); ctx.stroke(); ctx.setLineDash([]);
           }
-
-          const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2);
-          gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
-          ctx.fillStyle = gradRod;
-          ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=2; ctx.shadowOffsetY=1;
-          ctx.fillRect(rodX, rodY-2, rodW, 4);
-          ctx.shadowColor="transparent";
-
-          // Billes
-          const count = state[r];
-          const beadRadius = beadSize/2;
-          const startLeft = rodX + beadRadius;
-          const startRight = rodX + rodW - beadRadius;
+          const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2); gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
+          ctx.fillStyle = gradRod; ctx.fillRect(rodX, rodY-2, rodW, 4);
           
-          let bMain, bHi;
-          const colIdx = r % 3;
-          if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; }
-          else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; }
-          else { bMain = C.red; bHi = C.redHi; }
+          const count = state[r]; const beadRadius = beadSize/2;
+          const startLeft = rodX + beadRadius; const startRight = rodX + rodW - beadRadius;
+          let bMain, bHi; const colIdx = r % 3;
+          if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; } else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; } else { bMain = C.red; bHi = C.redHi; }
           
           for(let j=1; j<=10; j++){
-              let bx;
-              if (j <= count) bx = startLeft + (j - 1) * beadSize;
-              else { const offset = (10 - j) * beadSize; bx = startRight - offset; }
-              drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, showBeadValues ? getBeadText(r) : "");
+              let bx; if (j <= count) bx = startLeft + (j - 1) * beadSize; else { const offset = (10 - j) * beadSize; bx = startRight - offset; }
+              const txt = (showBeadValues && r<4) ? ["1", "10", "100", "1 000"][r] : "";
+              drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, txt);
           }
           currentY += rowHeight;
       }
   }
 
-  // -- Helpers de Dessin --
-
-  function getBeadText(r){
-      const vals = ["1", "10", "100", "1 000"];
-      return (r < 4) ? vals[r] : "";
-  }
-
   function drawBead(ctx, x, y, r, colorMain, colorHi, idx, marked, text){
       ctx.save();
-      // Ombre
-      ctx.shadowColor = "rgba(0,0,0,0.3)";
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetY = 2;
-      
-      // Gradient Radial (Effet 3D Soroban)
-      const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r);
-      grad.addColorStop(0, colorHi);
-      grad.addColorStop(1, colorMain);
-      
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI*2);
-      ctx.fill();
-      
-      // Contour subtil
-      ctx.shadowColor = "transparent";
-      ctx.strokeStyle = "rgba(0,0,0,0.15)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Marqueur noir (si activé et pas de texte)
-      if(marked && text === ""){
-          ctx.fillStyle = "rgba(0,0,0,0.4)";
-          ctx.beginPath();
-          // Correction : Centré sur la bille (x,y)
-          ctx.arc(x, y, 2, 0, Math.PI*2); // Rayon 2px (petit)
-          ctx.fill();
-      }
-      
-      // Texte (Valeur)
-      if(text !== ""){
-          ctx.fillStyle = "#fff";
-          ctx.font = "bold 9px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.shadowColor = "rgba(0,0,0,0.5)";
-          ctx.shadowBlur = 2;
-          ctx.fillText(text, x, y);
-      }
-
+      const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r); grad.addColorStop(0, colorHi); grad.addColorStop(1, colorMain);
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 1; ctx.stroke();
+      if(marked && text === ""){ ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill(); }
+      if(text !== ""){ ctx.fillStyle = "#fff"; ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, x, y); }
       ctx.restore();
-  }
-
-  // -- Dessin Nombre en haut (Corrigé : Groupes unis, Sans traits noirs, espacement serré 32px) --
-  function drawNumberDisplay(ctx, total, centerX, y){
-      const str = total.toString();
-      const len = str.length;
-      // Rétablissement de l'espacement serré : 32px par caractère
-      const charW = 32;
-      const charH = 60;
-      const pad = 10;
-      
-      // Calcul largeur totale pour centrer (approx)
-      let totalW = len * charW + Math.floor((len-1)/3)*10;
-      let curX = centerX - totalW/2;
-      
-      ctx.font = "800 40px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      
-      let i = 0;
-      while(i < len) {
-          // Trouver la taille du groupe courant (1, 2 ou 3 chiffres)
-          // Un groupe change quand power change de millier (power/3 change)
-          const startI = i;
-          const startPower = len - 1 - i;
-          const currentGrpIdx = Math.floor(startPower/3);
-          
-          // Avancer tant qu'on est dans le même groupe
-          let count = 0;
-          while(i < len) {
-              const p = len - 1 - i;
-              if(Math.floor(p/3) !== currentGrpIdx) break;
-              count++;
-              i++;
-          }
-          
-          // Dessiner le fond pour ce groupe entier
-          let bg = null;
-          if(useGroups){
-              if(currentGrpIdx===0) bg='#fff'; else if(currentGrpIdx===1) bg='#e0e0e0'; else bg='#1b1b1b';
-          }
-          
-          const groupW = count * charW;
-          const groupX = curX; // X actuel pour le début du groupe
-          
-          if(bg){
-             ctx.fillStyle = bg;
-             ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4;
-             // Fond unique pour tout le groupe (SANS CONTOUR STROKE)
-             ctx.fillRect(groupX, y-charH/2, groupW, charH);
-             ctx.shadowColor="transparent";
-          }
-          
-          // Dessiner les chiffres du groupe
-          for(let k=0; k<count; k++) {
-              const charIndex = startI + k;
-              const digit = str[charIndex];
-              const power = len - 1 - charIndex;
-              const colIdx = power % 3;
-              
-              let txtCol='#111';
-              if(useColors){
-                  if(colIdx===0) txtCol='#3cb371'; else if(colIdx===1) txtCol='#40c4ff'; else txtCol='#e53935';
-              } else {
-                  if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0';
-              }
-              ctx.fillStyle = txtCol;
-              // Centrage vertical standard (y + 4 pour ajustement visuel)
-              ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 4);
-          }
-          
-          // Avancer X pour le prochain groupe (+ espace si pas fini)
-          curX += groupW;
-          if(i < len) curX += 10; // Espace entre groupes
-      }
-  }
-
-  function drawTable(ctx, x, y, w){
-      // Background Table
-      // Calculer la hauteur totale pour éviter le "blanc" en dessous
-      const h1 = 30; // Hauteur header 1
-      const h2 = 30; // Hauteur header 2
-      const h3 = 70; // Hauteur valeurs
-      const totalH = h1 + h2 + h3;
-      
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = "rgba(0,0,0,0.1)";
-      ctx.shadowBlur = 10;
-      ctx.fillRect(x, y, w, totalH); // Correction ici (était 200)
-      ctx.shadowColor = "transparent";
-      
-      // Définition des colonnes à afficher
-      // Logique identique à renderTable HTML
-      let groups = [];
-      
-      // Construction des données colonnes
-      let colsData = []; // {label, idx, groupName, groupClass}
-      
-      if(currentRows > 6){
-           colsData.push({l:"100", i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"});
-           colsData.push({l:"10",  i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"});
-           colsData.push({l:"1",   i:6,  g:"Millions", gc:"#1b1b1b", tc:"#fff"});
-      }
-      // Mille
-      if(currentRows > 5) colsData.push({l:"100", i:5, g:"Mille", gc:"#e0e0e0", tc:"#333"});
-      if(currentRows > 4) colsData.push({l:"10",  i:4, g:"Mille", gc:"#e0e0e0", tc:"#333"});
-      colsData.push({l:"1",   i:3, g:"Mille", gc:"#e0e0e0", tc:"#333"});
-      
-      // Unités
-      colsData.push({l:"100", i:2, g:"Unités Simples", gc:"#fff", tc:"#333"});
-      colsData.push({l:"10",  i:1, g:"Unités Simples", gc:"#fff", tc:"#333"});
-      colsData.push({l:"1",   i:0, g:"Unités Simples", gc:"#fff", tc:"#333"});
-
-      const cellW = w / colsData.length;
-
-      // Dessin Headers
-      let curX = x;
-      
-      // 1. Ligne Grp (Millions, Mille...)
-      // On doit fusionner les cellules visuellement
-      let lastGrp = "";
-      let grpStart = x;
-      let grpCount = 0;
-      
-      // Helper pour dessiner le groupe fini
-      const drawGroupHeader = (gName, gColor, tColor, start, count) => {
-          const gw = count * cellW;
-          ctx.fillStyle = gColor;
-          ctx.fillRect(start, y, gw, h1);
-          ctx.strokeStyle = "#ccc";
-          ctx.strokeRect(start, y, gw, h1);
-          
-          ctx.fillStyle = tColor;
-          ctx.font = "bold 10px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(gName.toUpperCase(), start + gw/2, y + h1/2);
-      };
-
-      for(let k=0; k<colsData.length; k++){
-          const c = colsData[k];
-          if(c.g !== lastGrp){
-              if(grpCount > 0) drawGroupHeader(lastGrp, colsData[k-1].gc, colsData[k-1].tc, grpStart, grpCount);
-              lastGrp = c.g;
-              grpStart = curX;
-              grpCount = 0;
-          }
-          grpCount++;
-          curX += cellW;
-      }
-      if(grpCount > 0) drawGroupHeader(lastGrp, colsData[colsData.length-1].gc, colsData[colsData.length-1].tc, grpStart, grpCount);
-
-      // 2. Ligne Rangs (100, 10, 1) & 3. Valeurs
-      curX = x;
-      const y2 = y + h1;
-      const y3 = y + h1 + h2;
-      
-      // Préparation valeurs
-      let hasStarted = false;
-      const maxIdx = currentRows - 1;
-      const vals = {};
-      for(let i = maxIdx; i >= 0; i--) {
-          const v = state[i];
-          if(v > 0) hasStarted = true;
-          if(hasStarted || i === 0) vals[i] = v;
-          else vals[i] = "";
-      }
-
-      for(let k=0; k<colsData.length; k++){
-          const c = colsData[k];
-          
-          // Header 2 Background
-          ctx.fillStyle = "#fafafa";
-          ctx.fillRect(curX, y2, cellW, h2);
-          ctx.strokeStyle = "#eee";
-          ctx.strokeRect(curX, y2, cellW, h2);
-          
-          // Texte Header 2
-          ctx.fillStyle = "#555";
-          ctx.font = "bold 12px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(c.l, curX + cellW/2, y2 + h2/2 + 4);
-
-          // Valeur Cellule
-          // Tint Background
-          let val = "?";
-          let cellBg = "#fff";
-          if(c.i !== -1 && c.i < currentRows){
-             if(vals[c.i] !== "") val = revealed ? vals[c.i] : "?";
-             else val = "";
-             
-             if(useColors && val !== ""){
-                 if(c.l === "1") cellBg = "rgba(60, 179, 113, 0.08)";
-                 else if(c.l === "10") cellBg = "rgba(64, 196, 255, 0.08)";
-                 else if(c.l === "100") cellBg = "rgba(229, 57, 53, 0.08)";
-             }
-          } else {
-             val = "";
-          }
-
-          ctx.fillStyle = cellBg;
-          ctx.fillRect(curX, y3, cellW, h3);
-          ctx.strokeRect(curX, y3, cellW, h3);
-
-          // Valeur Texte
-          if(val !== ""){
-             let col = "#000";
-             if(useColors){
-                 if(c.l === "1") col = "#3cb371";
-                 else if(c.l === "10") col = "#40c4ff";
-                 else if(c.l === "100") col = "#e53935";
-             }
-             ctx.fillStyle = col;
-             ctx.font = "800 24px sans-serif";
-             ctx.fillText(val, curX + cellW/2, y3 + h3/2);
-          }
-          
-          curX += cellW;
-      }
-      
-      // Cadre extérieur tableau
-      ctx.strokeStyle = "rgba(0,0,0,0.1)";
-      ctx.strokeRect(x, y, w, h1+h2+h3);
   }
 
   init();
