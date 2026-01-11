@@ -16,11 +16,13 @@
     --bead-white: #ffffff; 
     --bead-blue: #2196f3;
     
-    /* Variables dynamiques pour le mode clair */
+    /* Variables dynamiques */
     --cache-bg: #000;
     --cache-border: #444;
     --cache-handle: #444;
     --cache-text: #fff;
+    --row-border: 1px solid rgba(128,128,128,0.1); 
+    --frame-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Ombre par défaut */
   }
   
   /* Thème Clair (Eco) */
@@ -33,6 +35,9 @@
     --cache-border: #999;
     --cache-handle: #666;
     --cache-text: #fff;
+    /* Suppression totale des démarcations en mode clair */
+    --row-border: none; 
+    --frame-shadow: none; /* Plus d'ombre pour fondre le boulier dans la page */
   }
 
   body, html { 
@@ -98,7 +103,10 @@
     position: relative; width: 820px; 
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: auto; box-sizing: content-box;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    /* Ombre conditionnelle */
+    box-shadow: var(--frame-shadow);
+    /* Fond transparent pour uniformité totale */
+    background: transparent;
   }
 
   #abacus-frame::before, #abacus-frame::after {
@@ -113,7 +121,8 @@
     height: 56px; 
     width: 820px; 
     pointer-events: auto; 
-    border-bottom: none; 
+    /* Bordure conditionnelle */
+    border-bottom: var(--row-border); 
   }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
@@ -208,6 +217,7 @@
   
   let rowsCount = 10, showVal = false, isPen = false, isBlue = false, isCache = false, currentScale = 1;
   let isLightMode = false; 
+  let hasDrawing = false; // Flag pour savoir si l'utilisateur a dessiné
   let penCol = '#0f6cf9', states = Array.from({length: 10}, () => 0); 
   let currentLang = 'fr'; 
 
@@ -331,15 +341,25 @@
   }
 
   function resizeCanvas() { 
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    if (window.innerWidth === 0 || window.innerHeight === 0) return;
+
+    let tempCanvas = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+        tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        try {
+            tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+        } catch (e) { tempCanvas = null; }
+    }
 
     canvas.width = window.innerWidth; 
     canvas.height = window.innerHeight; 
     ctx.lineCap = 'round'; 
-    ctx.drawImage(tempCanvas, 0, 0);
+    
+    if (tempCanvas) {
+        try { ctx.drawImage(tempCanvas, 0, 0); } catch (e) {}
+    }
   }
   
   let drawing = false, activeDrag = null;
@@ -352,6 +372,7 @@
   const startDraw = (e) => {
     if (!isPen) return;
     drawing = true;
+    hasDrawing = true; // On a dessiné quelque chose
     const pos = getPos(e);
     ctx.beginPath();
     ctx.strokeStyle = penCol;
@@ -378,7 +399,10 @@
   function toggleVal() { showVal = !showVal; document.getElementById('btn-val').classList.toggle('active', showVal); updateBeads(false); }
   function togglePen() { isPen = !isPen; canvas.classList.toggle('active', isPen); document.getElementById('btn-pen').classList.toggle('active', isPen); }
   function setCol(c, el) { penCol = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
-  function clearDraw() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  function clearDraw() { 
+      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      hasDrawing = false; // Reset du flag
+  }
   
   function toggleLang() {
     currentLang = (currentLang === 'fr') ? 'en' : 'fr';
@@ -413,11 +437,12 @@
   document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
   window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
   
-  // === MOTEUR PHOTO REKENREK (AVEC DESSIN) ===
+  // === MOTEUR PHOTO REKENREK (SMART CROP) ===
   
   function exportImage() {
     const scale = 3; 
-    const margin = 40;
+    // MARGE INTELLIGENTE : Si dessin, 200px. Sinon 40px.
+    const margin = hasDrawing ? 200 : 40;
     
     const rows = rowsCount;
     const frameInternalW = 820;
@@ -535,26 +560,30 @@
         }
     }
 
-    // 6. DESSIN À LA MAIN (Incrustation)
-    const frameRect = frame.getBoundingClientRect(); 
-    
-    // Si frameRect est null ou invisible (ex: tab inactive), protection
-    if(frameRect.width > 0) {
-        const ratio = frameW / frameRect.width; 
+    // 6. DESSIN À LA MAIN (Uniquement si hasDrawing est true)
+    if(hasDrawing) {
+        const frameRect = frame.getBoundingClientRect(); 
         
-        exCtx.save();
-        
-        // On se place au coin haut-gauche du BOULIER dans l'export
-        exCtx.translate(startX, startY);
-        // On met à l'échelle (pour que 1px écran = 1px export adapté)
-        exCtx.scale(ratio, ratio);
-        // On se déplace en négatif pour que le coin haut-gauche du boulier écran (frameRect.left, top) se retrouve en (0,0) local
-        exCtx.translate(-frameRect.left, -frameRect.top);
-        
-        // On dessine le canvas écran
-        exCtx.drawImage(canvas, 0, 0);
-        
-        exCtx.restore();
+        if(frameRect.width > 0 && canvas.width > 0 && canvas.height > 0) {
+            const ratio = frameW / frameRect.width; 
+            
+            exCtx.save();
+            
+            // On se place au coin haut-gauche du BOULIER dans l'export
+            exCtx.translate(startX, startY);
+            // On met à l'échelle
+            exCtx.scale(ratio, ratio);
+            // On se déplace pour aligner avec le coin haut-gauche du boulier écran
+            exCtx.translate(-frameRect.left, -frameRect.top);
+            
+            try {
+                exCtx.drawImage(canvas, 0, 0);
+            } catch(e) {
+                console.warn("Impossible de copier le dessin manuscrit", e);
+            }
+            
+            exCtx.restore();
+        }
     }
 
     // Téléchargement
