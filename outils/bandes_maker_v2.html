@@ -268,11 +268,13 @@
             </fieldset>
         </div>
 
-        <!-- ONGLET 2 : RECTO -->
+        <!-- ONGLET 2 : RECTO (UNIFORMISÉ AVEC LE VERSO) -->
         <div id="tab-recto" class="tab-content">
+            
+            <!-- BLOC 1 : BANDE UNITÉ RECTO -->
             <fieldset>
-                <legend>Contenu (Face Avant)</legend>
-                <label>Contenu de la bande UNITÉ (d=1)</label>
+                <legend>Bande UNITÉ (d=1)</legend>
+                <label>Contenu affiché</label>
                 <select id="unitModeRecto"> 
                     <option value="unit" selected>Texte "1 unité"</option> 
                     <option value="numeric_one">Chiffre "1"</option>
@@ -285,8 +287,12 @@
                     <option value="empty">Vide</option>
                 </select>
                 <input type="text" id="customTextRecto" value="1 unité" placeholder="Votre texte..." style="margin-top: 5px; display: none;">
+            </fieldset>
 
-                <label>Contenu des PARTS (d>1)</label>
+            <!-- BLOC 2 : BANDES FRACTIONNÉES RECTO -->
+            <fieldset>
+                <legend>Bandes FRACTIONNÉES (d>1)</legend>
+                <label>Contenu des parts</label>
                 <select id="contentRecto"> 
                   <option value="numeric" selected>Fraction (1/2)</option>
                   <option value="numeric_unit">Fraction + unité (1/2 u)</option>
@@ -300,8 +306,9 @@
                 </select>
             </fieldset>
 
+            <!-- BLOC 3 : STYLE RECTO -->
             <fieldset>
-                <legend>Style & Traits (Recto)</legend>
+                <legend>Style & Traits</legend>
                 <div class="row">
                     <div>
                         <label>Taille texte (pt)</label>
@@ -341,56 +348,75 @@
 
         <!-- ONGLET 3 : VERSO -->
         <div id="tab-verso" class="tab-content">
+            
+            <!-- BLOC 1 : BANDE UNITÉ VERSO -->
             <fieldset>
-                <legend>Structure du Dos</legend>
-                <label>Pour les bandes fractionnées (d>1) :</label>
-                <select id="versoStructureDgt1">
-                    <option value="unit_center" selected>Unité au centre (Non divisée)</option>
-                    <option value="segmented">Divisée en parts (Comme le recto)</option>
-                </select>
-                <div class="help-text">"Unité au centre" permet d'avoir '1 unité' au dos de toutes les bandes.</div>
-            </fieldset>
-
-            <fieldset>
-                <legend>Contenu Verso</legend>
-                
-                <!-- Options pour D=1 -->
-                <label>Bande UNITÉ (d=1)</label>
+                <legend>Bande UNITÉ (d=1)</legend>
+                <label>Contenu affiché</label>
                 <select id="unitModeVersoD1">
                     <option value="same_as_recto" selected>Identique au Recto</option>
                     <option value="unit">Texte "1 unité"</option>
                     <option value="numeric_one">Chiffre "1"</option>
+                    <option value="one-on-one">Fraction "1/1"</option>
+                    <option value="percent">100%</option>
+                    <option value="minutes">60min</option>
+                    <option value="hours_unit">1 heure</option>
+                    <option value="degrees_unit">360°</option>
                     <option value="custom">Texte personnalisé...</option>
                     <option value="empty">Vide</option>
                 </select>
                 <input type="text" id="customTextVersoD1" value="1 unité (Verso)" style="margin-top: 5px; display: none;">
+            </fieldset>
 
-                <!-- Options dynamiques D>1 -->
+            <!-- BLOC 2 : BANDES FRACTIONNÉES VERSO -->
+            <fieldset>
+                <legend>Bandes FRACTIONNÉES (d>1)</legend>
+                
+                <label>Structure de la bande</label>
+                <select id="versoStructureDgt1">
+                    <option value="unit_center" selected>Unité au centre (Non divisée)</option>
+                    <option value="segmented">Divisée en parts (Comme le recto)</option>
+                </select>
+                <div class="help-text" style="margin-bottom: 12px;">"Unité au centre" permet d'avoir '1 unité' au dos de toutes les bandes.</div>
+
+                <!-- Options dynamiques D>1 (Unité au centre) -->
                 <div id="unitCenterVersoOptions">
-                    <label>Bandes FRACTIONS (d>1)</label>
+                    <label>Contenu affiché</label>
                     <select id="unitModeVersoDgt1">
                         <option value="unit" selected>Texte "1 unité"</option> 
                         <option value="numeric_one">Chiffre "1"</option>
+                        <option value="one-on-one">Fraction "1/1"</option>
+                        <option value="percent">100%</option>
+                        <option value="minutes">60min</option>
+                        <option value="hours_unit">1 heure</option>
+                        <option value="degrees_unit">360°</option>
                         <option value="custom">Texte personnalisé...</option>
                         <option value="empty">Vide</option>
                     </select>
                     <input type="text" id="customTextVersoDgt1" value="1 unité" style="margin-top: 5px; display: none;">
                 </div>
 
+                <!-- Options dynamiques D>1 (Segmenté) -->
                 <div id="segmentedVersoOptions" style="display: none;">
-                    <label>Contenu des parts (d>1)</label>
+                    <label>Contenu des parts</label>
                     <select id="contentVersoDgt1">
                         <option value="same_as_recto" selected>Identique au Recto</option>
                         <option value="numeric">Fraction (1/2)</option>
+                        <option value="numeric_unit">Fraction + unité (1/2 u)</option>
                         <option value="decimal">Décimal (0,5)</option>
+                        <option value="decimal_unit">Décimal + unité (0,5 u)</option>
+                        <option value="percentage">Pourcentage (50 %)</option>
+                        <option value="minutes">Temps (30 min)</option>
+                        <option value="hours_fractional">Temps fraction (1/2 h)</option>
                         <option value="letters">En lettres</option>
                         <option value="empty">Vide</option>
                     </select>
                 </div>
             </fieldset>
 
+            <!-- BLOC 3 : STYLE VERSO -->
             <fieldset>
-                <legend>Style & Traits (Verso)</legend>
+                <legend>Style & Traits</legend>
                  <div class="row">
                     <div>
                         <label>Taille texte (pt)</label>
