@@ -1,26 +1,159 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Accueil</title><link rel="stylesheet" href="assets/style.css"/></head>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Bienvenue</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-page: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Conteneur principal centré */
+        .welcome-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Carte d'accueil */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Petit effet au survol de la carte globale */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .emoji-header {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: wave 2.5s infinite;
+            transform-origin: 70% 70%;
+            display: inline-block;
+        }
+
+        @keyframes wave {
+            0% { transform: rotate( 0.0deg) }
+            10% { transform: rotate(14.0deg) }
+            20% { transform: rotate(-8.0deg) }
+            30% { transform: rotate(14.0deg) }
+            40% { transform: rotate(-4.0deg) }
+            50% { transform: rotate(10.0deg) }
+            60% { transform: rotate( 0.0deg) }
+            100% { transform: rotate( 0.0deg) }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0 0 1rem 0;
+            color: var(--text-main);
+            letter-spacing: -0.05rem;
+        }
+
+        p.subtitle {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0 0 2.5rem 0;
+            font-weight: 500;
+        }
+
+        /* Bouton d'action principal */
+        .btn-start {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-start:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -1px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-start svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        footer {
+            margin-top: 3rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+            .card { padding: 2rem 1.5rem; }
+            .emoji-header { font-size: 3rem; }
+        }
+    </style>
+</head>
 <body>
 
-<header><div class="wrapper"><nav class="nav">
-  <a class="brand" href="">Maths</a>
-  <a href="outils/">Outils</a>
-</nav></div></header>
+    <div class="welcome-container">
+        
+        <div class="card">
+            <div class="emoji-header">👋</div>
+            
+            <h1>Bienvenue</h1>
+            
+            <p class="subtitle">
+                Outils à l'usage des profs et des élèves en mathématiques.
+            </p>
 
-<main><div class="wrapper">
+            <a href="outils/" class="btn-start">
+                <span>Accéder aux outils</span>
+                <!-- Flèche icon -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </a>
+        </div>
 
-<div class="grid layout">
-  <section class="card center">
-    <h1 class="big">Bienvenue 👋</h1>
-    <p>Outils interactifs et documents pour tes entraînements à la maison.</p>
-    <p class="small">Sur téléphone passe en paysage dans les outils.</p>
-  </section>
-  <aside class="card" style="display:flex;align-items:center;justify-content:center">
-    <a class="btn-chip" href="outils/">🔧&nbsp;&nbsp;Outils</a>
-  </aside>
-</div>
+        <footer>
+            Site pédagogique — Bourgault Gwenaël
+        </footer>
 
-</div></main>
-<footer><div class='wrapper'>Site pédagogique — Bourgault Gwenaël</div></footer>
-</body></html>
+    </div>
+
+</body>
+</html>
