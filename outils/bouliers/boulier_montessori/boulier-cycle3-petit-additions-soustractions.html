@@ -828,7 +828,8 @@
       if(currentRows > 6) groups.push({ name: "Millions", gc:"#1b1b1b", tc:"#fff", cols: [{l:"1", i:6}] });
       const milleCols = []; if(currentRows > 5) milleCols.push({l:"100", i:5}); if(currentRows > 4) milleCols.push({l:"10", i:4}); milleCols.push({l:"1", i:3});
       groups.push({ name: "Mille", gc:"#e0e0e0", tc:"#333", cols: milleCols });
-      groups.push({ name: "Unités Simples", gc:"#fff", tc:"#333", cols: [{l:"100", i:2}, {l:"10", i:1}, {l:"10", i:0}] });
+      /* CORRECTION ICI: l:"1" au lieu de l:"10" pour les unités simples */
+      groups.push({ name: "Unités Simples", gc:"#fff", tc:"#333", cols: [{l:"100", i:2}, {l:"10", i:1}, {l:"1", i:0}] });
 
       const colCount = groups.reduce((acc, g) => acc + g.cols.length, 0); const cellW = w / colCount;
       let curX = x;
