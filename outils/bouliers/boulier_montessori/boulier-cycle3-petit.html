@@ -4,8 +4,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Boulier Montessori (Découverte)</title>
-<!-- Import de html2canvas -->
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <style>
   /* --- Réinitialisation & Variables --- */
   *, *::before, *::after {
@@ -307,17 +305,6 @@
   .text-black { color: #000; }
   .text-muted { color: #ddd; } 
 
-  /* --- CSS Spécifique Export --- */
-  body.exporting .bead {
-    box-shadow: none !important;
-    border: 2px solid rgba(255,255,255,0.3) !important;
-    filter: brightness(1.2) saturate(1.1) !important;
-  }
-  body.exporting .bead[style*="rgb(60, 179, 113)"] { background: radial-gradient(circle at 30% 30%, #66d494, #3cb371) !important; }
-  body.exporting .bead[style*="rgb(64, 196, 255)"] { background: radial-gradient(circle at 30% 30%, #80d8ff, #40c4ff) !important; }
-  body.exporting .bead[style*="rgb(229, 57, 53)"] { background: radial-gradient(circle at 30% 30%, #ff6f60, #e53935) !important; }
-  body.exporting .overlay { display: none !important; }
-
 </style>
 </head>
 <body>
@@ -387,7 +374,7 @@
 
   let currentRows = 4;
   let state = [];
-  let revealed = true; // CHANGEMENT ICI: true par défaut
+  let revealed = true; // true par défaut
   let useColors = true;
   let useGroups = true;
   let useMarkers = false;
@@ -479,22 +466,9 @@
       renderTable();
     });
 
-    btnExport.addEventListener('click', async () => {
-      btnExport.classList.add('active');
-      document.body.classList.add('exporting');
-      setTimeout(async () => {
-        try {
-          const canvas = await html2canvas(appContainer, { scale: 2, backgroundColor: '#fffdf8', useCORS: true });
-          const link = document.createElement('a');
-          link.download = 'capture-boulier.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        } catch (err) { console.error(err); } 
-        finally {
-          document.body.classList.remove('exporting');
-          btnExport.classList.remove('active');
-        }
-      }, 100);
+    // --- NOUVEAU MOTEUR DE RENDU ---
+    btnExport.addEventListener('click', () => {
+      exportImage();
     });
     
     let resizeTimer;
@@ -568,8 +542,6 @@
     });
   }
 
-  // Si showBeadValues (Bouton Bleu) : Texte dans billes, Côté vide
-  // Sinon (Bouton Gris) : Billes vides, Texte sur le côté
   function updateBeadText() {
     const rows = abacusEl.children;
     const displayValues = ["1", "10", "100", "1 000"];
@@ -594,7 +566,7 @@
   function updateLabelsText(){
     const labelDivs = labelsEl.querySelectorAll('.label-item');
     labelDivs.forEach((div, i) => {
-      if(!showBeadValues) { // Si PAS de valeurs dans les billes, on affiche à gauche
+      if(!showBeadValues) { 
         div.textContent = defaultLabels[i] || "";
       } else {
         div.textContent = ""; 
@@ -767,6 +739,538 @@
     }
     if(currentGroupIndex !== -1) html += `</div>`;
     valueContainer.innerHTML = html;
+  }
+
+  /* ========================================================== */
+  /* === MOTEUR DE RENDU GRAPHIQUE INTELLIGENT (CANVAS 2D) === */
+  /* ========================================================== */
+  
+  function exportImage() {
+    const scale = 3; // Facteur HD
+    const margin = 30;
+    
+    // 1. Calcul de la géométrie
+    // Dimensions de base du boulier (partie graphique)
+    const abacusWidth = 660; // AGRANDI POUR ETRE REALISTE (LARGEUR 2x10 billes)
+    const labelWidth = 100;
+    const rowHeight = 50;
+    const frameThick = 14;
+    const gapHeight = 30; // Espace entre classes
+    const beadSize = 28;
+    
+    // Calcul hauteur boulier
+    let abacusContentHeight = 0;
+    for(let i=0; i<currentRows; i++){
+       abacusContentHeight += rowHeight;
+       if(i===2 || i===5) abacusContentHeight += gapHeight; // Fin de classe
+    }
+    const totalAbacusHeight = abacusContentHeight + frameThick*2; // Haut + Bas
+    const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; // Labels + Cadre
+
+    // Dimensions Tableau
+    const tableWidth = 400;
+    const tableGap = 40;
+    
+    // Dimension Display (Chiffre du haut)
+    const displayHeight = revealed ? 100 : 20;
+
+    // Dimensions Totales Canvas
+    let cvsW = margin*2 + totalAbacusWidth;
+    if(showTable) cvsW += tableGap + tableWidth;
+    
+    let cvsH = margin*2 + displayHeight + totalAbacusHeight;
+    
+    // Création Canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = cvsW * scale;
+    canvas.height = cvsH * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // --- FONCTIONS DE DESSIN ---
+
+    // Palette Couleurs
+    const C = {
+        green: '#3cb371', greenHi: '#66d494',
+        blue:  '#40c4ff', blueHi:  '#80d8ff',
+        red:   '#e53935', redHi:   '#ff6f60',
+        wood:  '#e2c48a', woodMid: '#f3e5c2', woodDark: '#a88348',
+        rod:   '#c09e6c', rodDark: '#8a6538',
+        bg:    '#fffdf8', text: '#1b1b1b'
+    };
+    
+    // Fond
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0,0,cvsW,cvsH);
+
+    // Origines
+    const startY = margin + displayHeight;
+    const abacusX = margin;
+    
+    // --- 1. DESSINER LE NOMBRE (DISPLAY) ---
+    if(revealed && renderTotal.toString().length > 0) {
+        let total = 0;
+        for(let r=0; r<currentRows; r++) total += state[r] * fullMultipliers[r];
+        drawNumberDisplay(ctx, total, cvsW/2, margin + 40);
+    }
+
+    // --- 2. DESSINER LE BOULIER ---
+    
+    // Cadre Bois (Fond)
+    const frameX = abacusX + labelWidth;
+    const frameW = abacusWidth + frameThick*2;
+    const frameH = totalAbacusHeight;
+    
+    // Ombre portée du boulier
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.15)";
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 10;
+    
+    // Dégradé Bois Horizontal
+    const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
+    gradWood.addColorStop(0, C.wood);
+    gradWood.addColorStop(0.2, C.woodMid);
+    gradWood.addColorStop(0.8, C.woodMid);
+    gradWood.addColorStop(1, C.wood);
+    
+    ctx.fillStyle = gradWood;
+    ctx.fillRect(frameX, startY, frameW, frameH);
+    ctx.restore();
+
+    // Bords Haut/Bas (Cadre)
+    const gradFrameV = ctx.createLinearGradient(0, startY, 0, startY+frameThick);
+    gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
+    
+    // Bord Haut
+    ctx.fillStyle = gradFrameV;
+    ctx.beginPath(); 
+    ctx.roundRect(frameX-frameThick, startY, frameW+frameThick*2, frameThick, [4,4,0,0]);
+    ctx.fill();
+    
+    // Bord Bas
+    const gradFrameV2 = ctx.createLinearGradient(0, startY+frameH-frameThick, 0, startY+frameH);
+    gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
+    
+    ctx.fillStyle = gradFrameV2;
+    ctx.beginPath();
+    ctx.roundRect(frameX-frameThick, startY+frameH-frameThick, frameW+frameThick*2, frameThick, [0,0,4,4]);
+    ctx.fill();
+    
+    // Bords Latéraux (épais)
+    ctx.fillStyle = C.woodDark;
+    ctx.fillRect(frameX, startY, frameThick, frameH); // Gauche
+    ctx.fillRect(frameX+frameW-frameThick, startY, frameThick, frameH); // Droite
+
+    // -- CONTENU DU BOULIER (Tiges, Billes, Labels) --
+    let currentY = startY + frameThick;
+    
+    for(let r=0; r<currentRows; r++){
+        const isStartGroup = (r===3 || r===6);
+        if(isStartGroup) currentY += gapHeight;
+
+        // -- Labels (Gauche) --
+        const labelX = abacusX;
+        const labelY = currentY;
+        const labelH = rowHeight;
+        
+        // Fond Label (Couleurs et Bordures)
+        let labelBg = '#fff';
+        let labelTxt = '#444';
+        let borderColor = '#ccc';
+        let isLastInGroup = (r===2 || r===5 || r===6);
+        let isFirstInGroup = (r===0 || r===3 || r===6);
+        
+        if(r < 3) labelBg = '#fff';
+        else if(r < 6) labelBg = '#e0e0e0';
+        else { labelBg = '#1b1b1b'; labelTxt='#bdbdbd'; borderColor='#333'; }
+        
+        // Forme Label (Arrondi)
+        ctx.fillStyle = labelBg;
+        ctx.beginPath();
+        let rad = [0,0,0,0];
+        // Arrondis seulement aux extrémités du groupe
+        if(isFirstInGroup) rad[0]=6; // Top-left
+        if(isLastInGroup) rad[3]=6; // Bottom-left
+        
+        ctx.roundRect(labelX, labelY, labelWidth, labelH, rad);
+        ctx.fill();
+        
+        // --- DESSIN DES BORDURES LABEL (Manuellement pour éviter les lignes doubles) ---
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1;
+        
+        // Bordure Gauche (Toujours)
+        ctx.beginPath(); ctx.moveTo(labelX, labelY); ctx.lineTo(labelX, labelY+labelH); ctx.stroke();
+        
+        // Bordure Haut (Seulement si premier du groupe)
+        if(isFirstInGroup) {
+           ctx.beginPath(); 
+           // Arc pour le coin arrondi
+           // Simplification : Ligne droite qui démarre après l'arrondi (approximatif mais propre)
+           ctx.moveTo(labelX+6, labelY); ctx.lineTo(labelX+labelWidth, labelY); 
+           ctx.stroke();
+           // Coin gauche
+           // ctx.arcTo(...) - On laisse simple pour l'instant, le roundRect a déjà rempli.
+           // On dessine juste la ligne droite du haut pour fermer visuellement
+        }
+        
+        // Bordure Bas (Seulement si dernier du groupe)
+        if(isLastInGroup) {
+           ctx.beginPath();
+           ctx.moveTo(labelX+6, labelY+labelH); ctx.lineTo(labelX+labelWidth, labelY+labelH);
+           ctx.stroke();
+        }
+
+        // Texte Label
+        if(!showBeadValues){
+            ctx.fillStyle = labelTxt;
+            ctx.font = "bold 14px sans-serif";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(defaultLabels[r], labelX + labelWidth - 12, labelY + labelH/2);
+        }
+
+        // -- Tiges --
+        const rodY = currentY + rowHeight/2;
+        const rodX = frameX + frameThick;
+        const rodW = abacusWidth;
+        
+        // Ligne pointillée séparatrice (si gap)
+        if(isStartGroup){
+             ctx.beginPath();
+             ctx.strokeStyle = "rgba(168, 131, 72, 0.4)";
+             ctx.lineWidth = 1;
+             ctx.setLineDash([5, 5]);
+             ctx.moveTo(frameX, currentY - gapHeight/2);
+             ctx.lineTo(frameX+frameW, currentY - gapHeight/2);
+             ctx.stroke();
+             ctx.setLineDash([]);
+        }
+
+        const gradRod = ctx.createLinearGradient(0, rodY-2, 0, rodY+2);
+        gradRod.addColorStop(0, C.rod); gradRod.addColorStop(1, C.rodDark);
+        
+        ctx.fillStyle = gradRod;
+        ctx.shadowColor = "rgba(0,0,0,0.3)";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        ctx.fillRect(rodX, rodY-2, rodW, 4);
+        ctx.shadowColor = "transparent";
+
+        // -- Billes --
+        const count = state[r];
+        const innerW = rodW; // Espace disponible pour billes
+        
+        // Calcul position billes
+        const beadRadius = beadSize/2;
+        const startLeft = rodX + beadRadius;
+        const startRight = rodX + innerW - beadRadius;
+        
+        // Couleurs Bille
+        let bMain, bHi;
+        const colIdx = r % 3;
+        if(colIdx === 0) { bMain = C.green; bHi = C.greenHi; }
+        else if(colIdx === 1) { bMain = C.blue; bHi = C.blueHi; }
+        else { bMain = C.red; bHi = C.redHi; }
+        
+        // Boucle 10 billes
+        for(let j=1; j<=10; j++){
+            let bx;
+            if (j <= count) {
+                // Gauche
+                bx = startLeft + (j - 1) * beadSize;
+            } else {
+                // Droite
+                const offset = (10 - j) * beadSize;
+                bx = startRight - offset;
+            }
+            
+            drawBead(ctx, bx, rodY, beadRadius, bMain, bHi, j, j>5 && useMarkers, showBeadValues ? getBeadText(r) : "");
+        }
+        
+        currentY += rowHeight;
+    }
+
+    // --- 3. DESSINER LE TABLEAU ---
+    if(showTable){
+        drawTable(ctx, abacusX + totalAbacusWidth + tableGap, startY, tableWidth);
+    }
+    
+    // --- FINALISATION ---
+    // Téléchargement
+    const link = document.createElement('a');
+    link.download = `boulier_montessori_${currentRows}rangs.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+  
+  // -- Helpers de Dessin --
+
+  function getBeadText(r){
+      const vals = ["1", "10", "100", "1 000"];
+      return (r < 4) ? vals[r] : "";
+  }
+
+  function drawBead(ctx, x, y, r, colorMain, colorHi, idx, marked, text){
+      ctx.save();
+      // Ombre
+      ctx.shadowColor = "rgba(0,0,0,0.3)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      
+      // Gradient Radial (Effet 3D Soroban)
+      const grad = ctx.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r);
+      grad.addColorStop(0, colorHi);
+      grad.addColorStop(1, colorMain);
+      
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+      
+      // Contour subtil
+      ctx.shadowColor = "transparent";
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Marqueur noir (si activé et pas de texte)
+      if(marked && text === ""){
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          // Correction : Centré sur la bille (x,y)
+          ctx.arc(x, y, 2, 0, Math.PI*2); // Retour à la taille originale (rayon 2)
+          ctx.fill();
+      }
+      
+      // Texte (Valeur)
+      if(text !== ""){
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 9px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.shadowColor = "rgba(0,0,0,0.5)";
+          ctx.shadowBlur = 2;
+          ctx.fillText(text, x, y);
+      }
+
+      ctx.restore();
+  }
+
+  function drawNumberDisplay(ctx, total, centerX, y){
+      const str = total.toString();
+      const len = str.length;
+      const charW = 40;
+      const charH = 60;
+      const pad = 10;
+      
+      // Calcul largeur totale pour centrer
+      // On estime grossièrement
+      const totalW = len * charW + Math.floor((len-1)/3)*10; 
+      let curX = centerX - totalW/2;
+      
+      ctx.font = "800 40px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      for(let i=0; i<len; i++){
+          const digit = str[i];
+          const power = len - 1 - i;
+          const groupIndex = Math.floor(power / 3);
+          const colIndex = power % 3;
+          
+          // Fond du groupe (si activé)
+          let bg = null;
+          let txtCol = '#111';
+          
+          if(useGroups){
+             if(groupIndex===0) bg = '#fff';
+             else if(groupIndex===1) bg = '#e0e0e0';
+             else bg = '#1b1b1b';
+          }
+          
+          // Couleur texte
+          if(useColors){
+              if(colIndex===0) txtCol = '#3cb371';
+              else if(colIndex===1) txtCol = '#40c4ff';
+              else txtCol = '#e53935';
+          } else {
+              if(useGroups && groupIndex >= 2) txtCol = '#f0f0f0';
+          }
+
+          // Dessin du fond (un rectangle par chiffre pour simplifier, ou par groupe)
+          // Ici on dessine un rect par chiffre pour faire simple, collés
+          if(bg){
+              ctx.fillStyle = bg;
+              // Bords arrondis pour le groupe ?
+              // Simplification : rect simple avec ombre
+              ctx.shadowColor = "rgba(0,0,0,0.1)";
+              ctx.shadowBlur = 4;
+              ctx.fillRect(curX, y - charH/2, charW, charH);
+              ctx.shadowColor = "transparent";
+              
+              // Bordure légère
+              ctx.strokeStyle = "rgba(0,0,0,0.1)";
+              ctx.strokeRect(curX, y - charH/2, charW, charH);
+          }
+          
+          // Chiffre
+          ctx.fillStyle = txtCol;
+          ctx.fillText(digit, curX + charW/2, y);
+          
+          curX += charW;
+          // Espace entre milliers
+          if(colIndex === 0 && i !== len-1) curX += 10;
+      }
+  }
+
+  function drawTable(ctx, x, y, w){
+      // Background Table
+      // Calculer la hauteur totale pour éviter le "blanc" en dessous
+      const h1 = 30; // Hauteur header 1
+      const h2 = 30; // Hauteur header 2
+      const h3 = 70; // Hauteur valeurs
+      const totalH = h1 + h2 + h3;
+      
+      ctx.fillStyle = "#fff";
+      ctx.shadowColor = "rgba(0,0,0,0.1)";
+      ctx.shadowBlur = 10;
+      ctx.fillRect(x, y, w, totalH); // Correction ici (était 200)
+      ctx.shadowColor = "transparent";
+      
+      // Définition des colonnes à afficher
+      // Logique identique à renderTable HTML
+      let groups = [];
+      
+      // Construction des données colonnes
+      let colsData = []; // {label, idx, groupName, groupClass}
+      
+      if(currentRows > 6){
+           colsData.push({l:"100", i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"});
+           colsData.push({l:"10",  i:-1, g:"Millions", gc:"#1b1b1b", tc:"#fff"});
+           colsData.push({l:"1",   i:6,  g:"Millions", gc:"#1b1b1b", tc:"#fff"});
+      }
+      // Mille
+      if(currentRows > 5) colsData.push({l:"100", i:5, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      if(currentRows > 4) colsData.push({l:"10",  i:4, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      colsData.push({l:"1",   i:3, g:"Mille", gc:"#e0e0e0", tc:"#333"});
+      
+      // Unités
+      colsData.push({l:"100", i:2, g:"Unités Simples", gc:"#fff", tc:"#333"});
+      colsData.push({l:"10",  i:1, g:"Unités Simples", gc:"#fff", tc:"#333"});
+      colsData.push({l:"1",   i:0, g:"Unités Simples", gc:"#fff", tc:"#333"});
+
+      const cellW = w / colsData.length;
+
+      // Dessin Headers
+      let curX = x;
+      
+      // 1. Ligne Grp (Millions, Mille...)
+      // On doit fusionner les cellules visuellement
+      let lastGrp = "";
+      let grpStart = x;
+      let grpCount = 0;
+      
+      // Helper pour dessiner le groupe fini
+      const drawGroupHeader = (gName, gColor, tColor, start, count) => {
+          const gw = count * cellW;
+          ctx.fillStyle = gColor;
+          ctx.fillRect(start, y, gw, h1);
+          ctx.strokeStyle = "#ccc";
+          ctx.strokeRect(start, y, gw, h1);
+          
+          ctx.fillStyle = tColor;
+          ctx.font = "bold 10px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(gName.toUpperCase(), start + gw/2, y + h1/2);
+      };
+
+      for(let k=0; k<colsData.length; k++){
+          const c = colsData[k];
+          if(c.g !== lastGrp){
+              if(grpCount > 0) drawGroupHeader(lastGrp, colsData[k-1].gc, colsData[k-1].tc, grpStart, grpCount);
+              lastGrp = c.g;
+              grpStart = curX;
+              grpCount = 0;
+          }
+          grpCount++;
+          curX += cellW;
+      }
+      if(grpCount > 0) drawGroupHeader(lastGrp, colsData[colsData.length-1].gc, colsData[colsData.length-1].tc, grpStart, grpCount);
+
+      // 2. Ligne Rangs (100, 10, 1) & 3. Valeurs
+      curX = x;
+      const y2 = y + h1;
+      const y3 = y + h1 + h2;
+      
+      // Préparation valeurs
+      let hasStarted = false;
+      const maxIdx = currentRows - 1;
+      const vals = {};
+      for(let i = maxIdx; i >= 0; i--) {
+          const v = state[i];
+          if(v > 0) hasStarted = true;
+          if(hasStarted || i === 0) vals[i] = v;
+          else vals[i] = "";
+      }
+
+      for(let k=0; k<colsData.length; k++){
+          const c = colsData[k];
+          
+          // Header 2 Background
+          ctx.fillStyle = "#fafafa";
+          ctx.fillRect(curX, y2, cellW, h2);
+          ctx.strokeStyle = "#eee";
+          ctx.strokeRect(curX, y2, cellW, h2);
+          
+          // Texte Header 2
+          ctx.fillStyle = "#555";
+          ctx.font = "bold 12px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(c.l, curX + cellW/2, y2 + h2/2 + 4);
+
+          // Valeur Cellule
+          // Tint Background
+          let val = "?";
+          let cellBg = "#fff";
+          if(c.i !== -1 && c.i < currentRows){
+             if(vals[c.i] !== "") val = revealed ? vals[c.i] : "?";
+             else val = "";
+             
+             if(useColors && val !== ""){
+                 if(c.l === "1") cellBg = "rgba(60, 179, 113, 0.08)";
+                 else if(c.l === "10") cellBg = "rgba(64, 196, 255, 0.08)";
+                 else if(c.l === "100") cellBg = "rgba(229, 57, 53, 0.08)";
+             }
+          } else {
+             val = "";
+          }
+
+          ctx.fillStyle = cellBg;
+          ctx.fillRect(curX, y3, cellW, h3);
+          ctx.strokeRect(curX, y3, cellW, h3);
+
+          // Valeur Texte
+          if(val !== ""){
+             let col = "#000";
+             if(useColors){
+                 if(c.l === "1") col = "#3cb371";
+                 else if(c.l === "10") col = "#40c4ff";
+                 else if(c.l === "100") col = "#e53935";
+             }
+             ctx.fillStyle = col;
+             ctx.font = "800 24px sans-serif";
+             ctx.fillText(val, curX + cellW/2, y3 + h3/2);
+          }
+          
+          curX += cellW;
+      }
+      
+      // Cadre extérieur tableau
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.strokeRect(x, y, w, h1+h2+h3);
   }
 
   init();
