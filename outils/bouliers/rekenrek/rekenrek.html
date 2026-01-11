@@ -6,23 +6,48 @@
 <title>Boulier Rekenrek Pro - Version Équilibre</title>
 <style>
   :root {
+    /* Thème Sombre (Défaut) */
     --bg: #1a1a1a; 
     --wood: #b08d57;
-    --rod: #888; --ui: #2a2a2a;
-    --accent: #0f6cf9; --bead-white: #ffffff; --bead-blue: #2196f3;
+    --rod: #888; 
+    --ui: #2a2a2a;
+    --text: #ffffff;
+    --accent: #0f6cf9; 
+    --bead-white: #ffffff; 
+    --bead-blue: #2196f3;
+    
+    /* Variables dynamiques pour le mode clair */
+    --cache-bg: #000;
+    --cache-border: #444;
+    --cache-handle: #444;
+    --cache-text: #fff;
+  }
+  
+  /* Thème Clair (Eco) */
+  body.light-mode {
+    --bg: #ffffff;
+    --ui: #f0f0f0;
+    --text: #1a1a1a;
+    --rod: #555;
+    --cache-bg: #e0e0e0;
+    --cache-border: #999;
+    --cache-handle: #666;
+    --cache-text: #fff;
   }
 
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
-    background: var(--bg); color: white; font-family: sans-serif;
+    background: var(--bg); color: var(--text); font-family: sans-serif;
     overflow: hidden; touch-action: none;
+    transition: background 0.3s, color 0.3s;
   }
 
   .toolbar {
     position: relative; width: 100%; min-height: 55px;
     background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
     justify-content: center; gap: 15px; z-index: 1000; padding: 5px 20px;
-    box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: background 0.3s;
   }
 
   .toolbar-group { display: flex; align-items: center; gap: 8px; }
@@ -32,20 +57,22 @@
     -webkit-appearance: none; height: 26px; width: 24px; border-radius: 50%;
     background: var(--accent); cursor: pointer; margin-top: -9px; border: 2px solid white;
   }
-  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #444; border-radius: 4px; }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #888; border-radius: 4px; }
 
   .btn {
     border: none; background: #444; color: white; padding: 8px 12px;
     border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
-    white-space: nowrap;
+    white-space: nowrap; transition: background 0.2s;
   }
-  .btn.active { background: var(--accent); outline: 1px solid white; }
+  body.light-mode .btn { background: #999; color: #fff; }
+  body.light-mode .btn:hover { background: #777; }
+  
+  .btn.active { background: var(--accent) !important; outline: 1px solid white; color: #fff !important; }
   
   .btn-eraser { background: #444; }
   .btn-eraser:active { background: #666; }
   
-  /* Style spécifique pour le bouton de langue : plus large pour le texte */
   #btn-lang { background: #333; border: 1px solid #555; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
 
   #main-container {
@@ -62,7 +89,8 @@
 
   #total-display { 
     font-size: 64px; font-weight: bold; color: var(--accent); 
-    height: 75px; margin-bottom: 5px; text-shadow: 0 2px 6px black;
+    height: 75px; margin-bottom: 5px; 
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
     display: flex; align-items: center;
   }
 
@@ -70,6 +98,7 @@
     position: relative; width: 820px; 
     border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
     pointer-events: auto; box-sizing: content-box;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   }
 
   #abacus-frame::before, #abacus-frame::after {
@@ -79,29 +108,37 @@
   #abacus-frame::before { left: -30px; }
   #abacus-frame::after { right: -30px; }
 
-  .row { position: relative; height: 56px; width: 820px; pointer-events: auto; }
+  .row { 
+    position: relative; 
+    height: 56px; 
+    width: 820px; 
+    pointer-events: auto; 
+    border-bottom: none; 
+  }
   .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
 
-  /* MODIFICATION CACHE : right: 0 (au lieu de -30px) pour commencer à l'intérieur du cadre */
   #cache-curtain {
     position: absolute; right: 0; top: 0; bottom: 0; width: 0;
-    background: #000; z-index: 25; border-left: 5px solid #444; 
+    background: var(--cache-bg); z-index: 25; border-left: 5px solid var(--cache-border); 
     pointer-events: auto; display: none; cursor: ew-resize;
   }
   #cache-curtain::before { 
     content: "↔"; position: absolute; left: -22px; top: 50%; 
-    background: #444; border-radius: 50%; width: 44px; height: 44px; 
+    background: var(--cache-handle); border-radius: 50%; width: 44px; height: 44px; 
     display: flex; align-items: center; justify-content: center; 
-    font-weight: bold; font-size: 20px; color: white; transform: translateY(-50%);
-    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    font-weight: bold; font-size: 20px; color: var(--cache-text); transform: translateY(-50%);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
   }
 
   .bead {
     position: absolute; width: 38px; height: 38px; border-radius: 50%;
     top: 50%; transform: translateY(-50%); z-index: 5;
     cursor: grab; touch-action: none;
-    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 2px 2px 5px rgba(0,0,0,0.5);
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3), 2px 2px 5px rgba(0,0,0,0.3);
   }
+  
+  body.light-mode .bead.white { border: 1px solid #ccc; box-sizing: border-box; }
+
   .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); }
   .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); }
@@ -132,15 +169,14 @@
     <span id="row-val" style="font-weight:bold; font-size:16px; color:var(--accent)">10</span>
   </div>
   <div class="toolbar-group">
-    <button class="btn" id="btn-reset" onclick="allTo(0)" style="padding: 8px 15px;">Position de départ</button>
-    <button class="btn" onclick="set50()">50</button>
-    <button class="btn" onclick="allTo(10)">100</button>
+    <button class="btn" id="btn-reset" onclick="allTo(0)" style="padding: 8px 15px;">Départ</button>
   </div>
   <div class="toolbar-group">
+    <button class="btn" id="btn-theme" onclick="toggleTheme()" title="Changer le fond (Blanc/Noir)">☀️ Fond</button>
     <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     <button class="btn" id="btn-val" onclick="toggleVal()">Valeur</button>
-    <button class="btn" id="btn-full" onclick="toggleFullScreen()" title="Plein écran">⛶</button>
+    <button class="btn" id="btn-export" onclick="exportImage()" title="Télécharger Photo HD (Eco)">📷 Photo</button>
   </div>
   <div class="toolbar-group" style="gap:10px">
     <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
@@ -171,29 +207,18 @@
   const topBar = document.getElementById('top-bar');
   
   let rowsCount = 10, showVal = false, isPen = false, isBlue = false, isCache = false, currentScale = 1;
+  let isLightMode = false; 
   let penCol = '#0f6cf9', states = Array.from({length: 10}, () => 0); 
   let currentLang = 'fr'; 
 
   const i18n = {
     fr: {
-      btnReset: "Position de départ",
-      btnColorBlue: "🔵 Bleu",
-      btnColorWhite: "⚪ Blanc",
-      btnCache: "🌑 Cache",
-      btnVal: "Valeur",
-      titleFull: "Plein écran",
-      titleEraser: "Effacer tout",
-      langLabel: "ENG" // MODIF: Texte court
+      btnReset: "Départ", btnColorBlue: "🔵 Bleu", btnColorWhite: "⚪ Blanc", btnCache: "🌑 Cache",
+      btnVal: "Valeur", btnTheme: "☀️ Fond", titleEraser: "Effacer tout", langLabel: "ENG" 
     },
     en: {
-      btnReset: "Ready Position",
-      btnColorBlue: "🔵 Blue",
-      btnColorWhite: "⚪ White",
-      btnCache: "🌑 Cover",
-      btnVal: "Value",
-      titleFull: "Fullscreen",
-      titleEraser: "Clear all",
-      langLabel: "FR" // MODIF: Texte court
+      btnReset: "Reset", btnColorBlue: "🔵 Blue", btnColorWhite: "⚪ White", btnCache: "🌑 Cover",
+      btnVal: "Value", btnTheme: "☀️ Theme", titleEraser: "Clear all", langLabel: "FR" 
     }
   };
 
@@ -226,7 +251,6 @@
   function autoScale() {
     const availableW = window.innerWidth - 30;
     const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
-    
     const margin = isLand ? 20 : 30; 
     const availableH = window.innerHeight - topBar.offsetHeight - margin;
     const rowH = isLand ? 45 : 56;
@@ -272,8 +296,6 @@
     
     const targetLeft = beadIdx * (BEAD_W + GAP);
     const targetRight = FRAME_W - (10 - beadIdx) * (BEAD_W + GAP);
-    
-    // MODIFICATION 2 : Zone d'acceptation réduite à 1 diamètre de bille
     const snapMargin = BEAD_W * 1; 
 
     if (beadIdx >= states[rowIdx]) { 
@@ -282,7 +304,6 @@
     else { 
       if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx;
     }
-    
     activeDrag = null; updateBeads(true);
   });
 
@@ -298,21 +319,29 @@
 
   function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
   
-  // MODIFICATION LOGIQUE CACHE POUR S'ADAPTER AU NOUVEAU STYLE (right: 0)
   function startCacheDrag(e) { 
     e.preventDefault(); 
     cache.setPointerCapture(e.pointerId);
     cache.onpointermove = (ev) => { 
         const rect = frame.getBoundingClientRect(); 
-        // Le calcul change car l'ancre est maintenant à 0 (intérieur du cadre)
-        // On ne rajoute plus 30px pour couvrir le bois, on reste dans le cadre
         let newW = (rect.right - 30 - ev.clientX) / currentScale; 
         cache.style.width = Math.max(0, Math.min(FRAME_W, newW)) + "px"; 
     };
     cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
   }
 
-  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; ctx.lineCap = 'round'; }
+  function resizeCanvas() { 
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+    ctx.lineCap = 'round'; 
+    ctx.drawImage(tempCanvas, 0, 0);
+  }
+  
   let drawing = false, activeDrag = null;
 
   const getPos = (e) => {
@@ -340,17 +369,9 @@
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('mousemove', moveDraw);
   canvas.addEventListener('mouseup', () => drawing = false);
-  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); }, {passive: false});
-  canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDraw(e); }, {passive: false});
+  canvas.addEventListener('touchstart', (e) => { if(isPen) e.preventDefault(); startDraw(e); }, {passive: false});
+  canvas.addEventListener('touchmove', (e) => { if(isPen) e.preventDefault(); moveDraw(e); }, {passive: false});
   canvas.addEventListener('touchend', () => drawing = false);
-
-  function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-    }
-  }
 
   function allTo(n) { states.fill(n); updateBeads(true); }
   function set50() { for(let i=0; i<10; i++) states[i] = (i < 5) ? 10 : 0; updateBeads(true); }
@@ -363,6 +384,12 @@
     currentLang = (currentLang === 'fr') ? 'en' : 'fr';
     updateLanguageUI();
   }
+  
+  function toggleTheme() {
+    isLightMode = !isLightMode;
+    document.body.classList.toggle('light-mode', isLightMode);
+    document.getElementById('btn-theme').classList.toggle('active', isLightMode);
+  }
 
   function updateLanguageUI() {
     const t = i18n[currentLang];
@@ -370,11 +397,9 @@
     document.getElementById('btn-reset').innerText = t.btnReset;
     document.getElementById('btn-cache').innerText = t.btnCache;
     document.getElementById('btn-val').innerText = t.btnVal;
-    
+    document.getElementById('btn-theme').innerText = t.btnTheme;
     const colBtn = document.getElementById('btn-color');
     colBtn.textContent = isBlue ? t.btnColorWhite : t.btnColorBlue;
-
-    document.getElementById('btn-full').title = t.titleFull;
     document.getElementById('btn-eraser').title = t.titleEraser;
   }
 
@@ -387,6 +412,174 @@
 
   document.getElementById('row-range').oninput = (e) => { rowsCount = parseInt(e.target.value); document.getElementById('row-val').innerText = rowsCount; init(); };
   window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
+  
+  // === MOTEUR PHOTO REKENREK (AVEC DESSIN) ===
+  
+  function exportImage() {
+    const scale = 3; 
+    const margin = 40;
+    
+    const rows = rowsCount;
+    const frameInternalW = 820;
+    const borderW = 30;
+    const rowH = 56;
+    const frameW = frameInternalW + borderW*2; 
+    const frameH = rows * rowH;
+    
+    const displayH = showVal ? 80 : 0;
+    
+    const cvsW = frameW + margin*2;
+    const cvsH = displayH + frameH + margin*2;
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = cvsW * scale;
+    exportCanvas.height = cvsH * scale;
+    const exCtx = exportCanvas.getContext('2d');
+    exCtx.scale(scale, scale);
+
+    // 1. Fond
+    exCtx.fillStyle = isLightMode ? '#ffffff' : '#1a1a1a';
+    exCtx.fillRect(0, 0, cvsW, cvsH);
+
+    const startX = margin;
+    const startY = margin + displayH;
+
+    // 2. Valeur (Total)
+    if (showVal) {
+        const total = states.reduce((a, b) => a + b, 0);
+        exCtx.fillStyle = '#0f6cf9'; 
+        exCtx.font = "bold 64px sans-serif";
+        exCtx.textAlign = "center";
+        exCtx.textBaseline = "middle";
+        if (!isLightMode) {
+             exCtx.shadowColor = "black"; exCtx.shadowBlur = 6; exCtx.shadowOffsetY = 2;
+        } else {
+             exCtx.shadowColor = "rgba(0,0,0,0.2)"; exCtx.shadowBlur = 4; exCtx.shadowOffsetY = 1;
+        }
+        exCtx.fillText(total, cvsW/2, margin + 40);
+        exCtx.shadowColor = "transparent";
+    }
+
+    // 3. Cadre & Tiges
+    const woodColor = '#b08d57';
+    exCtx.fillStyle = woodColor;
+    exCtx.fillRect(startX, startY, borderW, frameH);
+    exCtx.fillRect(startX + frameW - borderW, startY, borderW, frameH);
+    
+    exCtx.fillStyle = "rgba(0,0,0,0.2)";
+    exCtx.fillRect(startX + borderW - 2, startY, 2, frameH);
+    exCtx.fillRect(startX + frameW - borderW, startY, 2, frameH);
+
+    const rodColor = isLightMode ? '#666' : '#888';
+    const rodYOffset = rowH / 2;
+    
+    for (let r = 0; r < rows; r++) {
+        const rowY = startY + r * rowH;
+        const rodY = rowY + rodYOffset;
+        exCtx.fillStyle = rodColor;
+        exCtx.fillRect(startX + borderW, rodY - 2, frameInternalW, 4);
+    }
+
+    // 4. Perles
+    const beadSize = 38;
+    const cRed = ['#ff5f5f', '#aa0000']; 
+    const cWhite = isLightMode ? ['#ffffff', '#cccccc'] : ['#ffffff', '#bbbbbb'];
+    const cBlue = ['#2196f3', '#0d47a1'];
+    
+    for (let r = 0; r < rows; r++) {
+        const rowY = startY + r * rowH;
+        const countLeft = states[r];
+        
+        for (let b = 0; b < 10; b++) {
+            let isRedBead = (r < 5) ? (b < 5) : (b >= 5);
+            let palette = isRedBead ? cRed : (isBlue ? cBlue : cWhite);
+            let xPos;
+            if (b < countLeft) {
+                xPos = startX + borderW + b * beadSize;
+            } else {
+                xPos = startX + borderW + frameInternalW - (10 - b) * beadSize;
+            }
+            const yPos = rowY + (rowH - beadSize) / 2;
+            const forceStroke = (isLightMode && !isRedBead && !isBlue);
+            
+            drawRekenrekBead(exCtx, xPos, yPos, beadSize, palette[0], palette[1], forceStroke);
+        }
+    }
+    
+    // 5. Cache
+    if (isCache) {
+        const domCacheW = parseFloat(cache.style.width) || 0;
+        const cacheX = (startX + borderW + frameInternalW) - domCacheW;
+        const cacheBg = isLightMode ? '#e0e0e0' : '#000000';
+        const cacheBorder = isLightMode ? '#999999' : '#444444';
+        const handleColor = isLightMode ? '#666666' : '#444444';
+        const textColor = '#ffffff';
+
+        if (domCacheW > 0) {
+            exCtx.fillStyle = cacheBg;
+            exCtx.fillRect(cacheX, startY, domCacheW, frameH);
+            exCtx.fillStyle = cacheBorder;
+            exCtx.fillRect(cacheX, startY, 5, frameH);
+            
+            const handleY = startY + frameH / 2;
+            const handleX = cacheX; 
+            exCtx.beginPath();
+            exCtx.arc(handleX, handleY, 22, 0, Math.PI * 2);
+            exCtx.fillStyle = handleColor;
+            exCtx.fill();
+            exCtx.fillStyle = textColor;
+            exCtx.font = "bold 20px sans-serif";
+            exCtx.textAlign = "center";
+            exCtx.textBaseline = "middle";
+            exCtx.fillText("↔", handleX, handleY);
+        }
+    }
+
+    // 6. DESSIN À LA MAIN (Incrustation)
+    const frameRect = frame.getBoundingClientRect(); 
+    
+    // Si frameRect est null ou invisible (ex: tab inactive), protection
+    if(frameRect.width > 0) {
+        const ratio = frameW / frameRect.width; 
+        
+        exCtx.save();
+        
+        // On se place au coin haut-gauche du BOULIER dans l'export
+        exCtx.translate(startX, startY);
+        // On met à l'échelle (pour que 1px écran = 1px export adapté)
+        exCtx.scale(ratio, ratio);
+        // On se déplace en négatif pour que le coin haut-gauche du boulier écran (frameRect.left, top) se retrouve en (0,0) local
+        exCtx.translate(-frameRect.left, -frameRect.top);
+        
+        // On dessine le canvas écran
+        exCtx.drawImage(canvas, 0, 0);
+        
+        exCtx.restore();
+    }
+
+    // Téléchargement
+    const link = document.createElement('a');
+    link.download = `rekenrek_export.png`;
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function drawRekenrekBead(ctx, x, y, size, colorLight, colorDark, forceStroke) {
+      const cx = x + size/2;
+      const cy = y + size/2;
+      const r = size/2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      const grad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, r*0.1, cx, cy, r);
+      grad.addColorStop(0, colorLight);
+      grad.addColorStop(1, colorDark);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = forceStroke ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)";
+      ctx.lineWidth = forceStroke ? 1.5 : 1;
+      ctx.stroke();
+  }
+
   init();
 </script>
 </body>
