@@ -1124,32 +1124,39 @@
     const margin = 30;
     
     // 1. Calcul de la géométrie
-    const abacusWidth = 660; 
+    // Dimensions de base du boulier (partie graphique)
+    const abacusWidth = 660; // AGRANDI POUR ETRE REALISTE (LARGEUR 2x10 billes)
     const labelWidth = 100;
     const rowHeight = 50;
     const frameThick = 14;
     const gapHeight = 30; 
     const beadSize = 28;
     
+    // Calcul hauteur boulier
     let abacusContentHeight = 0;
     for(let i=0; i<currentRows; i++){
        abacusContentHeight += rowHeight;
        if(i===2 || i===5) abacusContentHeight += gapHeight; 
     }
     const totalAbacusHeight = abacusContentHeight + frameThick*2; 
-    const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; // Correction ici, on dessine le cadre autour
+    const totalAbacusWidth = labelWidth + abacusWidth + frameThick*2; 
 
+    // Dimensions Tableau (Dynamique selon nombre d'opérations)
     const tableWidth = 400;
     const tableGap = 40;
     
+    // Hauteur du tableau : Header + Rows + Result
     const hHeader1 = 30;
     const hHeader2 = 30;
     const hRow = 60;
     const opCount = currentOpsList.length;
+    // Header + (ops) rows + result row
     const totalTableHeight = hHeader1 + hHeader2 + (opCount * hRow) + hRow; 
 
+    // Dimension Display (Calcul du haut)
     const displayHeight = 100;
 
+    // Dimensions Totales Canvas
     let cvsW, cvsH;
     
     if(tableOnly) {
@@ -1157,16 +1164,21 @@
        cvsH = margin*2 + displayHeight + totalTableHeight;
     } else {
        cvsW = margin*2 + totalAbacusWidth + tableGap + tableWidth;
+       // La hauteur max entre le boulier et le tableau
        const maxContentH = Math.max(totalAbacusHeight, totalTableHeight);
        cvsH = margin*2 + displayHeight + maxContentH;
     }
     
+    // Création Canvas
     const canvas = document.createElement('canvas');
     canvas.width = cvsW * scale;
     canvas.height = cvsH * scale;
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
+    // --- FONCTIONS DE DESSIN ---
+
+    // Palette Couleurs
     const C = {
         green: '#3cb371', greenHi: '#66d494',
         blue:  '#40c4ff', blueHi:  '#80d8ff',
@@ -1176,75 +1188,68 @@
         bg:    '#fffdf8', text: '#1b1b1b'
     };
     
+    // Fond
     ctx.fillStyle = C.bg;
     ctx.fillRect(0,0,cvsW,cvsH);
 
+    // Origines
     const startY = margin + displayHeight;
     let abacusX = margin;
     let tableX = tableOnly ? margin : (margin + totalAbacusWidth + tableGap);
     
+    // --- 1. DESSINER LE CALCUL (DISPLAY) ---
+    // Centré au dessus de la zone concernée
     const displayCenterX = tableX + tableWidth/2;
     drawOpsDisplayCanvas(ctx, displayCenterX, margin + 40);
 
+    // --- 2. DESSINER LE BOULIER (SI PAS TABLE ONLY) ---
     if(!tableOnly) {
         drawAbacusCanvas(ctx, abacusX, startY, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C);
     }
 
+    // --- 3. DESSINER LE TABLEAU ---
     drawTableCanvas(ctx, tableX, startY, tableWidth, hHeader1, hHeader2, hRow, C);
     
+    // --- FINALISATION ---
     const link = document.createElement('a');
     link.download = `boulier_operations_${tableOnly?'table':'complet'}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
   
-  // -- Dessin Boulier (Corrigé : Cadre rectangulaire uniforme) --
+  // -- Dessin Boulier (Isolé) --
   function drawAbacusCanvas(ctx, x, y, abacusWidth, labelWidth, totalAbacusHeight, frameThick, rowHeight, gapHeight, beadSize, C) {
-      // Zone principale bois (fond derrière les tiges)
-      const frameX = x + labelWidth; // Début du cadre (après les étiquettes)
-      const frameW = abacusWidth + frameThick*2; // Largeur totale incluant les bords
+      const frameX = x + labelWidth;
+      const frameW = abacusWidth + frameThick*2;
       const frameH = totalAbacusHeight;
       
-      // Ombre portée globale
+      // Ombre portée
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.15)"; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
-      
-      // Fond Bois (Dégradé Horizontal)
+      // Fond Bois
       const gradWood = ctx.createLinearGradient(frameX, 0, frameX+frameW, 0);
       gradWood.addColorStop(0, C.wood); gradWood.addColorStop(0.2, C.woodMid);
       gradWood.addColorStop(0.8, C.woodMid); gradWood.addColorStop(1, C.wood);
       ctx.fillStyle = gradWood;
-      // On dessine le fond principal
       ctx.fillRect(frameX, y, frameW, frameH);
       ctx.restore();
 
-      // Bords Verticaux (Gauche et Droite)
-      // Pour faire propre, on utilise une couleur bois unie ou un dégradé subtil, mais qui "encadre" bien
-      ctx.fillStyle = C.woodDark;
-      ctx.fillRect(frameX, y, frameThick, frameH); // Gauche
-      ctx.fillRect(frameX + frameW - frameThick, y, frameThick, frameH); // Droite
-
-      // Bords Horizontaux (Haut et Bas) - Superposés aux verticaux pour faire le coin ou l'inverse
-      // Ici on dessine par dessus pour faire "traverses"
+      // Bords (Haut/Bas)
       const gradFrameV = ctx.createLinearGradient(0, y, 0, y+frameThick);
       gradFrameV.addColorStop(0, "#caa367"); gradFrameV.addColorStop(1, "#9a733c");
-      
-      // Haut (Rectangulaire avec coins arrondis seulement en haut)
       ctx.fillStyle = gradFrameV;
-      ctx.beginPath(); 
-      // On aligne exactement sur frameX pour ne pas dépasser
-      ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); 
-      ctx.fill();
+      ctx.beginPath(); ctx.roundRect(frameX, y, frameW, frameThick, [4,4,0,0]); ctx.fill();
       
       const gradFrameV2 = ctx.createLinearGradient(0, y+frameH-frameThick, 0, y+frameH);
       gradFrameV2.addColorStop(0, "#caa367"); gradFrameV2.addColorStop(1, "#9a733c");
-      
-      // Bas
       ctx.fillStyle = gradFrameV2;
-      ctx.beginPath(); 
-      ctx.roundRect(frameX, y+frameH-frameThick, frameW, frameThick, [0,0,4,4]); 
-      ctx.fill();
+      ctx.beginPath(); ctx.roundRect(frameX, y+frameH-frameThick, frameW, frameThick, [0,0,4,4]); ctx.fill();
       
+      // Bords Latéraux
+      ctx.fillStyle = C.woodDark;
+      ctx.fillRect(frameX, y, frameThick, frameH); 
+      ctx.fillRect(frameX + frameW - frameThick, y, frameThick, frameH);
+
       // Contenu
       let currentY = y + frameThick;
       for(let r=0; r<currentRows; r++){
@@ -1263,14 +1268,45 @@
           ctx.beginPath();
           let rad=[0,0,0,0];
           if(isFirst) rad[0]=6; if(isLast) rad[3]=6;
+          // IMPORTANT: utiliser roundRect pour tout dessiner d'un coup (fond + contour)
           ctx.roundRect(labelX, labelY, labelWidth, rowHeight, rad);
           ctx.fill();
           
-          // Bordures Label
-          ctx.strokeStyle = borderColor; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(labelX, labelY); ctx.lineTo(labelX, labelY+rowHeight); ctx.stroke();
-          if(isFirst){ ctx.beginPath(); ctx.moveTo(labelX+6, labelY); ctx.lineTo(labelX+labelWidth, labelY); ctx.stroke(); }
-          if(isLast){ ctx.beginPath(); ctx.moveTo(labelX+6, labelY+rowHeight); ctx.lineTo(labelX+labelWidth, labelY+rowHeight); ctx.stroke(); }
+          // CONTOURS RÉACTIVÉS (avec roundRect propre pour éviter les trous)
+          // -------------------------------------------------------------
+          // MODIFICATION ICI: 
+          // Au lieu de dessiner le contour pour chaque rangée, on ne dessine
+          // que le contour extérieur du groupe entier (Unités, Mille, Millions).
+          // Cela élimine les lignes horizontales internes.
+          // -------------------------------------------------------------
+          
+          ctx.strokeStyle = borderColor; 
+          ctx.lineWidth = 1;
+          
+          // 1. Bordure GAUCHE (Toujours)
+          ctx.beginPath();
+          ctx.moveTo(labelX, labelY);
+          ctx.lineTo(labelX, labelY + rowHeight);
+          ctx.stroke();
+          
+          // 2. Bordure HAUT (Seulement si premier du groupe)
+          if(isFirst) {
+             ctx.beginPath();
+             // Coin arrondi (approximatif pour stroke)
+             ctx.moveTo(labelX, labelY + 6); // bas du coin
+             ctx.quadraticCurveTo(labelX, labelY, labelX + 6, labelY); // coin
+             ctx.lineTo(labelX + labelWidth, labelY); // ligne haut
+             ctx.stroke();
+          }
+          
+          // 3. Bordure BAS (Seulement si dernier du groupe)
+          if(isLast) {
+             ctx.beginPath();
+             ctx.moveTo(labelX, labelY + rowHeight - 6); // haut du coin
+             ctx.quadraticCurveTo(labelX, labelY + rowHeight, labelX + 6, labelY + rowHeight); // coin
+             ctx.lineTo(labelX + labelWidth, labelY + rowHeight); // ligne bas
+             ctx.stroke();
+          }
 
           if(!showBeadValues){
               ctx.fillStyle = labelTxt; ctx.font = "bold 14px sans-serif";
@@ -1281,7 +1317,7 @@
           // Tiges
           const rodY = currentY + rowHeight/2;
           const rodX = frameX + frameThick;
-          const rodW = abacusWidth; // Largeur interne (sans les bords cadre)
+          const rodW = abacusWidth;
 
           if(isStartGroup){
              ctx.beginPath(); ctx.strokeStyle = "rgba(168, 131, 72, 0.4)"; ctx.lineWidth = 1;
@@ -1317,36 +1353,39 @@
       }
   }
 
-  // -- Dessin Calcul (Corrigé : Groupes unis) --
+  // -- Dessin Calcul (Haut) --
   function drawOpsDisplayCanvas(ctx, centerX, y){
       if(!currentOpsList || currentOpsList.length === 0) return;
       
-      // On construit un tableau de "blocs" à dessiner
+      // On construit un tableau de "blocs" à dessiner pour mesurer la largeur totale
+      // Blocs = [ {type:'num', val:12}, {type:'sym', val:'+'}, ... ]
       const blocks = [];
       currentOpsList.forEach((val, idx) => {
           if(idx > 0) blocks.push({type:'sym', val: val>=0?'+':'−'});
           blocks.push({type:'num', val: Math.abs(val)});
       });
       blocks.push({type:'sym', val:'='});
-      blocks.push({type:'sym', val:'?'});
+      blocks.push({type:'sym', val:'?'}); // Toujours ? pour l'exercice
       
-      const charW = 35; 
-      const symW = 40;  
-      const h = 50;
+      const charW = 32; // Largeur approx chiffre
+      const symW = 40;  // Largeur symbole
+      const charH = 60;
       
-      // Calcul largeur totale pour centrage
+      // Calcul largeur totale
       let totalW = 0;
       blocks.forEach(b => {
           if(b.type === 'sym') totalW += symW;
           else {
               const str = b.val.toString();
-              totalW += str.length * charW + (Math.floor((str.length-1)/3)*10); // +10px par espace de groupe
+              totalW += str.length * charW + (Math.floor((str.length-1)/3)*10);
           }
       });
+      // Espaces entre blocs
       totalW += (blocks.length-1) * 10;
       
       let curX = centerX - totalW/2;
       
+      // Dessin
       ctx.font = "800 36px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -1357,7 +1396,7 @@
               ctx.fillText(b.val, curX + symW/2, y);
               curX += symW + 10;
           } else {
-              // Dessiner nombre avec fond groupé
+              // Dessiner nombre (coloré + groupes)
               const str = b.val.toString();
               const len = str.length;
               
@@ -1392,9 +1431,10 @@
                      ctx.fillStyle = bg;
                      ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=4;
                      // Fond unique pour tout le groupe
-                     ctx.fillRect(groupX, y-h/2, groupW, h);
+                     ctx.fillRect(groupX, y-charH/2, groupW, charH);
                      ctx.shadowColor="transparent";
-                     ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.strokeRect(groupX, y-h/2, groupW, h);
+                     // **CORRECTION : SUPPRESSION DU CONTOUR POUR ÉVITER LES LIGNES PARASITES**
+                     // ctx.strokeStyle="rgba(0,0,0,0.1)"; ctx.strokeRect(groupX, y-charH/2, groupW, charH);
                   }
                   
                   // Dessiner les chiffres du groupe
@@ -1411,7 +1451,8 @@
                           if(useGroups && currentGrpIdx>=2) txtCol='#f0f0f0';
                       }
                       ctx.fillStyle = txtCol;
-                      ctx.fillText(digit, groupX + (k * charW) + charW/2, y);
+                      // Centrage vertical standard (y + 4 pour ajustement visuel)
+                      ctx.fillText(digit, groupX + (k * charW) + charW/2, y + 4);
                   }
                   
                   // Avancer X pour le prochain groupe (+ espace si pas fini)
