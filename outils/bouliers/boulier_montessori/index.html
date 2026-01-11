@@ -1,30 +1,201 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Boulier cycle 3</title><link rel="stylesheet" href="../../../assets/style.css"/></head>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Boulier Montessori - Menu Principal</title>
+    <!-- On garde le lien vers le style global s'il existe, mais le style spécifique est inclus ci-dessous -->
+    <link rel="stylesheet" href="../../../assets/style.css"/>
+    <style>
+        :root {
+            /* Palette Montessori (Vert/Nature) pour différencier du Rekenrek (Bleu) */
+            --primary: #059669; /* Emerald 600 */
+            --bg-page: #f0fdf4; /* Light Green Tint */
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding-bottom: 4rem;
+        }
+
+        /* HEADER */
+        .header-nav {
+            /* Un dégradé vert profond pour le style Montessori */
+            background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+            color: white;
+            padding: 2.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header-content { max-width: 1200px; margin: 0 auto; position: relative;}
+
+        .header-title h1 { margin: 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+        .header-title p { 
+            margin: 0.8rem 0 0; 
+            color: #86efac; /* Vert clair pour le sous-titre */
+            font-size: 1.2rem; 
+            font-weight: 500; 
+            letter-spacing: 1px; 
+            text-transform: uppercase;
+        }
+
+        .back-link {
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            color: #a7f3d0; 
+            text-decoration: none; font-weight: 600;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: white; }
+        
+        @media (max-width: 768px) {
+            .back-link { position: relative; top: auto; transform: none; display: block; margin-bottom: 1rem;}
+        }
+
+        /* CONTAINER */
+        .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* SECTIONS */
+        .section-title {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.6rem; font-weight: 700; color: #166534; /* Dark Green Text */
+            margin: 3.5rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #bbf7d0;
+        }
+        .badge {
+            font-size: 0.8rem; background: #dcfce7; color: #166534;
+            padding: 4px 12px; border-radius: 20px; vertical-align: middle; font-weight: 600;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        /* CARDS */
+        .card-link {
+            text-decoration: none;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid white;
+            padding: 1.5rem;
+            display: flex; flex-direction: column;
+            transition: all 0.2s ease;
+            position: relative; overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Barre de couleur latérale */
+        .card-link::before {
+            content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+            background: #cbd5e1; transition: width 0.2s;
+        }
+
+        /* Couleurs sémantiques pour les catégories */
+        .cat-bases .card-link::before { background: #10b981; } /* Emerald */
+        .cat-calc .card-link::before { background: #f59e0b; }   /* Amber/Orange pour le calcul */
+
+        .card-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+            border-color: #cbd5e1;
+        }
+        .card-link:hover::before { width: 10px; }
+
+        .icon-box { font-size: 2.5rem; margin-bottom: 1rem; }
+
+        .card-link h3 {
+            margin: 0; font-size: 1.3rem; color: var(--text-main); font-weight: 700;
+        }
+
+        .card-link p {
+            margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;
+        }
+
+        footer { text-align: center; margin-top: 5rem; color: #64748b; font-size: 0.9rem; padding-bottom: 2rem; }
+
+    </style>
+</head>
 <body>
-<header><div class="wrapper"><nav class="nav">
-  <a class="brand" href="../../../">Maths</a>
-  <a href="../../">Outils</a>
-</nav></div></header>
-<main><div class="wrapper">
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px">
-  <div class="card center">
-    <h3>Transition Rekenrek</h3>
-    <p><a class="btn-chip" href="transition_rekenrek-montessori.html">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Boulier</h3>
-    <p><a class="btn-chip" href="boulier-cycle3-petit.html">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Placer des nombres</h3>
-    <p><a class="btn-chip" href="boulier-cycle3-petit-placer-nombres.html">Ouvrir</a></p>
-  </div>
-  <div class="card center">
-    <h3>Additions &amp; Soustractions</h3>
-    <p><a class="btn-chip" href="boulier-cycle3-petit-additions-soustractions.html">Ouvrir</a></p>
-  </div>
-</section>
-</div></main>
-<footer><div class="wrapper">© 2025 — Site pédagogique</div></footer>
-</body></html>
+
+<header class="header-nav">
+    <div class="header-content">
+        <nav>
+            <!-- Lien retour adapté au contexte (remonte d'un niveau ou deux selon votre structure) -->
+            <a href="../../" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Retour aux outils
+            </a>
+        </nav>
+        <div class="header-title">
+            <h1>Atelier Boulier Montessori</h1>
+            <p>Concret • Pictural • Abstrait</p>
+        </div>
+    </div>
+</header>
+
+<main class="wrapper">
+
+    <!-- Section 1 : Numération & Manipulation -->
+    <h2 class="section-title">🔢 Numération & Manipulation <span class="badge">Découverte</span></h2>
+    <section class="grid cat-bases">
+        
+        <a href="transition_rekenrek-montessori.html" class="card-link">
+            <div class="icon-box">🔄</div>
+            <h3>Transition Rekenrek</h3>
+            <p>Passer du Rekenrek au boulier Montessori (Hiérarchique).</p>
+        </a>
+
+        <a href="boulier-cycle3-petit.html" class="card-link">
+            <div class="icon-box">🧮</div>
+            <h3>Boulier Libre</h3>
+            <p>L'outil interactif pour manipuler librement les perles.</p>
+        </a>
+
+        <a href="boulier-cycle3-petit-placer-nombres.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Placer des nombres</h3>
+            <p>Exercice : Construire le nombre demandé sur le boulier.</p>
+        </a>
+
+    </section>
+
+
+    <!-- Section 2 : Stratégies de Calcul -->
+    <h2 class="section-title">🧮 Stratégies de Calcul <span class="badge">Opérations</span></h2>
+    <section class="grid cat-calc">
+        
+        <a href="boulier-cycle3-petit-additions-soustractions.html" class="card-link">
+            <div class="icon-box">➕➖</div>
+            <h3>Additions & Soustractions</h3>
+            <p>Poser des opérations et calculer avec les échanges.</p>
+        </a>
+
+        <!-- Espace pour de futurs outils de calcul -->
+
+    </section>
+
+</main>
+
+<footer>
+    <p>Outils pédagogiques Montessori</p>
+</footer>
+
+</body>
+</html>
