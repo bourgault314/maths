@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Opérations Nombres Relatifs - Stylo Fixé</title>
+    <title>Opérations Nombres Relatifs - Focus Jetons</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -129,28 +129,6 @@
         /* Scrollbar masquée */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Canvas de dessin */
-        #drawing-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50; /* Au dessus des jetons */
-            pointer-events: none; /* Par défaut, on clique au travers */
-            touch-action: none;
-        }
-        
-        /* Curseurs pour le dessin - FIXÉS sur 0,0 (Top Left) pour précision absolue */
-        .cursor-pen { 
-            /* SVG stylo pointant vers le haut-gauche (0,0) */
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0 L18 18" stroke="%232563eb" stroke-width="3"/><path d="M0 0 L6 6" stroke="black" stroke-width="1"/></svg>') 0 0, crosshair; 
-        }
-        .cursor-eraser { 
-            /* SVG cercle gomme centré sur 12,12 */
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" stroke="black" stroke-width="2"><circle cx="12" cy="12" r="8" /></svg>') 12 12, cell; 
-        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col">
@@ -199,36 +177,9 @@
                 <div id="mission-tokens" class="flex gap-1"></div>
             </div>
         </div>
-
-        <!-- Outils Dessin (Droite) -->
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
-            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Déplacer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-                </svg>
-            </button>
-            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-            </button>
-            <button onclick="setTool('eraser')" id="tool-eraser" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Gomme">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            </button>
-            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer le dessin">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        <!-- Canvas pour dessiner -->
-        <canvas id="drawing-canvas"></canvas>
-
         <!-- Zone Ciel -->
         <div id="sky-zone">
             <span id="sky-text" class="text-orange-500 font-bold bg-white/90 px-3 py-1 rounded-full text-sm hidden shadow-sm border border-orange-200 mt-2">
@@ -279,7 +230,7 @@
         </aside>
 
         <!-- BOARD -->
-        <main id="board" class="flex-1 relative bg-white overflow-hidden cursor-crosshair touch-none">
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
             <div class="absolute inset-0 opacity-20 pointer-events-none" 
                  style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
             </div>
@@ -304,8 +255,7 @@
             subtractionDefined: [], 
             frozenValues: {}, 
             operators: [],
-            locked: false,
-            currentTool: 'hand' // 'hand', 'pen', 'eraser'
+            locked: false
         };
 
         const board = document.getElementById('board');
@@ -317,95 +267,6 @@
         const equationTerms = document.getElementById('equation-terms');
         const btnPlus = document.getElementById('btn-plus');
         const btnMinus = document.getElementById('btn-minus');
-        const canvas = document.getElementById('drawing-canvas');
-        const ctx = canvas.getContext('2d');
-
-        // --- DESSIN ---
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        function resizeCanvas() {
-            canvas.width = board.clientWidth;
-            canvas.height = board.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        // Init size after load
-        setTimeout(resizeCanvas, 100);
-
-        function setTool(tool) {
-            state.currentTool = tool;
-            
-            // On force le redimensionnement du canvas au cas où la fenêtre aurait bougé
-            resizeCanvas();
-            
-            // Reset UI
-            ['tool-hand', 'tool-pen', 'tool-eraser'].forEach(id => {
-                document.getElementById(id).className = "p-2 rounded text-gray-500 hover:bg-gray-200";
-            });
-            document.getElementById(`tool-${tool}`).className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
-
-            if (tool === 'hand') {
-                canvas.style.pointerEvents = 'none';
-                board.style.cursor = 'crosshair';
-            } else {
-                canvas.style.pointerEvents = 'auto';
-                if(tool === 'pen') {
-                    canvas.className = 'cursor-pen';
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = '#2563eb'; // Blue pen
-                    ctx.lineWidth = 3;
-                } else {
-                    canvas.className = 'cursor-eraser';
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = 20;
-                }
-            }
-        }
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Canvas Events
-        function startDraw(e) {
-            if (state.currentTool === 'hand') return;
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            lastX = clientX - rect.left;
-            lastY = clientY - rect.top;
-        }
-
-        function draw(e) {
-            if (!isDrawing || state.currentTool === 'hand') return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            lastX = x;
-            lastY = y;
-        }
-
-        function endDraw() {
-            isDrawing = false;
-        }
-
-        canvas.addEventListener('mousedown', startDraw);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('touchstart', startDraw, {passive: false});
-        canvas.addEventListener('touchmove', draw, {passive: false});
-        canvas.addEventListener('touchend', endDraw);
-
 
         // --- LOGIQUE APP ---
 
@@ -617,60 +478,38 @@
             }
         }
 
-        // --- ALIGNEMENT AMÉLIORÉ (DROITE) ---
         function organizeBoard() {
             state.tokens.forEach(t => unpairTokens(t));
-            
-            // On trie par ID pour garder l'ordre chronologique
             const sortedGreens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
             const sortedReds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
-
             const spacing = TOKEN_SIZE + 5; 
             const availableWidth = board.clientWidth - 40; 
             const maxCols = Math.max(1, Math.floor(availableWidth / spacing));
-            
-            // Nombre de jetons
             const countGreen = sortedGreens.length;
             const countRed = sortedReds.length;
             const maxCount = Math.max(countGreen, countRed);
-            
-            // Calcul de la largeur du bloc
             const usedCols = Math.min(maxCount, maxCols);
             const blockWidth = usedCols * spacing;
             const startX = (board.clientWidth - blockWidth) / 2 + (spacing / 2);
-            
-            // Centre Vertical
             const centerY = board.clientHeight / 2 + 30; 
             const verticalPitch = TOKEN_SIZE + 10;
-
-            // Offset d'index pour aligner la fin des listes
             const greenOffset = maxCount - countGreen;
             const redOffset = maxCount - countRed;
-
-            // Placement Verts (Vers le haut)
             sortedGreens.forEach((t, i) => {
                 const visualIndex = i + greenOffset; 
-                
                 const col = visualIndex % maxCols;
                 const row = Math.floor(visualIndex / maxCols);
-                
                 const x = startX + (col * spacing);
                 const y = centerY - (verticalPitch / 2) - (row * verticalPitch);
-                
                 moveTokenTo(t, x, y);
                 t.element.style.transform = "scale(1)";
             });
-
-            // Placement Rouges (Vers le bas)
             sortedReds.forEach((t, i) => {
                 const visualIndex = i + redOffset;
-                
                 const col = visualIndex % maxCols;
                 const row = Math.floor(visualIndex / maxCols);
-                
                 const x = startX + (col * spacing);
                 const y = centerY + (verticalPitch / 2) + (row * verticalPitch);
-                
                 moveTokenTo(t, x, y);
                 t.element.style.transform = "scale(1)";
             });
@@ -686,7 +525,6 @@
         let dragOffset = {x:0, y:0};
 
         function handleDragStart(e) {
-            if (state.currentTool !== 'hand') return; // Bloquer drag si mode dessin
             e.preventDefault();
             const el = e.target.closest('.token');
             if(!el) return;
@@ -783,16 +621,13 @@
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
             }
             state.locked = true;
-            // --- FIX FOR RIGHT-TO-LEFT REMOVAL ---
             const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
             const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
             let pairs = [];
             const count = Math.min(greens.length, reds.length);
-            // We take from the end (pop) so we remove tokens that are visually on the right
             for(let i=0; i<count; i++) {
                 pairs.push([greens.pop(), reds.pop()]);
             }
-            // -------------------------------------
             if (pairs.length === 0) return;
             const interval = 500; 
             pairs.forEach((pair, index) => {
@@ -814,7 +649,6 @@
         function resetBoard() {
             state.tokens.forEach(t => t.element.remove());
             document.querySelectorAll('.zero-badge').forEach(b => b.remove());
-            clearCanvas();
             state.tokens = [];
             state.subtractionTarget = [];
             state.subtractionDefined = []; 
@@ -839,7 +673,6 @@
             document.getElementById('action-label').className = "text-[10px] font-bold text-slate-400 uppercase text-center";
             document.getElementById('btn-auto-simplify').classList.remove('hidden');
             document.getElementById('shortage-hint').classList.add('hidden', 'opacity-0');
-            setTool('hand');
             updateMissionDisplay();
             updateLogic();
         }
