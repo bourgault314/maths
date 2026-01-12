@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Nombres relatifs</title>
+    <title>Nombres Relatifs</title>
     <style>
         :root {
             --bg-page: #f8fafc;
@@ -73,17 +73,16 @@
             text-align: center;
             color: #334155;
             letter-spacing: -1px;
-            /* On s'assure que le titre ne prend pas toute la place sur mobile */
             line-height: 1.2;
         }
 
         /* La Grille de Choix */
         .choice-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Un peu plus compact */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             width: 100%;
-            max-width: 1000px;
+            max-width: 400px; /* Limité ici car il n'y a qu'une seule carte pour l'instant */
         }
 
         /* Les Cartes "Boutons" */
@@ -92,7 +91,7 @@
             position: relative;
             background: white;
             border-radius: 24px;
-            padding: 1.5rem; /* Padding réduit un peu pour gagner de la place */
+            padding: 1.5rem;
             text-align: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid transparent;
@@ -102,11 +101,10 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-height: 220px; /* Hauteur minimale légèrement réduite */
+            min-height: 220px;
             overflow: hidden;
         }
 
-        /* Effet de brillance au survol */
         .choice-card::after {
             content: '';
             position: absolute;
@@ -121,109 +119,53 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
-        /* ICONES ET BILLES */
+        /* ICONES */
         .icon-wrapper {
-            height: 3.5rem; /* Un peu plus compact */
+            height: 4rem;
             margin-bottom: 1.2rem;
             transition: transform 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.5rem; 
+            gap: 1rem; /* Espace entre le plus et le moins */
+            color: #4338ca;
         }
-        
-        /* Design des billes CSS */
-        .beads-container {
-            display: flex;
-            align-items: center;
-            gap: 4px; /* Espacement réduit entre les billes */
-        }
-        .bead {
-            width: 28px; /* Billes légèrement plus petites */
-            height: 28px;
-            border-radius: 50%;
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 2px 2px 5px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        .bead::after {
-            content: '';
-            position: absolute;
-            top: 5px; left: 5px;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-        }
-
-        /* Couleurs des billes */
-        .b-red { background: #dc2626; }    
-        .b-white { background: #f1f5f9; border: 1px solid #cbd5e1; } 
-        .b-green { background: #16a34a; }  
-        .b-blue { background: #2563eb; }   
-
         
         .choice-card:hover .icon-wrapper {
             transform: scale(1.1);
         }
 
         .card-title {
-            font-size: 1.25rem; /* Taille réduite (avant 1.5rem) */
+            font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
             color: #1e293b;
             line-height: 1.3;
         }
 
-        .card-desc {
-            margin-top: 0.4rem;
-            font-size: 0.9rem; /* Légèrement réduit aussi */
-            opacity: 0.7;
-            font-weight: 500;
-        }
+        /* Suppression de .card-desc car on l'enlève du HTML */
 
-        /* Thèmes Spécifiques */
-        .theme-rekenrek { border-color: #e2e8f0; }
-        .theme-rekenrek:hover {
-            border-color: #3b82f6;
-            background: linear-gradient(to bottom right, #ffffff, #eff6ff);
-        }
-        .theme-rekenrek .card-title { color: #1d4ed8; }
-        .theme-rekenrek .card-desc { color: #60a5fa; }
-
-        .theme-montessori { border-color: #e2e8f0; }
-        .theme-montessori:hover {
-            border-color: #10b981;
-            background: linear-gradient(to bottom right, #ffffff, #f0fdf4);
-        }
-        .theme-montessori .card-title { color: #047857; }
-        .theme-montessori .card-desc { color: #34d399; }
-
-        .theme-soroban { border-color: #e2e8f0; }
-        .theme-soroban:hover {
-            border-color: #f59e0b;
-            background: linear-gradient(to bottom right, #ffffff, #fffbeb);
-        }
-        .theme-soroban .card-title { color: #b45309; }
-        .theme-soroban .card-desc { color: #fbbf24; }
-
+        /* Thème Nombres Relatifs (Violet/Bleu) */
         .theme-relatifs { border-color: #e2e8f0; }
         .theme-relatifs:hover {
-            border-color: #ef4444;
-            background: linear-gradient(to bottom right, #ffffff, #fef2f2);
+            border-color: #6366f1;
+            background: linear-gradient(to bottom right, #ffffff, #eef2ff);
         }
-        .theme-relatifs .card-title { color: #b91c1c; }
-        .theme-relatifs .card-desc { color: #f87171; }
+        .theme-relatifs .card-title { color: #4338ca; }
+        .theme-relatifs .icon-wrapper svg { 
+            stroke-width: 3;
+        }
 
         footer {
             text-align: center;
             padding: 2rem;
-            color: #cbd5e1; /* Très discret */
+            color: #cbd5e1;
             font-size: 0.8rem;
         }
 
         @media (max-width: 600px) {
             .page-title { font-size: 2rem; margin-top: 3rem; }
             .choice-card { min-height: 160px; padding: 1.25rem; }
-            .icon-wrapper { font-size: 3rem; height: 3rem; margin-bottom: 0.8rem; }
         }
     </style>
 </head>
@@ -239,48 +181,25 @@
     <div class="main-container">
         
         <h1 class="page-title">
-            Nombres relatifs
+            Nombres Relatifs
         </h1>
 
         <div class="choice-grid">
             
-            
-            <!-- SOMME & DIFFÉRENCE (RELATIFS) -->
+            <!-- Lien vers le fichier spécifié -->
             <a href="nombres_relatifs_somme_différence.html" class="choice-card theme-relatifs">
                 <div class="icon-wrapper">
-                    <div class="beads-container">
-                        <div class="bead b-red"></div>
-                        <div class="bead b-green"></div>
-                    </div>
+                    <!-- Icone Plus -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <!-- Icone Moins -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                 </div>
-                <h2 class="card-title">Somme &amp; différence</h2>
-                <span class="card-desc">Addition · Soustraction</span>
-            </a>
-</div>
-                    </div>
-                </div>
-                <h2 class="card-title">Rekenrek</h2>
-                <span class="card-desc">Cycle 2 · Cycle 3</span>
-            </a>
-
-            <!-- BOULIER MONTESSORI -->
-            <a href="boulier_montessori/index.html" class="choice-card theme-montessori">
-                <div class="icon-wrapper">
-                    <div class="beads-container">
-                        <div class="bead b-green"></div>
-                        <div class="bead b-blue"></div>
-                        <div class="bead b-red"></div>
-                    </div>
-                </div>
-                <h2 class="card-title">Boulier Montessori</h2>
-                <span class="card-desc">Cycle 3 · Cycle 4</span>
-            </a>
-
-            <!-- SOROBAN -->
-            <a href="soroban/index.html" class="choice-card theme-soroban">
-                <div class="icon-wrapper">🧮</div>
-                <h2 class="card-title">Soroban</h2>
-                <span class="card-desc">Cycle 3 · Cycle 4</span>
+                <h2 class="card-title">Somme et Différence</h2>
             </a>
 
         </div>
@@ -288,7 +207,7 @@
     </div>
 
     <footer>
-        <!-- Texte supprimé comme demandé -->
+        <!-- Footer vide -->
     </footer>
 
 </body>
