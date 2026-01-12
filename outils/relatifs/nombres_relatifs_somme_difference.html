@@ -1,214 +1,925 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Nombres Relatifs</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Opérations Nombres Relatifs - Final Audio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-page: #f8fafc;
-            --text-main: #1e293b;
-        }
-
         body {
-            background-color: var(--bg-page);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: var(--text-main);
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
         }
 
-        /* En-tête simplifié et flottant */
-        .top-nav {
-            padding: 1rem 2rem;
+        /* --- STYLES DES JETONS --- */
+        .token {
+            width: 70px !important;
+            height: 70px !important;
+            min-width: 70px;
+            min-height: 70px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.6rem;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+            cursor: grab;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s;
+            z-index: 10;
+            touch-action: none;
+            box-sizing: border-box; 
+        }
+
+        .token:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 100 !important;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+        }
+
+        .token.green {
+            background: radial-gradient(circle at 35% 35%, #4ade80, #16a34a);
+            border: 3px solid #14532d;
+        }
+
+        .token.red {
+            background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
+            border: 3px solid #7f1d1d;
+        }
+
+        .token.is-zero {
+            background: #9ca3af !important;
+            opacity: 0.6;
+            border: 3px solid #6b7280;
+            box-shadow: none;
+            z-index: 5;
+            transform: scale(0.95);
+        }
+        
+        /* CIBLE (MISSION) */
+        .target-token {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            margin: 1px;
+            opacity: 0.9;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
+        .target-token.green { background-color: #4ade80; border: 1px solid #14532d; }
+        .target-token.red { background-color: #f87171; border: 1px solid #7f1d1d; }
+
+        .zero-badge {
+            position: absolute;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #374151;
+            pointer-events: none;
+            z-index: 20;
+            text-shadow: 0 0 10px rgba(255,255,255,1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .fly-away {
+            transition: all 0.6s ease-in;
+            transform: translateY(-100vh) scale(0.5) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Zone Ciel */
+        #sky-zone {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            box-sizing: border-box;
-            z-index: 10;
-        }
-
-        .back-link {
-            text-decoration: none;
-            color: #64748b;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .back-link:hover {
-            transform: translateX(-3px);
-            color: #1e293b;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        /* Conteneur Principal Centré */
-        .main-container {
-            flex: 1;
+            height: 130px;
+            z-index: 5;
+            background: linear-gradient(to bottom, rgba(200,220,255,0.0), transparent);
+            pointer-events: none;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 4rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            align-items: flex-start;
+            padding-top: 10px;
+            transition: background 0.3s;
+        }
+        #sky-zone.active {
+            background: linear-gradient(to bottom, rgba(251, 146, 60, 0.15), transparent);
+            border-bottom: 2px dashed rgba(251, 146, 60, 0.4);
         }
 
-        .page-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 3rem;
-            text-align: center;
-            color: #334155;
-            letter-spacing: -1px;
-            line-height: 1.2;
-        }
+        /* Scrollbar masquée */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* La Grille de Choix */
-        .choice-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            width: 100%;
-            max-width: 400px; /* Limité ici car il n'y a qu'une seule carte pour l'instant */
-        }
-
-        /* Les Cartes "Boutons" */
-        .choice-card {
-            text-decoration: none;
-            position: relative;
-            background: white;
-            border-radius: 24px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 220px;
-            overflow: hidden;
-        }
-
-        .choice-card::after {
-            content: '';
+        /* Canvas de dessin */
+        #drawing-canvas {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .choice-card:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        /* ICONES */
-        .icon-wrapper {
-            height: 4rem;
-            margin-bottom: 1.2rem;
-            transition: transform 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem; /* Espace entre le plus et le moins */
-            color: #4338ca;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Au dessus des jetons */
+            pointer-events: none; /* Par défaut, on clique au travers */
+            touch-action: none;
         }
         
-        .choice-card:hover .icon-wrapper {
-            transform: scale(1.1);
+        /* CURSEUR VIRTUEL (Le stylo magique) */
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            transform-origin: top left;
         }
-
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin: 0;
-            color: #1e293b;
-            line-height: 1.3;
-        }
-
-        /* Suppression de .card-desc car on l'enlève du HTML */
-
-        /* Thème Nombres Relatifs (Violet/Bleu) */
-        .theme-relatifs { border-color: #e2e8f0; }
-        .theme-relatifs:hover {
-            border-color: #6366f1;
-            background: linear-gradient(to bottom right, #ffffff, #eef2ff);
-        }
-        .theme-relatifs .card-title { color: #4338ca; }
-        .theme-relatifs .icon-wrapper svg { 
-            stroke-width: 3;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #cbd5e1;
-            font-size: 0.8rem;
-        }
-
-        @media (max-width: 600px) {
-            .page-title { font-size: 2rem; margin-top: 3rem; }
-            .choice-card { min-height: 160px; padding: 1.25rem; }
+        
+        /* Quand le stylo est actif, on cache le vrai curseur sur la zone de dessin */
+        .hide-cursor, .hide-cursor * {
+            cursor: none !important;
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col">
 
-    <nav class="top-nav">
-        <a href="../" class="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Retour
-        </a>
-    </nav>
-
-    <div class="main-container">
-        
-        <h1 class="page-title">
-            Nombres Relatifs
-        </h1>
-
-        <div class="choice-grid">
-            
-            <!-- Lien vers le fichier spécifié -->
-            <a href="nombres_relatifs_somme_différence.html" class="choice-card theme-relatifs">
-                <div class="icon-wrapper">
-                    <!-- Icone Plus -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <!-- Icone Moins -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </div>
-                <h2 class="card-title">Somme et Différence</h2>
-            </a>
-
-        </div>
-
+    <!-- CURSEUR PERSONNALISÉ (Leurre) -->
+    <div id="custom-cursor">
+        <!-- SVG du stylo, pointe en bas à gauche -->
+        <svg id="cursor-pen-svg" class="hidden drop-shadow-md" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Corps du stylo -->
+            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+            <!-- Pointe -->
+            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <circle cx="8" cy="32" r="1.6" fill="#111827"/>
+            <path d="M26 8 L14 20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
+        </svg>
     </div>
 
-    <footer>
-        <!-- Footer vide -->
-    </footer>
+    <!-- HEADER -->
+    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 relative">
+        
+        <!-- Actions Gauche -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+             <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer (Suppr)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="hidden sm:inline text-xs">Reset</span>
+            </button>
 
+            <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base" title="Raccourci: Entrée">
+                Réponse
+            </button>
+            
+            <div class="h-8 w-px bg-slate-200 mx-1"></div>
+
+            <div class="flex gap-1">
+                <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
+                    +
+                </button>
+                <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
+                    -
+                </button>
+            </div>
+        </div>
+
+        <!-- Opération (Centre) -->
+        <div class="flex-1 flex flex-col items-center justify-center min-w-[150px] overflow-hidden px-2">
+            <div class="flex items-center gap-1 sm:gap-2 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200 shadow-inner mb-1 max-w-full">
+                <div id="equation-terms" class="flex items-center gap-1 overflow-x-auto no-scrollbar whitespace-nowrap">
+                    <span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>
+                </div>
+                <span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">=</span>
+                <span id="op-result" class="text-2xl sm:text-4xl font-bold text-blue-600 hidden">?</span>
+                <span id="op-question" class="text-2xl sm:text-4xl font-bold text-slate-300">?</span>
+            </div>
+            <!-- Zone d'objectif -->
+            <div id="mission-panel" class="hidden flex items-center gap-2 text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 shadow-sm mt-1">
+                <span class="text-xs uppercase tracking-wide">Reste à retirer :</span>
+                <div id="mission-tokens" class="flex gap-1"></div>
+            </div>
+        </div>
+
+        <!-- Outils Dessin (Droite) -->
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
+            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Déplacer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                </svg>
+            </button>
+            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+            </button>
+            <!-- Bouton Gomme (Efface Tout) -->
+            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer tout le dessin">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Canvas pour dessiner -->
+        <canvas id="drawing-canvas"></canvas>
+
+        <!-- Zone Ciel -->
+        <div id="sky-zone">
+            <span id="sky-text" class="text-orange-500 font-bold bg-white/90 px-3 py-1 rounded-full text-sm hidden shadow-sm border border-orange-200 mt-2">
+                Glisser ici pour retirer ⬆️
+            </span>
+        </div>
+        
+        <!-- AIDE CONTEXTUELLE -->
+        <div id="shortage-hint" class="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40 hidden opacity-0 transition-opacity duration-500">
+            <div class="bg-red-50 text-red-800 border-2 border-red-300 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 backdrop-blur-sm animate-bounce">
+                <span class="text-2xl">⚠️</span>
+                <div>
+                    <span class="text-sm font-bold block">Il te manque des jetons !</span>
+                    <span class="text-xs">Ajoute une <span class="font-bold">paire Zéro</span> pour débloquer la situation.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
+            <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
+            
+            <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
+                +1
+            </button>
+            <button onclick="handleSideButton('red')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: -">
+                -1
+            </button>
+            
+            <button onclick="addZeroPair()" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-200 border-4 border-slate-400 text-slate-600 font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex flex-col items-center justify-center leading-none mt-2" title="Raccourci: 0">
+                <div class="flex gap-1">
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                </div>
+                <span class="text-xs mt-1 font-bold">0</span>
+            </button>
+
+            <div class="w-12 h-px bg-slate-300 my-1"></div>
+
+            <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm" title="Raccourci: Espace">
+                ALIGNER
+            </button>
+
+            <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
+                <span class="text-xs font-bold">AUTO</span>
+                <span class="text-lg font-bold">0</span>
+            </button>
+        </aside>
+
+        <!-- BOARD -->
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
+            <div class="absolute inset-0 opacity-20 pointer-events-none" 
+                 style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
+            </div>
+            
+            <div class="absolute top-2 left-2 pointer-events-none opacity-40">
+                <p class="text-xs text-slate-400">Zone de manipulation</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SNAP_THRESHOLD = 80;
+        const TOKEN_SIZE = 70;
+        
+        const state = {
+            phase: 1, 
+            operationType: null, 
+            tokens: [],
+            nextId: 1,
+            resultRevealed: false,
+            subtractionTarget: [],
+            subtractionDefined: [], 
+            frozenValues: {}, 
+            operators: [],
+            locked: false,
+            currentTool: 'hand'
+        };
+
+        const board = document.getElementById('board');
+        const skyZone = document.getElementById('sky-zone');
+        const skyText = document.getElementById('sky-text');
+        const missionPanel = document.getElementById('mission-panel');
+        const missionTokensDiv = document.getElementById('mission-tokens');
+        const shortageHint = document.getElementById('shortage-hint');
+        const equationTerms = document.getElementById('equation-terms');
+        const btnPlus = document.getElementById('btn-plus');
+        const btnMinus = document.getElementById('btn-minus');
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorDiv = document.getElementById('custom-cursor');
+        const cursorPenSvg = document.getElementById('cursor-pen-svg');
+
+        // --- AUDIO (v23) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } 
+            else if (type === 'whoosh') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+            else if (type === 'snap') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+            else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+        }
+
+        // --- RACCOURCIS CLAVIER (v23) ---
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (e.key === '+' || e.key === '=') { handleSideButton('green'); playSound('click'); }
+            if (e.key === '-' || e.key === '_') { handleSideButton('red'); playSound('click'); }
+            if (e.key === '0' || e.key === 'à') { addZeroPair(); playSound('click'); }
+            if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
+            if (e.key === 'Enter') {
+                if (state.operationType !== 'subtract' && !state.locked) {
+                    animateSimplification();
+                } else {
+                    showAnswer();
+                }
+                playSound('click');
+            }
+            if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
+        });
+
+        // --- DESSIN (Correctif "Leurre") ---
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            canvas.width = board.clientWidth;
+            canvas.height = board.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        function setTool(tool) {
+            state.currentTool = tool;
+            resizeCanvas();
+            ['tool-hand', 'tool-pen'].forEach(id => {
+                document.getElementById(id).className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+            });
+            document.getElementById(`tool-${tool}`).className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+
+            if (tool === 'hand') {
+                canvas.style.pointerEvents = 'none';
+                board.style.cursor = 'default';
+                cursorDiv.style.display = 'none';
+                board.classList.remove('hide-cursor');
+            } else if (tool === 'pen') {
+                canvas.style.pointerEvents = 'auto';
+                board.classList.add('hide-cursor'); // Cacher la vraie souris
+                cursorDiv.style.display = 'block';
+                cursorPenSvg.style.display = 'block';
+                
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3;
+            }
+        }
+
+        // MAJ position curseur leurre
+        function updateCustomCursor(e) {
+            if (state.currentTool !== 'pen') return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            cursorDiv.style.left = clientX + 'px';
+            cursorDiv.style.top = clientY + 'px';
+            
+            // LA CLÉ : Ajustement fin pour que la pointe visuelle soit sous le clic
+            // L'image fait 34px, la pointe est à x=8, y=32 (dans le SVG)
+            // Donc on décale le div de -8px (X) et -32px (Y) pour que (0,0) de l'écran soit sous la pointe
+            cursorDiv.style.transform = 'translate(-2px, -30px)';
+        }
+
+        window.addEventListener('mousemove', updateCustomCursor);
+        window.addEventListener('touchmove', updateCustomCursor, {passive: false});
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            playSound('whoosh');
+        }
+
+        function startDraw(e) {
+            if (state.currentTool !== 'pen') return;
+            isDrawing = true;
+            updateCustomCursor(e);
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            lastX = clientX - rect.left;
+            lastY = clientY - rect.top;
+        }
+
+        function draw(e) {
+            if (!isDrawing || state.currentTool !== 'pen') return;
+            e.preventDefault();
+            updateCustomCursor(e);
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            lastX = x;
+            lastY = y;
+        }
+
+        function endDraw() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
+        canvas.addEventListener('touchend', endDraw);
+
+
+        // --- LOGIQUE APP ---
+
+        function handleSideButton(type) {
+            playSound('pop');
+            if (state.operationType === 'subtract') {
+                addToSubtractionTarget(type);
+            } else {
+                addToken(type);
+            }
+        }
+
+        function addToSubtractionTarget(type) {
+            state.subtractionTarget.push(type);
+            state.subtractionDefined.push(type);
+            updateMissionDisplay();
+            updateLogic(); 
+        }
+
+        function updateMissionDisplay() {
+            missionTokensDiv.innerHTML = '';
+            state.subtractionTarget.forEach(tType => {
+                const badge = document.createElement('div');
+                badge.className = `target-token ${tType}`;
+                badge.innerText = tType === 'green' ? '+1' : '-1';
+                missionTokensDiv.appendChild(badge);
+            });
+            
+            if (state.subtractionTarget.length > 0) {
+                missionPanel.classList.remove('hidden');
+                skyText.classList.remove('hidden');
+                skyZone.classList.add('active');
+            } else {
+                missionPanel.classList.add('hidden');
+                skyText.classList.add('hidden');
+                skyZone.classList.remove('active');
+            }
+        }
+
+        function addToken(type, x = null, y = null) {
+            const id = state.nextId++;
+            const el = document.createElement('div');
+            el.classList.add('token', type);
+            el.innerText = type === 'green' ? '+1' : '-1';
+            el.id = `token-${id}`;
+            const pos = (x === null || y === null) ? findFreePosition() : {x, y};
+            el.style.left = pos.x + 'px';
+            el.style.top = pos.y + 'px';
+            el.addEventListener('mousedown', handleDragStart);
+            el.addEventListener('touchstart', handleDragStart, {passive: false});
+            board.appendChild(el);
+            const tokenObj = { id: id, type: type, element: el, x: pos.x, y: pos.y, pairId: null, creationPhase: state.phase };
+            state.tokens.push(tokenObj);
+            updateLogic();
+            return tokenObj;
+        }
+
+        function addZeroPair() {
+            playSound('pop');
+            const pos = findFreePosition();
+            const t1 = addToken('green', pos.x, pos.y);
+            const t2 = addToken('red', pos.x, pos.y); 
+            createZeroPair(t1, t2);
+            updateLogic();
+        }
+
+        function findFreePosition() {
+            const padding = 20;
+            const maxX = board.clientWidth - TOKEN_SIZE - padding;
+            const maxY = board.clientHeight - TOKEN_SIZE - padding;
+            const minX = padding;
+            const minY = padding + 130; 
+            let bestX = 0, bestY = 0;
+            let maxMinDist = -1;
+
+            for(let i=0; i<15; i++) {
+                const rx = minX + Math.random() * (maxX - minX);
+                const ry = minY + Math.random() * (maxY - minY);
+                let minDist = 9999;
+                if (state.tokens.length === 0) return {x: rx, y: ry};
+                for(let t of state.tokens) {
+                    const d = Math.hypot(t.x - rx, t.y - ry);
+                    if(d < minDist) minDist = d;
+                }
+                if (minDist > maxMinDist) { maxMinDist = minDist; bestX = rx; bestY = ry; }
+                if (minDist > TOKEN_SIZE + 10) return {x: rx, y: ry};
+            }
+            return {x: bestX, y: bestY};
+        }
+
+        function setOperator(opType) {
+            playSound('click');
+            if (state.operationType === 'subtract') return;
+
+            if (opType === 'add') {
+                state.operationType = 'add';
+                const tokensCurrentPhase = state.tokens.filter(t => t.creationPhase === state.phase);
+                state.frozenValues[state.phase] = calculateValue(tokensCurrentPhase);
+                state.phase++;
+                state.operators.push('+');
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+            } 
+            else if (opType === 'subtract') {
+                if (state.phase > 1) return;
+                state.operationType = 'subtract';
+                const tokensP1 = state.tokens.filter(t => t.creationPhase === 1);
+                state.frozenValues[1] = calculateValue(tokensP1);
+                state.phase++; 
+                state.operators.push('-');
+                btnPlus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnPlus.disabled = true;
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+                const label = document.getElementById('action-label');
+                label.innerText = 'DÉFINIR CIBLE';
+                label.className = "text-[10px] font-bold text-orange-500 uppercase text-center";
+                document.getElementById('btn-auto-simplify').classList.add('hidden'); 
+            }
+            updateLogic();
+        }
+
+        function updateLogic() {
+            let html = '';
+            for (let p = 1; p <= state.phase; p++) {
+                let val = 0;
+                if (p < state.phase || state.locked) {
+                    if (state.frozenValues[p] !== undefined) {
+                        val = state.frozenValues[p];
+                    } else if (state.operationType === 'subtract' && p === 2) {
+                        val = calculateValueFromList(state.subtractionDefined);
+                    } else {
+                         const tokensP = state.tokens.filter(t => t.creationPhase === p);
+                         val = calculateValue(tokensP);
+                    }
+                } else {
+                    if (state.operationType === 'subtract' && p === 2) {
+                        val = calculateValueFromList(state.subtractionDefined);
+                    } else {
+                        const tokensP = state.tokens.filter(t => t.creationPhase === p);
+                        val = calculateValue(tokensP);
+                    }
+                }
+                const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-600' : 'text-slate-800');
+                const sign = val > 0 ? '+' : '';
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${val})</span>`;
+                if (p < state.phase) {
+                    const op = state.operators[p-1];
+                    html += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">${op}</span>`;
+                }
+            }
+            equationTerms.innerHTML = html;
+            if (state.operationType === 'subtract') checkShortage();
+            const totalRemaining = calculateValue(state.tokens);
+            const resEl = document.getElementById('op-result');
+            resEl.innerText = `(${totalRemaining > 0 ? '+' : ''}${totalRemaining})`;
+            resEl.className = "text-2xl sm:text-4xl font-bold " + (state.resultRevealed ? "" : "hidden ");
+            if(totalRemaining > 0) resEl.classList.add('text-green-600');
+            else if(totalRemaining < 0) resEl.classList.add('text-red-600');
+            else resEl.classList.add('text-slate-800');
+        }
+
+        function checkShortage() {
+            if (state.operationType !== 'subtract' || state.subtractionTarget.length === 0) {
+                shortageHint.classList.add('hidden', 'opacity-0');
+                return;
+            }
+            let neededGreen = 0; let neededRed = 0;
+            state.subtractionTarget.forEach(t => { if(t === 'green') neededGreen++; else neededRed++; });
+            let hasGreen = 0; let hasRed = 0;
+            state.tokens.forEach(t => { if(t.type === 'green') hasGreen++; else hasRed++; });
+            if (hasGreen < neededGreen || hasRed < neededRed) {
+                shortageHint.classList.remove('hidden');
+                setTimeout(() => shortageHint.classList.remove('opacity-0'), 100);
+            } else {
+                shortageHint.classList.add('opacity-0');
+                setTimeout(() => shortageHint.classList.add('hidden'), 500);
+            }
+        }
+
+        function calculateValueFromList(list) { return list.reduce((acc, type) => acc + (type === 'green' ? 1 : -1), 0); }
+        function calculateValue(list) { return list.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0); }
+
+        function showAnswer() {
+            playSound('click');
+            if(!state.locked && state.operationType !== 'subtract') {
+                 const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+            }
+            state.locked = true;
+            state.resultRevealed = true;
+            document.getElementById('op-question').classList.add('hidden');
+            document.getElementById('op-result').classList.remove('hidden');
+            updateLogic();
+        }
+        
+        function attemptRemoval(token) {
+            const targetIndex = state.subtractionTarget.indexOf(token.type);
+            if (targetIndex !== -1) {
+                playSound('whoosh');
+                state.subtractionTarget.splice(targetIndex, 1);
+                updateMissionDisplay();
+                unpairTokens(token);
+                token.element.classList.add('fly-away');
+                setTimeout(() => {
+                    token.element.remove();
+                    state.tokens = state.tokens.filter(t => t.id !== token.id);
+                    updateLogic();
+                }, 500);
+            } else {
+                token.element.animate([
+                    { transform: 'translateY(0)' }, { transform: 'translateY(20px)' }, { transform: 'translateY(0)' }
+                ], { duration: 300 });
+            }
+        }
+
+        function organizeBoard() {
+            playSound('whoosh');
+            state.tokens.forEach(t => unpairTokens(t));
+            const sortedGreens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
+            const sortedReds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
+            const spacing = TOKEN_SIZE + 5; 
+            const availableWidth = board.clientWidth - 40; 
+            const maxCols = Math.max(1, Math.floor(availableWidth / spacing));
+            const countGreen = sortedGreens.length;
+            const countRed = sortedReds.length;
+            const maxCount = Math.max(countGreen, countRed);
+            const usedCols = Math.min(maxCount, maxCols);
+            const blockWidth = usedCols * spacing;
+            const startX = (board.clientWidth - blockWidth) / 2 + (spacing / 2);
+            const centerY = board.clientHeight / 2 + 30; 
+            const verticalPitch = TOKEN_SIZE + 10;
+            const greenOffset = maxCount - countGreen;
+            const redOffset = maxCount - countRed;
+            sortedGreens.forEach((t, i) => {
+                const visualIndex = i + greenOffset; 
+                const col = visualIndex % maxCols;
+                const row = Math.floor(visualIndex / maxCols);
+                const x = startX + (col * spacing);
+                const y = centerY - (verticalPitch / 2) - (row * verticalPitch);
+                moveTokenTo(t, x, y);
+                t.element.style.transform = "scale(1)";
+            });
+            sortedReds.forEach((t, i) => {
+                const visualIndex = i + redOffset;
+                const col = visualIndex % maxCols;
+                const row = Math.floor(visualIndex / maxCols);
+                const x = startX + (col * spacing);
+                const y = centerY + (verticalPitch / 2) + (row * verticalPitch);
+                moveTokenTo(t, x, y);
+                t.element.style.transform = "scale(1)";
+            });
+        }
+
+        function moveTokenTo(t, x, y) {
+            t.x = x; t.y = y;
+            t.element.style.left = (x - TOKEN_SIZE/2) + 'px';
+            t.element.style.top = (y - TOKEN_SIZE/2) + 'px';
+        }
+
+        let draggedToken = null;
+        let dragOffset = {x:0, y:0};
+
+        function handleDragStart(e) {
+            if (state.currentTool !== 'hand') return;
+            e.preventDefault();
+            const el = e.target.closest('.token');
+            if(!el) return;
+            const id = parseInt(el.id.split('-')[1]);
+            draggedToken = state.tokens.find(t => t.id === id);
+            if (draggedToken.pairId !== null) unpairTokens(draggedToken);
+            el.style.zIndex = 1000;
+            el.style.transform = "scale(1.15)";
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMove, {passive: false});
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        function handleDragMove(e) {
+            if (!draggedToken) return;
+            e.preventDefault();
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const boardRect = board.getBoundingClientRect();
+            let newX = clientX - boardRect.left - dragOffset.x; 
+            let newY = clientY - boardRect.top - dragOffset.y;
+            draggedToken.element.style.left = newX + 'px';
+            draggedToken.element.style.top = newY + 'px';
+            draggedToken.x = newX + TOKEN_SIZE/2;
+            draggedToken.y = newY + TOKEN_SIZE/2;
+        }
+
+        function handleDragEnd(e) {
+            if (!draggedToken) return;
+            if (state.operationType === 'subtract' && draggedToken.y < 130) {
+                attemptRemoval(draggedToken);
+            } else {
+                checkForPairing(draggedToken);
+            }
+            draggedToken.element.style.zIndex = '';
+            draggedToken.element.style.transform = "";
+            draggedToken = null;
+            document.removeEventListener('mousemove', handleDragMove);
+            document.removeEventListener('touchmove', handleDragMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchend', handleDragEnd);
+            updateLogic();
+        }
+
+        function checkForPairing(token) {
+            const targetType = token.type === 'green' ? 'red' : 'green';
+            let bestCandidate = null;
+            let minDistance = SNAP_THRESHOLD; 
+            for (let t of state.tokens) {
+                if (t.type === targetType && t.pairId === null) {
+                    const dist = Math.hypot(t.x - token.x, t.y - token.y);
+                    if (dist < minDistance) { minDistance = dist; bestCandidate = t; }
+                }
+            }
+            if (bestCandidate) { playSound('snap'); createZeroPair(token, bestCandidate); }
+        }
+
+        function createZeroPair(t1, t2) {
+            const midX = (t1.x + t2.x) / 2;
+            const midY = (t1.y + t2.y) / 2;
+            moveTokenTo(t1, midX, midY);
+            moveTokenTo(t2, midX, midY);
+            t1.pairId = t2.id; t2.pairId = t1.id;
+            t1.element.classList.add('is-zero'); t2.element.classList.add('is-zero');
+            const badge = document.createElement('div');
+            badge.classList.add('zero-badge');
+            badge.innerText = '0';
+            badge.id = `badge-${t1.id}-${t2.id}`;
+            badge.style.left = (midX - 12) + 'px'; 
+            badge.style.top = (midY - 30) + 'px';
+            board.appendChild(badge);
+        }
+
+        function unpairTokens(token) {
+            if (token.pairId === null) return;
+            const partner = state.tokens.find(t => t.id === token.pairId);
+            if (partner) { partner.pairId = null; partner.element.classList.remove('is-zero'); }
+            token.pairId = null; token.element.classList.remove('is-zero');
+            let badge = document.getElementById(`badge-${token.id}-${partner?.id}`);
+            if (!badge && partner) badge = document.getElementById(`badge-${partner.id}-${token.id}`);
+            if (badge) badge.remove();
+        }
+
+        function animateSimplification() {
+            if (state.operationType === 'subtract') return;
+            if(!state.locked && state.operationType === 'add') {
+                 const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+            }
+            state.locked = true;
+            const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
+            const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
+            let pairs = [];
+            const count = Math.min(greens.length, reds.length);
+            for(let i=0; i<count; i++) {
+                pairs.push([greens.pop(), reds.pop()]);
+            }
+            if (pairs.length === 0) return;
+            const interval = 500; 
+            playSound('whoosh');
+            pairs.forEach((pair, index) => {
+                setTimeout(() => {
+                    const [t1, t2] = pair;
+                    unpairTokens(t1); 
+                    t1.element.classList.add('fly-away');
+                    t2.element.classList.add('fly-away');
+                    setTimeout(() => {
+                        if(t1.element.parentNode) t1.element.remove();
+                        if(t2.element.parentNode) t2.element.remove();
+                        state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                        updateLogic();
+                    }, 800);
+                }, index * interval);
+            });
+        }
+
+        function resetBoard() {
+            playSound('click');
+            state.tokens.forEach(t => t.element.remove());
+            document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+            clearCanvas();
+            state.tokens = [];
+            state.subtractionTarget = [];
+            state.subtractionDefined = []; 
+            state.phase = 1;
+            state.hasOperator = false;
+            state.resultRevealed = false;
+            state.operationType = null;
+            state.locked = false;
+            state.frozenValues = {};
+            state.operators = [];
+            
+            document.getElementById('equation-terms').innerHTML = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
+            document.getElementById('op-result').classList.add('hidden');
+            document.getElementById('op-question').classList.remove('hidden');
+            
+            btnPlus.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+            btnPlus.disabled = false;
+            btnMinus.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+            btnMinus.disabled = false;
+            
+            document.getElementById('action-label').innerText = 'AJOUTER';
+            document.getElementById('action-label').className = "text-[10px] font-bold text-slate-400 uppercase text-center";
+            document.getElementById('btn-auto-simplify').classList.remove('hidden');
+            document.getElementById('shortage-hint').classList.add('hidden', 'opacity-0');
+            setTool('hand');
+            updateMissionDisplay();
+            updateLogic();
+        }
+    </script>
 </body>
 </html>
