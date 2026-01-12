@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Opérations Nombres Relatifs - Focus Jetons</title>
+    <title>Opérations Nombres Relatifs - Version Luxe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -138,14 +138,14 @@
         
         <!-- Actions Gauche -->
         <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-             <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
+             <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer (Suppr)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <span class="hidden sm:inline text-xs">Reset</span>
             </button>
 
-            <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base">
+            <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base" title="Raccourci: Entrée">
                 Réponse
             </button>
             
@@ -202,14 +202,14 @@
         <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
             <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
             
-            <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center">
+            <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
                 +1
             </button>
-            <button onclick="handleSideButton('red')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center">
+            <button onclick="handleSideButton('red')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: -">
                 -1
             </button>
             
-            <button onclick="addZeroPair()" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-200 border-4 border-slate-400 text-slate-600 font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex flex-col items-center justify-center leading-none mt-2">
+            <button onclick="addZeroPair()" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-200 border-4 border-slate-400 text-slate-600 font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex flex-col items-center justify-center leading-none mt-2" title="Raccourci: 0">
                 <div class="flex gap-1">
                     <div class="w-3 h-3 rounded-full bg-green-500"></div>
                     <div class="w-3 h-3 rounded-full bg-red-500"></div>
@@ -219,11 +219,11 @@
 
             <div class="w-12 h-px bg-slate-300 my-1"></div>
 
-            <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm">
+            <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm" title="Raccourci: Espace">
                 ALIGNER
             </button>
 
-            <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition">
+            <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
                 <span class="text-xs font-bold">AUTO</span>
                 <span class="text-lg font-bold">0</span>
             </button>
@@ -268,9 +268,93 @@
         const btnPlus = document.getElementById('btn-plus');
         const btnMinus = document.getElementById('btn-minus');
 
+        // --- AUDIO ENGINE (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                // Son "Pop" (Ajout) - Court et montant
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } 
+            else if (type === 'whoosh') {
+                // Son "Whoosh" (Envol) - Bruit blanc filtré (approximé par dent de scie descendant)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+            else if (type === 'snap') {
+                // Son "Snap" (Paire Zéro) - Sec
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+            else if (type === 'click') {
+                // Son "Click" (Boutons)
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        // --- KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            
+            // + / - (Pavé num ou haut du clavier)
+            if (e.key === '+' || e.key === '=') { handleSideButton('green'); playSound('click'); }
+            if (e.key === '-' || e.key === '_') { handleSideButton('red'); playSound('click'); }
+            
+            // 0 (Zéro)
+            if (e.key === '0' || e.key === 'à') { addZeroPair(); playSound('click'); }
+            
+            // Espace (Ordonner)
+            if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
+            
+            // Entrée (Simplifier / Réponse)
+            if (e.key === 'Enter') {
+                if (state.operationType !== 'subtract' && !state.locked) {
+                    animateSimplification();
+                } else {
+                    showAnswer();
+                }
+                playSound('click');
+            }
+            
+            // Delete / Backspace (Reset)
+            if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
+        });
+
+
         // --- LOGIQUE APP ---
 
         function handleSideButton(type) {
+            playSound('pop');
             if (state.operationType === 'subtract') {
                 addToSubtractionTarget(type);
             } else {
@@ -324,6 +408,7 @@
         }
 
         function addZeroPair() {
+            playSound('pop');
             const pos = findFreePosition();
             const t1 = addToken('green', pos.x, pos.y);
             const t2 = addToken('red', pos.x, pos.y); 
@@ -356,6 +441,7 @@
         }
 
         function setOperator(opType) {
+            playSound('click');
             if (state.operationType === 'subtract') return;
 
             if (opType === 'add') {
@@ -448,6 +534,7 @@
         function calculateValue(list) { return list.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0); }
 
         function showAnswer() {
+            playSound('click');
             if(!state.locked && state.operationType !== 'subtract') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
@@ -462,6 +549,7 @@
         function attemptRemoval(token) {
             const targetIndex = state.subtractionTarget.indexOf(token.type);
             if (targetIndex !== -1) {
+                playSound('whoosh');
                 state.subtractionTarget.splice(targetIndex, 1);
                 updateMissionDisplay();
                 unpairTokens(token);
@@ -479,6 +567,7 @@
         }
 
         function organizeBoard() {
+            playSound('whoosh');
             state.tokens.forEach(t => unpairTokens(t));
             const sortedGreens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
             const sortedReds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
@@ -585,7 +674,7 @@
                     if (dist < minDistance) { minDistance = dist; bestCandidate = t; }
                 }
             }
-            if (bestCandidate) { createZeroPair(token, bestCandidate); }
+            if (bestCandidate) { playSound('snap'); createZeroPair(token, bestCandidate); }
         }
 
         function createZeroPair(t1, t2) {
@@ -630,6 +719,7 @@
             }
             if (pairs.length === 0) return;
             const interval = 500; 
+            playSound('whoosh');
             pairs.forEach((pair, index) => {
                 setTimeout(() => {
                     const [t1, t2] = pair;
@@ -647,6 +737,7 @@
         }
 
         function resetBoard() {
+            playSound('click');
             state.tokens.forEach(t => t.element.remove());
             document.querySelectorAll('.zero-badge').forEach(b => b.remove());
             state.tokens = [];
