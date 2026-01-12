@@ -548,12 +548,33 @@
 
         function handleSideButton(type) {
             playSound('pop');
-            // En mode soustraction OU nuage, on définit la cible
+
+            // 1. En mode soustraction OU nuage, on ne change rien au comportement (cible)
             if (state.operationType === 'subtract' || state.operationType === 'cloud') {
                 addToSubtractionTarget(type);
-            } else {
-                addToken(type);
+                return;
+            } 
+            
+            // 2. LOGIQUE D'AJOUT AUTOMATIQUE DU "+" (Nouvelle fonctionnalité)
+            // On regarde les jetons actuellement dans le paquet en cours
+            const currentTokens = state.tokens.filter(t => t.creationPhase === state.phase);
+
+            if (currentTokens.length > 0) {
+                const hasGreen = currentTokens.some(t => t.type === 'green');
+                const hasRed = currentTokens.some(t => t.type === 'red');
+
+                // Si j'ajoute un ROUGE alors que je n'ai que des VERTS -> Hop, nouvelle parenthèse (+)
+                if (type === 'red' && hasGreen && !hasRed) {
+                    setOperator('add');
+                }
+                // Si j'ajoute un VERT alors que je n'ai que des ROUGES -> Hop, nouvelle parenthèse (+)
+                else if (type === 'green' && hasRed && !hasGreen) {
+                    setOperator('add');
+                }
             }
+            
+            // 3. On ajoute le jeton (dans la phase actuelle ou la nouvelle si setOperator a été déclenché)
+            addToken(type);
         }
 
         function addToSubtractionTarget(type) {
