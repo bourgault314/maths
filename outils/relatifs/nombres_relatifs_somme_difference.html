@@ -127,6 +127,45 @@
             border-bottom: 2px dashed rgba(251, 146, 60, 0.4);
         }
 
+        /* NUAGE (Mode Inconnu) */
+        #unknown-cloud {
+            position: absolute;
+            /* MODIFICATION: Déplacement vers le coin gauche */
+            top: 35%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 180px;
+            z-index: 1; /* Derrière les jetons */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        #unknown-cloud.visible {
+            opacity: 0.6;
+        }
+        /* Forme du nuage en CSS pur */
+        .cloud-shape {
+            width: 100%;
+            height: 100%;
+            background: #e0f2fe;
+            border-radius: 100px;
+            position: relative;
+        }
+        .cloud-shape::after, .cloud-shape::before {
+            content: '';
+            position: absolute;
+            background: #e0f2fe;
+            z-index: -1;
+        }
+        .cloud-shape::after { width: 100px; height: 100px; top: -50px; left: 50px; border-radius: 50%; }
+        .cloud-shape::before { width: 120px; height: 120px; top: -70px; right: 50px; border-radius: 50%; }
+
         /* Scrollbar masquée */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -200,6 +239,13 @@
                 <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
                     -
                 </button>
+                <!-- BOUTON NUAGE -->
+                <button id="btn-cloud" onclick="setOperator('cloud')" class="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full border-4 border-slate-400 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-xl relative" title="Nombre Mystère">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <span class="relative z-10 text-xs font-extrabold translate-y-0.5">?</span>
+                </button>
             </div>
         </div>
 
@@ -213,14 +259,14 @@
                 <span id="op-result" class="text-2xl sm:text-4xl font-bold text-blue-600 hidden">?</span>
                 <span id="op-question" class="text-2xl sm:text-4xl font-bold text-slate-300">?</span>
             </div>
-            <!-- Zone d'objectif -->
-            <div id="mission-panel" class="hidden flex items-center gap-2 text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 shadow-sm mt-1">
-                <span class="text-xs uppercase tracking-wide">Reste à retirer :</span>
-                <div id="mission-tokens" class="flex gap-1"></div>
+            <!-- Zone d'objectif - HAUTEUR FIXÉE (h-[44px]) pour éviter le décalage -->
+            <div id="mission-panel" class="invisible flex items-center justify-center gap-2 text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 shadow-sm mt-1 h-[44px] box-border">
+                <span class="text-xs uppercase tracking-wide whitespace-nowrap">Reste à retirer :</span>
+                <div id="mission-tokens" class="flex gap-1 h-[32px] items-center"></div>
             </div>
         </div>
 
-        <!-- OUTILS DESSIN (Nouveau) -->
+        <!-- OUTILS DESSIN -->
         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
             <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main (Bouger les jetons)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,7 +279,6 @@
                 </svg>
             </button>
             <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Tout effacer le dessin">
-                <!-- Balai -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -244,6 +289,14 @@
     <div class="flex flex-1 overflow-hidden relative">
         <!-- Canvas pour dessiner -->
         <canvas id="drawing-canvas"></canvas>
+
+        <!-- NUAGE MYSTÈRE -->
+        <div id="unknown-cloud">
+            <div class="cloud-shape flex items-center justify-center flex-col pt-4">
+                <span class="text-4xl font-extrabold text-slate-400">?</span>
+                <span class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-1">Jetons Cachés</span>
+            </div>
+        </div>
 
         <!-- Zone Ciel -->
         <div id="sky-zone">
@@ -263,7 +316,7 @@
             </div>
         </div>
 
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (GAUCHE) -->
         <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
             <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
             
@@ -294,7 +347,7 @@
             </button>
         </aside>
 
-        <!-- BOARD -->
+        <!-- BOARD (DROITE) -->
         <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
             <div class="absolute inset-0 opacity-20 pointer-events-none" 
                  style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
@@ -312,7 +365,7 @@
         
         const state = {
             phase: 1, 
-            operationType: null, 
+            operationType: null, // 'add', 'subtract', 'cloud'
             tokens: [],
             nextId: 1,
             resultRevealed: false,
@@ -333,11 +386,12 @@
         const equationTerms = document.getElementById('equation-terms');
         const btnPlus = document.getElementById('btn-plus');
         const btnMinus = document.getElementById('btn-minus');
+        const cloudEl = document.getElementById('unknown-cloud');
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
         const cursorDiv = document.getElementById('custom-cursor');
 
-        // --- AUDIO ENGINE (Web Audio API) ---
+        // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound(type) {
@@ -384,13 +438,12 @@
         // --- KEYBOARD SHORTCUTS ---
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
-            // Bloquer raccourcis si on dessine ? Non, pratique pour changer d'outil
             if (e.key === '+' || e.key === '=') { handleSideButton('green'); playSound('click'); }
             if (e.key === '-' || e.key === '_') { handleSideButton('red'); playSound('click'); }
             if (e.key === '0' || e.key === 'à') { addZeroPair(); playSound('click'); }
             if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
             if (e.key === 'Enter') {
-                if (state.operationType !== 'subtract' && !state.locked) {
+                if (state.operationType !== 'subtract' && state.operationType !== 'cloud' && !state.locked) {
                     animateSimplification();
                 } else {
                     showAnswer();
@@ -400,24 +453,19 @@
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
         });
 
-        // --- DESSIN & CURSEUR VIRTUEL ---
+        // --- DESSIN & CURSEUR ---
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
 
         function resizeCanvas() {
             const boardRect = board.getBoundingClientRect();
-            // On veut que le canvas couvre exactement le board
             canvas.style.width = boardRect.width + 'px';
             canvas.style.height = boardRect.height + 'px';
-            
-            // HiDPI
             const dpr = window.devicePixelRatio || 1;
             canvas.width = Math.round(boardRect.width * dpr);
             canvas.height = Math.round(boardRect.height * dpr);
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-            // Restore style after resize
             if (state.currentTool === 'pen') {
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#2563eb';
@@ -433,7 +481,6 @@
                 canvas.style.pointerEvents = 'none';
                 board.classList.remove('hide-cursor');
                 cursorDiv.style.display = 'none';
-                
                 document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
                 document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
             } else if (tool === 'pen') {
@@ -441,11 +488,9 @@
                 canvas.style.pointerEvents = 'auto';
                 board.classList.add('hide-cursor');
                 cursorDiv.style.display = 'block';
-                
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 3;
-
                 document.getElementById('tool-hand').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
                 document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
             }
@@ -453,35 +498,24 @@
 
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
-            // Optionnel : revenir en mode main après effacement ?
-            // setTool('hand'); 
         }
 
-        // Suivi du curseur virtuel
         function updateCustomCursor(e) {
             if (state.currentTool !== 'pen') return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
             cursorDiv.style.left = clientX + 'px';
             cursorDiv.style.top = clientY + 'px';
-            
-            // LA CLÉ DU SUCCÈS : Le translate exact du fichier uploadé
             cursorDiv.style.transform = 'translate(-2px, -30px)';
         }
-
         window.addEventListener('mousemove', updateCustomCursor);
         window.addEventListener('touchmove', updateCustomCursor, {passive: false});
 
-        // Events Dessin
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function startDraw(e) {
@@ -489,8 +523,7 @@
             isDrawing = true;
             updateCustomCursor(e);
             const pos = getPos(e);
-            lastX = pos.x;
-            lastY = pos.y;
+            lastX = pos.x; lastY = pos.y;
         }
 
         function draw(e) {
@@ -498,19 +531,11 @@
             e.preventDefault();
             updateCustomCursor(e);
             const pos = getPos(e);
-            
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            lastX = pos.x;
-            lastY = pos.y;
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+            lastX = pos.x; lastY = pos.y;
         }
 
-        function endDraw() {
-            isDrawing = false;
-        }
-
+        function endDraw() { isDrawing = false; }
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', endDraw);
@@ -519,11 +544,12 @@
         canvas.addEventListener('touchend', endDraw);
 
 
-        // --- LOGIQUE APP (Identique v23) ---
+        // --- LOGIQUE APP ---
 
         function handleSideButton(type) {
             playSound('pop');
-            if (state.operationType === 'subtract') {
+            // En mode soustraction OU nuage, on définit la cible
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') {
                 addToSubtractionTarget(type);
             } else {
                 addToken(type);
@@ -547,11 +573,11 @@
             });
             
             if (state.subtractionTarget.length > 0) {
-                missionPanel.classList.remove('hidden');
+                missionPanel.classList.remove('invisible');
                 skyText.classList.remove('hidden');
                 skyZone.classList.add('active');
             } else {
-                missionPanel.classList.add('hidden');
+                missionPanel.classList.add('invisible');
                 skyText.classList.add('hidden');
                 skyZone.classList.remove('active');
             }
@@ -610,7 +636,30 @@
 
         function setOperator(opType) {
             playSound('click');
-            if (state.operationType === 'subtract') return;
+            
+            if (opType === 'cloud') {
+                resetBoard();
+                state.operationType = 'cloud';
+                state.phase = 2; // On passe direct à l'étape "retirer"
+                cloudEl.classList.add('visible'); // Affiche le nuage
+                
+                // UI Label
+                const label = document.getElementById('action-label');
+                label.innerText = 'DÉFINIR CIBLE';
+                label.className = "text-[10px] font-bold text-orange-500 uppercase text-center";
+                document.getElementById('btn-auto-simplify').classList.add('hidden');
+                
+                // Désactive boutons
+                btnPlus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnPlus.disabled = true;
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+                
+                updateLogic();
+                return;
+            }
+
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
 
             if (opType === 'add') {
                 state.operationType = 'add';
@@ -642,6 +691,37 @@
 
         function updateLogic() {
             let html = '';
+            
+            // --- MODE NUAGE ---
+            if (state.operationType === 'cloud') {
+                // Inconnue
+                html += `<span class="text-2xl sm:text-4xl font-extrabold text-slate-600 tracking-tight transition-colors">?</span>`;
+                // Opérateur Moins (toujours soustraction en mode nuage pour cet exercice)
+                html += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">-</span>`;
+                
+                // La cible définie
+                let valCible = calculateValueFromList(state.subtractionDefined);
+                const colorClass = valCible > 0 ? 'text-green-600' : (valCible < 0 ? 'text-red-600' : 'text-slate-800');
+                const sign = valCible > 0 ? '+' : '';
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass}">(${sign}${valCible})</span>`;
+
+                equationTerms.innerHTML = html;
+                checkShortage();
+
+                // Résultat : ? + (Ce qu'il reste sur le plateau)
+                const totalRemaining = calculateValue(state.tokens);
+                const resEl = document.getElementById('op-result');
+                const remainingSign = totalRemaining > 0 ? '+' : '';
+                const remainingColor = totalRemaining > 0 ? 'text-green-600' : (totalRemaining < 0 ? 'text-red-600' : 'text-slate-800');
+                
+                // Affichage spécial pour le résultat Nuage: "? + (-4)"
+                resEl.innerHTML = `<span class="text-slate-600">?</span> <span class="text-slate-800">+</span> <span class="${remainingColor}">(${remainingSign}${totalRemaining})</span>`;
+                
+                resEl.className = "text-2xl sm:text-4xl font-bold flex items-center gap-1 " + (state.resultRevealed ? "" : "hidden ");
+                return;
+            }
+
+            // --- MODE STANDARD ---
             for (let p = 1; p <= state.phase; p++) {
                 let val = 0;
                 if (p < state.phase || state.locked) {
@@ -681,7 +761,7 @@
         }
 
         function checkShortage() {
-            if (state.operationType !== 'subtract' || state.subtractionTarget.length === 0) {
+            if ((state.operationType !== 'subtract' && state.operationType !== 'cloud') || state.subtractionTarget.length === 0) {
                 shortageHint.classList.add('hidden', 'opacity-0');
                 return;
             }
@@ -703,7 +783,7 @@
 
         function showAnswer() {
             playSound('click');
-            if(!state.locked && state.operationType !== 'subtract') {
+            if(!state.locked && state.operationType !== 'subtract' && state.operationType !== 'cloud') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
             }
@@ -736,40 +816,149 @@
 
         function organizeBoard() {
             playSound('whoosh');
-            state.tokens.forEach(t => unpairTokens(t));
-            const sortedGreens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
-            const sortedReds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
+            
+            // 1. Identifier les groupes
+            const unpairedGreens = state.tokens.filter(t => t.type === 'green' && t.pairId === null).sort((a,b) => a.id - b.id);
+            const unpairedReds = state.tokens.filter(t => t.type === 'red' && t.pairId === null).sort((a,b) => a.id - b.id);
+            const zeroPairs = state.tokens.filter(t => t.type === 'green' && t.pairId !== null).sort((a,b) => a.id - b.id);
+
             const spacing = TOKEN_SIZE + 5; 
             const availableWidth = board.clientWidth - 40; 
-            const maxCols = Math.max(1, Math.floor(availableWidth / spacing));
-            const countGreen = sortedGreens.length;
-            const countRed = sortedReds.length;
-            const maxCount = Math.max(countGreen, countRed);
-            const usedCols = Math.min(maxCount, maxCols);
-            const blockWidth = usedCols * spacing;
-            const startX = (board.clientWidth - blockWidth) / 2 + (spacing / 2);
-            const centerY = board.clientHeight / 2 + 30; 
-            const verticalPitch = TOKEN_SIZE + 10;
-            const greenOffset = maxCount - countGreen;
-            const redOffset = maxCount - countRed;
-            sortedGreens.forEach((t, i) => {
+            const maxColsBoard = Math.max(1, Math.floor(availableWidth / spacing));
+
+            // --- A. Calcul espace ZÉROS (Droite) ---
+            const pairsCount = zeroPairs.length;
+            let zeroCols = 0;
+            let widthZeros = 0;
+            let gap = 0;
+
+            if (pairsCount > 0) {
+                gap = spacing * 1.5; 
+                zeroCols = Math.ceil(Math.sqrt(pairsCount));
+                // Limite largeur Zéros (max 40% écran)
+                const maxZeroColsLimit = Math.floor(maxColsBoard * 0.4);
+                if (zeroCols > maxZeroColsLimit && maxZeroColsLimit >= 1) {
+                    zeroCols = maxZeroColsLimit;
+                }
+                widthZeros = zeroCols * spacing;
+            }
+
+            // --- B. Calcul espace NON-APPARIÉS (Gauche) ---
+            const availableForUnpaired = availableWidth - widthZeros - gap;
+            
+            // Nombre max de colonnes par ligne (avant retour à la ligne)
+            const maxColsPerRow = Math.max(1, Math.floor(availableForUnpaired / spacing));
+
+            const countGreen = unpairedGreens.length;
+            const countRed = unpairedReds.length;
+            const maxCountUnpaired = Math.max(countGreen, countRed);
+            
+            // Largeur visuelle utilisée (soit on remplit tout, soit on prend juste ce qu'il faut)
+            const usedColsUnpaired = Math.min(maxCountUnpaired, maxColsPerRow);
+            const widthUnpaired = usedColsUnpaired * spacing;
+            
+            const totalWidth = widthUnpaired + gap + widthZeros;
+            
+            // --- C. Calcul Hauteur Totale (pour centrage vertical) ---
+            
+            // Zéros : Hauteur de la grille
+            const zeroRows = zeroCols > 0 ? Math.ceil(pairsCount / zeroCols) : 0;
+            const totalHeightZeros = zeroRows > 0 ? (zeroRows * spacing) : 0;
+
+            // Unpaired : On fonctionne par "BLOCS" (1 ligne Vert + 1 ligne Rouge)
+            const totalBlocks = Math.ceil(maxCountUnpaired / maxColsPerRow);
+            const rowHeight = TOKEN_SIZE + 10; // Hauteur d'une rangée de jetons
+            const blockGap = 30; // Espace entre le bloc (G+R) et le suivant
+            // Hauteur d'un bloc complet (Verts + Rouges + Espace dessous)
+            const blockHeight = (rowHeight * 2) + blockGap; 
+            
+            const totalHeightUnpaired = totalBlocks > 0 ? (totalBlocks * blockHeight) - blockGap : 0;
+            
+            // Hauteur max globale
+            const totalContentHeight = Math.max(totalHeightUnpaired, totalHeightZeros);
+
+            // --- D. Coordonnées de départ ---
+            
+            // Centrage Horizontal
+            let startX = (availableWidth - totalWidth) / 2 + 20 + (spacing / 2);
+            if (startX < 20 + spacing/2) startX = 20 + spacing/2;
+
+            // Centrage Vertical (Point le plus haut)
+            const startY = (board.clientHeight - totalContentHeight) / 2 + (TOKEN_SIZE/2);
+
+            // Calcul du décalage (Offset) pour alignement à DROITE
+            const greenOffset = maxCountUnpaired - countGreen;
+            const redOffset = maxCountUnpaired - countRed;
+
+            // --- E. Placement ---
+
+            // 1. Verts (Haut du bloc)
+            unpairedGreens.forEach((t, i) => {
                 const visualIndex = i + greenOffset; 
-                const col = visualIndex % maxCols;
-                const row = Math.floor(visualIndex / maxCols);
-                const x = startX + (col * spacing);
-                const y = centerY - (verticalPitch / 2) - (row * verticalPitch);
+                
+                // On détermine dans quel bloc (quelle paire de ligne) et quelle colonne
+                const blockIndex = Math.floor(visualIndex / maxColsPerRow);
+                const colIndex = visualIndex % maxColsPerRow;
+                
+                const x = startX + (colIndex * spacing);
+                // Y = Start + Hauteur des blocs précédents
+                const y = startY + (blockIndex * blockHeight);
+                
                 moveTokenTo(t, x, y);
                 t.element.style.transform = "scale(1)";
             });
-            sortedReds.forEach((t, i) => {
+
+            // 2. Rouges (Bas du bloc, juste sous les verts)
+            unpairedReds.forEach((t, i) => {
                 const visualIndex = i + redOffset;
-                const col = visualIndex % maxCols;
-                const row = Math.floor(visualIndex / maxCols);
-                const x = startX + (col * spacing);
-                const y = centerY + (verticalPitch / 2) + (row * verticalPitch);
+                
+                const blockIndex = Math.floor(visualIndex / maxColsPerRow);
+                const colIndex = visualIndex % maxColsPerRow;
+                
+                const x = startX + (colIndex * spacing);
+                // Y = Comme les verts + hauteur d'une ligne
+                const y = startY + (blockIndex * blockHeight) + rowHeight;
+                
                 moveTokenTo(t, x, y);
                 t.element.style.transform = "scale(1)";
             });
+
+            // 3. Zéros (Grille à droite)
+            if (zeroPairs.length > 0) {
+                const zeroStartX = startX + widthUnpaired + gap;
+                // Centrage vertical de la grille zéro par rapport au tout
+                const zeroStartY = (board.clientHeight - totalHeightZeros) / 2 + (TOKEN_SIZE/2);
+                
+                zeroPairs.forEach((greenT, i) => {
+                    const redT = state.tokens.find(t => t.id === greenT.pairId);
+                    
+                    const col = i % zeroCols;
+                    const row = Math.floor(i / zeroCols);
+                    
+                    const x = zeroStartX + (col * spacing);
+                    const y = zeroStartY + (row * spacing);
+                    
+                    moveTokenTo(greenT, x, y);
+                    greenT.element.style.transform = "scale(1)";
+                    
+                    if (redT) {
+                        moveTokenTo(redT, x, y);
+                        redT.element.style.transform = "scale(1)";
+                        updateBadgePosition(greenT, redT);
+                    }
+                });
+            }
+        }
+        
+        // Helper pour mettre à jour la position du badge 0
+        function updateBadgePosition(t1, t2) {
+            const badgeId1 = `badge-${t1.id}-${t2.id}`;
+            const badgeId2 = `badge-${t2.id}-${t1.id}`;
+            let badge = document.getElementById(badgeId1) || document.getElementById(badgeId2);
+            if (badge) {
+                badge.style.left = (t1.x - 12) + 'px'; 
+                badge.style.top = (t1.y - 30) + 'px';
+            }
         }
 
         function moveTokenTo(t, x, y) {
@@ -782,7 +971,6 @@
         let dragOffset = {x:0, y:0};
 
         function handleDragStart(e) {
-            // Pas de drag si on est en mode stylo (mais ok si main)
             if (state.currentTool !== 'hand') return; 
             e.preventDefault();
             const el = e.target.closest('.token');
@@ -819,7 +1007,7 @@
 
         function handleDragEnd(e) {
             if (!draggedToken) return;
-            if (state.operationType === 'subtract' && draggedToken.y < 130) {
+            if ((state.operationType === 'subtract' || state.operationType === 'cloud') && draggedToken.y < 130) {
                 attemptRemoval(draggedToken);
             } else {
                 checkForPairing(draggedToken);
@@ -874,7 +1062,7 @@
         }
 
         function animateSimplification() {
-            if (state.operationType === 'subtract') return;
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
             if(!state.locked && state.operationType === 'add') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
@@ -886,10 +1074,8 @@
             let pairs = [];
             const count = Math.min(greens.length, reds.length);
             for(let i=0; i<count; i++) {
-                // On prend depuis la fin (les derniers arrivés, ceux à droite)
                 pairs.push([greens.pop(), reds.pop()]);
             }
-            // ---------------------------------------------------
             if (pairs.length === 0) return;
             const interval = 500; 
             playSound('whoosh');
@@ -914,6 +1100,7 @@
             state.tokens.forEach(t => t.element.remove());
             document.querySelectorAll('.zero-badge').forEach(b => b.remove());
             clearCanvas();
+            cloudEl.classList.remove('visible'); // Cache le nuage
             state.tokens = [];
             state.subtractionTarget = [];
             state.subtractionDefined = []; 
