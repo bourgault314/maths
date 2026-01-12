@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Opérations Nombres Relatifs - Final Audio</title>
+    <title>Opérations Nombres Relatifs - Fusion Finale</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -14,7 +14,7 @@
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
-            cursor: default;
+            cursor: default; /* Curseur par défaut si pas en mode dessin */
         }
 
         /* --- STYLES DES JETONS --- */
@@ -131,28 +131,28 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Canvas de dessin */
+        /* --- DESSIN --- */
         #drawing-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 50; /* Au dessus des jetons */
-            pointer-events: none; /* Par défaut, on clique au travers */
+            z-index: 50; /* Au-dessus des jetons */
+            pointer-events: none; /* Par défaut, laisse passer les clics (Main) */
             touch-action: none;
         }
-        
+
         /* CURSEUR VIRTUEL (Le stylo magique) */
         #custom-cursor {
             position: fixed;
             pointer-events: none;
             z-index: 9999;
-            display: none;
+            display: none; /* Caché par défaut */
             transform-origin: top left;
         }
         
-        /* Quand le stylo est actif, on cache le vrai curseur sur la zone de dessin */
+        /* Quand le stylo est actif, on cache le vrai curseur sur TOUT le body */
         .hide-cursor, .hide-cursor * {
             cursor: none !important;
         }
@@ -160,16 +160,17 @@
 </head>
 <body class="h-screen w-screen flex flex-col">
 
-    <!-- CURSEUR PERSONNALISÉ (Leurre) -->
+    <!-- CURSEUR PERSONNALISÉ (Stylo) -->
     <div id="custom-cursor">
-        <!-- SVG du stylo, pointe en bas à gauche -->
-        <svg id="cursor-pen-svg" class="hidden drop-shadow-md" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg id="cursor-pen-svg" class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Corps du stylo -->
             <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
             <!-- Pointe -->
             <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
             <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-            <circle cx="8" cy="32" r="1.6" fill="#111827"/>
+            <!-- Point exact -->
+            <circle cx="8" cy="32" r="1" fill="white"/>
+            <!-- Reflet -->
             <path d="M26 8 L14 20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
         </svg>
     </div>
@@ -219,20 +220,20 @@
             </div>
         </div>
 
-        <!-- Outils Dessin (Droite) -->
+        <!-- OUTILS DESSIN (Nouveau) -->
         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
-            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Déplacer">
+            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main (Bouger les jetons)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
                 </svg>
             </button>
-            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
+            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon (Dessiner)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
             </button>
-            <!-- Bouton Gomme (Efface Tout) -->
-            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer tout le dessin">
+            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Tout effacer le dessin">
+                <!-- Balai -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -335,14 +336,12 @@
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
         const cursorDiv = document.getElementById('custom-cursor');
-        const cursorPenSvg = document.getElementById('cursor-pen-svg');
 
-        // --- AUDIO (v23) ---
+        // --- AUDIO ENGINE (Web Audio API) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -382,9 +381,10 @@
             }
         }
 
-        // --- RACCOURCIS CLAVIER (v23) ---
+        // --- KEYBOARD SHORTCUTS ---
         document.addEventListener('keydown', (e) => {
             if (e.repeat) return;
+            // Bloquer raccourcis si on dessine ? Non, pratique pour changer d'outil
             if (e.key === '+' || e.key === '=') { handleSideButton('green'); playSound('click'); }
             if (e.key === '-' || e.key === '_') { handleSideButton('red'); playSound('click'); }
             if (e.key === '0' || e.key === 'à') { addZeroPair(); playSound('click'); }
@@ -400,44 +400,64 @@
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
         });
 
-        // --- DESSIN (Correctif "Leurre") ---
+        // --- DESSIN & CURSEUR VIRTUEL ---
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
 
         function resizeCanvas() {
-            canvas.width = board.clientWidth;
-            canvas.height = board.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
+            const boardRect = board.getBoundingClientRect();
+            // On veut que le canvas couvre exactement le board
+            canvas.style.width = boardRect.width + 'px';
+            canvas.style.height = boardRect.height + 'px';
+            
+            // HiDPI
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.round(boardRect.width * dpr);
+            canvas.height = Math.round(boardRect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        function setTool(tool) {
-            state.currentTool = tool;
-            resizeCanvas();
-            ['tool-hand', 'tool-pen'].forEach(id => {
-                document.getElementById(id).className = "p-2 rounded text-gray-500 hover:bg-gray-200";
-            });
-            document.getElementById(`tool-${tool}`).className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
-
-            if (tool === 'hand') {
-                canvas.style.pointerEvents = 'none';
-                board.style.cursor = 'default';
-                cursorDiv.style.display = 'none';
-                board.classList.remove('hide-cursor');
-            } else if (tool === 'pen') {
-                canvas.style.pointerEvents = 'auto';
-                board.classList.add('hide-cursor'); // Cacher la vraie souris
-                cursorDiv.style.display = 'block';
-                cursorPenSvg.style.display = 'block';
-                
+            // Restore style after resize
+            if (state.currentTool === 'pen') {
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 3;
             }
         }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
 
-        // MAJ position curseur leurre
+        function setTool(tool) {
+            if (tool === 'hand') {
+                state.currentTool = 'hand';
+                canvas.style.pointerEvents = 'none';
+                board.classList.remove('hide-cursor');
+                cursorDiv.style.display = 'none';
+                
+                document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+                document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+            } else if (tool === 'pen') {
+                state.currentTool = 'pen';
+                canvas.style.pointerEvents = 'auto';
+                board.classList.add('hide-cursor');
+                cursorDiv.style.display = 'block';
+                
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3;
+
+                document.getElementById('tool-hand').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+                document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+            }
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+            // Optionnel : revenir en mode main après effacement ?
+            // setTool('hand'); 
+        }
+
+        // Suivi du curseur virtuel
         function updateCustomCursor(e) {
             if (state.currentTool !== 'pen') return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -446,47 +466,45 @@
             cursorDiv.style.left = clientX + 'px';
             cursorDiv.style.top = clientY + 'px';
             
-            // LA CLÉ : Ajustement fin pour que la pointe visuelle soit sous le clic
-            // L'image fait 34px, la pointe est à x=8, y=32 (dans le SVG)
-            // Donc on décale le div de -8px (X) et -32px (Y) pour que (0,0) de l'écran soit sous la pointe
+            // LA CLÉ DU SUCCÈS : Le translate exact du fichier uploadé
             cursorDiv.style.transform = 'translate(-2px, -30px)';
         }
 
         window.addEventListener('mousemove', updateCustomCursor);
         window.addEventListener('touchmove', updateCustomCursor, {passive: false});
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            playSound('whoosh');
+        // Events Dessin
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
         }
 
         function startDraw(e) {
             if (state.currentTool !== 'pen') return;
             isDrawing = true;
             updateCustomCursor(e);
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            lastX = clientX - rect.left;
-            lastY = clientY - rect.top;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
         }
 
         function draw(e) {
             if (!isDrawing || state.currentTool !== 'pen') return;
             e.preventDefault();
             updateCustomCursor(e);
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-
+            const pos = getPos(e);
+            
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
+            ctx.lineTo(pos.x, pos.y);
             ctx.stroke();
-            lastX = x;
-            lastY = y;
+            lastX = pos.x;
+            lastY = pos.y;
         }
 
         function endDraw() {
@@ -501,7 +519,7 @@
         canvas.addEventListener('touchend', endDraw);
 
 
-        // --- LOGIQUE APP ---
+        // --- LOGIQUE APP (Identique v23) ---
 
         function handleSideButton(type) {
             playSound('pop');
@@ -764,7 +782,8 @@
         let dragOffset = {x:0, y:0};
 
         function handleDragStart(e) {
-            if (state.currentTool !== 'hand') return;
+            // Pas de drag si on est en mode stylo (mais ok si main)
+            if (state.currentTool !== 'hand') return; 
             e.preventDefault();
             const el = e.target.closest('.token');
             if(!el) return;
@@ -861,13 +880,16 @@
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
             }
             state.locked = true;
+            // --- LOGIQUE DE SUPPRESSION (De Droite à Gauche) ---
             const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
             const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
             let pairs = [];
             const count = Math.min(greens.length, reds.length);
             for(let i=0; i<count; i++) {
+                // On prend depuis la fin (les derniers arrivés, ceux à droite)
                 pairs.push([greens.pop(), reds.pop()]);
             }
+            // ---------------------------------------------------
             if (pairs.length === 0) return;
             const interval = 500; 
             playSound('whoosh');
