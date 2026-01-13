@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tuiles algébriques – Manipulation</title>
+  <style>
+    :root{
+      --bg:#0b0f19;
+      --panel:#111827;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#60a5fa;
+      --grid:#233047;
+      --pos:#22c55e;
+      --neg:#ef4444;
+      --tileText:#0b0f19;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --unit: 34px; /* taille d'une unité de grille */
+      --gap: 10px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1100px 700px at 20% 10%, #111c35, var(--bg));
+      color:var(--text);
+      height:100vh;
+      overflow:hidden;
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap: var(--gap);
+      padding: var(--gap);
+      height:100vh;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .header{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(96,165,250,.10), transparent);
+    }
+
+    .title{
+      font-weight: 750;
+      letter-spacing:.2px;
+      font-size: 18px;
+      margin:0 0 6px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .pill{
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .section{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .section h3{
+      margin:0 0 10px;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    button, input, textarea{
+      font: inherit;
+    }
+
+    button{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    button:hover{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+    button:active{ transform: translateY(1px); }
+    button.primary{ background: rgba(96,165,250,.18); border-color: rgba(96,165,250,.30); }
+    button.primary:hover{ background: rgba(96,165,250,.24); }
+    button.danger{ background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.28); }
+    button.danger:hover{ background: rgba(239,68,68,.22); }
+    button.success{ background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.28); }
+    button.success:hover{ background: rgba(34,197,94,.22); }
+    button.ghost{ background: transparent; }
+
+    .small{ padding: 8px 10px; border-radius: 12px; font-size: 13px; }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+
+    .kbd{
+      display:inline-block;
+      padding: 2px 6px;
+      border:1px solid rgba(255,255,255,.14);
+      border-bottom-color: rgba(255,255,255,.22);
+      border-radius: 8px;
+      background: rgba(255,255,255,.05);
+      color: #e2e8f0;
+      font-size: 11px;
+      transform: translateY(-1px);
+    }
+
+    .workspace{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+    }
+
+    .expr{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 320px;
+    }
+
+    .expr .main{
+      font-weight:800;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+
+    .expr .sub{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+
+    .boardWrap{
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--gap);
+      padding: var(--gap);
+      min-height:0;
+      flex:1;
+    }
+
+    .boardCard{ position:relative; min-height:0; }
+
+    .boardHeader{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+
+    .boardHeader .left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:#cbd5e1;
+      font-weight:700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .boardHeader .right{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .board{
+      position:relative;
+      height: calc(100% - 52px);
+      background:
+        linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,.02)),
+        repeating-linear-gradient(0deg, transparent 0 calc(var(--unit) - 1px), rgba(35,48,71,.8) calc(var(--unit) - 1px) var(--unit)),
+        repeating-linear-gradient(90deg, transparent 0 calc(var(--unit) - 1px), rgba(35,48,71,.8) calc(var(--unit) - 1px) var(--unit));
+      border-radius: calc(var(--radius) - 8px);
+      margin: 12px;
+      overflow:hidden;
+      outline: 1px solid rgba(255,255,255,.06);
+    }
+
+    .toast{
+      position:absolute;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(17,24,39,.78);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      font-size: 13px;
+      color:#e2e8f0;
+      z-index: 30;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(2px);
+    }
+
+    .tile{
+      position:absolute;
+      border-radius: 14px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.28);
+      border: 1px solid rgba(255,255,255,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      letter-spacing: .2px;
+      color: var(--tileText);
+      user-select:none;
+      touch-action:none;
+      cursor:grab;
+      z-index: 10;
+    }
+
+    .tile:active{ cursor:grabbing; }
+
+    .tile.pos{
+      background: linear-gradient(180deg, rgba(34,197,94,.95), rgba(34,197,94,.76));
+    }
+
+    .tile.neg{
+      background: linear-gradient(180deg, rgba(239,68,68,.95), rgba(239,68,68,.76));
+    }
+
+    .tile.selected{
+      outline: 3px solid rgba(96,165,250,.95);
+      outline-offset: 2px;
+    }
+
+    .tile .label{
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.60);
+      font-size: 14px;
+    }
+
+    .palette{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .paletteItem{
+      border-radius: 16px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      cursor:pointer;
+      transition: background .15s ease, border-color .15s ease, transform .05s ease;
+      user-select:none;
+    }
+
+    .paletteItem:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); }
+    .paletteItem:active{ transform: translateY(1px); }
+
+    .miniTile{
+      width: 52px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      color: var(--tileText);
+      box-shadow: 0 10px 20px rgba(0,0,0,.22);
+    }
+
+    .miniTile.pos{ background: linear-gradient(180deg, rgba(34,197,94,.95), rgba(34,197,94,.72)); }
+    .miniTile.neg{ background: linear-gradient(180deg, rgba(239,68,68,.95), rgba(239,68,68,.72)); }
+
+    .miniMeta{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      flex:1;
+      min-width:0;
+    }
+    .miniMeta .name{ font-weight:800; font-size: 13px; }
+    .miniMeta .desc{ font-size: 12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .sideRight{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      gap: var(--gap);
+    }
+
+    .panel{
+      padding: 14px 16px;
+    }
+
+    .panel h3{
+      margin:0 0 10px;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .input{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+    }
+
+    textarea.input{ min-height: 86px; resize: vertical; }
+
+    .status{
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .good{ color: #86efac; }
+    .bad{ color: #fca5a5; }
+
+    .groupBox{
+      position:absolute;
+      border-radius: 18px;
+      border: 2px dashed rgba(226,232,240,.65);
+      background: rgba(15,23,42,.12);
+      pointer-events:none;
+      z-index: 5;
+    }
+
+    .groupTag{
+      position:absolute;
+      top: -12px;
+      left: 14px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(17,24,39,.9);
+      border: 1px solid rgba(255,255,255,.14);
+      color:#e2e8f0;
+      font-weight:800;
+      font-size: 12px;
+      letter-spacing:.02em;
+    }
+
+    .footerNote{
+      padding: 12px 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1100px){
+      body{ overflow:auto; }
+      .app{ grid-template-columns: 1fr; height:auto; }
+      .boardWrap{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <aside class="card sidebar">
+      <div class="header">
+        <div class="title">🧩 Tuiles algébriques <span class="pill">glisser / déposer</span></div>
+        <p class="subtitle">Palette à gauche, plateau à droite. Deux tuiles opposées (vert/rouge) qui se superposent exactement <b>s'annulent</b> (→ 0).</p>
+      </div>
+
+      <div class="section">
+        <h3>Palette</h3>
+        <div class="palette" id="palette"></div>
+        <div class="hint">
+          Astuces : <span class="kbd">clic</span> sélection, <span class="kbd">Shift</span> multi-sélection, <span class="kbd">Suppr</span> effacer, <span class="kbd">R</span> pivoter (tuile x).
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Actions</h3>
+        <div class="row">
+          <button class="small" id="undoBtn">↩︎ Annuler</button>
+          <button class="small" id="redoBtn">↪︎ Rétablir</button>
+          <button class="small danger" id="clearBtn">🧹 Vider</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button class="small" id="rotateBtn">⤾ Pivoter x</button>
+          <button class="small" id="groupBtn">( ) Grouper</button>
+          <button class="small" id="flipGroupBtn">± Inverser groupe</button>
+          <button class="small danger" id="deleteBtn">🗑 Supprimer</button>
+        </div>
+        <div class="hint">"Grouper" met une parenthèse visuelle autour de la sélection. "Inverser" multiplie le groupe par −1 (distributivité du −).</div>
+      </div>
+
+      <div class="section">
+        <h3>Exporter / importer</h3>
+        <div class="row">
+          <button class="small" id="copyStateBtn">📋 Copier JSON</button>
+          <button class="small" id="pasteStateBtn">⬇︎ Charger JSON</button>
+        </div>
+        <textarea class="input" id="stateArea" placeholder="État JSON (pour corriger / partager)…"></textarea>
+        <div class="hint">Tu peux copier l'état d'un élève, le coller ici, puis le recharger pour corriger.</div>
+      </div>
+
+      <div class="footerNote">
+        Ce fichier est autonome (un seul HTML). Idée clé : <b>snap sur une grille</b> + <b>annulation par superposition exacte</b> + <b>coefficients</b> affichés.
+      </div>
+    </aside>
+
+    <main class="card workspace">
+      <div class="topbar">
+        <div class="expr">
+          <div class="main" id="polyDisplay">0</div>
+          <div class="sub" id="polyBadges"></div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <input class="input" style="width: 340px" id="targetInput" placeholder="Cible (ex: x^2 - 3x + 2)" />
+          <button class="primary" id="checkBtn">✅ Vérifier</button>
+        </div>
+      </div>
+
+      <div class="boardWrap">
+        <section class="card boardCard">
+          <div class="boardHeader">
+            <div class="left">Plateau</div>
+            <div class="right">
+              <button class="small ghost" id="snapToggleBtn" title="Activer/désactiver la grille">🧲 Snap: <span id="snapLabel">ON</span></button>
+              <button class="small ghost" id="showCoefBtn" title="Afficher/masquer les détails">📊 Détails</button>
+            </div>
+          </div>
+          <div class="board" id="board">
+            <div class="toast" id="toast"></div>
+          </div>
+        </section>
+
+        <section class="sideRight">
+          <div class="card panel">
+            <h3>Consigne rapide</h3>
+            <div class="status">
+              1) Clique une tuile dans la palette pour l'ajouter.<br/>
+              2) Glisse-la sur la grille.<br/>
+              3) Superpose exactement un vert et son rouge (même type, même orientation) → <b>annulation</b>.<br/>
+              4) Sélectionne plusieurs tuiles → <b>( ) Grouper</b>, puis <b>±</b> pour distribuer un moins.
+            </div>
+          </div>
+
+          <div class="card panel">
+            <h3>Résultat</h3>
+            <div class="status" id="checkStatus">Entre une cible puis clique sur <b>Vérifier</b>.</div>
+          </div>
+
+          <div class="card panel" id="detailsPanel" style="display:none;">
+            <h3>Coefficients</h3>
+            <div class="status" id="coefDetails"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+<script>
+(() => {
+  // --- Modèle ---
+  const UNIT = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--unit'), 10) || 34;
+
+  const TYPES = {
+    one: { key: 'one', label: '1', desc: 'constante', baseW: 1, baseH: 1 },
+    x:   { key: 'x', label: 'x', desc: 'rectangle', baseW: 4, baseH: 1 },
+    x2:  { key: 'x2', label: 'x²', desc: 'grand carré', baseW: 4, baseH: 4 },
+  };
+
+  const PALETTE_ITEMS = [
+    { type: 'one', sign: +1, name: '+1', colorClass: 'pos' },
+    { type: 'one', sign: -1, name: '−1', colorClass: 'neg' },
+    { type: 'x',   sign: +1, name: '+x', colorClass: 'pos' },
+    { type: 'x',   sign: -1, name: '−x', colorClass: 'neg' },
+    { type: 'x2',  sign: +1, name: '+x²', colorClass: 'pos' },
+    { type: 'x2',  sign: -1, name: '−x²', colorClass: 'neg' },
+  ];
+
+  const state = {
+    cols: 22,
+    rows: 12,
+    snap: true,
+    tiles: new Map(), // id -> tile
+    groups: new Map(), // id -> group
+    selected: new Set(),
+    dragging: null,
+    history: [],
+    redo: [],
+    showDetails: false,
+  };
+
+  const el = {
+    palette: document.getElementById('palette'),
+    board: document.getElementById('board'),
+    toast: document.getElementById('toast'),
+    polyDisplay: document.getElementById('polyDisplay'),
+    polyBadges: document.getElementById('polyBadges'),
+    coefDetails: document.getElementById('coefDetails'),
+    detailsPanel: document.getElementById('detailsPanel'),
+    checkStatus: document.getElementById('checkStatus'),
+    targetInput: document.getElementById('targetInput'),
+    snapLabel: document.getElementById('snapLabel'),
+    stateArea: document.getElementById('stateArea'),
+  };
+
+  // --- Utilitaires ---
+  const uid = (prefix) => `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+
+  function showToast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => el.toast.classList.remove('show'), 1200);
+  }
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function tileDims(tile){
+    const def = TYPES[tile.type];
+    if(tile.type !== 'x') return { w: def.baseW, h: def.baseH };
+    // x: rotation 0 => horizontal (4x1), 90 => vertical (1x4)
+    return tile.rot % 180 === 0 ? { w: def.baseW, h: def.baseH } : { w: def.baseH, h: def.baseW };
+  }
+
+  function tileLabel(tile){
+    const def = TYPES[tile.type];
+    const sign = tile.sign === -1 ? '−' : '';
+    return sign + def.label;
+  }
+
+  function termFromType(type){
+    if(type === 'x2') return 'x^2';
+    if(type === 'x') return 'x';
+    return '1';
+  }
+
+  // --- Plateau : calcul des cellules occupées ---
+  function cellsFor(tile){
+    const { w, h } = tileDims(tile);
+    const cells = [];
+    for(let dy=0; dy<h; dy++){
+      for(let dx=0; dx<w; dx++){
+        cells.push({ x: tile.gx + dx, y: tile.gy + dy });
+      }
+    }
+    return cells;
+  }
+
+  function inBounds(tile){
+    const { w, h } = tileDims(tile);
+    return tile.gx >= 0 && tile.gy >= 0 && (tile.gx + w) <= state.cols && (tile.gy + h) <= state.rows;
+  }
+
+  function buildOccupancy(exceptTileId=null){
+    const occ = Array.from({length: state.rows}, () => Array.from({length: state.cols}, () => null));
+    for(const [id, tile] of state.tiles.entries()){
+      if(id === exceptTileId) continue;
+      for(const c of cellsFor(tile)){
+        if(c.y>=0 && c.y<state.rows && c.x>=0 && c.x<state.cols){
+          occ[c.y][c.x] = id;
+        }
+      }
+    }
+    return occ;
+  }
+
+  function canPlace(tile, occ){
+    if(!inBounds(tile)) return { ok:false, reason:'hors-limites' };
+    const cells = cellsFor(tile);
+    let first = null;
+    for(const c of cells){
+      const here = occ[c.y][c.x];
+      if(here === null) continue;
+      if(first === null) first = here;
+      if(here !== first) return { ok:false, reason:'collision' };
+    }
+
+    if(first === null){
+      return { ok:true, mode:'empty' };
+    }
+
+    // superposition exacte avec un seul autre tile
+    const other = state.tiles.get(first);
+    if(!other) return { ok:false, reason:'collision' };
+    // vérifier que les zones se superposent exactement
+    // => même type, même rotation, même gx/gy, signe opposé
+    const sameShape = other.type === tile.type && other.rot === tile.rot;
+    const samePos = other.gx === tile.gx && other.gy === tile.gy;
+    const oppSign = other.sign === -tile.sign;
+
+    if(sameShape && samePos && oppSign){
+      return { ok:true, mode:'cancel', otherId:first };
+    }
+
+    return { ok:false, reason:'collision' };
+  }
+
+  // --- Rendu ---
+  function ensureBoardSize(){
+    // Ajuster la taille visuelle au plus près de la grille (sans scroll)
+    const unit = UNIT();
+    const w = unit * state.cols;
+    const h = unit * state.rows;
+    el.board.style.width = w + 'px';
+    el.board.style.height = h + 'px';
+  }
+
+  function renderPalette(){
+    el.palette.innerHTML = '';
+    for(const item of PALETTE_ITEMS){
+      const def = TYPES[item.type];
+      const node = document.createElement('div');
+      node.className = 'paletteItem';
+      node.tabIndex = 0;
+      node.setAttribute('role','button');
+      node.setAttribute('aria-label', `Ajouter ${item.name}`);
+
+      const mini = document.createElement('div');
+      mini.className = `miniTile ${item.colorClass}`;
+      mini.textContent = item.name;
+
+      const meta = document.createElement('div');
+      meta.className = 'miniMeta';
+      meta.innerHTML = `<div class="name">${item.name}</div><div class="desc">${def.desc} • ${termFromType(item.type)}</div>`;
+
+      const plus = document.createElement('div');
+      plus.className = 'pill';
+      plus.textContent = 'Ajouter';
+
+      node.appendChild(mini);
+      node.appendChild(meta);
+      node.appendChild(plus);
+
+      node.addEventListener('click', () => {
+        const t = createTile(item.type, item.sign);
+        // positionner au centre du plateau au départ
+        t.gx = Math.floor((state.cols - tileDims(t).w) / 2);
+        t.gy = Math.floor((state.rows - tileDims(t).h) / 2);
+        addTile(t);
+        pushHistory('add');
+        showToast(`${item.name} ajouté`);
+      });
+
+      node.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); node.click(); }
+      });
+
+      el.palette.appendChild(node);
+    }
+  }
+
+  function renderAll(){
+    // garder le toast en dernier
+    const toast = el.toast;
+    el.board.innerHTML = '';
+    el.board.appendChild(toast);
+
+    // groupes sous les tuiles
+    for(const group of state.groups.values()){
+      const gb = document.createElement('div');
+      gb.className = 'groupBox';
+      gb.dataset.groupId = group.id;
+      gb.style.left = (group.px) + 'px';
+      gb.style.top = (group.py) + 'px';
+      gb.style.width = (group.pw) + 'px';
+      gb.style.height = (group.ph) + 'px';
+
+      const tag = document.createElement('div');
+      tag.className = 'groupTag';
+      tag.textContent = group.mult === -1 ? '( ) × (−1)' : '( )';
+      gb.appendChild(tag);
+
+      el.board.appendChild(gb);
+    }
+
+    for(const [id, tile] of state.tiles.entries()){
+      const node = document.createElement('div');
+      node.className = `tile ${tile.sign === 1 ? 'pos' : 'neg'}${state.selected.has(id) ? ' selected':''}`;
+      node.dataset.tileId = id;
+
+      const unit = UNIT();
+      const { w, h } = tileDims(tile);
+      node.style.width = (w * unit) + 'px';
+      node.style.height = (h * unit) + 'px';
+      node.style.left = (tile.gx * unit) + 'px';
+      node.style.top  = (tile.gy * unit) + 'px';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'label';
+      lbl.textContent = tileLabel(tile);
+      node.appendChild(lbl);
+
+      // interactions
+      node.addEventListener('pointerdown', (e) => onTilePointerDown(e, id));
+      node.addEventListener('click', (e) => onTileClick(e, id));
+
+      el.board.appendChild(node);
+    }
+
+    updatePolynomialUI();
+    updateGroupsGeometry();
+  }
+
+  function updateGroupsGeometry(){
+    // recalculer les boîtes de groupes à partir des tuiles qu'ils contiennent
+    const unit = UNIT();
+    for(const group of state.groups.values()){
+      const tiles = group.tileIds.map(id => state.tiles.get(id)).filter(Boolean);
+      if(tiles.length === 0){
+        state.groups.delete(group.id);
+        continue;
+      }
+      let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+      for(const t of tiles){
+        const { w, h } = tileDims(t);
+        minX = Math.min(minX, t.gx);
+        minY = Math.min(minY, t.gy);
+        maxX = Math.max(maxX, t.gx + w);
+        maxY = Math.max(maxY, t.gy + h);
+      }
+      // marge visuelle
+      const pad = 0.35;
+      group.px = (minX - pad) * unit;
+      group.py = (minY - pad) * unit;
+      group.pw = (maxX - minX + pad*2) * unit;
+      group.ph = (maxY - minY + pad*2) * unit;
+    }
+
+    // Mise à jour DOM (si existant)
+    const boxes = el.board.querySelectorAll('.groupBox');
+    for(const b of boxes){
+      const gid = b.dataset.groupId;
+      const g = state.groups.get(gid);
+      if(!g){ b.remove(); continue; }
+      b.style.left = g.px + 'px';
+      b.style.top  = g.py + 'px';
+      b.style.width = g.pw + 'px';
+      b.style.height = g.ph + 'px';
+      const tag = b.querySelector('.groupTag');
+      if(tag) tag.textContent = g.mult === -1 ? '( ) × (−1)' : '( )';
+    }
+  }
+
+  // --- Tuiles ---
+  function createTile(type, sign){
+    return {
+      id: uid('tile'),
+      type,
+      sign,
+      rot: 0,
+      gx: 0,
+      gy: 0,
+    };
+  }
+
+  function addTile(tile){
+    state.tiles.set(tile.id, tile);
+    state.selected.clear();
+    state.selected.add(tile.id);
+    renderAll();
+  }
+
+  function deleteSelected(){
+    if(state.selected.size === 0) return;
+    for(const id of Array.from(state.selected)){
+      state.tiles.delete(id);
+      // retirer des groupes
+      for(const g of state.groups.values()){
+        g.tileIds = g.tileIds.filter(tid => tid !== id);
+      }
+    }
+    state.selected.clear();
+    cleanupEmptyGroups();
+    renderAll();
+    pushHistory('delete');
+  }
+
+  function cleanupEmptyGroups(){
+    for(const [gid, g] of state.groups.entries()){
+      g.tileIds = g.tileIds.filter(id => state.tiles.has(id));
+      if(g.tileIds.length === 0) state.groups.delete(gid);
+    }
+  }
+
+  function rotateSelectedX(){
+    let changed = false;
+    for(const id of state.selected){
+      const t = state.tiles.get(id);
+      if(!t) continue;
+      if(t.type !== 'x') continue;
+      const prev = { gx:t.gx, gy:t.gy, rot:t.rot };
+      t.rot = (t.rot + 90) % 360;
+
+      // garder dans les limites, sans collision : tenter de clamp
+      const occ = buildOccupancy(id);
+      const { w, h } = tileDims(t);
+      t.gx = clamp(t.gx, 0, state.cols - w);
+      t.gy = clamp(t.gy, 0, state.rows - h);
+      const res = canPlace(t, occ);
+      if(!res.ok){
+        // rollback
+        t.gx = prev.gx; t.gy = prev.gy; t.rot = prev.rot;
+      }else{
+        // si rotation provoque une annulation immédiate, elle sera gérée par drop logic via placeAndMaybeCancel
+        changed = true;
+      }
+    }
+    if(changed){
+      renderAll();
+      pushHistory('rotate');
+      showToast('Tuile(s) x pivotée(s)');
+    }
+  }
+
+  // --- Sélection ---
+  function onTileClick(e, id){
+    // éviter le click final après un drag
+    if(state.dragging && state.dragging.didMove) return;
+
+    if(e.shiftKey){
+      if(state.selected.has(id)) state.selected.delete(id);
+      else state.selected.add(id);
+    } else {
+      if(state.selected.size === 1 && state.selected.has(id)){
+        // toggle off
+        state.selected.clear();
+      } else {
+        state.selected.clear();
+        state.selected.add(id);
+      }
+    }
+    renderAll();
+  }
+
+  // --- Drag ---
+  function boardClientToGrid(clientX, clientY){
+    const rect = el.board.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const unit = UNIT();
+    const gx = Math.round(x / unit);
+    const gy = Math.round(y / unit);
+    return { gx, gy };
+  }
+
+  function onTilePointerDown(e, id){
+    const tile = state.tiles.get(id);
+    if(!tile) return;
+
+    // sélectionner si nécessaire
+    if(!state.selected.has(id)){
+      if(!e.shiftKey){ state.selected.clear(); }
+      state.selected.add(id);
+      renderAll();
+    }
+
+    const rect = el.board.getBoundingClientRect();
+    const unit = UNIT();
+
+    const start = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseTiles: Array.from(state.selected).map(tid => {
+        const t = state.tiles.get(tid);
+        return { id: tid, gx: t.gx, gy: t.gy };
+      }),
+      offsetX: e.clientX - (rect.left + tile.gx * unit),
+      offsetY: e.clientY - (rect.top + tile.gy * unit),
+      didMove: false,
+    };
+
+    state.dragging = start;
+
+    const onMove = (ev) => {
+      if(!state.dragging || ev.pointerId !== state.dragging.pointerId) return;
+      const dx = ev.clientX - state.dragging.startX;
+      const dy = ev.clientY - state.dragging.startY;
+      if(Math.abs(dx) + Math.abs(dy) > 3) state.dragging.didMove = true;
+
+      // déplacer tous les tiles sélectionnés de manière relative
+      const dGx = dx / unit;
+      const dGy = dy / unit;
+
+      for(const bt of state.dragging.baseTiles){
+        const t = state.tiles.get(bt.id);
+        if(!t) continue;
+
+        let nx = bt.gx + dGx;
+        let ny = bt.gy + dGy;
+
+        if(state.snap){
+          nx = Math.round(nx);
+          ny = Math.round(ny);
+        }
+
+        // clamp provisoire pour éviter trop d'écart
+        const { w, h } = tileDims(t);
+        t.gx = clamp(nx, 0, state.cols - w);
+        t.gy = clamp(ny, 0, state.rows - h);
+      }
+
+      renderAll();
+    };
+
+    const onUp = (ev) => {
+      if(!state.dragging || ev.pointerId !== state.dragging.pointerId) return;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+
+      const base = state.dragging.baseTiles;
+      const moved = state.dragging.didMove;
+      state.dragging = null;
+
+      if(!moved){
+        // c'était un clic
+        renderAll();
+        return;
+      }
+
+      // tenter de valider le placement des tuiles (sans collision) ; annulation possible
+      const snapshotBefore = serializeState();
+
+      // On place dans un ordre stable : d'abord x2, puis x, puis 1 (pour réduire collisions)
+      const order = (tid) => {
+        const t = state.tiles.get(tid);
+        if(!t) return 99;
+        return t.type === 'x2' ? 0 : (t.type === 'x' ? 1 : 2);
+      };
+
+      const ids = Array.from(new Set(base.map(b => b.id))).sort((a,b)=>order(a)-order(b));
+
+      // occupancy sans les tiles déplacés
+      const occ = buildOccupancy(null);
+      for(const tid of ids){
+        // retirer temporairement du plan d'occupation
+        const t = state.tiles.get(tid);
+        if(!t) continue;
+        for(const c of cellsFor(t)){
+          if(c.y>=0 && c.y<state.rows && c.x>=0 && c.x<state.cols) occ[c.y][c.x] = null;
+        }
+      }
+
+      const cancelledPairs = [];
+      let ok = true;
+
+      for(const tid of ids){
+        const t = state.tiles.get(tid);
+        if(!t) continue;
+
+        // vérifier placement
+        const res = canPlace(t, occ);
+        if(!res.ok){
+          ok = false;
+          break;
+        }
+
+        if(res.mode === 'cancel'){
+          cancelledPairs.push([tid, res.otherId]);
+          // retirer l'autre des cartes d'occupation
+          const other = state.tiles.get(res.otherId);
+          if(other){
+            for(const c of cellsFor(other)) occ[c.y][c.x] = null;
+          }
+          // ne pas placer la tuile, elle va être supprimée
+          continue;
+        }
+
+        // placer : marquer occupation
+        for(const c of cellsFor(t)) occ[c.y][c.x] = tid;
+      }
+
+      if(!ok){
+        // rollback complet
+        deserializeIntoState(snapshotBefore);
+        renderAll();
+        showToast('Collision : déplacement annulé');
+        return;
+      }
+
+      // Appliquer annulations
+      if(cancelledPairs.length){
+        // retirer sans doublons
+        const toRemove = new Set();
+        for(const [a,b] of cancelledPairs){ toRemove.add(a); toRemove.add(b); }
+        for(const rid of toRemove){
+          state.tiles.delete(rid);
+          for(const g of state.groups.values()){
+            g.tileIds = g.tileIds.filter(tid => tid !== rid);
+          }
+        }
+        state.selected.clear();
+        cleanupEmptyGroups();
+        renderAll();
+        showToast('Annulation : 0');
+      } else {
+        renderAll();
+      }
+
+      pushHistory('move');
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    el.board.setPointerCapture?.(e.pointerId);
+  }
+
+  // --- Polynomial UI ---
+  function computeCoefficients(){
+    let a=0,b=0,c=0;
+    let p = { x2p:0, x2n:0, xp:0, xn:0, onep:0, onen:0 };
+
+    for(const t of state.tiles.values()){
+      if(t.type === 'x2'){
+        if(t.sign === 1) p.x2p++; else p.x2n++;
+      } else if(t.type === 'x'){
+        if(t.sign === 1) p.xp++; else p.xn++;
+      } else {
+        if(t.sign === 1) p.onep++; else p.onen++;
+      }
+    }
+
+    a = p.x2p - p.x2n;
+    b = p.xp - p.xn;
+    c = p.onep - p.onen;
+
+    return { a,b,c, raw:p };
+  }
+
+  function formatPoly({a,b,c}){
+    const parts = [];
+    const pushTerm = (coef, term) => {
+      if(coef === 0) return;
+      const sign = coef < 0 ? '−' : (parts.length ? '+' : '');
+      const abs = Math.abs(coef);
+      const coefStr = (term !== '' && abs === 1) ? '' : String(abs);
+      const termStr = term;
+      parts.push(`${sign}${coefStr}${termStr}`.replace('+−','−'));
+    };
+
+    pushTerm(a, 'x²');
+    pushTerm(b, 'x');
+    pushTerm(c, '');
+
+    if(parts.length === 0) return '0';
+
+    // Beautifier espaces
+    return parts.join(' ').replace(/\+/g, '+');
+  }
+
+  function updatePolynomialUI(){
+    const coefs = computeCoefficients();
+    el.polyDisplay.textContent = formatPoly(coefs);
+
+    const { raw } = coefs;
+    const badges = [
+      { k:'x²', v:`${raw.x2p} vert • ${raw.x2n} rouge`, color:'rgba(96,165,250,.18)' },
+      { k:'x',  v:`${raw.xp} vert • ${raw.xn} rouge`,  color:'rgba(255,255,255,.04)' },
+      { k:'1',  v:`${raw.onep} vert • ${raw.onen} rouge`,color:'rgba(255,255,255,.04)' },
+    ];
+
+    el.polyBadges.innerHTML = '';
+    for(const b of badges){
+      const span = document.createElement('span');
+      span.className = 'badge';
+      span.textContent = `${b.k} : ${b.v}`;
+      el.polyBadges.appendChild(span);
+    }
+
+    el.coefDetails.innerHTML = `
+      a (x²) = ${coefs.a}<br/>
+      b (x) = ${coefs.b}<br/>
+      c (1) = ${coefs.c}<br/>
+      <span style="color:var(--muted)">Soit : ${formatPoly(coefs)}</span>
+    `;
+  }
+
+  // --- Groupes (parenthèses) ---
+  function groupSelected(){
+    const ids = Array.from(state.selected);
+    if(ids.length < 2){
+      showToast('Sélectionne au moins 2 tuiles');
+      return;
+    }
+
+    // si ces tuiles sont déjà toutes dans un même groupe, ne pas dupliquer
+    for(const g of state.groups.values()){
+      const allIn = ids.every(id => g.tileIds.includes(id));
+      if(allIn){
+        showToast('Déjà groupé');
+        return;
+      }
+    }
+
+    const g = {
+      id: uid('group'),
+      tileIds: ids.slice(),
+      mult: +1,
+      px:0,py:0,pw:0,ph:0,
+    };
+    state.groups.set(g.id, g);
+    updateGroupsGeometry();
+    renderAll();
+    pushHistory('group');
+    showToast('Groupe créé');
+  }
+
+  function flipGroupForSelection(){
+    const ids = Array.from(state.selected);
+    if(ids.length === 0){
+      showToast('Sélectionne un groupe (ou ses tuiles)');
+      return;
+    }
+
+    // trouver un groupe qui contient toutes les tuiles sélectionnées (ou au moins une)
+    const groups = Array.from(state.groups.values()).filter(g => ids.some(id => g.tileIds.includes(id)));
+    if(groups.length === 0){
+      showToast('Aucun groupe trouvé pour la sélection');
+      return;
+    }
+
+    // prendre le premier groupe trouvé
+    const g = groups[0];
+    g.mult *= -1;
+
+    // multiplier les signes des tuiles du groupe par -1
+    for(const tid of g.tileIds){
+      const t = state.tiles.get(tid);
+      if(t) t.sign *= -1;
+    }
+
+    renderAll();
+    pushHistory('flip');
+    showToast('Distributivité du − appliquée');
+  }
+
+  // --- Historique ---
+  function serializeState(){
+    return {
+      cols: state.cols,
+      rows: state.rows,
+      snap: state.snap,
+      tiles: Array.from(state.tiles.values()),
+      groups: Array.from(state.groups.values()).map(g => ({ id:g.id, tileIds:g.tileIds.slice(), mult:g.mult })),
+      selected: Array.from(state.selected),
+    };
+  }
+
+  function deserializeIntoState(obj){
+    state.cols = obj.cols ?? state.cols;
+    state.rows = obj.rows ?? state.rows;
+    state.snap = obj.snap ?? state.snap;
+
+    state.tiles.clear();
+    state.groups.clear();
+    state.selected.clear();
+
+    for(const t of (obj.tiles || [])){
+      // normaliser champs
+      state.tiles.set(t.id, {
+        id: t.id,
+        type: t.type,
+        sign: t.sign,
+        rot: t.rot ?? 0,
+        gx: t.gx ?? 0,
+        gy: t.gy ?? 0,
+      });
+    }
+
+    for(const g of (obj.groups || [])){
+      state.groups.set(g.id, {
+        id: g.id,
+        tileIds: (g.tileIds || []).filter(id => state.tiles.has(id)),
+        mult: g.mult ?? 1,
+        px:0,py:0,pw:0,ph:0,
+      });
+    }
+
+    for(const id of (obj.selected || [])){
+      if(state.tiles.has(id)) state.selected.add(id);
+    }
+
+    ensureBoardSize();
+    updateGroupsGeometry();
+  }
+
+  function pushHistory(action){
+    // limiter la taille
+    const snap = serializeState();
+    state.history.push({ action, snap });
+    if(state.history.length > 80) state.history.shift();
+    state.redo = [];
+    updateHistoryButtons();
+  }
+
+  function canUndo(){ return state.history.length > 1; }
+
+  function undo(){
+    if(!canUndo()) return;
+    // l'état courant est le dernier
+    const current = state.history.pop();
+    state.redo.push(current);
+    const prev = state.history[state.history.length - 1];
+    deserializeIntoState(prev.snap);
+    renderAll();
+    updateHistoryButtons();
+    showToast('Annulé');
+  }
+
+  function redo(){
+    if(state.redo.length === 0) return;
+    const next = state.redo.pop();
+    state.history.push(next);
+    deserializeIntoState(next.snap);
+    renderAll();
+    updateHistoryButtons();
+    showToast('Rétabli');
+  }
+
+  function updateHistoryButtons(){
+    document.getElementById('undoBtn').disabled = !canUndo();
+    document.getElementById('redoBtn').disabled = state.redo.length === 0;
+  }
+
+  // --- Vérification ---
+  function parsePolynomial(input){
+    // Parse très simple : accepte x^2, x², x, nombres, +/-, espaces.
+    // Retourne {a,b,c} pour ax^2 + bx + c
+    if(!input || !input.trim()) return null;
+    let s = input.trim()
+      .replace(/×/g,'*')
+      .replace(/\s+/g,'')
+      .replace(/−/g,'-')
+      .replace(/²/g,'^2');
+
+    // normaliser : remplacer "x^2" par "x2" token
+    // Puis découper en termes par + et - (en conservant le signe)
+    // Ex: "x^2-3x+2" => ["+x^2","-3x","+2"]
+
+    if(s[0] !== '+' && s[0] !== '-') s = '+' + s;
+
+    const terms = s.match(/[+-][^+-]+/g);
+    if(!terms) return null;
+
+    let a=0,b=0,c=0;
+
+    for(const t of terms){
+      const sign = t[0] === '-' ? -1 : 1;
+      const body = t.slice(1);
+
+      if(body.includes('x^2') || body.includes('x^2'.replace('^2','^2'))){
+        const coefStr = body.replace('x^2','');
+        const coef = coefStr === '' ? 1 : Number(coefStr);
+        if(!Number.isFinite(coef)) return null;
+        a += sign * coef;
+      } else if(/x(?!\^)/.test(body)){
+        const coefStr = body.replace('x','');
+        const coef = coefStr === '' ? 1 : Number(coefStr);
+        if(!Number.isFinite(coef)) return null;
+        b += sign * coef;
+      } else {
+        const num = Number(body);
+        if(!Number.isFinite(num)) return null;
+        c += sign * num;
+      }
+    }
+
+    return { a,b,c };
+  }
+
+  function checkAgainstTarget(){
+    const target = parsePolynomial(el.targetInput.value);
+    if(!target){
+      el.checkStatus.innerHTML = `<span class="bad">Cible illisible.</span> Exemples : <b>x^2 - 3x + 2</b>, <b>-x + 4</b>, <b>2x^2+1</b>.`;
+      return;
+    }
+    const got = computeCoefficients();
+    const ok = target.a === got.a && target.b === got.b && target.c === got.c;
+
+    if(ok){
+      el.checkStatus.innerHTML = `<span class="good">✅ Bravo :</span> le plateau correspond à <b>${formatPoly(target)}</b>.`;
+      showToast('Correct ✅');
+    } else {
+      el.checkStatus.innerHTML = `
+        <span class="bad">❌ Pas encore.</span><br/>
+        Cible : <b>${formatPoly(target)}</b><br/>
+        Plateau : <b>${formatPoly(got)}</b>
+      `;
+      showToast('Pas encore…');
+    }
+  }
+
+  // --- Export / import ---
+  async function copyJSON(){
+    const snap = serializeState();
+    const txt = JSON.stringify(snap);
+    el.stateArea.value = txt;
+    try{
+      await navigator.clipboard.writeText(txt);
+      showToast('JSON copié');
+    } catch {
+      showToast('JSON prêt (copie manuelle)');
+    }
+  }
+
+  function loadJSON(){
+    const txt = el.stateArea.value.trim();
+    if(!txt){ showToast('Colle un JSON d\'abord'); return; }
+    try{
+      const obj = JSON.parse(txt);
+      deserializeIntoState(obj);
+      pushHistory('load');
+      renderAll();
+      showToast('État chargé');
+    } catch {
+      showToast('JSON invalide');
+    }
+  }
+
+  // --- Raccourcis clavier ---
+  function onKeyDown(e){
+    if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+    if(e.key === 'Delete' || e.key === 'Backspace'){
+      e.preventDefault();
+      deleteSelected();
+    }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
+      e.preventDefault();
+      if(e.shiftKey) redo();
+      else undo();
+    }
+    if(e.key.toLowerCase() === 'r'){
+      rotateSelectedX();
+    }
+  }
+
+  // --- Boutons ---
+  function bindUI(){
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      state.tiles.clear();
+      state.groups.clear();
+      state.selected.clear();
+      renderAll();
+      pushHistory('clear');
+      showToast('Plateau vidé');
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+    document.getElementById('rotateBtn').addEventListener('click', rotateSelectedX);
+    document.getElementById('groupBtn').addEventListener('click', groupSelected);
+    document.getElementById('flipGroupBtn').addEventListener('click', flipGroupForSelection);
+
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    document.getElementById('redoBtn').addEventListener('click', redo);
+
+    document.getElementById('checkBtn').addEventListener('click', checkAgainstTarget);
+
+    document.getElementById('snapToggleBtn').addEventListener('click', () => {
+      state.snap = !state.snap;
+      el.snapLabel.textContent = state.snap ? 'ON' : 'OFF';
+      showToast(`Snap ${state.snap ? 'ON' : 'OFF'}`);
+      pushHistory('snap');
+    });
+
+    document.getElementById('showCoefBtn').addEventListener('click', () => {
+      state.showDetails = !state.showDetails;
+      el.detailsPanel.style.display = state.showDetails ? 'block' : 'none';
+    });
+
+    document.getElementById('copyStateBtn').addEventListener('click', copyJSON);
+    document.getElementById('pasteStateBtn').addEventListener('click', loadJSON);
+
+    // clic vide sur plateau => désélection
+    el.board.addEventListener('click', (e) => {
+      if(e.target === el.board){
+        state.selected.clear();
+        renderAll();
+      }
+    });
+
+    window.addEventListener('keydown', onKeyDown);
+  }
+
+  // --- Init ---
+  function init(){
+    ensureBoardSize();
+    renderPalette();
+    bindUI();
+
+    // état initial pour l'historique
+    pushHistory('init');
+    renderAll();
+    updateHistoryButtons();
+
+    // rendre le snap label
+    el.snapLabel.textContent = state.snap ? 'ON' : 'OFF';
+
+    // placeholder exemple
+    el.targetInput.value = 'x^2 - 3x + 2';
+  }
+
+  // au resize, recalculer unités et tailles
+  window.addEventListener('resize', () => {
+    ensureBoardSize();
+    updateGroupsGeometry();
+    renderAll();
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

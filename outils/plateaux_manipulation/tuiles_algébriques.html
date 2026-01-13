@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Opérations Nombres Relatifs - Fusion Finale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default; /* Curseur par défaut si pas en mode dessin */
+        }
+
+        /* --- STYLES DES JETONS --- */
+        .token {
+            width: 70px !important;
+            height: 70px !important;
+            min-width: 70px;
+            min-height: 70px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.6rem;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+            cursor: grab;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s;
+            z-index: 10;
+            touch-action: none;
+            box-sizing: border-box; 
+        }
+
+        .token:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+            z-index: 100 !important;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+        }
+
+        .token.green {
+            background: radial-gradient(circle at 35% 35%, #4ade80, #16a34a);
+            border: 3px solid #14532d;
+        }
+
+        .token.red {
+            background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
+            border: 3px solid #7f1d1d;
+        }
+
+        .token.is-zero {
+            background: #9ca3af !important;
+            opacity: 0.6;
+            border: 3px solid #6b7280;
+            box-shadow: none;
+            z-index: 5;
+            transform: scale(0.95);
+        }
+        
+        /* CIBLE (MISSION) */
+        .target-token {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            margin: 1px;
+            opacity: 0.9;
+            box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
+        .target-token.green { background-color: #4ade80; border: 1px solid #14532d; }
+        .target-token.red { background-color: #f87171; border: 1px solid #7f1d1d; }
+
+        .zero-badge {
+            position: absolute;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #374151;
+            pointer-events: none;
+            z-index: 20;
+            text-shadow: 0 0 10px rgba(255,255,255,1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .fly-away {
+            transition: all 0.6s ease-in;
+            transform: translateY(-100vh) scale(0.5) !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Zone Ciel */
+        #sky-zone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 130px;
+            z-index: 5;
+            background: linear-gradient(to bottom, rgba(200,220,255,0.0), transparent);
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 10px;
+            transition: background 0.3s;
+        }
+        #sky-zone.active {
+            background: linear-gradient(to bottom, rgba(251, 146, 60, 0.15), transparent);
+            border-bottom: 2px dashed rgba(251, 146, 60, 0.4);
+        }
+
+        /* NUAGE (Mode Inconnu) */
+        #unknown-cloud {
+            position: absolute;
+            /* MODIFICATION: Déplacement vers le coin gauche */
+            top: 35%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 180px;
+            z-index: 1; /* Derrière les jetons */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        #unknown-cloud.visible {
+            opacity: 0.6;
+        }
+        /* Forme du nuage en CSS pur */
+        .cloud-shape {
+            width: 100%;
+            height: 100%;
+            background: #e0f2fe;
+            border-radius: 100px;
+            position: relative;
+        }
+        .cloud-shape::after, .cloud-shape::before {
+            content: '';
+            position: absolute;
+            background: #e0f2fe;
+            z-index: -1;
+        }
+        .cloud-shape::after { width: 100px; height: 100px; top: -50px; left: 50px; border-radius: 50%; }
+        .cloud-shape::before { width: 120px; height: 120px; top: -70px; right: 50px; border-radius: 50%; }
+
+        /* Scrollbar masquée */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- DESSIN --- */
+        #drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Au-dessus des jetons */
+            pointer-events: none; /* Par défaut, laisse passer les clics (Main) */
+            touch-action: none;
+        }
+
+        /* CURSEUR VIRTUEL (Le stylo magique) */
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none; /* Caché par défaut */
+            transform-origin: top left;
+        }
+        
+        /* Quand le stylo est actif, on cache le vrai curseur sur TOUT le body */
+        .hide-cursor, .hide-cursor * {
+            cursor: none !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- CURSEUR PERSONNALISÉ (Stylo) -->
+    <div id="custom-cursor">
+        <svg id="cursor-pen-svg" class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Corps du stylo -->
+            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+            <!-- Pointe -->
+            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <!-- Point exact -->
+            <circle cx="8" cy="32" r="1" fill="white"/>
+            <!-- Reflet -->
+            <path d="M26 8 L14 20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
+        </svg>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 relative">
+        
+        <!-- Actions Gauche -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+             <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer (Suppr)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span class="hidden sm:inline text-xs">Reset</span>
+            </button>
+
+            <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base" title="Raccourci: Entrée">
+                Réponse
+            </button>
+            
+            <div class="h-8 w-px bg-slate-200 mx-1"></div>
+
+            <div class="flex gap-1">
+                <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
+                    +
+                </button>
+                <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
+                    -
+                </button>
+                <!-- BOUTON NUAGE -->
+                <button id="btn-cloud" onclick="setOperator('cloud')" class="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full border-4 border-slate-400 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-xl relative" title="Nombre Mystère">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 absolute" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <span class="relative z-10 text-xs font-extrabold translate-y-0.5">?</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Opération (Centre) -->
+        <div class="flex-1 flex flex-col items-center justify-center min-w-[150px] overflow-hidden px-2">
+            <div class="flex items-center gap-1 sm:gap-2 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200 shadow-inner mb-1 max-w-full">
+                <div id="equation-terms" class="flex items-center gap-1 overflow-x-auto no-scrollbar whitespace-nowrap">
+                    <span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>
+                </div>
+                <span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">=</span>
+                <span id="op-result" class="text-2xl sm:text-4xl font-bold text-blue-600 hidden">?</span>
+                <span id="op-question" class="text-2xl sm:text-4xl font-bold text-slate-300">?</span>
+            </div>
+            <!-- Zone d'objectif - HAUTEUR FIXÉE (h-[44px]) pour éviter le décalage -->
+            <div id="mission-panel" class="invisible flex items-center justify-center gap-2 text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 shadow-sm mt-1 h-[44px] box-border">
+                <span class="text-xs uppercase tracking-wide whitespace-nowrap">Reste à retirer :</span>
+                <div id="mission-tokens" class="flex gap-1 h-[32px] items-center"></div>
+            </div>
+        </div>
+
+        <!-- OUTILS DESSIN -->
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
+            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main (Bouger les jetons)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                </svg>
+            </button>
+            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon (Dessiner)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+            </button>
+            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Tout effacer le dessin">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <!-- Canvas pour dessiner -->
+        <canvas id="drawing-canvas"></canvas>
+
+        <!-- NUAGE MYSTÈRE -->
+        <div id="unknown-cloud">
+            <div class="cloud-shape flex items-center justify-center flex-col pt-4">
+                <span class="text-4xl font-extrabold text-slate-400">?</span>
+                <span class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-1">Jetons Cachés</span>
+            </div>
+        </div>
+
+        <!-- Zone Ciel -->
+        <div id="sky-zone">
+            <span id="sky-text" class="text-orange-500 font-bold bg-white/90 px-3 py-1 rounded-full text-sm hidden shadow-sm border border-orange-200 mt-2">
+                Glisser ici pour retirer ⬆️
+            </span>
+        </div>
+        
+        <!-- AIDE CONTEXTUELLE -->
+        <div id="shortage-hint" class="absolute bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40 hidden opacity-0 transition-opacity duration-500">
+            <div class="bg-red-50 text-red-800 border-2 border-red-300 px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 backdrop-blur-sm animate-bounce">
+                <span class="text-2xl">⚠️</span>
+                <div>
+                    <span class="text-sm font-bold block">Il te manque des jetons !</span>
+                    <span class="text-xs">Ajoute une <span class="font-bold">paire Zéro</span> pour débloquer la situation.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR (GAUCHE) -->
+        <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
+            <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
+            
+            <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
+                +1
+            </button>
+            <button onclick="handleSideButton('red')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: -">
+                -1
+            </button>
+            
+            <button onclick="addZeroPair()" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-200 border-4 border-slate-400 text-slate-600 font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex flex-col items-center justify-center leading-none mt-2" title="Raccourci: 0">
+                <div class="flex gap-1">
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                </div>
+                <span class="text-xs mt-1 font-bold">0</span>
+            </button>
+
+            <div class="w-12 h-px bg-slate-300 my-1"></div>
+
+            <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm" title="Raccourci: Espace">
+                ALIGNER
+            </button>
+
+            <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
+                <span class="text-xs font-bold">AUTO</span>
+                <span class="text-lg font-bold">0</span>
+            </button>
+        </aside>
+
+        <!-- BOARD (DROITE) -->
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
+            <div class="absolute inset-0 opacity-20 pointer-events-none" 
+                 style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
+            </div>
+            
+            <div class="absolute top-2 left-2 pointer-events-none opacity-40">
+                <p class="text-xs text-slate-400">Zone de manipulation</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SNAP_THRESHOLD = 80;
+        const TOKEN_SIZE = 70;
+        
+        const state = {
+            phase: 1, 
+            operationType: null, // 'add', 'subtract', 'cloud'
+            tokens: [],
+            nextId: 1,
+            resultRevealed: false,
+            subtractionTarget: [],
+            subtractionDefined: [], 
+            frozenValues: {}, 
+            operators: [],
+            locked: false,
+            currentTool: 'hand'
+        };
+
+        const board = document.getElementById('board');
+        const skyZone = document.getElementById('sky-zone');
+        const skyText = document.getElementById('sky-text');
+        const missionPanel = document.getElementById('mission-panel');
+        const missionTokensDiv = document.getElementById('mission-tokens');
+        const shortageHint = document.getElementById('shortage-hint');
+        const equationTerms = document.getElementById('equation-terms');
+        const btnPlus = document.getElementById('btn-plus');
+        const btnMinus = document.getElementById('btn-minus');
+        const cloudEl = document.getElementById('unknown-cloud');
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorDiv = document.getElementById('custom-cursor');
+
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } 
+            else if (type === 'whoosh') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+            else if (type === 'snap') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+            else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+        }
+
+        // --- KEYBOARD SHORTCUTS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (e.key === '+' || e.key === '=') { handleSideButton('green'); playSound('click'); }
+            if (e.key === '-' || e.key === '_') { handleSideButton('red'); playSound('click'); }
+            if (e.key === '0' || e.key === 'à') { addZeroPair(); playSound('click'); }
+            if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
+            if (e.key === 'Enter') {
+                if (state.operationType !== 'subtract' && state.operationType !== 'cloud' && !state.locked) {
+                    animateSimplification();
+                } else {
+                    showAnswer();
+                }
+                playSound('click');
+            }
+            if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
+        });
+
+        // --- DESSIN & CURSEUR ---
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const boardRect = board.getBoundingClientRect();
+            canvas.style.width = boardRect.width + 'px';
+            canvas.style.height = boardRect.height + 'px';
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.round(boardRect.width * dpr);
+            canvas.height = Math.round(boardRect.height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            if (state.currentTool === 'pen') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        function setTool(tool) {
+            if (tool === 'hand') {
+                state.currentTool = 'hand';
+                canvas.style.pointerEvents = 'none';
+                board.classList.remove('hide-cursor');
+                cursorDiv.style.display = 'none';
+                document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+                document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+            } else if (tool === 'pen') {
+                state.currentTool = 'pen';
+                canvas.style.pointerEvents = 'auto';
+                board.classList.add('hide-cursor');
+                cursorDiv.style.display = 'block';
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3;
+                document.getElementById('tool-hand').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+                document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+            }
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+        }
+
+        function updateCustomCursor(e) {
+            if (state.currentTool !== 'pen') return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            cursorDiv.style.left = clientX + 'px';
+            cursorDiv.style.top = clientY + 'px';
+            cursorDiv.style.transform = 'translate(-2px, -30px)';
+        }
+        window.addEventListener('mousemove', updateCustomCursor);
+        window.addEventListener('touchmove', updateCustomCursor, {passive: false});
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function startDraw(e) {
+            if (state.currentTool !== 'pen') return;
+            isDrawing = true;
+            updateCustomCursor(e);
+            const pos = getPos(e);
+            lastX = pos.x; lastY = pos.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || state.currentTool !== 'pen') return;
+            e.preventDefault();
+            updateCustomCursor(e);
+            const pos = getPos(e);
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+            lastX = pos.x; lastY = pos.y;
+        }
+
+        function endDraw() { isDrawing = false; }
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
+        canvas.addEventListener('touchend', endDraw);
+
+
+        // --- LOGIQUE APP ---
+
+        function handleSideButton(type) {
+            playSound('pop');
+
+            // 1. En mode soustraction OU nuage, on ne change rien au comportement (cible)
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') {
+                addToSubtractionTarget(type);
+                return;
+            } 
+            
+            // 2. LOGIQUE D'AJOUT AUTOMATIQUE DU "+" (Nouvelle fonctionnalité)
+            // On regarde les jetons actuellement dans le paquet en cours
+            const currentTokens = state.tokens.filter(t => t.creationPhase === state.phase);
+
+            if (currentTokens.length > 0) {
+                const hasGreen = currentTokens.some(t => t.type === 'green');
+                const hasRed = currentTokens.some(t => t.type === 'red');
+
+                // Si j'ajoute un ROUGE alors que je n'ai que des VERTS -> Hop, nouvelle parenthèse (+)
+                if (type === 'red' && hasGreen && !hasRed) {
+                    setOperator('add');
+                }
+                // Si j'ajoute un VERT alors que je n'ai que des ROUGES -> Hop, nouvelle parenthèse (+)
+                else if (type === 'green' && hasRed && !hasGreen) {
+                    setOperator('add');
+                }
+            }
+            
+            // 3. On ajoute le jeton (dans la phase actuelle ou la nouvelle si setOperator a été déclenché)
+            addToken(type);
+        }
+
+        function addToSubtractionTarget(type) {
+            state.subtractionTarget.push(type);
+            state.subtractionDefined.push(type);
+            updateMissionDisplay();
+            updateLogic(); 
+        }
+
+        function updateMissionDisplay() {
+            missionTokensDiv.innerHTML = '';
+            state.subtractionTarget.forEach(tType => {
+                const badge = document.createElement('div');
+                badge.className = `target-token ${tType}`;
+                badge.innerText = tType === 'green' ? '+1' : '-1';
+                missionTokensDiv.appendChild(badge);
+            });
+            
+            if (state.subtractionTarget.length > 0) {
+                missionPanel.classList.remove('invisible');
+                skyText.classList.remove('hidden');
+                skyZone.classList.add('active');
+            } else {
+                missionPanel.classList.add('invisible');
+                skyText.classList.add('hidden');
+                skyZone.classList.remove('active');
+            }
+        }
+
+        function addToken(type, x = null, y = null) {
+            const id = state.nextId++;
+            const el = document.createElement('div');
+            el.classList.add('token', type);
+            el.innerText = type === 'green' ? '+1' : '-1';
+            el.id = `token-${id}`;
+            const pos = (x === null || y === null) ? findFreePosition() : {x, y};
+            el.style.left = pos.x + 'px';
+            el.style.top = pos.y + 'px';
+            el.addEventListener('mousedown', handleDragStart);
+            el.addEventListener('touchstart', handleDragStart, {passive: false});
+            board.appendChild(el);
+            const tokenObj = { id: id, type: type, element: el, x: pos.x, y: pos.y, pairId: null, creationPhase: state.phase };
+            state.tokens.push(tokenObj);
+            updateLogic();
+            return tokenObj;
+        }
+
+        function addZeroPair() {
+            playSound('pop');
+            const pos = findFreePosition();
+            const t1 = addToken('green', pos.x, pos.y);
+            const t2 = addToken('red', pos.x, pos.y); 
+            createZeroPair(t1, t2);
+            updateLogic();
+        }
+
+        function findFreePosition() {
+            const padding = 20;
+            const maxX = board.clientWidth - TOKEN_SIZE - padding;
+            const maxY = board.clientHeight - TOKEN_SIZE - padding;
+            const minX = padding;
+            const minY = padding + 130; 
+            let bestX = 0, bestY = 0;
+            let maxMinDist = -1;
+
+            for(let i=0; i<15; i++) {
+                const rx = minX + Math.random() * (maxX - minX);
+                const ry = minY + Math.random() * (maxY - minY);
+                let minDist = 9999;
+                if (state.tokens.length === 0) return {x: rx, y: ry};
+                for(let t of state.tokens) {
+                    const d = Math.hypot(t.x - rx, t.y - ry);
+                    if(d < minDist) minDist = d;
+                }
+                if (minDist > maxMinDist) { maxMinDist = minDist; bestX = rx; bestY = ry; }
+                if (minDist > TOKEN_SIZE + 10) return {x: rx, y: ry};
+            }
+            return {x: bestX, y: bestY};
+        }
+
+        function setOperator(opType) {
+            playSound('click');
+            
+            if (opType === 'cloud') {
+                resetBoard();
+                state.operationType = 'cloud';
+                state.phase = 2; // On passe direct à l'étape "retirer"
+                cloudEl.classList.add('visible'); // Affiche le nuage
+                
+                // UI Label
+                const label = document.getElementById('action-label');
+                label.innerText = 'DÉFINIR CIBLE';
+                label.className = "text-[10px] font-bold text-orange-500 uppercase text-center";
+                document.getElementById('btn-auto-simplify').classList.add('hidden');
+                
+                // Désactive boutons
+                btnPlus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnPlus.disabled = true;
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+                
+                updateLogic();
+                return;
+            }
+
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
+
+            if (opType === 'add') {
+                state.operationType = 'add';
+                const tokensCurrentPhase = state.tokens.filter(t => t.creationPhase === state.phase);
+                state.frozenValues[state.phase] = calculateValue(tokensCurrentPhase);
+                state.phase++;
+                state.operators.push('+');
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+            } 
+            else if (opType === 'subtract') {
+                if (state.phase > 1) return;
+                state.operationType = 'subtract';
+                const tokensP1 = state.tokens.filter(t => t.creationPhase === 1);
+                state.frozenValues[1] = calculateValue(tokensP1);
+                state.phase++; 
+                state.operators.push('-');
+                btnPlus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnPlus.disabled = true;
+                btnMinus.classList.add('opacity-50', 'grayscale', 'cursor-not-allowed');
+                btnMinus.disabled = true;
+                const label = document.getElementById('action-label');
+                label.innerText = 'DÉFINIR CIBLE';
+                label.className = "text-[10px] font-bold text-orange-500 uppercase text-center";
+                document.getElementById('btn-auto-simplify').classList.add('hidden'); 
+            }
+            updateLogic();
+        }
+
+        function updateLogic() {
+            let html = '';
+            
+            // --- MODE NUAGE ---
+            if (state.operationType === 'cloud') {
+                // Inconnue
+                html += `<span class="text-2xl sm:text-4xl font-extrabold text-slate-600 tracking-tight transition-colors">?</span>`;
+                // Opérateur Moins (toujours soustraction en mode nuage pour cet exercice)
+                html += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">-</span>`;
+                
+                // La cible définie
+                let valCible = calculateValueFromList(state.subtractionDefined);
+                const colorClass = valCible > 0 ? 'text-green-600' : (valCible < 0 ? 'text-red-600' : 'text-slate-800');
+                const sign = valCible > 0 ? '+' : '';
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass}">(${sign}${valCible})</span>`;
+
+                equationTerms.innerHTML = html;
+                checkShortage();
+
+                // Résultat : ? + (Ce qu'il reste sur le plateau)
+                const totalRemaining = calculateValue(state.tokens);
+                const resEl = document.getElementById('op-result');
+                const remainingSign = totalRemaining > 0 ? '+' : '';
+                const remainingColor = totalRemaining > 0 ? 'text-green-600' : (totalRemaining < 0 ? 'text-red-600' : 'text-slate-800');
+                
+                // Affichage spécial pour le résultat Nuage: "? + (-4)"
+                resEl.innerHTML = `<span class="text-slate-600">?</span> <span class="text-slate-800">+</span> <span class="${remainingColor}">(${remainingSign}${totalRemaining})</span>`;
+                
+                resEl.className = "text-2xl sm:text-4xl font-bold flex items-center gap-1 " + (state.resultRevealed ? "" : "hidden ");
+                return;
+            }
+
+            // --- MODE STANDARD ---
+            for (let p = 1; p <= state.phase; p++) {
+                let val = 0;
+                if (p < state.phase || state.locked) {
+                    if (state.frozenValues[p] !== undefined) {
+                        val = state.frozenValues[p];
+                    } else if (state.operationType === 'subtract' && p === 2) {
+                        val = calculateValueFromList(state.subtractionDefined);
+                    } else {
+                         const tokensP = state.tokens.filter(t => t.creationPhase === p);
+                         val = calculateValue(tokensP);
+                    }
+                } else {
+                    if (state.operationType === 'subtract' && p === 2) {
+                        val = calculateValueFromList(state.subtractionDefined);
+                    } else {
+                        const tokensP = state.tokens.filter(t => t.creationPhase === p);
+                        val = calculateValue(tokensP);
+                    }
+                }
+                const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-600' : 'text-slate-800');
+                const sign = val > 0 ? '+' : '';
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${val})</span>`;
+                if (p < state.phase) {
+                    const op = state.operators[p-1];
+                    html += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">${op}</span>`;
+                }
+            }
+            equationTerms.innerHTML = html;
+            if (state.operationType === 'subtract') checkShortage();
+            const totalRemaining = calculateValue(state.tokens);
+            const resEl = document.getElementById('op-result');
+            resEl.innerText = `(${totalRemaining > 0 ? '+' : ''}${totalRemaining})`;
+            resEl.className = "text-2xl sm:text-4xl font-bold " + (state.resultRevealed ? "" : "hidden ");
+            if(totalRemaining > 0) resEl.classList.add('text-green-600');
+            else if(totalRemaining < 0) resEl.classList.add('text-red-600');
+            else resEl.classList.add('text-slate-800');
+        }
+
+        function checkShortage() {
+            if ((state.operationType !== 'subtract' && state.operationType !== 'cloud') || state.subtractionTarget.length === 0) {
+                shortageHint.classList.add('hidden', 'opacity-0');
+                return;
+            }
+            let neededGreen = 0; let neededRed = 0;
+            state.subtractionTarget.forEach(t => { if(t === 'green') neededGreen++; else neededRed++; });
+            let hasGreen = 0; let hasRed = 0;
+            state.tokens.forEach(t => { if(t.type === 'green') hasGreen++; else hasRed++; });
+            if (hasGreen < neededGreen || hasRed < neededRed) {
+                shortageHint.classList.remove('hidden');
+                setTimeout(() => shortageHint.classList.remove('opacity-0'), 100);
+            } else {
+                shortageHint.classList.add('opacity-0');
+                setTimeout(() => shortageHint.classList.add('hidden'), 500);
+            }
+        }
+
+        function calculateValueFromList(list) { return list.reduce((acc, type) => acc + (type === 'green' ? 1 : -1), 0); }
+        function calculateValue(list) { return list.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0); }
+
+        function showAnswer() {
+            playSound('click');
+            if(!state.locked && state.operationType !== 'subtract' && state.operationType !== 'cloud') {
+                 const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+            }
+            state.locked = true;
+            state.resultRevealed = true;
+            document.getElementById('op-question').classList.add('hidden');
+            document.getElementById('op-result').classList.remove('hidden');
+            updateLogic();
+        }
+        
+        function attemptRemoval(token) {
+            const targetIndex = state.subtractionTarget.indexOf(token.type);
+            if (targetIndex !== -1) {
+                playSound('whoosh');
+                state.subtractionTarget.splice(targetIndex, 1);
+                updateMissionDisplay();
+                unpairTokens(token);
+                token.element.classList.add('fly-away');
+                setTimeout(() => {
+                    token.element.remove();
+                    state.tokens = state.tokens.filter(t => t.id !== token.id);
+                    updateLogic();
+                }, 500);
+            } else {
+                token.element.animate([
+                    { transform: 'translateY(0)' }, { transform: 'translateY(20px)' }, { transform: 'translateY(0)' }
+                ], { duration: 300 });
+            }
+        }
+
+        function organizeBoard() {
+            playSound('whoosh');
+            
+            // 1. Identifier les groupes
+            const unpairedGreens = state.tokens.filter(t => t.type === 'green' && t.pairId === null).sort((a,b) => a.id - b.id);
+            const unpairedReds = state.tokens.filter(t => t.type === 'red' && t.pairId === null).sort((a,b) => a.id - b.id);
+            const zeroPairs = state.tokens.filter(t => t.type === 'green' && t.pairId !== null).sort((a,b) => a.id - b.id);
+
+            const spacing = TOKEN_SIZE + 5; 
+            const availableWidth = board.clientWidth - 40; 
+            const maxColsBoard = Math.max(1, Math.floor(availableWidth / spacing));
+
+            // --- A. Calcul espace ZÉROS (Droite) ---
+            const pairsCount = zeroPairs.length;
+            let zeroCols = 0;
+            let widthZeros = 0;
+            let gap = 0;
+
+            if (pairsCount > 0) {
+                gap = spacing * 1.5; 
+                zeroCols = Math.ceil(Math.sqrt(pairsCount));
+                // Limite largeur Zéros (max 40% écran)
+                const maxZeroColsLimit = Math.floor(maxColsBoard * 0.4);
+                if (zeroCols > maxZeroColsLimit && maxZeroColsLimit >= 1) {
+                    zeroCols = maxZeroColsLimit;
+                }
+                widthZeros = zeroCols * spacing;
+            }
+
+            // --- B. Calcul espace NON-APPARIÉS (Gauche) ---
+            const availableForUnpaired = availableWidth - widthZeros - gap;
+            
+            // Nombre max de colonnes par ligne (avant retour à la ligne)
+            const maxColsPerRow = Math.max(1, Math.floor(availableForUnpaired / spacing));
+
+            const countGreen = unpairedGreens.length;
+            const countRed = unpairedReds.length;
+            const maxCountUnpaired = Math.max(countGreen, countRed);
+            
+            // Largeur visuelle utilisée (soit on remplit tout, soit on prend juste ce qu'il faut)
+            const usedColsUnpaired = Math.min(maxCountUnpaired, maxColsPerRow);
+            const widthUnpaired = usedColsUnpaired * spacing;
+            
+            const totalWidth = widthUnpaired + gap + widthZeros;
+            
+            // --- C. Calcul Hauteur Totale (pour centrage vertical) ---
+            
+            // Zéros : Hauteur de la grille
+            const zeroRows = zeroCols > 0 ? Math.ceil(pairsCount / zeroCols) : 0;
+            const totalHeightZeros = zeroRows > 0 ? (zeroRows * spacing) : 0;
+
+            // Unpaired : On fonctionne par "BLOCS" (1 ligne Vert + 1 ligne Rouge)
+            const totalBlocks = Math.ceil(maxCountUnpaired / maxColsPerRow);
+            const rowHeight = TOKEN_SIZE + 10; // Hauteur d'une rangée de jetons
+            const blockGap = 30; // Espace entre le bloc (G+R) et le suivant
+            // Hauteur d'un bloc complet (Verts + Rouges + Espace dessous)
+            const blockHeight = (rowHeight * 2) + blockGap; 
+            
+            const totalHeightUnpaired = totalBlocks > 0 ? (totalBlocks * blockHeight) - blockGap : 0;
+            
+            // Hauteur max globale
+            const totalContentHeight = Math.max(totalHeightUnpaired, totalHeightZeros);
+
+            // --- D. Coordonnées de départ ---
+            
+            // Centrage Horizontal
+            let startX = (availableWidth - totalWidth) / 2 + 20 + (spacing / 2);
+            if (startX < 20 + spacing/2) startX = 20 + spacing/2;
+
+            // Centrage Vertical (Point le plus haut)
+            const startY = (board.clientHeight - totalContentHeight) / 2 + (TOKEN_SIZE/2);
+
+            // Calcul du décalage (Offset) pour alignement à DROITE
+            const greenOffset = maxCountUnpaired - countGreen;
+            const redOffset = maxCountUnpaired - countRed;
+
+            // --- E. Placement ---
+
+            // 1. Verts (Haut du bloc)
+            unpairedGreens.forEach((t, i) => {
+                const visualIndex = i + greenOffset; 
+                
+                // On détermine dans quel bloc (quelle paire de ligne) et quelle colonne
+                const blockIndex = Math.floor(visualIndex / maxColsPerRow);
+                const colIndex = visualIndex % maxColsPerRow;
+                
+                const x = startX + (colIndex * spacing);
+                // Y = Start + Hauteur des blocs précédents
+                const y = startY + (blockIndex * blockHeight);
+                
+                moveTokenTo(t, x, y);
+                t.element.style.transform = "scale(1)";
+            });
+
+            // 2. Rouges (Bas du bloc, juste sous les verts)
+            unpairedReds.forEach((t, i) => {
+                const visualIndex = i + redOffset;
+                
+                const blockIndex = Math.floor(visualIndex / maxColsPerRow);
+                const colIndex = visualIndex % maxColsPerRow;
+                
+                const x = startX + (colIndex * spacing);
+                // Y = Comme les verts + hauteur d'une ligne
+                const y = startY + (blockIndex * blockHeight) + rowHeight;
+                
+                moveTokenTo(t, x, y);
+                t.element.style.transform = "scale(1)";
+            });
+
+            // 3. Zéros (Grille à droite)
+            if (zeroPairs.length > 0) {
+                const zeroStartX = startX + widthUnpaired + gap;
+                // Centrage vertical de la grille zéro par rapport au tout
+                const zeroStartY = (board.clientHeight - totalHeightZeros) / 2 + (TOKEN_SIZE/2);
+                
+                zeroPairs.forEach((greenT, i) => {
+                    const redT = state.tokens.find(t => t.id === greenT.pairId);
+                    
+                    const col = i % zeroCols;
+                    const row = Math.floor(i / zeroCols);
+                    
+                    const x = zeroStartX + (col * spacing);
+                    const y = zeroStartY + (row * spacing);
+                    
+                    moveTokenTo(greenT, x, y);
+                    greenT.element.style.transform = "scale(1)";
+                    
+                    if (redT) {
+                        moveTokenTo(redT, x, y);
+                        redT.element.style.transform = "scale(1)";
+                        updateBadgePosition(greenT, redT);
+                    }
+                });
+            }
+        }
+        
+        // Helper pour mettre à jour la position du badge 0
+        function updateBadgePosition(t1, t2) {
+            const badgeId1 = `badge-${t1.id}-${t2.id}`;
+            const badgeId2 = `badge-${t2.id}-${t1.id}`;
+            let badge = document.getElementById(badgeId1) || document.getElementById(badgeId2);
+            if (badge) {
+                badge.style.left = (t1.x - 12) + 'px'; 
+                badge.style.top = (t1.y - 30) + 'px';
+            }
+        }
+
+        function moveTokenTo(t, x, y) {
+            t.x = x; t.y = y;
+            t.element.style.left = (x - TOKEN_SIZE/2) + 'px';
+            t.element.style.top = (y - TOKEN_SIZE/2) + 'px';
+        }
+
+        let draggedToken = null;
+        let dragOffset = {x:0, y:0};
+
+        function handleDragStart(e) {
+            if (state.currentTool !== 'hand') return; 
+            e.preventDefault();
+            const el = e.target.closest('.token');
+            if(!el) return;
+            const id = parseInt(el.id.split('-')[1]);
+            draggedToken = state.tokens.find(t => t.id === id);
+            if (draggedToken.pairId !== null) unpairTokens(draggedToken);
+            el.style.zIndex = 1000;
+            el.style.transform = "scale(1.15)";
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMove, {passive: false});
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        function handleDragMove(e) {
+            if (!draggedToken) return;
+            e.preventDefault();
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const boardRect = board.getBoundingClientRect();
+            let newX = clientX - boardRect.left - dragOffset.x; 
+            let newY = clientY - boardRect.top - dragOffset.y;
+            draggedToken.element.style.left = newX + 'px';
+            draggedToken.element.style.top = newY + 'px';
+            draggedToken.x = newX + TOKEN_SIZE/2;
+            draggedToken.y = newY + TOKEN_SIZE/2;
+        }
+
+        function handleDragEnd(e) {
+            if (!draggedToken) return;
+            if ((state.operationType === 'subtract' || state.operationType === 'cloud') && draggedToken.y < 130) {
+                attemptRemoval(draggedToken);
+            } else {
+                checkForPairing(draggedToken);
+            }
+            draggedToken.element.style.zIndex = '';
+            draggedToken.element.style.transform = "";
+            draggedToken = null;
+            document.removeEventListener('mousemove', handleDragMove);
+            document.removeEventListener('touchmove', handleDragMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchend', handleDragEnd);
+            updateLogic();
+        }
+
+        function checkForPairing(token) {
+            const targetType = token.type === 'green' ? 'red' : 'green';
+            let bestCandidate = null;
+            let minDistance = SNAP_THRESHOLD; 
+            for (let t of state.tokens) {
+                if (t.type === targetType && t.pairId === null) {
+                    const dist = Math.hypot(t.x - token.x, t.y - token.y);
+                    if (dist < minDistance) { minDistance = dist; bestCandidate = t; }
+                }
+            }
+            if (bestCandidate) { playSound('snap'); createZeroPair(token, bestCandidate); }
+        }
+
+        function createZeroPair(t1, t2) {
+            const midX = (t1.x + t2.x) / 2;
+            const midY = (t1.y + t2.y) / 2;
+            moveTokenTo(t1, midX, midY);
+            moveTokenTo(t2, midX, midY);
+            t1.pairId = t2.id; t2.pairId = t1.id;
+            t1.element.classList.add('is-zero'); t2.element.classList.add('is-zero');
+            const badge = document.createElement('div');
+            badge.classList.add('zero-badge');
+            badge.innerText = '0';
+            badge.id = `badge-${t1.id}-${t2.id}`;
+            badge.style.left = (midX - 12) + 'px'; 
+            badge.style.top = (midY - 30) + 'px';
+            board.appendChild(badge);
+        }
+
+        function unpairTokens(token) {
+            if (token.pairId === null) return;
+            const partner = state.tokens.find(t => t.id === token.pairId);
+            if (partner) { partner.pairId = null; partner.element.classList.remove('is-zero'); }
+            token.pairId = null; token.element.classList.remove('is-zero');
+            let badge = document.getElementById(`badge-${token.id}-${partner?.id}`);
+            if (!badge && partner) badge = document.getElementById(`badge-${partner.id}-${token.id}`);
+            if (badge) badge.remove();
+        }
+
+        function animateSimplification() {
+            if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
+            if(!state.locked && state.operationType === 'add') {
+                 const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+            }
+            state.locked = true;
+            // --- LOGIQUE DE SUPPRESSION (De Droite à Gauche) ---
+            const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
+            const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
+            let pairs = [];
+            const count = Math.min(greens.length, reds.length);
+            for(let i=0; i<count; i++) {
+                pairs.push([greens.pop(), reds.pop()]);
+            }
+            if (pairs.length === 0) return;
+            const interval = 500; 
+            playSound('whoosh');
+            pairs.forEach((pair, index) => {
+                setTimeout(() => {
+                    const [t1, t2] = pair;
+                    unpairTokens(t1); 
+                    t1.element.classList.add('fly-away');
+                    t2.element.classList.add('fly-away');
+                    setTimeout(() => {
+                        if(t1.element.parentNode) t1.element.remove();
+                        if(t2.element.parentNode) t2.element.remove();
+                        state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                        updateLogic();
+                    }, 800);
+                }, index * interval);
+            });
+        }
+
+        function resetBoard() {
+            playSound('click');
+            state.tokens.forEach(t => t.element.remove());
+            document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+            clearCanvas();
+            cloudEl.classList.remove('visible'); // Cache le nuage
+            state.tokens = [];
+            state.subtractionTarget = [];
+            state.subtractionDefined = []; 
+            state.phase = 1;
+            state.hasOperator = false;
+            state.resultRevealed = false;
+            state.operationType = null;
+            state.locked = false;
+            state.frozenValues = {};
+            state.operators = [];
+            
+            document.getElementById('equation-terms').innerHTML = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
+            document.getElementById('op-result').classList.add('hidden');
+            document.getElementById('op-question').classList.remove('hidden');
+            
+            btnPlus.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+            btnPlus.disabled = false;
+            btnMinus.classList.remove('opacity-50', 'grayscale', 'cursor-not-allowed');
+            btnMinus.disabled = false;
+            
+            document.getElementById('action-label').innerText = 'AJOUTER';
+            document.getElementById('action-label').className = "text-[10px] font-bold text-slate-400 uppercase text-center";
+            document.getElementById('btn-auto-simplify').classList.remove('hidden');
+            document.getElementById('shortage-hint').classList.add('hidden', 'opacity-0');
+            setTool('hand');
+            updateMissionDisplay();
+            updateLogic();
+        }
+    </script>
+</body>
+</html>

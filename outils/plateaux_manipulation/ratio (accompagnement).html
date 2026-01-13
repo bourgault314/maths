@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calcul Littéral - Tuiles Algébriques</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
+        }
+
+        /* --- STYLES DES TUILES --- */
+        .token {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+            cursor: grab;
+            transition: transform 0.1s, background-color 0.5s;
+            z-index: 10;
+            touch-action: none;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .token.animating {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s ease-in-out, top 0.5s ease-in-out, background-color 0.5s !important;
+        }
+
+        @keyframes flipToken {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(90deg) scale(1.1); }
+            100% { transform: rotateY(0deg) scale(1); }
+        }
+        .flipping { animation: flipToken 0.6s ease-in-out; }
+
+        @keyframes flyAway {
+            0% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(0.1) translateY(-150px); opacity: 0; }
+        }
+        .flying { animation: flyAway 0.6s ease-in forwards; pointer-events: none; }
+
+        .token:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 100 !important;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+            transition: none !important;
+        }
+
+        .token.green {
+            background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a);
+            border: 2px solid #14532d;
+        }
+        .token.red {
+            background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
+            border: 2px solid #7f1d1d;
+        }
+        
+        .token.in-bracket { opacity: 0.95; box-shadow: 0 0 0 3px #f97316 !important; }
+        .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
+        .token.in-group { box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.6); }
+
+        .token.is-zero {
+            background: #9ca3af !important;
+            opacity: 0.6;
+            border: 2px solid #6b7280;
+            box-shadow: none;
+            z-index: 5;
+            transform: scale(0.95);
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* FORMES */
+        .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
+        .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
+        .token.type-x2 { width: 90px; height: 90px; border-radius: 4px; }
+
+        .zero-badge {
+            position: absolute;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #374151;
+            pointer-events: none;
+            z-index: 20;
+            text-shadow: 0 0 10px rgba(255,255,255,1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        #drawing-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; touch-action: none;
+        }
+        .hide-cursor, .hide-cursor * { cursor: none !important; }
+        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
+
+        /* SIDEBAR BOUTONS */
+        .tile-btn {
+            position: relative;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .tile-btn:active { transform: translateY(1px); box-shadow: none; }
+        .tile-btn:hover { background: #f1f5f9; }
+        
+        .preview-shape { 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 2px; color: white; font-weight: bold; 
+            font-family: 'Times New Roman', serif; font-style: italic;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
+        .ps-green { background: #4ade80; border: 1px solid #15803d; }
+        .ps-red { background: #f87171; border: 1px solid #b91c1c; }
+
+        .mode-active-minus { border: 2px solid #f97316; background-color: #fff7ed; }
+        .mode-active-group { border: 2px solid #3b82f6; background-color: #eff6ff; }
+
+        @keyframes pulse-orange {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+        }
+        .btn-opposite { animation: pulse-orange 2s infinite; }
+        
+        @keyframes pulse-blue {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        }
+        .btn-distribute { animation: pulse-blue 2s infinite; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- CURSEUR -->
+    <div id="custom-cursor">
+        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
+            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <circle cx="8" cy="32" r="1" fill="white"/>
+        </svg>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0">
+        <div class="flex items-center gap-2">
+            <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+            
+            <!-- BOUTON DISTRIBUER -->
+            <button id="btn-distribute" onclick="applyDistribution()" class="hidden btn-distribute bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-lg shadow-md border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition text-sm">
+                Distribuer
+            </button>
+            
+            <div class="h-8 w-px bg-slate-200 mx-1"></div>
+            
+            <!-- OPÉRATEURS -->
+            <div class="flex gap-1 items-center">
+                <button onclick="setOperator('add')" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Ajouter">+</button>
+                
+                <div class="flex gap-1 items-center bg-orange-50 rounded-full p-1 border border-orange-100">
+                    <button id="btn-op-minus" onclick="setOperator('subtract')" class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full border-2 border-orange-400 font-bold text-xl active:scale-95 transition hover:bg-orange-200" title="Soustraire (Ouvrir parenthèse)">-</button>
+                    <!-- BOUTON FERMER PARENTHÈSE -->
+                    <button id="btn-close-parenthesis" onclick="closeSubtraction()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
+                </div>
+
+                <!-- BOUTON OPPOSÉ -->
+                <button id="btn-opposite" onclick="applyOpposite()" class="hidden btn-opposite ml-2 bg-orange-600 text-white px-3 py-1 rounded-full font-bold shadow-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1 text-xs sm:text-sm uppercase tracking-wide flex flex-col items-center leading-none py-2">
+                    <span>OPPOSÉ</span>
+                    <span class="text-[10px] opacity-80">(Changer signes)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ZONE EQUATION -->
+        <div class="flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
+            <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar min-h-[60px]">
+                <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">
+                    (...)
+                </div>
+            </div>
+        </div>
+
+        <!-- OUTILS STYLO -->
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
+            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <canvas id="drawing-canvas"></canvas>
+
+        <!-- SIDEBAR -->
+        <aside class="w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-2 z-20 shadow-lg shrink-0 overflow-y-auto">
+            <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tuiles</span>
+
+            <!-- X² -->
+            <div class="flex flex-col gap-1 w-full px-2 items-center">
+                <button onclick="addTile('x2', 1)" class="tile-btn w-12 h-12" title="+x²">
+                    <div class="preview-shape ps-green w-8 h-8 text-sm">x²</div>
+                </button>
+                <button onclick="addTile('x2', -1)" class="tile-btn w-12 h-12" title="-x²">
+                    <div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div>
+                </button>
+            </div>
+
+            <!-- X -->
+            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
+                <button onclick="addTile('x', 1)" class="tile-btn w-16 h-10" title="+x">
+                    <div class="preview-shape ps-green w-10 h-5 text-sm">x</div>
+                </button>
+                <button onclick="addTile('x', -1)" class="tile-btn w-16 h-10" title="-x">
+                    <div class="preview-shape ps-red w-10 h-5 text-sm">-x</div>
+                </button>
+            </div>
+
+            <!-- Unit -->
+            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
+                <button onclick="addTile('unit', 1)" class="tile-btn w-10 h-10" title="+1">
+                    <div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div>
+                </button>
+                <button onclick="addTile('unit', -1)" class="tile-btn w-10 h-10" title="-1">
+                    <div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div>
+                </button>
+            </div>
+
+            <!-- BOUTON GROUPE -->
+            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
+                <button id="btn-group" onclick="toggleGroupMode()" class="w-full py-1 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 transition shadow-sm">
+                    GROUPE ( )
+                </button>
+            </div>
+
+            <!-- MULTIPLICATEUR -->
+            <div class="flex flex-col gap-1 w-full px-2 items-center mt-1">
+                <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
+                <div class="grid grid-cols-2 gap-1 w-full">
+                    <button onclick="multiplyGroup(2)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100">x2</button>
+                    <button onclick="multiplyGroup(3)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100">x3</button>
+                    <button onclick="multiplyGroup(4)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 col-span-2">x4</button>
+                </div>
+            </div>
+
+            <!-- ORDONNER -->
+            <button onclick="organizeBoard()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 flex flex-col items-center gap-1 hover:bg-slate-50 transition" title="Ordonner les tuiles">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                ORDONNER
+            </button>
+
+            <!-- FLASH / RÉDUIRE -->
+            <button id="btn-reduce" onclick="autoSimplify()" class="w-14 h-14 mt-2 rounded-full bg-yellow-100 border-4 border-yellow-300 text-yellow-600 shadow-md flex items-center justify-center hover:bg-yellow-200 active:scale-95 transition" title="Réduire (Simplifier les zéros)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </button>
+        </aside>
+
+        <!-- PLATEAU -->
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none">
+            <div class="absolute inset-0 opacity-10 pointer-events-none" 
+                 style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;">
+            </div>
+            <div class="absolute top-2 left-2 pointer-events-none opacity-40">
+                <p class="text-xs text-slate-400">Zone de manipulation</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SNAP_THRESHOLD = 60;
+        
+        const SIZES = {
+            'unit': { w: 40, h: 40 },
+            'x': { w: 90, h: 40 }, 
+            'x2': { w: 90, h: 90 }
+        };
+
+        const state = {
+            tokens: [],
+            nextId: 1,
+            steps: [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }],
+            currentStepIndex: 0,
+            isGrouping: false,
+            currentGroupId: null,
+            isSubtractingInput: false,
+            displayMode: 'normal', 
+            currentTool: 'hand',
+            lastPos: { x: 40, y: 60, maxYInRow: 0 }
+        };
+
+        const board = document.getElementById('board');
+        const eqDisplay = document.getElementById('equation-display');
+        const btnOpposite = document.getElementById('btn-opposite');
+        const btnMinus = document.getElementById('btn-op-minus');
+        const btnCloseP = document.getElementById('btn-close-parenthesis');
+        const btnGroup = document.getElementById('btn-group');
+        const btnDistribute = document.getElementById('btn-distribute');
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if (type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1);
+                osc.start(now); osc.stop(now+0.1);
+            } else if (type === 'snap') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.05);
+                osc.start(now); osc.stop(now+0.05);
+            } else if (type === 'flip') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now+0.2);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2);
+                osc.start(now); osc.stop(now+0.2);
+            } else if (type === 'magic') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.3);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.3);
+                osc.start(now); osc.stop(now+0.3);
+            } else if (type === 'whoosh') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.3);
+                osc.start(now); osc.stop(now+0.3);
+            }
+        }
+
+        // --- GESTION DES TUILES ---
+
+        function addTile(type, sign, x = null, y = null) {
+            playSound('pop');
+            const id = state.nextId++;
+            const el = document.createElement('div');
+            
+            let colorClass = sign === 1 ? 'green' : 'red';
+            el.classList.add('token', colorClass, `type-${type}`);
+            
+            const currentStep = state.steps[state.currentStepIndex];
+            const isSubStep = (currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
+            if (isSubStep) el.classList.add('in-bracket');
+            if (state.isGrouping) el.classList.add('in-group');
+
+            let label = "";
+            if (type === 'x2') label = sign === 1 ? "x²" : "-x²";
+            else if (type === 'x') label = sign === 1 ? "x" : "-x";
+            else label = sign === 1 ? "1" : "-1";
+            
+            el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+            el.id = `t-${id}`;
+            
+            let pos = (x !== null && y !== null) ? {x, y} : getSequentialPosition(SIZES[type].w, SIZES[type].h);
+            el.style.left = pos.x + 'px';
+            el.style.top = pos.y + 'px';
+            
+            el.addEventListener('mousedown', handleDragStart);
+            el.addEventListener('touchstart', handleDragStart, {passive: false});
+
+            board.appendChild(el);
+            
+            const tokenObj = {
+                id, type, sign, element: el, x: pos.x, y: pos.y, 
+                pairId: null,
+                inGroup: state.isGrouping ? state.currentGroupId : null
+            };
+            
+            state.tokens.push(tokenObj);
+            state.steps[state.currentStepIndex].tokenIds.push(id);
+
+            updateEquation();
+        }
+
+        function getSequentialPosition(w, h) {
+            const padding = 10;
+            const boardW = board.clientWidth;
+            if (state.lastPos.x + w + padding > boardW) {
+                state.lastPos.x = 40;
+                state.lastPos.y += state.lastPos.maxYInRow + padding;
+                state.lastPos.maxYInRow = 0;
+            }
+            const x = state.lastPos.x;
+            const y = state.lastPos.y; 
+            state.lastPos.x += w + padding;
+            if (h > state.lastPos.maxYInRow) state.lastPos.maxYInRow = h;
+            return {x, y};
+        }
+
+        // --- MODE GROUPE ---
+
+        function toggleGroupMode() {
+            if (state.isSubtractingInput) return;
+            state.isGrouping = !state.isGrouping;
+            if (state.isGrouping) {
+                state.currentGroupId = Date.now();
+                btnGroup.classList.add('mode-active-group');
+                btnGroup.innerText = 'FIN GROUPE';
+                state.lastPos.x += 20; 
+                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
+            } else {
+                btnGroup.classList.remove('mode-active-group');
+                btnGroup.innerText = 'GROUPE ( )';
+                state.currentGroupId = null;
+            }
+        }
+
+        function multiplyGroup(factor) {
+            if (state.isGrouping) toggleGroupMode();
+
+            // Cherche étape courante (supposée être celle du groupe)
+            const currentStep = state.steps[state.currentStepIndex];
+            if (currentStep.tokenIds.length === 0) return;
+
+            playSound('magic');
+
+            // On met à jour l'étape courante
+            currentStep.type = (currentStep.type === 'subtraction') ? 'subtraction' : 'multiplication';
+            currentStep.factor = factor;
+            currentStep.distributed = false; 
+
+            // Marquage visuel
+            const stepTokens = currentStep.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+            stepTokens.forEach(t => t.element.classList.add('pending-mult'));
+
+            btnDistribute.classList.remove('hidden');
+            updateEquation();
+        }
+
+        function applyDistribution() {
+            const currentStep = state.steps[state.currentStepIndex];
+            if (!currentStep || currentStep.factor <= 1) return;
+
+            playSound('whoosh');
+
+            const factor = currentStep.factor;
+            const baseTokens = currentStep.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+
+            let minY = Infinity, maxY = -Infinity;
+            baseTokens.forEach(t => {
+                if(t.y < minY) minY = t.y;
+                if(t.y + SIZES[t.type].h > maxY) maxY = t.y + SIZES[t.type].h;
+            });
+            const groupHeight = maxY - minY;
+            const verticalGap = 15;
+
+            baseTokens.forEach(t => t.element.classList.remove('pending-mult'));
+
+            for (let i = 1; i < factor; i++) {
+                const shiftY = i * (groupHeight + verticalGap);
+                baseTokens.forEach(original => {
+                    setTimeout(() => {
+                        addTile(original.type, original.sign, original.x, original.y + shiftY);
+                        // Assurer couleur orange si dans soustraction
+                        const newId = state.tokens[state.tokens.length - 1].id;
+                        const newEl = document.getElementById(`t-${newId}`);
+                        if (currentStep.type === 'subtraction' && !currentStep.oppositeApplied) {
+                            newEl.classList.add('in-bracket');
+                        }
+                    }, i * 100);
+                });
+            }
+
+            currentStep.distributed = true;
+            btnDistribute.classList.add('hidden');
+            updateEquation();
+        }
+
+        // --- GESTION OPÉRATEURS ---
+
+        function setOperator(op) {
+            if (state.isSubtractingInput) return;
+            if (state.isGrouping) {
+                // Dans un groupe, on ne crée pas de nouvelle étape, on espace juste
+                state.lastPos.x += 20; 
+                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
+                return;
+            }
+
+            if (op === 'add') {
+                state.lastPos.x += 30; 
+                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
+                state.steps.push({
+                    id: state.steps.length,
+                    operator: '+',
+                    type: 'simple',
+                    tokenIds: [],
+                    factor: 1,
+                    oppositeApplied: false, distributed: false, isClosed: false
+                });
+                state.currentStepIndex++;
+
+            } else if (op === 'subtract') {
+                state.lastPos.x += 30;
+                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
+                state.steps.push({
+                    id: state.steps.length,
+                    operator: '-',
+                    type: 'subtraction',
+                    tokenIds: [],
+                    factor: 1,
+                    oppositeApplied: false, distributed: false, isClosed: false
+                });
+                state.currentStepIndex++;
+                state.isSubtractingInput = true;
+                btnCloseP.classList.remove('hidden');
+            }
+            updateEquation();
+        }
+
+        function closeSubtraction() {
+            state.isSubtractingInput = false;
+            state.steps[state.currentStepIndex].isClosed = true;
+            btnCloseP.classList.add('hidden');
+            checkOppositeAvailable();
+            updateEquation();
+        }
+
+        function checkOppositeAvailable() {
+            const hasPending = state.steps.some(s => s.type === 'subtraction' && !s.oppositeApplied);
+            if (hasPending) btnOpposite.classList.remove('hidden');
+            else btnOpposite.classList.add('hidden');
+        }
+
+        function applyOpposite() {
+            const pendingSteps = state.steps.filter(s => s.type === 'subtraction' && !s.oppositeApplied);
+            if (pendingSteps.length === 0) return;
+            
+            let needsDistribute = false;
+            pendingSteps.forEach(step => {
+                if (step.factor > 1 && !step.distributed) {
+                    // Forcer distribution avant opposé
+                    state.currentStepIndex = state.steps.indexOf(step);
+                    applyDistribution();
+                    needsDistribute = true;
+                }
+            });
+
+            setTimeout(() => {
+                playSound('flip');
+                pendingSteps.forEach(step => {
+                    const tokensToFlip = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+                    tokensToFlip.forEach(t => {
+                        t.element.classList.add('flipping');
+                        t.sign *= -1;
+                        setTimeout(() => {
+                            t.element.classList.remove('green', 'red', 'in-bracket', 'pending-mult');
+                            t.element.classList.add(t.sign === 1 ? 'green' : 'red');
+                            let label = t.type === 'x2' ? (t.sign===1?"x²":"-x²") : (t.type==='x'?(t.sign===1?"x":"-x"):(t.sign===1?"1":"-1"));
+                            t.element.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                        }, 300);
+                        setTimeout(() => t.element.classList.remove('flipping'), 600);
+                    });
+                    step.oppositeApplied = true;
+                });
+                checkOppositeAvailable();
+                updateEquation();
+            }, needsDistribute ? 500 : 0);
+        }
+
+        // --- ORDONNER ---
+
+        function organizeBoard() {
+            playSound('pop');
+            state.displayMode = 'aligned';
+
+            const groups = {
+                x2: state.tokens.filter(t => t.type === 'x2'),
+                x: state.tokens.filter(t => t.type === 'x'),
+                unit: state.tokens.filter(t => t.type === 'unit')
+            };
+
+            const boardW = board.clientWidth;
+            const startY = 60;
+            
+            const placeColumn = (tokens, colStartX, widthLimit) => {
+                const greens = tokens.filter(t => t.sign === 1);
+                const reds = tokens.filter(t => t.sign === -1);
+                const size = tokens.length > 0 ? SIZES[tokens[0].type] : {w:50, h:50};
+                const gap = 5;
+                
+                let rX = colStartX; let rY = startY;
+                greens.forEach(t => {
+                    t.element.classList.add('animating');
+                    if (rX + size.w > colStartX + widthLimit) { rX = colStartX; rY += size.h + gap; }
+                    unpair(t); moveToken(t, rX, rY); rX += size.w + gap;
+                    setTimeout(() => t.element.classList.remove('animating'), 500); 
+                });
+                
+                let maxGreenY = startY + Math.ceil(greens.length * (size.w+gap) / widthLimit) * (size.h+gap);
+                if (greens.length === 0) maxGreenY = startY;
+                let redStartY = Math.max(maxGreenY + 20, startY + 180);
+                
+                rX = colStartX; rY = redStartY;
+                reds.forEach(t => {
+                     t.element.classList.add('animating');
+                     if (rX + size.w > colStartX + widthLimit) { rX = colStartX; rY += size.h + gap; }
+                    unpair(t); moveToken(t, rX, rY); rX += size.w + gap;
+                    setTimeout(() => t.element.classList.remove('animating'), 500);
+                });
+            };
+
+            const colW = (boardW - 40) / 3;
+            placeColumn(groups.x2, 20, colW);
+            placeColumn(groups.x, 20 + colW, colW);
+            placeColumn(groups.unit, 20 + colW * 2, colW);
+            
+            state.lastPos = { x: 20, y: board.clientHeight - 100, maxYInRow: 0 };
+            updateEquation();
+        }
+
+        function moveToken(t, x, y) {
+            t.x = x; t.y = y;
+            t.element.style.left = x + 'px';
+            t.element.style.top = y + 'px';
+        }
+
+        // --- GÉNÉRATION ÉQUATION ---
+
+        function generateEquationString(mode) {
+            if (mode === 'aligned') {
+                // Affiche la liste ordonnée SANS calculer le total
+                return tokensToSortedLatex(state.tokens);
+            }
+
+            let latex = "";
+            let isEmpty = true;
+
+            state.steps.forEach((step, index) => {
+                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+                const isCurrent = (index === state.currentStepIndex);
+                if (stepTokens.length === 0 && !isCurrent) return;
+
+                if (index > 0) {
+                    if (step.type === 'subtraction' && step.oppositeApplied) {
+                        // On n'affiche pas de signe ici, car le premier terme du bloc inversé portera son signe
+                        // Si le premier terme est positif (ex: -(-2x) -> 2x), il faudra peut-être un +
+                        // On verra avec le polyStr
+                        latex += " + ";
+                    }
+                    else if (step.operator === '+') latex += " + ";
+                    else if (step.operator === '-') latex += " - ";
+                }
+
+                let poly = tokensToPoly(stepTokens);
+                let pStr = "";
+
+                let basePoly = {...poly};
+                if (!step.distributed && step.factor > 1) {
+                    basePoly.x2 /= step.factor; 
+                    basePoly.x /= step.factor; 
+                    basePoly.unit /= step.factor;
+                }
+
+                if (step.type === 'multiplication') {
+                    if (step.distributed) {
+                        pStr = polyObjToLatex(poly);
+                        if (index > 0 && (stepTokens.length > 1 || pStr.startsWith('-'))) pStr = "(" + pStr + ")";
+                    } else {
+                        pStr = step.factor + "(" + polyObjToLatex(basePoly) + ")";
+                    }
+                }
+                else if (step.type === 'subtraction') {
+                    if (step.oppositeApplied) {
+                        // Mode transformé: A + (-B). On affiche les termes tels quels.
+                        // On n'entoure plus de parenthèses pour montrer que c'est libéré
+                        // SAUF si c'est pour la clarté visuelle d'un bloc négatif
+                        // User veut: "les termes s'affichent à la suite"
+                        pStr = polyObjToLatex(poly);
+                    } else {
+                        // Mode A - (B)
+                        // Si factorisé: - 2 ( ... )
+                        if (step.factor > 1 && !step.distributed) {
+                            pStr = step.factor + "(" + polyObjToLatex(basePoly) + ")";
+                        } else {
+                            pStr = "(" + (stepTokens.length > 0 ? polyObjToLatex(poly) : "\\dots") + ")";
+                        }
+                    }
+                }
+                else {
+                    pStr = polyObjToLatex(poly);
+                    if (stepTokens.length === 0) pStr = "\\dots";
+                    if (index > 0 && pStr.startsWith('-')) pStr = "(" + pStr + ")";
+                }
+                latex += pStr;
+                isEmpty = false;
+            });
+            return isEmpty ? "\\dots" : latex;
+        }
+
+        function updateEquation() {
+            let displayString = generateEquationString(state.displayMode);
+            katex.render(displayString, eqDisplay, { throwOnError: false });
+        }
+
+        // --- OUTILS & HELPERS ---
+
+        function tokensToPoly(list) {
+            return list.reduce((acc, t) => {
+                acc[t.type] += t.sign;
+                return acc;
+            }, {x2: 0, x: 0, unit: 0});
+        }
+
+        function tokensToSortedLatex(tokens) {
+            const counts = { x2: { pos: 0, neg: 0 }, x: { pos: 0, neg: 0 }, unit: { pos: 0, neg: 0 } };
+            tokens.forEach(t => { if (t.sign === 1) counts[t.type].pos++; else counts[t.type].neg++; });
+
+            let latex = "";
+            let isFirst = true;
+            const append = (count, type, sign) => {
+                if (count === 0) return;
+                let term = (type === 'unit') ? count.toString() : ((count === 1 ? "" : count) + (type === 'x2' ? "x^2" : "x"));
+                // Affichage détaillé: on répète le terme 'count' fois ? 
+                // Non, "regroupe par signe" -> 3x^2 - x^2. Donc on affiche le sous-total par signe.
+                if (isFirst) { latex += (sign === -1 ? "-" : "") + term; } 
+                else { latex += (sign === -1 ? " - " : " + ") + term; }
+                isFirst = false;
+            };
+            append(counts.x2.pos, 'x2', 1); append(counts.x2.neg, 'x2', -1);
+            append(counts.x.pos, 'x', 1); append(counts.x.neg, 'x', -1);
+            append(counts.unit.pos, 'unit', 1); append(counts.unit.neg, 'unit', -1);
+            return latex || "0";
+        }
+
+        function polyObjToLatex(poly) {
+            let parts = [];
+            let x2 = Math.round(poly.x2 * 100)/100;
+            let x = Math.round(poly.x * 100)/100;
+            let u = Math.round(poly.unit * 100)/100;
+
+            if (Math.abs(x2) > 0) { 
+                if (x2 === 1) parts.push("x^2"); else if (x2 === -1) parts.push("-x^2"); else parts.push(`${x2}x^2`);
+            }
+            if (Math.abs(x) > 0) {
+                let s = (x > 0 && parts.length > 0) ? "+" : "";
+                if (x === 1) s += "x"; else if (x === -1) s += "-x"; else s += `${x}x`;
+                parts.push(s);
+            }
+            if (Math.abs(u) > 0) {
+                if (u > 0 && parts.length > 0) parts.push(`+${u}`); else parts.push(`${u}`);
+            }
+            if (parts.length === 0) return "0";
+            return parts.join("");
+        }
+
+        function autoSimplify() {
+            // 1. Chercher les paires MANUELLES (déjà formées)
+            const manualPairs = [];
+            const processedIds = new Set();
+            state.tokens.forEach(t => {
+                if (t.pairId !== null && !processedIds.has(t.id)) {
+                    const partner = state.tokens.find(p => p.id === t.pairId);
+                    if(partner) { manualPairs.push([t, partner]); processedIds.add(t.id); processedIds.add(partner.id); }
+                }
+            });
+
+            if (manualPairs.length > 0) {
+                playSound('whoosh');
+                manualPairs.forEach((pair, idx) => {
+                    setTimeout(() => {
+                        const [t1, t2] = pair;
+                        t1.element.classList.add('flying'); t2.element.classList.add('flying');
+                        setTimeout(() => removeTokens([t1, t2]), 600);
+                    }, idx * 150);
+                });
+                return; // On ne fait que les manuelles si il y en a
+            }
+
+            // 2. Sinon Auto-Pairing
+            playSound('whoosh');
+            const available = state.tokens.filter(t => !t.inParenthesis && !t.pendingMult); // Exclure ceux bloqués
+            const greens = available.filter(t => t.sign === 1);
+            const reds = available.filter(t => t.sign === -1);
+            let pairs = [];
+            
+            // Logique de matching
+            for (let i = greens.length - 1; i >= 0; i--) {
+                const g = greens[i];
+                const matchIndex = reds.findIndex(r => r.type === g.type);
+                if (matchIndex !== -1) {
+                    const r = reds.splice(matchIndex, 1)[0];
+                    pairs.push([g, r]);
+                }
+            }
+
+            if (pairs.length === 0) return;
+
+            pairs.forEach((pair, idx) => {
+                setTimeout(() => {
+                    const [t1, t2] = pair;
+                    unpair(t1); unpair(t2);
+                    
+                    // Animation "Se rejoindre" (optionnel, ici direct envol)
+                    const mx = (t1.x + t2.x)/2; const my = (t1.y + t2.y)/2;
+                    // moveToken(t1, mx, my); moveToken(t2, mx, my); // Désactivé pour fluidité instantanée
+                    
+                    t1.element.classList.add('flying'); t2.element.classList.add('flying');
+                    setTimeout(() => removeTokens([t1, t2]), 600);
+                }, idx * 200);
+            });
+        }
+
+        function removeTokens(list) {
+            list.forEach(t => t.element.remove());
+            const idsToRemove = list.map(t => t.id);
+            state.tokens = state.tokens.filter(t => !idsToRemove.includes(t.id));
+            state.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => !idsToRemove.includes(id)));
+            updateEquation();
+        }
+
+        // --- DRAG & DROP & RESET ---
+        let draggedToken = null; let dragOffset = {x:0, y:0};
+        function handleDragStart(e) {
+            if (state.currentTool !== 'hand') return;
+            e.preventDefault();
+            const el = e.target.closest('.token');
+            if(!el) return;
+            const id = parseInt(el.id.split('-')[1]);
+            draggedToken = state.tokens.find(t => t.id === id);
+            unpair(draggedToken);
+            el.style.zIndex = 1000;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = clientX - rect.left; dragOffset.y = clientY - rect.top;
+            document.addEventListener('mousemove', handleDragMove); document.addEventListener('touchmove', handleDragMove, {passive: false});
+            document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchend', handleDragEnd);
+        }
+        function handleDragMove(e) {
+            if (!draggedToken) return;
+            e.preventDefault();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const bRect = board.getBoundingClientRect();
+            let nx = clientX - bRect.left - dragOffset.x; let ny = clientY - bRect.top - dragOffset.y;
+            draggedToken.element.style.left = nx + 'px'; draggedToken.element.style.top = ny + 'px';
+            draggedToken.x = nx; draggedToken.y = ny;
+        }
+        function handleDragEnd(e) {
+            if (!draggedToken) return;
+            const partner = findOverlap(draggedToken);
+            if (partner) createZeroPair(draggedToken, partner);
+            draggedToken.element.style.zIndex = ''; draggedToken = null;
+            document.removeEventListener('mousemove', handleDragMove); document.removeEventListener('touchmove', handleDragMove);
+            document.removeEventListener('mouseup', handleDragEnd); document.removeEventListener('touchend', handleDragEnd);
+            updateEquation();
+        }
+        function findOverlap(token) {
+            const center = { x: token.x + SIZES[token.type].w/2, y: token.y + SIZES[token.type].h/2 };
+            for (let t of state.tokens) {
+                if (t === token) continue;
+                if (t.pairId !== null) continue; 
+                if (t.type !== token.type) continue;
+                if (t.sign === token.sign) continue;
+                const tCenter = { x: t.x + SIZES[t.type].w/2, y: t.y + SIZES[t.type].h/2 };
+                const dist = Math.hypot(center.x - tCenter.x, center.y - tCenter.y);
+                if (dist < SNAP_THRESHOLD) return t;
+            }
+            return null;
+        }
+        function createZeroPair(t1, t2) {
+            playSound('snap');
+            const mx = (t1.x + t2.x) / 2; const my = (t1.y + t2.y) / 2;
+            moveToken(t1, mx, my); moveToken(t2, mx, my);
+            t1.pairId = t2.id; t2.pairId = t1.id;
+            t1.element.classList.add('is-zero'); t2.element.classList.add('is-zero');
+            const badge = document.createElement('div');
+            badge.className = 'zero-badge'; badge.innerText = '0'; badge.id = `badge-${t1.id}-${t2.id}`;
+            badge.style.left = (mx + SIZES[t1.type].w/2 - 10) + 'px'; badge.style.top = (my + SIZES[t1.type].h/2 - 20) + 'px';
+            board.appendChild(badge);
+        }
+        function unpair(t) {
+            if (t.pairId === null) return;
+            const p = state.tokens.find(tok => tok.id === t.pairId);
+            if (p) { p.pairId = null; p.element.classList.remove('is-zero'); }
+            t.pairId = null; t.element.classList.remove('is-zero');
+            let b = document.getElementById(`badge-${t.id}-${p?.id}`) || document.getElementById(`badge-${p?.id}-${t.id}`);
+            if(b) b.remove();
+        }
+        
+        function resetBoard() {
+            playSound('pop');
+            state.tokens.forEach(t => t.element.remove());
+            document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+            state.tokens = []; 
+            state.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
+            state.currentStepIndex = 0;
+            state.displayMode = 'normal';
+            state.isGrouping = false; state.currentGroupId = null;
+            state.isSubtractingInput = false;
+            state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+            
+            btnOpposite.classList.add('hidden'); btnCloseP.classList.add('hidden');
+            btnGroup.classList.remove('mode-active-group'); btnGroup.innerText = 'GROUPE ( )';
+            btnDistribute.classList.add('hidden'); 
+            clearCanvas(); updateEquation();
+        }
+        function setTool(t) {
+            state.currentTool = t; const penMode = t === 'pen';
+            board.classList.toggle('hide-cursor', penMode);
+            document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
+            document.getElementById('drawing-canvas').style.pointerEvents = penMode ? 'auto' : 'none';
+        }
+        const dCanvas = document.getElementById('drawing-canvas'); const ctx = dCanvas.getContext('2d');
+        let isDrawing = false, lastX = 0, lastY = 0;
+        function resizeCanvas() { dCanvas.width = board.clientWidth; dCanvas.height = board.clientHeight; ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 3; ctx.lineCap = 'round'; }
+        window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
+        function getMousePos(e) { const r = dCanvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx - r.left, y: cy - r.top }; }
+        dCanvas.addEventListener('mousedown', startDraw); dCanvas.addEventListener('touchstart', startDraw, {passive:false});
+        dCanvas.addEventListener('mousemove', draw); dCanvas.addEventListener('touchmove', draw, {passive:false});
+        dCanvas.addEventListener('mouseup', endDraw); dCanvas.addEventListener('touchend', endDraw);
+        window.addEventListener('mousemove', moveCursor);
+        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getMousePos(e); lastX=p.x; lastY=p.y; }
+        function draw(e) { if(!isDrawing||state.currentTool!=='pen')return; e.preventDefault(); const p=getMousePos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; }
+        function endDraw() { isDrawing=false; }
+        function clearCanvas() { ctx.clearRect(0,0,dCanvas.width,dCanvas.height); }
+        function moveCursor(e) { if(state.currentTool!=='pen')return; const c=document.getElementById('custom-cursor'); c.style.left=e.clientX+'px'; c.style.top=e.clientY+'px'; c.style.transform='translate(-2px,-30px)'; }
+        updateEquation();
+    </script>
+</body>
+</html>
