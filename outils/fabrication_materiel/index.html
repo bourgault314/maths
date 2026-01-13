@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Nombres Relatifs</title>
+    <title>Fabrication de Matériel</title>
     <style>
         :root {
             --bg-page: #f8fafc;
@@ -79,10 +79,10 @@
         /* La Grille de Choix */
         .choice-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
             width: 100%;
-            max-width: 400px; /* Limité ici car il n'y a qu'une seule carte pour l'instant */
+            max-width: 1000px;
         }
 
         /* Les Cartes "Boutons" */
@@ -91,7 +91,7 @@
             position: relative;
             background: white;
             border-radius: 24px;
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             text-align: center;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid transparent;
@@ -101,10 +101,11 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            min-height: 220px;
+            min-height: 240px;
             overflow: hidden;
         }
 
+        /* Effet de brillance au survol */
         .choice-card::after {
             content: '';
             position: absolute;
@@ -122,39 +123,63 @@
         /* ICONES */
         .icon-wrapper {
             height: 4rem;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
             transition: transform 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem; /* Espace entre le plus et le moins */
-            color: #4338ca;
+            font-size: 4rem; 
+            line-height: 1;
         }
         
         .choice-card:hover .icon-wrapper {
-            transform: scale(1.1);
+            transform: scale(1.15) rotate(-5deg);
         }
 
         .card-title {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             margin: 0;
             color: #1e293b;
             line-height: 1.3;
         }
 
-        /* Suppression de .card-desc car on l'enlève du HTML */
+        .card-desc {
+            margin-top: 0.6rem;
+            font-size: 0.95rem;
+            opacity: 0.7;
+            font-weight: 500;
+        }
 
-        /* Thème Nombres Relatifs (Violet/Bleu) */
-        .theme-relatifs { border-color: #e2e8f0; }
-        .theme-relatifs:hover {
+        /* THÈMES SPÉCIFIQUES (Couleurs adaptées) */
+        
+        /* Cartes (Rose/Rouge) */
+        .theme-cartes { border-color: #fce7f3; }
+        .theme-cartes:hover {
+            border-color: #ec4899;
+            background: linear-gradient(to bottom right, #ffffff, #fdf2f8);
+        }
+        .theme-cartes .card-title { color: #db2777; }
+        .theme-cartes .card-desc { color: #f472b6; }
+
+        /* Bandes (Bleu/Indigo) */
+        .theme-bandes { border-color: #e0e7ff; }
+        .theme-bandes:hover {
             border-color: #6366f1;
             background: linear-gradient(to bottom right, #ffffff, #eef2ff);
         }
-        .theme-relatifs .card-title { color: #4338ca; }
-        .theme-relatifs .icon-wrapper svg { 
-            stroke-width: 3;
+        .theme-bandes .card-title { color: #4f46e5; }
+        .theme-bandes .card-desc { color: #818cf8; }
+
+        /* Disques (Orange/Ambre) */
+        .theme-disques { border-color: #fff7ed; }
+        .theme-disques:hover {
+            border-color: #f97316;
+            background: linear-gradient(to bottom right, #ffffff, #fff7ed);
         }
+        .theme-disques .card-title { color: #c2410c; }
+        .theme-disques .card-desc { color: #fb923c; }
+
 
         footer {
             text-align: center;
@@ -165,14 +190,16 @@
 
         @media (max-width: 600px) {
             .page-title { font-size: 2rem; margin-top: 3rem; }
-            .choice-card { min-height: 160px; padding: 1.25rem; }
+            .choice-card { min-height: 180px; padding: 1.25rem; }
+            .icon-wrapper { font-size: 3rem; height: 3rem; margin-bottom: 0.8rem; }
         }
     </style>
 </head>
 <body>
 
     <nav class="top-nav">
-        <a href="../" class="back-link">
+        <!-- Lien retour vers le dossier parent (Outils Pédagogiques) -->
+        <a href="../index.html" class="back-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Retour
         </a>
@@ -181,25 +208,36 @@
     <div class="main-container">
         
         <h1 class="page-title">
-            Nombres Relatifs
+            Fabrication de matériel
         </h1>
 
         <div class="choice-grid">
             
-            <!-- Lien vers le fichier spécifié -->
-            <a href="nombres_relatifs_somme_difference.html" class="choice-card theme-relatifs">
+            <!-- CARTES PREMIERS -->
+            <a href="cartes_premiers_1_100.html" class="choice-card theme-cartes">
                 <div class="icon-wrapper">
-                    <!-- Icone Plus -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <!-- Icone Moins -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                    🃏
                 </div>
-                <h2 class="card-title">Somme et Différence</h2>
+                <h2 class="card-title">Générateur de Cartes</h2>
+                <span class="card-desc">Nombres premiers, composés, diviseurs (1-100)</span>
+            </a>
+
+            <!-- BANDES MAKER -->
+            <a href="bandes_maker_v2.html" class="choice-card theme-bandes">
+                <div class="icon-wrapper">
+                   📏
+                </div>
+                <h2 class="card-title">Bandes Maker</h2>
+                <span class="card-desc">Générateur de bandes de fractions à découper</span>
+            </a>
+
+            <!-- DISQUE MAKER -->
+            <a href="disque_maker.html" class="choice-card theme-disques">
+                <div class="icon-wrapper">
+                    ⭕️
+                </div>
+                <h2 class="card-title">Disques Maker</h2>
+                <span class="card-desc">Générateur de disques de fractions</span>
             </a>
 
         </div>
@@ -207,7 +245,7 @@
     </div>
 
     <footer>
-        <!-- Footer vide -->
+        <!-- Pied de page -->
     </footer>
 
 </body>
