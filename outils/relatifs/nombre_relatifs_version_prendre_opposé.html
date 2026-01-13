@@ -698,21 +698,25 @@
                         effectiveValue = -rawValue;
                     }
 
-                    // Modification: Couleur Amber si en attente (plus distinct du rouge)
-                    let colorClass = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
-                    if (isPhasePending) {
-                        colorClass = 'text-amber-600'; // COULEUR MODIFIÉE
-                    }
+                    // --- AJUSTEMENT DES COULEURS ---
+                    
+                    // Couleur du NOMBRE et des PARENTHÈSES (Vert/Rouge selon le signe)
+                    let termColor = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
+                    
+                    // Note: On ne change PAS la couleur du terme ou des parenthèses si isPhasePending.
+                    // Seul l'opérateur (géré plus bas) sera orange.
 
                     const sign = rawValue > 0 ? '+' : '';
-                    let html = `<span class="text-3xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
+                    
+                    // Construction HTML standard
+                    let html = `<span class="text-3xl sm:text-4xl font-bold ${termColor} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
                     
                     terms.push({
                         phase: p,
                         html: html,
                         operator: phaseOperator,
                         effectiveValue: effectiveValue,
-                        isPending: isPhasePending // On stocke l'état pour colorer l'opérateur plus tard
+                        isPending: isPhasePending // Important pour l'opérateur
                     });
                     totalValue += effectiveValue;
                 }
@@ -744,7 +748,7 @@
             let fullHtml = '';
             terms.forEach((term, index) => {
                 // Détermine la couleur de l'opérateur: Amber si le terme qui suit est en attente
-                const opColorClass = term.isPending ? 'text-amber-600' : 'text-slate-800'; // COULEUR MODIFIÉE
+                const opColorClass = term.isPending ? 'text-amber-500' : 'text-slate-800'; 
 
                 if (index === 0) {
                     if (term.operator === '-') {
