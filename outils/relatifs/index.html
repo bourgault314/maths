@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Nombres Relatifs</title>
+    <title>Nombres Relatifs - Accueil</title>
     <style>
         :root {
             --bg-page: #f8fafc;
@@ -82,7 +82,7 @@
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             width: 100%;
-            max-width: 750px;
+            max-width: 1100px;
         }
 
         /* Les Cartes "Boutons" */
@@ -127,11 +127,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem; 
+            gap: 0.5rem; 
         }
         
         .icon-wrapper svg {
-            stroke-width: 3;
+            stroke-width: 2.5;
         }
 
         .choice-card:hover .icon-wrapper {
@@ -139,33 +139,44 @@
         }
 
         .card-title {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             margin: 0;
             line-height: 1.3;
         }
+        
+        .card-subtitle {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
 
         /* --- THEME BLEU (Découverte) --- */
-        .theme-blue { 
-            border-color: #e2e8f0; 
-        }
-        .theme-blue:hover {
-            border-color: #6366f1;
-            background: linear-gradient(to bottom right, #ffffff, #eef2ff);
-        }
-        .theme-blue .card-title { color: #4338ca; }
-        .theme-blue .icon-wrapper { color: #4338ca; }
+        .theme-blue { border-color: #e2e8f0; }
+        .theme-blue:hover { border-color: #6366f1; background: linear-gradient(to bottom right, #ffffff, #eef2ff); }
+        .theme-blue .card-title, .theme-blue .icon-wrapper { color: #4338ca; }
 
-        /* --- THEME ORANGE (Méthode) --- */
-        .theme-orange { 
-            border-color: #e2e8f0; 
-        }
-        .theme-orange:hover {
-            border-color: #f59e0b;
-            background: linear-gradient(to bottom right, #ffffff, #fffbeb);
-        }
-        .theme-orange .card-title { color: #d97706; }
-        .theme-orange .icon-wrapper { color: #d97706; }
+        /* --- THEME ORANGE (Méthode B) --- */
+        .theme-orange { border-color: #e2e8f0; }
+        .theme-orange:hover { border-color: #f59e0b; background: linear-gradient(to bottom right, #ffffff, #fffbeb); }
+        .theme-orange .card-title, .theme-orange .icon-wrapper { color: #d97706; }
+
+        /* --- THEME VERT (Version C) --- */
+        .theme-green { border-color: #e2e8f0; }
+        .theme-green:hover { border-color: #10b981; background: linear-gradient(to bottom right, #ffffff, #ecfdf5); }
+        .theme-green .card-title, .theme-green .icon-wrapper { color: #059669; }
+
+        /* --- THEME VIOLET (Version D) --- */
+        .theme-purple { border-color: #e2e8f0; }
+        .theme-purple:hover { border-color: #d946ef; background: linear-gradient(to bottom right, #ffffff, #fdf4ff); }
+        .theme-purple .card-title, .theme-purple .icon-wrapper { color: #c026d3; }
+        
+        /* --- THEME GRIS (Version Spéciale / Tentative) --- */
+        .theme-gray { border-color: #e2e8f0; }
+        .theme-gray:hover { border-color: #64748b; background: linear-gradient(to bottom right, #ffffff, #f1f5f9); }
+        .theme-gray .card-title, .theme-gray .icon-wrapper { color: #475569; }
 
         footer {
             text-align: center;
@@ -197,36 +208,40 @@
 
         <div class="choice-grid">
 
-            <!-- Version A (Bleu) -->
             <a href="nombres_relatifs_somme_difference.html" class="choice-card theme-blue">
                 <div class="icon-wrapper">
-                    <!-- Icone Plus -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <!-- Icone Moins -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                 </div>
                 <h2 class="card-title">Découverte</h2>
             </a>
 
-            <!-- Version B (Orange) -->
             <a href="nombres_relatifs_somme_differenceB.html" class="choice-card theme-orange">
                 <div class="icon-wrapper">
-                    <!-- Icone Plus -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <!-- Icone Moins -->
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 </div>
-                <h2 class="card-title">Méthode : addition de l’opposé</h2>
+                <h2 class="card-title">Méthode Automatique</h2>
+            </a>
+
+            <a href="nombres_relatifs_somme_differenceC.html" class="choice-card theme-green">
+                <div class="icon-wrapper">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h2 class="card-title">Ajout de l'opposé</h2>
+            </a>
+
+            <a href="nombres_relatifs_somme_differenceD.html" class="choice-card theme-purple">
+                <div class="icon-wrapper">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </div>
+                <h2 class="card-title">Suppression des parenthèses</h2>
+            </a>
+
+            <a href="nombre_relatifs_version_prendre_opposé.html" class="choice-card theme-gray">
+                <div class="icon-wrapper">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <h2 class="card-title">Version Spéciale</h2>
+                <div class="card-subtitle">Tentative (Pas convaincu)</div>
             </a>
 
         </div>
@@ -234,8 +249,7 @@
     </div>
 
     <footer>
-        <!-- Footer vide -->
-    </footer>
+        </footer>
 
 </body>
 </html>
