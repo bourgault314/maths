@@ -6,129 +6,211 @@
 <title>Outils pédagogiques</title>
 <style>
 :root{
---bg:#f7f7f7; --fg:#0b0b0b; --card:#fff; --border:#ddd; --primary:#2563eb;
-/* Ajout de couleurs pour les accents */
---c1: #3b82f6; /* blue */
---c2: #16a34a; /* green */
---c3: #ea580c; /* orange */
---c4: #ca8a04; /* yellow */
---c5: #9333ea; /* purple */
---c6: #db2777; /* pink */
---c7: #e11d48; /* rose */
+  --bg: #f7f7f7;
+  --fg: #0b0b0b;
+  --card-bg: #fff;
+  --border: #ddd;
+  --text-muted: #666;
+
+  /* Couleurs pour les accents (bordures au survol) */
+  --c-red: #e11d48;    /* Fabrication */
+  --c-cyan: #06b6d4;   /* Plateaux */
+  --c-blue: #3b82f6;   /* Glisse-nombres */
+  --c-orange: #ea580c; /* Conversions */
+  --c-yellow: #d97706; /* Bouliers */
+  --c-purple: #9333ea; /* Diagrammes */
+  --c-green: #16a34a;  /* Relatifs */
 }
+
 *{box-sizing:border-box}
-html,body{height:100%} html{-webkit-text-size-adjust:100%}
+html,body{height:100%} 
+html{-webkit-text-size-adjust:100%}
+
 body{
-margin:0; font:18px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-background:var(--bg); color:var(--fg);
-display:flex; justify-content:center; padding:clamp(12px,3vw,28px);
-padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right));
+  margin:0; 
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg); 
+  color: var(--fg);
+  display: flex; 
+  justify-content: center; 
+  padding: clamp(12px, 3vw, 28px);
+  padding-left: max(12px, env(safe-area-inset-left)); 
+  padding-right: max(12px, env(safe-area-inset-right));
 }
-.wrap{ width:min(1100px,100%); }
-.topbar{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-.back{
-display:inline-block; padding:8px 12px; border:1.5px solid var(--primary); color:#fff; background:var(--primary);
-border-radius:12px; text-decoration:none; font-weight:800;
-}
-h1{ margin:0 0 8px; font-weight:900; font-size:clamp(22px,3.6vw,34px) }
-p.lead{ margin:.25rem 0 0; color:#555; font-size:clamp(14px,2.4vw,18px) }
 
-.grid{ display:grid; gap:14px; grid-template-columns: repeat(2, minmax(0,1fr)); margin-top:14px; }
-@media (max-width: 760px){ .grid{ grid-template-columns:1fr; } }
+.wrap{ width: min(1000px, 100%); }
 
-a.card{
-display:block; text-decoration:none; color:inherit;
-background:var(--card); 
-border:1.5px solid var(--border);
-/* AMÉLIORATION : Ajout d'un accent de couleur */
-border-top: 6px solid var(--border);
-border-radius:16px;
-padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06);
-transition:transform .08s ease, box-shadow .08s ease, border-color .08s ease;
-min-height:112px;
+/* --- HEADER & BOUTON RETOUR --- */
+.topbar {
+  display: flex; 
+  align-items: center; 
+  margin-bottom: 20px;
 }
-a.card:hover{ 
-transform:translateY(-2px); 
-box-shadow:0 4px 16px rgba(0,0,0,.10); 
-border-color: #555;
-}
-/* On applique les couleurs d'accent au survol */
-a.card[data-color="1"]:hover{ border-top-color: var(--c1); }
-a.card[data-color="2"]:hover{ border-top-color: var(--c2); }
-a.card[data-color="3"]:hover{ border-top-color: var(--c3); }
-a.card[data-color="4"]:hover{ border-top-color: var(--c4); }
-a.card[data-color="5"]:hover{ border-top-color: var(--c5); }
-a.card[data-color="6"]:hover{ border-top-color: var(--c6); }
-a.card[data-color="7"]:hover{ border-top-color: var(--c7); }
 
-.title{ 
-margin:0 0 6px; font-weight:900; font-size:clamp(18px,2.8vw,22px);
-/* AMÉLIORATION : Espace pour l'emoji */
-display:flex; align-items:center; gap: 10px;
+.back {
+  /* Style "pilule" discret */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 9999px; /* Très arrondi */
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
 }
-.desc{ margin:0; color:#444; font-size:clamp(14px,2.4vw,16px) }
 
-footer{ margin-top:16px; color:#666; font-size:14px }
+.back:hover {
+  background-color: #fff;
+  color: #000;
+  border-color: #bbb;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transform: translateX(-2px);
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: -0.5px;
+}
+
+/* --- GRILLE & CARTES --- */
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin-top: 20px;
+}
+
+a.card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card-bg);
+  
+  /* Bordure de base */
+  border: 1px solid var(--border);
+  border-top: 6px solid var(--border); /* Bordure supérieure grise par défaut */
+  
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+a.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  border-right-color: transparent; /* Astuce visuelle pour focus sur le top */
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+/* Application des couleurs au survol (via l'attribut data-color) */
+a.card[data-color="fabrication"]:hover { border-top-color: var(--c-red); }
+a.card[data-color="plateaux"]:hover    { border-top-color: var(--c-cyan); }
+a.card[data-color="glisse"]:hover      { border-top-color: var(--c-blue); }
+a.card[data-color="conversions"]:hover { border-top-color: var(--c-orange); }
+a.card[data-color="bouliers"]:hover    { border-top-color: var(--c-yellow); }
+a.card[data-color="diagrammes"]:hover  { border-top-color: var(--c-purple); }
+a.card[data-color="relatifs"]:hover    { border-top-color: var(--c-green); }
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.card-desc {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #888;
+  padding-bottom: 20px;
+}
 </style>
 </head>
 <body>
+
 <main class="wrap">
-<div class="topbar">
-<a class="back" href="../">← Retour à Maths</a>
-</div>
+  
+  <div class="topbar">
+    <a class="back" href="../">
+      <span>←</span> Retour
+    </a>
+  </div>
 
-<header>
-<h1>Outils pédagogiques</h1>
-</header>
+  <header>
+    <h1>Outils pédagogiques</h1>
+  </header>
 
-<section class="grid">
+  <section class="grid">
 
-<!-- Nouveau dossier regroupant les outils de fabrication -->
-      <a class="card" href="fabrication/" data-color="7">
-      <a class="card" href="fabrication_materiel/" data-color="7">
-<div class="title">✂️ Fabrication de matériel</div>
-<p class="desc">Outils pour générer du matériel à manipuler (imprimer, couper, coller, plastifier).</p>
-</a>
+    <!-- 1. Fabrication -->
+    <a class="card" href="fabrication_materiel/" data-color="fabrication">
+      <div class="card-title">✂️ Fabrication de matériel</div>
+      <p class="card-desc">Générateurs pour imprimer, découper et plastifier vos supports.</p>
+    </a>
 
-<a class="card" href="glisse-nombres-decimaux.html" data-color="1">
-<div class="title">↔️ Glisse-nombres (décimaux)</div>
-<p class="desc">Manipuler la virgule, ×10 / ÷10, zéros d’affichage, sortie.</p>
-</a>
+    <!-- 2. Plateaux -->
+    <a class="card" href="plateaux_manipulation.html" data-color="plateaux">
+      <div class="card-title">🔲 Plateaux de manipulation</div>
+      <p class="card-desc">Espaces de travail vierges ou structurés pour projeter.</p>
+    </a>
 
-<a class="card" href="glisse-entiers-flex.html" data-color="2">
-<div class="title">🔢 Glisse-entiers (flexible)</div>
-<p class="desc">Entiers avec 6 à 12 colonnes. ÷10 indique aussi le reste.</p>
-</a>
+    <!-- 3. Glisse-nombres -->
+    <a class="card" href="glisse_nombres.html" data-color="glisse">
+      <div class="card-title">↔️ Glisse-nombres</div>
+      <p class="card-desc">Outil interactif pour comprendre la numération (×10, ÷10).</p>
+    </a>
 
-<a class="card" href="conversions.html" data-color="3">
-<div class="title">⚖️ Conversions</div>
-<p class="desc">Convertir rapidement des unités (longueur, masse, …).</p>
-</a>
+    <!-- 4. Conversions -->
+    <a class="card" href="conversions.html" data-color="conversions">
+      <div class="card-title">⚖️ Conversions</div>
+      <p class="card-desc">Tableaux interactifs pour longueurs, masses et capacités.</p>
+    </a>
 
-<a class="card" href="bouliers/" data-color="4">
-<div class="title">🧮 Bouliers</div>
-<p class="desc">Ateliers et activités autour du boulier.</p>
-</a>
+    <!-- 5. Bouliers -->
+    <a class="card" href="bouliers/" data-color="bouliers">
+      <div class="card-title">🧮 Bouliers</div>
+      <p class="card-desc">Manipulations virtuelles et activités sur le boulier.</p>
+    </a>
 
-<a class="card" href="sheet_generator_diagramme_partie_tout.html" data-color="1">
-<div class="title">🧩 Diagrammes partie-tout</div>
-<p class="desc">Générateur de diagrammes partie-tout avec problèmes (énoncés + schémas).</p>
-</a>
+    <!-- 6. Diagrammes -->
+    <a class="card" href="sheet_generator_diagramme_partie_tout.html" data-color="diagrammes">
+      <div class="card-title">🧩 Diagrammes partie-tout</div>
+      <p class="card-desc">Générateur de schémas et de problèmes mathématiques.</p>
+    </a>
 
-<a class="card" href="relatifs/" data-color="2">
-<div class="title">🔴🟢 Relatifs</div>
-<p class="desc">Manipulations et outils autour des nombres relatifs.</p>
-</a>
+    <!-- 7. Relatifs -->
+    <a class="card" href="relatifs/" data-color="relatifs">
+      <div class="card-title">🔴🟢 Relatifs</div>
+      <p class="card-desc">Activités et modèles pour appréhender les nombres relatifs.</p>
+    </a>
 
-</section>
+  </section>
+
+  <footer>
+    Outils pédagogiques
+  </footer>
 
 </main>
 
-<script>
-// Petit secours : si le bouton « Retour à Maths » mène à une 404 selon l’endroit où tu poses ce fichier,
-// dé-commente l’une de ces lignes :
-// document.querySelector('.back').setAttribute('href','/maths/');    // vers /maths à la racine du site
-// document.querySelector('.back').setAttribute('href','./');         // si l’index est lui-même dans /maths/
-</script>
 </body>
 </html>
