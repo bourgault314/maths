@@ -19,17 +19,16 @@
             display: flex;
             flex-direction: column;
             color: var(--text-main);
+            /* Suppression du centrage vertical qui causait le chevauchement */
         }
 
-        /* En-tête simplifié */
+        /* En-tête */
         .top-nav {
             padding: 1rem 2rem;
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             box-sizing: border-box;
-            z-index: 10;
+            /* On ne le met plus en absolute pour éviter qu'il gêne le contenu sur petit écran */
+            background-color: var(--bg-page); 
         }
 
         .back-link {
@@ -42,15 +41,15 @@
             background: rgba(255, 255, 255, 0.8);
             padding: 0.5rem 1rem;
             border-radius: 20px;
-            backdrop-filter: blur(5px);
+            border: 1px solid #e2e8f0;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             font-size: 0.9rem;
         }
         .back-link:hover {
             transform: translateX(-3px);
             color: #1e293b;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #cbd5e1;
+            background: white;
         }
 
         /* Conteneur Principal */
@@ -58,104 +57,93 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 3rem 1rem;
-            max-width: 1000px; /* Largeur max réduite pour resserrer */
+            /* On laisse de l'espace en haut et en bas pour scroller tranquillement */
+            padding: 2rem 1rem 4rem 1rem; 
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
         }
 
         .page-title {
-            font-size: 2rem; /* Titre un peu plus petit */
+            font-size: 2rem;
             font-weight: 800;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             text-align: center;
             color: #334155;
             letter-spacing: -1px;
             line-height: 1.2;
         }
 
-        /* La Grille de Choix - Ajustée */
-        .choice-grid {
-            display: grid;
-            /* Accepte des colonnes plus étroites (200px) pour éviter la superposition */
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 1.5rem; /* Espace réduit entre les cartes */
+        /* FLEXBOX au lieu de Grid : Empêche tout chevauchement */
+        .choice-container {
+            display: flex;
+            flex-wrap: wrap; /* Permet de passer à la ligne */
+            justify-content: center; /* Centre les éléments */
+            gap: 1.5rem; /* Espace entre les cartes */
             width: 100%;
         }
 
-        /* Les Cartes "Boutons" - Plus compactes */
+        /* Les Cartes */
         .choice-card {
             text-decoration: none;
             position: relative;
             background: white;
-            border-radius: 20px; /* Arrondi légèrement réduit */
-            padding: 1.2rem;     /* Moins de padding interne */
+            border-radius: 20px;
+            padding: 1.5rem 1rem;
             text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             border: 2px solid transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            min-height: 160px; /* Hauteur minimale réduite (était 220px) */
-            overflow: hidden;
-        }
-
-        .choice-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
+            
+            /* Taille fixe pour uniformité, mais flexible si besoin */
+            width: 240px; 
+            min-height: 180px; 
         }
 
         .choice-card:hover {
-            transform: translateY(-4px) scale(1.01); /* Effet de survol plus subtil */
-            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+            z-index: 2; /* S'assure que la carte survolée passe devant */
         }
 
-        /* ICONES - Plus petites */
+        /* ICONES */
         .icon-wrapper {
-            height: 3rem; /* Hauteur réduite */
-            margin-bottom: 0.8rem;
-            transition: transform 0.3s;
+            height: 3rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .icon-wrapper svg {
-            width: 32px; /* Icône SVG plus petite */
-            height: 32px;
+            width: 36px;
+            height: 36px;
             stroke-width: 2.5;
         }
 
-        .choice-card:hover .icon-wrapper {
-            transform: scale(1.1);
-        }
-
         .card-title {
-            font-size: 1.1rem; /* Texte plus petit */
+            font-size: 1.1rem;
             font-weight: 700;
             margin: 0;
             line-height: 1.3;
         }
         
         .card-subtitle {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 500;
-            margin-top: 0.4rem;
+            margin-top: 0.5rem;
             opacity: 0.8;
             font-style: italic;
         }
 
-        /* COULEURS (inchangées) */
+        /* --- COULEURS --- */
         .theme-blue { border-color: #e2e8f0; }
         .theme-blue:hover { border-color: #6366f1; background: linear-gradient(to bottom right, #ffffff, #eef2ff); }
         .theme-blue .card-title, .theme-blue .icon-wrapper { color: #4338ca; }
@@ -184,8 +172,8 @@
         }
 
         @media (max-width: 600px) {
-            .page-title { font-size: 1.75rem; margin-top: 3rem; }
-            .choice-card { min-height: 120px; padding: 1rem; }
+            .choice-card { width: 100%; max-width: 300px; min-height: 140px; }
+            .page-title { margin-top: 1rem; }
         }
     </style>
 </head>
@@ -204,7 +192,7 @@
             Nombres Relatifs
         </h1>
 
-        <div class="choice-grid">
+        <div class="choice-container">
 
             <a href="nombres_relatifs_somme_difference.html" class="choice-card theme-blue">
                 <div class="icon-wrapper">
