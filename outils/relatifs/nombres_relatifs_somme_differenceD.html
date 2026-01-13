@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Opérations Relatifs - L'Opposé</title>
+    <title>Opérations Relatifs - Expert & Undo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -54,20 +54,6 @@
         .token.red {
             background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
             border: 3px solid #7f1d1d;
-        }
-
-        /* JETONS EN ATTENTE DE SOUSTRACTION (Orange/Amber) */
-        .token.pending-subtraction {
-            border: 5px solid #f59e0b !important; /* Amber-500 */
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
-            animation: pulse-orange 2s infinite;
-            cursor: pointer !important; /* Indique qu'on peut cliquer */
-        }
-
-        @keyframes pulse-orange {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
 
         .token.is-zero {
@@ -130,8 +116,8 @@
             cursor: none !important;
         }
 
-        /* Bouton OPPOSÉ qui apparaît */
-        #btn-opposite {
+        /* Animation bouton Transformer */
+        #btn-transform {
             animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         @keyframes bounceIn {
@@ -156,17 +142,28 @@
     <!-- HEADER RESTRUCTURÉ -->
     <header class="bg-white shadow-md z-30 flex flex-col shrink-0">
         
-        <!-- LIGNE 1 : CONTROLES + BOUTON OPPOSÉ -->
+        <!-- LIGNE 1 : CONTROLES -->
         <div class="flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[70px]">
             
             <!-- GAUCHE : Boutons Actions -->
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                 <!-- Bouton RESET -->
                  <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                     <span class="hidden sm:inline text-xs">Reset</span>
                 </button>
+
+                <!-- Bouton UNDO (Annuler) -->
+                <button onclick="undo()" class="bg-slate-100 text-slate-600 hover:bg-slate-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-slate-200 shadow-sm flex items-center gap-1 active:bg-slate-300 transition" title="Annuler la dernière action">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span class="hidden sm:inline text-xs">Annuler</span>
+                </button>
+
+                <div class="h-8 w-px bg-slate-200 mx-1"></div>
 
                 <button onclick="reduceEquation()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-sm border border-cyan-300 active:translate-y-1 transition-all text-sm sm:text-base" title="Simplifier l'écriture">
                     RÉDUIRE
@@ -175,23 +172,23 @@
                 <div class="h-8 w-px bg-slate-200 mx-1"></div>
 
                 <div class="flex gap-1">
-                    <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
+                    <button id="btn-plus" onclick="handleOperatorClick('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
                         +
                     </button>
-                    <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
+                    <button id="btn-minus" onclick="handleOperatorClick('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
                         -
                     </button>
                 </div>
             </div>
 
-            <!-- CENTRE : BOUTON OPPOSÉ (COULEUR MODIFIÉE -> Amber) -->
+            <!-- CENTRE : BOUTON TRANSFORMER -->
             <div class="flex-1 flex justify-center items-center px-2 min-w-[40px]">
-                <button id="btn-opposite" onclick="transformOpposite()" class="hidden bg-amber-500 hover:bg-amber-600 text-white px-4 py-1 rounded-full font-extrabold shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition flex items-center gap-2 text-sm sm:text-base whitespace-nowrap">
+                <button id="btn-transform" onclick="transformSubtractions()" class="hidden bg-amber-500 hover:bg-amber-600 text-white px-4 py-1 rounded-full font-extrabold shadow-lg border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition flex items-center gap-2 text-sm sm:text-base whitespace-nowrap">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    <span class="hidden md:inline">PRENDRE L'OPPOSÉ</span>
-                    <span class="md:hidden">OPPOSÉ</span>
+                    <span class="hidden md:inline">AJOUTER L'OPPOSÉ</span>
+                    <span class="md:hidden">TRANSFORMER</span>
                 </button>
             </div>
 
@@ -219,7 +216,7 @@
         <div class="h-16 w-full bg-white flex items-center justify-center relative shadow-inner z-10 border-b border-slate-200 overflow-hidden">
              <div class="w-full h-full flex items-center justify-center overflow-x-auto no-scrollbar whitespace-nowrap px-4">
                 <div id="equation-terms" class="flex items-center gap-1">
-                    <span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>
+                    <span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>
                 </div>
             </div>
         </div>
@@ -268,24 +265,33 @@
     <script>
         const SNAP_THRESHOLD = 80;
         const TOKEN_SIZE = 70;
+        const SPACING = 80;
+        const GROUP_GAP = 120; 
+        const LINE_HEIGHT = 120; 
         
         const state = {
             phase: 1, 
-            operators: [], // Liste des opérateurs ['+', '-', '+']
-            tokens: [],    // Liste de tous les jetons
+            operators: [], 
+            tokens: [],    
             nextId: 1,
             locked: false,
             isAligned: false,
-            isReduced: false, // Nouvel état pour savoir si on affiche la forme réduite
+            isReduced: false, 
             currentPendingMode: null,
-            currentTool: 'hand'
+            currentTool: 'hand',
+            lastInputType: null,
+            transformMode: false,
+            forceNewGroup: false // Nouveau flag pour forcer la séparation après transformation
         };
+
+        // Stack d'historique
+        const historyStack = [];
 
         const board = document.getElementById('board');
         const equationTerms = document.getElementById('equation-terms');
         const btnPlus = document.getElementById('btn-plus');
         const btnMinus = document.getElementById('btn-minus');
-        const btnOpposite = document.getElementById('btn-opposite');
+        const btnTransform = document.getElementById('btn-transform'); 
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
         const cursorDiv = document.getElementById('custom-cursor');
@@ -339,6 +345,14 @@
                 gain.gain.linearRampToValueAtTime(0, now + 0.4);
                 osc.start(now); osc.stop(now + 0.4);
             }
+            else if (type === 'delete') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            }
         }
 
         // --- KEYBOARD SHORTCUTS ---
@@ -349,6 +363,7 @@
             if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
             if (e.key === 'Enter') { animateSimplification(); playSound('click'); }
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { undo(); } // Raccourci Undo
         });
 
         // --- DESSIN & CURSEUR ---
@@ -441,56 +456,152 @@
         canvas.addEventListener('touchend', endDraw);
 
 
+        // --- GESTION HISTORIQUE (UNDO) ---
+        
+        function saveState() {
+            if (historyStack.length > 20) historyStack.shift();
+            
+            const stateCopy = {
+                phase: state.phase,
+                operators: [...state.operators],
+                nextId: state.nextId,
+                locked: state.locked,
+                isAligned: state.isAligned,
+                isReduced: state.isReduced,
+                currentPendingMode: state.currentPendingMode,
+                lastInputType: state.lastInputType,
+                transformMode: state.transformMode,
+                forceNewGroup: state.forceNewGroup,
+                tokensData: state.tokens.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    x: t.x,
+                    y: t.y,
+                    pairId: t.pairId,
+                    creationPhase: t.creationPhase,
+                    isToRemove: t.isToRemove
+                }))
+            };
+            historyStack.push(stateCopy);
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            
+            playSound('pop');
+            const previousState = historyStack.pop();
+            
+            state.phase = previousState.phase;
+            state.operators = previousState.operators;
+            state.nextId = previousState.nextId;
+            state.locked = previousState.locked;
+            state.isAligned = previousState.isAligned;
+            state.isReduced = previousState.isReduced;
+            state.currentPendingMode = previousState.currentPendingMode;
+            state.lastInputType = previousState.lastInputType;
+            state.transformMode = previousState.transformMode;
+            state.forceNewGroup = previousState.forceNewGroup;
+            
+            board.innerHTML = '<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;"></div><div class="absolute top-2 left-2 pointer-events-none opacity-40"><p class="text-xs text-slate-400">Zone de manipulation</p></div>';
+            state.tokens = [];
+
+            previousState.tokensData.forEach(tData => {
+                const el = document.createElement('div');
+                el.classList.add('token', tData.type);
+                if (tData.isToRemove) el.classList.add('to-remove');
+                if (tData.pairId !== null) el.classList.add('is-zero');
+                
+                el.innerText = tData.type === 'green' ? '+1' : '-1';
+                el.id = `token-${tData.id}`;
+                el.style.left = tData.x + 'px';
+                el.style.top = tData.y + 'px';
+                
+                if (tData.isToRemove) {
+                    el.setAttribute('onclick', 'removeSingleToken(this)');
+                } else {
+                    el.addEventListener('mousedown', handleDragStart);
+                    el.addEventListener('touchstart', handleDragStart, {passive: false});
+                }
+                
+                board.appendChild(el);
+                
+                if (tData.pairId !== null && !document.getElementById(`badge-${tData.id}-${tData.pairId}`) && !document.getElementById(`badge-${tData.pairId}-${tData.id}`)) {
+                    const badge = document.createElement('div');
+                    badge.classList.add('zero-badge');
+                    badge.innerText = '0';
+                    const id1 = tData.id;
+                    const id2 = tData.pairId;
+                    badge.id = `badge-${id1}-${id2}`;
+                    badge.style.left = (tData.x - 12) + 'px'; 
+                    badge.style.top = (tData.y - 30) + 'px';
+                    board.appendChild(badge);
+                }
+
+                state.tokens.push({
+                    ...tData,
+                    element: el
+                });
+            });
+
+            updateLogic();
+        }
+
+
         // --- LOGIQUE PRINCIPALE ---
 
         function handleSideButton(type) {
+            saveState(); 
             playSound('pop');
-            state.isReduced = false; // Reset reduced view on interaction
+            state.isReduced = false; 
             
-            // MODIFICATION: Autoriser la détection de changement de signe MÊME en mode soustraction
-            const currentTokens = state.tokens.filter(t => t.creationPhase === state.phase);
-            if (currentTokens.length > 0) {
-                const hasGreen = currentTokens.some(t => t.type === 'green');
-                const hasRed = currentTokens.some(t => t.type === 'red');
-                if ((type === 'red' && hasGreen && !hasRed) || (type === 'green' && hasRed && !hasGreen)) {
-                    setOperator('add');
-                }
+            // Check force new group (after transform)
+            if (state.forceNewGroup) {
+                setOperator('add');
+                state.forceNewGroup = false;
+            }
+
+            // CORRECTION: Si on change de "bouton" (couleur), on force une nouvelle addition
+            // Cela permet de sortir du mode soustraction "collant" et de séparer les groupes
+            if (state.lastInputType && state.lastInputType !== type) {
+                setOperator('add'); 
             }
             
+            state.lastInputType = type; // Mémorise le dernier type cliqué
             addToken(type);
         }
 
         function addToken(type, x = null, y = null) {
+            let finalType = type;
+            
+            // MODE EXPERT : Soustraction = Ajout de l'opposé DIRECT
+            if (state.currentPendingMode === 'subtract') {
+                finalType = (type === 'green') ? 'red' : 'green';
+            }
+
             const id = state.nextId++;
             const el = document.createElement('div');
-            el.classList.add('token', type);
-            el.innerText = type === 'green' ? '+1' : '-1';
+            el.classList.add('token', finalType);
+            el.innerText = finalType === 'green' ? '+1' : '-1';
             el.id = `token-${id}`;
+            
             const pos = (x === null || y === null) ? findFreePosition() : {x, y};
             el.style.left = pos.x + 'px';
             el.style.top = pos.y + 'px';
+            
             el.addEventListener('mousedown', handleDragStart);
             el.addEventListener('touchstart', handleDragStart, {passive: false});
             
-            const isPending = (state.currentPendingMode === 'subtract');
-            if (isPending) {
-                el.classList.add('pending-subtraction');
-                el.setAttribute('onclick', 'transformSingleToken(this)'); // AJOUTÉ : clic direct
-                btnOpposite.classList.remove('hidden');
-            }
-
             board.appendChild(el);
             
             const tokenObj = { 
                 id: id, 
-                type: type, 
+                type: finalType, 
                 element: el, 
                 x: pos.x, 
                 y: pos.y, 
                 pairId: null, 
                 creationPhase: state.phase,
-                isPending: isPending,
-                isConverted: false // NOUVEAU
+                isToRemove: false 
             };
             
             state.tokens.push(tokenObj);
@@ -498,40 +609,59 @@
             return tokenObj;
         }
 
-        // MODIFICATION : Système de grille pour le placement initial
         function findFreePosition() {
             const startX = 50;
-            const startY = 30; // Un peu de marge sous le titre
-            const gap = 80; // Taille jeton (70) + Marge (10)
-            const availableWidth = board.clientWidth - 40;
-            const tokensPerRow = Math.max(1, Math.floor(availableWidth / gap));
-
-            // On cherche le premier emplacement de grille "libre"
-            // Libre = aucun jeton existant n'est trop proche de ce point de la grille
-            let slotIndex = 0;
-            while (true) {
-                const row = Math.floor(slotIndex / tokensPerRow);
-                const col = slotIndex % tokensPerRow;
+            const startY = 30;
+            const availableWidth = board.clientWidth - 80;
+            
+            const currentPhaseTokens = state.tokens.filter(t => t.creationPhase === state.phase);
+            
+            if (currentPhaseTokens.length > 0) {
+                const lastToken = currentPhaseTokens[currentPhaseTokens.length - 1];
+                let nextX = lastToken.x + SPACING;
+                let nextY = lastToken.y;
                 
-                const x = startX + col * gap;
-                const y = startY + row * gap;
-
-                // Vérifier si cet emplacement est occupé (si un jeton est à moins de la moitié d'un écart)
-                const occupied = state.tokens.some(t => Math.hypot(t.x - x, t.y - y) < gap/2);
-
-                if (!occupied) {
-                    return {x, y};
+                if (nextX > availableWidth) {
+                    nextX = 50;
+                    nextY += LINE_HEIGHT;
                 }
-                
-                slotIndex++;
-                // Sécurité : si le tableau est plein à craquer (peu probable), on empile au centre
-                if (slotIndex > 2000) return {x: board.clientWidth/2, y: board.clientHeight/2}; 
+                return { x: nextX, y: nextY };
+            } 
+            else {
+                if (state.phase > 1) {
+                    let maxToken = null;
+                    state.tokens.forEach(t => {
+                        if (t.creationPhase < state.phase) {
+                            if (!maxToken) maxToken = t;
+                            else {
+                                if (t.y > maxToken.y) maxToken = t;
+                                else if (t.y === maxToken.y && t.x > maxToken.x) maxToken = t;
+                            }
+                        }
+                    });
+                    
+                    if (maxToken) {
+                        let nextX = maxToken.x + GROUP_GAP;
+                        let nextY = maxToken.y;
+                        
+                        if (nextX > availableWidth) {
+                            nextX = 50;
+                            nextY += LINE_HEIGHT;
+                        }
+                        return { x: nextX, y: nextY };
+                    }
+                }
+                return { x: startX, y: startY };
             }
         }
 
         function setOperator(opType) {
+            // On ne sauvegarde pas ici car setOperator est souvent appelé par handleSideButton qui sauvegarde déjà
+            
             playSound('click');
-            state.isReduced = false; // Reset reduced view on interaction
+            state.isReduced = false;
+            state.lastInputType = null; // Reset du type d'input pour le nouveau groupe
+            
             if (opType === 'add') {
                 state.phase++;
                 state.operators.push('+');
@@ -545,270 +675,231 @@
             updateLogic();
         }
 
-        // NOUVELLE FONCTION : Transformer un seul jeton au clic
-        function transformSingleToken(el) {
-            const id = parseInt(el.id.split('-')[1]);
-            const token = state.tokens.find(t => t.id === id);
-            
-            if (!token || !token.isPending) return;
-            
-            playSound('magic');
-            
-            // Transformation
-            const newType = token.type === 'green' ? 'red' : 'green';
-            token.type = newType;
-            token.isPending = false;
-            token.isConverted = true; // Marque comme converti individuellement
-            
-            // MAJ DOM
-            token.element.className = `token ${newType}`; // Retire pending-subtraction
-            token.element.removeAttribute('onclick'); // Retire le listener
-            token.element.innerText = newType === 'green' ? '+1' : '-1';
-            
-            token.element.animate([
-                { transform: 'scale(1) rotateY(0deg)' },
-                { transform: 'scale(1.2) rotateY(180deg)' },
-                { transform: 'scale(1) rotateY(360deg)' }
-            ], { duration: 500 });
-
-            // Vérifier s'il reste des jetons en attente pour cacher le bouton global
-            const hasPending = state.tokens.some(t => t.isPending);
-            if (!hasPending) {
-                btnOpposite.classList.add('hidden');
-                state.currentPendingMode = null;
-            }
-            
-            updateLogic();
-        }
-
-        function transformOpposite() {
-            const pendingTokens = state.tokens.filter(t => t.isPending);
-            if (pendingTokens.length === 0) return;
-            
-            playSound('magic');
-
-            // 1. Changer l'opérateur principal des phases concernées
-            // (Ici on change l'opérateur "global" de la phase, donc tous les jetons deviennent "Regular" ajoutés)
-            const involvedPhases = new Set();
-            pendingTokens.forEach(t => involvedPhases.add(t.creationPhase));
-
-            involvedPhases.forEach(p => {
-                const opIndex = p - 2;
-                if (opIndex >= 0) {
-                    state.operators[opIndex] = '+';
-                }
-            });
-
-            // 2. Transformer les jetons
-            pendingTokens.forEach(token => {
-                const newType = token.type === 'green' ? 'red' : 'green';
-                token.type = newType;
-                token.isPending = false;
-                token.isConverted = false; // Pas besoin de flag spécial car l'opérateur de phase a changé
-                
-                token.element.className = `token ${newType}`;
-                token.element.removeAttribute('onclick');
-                token.element.innerText = newType === 'green' ? '+1' : '-1';
-                
-                token.element.animate([
-                    { transform: 'scale(1) rotateY(0deg)' },
-                    { transform: 'scale(1.2) rotateY(180deg)' },
-                    { transform: 'scale(1) rotateY(360deg)' }
-                ], { duration: 500 });
-            });
-
-            state.currentPendingMode = null;
-            btnOpposite.classList.add('hidden');
-            updateLogic();
+        // Wrapper pour les boutons d'opérateurs pour gérer l'historique
+        function handleOperatorClick(opType) {
+            saveState();
+            setOperator(opType);
         }
 
         function reduceEquation() {
-            // Modification: Empêcher la réduction tant qu'il y a des jetons en attente (opposés)
-            const hasPending = state.tokens.some(t => t.isPending);
-            if (hasPending) {
-                return; // On ne fait rien
-            }
-
+            saveState();
             playSound('whoosh');
             state.isReduced = true;
             updateLogic();
+            organizeBoard(); 
         }
 
-        function updateLogic() {
-            // NOTE : On filtre maintenant les jetons qui sont "pairId !== null" (les couples de zéros)
-            // pour qu'ils ne soient plus comptés dans le calcul affiché.
+        // --- TRANSFORMATION ---
+        function transformSubtractions() {
+            saveState();
+            playSound('magic');
+            // 1. On remplace les opérateurs
+            state.operators = state.operators.map(op => op === '-' ? '+' : op);
             
-            // Si on est en mode RÉDUIT, on affiche juste la somme des positifs et des négatifs
-            if (state.isReduced) {
-                const positives = state.tokens.filter(t => 
-                    t.pairId === null && // On ignore les paires
-                    ((t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending))
-                ).length;
+            // 2. On ferme le mode soustraction et on force un nouveau groupe
+            state.currentPendingMode = null;
+            state.forceNewGroup = true;
+            
+            updateLogic();
+        }
 
-                const negatives = state.tokens.filter(t => 
-                    t.pairId === null && // On ignore les paires
-                    ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
-                ).length;
+        // MISE A JOUR DE L'AFFICHAGE SIMPLIFIE
+        function updateLogic() {
+            
+            // GESTION BOUTON TRANSFORMER
+            // Il apparaît si il y a un opérateur '-' dans la liste actuelle
+            const hasSubtraction = state.operators.includes('-');
+            if (hasSubtraction) {
+                btnTransform.classList.remove('hidden');
+            } else {
+                btnTransform.classList.add('hidden');
+            }
+
+            if (state.isReduced) {
+                const positives = state.tokens.filter(t => t.pairId === null && t.type === 'green').length;
+                const negatives = state.tokens.filter(t => t.pairId === null && t.type === 'red').length;
 
                 let html = '';
-                
-                if (positives > 0) {
-                    html += `<span class="text-3xl sm:text-4xl font-bold text-green-600 tracking-tight transition-colors">(+${positives})</span>`;
-                }
-
+                if (positives > 0) html += `<span class="text-3xl sm:text-4xl font-bold text-green-600 tracking-tight transition-colors">${positives}</span>`;
                 if (negatives > 0) {
-                    if (positives > 0) {
-                        html += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-1">+</span>`;
-                    }
-                    html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight transition-colors">(-${negatives})</span>`;
+                    if (positives > 0) html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 mx-2">-</span>`;
+                    else html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight transition-colors">-</span>`; 
+                    html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight transition-colors mx-2">${negatives}</span>`;
                 }
-
-                if (positives === 0 && negatives === 0) {
-                    html = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
-                }
-
+                if (positives === 0 && negatives === 0) html = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
                 equationTerms.innerHTML = html;
                 return;
             }
 
-            // --- MODE STANDARD (Détaillé) ---
-            let terms = [];
-            let totalValue = 0;
-
+            let fullHtml = '';
+            
             for (let p = 1; p <= state.phase; p++) {
-                // On ne prend que les jetons NON PAIRES pour ce calcul
                 const tokensP = state.tokens.filter(t => t.creationPhase === p && t.pairId === null);
                 
-                // Séparation : Jetons "Normaux/En attente" vs Jetons "Convertis individuellement"
-                const regularTokens = tokensP.filter(t => !t.isConverted);
-                const convertedTokens = tokensP.filter(t => t.isConverted);
+                if (tokensP.length === 0) {
+                    if (p > 1 && p-1 <= state.operators.length) {
+                        const op = state.operators[p-2];
+                        if (op === '-' && p === state.phase) {
+                             // Si c'est un '-' encore présent, on l'affiche en orange
+                             fullHtml += `<span class="text-3xl sm:text-4xl font-bold text-amber-500 mx-2">&nbsp;-&nbsp;</span>`;
+                        } else if (op === '+' && p === state.phase) {
+                             fullHtml += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-2">&nbsp;+&nbsp;</span>`;
+                        }
+                    }
+                    continue;
+                }
+
+                let rawValueOnBoard = tokensP.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0);
+                const phaseOperator = (p === 1) ? '+' : state.operators[p-2];
+
+                let valToDisplay, sign, colorClass, displayOp;
+
+                // Cas 1 : Soustraction ENCORE PRÉSENTE (Orange)
+                if (phaseOperator === '-') {
+                    let intendedValue = -rawValueOnBoard; 
+                    valToDisplay = Math.abs(intendedValue);
+                    let intendedColor = intendedValue >= 0 ? 'text-green-600' : 'text-red-600';
+                    let intendedSign = intendedValue >= 0 ? '+' : '-'; 
+                    
+                    // L'opérateur est ORANGE
+                    displayOp = `<span class="text-3xl sm:text-4xl font-bold text-amber-500 mx-2">-</span>`;
+                    
+                    // ON FORCE L'AFFICHAGE DU SIGNE ET PARENTHÈSES POUR CLARTE
+                    // ex: - (-1)
+                    if (fullHtml === '') {
+                         fullHtml += `<span class="text-3xl sm:text-4xl font-bold text-amber-500">-</span>`;
+                    } else {
+                         fullHtml += displayOp;
+                    }
+                    
+                    // Le nombre entre parenthèses avec son signe explicite
+                    fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${intendedColor} mx-1">(${intendedSign}&nbsp;${valToDisplay})</span>`;
+                    
+                } 
                 
-                // Si phase vide (car tout a été annulé), on ne l'affiche pas
-                if (tokensP.length === 0) continue;
-
-                // --- 1. Terme Régulier ---
-                if (regularTokens.length > 0) {
-                    let rawValue = regularTokens.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0);
-                    let effectiveValue = rawValue;
-                    const phaseOperator = (p === 1) ? '+' : state.operators[p-2];
-
-                    const isPhasePending = regularTokens.some(t => t.isPending);
+                // Cas 2 : Addition / Simplifié
+                else {
+                    valToDisplay = Math.abs(rawValueOnBoard);
+                    sign = rawValueOnBoard >= 0 ? '+' : '-';
+                    colorClass = rawValueOnBoard >= 0 ? 'text-green-600' : 'text-red-600';
                     
-                    if (phaseOperator === '-') {
-                        effectiveValue = -rawValue;
+                    if (fullHtml === '') {
+                        if (sign === '-') {
+                            fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${colorClass}">-</span>`;
+                            fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${colorClass} mx-1">${valToDisplay}</span>`;
+                        } else {
+                            fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${colorClass}">${valToDisplay}</span>`;
+                        }
+                    } else {
+                        fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${colorClass} mx-2">${sign}</span>`;
+                        fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${colorClass}">${valToDisplay}</span>`;
                     }
-
-                    // --- AJUSTEMENT DES COULEURS ---
-                    
-                    // Couleur du NOMBRE et des PARENTHÈSES (Vert/Rouge selon le signe)
-                    let termColor = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
-                    
-                    // Note: On ne change PAS la couleur du terme ou des parenthèses si isPhasePending.
-                    // Seul l'opérateur (géré plus bas) sera orange.
-
-                    const sign = rawValue > 0 ? '+' : '';
-                    
-                    // Construction HTML standard
-                    let html = `<span class="text-3xl sm:text-4xl font-bold ${termColor} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
-                    
-                    terms.push({
-                        phase: p,
-                        html: html,
-                        operator: phaseOperator,
-                        effectiveValue: effectiveValue,
-                        isPending: isPhasePending // Important pour l'opérateur
-                    });
-                    totalValue += effectiveValue;
-                }
-
-                // --- 2. Terme Converti ---
-                if (convertedTokens.length > 0) {
-                    let rawValue = convertedTokens.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0);
-                    let effectiveValue = rawValue;
-                    
-                    const colorClass = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
-                    const sign = rawValue > 0 ? '+' : '';
-                    let html = `<span class="text-3xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
-                    
-                    terms.push({
-                        phase: p, 
-                        html: html,
-                        operator: '+',
-                        effectiveValue: effectiveValue,
-                        isPending: false
-                    });
-                    totalValue += effectiveValue;
                 }
             }
 
-            if (state.isAligned && !state.isReduced) {
-                terms.sort((a, b) => b.effectiveValue - a.effectiveValue);
-            }
-
-            let fullHtml = '';
-            terms.forEach((term, index) => {
-                // Détermine la couleur de l'opérateur: Amber si le terme qui suit est en attente
-                const opColorClass = term.isPending ? 'text-amber-500' : 'text-slate-800'; 
-
-                if (index === 0) {
-                    if (term.operator === '-') {
-                        fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${opColorClass} mx-1">-</span>`;
-                    }
-                    fullHtml += term.html;
-                } else {
-                    const op = term.operator === '+' || (term.phase === 1 && term.operator === '+' && index===0) ? '+' : term.operator;
-                    fullHtml += `<span class="text-3xl sm:text-4xl font-bold ${opColorClass} mx-1">${op}</span>`;
-                    fullHtml += term.html;
-                }
-            });
-
-            // Si tout a été annulé, afficher (0)
-            if (fullHtml === '') fullHtml = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
+            if (fullHtml === '') fullHtml = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
             equationTerms.innerHTML = fullHtml;
         }
         
         function organizeBoard() {
+            saveState(); 
             playSound('whoosh');
             state.isAligned = true;
+            
+            const availableWidth = board.clientWidth - 80; 
+            let currentX = 50;
+            let currentY = 80; 
 
-            const groupPositive = state.tokens.filter(t => 
-                ((t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending))
-            ).sort((a,b) => a.id - b.id);
+            const activeTokens = state.tokens.filter(t => t.pairId === null);
+            const zeroTokens = state.tokens.filter(t => t.pairId !== null); 
 
-            const groupNegative = state.tokens.filter(t => 
-                ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
-            ).sort((a,b) => a.id - b.id);
-            
-            const spacing = 80; 
-            const availableWidth = board.clientWidth - 40; 
-            const colsPerRow = Math.max(1, Math.floor(availableWidth / spacing));
-            
-            const posRows = Math.ceil(groupPositive.length / colsPerRow) || 0;
-            const negRows = Math.ceil(groupNegative.length / colsPerRow) || 0;
-            const gap = 60; 
-            
-            const totalHeight = (posRows * spacing) + (negRows > 0 ? gap + (negRows * spacing) : 0);
-            
-            let startY = (board.clientHeight - totalHeight) / 2 + (TOKEN_SIZE/2);
-            if (startY < 80) startY = 80;
+            const greenTokens = activeTokens.filter(t => t.type === 'green').sort((a,b) => (a.creationPhase - b.creationPhase) || (a.id - b.id));
+            const redTokens = activeTokens.filter(t => t.type === 'red').sort((a,b) => (a.creationPhase - b.creationPhase) || (a.id - b.id));
 
-            let startX = (availableWidth - (Math.min(groupPositive.length, colsPerRow) * spacing)) / 2 + 30; 
-            if (groupPositive.length > 0 && groupNegative.length > 0) {
-                 startX = (board.clientWidth - (colsPerRow * spacing)) / 2 + (spacing/2);
+            const placeGroup = (tokens) => {
+                if (tokens.length === 0) return;
+                
+                let prevPhase = tokens[0].creationPhase;
+                
+                tokens.forEach((token, index) => {
+                    let gap = SPACING;
+                    
+                    if (!state.isReduced && index > 0 && token.creationPhase !== prevPhase) {
+                        gap = GROUP_GAP;
+                    }
+                    prevPhase = token.creationPhase;
+
+                    if (index > 0) {
+                        currentX += gap;
+                    }
+
+                    if (currentX > availableWidth) {
+                        currentX = 50;
+                        currentY += LINE_HEIGHT;
+                    }
+
+                    moveTokenTo(token, currentX, currentY);
+                });
+            };
+
+            if (state.isReduced) {
+                if (greenTokens.length > 0) {
+                    placeGroup(greenTokens);
+                    currentX = 50;
+                    currentY += LINE_HEIGHT;
+                }
+                
+                if (redTokens.length > 0) {
+                    placeGroup(redTokens);
+                }
+            } 
+            else {
+                if (greenTokens.length > 0) {
+                    placeGroup(greenTokens);
+                }
+
+                if (greenTokens.length > 0 && redTokens.length > 0) {
+                    const separation = GROUP_GAP * 1.5;
+                    const nextStart = currentX + separation;
+                    if (nextStart < availableWidth - 100) {
+                         currentX += separation;
+                    } else {
+                         currentX = 50;
+                         currentY += LINE_HEIGHT;
+                    }
+                }
+
+                if (redTokens.length > 0) {
+                    placeGroup(redTokens);
+                }
             }
 
-            groupPositive.forEach((t, i) => {
-                const col = i % colsPerRow;
-                const row = Math.floor(i / colsPerRow);
-                moveTokenTo(t, startX + (col * spacing), startY + (row * spacing));
-            });
-
-            const negStartY = startY + (posRows * spacing) + (posRows > 0 ? gap : 0);
-            groupNegative.forEach((t, i) => {
-                const col = i % colsPerRow;
-                const row = Math.floor(i / colsPerRow);
-                moveTokenTo(t, startX + (col * spacing), negStartY + (row * spacing));
-            });
+            if (zeroTokens.length > 0) {
+                currentX = 50;
+                currentY += LINE_HEIGHT; 
+                
+                const placedZeros = new Set();
+                
+                zeroTokens.forEach(t1 => {
+                    if (placedZeros.has(t1.id)) return;
+                    
+                    const t2 = zeroTokens.find(t => t.id === t1.pairId);
+                    
+                    if (currentX > availableWidth) {
+                        currentX = 50;
+                        currentY += LINE_HEIGHT;
+                    }
+                    moveTokenTo(t1, currentX, currentY);
+                    placedZeros.add(t1.id);
+                    
+                    if (t2) {
+                        moveTokenTo(t2, currentX + 30, currentY + 20); 
+                        placedZeros.add(t2.id);
+                    }
+                    
+                    currentX += SPACING + 40; 
+                });
+            }
 
             updateLogic();
         }
@@ -824,16 +915,17 @@
 
         function handleDragStart(e) {
             if (state.currentTool !== 'hand') return; 
-            if (e.target.closest('.pending-subtraction')) return;
-
+            
             e.preventDefault();
             const el = e.target.closest('.token');
             if(!el) return;
             const id = parseInt(el.id.split('-')[1]);
             draggedToken = state.tokens.find(t => t.id === id);
             
-            if (draggedToken.isPending) return; 
-            if (draggedToken.pairId !== null) unpairTokens(draggedToken);
+            if (draggedToken.pairId !== null) {
+                saveState(); // Unpairing is an action
+                unpairTokens(draggedToken);
+            }
             
             el.style.zIndex = 1000;
             el.style.transform = "scale(1.15)";
@@ -876,17 +968,20 @@
         }
 
         function checkForPairing(token) {
-            if (token.isPending) return;
             const targetType = token.type === 'green' ? 'red' : 'green';
             let bestCandidate = null;
             let minDistance = SNAP_THRESHOLD; 
             for (let t of state.tokens) {
-                if (t.type === targetType && t.pairId === null && !t.isPending) {
+                if (t.type === targetType && t.pairId === null) {
                     const dist = Math.hypot(t.x - token.x, t.y - token.y);
                     if (dist < minDistance) { minDistance = dist; bestCandidate = t; }
                 }
             }
-            if (bestCandidate) { playSound('snap'); createZeroPair(token, bestCandidate); }
+            if (bestCandidate) { 
+                saveState(); // Pairing is an action
+                playSound('snap'); 
+                createZeroPair(token, bestCandidate); 
+            }
         }
 
         function createZeroPair(t1, t2) {
@@ -904,7 +999,6 @@
             badge.style.top = (midY - 30) + 'px';
             board.appendChild(badge);
             
-            // Mise à jour immédiate du calcul pour refléter la disparition
             updateLogic();
         }
 
@@ -917,15 +1011,14 @@
             if (!badge && partner) badge = document.getElementById(`badge-${partner.id}-${token.id}`);
             if (badge) badge.remove();
             
-            // Mise à jour immédiate du calcul pour refléter la réapparition
             updateLogic();
         }
 
         function animateSimplification() {
+            saveState(); // Undoable
             state.locked = true;
             playSound('whoosh');
 
-            // 1. Identifier les paires de zéros MANUELLES déjà existantes
             const processedIds = new Set();
             const existingPairs = [];
             state.tokens.forEach(t => {
@@ -939,16 +1032,10 @@
                 }
             });
 
-            // 2. Identifier les NOUVELLES paires potentielles
             const activeTokens = state.tokens.filter(t => t.pairId === null);
             
-            const logicalPositives = activeTokens.filter(t => 
-                (t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending)
-            ).sort((a,b) => (a.x - b.x) || (a.y - b.y));
-            
-            const logicalNegatives = activeTokens.filter(t => 
-                ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
-            ).sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            const logicalPositives = activeTokens.filter(t => t.type === 'green').sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            const logicalNegatives = activeTokens.filter(t => t.type === 'red').sort((a,b) => (a.x - b.x) || (a.y - b.y));
 
             const newPairs = [];
             const count = Math.min(logicalPositives.length, logicalNegatives.length);
@@ -961,10 +1048,8 @@
                  return;
             }
 
-            // --- SEQUENCE D'ANIMATION ---
             let delayForNewPairs = 0;
 
-            // PHASE 1 : Nettoyage rapide des paires existantes
             if (existingPairs.length > 0) {
                 existingPairs.forEach((pair, i) => {
                     setTimeout(() => {
@@ -974,37 +1059,27 @@
                 delayForNewPairs = (existingPairs.length * 100) + 600; 
             }
 
-            // PHASE 2 : Animation des nouvelles paires
             setTimeout(() => {
-                const interval = 800; 
-                
+                const interval = 500; 
                 newPairs.forEach((pair, index) => {
                     setTimeout(() => {
                         const [t1, t2] = pair;
-                        
-                        // Déplacement
                         moveTokenTo(t2, t1.x, t1.y);
-                        
                         setTimeout(() => {
-                            // Snap (Zéro)
                             createZeroPair(t1, t2); 
                             playSound('snap');
-                            
                             setTimeout(() => {
-                                // Disparition
                                 removePairElements(t1, t2);
-                            }, 600); 
-                            
-                        }, 500); 
-                        
+                            }, 400); 
+                        }, 350); 
                     }, index * interval);
                 });
 
-                // Déverrouillage à la fin
                 const totalTime = (newPairs.length * interval) + 500 + 600 + 200;
                 setTimeout(() => {
                     state.locked = false;
                     updateLogic();
+                    organizeBoard();
                 }, totalTime);
 
             }, delayForNewPairs);
@@ -1014,7 +1089,6 @@
              t1.element.classList.add('fade-out');
              t2.element.classList.add('fade-out');
              
-             // Essayer les deux combinaisons d'ID pour le badge
              let badge = document.getElementById(`badge-${t1.id}-${t2.id}`);
              if (!badge) badge = document.getElementById(`badge-${t2.id}-${t1.id}`);
              
@@ -1033,6 +1107,7 @@
         }
 
         function resetBoard() {
+            saveState(); // Reset is undoable
             playSound('click');
             state.tokens.forEach(t => t.element.remove());
             document.querySelectorAll('.zero-badge').forEach(b => b.remove());
@@ -1046,10 +1121,13 @@
             state.isAligned = false;
             state.isReduced = false;
             state.currentPendingMode = null;
+            state.lastInputType = null;
+            state.transformMode = false;
+            state.forceNewGroup = false;
             
-            document.getElementById('equation-terms').innerHTML = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
+            document.getElementById('equation-terms').innerHTML = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
             
-            btnOpposite.classList.add('hidden');
+            btnTransform.classList.add('hidden');
             setTool('hand');
             updateLogic();
         }
