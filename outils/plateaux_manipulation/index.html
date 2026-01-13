@@ -1,1037 +1,292 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Géométrie : Bandes Magnétiques</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Menu des Ateliers</title>
+    <!-- On charge la librairie d'icônes -->
+    <script src="https://unpkg.com/lucide@latest"></script> 
     <style>
+        :root {
+            --bg-page: #f8fafc;
+            --text-main: #1e293b;
+            --card-bg: #ffffff;
+        }
+
         body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: #f0f9ff;
-            overflow: hidden;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-            cursor: default;
+            background-color: var(--bg-page);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
         }
 
-        /* --- UI ELEMENTS --- */
-        .tool-btn {
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .tool-btn:active {
-            transform: scale(0.9);
-        }
-        .tool-btn.active {
-            background-color: #dbeafe; /* blue-100 */
-            border-color: #3b82f6; /* blue-500 */
-            color: #1d4ed8;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tool-btn.active-red {
-            background-color: #fee2e2; /* red-100 */
-            border-color: #ef4444; /* red-500 */
-            color: #b91c1c;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        /* En-tête */
+        .top-nav {
+            padding: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* Classes pour le Drag & Drop sidebar */
-        .strip-dragger {
-            cursor: grab;
-            touch-action: none;
+        .back-link {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
-        .strip-dragger:active {
-            cursor: grabbing;
-        }
-
-        /* Header Trash Zone State */
-        header {
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        header.trash-active {
-            background-color: #fef2f2 !important; /* red-50 */
-            border-color: #fecaca !important; /* red-200 */
-        }
-        header.trash-active .trash-label {
-            display: flex !important;
-            opacity: 1 !important;
-        }
-        header.trash-active .header-tools {
-            opacity: 0.2;
-            pointer-events: none;
+        .back-link:hover {
+            background: rgba(0,0,0,0.05);
+            color: #1e293b;
         }
 
-        /* Scrollbar masquée */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* --- DESSIN & CANVAS --- */
-        #layer-container {
-            position: relative;
+        /* Conteneur Principal */
+        .main-container {
             flex: 1;
-            overflow: hidden;
-            background-color: white;
-            cursor: crosshair;
-        }
-
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+            padding: 2rem 1rem;
+            max-width: 1400px; 
+            margin: 0 auto;
             width: 100%;
-            height: 100%;
-            touch-action: none;
+            box-sizing: border-box;
         }
 
-        #strips-canvas { z-index: 10; }
-        #drawing-canvas { z-index: 20; pointer-events: none; }
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #334155;
+            letter-spacing: -0.5px;
+        }
+
+        /* GRILLE COMPACTE */
+        .choice-grid {
+            display: grid;
+            /* Petites colonnes pour afficher beaucoup de boutons */
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 1rem; 
+            width: 100%;
+        }
+
+        /* Carte Compacte */
+        .choice-card {
+            text-decoration: none;
+            position: relative;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 130px; /* Hauteur réduite */
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        .choice-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+            border-color: currentColor; 
+        }
+
+        /* Icones */
+        .icon-wrapper {
+            height: 2.5rem;
+            width: 2.5rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: #f1f5f9;
+            border-radius: 12px;
+            color: inherit;
+            position: relative; /* Pour positionner l'icône de construction */
+        }
         
-        /* Outils Géométrie (Équerre) - Au dessus du dessin */
-        #geometry-tools-layer {
+        /* Pour les icônes Lucide */
+        .icon-wrapper svg.lucide-main {
+            width: 24px;
+            height: 24px;
+            stroke-width: 2;
+        }
+
+        /* Petit badge "En construction" */
+        .construction-badge {
             position: absolute;
-            top: 0;
-            left: 0;
+            bottom: -4px;
+            right: -4px;
+            background: white;
+            border-radius: 50%;
+            padding: 2px;
+            display: flex;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .construction-badge svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 2.5;
+            color: #f59e0b; /* Couleur orange chantier */
+        }
+
+        .card-title {
+            font-size: 0.95rem; /* Texte compact */
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.2;
             width: 100%;
-            height: 100%;
-            z-index: 30;
-            pointer-events: none; /* Laisse passer les clics sauf sur les outils */
+            /* Coupe le texte s'il est trop long */
             overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
-        .geo-tool {
-            pointer-events: auto;
-            position: absolute;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-            touch-action: none;
-            transform-origin: 20px 220px; /* IMPORTANT: Correspond au coin angle droit */
-        }
+        /* Couleurs automatiques (cycle de 6 couleurs) */
+        .choice-card:nth-child(6n+1) { color: #2563eb; } /* Bleu */
+        .choice-card:nth-child(6n+1) .icon-wrapper { background: #eff6ff; color: #2563eb; }
+        
+        .choice-card:nth-child(6n+2) { color: #059669; } /* Vert */
+        .choice-card:nth-child(6n+2) .icon-wrapper { background: #f0fdf4; color: #059669; }
 
-        /* CURSEUR VIRTUEL */
-        #custom-cursor {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            display: none;
-            transform-origin: top left;
-        }
-        .hide-cursor, .hide-cursor * {
-            cursor: none !important;
+        .choice-card:nth-child(6n+3) { color: #7c3aed; } /* Violet */
+        .choice-card:nth-child(6n+3) .icon-wrapper { background: #f5f3ff; color: #7c3aed; }
+
+        .choice-card:nth-child(6n+4) { color: #ea580c; } /* Orange */
+        .choice-card:nth-child(6n+4) .icon-wrapper { background: #fff7ed; color: #ea580c; }
+
+        .choice-card:nth-child(6n+5) { color: #db2777; } /* Rose */
+        .choice-card:nth-child(6n+5) .icon-wrapper { background: #fdf2f8; color: #db2777; }
+
+        .choice-card:nth-child(6n+6) { color: #4f46e5; } /* Indigo */
+        .choice-card:nth-child(6n+6) .icon-wrapper { background: #eef2ff; color: #4f46e5; }
+
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #cbd5e1;
+            font-size: 0.8rem;
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col overflow-hidden text-slate-700">
+<body>
 
-    <!-- CURSEUR PERSONNALISÉ (Crayon) -->
-    <div id="custom-cursor">
-        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path id="cursor-color-1" d="M27 7 L13 21" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-            <circle cx="8" cy="32" r="1" fill="white"/>
-        </svg>
-    </div>
+    <nav class="top-nav">
+        <a href="../" class="back-link">
+            <i data-lucide="arrow-left"></i>
+            Retour
+        </a>
+    </nav>
 
-    <!-- HEADER (Zone de suppression) -->
-    <header id="main-header" class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative transition-colors duration-200">
+    <div class="main-container">
         
-        <!-- Overlay Supprimer (caché par défaut) -->
-        <div class="trash-label absolute inset-0 hidden items-center justify-center pointer-events-none z-50">
-             <div class="flex items-center gap-2 text-rose-500 font-bold text-lg bg-white/80 px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-rose-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Relâcher pour supprimer</span>
-             </div>
+        <h1 class="page-title">
+            Les plateaux
+        </h1>
+
+        <div class="choice-grid">
+            
+            <!-- VOS LIENS (8 fichiers) -->
+
+            <a href="bandes_magnetique.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="magnet" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Bandes Magnétiques</h2>
+            </a>
+
+            <a href="cubes_construction.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="box" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Cubes Construction</h2>
+            </a>
+
+            <a href="gabarits_angles.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="triangle" class="lucide-main"></i>
+                </div>
+                <h2 class="card-title">Gabarits Angles</h2>
+            </a>
+
+            <a href="moyennes.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="bar-chart-3" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Moyennes</h2>
+            </a>
+
+            <a href="médiane.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="activity" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Médiane</h2>
+            </a>
+
+            <a href="ratio (accompagnement).html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="divide" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Ratio (Accomp.)</h2>
+            </a>
+
+            <!-- TUILES ALGEBRIQUES : Pas de badge construction + Icône Spéciale -->
+            <a href="tuiles_algébriques.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <!-- SVG personnalisé : Petit carré + Rectangle long -->
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-main">
+                        <rect x="2" y="14" width="8" height="8" rx="1"/> <!-- Petit carré -->
+                        <rect x="12" y="2" width="8" height="20" rx="1"/> <!-- Rectangle long -->
+                    </svg>
+                </div>
+                <h2 class="card-title">Tuiles Algébriques</h2>
+            </a>
+
+            <a href="unités d'aires.html" class="choice-card">
+                <div class="icon-wrapper">
+                    <i data-lucide="maximize" class="lucide-main"></i>
+                    <div class="construction-badge"><i data-lucide="hammer"></i></div>
+                </div>
+                <h2 class="card-title">Unités d'Aires</h2>
+            </a>
+
         </div>
 
-        <div class="header-tools flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[60px] transition-opacity">
-            
-            <!-- GAUCHE : Reset -->
-            <div class="flex items-center gap-3">
-                 <button onclick="resetBoard()" class="tool-btn bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-xl font-bold border-2 border-rose-100 flex items-center gap-2" title="Tout effacer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span class="hidden sm:inline text-sm">Reset</span>
-                </button>
-            </div>
-
-            <!-- CENTRE : Titre -->
-            <div class="flex-1 flex justify-center items-center gap-4">
-                <span class="text-slate-400 font-bold text-lg tracking-tight pointer-events-none">Bandes Magnétiques</span>
-            </div>
-
-            <!-- DROITE : Outils -->
-            <div class="flex items-center gap-2 shrink-0">
-                
-                <!-- Toggle Équerre -->
-                <button onclick="toggleSetSquare()" id="btn-setsquare" class="tool-btn bg-yellow-50 text-yellow-600 hover:bg-yellow-100 p-2 rounded-xl border border-yellow-200" title="Équerre">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 20L4 4L20 20H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
-                    </svg>
-                </button>
-
-                <div class="w-px h-8 bg-slate-200 mx-1"></div>
-
-                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                    <button onclick="setTool('hand')" id="tool-hand" class="tool-btn active p-2 rounded-lg" title="Manipuler (Main)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-                        </svg>
-                    </button>
-                    
-                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
-                    
-                    <!-- Stylo Bleu -->
-                    <button onclick="setTool('pen', 'blue')" id="tool-pen-blue" class="tool-btn text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="Stylo Bleu">
-                        <div class="w-4 h-4 bg-blue-600 rounded-full border border-blue-700"></div>
-                    </button>
-                    <!-- Stylo Rouge -->
-                    <button onclick="setTool('pen', 'red')" id="tool-pen-red" class="tool-btn text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Stylo Rouge">
-                        <div class="w-4 h-4 bg-red-600 rounded-full border border-red-700"></div>
-                    </button>
-
-                    <button onclick="clearDrawings()" class="tool-btn text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg" title="Effacer les annotations">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="flex flex-1 overflow-hidden relative">
-        
-        <!-- SIDEBAR (BOITE A OUTILS) -->
-        <aside class="w-20 sm:w-24 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-6 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 overflow-y-auto">
-            
-            <!-- Très Longue (Jaune) -->
-            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="yellow" title="Bande XL">
-                <div class="w-3 h-20 bg-amber-400 rounded-full shadow-md border border-amber-500 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                </div>
-            </div>
-
-            <!-- Longue (Rouge) -->
-            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="red" title="Bande Longue (5)">
-                <div class="w-3 h-16 bg-red-500 rounded-full shadow-md border border-red-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                </div>
-            </div>
-
-            <!-- Moyenne (Bleue) -->
-            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="blue" title="Bande Moyenne (4)">
-                <div class="w-3 h-12 bg-blue-500 rounded-full shadow-md border border-blue-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                </div>
-            </div>
-
-            <!-- Courte (Verte) -->
-            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="green" title="Bande Courte (3)">
-                <div class="w-3 h-8 bg-green-500 rounded-full shadow-md border border-green-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                </div>
-            </div>
-            
-            <!-- Mini (Violette) -->
-            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="purple" title="Bande Mini (2)">
-                <div class="w-3 h-6 bg-purple-500 rounded-full shadow-md border border-purple-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                </div>
-            </div>
-
-            <div class="flex-1"></div>
-
-            <div class="w-8 h-px bg-slate-100 my-2"></div>
-            <div class="text-[10px] text-center text-slate-300 px-2 leading-tight pb-4">
-                Double-clic sur un magnet pour détacher
-            </div>
-
-        </aside>
-
-        <!-- ESPACE DE TRAVAIL -->
-        <main id="layer-container" class="cursor-grab active:cursor-grabbing">
-            <!-- Grille de fond -->
-            <div class="absolute inset-0 opacity-20 pointer-events-none" 
-                 style="background-image: radial-gradient(#94a3b8 1.5px, transparent 1.5px); background-size: 24px 24px;">
-            </div>
-            
-            <canvas id="strips-canvas"></canvas>
-            <canvas id="drawing-canvas"></canvas>
-
-            <!-- Layer Outils (Équerre) -->
-            <div id="geometry-tools-layer">
-                <!-- L'équerre sera injectée ici par JS -->
-            </div>
-        </main>
     </div>
 
-    <!-- SCRIPT DU MOTEUR PHYSIQUE -->
+    <footer>
+        <!-- Pied de page -->
+    </footer>
+
+    <!-- Initialisation des icônes -->
     <script>
-        /* --- CONFIGURATION --- */
-        const CONFIG = {
-            snapDistance: 45, 
-            stripWidth: 26,
-            colors: {
-                yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, // XL (6.4u)
-                red:    { fill: '#ef4444', stroke: '#b91c1c', length: 250 }, // Longue (5u)
-                blue:   { fill: '#3b82f6', stroke: '#1d4ed8', length: 200 }, // Moyenne (4u)
-                green:  { fill: '#22c55e', stroke: '#15803d', length: 150 }, // Courte (3u)
-                purple: { fill: '#a855f7', stroke: '#7e22ce', length: 100 }  // Mini (2u)
-            }
-        };
-
-        /* --- ÉTAT GLOBAL --- */
-        const state = {
-            points: [], 
-            strips: [], 
-            tool: 'hand', 
-            penColor: 'blue', // Couleur courante du stylo
-            draggingPoint: null,
-            draggingStrip: null, 
-            dragOffset: {x:0, y:0},
-            nextId: 1,
-            // Équerre
-            setSquare: {
-                visible: false,
-                x: 0,
-                y: 0,
-                rotation: 0, // Radians
-                isDragging: false,
-                isRotating: false,
-                rotationOffset: 0
-            }
-        };
-
-        const canvasStrips = document.getElementById('strips-canvas');
-        const ctxStrips = canvasStrips.getContext('2d');
-        const canvasDraw = document.getElementById('drawing-canvas');
-        const ctxDraw = canvasDraw.getContext('2d');
-        const container = document.getElementById('layer-container');
-        const toolsLayer = document.getElementById('geometry-tools-layer');
-        const header = document.getElementById('main-header'); // Pour la zone poubelle
-
-        /* --- INIT ÉQUERRE --- */
-        function initSetSquare() {
-            const el = document.createElement('div');
-            el.id = 'set-square-tool';
-            el.className = 'geo-tool hidden absolute select-none';
-            el.style.width = '240px';
-            el.style.height = '240px';
-            
-            el.innerHTML = `
-                <svg width="100%" height="100%" viewBox="0 0 240 240" style="overflow: visible;">
-                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" />
-                    <path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
-                    <line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
-                </svg>
-                <div id="set-square-handle" class="absolute w-10 h-10 bg-white border-2 border-yellow-500 rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-yellow-50 active:bg-yellow-100 transition-transform hover:scale-110 active:scale-95" style="top: 10px; right: 10px; transform: translate(50%, -50%); pointer-events: auto;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21.5 2v6h-6M21.34 5.5A10 10 0 1 0 22 12"/>
-                    </svg>
-                </div>
-            `;
-            
-            el.addEventListener('mousedown', handleSquareStart);
-            el.addEventListener('touchstart', handleSquareStart, {passive: false});
-            
-            toolsLayer.appendChild(el);
-        }
-        
-        function toggleSetSquare() {
-            state.setSquare.visible = !state.setSquare.visible;
-            const el = document.getElementById('set-square-tool');
-            const btn = document.getElementById('btn-setsquare');
-            
-            if (state.setSquare.visible) {
-                el.classList.remove('hidden');
-                btn.classList.add('active', 'bg-yellow-100');
-                
-                const rect = container.getBoundingClientRect();
-                if (state.setSquare.x === 0 && state.setSquare.y === 0) {
-                    state.setSquare.x = rect.width / 2 - 20; 
-                    state.setSquare.y = rect.height / 2 - 220; 
-                }
-                updateSquareTransform();
-                playSound('pop');
-            } else {
-                el.classList.add('hidden');
-                btn.classList.remove('active', 'bg-yellow-100');
-            }
-        }
-
-        function updateSquareTransform() {
-            const el = document.getElementById('set-square-tool');
-            if (!el) return;
-            el.style.left = state.setSquare.x + 'px';
-            el.style.top = state.setSquare.y + 'px';
-            el.style.transform = `rotate(${state.setSquare.rotation}rad)`;
-        }
-
-        function handleSquareStart(e) {
-            e.stopPropagation(); 
-            e.preventDefault(); 
-            
-            const pos = getPos(e); 
-            const handle = document.getElementById('set-square-handle');
-            
-            if (e.target.closest('#set-square-handle')) {
-                state.setSquare.isRotating = true;
-                const pivotX = state.setSquare.x + 20;
-                const pivotY = state.setSquare.y + 220;
-                const currentMouseAngle = Math.atan2(pos.y - pivotY, pos.x - pivotX);
-                state.setSquare.rotationOffset = state.setSquare.rotation - currentMouseAngle;
-
-            } else {
-                state.setSquare.isDragging = true;
-                state.dragOffset.x = pos.x - state.setSquare.x;
-                state.dragOffset.y = pos.y - state.setSquare.y;
-            }
-
-            document.addEventListener('mousemove', handleSquareMove);
-            document.addEventListener('touchmove', handleSquareMove, {passive: false});
-            document.addEventListener('mouseup', handleSquareEnd);
-            document.addEventListener('touchend', handleSquareEnd);
-        }
-
-        function handleSquareMove(e) {
-            e.preventDefault();
-            const pos = getPos(e);
-
-            if (state.setSquare.isDragging) {
-                state.setSquare.x = pos.x - state.dragOffset.x;
-                state.setSquare.y = pos.y - state.dragOffset.y;
-                updateSquareTransform();
-            } 
-            else if (state.setSquare.isRotating) {
-                const pivotX = state.setSquare.x + 20;
-                const pivotY = state.setSquare.y + 220;
-                const currentMouseAngle = Math.atan2(pos.y - pivotY, pos.x - pivotX);
-                state.setSquare.rotation = currentMouseAngle + state.setSquare.rotationOffset;
-                updateSquareTransform();
-            }
-        }
-
-        function handleSquareEnd() {
-            state.setSquare.isDragging = false;
-            state.setSquare.isRotating = false;
-            document.removeEventListener('mousemove', handleSquareMove);
-            document.removeEventListener('touchmove', handleSquareMove);
-            document.removeEventListener('mouseup', handleSquareEnd);
-            document.removeEventListener('touchend', handleSquareEnd);
-        }
-
-
-        /* --- AUDIO --- */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'snap') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'pop') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'detach') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, now);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now); osc.stop(now + 0.15);
-            } else if (type === 'trash') {
-                // Son de suppression grave
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            }
-        }
-
-        /* --- GESTION DES TAILLES --- */
-        function resize() {
-            const rect = container.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            
-            [canvasStrips, canvasDraw].forEach(c => {
-                c.width = rect.width * dpr;
-                c.height = rect.height * dpr;
-                c.style.width = rect.width + 'px';
-                c.style.height = rect.height + 'px';
-                c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
-            });
-            render();
-        }
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
-
-        /* --- LOGIQUE DRAG & DROP DEPUIS LA SIDEBAR --- */
-        function initSidebarDrag() {
-            const draggers = document.querySelectorAll('.strip-dragger');
-            
-            draggers.forEach(btn => {
-                const startDrag = (e) => {
-                    const type = btn.dataset.type;
-                    const length = CONFIG.colors[type].length;
-                    const color = CONFIG.colors[type].fill;
-                    const border = CONFIG.colors[type].stroke;
-                    
-                    const ghost = document.createElement('div');
-                    ghost.style.position = 'fixed';
-                    ghost.style.width = length + 'px';
-                    ghost.style.height = CONFIG.stripWidth + 'px';
-                    ghost.style.backgroundColor = color;
-                    ghost.style.border = `2px solid ${border}`;
-                    ghost.style.borderRadius = (CONFIG.stripWidth/2) + 'px';
-                    ghost.style.opacity = '0.8';
-                    ghost.style.zIndex = '9999';
-                    ghost.style.pointerEvents = 'none';
-                    ghost.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
-                    ghost.style.transform = 'translate(-50%, -50%)'; 
-                    
-                    document.body.appendChild(ghost);
-                    
-                    const startX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const startY = e.touches ? e.touches[0].clientY : e.clientY;
-                    ghost.style.left = startX + 'px';
-                    ghost.style.top = startY + 'px';
-
-                    const moveDrag = (ev) => {
-                        ev.preventDefault(); 
-                        const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                        const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                        ghost.style.left = clientX + 'px';
-                        ghost.style.top = clientY + 'px';
-                    };
-                    
-                    const endDrag = (ev) => {
-                        const clientX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
-                        const clientY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
-                        
-                        const canvasRect = container.getBoundingClientRect();
-                        if (
-                            clientX >= canvasRect.left && 
-                            clientX <= canvasRect.right &&
-                            clientY >= canvasRect.top &&
-                            clientY <= canvasRect.bottom
-                        ) {
-                            const x = clientX - canvasRect.left;
-                            const y = clientY - canvasRect.top;
-                            addStrip(type, x, y);
-                        }
-                        
-                        ghost.remove();
-                        document.removeEventListener('mousemove', moveDrag);
-                        document.removeEventListener('touchmove', moveDrag);
-                        document.removeEventListener('mouseup', endDrag);
-                        document.removeEventListener('touchend', endDrag);
-                    };
-                    
-                    document.addEventListener('mousemove', moveDrag);
-                    document.addEventListener('touchmove', moveDrag, {passive: false});
-                    document.addEventListener('mouseup', endDrag);
-                    document.addEventListener('touchend', endDrag);
-                };
-                
-                btn.addEventListener('mousedown', startDrag);
-                btn.addEventListener('touchstart', startDrag, {passive: false});
-            });
-        }
-        initSidebarDrag();
-
-        /* --- MOTEUR PHYSIQUE --- */
-        function solveConstraints() {
-            for (let i = 0; i < 5; i++) {
-                state.strips.forEach(strip => {
-                    const p1 = state.points.find(p => p.id === strip.p1);
-                    const p2 = state.points.find(p => p.id === strip.p2);
-                    if (!p1 || !p2) return;
-
-                    const dx = p2.x - p1.x;
-                    const dy = p2.y - p1.y;
-                    const dist = Math.hypot(dx, dy);
-                    const targetLen = CONFIG.colors[strip.type].length;
-                    
-                    if (dist === 0) return;
-
-                    const diff = (dist - targetLen) / dist;
-                    const scalar = diff * 0.5;
-                    const offsetX = dx * scalar;
-                    const offsetY = dy * scalar;
-
-                    if (!p1.pinned) {
-                        p1.x += offsetX;
-                        p1.y += offsetY;
-                    }
-                    if (!p2.pinned) {
-                        p2.x -= offsetX;
-                        p2.y -= offsetY;
-                    }
-                    
-                    if (p1.pinned && !p2.pinned) {
-                        p2.x -= offsetX; 
-                        p2.y -= offsetY;
-                    }
-                    if (!p1.pinned && p2.pinned) {
-                        p1.x += offsetX;
-                        p1.y += offsetY;
-                    }
-                });
-            }
-        }
-
-        /* --- ACTIONS --- */
-        function addStrip(type, x = null, y = null) {
-            playSound('pop');
-            const rect = container.getBoundingClientRect();
-            const cx = x !== null ? x : rect.width / 2;
-            const cy = y !== null ? y : rect.height / 2;
-            const len = CONFIG.colors[type].length;
-
-            const p1 = { id: state.nextId++, x: cx - len/2, y: cy, pinned: false };
-            const p2 = { id: state.nextId++, x: cx + len/2, y: cy, pinned: false };
-            
-            state.points.push(p1, p2);
-            state.strips.push({
-                id: state.nextId++,
-                p1: p1.id,
-                p2: p2.id,
-                type: type
-            });
-            render();
-        }
-
-        function removeStrip(strip) {
-            // Supprimer la bande
-            state.strips = state.strips.filter(s => s.id !== strip.id);
-            
-            // Nettoyer les points orphelins (points qui n'appartiennent plus à aucune bande)
-            const usedPointIds = new Set();
-            state.strips.forEach(s => {
-                usedPointIds.add(s.p1);
-                usedPointIds.add(s.p2);
-            });
-            state.points = state.points.filter(p => usedPointIds.has(p.id));
-            
-            playSound('trash');
-            render();
-        }
-
-        function resetBoard() {
-            state.points = [];
-            state.strips = [];
-            
-            state.setSquare.visible = false;
-            const el = document.getElementById('set-square-tool');
-            const btn = document.getElementById('btn-setsquare');
-            el.classList.add('hidden');
-            btn.classList.remove('active', 'bg-yellow-100');
-
-            clearDrawings();
-            render();
-        }
-
-        /* --- GESTION SOURIS / TOUCH --- */
-        function getPos(e) {
-            const rect = container.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-        
-        // Coordonnées absolues pour check collision avec la poubelle (hors du canvas)
-        function getClientPos(e) {
-             return {
-                x: e.touches ? e.touches[0].clientX : e.clientX,
-                y: e.touches ? e.touches[0].clientY : e.clientY
-            };
-        }
-
-        function getPointAt(x, y) {
-            return state.points.find(p => Math.hypot(p.x - x, p.y - y) < 45);
-        }
-
-        function getStripAt(x, y) {
-            return state.strips.find(s => {
-                const p1 = state.points.find(p => p.id === s.p1);
-                const p2 = state.points.find(p => p.id === s.p2);
-                if(!p1 || !p2) return false;
-
-                const A = x - p1.x;
-                const B = y - p1.y;
-                const C = p2.x - p1.x;
-                const D = p2.y - p1.y;
-
-                const dot = A * C + B * D;
-                const lenSq = C * C + D * D;
-                let param = -1;
-                if (lenSq !== 0) param = dot / lenSq;
-
-                let xx, yy;
-
-                if (param < 0) { xx = p1.x; yy = p1.y; }
-                else if (param > 1) { xx = p2.x; yy = p2.y; }
-                else { xx = p1.x + param * C; yy = p1.y + param * D; }
-
-                const dx = x - xx;
-                const dy = y - yy;
-                return Math.hypot(dx, dy) < (CONFIG.stripWidth / 2);
-            });
-        }
-
-        function getAllConnectedPoints(startStrip) {
-            const pointsToMove = new Set();
-            const stripsChecked = new Set();
-            const queue = [startStrip];
-
-            while(queue.length > 0) {
-                const s = queue.shift();
-                if(stripsChecked.has(s.id)) continue;
-                stripsChecked.add(s.id);
-
-                pointsToMove.add(s.p1);
-                pointsToMove.add(s.p2);
-
-                state.strips.forEach(neighbor => {
-                    if(!stripsChecked.has(neighbor.id)) {
-                        if(neighbor.p1 === s.p1 || neighbor.p1 === s.p2 || neighbor.p2 === s.p1 || neighbor.p2 === s.p2) {
-                            queue.push(neighbor);
-                        }
-                    }
-                });
-            }
-            return Array.from(pointsToMove).map(id => state.points.find(p => p.id === id));
-        }
-
-        container.addEventListener('mousedown', handleStart);
-        container.addEventListener('touchstart', handleStart, {passive: false});
-
-        function handleStart(e) {
-            if (state.tool === 'pen') return;
-            
-            const pos = getPos(e);
-            
-            const point = getPointAt(pos.x, pos.y);
-            if (point) {
-                state.draggingPoint = point;
-                point.pinned = true;
-                return;
-            }
-
-            const strip = getStripAt(pos.x, pos.y);
-            if (strip) {
-                state.draggingStrip = getAllConnectedPoints(strip);
-                // On stocke aussi la bande "saisie" pour savoir quoi supprimer si on drop sur la poubelle
-                state.draggingStripRef = strip; 
-                state.dragOffset = pos;
-                state.draggingStrip.forEach(p => p.pinned = true);
-                return;
-            }
-        }
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove, {passive: false});
-
-        function handleMove(e) {
-            if (state.setSquare.isDragging || state.setSquare.isRotating) return; 
-
-            const pos = getPos(e);
-            const clientPos = getClientPos(e);
-
-            if (state.tool === 'pen') {
-                updateCustomCursor(e);
-                return;
-            }
-
-            // Curseurs
-            const hoverPoint = getPointAt(pos.x, pos.y);
-            if (!e.target.closest('.geo-tool')) {
-                container.style.cursor = hoverPoint ? 'crosshair' : (getStripAt(pos.x, pos.y) ? 'move' : 'default');
-            }
-
-            if (state.draggingPoint) {
-                e.preventDefault();
-                
-                let targetX = pos.x;
-                let targetY = pos.y;
-                
-                const self = state.draggingPoint;
-                const snapTarget = state.points.find(p => 
-                    p.id !== self.id && 
-                    Math.hypot(p.x - pos.x, p.y - pos.y) < CONFIG.snapDistance
-                );
-                
-                if (snapTarget) {
-                    targetX = snapTarget.x;
-                    targetY = snapTarget.y;
-                }
-
-                state.draggingPoint.x = targetX;
-                state.draggingPoint.y = targetY;
-                solveConstraints();
-                render();
-
-            } else if (state.draggingStrip) {
-                e.preventDefault();
-                
-                // Detection collision poubelle (HEADER ZONE)
-                const headerRect = header.getBoundingClientRect();
-                if (clientPos.y <= headerRect.bottom) {
-                    header.classList.add('trash-active');
-                } else {
-                    header.classList.remove('trash-active');
-                }
-
-                const dx = pos.x - state.dragOffset.x;
-                const dy = pos.y - state.dragOffset.y;
-                
-                state.draggingStrip.forEach(p => {
-                    p.x += dx;
-                    p.y += dy;
-                });
-                
-                state.dragOffset = pos;
-                solveConstraints(); 
-                render();
-            }
-        }
-
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchend', handleEnd);
-
-        function handleEnd(e) {
-            // Fin de drag: reset visuel header
-            header.classList.remove('trash-active');
-
-            if (state.draggingPoint) {
-                const self = state.draggingPoint;
-                
-                const target = state.points.find(p => 
-                    p.id !== self.id && 
-                    Math.hypot(p.x - self.x, p.y - self.y) < CONFIG.snapDistance
-                );
-
-                if (target) {
-                    playSound('snap');
-                    state.strips.forEach(s => {
-                        if (s.p1 === self.id) s.p1 = target.id;
-                        if (s.p2 === self.id) s.p2 = target.id;
-                    });
-                    state.points = state.points.filter(p => p.id !== self.id);
-                }
-
-                self.pinned = false;
-                state.draggingPoint = null;
-                render();
-            }
-
-            if (state.draggingStrip) {
-                // LOGIQUE POUBELLE (HEADER)
-                const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-                const headerRect = header.getBoundingClientRect();
-                
-                if (clientY <= headerRect.bottom) {
-                    if (state.draggingStripRef) {
-                        removeStrip(state.draggingStripRef);
-                    }
-                }
-
-                state.draggingStrip.forEach(p => p.pinned = false);
-                state.draggingStrip = null;
-                state.draggingStripRef = null;
-            }
-        }
-        
-        container.addEventListener('dblclick', (e) => {
-            if (state.tool === 'pen' || e.target.closest('.geo-tool')) return;
-            const pos = getPos(e);
-            const point = getPointAt(pos.x, pos.y);
-            
-            if (point) {
-                const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
-                
-                if (connectedStrips.length > 1) {
-                    playSound('detach');
-                    for (let i = 1; i < connectedStrips.length; i++) {
-                        const s = connectedStrips[i];
-                        const newP = { 
-                            id: state.nextId++, 
-                            x: point.x + (Math.random()*20 - 10),
-                            y: point.y + (Math.random()*20 - 10), 
-                            pinned: false 
-                        };
-                        state.points.push(newP);
-                        
-                        if (s.p1 === point.id) s.p1 = newP.id;
-                        else s.p2 = newP.id;
-                    }
-                    render();
-                }
-            }
-        });
-
-        /* --- RENDU --- */
-        function render() {
-            ctxStrips.clearRect(0, 0, canvasStrips.width, canvasStrips.height);
-
-            // TRI POUR AFFICHAGE (Z-INDEX)
-            const sortedStrips = [...state.strips].sort((a, b) => {
-                const lenA = CONFIG.colors[a.type].length;
-                const lenB = CONFIG.colors[b.type].length;
-                return lenB - lenA; // Décroissant: Grand -> Petit
-            });
-
-            ctxStrips.shadowColor = "rgba(0,0,0,0.2)";
-            ctxStrips.shadowBlur = 6;
-            ctxStrips.shadowOffsetY = 3;
-
-            sortedStrips.forEach(strip => {
-                const p1 = state.points.find(p => p.id === strip.p1);
-                const p2 = state.points.find(p => p.id === strip.p2);
-                if (!p1 || !p2) return;
-
-                const style = CONFIG.colors[strip.type];
-                
-                ctxStrips.beginPath();
-                ctxStrips.lineWidth = CONFIG.stripWidth;
-                ctxStrips.lineCap = 'round';
-                ctxStrips.strokeStyle = style.fill;
-                ctxStrips.moveTo(p1.x, p1.y);
-                ctxStrips.lineTo(p2.x, p2.y);
-                ctxStrips.stroke();
-            });
-            
-            ctxStrips.shadowColor = "rgba(0,0,0,0.3)";
-            ctxStrips.shadowBlur = 2;
-            ctxStrips.shadowOffsetY = 1;
-
-            state.points.forEach(p => {
-                const connectionCount = state.strips.filter(s => s.p1 === p.id || s.p2 === p.id).length;
-                
-                ctxStrips.beginPath();
-                ctxStrips.arc(p.x, p.y, 6, 0, Math.PI * 2);
-                ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9'; 
-                ctxStrips.fill();
-                ctxStrips.strokeStyle = '#334155';
-                ctxStrips.lineWidth = 2;
-                ctxStrips.stroke();
-            });
-        }
-
-        /* --- LOGIQUE CRAYON --- */
-        let isDrawing = false;
-        let lastX = 0, lastY = 0;
-
-        function setTool(t, color = null) {
-            state.tool = t;
-            if (color) state.penColor = color;
-
-            const cursorDiv = document.getElementById('custom-cursor');
-            const handBtn = document.getElementById('tool-hand');
-            const penBlueBtn = document.getElementById('tool-pen-blue');
-            const penRedBtn = document.getElementById('tool-pen-red');
-            const cursorPath = document.getElementById('cursor-color-1');
-
-            // Reset UI
-            handBtn.classList.remove('active', 'bg-slate-200');
-            penBlueBtn.classList.remove('active', 'bg-blue-100');
-            penRedBtn.classList.remove('active-red', 'bg-red-50'); // Note classe active-red spéciale
-
-            if (t === 'hand') {
-                container.classList.remove('hide-cursor');
-                cursorDiv.style.display = 'none';
-                canvasDraw.style.pointerEvents = 'none';
-                handBtn.classList.add('active', 'bg-slate-200');
-            } else {
-                container.classList.add('hide-cursor');
-                cursorDiv.style.display = 'block';
-                canvasDraw.style.pointerEvents = 'auto';
-                
-                if (state.penColor === 'blue') {
-                    penBlueBtn.classList.add('active', 'bg-blue-100');
-                    ctxDraw.strokeStyle = '#2563eb';
-                    cursorPath.setAttribute('stroke', '#2563eb');
-                } else {
-                    penRedBtn.classList.add('active-red', 'bg-red-50');
-                    ctxDraw.strokeStyle = '#dc2626';
-                    cursorPath.setAttribute('stroke', '#dc2626');
-                }
-                
-                ctxDraw.lineCap = 'round';
-                ctxDraw.lineJoin = 'round';
-                ctxDraw.lineWidth = 3;
-            }
-        }
-
-        function updateCustomCursor(e) {
-            const cursorDiv = document.getElementById('custom-cursor');
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            cursorDiv.style.left = clientX + 'px';
-            cursorDiv.style.top = clientY + 'px';
-            cursorDiv.style.transform = 'translate(-2px, -30px)';
-        }
-
-        function startDraw(e) {
-            if (state.tool !== 'pen') return;
-            isDrawing = true;
-            const pos = getPos(e);
-            lastX = pos.x; lastY = pos.y;
-            ctxDraw.beginPath();
-            ctxDraw.moveTo(lastX, lastY);
-        }
-
-        function draw(e) {
-            if (!isDrawing || state.tool !== 'pen') return;
-            e.preventDefault(); 
-            const pos = getPos(e);
-            ctxDraw.lineTo(pos.x, pos.y);
-            ctxDraw.stroke();
-            lastX = pos.x; lastY = pos.y;
-        }
-
-        function stopDraw() { isDrawing = false; }
-        
-        function clearDrawings() {
-            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
-        }
-
-        canvasDraw.addEventListener('mousedown', startDraw);
-        canvasDraw.addEventListener('mousemove', draw);
-        canvasDraw.addEventListener('mouseup', stopDraw);
-        canvasDraw.addEventListener('touchstart', startDraw, {passive: false});
-        canvasDraw.addEventListener('touchmove', draw, {passive: false});
-        canvasDraw.addEventListener('touchend', stopDraw);
-
-        // Init
-        initSetSquare();
-        render();
-
+        lucide.createIcons();
     </script>
 </body>
 </html>
