@@ -2,152 +2,471 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page en construction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Outil : La Moyenne (Décimaux)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #f8fafc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #1e293b;
-            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            background-color: #ffffff;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
         }
 
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 90%;
-            width: 400px;
-            border: 2px solid #f1f5f9;
+        .tool-btn { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .tool-btn:active { transform: scale(0.9); }
+        .tool-btn.active {
+            background-color: #dbeafe; border-color: #3b82f6; color: #1d4ed8;
+        }
+        .tool-btn.active-scissors {
+            background-color: #fef3c7; border-color: #d97706; color: #d97706;
         }
 
-        /* L'Emoji animé */
-        .icon {
-            font-size: 5rem;
-            display: inline-block;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            /* Animation douce par défaut */
-            animation: float 3s ease-in-out infinite;
+        #layer-container {
+            position: relative; flex: 1; overflow: hidden; background-color: white;
         }
-
-        /* Titre */
-        h1 {
-            color: #b45309; /* Couleur brique/orange */
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
+        canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none;
         }
-
-        /* Le texte rigolo */
-        #message {
-            margin: 1.5rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #64748b;
-            min-height: 3.5rem; /* Pour éviter que ça saute selon la longueur du texte */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Bouton Retour */
-        .btn-back {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-back:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        /* --- ANIMATIONS --- */
         
-        /* Flottement doux */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        #setup-modal {
+            position: absolute; inset: 0; z-index: 50;
+            background: rgba(255,255,255,0.98);
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* Secousse (si on clique sur l'icone) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shaking {
-            animation: shake 0.5s;
+        .victory-text { 
+            color: #16a34a !important;
+            font-weight: 800;
+            font-size: 1.5rem;
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col overflow-hidden text-slate-700">
 
-    <div class="container">
-        <div class="icon" onclick="shakeMe(this)">🚧</div>
-        
-        <h1>Oups ! Pas fini...</h1>
-        
-        <p id="message">Chargement de l'excuse...</p>
+    <div id="setup-modal">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl border-2 border-slate-100 max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Calcul de Moyenne</h2>
+            <p class="text-slate-500 mb-6 text-sm">Entre les hauteurs des piles.</p>
+            
+            <input type="text" id="numbers-input" 
+                   class="w-full text-2xl font-bold text-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none mb-6 text-slate-700 placeholder-slate-400"
+                   placeholder="ex: 9 8" autocomplete="off">
+            
+            <button onclick="startGame()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg transition-transform active:scale-95 shadow-lg shadow-blue-200">
+                Construire les piles
+            </button>
+            <p id="error-msg" class="text-rose-500 text-sm mt-4 hidden"></p>
+        </div>
+    </div>
 
-        <a href="javascript:history.back()" class="btn-back">
-            Retour en arrière
-        </a>
+    <header class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative">
+        <div class="flex items-center justify-between p-2 gap-2 w-full border-b border-slate-100 min-h-[70px]">
+            <button onclick="resetSetup()" class="tool-btn bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl font-bold flex items-center gap-2 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                <span class="hidden sm:inline text-sm">Nouveau</span>
+            </button>
+
+            <div class="flex-1 flex flex-col justify-center items-center pointer-events-none px-2 text-center overflow-hidden">
+                <span id="header-title" class="text-slate-800 font-bold text-xl leading-tight truncate w-full">Égaliser les piles</span>
+                <span id="header-subtitle" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Déplace ou coupe les blocs</span>
+            </div>
+
+            <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                <button onclick="setTool('hand')" id="tool-hand" class="tool-btn active p-2 rounded-lg" title="Déplacer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+                </button>
+                
+                <button onclick="setTool('scissors')" id="tool-scissors" class="tool-btn text-amber-600 hover:bg-amber-50 p-2 rounded-lg" title="Couper (Max 1/4)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+                    </svg>
+                </button>
+
+                <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                
+                <button onclick="setTool('pen')" id="tool-pen" class="tool-btn text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="Stylo">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                </button>
+                <button onclick="clearDrawings()" class="tool-btn text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <main id="layer-container">
+            <canvas id="main-canvas"></canvas>
+            <canvas id="drawing-canvas"></canvas>
+        </main>
     </div>
 
     <script>
-        // Liste des messages rigolos
-        const phrases = [
-            "Le développeur est parti chercher du café... Il revient (peut-être).",
-            "C'est en chantier ! Attention aux chutes de pixels.",
-            "J'ai perdu la clé de 12 pour finir cette page.",
-            "Patience, c'est comme les maths, ça prend du temps à construire.",
-            "Les lutins du code sont en grève. Repassez plus tard !",
-            "Page en cours de téléchargement cérébral...",
-            "404 ? Non, juste 'Pas encore prêt' !"
-        ];
+        const state = {
+            stacks: [], // Liste de listes : [[1,1,1], [1,0.5,0.5]]
+            initialValues: [],
+            tool: 'hand', // 'hand', 'scissors', 'pen'
+            dragging: null,
+            blockSize: 60,
+            baseY: 0,
+            targetAverage: 0,
+            isWin: false
+        };
 
-        // Choisir une phrase au hasard au chargement
-        const texteElement = document.getElementById('message');
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        texteElement.innerText = randomPhrase;
+        const canvasMain = document.getElementById('main-canvas');
+        const ctxMain = canvasMain.getContext('2d');
+        const canvasDraw = document.getElementById('drawing-canvas');
+        const ctxDraw = canvasDraw.getContext('2d');
+        const container = document.getElementById('layer-container');
 
-        // Fonction pour secouer l'icone au clic
-        function shakeMe(element) {
-            element.classList.remove('shaking'); // Reset
-            void element.offsetWidth; // Force le reflow
-            element.classList.add('shaking'); // Re-lance
+        /* --- SETUP --- */
+        function startGame() {
+            const input = document.getElementById('numbers-input').value;
+            const errorMsg = document.getElementById('error-msg');
             
-            // Changer le texte aussi quand on clique, pour le fun
-            const newPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            texteElement.innerText = newPhrase;
-        }
-    </script>
+            if (!input) {
+                 errorMsg.textContent = "Entre quelques nombres.";
+                 errorMsg.classList.remove('hidden');
+                 return;
+            }
 
+            const numbers = input.trim().split(/\s+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 0);
+
+            if (numbers.length < 2) {
+                errorMsg.textContent = "Il faut au moins 2 piles.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            if (numbers.length > 15) {
+                errorMsg.textContent = "Trop de colonnes (max 15).";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            state.initialValues = [...numbers];
+            state.stacks = numbers.map(val => Array(val).fill(1));
+            
+            const totalSum = numbers.reduce((a, b) => a + b, 0);
+            state.targetAverage = totalSum / numbers.length;
+            state.isWin = false;
+
+            const title = document.getElementById('header-title');
+            title.textContent = "Égaliser les piles";
+            title.className = "text-slate-800 font-bold text-xl leading-tight truncate w-full"; 
+            document.getElementById('header-subtitle').textContent = "Déplace ou coupe les blocs";
+            document.getElementById('setup-modal').style.display = 'none';
+            errorMsg.classList.add('hidden');
+            
+            setTool('hand');
+            calculateFixedScale();
+            render(); 
+        }
+
+        function resetSetup() {
+            document.getElementById('setup-modal').style.display = 'flex';
+            document.getElementById('numbers-input').value = ""; 
+            clearDrawings();
+        }
+
+        /* --- ÉCHELLE --- */
+        function calculateFixedScale() {
+            const rect = container.getBoundingClientRect();
+            
+            // Hauteur max : on ajoute une petite marge pour manipuler
+            const maxVal = Math.max(...state.initialValues, 1);
+            const scaleHeightInBlocks = maxVal + 3; 
+            
+            // Hauteur dispo (Header + bas)
+            const availableHeight = rect.height - 150; 
+            let sizeByHeight = Math.floor(availableHeight / scaleHeightInBlocks);
+
+            // Largeur dispo
+            const maxCol = Math.max(state.stacks.length, 2);
+            const availableWidth = rect.width - 20;
+            let sizeByWidth = Math.floor(availableWidth / (maxCol * 1.2)); 
+
+            // Max 300px (énorme pour les petits nombres), mais contraint pour que tout rentre
+            state.blockSize = Math.min(300, sizeByWidth, sizeByHeight);
+            
+            state.baseY = rect.height - 70;
+
+            const dpr = window.devicePixelRatio || 1;
+            [canvasMain, canvasDraw].forEach(c => {
+                c.width = rect.width * dpr;
+                c.height = rect.height * dpr;
+                c.style.width = rect.width + 'px';
+                c.style.height = rect.height + 'px';
+                c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+            });
+        }
+        
+        window.addEventListener('resize', () => {
+            if(state.stacks.length > 0) {
+                calculateFixedScale();
+                render();
+            }
+        });
+
+        /* --- RENDU --- */
+        function render() {
+            const w = canvasMain.width / (window.devicePixelRatio || 1);
+            const h = canvasMain.height / (window.devicePixelRatio || 1);
+            ctxMain.clearRect(0, 0, w, h);
+
+            // SOL
+            ctxMain.beginPath();
+            ctxMain.moveTo(0, state.baseY);
+            ctxMain.lineTo(w, state.baseY);
+            ctxMain.strokeStyle = "#cbd5e1"; 
+            ctxMain.lineWidth = 2;
+            ctxMain.stroke();
+
+            if (state.stacks.length === 0) return;
+
+            const bs = state.blockSize;
+            const gap = bs * 0.2; 
+            const totalWidth = state.stacks.length * bs + (state.stacks.length - 1) * gap;
+            const startX = (w - totalWidth) / 2;
+
+            state.stacks.forEach((stack, i) => {
+                const x = startX + i * (bs + gap);
+                let currentY = state.baseY;
+
+                const totalHeight = stack.reduce((a,b) => a+b, 0);
+
+                // Ombre
+                if (totalHeight > 0) {
+                    ctxMain.fillStyle = "rgba(0,0,0,0.1)";
+                    ctxMain.beginPath();
+                    ctxMain.ellipse(x + bs/2, state.baseY, bs * 0.45, 4, 0, 0, Math.PI * 2);
+                    ctxMain.fill();
+                }
+
+                // Dessin des blocs
+                stack.forEach((val, idx) => {
+                    // Si drag, on cache l'original
+                    if (state.dragging && state.dragging.sourceCol === i && idx === stack.length - 1) return;
+
+                    const blockH = val * bs;
+                    drawBlock(ctxMain, x, currentY - blockH, bs, blockH, "#60a5fa");
+                    currentY -= blockH; 
+                });
+
+                // Chiffre
+                ctxMain.fillStyle = "#64748b"; 
+                const fontSize = Math.max(24, bs * 0.4); 
+                ctxMain.font = `bold ${fontSize}px Fredoka`;
+                ctxMain.textAlign = "center";
+                const displayNum = parseFloat(totalHeight.toFixed(2));
+                ctxMain.fillText(displayNum, x + bs/2, state.baseY + fontSize + 10);
+            });
+
+            // Drag
+            if (state.dragging) {
+                const dragH = state.dragging.value * bs;
+                ctxMain.shadowColor = "rgba(0,0,0,0.2)";
+                ctxMain.shadowBlur = 20; ctxMain.shadowOffsetY = 20;
+                drawBlock(ctxMain, state.dragging.currentX - bs/2, state.dragging.currentY - dragH/2, bs, dragH, "#3b82f6");
+                ctxMain.shadowColor = "transparent"; ctxMain.shadowBlur = 0;
+            }
+        }
+
+        function drawBlock(ctx, x, y, width, height, color) {
+            ctx.fillStyle = color;
+            // Arrondi adaptatif (moins arrondi si c'est une tranche fine)
+            const r = Math.min(width * 0.12, height * 0.4); 
+            
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, r);
+            ctx.fill();
+
+            ctx.strokeStyle = "rgba(0,0,0,0.1)";
+            ctx.lineWidth = Math.max(1, width * 0.03); 
+            ctx.stroke();
+            
+            ctx.fillStyle = "rgba(255,255,255,0.25)";
+            ctx.beginPath();
+            ctx.ellipse(x + width/2, y + height*0.15, width*0.35, height*0.1, 0, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        /* --- LOGIQUE JEU --- */
+        function getColFromX(x) {
+            const w = canvasMain.width / (window.devicePixelRatio || 1);
+            const bs = state.blockSize;
+            const gap = bs * 0.2;
+            const totalWidth = state.stacks.length * bs + (state.stacks.length - 1) * gap;
+            const startX = (w - totalWidth) / 2;
+
+            for (let i = 0; i < state.stacks.length; i++) {
+                const colX = startX + i * (bs + gap);
+                if (x >= colX && x <= colX + bs) return i;
+            }
+            return -1;
+        }
+
+        function handleStart(x, y) {
+            if (state.isWin && state.tool !== 'pen') return;
+
+            if (state.tool === 'pen') {
+                startDraw({x,y});
+                return;
+            }
+
+            const colIdx = getColFromX(x);
+            if (colIdx === -1) return;
+            
+            const stack = state.stacks[colIdx];
+            if (stack.length === 0) return;
+
+            const bs = state.blockSize;
+            const totalHeightVal = stack.reduce((a,b)=>a+b,0);
+            const topY = state.baseY - totalHeightVal * bs;
+            
+            const lastVal = stack[stack.length - 1];
+            const lastBlockHeight = lastVal * bs;
+            
+            // Hitbox sur le bloc du haut
+            if (y >= topY && y <= topY + lastBlockHeight) {
+                
+                if (state.tool === 'hand') {
+                    state.dragging = {
+                        sourceCol: colIdx,
+                        value: lastVal,
+                        currentX: x, currentY: y
+                    };
+                } else if (state.tool === 'scissors') {
+                    cutBlock(colIdx);
+                }
+                render();
+            }
+        }
+
+        function cutBlock(colIdx) {
+            const stack = state.stacks[colIdx];
+            const val = stack.pop(); 
+            
+            // VERROUILLAGE : Si c'est déjà un quart (0.25) ou moins, on ne coupe plus !
+            if (val <= 0.25) {
+                stack.push(val); // On remet le bloc intact
+                // On pourrait ajouter un son ou un effet visuel de "refus" ici
+            } else {
+                // Sinon on coupe en deux
+                const half = val / 2;
+                stack.push(half, half);
+            }
+        }
+
+        function handleMove(x, y) {
+            if (state.tool === 'pen') {
+                draw({x,y});
+                return;
+            }
+            if (state.dragging) {
+                state.dragging.currentX = x;
+                state.dragging.currentY = y;
+                render();
+            }
+        }
+
+        function handleEnd() {
+            if (state.tool === 'pen') {
+                stopDraw();
+                return;
+            }
+            if (!state.dragging) return;
+            
+            const dropColIdx = getColFromX(state.dragging.currentX);
+            
+            if (dropColIdx !== -1) {
+                if (dropColIdx !== state.dragging.sourceCol) {
+                    state.stacks[state.dragging.sourceCol].pop();
+                    state.stacks[dropColIdx].push(state.dragging.value);
+                    checkWin();
+                }
+            }
+            state.dragging = null;
+            render();
+        }
+
+        function checkWin() {
+            const heights = state.stacks.map(s => s.reduce((a,b)=>a+b,0));
+            const first = heights[0];
+            // Petite tolérance pour les calculs flottants (ex: 8.5 vs 8.49999)
+            const allEqual = heights.every(h => Math.abs(h - first) < 0.001);
+            
+            const title = document.getElementById('header-title');
+            const sub = document.getElementById('header-subtitle');
+            
+            if (allEqual) {
+                state.isWin = true;
+                const avg = parseFloat(first.toFixed(2));
+                title.classList.add('victory-text');
+                title.innerText = `BRAVO ! La moyenne est ${avg}`;
+                sub.innerText = "";
+            } else {
+                 state.isWin = false;
+                 title.classList.remove('victory-text');
+                 title.innerText = "Égaliser les piles";
+                 sub.innerText = "Déplace ou coupe les blocs";
+            }
+        }
+
+        /* --- OUTILS --- */
+        function setTool(t) {
+            state.tool = t;
+            const handBtn = document.getElementById('tool-hand');
+            const sciBtn = document.getElementById('tool-scissors');
+            const penBtn = document.getElementById('tool-pen');
+
+            handBtn.classList.remove('active', 'bg-slate-200');
+            sciBtn.classList.remove('active-scissors', 'bg-amber-100');
+            penBtn.classList.remove('active', 'bg-blue-100');
+            
+            canvasDraw.style.pointerEvents = (t === 'pen') ? 'auto' : 'none';
+
+            if (t === 'hand') handBtn.classList.add('active', 'bg-slate-200');
+            else if (t === 'scissors') sciBtn.classList.add('active-scissors', 'bg-amber-100');
+            else {
+                penBtn.classList.add('active', 'bg-blue-100');
+                ctxDraw.strokeStyle = '#2563eb';
+                ctxDraw.lineWidth = 3;
+                ctxDraw.lineCap = 'round';
+            }
+        }
+
+        /* --- INPUTS --- */
+        function getPos(e) {
+            const rect = container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+        container.addEventListener('mousedown', e => handleStart(getPos(e).x, getPos(e).y));
+        window.addEventListener('mousemove', e => handleMove(getPos(e).x, getPos(e).y));
+        window.addEventListener('mouseup', handleEnd);
+        
+        container.addEventListener('touchstart', e => {
+            const p = getPos(e); handleStart(p.x, p.y);
+        }, {passive: false});
+        container.addEventListener('touchmove', e => {
+            e.preventDefault(); const p = getPos(e); handleMove(p.x, p.y);
+        }, {passive: false});
+        container.addEventListener('touchend', handleEnd);
+
+        /* --- DESSIN --- */
+        let isDrawing = false;
+        let lastDrawX = 0, lastDrawY = 0;
+        function startDraw(pos) { isDrawing = true; lastDrawX = pos.x; lastDrawY = pos.y; ctxDraw.beginPath(); ctxDraw.moveTo(lastDrawX, lastDrawY); }
+        function draw(pos) { if (!isDrawing) return; ctxDraw.lineTo(pos.x, pos.y); ctxDraw.stroke(); lastDrawX = pos.x; lastDrawY = pos.y; }
+        function stopDraw() { isDrawing = false; }
+        function clearDrawings() { ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height); }
+
+    </script>
 </body>
 </html>
