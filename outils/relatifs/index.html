@@ -82,7 +82,7 @@
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             width: 100%;
-            max-width: 750px; /* Ajusté : permet d'afficher la version A + la version B */
+            max-width: 750px;
         }
 
         /* Les Cartes "Boutons" */
@@ -127,8 +127,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem; /* Espace entre le plus et le moins */
-            color: #4338ca;
+            gap: 1rem; 
+        }
+        
+        .icon-wrapper svg {
+            stroke-width: 3;
         }
 
         .choice-card:hover .icon-wrapper {
@@ -139,20 +142,30 @@
             font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
-            color: #1e293b;
             line-height: 1.3;
         }
 
-        /* Thème Nombres Relatifs (Violet/Bleu) */
-        .theme-relatifs { border-color: #e2e8f0; }
-        .theme-relatifs:hover {
+        /* --- THEME BLEU (Découverte) --- */
+        .theme-blue { 
+            border-color: #e2e8f0; 
+        }
+        .theme-blue:hover {
             border-color: #6366f1;
             background: linear-gradient(to bottom right, #ffffff, #eef2ff);
         }
-        .theme-relatifs .card-title { color: #4338ca; }
-        .theme-relatifs .icon-wrapper svg { 
-            stroke-width: 3;
+        .theme-blue .card-title { color: #4338ca; }
+        .theme-blue .icon-wrapper { color: #4338ca; }
+
+        /* --- THEME ORANGE (Méthode) --- */
+        .theme-orange { 
+            border-color: #e2e8f0; 
         }
+        .theme-orange:hover {
+            border-color: #f59e0b;
+            background: linear-gradient(to bottom right, #ffffff, #fffbeb);
+        }
+        .theme-orange .card-title { color: #d97706; }
+        .theme-orange .icon-wrapper { color: #d97706; }
 
         footer {
             text-align: center;
@@ -184,8 +197,8 @@
 
         <div class="choice-grid">
 
-            <!-- Version A -->
-            <a href="nombres_relatifs_somme_difference.html" class="choice-card theme-relatifs">
+            <!-- Version A (Bleu) -->
+            <a href="nombres_relatifs_somme_difference.html" class="choice-card theme-blue">
                 <div class="icon-wrapper">
                     <!-- Icone Plus -->
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -200,8 +213,8 @@
                 <h2 class="card-title">Découverte</h2>
             </a>
 
-            <!-- Version B -->
-            <a href="nombres_relatifs_somme_differenceB.html" class="choice-card theme-relatifs">
+            <!-- Version B (Orange) -->
+            <a href="nombres_relatifs_somme_differenceB.html" class="choice-card theme-orange">
                 <div class="icon-wrapper">
                     <!-- Icone Plus -->
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
