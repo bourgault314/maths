@@ -140,7 +140,7 @@
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body class="h-screen w-screen flex flex-col overflow-hidden">
 
     <!-- CURSEUR PERSONNALISÉ -->
     <div id="custom-cursor">
@@ -153,73 +153,75 @@
         </svg>
     </div>
 
-    <!-- HEADER -->
-    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 relative min-h-[80px]">
+    <!-- HEADER RESTRUCTURÉ -->
+    <header class="bg-white shadow-md z-30 flex flex-col shrink-0">
         
-        <!-- Actions Gauche -->
-        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-             <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span class="hidden sm:inline text-xs">Reset</span>
-            </button>
-
-            <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base" title="Voir résultat final">
-                Réponse
-            </button>
+        <!-- LIGNE 1 : CONTROLES + BOUTON OPPOSÉ -->
+        <div class="flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[70px]">
             
-            <div class="h-8 w-px bg-slate-200 mx-1"></div>
+            <!-- GAUCHE : Boutons Actions -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                 <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="hidden sm:inline text-xs">Reset</span>
+                </button>
 
-            <div class="flex gap-1">
-                <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
-                    +
+                <button onclick="reduceEquation()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-sm border border-cyan-300 active:translate-y-1 transition-all text-sm sm:text-base" title="Simplifier l'écriture">
+                    RÉDUIRE
                 </button>
-                <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
-                    -
-                </button>
+                
+                <div class="h-8 w-px bg-slate-200 mx-1"></div>
+
+                <div class="flex gap-1">
+                    <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
+                        +
+                    </button>
+                    <button id="btn-minus" onclick="setOperator('subtract')" class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full border-4 border-orange-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Soustraction">
+                        -
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Opération (Centre) -->
-        <div class="flex-1 flex flex-col items-center justify-center min-w-[150px] overflow-hidden px-2">
-            <!-- BOUTON OPPOSÉ (Contextuel) -->
-            <div id="opposite-action-area" class="h-[40px] mb-1 w-full flex justify-center">
-                <button id="btn-opposite" onclick="transformOpposite()" class="hidden bg-orange-500 hover:bg-orange-600 text-white px-4 py-1 rounded-full font-extrabold shadow-lg border-b-4 border-orange-700 active:border-b-0 active:translate-y-1 transition flex items-center gap-2">
+            <!-- CENTRE : BOUTON OPPOSÉ (Apparaît ici maintenant) -->
+            <div class="flex-1 flex justify-center items-center px-2 min-w-[40px]">
+                <button id="btn-opposite" onclick="transformOpposite()" class="hidden bg-orange-500 hover:bg-orange-600 text-white px-4 py-1 rounded-full font-extrabold shadow-lg border-b-4 border-orange-700 active:border-b-0 active:translate-y-1 transition flex items-center gap-2 text-sm sm:text-base whitespace-nowrap">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
-                    PRENDRE L'OPPOSÉ
+                    <span class="hidden md:inline">PRENDRE L'OPPOSÉ</span>
+                    <span class="md:hidden">OPPOSÉ</span>
                 </button>
             </div>
 
-            <div class="flex items-center gap-1 sm:gap-2 bg-slate-50 px-2 py-2 rounded-xl border border-slate-200 shadow-inner w-full justify-center">
-                <div id="equation-terms" class="flex items-center gap-1 overflow-x-auto no-scrollbar whitespace-nowrap">
-                    <span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>
-                </div>
-                <span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">=</span>
-                <span id="op-result" class="text-2xl sm:text-4xl font-bold text-blue-600 hidden">?</span>
-                <span id="op-question" class="text-2xl sm:text-4xl font-bold text-slate-300">?</span>
+            <!-- DROITE : Outils -->
+            <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300 shrink-0">
+                <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                    </svg>
+                </button>
+                <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+                <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer dessin">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- OUTILS DESSIN -->
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300">
-            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-                </svg>
-            </button>
-            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-            </button>
-            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer dessin">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            </button>
+        <!-- LIGNE 2 : ZONE DE CALCUL (Prend toute la largeur) -->
+        <div class="h-16 w-full bg-white flex items-center justify-center relative shadow-inner z-10 border-b border-slate-200 overflow-hidden">
+             <div class="w-full h-full flex items-center justify-center overflow-x-auto no-scrollbar whitespace-nowrap px-4">
+                <div id="equation-terms" class="flex items-center gap-1">
+                    <span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -240,8 +242,9 @@
 
             <div class="w-12 h-px bg-slate-300 my-1"></div>
 
+            <!-- Bouton REGROUPER -->
             <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm" title="Raccourci: Espace">
-                ALIGNER
+                REGROUPER
             </button>
 
             <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
@@ -272,8 +275,8 @@
             tokens: [],    // Liste de tous les jetons
             nextId: 1,
             locked: false,
-            resultRevealed: false,
             isAligned: false,
+            isReduced: false, // Nouvel état pour savoir si on affiche la forme réduite
             currentPendingMode: null,
             currentTool: 'hand'
         };
@@ -442,6 +445,7 @@
 
         function handleSideButton(type) {
             playSound('pop');
+            state.isReduced = false; // Reset reduced view on interaction
             if (state.currentPendingMode !== 'subtract') {
                 const currentTokens = state.tokens.filter(t => t.creationPhase === state.phase);
                 if (currentTokens.length > 0) {
@@ -518,6 +522,7 @@
 
         function setOperator(opType) {
             playSound('click');
+            state.isReduced = false; // Reset reduced view on interaction
             if (opType === 'add') {
                 state.phase++;
                 state.operators.push('+');
@@ -608,33 +613,70 @@
             updateLogic();
         }
 
+        function reduceEquation() {
+            playSound('whoosh');
+            state.isReduced = true;
+            updateLogic();
+        }
+
         function updateLogic() {
+            // NOTE : On filtre maintenant les jetons qui sont "pairId !== null" (les couples de zéros)
+            // pour qu'ils ne soient plus comptés dans le calcul affiché.
+            
+            // Si on est en mode RÉDUIT, on affiche juste la somme des positifs et des négatifs
+            if (state.isReduced) {
+                const positives = state.tokens.filter(t => 
+                    t.pairId === null && // On ignore les paires
+                    ((t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending))
+                ).length;
+
+                const negatives = state.tokens.filter(t => 
+                    t.pairId === null && // On ignore les paires
+                    ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
+                ).length;
+
+                let html = '';
+                
+                if (positives > 0) {
+                    html += `<span class="text-3xl sm:text-4xl font-bold text-green-600 tracking-tight transition-colors">(+${positives})</span>`;
+                }
+
+                if (negatives > 0) {
+                    if (positives > 0) {
+                        html += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-1">+</span>`;
+                    }
+                    html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight transition-colors">(-${negatives})</span>`;
+                }
+
+                if (positives === 0 && negatives === 0) {
+                    html = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
+                }
+
+                equationTerms.innerHTML = html;
+                return;
+            }
+
+            // --- MODE STANDARD (Détaillé) ---
             let terms = [];
             let totalValue = 0;
 
             for (let p = 1; p <= state.phase; p++) {
-                const tokensP = state.tokens.filter(t => t.creationPhase === p);
+                // On ne prend que les jetons NON PAIRES pour ce calcul
+                const tokensP = state.tokens.filter(t => t.creationPhase === p && t.pairId === null);
                 
                 // Séparation : Jetons "Normaux/En attente" vs Jetons "Convertis individuellement"
                 const regularTokens = tokensP.filter(t => !t.isConverted);
                 const convertedTokens = tokensP.filter(t => t.isConverted);
                 
-                // Si phase vide et pas courante, on zappe
-                if (tokensP.length === 0 && p !== state.phase) continue;
-                // Cas initial vide
-                if (tokensP.length === 0 && p === state.phase && state.phase === 1 && state.tokens.length === 0) {
-                     equationTerms.innerHTML = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
-                     return;
-                }
+                // Si phase vide (car tout a été annulé), on ne l'affiche pas
+                if (tokensP.length === 0) continue;
 
-                // --- 1. Terme Régulier (Ceux qui suivent l'opérateur de la phase) ---
-                if (regularTokens.length > 0 || (p === state.phase && convertedTokens.length === 0)) {
+                // --- 1. Terme Régulier ---
+                if (regularTokens.length > 0) {
                     let rawValue = regularTokens.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0);
                     let effectiveValue = rawValue;
                     const phaseOperator = (p === 1) ? '+' : state.operators[p-2];
 
-                    // Si c'est du pending (orange) avec un moins devant, ça compte en inverse pour le calcul final
-                    // MAIS ici on affiche ce qu'on voit : -(+3) ou -(-2)
                     const isPhasePending = regularTokens.some(t => t.isPending);
                     
                     if (phaseOperator === '-') {
@@ -643,7 +685,7 @@
 
                     const colorClass = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
                     const sign = rawValue > 0 ? '+' : '';
-                    let html = `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
+                    let html = `<span class="text-3xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
                     
                     terms.push({
                         phase: p,
@@ -654,27 +696,26 @@
                     totalValue += effectiveValue;
                 }
 
-                // --- 2. Terme Converti (Ceux qu'on a cliqué individuellement) ---
-                // Eux sont TOUJOURS ajoutés (c'est le principe de l'opposé : on ajoute l'opposé)
+                // --- 2. Terme Converti ---
                 if (convertedTokens.length > 0) {
                     let rawValue = convertedTokens.reduce((acc, t) => acc + (t.type === 'green' ? 1 : -1), 0);
-                    let effectiveValue = rawValue; // Toujours ajouté
+                    let effectiveValue = rawValue;
                     
                     const colorClass = rawValue > 0 ? 'text-green-600' : (rawValue < 0 ? 'text-red-600' : 'text-slate-800');
                     const sign = rawValue > 0 ? '+' : '';
-                    let html = `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
+                    let html = `<span class="text-3xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${rawValue})</span>`;
                     
                     terms.push({
-                        phase: p, // Même phase ID, mais traité à part
+                        phase: p, 
                         html: html,
-                        operator: '+', // Toujours un +
+                        operator: '+',
                         effectiveValue: effectiveValue
                     });
                     totalValue += effectiveValue;
                 }
             }
 
-            if (state.isAligned) {
+            if (state.isAligned && !state.isReduced) {
                 terms.sort((a, b) => b.effectiveValue - a.effectiveValue);
             }
 
@@ -682,52 +723,29 @@
             terms.forEach((term, index) => {
                 if (index === 0) {
                     if (term.operator === '-') {
-                        fullHtml += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">-</span>`;
+                        fullHtml += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-1">-</span>`;
                     }
                     fullHtml += term.html;
                 } else {
-                    // Si on a splité une phase, le "converted" aura un opérateur '+'.
-                    // On affiche toujours l'opérateur, sauf si c'est le tout premier terme positif implicite.
                     const op = term.operator === '+' || (term.phase === 1 && term.operator === '+' && index===0) ? '+' : term.operator;
-                    // Petite astuce: si index > 0, on met toujours l'opérateur.
-                    // Si index == 0, on met l'opérateur seulement si c'est '-' (déjà géré ci-dessus).
-                    // Donc ici :
-                    fullHtml += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">${op}</span>`;
+                    fullHtml += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-1">${op}</span>`;
                     fullHtml += term.html;
                 }
             });
 
-            if (fullHtml === '') fullHtml = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
+            // Si tout a été annulé, afficher (0)
+            if (fullHtml === '') fullHtml = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
             equationTerms.innerHTML = fullHtml;
-
-            const resEl = document.getElementById('op-result');
-            resEl.innerText = `(${totalValue > 0 ? '+' : ''}${totalValue})`;
-            resEl.className = "text-2xl sm:text-4xl font-bold " + (state.resultRevealed ? "" : "hidden ");
-            if(totalValue > 0) resEl.classList.add('text-green-600');
-            else if(totalValue < 0) resEl.classList.add('text-red-600');
-            else resEl.classList.add('text-slate-800');
         }
         
         function organizeBoard() {
             playSound('whoosh');
             state.isAligned = true;
 
-            // Groupe 1: Effectif Positif 
-            // - Verts (non pending)
-            // - Rouges Pending (car -(-1) = +1)
-            // - Rouges Convertis ? Non, Rouge Converti = -1 ajouté = -1. Donc négatif.
-            // Donc logique :
-            // Vert Normal (+1) -> Positif
-            // Vert Converti (+1) -> Positif
-            // Rouge Pending (-(-1) -> +1) -> Positif
-            
             const groupPositive = state.tokens.filter(t => 
                 ((t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending))
             ).sort((a,b) => a.id - b.id);
 
-            // Groupe 2: Effectif Négatif
-            // - Rouges (non pending)
-            // - Verts Pending (car -(+1) = -1)
             const groupNegative = state.tokens.filter(t => 
                 ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
             ).sort((a,b) => a.id - b.id);
@@ -750,14 +768,12 @@
                  startX = (board.clientWidth - (colsPerRow * spacing)) / 2 + (spacing/2);
             }
 
-            // 1. Placement des Positifs
             groupPositive.forEach((t, i) => {
                 const col = i % colsPerRow;
                 const row = Math.floor(i / colsPerRow);
                 moveTokenTo(t, startX + (col * spacing), startY + (row * spacing));
             });
 
-            // 2. Placement des Négatifs
             const negStartY = startY + (posRows * spacing) + (posRows > 0 ? gap : 0);
             groupNegative.forEach((t, i) => {
                 const col = i % colsPerRow;
@@ -779,8 +795,6 @@
 
         function handleDragStart(e) {
             if (state.currentTool !== 'hand') return; 
-            // On laisse passer le clic sur les jetons pending pour le onclick natif
-            // Mais on bloque le drag
             if (e.target.closest('.pending-subtraction')) return;
 
             e.preventDefault();
@@ -789,7 +803,7 @@
             const id = parseInt(el.id.split('-')[1]);
             draggedToken = state.tokens.find(t => t.id === id);
             
-            if (draggedToken.isPending) return; // Sécurité supp
+            if (draggedToken.isPending) return; 
             if (draggedToken.pairId !== null) unpairTokens(draggedToken);
             
             el.style.zIndex = 1000;
@@ -860,6 +874,9 @@
             badge.style.left = (midX - 12) + 'px'; 
             badge.style.top = (midY - 30) + 'px';
             board.appendChild(badge);
+            
+            // Mise à jour immédiate du calcul pour refléter la disparition
+            updateLogic();
         }
 
         function unpairTokens(token) {
@@ -870,74 +887,120 @@
             let badge = document.getElementById(`badge-${token.id}-${partner?.id}`);
             if (!badge && partner) badge = document.getElementById(`badge-${partner.id}-${token.id}`);
             if (badge) badge.remove();
+            
+            // Mise à jour immédiate du calcul pour refléter la réapparition
+            updateLogic();
         }
 
         function animateSimplification() {
             state.locked = true;
+            playSound('whoosh');
 
-            const logicalPositives = state.tokens.filter(t => 
-                t.pairId === null && ((t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending))
-            );
-            const logicalNegatives = state.tokens.filter(t => 
-                t.pairId === null && ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
-            );
+            // 1. Identifier les paires de zéros MANUELLES déjà existantes
+            const processedIds = new Set();
+            const existingPairs = [];
+            state.tokens.forEach(t => {
+                if (t.pairId !== null && !processedIds.has(t.id)) {
+                    const partner = state.tokens.find(p => p.id === t.pairId);
+                    if (partner) {
+                        existingPairs.push([t, partner]);
+                        processedIds.add(t.id);
+                        processedIds.add(partner.id);
+                    }
+                }
+            });
 
-            const sortFn = (a, b) => (a.x - b.x) || (a.y - b.y);
-            logicalPositives.sort(sortFn);
-            logicalNegatives.sort(sortFn);
-
-            let pairs = [];
+            // 2. Identifier les NOUVELLES paires potentielles
+            const activeTokens = state.tokens.filter(t => t.pairId === null);
             
+            const logicalPositives = activeTokens.filter(t => 
+                (t.type === 'green' && !t.isPending) || (t.type === 'red' && t.isPending)
+            ).sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            
+            const logicalNegatives = activeTokens.filter(t => 
+                ((t.type === 'red' && !t.isPending) || (t.type === 'green' && t.isPending))
+            ).sort((a,b) => (a.x - b.x) || (a.y - b.y));
+
+            const newPairs = [];
             const count = Math.min(logicalPositives.length, logicalNegatives.length);
             for(let i=0; i<count; i++) {
-                pairs.push([logicalPositives[i], logicalNegatives[i]]);
+                newPairs.push([logicalPositives[i], logicalNegatives[i]]);
             }
-            
-            const zeroPairs = state.tokens.filter(t => t.pairId !== null && t.type === 'green');
-            zeroPairs.forEach(t => {
-                const partner = state.tokens.find(p => p.id === t.pairId);
-                pairs.push([t, partner]);
-            });
 
-            if (pairs.length === 0) return;
-            
-            const interval = 800; 
-            playSound('whoosh');
-            
-            pairs.forEach((pair, index) => {
-                setTimeout(() => {
-                    const [t1, t2] = pair;
-                    
-                    unpairTokens(t1); 
-                    moveTokenTo(t2, t1.x, t1.y);
-                    
+            if (existingPairs.length === 0 && newPairs.length === 0) {
+                 state.locked = false;
+                 return;
+            }
+
+            // --- SEQUENCE D'ANIMATION ---
+            let delayForNewPairs = 0;
+
+            // PHASE 1 : Nettoyage rapide des paires existantes
+            if (existingPairs.length > 0) {
+                existingPairs.forEach((pair, i) => {
                     setTimeout(() => {
-                        createZeroPair(t1, t2); 
-                        playSound('snap');
+                        removePairElements(pair[0], pair[1]);
+                    }, i * 100); 
+                });
+                delayForNewPairs = (existingPairs.length * 100) + 600; 
+            }
+
+            // PHASE 2 : Animation des nouvelles paires
+            setTimeout(() => {
+                const interval = 800; 
+                
+                newPairs.forEach((pair, index) => {
+                    setTimeout(() => {
+                        const [t1, t2] = pair;
+                        
+                        // Déplacement
+                        moveTokenTo(t2, t1.x, t1.y);
                         
                         setTimeout(() => {
-                            t1.element.classList.add('fade-out');
-                            t2.element.classList.add('fade-out');
-                            let badge = document.getElementById(`badge-${t1.id}-${t2.id}`);
-                            if(badge) {
-                                badge.style.transition = 'opacity 0.5s';
-                                badge.style.opacity = '0';
-                            }
+                            // Snap (Zéro)
+                            createZeroPair(t1, t2); 
+                            playSound('snap');
                             
                             setTimeout(() => {
-                                if(t1.element.parentNode) t1.element.remove();
-                                if(t2.element.parentNode) t2.element.remove();
-                                if(badge) badge.remove();
-                                state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
-                                updateLogic();
-                            }, 500);
+                                // Disparition
+                                removePairElements(t1, t2);
+                            }, 600); 
                             
-                        }, 600); 
+                        }, 500); 
                         
-                    }, 500); 
-                    
-                }, index * interval);
-            });
+                    }, index * interval);
+                });
+
+                // Déverrouillage à la fin
+                const totalTime = (newPairs.length * interval) + 500 + 600 + 200;
+                setTimeout(() => {
+                    state.locked = false;
+                    updateLogic();
+                }, totalTime);
+
+            }, delayForNewPairs);
+        }
+
+        function removePairElements(t1, t2) {
+             t1.element.classList.add('fade-out');
+             t2.element.classList.add('fade-out');
+             
+             // Essayer les deux combinaisons d'ID pour le badge
+             let badge = document.getElementById(`badge-${t1.id}-${t2.id}`);
+             if (!badge) badge = document.getElementById(`badge-${t2.id}-${t1.id}`);
+             
+             if(badge) {
+                 badge.style.transition = 'opacity 0.5s';
+                 badge.style.opacity = '0';
+             }
+             
+             setTimeout(() => {
+                 if(t1.element.parentNode) t1.element.remove();
+                 if(t2.element.parentNode) t2.element.remove();
+                 if(badge && badge.parentNode) badge.remove();
+                 state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                 updateLogic();
+             }, 500);
         }
 
         function resetBoard() {
@@ -952,22 +1015,13 @@
             state.resultRevealed = false;
             state.locked = false;
             state.isAligned = false;
+            state.isReduced = false;
             state.currentPendingMode = null;
             
-            document.getElementById('equation-terms').innerHTML = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
-            document.getElementById('op-result').classList.add('hidden');
-            document.getElementById('op-question').classList.remove('hidden');
+            document.getElementById('equation-terms').innerHTML = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
             
             btnOpposite.classList.add('hidden');
             setTool('hand');
-            updateLogic();
-        }
-        
-        function showAnswer() {
-            playSound('click');
-            state.resultRevealed = true;
-            document.getElementById('op-question').classList.add('hidden');
-            document.getElementById('op-result').classList.remove('hidden');
             updateLogic();
         }
     </script>
