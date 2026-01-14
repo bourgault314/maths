@@ -909,8 +909,19 @@
 
             // 3. PLACER LES ZEROS (GRIS) TOUT A LA FIN
             if (zeroTokens.length > 0) {
-                currentX = 50;
-                currentY += LINE_HEIGHT; 
+                // Ensure we start on a new line below everything else
+                // If in reduced mode, we might need more space because reduced lines are tight
+                const verticalGap = state.isReduced ? LINE_HEIGHT : LINE_HEIGHT; 
+                
+                // If we are at the top (no active tokens), start at 80
+                if (activeTokens.length === 0) {
+                     currentY = 80;
+                     currentX = 50;
+                } else {
+                     // Start a new line relative to current Y position
+                     currentX = 50;
+                     currentY += verticalGap;
+                }
                 
                 const placedZeros = new Set();
                 
@@ -923,12 +934,32 @@
                         currentX = 50;
                         currentY += LINE_HEIGHT;
                     }
+                    
+                    // Move T1
                     moveTokenTo(t1, currentX, currentY);
                     placedZeros.add(t1.id);
                     
                     if (t2) {
-                        moveTokenTo(t2, currentX + 30, currentY + 20); 
+                        // Move T2 slightly offset
+                        // FIX: Zero offsets to keep them combined visually
+                        const offsetX = 0;
+                        const offsetY = 0;
+                        moveTokenTo(t2, currentX + offsetX, currentY + offsetY); 
                         placedZeros.add(t2.id);
+                        
+                        // MOVE THE BADGE! (Bug fixed here)
+                        const badgeId1 = `badge-${t1.id}-${t2.id}`;
+                        const badgeId2 = `badge-${t2.id}-${t1.id}`;
+                        let badge = document.getElementById(badgeId1) || document.getElementById(badgeId2);
+                        
+                        if (badge) {
+                            const midX = (currentX + (currentX + offsetX)) / 2;
+                            const midY = (currentY + (currentY + offsetY)) / 2;
+                            badge.style.left = (midX - 12) + 'px'; 
+                            badge.style.top = (midY - 30) + 'px';
+                            // Ensure badge is visible if it was hidden/faded
+                            badge.style.opacity = '1'; 
+                        }
                     }
                     
                     currentX += SPACING + 40; 
