@@ -2,152 +2,690 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page en construction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labo des Proportions - Multi-Ratio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Fredoka', sans-serif;
             background-color: #f8fafc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #1e293b;
-            text-align: center;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 90%;
-            width: 400px;
-            border: 2px solid #f1f5f9;
-        }
-
-        /* L'Emoji animé */
-        .icon {
-            font-size: 5rem;
-            display: inline-block;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            /* Animation douce par défaut */
-            animation: float 3s ease-in-out infinite;
-        }
-
-        /* Titre */
-        h1 {
-            color: #b45309; /* Couleur brique/orange */
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-
-        /* Le texte rigolo */
-        #message {
-            margin: 1.5rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #64748b;
-            min-height: 3.5rem; /* Pour éviter que ça saute selon la longueur du texte */
+        /* --- BLOCS (CONCRET) --- */
+        .item-block {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        /* Bouton Retour */
-        .btn-back {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #3b82f6;
+            font-size: 1rem;
             color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+            font-weight: bold;
+            cursor: pointer;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 10;
+            transition: transform 0.1s;
         }
+        .item-block:active { transform: scale(0.9); }
 
-        .btn-back:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        /* --- ANIMATIONS --- */
+        .item-block.blue { background-color: #3b82f6; border: 2px solid #1d4ed8; }
+        .item-block.pink { background-color: #ec4899; border: 2px solid #be185d; }
+        .item-block.amber { background-color: #f59e0b; border: 2px solid #b45309; }
+        .item-block.emerald { background-color: #10b981; border: 2px solid #047857; }
         
-        /* Flottement doux */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        /* Effet de groupe (simplification) */
+        .group-container {
+            border: 2px dashed #94a3b8;
+            border-radius: 16px;
+            padding: 8px;
+            background: rgba(255,255,255,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.5s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
-        /* Secousse (si on clique sur l'icone) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .shaking {
-            animation: shake 0.5s;
+        /* --- BAR MODEL (IMAGÉ) --- */
+        .bar-segment {
+            height: 40px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .bar-segment.blue { background-color: #60a5fa; border-right: 1px solid rgba(255,255,255,0.3); }
+        .bar-segment.pink { background-color: #f472b6; border-right: 1px solid rgba(255,255,255,0.3); }
+        .bar-segment.amber { background-color: #fbbf24; border-right: 1px solid rgba(255,255,255,0.3); }
+        .bar-segment.emerald { background-color: #34d399; border-right: 1px solid rgba(255,255,255,0.3); }
+        
+        .bar-segment:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        .bar-segment:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-right: none; }
+
+        /* --- DESSIN --- */
+        #drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            pointer-events: none;
+        }
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            transform-origin: top left;
+        }
+        .hide-cursor, .hide-cursor * { cursor: none !important; }
+
+        /* JAUGE POURCENTAGE */
+        .gauge-container {
+            height: 24px;
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+        }
+        .gauge-fill {
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+        .gauge-fill.blue { background-color: #3b82f6; }
+        .gauge-fill.pink { background-color: #ec4899; }
+        .gauge-fill.amber { background-color: #f59e0b; }
+        .gauge-fill.emerald { background-color: #10b981; }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #f1f5f9;
         }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col bg-slate-50">
 
-    <div class="container">
-        <div class="icon" onclick="shakeMe(this)">🚧</div>
-        
-        <h1>Oups ! Pas fini...</h1>
-        
-        <p id="message">Chargement de l'excuse...</p>
+    <!-- CURSEUR VIRTUEL -->
+    <div id="custom-cursor">
+        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <circle cx="8" cy="32" r="1" fill="white"/>
+        </svg>
+    </div>
 
-        <a href="javascript:history.back()" class="btn-back">
-            Retour en arrière
-        </a>
+    <!-- HEADER -->
+    <header class="bg-white p-2 shadow-sm z-30 flex items-center justify-between shrink-0 border-b border-slate-200 flex-wrap gap-2">
+        <div class="flex items-center gap-3">
+            <h1 class="text-lg font-extrabold text-slate-700 tracking-tight flex items-center gap-2">
+                <span class="text-2xl">🧪</span> 
+                <span class="hidden sm:inline">Labo des Proportions</span>
+            </h1>
+            
+            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+            <!-- SELECTEUR DE MODE -->
+            <div class="flex bg-slate-100 p-1 rounded-lg">
+                <button onclick="setMode(2)" id="mode-2" class="px-3 py-1 rounded text-xs font-bold transition bg-white text-slate-700 shadow-sm">2 Couleurs</button>
+                <button onclick="setMode(3)" id="mode-3" class="px-3 py-1 rounded text-xs font-bold transition text-slate-500 hover:text-slate-700">3 Couleurs</button>
+                <button onclick="setMode(4)" id="mode-4" class="px-3 py-1 rounded text-xs font-bold transition text-slate-500 hover:text-slate-700">4 Couleurs</button>
+            </div>
+            
+            <button onclick="resetBoard()" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg font-bold text-xs transition" title="Reset">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- OUTILS DESSIN -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-slate-700" title="Main">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                </svg>
+            </button>
+            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-slate-500 hover:bg-slate-200" title="Annoter">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+            </button>
+            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer dessin">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        <canvas id="drawing-canvas"></canvas>
+
+        <!-- COLONNE GAUCHE : MANIPULATION -->
+        <section class="flex-1 p-4 flex flex-col gap-4 overflow-y-auto bg-slate-50 z-10">
+            
+            <!-- CONTROLS DYNAMIC -->
+            <div id="controls-container" class="card p-3 flex flex-wrap justify-center items-center gap-4 sticky top-0 z-20">
+                <!-- Generated by JS -->
+            </div>
+
+            <!-- ZONE DE BLOCS -->
+            <div class="flex-1 relative min-h-[300px]">
+                <div class="absolute inset-0 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-100/50 flex items-center justify-center pointer-events-none">
+                    <span class="text-slate-400 font-bold text-lg opacity-50">Zone de mélange</span>
+                </div>
+                <div id="workspace" class="relative z-10 flex flex-wrap content-start gap-2 p-4">
+                    <!-- Les blocs seront ici -->
+                </div>
+            </div>
+
+            <!-- BOUTON SIMPLIFIER -->
+            <div class="flex justify-center pb-2">
+                <button id="btn-simplify" onclick="toggleSimplify()" class="bg-indigo-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-indigo-700 active:scale-95 transition hidden flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>Grouper par paquets</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- COLONNE DROITE : VISUALISATION -->
+        <aside class="w-full lg:w-[400px] bg-white border-l border-slate-200 z-10 flex flex-col shadow-xl">
+            
+            <div class="p-6 flex flex-col gap-8 h-full overflow-y-auto">
+                
+                <!-- 1. BAR MODEL -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Modèle en Barres</h3>
+                    <div class="bg-slate-100 p-3 rounded-xl border border-slate-200 min-h-[80px] flex items-center justify-center relative">
+                        <div id="bar-model-container" class="w-full flex rounded-lg overflow-hidden shadow-sm h-12 bg-white">
+                            <div class="w-full h-full flex items-center justify-center text-slate-300 font-bold text-sm italic">Vide</div>
+                        </div>
+                        <div class="absolute -bottom-6 w-full flex justify-between px-1">
+                             <span class="text-xs font-bold text-slate-400">0</span>
+                             <span id="total-label" class="text-xs font-bold text-slate-700">Total: 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-px bg-slate-100"></div>
+
+                <!-- 2. RATIO -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Ratio</h3>
+                    <div id="ratio-display" class="flex items-center justify-center gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200 flex-wrap">
+                        <!-- Généré par JS -->
+                    </div>
+                    <div id="simplified-ratio-hint" class="text-center mt-2 text-sm font-bold text-indigo-500 h-6"></div>
+                </div>
+
+                <!-- 3. FRACTIONS -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Fractions</h3>
+                    <div id="fraction-display" class="flex justify-around flex-wrap gap-4">
+                        <!-- Généré par JS -->
+                    </div>
+                </div>
+
+                <!-- 4. POURCENTAGE -->
+                <div class="mt-auto">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Pourcentages</h3>
+                    <div class="relative pt-6 pb-4">
+                        <div id="gauge-container" class="gauge-container w-full">
+                            <!-- Segments générés par JS -->
+                        </div>
+                        <!-- Labels -->
+                        <div id="pct-labels" class="flex justify-between mt-2 flex-wrap gap-2 text-xs">
+                             <!-- Labels générés par JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
     </div>
 
     <script>
-        // Liste des messages rigolos
-        const phrases = [
-            "Le développeur est parti chercher du café... Il revient (peut-être).",
-            "C'est en chantier ! Attention aux chutes de pixels.",
-            "J'ai perdu la clé de 12 pour finir cette page.",
-            "Patience, c'est comme les maths, ça prend du temps à construire.",
-            "Les lutins du code sont en grève. Repassez plus tard !",
-            "Page en cours de téléchargement cérébral...",
-            "404 ? Non, juste 'Pas encore prêt' !"
-        ];
+        // --- CONFIG & STATE ---
+        const CONFIG = {
+            blue: { label: 'Bleu', colorHex: '#3b82f6', bgBtn: 'bg-blue-500', bgLight: 'bg-blue-100', text: 'text-blue-600', class: 'blue' },
+            pink: { label: 'Rose', colorHex: '#ec4899', bgBtn: 'bg-pink-500', bgLight: 'bg-pink-100', text: 'text-pink-600', class: 'pink' },
+            amber: { label: 'Jaune', colorHex: '#f59e0b', bgBtn: 'bg-amber-500', bgLight: 'bg-amber-100', text: 'text-amber-600', class: 'amber' },
+            emerald: { label: 'Vert', colorHex: '#10b981', bgBtn: 'bg-emerald-500', bgLight: 'bg-emerald-100', text: 'text-emerald-600', class: 'emerald' }
+        };
 
-        // Choisir une phrase au hasard au chargement
-        const texteElement = document.getElementById('message');
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        texteElement.innerText = randomPhrase;
+        const state = {
+            mode: 2, // 2, 3, or 4 colors
+            counts: { blue: 0, pink: 0, amber: 0, emerald: 0 },
+            isGrouped: false,
+            currentTool: 'hand'
+        };
 
-        // Fonction pour secouer l'icone au clic
-        function shakeMe(element) {
-            element.classList.remove('shaking'); // Reset
-            void element.offsetWidth; // Force le reflow
-            element.classList.add('shaking'); // Re-lance
-            
-            // Changer le texte aussi quand on clique, pour le fun
-            const newPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            texteElement.innerText = newPhrase;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'pop') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'whoosh') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
         }
-    </script>
 
+        // --- CORE LOGIC ---
+
+        function getActiveColors() {
+            const keys = Object.keys(CONFIG);
+            return keys.slice(0, state.mode);
+        }
+
+        function setMode(n) {
+            if (n === state.mode) return;
+            state.mode = n;
+            state.isGrouped = false;
+            
+            // Reset counts for inactive colors
+            const active = getActiveColors();
+            Object.keys(state.counts).forEach(k => {
+                if (!active.includes(k)) state.counts[k] = 0;
+            });
+            
+            // Update UI buttons
+            [2,3,4].forEach(i => {
+                const btn = document.getElementById(`mode-${i}`);
+                if (i === n) {
+                    btn.className = "px-3 py-1 rounded text-xs font-bold transition bg-white text-slate-700 shadow-sm border border-slate-200";
+                } else {
+                    btn.className = "px-3 py-1 rounded text-xs font-bold transition text-slate-500 hover:text-slate-700";
+                }
+            });
+
+            renderControls();
+            render();
+            playSound('whoosh');
+        }
+
+        function modify(color, delta) {
+            const newVal = state.counts[color] + delta;
+            if (newVal >= 0 && newVal <= 20) {
+                state.counts[color] = newVal;
+                state.isGrouped = false;
+                playSound('pop');
+                render();
+            }
+        }
+
+        function gcdTwo(a, b) {
+            return b === 0 ? a : gcdTwo(b, a % b);
+        }
+
+        function calculateGCD() {
+            const active = getActiveColors();
+            // Filter non-zero values for GCD calculation
+            const values = active.map(c => state.counts[c]).filter(v => v > 0);
+            if (values.length < active.length) return 1; // If any active category is 0, no GCD meaningful for "all"
+            if (values.length === 0) return 1;
+            
+            let result = values[0];
+            for(let i=1; i<values.length; i++) {
+                result = gcdTwo(result, values[i]);
+            }
+            return result;
+        }
+
+        function toggleSimplify() {
+            const hasZero = getActiveColors().some(c => state.counts[c] === 0);
+            if (hasZero) return; // Can't simplify if a category is missing
+            
+            state.isGrouped = !state.isGrouped;
+            playSound('whoosh');
+            render();
+        }
+
+        // --- RENDERING ---
+
+        function renderControls() {
+            const container = document.getElementById('controls-container');
+            container.innerHTML = '';
+            
+            getActiveColors().forEach((color, index) => {
+                const conf = CONFIG[color];
+                
+                // Divider if not first
+                if (index > 0) {
+                    const div = document.createElement('div');
+                    div.className = "w-px h-12 bg-slate-200 hidden sm:block";
+                    container.appendChild(div);
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col items-center gap-2";
+                
+                // Added id="cnt-${color}" for updating text in render()
+                wrapper.innerHTML = `
+                    <span class="text-[10px] font-bold uppercase tracking-wider" style="color:${conf.colorHex}">${conf.label}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="modify('${color}', -1)" class="control-btn w-8 h-8 rounded-full ${conf.bgLight} ${conf.text} font-bold text-lg hover:brightness-95">-</button>
+                        <span id="cnt-${color}" class="text-2xl font-black text-slate-700 w-8 text-center">${state.counts[color]}</span>
+                        <button onclick="modify('${color}', 1)" class="control-btn w-8 h-8 rounded-full ${conf.bgBtn} text-white font-bold text-lg hover:brightness-110 shadow-md shadow-${color}-500/30">+</button>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        function render() {
+            const active = getActiveColors();
+            const total = active.reduce((sum, c) => sum + state.counts[c], 0);
+            const gcd = calculateGCD();
+            const canSimplify = (gcd > 1 && active.every(c => state.counts[c] > 0));
+
+            // NEW: UPDATE CONTROL COUNTERS
+            active.forEach(color => {
+                const el = document.getElementById(`cnt-${color}`);
+                if (el) el.innerText = state.counts[color];
+            });
+
+            // 1. UPDATE BUTTON SIMPLIFY
+            const btnSimp = document.getElementById('btn-simplify');
+            if (canSimplify) {
+                btnSimp.classList.remove('hidden');
+                btnSimp.innerHTML = state.isGrouped 
+                    ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg><span>Dégrouper</span>` 
+                    : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg><span>Grouper en ${gcd} paquets</span>`;
+                
+                btnSimp.className = state.isGrouped 
+                    ? "bg-slate-500 text-white px-6 py-2 rounded-full font-bold shadow-sm hover:bg-slate-600 transition flex items-center gap-2"
+                    : "bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-indigo-700 active:scale-95 transition flex items-center gap-2 animate-bounce";
+            } else {
+                btnSimp.classList.add('hidden');
+                state.isGrouped = false;
+            }
+
+            // 2. WORKSPACE
+            const workspace = document.getElementById('workspace');
+            workspace.innerHTML = '';
+
+            if (state.isGrouped && canSimplify) {
+                const groups = gcd;
+                for (let i = 0; i < groups; i++) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'group-container';
+                    
+                    active.forEach(color => {
+                        const countPerGroup = state.counts[color] / gcd;
+                        const row = document.createElement('div');
+                        row.className = 'flex gap-1';
+                        for(let k=0; k<countPerGroup; k++) {
+                            row.appendChild(createBlockDiv(color, true));
+                        }
+                        groupDiv.appendChild(row);
+                    });
+                    
+                    // Group Label
+                    const lbl = document.createElement('div');
+                    lbl.className = "text-[10px] text-center font-bold text-slate-400 mt-1";
+                    lbl.innerText = `Paquet ${i+1}`;
+                    groupDiv.appendChild(lbl);
+
+                    workspace.appendChild(groupDiv);
+                }
+            } else {
+                active.forEach(color => {
+                    const count = state.counts[color];
+                    for(let i=0; i<count; i++) {
+                        workspace.appendChild(createBlockDiv(color));
+                    }
+                });
+            }
+
+            // 3. BAR MODEL
+            const barContainer = document.getElementById('bar-model-container');
+            barContainer.innerHTML = '';
+            document.getElementById('total-label').innerText = `Total: ${total}`;
+
+            if (total === 0) {
+                 barContainer.innerHTML = '<div class="w-full h-full flex items-center justify-center text-slate-300 font-bold text-sm italic">Ajoutez des éléments...</div>';
+            } else {
+                active.forEach(color => {
+                    const count = state.counts[color];
+                    if (count > 0) {
+                        const seg = document.createElement('div');
+                        seg.className = `bar-segment ${CONFIG[color].class}`;
+                        seg.style.width = (count / total * 100) + '%';
+                        seg.innerText = count;
+                        barContainer.appendChild(seg);
+                    }
+                });
+            }
+
+            // 4. RATIO & FRACTIONS
+            const ratioContainer = document.getElementById('ratio-display');
+            ratioContainer.innerHTML = '';
+            
+            const fracContainer = document.getElementById('fraction-display');
+            fracContainer.innerHTML = '';
+
+            active.forEach((color, idx) => {
+                // Ratio
+                const ratioBlock = document.createElement('div');
+                ratioBlock.className = "text-center";
+                ratioBlock.innerHTML = `
+                    <span class="block text-2xl font-black" style="color:${CONFIG[color].colorHex}">${state.counts[color]}</span>
+                    <span class="text-[10px] font-bold uppercase text-slate-400">${CONFIG[color].label}</span>
+                `;
+                ratioContainer.appendChild(ratioBlock);
+
+                if (idx < active.length - 1) {
+                    const sep = document.createElement('span');
+                    sep.className = "text-xl font-bold text-slate-300";
+                    sep.innerText = ":";
+                    ratioContainer.appendChild(sep);
+                }
+
+                // Fraction
+                const fracBlock = document.createElement('div');
+                fracBlock.className = "flex flex-col items-center";
+                fracBlock.innerHTML = `
+                    <span class="text-xl font-bold border-b-2 border-slate-300 px-2" style="color:${CONFIG[color].colorHex}">${state.counts[color]}</span>
+                    <span class="text-xl font-bold text-slate-600 px-2">${total || '?'}</span>
+                `;
+                fracContainer.appendChild(fracBlock);
+            });
+
+            // Ratio Simplified Hint
+            const hintEl = document.getElementById('simplified-ratio-hint');
+            if (state.isGrouped) {
+                const simpVals = active.map(c => state.counts[c] / gcd);
+                hintEl.innerText = `Ratio simplifié : ${simpVals.join(' : ')}`;
+            } else {
+                hintEl.innerText = '';
+            }
+
+            // 5. PERCENTAGE GAUGE
+            const gaugeContainer = document.getElementById('gauge-container');
+            gaugeContainer.innerHTML = '';
+            const pctLabels = document.getElementById('pct-labels');
+            pctLabels.innerHTML = '';
+
+            let accumulatedPct = 0;
+            active.forEach((color, idx) => {
+                const count = state.counts[color];
+                if (count === 0 && total > 0) return;
+                
+                // Calculate Pct
+                let pct = total === 0 ? 0 : (count / total * 100);
+                
+                // Visual bar segment
+                const bar = document.createElement('div');
+                bar.className = `gauge-fill ${CONFIG[color].class}`;
+                bar.style.width = pct + '%';
+                gaugeContainer.appendChild(bar);
+
+                // Label
+                const label = document.createElement('div');
+                label.className = "flex items-center gap-1";
+                label.innerHTML = `
+                    <div class="w-2 h-2 rounded-full ${CONFIG[color].bgBtn}"></div>
+                    <span class="font-bold ${CONFIG[color].text}">${Math.round(pct)}%</span>
+                `;
+                pctLabels.appendChild(label);
+            });
+        }
+
+        function createBlockDiv(color, isMini = false) {
+            const el = document.createElement('div');
+            el.className = `item-block ${CONFIG[color].class}`;
+            if (isMini) {
+                el.style.width = '30px';
+                el.style.height = '30px';
+                el.style.fontSize = '0.7rem';
+                el.style.borderRadius = '6px';
+            } else {
+                el.innerText = '1';
+            }
+            return el;
+        }
+
+        function resetBoard() {
+            Object.keys(state.counts).forEach(k => state.counts[k] = 0);
+            state.isGrouped = false;
+            clearCanvas();
+            render();
+            playSound('whoosh');
+        }
+
+        // --- DRAWING ---
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorDiv = document.getElementById('custom-cursor');
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (state.currentTool === 'pen') {
+                ctx.strokeStyle = '#ef4444'; 
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        // Init canvas size
+        setTimeout(resizeCanvas, 100);
+
+        function setTool(tool) {
+            state.currentTool = tool;
+            if (tool === 'hand') {
+                canvas.style.pointerEvents = 'none';
+                document.body.classList.remove('hide-cursor');
+                cursorDiv.style.display = 'none';
+                document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-slate-700";
+                document.getElementById('tool-pen').className = "p-2 rounded text-slate-500 hover:bg-slate-200";
+            } else {
+                canvas.style.pointerEvents = 'auto';
+                document.body.classList.add('hide-cursor');
+                cursorDiv.style.display = 'block';
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 3;
+                document.getElementById('tool-hand').className = "p-2 rounded text-slate-500 hover:bg-slate-200";
+                document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-red-500";
+            }
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getPos(e) {
+            return {
+                x: e.touches ? e.touches[0].clientX : e.clientX,
+                y: e.touches ? e.touches[0].clientY : e.clientY
+            };
+        }
+        
+        function updateCursor(e) {
+            if (state.currentTool !== 'pen') return;
+            const {x, y} = getPos(e);
+            cursorDiv.style.left = x + 'px';
+            cursorDiv.style.top = y + 'px';
+            cursorDiv.style.transform = 'translate(-2px, -30px)';
+        }
+
+        ['mousedown', 'touchstart'].forEach(evt => canvas.addEventListener(evt, (e) => {
+            if (state.currentTool !== 'pen') return;
+            isDrawing = true;
+            const {x, y} = getPos(e);
+            lastX = x; lastY = y;
+            updateCursor(e);
+        }, {passive: false}));
+
+        ['mousemove', 'touchmove'].forEach(evt => window.addEventListener(evt, (e) => {
+            updateCursor(e);
+            if (!isDrawing) return;
+            const {x, y} = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            lastX = x; lastY = y;
+        }, {passive: false}));
+
+        ['mouseup', 'touchend'].forEach(evt => window.addEventListener(evt, () => isDrawing = false));
+
+        // Start
+        renderControls();
+        render();
+
+    </script>
 </body>
 </html>
