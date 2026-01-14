@@ -64,6 +64,12 @@
             z-index: 5;
             transform: scale(0.95);
         }
+
+        /* Classe pour l'animation de saut lors de l'annulation auto */
+        .token.jumping {
+            transition: left 0.4s ease-in-out, top 0.4s ease-in-out, transform 0.4s ease-in-out !important;
+            z-index: 1000 !important;
+        }
         
         /* CIBLE (MISSION) */
         .target-token {
@@ -92,6 +98,25 @@
             z-index: 20;
             text-shadow: 0 0 10px rgba(255,255,255,1);
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Badge temporaire pour l'animation automatique */
+        .temp-zero-badge {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 800;
+            color: #64748b; /* Slate 500 */
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            border: 4px solid #94a3b8;
+            pointer-events: none;
+            z-index: 50;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes popIn {
@@ -722,9 +747,11 @@
                 
                 // La cible définie
                 let valCible = calculateValueFromList(state.subtractionDefined);
+                // MODIFICATION: Affichage sans parenthèses si 0
+                let displayCible = valCible === 0 ? '0' : `(${valCible > 0 ? '+' : ''}${valCible})`;
                 const colorClass = valCible > 0 ? 'text-green-600' : (valCible < 0 ? 'text-red-600' : 'text-slate-800');
-                const sign = valCible > 0 ? '+' : '';
-                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass}">(${sign}${valCible})</span>`;
+                
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass}">${displayCible}</span>`;
 
                 equationTerms.innerHTML = html;
                 checkShortage();
@@ -732,11 +759,13 @@
                 // Résultat : ? + (Ce qu'il reste sur le plateau)
                 const totalRemaining = calculateValue(state.tokens);
                 const resEl = document.getElementById('op-result');
-                const remainingSign = totalRemaining > 0 ? '+' : '';
                 const remainingColor = totalRemaining > 0 ? 'text-green-600' : (totalRemaining < 0 ? 'text-red-600' : 'text-slate-800');
                 
+                // MODIFICATION: Affichage sans parenthèses si 0
+                let displayRemaining = totalRemaining === 0 ? '0' : `(${totalRemaining > 0 ? '+' : ''}${totalRemaining})`;
+                
                 // Affichage spécial pour le résultat Nuage: "? + (-4)"
-                resEl.innerHTML = `<span class="text-slate-600">?</span> <span class="text-slate-800">+</span> <span class="${remainingColor}">(${remainingSign}${totalRemaining})</span>`;
+                resEl.innerHTML = `<span class="text-slate-600">?</span> <span class="text-slate-800">+</span> <span class="${remainingColor}">${displayRemaining}</span>`;
                 
                 resEl.className = "text-2xl sm:text-4xl font-bold flex items-center gap-1 " + (state.resultRevealed ? "" : "hidden ");
                 return;
@@ -763,8 +792,11 @@
                     }
                 }
                 const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-600' : 'text-slate-800');
-                const sign = val > 0 ? '+' : '';
-                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">(${sign}${val})</span>`;
+                
+                // MODIFICATION: Affichage sans parenthèses si 0
+                let displayVal = val === 0 ? '0' : `(${val > 0 ? '+' : ''}${val})`;
+                
+                html += `<span class="text-2xl sm:text-4xl font-bold ${colorClass} tracking-tight transition-colors">${displayVal}</span>`;
                 if (p < state.phase) {
                     const op = state.operators[p-1];
                     html += `<span class="text-2xl sm:text-4xl font-bold text-slate-800 mx-1">${op}</span>`;
@@ -772,13 +804,21 @@
             }
             equationTerms.innerHTML = html;
             if (state.operationType === 'subtract') checkShortage();
+            
             const totalRemaining = calculateValue(state.tokens);
             const resEl = document.getElementById('op-result');
-            resEl.innerText = `(${totalRemaining > 0 ? '+' : ''}${totalRemaining})`;
+            
+            // MODIFICATION: Affichage du résultat final sans parenthèses si 0
+            if (totalRemaining === 0) {
+                resEl.innerText = "0";
+            } else {
+                resEl.innerText = `(${totalRemaining > 0 ? '+' : ''}${totalRemaining})`;
+            }
+            
             resEl.className = "text-2xl sm:text-4xl font-bold " + (state.resultRevealed ? "" : "hidden ");
             if(totalRemaining > 0) resEl.classList.add('text-green-600');
             else if(totalRemaining < 0) resEl.classList.add('text-red-600');
-            else resEl.classList.add('text-slate-800');
+            else resEl.classList.add('text-slate-800'); // Gris pour le zéro
         }
 
         function checkShortage() {
@@ -1089,7 +1129,8 @@
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
             }
             state.locked = true;
-            // --- LOGIQUE DE SUPPRESSION (De Droite à Gauche) ---
+
+            // --- LOGIQUE DE SUPPRESSION ANIMÉE ---
             const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
             const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
             let pairs = [];
@@ -1098,20 +1139,62 @@
                 pairs.push([greens.pop(), reds.pop()]);
             }
             if (pairs.length === 0) return;
-            const interval = 500; 
+
+            const interval = 800; // Un peu plus long pour laisser le temps à l'animation
             playSound('whoosh');
+
             pairs.forEach((pair, index) => {
                 setTimeout(() => {
                     const [t1, t2] = pair;
                     unpairTokens(t1); 
-                    t1.element.classList.add('fly-away');
-                    t2.element.classList.add('fly-away');
+
+                    // 1. Ajouter classe pour animation fluide
+                    t1.element.classList.add('jumping');
+                    t2.element.classList.add('jumping');
+
+                    // 2. T1 saute sur T2 (physiquement)
+                    t1.element.style.left = t2.element.style.left;
+                    t1.element.style.top = t2.element.style.top;
+                    
+                    // 3. Après impact : Disparition + Affichage du 0
                     setTimeout(() => {
-                        if(t1.element.parentNode) t1.element.remove();
-                        if(t2.element.parentNode) t2.element.remove();
-                        state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
-                        updateLogic();
-                    }, 800);
+                        playSound('snap');
+                        // Création du badge 0 temporaire
+                        const tempZero = document.createElement('div');
+                        tempZero.classList.add('temp-zero-badge');
+                        tempZero.innerText = '0';
+                        // Position au centre du token cible
+                        // On doit parser les px pour positionner correctement centré
+                        const rect = t2.element.getBoundingClientRect();
+                        const boardRect = board.getBoundingClientRect();
+                        // Position relative au board
+                        const leftVal = parseInt(t2.element.style.left);
+                        const topVal = parseInt(t2.element.style.top);
+                        
+                        tempZero.style.left = leftVal + 'px';
+                        tempZero.style.top = topVal + 'px';
+                        board.appendChild(tempZero);
+
+                        // Cacher les jetons originaux
+                        t1.element.style.opacity = '0';
+                        t2.element.style.opacity = '0';
+
+                        // 4. Le 0 s'envole après un petit délai
+                        setTimeout(() => {
+                            tempZero.classList.add('fly-away');
+                            
+                            // Nettoyage final après l'envol
+                            setTimeout(() => {
+                                tempZero.remove();
+                                if(t1.element.parentNode) t1.element.remove();
+                                if(t2.element.parentNode) t2.element.remove();
+                                state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                                updateLogic();
+                            }, 600);
+                        }, 500);
+
+                    }, 400); // Délai correspondant à la transition CSS 'jumping'
+                    
                 }, index * interval);
             });
         }
