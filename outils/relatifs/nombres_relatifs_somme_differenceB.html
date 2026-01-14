@@ -185,8 +185,8 @@
                     <span class="hidden sm:inline text-xs">Reset</span>
                 </button>
 
-                <button onclick="reduceEquation()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-sm border border-cyan-300 active:translate-y-1 transition-all text-sm sm:text-base" title="Simplifier l'écriture">
-                    RÉDUIRE
+                <button onclick="reduceEquation()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-sm border border-cyan-300 active:translate-y-1 transition-all text-sm sm:text-base leading-tight" title="Simplifier l'écriture">
+                    RÉDUIRE <br class="sm:hidden" /> / ALIGNER
                 </button>
                 
                 <div class="h-8 w-px bg-slate-200 mx-1"></div>
@@ -236,7 +236,7 @@
         <div class="h-16 w-full bg-white flex items-center justify-center relative shadow-inner z-10 border-b border-slate-200 overflow-hidden">
              <div class="w-full h-full flex items-center justify-center overflow-x-auto no-scrollbar whitespace-nowrap px-4">
                 <div id="equation-terms" class="flex items-center gap-1">
-                    <span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>
+                    <span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>
                 </div>
             </div>
         </div>
@@ -288,6 +288,7 @@
         const SPACING = 80;
         const GROUP_GAP = 120; // Espace entre les blocs chronologiques
         const LINE_HEIGHT = 180; 
+        const REDUCED_LINE_HEIGHT = 85; // Nouvelle hauteur pour le mode réduit (compact)
         
         const state = {
             phase: 1, 
@@ -729,7 +730,8 @@
                     if (positives > 0) html += `<span class="text-3xl sm:text-4xl font-bold text-slate-800 mx-1">+</span>`;
                     html += `<span class="text-3xl sm:text-4xl font-bold text-red-600 tracking-tight transition-colors">(-${negatives})</span>`;
                 }
-                if (positives === 0 && negatives === 0) html = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
+                // FIX: Afficher 0 sans parenthèses
+                if (positives === 0 && negatives === 0) html = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
                 equationTerms.innerHTML = html;
                 return;
             }
@@ -797,7 +799,8 @@
                 }
             });
 
-            if (fullHtml === '') fullHtml = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(0)</span>';
+            // FIX: Afficher 0 sans parenthèses
+            if (fullHtml === '') fullHtml = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
             equationTerms.innerHTML = fullHtml;
         }
         
@@ -846,7 +849,8 @@
                     // Check wrap
                     if (currentX > availableWidth) {
                         currentX = 50;
-                        currentY += LINE_HEIGHT;
+                        // FIX: Utiliser une hauteur de ligne plus petite si mode réduit pour empiler
+                        currentY += (state.isReduced ? REDUCED_LINE_HEIGHT : LINE_HEIGHT);
                     }
 
                     moveTokenTo(token, currentX, currentY);
@@ -871,9 +875,9 @@
                 // Placer les Verts
                 if (greenTokens.length > 0) {
                     placeGroup(greenTokens);
-                    // Forcer une nouvelle ligne pour les Rouges
+                    // Forcer une nouvelle ligne pour les Rouges, mais TOUT PRES (REDUCED_LINE_HEIGHT)
                     currentX = 50;
-                    currentY += LINE_HEIGHT;
+                    currentY += REDUCED_LINE_HEIGHT; 
                 }
                 
                 // Placer les Rouges
@@ -1151,7 +1155,8 @@
             state.isReduced = false;
             state.currentPendingMode = null;
             
-            document.getElementById('equation-terms').innerHTML = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
+            // FIX: Afficher 0 au reset au lieu de (...) ou (0)
+            document.getElementById('equation-terms').innerHTML = '<span class="text-3xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">0</span>';
             
             btnRemoveAll.classList.add('hidden');
             setTool('hand');
