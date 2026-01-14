@@ -56,8 +56,9 @@
             border: 3px solid #7f1d1d;
         }
 
+        /* Le style "Zéro" (Grisé) */
         .token.is-zero {
-            background: #9ca3af !important;
+            background: #9ca3af !important; /* Gris */
             opacity: 0.6;
             border: 3px solid #6b7280;
             box-shadow: none;
@@ -100,25 +101,6 @@
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Badge temporaire pour l'animation automatique */
-        .temp-zero-badge {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-weight: 800;
-            color: #64748b; /* Slate 500 */
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            border: 4px solid #94a3b8;
-            pointer-events: none;
-            z-index: 50;
-            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
         @keyframes popIn {
             from { transform: scale(0); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
@@ -155,7 +137,6 @@
         /* NUAGE (Mode Inconnu) */
         #unknown-cloud {
             position: absolute;
-            /* MODIFICATION: Déplacement vers le coin gauche */
             top: 35%;
             left: 20%;
             transform: translate(-50%, -50%);
@@ -1124,79 +1105,135 @@
 
         function animateSimplification() {
             if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
+            
             if(!state.locked && state.operationType === 'add') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
                  state.frozenValues[state.phase] = calculateValue(tokensCurrent);
             }
-            state.locked = true;
 
-            // --- LOGIQUE DE SUPPRESSION ANIMÉE ---
-            const greens = state.tokens.filter(t => t.type === 'green').sort((a,b) => a.id - b.id);
-            const reds = state.tokens.filter(t => t.type === 'red').sort((a,b) => a.id - b.id);
-            let pairs = [];
-            const count = Math.min(greens.length, reds.length);
+            // 1. D'abord, on s'occupe des paires DÉJÀ EXISTANTES (manuelles)
+            const processedIds = new Set();
+            const existingPairs = [];
+            state.tokens.forEach(t => {
+                if (t.pairId !== null && !processedIds.has(t.id)) {
+                    const partner = state.tokens.find(p => p.id === t.pairId);
+                    if (partner) {
+                        existingPairs.push([t, partner]);
+                        processedIds.add(t.id);
+                        processedIds.add(partner.id);
+                    }
+                }
+            });
+
+            // 2. Ensuite, on cherche les NOUVELLES paires parmi les célibataires
+            // TRI GÉOGRAPHIQUE : On trie par X (puis Y) pour que ce soit ceux à gauche qui partent en premier
+            // ou ceux les plus proches qui soient pris. Cela évite de prendre un jeton tout au fond.
+            const activeGreens = state.tokens
+                .filter(t => t.type === 'green' && t.pairId === null)
+                .sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            
+            const activeReds = state.tokens
+                .filter(t => t.type === 'red' && t.pairId === null)
+                .sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            
+            const newPairs = [];
+            const count = Math.min(activeGreens.length, activeReds.length);
             for(let i=0; i<count; i++) {
-                pairs.push([greens.pop(), reds.pop()]);
+                newPairs.push([activeGreens[i], activeReds[i]]);
             }
-            if (pairs.length === 0) return;
 
-            const interval = 800; // Un peu plus long pour laisser le temps à l'animation
+            if (existingPairs.length === 0 && newPairs.length === 0) return;
+
+            state.locked = true;
             playSound('whoosh');
 
-            pairs.forEach((pair, index) => {
+            // --- ETAPE A : Suppression des paires existantes (sans saut, juste disparition) ---
+            existingPairs.forEach((pair, index) => {
                 setTimeout(() => {
                     const [t1, t2] = pair;
-                    unpairTokens(t1); 
-
-                    // 1. Ajouter classe pour animation fluide
-                    t1.element.classList.add('jumping');
-                    t2.element.classList.add('jumping');
-
-                    // 2. T1 saute sur T2 (physiquement)
-                    t1.element.style.left = t2.element.style.left;
-                    t1.element.style.top = t2.element.style.top;
+                    // On récupère le badge existant
+                    let badge = document.getElementById(`badge-${t1.id}-${t2.id}`);
+                    if (!badge) badge = document.getElementById(`badge-${t2.id}-${t1.id}`);
                     
-                    // 3. Après impact : Disparition + Affichage du 0
+                    // Animation de départ
+                    if (badge) badge.classList.add('fly-away');
+                    t1.element.classList.add('fly-away');
+                    t2.element.classList.add('fly-away');
+
                     setTimeout(() => {
-                        playSound('snap');
-                        // Création du badge 0 temporaire
-                        const tempZero = document.createElement('div');
-                        tempZero.classList.add('temp-zero-badge');
-                        tempZero.innerText = '0';
-                        // Position au centre du token cible
-                        // On doit parser les px pour positionner correctement centré
-                        const rect = t2.element.getBoundingClientRect();
-                        const boardRect = board.getBoundingClientRect();
-                        // Position relative au board
-                        const leftVal = parseInt(t2.element.style.left);
-                        const topVal = parseInt(t2.element.style.top);
-                        
-                        tempZero.style.left = leftVal + 'px';
-                        tempZero.style.top = topVal + 'px';
-                        board.appendChild(tempZero);
-
-                        // Cacher les jetons originaux
-                        t1.element.style.opacity = '0';
-                        t2.element.style.opacity = '0';
-
-                        // 4. Le 0 s'envole après un petit délai
-                        setTimeout(() => {
-                            tempZero.classList.add('fly-away');
-                            
-                            // Nettoyage final après l'envol
-                            setTimeout(() => {
-                                tempZero.remove();
-                                if(t1.element.parentNode) t1.element.remove();
-                                if(t2.element.parentNode) t2.element.remove();
-                                state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
-                                updateLogic();
-                            }, 600);
-                        }, 500);
-
-                    }, 400); // Délai correspondant à la transition CSS 'jumping'
-                    
-                }, index * interval);
+                        if(t1.element.parentNode) t1.element.remove();
+                        if(t2.element.parentNode) t2.element.remove();
+                        if(badge && badge.parentNode) badge.remove();
+                        state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                        updateLogic();
+                    }, 600);
+                }, index * 100);
             });
+
+            // Délai avant de commencer les nouvelles paires (si on avait des anciennes)
+            const delayForNewPairs = (existingPairs.length * 100) + 200;
+
+            // --- ETAPE B : Animation des NOUVELLES paires (Saut -> Choc -> Grisé -> Disparition) ---
+            setTimeout(() => {
+                const interval = 800;
+                newPairs.forEach((pair, index) => {
+                    setTimeout(() => {
+                        const [t1, t2] = pair;
+                        
+                        // Animation de saut
+                        t1.element.classList.add('jumping');
+                        t2.element.classList.add('jumping');
+                        t1.element.style.left = t2.element.style.left;
+                        t1.element.style.top = t2.element.style.top;
+                        
+                        setTimeout(() => {
+                            playSound('snap');
+                            
+                            // VISUEL EXACTEMENT COMME MANUEL (GRISÉ)
+                            t1.element.classList.remove('jumping'); // On enlève le saut pour éviter conflits
+                            t2.element.classList.remove('jumping');
+                            t1.element.classList.add('is-zero');
+                            t2.element.classList.add('is-zero');
+                            
+                            // Création du Badge "0" Standard (identique à createZeroPair)
+                            const badge = document.createElement('div');
+                            badge.classList.add('zero-badge');
+                            badge.innerText = '0';
+                            
+                            // Positionnement (comme dans createZeroPair, mais basé sur t2)
+                            // t2.left est coin haut-gauche. t2.left + 35 est le centre X.
+                            // Le badge est centré à (CentreX - 12).
+                            const leftVal = parseInt(t2.element.style.left);
+                            const topVal = parseInt(t2.element.style.top);
+                            badge.style.left = (leftVal + 23) + 'px'; 
+                            badge.style.top = (topVal + 5) + 'px';
+                            board.appendChild(badge);
+
+                            // On attend un peu pour montrer le "0 grisé"
+                            setTimeout(() => {
+                                badge.classList.add('fly-away');
+                                t1.element.classList.add('fly-away');
+                                t2.element.classList.add('fly-away');
+                                
+                                setTimeout(() => {
+                                    badge.remove();
+                                    if(t1.element.parentNode) t1.element.remove();
+                                    if(t2.element.parentNode) t2.element.remove();
+                                    state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                                    updateLogic();
+                                }, 600);
+                            }, 500); // 500ms de pause visuelle
+                        }, 400); // Temps du saut
+                    }, index * interval);
+                });
+
+                // Déverrouillage final
+                const totalTime = (newPairs.length * interval) + 1200;
+                setTimeout(() => {
+                    state.locked = false;
+                }, totalTime);
+
+            }, delayForNewPairs);
         }
 
         function resetBoard() {
