@@ -66,10 +66,33 @@
 
     <header class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative">
         <div class="flex items-center justify-between p-2 gap-2 w-full border-b border-slate-100 min-h-[70px]">
-            <button onclick="resetSetup()" class="tool-btn bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl font-bold flex items-center gap-2 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                <span class="hidden sm:inline text-sm">Nouveau</span>
-            </button>
+            <div class="flex gap-2 shrink-0">
+                <button onclick="resetSetup()" class="tool-btn bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl font-bold flex items-center gap-2" title="Recommencer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    <span class="hidden sm:inline text-sm">Nouveau</span>
+                </button>
+                
+                <button onclick="undo()" class="tool-btn bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl font-bold flex items-center gap-2" title="Annuler la dernière action">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span class="hidden sm:inline text-sm">Annuler</span>
+                </button>
+
+                <!-- NOUVEAU : Boutons de Zoom -->
+                <div class="flex items-center bg-slate-100 rounded-xl p-1 ml-2 border border-slate-200">
+                    <button onclick="adjustZoom(-0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Dézoomer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+                    </button>
+                    <button onclick="adjustZoom(0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Zoomer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
             <div class="flex-1 flex flex-col justify-center items-center pointer-events-none px-2 text-center overflow-hidden">
                 <span id="header-title" class="text-slate-800 font-bold text-xl leading-tight truncate w-full">Égaliser les piles</span>
@@ -109,10 +132,13 @@
     <script>
         const state = {
             stacks: [], // Liste de listes : [[1,1,1], [1,0.5,0.5]]
+            history: [], // Pour stocker les états précédents
             initialValues: [],
             tool: 'hand', // 'hand', 'scissors', 'pen'
             dragging: null,
             blockSize: 60,
+            baseBlockSize: 60, // Taille de référence calculée auto
+            zoom: 1.0,         // Facteur de zoom manuel
             baseY: 0,
             targetAverage: 0,
             isWin: false
@@ -150,6 +176,8 @@
 
             state.initialValues = [...numbers];
             state.stacks = numbers.map(val => Array(val).fill(1));
+            state.history = []; 
+            state.zoom = 1.0; // Reset du zoom au démarrage
             
             const totalSum = numbers.reduce((a, b) => a + b, 0);
             state.targetAverage = totalSum / numbers.length;
@@ -173,27 +201,35 @@
             clearDrawings();
         }
 
-        /* --- ÉCHELLE --- */
+        /* --- ÉCHELLE & ZOOM --- */
         function calculateFixedScale() {
             const rect = container.getBoundingClientRect();
             
-            // Hauteur max : on ajoute une petite marge pour manipuler
+            // Hauteur max : on réduit drastiquement la marge pour utiliser l'espace vide du haut
             const maxVal = Math.max(...state.initialValues, 1);
-            const scaleHeightInBlocks = maxVal + 3; 
+            const scaleHeightInBlocks = maxVal + 0.8; 
             
-            // Hauteur dispo (Header + bas)
-            const availableHeight = rect.height - 150; 
+            // Hauteur dispo : on réduit la marge fixe (header + padding bas)
+            const availableHeight = rect.height - 90; 
             let sizeByHeight = Math.floor(availableHeight / scaleHeightInBlocks);
 
             // Largeur dispo
-            const maxCol = Math.max(state.stacks.length, 2);
-            const availableWidth = rect.width - 20;
-            let sizeByWidth = Math.floor(availableWidth / (maxCol * 1.2)); 
-
-            // Max 300px (énorme pour les petits nombres), mais contraint pour que tout rentre
-            state.blockSize = Math.min(300, sizeByWidth, sizeByHeight);
+            const maxCol = Math.max(state.stacks.length, 1);
+            const availableWidth = rect.width - 40;
             
-            state.baseY = rect.height - 70;
+            // ÉCART : 1 bloc entier
+            const gapFactor = 1.0;
+            const totalUnitsWidth = maxCol + (maxCol - 1) * gapFactor;
+            
+            let sizeByWidth = Math.floor(availableWidth / totalUnitsWidth); 
+
+            // Calcul de la taille de base "optimale" pour l'écran
+            state.baseBlockSize = Math.min(400, sizeByWidth, sizeByHeight);
+            
+            // Application du zoom manuel par dessus
+            state.blockSize = state.baseBlockSize * state.zoom;
+            
+            state.baseY = rect.height - 30;
 
             const dpr = window.devicePixelRatio || 1;
             [canvasMain, canvasDraw].forEach(c => {
@@ -203,6 +239,16 @@
                 c.style.height = rect.height + 'px';
                 c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
             });
+        }
+
+        function adjustZoom(delta) {
+            state.zoom += delta;
+            // Limites du zoom (0.5x à 2.0x)
+            state.zoom = Math.max(0.5, Math.min(state.zoom, 2.0));
+            
+            // Recalcul avec le nouveau zoom
+            calculateFixedScale();
+            render();
         }
         
         window.addEventListener('resize', () => {
@@ -229,7 +275,7 @@
             if (state.stacks.length === 0) return;
 
             const bs = state.blockSize;
-            const gap = bs * 0.2; 
+            const gap = bs * 1.0; // ÉCART : 1 bloc entier
             const totalWidth = state.stacks.length * bs + (state.stacks.length - 1) * gap;
             const startX = (w - totalWidth) / 2;
 
@@ -259,11 +305,12 @@
 
                 // Chiffre
                 ctxMain.fillStyle = "#64748b"; 
-                const fontSize = Math.max(24, bs * 0.4); 
+                // Police un peu plus petite relative au bloc si le bloc est énorme, pour rester lisible
+                const fontSize = Math.min(30, Math.max(20, bs * 0.35)); 
                 ctxMain.font = `bold ${fontSize}px Fredoka`;
                 ctxMain.textAlign = "center";
                 const displayNum = parseFloat(totalHeight.toFixed(2));
-                ctxMain.fillText(displayNum, x + bs/2, state.baseY + fontSize + 10);
+                ctxMain.fillText(displayNum, x + bs/2, state.baseY + fontSize + 8);
             });
 
             // Drag
@@ -296,10 +343,32 @@
         }
 
         /* --- LOGIQUE JEU --- */
+        
+        // Sauvegarde l'état actuel dans l'historique
+        function saveState() {
+            // Copie profonde des piles pour ne pas garder la référence
+            const stacksCopy = JSON.parse(JSON.stringify(state.stacks));
+            state.history.push(stacksCopy);
+            // On peut limiter l'historique si on veut (ex: 50 derniers coups), mais pas obligé ici.
+        }
+
+        function undo() {
+            if (state.history.length === 0) return;
+            
+            // On récupère le dernier état
+            const previousStacks = state.history.pop();
+            state.stacks = previousStacks;
+            
+            // On vérifie la victoire au cas où on revient sur un état gagnant
+            checkWin();
+            calculateFixedScale(); // On recalcule l'échelle au cas où les valeurs changent drastiquement
+            render();
+        }
+
         function getColFromX(x) {
             const w = canvasMain.width / (window.devicePixelRatio || 1);
             const bs = state.blockSize;
-            const gap = bs * 0.2;
+            const gap = bs * 1.0; // MAJ : 1 bloc d'écart
             const totalWidth = state.stacks.length * bs + (state.stacks.length - 1) * gap;
             const startX = (w - totalWidth) / 2;
 
@@ -341,6 +410,8 @@
                         currentX: x, currentY: y
                     };
                 } else if (state.tool === 'scissors') {
+                    // On sauvegarde AVANT de couper
+                    saveState();
                     cutBlock(colIdx);
                 }
                 render();
@@ -385,6 +456,9 @@
             
             if (dropColIdx !== -1) {
                 if (dropColIdx !== state.dragging.sourceCol) {
+                    // On sauvegarde AVANT de valider le déplacement
+                    saveState();
+                    
                     state.stacks[state.dragging.sourceCol].pop();
                     state.stacks[dropColIdx].push(state.dragging.value);
                     checkWin();
@@ -407,7 +481,11 @@
                 state.isWin = true;
                 const avg = parseFloat(first.toFixed(2));
                 title.classList.add('victory-text');
-                title.innerText = `BRAVO ! La moyenne est ${avg}`;
+                
+                // Modification : séparateur " ; " au lieu de ", "
+                const originalStr = state.initialValues.join(' ; ');
+                title.innerText = `BRAVO ! La moyenne de ${originalStr} est ${avg}`;
+                
                 sub.innerText = "";
             } else {
                  state.isWin = false;
