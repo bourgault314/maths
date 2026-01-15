@@ -125,9 +125,10 @@
             font-size: 10px; color: white; opacity: 0.9; font-weight: bold;
         }
         
-        /* Ciseaux Visual - Ligne centrée */
+        /* Ciseaux Visual - Ligne centrée (CORRIGÉ: Plus de double ligne) */
         .brick.cut-visual::before {
-            content: '- - - -'; position: absolute; top: 50%; left: 0; right: 0; height: 0;
+            content: ''; 
+            position: absolute; top: 50%; left: 0; right: 0; height: 0;
             border-top: 2px dashed #e9d5ff; z-index: 10;
         }
 
@@ -157,10 +158,14 @@
             pointer-events: auto; border-radius: 4px 4px 0 0;
             box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
         }
+        
+        /* MODIFICATION: Style "Résolu/Or" pour le bâton */
         #median-tool.solved {
             background-color: #facc15 !important;
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.8) !important;
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.9) !important;
+            width: 8px; /* Un peu plus épais pour le style "pilier" */
         }
+        
         #median-tool:active { cursor: grabbing; }
         
         #tool-handle {
@@ -170,7 +175,10 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #ec4899; padding: 0 8px;
             transition: border-color 0.5s, color 0.5s;
         }
-        #median-tool.solved #tool-handle { border-color: #facc15; color: #ca8a04; }
+        /* MODIFICATION: On cache la poignée quand c'est résolu */
+        #median-tool.solved #tool-handle { 
+            display: none !important;
+        }
         
         /* PANCARTE DU PANNEAU (Label) */
         #tool-label {
@@ -182,16 +190,27 @@
             pointer-events: none; z-index: 60; text-align: center; transition: all 0.3s;
             min-width: 60px; opacity: 1; border: 2px solid white;
         }
-        #median-tool.solved #tool-label {
-             background: #facc15; color: #713f12; border-color: white; 
-        }
+        
         #tool-label::after {
             content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
             border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #ec4899;
         }
-        #median-tool.solved #tool-label::after { border-top-color: #facc15; }
+        
+        /* MODIFICATION: Style "Surbrillance" quand c'est résolu */
+        #median-tool.solved #tool-label {
+            background: transparent;
+            color: #facc15;
+            border: none;
+            box-shadow: none;
+            font-size: 3.5rem; /* Plus gros */
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8), 0 0 20px rgba(250, 204, 21, 0.6);
+            transform: translateY(-100%); /* On enlève le -10px supplémentaire pour coller au bâton */
+        }
+        #median-tool.solved #tool-label::after { 
+            display: none; 
+        }
 
-        /* FLECHE D'ETENDUE */
+        /* FLECHE D'ETENDUE - SUPPRIMÉE AU DISPLAY */
         #range-arrow {
             position: absolute; top: 25%; left: 0; height: 40px; pointer-events: none;
             display: none; z-index: 45; align-items: center;
@@ -315,8 +334,11 @@
                 Cliquez sur une bulle pour changer la valeur • Glissez pour ranger
             </div>
 
-            <!-- CISEAUX (Mode Moyenne) -->
+            <!-- CISEAUX (Mode Moyenne) : Ajout du bouton Main -->
             <div id="scissors-container" class="hidden items-center gap-1 bg-purple-900/30 p-1 rounded-lg border border-purple-600/50">
+                <button onclick="setTool('hand')" id="tool-mean-hand" class="p-2 rounded text-purple-300 hover:bg-purple-800 hover:text-white" title="Main">
+                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+                </button>
                 <button onclick="setTool('scissors')" id="tool-scissors" class="p-2 rounded text-purple-300 hover:bg-purple-800 hover:text-white" title="Couper en deux (0.5)">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
                 </button>
@@ -535,7 +557,8 @@
             if (mode === 'MEDIAN') {
                 footerMedian.classList.remove('hidden'); footerMedian.classList.add('flex');
                 showMessage("La ville est prête");
-                mini.innerText = "Cliquez sur une bulle pour changer la valeur • Glissez pour ranger";
+                // MODIFICATION DEMANDÉE : Changement du texte
+                mini.innerText = "Glissez les immeubles pour les ranger";
                 // Restore sorting by ID
                 state.buildings.sort((a,b) => a.id - b.id);
             } else if (mode === 'MEAN') {
@@ -589,9 +612,27 @@
                     state.buildings.push({ id: i, value: val, originalVal: val, originalId: i });
                 }
                 
-                // FORCE INTEGER AVERAGE OR .5 IF N IS EVEN
+                // LOGIQUE MODIFIÉE: 
+                // 1. Si nombre impair d'immeubles: La moyenne DOIT être entière (mathématiquement impossible d'avoir .5 avec des briques de 0.5 si le compte est impair, car Sum/N = X.5 => Sum = N*X + N/2 => Impossible pour Sum entier).
+                // 2. Si nombre pair: On choisit aléatoirement entre moyenne entière et moyenne .5
+                
                 let sum = state.buildings.reduce((a,b)=>a+b.value, 0);
-                while ((sum * 2) % state.count !== 0) {
+                
+                // Est-ce qu'on peut avoir une moyenne en demi ? (Seulement si Count est pair)
+                const canHaveHalf = (state.count % 2 === 0);
+                
+                // Pile ou face pour forcer un entier, sauf si on ne peut pas avoir de demi (alors on force entier)
+                const forceInteger = !canHaveHalf || (Math.random() > 0.5); 
+
+                while (true) {
+                    const mean = sum / state.count;
+                    const isInteger = (mean % 1 === 0);
+                    const isHalf = (mean % 1 === 0.5);
+
+                    if (forceInteger && isInteger) break;
+                    if (!forceInteger && isHalf) break;
+                    
+                    // Ajustement
                     state.buildings[state.count-1].value += 1;
                     state.buildings[state.count-1].originalVal += 1;
                     sum++;
@@ -615,10 +656,18 @@
 
             medianTool.style.display = 'none';
             medianTool.style.height = '380px';
+            // BUG FIX: Reset pointer events and solved class so it can be moved again
+            medianTool.style.pointerEvents = 'auto'; 
             medianTool.classList.remove('solved');
+            document.getElementById('tool-handle').style.display = 'flex'; // Reset handle visibility
+
             toolLabel.style.opacity = '1'; 
             toolLabel.innerText = "?";
             toolLabel.style.minWidth = "60px";
+            // RESET STYLE of label
+            toolLabel.style.top = ''; 
+            toolLabel.style.transform = ''; 
+            
             groupLeft.style.opacity = '0';
             groupRight.style.opacity = '0';
             floatRes.style.opacity = '0';
@@ -781,6 +830,9 @@
                 if(!state.isMedianFound) {
                     showMessage("La ville est rangée !");
                     medianTool.style.display = 'flex';
+                    // BUG FIX: Ensure it is movable
+                    medianTool.style.pointerEvents = 'auto';
+
                     // Calculate height taller than tallest building
                     const maxVal = Math.max(...state.buildings.map(b => b.value));
                     const toolH = (maxVal * CONFIG.floorHeight) + 60;
@@ -823,34 +875,34 @@
                 
                 state.buildings.forEach((b,i) => { if(i!==mid) b.buildingEl.classList.add('dimmed'); });
                 
-                showFloatingResult(`Médiane = ${target.value}`, ``, "text-yellow-400");
+                showFloatingResult(`Médiane = ${target.value} étages`, ``, "text-yellow-400");
             } else {
+                // CAS PAIR (MODIFIÉ)
                 const b1 = state.buildings[mid-1];
                 const b2 = state.buildings[mid];
                 const med = (b1.value + b2.value) / 2;
                 
                 medianTool.style.display = 'flex';
-                medianTool.classList.add('solved'); // GOLD mode
+                medianTool.classList.add('solved'); // ACTIVE LE STYLE DORÉ SANS CADRE
                 medianTool.style.pointerEvents = 'none';
                 document.getElementById('tool-label').innerText = med;
                 
                 const centerX = startX + (mid-1)*(CONFIG.buildingWidth+CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
                 medianTool.style.left = centerX + 'px';
                 
-                // Adjust height for pair case
-                const maxVal = Math.max(...state.buildings.map(b => b.value));
-                medianTool.style.height = ((maxVal * CONFIG.floorHeight) + 120) + 'px';
+                // ADJUST HEIGHT (MODIFIÉ: Le bâton prend la hauteur exacte de la médiane)
+                medianTool.style.height = (med * CONFIG.floorHeight) + 'px';
                 
-                // FORCE VISIBILITY OF LABEL
+                // FORCE VISIBILITY OF LABEL (Sans le décalage top manuel)
                 const tl = document.getElementById('tool-label');
                 tl.style.opacity = '1';
-                tl.style.top = '-60px'; // Bien au dessus
+                // Note: La classe CSS .solved gère le retrait du translateY extra
                 
                 b1.badgeEl.classList.add('highlight-neighbor');
                 b2.badgeEl.classList.add('highlight-neighbor');
                 state.buildings.forEach(b => b.buildingEl.classList.add('dimmed'));
                 
-                showFloatingResult(`Médiane = ${med}`, ``, "text-yellow-400");
+                showFloatingResult(`Médiane = ${med} étages`, ``, "text-yellow-400");
             }
             btnMedian.disabled = true; btnMedian.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -1022,27 +1074,8 @@
                     b.buildingEl.classList.add('highlight-range');
                 });
                 
-                // Draw Arrow
-                const rect1 = b1.element.getBoundingClientRect();
-                const rect2 = b2.element.getBoundingClientRect();
-                const containerRect = container.getBoundingClientRect();
-                const x1 = rect1.left + rect1.width/2 - containerRect.left;
-                const x2 = rect2.left + rect2.width/2 - containerRect.left;
-                
-                const left = Math.min(x1, x2);
-                const width = Math.abs(x1 - x2);
-                
-                const arr = document.getElementById('range-arrow');
-                arr.style.top = "15%"; // Remonté
-                arr.style.left = left + 'px';
-                arr.style.display = 'flex';
-                arr.querySelector('.range-line').style.width = '0px';
-                arr.querySelectorAll('.range-tip').forEach(t => t.style.opacity='0');
-                
-                requestAnimationFrame(() => {
-                   arr.querySelector('.range-line').style.width = width + 'px';
-                   arr.querySelectorAll('.range-tip').forEach(t => t.style.opacity='1');
-                });
+                // ARROW REMOVED BY REQUEST
+                // We keep only buildings highlight and text
 
                 state.buildings.forEach(b => {
                     if(b.id !== b1.id && b.id !== b2.id) b.buildingEl.classList.add('dimmed');
@@ -1072,6 +1105,17 @@
             container.appendChild(floatRes);
             container.appendChild(ground);
             
+            // REMIS EN FONCTION : Initialisation correcte des variables cibles
+            const tM = Math.floor(Math.random() * 6) + 3; 
+            const tR = Math.floor(Math.random() * 5) + 3;
+            const tMean = Math.floor(Math.random() * 5) + 2; 
+            const tSpec = Math.floor(Math.random() * 8) + 2;
+
+            state.targetMedian = tM; 
+            state.targetRange = tR;
+            state.targetMean = tMean;
+            state.targetSpecial = tSpec;
+
             state.buildings = [];
             for(let i=0; i<state.count; i++) {
                 const slot = document.createElement('div');
@@ -1094,9 +1138,6 @@
                 state.buildings.push(bObj);
             }
             
-            const tM = Math.floor(Math.random() * 6) + 3; 
-            const tR = Math.floor(Math.random() * 5) + 3;
-            state.targetMedian = tM; state.targetRange = tR;
             document.getElementById('goal-text-count').innerText = `${state.count} Immeubles`;
             document.getElementById('goal-text-med').innerText = `Médiane : ${tM}`;
             document.getElementById('goal-text-range').innerText = `Étendue : ${tR}`;
@@ -1106,16 +1147,20 @@
             
             if(lvl >= 2) {
                 elMean.classList.remove('hidden');
-                document.getElementById('goal-text-mean').innerText = `Moyenne : ${tM}`; // Simplified target
+                document.getElementById('goal-text-mean').innerText = `Moyenne : ${tMean}`;
             } else elMean.classList.add('hidden');
             
             if(lvl === 3) {
                 elSpec.classList.remove('hidden');
-                document.getElementById('goal-text-special').innerText = `Un immeuble de ${state.targetSpecial}`;
+                document.getElementById('goal-text-special').innerText = `Un immeuble de ${tSpec}`;
             } else elSpec.classList.add('hidden');
             
             document.querySelectorAll('.goal-check').forEach(c => c.classList.remove('ok'));
             document.querySelectorAll('.goal-item').forEach(c => c.classList.remove('done'));
+            
+            // REMIS EN FONCTION : Appel de repositionBuildings et reset outil
+            setTool('hand');
+            repositionBuildings();
             checkConstructWin(); 
         }
         
@@ -1163,21 +1208,35 @@
             const mid = Math.floor(vals.length/2);
             const currMed = (vals.length % 2 !== 0) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
             const currRange = Math.max(...vals) - Math.min(...vals);
+            const currMean = vals.reduce((a,b)=>a+b, 0) / (vals.length || 1);
             
             let win = true;
             
             const updateItem = (id, cond) => {
                 const el = document.getElementById(id);
-                if(cond) { el.parentElement.classList.add('done'); el.querySelector('.goal-check').classList.add('ok'); }
-                else { el.parentElement.classList.remove('done'); el.querySelector('.goal-check').classList.remove('ok'); win = false; }
+                if (!el) return;
+                if(cond) { 
+                    if(el.parentElement) el.parentElement.classList.add('done'); 
+                    el.classList.add('ok'); 
+                } else { 
+                    if(el.parentElement) el.parentElement.classList.remove('done'); 
+                    el.classList.remove('ok'); 
+                    win = false; 
+                }
             };
 
             updateItem('check-med', currMed === state.targetMedian);
             updateItem('check-range', currRange === state.targetRange);
             updateItem('check-count', true);
             
-            if(state.constructLevel >= 2) updateItem('check-mean', false); // Placeholder logic
-            if(state.constructLevel === 3) updateItem('check-special', false);
+            if(state.constructLevel >= 2) {
+                // REMIS EN FONCTION : Logique Moyenne (tolérance float minime)
+                updateItem('check-mean', Math.abs(currMean - state.targetMean) < 0.01);
+            }
+            if(state.constructLevel === 3) {
+                // REMIS EN FONCTION : Logique Spéciale (au moins un immeuble de hauteur X)
+                updateItem('check-special', vals.includes(state.targetSpecial));
+            }
             
             if(win) { playSound('ding'); showFloatingResult("Mission Réussie !", "", "text-green-400"); }
             else { floatRes.style.opacity = '0'; }
@@ -1295,7 +1354,14 @@
             const r = container.getBoundingClientRect();
             let x = cx - r.left; if(x<0) x=0; if(x>r.width) x=r.width;
             mt.style.left = x + 'px';
-            getClosestSnap(x);
+            
+            // UPDATE LABEL DYNAMICALLY
+            const snap = getClosestSnap(x);
+            if(snap) {
+                toolLabel.innerText = snap.val;
+            } else {
+                toolLabel.innerText = "?";
+            }
         }
         function stopToolDrag(e) {
             isToolDragging = false;
@@ -1315,15 +1381,23 @@
             const n = state.buildings.length;
             const isOdd = n%2!==0;
             const mid = Math.floor(n/2);
+            
+            // Check Buildings Centers
             state.buildings.forEach((b, i) => {
                 const bx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth/2;
                 const d = Math.abs(x - bx);
-                if(d < 30 && d < minD) { minD = d; best = { x:bx, isMedian:(isOdd && i===mid), val:b.value }; }
+                // On snap si on est proche, mais pour l'affichage (drag) on prend toujours le plus proche
+                if(d < minD) { minD = d; best = { x:bx, isMedian:(isOdd && i===mid), val:b.value, type:'BUILDING' }; }
             });
+            
+            // Check Gaps Centers
             for(let i=0; i<n-1; i++) {
                 const gx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
                 const d = Math.abs(x - gx);
-                if(d < 30 && d < minD) { minD = d; best = { x:gx, isMedian:(!isOdd && i===mid-1), val: (state.buildings[i].value+state.buildings[i+1].value)/2 }; }
+                if(d < minD) { 
+                    minD = d; 
+                    best = { x:gx, isMedian:(!isOdd && i===mid-1), val: (state.buildings[i].value+state.buildings[i+1].value)/2, type:'GAP' }; 
+                }
             }
             return best;
         }
@@ -1340,10 +1414,13 @@
         }
         function setTool(tool) {
             state.currentTool = tool;
-            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors');
-            [h,p,s].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
+            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors'), sh=document.getElementById('tool-mean-hand');
+            [h,p,s,sh].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
             canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; mt.style.pointerEvents = 'auto';
-            if(tool === 'hand') h.className = "p-2 rounded bg-slate-600 text-white shadow";
+            if(tool === 'hand') {
+                 if(h) h.className = "p-2 rounded bg-slate-600 text-white shadow";
+                 if(sh) sh.className = "p-2 rounded bg-purple-600 text-white shadow";
+            }
             else if(tool === 'pen') {
                 p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
                 document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; mt.style.pointerEvents = 'none';
