@@ -75,22 +75,33 @@
         /* STYLE "GRATTE-CIEL" */
         .building {
             width: 60px;
+            /* Background gradient is base color */
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
             border: 3px solid #7dd3fc; border-bottom: none; border-radius: 8px 8px 0 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             cursor: grab; position: relative; overflow: hidden;
             display: flex; flex-direction: column-reverse;
+            /* Windows texture */
             background-image: radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%);
             background-size: 12px 20px; background-position: center 6px;
             transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s, box-shadow 0.2s, opacity 0.5s, filter 0.5s;
         }
 
+        /* CORRECTION : L'immeuble impair est solide et garde ses fenêtres */
         .building.highlight-odd {
-            background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%) !important;
+            /* On remplace la couleur de fond par du doré, mais on réapplique la texture des fenêtres */
+            background: 
+                radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%), /* Fenêtres */
+                linear-gradient(180deg, #facc15 0%, #ca8a04 100%) !important; /* Doré */
+            background-size: 12px 20px, 100% 100% !important;
+            background-position: center 6px, 0 0 !important;
+            
             border-color: #fef08a !important; 
             box-shadow: 0 0 50px rgba(250, 204, 21, 0.9) !important;
             z-index: 30; transform: scale(1.05);
+            opacity: 1 !important; /* Force opacity */
         }
+        
         .building.highlight-range {
             border-color: #a855f7 !important;
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.8) !important;
@@ -125,7 +136,7 @@
             font-size: 10px; color: white; opacity: 0.9; font-weight: bold;
         }
         
-        /* Ciseaux Visual - Ligne centrée (CORRIGÉ: Plus de double ligne) */
+        /* Ciseaux Visual */
         .brick.cut-visual::before {
             content: ''; 
             position: absolute; top: 50%; left: 0; right: 0; height: 0;
@@ -153,17 +164,29 @@
             background: #ec4899; z-index: 50; display: none;
             align-items: flex-start; justify-content: center;
             cursor: grab; touch-action: none;
-            transition: opacity 0.3s, height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             transform: translateX(-50%);
             pointer-events: auto; border-radius: 4px 4px 0 0;
             box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
         }
         
-        /* MODIFICATION: Style "Résolu/Or" pour le bâton */
-        #median-tool.solved {
-            background-color: #facc15 !important;
-            box-shadow: 0 0 25px rgba(250, 204, 21, 0.9) !important;
-            width: 8px; /* Un peu plus épais pour le style "pilier" */
+        /* STYLE IMMEUBLE FANTOME (MÉDIANE PAIR UNIQUEMENT) */
+        #median-tool.ghost-building {
+            width: 60px !important; /* Largeur d'un immeuble */
+            background: linear-gradient(180deg, rgba(250, 204, 21, 0.8) 0%, rgba(202, 138, 4, 0.8) 100%) !important;
+            border: 3px solid rgba(254, 240, 138, 0.9) !important;
+            border-bottom: none; border-radius: 8px 8px 0 0;
+            box-shadow: 0 0 40px rgba(250, 204, 21, 0.6) !important;
+            /* Texture fenêtres par défaut sur le ghost (sera supprimée par no-windows) */
+            background-image: radial-gradient(rgba(255,255,255,0.6) 20%, transparent 20%) !important;
+            background-size: 12px 20px !important; background-position: center 6px !important;
+            pointer-events: none;
+            z-index: 40; /* Devant les dimmed mais derrière le texte */
+        }
+
+        /* Pas de fenêtres pour le cas PAIR (virtuel) */
+        #median-tool.ghost-building.no-windows {
+            background-image: none !important;
         }
         
         #median-tool:active { cursor: grabbing; }
@@ -175,8 +198,8 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #ec4899; padding: 0 8px;
             transition: border-color 0.5s, color 0.5s;
         }
-        /* MODIFICATION: On cache la poignée quand c'est résolu */
-        #median-tool.solved #tool-handle { 
+        
+        #median-tool.ghost-building #tool-handle { 
             display: none !important;
         }
         
@@ -196,17 +219,17 @@
             border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #ec4899;
         }
         
-        /* MODIFICATION: Style "Surbrillance" quand c'est résolu */
-        #median-tool.solved #tool-label {
+        /* Label sur l'immeuble fantôme */
+        #median-tool.ghost-building #tool-label {
             background: transparent;
             color: #facc15;
             border: none;
             box-shadow: none;
-            font-size: 3.5rem; /* Plus gros */
-            text-shadow: 0 4px 10px rgba(0,0,0,0.8), 0 0 20px rgba(250, 204, 21, 0.6);
-            transform: translateY(-100%); /* On enlève le -10px supplémentaire pour coller au bâton */
+            font-size: 3rem; /* Gros texte */
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+            transform: translateY(-90%); /* Posé sur le toit */
         }
-        #median-tool.solved #tool-label::after { 
+        #median-tool.ghost-building #tool-label::after { 
             display: none; 
         }
 
@@ -658,7 +681,7 @@
             medianTool.style.height = '380px';
             // BUG FIX: Reset pointer events and solved class so it can be moved again
             medianTool.style.pointerEvents = 'auto'; 
-            medianTool.classList.remove('solved');
+            medianTool.classList.remove('solved', 'ghost-building', 'no-windows'); // ADDED no-windows
             document.getElementById('tool-handle').style.display = 'flex'; // Reset handle visibility
 
             toolLabel.style.opacity = '1'; 
@@ -690,6 +713,9 @@
                 createBuildingDOM(bData);
             });
             
+            // RE-APPLY CURRENT TOOL (Fix "Stylo ne fonctionne plus")
+            setTool(state.currentTool);
+
             repositionBuildings();
             if(state.mode === 'MEDIAN') checkSorted();
         }
@@ -773,7 +799,15 @@
                  return;
             }
 
-            const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
+            let extraGap = 0;
+            let splitIndex = -1;
+
+            if (state.mode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
+                extraGap = CONFIG.buildingWidth + CONFIG.gap; 
+                splitIndex = state.count / 2;
+            }
+
+            const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap) + extraGap;
             const startX = (container.offsetWidth - totalW) / 2;
 
             let list = state.buildings;
@@ -789,7 +823,13 @@
 
             list.forEach((b, i) => {
                 if (b === skipItem) return;
-                const x = startX + i * (CONFIG.buildingWidth + CONFIG.gap);
+                
+                let x = startX + i * (CONFIG.buildingWidth + CONFIG.gap);
+                
+                if (splitIndex !== -1 && i >= splitIndex) {
+                    x += extraGap;
+                }
+
                 if(b.element) {
                     b.element.style.left = x + 'px';
                     b.element.style.transform = '';
@@ -866,11 +906,22 @@
 
             if (isOdd) {
                 const target = state.buildings[mid];
-                medianTool.style.display = 'none'; 
+                
+                // RESTORED: Show actual building, Highlight it
+                target.buildingEl.style.opacity = '1'; 
+                target.badgeEl.style.opacity = '1';
+                
+                // Hide tool (we use the real building)
+                medianTool.style.display = 'none';
                 
                 target.buildingEl.classList.add('highlight-odd');
+                // Make badge pop
                 target.badgeEl.style.backgroundColor = '#facc15';
-                target.badgeEl.style.transform = 'scale(1.3)';
+                target.badgeEl.style.color = '#000';
+                
+                // MODIFICATION: Ajout de translateY pour l'espace
+                target.badgeEl.style.transform = 'scale(1.5) translateY(-15px)'; 
+                
                 target.badgeEl.style.border = '3px solid white';
                 
                 state.buildings.forEach((b,i) => { if(i!==mid) b.buildingEl.classList.add('dimmed'); });
@@ -882,12 +933,20 @@
                 const b2 = state.buildings[mid];
                 const med = (b1.value + b2.value) / 2;
                 
+                // FORCE REPOSITIONING (Pour écarter les immeubles)
+                // L'appel précédent a déjà set state.isMedianFound = true, donc repositionBuildings va créer le trou
+                repositionBuildings();
+
                 medianTool.style.display = 'flex';
-                medianTool.classList.add('solved'); // ACTIVE LE STYLE DORÉ SANS CADRE
+                medianTool.classList.remove('solved'); 
+                medianTool.classList.add('ghost-building', 'no-windows'); // No windows for ghost
+                
                 medianTool.style.pointerEvents = 'none';
                 document.getElementById('tool-label').innerText = med;
                 
-                const centerX = startX + (mid-1)*(CONFIG.buildingWidth+CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
+                // CENTRE EXACTEMENT DANS LE TROU CRÉÉ
+                // Le trou est exactement au milieu du container
+                const centerX = container.offsetWidth / 2;
                 medianTool.style.left = centerX + 'px';
                 
                 // ADJUST HEIGHT (MODIFIÉ: Le bâton prend la hauteur exacte de la médiane)
@@ -896,7 +955,6 @@
                 // FORCE VISIBILITY OF LABEL (Sans le décalage top manuel)
                 const tl = document.getElementById('tool-label');
                 tl.style.opacity = '1';
-                // Note: La classe CSS .solved gère le retrait du translateY extra
                 
                 b1.badgeEl.classList.add('highlight-neighbor');
                 b2.badgeEl.classList.add('highlight-neighbor');
@@ -1013,8 +1071,8 @@
             draggedBrick = null;
             document.removeEventListener('mousemove', onBrickDrag);
             document.removeEventListener('touchmove', onBrickDrag);
-            document.removeEventListener('mouseup', endBrickDrag);
-            document.removeEventListener('touchend', endBrickDrag);
+            document.removeEventListener('mouseup', endBrickDragConstruct);
+            document.removeEventListener('touchend', endBrickDragConstruct);
         }
 
         function updateBuildingVisuals(bObj) {
