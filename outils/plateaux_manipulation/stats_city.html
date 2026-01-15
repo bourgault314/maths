@@ -43,6 +43,20 @@
         .sub-mode-btn:hover { background: #334155; }
         .sub-mode-btn.active { background: #0ea5e9; color: white; border-color: #38bdf8; }
 
+        /* Style spécifique pour les onglets constructeur */
+        .construct-tab-btn {
+            padding: 4px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+            background: #334155; color: #cbd5e1; border: 1px solid #475569;
+            transition: all 0.2s;
+        }
+        .construct-tab-btn:hover { background: #475569; }
+        .construct-tab-btn.active { 
+            background: #f43f5e; color: white; border-color: #fb7185; /* Rose */
+        }
+        .construct-tab-btn.filter-active {
+            background: #8b5cf6; color: white; border-color: #a78bfa; /* Violet pour les filtres */
+        }
+
         .lvl-btn {
             padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
             background: #334155; color: #94a3b8; border: 1px solid #475569;
@@ -90,14 +104,12 @@
         .mode-mean .building-wrapper, .mode-build .building-wrapper { transition: none; }
         .mode-range .building-wrapper { cursor: pointer; }
 
-        /* MODIFICATION: Gestion du Drag pour le building ET le badge */
         .building-wrapper.is-dragging .building {
             transform: scale(1.05) translateY(-10px);
             box-shadow: 0 0 30px rgba(34, 211, 238, 0.6);
             border-color: #67e8f9 !important; z-index: 100;
             filter: brightness(1.1);
         }
-        /* AJOUT: On remonte le badge quand on drag */
         .building-wrapper.is-dragging .value-badge {
             transform: translateY(-20px) scale(1.1);
             z-index: 101;
@@ -348,12 +360,20 @@
             <button onclick="setSubMode('RANGE')" id="btn-mode-range" class="sub-mode-btn">ÉTENDUE</button>
         </div>
 
-        <!-- SUB-NAVIGATION: BUILD (Juste les niveaux) -->
-        <div id="subnav-build" class="hidden flex gap-4 items-center">
-            <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">Niveau :</div>
-            <button onclick="setConstructLevel(1)" class="lvl-btn active" id="btn-lvl-1">Apprenti</button>
-            <button onclick="setConstructLevel(2)" class="lvl-btn" id="btn-lvl-2">Architecte</button>
-            <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">Expert</button>
+        <!-- SUB-NAVIGATION: BUILD (TABS VIEWS) -->
+        <div id="subnav-build" class="hidden flex gap-2 items-center">
+            <div class="mr-4 flex gap-1">
+                <div class="text-slate-400 text-xs font-bold uppercase tracking-widest self-center mr-2">Niveau:</div>
+                <button onclick="setConstructLevel(1)" class="lvl-btn active" id="btn-lvl-1">1</button>
+                <button onclick="setConstructLevel(2)" class="lvl-btn" id="btn-lvl-2">2</button>
+                <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">3</button>
+            </div>
+            <div class="w-px h-6 bg-slate-700 mx-2"></div>
+            <!-- FILTRES CONSTRUCTEUR -->
+            <button onclick="setBuildSubMode('EDIT')" id="tab-build-edit" class="construct-tab-btn active">🔨 Construction</button>
+            <button onclick="setBuildSubMode('MEDIAN')" id="tab-build-median" class="construct-tab-btn">Médiane</button>
+            <button onclick="setBuildSubMode('MEAN')" id="tab-build-mean" class="construct-tab-btn">Moyenne</button>
+            <button onclick="setBuildSubMode('RANGE')" id="tab-build-range" class="construct-tab-btn">Étendue</button>
         </div>
 
         <!-- GENERATEUR (CALCUL SEULEMENT) -->
@@ -369,8 +389,8 @@
             </button>
         </div>
 
-        <!-- TOOLS COMMON -->
-        <div class="flex gap-2 items-center absolute left-1/2 -translate-x-1/2">
+        <!-- TOOLS COMMON (Shifted to right) -->
+        <div class="flex gap-2 items-center absolute left-[65%] -translate-x-1/2">
             <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
                 <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-slate-600 text-white shadow"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg></button>
                 <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
@@ -423,7 +443,7 @@
                 <p id="res-sub"></p>
             </div>
             
-            <!-- Constructeur Supply -->
+            <!-- Constructeur Supply (Visible uniquement en mode EDIT) -->
             <div id="brick-supply" onmousedown="startDragSupply(event)" ontouchstart="startDragSupply(event)">
                 <div class="brick" style="width: 40px; height: 12px; border-top: 2px solid #60a5fa; border-radius: 2px; margin-bottom:2px;"></div>
                 <div class="brick" style="width: 40px; height: 12px; margin-bottom:2px;"></div>
@@ -450,7 +470,7 @@
     </main>
 
     <!-- FOOTER: CALCUL / MEDIANE -->
-    <footer id="footer-median" class="footer-group bg-slate-900 border-t border-slate-700 p-4 flex justify-center items-center gap-8 min-h-[80px]">
+    <footer id="footer-median" class="footer-group bg-slate-900 border-t border-slate-700 p-4 pb-8 flex justify-center items-center gap-8 min-h-[80px]">
         <button id="btn-sort" onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> 1. RANGER
         </button>
@@ -461,7 +481,7 @@
     </footer>
 
     <!-- FOOTER: CALCUL / RANGE -->
-    <footer id="footer-range" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-8 min-h-[80px]">
+    <footer id="footer-range" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-8 min-h-[80px]">
         <button onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> RANGER
         </button>
@@ -472,7 +492,7 @@
     </footer>
     
     <!-- FOOTER: CALCUL / MEAN -->
-    <footer id="footer-mean" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center min-h-[80px]">
+    <footer id="footer-mean" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center min-h-[80px]">
         <div class="text-slate-400 text-sm font-medium flex items-center gap-2">
             <span class="text-2xl">🏗️</span>
             <span>Déplacez les briques pour égaliser les hauteurs</span>
@@ -480,11 +500,19 @@
     </footer>
     
     <!-- FOOTER: BUILDER -->
-    <footer id="footer-build" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-4 min-h-[80px]">
+    <footer id="footer-build" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-4 min-h-[80px]">
         <div class="text-slate-400 text-sm mr-4">Une fois terminé :</div>
         <button onclick="verifyConstruction()" class="btn-verify">
             VÉRIFIER
         </button>
+    </footer>
+
+    <!-- FOOTER: BUILDER FILTER VIEW (MEDIAN/MEAN/RANGE in BUILD) -->
+    <footer id="footer-build-view" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-4 min-h-[80px]">
+        <div class="text-sky-400 text-sm font-bold flex items-center gap-2">
+             <span class="text-2xl">👁️</span> Mode Simulation
+        </div>
+        <div class="text-slate-500 text-xs">Retournez à "Construction" pour modifier</div>
     </footer>
 
     <script>
@@ -496,15 +524,17 @@
             minFloors: 1
         };
 
-        // Variable globale pour éviter les références undefined
         const medianTool = document.getElementById('median-tool');
 
         let state = {
             mainMode: 'CALCUL', // 'CALCUL' or 'BUILD'
-            subMode: 'MEDIAN', // 'MEDIAN', 'MEAN', 'RANGE'
+            subMode: 'MEDIAN', // 'MEDIAN', 'MEAN', 'RANGE' or 'EDIT' (for build)
             
             count: 5,
-            buildings: [],
+            buildings: [], // Current displayed buildings
+            
+            // For Build Mode Snapshots
+            constructionSnapshot: null, // Stores the real construction when viewing filters
             
             isSorted: false,
             isMedianFound: false,
@@ -545,17 +575,14 @@
             });
             setTimeout(resizeCanvas, 100);
             
-            // Default Start
             generateRandomCity(); 
             updateUIForMode();
             
-            // Initialize global mouse move for cursor
             document.addEventListener('mousemove', (e) => {
                 if(state.currentTool === 'pen') {
                     const cursorDiv = document.getElementById('custom-cursor');
                     const x = e.touches ? e.touches[0].clientX : e.clientX;
                     const y = e.touches ? e.touches[0].clientY : e.clientY;
-                    // Tip is at 8, 32 in 34x34 SVG. We offset by that amount.
                     cursorDiv.style.left = (x - 8) + 'px';
                     cursorDiv.style.top = (y - 32) + 'px';
                 }
@@ -566,33 +593,66 @@
             state.mainMode = mode;
             if (mode === 'BUILD') {
                 if (state.targetMedian === 0) startNewChallenge();
+                setBuildSubMode('EDIT'); // Default to edit
             } else {
-                state.isMedianFound = false;
-                state.isMeanFound = false;
-                state.isRangeFound = false;
-                state.isSorted = false;
-                state.rangeSelection = [];
+                setSubMode('MEDIAN'); // Default to median in Calcul
             }
             updateUIForMode();
         }
 
         function setSubMode(sub) {
             state.subMode = sub;
+            resetLogicFlags();
+            // Reset to clean state for Calcul mode
+            if (state.mainMode === 'CALCUL') {
+                state.buildings.forEach(b => {
+                    b.value = b.originalVal || b.value;
+                    b.cutTop = false; 
+                });
+            }
+            updateUIForMode();
+        }
+
+        // New function for Builder Tabs
+        function setBuildSubMode(sub) {
+            // Restore snapshot if we were in a view and now switching
+            if (state.constructionSnapshot) {
+                // Restore original construction
+                state.buildings = JSON.parse(state.constructionSnapshot);
+                // Re-link DOM elements is tricky, simpler to re-render
+                // But wait, refreshCityFromState handles creating DOM.
+                // We just need to restore data.
+                state.constructionSnapshot = null;
+            }
+
+            // If switching TO a view (not EDIT), save snapshot first
+            if (sub !== 'EDIT') {
+                state.constructionSnapshot = JSON.stringify(state.buildings);
+                // In Mean view, we might modify bricks, so snapshot is crucial.
+            }
+
+            state.subMode = sub; // Can be 'EDIT', 'MEDIAN', 'MEAN', 'RANGE'
+            resetLogicFlags();
+            
+            // In Builder View modes, we might need to reset cuts
+            if (sub !== 'MEAN') {
+                 state.buildings.forEach(b => b.cutTop = false);
+            }
+            
+            updateUIForMode();
+        }
+
+        function resetLogicFlags() {
             state.isMedianFound = false;
             state.isMeanFound = false;
             state.isRangeFound = false;
             state.isSorted = false;
             state.rangeSelection = [];
-            
-            state.buildings.forEach(b => {
-                b.value = b.originalVal || b.value;
-                b.cutTop = false; 
-            });
-            
-            updateUIForMode();
+            document.getElementById('range-arrow').style.display = 'none';
         }
 
         function updateUIForMode() {
+            // Main Nav
             document.getElementById('nav-calcul').className = `nav-btn ${state.mainMode === 'CALCUL' ? 'active' : ''}`;
             document.getElementById('nav-build').className = `nav-btn ${state.mainMode === 'BUILD' ? 'active-construct' : ''}`;
 
@@ -603,11 +663,24 @@
             document.getElementById('subnav-build').style.display = isBuild ? 'flex' : 'none';
             controlsGen.style.visibility = isCalcul ? 'visible' : 'hidden'; 
             
+            // Sub Nav (Calcul)
             document.querySelectorAll('.sub-mode-btn').forEach(b => b.classList.remove('active'));
-            if(state.subMode === 'MEDIAN') document.getElementById('btn-mode-median').classList.add('active');
-            if(state.subMode === 'MEAN') document.getElementById('btn-mode-mean').classList.add('active');
-            if(state.subMode === 'RANGE') document.getElementById('btn-mode-range').classList.add('active');
+            if(isCalcul) {
+                if(state.subMode === 'MEDIAN') document.getElementById('btn-mode-median').classList.add('active');
+                if(state.subMode === 'MEAN') document.getElementById('btn-mode-mean').classList.add('active');
+                if(state.subMode === 'RANGE') document.getElementById('btn-mode-range').classList.add('active');
+            }
 
+            // Sub Nav (Build)
+            document.querySelectorAll('.construct-tab-btn').forEach(b => b.classList.remove('active', 'filter-active'));
+            if(isBuild) {
+                if(state.subMode === 'EDIT') document.getElementById('tab-build-edit').classList.add('active');
+                else if(state.subMode === 'MEDIAN') document.getElementById('tab-build-median').classList.add('filter-active');
+                else if(state.subMode === 'MEAN') document.getElementById('tab-build-mean').classList.add('filter-active');
+                else if(state.subMode === 'RANGE') document.getElementById('tab-build-range').classList.add('filter-active');
+            }
+
+            // Footers & Tools
             document.querySelectorAll('.footer-group').forEach(f => f.classList.remove('flex', 'hidden'));
             document.querySelectorAll('.footer-group').forEach(f => f.classList.add('hidden'));
 
@@ -640,14 +713,32 @@
                     state.buildings.sort((a,b) => a.originalId - b.originalId);
                 }
             } else {
-                document.getElementById('footer-build').classList.remove('hidden');
-                document.getElementById('footer-build').classList.add('flex');
-                brickSupply.style.display = 'flex';
-                constructGoals.style.display = 'flex';
-                scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex'); // Add scissors for Build
-                showMessage("Mode Constructeur");
-                mini.innerText = "Construisez pour atteindre les objectifs";
-                state.rangeSelection = [];
+                // BUILDER MODES
+                constructGoals.style.display = 'flex'; // Always show goals
+                
+                if (state.subMode === 'EDIT') {
+                    // Main Construction View
+                    document.getElementById('footer-build').classList.remove('hidden');
+                    document.getElementById('footer-build').classList.add('flex');
+                    brickSupply.style.display = 'flex';
+                    scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex'); // Allow editing bricks
+                    showMessage("Mode Constructeur");
+                    mini.innerText = "Construisez pour atteindre les objectifs";
+                    // No sort in EDIT
+                } else {
+                    // Filter Views in Builder
+                    document.getElementById('footer-build-view').classList.remove('hidden'); // Show generic "Simulation" footer
+                    document.getElementById('footer-build-view').classList.add('flex');
+
+                    if (state.subMode === 'MEDIAN') {
+                         showMessage("Simulation Médiane", "Triez pour vérifier");
+                    } else if (state.subMode === 'MEAN') {
+                         scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex');
+                         showMessage("Simulation Moyenne", "Égalisez pour vérifier");
+                    } else if (state.subMode === 'RANGE') {
+                         showMessage("Simulation Étendue", "Vérifiez l'écart");
+                    }
+                }
             }
 
             setTool('hand');
@@ -723,13 +814,30 @@
             floatRes.style.opacity = '0';
             rangeArrow.style.display = 'none';
             
-            const useMeanStyle = (state.mainMode === 'CALCUL' && state.subMode === 'MEAN') || (state.mainMode === 'BUILD');
+            const useMeanStyle = (state.mainMode === 'CALCUL' && state.subMode === 'MEAN') || 
+                                 (state.mainMode === 'BUILD' && (state.subMode === 'EDIT' || state.subMode === 'MEAN'));
             
             if(useMeanStyle) container.classList.add('mode-mean');
             else container.classList.remove('mode-mean');
             
-            if((state.mainMode === 'CALCUL' && state.subMode !== 'MEDIAN') || state.mainMode === 'BUILD' || !state.isSorted) {
-                state.buildings.sort((a,b) => a.originalId - b.originalId);
+            // Sorting Logic
+            // In BUILD_EDIT: Never sort automatically (preserve user construction order)
+            if (state.mainMode === 'BUILD' && state.subMode === 'EDIT') {
+                 // No sort, they are in creation order
+            } 
+            // In Calcul Mean or Build Mean: visual order usually by ID to avoid jumping, or just unsorted
+            else if (state.subMode === 'MEAN') {
+                 state.buildings.sort((a,b) => a.originalId - b.originalId);
+            }
+            // In Median/Range: depends on if sorted
+            else if (state.subMode === 'MEDIAN' || state.subMode === 'RANGE') {
+                 if (state.isSorted) {
+                     state.buildings.sort((a,b) => a.value - b.value);
+                 } else {
+                     // If we are in simulation, restore original ID sort for clarity? Or keep shuffled?
+                     // In Calc mode we shuffle. In Build mode, we keep original construction order.
+                     state.buildings.sort((a,b) => a.originalId - b.originalId);
+                 }
             }
 
             state.buildings.forEach((bData) => {
@@ -739,7 +847,10 @@
             setTool(state.currentTool);
             repositionBuildings();
             
-            if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
+            if(state.subMode === 'MEDIAN') checkSorted();
+
+            // BUG FIX: Check Mean Win immediately if entering Mean mode
+            if(state.subMode === 'MEAN') checkMeanWin();
         }
 
         function createBuildingDOM(bObj) {
@@ -752,9 +863,9 @@
             
             const building = document.createElement('div');
             
-            const isMedian = (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN');
-            const isRange = (state.mainMode === 'CALCUL' && state.subMode === 'RANGE');
-            const isMeanOrBuild = (state.mainMode === 'BUILD' || (state.mainMode === 'CALCUL' && state.subMode === 'MEAN'));
+            const isMedian = (state.subMode === 'MEDIAN');
+            const isRange = (state.subMode === 'RANGE');
+            const isMeanOrBuild = (state.subMode === 'MEAN' || state.subMode === 'EDIT');
 
             if (isMedian) {
                 building.className = 'building'; 
@@ -818,7 +929,7 @@
             let extraGap = 0;
             let splitIndex = -1;
 
-            if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
+            if (state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
                 extraGap = CONFIG.buildingWidth + CONFIG.gap; 
                 splitIndex = state.count / 2;
             }
@@ -827,15 +938,7 @@
             const startX = (container.offsetWidth - totalW) / 2;
 
             let list = state.buildings;
-            
-            if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') {
-                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
-            } else if (state.mainMode === 'CALCUL' && state.subMode === 'RANGE') {
-                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
-                 else list.sort((a,b) => a.originalId - b.originalId);
-            } else {
-                 list.sort((a,b) => a.originalId - b.originalId);
-            }
+            // Note: buildings are already sorted in refreshCityFromState
 
             list.forEach((b, i) => {
                 if (b === skipItem) return;
@@ -866,7 +969,7 @@
         // --- MEDIAN LOGIC ---
 
         function checkSorted() {
-            if(state.mainMode !== 'CALCUL' || state.subMode !== 'MEDIAN') return;
+            if(state.subMode !== 'MEDIAN') return;
             
             let asc = true, desc = true;
             for(let i=0; i<state.buildings.length-1; i++) {
@@ -877,10 +980,12 @@
 
             const icon = document.getElementById('median-icon');
             if (state.isSorted) {
-                btnMedian.disabled = false;
-                btnMedian.classList.remove('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
-                btnMedian.classList.add('bg-pink-600', 'text-white', 'cursor-pointer', 'shadow-lg');
-                icon.innerText = "🎯";
+                if(btnMedian) {
+                    btnMedian.disabled = false;
+                    btnMedian.classList.remove('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
+                    btnMedian.classList.add('bg-pink-600', 'text-white', 'cursor-pointer', 'shadow-lg');
+                }
+                
                 if(!state.isMedianFound) {
                     showMessage("La ville est rangée !");
                     medianTool.style.display = 'flex';
@@ -895,10 +1000,11 @@
                     toolLabel.innerText = "?";
                 }
             } else {
-                btnMedian.disabled = true;
-                btnMedian.classList.add('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
-                btnMedian.classList.remove('bg-pink-600', 'text-white', 'cursor-pointer', 'shadow-lg');
-                icon.innerText = "🔒";
+                if(btnMedian) {
+                    btnMedian.disabled = true;
+                    btnMedian.classList.add('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
+                    btnMedian.classList.remove('bg-pink-600', 'text-white', 'cursor-pointer', 'shadow-lg');
+                }
                 medianTool.style.display = 'none';
             }
         }
@@ -957,14 +1063,22 @@
                 
                 showFloatingResult(`Médiane = ${med} étages`, ``, "text-yellow-400");
             }
-            btnMedian.disabled = true; btnMedian.classList.add('opacity-50', 'cursor-not-allowed');
+            if(btnMedian) btnMedian.disabled = true; 
+            if(btnMedian) btnMedian.classList.add('opacity-50', 'cursor-not-allowed');
         }
 
         // --- MEAN MODE LOGIC ---
         let draggedBrick = null;
         
         function handleBrickInteraction(e, colId) {
-            if ((state.mainMode !== 'BUILD') && !(state.mainMode === 'CALCUL' && state.subMode === 'MEAN')) return;
+            if ((state.mainMode !== 'BUILD') && !(state.mainMode === 'CALCUL' && state.subMode === 'MEAN')) {
+                 // Also allow if in Build View of Mean
+                 if(state.mainMode === 'BUILD' && (state.subMode === 'MEAN' || state.subMode === 'EDIT')) {
+                     // pass
+                 } else {
+                     return;
+                 }
+            }
             if (state.mainMode === 'CALCUL' && state.isMeanFound) return;
 
             const bObj = state.buildings.find(b => b.id === colId);
@@ -998,7 +1112,7 @@
             updateBuildingVisuals(bObj);
             bObj.cutTop = false; 
             
-            resetGoalStatus();
+            if(state.subMode === 'EDIT') resetGoalStatus();
 
             draggedBrick = {
                 sourceId: colId,
@@ -1016,6 +1130,9 @@
         }
         
         function startDragSupply(e) {
+            // Supply only active in Edit mode
+            if(state.subMode !== 'EDIT') return;
+
             e.preventDefault();
             const ghost = document.createElement('div');
             ghost.className = 'flying-brick';
@@ -1053,6 +1170,11 @@
             
             let success = false;
             if (targetIdx >= 0 && targetIdx < state.count) {
+                // In Mean mode, buildings might be sorted differently.
+                // We need to find the building at visual index `targetIdx`.
+                // state.buildings is ALREADY sorted for visual display in refreshCityFromState
+                // So state.buildings[targetIdx] is correct visual mapping.
+                
                 const targetObj = state.buildings[targetIdx];
                 
                 if (targetObj && targetObj.id !== draggedBrick.sourceId) {
@@ -1061,7 +1183,7 @@
                         updateBuildingVisuals(targetObj);
                         playSound('pop');
                         
-                        if(state.mainMode === 'CALCUL' && state.subMode === 'MEAN') checkMeanWin();
+                        if(state.subMode === 'MEAN') checkMeanWin(); // Check if in Mean Sim or Calc Mean
                         success = true;
                     }
                 }
@@ -1088,6 +1210,7 @@
         }
 
         function checkMeanWin() {
+            // Only visual win, doesn't affect builder verify
             const first = state.buildings[0].value;
             const allEqual = state.buildings.every(b => Math.abs(b.value - first) < 0.001);
             if (allEqual) {
@@ -1103,7 +1226,7 @@
 
         // --- RANGE MODE LOGIC ---
         function selectRangeBuilding(id) {
-            if(state.mainMode !== 'CALCUL' || state.subMode !== 'RANGE' || state.isRangeFound) return;
+            if(state.subMode !== 'RANGE' || state.isRangeFound) return;
             const b = state.buildings.find(x => x.id === id);
             
             if(state.rangeSelection.includes(id)) {
@@ -1122,6 +1245,8 @@
         function checkRange() {
             const b1 = state.buildings.find(x => x.id === state.rangeSelection[0]);
             const b2 = state.buildings.find(x => x.id === state.rangeSelection[1]);
+            
+            // Values from currently displayed state (could be snapshot)
             const values = state.buildings.map(b => b.value);
             const min = Math.min(...values); const max = Math.max(...values);
             
@@ -1212,7 +1337,7 @@
             } else elSpec.classList.add('hidden');
             
             resetGoalStatus();
-            refreshCityFromState();
+            setBuildSubMode('EDIT'); // Force Edit on new challenge
             playSound('pop');
         }
         
@@ -1224,7 +1349,20 @@
         }
 
         function verifyConstruction() {
-            const vals = state.buildings.map(b => b.value).sort((a,b)=>a-b);
+            // Verify based on Snapshot (Real Construction) if currently in a view
+            // OR based on current buildings if in Edit view.
+            
+            let vals;
+            if(state.constructionSnapshot && state.subMode !== 'EDIT') {
+                 // User is verifying while in Mean/Median view?
+                 // Usually verification happens on the "Real" construction.
+                 // If they are in Mean view, state.buildings is the modified mean version.
+                 // We should probably check the SNAPSHOT (the real construction) if it exists.
+                 vals = JSON.parse(state.constructionSnapshot).map(b => b.value).sort((a,b)=>a-b);
+            } else {
+                 vals = state.buildings.map(b => b.value).sort((a,b)=>a-b);
+            }
+
             const mid = Math.floor(vals.length/2);
             const currMed = (vals.length % 2 !== 0) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
             const currRange = Math.max(...vals) - Math.min(...vals);
@@ -1271,12 +1409,15 @@
         // --- DRAG & EDIT COMMON ---
         
         function editBuilding(id) {
+            // Edit not allowed in Simulation views in Builder, only in Edit
+            if(state.mainMode === 'BUILD' && state.subMode !== 'EDIT') return;
+
             const b = state.buildings.find(x => x.id === id);
             let v = prompt("Hauteur :", b.value);
             if(v) { 
                 v = parseFloat(v); 
                 if(!isNaN(v) && v>=0 && v<=CONFIG.maxFloors) { 
-                    v = (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') ? Math.round(v) : v;
+                    v = (state.subMode === 'MEDIAN') ? Math.round(v) : v;
                     if(state.mainMode === 'BUILD' && v % 0.5 !== 0) v = Math.round(v); 
                     
                     b.value = v;
@@ -1289,7 +1430,7 @@
                     medianTool.style.display='none';
                     floatRes.style.opacity='0';
                     
-                    if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') {
+                    if(state.subMode === 'MEDIAN') {
                         checkSorted();
                         b.badgeEl.innerText = v;
                         b.buildingEl.style.height = (v * CONFIG.floorHeight) + 'px';
@@ -1301,8 +1442,13 @@
         }
 
         function startDragBuilding(e, wrapper, id) {
-            if (state.currentTool !== 'hand' || (state.mainMode === 'CALCUL' && state.subMode === 'MEAN') || state.mainMode === 'BUILD') return; 
+            if (state.currentTool !== 'hand') return;
+            // Drag building is allowed only in Median and Range
+            // In Build mode, only allowed in Median/Range views (Simulations)
+            // Not allowed in Build Edit (fixed slots) or Build Mean
             
+            if(state.subMode === 'EDIT' || state.subMode === 'MEAN') return;
+
             e.preventDefault();
             const bObj = state.buildings.find(b => b.id === id);
             wrapper.classList.add('is-dragging');
@@ -1313,7 +1459,7 @@
                 const containerRect = container.getBoundingClientRect();
                 
                 let extraGap = 0; let splitIndex = -1;
-                if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
+                if (state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
                     extraGap = CONFIG.buildingWidth + CONFIG.gap; splitIndex = state.count / 2;
                 }
                 const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap) + extraGap;
@@ -1341,7 +1487,7 @@
             const stopDrag = () => {
                 wrapper.classList.remove('is-dragging');
                 repositionBuildings();
-                if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
+                if(state.subMode === 'MEDIAN') checkSorted();
                 document.removeEventListener('mousemove', onDrag);
                 document.removeEventListener('touchmove', onDrag);
                 document.removeEventListener('mouseup', stopDrag);
@@ -1353,53 +1499,38 @@
             document.addEventListener('touchend', stopDrag);
         }
 
-        // --- DRAWING ---
-        const canvas = document.getElementById('drawing-canvas');
-        const ctx = canvas.getContext('2d');
-        const cursorDiv = document.getElementById('custom-cursor');
-        let isDrawing = false, lastX=0, lastY=0;
-        function resizeCanvas() {
-            const rect = document.getElementById('city-container').getBoundingClientRect();
-            canvas.width = rect.width; canvas.height = rect.height;
-            if(state.currentTool === 'pen') { 
-                ctx.globalCompositeOperation = 'source-over'; 
-                // CHANGE: White color
-                ctx.strokeStyle = '#ffffff'; 
-                ctx.lineWidth = 4; 
-                ctx.lineCap = 'round'; 
+        // --- MISSING FUNCTIONS ADDED BACK ---
+        
+        function autoSort() {
+            state.isSorted = true;
+            state.buildings.sort((a,b)=>a.value-b.value);
+            repositionBuildings();
+            playSound('slide');
+            if(state.subMode === 'MEDIAN') checkSorted();
+            // Reset Range findings if sorting
+            if(state.subMode === 'RANGE') {
+                state.rangeSelection = [];
+                state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
+                document.getElementById('range-arrow').style.display = 'none';
+                floatRes.style.opacity = '0';
             }
         }
-        function setTool(tool) {
-            state.currentTool = tool;
-            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors'), sh=document.getElementById('tool-mean-hand');
-            [h,p,s,sh].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
-            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; medianTool.style.pointerEvents = 'auto';
-            if(tool === 'hand') {
-                 if(h) h.className = "p-2 rounded bg-slate-600 text-white shadow";
-                 if(sh) sh.className = "p-2 rounded bg-purple-600 text-white shadow";
-            }
-            else if(tool === 'pen') {
-                p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
-                document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; medianTool.style.pointerEvents = 'none';
-                // Force reset styles
-                resizeCanvas();
-            } else if(tool === 'scissors') s.className = "p-2 rounded bg-purple-600 text-white shadow";
+
+        function trySelectMedian(id) {
+            if(state.subMode !== 'MEDIAN') return;
+            const n = state.buildings.length;
+            if(n%2===0 || !state.isSorted) return;
+            const mid = Math.floor(n/2);
+            if(state.buildings[mid].id === id) solveMedian();
+            else playSound('lock');
         }
-        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-        function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-r.left, y: (e.touches?e.touches[0].clientY:e.clientY)-r.top }; }
-        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
-        function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; cursorDiv.style.left=(e.touches?e.touches[0].clientX:e.clientX)+'px'; cursorDiv.style.top=(e.touches?e.touches[0].clientY:e.clientY)+'px'; }
-        function endDraw() { isDrawing=false; }
-        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); canvas.addEventListener('touchend', endDraw);
 
         // --- MEDIAN TOOL ---
         let isToolDragging = false;
-        // Replaced mt with medianTool globally
         medianTool.addEventListener('mousedown', startToolDrag);
         medianTool.addEventListener('touchstart', startToolDrag, {passive: false});
         function startToolDrag(e) {
-            if(state.isMedianFound || state.subMode !== 'MEDIAN' || state.mainMode !== 'CALCUL') return;
+            if(state.isMedianFound || state.subMode !== 'MEDIAN') return;
             e.preventDefault(); e.stopPropagation();
             isToolDragging = true;
             document.addEventListener('mousemove', onToolDrag);
@@ -1435,15 +1566,12 @@
             const isOdd = n%2!==0;
             const mid = Math.floor(n/2);
             
-            // Check Buildings Centers
             state.buildings.forEach((b, i) => {
                 const bx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth/2;
                 const d = Math.abs(x - bx);
-                // On snap si on est proche, mais pour l'affichage (drag) on prend toujours le plus proche
                 if(d < minD) { minD = d; best = { x:bx, isMedian:(isOdd && i===mid), val:b.value, type:'BUILDING' }; }
             });
             
-            // Check Gaps Centers
             for(let i=0; i<n-1; i++) {
                 const gx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
                 const d = Math.abs(x - gx);
@@ -1454,6 +1582,62 @@
             }
             return best;
         }
+
+        // --- DRAWING ---
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorDiv = document.getElementById('custom-cursor');
+        let isDrawing = false, lastX=0, lastY=0;
+        function resizeCanvas() {
+            const rect = document.getElementById('city-container').getBoundingClientRect();
+            canvas.width = rect.width; rect.height;
+            if(state.currentTool === 'pen') { 
+                ctx.globalCompositeOperation = 'source-over'; 
+                ctx.strokeStyle = '#ffffff'; 
+                ctx.lineWidth = 4; 
+                ctx.lineCap = 'round'; 
+            }
+        }
+        function setTool(tool) {
+            state.currentTool = tool;
+            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors'), sh=document.getElementById('tool-mean-hand');
+            [h,p,s,sh].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
+            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; medianTool.style.pointerEvents = 'auto';
+            if(tool === 'hand') {
+                 if(h) h.className = "p-2 rounded bg-slate-600 text-white shadow";
+                 if(sh) sh.className = "p-2 rounded bg-purple-600 text-white shadow";
+            }
+            else if(tool === 'pen') {
+                p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
+                document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; medianTool.style.pointerEvents = 'none';
+                resizeCanvas();
+            } else if(tool === 'scissors') s.className = "p-2 rounded bg-purple-600 text-white shadow";
+        }
+        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-r.left, y: (e.touches?e.touches[0].clientY:e.clientY)-r.top }; }
+        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
+        
+        function draw(e) { 
+            if(!isDrawing)return; 
+            e.preventDefault(); 
+            const p=getPos(e); 
+            ctx.beginPath(); 
+            ctx.moveTo(lastX,lastY); 
+            ctx.lineTo(p.x,p.y); 
+            ctx.stroke(); 
+            lastX=p.x; 
+            lastY=p.y; 
+            
+            // Correction du décalage pour que la mine (8, 32) soit sous la souris
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            cursorDiv.style.left = (cx - 8) + 'px'; 
+            cursorDiv.style.top = (cy - 32) + 'px'; 
+        }
+        
+        function endDraw() { isDrawing=false; }
+        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); canvas.addEventListener('touchend', endDraw);
 
         // --- AUDIO ---
         const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
@@ -1466,32 +1650,6 @@
             else if(type==='slide'){ osc.frequency.linearRampToValueAtTime(200, audioCtx.currentTime+0.3); }
             else if(type==='lock'){ osc.frequency.setValueAtTime(150,audioCtx.currentTime); osc.type='sawtooth'; g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.3); }
             osc.start(); osc.stop(audioCtx.currentTime+(type==='ding'?0.5:0.3));
-        }
-
-        // --- MISSING FUNCTIONS ADDED BACK ---
-        
-        function autoSort() {
-            state.isSorted = true;
-            state.buildings.sort((a,b)=>a.value-b.value);
-            repositionBuildings();
-            playSound('slide');
-            if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
-            // Reset Range findings if sorting
-            if(state.subMode === 'RANGE') {
-                state.rangeSelection = [];
-                state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
-                document.getElementById('range-arrow').style.display = 'none';
-                floatRes.style.opacity = '0';
-            }
-        }
-
-        function trySelectMedian(id) {
-            if(state.mainMode !== 'CALCUL' || state.subMode !== 'MEDIAN') return;
-            const n = state.buildings.length;
-            if(n%2===0 || !state.isSorted) return;
-            const mid = Math.floor(n/2);
-            if(state.buildings[mid].id === id) solveMedian();
-            else playSound('lock');
         }
 
         init();
