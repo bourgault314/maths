@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Stats - La ville des statistiques</title>
+    <title>Stats City - La ville des statistiques</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -18,151 +18,117 @@
 
         /* --- UI ELEMENTS --- */
         .mode-btn {
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(30, 41, 59, 0.8);
-            color: #94a3b8;
+            padding: 6px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
+            transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(30, 41, 59, 0.8); color: #94a3b8;
         }
         .mode-btn:hover { background: rgba(51, 65, 85, 0.9); color: white; }
         .mode-btn.active {
             background: #e11d48; /* Rose vif */
-            color: white;
-            border-color: #fb7185;
+            color: white; border-color: #fb7185;
             box-shadow: 0 0 15px rgba(225, 29, 72, 0.4);
+        }
+
+        .lvl-btn {
+            padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
+            background: #334155; color: #94a3b8; border: 1px solid #475569;
+            transition: all 0.2s;
+        }
+        .lvl-btn:hover { background: #475569; color: white; }
+        .lvl-btn.active {
+            background: #22c55e; color: white; border-color: #4ade80;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
         }
 
         /* SCÈNE */
         #city-container {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            perspective: 1000px;
-            z-index: 10;
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; perspective: 1000px; z-index: 10;
         }
         
         #drawing-canvas {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 60; pointer-events: none;
         }
 
-        #custom-cursor {
-            position: fixed; pointer-events: none; z-index: 9999; display: none;
-        }
+        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
         .hide-cursor, .hide-cursor * { cursor: none !important; }
 
         /* IMMEUBLES */
         .building-wrapper {
-            position: absolute;
-            bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            z-index: 20;
-            touch-action: none;
+            position: absolute; bottom: 24px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            z-index: 20; touch-action: none;
             transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        
-        .mode-mean .building-wrapper {
-            transition: none;
-        }
+        .mode-mean .building-wrapper, .mode-build .building-wrapper { transition: none; }
+        .mode-range .building-wrapper { cursor: pointer; }
 
         /* Dragging Style (Cyan) */
         .building-wrapper.is-dragging .building {
             transform: scale(1.05) translateY(-10px);
             box-shadow: 0 0 30px rgba(34, 211, 238, 0.6);
-            border-color: #67e8f9 !important;
-            z-index: 100;
+            border-color: #67e8f9 !important; z-index: 100;
             filter: brightness(1.1);
         }
 
+        /* STYLE "GRATTE-CIEL" */
         .building {
             width: 60px;
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-            border: 3px solid #7dd3fc;
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
+            border: 3px solid #7dd3fc; border-bottom: none; border-radius: 8px 8px 0 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            cursor: grab;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column-reverse;
-            /* Motif Fenêtres (Points) */
+            cursor: grab; position: relative; overflow: hidden;
+            display: flex; flex-direction: column-reverse;
             background-image: radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%);
-            background-size: 12px 20px;
-            background-position: center 6px;
+            background-size: 12px 20px; background-position: center 6px;
             transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s, box-shadow 0.2s, opacity 0.5s, filter 0.5s;
         }
 
-        /* Highlight Médiane Impaire (L'ÉLU - Gold Glow Intense) */
         .building.highlight-odd {
             background: linear-gradient(180deg, #facc15 0%, #ca8a04 100%) !important;
             border-color: #fef08a !important; 
-            box-shadow: 0 0 60px rgba(250, 204, 21, 0.9), inset 0 0 20px rgba(255,255,255,0.5) !important;
-            z-index: 30;
-            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(250, 204, 21, 0.9) !important;
+            z-index: 30; transform: scale(1.05);
         }
-        
-        /* Highlight Range (Violet) */
         .building.highlight-range {
             border-color: #a855f7 !important;
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.8) !important;
-            transform: scale(1.05);
-            z-index: 30;
+            transform: scale(1.05); z-index: 30;
         }
-        
         .building.dimmed { opacity: 0.3; filter: grayscale(0.8); }
 
-        /* MODE MOYENNE : BRIQUES */
+        /* MODE MOYENNE : STYLE BRIQUES UNIES */
         .building.mean-mode {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            background-image: none !important;
-            overflow: visible !important;
-        }
-
-        .brick {
-            width: 60px;
-            box-sizing: border-box;
-            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-            border-left: 3px solid #7dd3fc;
-            border-right: 3px solid #0284c7;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            /* Motif Fenêtres SUR LES BRIQUES */
-            background-image: radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%);
-            background-size: 12px 20px;
-            background-position: center 4px;
-            position: relative;
-        }
-        /* Top brick */
-        .building.mean-mode .brick:last-child {
-            border-top: 3px solid #7dd3fc;
-            border-radius: 8px 8px 0 0;
-            cursor: grab;
-        }
-        .building.mean-mode .brick:last-child:hover {
-            filter: brightness(1.15);
-            border-color: #bae6fd;
+            background: transparent !important; border: none !important; box-shadow: none !important;
+            background-image: none !important; overflow: visible !important;
         }
         
+        .brick {
+            width: 60px; box-sizing: border-box;
+            background: #3b82f6; /* Bleu solide */
+            border: 1px solid #1d4ed8; 
+            border-top: 1px solid #60a5fa; 
+            position: relative; height: 20px;
+        }
+        /* Top brick style - Uniforme */
+        .brick.is-top {
+            cursor: grab;
+        }
+        .brick.is-top:hover { filter: brightness(1.1); }
+        
         .brick.half-brick {
-            background: #a855f7; 
-            border-color: #d8b4fe;
-            background-image: none;
+            background: #a855f7; border-color: #7e22ce;
         }
         .brick.half-brick::after {
             content: '½'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 10px; color: white; opacity: 0.9; font-weight: bold;
+        }
+        
+        /* Ciseaux Visual - Ligne centrée */
+        .brick.cut-visual::before {
+            content: '- - - -'; position: absolute; top: 50%; left: 0; right: 0; height: 0;
+            border-top: 2px dashed #e9d5ff; z-index: 10;
         }
 
         /* Badge Valeur */
@@ -170,28 +136,30 @@
             background: white; color: #0f172a; font-weight: 800;
             padding: 4px 12px; border-radius: 20px; font-size: 1.5rem;
             margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 30; cursor: pointer;
-            transition: all 0.3s;
+            z-index: 30; cursor: pointer; transition: all 0.3s;
             border: 2px solid transparent;
         }
         .value-badge:hover { transform: scale(1.15); background-color: #f0f9ff; color: #0284c7; }
-        .value-badge.highlight-neighbor {
+        .value-badge.highlight-neighbor { /* Orange */
             background-color: #fff7ed !important; color: #ea580c !important;
-            border: 2px solid #fb923c !important; transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(251, 146, 60, 0.3);
+            border: 2px solid #fb923c !important; transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.5);
         }
-        
+
         /* PANNEAU MEDIANE */
         #median-tool {
             position: absolute; bottom: 24px; width: 6px; 
             background: #ec4899; z-index: 50; display: none;
             align-items: flex-start; justify-content: center;
             cursor: grab; touch-action: none;
-            transition: opacity 0.3s, height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.3s, height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s;
             transform: translateX(-50%);
-            pointer-events: auto;
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.6);
+            pointer-events: auto; border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
+        }
+        #median-tool.solved {
+            background-color: #facc15 !important;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.8) !important;
         }
         #median-tool:active { cursor: grabbing; }
         
@@ -199,67 +167,45 @@
             position: absolute; bottom: 50%; width: 60px; height: 32px;
             background: white; border: 3px solid #ec4899; border-radius: 20px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            color: #ec4899; padding: 0 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #ec4899; padding: 0 8px;
+            transition: border-color 0.5s, color 0.5s;
         }
-        /* Petit bâton blanc horizontal dans la poignée */
-        #tool-handle::after {
-             content: '';
-             position: absolute;
-             left: 50%; top: 50%; transform: translate(-50%, -50%);
-             width: 20px; height: 4px;
-             background: #ec4899;
-             border-radius: 2px;
-             opacity: 0.3;
-        }
+        #median-tool.solved #tool-handle { border-color: #facc15; color: #ca8a04; }
         
+        /* PANCARTE DU PANNEAU (Label) */
         #tool-label {
-            position: absolute; top: 0px; background: #ec4899; color: white;
-            padding: 8px 16px; border-radius: 12px; font-weight: bold; font-size: 1.4rem;
+            position: absolute; top: 0; 
+            transform: translateY(-100%) translateY(-10px); 
+            background: #ec4899; color: white; 
+            padding: 8px 16px; border-radius: 12px; font-weight: 900; font-size: 2rem;
             white-space: nowrap; box-shadow: 0 5px 20px rgba(236, 72, 153, 0.6);
             pointer-events: none; z-index: 60; text-align: center; transition: all 0.3s;
-            min-width: 60px;
+            min-width: 60px; opacity: 1; border: 2px solid white;
+        }
+        #median-tool.solved #tool-label {
+             background: #facc15; color: #713f12; border-color: white; 
         }
         #tool-label::after {
             content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
             border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #ec4899;
         }
+        #median-tool.solved #tool-label::after { border-top-color: #facc15; }
 
-        /* FLECHE D'ETENDUE (Animation) */
+        /* FLECHE D'ETENDUE */
         #range-arrow {
-            position: absolute; top: 20%; left: 0; height: 40px; pointer-events: none;
-            display: none; z-index: 45;
-            align-items: center;
+            position: absolute; top: 25%; left: 0; height: 40px; pointer-events: none;
+            display: none; z-index: 45; align-items: center;
         }
         .range-line {
-            height: 4px; background: #a855f7; border-radius: 2px;
-            box-shadow: 0 0 10px #a855f7;
-            width: 0; /* Pour animation */
-            transition: width 0.8s ease-out;
+            height: 6px; background: #a855f7; border-radius: 3px;
+            box-shadow: 0 0 15px #a855f7; width: 0; transition: width 0.8s ease-out;
         }
         .range-tip {
-            width: 0; height: 0; 
-            border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+            width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent;
             opacity: 0; transition: opacity 0.3s 0.8s;
         }
-        .range-tip-left { border-right: 12px solid #a855f7; margin-right: -2px; }
-        .range-tip-right { border-left: 12px solid #a855f7; margin-left: -2px; }
-
-        /* Indicateurs */
-        .group-indicator {
-            position: absolute; bottom: 40px; height: 2px; background: rgba(255, 255, 255, 0.3);
-            display: flex; align-items: flex-end; justify-content: center;
-            opacity: 0; transition: opacity 0.5s; z-index: 5;
-        }
-        .group-indicator::before, .group-indicator::after {
-            content: ''; position: absolute; width: 2px; height: 10px;
-            background: rgba(255, 255, 255, 0.3); bottom: 0;
-        }
-        .group-indicator::before { left: 0; } .group-indicator::after { right: 0; }
-        .group-label {
-            margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; font-weight: bold;
-            background: rgba(15, 23, 42, 0.8); padding: 2px 8px; border-radius: 4px;
-        }
+        .range-tip-left { border-right: 15px solid #a855f7; margin-right: -2px; }
+        .range-tip-right { border-left: 15px solid #a855f7; margin-left: -2px; }
 
         /* Sol */
         .ground {
@@ -268,37 +214,58 @@
             box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        /* Resultat Flottant (Au dessus de tout) */
+        /* Resultat Flottant (Tout en haut) */
         #floating-result {
-            position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             text-align: center; pointer-events: none; z-index: 60;
-            opacity: 0; transition: opacity 0.5s;
-            width: 80%;
+            opacity: 0; transition: opacity 0.5s; width: 90%;
         }
         #floating-result h2 {
-            font-size: 2.5rem; font-weight: 800; 
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-size: 3rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            margin-bottom: 0; line-height: 1;
         }
         #floating-result p {
-            color: #cbd5e1; font-size: 1.1rem; margin-top: 5px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
-            background: rgba(15, 23, 42, 0.8); padding: 5px 12px; border-radius: 8px;
-            display: inline-block;
+            color: #cbd5e1; font-size: 1.2rem; margin-top: 5px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8); display: inline-block;
         }
 
-        /* Brique Volante (Drag Moyenne) */
+        /* Constructeur Slots */
+        .construct-slot {
+            width: 70px; height: 10px; background: #334155; 
+            border-radius: 4px; margin-bottom: 24px; position: absolute; bottom: 0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        #brick-supply {
+            position: absolute; bottom: 100px; left: 15%;
+            width: 80px; height: 120px; background: rgba(30, 41, 59, 0.8);
+            border: 2px dashed #475569; border-radius: 12px;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 40; cursor: grab;
+        }
+        #brick-supply::after { content: 'BRIQUES'; font-size: 10px; color: #94a3b8; font-weight: bold; margin-top: 10px; }
+        
+        /* Objectifs HUD */
+        #construct-goals {
+            position: absolute; top: 10px; right: 20px;
+            background: rgba(15, 23, 42, 0.95); padding: 15px; border-radius: 16px;
+            border: 1px solid #334155; display: none; flex-direction: column; gap: 10px;
+            z-index: 40; box-shadow: 0 10px 20px rgba(0,0,0,0.5); width: 240px;
+        }
+        .goal-item { display: flex; align-items: center; justify-content: space-between; color: #94a3b8; font-weight: 600; font-size: 0.9rem; transition: color 0.3s; }
+        .goal-item.done { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
+        .goal-check { 
+            width: 12px; height: 12px; border-radius: 50%; background: #475569;
+            transition: all 0.3s; margin-left: 10px;
+        }
+        .goal-item.done .goal-check { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
         .flying-brick {
             position: fixed; width: 60px; height: 20px;
-            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-            border: 2px solid #bae6fd;
-            border-top: 3px solid #bae6fd;
+            background: #3b82f6; border: 1px solid #1d4ed8; border-top: 1px solid #60a5fa;
             z-index: 9999; pointer-events: none; opacity: 0.95;
             box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-            border-radius: 4px;
-            background-image: radial-gradient(rgba(255,255,255,0.3) 20%, transparent 20%);
-            background-size: 12px 20px;
         }
-        .flying-brick.half { height: 10px; background: #a855f7; border-color: #e9d5ff; background-image: none; }
+        .flying-brick.half { height: 10px; background: #9333ea; border-color: #581c87; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -312,20 +279,19 @@
         </svg>
     </div>
 
-    <!-- HEADER FLOTTANT -->
+    <!-- HEADER -->
     <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-2">
         <div class="flex items-center gap-3 pl-2">
             <span class="text-3xl">🏙️</span>
             <div>
-                <h1 class="text-xl font-bold text-slate-100">City Stats</h1>
+                <h1 class="text-xl font-bold text-slate-100">Stats City</h1>
                 <p class="text-slate-500 text-xs font-semibold tracking-wide">La ville des statistiques</p>
             </div>
         </div>
 
-        <!-- MESSAGE INFO DANS LE HEADER (RESULTATS ICI) -->
-        <div id="info-message" class="flex-1 text-center transition-all duration-500">
-            <h2 id="msg-title" class="text-lg sm:text-2xl font-bold text-slate-300 drop-shadow-md">La ville est prête</h2>
-            <p id="msg-subtitle" class="text-xs sm:text-sm text-sky-400 font-medium hidden mt-1">...</p>
+        <!-- ZONE DE RESULTAT (Tout en haut) -->
+        <div id="info-message" class="flex-1 text-center transition-all duration-500 min-h-[40px] flex items-center justify-center">
+            <h2 id="msg-title" class="text-lg sm:text-2xl font-bold text-slate-300 drop-shadow-md"></h2>
         </div>
 
         <div class="flex gap-2 pr-2">
@@ -339,14 +305,12 @@
     <!-- TOOLBAR -->
     <div class="bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-40 shrink-0 relative">
         <div class="flex gap-2 items-center">
-            <!-- DESSIN -->
             <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
                 <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-slate-600 text-white shadow"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg></button>
                 <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                 <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:text-red-200"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
             </div>
 
-            <!-- INSTRUCTION DISCRÈTE -->
             <div id="mini-instruction" class="text-[10px] text-slate-400 border border-slate-700 rounded px-2 py-1 hidden sm:block">
                 Cliquez sur une bulle pour changer la valeur • Glissez pour ranger
             </div>
@@ -360,7 +324,7 @@
         </div>
 
         <!-- GENERATEUR -->
-        <div class="flex items-center gap-3 bg-slate-800 p-1 pr-2 rounded-xl border border-slate-600">
+        <div id="controls-gen" class="flex items-center gap-3 bg-slate-800 p-1 pr-2 rounded-xl border border-slate-600">
             <div class="flex items-center gap-1 px-2 border-r border-slate-600">
                 <button onclick="updateCount(-1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">-</button>
                 <span id="count-display" class="w-6 text-center font-bold text-sky-400">5</span>
@@ -391,7 +355,6 @@
                 </div>
             </div>
             
-            <!-- Flèche Étendue -->
             <div id="range-arrow">
                 <div class="range-tip range-tip-left"></div>
                 <div class="range-line"></div>
@@ -402,6 +365,28 @@
             <div id="floating-result">
                 <h2 id="res-title"></h2>
                 <p id="res-sub"></p>
+            </div>
+            
+            <!-- Constructeur Supply -->
+            <div id="brick-supply" onmousedown="startDragSupply(event)" ontouchstart="startDragSupply(event)">
+                <div class="brick" style="width: 40px; height: 12px; border-top: 2px solid #60a5fa; border-radius: 2px; margin-bottom:2px;"></div>
+                <div class="brick" style="width: 40px; height: 12px; margin-bottom:2px;"></div>
+                <div class="brick" style="width: 40px; height: 12px;"></div>
+            </div>
+            
+            <!-- Objectifs Constructeur HUD (AUTOMATIQUE) -->
+            <div id="construct-goals">
+                <div class="text-slate-300 text-sm font-bold mb-3 border-b border-slate-700 pb-2 flex justify-between">
+                    <span>🎯 Objectifs</span>
+                    <span id="level-display" class="text-xs text-sky-400">Niveau 1</span>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <div class="goal-item"><span id="goal-text-count">...</span> <div id="check-count" class="goal-check"></div></div>
+                    <div class="goal-item"><span id="goal-text-med">...</span> <div id="check-med" class="goal-check"></div></div>
+                    <div class="goal-item"><span id="goal-text-range">...</span> <div id="check-range" class="goal-check"></div></div>
+                    <div class="goal-item hidden" id="goal-item-mean"><span id="goal-text-mean">...</span> <div id="check-mean" class="goal-check"></div></div>
+                    <div class="goal-item hidden" id="goal-item-special"><span id="goal-text-special">...</span> <div id="check-special" class="goal-check"></div></div>
+                </div>
             </div>
 
             <div class="ground"></div>
@@ -418,15 +403,15 @@
             <span id="median-icon">🔒</span> 2. SOLUTION
         </button>
     </footer>
-    
-    <!-- FOOTER RANGE (ETENDUE) -->
+
+    <!-- FOOTER RANGE -->
     <footer id="footer-range" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-8 min-h-[80px]">
         <button onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> RANGER
         </button>
         <div class="text-slate-400 text-sm font-medium flex items-center gap-2">
             <span class="text-2xl">📏</span>
-            <span>Sélectionnez le plus petit et le plus grand</span>
+            <span>Sélectionnez le Min et le Max</span>
         </div>
     </footer>
     
@@ -438,9 +423,12 @@
         </div>
     </footer>
     
-    <!-- FOOTER BUILD (VIDE POUR L'INSTANT) -->
-    <footer id="footer-build" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center min-h-[80px]">
-        <div class="text-slate-400 text-sm font-medium">Mode Constructeur activé</div>
+    <!-- FOOTER BUILD -->
+    <footer id="footer-build" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-4 min-h-[80px]">
+        <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">Difficulté :</div>
+        <button onclick="setConstructLevel(1)" class="lvl-btn active" id="btn-lvl-1">Apprenti</button>
+        <button onclick="setConstructLevel(2)" class="lvl-btn" id="btn-lvl-2">Architecte</button>
+        <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">Expert</button>
     </footer>
 
     <script>
@@ -448,12 +436,12 @@
             buildingWidth: 60,
             gap: 20,
             floorHeight: 20,
-            maxFloors: 20,
+            maxFloors: 25,
             minFloors: 1
         };
 
         let state = {
-            mode: 'MEDIAN', // 'MEDIAN', 'MEAN', 'RANGE', 'BUILD'
+            mode: 'MEDIAN',
             count: 5,
             buildings: [], 
             isSorted: false,
@@ -461,7 +449,14 @@
             isMeanFound: false,
             isRangeFound: false,
             rangeSelection: [],
-            currentTool: 'hand'
+            currentTool: 'hand',
+            
+            // Construct
+            constructLevel: 1,
+            targetMedian: 0,
+            targetRange: 0,
+            targetMean: 0,
+            targetSpecial: null
         };
 
         // UI Refs
@@ -478,15 +473,18 @@
         const resTitle = document.getElementById('res-title');
         const resSub = document.getElementById('res-sub');
         
-        const headerInfoTitle = document.querySelector('#info-message h2');
-        const headerInfoSub = document.querySelector('#info-message p');
+        const headerInfoTitle = document.getElementById('msg-title');
 
         const footerMedian = document.getElementById('footer-median');
         const footerMean = document.getElementById('footer-mean');
         const footerRange = document.getElementById('footer-range');
         const footerBuild = document.getElementById('footer-build');
-        const scissorsContainer = document.getElementById('scissors-container');
         const btnMedian = document.getElementById('btn-median');
+        
+        const brickSupply = document.getElementById('brick-supply');
+        const constructGoals = document.getElementById('construct-goals');
+        const controlsGen = document.getElementById('controls-gen');
+        const scissorsContainer = document.getElementById('scissors-container');
 
         // --- CORE FUNCTIONS ---
 
@@ -501,8 +499,22 @@
 
         function setMode(mode) {
             if(state.mode === mode) return;
-            state.mode = mode;
             
+            // RESET
+            if(state.mode !== 'BUILD' && mode !== 'BUILD') {
+                state.buildings.forEach(b => {
+                    b.value = b.originalVal;
+                    b.cutTop = false; 
+                });
+            }
+
+            state.mode = mode;
+            state.rangeSelection = [];
+            state.isMedianFound = false;
+            state.isMeanFound = false;
+            state.isRangeFound = false;
+            state.isSorted = false;
+
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             if(mode === 'MEDIAN') document.getElementById('btn-mode-median').classList.add('active');
             if(mode === 'MEAN') document.getElementById('btn-mode-mean').classList.add('active');
@@ -514,24 +526,39 @@
             footerRange.classList.add('hidden'); footerRange.classList.remove('flex');
             footerBuild.classList.add('hidden'); footerBuild.classList.remove('flex');
             scissorsContainer.classList.add('hidden'); scissorsContainer.classList.remove('flex');
+            brickSupply.style.display = 'none';
+            constructGoals.style.display = 'none';
+            controlsGen.style.visibility = 'visible';
             
+            const mini = document.getElementById('mini-instruction');
+
             if (mode === 'MEDIAN') {
                 footerMedian.classList.remove('hidden'); footerMedian.classList.add('flex');
                 showMessage("La ville est prête");
-                document.getElementById('mini-instruction').innerText = "Cliquez sur une bulle pour changer la valeur • Glissez pour ranger";
+                mini.innerText = "Cliquez sur une bulle pour changer la valeur • Glissez pour ranger";
+                // Restore sorting by ID
+                state.buildings.sort((a,b) => a.id - b.id);
             } else if (mode === 'MEAN') {
                 footerMean.classList.remove('hidden'); footerMean.classList.add('flex');
                 scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex');
                 showMessage("Égalisez les hauteurs");
-                document.getElementById('mini-instruction').innerText = "Déplacez les briques pour égaliser";
+                mini.innerText = "Les ciseaux permettent de couper une brique en deux";
             } else if (mode === 'RANGE') {
                 footerRange.classList.remove('hidden'); footerRange.classList.add('flex');
                 showMessage("Calculez l'étendue");
-                document.getElementById('mini-instruction').innerText = "Cliquez sur Min et Max";
+                mini.innerText = "Cliquez sur Min et Max";
                 state.rangeSelection = [];
+                // Restore original order
+                state.buildings.sort((a,b) => a.originalId - b.originalId);
             } else if (mode === 'BUILD') {
                 footerBuild.classList.remove('hidden'); footerBuild.classList.add('flex');
+                brickSupply.style.display = 'flex';
+                constructGoals.style.display = 'flex';
+                controlsGen.style.visibility = 'hidden';
                 showMessage("Mode Constructeur");
+                mini.innerText = "Construisez pour atteindre les objectifs";
+                initConstructMode(state.constructLevel);
+                return;
             }
             
             setTool('hand');
@@ -559,13 +586,14 @@
                 state.buildings = [];
                 for(let i=0; i<state.count; i++) {
                     let val = Math.floor(Math.random() * 19) + 2; 
-                    state.buildings.push({ id: i, value: val, originalId: i });
+                    state.buildings.push({ id: i, value: val, originalVal: val, originalId: i });
                 }
                 
-                // Adjust for Mean Mode (Result should be Integer)
+                // FORCE INTEGER AVERAGE OR .5 IF N IS EVEN
                 let sum = state.buildings.reduce((a,b)=>a+b.value, 0);
-                while (sum % state.count !== 0) {
+                while ((sum * 2) % state.count !== 0) {
                     state.buildings[state.count-1].value += 1;
+                    state.buildings[state.count-1].originalVal += 1;
                     sum++;
                 }
             }
@@ -581,11 +609,14 @@
             container.appendChild(groupRight);
             container.appendChild(rangeArrow);
             container.appendChild(floatRes);
+            container.appendChild(brickSupply);
+            container.appendChild(constructGoals);
             container.appendChild(ground);
 
             medianTool.style.display = 'none';
             medianTool.style.height = '380px';
-            toolLabel.style.opacity = '1';
+            medianTool.classList.remove('solved');
+            toolLabel.style.opacity = '1'; 
             toolLabel.innerText = "?";
             toolLabel.style.minWidth = "60px";
             groupLeft.style.opacity = '0';
@@ -597,12 +628,12 @@
             else container.classList.remove('mode-mean');
             
             if(state.mode === 'BUILD') {
-                // Clear buildings for build mode (just slots in future)
-                container.innerHTML += '<div class="absolute top-1/2 left-1/2 -translate-x-1/2 text-slate-500">Zone de construction (A venir)</div>';
+                container.innerHTML += '<div class="absolute top-1/2 left-1/2 -translate-x-1/2 text-slate-500"></div>';
                 return;
             }
 
-            if(state.mode === 'MEAN') {
+            // Restore order for Mean
+            if(state.mode === 'MEAN' || !state.isSorted) {
                 state.buildings.sort((a,b) => a.originalId - b.originalId);
             }
 
@@ -636,7 +667,7 @@
             } 
             else if (state.mode === 'MEAN') {
                 building.className = 'building mean-mode'; 
-                renderBricks(building, bObj.value);
+                renderBricks(building, bObj.value, bObj.cutTop);
                 building.style.height = 'auto';
                 
                 building.addEventListener('mousedown', (e) => handleBrickInteraction(e, bObj.id));
@@ -659,7 +690,7 @@
             bObj.badgeEl = badge;
         }
 
-        function renderBricks(container, value) {
+        function renderBricks(container, value, cutTop = false) {
             container.innerHTML = '';
             let count = Math.floor(value);
             let hasHalf = (value % 1 !== 0);
@@ -667,28 +698,44 @@
             for(let i=0; i<count; i++) {
                 let b = document.createElement('div');
                 b.className = 'brick';
+                // Add visual cut if this is top and marked cut
+                if(i === count-1 && !hasHalf && cutTop) {
+                    b.classList.add('cut-visual');
+                }
+                if(i === count-1 && !hasHalf) b.classList.add('is-top');
                 b.style.height = CONFIG.floorHeight + 'px';
                 container.appendChild(b);
             }
             if(hasHalf) {
                 let b = document.createElement('div');
-                b.className = 'brick half-brick';
+                b.className = 'brick half-brick is-top'; 
                 b.style.height = (CONFIG.floorHeight / 2) + 'px';
                 container.appendChild(b);
             }
         }
 
         function repositionBuildings(skipItem = null) {
+            if(state.mode === 'BUILD') {
+                 const slots = document.querySelectorAll('.construct-slot');
+                 const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
+                 const startX = (container.offsetWidth - totalW) / 2;
+                 slots.forEach((s, i) => s.style.left = (startX + i * (CONFIG.buildingWidth + CONFIG.gap)) + 'px');
+                 state.buildings.forEach((b, i) => b.element.style.left = (startX + i * (CONFIG.buildingWidth + CONFIG.gap)) + 'px');
+                 return;
+            }
+
             const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
             const startX = (container.offsetWidth - totalW) / 2;
 
             let list = state.buildings;
-            if (state.mode === 'MEDIAN' && state.isSorted) {
-                list.sort((a,b) => a.value - b.value);
-            }
-            if (state.mode === 'MEAN' || state.mode === 'RANGE') {
-                if(state.isSorted && state.mode === 'RANGE') list.sort((a,b) => a.value - b.value);
-                else if(state.mode === 'MEAN') list.sort((a,b) => a.originalId - b.originalId);
+            // Sorting logic per mode
+            if (state.mode === 'MEDIAN') {
+                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
+            } else if(state.mode === 'RANGE') {
+                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
+                 else list.sort((a,b) => a.originalId - b.originalId);
+            } else if(state.mode === 'MEAN') {
+                 list.sort((a,b) => a.originalId - b.originalId);
             }
 
             list.forEach((b, i) => {
@@ -702,19 +749,14 @@
         }
 
         function showMessage(title, sub = "", color = "text-slate-300") {
-            headerInfoTitle.innerHTML = title;
-            headerInfoTitle.className = "text-lg sm:text-2xl font-bold drop-shadow-md " + color;
-            if(sub) {
-                headerInfoSub.innerHTML = sub;
-                headerInfoSub.classList.remove('hidden');
-            } else {
-                headerInfoSub.classList.add('hidden');
-            }
+            const h = document.getElementById('msg-title');
+            h.innerText = title;
+            h.className = "text-lg sm:text-2xl font-bold drop-shadow-md " + color;
         }
         
         function showFloatingResult(title, sub, colorClass = "text-yellow-400") {
             resTitle.innerText = title;
-            resTitle.className = "font-extrabold text-4xl " + colorClass; // Class for color
+            resTitle.className = "font-extrabold text-4xl " + colorClass; 
             resSub.innerText = sub;
             floatRes.style.opacity = '1';
         }
@@ -723,7 +765,6 @@
 
         function checkSorted() {
             if(state.mode !== 'MEDIAN') return;
-            
             let asc = true, desc = true;
             for(let i=0; i<state.buildings.length-1; i++) {
                 if (state.buildings[i].value > state.buildings[i+1].value) asc = false;
@@ -732,7 +773,6 @@
             state.isSorted = (asc || desc);
 
             const icon = document.getElementById('median-icon');
-            
             if (state.isSorted) {
                 btnMedian.disabled = false;
                 btnMedian.classList.remove('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
@@ -747,6 +787,9 @@
                     medianTool.style.height = toolH + 'px';
                     
                     medianTool.style.left = '50px'; 
+                    // Make label visible
+                    toolLabel.style.opacity = '1';
+                    toolLabel.innerText = "?";
                 }
             } else {
                 btnMedian.disabled = true;
@@ -762,7 +805,6 @@
             if (state.isMedianFound) return;
             state.isMedianFound = true;
             playSound('ding');
-            
             const n = state.buildings.length;
             const mid = Math.floor(n/2);
             const isOdd = (n % 2 !== 0);
@@ -781,65 +823,57 @@
                 
                 state.buildings.forEach((b,i) => { if(i!==mid) b.buildingEl.classList.add('dimmed'); });
                 
-                showFloatingResult(`Médiane = ${target.value}`, `Il y a autant de valeurs (${mid}) avant et après.`, "text-yellow-400");
+                showFloatingResult(`Médiane = ${target.value}`, ``, "text-yellow-400");
             } else {
                 const b1 = state.buildings[mid-1];
                 const b2 = state.buildings[mid];
                 const med = (b1.value + b2.value) / 2;
                 
                 medianTool.style.display = 'flex';
-                medianTool.style.backgroundColor = '#ec4899';
+                medianTool.classList.add('solved'); // GOLD mode
                 medianTool.style.pointerEvents = 'none';
                 document.getElementById('tool-label').innerText = med;
                 
                 const centerX = startX + (mid-1)*(CONFIG.buildingWidth+CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
                 medianTool.style.left = centerX + 'px';
                 
-                // Adjust height for pair case (also taller)
+                // Adjust height for pair case
                 const maxVal = Math.max(...state.buildings.map(b => b.value));
-                medianTool.style.height = ((maxVal * CONFIG.floorHeight) + 80) + 'px';
-                document.getElementById('tool-label').style.minWidth = "120px";
+                medianTool.style.height = ((maxVal * CONFIG.floorHeight) + 120) + 'px';
+                
+                // FORCE VISIBILITY OF LABEL
+                const tl = document.getElementById('tool-label');
+                tl.style.opacity = '1';
+                tl.style.top = '-60px'; // Bien au dessus
                 
                 b1.badgeEl.classList.add('highlight-neighbor');
                 b2.badgeEl.classList.add('highlight-neighbor');
                 state.buildings.forEach(b => b.buildingEl.classList.add('dimmed'));
                 
-                showFloatingResult(`Médiane = ${med}`, `(${b1.value} + ${b2.value}) ÷ 2 = ${med}`, "text-pink-400");
+                showFloatingResult(`Médiane = ${med}`, ``, "text-yellow-400");
             }
-            
-            btnMedian.disabled = true;
-            btnMedian.classList.add('opacity-50', 'cursor-not-allowed');
+            btnMedian.disabled = true; btnMedian.classList.add('opacity-50', 'cursor-not-allowed');
         }
 
         // --- MEAN MODE LOGIC ---
-
+        let draggedBrick = null;
+        
         function handleBrickInteraction(e, colId) {
-            if (state.mode !== 'MEAN' || state.isMeanFound) return;
-            
-            // Logic Ciseaux : Coupe la brique du haut en deux si elle est entière
+            if (state.mode !== 'MEAN' && state.mode !== 'BUILD') return;
+            if (state.isMeanFound && state.mode === 'MEAN') return;
+            const bObj = state.buildings.find(b => b.id === colId);
+
             if (state.currentTool === 'scissors') {
-                const bObj = state.buildings.find(b => b.id === colId);
-                // On peut couper seulement si > 0 et si c'est un entier
                 if (bObj.value > 0 && bObj.value % 1 === 0) {
                     playSound('pop'); 
-                    // Visual feedback: on peut "marquer" l'immeuble comme coupé temporairement ?
-                    // Simplification: le mode drag détectera si on prend un demi.
-                    // Pour l'instant, on va juste dire que le ciseau "prépare" le drag.
-                    // Mais pour faire simple : si on clique ciseau, on ne fait rien visuellement 
-                    // sauf si on veut afficher "brique coupée". 
-                    // L'utilisateur comprendra en draggant qu'il prend une moitié.
-                    // Pour feedback: on fait clignoter la brique du haut en violet
-                    if(bObj.buildingEl.lastChild) {
-                        bObj.buildingEl.lastChild.classList.add('brick-cut-effect');
-                        setTimeout(()=>bObj.buildingEl.lastChild.classList.remove('brick-cut-effect'), 500);
-                    }
+                    // Toggle visual cut
+                    bObj.cutTop = !bObj.cutTop;
+                    renderBricks(bObj.buildingEl, bObj.value, bObj.cutTop);
                 }
             } else if (state.currentTool === 'hand') {
                 startDragBrick(e, colId);
             }
         }
-
-        let draggedBrick = null;
         
         function startDragBrick(e, colId) {
             e.preventDefault();
@@ -847,8 +881,8 @@
             if (bObj.value <= 0) return;
 
             let amount = 1;
-            // Rule: Take half if it is a half-brick OR if using Scissors on a full brick
-            if (bObj.value % 1 !== 0 || state.currentTool === 'scissors') {
+            // Take half if: value is X.5 OR if it was cut
+            if (bObj.value % 1 !== 0 || bObj.cutTop) {
                 amount = 0.5;
             }
             
@@ -856,8 +890,10 @@
             ghost.className = amount === 0.5 ? 'flying-brick half' : 'flying-brick';
             document.body.appendChild(ghost);
             
-            // Masquer la brique du haut
-            if(bObj.buildingEl.lastChild) bObj.buildingEl.lastChild.style.opacity = '0';
+            // Immediate visual update of source
+            renderBricks(bObj.buildingEl, bObj.value - amount);
+            bObj.badgeEl.innerText = bObj.value - amount;
+            bObj.cutTop = false; 
 
             draggedBrick = {
                 sourceId: colId,
@@ -899,7 +935,6 @@
             
             let success = false;
             if (targetIdx >= 0 && targetIdx < state.count) {
-                // In Mean mode, visual index matches array index because we sorted by original ID
                 const targetObj = state.buildings[targetIdx];
                 const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
                 
@@ -918,10 +953,10 @@
             }
 
             if (!success) {
+                // Restore source
                 const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
-                updateBuildingVisuals(sourceObj); // Restore visibility via re-render
+                updateBuildingVisuals(sourceObj);
             }
-
             draggedBrick.element.remove();
             draggedBrick = null;
             document.removeEventListener('mousemove', onBrickDrag);
@@ -938,11 +973,10 @@
         function checkMeanWin() {
             const first = state.buildings[0].value;
             const allEqual = state.buildings.every(b => Math.abs(b.value - first) < 0.001);
-            
             if (allEqual) {
                 state.isMeanFound = true;
                 playSound('ding');
-                showFloatingResult(`Moyenne = ${first}`, "Toutes les barres sont égalisées !", "text-green-400");
+                showFloatingResult(`Moyenne = ${first} étages par immeuble`, "", "text-green-400");
                 state.buildings.forEach(b => {
                     b.badgeEl.style.backgroundColor = '#22c55e';
                     b.badgeEl.style.color = 'white';
@@ -953,21 +987,17 @@
         // --- RANGE MODE LOGIC ---
         function selectRangeBuilding(id) {
             if(state.mode !== 'RANGE' || state.isRangeFound) return;
-            
             const b = state.buildings.find(x => x.id === id);
             
             if(state.rangeSelection.includes(id)) {
                 state.rangeSelection = state.rangeSelection.filter(sid => sid !== id);
-                b.buildingEl.classList.remove('selected-range');
+                b.buildingEl.classList.remove('highlight-range');
             } else {
                 if(state.rangeSelection.length < 2) {
                     state.rangeSelection.push(id);
-                    b.buildingEl.classList.add('selected-range');
+                    b.buildingEl.classList.add('highlight-range');
                     playSound('pop');
-                    
-                    if(state.rangeSelection.length === 2) {
-                        checkRange();
-                    }
+                    if(state.rangeSelection.length === 2) checkRange();
                 }
             }
         }
@@ -975,46 +1005,43 @@
         function checkRange() {
             const b1 = state.buildings.find(x => x.id === state.rangeSelection[0]);
             const b2 = state.buildings.find(x => x.id === state.rangeSelection[1]);
-            
             const values = state.buildings.map(b => b.value);
-            const min = Math.min(...values);
-            const max = Math.max(...values);
+            const min = Math.min(...values); const max = Math.max(...values);
             
-            const v1 = b1.value;
-            const v2 = b2.value;
+            const v1 = b1.value; const v2 = b2.value;
             
+            // Allow any min/max selection even if duplicates
             if ( (v1 === min && v2 === max) || (v1 === max && v2 === min) ) {
-                // WIN
                 state.isRangeFound = true;
                 playSound('ding');
                 const range = max - min;
-                showFloatingResult(`Étendue = ${range}`, `Max (${max}) - Min (${min}) = ${range}`, "text-violet-400");
+                showFloatingResult(`Étendue = ${range} étages`, "", "text-violet-400");
                 
                 [b1, b2].forEach(b => {
                     b.buildingEl.classList.remove('selected-range');
                     b.buildingEl.classList.add('highlight-range');
                 });
                 
-                // Draw Arrow (Animated Width)
+                // Draw Arrow
                 const rect1 = b1.element.getBoundingClientRect();
                 const rect2 = b2.element.getBoundingClientRect();
                 const containerRect = container.getBoundingClientRect();
-                
                 const x1 = rect1.left + rect1.width/2 - containerRect.left;
                 const x2 = rect2.left + rect2.width/2 - containerRect.left;
                 
                 const left = Math.min(x1, x2);
                 const width = Math.abs(x1 - x2);
                 
-                rangeArrow.style.left = left + 'px';
-                rangeArrow.style.display = 'flex';
-                // Animation width
-                rangeArrow.querySelector('.range-line').style.width = '0px';
-                rangeArrow.querySelector('.range-tip-right').style.opacity = '0';
+                const arr = document.getElementById('range-arrow');
+                arr.style.top = "15%"; // Remonté
+                arr.style.left = left + 'px';
+                arr.style.display = 'flex';
+                arr.querySelector('.range-line').style.width = '0px';
+                arr.querySelectorAll('.range-tip').forEach(t => t.style.opacity='0');
                 
                 requestAnimationFrame(() => {
-                   rangeArrow.querySelector('.range-line').style.width = width + 'px';
-                   rangeArrow.querySelector('.range-tip-right').style.opacity = '1';
+                   arr.querySelector('.range-line').style.width = width + 'px';
+                   arr.querySelectorAll('.range-tip').forEach(t => t.style.opacity='1');
                 });
 
                 state.buildings.forEach(b => {
@@ -1023,21 +1050,147 @@
             } else {
                 setTimeout(() => {
                     state.rangeSelection = [];
-                    [b1, b2].forEach(b => b.buildingEl.classList.remove('selected-range'));
+                    [b1, b2].forEach(b => b.buildingEl.classList.remove('highlight-range'));
                     showMessage("Raté ! Cherchez le plus petit et le plus grand.");
                 }, 500);
             }
         }
 
-        // --- EVENTS ---
+        // --- CONSTRUCT MODE ---
+        function setConstructLevel(lvl) {
+            state.constructLevel = lvl;
+            document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-lvl-${lvl}`).classList.add('active');
+            initConstructMode(lvl);
+        }
+
+        function initConstructMode(lvl) {
+            clearCanvas();
+            container.innerHTML = '';
+            container.appendChild(brickSupply);
+            container.appendChild(constructGoals);
+            container.appendChild(floatRes);
+            container.appendChild(ground);
+            
+            state.buildings = [];
+            for(let i=0; i<state.count; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'construct-slot';
+                container.appendChild(slot);
+                
+                const bObj = { id: i, value: 0 };
+                const wrapper = document.createElement('div');
+                wrapper.className = 'building-wrapper';
+                const badge = document.createElement('div');
+                badge.className = 'value-badge';
+                badge.innerText = 0;
+                const building = document.createElement('div');
+                building.className = 'building mean-mode';
+                building.style.height = 'auto';
+                
+                wrapper.appendChild(badge); wrapper.appendChild(building);
+                container.appendChild(wrapper);
+                bObj.element = wrapper; bObj.buildingEl = building; bObj.badgeEl = badge;
+                state.buildings.push(bObj);
+            }
+            
+            const tM = Math.floor(Math.random() * 6) + 3; 
+            const tR = Math.floor(Math.random() * 5) + 3;
+            state.targetMedian = tM; state.targetRange = tR;
+            document.getElementById('goal-text-count').innerText = `${state.count} Immeubles`;
+            document.getElementById('goal-text-med').innerText = `Médiane : ${tM}`;
+            document.getElementById('goal-text-range').innerText = `Étendue : ${tR}`;
+            
+            const elMean = document.getElementById('goal-item-mean');
+            const elSpec = document.getElementById('goal-item-special');
+            
+            if(lvl >= 2) {
+                elMean.classList.remove('hidden');
+                document.getElementById('goal-text-mean').innerText = `Moyenne : ${tM}`; // Simplified target
+            } else elMean.classList.add('hidden');
+            
+            if(lvl === 3) {
+                elSpec.classList.remove('hidden');
+                document.getElementById('goal-text-special').innerText = `Un immeuble de ${state.targetSpecial}`;
+            } else elSpec.classList.add('hidden');
+            
+            document.querySelectorAll('.goal-check').forEach(c => c.classList.remove('ok'));
+            document.querySelectorAll('.goal-item').forEach(c => c.classList.remove('done'));
+            checkConstructWin(); 
+        }
         
+        function startDragSupply(e) {
+            e.preventDefault();
+            const ghost = document.createElement('div');
+            ghost.className = 'flying-brick';
+            document.body.appendChild(ghost);
+            draggedBrick = { sourceId: 'SUPPLY', amount: 1, element: ghost };
+            updateGhostPos(e.touches?e.touches[0]:e);
+            document.addEventListener('mousemove', onBrickDrag);
+            document.addEventListener('touchmove', onBrickDrag, {passive: false});
+            document.addEventListener('mouseup', endBrickDragConstruct);
+            document.addEventListener('touchend', endBrickDragConstruct);
+        }
+        
+        function endBrickDragConstruct(e) {
+            if(!draggedBrick) return;
+            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const containerRect = container.getBoundingClientRect();
+            const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
+            const startX = (containerRect.width - totalW) / 2;
+            const relativeX = clientX - containerRect.left - startX;
+            let targetIdx = Math.floor((relativeX + CONFIG.gap/2) / (CONFIG.buildingWidth + CONFIG.gap));
+            
+            if (targetIdx >= 0 && targetIdx < state.count) {
+                const targetObj = state.buildings[targetIdx];
+                if (targetObj.value < CONFIG.maxFloors) {
+                    targetObj.value += 1;
+                    updateBuildingVisuals(targetObj);
+                    playSound('pop');
+                    checkConstructWin();
+                }
+            }
+            draggedBrick.element.remove();
+            draggedBrick = null;
+            document.removeEventListener('mousemove', onBrickDrag);
+            document.removeEventListener('touchmove', onBrickDrag);
+            document.removeEventListener('mouseup', endBrickDragConstruct);
+            document.removeEventListener('touchend', endBrickDragConstruct);
+        }
+        
+        function checkConstructWin() {
+            const vals = state.buildings.map(b => b.value).sort((a,b)=>a-b);
+            const mid = Math.floor(vals.length/2);
+            const currMed = (vals.length % 2 !== 0) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
+            const currRange = Math.max(...vals) - Math.min(...vals);
+            
+            let win = true;
+            
+            const updateItem = (id, cond) => {
+                const el = document.getElementById(id);
+                if(cond) { el.parentElement.classList.add('done'); el.querySelector('.goal-check').classList.add('ok'); }
+                else { el.parentElement.classList.remove('done'); el.querySelector('.goal-check').classList.remove('ok'); win = false; }
+            };
+
+            updateItem('check-med', currMed === state.targetMedian);
+            updateItem('check-range', currRange === state.targetRange);
+            updateItem('check-count', true);
+            
+            if(state.constructLevel >= 2) updateItem('check-mean', false); // Placeholder logic
+            if(state.constructLevel === 3) updateItem('check-special', false);
+            
+            if(win) { playSound('ding'); showFloatingResult("Mission Réussie !", "", "text-green-400"); }
+            else { floatRes.style.opacity = '0'; }
+        }
+
+        // --- COMMON TOOLS ---
         function editBuilding(id) {
             const b = state.buildings.find(x => x.id === id);
             let v = prompt("Hauteur :", b.value);
             if(v) { 
                 v = parseFloat(v); 
                 if(!isNaN(v) && v>0 && v<=CONFIG.maxFloors) { 
-                    v = Math.round(v * 2) / 2;
+                    v = Math.round(v);
                     b.value=v; 
                     if(state.mode === 'MEDIAN') {
                         b.badgeEl.innerText = v;
@@ -1046,15 +1199,16 @@
                         medianTool.style.display='none';
                         floatRes.style.opacity='0';
                         checkSorted();
-                    } else if(state.mode === 'MEAN') {
+                    } else if(state.mode === 'MEAN' || state.mode === 'BUILD') {
                         updateBuildingVisuals(b);
-                        checkMeanWin();
+                        if(state.mode === 'MEAN') checkMeanWin();
+                        if(state.mode === 'BUILD') checkConstructWin();
                     } else {
                          b.badgeEl.innerText = v;
                          b.buildingEl.style.height = (v * CONFIG.floorHeight) + 'px';
                          if(state.mode === 'RANGE') {
                              state.rangeSelection = [];
-                             state.buildings.forEach(b=>b.buildingEl.classList.remove('selected-range', 'dimmed', 'highlight-range'));
+                             state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
                              rangeArrow.style.display = 'none';
                              state.isRangeFound = false;
                          }
@@ -1062,14 +1216,11 @@
                 }
             }
         }
-
         function startDragBuilding(e, wrapper, id) {
             if (state.currentTool !== 'hand' || state.isMedianFound || (state.mode !== 'MEDIAN' && state.mode !== 'RANGE')) return;
             e.preventDefault();
-            
             const bObj = state.buildings.find(b => b.id === id);
             wrapper.classList.add('is-dragging');
-            
             const onDrag = (e) => {
                 e.preventDefault();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1077,12 +1228,9 @@
                 const mouseRelativeX = clientX - containerRect.left;
                 const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
                 const startX = (containerRect.width - totalW) / 2;
-                
                 wrapper.style.left = (mouseRelativeX - CONFIG.buildingWidth/2) + 'px';
-                
                 let newIndex = Math.floor((mouseRelativeX - startX + CONFIG.gap/2) / (CONFIG.buildingWidth + CONFIG.gap));
                 if (newIndex < 0) newIndex = 0; if (newIndex >= state.count) newIndex = state.count - 1;
-
                 const oldIndex = state.buildings.indexOf(bObj);
                 if (newIndex !== oldIndex) {
                     state.buildings.splice(oldIndex, 1);
@@ -1091,7 +1239,6 @@
                     playSound('pop');
                 }
             };
-            
             const stopDrag = () => {
                 wrapper.classList.remove('is-dragging');
                 repositionBuildings();
@@ -1101,21 +1248,24 @@
                 document.removeEventListener('mouseup', stopDrag);
                 document.removeEventListener('touchend', stopDrag);
             };
-            
             document.addEventListener('mousemove', onDrag);
             document.addEventListener('touchmove', onDrag, {passive: false});
             document.addEventListener('mouseup', stopDrag);
             document.addEventListener('touchend', stopDrag);
         }
-
         function autoSort() {
-            state.isSorted = true; // Force sorted state
+            state.isSorted = true;
             state.buildings.sort((a,b)=>a.value-b.value);
             repositionBuildings();
             playSound('slide');
             if(state.mode === 'MEDIAN') checkSorted();
+            if(state.mode === 'RANGE') {
+                state.rangeSelection = [];
+                state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
+                document.getElementById('range-arrow').style.display = 'none';
+                floatRes.style.opacity = '0';
+            }
         }
-        
         function trySelectMedian(id) {
             if(state.mode !== 'MEDIAN') return;
             const n = state.buildings.length;
@@ -1125,12 +1275,11 @@
             else playSound('lock');
         }
 
-        // --- MEDIAN TOOL DRAG ---
+        // --- MEDIAN TOOL ---
         let isToolDragging = false;
         const mt = document.getElementById('median-tool');
         mt.addEventListener('mousedown', startToolDrag);
         mt.addEventListener('touchstart', startToolDrag, {passive: false});
-
         function startToolDrag(e) {
             if(state.isMedianFound || state.mode !== 'MEDIAN') return;
             e.preventDefault(); e.stopPropagation();
@@ -1144,31 +1293,21 @@
             if(!isToolDragging) return;
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
             const r = container.getBoundingClientRect();
-            let x = cx - r.left;
-            if(x < 0) x = 0; if(x > r.width) x = r.width;
+            let x = cx - r.left; if(x<0) x=0; if(x>r.width) x=r.width;
             mt.style.left = x + 'px';
-            
-            const snap = getClosestSnap(x);
-            const tl = document.getElementById('tool-label');
-            if(snap) tl.innerText = snap.val;
+            getClosestSnap(x);
         }
         function stopToolDrag(e) {
             isToolDragging = false;
             const r = mt.getBoundingClientRect();
             const tx = r.left + r.width/2 - container.getBoundingClientRect().left;
             const snap = getClosestSnap(tx);
-            if(snap && snap.isMedian) {
-                mt.style.left = snap.x + 'px';
-                solveMedian();
-            } else {
-                document.getElementById('tool-label').innerText = "?";
-            }
+            if(snap && snap.isMedian) { mt.style.left = snap.x + 'px'; solveMedian(); }
             document.removeEventListener('mousemove', onToolDrag);
             document.removeEventListener('touchmove', onToolDrag);
             document.removeEventListener('mouseup', stopToolDrag);
             document.removeEventListener('touchend', stopToolDrag);
         }
-
         function getClosestSnap(x) {
             const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
             const startX = (container.offsetWidth - totalW) / 2;
@@ -1176,63 +1315,45 @@
             const n = state.buildings.length;
             const isOdd = n%2!==0;
             const mid = Math.floor(n/2);
-
             state.buildings.forEach((b, i) => {
                 const bx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth/2;
                 const d = Math.abs(x - bx);
-                if(d < 30 && d < minD) {
-                    minD = d;
-                    best = { x:bx, type:'building', val:b.value, isMedian:(isOdd && i===mid) };
-                }
+                if(d < 30 && d < minD) { minD = d; best = { x:bx, isMedian:(isOdd && i===mid), val:b.value }; }
             });
             for(let i=0; i<n-1; i++) {
                 const gx = startX + i * (CONFIG.buildingWidth + CONFIG.gap) + CONFIG.buildingWidth + CONFIG.gap/2;
                 const d = Math.abs(x - gx);
-                if(d < 30 && d < minD) {
-                    minD = d;
-                    const avg = (state.buildings[i].value + state.buildings[i+1].value)/2;
-                    best = { x:gx, type:'gap', val:avg, isMedian:(!isOdd && i===mid-1) };
-                }
+                if(d < 30 && d < minD) { minD = d; best = { x:gx, isMedian:(!isOdd && i===mid-1), val: (state.buildings[i].value+state.buildings[i+1].value)/2 }; }
             }
             return best;
         }
 
-        // --- DRAWING & TOOLS ---
+        // --- DRAWING ---
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
         const cursorDiv = document.getElementById('custom-cursor');
         let isDrawing = false, lastX=0, lastY=0;
-
         function resizeCanvas() {
             const rect = document.getElementById('city-container').getBoundingClientRect();
             canvas.width = rect.width; canvas.height = rect.height;
-            if(state.currentTool === 'pen') {
-                ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = 4; ctx.lineCap = 'round';
-            }
+            if(state.currentTool === 'pen') { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.lineCap = 'round'; }
         }
-
         function setTool(tool) {
             state.currentTool = tool;
-            const h = document.getElementById('tool-hand'), p = document.getElementById('tool-pen'), s = document.getElementById('tool-scissors');
+            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors');
             [h,p,s].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
-            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none';
-            mt.style.pointerEvents = 'auto';
-
+            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; mt.style.pointerEvents = 'auto';
             if(tool === 'hand') h.className = "p-2 rounded bg-slate-600 text-white shadow";
             else if(tool === 'pen') {
-                p.className = "p-2 rounded bg-slate-600 text-white shadow";
-                canvas.style.pointerEvents = 'auto'; document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block';
-                mt.style.pointerEvents = 'none';
+                p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
+                document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; mt.style.pointerEvents = 'none';
             } else if(tool === 'scissors') s.className = "p-2 rounded bg-purple-600 text-white shadow";
         }
-
         function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
         function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-r.left, y: (e.touches?e.touches[0].clientY:e.clientY)-r.top }; }
         function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
-        function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; cursorDiv.style.left = (e.touches?e.touches[0].clientX:e.clientX) + 'px'; cursorDiv.style.top = (e.touches?e.touches[0].clientY:e.clientY) + 'px'; }
+        function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; cursorDiv.style.left=(e.touches?e.touches[0].clientX:e.clientX)+'px'; cursorDiv.style.top=(e.touches?e.touches[0].clientY:e.clientY)+'px'; }
         function endDraw() { isDrawing=false; }
-        
         canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
         canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); canvas.addEventListener('touchend', endDraw);
 
