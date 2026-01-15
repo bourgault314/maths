@@ -17,17 +17,31 @@
         }
 
         /* --- UI ELEMENTS --- */
-        .mode-btn {
-            padding: 6px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
-            transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(30, 41, 59, 0.8); color: #94a3b8;
+        .nav-btn {
+            padding: 8px 20px; border-radius: 12px; font-weight: 800; font-size: 1rem;
+            transition: all 0.2s; border: 2px solid transparent;
+            background: rgba(30, 41, 59, 0.5); color: #94a3b8; cursor: pointer;
         }
-        .mode-btn:hover { background: rgba(51, 65, 85, 0.9); color: white; }
-        .mode-btn.active {
-            background: #e11d48; /* Rose vif */
-            color: white; border-color: #fb7185;
-            box-shadow: 0 0 15px rgba(225, 29, 72, 0.4);
+        .nav-btn:hover { background: rgba(51, 65, 85, 0.8); color: white; }
+        .nav-btn.active {
+            background: #3b82f6; /* Bleu */
+            color: white; border-color: #60a5fa;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            transform: scale(1.05);
         }
+        .nav-btn.active-construct {
+            background: #e11d48; /* Rose/Rouge pour constructeur */
+            border-color: #fb7185;
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.4);
+        }
+
+        .sub-mode-btn {
+            padding: 4px 12px; border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+            background: #1e293b; color: #cbd5e1; border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+        .sub-mode-btn:hover { background: #334155; }
+        .sub-mode-btn.active { background: #0ea5e9; color: white; border-color: #38bdf8; }
 
         .lvl-btn {
             padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
@@ -39,6 +53,18 @@
             background: #22c55e; color: white; border-color: #4ade80;
             box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
         }
+
+        /* Verify Button */
+        .btn-verify {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white; font-weight: 900; letter-spacing: 1px;
+            padding: 10px 24px; border-radius: 50px;
+            border: 2px solid #4ade80;
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+            transition: all 0.2s;
+        }
+        .btn-verify:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(22, 163, 74, 0.6); }
+        .btn-verify:active { transform: scale(0.95); }
 
         /* SCÈNE */
         #city-container {
@@ -64,44 +90,44 @@
         .mode-mean .building-wrapper, .mode-build .building-wrapper { transition: none; }
         .mode-range .building-wrapper { cursor: pointer; }
 
-        /* Dragging Style (Cyan) */
+        /* MODIFICATION: Gestion du Drag pour le building ET le badge */
         .building-wrapper.is-dragging .building {
             transform: scale(1.05) translateY(-10px);
             box-shadow: 0 0 30px rgba(34, 211, 238, 0.6);
             border-color: #67e8f9 !important; z-index: 100;
             filter: brightness(1.1);
         }
+        /* AJOUT: On remonte le badge quand on drag */
+        .building-wrapper.is-dragging .value-badge {
+            transform: translateY(-20px) scale(1.1);
+            z-index: 101;
+            border: 2px solid #67e8f9;
+        }
 
         /* STYLE "GRATTE-CIEL" */
         .building {
             width: 60px;
-            /* Background gradient is base color */
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
             border: 3px solid #7dd3fc; border-bottom: none; border-radius: 8px 8px 0 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             cursor: grab; position: relative; overflow: hidden;
             display: flex; flex-direction: column-reverse;
-            /* Windows texture */
             background-image: radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%);
             background-size: 12px 20px; background-position: center 6px;
             transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.2s, box-shadow 0.2s, opacity 0.5s, filter 0.5s;
         }
 
-        /* CORRECTION : L'immeuble impair est solide et garde ses fenêtres */
         .building.highlight-odd {
-            /* On remplace la couleur de fond par du doré, mais on réapplique la texture des fenêtres */
             background: 
-                radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%), /* Fenêtres */
-                linear-gradient(180deg, #facc15 0%, #ca8a04 100%) !important; /* Doré */
+                radial-gradient(rgba(255,255,255,0.4) 20%, transparent 20%),
+                linear-gradient(180deg, #facc15 0%, #ca8a04 100%) !important; 
             background-size: 12px 20px, 100% 100% !important;
             background-position: center 6px, 0 0 !important;
-            
             border-color: #fef08a !important; 
             box-shadow: 0 0 50px rgba(250, 204, 21, 0.9) !important;
             z-index: 30; transform: scale(1.05);
-            opacity: 1 !important; /* Force opacity */
+            opacity: 1 !important;
         }
-        
         .building.highlight-range {
             border-color: #a855f7 !important;
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.8) !important;
@@ -109,7 +135,6 @@
         }
         .building.dimmed { opacity: 0.3; filter: grayscale(0.8); }
 
-        /* MODE MOYENNE : STYLE BRIQUES UNIES */
         .building.mean-mode {
             background: transparent !important; border: none !important; box-shadow: none !important;
             background-image: none !important; overflow: visible !important;
@@ -117,33 +142,21 @@
         
         .brick {
             width: 60px; box-sizing: border-box;
-            background: #3b82f6; /* Bleu solide */
-            border: 1px solid #1d4ed8; 
-            border-top: 1px solid #60a5fa; 
-            position: relative; height: 20px;
+            background: #3b82f6; border: 1px solid #1d4ed8; 
+            border-top: 1px solid #60a5fa; position: relative; height: 20px;
         }
-        /* Top brick style - Uniforme */
-        .brick.is-top {
-            cursor: grab;
-        }
+        .brick.is-top { cursor: grab; }
         .brick.is-top:hover { filter: brightness(1.1); }
-        
-        .brick.half-brick {
-            background: #a855f7; border-color: #7e22ce;
-        }
+        .brick.half-brick { background: #a855f7; border-color: #7e22ce; }
         .brick.half-brick::after {
             content: '½'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: 10px; color: white; opacity: 0.9; font-weight: bold;
         }
-        
-        /* Ciseaux Visual */
         .brick.cut-visual::before {
-            content: ''; 
-            position: absolute; top: 50%; left: 0; right: 0; height: 0;
+            content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 0;
             border-top: 2px dashed #e9d5ff; z-index: 10;
         }
 
-        /* Badge Valeur */
         .value-badge {
             background: white; color: #0f172a; font-weight: 800;
             padding: 4px 12px; border-radius: 20px; font-size: 1.5rem;
@@ -152,7 +165,7 @@
             border: 2px solid transparent;
         }
         .value-badge:hover { transform: scale(1.15); background-color: #f0f9ff; color: #0284c7; }
-        .value-badge.highlight-neighbor { /* Orange */
+        .value-badge.highlight-neighbor {
             background-color: #fff7ed !important; color: #ea580c !important;
             border: 2px solid #fb923c !important; transform: scale(1.1);
             box-shadow: 0 0 15px rgba(251, 146, 60, 0.5);
@@ -170,24 +183,17 @@
             box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
         }
         
-        /* STYLE IMMEUBLE FANTOME (MÉDIANE PAIR UNIQUEMENT) */
         #median-tool.ghost-building {
-            width: 60px !important; /* Largeur d'un immeuble */
+            width: 60px !important; 
             background: linear-gradient(180deg, rgba(250, 204, 21, 0.8) 0%, rgba(202, 138, 4, 0.8) 100%) !important;
             border: 3px solid rgba(254, 240, 138, 0.9) !important;
             border-bottom: none; border-radius: 8px 8px 0 0;
             box-shadow: 0 0 40px rgba(250, 204, 21, 0.6) !important;
-            /* Texture fenêtres par défaut sur le ghost (sera supprimée par no-windows) */
             background-image: radial-gradient(rgba(255,255,255,0.6) 20%, transparent 20%) !important;
             background-size: 12px 20px !important; background-position: center 6px !important;
-            pointer-events: none;
-            z-index: 40; /* Devant les dimmed mais derrière le texte */
+            pointer-events: none; z-index: 40;
         }
-
-        /* Pas de fenêtres pour le cas PAIR (virtuel) */
-        #median-tool.ghost-building.no-windows {
-            background-image: none !important;
-        }
+        #median-tool.ghost-building.no-windows { background-image: none !important; }
         
         #median-tool:active { cursor: grabbing; }
         
@@ -198,10 +204,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #ec4899; padding: 0 8px;
             transition: border-color 0.5s, color 0.5s;
         }
-        
-        #median-tool.ghost-building #tool-handle { 
-            display: none !important;
-        }
+        #median-tool.ghost-building #tool-handle { display: none !important; }
         
         /* PANCARTE DU PANNEAU (Label) */
         #tool-label {
@@ -213,27 +216,18 @@
             pointer-events: none; z-index: 60; text-align: center; transition: all 0.3s;
             min-width: 60px; opacity: 1; border: 2px solid white;
         }
-        
         #tool-label::after {
             content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
             border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid #ec4899;
         }
         
-        /* Label sur l'immeuble fantôme */
         #median-tool.ghost-building #tool-label {
-            background: transparent;
-            color: #facc15;
-            border: none;
-            box-shadow: none;
-            font-size: 3rem; /* Gros texte */
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(250, 204, 21, 0.5);
-            transform: translateY(-90%); /* Posé sur le toit */
+            background: transparent; color: #facc15; border: none; box-shadow: none;
+            font-size: 3rem; text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(250, 204, 21, 0.5);
+            transform: translateY(-90%);
         }
-        #median-tool.ghost-building #tool-label::after { 
-            display: none; 
-        }
+        #median-tool.ghost-building #tool-label::after { display: none; }
 
-        /* FLECHE D'ETENDUE - SUPPRIMÉE AU DISPLAY */
         #range-arrow {
             position: absolute; top: 25%; left: 0; height: 40px; pointer-events: none;
             display: none; z-index: 45; align-items: center;
@@ -249,29 +243,24 @@
         .range-tip-left { border-right: 15px solid #a855f7; margin-right: -2px; }
         .range-tip-right { border-left: 15px solid #a855f7; margin-left: -2px; }
 
-        /* Sol */
         .ground {
             position: absolute; bottom: 0; width: 100%; height: 24px;
             background: #1e293b; border-top: 4px solid #334155; z-index: 10;
             box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        /* Resultat Flottant (Tout en haut) */
         #floating-result {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
             text-align: center; pointer-events: none; z-index: 60;
             opacity: 0; transition: opacity 0.5s; width: 90%;
         }
         #floating-result h2 {
-            font-size: 3rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            margin-bottom: 0; line-height: 1;
+            font-size: 3rem; font-weight: 800; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 0; line-height: 1;
         }
         #floating-result p {
-            color: #cbd5e1; font-size: 1.2rem; margin-top: 5px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.8); display: inline-block;
+            color: #cbd5e1; font-size: 1.2rem; margin-top: 5px; text-shadow: 0 2px 5px rgba(0,0,0,0.8); display: inline-block;
         }
 
-        /* Constructeur Slots */
         .construct-slot {
             width: 70px; height: 10px; background: #334155; 
             border-radius: 4px; margin-bottom: 24px; position: absolute; bottom: 0;
@@ -286,7 +275,6 @@
         }
         #brick-supply::after { content: 'BRIQUES'; font-size: 10px; color: #94a3b8; font-weight: bold; margin-top: 10px; }
         
-        /* Objectifs HUD */
         #construct-goals {
             position: absolute; top: 10px; right: 20px;
             background: rgba(15, 23, 42, 0.95); padding: 15px; border-radius: 16px;
@@ -294,12 +282,15 @@
             z-index: 40; box-shadow: 0 10px 20px rgba(0,0,0,0.5); width: 240px;
         }
         .goal-item { display: flex; align-items: center; justify-content: space-between; color: #94a3b8; font-weight: 600; font-size: 0.9rem; transition: color 0.3s; }
-        .goal-item.done { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
+        .goal-item.success { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
+        .goal-item.error { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
+        
         .goal-check { 
-            width: 12px; height: 12px; border-radius: 50%; background: #475569;
-            transition: all 0.3s; margin-left: 10px;
+            width: 14px; height: 14px; border-radius: 50%; background: #475569;
+            transition: all 0.3s; margin-left: 10px; border: 2px solid #334155;
         }
-        .goal-item.done .goal-check { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .goal-item.success .goal-check { background: #22c55e; border-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .goal-item.error .goal-check { background: #ef4444; border-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
 
         .flying-brick {
             position: fixed; width: 60px; height: 20px;
@@ -314,15 +305,15 @@
 
     <div id="custom-cursor">
         <svg id="cursor-pen-svg" class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M27 7 L13 21" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <path d="M27 7 L13 21" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+            <path d="M13 21 L8 32" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#ffffff"/>
             <circle cx="8" cy="32" r="1" fill="white"/>
         </svg>
     </div>
 
     <!-- HEADER -->
-    <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-2">
+    <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-4">
         <div class="flex items-center gap-3 pl-2">
             <span class="text-3xl">🏙️</span>
             <div>
@@ -331,33 +322,62 @@
             </div>
         </div>
 
+        <!-- MAIN NAVIGATION -->
+        <div class="flex gap-4">
+            <button onclick="setMainMode('CALCUL')" id="nav-calcul" class="nav-btn active">
+                🧮 Mode Calcul
+            </button>
+            <button onclick="setMainMode('BUILD')" id="nav-build" class="nav-btn">
+                🏗️ Mode Constructeur
+            </button>
+        </div>
+
         <!-- ZONE DE RESULTAT (Tout en haut) -->
         <div id="info-message" class="flex-1 text-center transition-all duration-500 min-h-[40px] flex items-center justify-center">
             <h2 id="msg-title" class="text-lg sm:text-2xl font-bold text-slate-300 drop-shadow-md"></h2>
         </div>
-
-        <div class="flex gap-2 pr-2">
-            <button onclick="setMode('MEDIAN')" id="btn-mode-median" class="mode-btn active">MÉDIANE</button>
-            <button onclick="setMode('MEAN')" id="btn-mode-mean" class="mode-btn">MOYENNE</button>
-            <button onclick="setMode('RANGE')" id="btn-mode-range" class="mode-btn">ÉTENDUE</button>
-            <button onclick="setMode('BUILD')" id="btn-mode-build" class="mode-btn">CONSTRUCTEUR</button>
-        </div>
     </div>
 
-    <!-- TOOLBAR -->
-    <div class="bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-40 shrink-0 relative">
-        <div class="flex gap-2 items-center">
+    <!-- TOOLBAR (z-index 70 to be ABOVE canvas z-60) -->
+    <div class="bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-[70] shrink-0 relative min-h-[50px]">
+        
+        <!-- SUB-NAVIGATION: CALCUL -->
+        <div id="subnav-calcul" class="flex gap-2 items-center">
+            <button onclick="setSubMode('MEDIAN')" id="btn-mode-median" class="sub-mode-btn active">MÉDIANE</button>
+            <button onclick="setSubMode('MEAN')" id="btn-mode-mean" class="sub-mode-btn">MOYENNE</button>
+            <button onclick="setSubMode('RANGE')" id="btn-mode-range" class="sub-mode-btn">ÉTENDUE</button>
+        </div>
+
+        <!-- SUB-NAVIGATION: BUILD (Juste les niveaux) -->
+        <div id="subnav-build" class="hidden flex gap-4 items-center">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">Niveau :</div>
+            <button onclick="setConstructLevel(1)" class="lvl-btn active" id="btn-lvl-1">Apprenti</button>
+            <button onclick="setConstructLevel(2)" class="lvl-btn" id="btn-lvl-2">Architecte</button>
+            <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">Expert</button>
+        </div>
+
+        <!-- GENERATEUR (CALCUL SEULEMENT) -->
+        <div id="controls-gen" class="flex items-center gap-3 bg-slate-800 p-1 pr-2 rounded-xl border border-slate-600">
+            <div class="flex items-center gap-1 px-2 border-r border-slate-600">
+                <button onclick="updateCount(-1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">-</button>
+                <span id="count-display" class="w-6 text-center font-bold text-sky-400">5</span>
+                <button onclick="updateCount(1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">+</button>
+            </div>
+            <button onclick="generateRandomCity()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded font-bold text-sm shadow flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                Nouveau
+            </button>
+        </div>
+
+        <!-- TOOLS COMMON -->
+        <div class="flex gap-2 items-center absolute left-1/2 -translate-x-1/2">
             <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
                 <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-slate-600 text-white shadow"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg></button>
                 <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                 <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:text-red-200"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
             </div>
-
-            <div id="mini-instruction" class="text-[10px] text-slate-400 border border-slate-700 rounded px-2 py-1 hidden sm:block">
-                Cliquez sur une bulle pour changer la valeur • Glissez pour ranger
-            </div>
-
-            <!-- CISEAUX (Mode Moyenne) : Ajout du bouton Main -->
+            
+            <!-- CISEAUX (Mode Moyenne ou Build) -->
             <div id="scissors-container" class="hidden items-center gap-1 bg-purple-900/30 p-1 rounded-lg border border-purple-600/50">
                 <button onclick="setTool('hand')" id="tool-mean-hand" class="p-2 rounded text-purple-300 hover:bg-purple-800 hover:text-white" title="Main">
                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
@@ -367,18 +387,9 @@
                 </button>
             </div>
         </div>
-
-        <!-- GENERATEUR -->
-        <div id="controls-gen" class="flex items-center gap-3 bg-slate-800 p-1 pr-2 rounded-xl border border-slate-600">
-            <div class="flex items-center gap-1 px-2 border-r border-slate-600">
-                <button onclick="updateCount(-1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">-</button>
-                <span id="count-display" class="w-6 text-center font-bold text-sky-400">5</span>
-                <button onclick="updateCount(1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">+</button>
-            </div>
-            <button onclick="generateCity(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded font-bold text-sm shadow flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                Nouveau
-            </button>
+        
+        <div id="mini-instruction" class="text-[10px] text-slate-400 border border-slate-700 rounded px-2 py-1 hidden sm:block ml-auto">
+            Cliquez sur une bulle pour changer la valeur • Glissez pour ranger
         </div>
     </div>
 
@@ -419,11 +430,11 @@
                 <div class="brick" style="width: 40px; height: 12px;"></div>
             </div>
             
-            <!-- Objectifs Constructeur HUD (AUTOMATIQUE) -->
+            <!-- Objectifs Constructeur HUD (MANUEL) -->
             <div id="construct-goals">
                 <div class="text-slate-300 text-sm font-bold mb-3 border-b border-slate-700 pb-2 flex justify-between">
                     <span>🎯 Objectifs</span>
-                    <span id="level-display" class="text-xs text-sky-400">Niveau 1</span>
+                    <button onclick="startNewChallenge()" class="px-2 py-0.5 bg-indigo-600 rounded text-[10px] text-white hover:bg-indigo-500">Nouveau Défi</button>
                 </div>
                 <div class="flex flex-col gap-2">
                     <div class="goal-item"><span id="goal-text-count">...</span> <div id="check-count" class="goal-check"></div></div>
@@ -438,8 +449,8 @@
         </div>
     </main>
 
-    <!-- FOOTER MEDIANE -->
-    <footer id="footer-median" class="bg-slate-900 border-t border-slate-700 p-4 flex justify-center items-center gap-8 min-h-[80px]">
+    <!-- FOOTER: CALCUL / MEDIANE -->
+    <footer id="footer-median" class="footer-group bg-slate-900 border-t border-slate-700 p-4 flex justify-center items-center gap-8 min-h-[80px]">
         <button id="btn-sort" onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> 1. RANGER
         </button>
@@ -449,8 +460,8 @@
         </button>
     </footer>
 
-    <!-- FOOTER RANGE -->
-    <footer id="footer-range" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-8 min-h-[80px]">
+    <!-- FOOTER: CALCUL / RANGE -->
+    <footer id="footer-range" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-8 min-h-[80px]">
         <button onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> RANGER
         </button>
@@ -460,20 +471,20 @@
         </div>
     </footer>
     
-    <!-- FOOTER MOYENNE -->
-    <footer id="footer-mean" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center min-h-[80px]">
+    <!-- FOOTER: CALCUL / MEAN -->
+    <footer id="footer-mean" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center min-h-[80px]">
         <div class="text-slate-400 text-sm font-medium flex items-center gap-2">
             <span class="text-2xl">🏗️</span>
             <span>Déplacez les briques pour égaliser les hauteurs</span>
         </div>
     </footer>
     
-    <!-- FOOTER BUILD -->
-    <footer id="footer-build" class="hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-4 min-h-[80px]">
-        <div class="text-slate-400 text-xs font-bold uppercase tracking-widest">Difficulté :</div>
-        <button onclick="setConstructLevel(1)" class="lvl-btn active" id="btn-lvl-1">Apprenti</button>
-        <button onclick="setConstructLevel(2)" class="lvl-btn" id="btn-lvl-2">Architecte</button>
-        <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">Expert</button>
+    <!-- FOOTER: BUILDER -->
+    <footer id="footer-build" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 justify-center items-center gap-4 min-h-[80px]">
+        <div class="text-slate-400 text-sm mr-4">Une fois terminé :</div>
+        <button onclick="verifyConstruction()" class="btn-verify">
+            VÉRIFIER
+        </button>
     </footer>
 
     <script>
@@ -485,10 +496,16 @@
             minFloors: 1
         };
 
+        // Variable globale pour éviter les références undefined
+        const medianTool = document.getElementById('median-tool');
+
         let state = {
-            mode: 'MEDIAN',
+            mainMode: 'CALCUL', // 'CALCUL' or 'BUILD'
+            subMode: 'MEDIAN', // 'MEDIAN', 'MEAN', 'RANGE'
+            
             count: 5,
-            buildings: [], 
+            buildings: [],
+            
             isSorted: false,
             isMedianFound: false,
             isMeanFound: false,
@@ -496,7 +513,6 @@
             rangeSelection: [],
             currentTool: 'hand',
             
-            // Construct
             constructLevel: 1,
             targetMedian: 0,
             targetRange: 0,
@@ -506,26 +522,15 @@
 
         // UI Refs
         const container = document.getElementById('city-container');
-        const mainArea = document.getElementById('main-area');
-        const medianTool = document.getElementById('median-tool');
         const toolLabel = document.getElementById('tool-label');
         const groupLeft = document.getElementById('group-left');
         const groupRight = document.getElementById('group-right');
         const ground = document.querySelector('.ground');
         const rangeArrow = document.getElementById('range-arrow');
-        
         const floatRes = document.getElementById('floating-result');
         const resTitle = document.getElementById('res-title');
         const resSub = document.getElementById('res-sub');
-        
-        const headerInfoTitle = document.getElementById('msg-title');
-
-        const footerMedian = document.getElementById('footer-median');
-        const footerMean = document.getElementById('footer-mean');
-        const footerRange = document.getElementById('footer-range');
-        const footerBuild = document.getElementById('footer-build');
         const btnMedian = document.getElementById('btn-median');
-        
         const brickSupply = document.getElementById('brick-supply');
         const constructGoals = document.getElementById('construct-goals');
         const controlsGen = document.getElementById('controls-gen');
@@ -539,74 +544,112 @@
                 repositionBuildings(); 
             });
             setTimeout(resizeCanvas, 100);
-            generateCity(true); 
+            
+            // Default Start
+            generateRandomCity(); 
+            updateUIForMode();
+            
+            // Initialize global mouse move for cursor
+            document.addEventListener('mousemove', (e) => {
+                if(state.currentTool === 'pen') {
+                    const cursorDiv = document.getElementById('custom-cursor');
+                    const x = e.touches ? e.touches[0].clientX : e.clientX;
+                    const y = e.touches ? e.touches[0].clientY : e.clientY;
+                    // Tip is at 8, 32 in 34x34 SVG. We offset by that amount.
+                    cursorDiv.style.left = (x - 8) + 'px';
+                    cursorDiv.style.top = (y - 32) + 'px';
+                }
+            });
         }
 
-        function setMode(mode) {
-            if(state.mode === mode) return;
-            
-            // RESET
-            if(state.mode !== 'BUILD' && mode !== 'BUILD') {
-                state.buildings.forEach(b => {
-                    b.value = b.originalVal;
-                    b.cutTop = false; 
-                });
+        function setMainMode(mode) {
+            state.mainMode = mode;
+            if (mode === 'BUILD') {
+                if (state.targetMedian === 0) startNewChallenge();
+            } else {
+                state.isMedianFound = false;
+                state.isMeanFound = false;
+                state.isRangeFound = false;
+                state.isSorted = false;
+                state.rangeSelection = [];
             }
+            updateUIForMode();
+        }
 
-            state.mode = mode;
-            state.rangeSelection = [];
+        function setSubMode(sub) {
+            state.subMode = sub;
             state.isMedianFound = false;
             state.isMeanFound = false;
             state.isRangeFound = false;
             state.isSorted = false;
+            state.rangeSelection = [];
+            
+            state.buildings.forEach(b => {
+                b.value = b.originalVal || b.value;
+                b.cutTop = false; 
+            });
+            
+            updateUIForMode();
+        }
 
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            if(mode === 'MEDIAN') document.getElementById('btn-mode-median').classList.add('active');
-            if(mode === 'MEAN') document.getElementById('btn-mode-mean').classList.add('active');
-            if(mode === 'RANGE') document.getElementById('btn-mode-range').classList.add('active');
-            if(mode === 'BUILD') document.getElementById('btn-mode-build').classList.add('active');
+        function updateUIForMode() {
+            document.getElementById('nav-calcul').className = `nav-btn ${state.mainMode === 'CALCUL' ? 'active' : ''}`;
+            document.getElementById('nav-build').className = `nav-btn ${state.mainMode === 'BUILD' ? 'active-construct' : ''}`;
 
-            footerMedian.classList.add('hidden'); footerMedian.classList.remove('flex');
-            footerMean.classList.add('hidden'); footerMean.classList.remove('flex');
-            footerRange.classList.add('hidden'); footerRange.classList.remove('flex');
-            footerBuild.classList.add('hidden'); footerBuild.classList.remove('flex');
-            scissorsContainer.classList.add('hidden'); scissorsContainer.classList.remove('flex');
+            const isCalcul = (state.mainMode === 'CALCUL');
+            const isBuild = (state.mainMode === 'BUILD');
+
+            document.getElementById('subnav-calcul').style.display = isCalcul ? 'flex' : 'none';
+            document.getElementById('subnav-build').style.display = isBuild ? 'flex' : 'none';
+            controlsGen.style.visibility = isCalcul ? 'visible' : 'hidden'; 
+            
+            document.querySelectorAll('.sub-mode-btn').forEach(b => b.classList.remove('active'));
+            if(state.subMode === 'MEDIAN') document.getElementById('btn-mode-median').classList.add('active');
+            if(state.subMode === 'MEAN') document.getElementById('btn-mode-mean').classList.add('active');
+            if(state.subMode === 'RANGE') document.getElementById('btn-mode-range').classList.add('active');
+
+            document.querySelectorAll('.footer-group').forEach(f => f.classList.remove('flex', 'hidden'));
+            document.querySelectorAll('.footer-group').forEach(f => f.classList.add('hidden'));
+
             brickSupply.style.display = 'none';
             constructGoals.style.display = 'none';
-            controlsGen.style.visibility = 'visible';
-            
+            scissorsContainer.classList.remove('flex');
+            scissorsContainer.classList.add('hidden');
+
             const mini = document.getElementById('mini-instruction');
 
-            if (mode === 'MEDIAN') {
-                footerMedian.classList.remove('hidden'); footerMedian.classList.add('flex');
-                showMessage("La ville est prête");
-                // MODIFICATION DEMANDÉE : Changement du texte
-                mini.innerText = "Glissez les immeubles pour les ranger";
-                // Restore sorting by ID
-                state.buildings.sort((a,b) => a.id - b.id);
-            } else if (mode === 'MEAN') {
-                footerMean.classList.remove('hidden'); footerMean.classList.add('flex');
-                scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex');
-                showMessage("Égalisez les hauteurs");
-                mini.innerText = "Les ciseaux permettent de couper une brique en deux";
-            } else if (mode === 'RANGE') {
-                footerRange.classList.remove('hidden'); footerRange.classList.add('flex');
-                showMessage("Calculez l'étendue");
-                mini.innerText = "Cliquez sur Min et Max";
-                state.rangeSelection = [];
-                // Restore original order
-                state.buildings.sort((a,b) => a.originalId - b.originalId);
-            } else if (mode === 'BUILD') {
-                footerBuild.classList.remove('hidden'); footerBuild.classList.add('flex');
+            if (isCalcul) {
+                if (state.subMode === 'MEDIAN') {
+                    document.getElementById('footer-median').classList.remove('hidden');
+                    document.getElementById('footer-median').classList.add('flex');
+                    showMessage("La ville est prête");
+                    mini.innerText = "Glissez les immeubles pour les ranger";
+                    state.buildings.sort((a,b) => a.id - b.id);
+                } else if (state.subMode === 'MEAN') {
+                    document.getElementById('footer-mean').classList.remove('hidden');
+                    document.getElementById('footer-mean').classList.add('flex');
+                    scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex');
+                    showMessage("Égalisez les hauteurs");
+                    mini.innerText = "Les ciseaux permettent de couper une brique en deux";
+                    state.buildings.sort((a,b) => a.originalId - b.originalId);
+                } else if (state.subMode === 'RANGE') {
+                    document.getElementById('footer-range').classList.remove('hidden');
+                    document.getElementById('footer-range').classList.add('flex');
+                    showMessage("Calculez l'étendue");
+                    mini.innerText = "Cliquez sur Min et Max";
+                    state.buildings.sort((a,b) => a.originalId - b.originalId);
+                }
+            } else {
+                document.getElementById('footer-build').classList.remove('hidden');
+                document.getElementById('footer-build').classList.add('flex');
                 brickSupply.style.display = 'flex';
                 constructGoals.style.display = 'flex';
-                controlsGen.style.visibility = 'hidden';
+                scissorsContainer.classList.remove('hidden'); scissorsContainer.classList.add('flex'); // Add scissors for Build
                 showMessage("Mode Constructeur");
                 mini.innerText = "Construisez pour atteindre les objectifs";
-                initConstructMode(state.constructLevel);
-                return;
+                state.rangeSelection = [];
             }
-            
+
             setTool('hand');
             refreshCityFromState();
         }
@@ -617,10 +660,10 @@
             if (n > 12) n = 12;
             state.count = n;
             document.getElementById('count-display').innerText = n;
-            generateCity(true);
+            generateRandomCity();
         }
 
-        function generateCity(randomize = false) {
+        function generateRandomCity() {
             clearCanvas();
             state.isSorted = false;
             state.isMedianFound = false;
@@ -628,42 +671,29 @@
             state.isRangeFound = false;
             state.rangeSelection = [];
             
-            if (randomize) {
-                state.buildings = [];
-                for(let i=0; i<state.count; i++) {
-                    let val = Math.floor(Math.random() * 19) + 2; 
-                    state.buildings.push({ id: i, value: val, originalVal: val, originalId: i });
-                }
-                
-                // LOGIQUE MODIFIÉE: 
-                // 1. Si nombre impair d'immeubles: La moyenne DOIT être entière (mathématiquement impossible d'avoir .5 avec des briques de 0.5 si le compte est impair, car Sum/N = X.5 => Sum = N*X + N/2 => Impossible pour Sum entier).
-                // 2. Si nombre pair: On choisit aléatoirement entre moyenne entière et moyenne .5
-                
-                let sum = state.buildings.reduce((a,b)=>a+b.value, 0);
-                
-                // Est-ce qu'on peut avoir une moyenne en demi ? (Seulement si Count est pair)
-                const canHaveHalf = (state.count % 2 === 0);
-                
-                // Pile ou face pour forcer un entier, sauf si on ne peut pas avoir de demi (alors on force entier)
-                const forceInteger = !canHaveHalf || (Math.random() > 0.5); 
+            state.buildings = [];
+            for(let i=0; i<state.count; i++) {
+                let val = Math.floor(Math.random() * 19) + 2; 
+                state.buildings.push({ id: i, value: val, originalVal: val, originalId: i });
+            }
+            
+            let sum = state.buildings.reduce((a,b)=>a+b.value, 0);
+            const canHaveHalf = (state.count % 2 === 0);
+            const forceInteger = !canHaveHalf || (Math.random() > 0.5); 
 
-                while (true) {
-                    const mean = sum / state.count;
-                    const isInteger = (mean % 1 === 0);
-                    const isHalf = (mean % 1 === 0.5);
-
-                    if (forceInteger && isInteger) break;
-                    if (!forceInteger && isHalf) break;
-                    
-                    // Ajustement
-                    state.buildings[state.count-1].value += 1;
-                    state.buildings[state.count-1].originalVal += 1;
-                    sum++;
-                }
+            while (true) {
+                const mean = sum / state.count;
+                const isInteger = (mean % 1 === 0);
+                const isHalf = (mean % 1 === 0.5);
+                if (forceInteger && isInteger) break;
+                if (!forceInteger && isHalf) break;
+                state.buildings[state.count-1].value += 1;
+                state.buildings[state.count-1].originalVal += 1;
+                sum++;
             }
 
             refreshCityFromState();
-            if(randomize) playSound('pop');
+            playSound('pop');
         }
 
         function refreshCityFromState() {
@@ -679,15 +709,12 @@
 
             medianTool.style.display = 'none';
             medianTool.style.height = '380px';
-            // BUG FIX: Reset pointer events and solved class so it can be moved again
             medianTool.style.pointerEvents = 'auto'; 
-            medianTool.classList.remove('solved', 'ghost-building', 'no-windows'); // ADDED no-windows
-            document.getElementById('tool-handle').style.display = 'flex'; // Reset handle visibility
+            medianTool.classList.remove('solved', 'ghost-building', 'no-windows'); 
+            document.getElementById('tool-handle').style.display = 'flex';
 
             toolLabel.style.opacity = '1'; 
             toolLabel.innerText = "?";
-            toolLabel.style.minWidth = "60px";
-            // RESET STYLE of label
             toolLabel.style.top = ''; 
             toolLabel.style.transform = ''; 
             
@@ -696,16 +723,12 @@
             floatRes.style.opacity = '0';
             rangeArrow.style.display = 'none';
             
-            if(state.mode === 'MEAN') container.classList.add('mode-mean');
+            const useMeanStyle = (state.mainMode === 'CALCUL' && state.subMode === 'MEAN') || (state.mainMode === 'BUILD');
+            
+            if(useMeanStyle) container.classList.add('mode-mean');
             else container.classList.remove('mode-mean');
             
-            if(state.mode === 'BUILD') {
-                container.innerHTML += '<div class="absolute top-1/2 left-1/2 -translate-x-1/2 text-slate-500"></div>';
-                return;
-            }
-
-            // Restore order for Mean
-            if(state.mode === 'MEAN' || !state.isSorted) {
+            if((state.mainMode === 'CALCUL' && state.subMode !== 'MEDIAN') || state.mainMode === 'BUILD' || !state.isSorted) {
                 state.buildings.sort((a,b) => a.originalId - b.originalId);
             }
 
@@ -713,11 +736,10 @@
                 createBuildingDOM(bData);
             });
             
-            // RE-APPLY CURRENT TOOL (Fix "Stylo ne fonctionne plus")
             setTool(state.currentTool);
-
             repositionBuildings();
-            if(state.mode === 'MEDIAN') checkSorted();
+            
+            if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
         }
 
         function createBuildingDOM(bObj) {
@@ -730,7 +752,11 @@
             
             const building = document.createElement('div');
             
-            if (state.mode === 'MEDIAN') {
+            const isMedian = (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN');
+            const isRange = (state.mainMode === 'CALCUL' && state.subMode === 'RANGE');
+            const isMeanOrBuild = (state.mainMode === 'BUILD' || (state.mainMode === 'CALCUL' && state.subMode === 'MEAN'));
+
+            if (isMedian) {
                 building.className = 'building'; 
                 building.style.height = (bObj.value * CONFIG.floorHeight) + 'px';
                 
@@ -740,7 +766,7 @@
                 badge.addEventListener('touchstart', (e) => { e.stopPropagation(); editBuilding(bObj.id); });
                 building.addEventListener('click', () => trySelectMedian(bObj.id));
             } 
-            else if (state.mode === 'MEAN') {
+            else if (isMeanOrBuild) {
                 building.className = 'building mean-mode'; 
                 renderBricks(building, bObj.value, bObj.cutTop);
                 building.style.height = 'auto';
@@ -749,7 +775,7 @@
                 building.addEventListener('touchstart', (e) => handleBrickInteraction(e, bObj.id), {passive: false});
                 badge.addEventListener('mousedown', (e) => { e.stopPropagation(); editBuilding(bObj.id); });
             }
-            else if (state.mode === 'RANGE') {
+            else if (isRange) {
                 building.className = 'building'; 
                 building.style.height = (bObj.value * CONFIG.floorHeight) + 'px';
                 badge.addEventListener('mousedown', (e) => { e.stopPropagation(); editBuilding(bObj.id); });
@@ -773,7 +799,6 @@
             for(let i=0; i<count; i++) {
                 let b = document.createElement('div');
                 b.className = 'brick';
-                // Add visual cut if this is top and marked cut
                 if(i === count-1 && !hasHalf && cutTop) {
                     b.classList.add('cut-visual');
                 }
@@ -790,19 +815,10 @@
         }
 
         function repositionBuildings(skipItem = null) {
-            if(state.mode === 'BUILD') {
-                 const slots = document.querySelectorAll('.construct-slot');
-                 const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
-                 const startX = (container.offsetWidth - totalW) / 2;
-                 slots.forEach((s, i) => s.style.left = (startX + i * (CONFIG.buildingWidth + CONFIG.gap)) + 'px');
-                 state.buildings.forEach((b, i) => b.element.style.left = (startX + i * (CONFIG.buildingWidth + CONFIG.gap)) + 'px');
-                 return;
-            }
-
             let extraGap = 0;
             let splitIndex = -1;
 
-            if (state.mode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
+            if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
                 extraGap = CONFIG.buildingWidth + CONFIG.gap; 
                 splitIndex = state.count / 2;
             }
@@ -811,25 +827,22 @@
             const startX = (container.offsetWidth - totalW) / 2;
 
             let list = state.buildings;
-            // Sorting logic per mode
-            if (state.mode === 'MEDIAN') {
+            
+            if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') {
                  if(state.isSorted) list.sort((a,b) => a.value - b.value);
-            } else if(state.mode === 'RANGE') {
+            } else if (state.mainMode === 'CALCUL' && state.subMode === 'RANGE') {
                  if(state.isSorted) list.sort((a,b) => a.value - b.value);
                  else list.sort((a,b) => a.originalId - b.originalId);
-            } else if(state.mode === 'MEAN') {
+            } else {
                  list.sort((a,b) => a.originalId - b.originalId);
             }
 
             list.forEach((b, i) => {
                 if (b === skipItem) return;
-                
                 let x = startX + i * (CONFIG.buildingWidth + CONFIG.gap);
-                
                 if (splitIndex !== -1 && i >= splitIndex) {
                     x += extraGap;
                 }
-
                 if(b.element) {
                     b.element.style.left = x + 'px';
                     b.element.style.transform = '';
@@ -853,7 +866,8 @@
         // --- MEDIAN LOGIC ---
 
         function checkSorted() {
-            if(state.mode !== 'MEDIAN') return;
+            if(state.mainMode !== 'CALCUL' || state.subMode !== 'MEDIAN') return;
+            
             let asc = true, desc = true;
             for(let i=0; i<state.buildings.length-1; i++) {
                 if (state.buildings[i].value > state.buildings[i+1].value) asc = false;
@@ -870,16 +884,13 @@
                 if(!state.isMedianFound) {
                     showMessage("La ville est rangée !");
                     medianTool.style.display = 'flex';
-                    // BUG FIX: Ensure it is movable
                     medianTool.style.pointerEvents = 'auto';
 
-                    // Calculate height taller than tallest building
                     const maxVal = Math.max(...state.buildings.map(b => b.value));
                     const toolH = (maxVal * CONFIG.floorHeight) + 60;
                     medianTool.style.height = toolH + 'px';
                     
                     medianTool.style.left = '50px'; 
-                    // Make label visible
                     toolLabel.style.opacity = '1';
                     toolLabel.innerText = "?";
                 }
@@ -888,7 +899,6 @@
                 btnMedian.classList.add('bg-slate-700', 'text-slate-500', 'cursor-not-allowed', 'opacity-50');
                 btnMedian.classList.remove('bg-pink-600', 'text-white', 'cursor-pointer', 'shadow-lg');
                 icon.innerText = "🔒";
-                // Pas de message sur le plateau
                 medianTool.style.display = 'none';
             }
         }
@@ -906,53 +916,38 @@
 
             if (isOdd) {
                 const target = state.buildings[mid];
-                
-                // RESTORED: Show actual building, Highlight it
                 target.buildingEl.style.opacity = '1'; 
                 target.badgeEl.style.opacity = '1';
-                
-                // Hide tool (we use the real building)
                 medianTool.style.display = 'none';
                 
                 target.buildingEl.classList.add('highlight-odd');
-                // Make badge pop
                 target.badgeEl.style.backgroundColor = '#facc15';
                 target.badgeEl.style.color = '#000';
-                
-                // MODIFICATION: Ajout de translateY pour l'espace
                 target.badgeEl.style.transform = 'scale(1.5) translateY(-15px)'; 
-                
                 target.badgeEl.style.border = '3px solid white';
                 
                 state.buildings.forEach((b,i) => { if(i!==mid) b.buildingEl.classList.add('dimmed'); });
                 
                 showFloatingResult(`Médiane = ${target.value} étages`, ``, "text-yellow-400");
             } else {
-                // CAS PAIR (MODIFIÉ)
                 const b1 = state.buildings[mid-1];
                 const b2 = state.buildings[mid];
                 const med = (b1.value + b2.value) / 2;
                 
-                // FORCE REPOSITIONING (Pour écarter les immeubles)
-                // L'appel précédent a déjà set state.isMedianFound = true, donc repositionBuildings va créer le trou
                 repositionBuildings();
 
                 medianTool.style.display = 'flex';
                 medianTool.classList.remove('solved'); 
-                medianTool.classList.add('ghost-building', 'no-windows'); // No windows for ghost
+                medianTool.classList.add('ghost-building', 'no-windows');
                 
                 medianTool.style.pointerEvents = 'none';
                 document.getElementById('tool-label').innerText = med;
                 
-                // CENTRE EXACTEMENT DANS LE TROU CRÉÉ
-                // Le trou est exactement au milieu du container
                 const centerX = container.offsetWidth / 2;
                 medianTool.style.left = centerX + 'px';
                 
-                // ADJUST HEIGHT (MODIFIÉ: Le bâton prend la hauteur exacte de la médiane)
                 medianTool.style.height = (med * CONFIG.floorHeight) + 'px';
                 
-                // FORCE VISIBILITY OF LABEL (Sans le décalage top manuel)
                 const tl = document.getElementById('tool-label');
                 tl.style.opacity = '1';
                 
@@ -969,14 +964,14 @@
         let draggedBrick = null;
         
         function handleBrickInteraction(e, colId) {
-            if (state.mode !== 'MEAN' && state.mode !== 'BUILD') return;
-            if (state.isMeanFound && state.mode === 'MEAN') return;
+            if ((state.mainMode !== 'BUILD') && !(state.mainMode === 'CALCUL' && state.subMode === 'MEAN')) return;
+            if (state.mainMode === 'CALCUL' && state.isMeanFound) return;
+
             const bObj = state.buildings.find(b => b.id === colId);
 
             if (state.currentTool === 'scissors') {
                 if (bObj.value > 0 && bObj.value % 1 === 0) {
                     playSound('pop'); 
-                    // Toggle visual cut
                     bObj.cutTop = !bObj.cutTop;
                     renderBricks(bObj.buildingEl, bObj.value, bObj.cutTop);
                 }
@@ -991,19 +986,19 @@
             if (bObj.value <= 0) return;
 
             let amount = 1;
-            // Take half if: value is X.5 OR if it was cut
-            if (bObj.value % 1 !== 0 || bObj.cutTop) {
-                amount = 0.5;
-            }
+            if (bObj.value % 1 !== 0 || bObj.cutTop) amount = 0.5;
             
             const ghost = document.createElement('div');
             ghost.className = amount === 0.5 ? 'flying-brick half' : 'flying-brick';
             document.body.appendChild(ghost);
             
-            // Immediate visual update of source
-            renderBricks(bObj.buildingEl, bObj.value - amount);
-            bObj.badgeEl.innerText = bObj.value - amount;
+            bObj.value -= amount;
+            if(bObj.value < 0) bObj.value = 0;
+            
+            updateBuildingVisuals(bObj);
             bObj.cutTop = false; 
+            
+            resetGoalStatus();
 
             draggedBrick = {
                 sourceId: colId,
@@ -1014,6 +1009,19 @@
             };
             
             updateGhostPos(e.touches ? e.touches[0] : e);
+            document.addEventListener('mousemove', onBrickDrag);
+            document.addEventListener('touchmove', onBrickDrag, {passive: false});
+            document.addEventListener('mouseup', endBrickDrag);
+            document.addEventListener('touchend', endBrickDrag);
+        }
+        
+        function startDragSupply(e) {
+            e.preventDefault();
+            const ghost = document.createElement('div');
+            ghost.className = 'flying-brick';
+            document.body.appendChild(ghost);
+            draggedBrick = { sourceId: 'SUPPLY', amount: 1, element: ghost };
+            updateGhostPos(e.touches?e.touches[0]:e);
             document.addEventListener('mousemove', onBrickDrag);
             document.addEventListener('touchmove', onBrickDrag, {passive: false});
             document.addEventListener('mouseup', endBrickDrag);
@@ -1046,33 +1054,32 @@
             let success = false;
             if (targetIdx >= 0 && targetIdx < state.count) {
                 const targetObj = state.buildings[targetIdx];
-                const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
                 
                 if (targetObj && targetObj.id !== draggedBrick.sourceId) {
                     if (targetObj.value + draggedBrick.amount <= CONFIG.maxFloors) {
-                        sourceObj.value -= draggedBrick.amount;
                         targetObj.value += draggedBrick.amount;
-                        
-                        updateBuildingVisuals(sourceObj);
                         updateBuildingVisuals(targetObj);
                         playSound('pop');
-                        checkMeanWin();
+                        
+                        if(state.mainMode === 'CALCUL' && state.subMode === 'MEAN') checkMeanWin();
                         success = true;
                     }
                 }
             }
 
             if (!success) {
-                // Restore source
-                const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
-                updateBuildingVisuals(sourceObj);
+                if (draggedBrick.sourceId !== 'SUPPLY') {
+                    const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
+                    sourceObj.value += draggedBrick.amount;
+                    updateBuildingVisuals(sourceObj);
+                }
             }
             draggedBrick.element.remove();
             draggedBrick = null;
             document.removeEventListener('mousemove', onBrickDrag);
             document.removeEventListener('touchmove', onBrickDrag);
-            document.removeEventListener('mouseup', endBrickDragConstruct);
-            document.removeEventListener('touchend', endBrickDragConstruct);
+            document.removeEventListener('mouseup', endBrickDrag);
+            document.removeEventListener('touchend', endBrickDrag);
         }
 
         function updateBuildingVisuals(bObj) {
@@ -1096,7 +1103,7 @@
 
         // --- RANGE MODE LOGIC ---
         function selectRangeBuilding(id) {
-            if(state.mode !== 'RANGE' || state.isRangeFound) return;
+            if(state.mainMode !== 'CALCUL' || state.subMode !== 'RANGE' || state.isRangeFound) return;
             const b = state.buildings.find(x => x.id === id);
             
             if(state.rangeSelection.includes(id)) {
@@ -1120,7 +1127,6 @@
             
             const v1 = b1.value; const v2 = b2.value;
             
-            // Allow any min/max selection even if duplicates
             if ( (v1 === min && v2 === max) || (v1 === max && v2 === min) ) {
                 state.isRangeFound = true;
                 playSound('ding');
@@ -1132,9 +1138,6 @@
                     b.buildingEl.classList.add('highlight-range');
                 });
                 
-                // ARROW REMOVED BY REQUEST
-                // We keep only buildings highlight and text
-
                 state.buildings.forEach(b => {
                     if(b.id !== b1.id && b.id !== b2.id) b.buildingEl.classList.add('dimmed');
                 });
@@ -1152,22 +1155,33 @@
             state.constructLevel = lvl;
             document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-lvl-${lvl}`).classList.add('active');
-            initConstructMode(lvl);
+            startNewChallenge();
         }
 
-        function initConstructMode(lvl) {
+        function startNewChallenge() {
             clearCanvas();
-            container.innerHTML = '';
-            container.appendChild(brickSupply);
-            container.appendChild(constructGoals);
-            container.appendChild(floatRes);
-            container.appendChild(ground);
+            const lvl = state.constructLevel;
             
-            // REMIS EN FONCTION : Initialisation correcte des variables cibles
-            const tM = Math.floor(Math.random() * 6) + 3; 
-            const tR = Math.floor(Math.random() * 5) + 3;
-            const tMean = Math.floor(Math.random() * 5) + 2; 
-            const tSpec = Math.floor(Math.random() * 8) + 2;
+            state.count = Math.floor(Math.random() * 7) + 3;
+            
+            let virtualBuildings = [];
+            for(let i=0; i<state.count; i++) virtualBuildings.push(Math.floor(Math.random() * 10) + 1);
+            virtualBuildings.sort((a,b)=>a-b);
+            
+            const vMin = virtualBuildings[0];
+            const vMax = virtualBuildings[state.count-1];
+            
+            const mid = Math.floor(state.count/2);
+            let tM;
+            if(state.count % 2 !== 0) tM = virtualBuildings[mid];
+            else tM = (virtualBuildings[mid-1] + virtualBuildings[mid]) / 2;
+            
+            const tR = vMax - vMin;
+            
+            let tMean = Math.floor(virtualBuildings.reduce((a,b)=>a+b,0)/state.count);
+            if(tMean < 2) tMean = 3;
+            
+            const tSpec = virtualBuildings[Math.floor(Math.random()*state.count)];
 
             state.targetMedian = tM; 
             state.targetRange = tR;
@@ -1176,23 +1190,7 @@
 
             state.buildings = [];
             for(let i=0; i<state.count; i++) {
-                const slot = document.createElement('div');
-                slot.className = 'construct-slot';
-                container.appendChild(slot);
-                
-                const bObj = { id: i, value: 0 };
-                const wrapper = document.createElement('div');
-                wrapper.className = 'building-wrapper';
-                const badge = document.createElement('div');
-                badge.className = 'value-badge';
-                badge.innerText = 0;
-                const building = document.createElement('div');
-                building.className = 'building mean-mode';
-                building.style.height = 'auto';
-                
-                wrapper.appendChild(badge); wrapper.appendChild(building);
-                container.appendChild(wrapper);
-                bObj.element = wrapper; bObj.buildingEl = building; bObj.badgeEl = badge;
+                const bObj = { id: i, value: 0, originalVal: 0, originalId: i };
                 state.buildings.push(bObj);
             }
             
@@ -1205,63 +1203,27 @@
             
             if(lvl >= 2) {
                 elMean.classList.remove('hidden');
-                document.getElementById('goal-text-mean').innerText = `Moyenne : ${tMean}`;
+                document.getElementById('goal-text-mean').innerText = `Moyenne : ~${tMean}`;
             } else elMean.classList.add('hidden');
             
             if(lvl === 3) {
                 elSpec.classList.remove('hidden');
-                document.getElementById('goal-text-special').innerText = `Un immeuble de ${tSpec}`;
+                document.getElementById('goal-text-special').innerText = `Un immeuble de ${tSpec} étages`;
             } else elSpec.classList.add('hidden');
             
-            document.querySelectorAll('.goal-check').forEach(c => c.classList.remove('ok'));
-            document.querySelectorAll('.goal-item').forEach(c => c.classList.remove('done'));
-            
-            // REMIS EN FONCTION : Appel de repositionBuildings et reset outil
-            setTool('hand');
-            repositionBuildings();
-            checkConstructWin(); 
+            resetGoalStatus();
+            refreshCityFromState();
+            playSound('pop');
         }
         
-        function startDragSupply(e) {
-            e.preventDefault();
-            const ghost = document.createElement('div');
-            ghost.className = 'flying-brick';
-            document.body.appendChild(ghost);
-            draggedBrick = { sourceId: 'SUPPLY', amount: 1, element: ghost };
-            updateGhostPos(e.touches?e.touches[0]:e);
-            document.addEventListener('mousemove', onBrickDrag);
-            document.addEventListener('touchmove', onBrickDrag, {passive: false});
-            document.addEventListener('mouseup', endBrickDragConstruct);
-            document.addEventListener('touchend', endBrickDragConstruct);
+        function resetGoalStatus() {
+            document.querySelectorAll('.goal-item').forEach(el => {
+                el.classList.remove('success', 'error');
+            });
+            document.getElementById('floating-result').style.opacity = '0';
         }
-        
-        function endBrickDragConstruct(e) {
-            if(!draggedBrick) return;
-            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-            const containerRect = container.getBoundingClientRect();
-            const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
-            const startX = (containerRect.width - totalW) / 2;
-            const relativeX = clientX - containerRect.left - startX;
-            let targetIdx = Math.floor((relativeX + CONFIG.gap/2) / (CONFIG.buildingWidth + CONFIG.gap));
-            
-            if (targetIdx >= 0 && targetIdx < state.count) {
-                const targetObj = state.buildings[targetIdx];
-                if (targetObj.value < CONFIG.maxFloors) {
-                    targetObj.value += 1;
-                    updateBuildingVisuals(targetObj);
-                    playSound('pop');
-                    checkConstructWin();
-                }
-            }
-            draggedBrick.element.remove();
-            draggedBrick = null;
-            document.removeEventListener('mousemove', onBrickDrag);
-            document.removeEventListener('touchmove', onBrickDrag);
-            document.removeEventListener('mouseup', endBrickDragConstruct);
-            document.removeEventListener('touchend', endBrickDragConstruct);
-        }
-        
-        function checkConstructWin() {
+
+        function verifyConstruction() {
             const vals = state.buildings.map(b => b.value).sort((a,b)=>a-b);
             const mid = Math.floor(vals.length/2);
             const currMed = (vals.length % 2 !== 0) ? vals[mid] : (vals[mid-1]+vals[mid])/2;
@@ -1270,84 +1232,103 @@
             
             let win = true;
             
-            const updateItem = (id, cond) => {
+            const check = (id, condition) => {
                 const el = document.getElementById(id);
-                if (!el) return;
-                if(cond) { 
-                    if(el.parentElement) el.parentElement.classList.add('done'); 
-                    el.classList.add('ok'); 
-                } else { 
-                    if(el.parentElement) el.parentElement.classList.remove('done'); 
-                    el.classList.remove('ok'); 
-                    win = false; 
+                if(!el) return;
+                const parent = el.parentElement;
+                parent.classList.remove('success', 'error');
+                if(condition) {
+                    parent.classList.add('success');
+                } else {
+                    parent.classList.add('error');
+                    win = false;
                 }
             };
 
-            updateItem('check-med', currMed === state.targetMedian);
-            updateItem('check-range', currRange === state.targetRange);
-            updateItem('check-count', true);
+            check('check-count', true); 
+            check('check-med', currMed === state.targetMedian);
+            check('check-range', currRange === state.targetRange);
             
             if(state.constructLevel >= 2) {
-                // REMIS EN FONCTION : Logique Moyenne (tolérance float minime)
-                updateItem('check-mean', Math.abs(currMean - state.targetMean) < 0.01);
+                check('check-mean', Math.abs(currMean - state.targetMean) < 0.1); 
             }
             if(state.constructLevel === 3) {
-                // REMIS EN FONCTION : Logique Spéciale (au moins un immeuble de hauteur X)
-                updateItem('check-special', vals.includes(state.targetSpecial));
+                check('check-special', vals.includes(state.targetSpecial));
             }
             
-            if(win) { playSound('ding'); showFloatingResult("Mission Réussie !", "", "text-green-400"); }
-            else { floatRes.style.opacity = '0'; }
+            if(win) {
+                playSound('ding');
+                showFloatingResult("BRAVO ! Défi Réussi !", "Vous pouvez changer de mode ou relancer", "text-green-400");
+            } else {
+                playSound('lock');
+                showFloatingResult("Pas tout à fait...", "Vérifiez les objectifs en rouge", "text-red-400");
+                setTimeout(() => {
+                    if(!win) floatRes.style.opacity = '0';
+                }, 2000);
+            }
         }
 
-        // --- COMMON TOOLS ---
+        // --- DRAG & EDIT COMMON ---
+        
         function editBuilding(id) {
             const b = state.buildings.find(x => x.id === id);
             let v = prompt("Hauteur :", b.value);
             if(v) { 
                 v = parseFloat(v); 
-                if(!isNaN(v) && v>0 && v<=CONFIG.maxFloors) { 
-                    v = Math.round(v);
-                    b.value=v; 
-                    if(state.mode === 'MEDIAN') {
+                if(!isNaN(v) && v>=0 && v<=CONFIG.maxFloors) { 
+                    v = (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') ? Math.round(v) : v;
+                    if(state.mainMode === 'BUILD' && v % 0.5 !== 0) v = Math.round(v); 
+                    
+                    b.value = v;
+                    b.originalVal = v;
+                    
+                    resetGoalStatus();
+                    state.isMedianFound=false; 
+                    state.isMeanFound=false;
+                    state.isRangeFound=false;
+                    medianTool.style.display='none';
+                    floatRes.style.opacity='0';
+                    
+                    if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') {
+                        checkSorted();
                         b.badgeEl.innerText = v;
                         b.buildingEl.style.height = (v * CONFIG.floorHeight) + 'px';
-                        state.isMedianFound=false; 
-                        medianTool.style.display='none';
-                        floatRes.style.opacity='0';
-                        checkSorted();
-                    } else if(state.mode === 'MEAN' || state.mode === 'BUILD') {
-                        updateBuildingVisuals(b);
-                        if(state.mode === 'MEAN') checkMeanWin();
-                        if(state.mode === 'BUILD') checkConstructWin();
                     } else {
-                         b.badgeEl.innerText = v;
-                         b.buildingEl.style.height = (v * CONFIG.floorHeight) + 'px';
-                         if(state.mode === 'RANGE') {
-                             state.rangeSelection = [];
-                             state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
-                             rangeArrow.style.display = 'none';
-                             state.isRangeFound = false;
-                         }
+                        updateBuildingVisuals(b);
                     }
                 }
             }
         }
+
         function startDragBuilding(e, wrapper, id) {
-            if (state.currentTool !== 'hand' || state.isMedianFound || (state.mode !== 'MEDIAN' && state.mode !== 'RANGE')) return;
+            if (state.currentTool !== 'hand' || (state.mainMode === 'CALCUL' && state.subMode === 'MEAN') || state.mainMode === 'BUILD') return; 
+            
             e.preventDefault();
             const bObj = state.buildings.find(b => b.id === id);
             wrapper.classList.add('is-dragging');
+            
             const onDrag = (e) => {
                 e.preventDefault();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const containerRect = container.getBoundingClientRect();
-                const mouseRelativeX = clientX - containerRect.left;
-                const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
+                
+                let extraGap = 0; let splitIndex = -1;
+                if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
+                    extraGap = CONFIG.buildingWidth + CONFIG.gap; splitIndex = state.count / 2;
+                }
+                const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap) + extraGap;
+                
                 const startX = (containerRect.width - totalW) / 2;
+                const mouseRelativeX = clientX - containerRect.left;
+                
                 wrapper.style.left = (mouseRelativeX - CONFIG.buildingWidth/2) + 'px';
-                let newIndex = Math.floor((mouseRelativeX - startX + CONFIG.gap/2) / (CONFIG.buildingWidth + CONFIG.gap));
-                if (newIndex < 0) newIndex = 0; if (newIndex >= state.count) newIndex = state.count - 1;
+                
+                let rawX = mouseRelativeX - startX;
+                let newIndex = Math.floor((rawX + CONFIG.gap/2) / (CONFIG.buildingWidth + CONFIG.gap));
+                
+                if (newIndex < 0) newIndex = 0; 
+                if (newIndex >= state.count) newIndex = state.count - 1;
+                
                 const oldIndex = state.buildings.indexOf(bObj);
                 if (newIndex !== oldIndex) {
                     state.buildings.splice(oldIndex, 1);
@@ -1356,10 +1337,11 @@
                     playSound('pop');
                 }
             };
+            
             const stopDrag = () => {
                 wrapper.classList.remove('is-dragging');
                 repositionBuildings();
-                if(state.mode === 'MEDIAN') checkSorted();
+                if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
                 document.removeEventListener('mousemove', onDrag);
                 document.removeEventListener('touchmove', onDrag);
                 document.removeEventListener('mouseup', stopDrag);
@@ -1370,35 +1352,54 @@
             document.addEventListener('mouseup', stopDrag);
             document.addEventListener('touchend', stopDrag);
         }
-        function autoSort() {
-            state.isSorted = true;
-            state.buildings.sort((a,b)=>a.value-b.value);
-            repositionBuildings();
-            playSound('slide');
-            if(state.mode === 'MEDIAN') checkSorted();
-            if(state.mode === 'RANGE') {
-                state.rangeSelection = [];
-                state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
-                document.getElementById('range-arrow').style.display = 'none';
-                floatRes.style.opacity = '0';
+
+        // --- DRAWING ---
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const cursorDiv = document.getElementById('custom-cursor');
+        let isDrawing = false, lastX=0, lastY=0;
+        function resizeCanvas() {
+            const rect = document.getElementById('city-container').getBoundingClientRect();
+            canvas.width = rect.width; canvas.height = rect.height;
+            if(state.currentTool === 'pen') { 
+                ctx.globalCompositeOperation = 'source-over'; 
+                // CHANGE: White color
+                ctx.strokeStyle = '#ffffff'; 
+                ctx.lineWidth = 4; 
+                ctx.lineCap = 'round'; 
             }
         }
-        function trySelectMedian(id) {
-            if(state.mode !== 'MEDIAN') return;
-            const n = state.buildings.length;
-            if(n%2===0 || !state.isSorted) return;
-            const mid = Math.floor(n/2);
-            if(state.buildings[mid].id === id) solveMedian();
-            else playSound('lock');
+        function setTool(tool) {
+            state.currentTool = tool;
+            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors'), sh=document.getElementById('tool-mean-hand');
+            [h,p,s,sh].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
+            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; medianTool.style.pointerEvents = 'auto';
+            if(tool === 'hand') {
+                 if(h) h.className = "p-2 rounded bg-slate-600 text-white shadow";
+                 if(sh) sh.className = "p-2 rounded bg-purple-600 text-white shadow";
+            }
+            else if(tool === 'pen') {
+                p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
+                document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; medianTool.style.pointerEvents = 'none';
+                // Force reset styles
+                resizeCanvas();
+            } else if(tool === 'scissors') s.className = "p-2 rounded bg-purple-600 text-white shadow";
         }
+        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-r.left, y: (e.touches?e.touches[0].clientY:e.clientY)-r.top }; }
+        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
+        function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; cursorDiv.style.left=(e.touches?e.touches[0].clientX:e.clientX)+'px'; cursorDiv.style.top=(e.touches?e.touches[0].clientY:e.clientY)+'px'; }
+        function endDraw() { isDrawing=false; }
+        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); canvas.addEventListener('touchend', endDraw);
 
         // --- MEDIAN TOOL ---
         let isToolDragging = false;
-        const mt = document.getElementById('median-tool');
-        mt.addEventListener('mousedown', startToolDrag);
-        mt.addEventListener('touchstart', startToolDrag, {passive: false});
+        // Replaced mt with medianTool globally
+        medianTool.addEventListener('mousedown', startToolDrag);
+        medianTool.addEventListener('touchstart', startToolDrag, {passive: false});
         function startToolDrag(e) {
-            if(state.isMedianFound || state.mode !== 'MEDIAN') return;
+            if(state.isMedianFound || state.subMode !== 'MEDIAN' || state.mainMode !== 'CALCUL') return;
             e.preventDefault(); e.stopPropagation();
             isToolDragging = true;
             document.addEventListener('mousemove', onToolDrag);
@@ -1411,22 +1412,16 @@
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
             const r = container.getBoundingClientRect();
             let x = cx - r.left; if(x<0) x=0; if(x>r.width) x=r.width;
-            mt.style.left = x + 'px';
-            
-            // UPDATE LABEL DYNAMICALLY
+            medianTool.style.left = x + 'px';
             const snap = getClosestSnap(x);
-            if(snap) {
-                toolLabel.innerText = snap.val;
-            } else {
-                toolLabel.innerText = "?";
-            }
+            if(snap) toolLabel.innerText = snap.val; else toolLabel.innerText = "?";
         }
         function stopToolDrag(e) {
             isToolDragging = false;
-            const r = mt.getBoundingClientRect();
+            const r = medianTool.getBoundingClientRect();
             const tx = r.left + r.width/2 - container.getBoundingClientRect().left;
             const snap = getClosestSnap(tx);
-            if(snap && snap.isMedian) { mt.style.left = snap.x + 'px'; solveMedian(); }
+            if(snap && snap.isMedian) { medianTool.style.left = snap.x + 'px'; solveMedian(); }
             document.removeEventListener('mousemove', onToolDrag);
             document.removeEventListener('touchmove', onToolDrag);
             document.removeEventListener('mouseup', stopToolDrag);
@@ -1460,38 +1455,6 @@
             return best;
         }
 
-        // --- DRAWING ---
-        const canvas = document.getElementById('drawing-canvas');
-        const ctx = canvas.getContext('2d');
-        const cursorDiv = document.getElementById('custom-cursor');
-        let isDrawing = false, lastX=0, lastY=0;
-        function resizeCanvas() {
-            const rect = document.getElementById('city-container').getBoundingClientRect();
-            canvas.width = rect.width; canvas.height = rect.height;
-            if(state.currentTool === 'pen') { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4; ctx.lineCap = 'round'; }
-        }
-        function setTool(tool) {
-            state.currentTool = tool;
-            const h=document.getElementById('tool-hand'), p=document.getElementById('tool-pen'), s=document.getElementById('tool-scissors'), sh=document.getElementById('tool-mean-hand');
-            [h,p,s,sh].forEach(el => { if(el) el.className = "p-2 rounded text-slate-400 hover:text-white"; });
-            canvas.style.pointerEvents = 'none'; document.body.classList.remove('hide-cursor'); cursorDiv.style.display = 'none'; mt.style.pointerEvents = 'auto';
-            if(tool === 'hand') {
-                 if(h) h.className = "p-2 rounded bg-slate-600 text-white shadow";
-                 if(sh) sh.className = "p-2 rounded bg-purple-600 text-white shadow";
-            }
-            else if(tool === 'pen') {
-                p.className = "p-2 rounded bg-slate-600 text-white shadow"; canvas.style.pointerEvents = 'auto';
-                document.body.classList.add('hide-cursor'); cursorDiv.style.display = 'block'; mt.style.pointerEvents = 'none';
-            } else if(tool === 'scissors') s.className = "p-2 rounded bg-purple-600 text-white shadow";
-        }
-        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-        function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-r.left, y: (e.touches?e.touches[0].clientY:e.clientY)-r.top }; }
-        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
-        function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; cursorDiv.style.left=(e.touches?e.touches[0].clientX:e.clientX)+'px'; cursorDiv.style.top=(e.touches?e.touches[0].clientY:e.clientY)+'px'; }
-        function endDraw() { isDrawing=false; }
-        canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
-        canvas.addEventListener('touchstart', startDraw, {passive:false}); canvas.addEventListener('touchmove', draw, {passive:false}); canvas.addEventListener('touchend', endDraw);
-
         // --- AUDIO ---
         const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
         function playSound(type) {
@@ -1501,7 +1464,34 @@
             if(type==='pop'){ osc.frequency.setValueAtTime(400,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.1); }
             else if(type==='ding'){ osc.type='triangle'; osc.frequency.setValueAtTime(600,audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.5); }
             else if(type==='slide'){ osc.frequency.linearRampToValueAtTime(200, audioCtx.currentTime+0.3); }
-            osc.start(); osc.stop(audioCtx.currentTime+(type==='ding'?0.5:0.1));
+            else if(type==='lock'){ osc.frequency.setValueAtTime(150,audioCtx.currentTime); osc.type='sawtooth'; g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.3); }
+            osc.start(); osc.stop(audioCtx.currentTime+(type==='ding'?0.5:0.3));
+        }
+
+        // --- MISSING FUNCTIONS ADDED BACK ---
+        
+        function autoSort() {
+            state.isSorted = true;
+            state.buildings.sort((a,b)=>a.value-b.value);
+            repositionBuildings();
+            playSound('slide');
+            if(state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') checkSorted();
+            // Reset Range findings if sorting
+            if(state.subMode === 'RANGE') {
+                state.rangeSelection = [];
+                state.buildings.forEach(b=>b.buildingEl.classList.remove('highlight-range', 'dimmed'));
+                document.getElementById('range-arrow').style.display = 'none';
+                floatRes.style.opacity = '0';
+            }
+        }
+
+        function trySelectMedian(id) {
+            if(state.mainMode !== 'CALCUL' || state.subMode !== 'MEDIAN') return;
+            const n = state.buildings.length;
+            if(n%2===0 || !state.isSorted) return;
+            const mid = Math.floor(n/2);
+            if(state.buildings[mid].id === id) solveMedian();
+            else playSound('lock');
         }
 
         init();
