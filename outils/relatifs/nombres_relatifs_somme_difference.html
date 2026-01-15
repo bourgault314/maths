@@ -378,6 +378,7 @@
             subtractionTarget: [],
             subtractionDefined: [], 
             frozenValues: {}, 
+            phantomValues: {}, // FIX: Pour stocker les valeurs supprimées par simplification
             operators: [],
             locked: false,
             currentTool: 'hand'
@@ -761,15 +762,19 @@
                     } else if (state.operationType === 'subtract' && p === 2) {
                         val = calculateValueFromList(state.subtractionDefined);
                     } else {
+                         // FIX: Ajouter les valeurs fantômes (simplifiées)
                          const tokensP = state.tokens.filter(t => t.creationPhase === p);
-                         val = calculateValue(tokensP);
+                         const phantom = state.phantomValues[p] || 0;
+                         val = calculateValue(tokensP) + phantom;
                     }
                 } else {
                     if (state.operationType === 'subtract' && p === 2) {
                         val = calculateValueFromList(state.subtractionDefined);
                     } else {
+                        // FIX: Ajouter les valeurs fantômes aussi ici (pour l'affichage en temps réel)
                         const tokensP = state.tokens.filter(t => t.creationPhase === p);
-                        val = calculateValue(tokensP);
+                        const phantom = state.phantomValues[p] || 0;
+                        val = calculateValue(tokensP) + phantom;
                     }
                 }
                 const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-600' : 'text-slate-800');
@@ -827,7 +832,9 @@
             playSound('click');
             if(!state.locked && state.operationType !== 'subtract' && state.operationType !== 'cloud') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
-                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+                 // FIX: Inclure phantomValues lors du gel de la valeur
+                 const phantom = state.phantomValues[state.phase] || 0;
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent) + phantom;
             }
             state.locked = true;
             state.resultRevealed = true;
@@ -1103,12 +1110,20 @@
             if (badge) badge.remove();
         }
 
+        // Helper pour ajouter une valeur fantôme (mémoire d'un jeton supprimé par simplification)
+        function addToPhantom(token) {
+            if (!state.phantomValues[token.creationPhase]) state.phantomValues[token.creationPhase] = 0;
+            state.phantomValues[token.creationPhase] += (token.type === 'green' ? 1 : -1);
+        }
+
         function animateSimplification() {
             if (state.operationType === 'subtract' || state.operationType === 'cloud') return;
             
             if(!state.locked && state.operationType === 'add') {
                  const tokensCurrent = state.tokens.filter(t => t.creationPhase === state.phase);
-                 state.frozenValues[state.phase] = calculateValue(tokensCurrent);
+                 // FIX: On ajoute les phantomValues actuelles au calcul figé au cas où
+                 const phantom = state.phantomValues[state.phase] || 0;
+                 state.frozenValues[state.phase] = calculateValue(tokensCurrent) + phantom;
             }
 
             // 1. D'abord, on s'occupe des paires DÉJÀ EXISTANTES (manuelles)
@@ -1164,6 +1179,11 @@
                         if(t1.element.parentNode) t1.element.remove();
                         if(t2.element.parentNode) t2.element.remove();
                         if(badge && badge.parentNode) badge.remove();
+                        
+                        // FIX: Sauvegarder la valeur avant suppression pour l'équation
+                        addToPhantom(t1);
+                        addToPhantom(t2);
+
                         state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
                         updateLogic();
                     }, 600);
@@ -1219,6 +1239,11 @@
                                     badge.remove();
                                     if(t1.element.parentNode) t1.element.remove();
                                     if(t2.element.parentNode) t2.element.remove();
+                                    
+                                    // FIX: Sauvegarder la valeur avant suppression pour l'équation
+                                    addToPhantom(t1);
+                                    addToPhantom(t2);
+
                                     state.tokens = state.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
                                     updateLogic();
                                 }, 600);
@@ -1251,6 +1276,7 @@
             state.operationType = null;
             state.locked = false;
             state.frozenValues = {};
+            state.phantomValues = {}; // FIX: Reset des valeurs fantômes
             state.operators = [];
             
             document.getElementById('equation-terms').innerHTML = '<span class="text-2xl sm:text-4xl font-bold text-slate-400 tracking-tight transition-colors">(...)</span>';
