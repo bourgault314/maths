@@ -284,9 +284,20 @@
             border: 2px dashed #475569; border-radius: 12px;
             display: none; flex-direction: column; align-items: center; justify-content: center;
             z-index: 40; cursor: grab;
+            transition: all 0.3s;
         }
         #brick-supply::after { content: 'BRIQUES'; font-size: 10px; color: #94a3b8; font-weight: bold; margin-top: 10px; }
         
+        /* STYLE POUBELLE POUR LE SUPPLY */
+        #brick-supply.is-trash {
+            border-color: #ef4444 !important;
+            background: rgba(127, 29, 29, 0.8) !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            transform: scale(1.1);
+        }
+        #brick-supply.is-trash .brick { opacity: 0.2; }
+        #brick-supply.is-trash::after { content: 'POUBELLE'; color: #fca5a5; }
+
         #construct-goals {
             position: absolute; top: 10px; right: 20px;
             background: rgba(15, 23, 42, 0.95); padding: 15px; border-radius: 16px;
@@ -311,18 +322,82 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.4);
         }
         .flying-brick.half { height: 10px; background: #9333ea; border-color: #581c87; }
+
+        /* MODAL CUSTOM CHALLENGE */
+        #custom-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+            padding: 24px; width: 90%; max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: white; text-align: center; margin-bottom: 8px; }
+        .modal-row { display: flex; flex-direction: column; gap: 4px; }
+        .modal-label { color: #94a3b8; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        .modal-input {
+            background: #0f172a; border: 1px solid #334155; color: white;
+            padding: 10px; border-radius: 8px; font-weight: 600;
+            outline: none; transition: all 0.2s;
+        }
+        .modal-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .modal-btn {
+            flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-cancel { background: #334155; color: #cbd5e1; border: 1px solid #475569; }
+        .btn-cancel:hover { background: #475569; color: white; }
+        .btn-confirm { background: #2563eb; color: white; border: 1px solid #3b82f6; }
+        .btn-confirm:hover { background: #1d4ed8; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
+    <div id="custom-modal">
+        <div class="modal-box">
+            <h2 class="modal-title">Défi Personnalisé</h2>
+            <p class="text-xs text-slate-400 text-center mb-2">Laissez vide pour ignorer un objectif.</p>
+            
+            <div class="modal-row">
+                <label class="modal-label">Nombre d'immeubles (3-12)</label>
+                <input type="number" id="in-count" class="modal-input" placeholder="Ex: 5" min="3" max="12">
+            </div>
+            
+            <div class="modal-row">
+                <label class="modal-label">Objectif Médiane</label>
+                <input type="number" id="in-median" class="modal-input" placeholder="Ex: 8">
+            </div>
+            
+            <div class="modal-row">
+                <label class="modal-label">Objectif Étendue</label>
+                <input type="number" id="in-range" class="modal-input" placeholder="Ex: 10">
+            </div>
+
+            <div class="modal-row">
+                <label class="modal-label">Objectif Moyenne</label>
+                <input type="number" id="in-mean" class="modal-input" placeholder="Ex: 6">
+            </div>
+
+            <div class="modal-row">
+                <label class="modal-label">Un immeuble spécifique</label>
+                <input type="number" id="in-special" class="modal-input" placeholder="Ex: 15 étages">
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="closeCustomModal()" class="modal-btn btn-cancel">Annuler</button>
+                <button onclick="confirmCustomChallenge()" class="modal-btn btn-confirm">Valider le Défi</button>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-cursor">
-        <!-- NOUVELLE ICONE CRAYON PLUS PROPRE -->
         <svg id="cursor-pen-svg" class="drop-shadow-lg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.2)"/>
         </svg>
     </div>
 
-    <!-- HEADER -->
     <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-4">
         <div class="flex items-center gap-3 pl-2">
             <span class="text-3xl">🏙️</span>
@@ -332,7 +407,6 @@
             </div>
         </div>
 
-        <!-- MAIN NAVIGATION -->
         <div class="flex gap-4">
             <button onclick="setMainMode('CALCUL')" id="nav-calcul" class="nav-btn active">
                 🧮 Mode Calcul
@@ -342,23 +416,19 @@
             </button>
         </div>
 
-        <!-- ZONE DE RESULTAT (Tout en haut) -->
         <div id="info-message" class="flex-1 text-center transition-all duration-500 min-h-[40px] flex items-center justify-center">
             <h2 id="msg-title" class="text-lg sm:text-2xl font-bold text-slate-300 drop-shadow-md"></h2>
         </div>
     </div>
 
-    <!-- TOOLBAR (z-index 70 to be ABOVE canvas z-60) -->
     <div class="bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-[70] shrink-0 relative min-h-[50px]">
         
-        <!-- SUB-NAVIGATION: CALCUL -->
         <div id="subnav-calcul" class="flex gap-2 items-center">
             <button onclick="setSubMode('MEDIAN')" id="btn-mode-median" class="sub-mode-btn active">MÉDIANE</button>
             <button onclick="setSubMode('MEAN')" id="btn-mode-mean" class="sub-mode-btn">MOYENNE</button>
             <button onclick="setSubMode('RANGE')" id="btn-mode-range" class="sub-mode-btn">ÉTENDUE</button>
         </div>
 
-        <!-- SUB-NAVIGATION: BUILD (TABS VIEWS) -->
         <div id="subnav-build" class="hidden flex gap-2 items-center">
             <div class="mr-4 flex gap-1">
                 <div class="text-slate-400 text-xs font-bold uppercase tracking-widest self-center mr-2">Niveau:</div>
@@ -367,14 +437,12 @@
                 <button onclick="setConstructLevel(3)" class="lvl-btn" id="btn-lvl-3">3</button>
             </div>
             <div class="w-px h-6 bg-slate-700 mx-2"></div>
-            <!-- FILTRES CONSTRUCTEUR -->
             <button onclick="setBuildSubMode('EDIT')" id="tab-build-edit" class="construct-tab-btn active">🔨 Construction</button>
             <button onclick="setBuildSubMode('MEDIAN')" id="tab-build-median" class="construct-tab-btn">Médiane</button>
             <button onclick="setBuildSubMode('MEAN')" id="tab-build-mean" class="construct-tab-btn">Moyenne</button>
             <button onclick="setBuildSubMode('RANGE')" id="tab-build-range" class="construct-tab-btn">Étendue</button>
         </div>
 
-        <!-- GENERATEUR (CALCUL SEULEMENT) -->
         <div id="controls-gen" class="flex items-center gap-3 bg-slate-800 p-1 pr-2 rounded-xl border border-slate-600">
             <div class="flex items-center gap-1 px-2 border-r border-slate-600">
                 <button onclick="updateCount(-1)" class="w-6 h-6 rounded bg-slate-700 text-white font-bold hover:bg-slate-600">-</button>
@@ -387,7 +455,6 @@
             </button>
         </div>
 
-        <!-- TOOLS COMMON (Shifted to right) -->
         <div class="flex gap-2 items-center absolute left-[65%] -translate-x-1/2">
             <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
                 <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-slate-600 text-white shadow"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg></button>
@@ -395,7 +462,6 @@
                 <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:text-red-200"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
             </div>
             
-            <!-- CISEAUX (Mode Moyenne ou Build) -->
             <div id="scissors-container" class="hidden items-center gap-1 bg-purple-900/30 p-1 rounded-lg border border-purple-600/50">
                 <button onclick="setTool('hand')" id="tool-mean-hand" class="p-2 rounded text-purple-300 hover:bg-purple-800 hover:text-white" title="Main">
                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
@@ -411,19 +477,16 @@
         </div>
     </div>
 
-    <!-- MAIN -->
     <main id="main-area" class="flex-1 relative bg-slate-800 overflow-hidden w-full cursor-crosshair">
         <canvas id="drawing-canvas"></canvas>
 
         <div id="city-container">
-            <!-- Buildings generated here -->
             <div id="group-left" class="group-indicator"><span class="group-label"></span></div>
             <div id="group-right" class="group-indicator"><span class="group-label"></span></div>
             
             <div id="median-tool">
                 <div id="tool-label">?</div>
                 <div id="tool-handle">
-                    <!-- Flèches gauche/droite -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -435,29 +498,29 @@
                 <div class="range-tip range-tip-right"></div>
             </div>
             
-            <!-- Resultat Flottant (Au dessus de tout) -->
             <div id="floating-result">
                 <h2 id="res-title"></h2>
                 <p id="res-sub"></p>
             </div>
             
-            <!-- Constructeur Supply (Visible uniquement en mode EDIT) -->
             <div id="brick-supply" onmousedown="startDragSupply(event)" ontouchstart="startDragSupply(event)">
                 <div class="brick" style="width: 40px; height: 12px; border-top: 2px solid #60a5fa; border-radius: 2px; margin-bottom:2px;"></div>
                 <div class="brick" style="width: 40px; height: 12px; margin-bottom:2px;"></div>
                 <div class="brick" style="width: 40px; height: 12px;"></div>
             </div>
             
-            <!-- Objectifs Constructeur HUD (MANUEL) -->
             <div id="construct-goals">
-                <div class="text-slate-300 text-sm font-bold mb-3 border-b border-slate-700 pb-2 flex justify-between">
+                <div class="text-slate-300 text-sm font-bold mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
                     <span>🎯 Objectifs</span>
-                    <button onclick="startNewChallenge()" class="px-2 py-0.5 bg-indigo-600 rounded text-[10px] text-white hover:bg-indigo-500">Nouveau Défi</button>
+                    <div class="flex gap-1">
+                        <button onclick="startCustomSetup()" class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-[10px] text-white hover:bg-slate-600">Personnaliser</button>
+                        <button onclick="startNewChallenge()" class="px-2 py-0.5 bg-indigo-600 rounded text-[10px] text-white hover:bg-indigo-500">Aléatoire</button>
+                    </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <div class="goal-item"><span id="goal-text-count">...</span> <div id="check-count" class="goal-check"></div></div>
-                    <div class="goal-item"><span id="goal-text-med">...</span> <div id="check-med" class="goal-check"></div></div>
-                    <div class="goal-item"><span id="goal-text-range">...</span> <div id="check-range" class="goal-check"></div></div>
+                    <div class="goal-item" id="goal-item-count"><span id="goal-text-count">...</span> <div id="check-count" class="goal-check"></div></div>
+                    <div class="goal-item" id="goal-item-med"><span id="goal-text-med">...</span> <div id="check-med" class="goal-check"></div></div>
+                    <div class="goal-item" id="goal-item-range"><span id="goal-text-range">...</span> <div id="check-range" class="goal-check"></div></div>
                     <div class="goal-item hidden" id="goal-item-mean"><span id="goal-text-mean">...</span> <div id="check-mean" class="goal-check"></div></div>
                     <div class="goal-item hidden" id="goal-item-special"><span id="goal-text-special">...</span> <div id="check-special" class="goal-check"></div></div>
                 </div>
@@ -467,7 +530,6 @@
         </div>
     </main>
 
-    <!-- FOOTER: CALCUL / MEDIANE -->
     <footer id="footer-median" class="footer-group bg-slate-900 border-t border-slate-700 p-4 pb-8 flex justify-center items-center gap-8 min-h-[80px]">
         <button id="btn-sort" onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> 1. RANGER
@@ -478,7 +540,6 @@
         </button>
     </footer>
 
-    <!-- FOOTER: CALCUL / RANGE -->
     <footer id="footer-range" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-8 min-h-[80px]">
         <button onclick="autoSort()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg flex items-center gap-2 transition-all active:scale-95">
             <span>📊</span> RANGER
@@ -489,7 +550,6 @@
         </div>
     </footer>
     
-    <!-- FOOTER: CALCUL / MEAN -->
     <footer id="footer-mean" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center min-h-[80px]">
         <div class="text-slate-400 text-sm font-medium flex items-center gap-2">
             <span class="text-2xl">🏗️</span>
@@ -497,7 +557,6 @@
         </div>
     </footer>
     
-    <!-- FOOTER: BUILDER -->
     <footer id="footer-build" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-4 min-h-[80px]">
         <div class="text-slate-400 text-sm mr-4">Une fois terminé :</div>
         <button onclick="verifyConstruction()" class="btn-verify">
@@ -505,7 +564,6 @@
         </button>
     </footer>
 
-    <!-- FOOTER: BUILDER FILTER VIEW (MEDIAN/MEAN/RANGE in BUILD) -->
     <footer id="footer-build-view" class="footer-group hidden bg-slate-900 border-t border-slate-700 p-4 pb-8 justify-center items-center gap-4 min-h-[80px]">
         <div class="text-sky-400 text-sm font-bold flex items-center gap-2">
              <span class="text-2xl">👁️</span> Mode Simulation
@@ -591,10 +649,14 @@
         function setMainMode(mode) {
             state.mainMode = mode;
             if (mode === 'BUILD') {
-                if (state.targetMedian === 0) startNewChallenge();
+                // FORCE RESET TO ZERO AND NEW CHALLENGE FOR BUILD
+                state.isSorted = false;
+                setConstructLevel(state.constructLevel); // This triggers startNewChallenge with 0 height
                 setBuildSubMode('EDIT'); // Default to edit
             } else {
-                setSubMode('MEDIAN'); // Default to median in Calcul
+                // FORCE RANDOM CITY FOR CALCUL
+                state.subMode = 'MEDIAN';
+                generateRandomCity(); 
             }
             updateUIForMode();
         }
@@ -618,16 +680,12 @@
             if (state.constructionSnapshot) {
                 // Restore original construction
                 state.buildings = JSON.parse(state.constructionSnapshot);
-                // Re-link DOM elements is tricky, simpler to re-render
-                // But wait, refreshCityFromState handles creating DOM.
-                // We just need to restore data.
                 state.constructionSnapshot = null;
             }
 
             // If switching TO a view (not EDIT), save snapshot first
             if (sub !== 'EDIT') {
                 state.constructionSnapshot = JSON.stringify(state.buildings);
-                // In Mean view, we might modify bricks, so snapshot is crucial.
             }
 
             state.subMode = sub; // Can be 'EDIT', 'MEDIAN', 'MEAN', 'RANGE'
@@ -1129,6 +1187,11 @@
                 startY: e.touches ? e.touches[0].clientY : e.clientY
             };
             
+            // Activate Trash Visual only if dragging from building in EDIT mode
+            if(state.subMode === 'EDIT') {
+                brickSupply.classList.add('is-trash');
+            }
+
             updateGhostPos(e.touches ? e.touches[0] : e);
             document.addEventListener('mousemove', onBrickDrag);
             document.addEventListener('touchmove', onBrickDrag, {passive: false});
@@ -1166,9 +1229,28 @@
         function endBrickDrag(e) {
             if(!draggedBrick) return;
             
-            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-            const containerRect = container.getBoundingClientRect();
+            brickSupply.classList.remove('is-trash'); // Reset visual
             
+            const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            
+            // 1. CHECK FOR TRASH DROP
+            if (state.subMode === 'EDIT' && draggedBrick.sourceId !== 'SUPPLY') {
+                const r = brickSupply.getBoundingClientRect();
+                if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+                    playSound('pop'); // Sound effect for trash
+                    draggedBrick.element.remove();
+                    draggedBrick = null;
+                    document.removeEventListener('mousemove', onBrickDrag);
+                    document.removeEventListener('touchmove', onBrickDrag);
+                    document.removeEventListener('mouseup', endBrickDrag);
+                    document.removeEventListener('touchend', endBrickDrag);
+                    return; // Stop here, brick is destroyed
+                }
+            }
+            
+            // 2. CHECK FOR BUILDING DROP
+            const containerRect = container.getBoundingClientRect();
             const totalW = (state.count * CONFIG.buildingWidth) + ((state.count - 1) * CONFIG.gap);
             const startX = (containerRect.width - totalW) / 2;
             const relativeX = clientX - containerRect.left - startX;
@@ -1177,26 +1259,20 @@
             
             let success = false;
             if (targetIdx >= 0 && targetIdx < state.count) {
-                // In Mean mode, buildings might be sorted differently.
-                // We need to find the building at visual index `targetIdx`.
-                // state.buildings is ALREADY sorted for visual display in refreshCityFromState
-                // So state.buildings[targetIdx] is correct visual mapping.
-                
                 const targetObj = state.buildings[targetIdx];
-                
                 if (targetObj && targetObj.id !== draggedBrick.sourceId) {
                     if (targetObj.value + draggedBrick.amount <= CONFIG.maxFloors) {
                         targetObj.value += draggedBrick.amount;
                         updateBuildingVisuals(targetObj);
                         playSound('pop');
-                        
-                        if(state.subMode === 'MEAN') checkMeanWin(); // Check if in Mean Sim or Calc Mean
+                        if(state.subMode === 'MEAN') checkMeanWin();
                         success = true;
                     }
                 }
             }
 
             if (!success) {
+                // If failed drop and not supply source, return brick to sender
                 if (draggedBrick.sourceId !== 'SUPPLY') {
                     const sourceObj = state.buildings.find(b => b.id === draggedBrick.sourceId);
                     sourceObj.value += draggedBrick.amount;
@@ -1290,10 +1366,34 @@
             startNewChallenge();
         }
 
+        // CUSTOM MODAL LOGIC
+        function startCustomSetup() {
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+        function closeCustomModal() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+        function confirmCustomChallenge() {
+            const c = document.getElementById('in-count').value;
+            const m = document.getElementById('in-median').value;
+            const r = document.getElementById('in-range').value;
+            const mn = document.getElementById('in-mean').value;
+            const s = document.getElementById('in-special').value;
+
+            // Apply settings
+            state.count = (c && c >= 2 && c <= 12) ? parseInt(c) : 5;
+            state.targetMedian = m ? parseFloat(m) : null;
+            state.targetRange = r ? parseFloat(r) : null;
+            state.targetMean = mn ? parseFloat(mn) : null;
+            state.targetSpecial = s ? parseFloat(s) : null;
+
+            closeCustomModal();
+            initializeConstruction();
+        }
+
         function startNewChallenge() {
-            clearCanvas();
+            // Random generation logic (existing)
             const lvl = state.constructLevel;
-            
             state.count = Math.floor(Math.random() * 7) + 3;
             
             let virtualBuildings = [];
@@ -1315,33 +1415,44 @@
             
             const tSpec = virtualBuildings[Math.floor(Math.random()*state.count)];
 
+            // SET ALL TARGETS (Reset nulls)
             state.targetMedian = tM; 
             state.targetRange = tR;
-            state.targetMean = tMean;
-            state.targetSpecial = tSpec;
+            
+            // Level logic for random
+            state.targetMean = (lvl >= 2) ? tMean : null;
+            state.targetSpecial = (lvl === 3) ? tSpec : null;
 
+            initializeConstruction();
+        }
+
+        function initializeConstruction() {
+            clearCanvas();
+            
+            // Reset buildings to zero
             state.buildings = [];
             for(let i=0; i<state.count; i++) {
                 const bObj = { id: i, value: 0, originalVal: 0, originalId: i };
                 state.buildings.push(bObj);
             }
             
+            // UI Update based on targets (Null checks)
             document.getElementById('goal-text-count').innerText = `${state.count} Immeubles`;
-            document.getElementById('goal-text-med').innerText = `Médiane : ${tM}`;
-            document.getElementById('goal-text-range').innerText = `Étendue : ${tR}`;
             
-            const elMean = document.getElementById('goal-item-mean');
-            const elSpec = document.getElementById('goal-item-special');
-            
-            if(lvl >= 2) {
-                elMean.classList.remove('hidden');
-                document.getElementById('goal-text-mean').innerText = `Moyenne : ~${tMean}`;
-            } else elMean.classList.add('hidden');
-            
-            if(lvl === 3) {
-                elSpec.classList.remove('hidden');
-                document.getElementById('goal-text-special').innerText = `Un immeuble de ${tSpec} étages`;
-            } else elSpec.classList.add('hidden');
+            const showGoal = (id, val, text) => {
+                const el = document.getElementById(id);
+                if(val !== null) {
+                    el.classList.remove('hidden');
+                    el.querySelector('span').innerText = text;
+                } else {
+                    el.classList.add('hidden');
+                }
+            };
+
+            showGoal('goal-item-med', state.targetMedian, `Médiane : ${state.targetMedian}`);
+            showGoal('goal-item-range', state.targetRange, `Étendue : ${state.targetRange}`);
+            showGoal('goal-item-mean', state.targetMean, `Moyenne : ~${state.targetMean}`);
+            showGoal('goal-item-special', state.targetSpecial, `Un immeuble de ${state.targetSpecial} étages`);
             
             resetGoalStatus();
             setBuildSubMode('EDIT'); // Force Edit on new challenge
@@ -1361,10 +1472,6 @@
             
             let vals;
             if(state.constructionSnapshot && state.subMode !== 'EDIT') {
-                 // User is verifying while in Mean/Median view?
-                 // Usually verification happens on the "Real" construction.
-                 // If they are in Mean view, state.buildings is the modified mean version.
-                 // We should probably check the SNAPSHOT (the real construction) if it exists.
                  vals = JSON.parse(state.constructionSnapshot).map(b => b.value).sort((a,b)=>a-b);
             } else {
                  vals = state.buildings.map(b => b.value).sort((a,b)=>a-b);
@@ -1379,8 +1486,8 @@
             
             const check = (id, condition) => {
                 const el = document.getElementById(id);
-                if(!el) return;
-                const parent = el.parentElement;
+                if(!el || el.classList.contains('hidden')) return; // Skip checking hidden goals
+                const parent = el; // ID is on the parent div now
                 parent.classList.remove('success', 'error');
                 if(condition) {
                     parent.classList.add('success');
@@ -1390,16 +1497,12 @@
                 }
             };
 
-            check('check-count', true); 
-            check('check-med', currMed === state.targetMedian);
-            check('check-range', currRange === state.targetRange);
+            check('goal-item-count', true); // Always true if mode starts correctly
             
-            if(state.constructLevel >= 2) {
-                check('check-mean', Math.abs(currMean - state.targetMean) < 0.1); 
-            }
-            if(state.constructLevel === 3) {
-                check('check-special', vals.includes(state.targetSpecial));
-            }
+            if (state.targetMedian !== null) check('goal-item-med', currMed === state.targetMedian);
+            if (state.targetRange !== null) check('goal-item-range', currRange === state.targetRange);
+            if (state.targetMean !== null) check('goal-item-mean', Math.abs(currMean - state.targetMean) < 0.1);
+            if (state.targetSpecial !== null) check('goal-item-special', vals.includes(state.targetSpecial));
             
             if(win) {
                 playSound('ding');
