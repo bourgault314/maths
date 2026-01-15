@@ -316,11 +316,9 @@
 <body class="h-screen flex flex-col">
 
     <div id="custom-cursor">
-        <svg id="cursor-pen-svg" class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M27 7 L13 21" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#ffffff"/>
-            <circle cx="8" cy="32" r="1" fill="white"/>
+        <!-- NOUVELLE ICONE CRAYON PLUS PROPRE -->
+        <svg id="cursor-pen-svg" class="drop-shadow-lg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.2)"/>
         </svg>
     </div>
 
@@ -583,8 +581,9 @@
                     const cursorDiv = document.getElementById('custom-cursor');
                     const x = e.touches ? e.touches[0].clientX : e.clientX;
                     const y = e.touches ? e.touches[0].clientY : e.clientY;
-                    cursorDiv.style.left = (x - 8) + 'px';
-                    cursorDiv.style.top = (y - 32) + 'px';
+                    // CALCUL EXACT : Pointe à (2, 22) dans 24x24
+                    cursorDiv.style.left = (x - 2) + 'px';
+                    cursorDiv.style.top = (y - 22) + 'px';
                 }
             });
         }
@@ -938,7 +937,15 @@
             const startX = (container.offsetWidth - totalW) / 2;
 
             let list = state.buildings;
-            // Note: buildings are already sorted in refreshCityFromState
+            
+            if (state.mainMode === 'CALCUL' && state.subMode === 'MEDIAN') {
+                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
+            } else if (state.mainMode === 'CALCUL' && state.subMode === 'RANGE') {
+                 if(state.isSorted) list.sort((a,b) => a.value - b.value);
+                 else list.sort((a,b) => a.originalId - b.originalId);
+            } else {
+                 list.sort((a,b) => a.originalId - b.originalId);
+            }
 
             list.forEach((b, i) => {
                 if (b === skipItem) return;
@@ -1590,7 +1597,7 @@
         let isDrawing = false, lastX=0, lastY=0;
         function resizeCanvas() {
             const rect = document.getElementById('city-container').getBoundingClientRect();
-            canvas.width = rect.width; rect.height;
+            canvas.width = rect.width; canvas.height = rect.height;
             if(state.currentTool === 'pen') { 
                 ctx.globalCompositeOperation = 'source-over'; 
                 ctx.strokeStyle = '#ffffff'; 
@@ -1628,11 +1635,12 @@
             lastX=p.x; 
             lastY=p.y; 
             
-            // Correction du décalage pour que la mine (8, 32) soit sous la souris
             const cx = e.touches ? e.touches[0].clientX : e.clientX;
             const cy = e.touches ? e.touches[0].clientY : e.clientY;
-            cursorDiv.style.left = (cx - 8) + 'px'; 
-            cursorDiv.style.top = (cy - 32) + 'px'; 
+            
+            // CORRECTION: Application du même décalage que dans init() pour aligner la mine
+            cursorDiv.style.left = (cx - 2) + 'px'; 
+            cursorDiv.style.top = (cy - 22) + 'px'; 
         }
         
         function endDraw() { isDrawing=false; }
