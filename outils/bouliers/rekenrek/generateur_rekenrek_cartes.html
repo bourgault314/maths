@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Rekenrek V12 - Sur Mesure</title>
+    <title>Générateur Rekenrek V17 - Final Config</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
         :root {
@@ -11,10 +11,11 @@
             --margin-top: 15mm;
             --gap-grid: 5mm; 
             --padding-left-base: calc((210mm - (2 * var(--card-width)) - var(--gap-grid)) / 2);
-            --bead-size: 4.6mm; 
+            --bead-size: 4.6mm; /* Taille standard */
+            --wood-color: #C8AD7F; /* Couleur Carton/Bois recyclé */
         }
 
-        body.mode-airy { --bead-size: 3.8mm; }
+        body.mode-airy { --bead-size: 3.8mm; /* Taille aérée */ }
 
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -48,16 +49,19 @@
 
         /* Lignes d'inputs */
         .input-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;}
-        .row { display: flex; align-items: center; gap: 10px; }
+        .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         
-        label { cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; }
+        label { cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; color: #333; }
         .label-title { font-weight: 600; font-size: 13px; color: #555; }
+        
+        /* Styles spécifiques pour les groupes de boutons radio/check */
+        .radio-group { display: flex; gap: 15px; background: #f9fafb; padding: 5px 10px; border-radius: 4px; border: 1px solid #e5e7eb; }
 
         input[type="number"] { padding: 6px; border: 1px solid #ccc; border-radius: 4px; width: 60px; }
         select { padding: 6px; border: 1px solid #ccc; border-radius: 4px; width: 100%; }
-        input[type="checkbox"] { width: 16px; height: 16px; accent-color: #2563eb; }
+        input[type="checkbox"], input[type="radio"] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
 
-        /* BOUTON IMPRIMER (Prend toute la largeur en bas) */
+        /* BOUTON IMPRIMER */
         .full-width { grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 10px; }
         .btn-print {
             background-color: #16a34a; color: white; border: none; 
@@ -107,24 +111,51 @@
         .text-label { font-family: sans-serif; font-size: 10px; fill: #999; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
         .logo { font-family: 'Arial Black', sans-serif; font-weight: 900; font-size: 16px; fill: #ddd; text-anchor: middle; letter-spacing: 2px; dominant-baseline: middle; stroke:#ccc; stroke-width:1px; }
 
-        /* --- CARTE REKENREK --- */
+        /* --- CARTE REKENREK (RECTO) --- */
         .card {
             width: var(--card-width); height: var(--card-height);
             border: 1px solid #ccc; border-radius: 4px; 
             box-sizing: border-box; overflow: hidden; break-inside: avoid;
         }
+        
         .recto {
-            background-color: #2d2d2d !important; 
-            border-left: 7mm solid #d2b48c; border-right: 7mm solid #d2b48c; 
+            border-left: 4mm solid var(--wood-color); 
+            border-right: 4mm solid var(--wood-color); 
             padding: 2mm 0; display: flex; flex-direction: column;
             justify-content: space-evenly; height: 100%; box-sizing: border-box; 
         }
+
+        /* Styles de fond */
+        .recto.bg-white { background-color: #fff !important; }
+        .recto.bg-black { background-color: #2d2d2d !important; }
+
         .rack-row { display: flex; align-items: center; height: 10%; position: relative; }
-        .wire { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: #9ca3af !important; z-index: 0; margin: 0 -1px; }
+        
+        /* Tiges */
+        .recto.bg-white .wire { background: #6b7280 !important; } /* Gris foncé sur blanc */
+        .recto.bg-black .wire { background: #9ca3af !important; } /* Gris clair sur noir */
+        .wire { position: absolute; left: 0; right: 0; top: 50%; height: 2px; z-index: 0; margin: 0 -1px; }
+        
         .beads-container { display: flex; justify-content: space-between; width: 100%; height: 100%; z-index: 1; align-items: center; }
         .group-active, .group-inactive { display: flex; align-items: center; gap: 0; }
-        .bead { width: var(--bead-size); height: var(--bead-size); margin: 0; border-radius: 50%; box-shadow: inset -1px -1px 2px rgba(0,0,0,0.5), 1px 1px 2px rgba(255,255,255,0.2); }
-        .bead.blue { background-color: #3b82f6 !important; } .bead.red { background-color: #dc2626 !important; } .bead.white { background-color: #f3f4f6 !important; }
+        
+        /* Billes */
+        .bead { 
+            width: var(--bead-size); height: var(--bead-size); 
+            margin: 0; border-radius: 50%; 
+            box-sizing: border-box; 
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 1px 1px 3px rgba(255,255,255,0.7), 1px 1px 1px rgba(0,0,0,0.2);
+        }
+        
+        /* Contour dynamique */
+        .bead.with-outline {
+            border: 1px solid #222 !important;
+            box-shadow: inset -1px -1px 3px rgba(0,0,0,0.1), inset 1px 1px 2px rgba(255,255,255,0.5);
+        }
+
+        .bead.blue { background-color: #3b82f6 !important; } 
+        .bead.red { background-color: #dc2626 !important; } 
+        .bead.white { background-color: #f9fafb !important; } 
 
         /* VERSO */
         .verso { display: flex; flex-direction: column; background: white; border: 1px solid #ccc; }
@@ -152,63 +183,83 @@
     <div class="settings-panel">
         
         <div class="settings-column">
-            <h3>1. Configuration Cartes</h3>
+            <h3>1. Configuration</h3>
             <div class="input-group">
                 <span class="label-title">Plage de nombres :</span>
                 <div class="row">
                     De <input type="number" id="min" value="0">
-                    À <input type="number" id="max" value="15">
+                    À <input type="number" id="max" value="99" max="99">
                 </div>
             </div>
+            
             <div class="input-group">
-                <span class="label-title">Langue & Style :</span>
+                <span class="label-title">Fond du boulier :</span>
+                <div class="row radio-group">
+                    <label><input type="radio" name="bgStyle" value="white" checked> Blanc</label>
+                    <label><input type="radio" name="bgStyle" value="black"> Noir</label>
+                </div>
+            </div>
+            
+             <div class="input-group">
+                <label style="margin-top:5px;"><input type="checkbox" id="airyMode" checked> Mode Aéré (Billes + petites)</label>
+            </div>
+        </div>
+
+        <div class="settings-column">
+            <h3>2. Apparence & Couleurs</h3>
+            
+            <div class="input-group">
+                <span class="label-title">Thème de couleur :</span>
+                <div class="row radio-group">
+                    <label><input type="radio" name="beadTheme" value="blue"> Rge/Bleu</label>
+                    <label><input type="radio" name="beadTheme" value="white" checked> Rge/Blanc</label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <span class="label-title">Appliquer Contour Noir (Cercle) :</span>
+                <div class="row radio-group">
+                    <label><input type="checkbox" id="outlineRed"> Sur Rouges</label>
+                    <label><input type="checkbox" id="outlineSec"> Sur 2ème couleur</label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <span class="label-title">Langue (Verso) :</span>
                 <select id="language">
                     <option value="fr">🇫🇷 France</option>
                     <option value="be">🇧🇪 Belgique</option>
                     <option value="en">🇬🇧 English</option>
                 </select>
-                <select id="colorScheme">
-                    <option value="blue">🔴 🔵 Rouge/Bleu</option>
-                    <option value="white">🔴 ⚪ Rouge/Blanc</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label><input type="checkbox" id="airyMode"> Mode Aéré (Billes + petites)</label>
             </div>
         </div>
 
         <div class="settings-column">
-            <h3>2. Quoi imprimer ?</h3>
+            <h3>3. Impression & Technique</h3>
             <div class="input-group">
-                <label style="background:#e0f2fe; padding:10px; border-radius:6px;">
+                <label style="background:#e0f2fe; padding:8px; border-radius:6px;">
                     <input type="checkbox" id="printCards" checked> 
-                    <strong>Imprimer les Cartes</strong> (Recto/Verso)
+                    <strong>Cartes</strong>
                 </label>
-            </div>
-            <div class="input-group">
-                <label style="background:#fef3c7; padding:10px; border-radius:6px;">
+                <label style="background:#fef3c7; padding:8px; border-radius:6px;">
                     <input type="checkbox" id="printCache"> 
-                    <strong>Imprimer les Patrons "Cache"</strong>
+                    <strong>Patrons</strong>
                 </label>
             </div>
-        </div>
-
-        <div class="settings-column">
-            <h3>3. Réglages Techniques</h3>
             
             <div class="input-group">
-                <span class="label-title">📐 Dimensions Patron (mm) :</span>
+                <span class="label-title">📐 Patron (mm) :</span>
                 <div class="row">
-                    L <input type="number" id="cacheWidth" value="97" min="80" max="110">
-                    H <input type="number" id="cacheHeight" value="35" min="20" max="60">
+                    L <input type="number" id="cacheWidth" value="97" style="width:50px">
+                    H <input type="number" id="cacheHeight" value="35" style="width:50px">
                 </div>
             </div>
 
             <div class="input-group">
-                <span class="label-title">🖨️ Calibrage Verso (mm) :</span>
+                <span class="label-title">🖨️ Calibrage (mm) :</span>
                 <div class="row">
-                    X <input type="number" id="offsetX" value="0" step="0.5">
-                    Y <input type="number" id="offsetY" value="0" step="0.5">
+                    X <input type="number" id="offsetX" value="0" step="0.5" style="width:50px">
+                    Y <input type="number" id="offsetY" value="0" step="0.5" style="width:50px">
                 </div>
             </div>
         </div>
@@ -228,20 +279,47 @@
         function toFrench(n,be){if(n===0)return"zéro";let s="",d=Math.floor(n/10),u=n%10;if(n<10)return unitsFR[n];if(n>=10&&n<20)return teensFR[n-10];if(n>=20&&n<70){s=tensFR[d];if(u===1)s+="-et-un";else if(u>0)s+="-"+unitsFR[u];return s}if(n>=70&&n<80){if(be){s="septante";if(u===1)s+="-et-un";else if(u>0)s+="-"+unitsFR[u]}else{s="soixante";if(u===1)s+="-et-onze";else if(u===0)s+="-dix";else s+="-"+teensFR[u]}return s}if(n>=80&&n<90){s="quatre-vingt";if(u>0)s+="-"+unitsFR[u];else s+="s";return s}if(n>=90){if(be){s="nonante";if(u===1)s+="-et-un";else if(u>0)s+="-"+unitsFR[u]}else{s="quatre-vingt";if(u===0)s+="-dix";else s+="-"+teensFR[u]}return s}return s}
         function toEnglish(n){if(n===0)return"zero";let d=Math.floor(n/10),u=n%10;if(n<10)return unitsEN[n];if(n>=10&&n<20)return teensEN[n-10];let s=tensEN[d];if(u>0)s+="-"+unitsEN[u];return s}
         function numberToText(n,l){if(l==='en')return toEnglish(n);if(l==='be')return toFrench(n,true);return toFrench(n,false)}
-        function getBeadColorClass(r,c,s){if(r<5)return c<5?'red':s;else return c<5?s:'red'}
+        
+        // Retourne 'red' ou 'secondary'
+        function getBeadBaseColor(r,c){
+            // Standard: 5 rouges, 5 autres. Inversion après 5 lignes
+            if(r<5) return c<5 ? 'red' : 'secondary';
+            else return c<5 ? 'secondary' : 'red';
+        }
 
-        function createRecto(n,s){
-            const c=document.createElement('div');c.className='card recto';
+        function createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec){
+            const c=document.createElement('div');
+            c.className=`card recto bg-${bgStyle}`;
+            
             const full=Math.floor(n/10),rem=n%10;
+            const secondaryColor = beadTheme; // 'blue' or 'white'
+
             for(let i=0;i<10;i++){
                 const r=document.createElement('div');r.className='rack-row';
                 r.innerHTML='<div class="wire"></div>';
                 const ct=document.createElement('div');ct.className='beads-container';
                 const ga=document.createElement('div');ga.className='group-active';
                 const gi=document.createElement('div');gi.className='group-inactive';
+                
                 let ac=(i<full)?10:(i===full?rem:0);
+                
                 for(let j=0;j<10;j++){
-                    const b=document.createElement('div');b.className=`bead ${getBeadColorClass(i,j,s)}`;
+                    const b=document.createElement('div');
+                    
+                    const baseType = getBeadBaseColor(i, j); // 'red' or 'secondary'
+                    
+                    let finalColor = (baseType === 'red') ? 'red' : secondaryColor;
+                    let finalClass = `bead ${finalColor}`;
+                    
+                    // Gestion Contours
+                    let needsOutline = false;
+                    if(baseType === 'red' && outlineRed) needsOutline = true;
+                    if(baseType === 'secondary' && outlineSec) needsOutline = true;
+                    
+                    if(needsOutline) finalClass += ' with-outline';
+                    
+                    b.className = finalClass;
+                    
                     if(j<ac)ga.appendChild(b);else gi.appendChild(b);
                 }
                 ct.appendChild(ga);ct.appendChild(gi);r.appendChild(ct);c.appendChild(r);
@@ -296,14 +374,28 @@
 
         function generate(){
             const area=document.getElementById('preview-area');area.innerHTML='';
-            let min=parseInt(document.getElementById('min').value)||0,max=parseInt(document.getElementById('max').value)||0;
+            
+            // Gestion min/max (max 99)
+            let minInput = document.getElementById('min');
+            let maxInput = document.getElementById('max');
+            
+            // Forçage de la limite visuelle si l'utilisateur tape manuellement plus que 99
+            if (parseInt(maxInput.value) > 99) maxInput.value = 99;
+            
+            let min=parseInt(minInput.value)||0;
+            let max=parseInt(maxInput.value)||0;
+
             if(min>max)[min,max]=[max,min];
             
-            const scheme=document.getElementById('colorScheme').value;
+            // Récupération des nouveaux paramètres granulaires
+            const bgStyle = document.querySelector('input[name="bgStyle"]:checked').value;
+            const beadTheme = document.querySelector('input[name="beadTheme"]:checked').value;
+            const outlineRed = document.getElementById('outlineRed').checked;
+            const outlineSec = document.getElementById('outlineSec').checked;
+
             const lang=document.getElementById('language').value;
             const airy=document.getElementById('airyMode').checked;
             
-            // Nouveaux contrôles
             const doCards = document.getElementById('printCards').checked;
             const doCache = document.getElementById('printCache').checked;
             const cacheW = parseInt(document.getElementById('cacheWidth').value)||97;
@@ -313,10 +405,8 @@
 
             if(airy)document.body.classList.add('mode-airy');else document.body.classList.remove('mode-airy');
 
-            // 1. PAGE PATRONS (Si cochée)
             if (doCache) area.appendChild(createCachePage(cacheW, cacheH));
 
-            // 2. PAGES CARTES (Si cochée)
             if (doCards) {
                 const nums=[];for(let i=min;i<=max;i++)nums.push(i);
                 const perPage=8; const map=[1,0,3,2,5,4,7,6];
@@ -325,7 +415,8 @@
                     const chunk=nums.slice(i,i+perPage);
                     // Recto
                     const pR=document.createElement('div');pR.className='page-a4 page-cards';
-                    chunk.forEach(n=>pR.appendChild(createRecto(n,scheme)));
+                    // On passe tous les arguments nécessaires à createRecto
+                    chunk.forEach(n=>pR.appendChild(createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec)));
                     area.appendChild(pR);
                     // Verso
                     const pV=document.createElement('div');pV.className='page-a4 page-cards';
@@ -343,6 +434,7 @@
 
         window.onload=function(){
             generate();
+            // Écoute des changements sur tous les inputs (y compris radios et checkbox)
             document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',generate));
         };
     </script>
