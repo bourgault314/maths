@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Rekenrek V19 - Contours Activés</title>
+    <title>Générateur Rekenrek V25 - Final Clean</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
         :root {
@@ -114,16 +114,48 @@
         /* --- CARTE REKENREK (RECTO) --- */
         .card {
             width: var(--card-width); height: var(--card-height);
-            border: 1px solid #ccc; border-radius: 4px; 
+            border: none; /* Pas de bordure grise */
+            border-radius: 0; 
             box-sizing: border-box; overflow: hidden; break-inside: avoid;
+            position: relative; 
+        }
+
+        .recto {
+            /* Padding pour les montants */
+            padding: 2mm 4mm; 
+            display: flex; flex-direction: column;
+            justify-content: space-evenly; height: 100%; box-sizing: border-box;
+            position: relative; 
+        }
+
+        /* Les Montants en Bois (Pseudo-éléments) */
+        .recto::before, .recto::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 4mm;
+            background-color: var(--wood-color);
+            box-sizing: border-box;
+            z-index: 10;
         }
         
-        .recto {
-            border-left: 4mm solid var(--wood-color); 
-            border-right: 4mm solid var(--wood-color); 
-            padding: 2mm 0; display: flex; flex-direction: column;
-            justify-content: space-evenly; height: 100%; box-sizing: border-box; 
+        /* MONTANT GAUCHE : Arrondis externes à gauche */
+        .recto::before { 
+            left: 0; 
+            border-top-left-radius: 6px; 
+            border-bottom-left-radius: 6px; 
         }
+        
+        /* MONTANT DROIT : Arrondis externes à droite */
+        .recto::after { 
+            right: 0; 
+            border-top-right-radius: 6px; 
+            border-bottom-right-radius: 6px;
+        }
+
+        /* Option Contour Bois : Trait solide 1px */
+        .recto.wood-outline::before { border: 1px solid #000; }
+        .recto.wood-outline::after  { border: 1px solid #000; }
 
         /* Styles de fond */
         .recto.bg-white { background-color: #fff !important; }
@@ -132,8 +164,8 @@
         .rack-row { display: flex; align-items: center; height: 10%; position: relative; }
         
         /* Tiges */
-        .recto.bg-white .wire { background: #6b7280 !important; } /* Gris foncé sur blanc */
-        .recto.bg-black .wire { background: #9ca3af !important; } /* Gris clair sur noir */
+        .recto.bg-white .wire { background: #6b7280 !important; } 
+        .recto.bg-black .wire { background: #9ca3af !important; }
         .wire { position: absolute; left: 0; right: 0; top: 50%; height: 2px; z-index: 0; margin: 0 -1px; }
         
         .beads-container { display: flex; justify-content: space-between; width: 100%; height: 100%; z-index: 1; align-items: center; }
@@ -147,9 +179,9 @@
             box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 1px 1px 3px rgba(255,255,255,0.7), 1px 1px 1px rgba(0,0,0,0.2);
         }
         
-        /* Contour dynamique - PLUS FIN (0.5px) */
+        /* Contour billes : 1px */
         .bead.with-outline {
-            border: 0.5px solid #333 !important; /* Contour très fin */
+            border: 1px solid #000 !important; 
             box-shadow: inset -1px -1px 3px rgba(0,0,0,0.1), inset 1px 1px 2px rgba(255,255,255,0.5);
         }
 
@@ -158,7 +190,7 @@
         .bead.white { background-color: #f9fafb !important; } 
 
         /* VERSO */
-        .verso { display: flex; flex-direction: column; background: white; border: 1px solid #ccc; }
+        .verso { display: flex; flex-direction: column; background: white; border: 1px solid #ccc; border-radius: 4px; }
         .verso.theme-green { --theme-color: #10b981; }
         .verso.theme-blue  { --theme-color: #3b82f6; }
         .verso.theme-red   { --theme-color: #ef4444; }
@@ -225,6 +257,14 @@
             </div>
 
             <div class="input-group">
+                <!-- Option pour le contour bois -->
+                <label style="margin-top:5px; font-weight:600; color:#555;">
+                    <input type="checkbox" id="outlineWood" checked> 
+                    Contour Montants (Bois)
+                </label>
+            </div>
+
+            <div class="input-group">
                 <span class="label-title">Langue (Verso) :</span>
                 <select id="language">
                     <option value="fr">🇫🇷 France</option>
@@ -282,14 +322,19 @@
         
         // Retourne 'red' ou 'secondary'
         function getBeadBaseColor(r,c){
-            // Standard: 5 rouges, 5 autres. Inversion après 5 lignes
             if(r<5) return c<5 ? 'red' : 'secondary';
             else return c<5 ? 'secondary' : 'red';
         }
 
-        function createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec){
+        function createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec, outlineWood){
             const c=document.createElement('div');
-            c.className=`card recto bg-${bgStyle}`;
+            
+            // Classes : card + recto + bg
+            let classes = `card recto bg-${bgStyle}`;
+            if(outlineWood) classes += ' wood-outline';
+            c.className = classes;
+            
+            // Plus de marqueurs de coupe ici.
             
             const full=Math.floor(n/10),rem=n%10;
             const secondaryColor = beadTheme; // 'blue' or 'white'
@@ -311,7 +356,7 @@
                     let finalColor = (baseType === 'red') ? 'red' : secondaryColor;
                     let finalClass = `bead ${finalColor}`;
                     
-                    // Gestion Contours
+                    // Gestion Contours Billes
                     let needsOutline = false;
                     if(baseType === 'red' && outlineRed) needsOutline = true;
                     if(baseType === 'secondary' && outlineSec) needsOutline = true;
@@ -392,6 +437,7 @@
             const beadTheme = document.querySelector('input[name="beadTheme"]:checked').value;
             const outlineRed = document.getElementById('outlineRed').checked;
             const outlineSec = document.getElementById('outlineSec').checked;
+            const outlineWood = document.getElementById('outlineWood').checked; // Nouveau
 
             const lang=document.getElementById('language').value;
             const airy=document.getElementById('airyMode').checked;
@@ -416,7 +462,7 @@
                     // Recto
                     const pR=document.createElement('div');pR.className='page-a4 page-cards';
                     // On passe tous les arguments nécessaires à createRecto
-                    chunk.forEach(n=>pR.appendChild(createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec)));
+                    chunk.forEach(n=>pR.appendChild(createRecto(n, bgStyle, beadTheme, outlineRed, outlineSec, outlineWood)));
                     area.appendChild(pR);
                     // Verso
                     const pV=document.createElement('div');pV.className='page-a4 page-cards';
