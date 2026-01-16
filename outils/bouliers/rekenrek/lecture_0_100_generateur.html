@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — GÉNÉRATEUR V4 (Largeur Réelle)</title>
+  <title>REKENREK — GÉNÉRATEUR FINAL (Forme Fusionnée)</title>
   <style>
     :root {
       --ink: #111827;
@@ -259,6 +259,7 @@
         <label style="margin-bottom:5px;" data-i18n="color">Couleur Billes</label>
         <select id="beadColor" onchange="renderPages()">
           <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
+          <option value="gray" data-i18n="opt_gray">Rouge / Gris (Clair)</option>
           <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
         </select>
       </div>
@@ -298,12 +299,13 @@ const i18n = {
         mode_dict: "📚 Dictionnaire (Tout)",
         color: "Couleur Billes",
         opt_red: "Rouge / Blanc",
+        opt_gray: "Rouge / Gris (Clair)",
         opt_blue: "Rouge / Bleu",
         btn_mix: "GÉNÉRER / MÉLANGER",
         btn_print: "IMPRIMER",
         desc_digit: "Boulier et mot donnés. L'élève écrit le chiffre.",
         desc_word: "Boulier et chiffre donnés. L'élève écrit le mot.",
-        desc_color: "Le nombre est écrit. L'élève doit colorier les billes ou dessiner le déplacement.",
+        desc_color: "Le nombre est écrit. L'élève doit entourer ou colorier les billes sur le boulier.",
         desc_bead_only: "Seul le boulier est affiché. L'élève écrit le chiffre et le mot.",
         desc_num_only: "Seul le chiffre est donné. L'élève dessine/colorie et écrit le mot.",
         desc_word_only: "Seul le mot est donné. L'élève dessine/colorie et écrit le chiffre.",
@@ -324,7 +326,7 @@ const i18n = {
         exercise: "Mode",
         mode_digit: "1️⃣ Find the Digit",
         mode_word: "abc Find the Word",
-        mode_color: "🎨 Coloring",
+        mode_color: "🎨 Coloring / Circle",
         mode_bead_only: "🧮 Beads only (Do rest)",
         mode_num_only: "1️⃣ Digits only (Do rest)",
         mode_word_only: "abc Word only (Do rest)",
@@ -333,12 +335,13 @@ const i18n = {
         mode_dict: "📚 Dictionary (All)",
         color: "Bead Color",
         opt_red: "Red / White",
+        opt_gray: "Red / Gray (Light)",
         opt_blue: "Red / Blue",
         btn_mix: "GENERATE / SHUFFLE",
         btn_print: "PRINT",
         desc_digit: "Rekenrek and word shown. Student writes the digit.",
         desc_word: "Rekenrek and digit shown. Student writes the word.",
-        desc_color: "Number written. Student colors/draws the beads.",
+        desc_color: "Number written. Student must circle or color the beads.",
         desc_bead_only: "Only Beads shown. Student writes digit and word.",
         desc_num_only: "Only Digit shown. Student colors/draws and writes word.",
         desc_word_only: "Only Word shown. Student colors/draws and writes digit.",
@@ -543,9 +546,11 @@ function renderPages(sizeSelect) {
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
   
-  
   const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
   const theme = document.getElementById('beadColor').value;
+  const gameMode = document.getElementById('gameMode').value;
+  const isColoringMode = (gameMode === 'color');
+  
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
   
@@ -569,15 +574,16 @@ function renderPages(sizeSelect) {
         // 1. BOULIER
         const topPart = document.createElement('div');
         topPart.className = 'part-boulier';
-        // Passage des paramètres corrects (val, isVisible, theme, max)
-        topPart.innerHTML = getRekenrekSvg(item.val, (item.showBead || isCorr), theme, item.max);
+        
+        let showBeadsLogic = (item.showBead || isCorr);
+        
+        topPart.innerHTML = getRekenrekSvg(item.val, showBeadsLogic, theme, item.max, isColoringMode);
         cell.appendChild(topPart);
         
-        // 2. BAS : DEUX CASES (Chiffre | Mot)
+        // 2. BAS
         const botPart = document.createElement('div');
         botPart.className = 'part-bottom';
         
-        // Zone Chiffre (Gauche - 30%)
         const digitBox = document.createElement('div');
         digitBox.className = 'sub-box';
         digitBox.style.flex = "1"; 
@@ -589,7 +595,6 @@ function renderPages(sizeSelect) {
         }
         botPart.appendChild(digitBox);
         
-        // Zone Mot (Droite - 70%)
         const wordBox = document.createElement('div');
         wordBox.className = 'sub-box';
         wordBox.style.flex = "2.2"; 
@@ -612,21 +617,17 @@ function renderPages(sizeSelect) {
 }
 
 /**
- * GÉNÉRATION DU SVG DU BOULIER - VERSION V4 (REAL WIDTH)
- * - Largeur "W" calculée pour contenir 20 positions de billes (10 active + 10 inactive).
- * - Billes de taille généreuse (r=5).
- * - Le vide central correspond exactement aux billes manquantes.
+ * GÉNÉRATION DU SVG
+ * - isColoringMode (true) -> Force l'affichage "Centré" (sans montants).
+ * - isVisible (true) + isColoringMode -> Ajoute une FORME FUSIONNÉE (Correction).
  */
-function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
+function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
   
-  // GEOMETRIE (En unités SVG)
-  const r = 5;          // Rayon bille (gros)
-  const dia = 2 * r;    // Diamètre = 10
-  const frameW = 5;     // Largeur montant bois
-  
-  // Largeur Totale = MontantG + (20 * dia) + MontantD
-  // 5 + 200 + 5 = 210.
-  const W = 210; 
+  // GEOMETRIE
+  const r = 5;          
+  const dia = 2 * r;    
+  const frameW = 5;     
+  const W = 210;        
   
   // CALCUL HAUTEUR ET LIGNES
   let H, rows, spacingY, startY;
@@ -635,13 +636,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
   else if (maxValSetting <= 20) layoutType = 20;
   
   if (layoutType === 100) {
-      // Hauteur serrée pour 10 lignes
-      // 10 billes * 10 = 100px. + gaps.
-      // H=140 laisse ~4px de gap entre billes.
-      H = 140; 
-      rows = 10; 
-      spacingY = 13.5; // (140 - 2*start) / 9 env
-      startY = 10; 
+      H = 140; rows = 10; spacingY = 13.5; startY = 10; 
   } else if (layoutType === 20) {
       H = 60; rows = 2; spacingY = 24; startY = 18;
   } else {
@@ -650,88 +645,193 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
   
   let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
-  // MONTANTS EN BOIS
-  const brownColor = "#A07846";
-  svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
-  svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
-
-  // FONCTION DE DESSIN D'UNE LIGNE
-  const drawRow = (y, activeCount, isHidden, rowId) => {
-      let str = "";
-      // Tringle métallique (toute la largeur)
-      str += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+  // HELPER COULEUR
+  const getBeadColor = (idx, inverted) => {
+      let isFirstFive = (idx < 5);
+      let colMain = '#dc2626'; // Rouge
+      let colSec = '#f8fafc'; // Default Blanc
       
-      const inverted = (layoutType === 100 && rowId >= 5);
-      
-      const getBeadColor = (idx) => {
-          let isFirstFive = (idx < 5);
-          let colMain = '#dc2626'; // Rouge
-          let colSec = (theme === 'blue') ? '#2563eb' : '#f8fafc'; 
-          
-          let fill;
-          if (layoutType === 100 && inverted) {
-              fill = isFirstFive ? colSec : colMain;
-          } else {
-              fill = isFirstFive ? colMain : colSec;
-          }
-          return fill;
-      };
+      if (theme === 'blue') colSec = '#2563eb';
+      if (theme === 'gray') colSec = '#e2e8f0'; // Gris clair
 
-      let drawActive = isHidden ? 0 : activeCount;
-      // Les billes inactives sont celles qui "restent" sur les 10 possibles.
-      let drawInactive = 10 - drawActive;
-
-      // --- 1. BILLES ACTIVES (à GAUCHE) ---
-      // Collées au montant gauche.
-      let startXLeft = frameW + r; 
-      for (let i = 0; i < drawActive; i++) {
-          let cx = startXLeft + (i * dia);
-          
-          let fill = getBeadColor(i);
-          let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
-          
-          str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
-      }
-
-      // --- 2. BILLES INACTIVES (à DROITE) ---
-      // Collées au montant droit.
-      // La bille la plus à droite (index 9) est à : W - frameW - r.
-      // La bille inactive précédente (index 8) est à : W - frameW - r - dia.
-      // On dessine 'drawInactive' billes. Elles correspondent aux indices [drawActive ... 9].
-      // Exemple : Si 9 actives. Inactive est l'index 9.
-      // Si 0 actives. Inactives sont index 0 à 9.
-      
-      let startXRight = W - frameW - r;
-      for (let j = 0; j < drawInactive; j++) {
-          // j=0 -> première bille en partant de la droite (la dernière du rang, index 9)
-          // j=1 -> avant-dernière...
-          let realIdx = 9 - j; 
-          let cx = startXRight - (j * dia);
-          
-          let fill = getBeadColor(realIdx);
-          let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
-
-          str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
-      }
-
-      return str;
+      let fill;
+      if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
+      else fill = isFirstFive ? colMain : colSec;
+      return fill;
   };
 
-  for(let row = 0; row < rows; row++) {
-      let y = startY + (row * spacingY);
-      
-      if (!isVisible) {
-          svg += drawRow(y, 0, true, row);
+  // -----------------------------------------------------------------------
+  // CAS 1 : MODE COLORIAGE (CENTRÉ)
+  // -----------------------------------------------------------------------
+  if (isColoringMode) {
+      // Largeur du bloc de 10 billes = 100
+      const beadsWidth = 10 * dia;
+      const startX = (W - beadsWidth) / 2;
+
+      // DESSIN DES BILLES (TOUJOURS)
+      for(let row = 0; row < rows; row++) {
+          let y = startY + (row * spacingY);
+          
+          // Ligne support
+          svg += `<line x1="20" y1="${y}" x2="${W - 20}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+          
+          let inverted = (layoutType === 100 && row >= 5);
+          
+          for (let i = 0; i < 10; i++) {
+              let cx = startX + (i * dia) + r; 
+              let fill = getBeadColor(i, inverted);
+              let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
+              
+              svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+          }
+      }
+
+      // SI CORRECTION ACTIVE (isVisible == true) -> ENTOURER LA RÉPONSE AVEC UNE FORME FUSIONNÉE
+      if (isVisible) {
+           let fullRows = Math.floor(n / 10); // Nombre de lignes complètes (dizaines)
+           let remainder = n % 10;           // Unités restantes
+           
+           // PADDING TRÈS RÉDUIT pour ne pas déborder (ex: 1.5)
+           const pad = 1.5; 
+           // Rayon des coins (pour faire "capsule")
+           const cornerR = 8; 
+
+           // COORDONNÉES GÉNÉRALES
+           const leftX = startX - pad;
+           const topY = startY - r - pad;
+           const rightX_Full = startX + (10 * dia) + pad;
+           const rightX_Rem = startX + (remainder * dia) + pad;
+           
+           // Hauteur de la partie pleine (Full Block)
+           // Elle va du haut (topY) jusqu'au "milieu" de l'interligne après la dernière ligne pleine
+           // Ou plus simplement, jusqu'au bas de la dernière ligne pleine.
+           // Mais pour fusionner, on descend jusqu'au niveau de fusion.
+           
+           // Si on a SEULEMENT des lignes pleines (remainder == 0)
+           if (remainder === 0 && fullRows > 0) {
+                const bottomY = startY + ((fullRows - 1) * spacingY) + r + pad;
+                const w = rightX_Full - leftX;
+                const h = bottomY - topY;
+                svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="#2563eb" stroke-width="2.5" />`;
+           }
+           // Si on a SEULEMENT des unités (fullRows == 0)
+           else if (fullRows === 0 && remainder > 0) {
+               const bottomY = startY + r + pad;
+               const w = rightX_Rem - leftX;
+               const h = bottomY - topY;
+               svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="#2563eb" stroke-width="2.5" />`;
+           }
+           // CAS COMPLEXE : Lignes pleines + Unités (FORME EN L FUSIONNÉE)
+           else if (fullRows > 0 && remainder > 0) {
+               // On calcule la ligne de "soudure" entre le bloc du haut et le bloc du bas
+               // C'est à mi-chemin entre le bas de la ligne (fullRows-1) et le haut de la ligne (fullRows)
+               const yLastFull = startY + (fullRows - 1) * spacingY;
+               const yFirstRem = startY + fullRows * spacingY;
+               const mergeY = (yLastFull + r + pad + yFirstRem - r - pad) / 2; // Approximation mi-hauteur
+               // Ou plus simple : yLastFull + spacingY/2
+               const midY = yLastFull + (spacingY / 2);
+
+               const bottomY_Total = startY + (fullRows * spacingY) + r + pad;
+               
+               // CONSTRUCTION DU CHEMIN (PATH)
+               // Départ: Top-Left (arrondi handled by Arc command or manual Q)
+               // On va faire simple avec des L et A (Arc)
+               // A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+               
+               let d = "";
+               
+               // 1. Start Top-Left (after corner)
+               d += `M ${leftX + cornerR} ${topY} `;
+               
+               // 2. Line to Top-Right (before corner)
+               d += `L ${rightX_Full - cornerR} ${topY} `;
+               
+               // 3. Arc Top-Right
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Full} ${topY + cornerR} `;
+               
+               // 4. Line Down to "Step" level (Right side of full block)
+               // On descend jusqu'à midY.
+               d += `L ${rightX_Full} ${midY} `;
+               
+               // 5. Line Left (Step In) to Remainder Width
+               d += `L ${rightX_Rem} ${midY} `;
+               
+               // 6. Line Down to Bottom (Right side of remainder block)
+               d += `L ${rightX_Rem} ${bottomY_Total - cornerR} `;
+               
+               // 7. Arc Bottom-Right
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Rem - cornerR} ${bottomY_Total} `;
+               
+               // 8. Line Left to Bottom-Left (before corner)
+               d += `L ${leftX + cornerR} ${bottomY_Total} `;
+               
+               // 9. Arc Bottom-Left
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX} ${bottomY_Total - cornerR} `;
+               
+               // 10. Line Up to Top-Left (before corner)
+               d += `L ${leftX} ${topY + cornerR} `;
+               
+               // 11. Arc Top-Left (Closing)
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX + cornerR} ${topY} `;
+               
+               d += "Z"; // Close path
+
+               svg += `<path d="${d}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" />`;
+           }
+      }
+  }
+
+  // -----------------------------------------------------------------------
+  // CAS 2 : MODE CLASSIQUE / RÉALISTE
+  // -----------------------------------------------------------------------
+  else {
+      if (isVisible) {
+          // MODE VISIBLE (Boulier Réaliste)
+          const brownColor = "#A07846";
+          svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+          svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+
+          for(let row = 0; row < rows; row++) {
+              let y = startY + (row * spacingY);
+              svg += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+
+              let fullRows = Math.floor(n / 10);
+              let remainder = n % 10;
+              let activeCount = 0;
+              if (row < fullRows) activeCount = 10;
+              else if (row === fullRows) activeCount = remainder;
+              
+              let inactiveCount = 10 - activeCount;
+              let inverted = (layoutType === 100 && row >= 5);
+
+              // Actives (Gauche)
+              let startXLeft = frameW + r; 
+              for (let i = 0; i < activeCount; i++) {
+                  let cx = startXLeft + (i * dia);
+                  let fill = getBeadColor(i, inverted);
+                  let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
+                  svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+              }
+
+              // Inactives (Droite)
+              let startXRight = W - frameW - r;
+              for (let j = 0; j < inactiveCount; j++) {
+                  let realIdx = 9 - j; 
+                  let cx = startXRight - (j * dia);
+                  let fill = getBeadColor(realIdx, inverted);
+                  let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
+                  svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+              }
+          }
       } else {
-          let fullRows = Math.floor(n / 10);
-          let remainder = n % 10;
-          
-          let valOnThisRow = 0;
-          if (row < fullRows) valOnThisRow = 10;
-          else if (row === fullRows) valOnThisRow = remainder;
-          else valOnThisRow = 0;
-          
-          svg += drawRow(y, valOnThisRow, false, row);
+         // MODE CACHÉ (Classique)
+          const brownColor = "#A07846";
+          svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+          svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+          for(let row = 0; row < rows; row++) {
+              let y = startY + (row * spacingY);
+              svg += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+          }
       }
   }
   
