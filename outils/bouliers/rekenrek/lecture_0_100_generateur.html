@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — GÉNÉRATEUR FINAL (Forme Fusionnée)</title>
+  <title>REKENREK — GÉNÉRATEUR FINAL (Contour Noir)</title>
   <style>
     :root {
       --ink: #111827;
@@ -31,16 +31,6 @@
     }
     .sb-header { padding: 12px 15px; border-bottom: 1px solid var(--border); background: #fff; }
     
-    .corr-toggle{
-      display:flex; align-items:center; gap:8px;
-      margin-top:8px;
-      font-size:12px; font-weight:900;
-      color:#334155;
-      user-select:none;
-      cursor:pointer;
-    }
-    .corr-toggle input{ transform:scale(1.05); cursor:pointer; }
-    .corr-text{ letter-spacing:.3px; }
     .sb-title { font-size: 16px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
     .sb-scroll { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
     
@@ -174,7 +164,6 @@
 <aside>
   <div class="sb-header">
     <h2 class="sb-title" data-i18n="title">Lecture Nombres</h2>
-    <label class="corr-toggle"><input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)"><span class="corr-text">👁️ CORRECTION</span></label>
   </div>
   
   <div class="sb-scroll">
@@ -184,6 +173,17 @@
             <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
             <div class="flag-btn" onclick="setLang('en', this)">EN</div>
         </div>
+    </div>
+
+    <!-- MENU IMPRESSION -->
+    <div class="section" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:6px; margin-bottom:12px;">
+       <div class="sec-title" style="color:#166534;" data-i18n="print_mode">🖨️ Mode Impression</div>
+       <select id="printMode" onchange="renderPages()">
+         <option value="exo" selected data-i18n="pm_exo">Exercice (Élève)</option>
+         <option value="corr" data-i18n="pm_corr">Correction (Prof)</option>
+         <option value="sep" data-i18n="pm_sep">Dossier : Exo + Corrigé</option>
+         <option value="rv" data-i18n="pm_rv">Flashcards : Recto-Verso</option>
+       </select>
     </div>
 
     <div class="section">
@@ -205,8 +205,8 @@
       <div class="control" style="flex-direction:column; align-items:flex-start;">
         <label style="margin-bottom:5px;" data-i18n="order">Ordre</label>
         <select id="orderMode" onchange="toggleInputs(); startGen()">
-          <option value="random" data-i18n="ord_random">Aléatoire (1 Page)</option>
-          <option value="seq" data-i18n="ord_seq">Séquentiel (Multi-pages)</option>
+          <option value="random" data-i18n="ord_random">Aléatoire</option>
+          <option value="seq" data-i18n="ord_seq">Séquentiel</option>
         </select>
       </div>
 
@@ -239,14 +239,14 @@
             <option value="color" data-i18n="mode_color">🎨 Coloriage</option>
           </optgroup>
           <optgroup label="1 Indice (Difficile)">
-            <option value="only_bead" data-i18n="mode_bead_only">🧮 Boulier seul (faire le reste)</option>
-            <option value="only_num" data-i18n="mode_num_only">1️⃣ Chiffres seuls (faire le reste)</option>
-            <option value="only_word" data-i18n="mode_word_only">abc Mot seul (faire le reste)</option>
+            <option value="only_bead" data-i18n="mode_bead_only">🧮 Boulier seul</option>
+            <option value="only_num" data-i18n="mode_num_only">1️⃣ Chiffres seuls</option>
+            <option value="only_word" data-i18n="mode_word_only">abc Mot seul</option>
           </optgroup>
           <optgroup label="Autres">
             <option value="mixte" data-i18n="mode_mix">🔥 Mixte (Expert)</option>
-            <option value="modele" data-i18n="mode_model">👀 Modèle (Tout affiché)</option>
-            <option value="dictionary" style="font-weight:bold; color:var(--accent);" data-i18n="mode_dict">📚 Dictionnaire (Tout)</option>
+            <option value="modele" data-i18n="mode_model">👀 Modèle</option>
+            <option value="dictionary" style="font-weight:bold; color:var(--accent);" data-i18n="mode_dict">📚 Dictionnaire</option>
           </optgroup>
         </select>
         <div style="font-size:11px; color:#64748b; margin-top:8px; line-height:1.3; font-style:italic;" id="descMode"></div>
@@ -280,22 +280,27 @@ const i18n = {
     fr: {
         title: "Lecture Nombres",
         lang: "Langue",
+        print_mode: "🖨️ Mode Impression",
+        pm_exo: "Exercice (Élève)",
+        pm_corr: "Correction (Prof)",
+        pm_sep: "Dossier : Exo + Corrigé",
+        pm_rv: "Flashcards : Recto-Verso",
         layout: "Mise en page",
         grid: "Grille",
         content: "Contenu",
         order: "Ordre",
-        ord_random: "Aléatoire (1 Page)",
-        ord_seq: "Séquentiel (Multi-pages)",
-        range: "Plage (pour aléatoire)",
+        ord_random: "Aléatoire",
+        ord_seq: "Séquentiel",
+        range: "Plage",
         exercise: "Exercice",
         mode_digit: "1️⃣ Trouver le Chiffre",
         mode_word: "abc Trouver le Mot",
         mode_color: "🎨 Coloriage / Entourer",
-        mode_bead_only: "🧮 Boulier seul (faire le reste)",
-        mode_num_only: "1️⃣ Chiffres seuls (faire le reste)",
-        mode_word_only: "abc Mot seul (faire le reste)",
+        mode_bead_only: "🧮 Boulier seul",
+        mode_num_only: "1️⃣ Chiffres seuls",
+        mode_word_only: "abc Mot seul",
         mode_mix: "🔥 Mixte (Expert)",
-        mode_model: "👀 Modèle (Tout affiché)",
+        mode_model: "👀 Modèle",
         mode_dict: "📚 Dictionnaire (Tout)",
         color: "Couleur Billes",
         opt_red: "Rouge / Blanc",
@@ -305,34 +310,39 @@ const i18n = {
         btn_print: "IMPRIMER",
         desc_digit: "Boulier et mot donnés. L'élève écrit le chiffre.",
         desc_word: "Boulier et chiffre donnés. L'élève écrit le mot.",
-        desc_color: "Le nombre est écrit. L'élève doit entourer ou colorier les billes sur le boulier.",
-        desc_bead_only: "Seul le boulier est affiché. L'élève écrit le chiffre et le mot.",
-        desc_num_only: "Seul le chiffre est donné. L'élève dessine/colorie et écrit le mot.",
-        desc_word_only: "Seul le mot est donné. L'élève dessine/colorie et écrit le chiffre.",
-        desc_mix: "Un seul indice est donné au hasard. L'élève complète le reste.",
-        desc_model: "Tout est rempli. Idéal pour une leçon ou correction.",
-        desc_dict: "Génère TOUS les nombres de 0 à 100 dans l'ordre."
+        desc_color: "Le nombre est écrit. L'élève doit entourer ou colorier les billes.",
+        desc_bead_only: "Seul le boulier est affiché. L'élève complète tout.",
+        desc_num_only: "Seul le chiffre est donné. L'élève complète tout.",
+        desc_word_only: "Seul le mot est donné. L'élève complète tout.",
+        desc_mix: "Un seul indice aléatoire. L'élève complète.",
+        desc_model: "Tout est affiché.",
+        desc_dict: "Tout de 0 à 100."
     },
     en: {
         title: "Reading Numbers",
         lang: "Language",
+        print_mode: "🖨️ Print Mode",
+        pm_exo: "Worksheet (Student)",
+        pm_corr: "Answer Key (Teacher)",
+        pm_sep: "Bundle: Ex + Key (Separate)",
+        pm_rv: "Flashcards: Double-sided",
         layout: "Layout",
         grid: "Grid",
         content: "Content",
         order: "Order",
-        ord_random: "Random (1 Page)",
-        ord_seq: "Sequential (Multi-page)",
-        range: "Range (for random)",
+        ord_random: "Random",
+        ord_seq: "Sequential",
+        range: "Range",
         exercise: "Mode",
         mode_digit: "1️⃣ Find the Digit",
         mode_word: "abc Find the Word",
         mode_color: "🎨 Coloring / Circle",
-        mode_bead_only: "🧮 Beads only (Do rest)",
-        mode_num_only: "1️⃣ Digits only (Do rest)",
-        mode_word_only: "abc Word only (Do rest)",
-        mode_mix: "🔥 Mixed (Expert)",
-        mode_model: "👀 Model (Show All)",
-        mode_dict: "📚 Dictionary (All)",
+        mode_bead_only: "🧮 Beads only",
+        mode_num_only: "1️⃣ Digits only",
+        mode_word_only: "abc Word only",
+        mode_mix: "🔥 Mixed",
+        mode_model: "👀 Model",
+        mode_dict: "📚 Dictionary",
         color: "Bead Color",
         opt_red: "Red / White",
         opt_gray: "Red / Gray (Light)",
@@ -341,13 +351,13 @@ const i18n = {
         btn_print: "PRINT",
         desc_digit: "Rekenrek and word shown. Student writes the digit.",
         desc_word: "Rekenrek and digit shown. Student writes the word.",
-        desc_color: "Number written. Student must circle or color the beads.",
-        desc_bead_only: "Only Beads shown. Student writes digit and word.",
-        desc_num_only: "Only Digit shown. Student colors/draws and writes word.",
-        desc_word_only: "Only Word shown. Student colors/draws and writes digit.",
-        desc_mix: "Only one random clue shown. Student completes the rest.",
-        desc_model: "Everything is filled. Good for lessons or keys.",
-        desc_dict: "Generates ALL numbers from 0 to 100 in order."
+        desc_color: "Number written. Student circles/colors beads.",
+        desc_bead_only: "Only Beads shown. Student completes all.",
+        desc_num_only: "Only Digit shown. Student completes all.",
+        desc_word_only: "Only Word shown. Student completes all.",
+        desc_mix: "One random clue. Student completes all.",
+        desc_model: "Show everything.",
+        desc_dict: "All 0 to 100."
     }
 };
 
@@ -542,14 +552,14 @@ function createItem(val, maxVal, mode) {
     };
 }
 
-function renderPages(sizeSelect) {
+function renderPages() {
+  const sizeSelect = document.getElementById('gridSize').value;
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
   
-  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
+  const printMode = document.getElementById('printMode').value;
   const theme = document.getElementById('beadColor').value;
-  const gameMode = document.getElementById('gameMode').value;
-  const isColoringMode = (gameMode === 'color');
+  // Note: On n'utilise plus isColoringMode ici, car c'est calculé par item
   
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
@@ -557,79 +567,143 @@ function renderPages(sizeSelect) {
   for (let i = 0; i < state.length; i += itemsPerPage) {
       const chunk = state.slice(i, i + itemsPerPage);
       
-      const page = document.createElement('div');
-      page.className = 'page';
+      if (printMode === 'exo' || printMode === 'sep' || printMode === 'rv') {
+          renderOnePage(chunk, sizeSelect, theme, false);
+      }
       
-      const inner = document.createElement('div');
-      inner.className = 'page-inner';
-      
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      grid.setAttribute('data-size', sizeSelect);
-      
-      chunk.forEach(item => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        
-        // 1. BOULIER
-        const topPart = document.createElement('div');
-        topPart.className = 'part-boulier';
-        
-        let showBeadsLogic = (item.showBead || isCorr);
-        
-        topPart.innerHTML = getRekenrekSvg(item.val, showBeadsLogic, theme, item.max, isColoringMode);
-        cell.appendChild(topPart);
-        
-        // 2. BAS
-        const botPart = document.createElement('div');
-        botPart.className = 'part-bottom';
-        
-        const digitBox = document.createElement('div');
-        digitBox.className = 'sub-box';
-        digitBox.style.flex = "1"; 
-        
-        if(item.showNum || isCorr) {
-            digitBox.innerHTML = `<span class="val-digit">${item.val}</span>`;
-        } else {
-            digitBox.innerHTML = `<div class="empty-zone"></div>`;
-        }
-        botPart.appendChild(digitBox);
-        
-        const wordBox = document.createElement('div');
-        wordBox.className = 'sub-box';
-        wordBox.style.flex = "2.2"; 
-
-        if(item.showWord || isCorr) {
-            wordBox.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
-        } else {
-            wordBox.innerHTML = `<div class="empty-zone"></div>`;
-        }
-        botPart.appendChild(wordBox);
-
-        cell.appendChild(botPart);
-        grid.appendChild(cell);
-      });
-      
-      inner.appendChild(grid);
-      page.appendChild(inner);
-      main.appendChild(page);
+      if (printMode === 'corr' || printMode === 'sep' || printMode === 'rv') {
+          let itemsToRender = chunk;
+          if (printMode === 'rv') {
+              itemsToRender = mirrorChunk(chunk, cols, rows);
+          }
+          renderOnePage(itemsToRender, sizeSelect, theme, true);
+      }
   }
 }
 
-/**
- * GÉNÉRATION DU SVG
- * - isColoringMode (true) -> Force l'affichage "Centré" (sans montants).
- * - isVisible (true) + isColoringMode -> Ajoute une FORME FUSIONNÉE (Correction).
- */
+function mirrorChunk(chunk, cols, rows) {
+    let mirrored = new Array(chunk.length).fill(null);
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            let originalIndex = r * cols + c;
+            if (originalIndex >= chunk.length) continue;
+            let item = chunk[originalIndex];
+            let newCol = (cols - 1) - c;
+            let newIndex = r * cols + newCol;
+            mirrored[newIndex] = item;
+        }
+    }
+    return mirrored.filter(x => x !== null);
+}
+
+
+function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
+  const main = document.getElementById('mainArea');
+  const page = document.createElement('div');
+  page.className = 'page';
+  
+  const inner = document.createElement('div');
+  inner.className = 'page-inner';
+  
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  grid.setAttribute('data-size', sizeSelect);
+  
+  items.forEach(item => {
+    if (!item) {
+         const cell = document.createElement('div');
+         cell.className = 'cell';
+         grid.appendChild(cell);
+         return;
+    }
+
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    
+    // --- NOUVELLE LOGIQUE INTELLIGENTE ---
+    // Si les billes sont cachées dans l'exo (showBead == false), alors on utilise le style "Template" (billes neutres à entourer)
+    // Si les billes sont visibles dans l'exo (showBead == true), on utilise le style "Réaliste".
+    // Le mode "Correction" respecte ce choix initial.
+    
+    const useTemplateStyle = !item.showBead;
+    
+    // Pour l'affichage final (SVG visible ou non) :
+    // Si c'est la correction -> Toujours visible.
+    // Sinon -> Selon item.showBead OU si c'est un Template (car le Template est toujours visible, c'est l'exercice lui-même).
+    // Attends, si useTemplateStyle est vrai, on veut voir les billes neutres même en mode Exercice.
+    // Donc isVisible doit être TRUE pour le SVG si on est en mode Template (pour voir les billes neutres) 
+    // MAIS le paramètre isVisible dans getRekenrekSvg contrôle "Est-ce qu'on montre la RÉPONSE/CORRECTION ?".
+    
+    // Regardons getRekenrekSvg :
+    // if (isColoringMode) { ... DESSIN DES BILLES (TOUJOURS) ... if (isVisible) { DESSIN REPONSE } }
+    // Donc si isColoringMode est true, les billes neutres sont toujours dessinées. isVisible sert juste à entourer la réponse.
+    
+    // Donc, on passe :
+    // isVisible = isCorrectionPage
+    // isColoringMode = useTemplateStyle
+    
+    // Cas Réaliste :
+    // if (!isColoringMode) { if (isVisible) { ... } else { vide } }
+    // Ici, isVisible doit être true si item.showBead est true (exo) OU si isCorrectionPage est true.
+    
+    let isVisibleForSvg = false;
+    if (useTemplateStyle) {
+        // En mode template, isVisible sert uniquement à déclencher le tracé de correction (Bleu)
+        isVisibleForSvg = isCorrectionPage;
+    } else {
+        // En mode réaliste, isVisible sert à afficher les billes rouges/blanches
+        isVisibleForSvg = (item.showBead || isCorrectionPage);
+    }
+    
+    const topPart = document.createElement('div');
+    topPart.className = 'part-boulier';
+    topPart.innerHTML = getRekenrekSvg(item.val, isVisibleForSvg, theme, item.max, useTemplateStyle);
+    cell.appendChild(topPart);
+    
+    // 2. BAS
+    const botPart = document.createElement('div');
+    botPart.className = 'part-bottom';
+    
+    const digitBox = document.createElement('div');
+    digitBox.className = 'sub-box';
+    digitBox.style.flex = "1"; 
+    
+    let showNumLogic = isCorrectionPage ? true : item.showNum;
+    if(showNumLogic) {
+        digitBox.innerHTML = `<span class="val-digit">${item.val}</span>`;
+    } else {
+        digitBox.innerHTML = `<div class="empty-zone"></div>`;
+    }
+    botPart.appendChild(digitBox);
+    
+    const wordBox = document.createElement('div');
+    wordBox.className = 'sub-box';
+    wordBox.style.flex = "2.2"; 
+
+    let showWordLogic = isCorrectionPage ? true : item.showWord;
+    if(showWordLogic) {
+        wordBox.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
+    } else {
+        wordBox.innerHTML = `<div class="empty-zone"></div>`;
+    }
+    botPart.appendChild(wordBox);
+
+    cell.appendChild(botPart);
+    grid.appendChild(cell);
+  });
+  
+  inner.appendChild(grid);
+  page.appendChild(inner);
+  main.appendChild(page);
+}
+
 function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
   
-  // GEOMETRIE
   const r = 5;          
   const dia = 2 * r;    
   const frameW = 5;     
   const W = 210;        
   
-  // CALCUL HAUTEUR ET LIGNES
   let H, rows, spacingY, startY;
   let layoutType = 100;
   if (maxValSetting <= 10) layoutType = 10;
@@ -645,14 +719,13 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
   
   let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
-  // HELPER COULEUR
   const getBeadColor = (idx, inverted) => {
       let isFirstFive = (idx < 5);
-      let colMain = '#dc2626'; // Rouge
-      let colSec = '#f8fafc'; // Default Blanc
+      let colMain = '#dc2626'; 
+      let colSec = '#f8fafc'; 
       
       if (theme === 'blue') colSec = '#2563eb';
-      if (theme === 'gray') colSec = '#e2e8f0'; // Gris clair
+      if (theme === 'gray') colSec = '#e2e8f0'; 
 
       let fill;
       if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
@@ -660,133 +733,73 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
       return fill;
   };
 
-  // -----------------------------------------------------------------------
-  // CAS 1 : MODE COLORIAGE (CENTRÉ)
-  // -----------------------------------------------------------------------
   if (isColoringMode) {
-      // Largeur du bloc de 10 billes = 100
       const beadsWidth = 10 * dia;
       const startX = (W - beadsWidth) / 2;
 
-      // DESSIN DES BILLES (TOUJOURS)
       for(let row = 0; row < rows; row++) {
           let y = startY + (row * spacingY);
-          
-          // Ligne support
           svg += `<line x1="20" y1="${y}" x2="${W - 20}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
-          
           let inverted = (layoutType === 100 && row >= 5);
-          
           for (let i = 0; i < 10; i++) {
               let cx = startX + (i * dia) + r; 
               let fill = getBeadColor(i, inverted);
-              let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
-              
+              let stroke = '#333'; 
               svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
           }
       }
 
-      // SI CORRECTION ACTIVE (isVisible == true) -> ENTOURER LA RÉPONSE AVEC UNE FORME FUSIONNÉE
       if (isVisible) {
-           let fullRows = Math.floor(n / 10); // Nombre de lignes complètes (dizaines)
-           let remainder = n % 10;           // Unités restantes
-           
-           // PADDING TRÈS RÉDUIT pour ne pas déborder (ex: 1.5)
+           let fullRows = Math.floor(n / 10); 
+           let remainder = n % 10;           
            const pad = 1.5; 
-           // Rayon des coins (pour faire "capsule")
            const cornerR = 8; 
 
-           // COORDONNÉES GÉNÉRALES
            const leftX = startX - pad;
            const topY = startY - r - pad;
            const rightX_Full = startX + (10 * dia) + pad;
            const rightX_Rem = startX + (remainder * dia) + pad;
            
-           // Hauteur de la partie pleine (Full Block)
-           // Elle va du haut (topY) jusqu'au "milieu" de l'interligne après la dernière ligne pleine
-           // Ou plus simplement, jusqu'au bas de la dernière ligne pleine.
-           // Mais pour fusionner, on descend jusqu'au niveau de fusion.
-           
-           // Si on a SEULEMENT des lignes pleines (remainder == 0)
            if (remainder === 0 && fullRows > 0) {
                 const bottomY = startY + ((fullRows - 1) * spacingY) + r + pad;
                 const w = rightX_Full - leftX;
                 const h = bottomY - topY;
-                svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="#2563eb" stroke-width="2.5" />`;
+                // CHANGED: Black stroke
+                svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
            }
-           // Si on a SEULEMENT des unités (fullRows == 0)
            else if (fullRows === 0 && remainder > 0) {
                const bottomY = startY + r + pad;
                const w = rightX_Rem - leftX;
                const h = bottomY - topY;
-               svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="#2563eb" stroke-width="2.5" />`;
+                // CHANGED: Black stroke
+               svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
            }
-           // CAS COMPLEXE : Lignes pleines + Unités (FORME EN L FUSIONNÉE)
            else if (fullRows > 0 && remainder > 0) {
-               // On calcule la ligne de "soudure" entre le bloc du haut et le bloc du bas
-               // C'est à mi-chemin entre le bas de la ligne (fullRows-1) et le haut de la ligne (fullRows)
                const yLastFull = startY + (fullRows - 1) * spacingY;
-               const yFirstRem = startY + fullRows * spacingY;
-               const mergeY = (yLastFull + r + pad + yFirstRem - r - pad) / 2; // Approximation mi-hauteur
-               // Ou plus simple : yLastFull + spacingY/2
                const midY = yLastFull + (spacingY / 2);
-
                const bottomY_Total = startY + (fullRows * spacingY) + r + pad;
                
-               // CONSTRUCTION DU CHEMIN (PATH)
-               // Départ: Top-Left (arrondi handled by Arc command or manual Q)
-               // On va faire simple avec des L et A (Arc)
-               // A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-               
                let d = "";
-               
-               // 1. Start Top-Left (after corner)
                d += `M ${leftX + cornerR} ${topY} `;
-               
-               // 2. Line to Top-Right (before corner)
                d += `L ${rightX_Full - cornerR} ${topY} `;
-               
-               // 3. Arc Top-Right
                d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Full} ${topY + cornerR} `;
-               
-               // 4. Line Down to "Step" level (Right side of full block)
-               // On descend jusqu'à midY.
                d += `L ${rightX_Full} ${midY} `;
-               
-               // 5. Line Left (Step In) to Remainder Width
                d += `L ${rightX_Rem} ${midY} `;
-               
-               // 6. Line Down to Bottom (Right side of remainder block)
                d += `L ${rightX_Rem} ${bottomY_Total - cornerR} `;
-               
-               // 7. Arc Bottom-Right
                d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Rem - cornerR} ${bottomY_Total} `;
-               
-               // 8. Line Left to Bottom-Left (before corner)
                d += `L ${leftX + cornerR} ${bottomY_Total} `;
-               
-               // 9. Arc Bottom-Left
                d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX} ${bottomY_Total - cornerR} `;
-               
-               // 10. Line Up to Top-Left (before corner)
                d += `L ${leftX} ${topY + cornerR} `;
-               
-               // 11. Arc Top-Left (Closing)
                d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX + cornerR} ${topY} `;
-               
-               d += "Z"; // Close path
+               d += "Z"; 
 
-               svg += `<path d="${d}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" />`;
+               // CHANGED: Black stroke
+               svg += `<path d="${d}" fill="none" stroke="black" stroke-width="2.5" stroke-linejoin="round" />`;
            }
       }
   }
-
-  // -----------------------------------------------------------------------
-  // CAS 2 : MODE CLASSIQUE / RÉALISTE
-  // -----------------------------------------------------------------------
   else {
       if (isVisible) {
-          // MODE VISIBLE (Boulier Réaliste)
           const brownColor = "#A07846";
           svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
           svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
@@ -804,27 +817,24 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
               let inactiveCount = 10 - activeCount;
               let inverted = (layoutType === 100 && row >= 5);
 
-              // Actives (Gauche)
               let startXLeft = frameW + r; 
               for (let i = 0; i < activeCount; i++) {
                   let cx = startXLeft + (i * dia);
                   let fill = getBeadColor(i, inverted);
-                  let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
+                  let stroke = '#333'; 
                   svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
               }
 
-              // Inactives (Droite)
               let startXRight = W - frameW - r;
               for (let j = 0; j < inactiveCount; j++) {
                   let realIdx = 9 - j; 
                   let cx = startXRight - (j * dia);
                   let fill = getBeadColor(realIdx, inverted);
-                  let stroke = (fill === '#f8fafc' || fill === '#ffffff') ? '#333' : 'none';
+                  let stroke = '#333'; 
                   svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
               }
           }
       } else {
-         // MODE CACHÉ (Classique)
           const brownColor = "#A07846";
           svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
           svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
