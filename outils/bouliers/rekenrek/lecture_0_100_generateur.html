@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — GÉNÉRATEUR FINAL (Contour Noir)</title>
+  <title>REKENREK LECTURE — GÉNÉRATEUR FINAL V5</title>
   <style>
     :root {
       --ink: #111827;
@@ -125,6 +125,7 @@
     .val-word { 
         font-size: 16px; 
         font-weight: 700; 
+        /* CHANGED: Black text */
         color: #000000; 
         font-style: italic; 
         text-align: center; 
@@ -175,7 +176,7 @@
         </div>
     </div>
 
-    <!-- MENU IMPRESSION -->
+    <!-- MENU IMPRESSION COMPLET -->
     <div class="section" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:6px; margin-bottom:12px;">
        <div class="sec-title" style="color:#166534;" data-i18n="print_mode">🖨️ Mode Impression</div>
        <select id="printMode" onchange="renderPages()">
@@ -259,7 +260,7 @@
         <label style="margin-bottom:5px;" data-i18n="color">Couleur Billes</label>
         <select id="beadColor" onchange="renderPages()">
           <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
-          <option value="gray" data-i18n="opt_gray">Rouge / Gris (Clair)</option>
+          <option value="gray" data-i18n="opt_gray">Gris / Blanc (Imprimante N&B)</option>
           <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
         </select>
       </div>
@@ -304,7 +305,7 @@ const i18n = {
         mode_dict: "📚 Dictionnaire (Tout)",
         color: "Couleur Billes",
         opt_red: "Rouge / Blanc",
-        opt_gray: "Rouge / Gris (Clair)",
+        opt_gray: "Gris / Blanc (Imprimante N&B)",
         opt_blue: "Rouge / Bleu",
         btn_mix: "GÉNÉRER / MÉLANGER",
         btn_print: "IMPRIMER",
@@ -345,7 +346,7 @@ const i18n = {
         mode_dict: "📚 Dictionary",
         color: "Bead Color",
         opt_red: "Red / White",
-        opt_gray: "Red / Gray (Light)",
+        opt_gray: "Gray / White (B&W Print)",
         opt_blue: "Red / Blue",
         btn_mix: "GENERATE / SHUFFLE",
         btn_print: "PRINT",
@@ -559,7 +560,6 @@ function renderPages() {
   
   const printMode = document.getElementById('printMode').value;
   const theme = document.getElementById('beadColor').value;
-  // Note: On n'utilise plus isColoringMode ici, car c'est calculé par item
   
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
@@ -596,7 +596,6 @@ function mirrorChunk(chunk, cols, rows) {
     return mirrored.filter(x => x !== null);
 }
 
-
 function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
   const main = document.getElementById('mainArea');
   const page = document.createElement('div');
@@ -620,38 +619,13 @@ function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
     const cell = document.createElement('div');
     cell.className = 'cell';
     
-    // --- NOUVELLE LOGIQUE INTELLIGENTE ---
-    // Si les billes sont cachées dans l'exo (showBead == false), alors on utilise le style "Template" (billes neutres à entourer)
-    // Si les billes sont visibles dans l'exo (showBead == true), on utilise le style "Réaliste".
-    // Le mode "Correction" respecte ce choix initial.
-    
+    // --- SMART MIX LOGIC ---
     const useTemplateStyle = !item.showBead;
-    
-    // Pour l'affichage final (SVG visible ou non) :
-    // Si c'est la correction -> Toujours visible.
-    // Sinon -> Selon item.showBead OU si c'est un Template (car le Template est toujours visible, c'est l'exercice lui-même).
-    // Attends, si useTemplateStyle est vrai, on veut voir les billes neutres même en mode Exercice.
-    // Donc isVisible doit être TRUE pour le SVG si on est en mode Template (pour voir les billes neutres) 
-    // MAIS le paramètre isVisible dans getRekenrekSvg contrôle "Est-ce qu'on montre la RÉPONSE/CORRECTION ?".
-    
-    // Regardons getRekenrekSvg :
-    // if (isColoringMode) { ... DESSIN DES BILLES (TOUJOURS) ... if (isVisible) { DESSIN REPONSE } }
-    // Donc si isColoringMode est true, les billes neutres sont toujours dessinées. isVisible sert juste à entourer la réponse.
-    
-    // Donc, on passe :
-    // isVisible = isCorrectionPage
-    // isColoringMode = useTemplateStyle
-    
-    // Cas Réaliste :
-    // if (!isColoringMode) { if (isVisible) { ... } else { vide } }
-    // Ici, isVisible doit être true si item.showBead est true (exo) OU si isCorrectionPage est true.
     
     let isVisibleForSvg = false;
     if (useTemplateStyle) {
-        // En mode template, isVisible sert uniquement à déclencher le tracé de correction (Bleu)
         isVisibleForSvg = isCorrectionPage;
     } else {
-        // En mode réaliste, isVisible sert à afficher les billes rouges/blanches
         isVisibleForSvg = (item.showBead || isCorrectionPage);
     }
     
@@ -660,7 +634,6 @@ function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
     topPart.innerHTML = getRekenrekSvg(item.val, isVisibleForSvg, theme, item.max, useTemplateStyle);
     cell.appendChild(topPart);
     
-    // 2. BAS
     const botPart = document.createElement('div');
     botPart.className = 'part-bottom';
     
@@ -697,6 +670,7 @@ function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
   main.appendChild(page);
 }
 
+// --- SVG FINAL (V5: Width 210, BlackStroke, InsetFrame, GrayColor) ---
 function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
   
   const r = 5;          
@@ -721,11 +695,17 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
 
   const getBeadColor = (idx, inverted) => {
       let isFirstFive = (idx < 5);
+      
       let colMain = '#dc2626'; 
       let colSec = '#f8fafc'; 
       
-      if (theme === 'blue') colSec = '#2563eb';
-      if (theme === 'gray') colSec = '#e2e8f0'; 
+      if (theme === 'blue') {
+          colSec = '#2563eb'; 
+      } else if (theme === 'gray') {
+          // CORRECTION: Gris moyen #9ca3af (plus clair que le précédent)
+          colMain = '#9ca3af'; 
+          colSec = '#ffffff'; 
+      }
 
       let fill;
       if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
@@ -733,6 +713,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
       return fill;
   };
 
+  // --- BRANCHE 1 : TEMPLATE (Centré) ---
   if (isColoringMode) {
       const beadsWidth = 10 * dia;
       const startX = (W - beadsWidth) / 2;
@@ -764,14 +745,12 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
                 const bottomY = startY + ((fullRows - 1) * spacingY) + r + pad;
                 const w = rightX_Full - leftX;
                 const h = bottomY - topY;
-                // CHANGED: Black stroke
                 svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
            }
            else if (fullRows === 0 && remainder > 0) {
                const bottomY = startY + r + pad;
                const w = rightX_Rem - leftX;
                const h = bottomY - topY;
-                // CHANGED: Black stroke
                svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
            }
            else if (fullRows > 0 && remainder > 0) {
@@ -793,16 +772,17 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
                d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX + cornerR} ${topY} `;
                d += "Z"; 
 
-               // CHANGED: Black stroke
                svg += `<path d="${d}" fill="none" stroke="black" stroke-width="2.5" stroke-linejoin="round" />`;
            }
       }
   }
+  // --- BRANCHE 2 : RÉALISTE (Avec montants) ---
   else {
       if (isVisible) {
           const brownColor = "#A07846";
-          svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
-          svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+          // CHANGED: Black stroke, 0.5 offset
+          svg += `<rect x="0.5" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+          svg += `<rect x="${W - frameW + 0.5}" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
 
           for(let row = 0; row < rows; row++) {
               let y = startY + (row * spacingY);
@@ -817,6 +797,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
               let inactiveCount = 10 - activeCount;
               let inverted = (layoutType === 100 && row >= 5);
 
+              // Actives (Gauche)
               let startXLeft = frameW + r; 
               for (let i = 0; i < activeCount; i++) {
                   let cx = startXLeft + (i * dia);
@@ -825,6 +806,7 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
                   svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
               }
 
+              // Inactives (Droite)
               let startXRight = W - frameW - r;
               for (let j = 0; j < inactiveCount; j++) {
                   let realIdx = 9 - j; 
@@ -835,9 +817,11 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
               }
           }
       } else {
+          // Vide (juste le cadre)
           const brownColor = "#A07846";
-          svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
-          svg += `<rect x="${W - frameW}" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
+          // CHANGED: Black stroke, 0.5 offset
+          svg += `<rect x="0.5" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+          svg += `<rect x="${W - frameW + 0.5}" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
           for(let row = 0; row < rows; row++) {
               let y = startY + (row * spacingY);
               svg += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
