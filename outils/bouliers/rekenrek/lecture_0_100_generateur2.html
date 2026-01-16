@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>REKENREK — GÉNÉRATEUR FINAL</title>
+  <title>REKENREK D/U — GÉNÉRATEUR FINAL V4</title>
   <style>
     :root {
       --ink: #111827;
@@ -27,27 +27,22 @@
 
     /* --- SIDEBAR --- */
     aside {
-      width: 340px; background: var(--panel); border-right: 1px solid var(--border);
+      width: 300px; background: var(--panel); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     }
-    .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
-    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
-    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .sb-header { padding: 12px 15px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 16px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; }
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; }
     
-    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
-    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 10px; }
-
-    /* CORRECTION */
-    .corr-toggle { display: flex; align-items: center; gap: 10px; background: #eff6ff; padding: 12px; border-radius: 8px; border: 2px solid #bfdbfe; cursor: pointer; }
-    .corr-toggle input { width: 20px; height: 20px; cursor: pointer; }
-    .corr-text { font-weight: 800; color: var(--accent); font-size: 14px; }
+    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 8px; }
     
     .control { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
     .control label { flex: 1; color: #334155; }
     
     select, input[type="number"] {
-      padding: 8px; border: 1px solid var(--border); border-radius: 6px;
-      font-size: 13px; font-weight: 600; width: 100%; outline: none; background: #fff;
+      padding: 6px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 12px; font-weight: 600; width: 100%; outline: none; background: #fff;
     }
     select:hover, input:hover { border-color: var(--accent); }
 
@@ -57,7 +52,7 @@
     .flag-btn.active { opacity: 1; background: var(--accent); color: white; border-color: var(--accent); }
 
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
-    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
+    .btn { padding: 10px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
 
@@ -102,7 +97,7 @@
       border-bottom: 1px solid #cbd5e1;
       margin-bottom: 0;
       overflow: hidden; 
-      padding: 2px;
+      padding: 0; 
       min-height: 0;
     }
     .rr-svg { width: 100%; height: 100%; display: block; overflow: visible; }
@@ -114,7 +109,16 @@
       border-bottom: 1px solid #cbd5e1;
       background: #fff;
     }
-    .val-word { font-size: 15px; font-weight: 700; color: #475569; font-style: italic; text-align: center; font-family: 'Georgia', serif; line-height: 1; width:100%; }
+    .val-word { 
+        font-size: 15px; 
+        font-weight: 700; 
+        color: #000000; 
+        font-style: italic; 
+        text-align: center; 
+        font-family: 'Georgia', serif; 
+        line-height: 1; 
+        width:100%; 
+    }
 
     /* ZONE 3: Chiffres D/U (Bas) */
     .part-bottom {
@@ -147,19 +151,16 @@
     .empty-zone { width: 100%; height: 100%; }
 
     /* --- AJUSTEMENTS SPÉCIFIQUES --- */
-    /* Mode 2x4 (8 cases) : On garde les zones textes STANDARD, seul le boulier grossit via flex:1 */
     .grid[data-size="2x4"] .part-word { flex: 0 0 45px; } 
     .grid[data-size="2x4"] .val-word { font-size: 15px; } 
     .grid[data-size="2x4"] .part-bottom { flex: 0 0 50px; } 
     .grid[data-size="2x4"] .box-tens, .grid[data-size="2x4"] .box-units { font-size: 32px; } 
 
-    /* Mode 3x5 (15 cases) : On réduit légèrement pour laisser respirer le boulier */
     .grid[data-size="3x5"] .part-word { flex: 0 0 35px; }
     .grid[data-size="3x5"] .val-word { font-size: 13px; }
     .grid[data-size="3x5"] .part-bottom { flex: 0 0 40px; }
     .grid[data-size="3x5"] .box-tens, .grid[data-size="3x5"] .box-units { font-size: 26px; }
 
-    /* Mode 4x5 (20 cases) : Compact */
     .grid[data-size="4x5"] .part-word { flex: 0 0 30px; }
     .grid[data-size="4x5"] .val-word { font-size: 11px; }
     .grid[data-size="4x5"] .part-bottom { flex: 0 0 35px; }
@@ -175,19 +176,6 @@
       .cell { border: 1px solid #999; page-break-inside: avoid; }
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
-  
-    /* --- COMPACT UI OVERRIDES (organisation seulement) --- */
-    aside{ width: 280px; }
-    .sb-header{ padding: 10px 12px; }
-    .sb-title{ font-size: 16px; }
-    .corr-toggle{ margin-top: 6px; }
-    .sb-scroll{ padding: 12px; gap: 14px; }
-    .section{ padding-bottom: 10px; }
-    .sec-title{ margin-bottom: 6px; font-size: 10px; }
-    .control{ margin-bottom: 6px; font-size: 12px; }
-    select, input[type="number"]{ padding: 6px 7px; font-size: 12px; }
-    button{ padding: 9px 10px; font-size: 12px; }
-    
   </style>
 </head>
 <body>
@@ -199,15 +187,22 @@
   
   <div class="sb-scroll">
     <div class="section">
-      <label class="corr-toggle"><input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)"><span class="corr-text">👁️ CORRECTION</span></label>
-    </div>
-
-    <div class="section">
         <div class="sec-title" data-i18n="lang">Langue</div>
         <div class="flags">
             <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
             <div class="flag-btn" onclick="setLang('en', this)">EN</div>
         </div>
+    </div>
+
+    <!-- MENU IMPRESSION COMPLET -->
+    <div class="section" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:6px; margin-bottom:12px;">
+       <div class="sec-title" style="color:#166534;" data-i18n="print_mode">🖨️ Mode Impression</div>
+       <select id="printMode" onchange="renderPages()">
+         <option value="exo" selected data-i18n="pm_exo">Exercice (Élève)</option>
+         <option value="corr" data-i18n="pm_corr">Correction (Prof)</option>
+         <option value="sep" data-i18n="pm_sep">Dossier : Exo + Corrigé</option>
+         <option value="rv" data-i18n="pm_rv">Flashcards : Recto-Verso</option>
+       </select>
     </div>
 
     <div class="section">
@@ -270,6 +265,7 @@
           <optgroup label="Autres">
             <option value="mixte" data-i18n="mode_mix">🔥 Mixte (Expert)</option>
             <option value="modele" data-i18n="mode_model">👀 Modèle (Tout affiché)</option>
+            <option value="dictionary" style="font-weight:bold; color:var(--accent);" data-i18n="mode_dict">📚 Dictionnaire (Tout)</option>
           </optgroup>
         </select>
         <div style="font-size:11px; color:#64748b; margin-top:8px; line-height:1.3; font-style:italic;" id="descMode"></div>
@@ -282,6 +278,7 @@
         <label style="margin-bottom:5px;" data-i18n="color">Couleur Billes</label>
         <select id="beadColor" onchange="renderPages()">
           <option value="red" data-i18n="opt_red">Rouge / Blanc</option>
+          <option value="gray" data-i18n="opt_gray">Gris / Blanc (Imprimante N&B)</option>
           <option value="blue" data-i18n="opt_blue">Rouge / Bleu</option>
         </select>
       </div>
@@ -302,6 +299,11 @@ const i18n = {
     fr: {
         title: "Numération D/U",
         lang: "Langue",
+        print_mode: "🖨️ Mode Impression",
+        pm_exo: "Exercice (Élève)",
+        pm_corr: "Correction (Prof)",
+        pm_sep: "Dossier : Exo + Corrigé",
+        pm_rv: "Flashcards : Recto-Verso",
         layout: "Mise en page",
         grid: "Grille",
         content: "Contenu",
@@ -318,8 +320,10 @@ const i18n = {
         mode_word_only: "abc Mot seul (faire le reste)",
         mode_mix: "🔥 Mixte (Expert)",
         mode_model: "👀 Modèle (Tout affiché)",
+        mode_dict: "📚 Dictionnaire (Tout)",
         color: "Couleur Billes",
         opt_red: "Rouge / Blanc",
+        opt_gray: "Gris / Blanc (Imprimante N&B)",
         opt_blue: "Rouge / Bleu",
         btn_mix: "GÉNÉRER / MÉLANGER",
         btn_print: "IMPRIMER",
@@ -330,11 +334,17 @@ const i18n = {
         desc_num_only: "Seuls les chiffres sont donnés. L'élève colorie et écrit le mot.",
         desc_word_only: "Seul le mot est donné. L'élève colorie et écrit les chiffres.",
         desc_mix: "Un seul indice est donné au hasard. L'élève complète le reste.",
-        desc_model: "Tout est rempli. Idéal pour une leçon ou correction."
+        desc_model: "Tout est rempli. Idéal pour une leçon ou correction.",
+        desc_dict: "Génère TOUS les nombres de 0 à 100 dans l'ordre."
     },
     en: {
         title: "Place Value T/U",
         lang: "Language",
+        print_mode: "🖨️ Print Mode",
+        pm_exo: "Worksheet (Student)",
+        pm_corr: "Answer Key (Teacher)",
+        pm_sep: "Bundle: Ex + Key (Separate)",
+        pm_rv: "Flashcards: Double-sided",
         layout: "Layout",
         grid: "Grid",
         content: "Content",
@@ -351,8 +361,10 @@ const i18n = {
         mode_word_only: "abc Word only (Do rest)",
         mode_mix: "🔥 Mixed (Expert)",
         mode_model: "👀 Model (Show All)",
+        mode_dict: "📚 Dictionary (All)",
         color: "Bead Color",
         opt_red: "Red / White",
+        opt_gray: "Gray / White (B&W Print)",
         opt_blue: "Red / Blue",
         btn_mix: "GENERATE / SHUFFLE",
         btn_print: "PRINT",
@@ -363,7 +375,8 @@ const i18n = {
         desc_num_only: "Only Digits shown. Student colors and writes word.",
         desc_word_only: "Only Word shown. Student colors and writes digits.",
         desc_mix: "Only one random clue shown. Student completes the rest.",
-        desc_model: "Everything is filled. Good for lessons or keys."
+        desc_model: "Everything is filled. Good for lessons or keys.",
+        desc_dict: "Generates ALL numbers from 0 to 100 in order."
     }
 };
 
@@ -465,6 +478,7 @@ function updateDesc() {
     else if(mode === 'only_num') desc.innerText = dict.desc_num_only;
     else if(mode === 'only_word') desc.innerText = dict.desc_word_only;
     else if(mode === 'mixte') desc.innerText = dict.desc_mix;
+    else if(mode === 'dictionary') desc.innerText = dict.desc_dict;
     else desc.innerText = dict.desc_model;
 }
 
@@ -482,7 +496,13 @@ function startGen() {
   
   let maxValForLayout = 100;
 
-  if (orderMode === 'seq') {
+  if (gameMode === 'dictionary') {
+      maxValForLayout = 100;
+      for(let i=0; i<=100; i++) {
+          state.push(createItem(i, maxValForLayout, 'modele'));
+      }
+  } 
+  else if (orderMode === 'seq') {
       let start = parseInt(document.getElementById('seqStart').value) || 0;
       let end = parseInt(document.getElementById('seqEnd').value) || 20;
       if (start < 0) start = 0;
@@ -551,180 +571,293 @@ function createItem(val, maxVal, mode) {
     };
 }
 
-function renderPages(sizeSelect) {
+function renderPages() {
+  const sizeSelect = document.getElementById('gridSize').value;
   const main = document.getElementById('mainArea');
   main.innerHTML = ''; 
   
-  
-  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
+  const printMode = document.getElementById('printMode').value;
   const theme = document.getElementById('beadColor').value;
+  
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
   
   for (let i = 0; i < state.length; i += itemsPerPage) {
       const chunk = state.slice(i, i + itemsPerPage);
       
-      const page = document.createElement('div');
-      page.className = 'page';
+      if (printMode === 'exo' || printMode === 'sep' || printMode === 'rv') {
+          renderOnePage(chunk, sizeSelect, theme, false);
+      }
       
-      const inner = document.createElement('div');
-      inner.className = 'page-inner';
-      
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      grid.setAttribute('data-size', sizeSelect);
-      
-      chunk.forEach(item => {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        
-        // 1. BOULIER
-        const topPart = document.createElement('div');
-        topPart.className = 'part-boulier';
-        topPart.innerHTML = getRekenrekSvg(item.val, (item.showBead || isCorr), theme, item.max);
-        cell.appendChild(topPart);
-        
-        // 2. MOTS
-        const midPart = document.createElement('div');
-        midPart.className = 'part-word';
-        if(item.showWord || isCorr) {
-            midPart.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
-        } else {
-            midPart.innerHTML = `<div class="empty-zone"></div>`;
-        }
-        cell.appendChild(midPart);
-
-        // 3. CHIFFRES
-        const botPart = document.createElement('div');
-        botPart.className = 'part-bottom';
-        const boxTens = document.createElement('div');
-        boxTens.className = 'box-tens';
-        const boxUnits = document.createElement('div');
-        boxUnits.className = 'box-units';
-
-        if(item.showNum || isCorr) {
-            let tens = Math.floor(item.val / 10);
-            let units = item.val % 10;
-            boxTens.innerText = tens;
-            boxUnits.innerText = units;
-        } else {
-            boxTens.innerHTML = '';
-            boxUnits.innerHTML = '';
-        }
-
-        botPart.appendChild(boxTens);
-        botPart.appendChild(boxUnits);
-        
-        cell.appendChild(botPart);
-        grid.appendChild(cell);
-      });
-      
-      inner.appendChild(grid);
-      page.appendChild(inner);
-      main.appendChild(page);
+      if (printMode === 'corr' || printMode === 'sep' || printMode === 'rv') {
+          let itemsToRender = chunk;
+          if (printMode === 'rv') {
+              itemsToRender = mirrorChunk(chunk, cols, rows);
+          }
+          renderOnePage(itemsToRender, sizeSelect, theme, true);
+      }
   }
 }
 
-function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
-  let W = 140; 
-  let H, rows, r, spacingY, startY;
+function mirrorChunk(chunk, cols, rows) {
+    let mirrored = new Array(chunk.length).fill(null);
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            let originalIndex = r * cols + c;
+            if (originalIndex >= chunk.length) continue;
+            let item = chunk[originalIndex];
+            let newCol = (cols - 1) - c;
+            let newIndex = r * cols + newCol;
+            mirrored[newIndex] = item;
+        }
+    }
+    return mirrored.filter(x => x !== null);
+}
+
+function renderOnePage(items, sizeSelect, theme, isCorrectionPage) {
+  const main = document.getElementById('mainArea');
+  const page = document.createElement('div');
+  page.className = 'page';
   
+  const inner = document.createElement('div');
+  inner.className = 'page-inner';
+  
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  grid.setAttribute('data-size', sizeSelect);
+  
+  items.forEach(item => {
+    if (!item) {
+         const cell = document.createElement('div');
+         cell.className = 'cell';
+         grid.appendChild(cell);
+         return;
+    }
+
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    
+    // --- SMART MIX LOGIC ---
+    const useTemplateStyle = !item.showBead;
+    
+    let isVisibleForSvg = false;
+    if (useTemplateStyle) {
+        isVisibleForSvg = isCorrectionPage;
+    } else {
+        isVisibleForSvg = (item.showBead || isCorrectionPage);
+    }
+    
+    // 1. BOULIER
+    const topPart = document.createElement('div');
+    topPart.className = 'part-boulier';
+    topPart.innerHTML = getRekenrekSvg(item.val, isVisibleForSvg, theme, item.max, useTemplateStyle);
+    cell.appendChild(topPart);
+    
+    // 2. MOTS
+    const midPart = document.createElement('div');
+    midPart.className = 'part-word';
+    let showWordLogic = isCorrectionPage ? true : item.showWord;
+    if(showWordLogic) {
+        midPart.innerHTML = `<span class="val-word">${numberToText(item.val)}</span>`;
+    } else {
+        midPart.innerHTML = `<div class="empty-zone"></div>`;
+    }
+    cell.appendChild(midPart);
+
+    // 3. CHIFFRES (D/U)
+    const botPart = document.createElement('div');
+    botPart.className = 'part-bottom';
+    const boxTens = document.createElement('div');
+    boxTens.className = 'box-tens';
+    const boxUnits = document.createElement('div');
+    boxUnits.className = 'box-units';
+
+    let showNumLogic = isCorrectionPage ? true : item.showNum;
+    if(showNumLogic) {
+        let tens = Math.floor(item.val / 10);
+        let units = item.val % 10;
+        boxTens.innerText = tens;
+        boxUnits.innerText = units;
+    } else {
+        boxTens.innerHTML = '';
+        boxUnits.innerHTML = '';
+    }
+
+    botPart.appendChild(boxTens);
+    botPart.appendChild(boxUnits);
+    
+    cell.appendChild(botPart);
+    grid.appendChild(cell);
+  });
+  
+  inner.appendChild(grid);
+  page.appendChild(inner);
+  main.appendChild(page);
+}
+
+// --- BOULIER V6 (FINAL) ---
+function getRekenrekSvg(n, isVisible, theme, maxValSetting, isColoringMode) {
+  
+  // GEOMETRIE (210px width, Gros billes r=5)
+  const r = 5;          
+  const dia = 2 * r;    
+  const frameW = 5;     
+  const W = 210;        
+  
+  let H, rows, spacingY, startY;
   let layoutType = 100;
   if (maxValSetting <= 10) layoutType = 10;
   else if (maxValSetting <= 20) layoutType = 20;
   
   if (layoutType === 100) {
-      H = 160; 
-      rows = 10;
-      r = 4; 
-      spacingY = 12; 
-      startY = 20;
+      H = 140; rows = 10; spacingY = 13.5; startY = 10; 
   } else if (layoutType === 20) {
-      H = 60; 
-      rows = 2;
-      r = 5.5; 
-      spacingY = 20; 
-      startY = 20;
+      H = 60; rows = 2; spacingY = 24; startY = 18;
   } else {
-      H = 40; 
-      rows = 1;
-      r = 5.5;
-      spacingY = 0;
-      startY = 20;
+      H = 40; rows = 1; spacingY = 0; startY = 20;
   }
   
   let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
-  // AJOUT DE LA BARRE MARRON A GAUCHE UNIQUEMENT (8px de large)
-  const frameW = 8;
-  const brownColor = "#A07846";
-  svg += `<rect x="0" y="0" width="${frameW}" height="${H}" fill="${brownColor}" />`;
-
-  const drawLine = (y, valOnLine, hiddenMode, rowId) => {
-      let str = "";
-      // La ligne commence maintenant après la barre marron (à frameW)
-      str += `<line x1="${frameW}" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+  // Helper Couleur Billes
+  const getBeadColor = (idx, inverted) => {
+      let isFirstFive = (idx < 5);
       
-      const d_active = (layoutType === 100) ? 8.2 : 11.2; 
-      const d_tight = (layoutType === 100) ? 7.8 : 10.8; 
+      let colMain = '#dc2626'; // Rouge par défaut
+      let colSec = '#f8fafc';  // Blanc par défaut
       
-      // MODIFICATION : Début des billes calé sur la barre (frameW) + rayon (r)
-      // Pour coller parfaitement la bille sans espace
-      let startX = frameW + r; 
-      
-      const inverted = (layoutType === 100 && rowId >= 5);
-
-      if (hiddenMode) {
-          let cx = startX;
-          for(let i=0; i<10; i++) {
-              let fill;
-              if (layoutType === 100) {
-                  if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
-                  else fill = (i < 5) ? '#e5e7eb' : 'white';
-              } else {
-                  fill = (i < 5) ? '#e5e7eb' : 'white';
-              }
-              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
-              cx += d_tight; 
-          }
-      } else {
-          let cx = startX;
-          for(let i=0; i<valOnLine; i++) {
-             let isFirstFive = (i < 5);
-             let colMain = '#dc2626'; 
-             let colSec = (theme === 'blue') ? '#2563eb' : '#f8fafc'; 
-             
-             let fill;
-             if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
-             else fill = isFirstFive ? colMain : colSec;
-
-             let stroke = (fill === '#f8fafc' || fill === '#ffffff' || fill === 'white') ? '#333' : 'none';
-
-             str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1" />`;
-             cx += d_active;
-          }
+      if (theme === 'blue') {
+          colSec = '#2563eb'; // Rouge / Bleu
+      } else if (theme === 'gray') {
+          // CORRECTION: Gris plus clair pour la couleur principale, Blanc reste Blanc
+          colMain = '#9ca3af'; // Gris plus clair
+          colSec = '#ffffff';  // Blanc pur
       }
-      return str;
+
+      let fill;
+      if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
+      else fill = isFirstFive ? colMain : colSec;
+      return fill;
   };
 
-  for(let row = 0; row < rows; row++) {
-      let y = startY + (row * spacingY);
-      
-      if (!isVisible) {
-          svg += drawLine(y, 0, true, row);
+  // --- BRANCHE 1 : TEMPLATE (Centré, Soldats, Correction Fusionnée) ---
+  if (isColoringMode) {
+      const beadsWidth = 10 * dia;
+      const startX = (W - beadsWidth) / 2;
+
+      // Dessin des 10 billes centrées (TOUJOURS visible)
+      for(let row = 0; row < rows; row++) {
+          let y = startY + (row * spacingY);
+          svg += `<line x1="20" y1="${y}" x2="${W - 20}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+          let inverted = (layoutType === 100 && row >= 5);
+          for (let i = 0; i < 10; i++) {
+              let cx = startX + (i * dia) + r; 
+              let fill = getBeadColor(i, inverted);
+              // Contour Noir pour tout le monde
+              let stroke = '#333'; 
+              svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+          }
+      }
+
+      // SI CORRECTION ACTIVE -> TRACÉ NOIR FUSIONNÉ
+      if (isVisible) {
+           let fullRows = Math.floor(n / 10); 
+           let remainder = n % 10;           
+           const pad = 1.5; 
+           const cornerR = 8; 
+
+           const leftX = startX - pad;
+           const topY = startY - r - pad;
+           const rightX_Full = startX + (10 * dia) + pad;
+           const rightX_Rem = startX + (remainder * dia) + pad;
+           
+           // Cas 1 : Que des lignes pleines
+           if (remainder === 0 && fullRows > 0) {
+                const bottomY = startY + ((fullRows - 1) * spacingY) + r + pad;
+                const w = rightX_Full - leftX;
+                const h = bottomY - topY;
+                svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
+           }
+           // Cas 2 : Que des unités (sur 1ère ligne)
+           else if (fullRows === 0 && remainder > 0) {
+               const bottomY = startY + r + pad;
+               const w = rightX_Rem - leftX;
+               const h = bottomY - topY;
+               svg += `<rect x="${leftX}" y="${topY}" width="${w}" height="${h}" rx="${cornerR}" fill="none" stroke="black" stroke-width="2.5" />`;
+           }
+           // Cas 3 : Forme en L fusionnée
+           else if (fullRows > 0 && remainder > 0) {
+               const yLastFull = startY + (fullRows - 1) * spacingY;
+               const midY = yLastFull + (spacingY / 2);
+               const bottomY_Total = startY + (fullRows * spacingY) + r + pad;
+               
+               let d = "";
+               d += `M ${leftX + cornerR} ${topY} `;
+               d += `L ${rightX_Full - cornerR} ${topY} `;
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Full} ${topY + cornerR} `;
+               d += `L ${rightX_Full} ${midY} `;
+               d += `L ${rightX_Rem} ${midY} `;
+               d += `L ${rightX_Rem} ${bottomY_Total - cornerR} `;
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${rightX_Rem - cornerR} ${bottomY_Total} `;
+               d += `L ${leftX + cornerR} ${bottomY_Total} `;
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX} ${bottomY_Total - cornerR} `;
+               d += `L ${leftX} ${topY + cornerR} `;
+               d += `A ${cornerR} ${cornerR} 0 0 1 ${leftX + cornerR} ${topY} `;
+               d += "Z"; 
+
+               svg += `<path d="${d}" fill="none" stroke="black" stroke-width="2.5" stroke-linejoin="round" />`;
+           }
+      }
+  }
+  // --- BRANCHE 2 : RÉALISTE (Avec montants) ---
+  else {
+      if (isVisible) {
+          const brownColor = "#A07846";
+          // CHANGED: Black stroke for brown frame
+          svg += `<rect x="0.5" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+          svg += `<rect x="${W - frameW + 0.5}" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+
+          for(let row = 0; row < rows; row++) {
+              let y = startY + (row * spacingY);
+              svg += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
+
+              let fullRows = Math.floor(n / 10);
+              let remainder = n % 10;
+              let activeCount = 0;
+              if (row < fullRows) activeCount = 10;
+              else if (row === fullRows) activeCount = remainder;
+              
+              let inactiveCount = 10 - activeCount;
+              let inverted = (layoutType === 100 && row >= 5);
+
+              // Actives (Gauche)
+              let startXLeft = frameW + r; 
+              for (let i = 0; i < activeCount; i++) {
+                  let cx = startXLeft + (i * dia);
+                  let fill = getBeadColor(i, inverted);
+                  let stroke = '#333'; 
+                  svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+              }
+
+              // Inactives (Droite)
+              let startXRight = W - frameW - r;
+              for (let j = 0; j < inactiveCount; j++) {
+                  let realIdx = 9 - j; 
+                  let cx = startXRight - (j * dia);
+                  let fill = getBeadColor(realIdx, inverted);
+                  let stroke = '#333'; 
+                  svg += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="0.5" />`;
+              }
+          }
       } else {
-          let fullRows = Math.floor(n / 10);
-          let remainder = n % 10;
-          
-          let valOnThisRow = 0;
-          if (row < fullRows) valOnThisRow = 10;
-          else if (row === fullRows) valOnThisRow = remainder;
-          
-          if(valOnThisRow > 0) {
-              svg += drawLine(y, valOnThisRow, false, row);
-          } else {
-              // Ligne vide (quand on affiche les billes)
-              svg += `<line x1="${frameW}" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
+          // Vide (juste le cadre)
+          const brownColor = "#A07846";
+          // CHANGED: Black stroke for brown frame
+          svg += `<rect x="0.5" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+          svg += `<rect x="${W - frameW + 0.5}" y="0.5" width="${frameW-1}" height="${H-1}" fill="${brownColor}" stroke="black" stroke-width="0.5" />`;
+          for(let row = 0; row < rows; row++) {
+              let y = startY + (row * spacingY);
+              svg += `<line x1="${frameW}" y1="${y}" x2="${W - frameW}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
           }
       }
   }
