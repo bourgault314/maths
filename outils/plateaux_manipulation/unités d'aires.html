@@ -2,152 +2,768 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page en construction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atelier : Unités d'Aire (V29 - mm² traits non grossissants)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+        :root {
+            --view-scale: 1;
+            --inv-scale: 1;
+            --border-outer: 0.5px;
+            --border-inner: 0.22px;
+            --outer-alpha: 0.85;
+            --inner-alpha: 0.25;
+            --ghost-border: 2px;
+        }
+
+body {
+            font-family: 'Fredoka', sans-serif;
             background-color: #f8fafc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #1e293b;
-            text-align: center;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background-color 0.5s;
         }
 
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 90%;
-            width: 400px;
-            border: 2px solid #f1f5f9;
+        #app-container {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        #world-layer {
+            position: absolute; top: 0; left: 0;
+            width: 0; height: 0;
+            transform-origin: 0 0;
+            z-index: 5; 
+            pointer-events: none;
         }
 
-        /* L'Emoji animé */
-        .icon {
-            font-size: 5rem;
-            display: inline-block;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            /* Animation douce par défaut */
-            animation: float 3s ease-in-out infinite;
+        #grid-layer {
+            position: absolute; top: 0; left: 0;
+            z-index: 10;
+            pointer-events: none;
         }
 
-        /* Titre */
-        h1 {
-            color: #b45309; /* Couleur brique/orange */
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
+        #draw-layer {
+            position: absolute; top: 0; left: 0;
+            z-index: 20; 
+            pointer-events: none;
         }
 
-        /* Le texte rigolo */
-        #message {
-            margin: 1.5rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #64748b;
-            min-height: 3.5rem; /* Pour éviter que ça saute selon la longueur du texte */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* --- STYLES DES TUILES --- */
+        .tile {
+            position: absolute;
+            box-sizing: border-box;
+            display: grid;
+            overflow: hidden; 
+            pointer-events: auto;
+            /* Bordure externe simple et fine pour délimiter le bloc */
+            /* Plus fin (mm + rectangles en mm) : la bordure reste fine même quand on zoome */
+            border: calc(var(--border-outer) / var(--view-scale)) solid rgb(0 0 0 / var(--outer-alpha));
         }
-
-        /* Bouton Retour */
-        .btn-back {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-back:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        /* --- ANIMATIONS --- */
         
-        /* Flottement doux */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        /* CELLULES INTERNES (Le quadrillage 123) */
+        .sub-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            overflow: hidden;
+            /* Bordure interne très fine pour séparer les unités */
+            border: calc(var(--border-inner) / var(--view-scale)) solid rgb(0 0 0 / var(--inner-alpha)); 
         }
 
-        /* Secousse (si on clique sur l'icone) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        /* Une tuile 1×1 n'a pas besoin de bordure interne (évite la double bordure) */
+        .tile[data-cols="1"][data-rows="1"] .sub-cell {
+            border: none;
         }
 
-        .shaking {
-            animation: shake 0.5s;
+        /* LE TEXTE 123 */
+        .sub-cell span {
+            pointer-events: none;
+            display: none;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.15;
+            /* Police simple sans serif */
+            font-family: sans-serif; 
+            /* NOIR PUR */
+            color: #000000;
+            font-weight: bold;
+            /* AUCUN EFFET D'OMBRE OU DE CONTOUR BLANC */
+            text-shadow: none;
+            -webkit-text-stroke: 0;
+            padding: 0 0.15em;
         }
+
+        /* Superscript propre (évite les "²" coupés) */
+        .sub-cell span sup {
+            font-size: 0.7em;
+            line-height: 0;
+            vertical-align: super;
+        }
+
+        /*
+          Pour les unités très grandes (hm² / km²) : la vue est très dézoomée.
+          On "verrouille" l'écriture 123 à une taille écran stable en compensant le zoom.
+        */
+        .tile.lock-text .sub-cell span {
+            transform: scale(var(--inv-scale));
+            transform-origin: center;
+        }
+        
+        body.show-values .sub-cell span { display: inline-block; }
+
+        #ghost {
+            position: absolute; top: 0; left: 0;
+            z-index: 30;
+            pointer-events: none;
+            border: var(--ghost-border) solid currentColor;
+            background: rgba(255,255,255,0.3);
+            display: none;
+        }
+
+        /* UI */
+        .ui-panel {
+            background: white; border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 12px;
+            pointer-events: auto;
+        }
+        .tool-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 6px; border-radius: 8px; color: #64748b; min-width: 50px; transition: all 0.1s;
+        }
+        .tool-btn:active { transform: scale(0.95); }
+        .tool-btn.active { background-color: #e0f2fe; color: #0284c7; font-weight: bold; }
+        .tool-btn svg { width: 24px; height: 24px; margin-bottom: 2px; }
+        
+        .unit-pill {
+            padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 13px;
+            cursor: pointer; background: white; border: 1px solid #cbd5e1; color: #64748b;
+        }
+        .unit-pill.active { background-color: #3b82f6; color: white; border-color: #2563eb; }
+
+        .toggle-btn {
+            display: flex; align-items: center; gap: 6px; background: white;
+            padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1;
+            font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer;
+        }
+        .toggle-btn.active { background-color: #dcfce7; border-color: #16a34a; color: #15803d; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+            z-index: 999; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- Correction mm² : contours non grossissants (évite l'effet 'gros trait' quand on zoome) --- */
+        .tile.unit-mm {
+            border: none !important;
+        }
+        .tile.unit-mm .sub-cell {
+            border: none !important;
+            position: relative;
+            z-index: 4;
+        }
+        .tile-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">    <div id="app-container">        <div id="world-layer"><div id="tile-container"></div></div>
+        <canvas id="grid-layer"></canvas>
+        <canvas id="draw-layer"></canvas>
+        <div id="ghost"></div>
+    </div>
 
-    <div class="container">
-        <div class="icon" onclick="shakeMe(this)">🚧</div>
-        
-        <h1>Oups ! Pas fini...</h1>
-        
-        <p id="message">Chargement de l'excuse...</p>
+    <!-- UI HAUT -->
+    <div class="absolute top-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none z-50">
+        <div class="flex flex-wrap gap-2 pointer-events-auto bg-white/95 p-1.5 rounded-lg border shadow-sm">
+            <div class="unit-pill" onclick="app.setUnit('mm')" id="btn-mm">mm<sup>2</sup></div>
+            <div class="unit-pill active" onclick="app.setUnit('cm')" id="btn-cm">cm<sup>2</sup></div>
+            <div class="unit-pill" onclick="app.setUnit('dm')" id="btn-dm">dm<sup>2</sup></div>
+            <div class="unit-pill" onclick="app.setUnit('m')" id="btn-m">m<sup>2</sup></div>
+            <div class="unit-pill" onclick="app.setUnit('dam')" id="btn-dam" title="= 1 are (a)">dam<sup>2</sup></div>
+            <div class="unit-pill" onclick="app.setUnit('hm')" id="btn-hm" title="= 1 hectare (ha)">hm<sup>2</sup></div>
+            <div class="unit-pill" onclick="app.setUnit('km')" id="btn-km">km<sup>2</sup></div>
+        </div>
+        <div class="flex gap-2 pointer-events-auto">
+            <button id="btn-grid-toggle" class="toggle-btn" onclick="app.cycleGridMode()" style="display:none">Grille: Normale</button>
+            <button id="btn-values" class="toggle-btn" onclick="app.toggleValues()">123</button>        </div>
+    </div>
 
-        <a href="javascript:history.back()" class="btn-back">
-            Retour en arrière
-        </a>
+    <!-- UI BAS -->
+    <div class="absolute bottom-6 left-0 right-0 flex justify-center items-end gap-4 pointer-events-none z-50">
+        <!-- Zoom -->
+        <div class="ui-panel flex flex-col gap-1 p-1.5 pointer-events-auto">
+            <button onclick="app.zoom(1)" class="tool-btn w-10 h-10 bg-white hover:bg-slate-50 rounded shadow-sm flex items-center justify-center">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+            </button>
+            <button onclick="app.zoom(-1)" class="tool-btn w-10 h-10 bg-white hover:bg-slate-50 rounded shadow-sm flex items-center justify-center">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M20 12H4"/></svg>
+            </button>
+        </div>
+
+        <!-- Outils -->
+        <div class="ui-panel flex items-center gap-1 p-1.5 pointer-events-auto">
+            <button onclick="app.undo()" class="tool-btn" title="Annuler">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+            </button>
+            <div class="w-px h-8 bg-slate-200 mx-1"></div>
+            
+            <button id="tool-hand" onclick="app.setTool('hand')" class="tool-btn" title="Bouger la vue">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+                <span class="text-[10px] mt-0.5">Bouger</span>
+            </button>
+
+            <button id="tool-paint" onclick="app.setTool('paint')" class="tool-btn active" title="Placer des carrés">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="text-[10px] mt-0.5">Placer</span>
+            </button>
+
+            <button id="tool-eraser" onclick="app.setTool('eraser')" class="tool-btn" title="Enlever des blocs">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="text-rose-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6m4-6v6"/>
+                </svg>
+                <span class="text-[10px] mt-0.5">Enlever</span>
+            </button>
+            
+            <div class="w-px h-8 bg-slate-200 mx-1"></div>
+            
+            <button id="tool-pen" onclick="app.setTool('pen')" class="tool-btn" title="Écrire">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                <span class="text-[10px] mt-0.5">Stylo</span>
+            </button>
+            
+            <button onclick="app.clearDrawings()" class="tool-btn text-orange-500 hover:text-orange-700 hover:bg-orange-50" title="Effacer Dessins">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="10" rx="2" stroke="currentColor" fill="none"/><path d="M4 14l16 0" stroke="currentColor"/><path d="M7 14v4a2 2 0 002 2h6a2 2 0 002-2v-4" stroke="currentColor" fill="none"/></svg>
+                <span class="text-[10px] mt-0.5">Gomme</span>
+            </button>
+
+            <div class="w-px h-8 bg-slate-200 mx-1"></div>
+            
+            <button onclick="app.openModal()" class="tool-btn text-indigo-600" title="Rectangle Précis">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" /></svg>
+                <span class="text-[10px] mt-0.5">Rect.</span>
+            </button>
+            <button onclick="app.clear()" class="tool-btn text-rose-600 hover:text-rose-800 hover:bg-rose-50" title="Tout Effacer">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODALE -->
+    <div id="rect-modal" class="modal-overlay hidden">
+        <div class="bg-white rounded-xl p-6 w-80 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-slate-700">Nouveau Rectangle</h3>
+            <div class="flex gap-4 mb-4">
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-slate-400">LARGEUR</label>
+                    <input type="number" id="rect-w" value="5" class="w-full text-center font-bold text-xl p-2 border rounded">
+                </div>
+                <div class="flex items-center font-bold">×</div>
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-slate-400">HAUTEUR</label>
+                    <input type="number" id="rect-h" value="3" class="w-full text-center font-bold text-xl p-2 border rounded">
+                </div>
+            </div>
+            <!-- Aire masquée volontairement : peut servir d'exercice -->
+            <div class="text-center text-sm mb-4 font-bold text-slate-600 hidden">
+                Aire : <span id="rect-preview">15</span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('rect-modal').classList.add('hidden')" class="flex-1 py-2 font-bold text-slate-500 hover:bg-slate-100 rounded">Annuler</button>
+                <button onclick="app.addRect()" class="flex-1 py-2 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded">Créer</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Liste des messages rigolos
-        const phrases = [
-            "Le développeur est parti chercher du café... Il revient (peut-être).",
-            "C'est en chantier ! Attention aux chutes de pixels.",
-            "J'ai perdu la clé de 12 pour finir cette page.",
-            "Patience, c'est comme les maths, ça prend du temps à construire.",
-            "Les lutins du code sont en grève. Repassez plus tard !",
-            "Page en cours de téléchargement cérébral...",
-            "404 ? Non, juste 'Pas encore prêt' !"
-        ];
+        const BASE_PX = 50; 
 
-        // Choisir une phrase au hasard au chargement
-        const texteElement = document.getElementById('message');
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        texteElement.innerText = randomPhrase;
+        const CONFIG = {
+            units: {
+                // Zoom x8 pour mm (compromis visibilité/contexte)
+                'mm': { color: 'rgba(239, 68, 68, 0.5)', bg: '#fff1f2', label: 'mm²', realSize: 0.1, zoom: 8.0, step: 0.1 },
+                'cm': { color: 'rgba(59, 130, 246, 0.5)', bg: '#eff6ff', label: 'cm²', realSize: 1.0, zoom: 1.0, step: 1 },
+                'dm': { color: 'rgba(16, 185, 129, 0.5)', bg: '#f0fdf4', label: 'dm²', realSize: 10.0, zoom: 0.35, step: 10 },
+                'm':  { color: 'rgba(245, 158, 11, 0.5)', bg: '#fffbeb', label: 'm²',  realSize: 100.0, zoom: 0.04, step: 100 },
+                'dam': { color: 'rgba(20, 184, 166, 0.5)', bg: '#ecfeff', label: 'dam²', realSize: 1000.0, zoom: 0.004, step: 1000 },
+                // Grandement au-dessus : correct métriquement (base en cm)
+                'hm': { color: 'rgba(139, 92, 246, 0.5)', bg: '#f5f3ff', label: 'hm²', realSize: 10000.0, zoom: 0.0004, step: 10000 },
+                'km': { color: 'rgba(100, 116, 139, 0.5)', bg: '#f1f5f9', label: 'km²', realSize: 100000.0, zoom: 0.00004, step: 100000 }
+            }
+        };
 
-        // Fonction pour secouer l'icone au clic
-        function shakeMe(element) {
-            element.classList.remove('shaking'); // Reset
-            void element.offsetWidth; // Force le reflow
-            element.classList.add('shaking'); // Re-lance
-            
-            // Changer le texte aussi quand on clique, pour le fun
-            const newPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            texteElement.innerText = newPhrase;
+        // Affichage fiable des unités au carré (évite les soucis de caractère "²")
+        const labelHtml = (lbl) => (lbl && lbl.endsWith('²')) ? (lbl.slice(0, -1) + '<sup>2</sup>') : lbl;
+
+
+        // SVG overlay mm² : traits qui ne grossissent pas avec le zoom (vector-effect)
+        function makeMmOverlaySVG(cols, rows) {
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('class', 'tile-overlay');
+            svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
+            svg.setAttribute('preserveAspectRatio', 'none');
+
+            const g = document.createElementNS(svgNS, 'g');
+            g.setAttribute('shape-rendering', 'crispEdges');
+
+            // Contour externe (très fin, non grossissant)
+            const outer = document.createElementNS(svgNS, 'rect');
+            outer.setAttribute('x', '0');
+            outer.setAttribute('y', '0');
+            outer.setAttribute('width', String(cols));
+            outer.setAttribute('height', String(rows));
+            outer.setAttribute('fill', 'none');
+            outer.setAttribute('stroke', 'rgba(0,0,0,0.82)');
+            outer.setAttribute('stroke-width', '0.65');
+            outer.setAttribute('vector-effect', 'non-scaling-stroke');
+            g.appendChild(outer);
+
+            // Quadrillage interne (encore plus fin)
+            if (cols > 1 || rows > 1) {
+                const innerStroke = 'rgba(0,0,0,0.18)';
+                for (let c = 1; c < cols; c++) {
+                    const line = document.createElementNS(svgNS, 'line');
+                    line.setAttribute('x1', String(c));
+                    line.setAttribute('y1', '0');
+                    line.setAttribute('x2', String(c));
+                    line.setAttribute('y2', String(rows));
+                    line.setAttribute('stroke', innerStroke);
+                    line.setAttribute('stroke-width', '0.35');
+                    line.setAttribute('vector-effect', 'non-scaling-stroke');
+                    g.appendChild(line);
+                }
+                for (let r = 1; r < rows; r++) {
+                    const line = document.createElementNS(svgNS, 'line');
+                    line.setAttribute('x1', '0');
+                    line.setAttribute('y1', String(r));
+                    line.setAttribute('x2', String(cols));
+                    line.setAttribute('y2', String(r));
+                    line.setAttribute('stroke', innerStroke);
+                    line.setAttribute('stroke-width', '0.35');
+                    line.setAttribute('vector-effect', 'non-scaling-stroke');
+                    g.appendChild(line);
+                }
+            }
+
+            svg.appendChild(g);
+            return svg;
         }
-    </script>
 
+        class App {
+            constructor() {
+                this.state = {
+                    unit: 'cm', tool: 'paint', x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 1,
+                    gridMode: 0, showValues: false, isDragging: false, lastX: 0, lastY: 0
+                };
+                
+                this.tiles = [];
+                this.drawings = [];
+                this.currentStroke = null;
+                this.history = [];
+
+                this.canvasGrid = document.getElementById('grid-layer');
+                this.ctxGrid = this.canvasGrid.getContext('2d');
+                this.canvasDraw = document.getElementById('draw-layer');
+                this.ctxDraw = this.canvasDraw.getContext('2d');
+                this.world = document.getElementById('world-layer');
+                this.tileContainer = document.getElementById('tile-container');                this.ghost = document.getElementById('ghost');
+                this.elViewport = document.getElementById('app-container');
+                
+                const c = this.elViewport;
+                c.addEventListener('pointerdown', e => this.onDown(e));
+                window.addEventListener('pointermove', e => this.onMove(e));
+                window.addEventListener('pointerup', e => this.onUp(e));
+                c.addEventListener('wheel', e => this.onWheel(e), {passive: false});
+                window.addEventListener('resize', () => this.renderAll());
+                this.setUnit('cm');
+                const updatePreview = () => {
+                    const w = document.getElementById('rect-w').value;
+                    const h = document.getElementById('rect-h').value;
+                    document.getElementById('rect-preview').innerHTML = (w*h) + ' ' + labelHtml(CONFIG.units[this.state.unit].label);
+                };
+                document.getElementById('rect-w').addEventListener('input', updatePreview);
+                document.getElementById('rect-h').addEventListener('input', updatePreview);
+            }
+
+            renderAll() {
+                // Bordures constantes (indépendantes du zoom)
+                document.documentElement.style.setProperty('--view-scale', String(this.state.scale));
+                document.documentElement.style.setProperty('--inv-scale', String(1 / this.state.scale));
+
+                this.drawGrid();
+                this.drawDrawings();
+
+                const t = `translate(${this.state.x}px, ${this.state.y}px) scale(${this.state.scale})`;
+                this.world.style.transform = t;
+            }
+
+            drawGrid() {
+                const w = window.innerWidth, h = window.innerHeight;
+                this.canvasGrid.width = w; this.canvasGrid.height = h;
+                const ctx = this.ctxGrid;
+                ctx.clearRect(0, 0, w, h);
+
+                if (this.state.gridMode === 2) return; 
+
+                const u = CONFIG.units[this.state.unit];
+                let stepSize = (this.state.unit === 'mm') ? 0.1 : u.step;
+                const stepPx = BASE_PX * stepSize * this.state.scale;
+                
+                if (stepPx < 5) return; 
+
+                const offsetX = this.state.x % stepPx;
+                const offsetY = this.state.y % stepPx;
+
+                ctx.beginPath();
+                if (this.state.gridMode === 1 && this.state.unit === 'cm') {
+                    const subStep = BASE_PX * 0.5 * this.state.scale;
+                    const subOffX = this.state.x % subStep;
+                    const subOffY = this.state.y % subStep;
+                    ctx.strokeStyle = "rgba(59, 130, 246, 0.5)"; 
+                    ctx.lineWidth = 1;
+                    for (let x = subOffX; x < w; x += subStep) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+                    for (let y = subOffY; y < h; y += subStep) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+                } else {
+                    ctx.strokeStyle = "rgba(0, 0, 0, 0.35)"; 
+                    ctx.lineWidth = 1;
+                    for (let x = offsetX; x < w; x += stepPx) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+                    for (let y = offsetY; y < h; y += stepPx) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+                }
+                ctx.stroke();
+            }
+
+            drawDrawings() {
+                const w = window.innerWidth, h = window.innerHeight;
+                this.canvasDraw.width = w; this.canvasDraw.height = h;
+                const ctx = this.ctxDraw;
+                ctx.clearRect(0, 0, w, h);
+                
+                ctx.save();
+                ctx.translate(this.state.x, this.state.y);
+                ctx.scale(this.state.scale, this.state.scale);
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                
+                let penWidth = 4 / Math.sqrt(this.state.scale);
+                if (this.state.scale > 5) penWidth = 1 / Math.sqrt(this.state.scale) * 4; 
+                ctx.lineWidth = penWidth; 
+
+                const drawStroke = (stroke) => {
+                    if (stroke.points.length < 2) return;
+                    ctx.beginPath();
+                    ctx.strokeStyle = stroke.color;
+                    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    for (let i = 1; i < stroke.points.length; i++) ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                    ctx.stroke();
+                };
+                this.drawings.forEach(drawStroke);
+                if (this.currentStroke) drawStroke(this.currentStroke);
+                ctx.restore();
+            }
+
+            screenToWorld(sx, sy) {
+                const wx = (sx - this.state.x) / this.state.scale;
+                const wy = (sy - this.state.y) / this.state.scale;
+                return { x: wx / BASE_PX, y: wy / BASE_PX };
+            }
+
+            onDown(e) {
+                if (e.target.closest('.tool-btn, .toggle-btn')) return;
+                this.state.isDragging = true;
+                this.state.lastX = e.clientX;
+                this.state.lastY = e.clientY;
+
+                if (e.button === 2) { this.actionErase(e); return; }
+
+                if (this.state.tool === 'pen') {
+                    const pos = this.screenToWorld(e.clientX, e.clientY);
+                    this.currentStroke = { color: '#2563eb', points: [{x: pos.x * BASE_PX, y: pos.y * BASE_PX}] };
+                    this.renderAll();
+                }
+                else if (this.state.tool === 'paint') this.actionPaint(e);
+                else if (this.state.tool === 'eraser') this.actionErase(e);
+                else if (this.state.tool === 'hand') document.body.style.cursor = 'grabbing';
+            }
+
+            onMove(e) {
+                this.updateGhost(e);
+                if (!this.state.isDragging) return;
+
+                if (this.state.tool === 'hand') {
+                    this.state.x += e.clientX - this.state.lastX;
+                    this.state.y += e.clientY - this.state.lastY;
+                    this.state.lastX = e.clientX;
+                    this.state.lastY = e.clientY;
+                    this.renderAll();
+                } 
+                else if (this.state.tool === 'pen') {
+                    const pos = this.screenToWorld(e.clientX, e.clientY);
+                    if (this.currentStroke) {
+                        this.currentStroke.points.push({x: pos.x * BASE_PX, y: pos.y * BASE_PX});
+                        this.drawDrawings();
+                    }
+                }
+                else {
+                    if (e.buttons === 0) { this.state.isDragging = false; return; }
+                    if (this.state.tool === 'eraser' || e.buttons === 2) this.actionErase(e);
+                    else if (this.state.tool === 'paint') this.actionPaint(e);
+                }
+            }
+
+            onUp(e) {
+                this.state.isDragging = false;
+                document.body.style.cursor = 'default';
+                if (this.state.tool === 'pen' && this.currentStroke) {
+                    this.drawings.push(this.currentStroke);
+                    this.currentStroke = null;
+                } else if (this.state.tool !== 'hand') {
+                    this.saveHistory();
+                }
+            }
+
+            onWheel(e) {
+                e.preventDefault();
+                this.zoom(e.deltaY > 0 ? -1 : 1);
+            }
+
+            updateGhost(e) {
+                if (this.state.tool !== 'paint') { this.ghost.style.display = 'none'; return; }
+                const u = CONFIG.units[this.state.unit];
+                const pos = this.screenToWorld(e.clientX, e.clientY); 
+                
+                const gx = Math.floor(pos.x / u.realSize) * u.realSize;
+                const gy = Math.floor(pos.y / u.realSize) * u.realSize;
+                
+                const screenX = gx * BASE_PX * this.state.scale + this.state.x;
+                const screenY = gy * BASE_PX * this.state.scale + this.state.y;
+                const sizePx = u.realSize * BASE_PX * this.state.scale;
+
+                this.ghost.style.display = 'block';
+                this.ghost.style.width = sizePx + 'px';
+                this.ghost.style.height = sizePx + 'px';
+                this.ghost.style.left = screenX + 'px';
+                this.ghost.style.top = screenY + 'px';
+                this.ghost.style.borderColor = u.color.replace('0.5', '1');
+                this.ghost.style.backgroundColor = u.color.replace('0.5', '0.2');
+            }
+
+            actionPaint(e) {
+                const u = CONFIG.units[this.state.unit];
+                const pos = this.screenToWorld(e.clientX, e.clientY);
+                const gx = Math.round((Math.floor(pos.x / u.realSize) * u.realSize) * 1000) / 1000;
+                const gy = Math.round((Math.floor(pos.y / u.realSize) * u.realSize) * 1000) / 1000;
+                const id = `t_${gx}_${gy}_${u.realSize}`;
+                if (document.getElementById(id)) return;
+                this.addTile(gx, gy, u.realSize, u.realSize, u.color, id);
+            }
+
+            actionErase(e) {
+                this.ghost.style.display = 'none';
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if (this.state.tool === 'paint') this.ghost.style.display = 'block';
+                const tile = el ? el.closest('.tile') : null;
+                if (tile) tile.remove();
+            }
+
+            addTile(x, y, w, h, color, id) {
+                const div = document.createElement('div');
+                div.className = 'tile';
+                if(this.state.unit === 'mm') div.classList.add('unit-mm');
+                if(this.state.unit === 'hm' || this.state.unit === 'km') div.classList.add('lock-text');
+                
+                div.id = id || `t_${Date.now()}_${Math.random()}`;
+                div.style.left = (x * BASE_PX) + 'px';
+                div.style.top = (y * BASE_PX) + 'px';
+                div.style.width = (w * BASE_PX) + 'px';
+                div.style.height = (h * BASE_PX) + 'px';
+                div.style.backgroundColor = color;
+                
+                const u = CONFIG.units[this.state.unit];
+                
+                const unitW = w / u.realSize;
+                const unitH = h / u.realSize;
+                const cols = Math.round(unitW);
+                const rows = Math.round(unitH);
+                
+                div.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+                div.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+                // Pour cibler proprement les tuiles 1×1 en CSS
+                div.dataset.cols = String(cols);
+                div.dataset.rows = String(rows);
+
+                // Overlay mm² : contours non grossissants (évite les traits énormes au zoom)
+                if (this.state.unit === 'mm') {
+                    div.appendChild(makeMmOverlaySVG(cols, rows));
+                }
+                
+                // CALCUL TAILLE POLICE (Noir Pur)
+                let fontSize;
+                if(this.state.unit === 'mm') {
+                    // mm : police plus petite pour que "1mm²" rentre dans la case (zoom x8)
+                    fontSize = '1.0px'; 
+                } else if (this.state.unit === 'dm') {
+                    fontSize = '120px'; // Gros pour dm
+                } else if (this.state.unit === 'm') {
+                    fontSize = '1000px'; // Énorme pour m
+                } else if (this.state.unit === 'dam') {
+                    fontSize = '10000px'; // Pour rester lisible malgré le zoom faible
+                } else if (this.state.unit === 'hm') {
+                    // Taille "écran" stable via .lock-text (compense le zoom) : pas besoin de tailles gigantesques
+                    fontSize = '22px';
+                } else if (this.state.unit === 'km') {
+                    // Idem (verrouillage écran) : taille raisonnable et fiable sur tous les navigateurs
+                    fontSize = '22px';
+                } else {
+                    fontSize = '14px'; // Standard cm
+                }
+
+                for(let i=0; i<cols*rows; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'sub-cell';
+                    const s = document.createElement('span');
+                    const html = labelHtml(u.label);
+                    // mm : sans espace, sinon ça se fait rogner sur les côtés
+                    s.innerHTML = (this.state.unit === 'mm') ? `1${html}` : `1 ${html}`;
+                    s.style.fontSize = fontSize;
+                    cell.appendChild(s);
+                    div.appendChild(cell);
+                }
+
+                this.tileContainer.appendChild(div);
+            }
+
+            addRect() {
+                const w = parseInt(document.getElementById('rect-w').value);
+                const h = parseInt(document.getElementById('rect-h').value);
+                const u = CONFIG.units[this.state.unit];
+                const center = this.screenToWorld(window.innerWidth/2, window.innerHeight/2);
+                const gx = Math.floor(center.x / u.realSize) * u.realSize;
+                const gy = Math.floor(center.y / u.realSize) * u.realSize;
+                this.addTile(gx, gy, w * u.realSize, h * u.realSize, u.color, null);
+                this.saveHistory();
+                document.getElementById('rect-modal').classList.add('hidden');
+            }
+
+            setUnit(unit) {
+                this.state.unit = unit;
+
+                // Bordures encore plus fines en vue mm² (y compris pour les blocs cm² affichés en mm²)
+                if(unit === 'mm') {
+                    document.documentElement.style.setProperty('--border-outer', '0.18px');
+                    document.documentElement.style.setProperty('--border-inner', '0.08px');
+                    document.documentElement.style.setProperty('--outer-alpha', '0.82');
+                    document.documentElement.style.setProperty('--inner-alpha', '0.18');
+                    document.documentElement.style.setProperty('--ghost-border', '1px');
+                } else {
+                    document.documentElement.style.setProperty('--border-outer', '0.5px');
+                    document.documentElement.style.setProperty('--border-inner', '0.22px');
+                    document.documentElement.style.setProperty('--outer-alpha', '0.85');
+                    document.documentElement.style.setProperty('--inner-alpha', '0.25');
+                    document.documentElement.style.setProperty('--ghost-border', '2px');
+                }
+                document.body.style.backgroundColor = CONFIG.units[unit].bg;
+                document.querySelectorAll('.unit-pill').forEach(b => b.classList.toggle('active', b.id === 'btn-'+unit));
+                const btnGrid = document.getElementById('btn-grid-toggle');
+                if(unit === 'cm') {
+                    btnGrid.style.display = 'flex';
+                    this.state.gridMode = 0;
+                    btnGrid.innerText = "Grille: Normale";
+                    btnGrid.classList.remove('active');
+                } else {
+                    btnGrid.style.display = 'none';
+                    this.state.gridMode = 0;
+                }
+                this.animateZoom(CONFIG.units[unit].zoom);
+            }
+
+            setTool(t) {
+                this.state.tool = t;
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                const btn = document.getElementById('tool-'+t);
+                if(btn) btn.classList.add('active');
+                this.ghost.style.display = t === 'paint' ? 'block' : 'none';
+            }
+
+            toggleValues() {
+                this.state.showValues = !this.state.showValues;
+                document.getElementById('btn-values').classList.toggle('active');
+                document.body.classList.toggle('show-values');
+            }
+
+            cycleGridMode() {
+                this.state.gridMode = (this.state.gridMode + 1) % 3;
+                const btn = document.getElementById('btn-grid-toggle');
+                const labels = ["Grille: Normale", "Grille: Cahier", "Grille: Aucune"];
+                btn.innerText = labels[this.state.gridMode];
+                btn.classList.toggle('active', this.state.gridMode === 1);
+                this.drawGrid();
+            }
+
+            zoom(dir) {
+                const factor = dir > 0 ? 1.2 : 0.8;
+                // Permet aussi les très grands unités (hm²/km²) qui nécessitent un zoom très faible
+                const newScale = Math.min(Math.max(0.00001, this.state.scale * factor), 50);
+                
+                const rect = this.elViewport.getBoundingClientRect();
+                const cx = rect.width/2; const cy = rect.height/2;
+                const ratio = newScale / this.state.scale;
+                this.state.x = cx - (cx - this.state.x) * ratio;
+                this.state.y = cy - (cy - this.state.y) * ratio;
+                
+                this.state.scale = newScale;
+                this.renderAll();
+            }
+
+            animateZoom(target) {
+                const start = this.state.scale;
+                const rect = this.elViewport.getBoundingClientRect();
+                const cx = rect.width/2; const cy = rect.height/2;
+                const ratio = target / start;
+                const targetX = cx - (cx - this.state.x) * ratio;
+                const targetY = cy - (cy - this.state.y) * ratio;
+                const startX = this.state.x;
+                const startY = this.state.y;
+
+                const duration = 500;
+                let startTime = null;
+                const step = (t) => {
+                    if(!startTime) startTime = t;
+                    const p = Math.min((t - startTime)/duration, 1);
+                    const ease = 1 - Math.pow(1 - p, 3);
+                    this.state.scale = start + (target - start) * ease;
+                    this.state.x = startX + (targetX - startX) * ease;
+                    this.state.y = startY + (targetY - startY) * ease;
+                    this.renderAll();
+                    if(p < 1) requestAnimationFrame(step);
+                };
+                requestAnimationFrame(step);
+            }
+
+            clear() { this.tileContainer.innerHTML = ''; this.drawings = []; this.renderAll(); this.saveHistory(); }
+            clearDrawings() { this.drawings = []; this.renderAll(); }
+            undo() { if(this.history.length > 0) this.tileContainer.innerHTML = this.history.pop(); }
+            saveHistory() { if(this.history.length > 10) this.history.shift(); this.history.push(this.tileContainer.innerHTML); }
+            openModal() {
+                document.getElementById('rect-preview').innerHTML = 
+                    (document.getElementById('rect-w').value * document.getElementById('rect-h').value) + ' ' + labelHtml(CONFIG.units[this.state.unit].label);
+                document.getElementById('rect-modal').classList.remove('hidden');
+            }
+        }
+
+        const app = new App();
+    </script>
 </body>
 </html>
