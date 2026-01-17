@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Boulier Canari - Version Centièmes</title>
+<style>
+  :root {
+    /* Thème Sombre (Défaut) */
+    --bg: #1a1a1a; 
+    --wood: #b08d57;
+    --rod: #888; 
+    --ui: #2a2a2a;
+    --text: #ffffff;
+    --accent: #0f6cf9; 
+    --bead-white: #ffffff; 
+    --bead-blue: #2196f3;
+    
+    /* Variables dynamiques */
+    --cache-bg: #000;
+    --cache-border: #444;
+    --cache-handle: #444;
+    --cache-text: #fff;
+    --row-border: 1px solid rgba(128,128,128,0.1); 
+    --frame-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  
+  /* Thème Clair (Eco) */
+  body.light-mode {
+    --bg: #ffffff;
+    --ui: #f0f0f0;
+    --text: #1a1a1a;
+    --rod: #555;
+    --cache-bg: #e0e0e0;
+    --cache-border: #999;
+    --cache-handle: #666;
+    --cache-text: #fff;
+    --row-border: none; 
+    --frame-shadow: none;
+  }
+
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background: var(--bg); color: var(--text); font-family: sans-serif;
+    overflow: hidden; touch-action: none;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .toolbar {
+    position: relative; width: 100%; min-height: 55px;
+    background: var(--ui); display: flex; flex-wrap: wrap; align-items: center; 
+    justify-content: center; gap: 15px; z-index: 1000; padding: 5px 20px;
+    box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: background 0.3s;
+  }
+
+  .toolbar-group { display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    border: none; background: #444; color: white; padding: 8px 12px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    white-space: nowrap; transition: background 0.2s;
+  }
+  body.light-mode .btn { background: #999; color: #fff; }
+  body.light-mode .btn:hover { background: #777; }
+  
+  .btn.active { background: var(--accent) !important; outline: 1px solid white; color: #fff !important; }
+  
+  .btn-eraser { background: #444; }
+  .btn-eraser:active { background: #666; }
+  
+  #btn-lang { background: #333; border: 1px solid #555; min-width: 50px; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+
+  #main-container {
+    position: relative; width: 100%; height: calc(100vh - 65px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; overflow: hidden;
+  }
+
+  #scaler {
+    margin-top: 10px; 
+    display: flex; flex-direction: column; align-items: center;
+    transform-origin: top center; pointer-events: none;
+  }
+
+  #total-display { 
+    font-size: 50px; font-weight: bold; color: var(--accent); 
+    height: 75px; margin-bottom: 5px; 
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    white-space: nowrap; /* Évite le retour à la ligne si c'est long */
+  }
+
+  #abacus-frame {
+    position: relative; width: 820px; 
+    border-left: 30px solid var(--wood); border-right: 30px solid var(--wood);
+    pointer-events: auto; box-sizing: content-box;
+    box-shadow: var(--frame-shadow);
+    background: transparent;
+  }
+
+  #abacus-frame::before, #abacus-frame::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+    background: var(--wood); z-index: 20; pointer-events: none;
+  }
+  #abacus-frame::before { left: -30px; }
+  #abacus-frame::after { right: -30px; }
+
+  .row { 
+    position: relative; 
+    height: 56px; 
+    width: 820px; 
+    pointer-events: auto; 
+    border-bottom: var(--row-border); 
+  }
+  .rod { position: absolute; width: 100%; height: 4px; background: var(--rod); top: 50%; transform: translateY(-50%); z-index: 1; }
+
+  #cache-curtain {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 0;
+    background: var(--cache-bg); z-index: 25; border-left: 5px solid var(--cache-border); 
+    pointer-events: auto; display: none; cursor: ew-resize;
+  }
+  #cache-curtain::before { 
+    content: "↔"; position: absolute; left: -22px; top: 50%; 
+    background: var(--cache-handle); border-radius: 50%; width: 44px; height: 44px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-weight: bold; font-size: 20px; color: var(--cache-text); transform: translateY(-50%);
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+  }
+
+  .bead {
+    position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    top: 50%; transform: translateY(-50%); z-index: 5;
+    cursor: grab; touch-action: none;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.3), 2px 2px 5px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  body.light-mode .bead.white { border: 1px solid #ccc; box-sizing: border-box; }
+
+  .bead.red { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); color: white; }
+  .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); color: black; }
+  .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); color: white; }
+
+  /* Style pour l'étiquette 0,01 DANS la bille */
+  .bead-label {
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    font-size: 10px; font-weight: bold; 
+    color: inherit; 
+    pointer-events: none; 
+    margin: 0;
+    text-shadow: none; 
+    white-space: nowrap;
+  }
+
+  /* Style pour la fraction 1/100 DANS la bille */
+  .bead-fraction {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: bold; line-height: 0.85; opacity: 0.85; pointer-events: none;
+    color: inherit; 
+  }
+  .bead-fraction .top { font-size: 8px; }
+  .bead-fraction .bar { width: 12px; height: 1px; background: currentColor; margin: 0.5px 0; }
+  .bead-fraction .bottom { font-size: 8px; }
+
+  #draw-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500; pointer-events: none; }
+  #draw-layer.active { pointer-events: auto; cursor: crosshair; }
+  
+  .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid #555; }
+  .color-dot.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 5px white; }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    .toolbar { padding-left: 80px; } 
+    #scaler { margin-top: 5px; } 
+    #total-display { font-size: 32px; height: 35px; gap: 15px; }
+    .row { height: 45px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar" id="top-bar">
+  <div class="toolbar-group">
+    <button class="btn" id="btn-lang" onclick="toggleLang()">ENG</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button class="btn" id="btn-reset" onclick="allTo(0)" style="padding: 8px 15px;">Départ</button>
+  </div>
+  <div class="toolbar-group">
+    <button class="btn" id="btn-theme" onclick="toggleTheme()" title="Changer le fond (Blanc/Noir)">☀️ Fond</button>
+    <button class="btn" id="btn-color" onclick="toggleColorMode()">🔵 Bleu</button>
+    <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
+    
+    <!-- Boutons Séparés -->
+    <!-- Ajout de la classe active par défaut pour décimal -->
+    <button class="btn active" id="btn-dec" onclick="toggleDecimal()">Décimale</button>
+    <button class="btn" id="btn-frac" onclick="toggleFraction()">Fractionnaire</button>
+    
+    <!-- Bouton à 3 états -->
+    <button class="btn" id="btn-label" onclick="toggleLabels()">Étiquette</button>
+    <button class="btn" id="btn-export" onclick="exportImage()" title="Télécharger Photo HD">📷 Photo</button>
+  </div>
+  <div class="toolbar-group" style="gap:10px">
+    <button class="btn" id="btn-pen" onclick="togglePen()">✏️</button>
+    <div class="color-dot active" style="background:#0f6cf9" onclick="setCol('#0f6cf9', this)"></div>
+    <div class="color-dot" style="background:#ffffff" onclick="setCol('#ffffff', this)"></div>
+    <div class="color-dot" style="background:#f44336" onclick="setCol('#f44336', this)"></div>
+    <button class="btn btn-eraser" id="btn-eraser" onclick="clearDraw()" title="Effacer tout">🧽</button>
+  </div>
+</div>
+
+<div id="main-container">
+  <div id="scaler">
+    <div id="total-display"></div>
+    <div id="abacus-frame">
+      <div id="cache-curtain"></div>
+    </div>
+  </div>
+</div>
+<canvas id="draw-layer"></canvas>
+
+<script>
+  const frame = document.getElementById('abacus-frame');
+  const canvas = document.getElementById('draw-layer');
+  const scaler = document.getElementById('scaler');
+  const ctx = canvas.getContext('2d');
+  const totalDiv = document.getElementById('total-display');
+  const cache = document.getElementById('cache-curtain');
+  const topBar = document.getElementById('top-bar');
+  const btnDec = document.getElementById('btn-dec');
+  const btnFrac = document.getElementById('btn-frac');
+  const btnLabel = document.getElementById('btn-label');
+  
+  // Paramètres par défaut
+  let rowsCount = 10;
+  let showDecimal = true; // ACTIVÉ PAR DÉFAUT
+  let showFraction = false;
+  
+  // labelMode: 0=Rien, 1=0,01(dedans), 2=1/100(dedans)
+  let labelMode = 0; 
+  
+  let isPen = false, isBlue = false, isCache = false, currentScale = 1;
+  let isLightMode = false; 
+  let hasDrawing = false; 
+  let penCol = '#0f6cf9', states = Array.from({length: 10}, () => 0); 
+  let currentLang = 'fr'; 
+
+  const i18n = {
+    fr: {
+      btnReset: "Départ", btnColorBlue: "🔵 Bleu", btnColorWhite: "⚪ Blanc", btnCache: "🌑 Cache",
+      btnDec: "Décimale", btnFrac: "Fractionnaire", // Orthographe harmonisée
+      btnTheme: "☀️ Fond", titleEraser: "Effacer tout", langLabel: "ENG",
+      labels: ["Étiquette", "0,01", "1/100"]
+    },
+    en: {
+      btnReset: "Reset", btnColorBlue: "🔵 Blue", btnColorWhite: "⚪ White", btnCache: "🌑 Cover",
+      btnDec: "Decimal", btnFrac: "Fraction",
+      btnTheme: "☀️ Theme", titleEraser: "Clear all", langLabel: "FR",
+      labels: ["Label", "0.01", "1/100"]
+    }
+  };
+
+  const BEAD_W = 38, GAP = 0, FRAME_W = 820;
+
+  function init() {
+    const curW = cache.style.width;
+    frame.innerHTML = '';
+    frame.appendChild(cache);
+    cache.onpointerdown = startCacheDrag;
+    if (isCache) cache.style.width = curW || "0px";
+
+    for (let r = 0; r < rowsCount; r++) {
+      const row = document.createElement('div'); row.className = 'row'; row.dataset.row = r;
+      row.innerHTML = `<div class="rod"></div>`;
+      for (let b = 0; b < 10; b++) {
+        const bead = document.createElement('div');
+        const isRed = (r < 5) ? (b < 5) : (b >= 5);
+        bead.className = `bead ${isRed ? 'red' : 'white'} ${isBlue ? 'blue-mode' : ''}`;
+        bead.dataset.idx = b; bead.onpointerdown = startDrag;
+        
+        bead.innerHTML = `
+            <div class="bead-label" style="display:none">0,01</div>
+            <div class="bead-fraction" style="display:none">
+                <span class="top">1</span>
+                <span class="bar"></span>
+                <span class="bottom">100</span>
+            </div>
+        `;
+        
+        row.appendChild(bead);
+      }
+      frame.appendChild(row);
+    }
+    autoScale();
+    updateBeads(false);
+    updateLanguageUI(); 
+  }
+
+  function autoScale() {
+    const availableW = window.innerWidth - 30;
+    const isLand = window.innerWidth > window.innerHeight && window.innerHeight < 500;
+    const margin = isLand ? 20 : 30; 
+    const availableH = window.innerHeight - topBar.offsetHeight - margin;
+    const rowH = isLand ? 45 : 56;
+    const contentH = (isLand ? 35 : 130) + (rowH * rowsCount);
+
+    const maxScale = (window.innerWidth > 1024) ? 1.4 : 1.2;
+    currentScale = Math.min(maxScale, availableW / 880, availableH / contentH);
+    
+    scaler.style.transform = `scale(${currentScale})`;
+    resizeCanvas();
+  }
+
+  function startDrag(e) {
+    if (isPen) return;
+    const bead = e.target.closest('.bead'); 
+    bead.setPointerCapture(e.pointerId);
+    activeDrag = { rowIdx: parseInt(bead.parentElement.dataset.row), beadIdx: parseInt(bead.dataset.idx), rowEl: bead.parentElement, startX: e.clientX };
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl, startX } = activeDrag;
+    const dx = (e.clientX - startX) / currentScale;
+    const beads = rowEl.querySelectorAll('.bead');
+    if (beadIdx >= states[rowIdx]) { 
+      for (let i = states[rowIdx]; i <= beadIdx; i++) moveVisual(beads[i], i, dx, true);
+    } else {
+      for (let i = beadIdx; i < states[rowIdx]; i++) moveVisual(beads[i], i, dx, false);
+    }
+  });
+
+  function moveVisual(b, idx, dx, fromRight) {
+    let base = fromRight ? (FRAME_W - (10 - idx) * (BEAD_W + GAP)) : (idx * (BEAD_W + GAP));
+    b.style.transition = 'none';
+    b.style.left = Math.max(idx * (BEAD_W + GAP), Math.min(FRAME_W - (10 - idx) * (BEAD_W + GAP), base + dx)) + "px";
+  }
+
+  window.addEventListener('pointerup', () => {
+    if (!activeDrag) return;
+    const { rowIdx, beadIdx, rowEl } = activeDrag;
+    const beads = rowEl.querySelectorAll('.bead');
+    const currentPos = parseFloat(beads[beadIdx].style.left);
+    
+    const targetLeft = beadIdx * (BEAD_W + GAP);
+    const targetRight = FRAME_W - (10 - beadIdx) * (BEAD_W + GAP);
+    const snapMargin = BEAD_W * 1; 
+
+    if (beadIdx >= states[rowIdx]) { 
+      if (currentPos <= targetLeft + snapMargin) states[rowIdx] = beadIdx + 1;
+    }
+    else { 
+      if (currentPos >= targetRight - snapMargin) states[rowIdx] = beadIdx;
+    }
+    activeDrag = null; updateBeads(true);
+  });
+
+  function updateBeads(animate) {
+    document.querySelectorAll('.row').forEach((row, r) => {
+      row.querySelectorAll('.bead').forEach((b, i) => {
+        b.style.transition = animate ? 'left 0.3s cubic-bezier(0.25, 1, 0.5, 1)' : 'none'; 
+        b.style.left = (i < states[r]) ? (i * (BEAD_W + GAP)) + "px" : (FRAME_W - (10 - i) * (BEAD_W + GAP)) + "px";
+        
+        const labelEl = b.querySelector('.bead-label');
+        const fracEl = b.querySelector('.bead-fraction');
+        
+        if (labelMode === 1) { // 0,01
+            labelEl.style.display = 'block';
+            fracEl.style.display = 'none';
+        } else if (labelMode === 2) { // 1/100
+            labelEl.style.display = 'none';
+            fracEl.style.display = 'flex';
+        } else { // Rien
+            labelEl.style.display = 'none';
+            fracEl.style.display = 'none';
+        }
+      });
+    });
+    updateTotalDisplay();
+  }
+
+  function updateTotalDisplay() {
+    const totalCount = states.reduce((a, b) => a + b, 0);
+    
+    let valDecimal = totalCount / 100;
+    let strDecimal = valDecimal.toLocaleString(currentLang === 'fr' ? 'fr-FR' : 'en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+    let strFraction = getFractionString(totalCount);
+    
+    let parts = [];
+    if (showDecimal) parts.push(strDecimal);
+    if (showFraction) parts.push(strFraction);
+    
+    totalDiv.innerText = parts.join(" = ");
+  }
+
+  function getFractionString(n) {
+    if (n === 0) return "0";
+    if (n === 100) return "1";
+
+    let parts = [];
+
+    // 1. D'ABORD les Dixièmes si possible
+    if (n % 10 === 0) {
+        parts.push(`${n/10}/10`);
+    }
+
+    // 2. PUIS les Centièmes (toujours)
+    parts.push(`${n}/100`);
+
+    // 3. ENFIN la simplification spéciale (si différente des dixièmes)
+    let simp = null;
+    if (n === 50) simp = "1/2";
+    else if (n === 25) simp = "1/4";
+    else if (n === 75) simp = "3/4";
+    else if (n % 20 === 0) simp = `${n/20}/5`; 
+
+    if (simp) {
+        parts.push(simp);
+    }
+
+    return parts.join(" = ");
+  }
+
+  function toggleCache() { isCache = !isCache; cache.style.display = isCache ? 'block' : 'none'; document.getElementById('btn-cache').classList.toggle('active', isCache); }
+  
+  function startCacheDrag(e) { 
+    e.preventDefault(); 
+    cache.setPointerCapture(e.pointerId);
+    cache.onpointermove = (ev) => { 
+        const rect = frame.getBoundingClientRect(); 
+        let newW = (rect.right - 30 - ev.clientX) / currentScale; 
+        cache.style.width = Math.max(0, Math.min(FRAME_W, newW)) + "px"; 
+    };
+    cache.onpointerup = () => { cache.onpointermove = null; cache.releasePointerCapture(e.pointerId); };
+  }
+
+  function resizeCanvas() { 
+    if (window.innerWidth === 0 || window.innerHeight === 0) return;
+
+    let tempCanvas = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+        tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        try {
+            tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+        } catch (e) { tempCanvas = null; }
+    }
+
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+    ctx.lineCap = 'round'; 
+    
+    if (tempCanvas) {
+        try { ctx.drawImage(tempCanvas, 0, 0); } catch (e) {}
+    }
+  }
+  
+  let drawing = false, activeDrag = null;
+
+  const getPos = (e) => {
+    if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  const startDraw = (e) => {
+    if (!isPen) return;
+    drawing = true;
+    hasDrawing = true; 
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.strokeStyle = penCol;
+    ctx.lineWidth = window.innerWidth < 800 ? 2.5 : 4;
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const moveDraw = (e) => {
+    if (!drawing || !isPen) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('touchstart', (e) => { if(isPen) e.preventDefault(); startDraw(e); }, {passive: false});
+  canvas.addEventListener('touchmove', (e) => { if(isPen) e.preventDefault(); moveDraw(e); }, {passive: false});
+  canvas.addEventListener('touchend', () => drawing = false);
+
+  function allTo(n) { states.fill(n); updateBeads(true); }
+  
+  function toggleDecimal() {
+      showDecimal = !showDecimal;
+      btnDec.classList.toggle('active', showDecimal);
+      updateTotalDisplay();
+  }
+  
+  function toggleFraction() {
+      showFraction = !showFraction;
+      btnFrac.classList.toggle('active', showFraction);
+      updateTotalDisplay();
+  }
+
+  function toggleLabels() {
+      labelMode = (labelMode + 1) % 3;
+      btnLabel.classList.toggle('active', labelMode !== 0);
+      updateLabelButtonText();
+      updateBeads(false);
+  }
+
+  function updateLabelButtonText() {
+    const t = i18n[currentLang].labels;
+    btnLabel.innerText = t[labelMode];
+  }
+
+  function togglePen() { isPen = !isPen; canvas.classList.toggle('active', isPen); document.getElementById('btn-pen').classList.toggle('active', isPen); }
+  function setCol(c, el) { penCol = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+  function clearDraw() { 
+      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      hasDrawing = false; 
+  }
+  
+  function toggleLang() {
+    currentLang = (currentLang === 'fr') ? 'en' : 'fr';
+    updateLanguageUI();
+  }
+  
+  function toggleTheme() {
+    isLightMode = !isLightMode;
+    document.body.classList.toggle('light-mode', isLightMode);
+    document.getElementById('btn-theme').classList.toggle('active', isLightMode);
+    updateBeads(false); 
+  }
+
+  function updateLanguageUI() {
+    const t = i18n[currentLang];
+    document.getElementById('btn-lang').innerText = t.langLabel;
+    document.getElementById('btn-reset').innerText = t.btnReset;
+    document.getElementById('btn-cache').innerText = t.btnCache;
+    
+    btnDec.innerText = t.btnDec;
+    btnFrac.innerText = t.btnFrac;
+    updateLabelButtonText();
+    
+    document.getElementById('btn-theme').innerText = t.btnTheme;
+    const colBtn = document.getElementById('btn-color');
+    colBtn.textContent = isBlue ? t.btnColorWhite : t.btnColorBlue;
+    document.getElementById('btn-eraser').title = t.titleEraser;
+  }
+
+  function toggleColorMode() { 
+    isBlue = !isBlue; 
+    document.querySelectorAll('.bead.white').forEach(b => b.classList.toggle('blue-mode', isBlue));
+    const t = i18n[currentLang];
+    document.getElementById('btn-color').textContent = isBlue ? t.btnColorWhite : t.btnColorBlue;
+  }
+
+  window.addEventListener('resize', () => { setTimeout(autoScale, 100); });
+  
+  // === MOTEUR PHOTO ===
+  function exportImage() {
+    const scale = 3; 
+    const margin = hasDrawing ? 200 : 40;
+    
+    const rows = rowsCount;
+    const frameInternalW = 820;
+    const borderW = 30;
+    const rowH = 56;
+    const frameW = frameInternalW + borderW*2; 
+    const frameH = rows * rowH;
+    
+    const displayH = (showDecimal || showFraction) ? 80 : 0;
+    
+    const cvsW = frameW + margin*2;
+    const cvsH = displayH + frameH + margin*2;
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = cvsW * scale;
+    exportCanvas.height = cvsH * scale;
+    const exCtx = exportCanvas.getContext('2d');
+    exCtx.scale(scale, scale);
+
+    exCtx.fillStyle = isLightMode ? '#ffffff' : '#1a1a1a';
+    exCtx.fillRect(0, 0, cvsW, cvsH);
+
+    const startX = margin;
+    const startY = margin + displayH;
+
+    // Valeur
+    if (showDecimal || showFraction) {
+        exCtx.fillStyle = '#0f6cf9'; 
+        exCtx.font = "bold 58px sans-serif";
+        exCtx.textAlign = "center";
+        exCtx.textBaseline = "middle";
+        if (!isLightMode) {
+             exCtx.shadowColor = "black"; exCtx.shadowBlur = 6; exCtx.shadowOffsetY = 2;
+        } else {
+             exCtx.shadowColor = "rgba(0,0,0,0.2)"; exCtx.shadowBlur = 4; exCtx.shadowOffsetY = 1;
+        }
+        exCtx.fillText(totalDiv.innerText, cvsW/2, margin + 40);
+        exCtx.shadowColor = "transparent";
+    }
+
+    // Cadre
+    const woodColor = '#b08d57';
+    exCtx.fillStyle = woodColor;
+    exCtx.fillRect(startX, startY, borderW, frameH);
+    exCtx.fillRect(startX + frameW - borderW, startY, borderW, frameH);
+    
+    exCtx.fillStyle = "rgba(0,0,0,0.2)";
+    exCtx.fillRect(startX + borderW - 2, startY, 2, frameH);
+    exCtx.fillRect(startX + frameW - borderW, startY, 2, frameH);
+
+    const rodColor = isLightMode ? '#666' : '#888';
+    const rodYOffset = rowH / 2;
+    
+    for (let r = 0; r < rows; r++) {
+        const rowY = startY + r * rowH;
+        const rodY = rowY + rodYOffset;
+        exCtx.fillStyle = rodColor;
+        exCtx.fillRect(startX + borderW, rodY - 2, frameInternalW, 4);
+    }
+
+    // Perles
+    const beadSize = 38;
+    const cRed = ['#ff5f5f', '#aa0000']; 
+    const cWhite = isLightMode ? ['#ffffff', '#cccccc'] : ['#ffffff', '#bbbbbb'];
+    const cBlue = ['#2196f3', '#0d47a1'];
+    
+    for (let r = 0; r < rows; r++) {
+        const rowY = startY + r * rowH;
+        const countLeft = states[r];
+        
+        for (let b = 0; b < 10; b++) {
+            let isRedBead = (r < 5) ? (b < 5) : (b >= 5);
+            let palette = isRedBead ? cRed : (isBlue ? cBlue : cWhite);
+            let xPos;
+            if (b < countLeft) {
+                xPos = startX + borderW + b * beadSize;
+            } else {
+                xPos = startX + borderW + frameInternalW - (10 - b) * beadSize;
+            }
+            const yPos = rowY + (rowH - beadSize) / 2;
+            const forceStroke = (isLightMode && !isRedBead && !isBlue);
+            
+            drawRekenrekBead(exCtx, xPos, yPos, beadSize, palette[0], palette[1], forceStroke);
+
+            // Gestion de l'export des étiquettes
+            if (labelMode !== 0) {
+                const cx = xPos + beadSize/2;
+                const cy = yPos + beadSize/2;
+                
+                if (labelMode === 1) { 
+                    // Mode 1: 0,01 DEDANS (Centré)
+                    exCtx.fillStyle = (isRedBead || (isBlue && !isRedBead)) ? 'white' : 'black';
+                    exCtx.textAlign = 'center';
+                    exCtx.textBaseline = 'middle';
+                    exCtx.font = "bold 10px sans-serif";
+                    exCtx.fillText("0,01", cx, cy);
+
+                } else if (labelMode === 2) {
+                    // Mode 2: 1/100 DEDANS
+                    exCtx.fillStyle = (isRedBead || (isBlue && !isRedBead)) ? 'white' : 'black';
+                    exCtx.textAlign = 'center';
+                    exCtx.textBaseline = 'middle';
+                    
+                    exCtx.font = "bold 9px sans-serif";
+                    exCtx.fillText("1", cx, cy - 6);
+                    exCtx.fillRect(cx - 6, cy, 12, 1);
+                    exCtx.fillText("100", cx, cy + 8);
+                }
+            }
+        }
+    }
+    
+    // Cache
+    if (isCache) {
+        const domCacheW = parseFloat(cache.style.width) || 0;
+        const cacheX = (startX + borderW + frameInternalW) - domCacheW;
+        exCtx.fillStyle = isLightMode ? '#e0e0e0' : '#000000';
+        exCtx.fillRect(cacheX, startY, domCacheW, frameH);
+        exCtx.fillStyle = isLightMode ? '#999999' : '#444444';
+        exCtx.fillRect(cacheX, startY, 5, frameH);
+        
+        const handleY = startY + frameH / 2;
+        const handleX = cacheX; 
+        exCtx.beginPath();
+        exCtx.arc(handleX, handleY, 22, 0, Math.PI * 2);
+        exCtx.fillStyle = isLightMode ? '#666666' : '#444444';
+        exCtx.fill();
+        exCtx.fillStyle = '#ffffff';
+        exCtx.font = "bold 20px sans-serif";
+        exCtx.textAlign = "center";
+        exCtx.textBaseline = "middle";
+        exCtx.fillText("↔", handleX, handleY);
+    }
+
+    if(hasDrawing) {
+        const frameRect = frame.getBoundingClientRect(); 
+        if(frameRect.width > 0 && canvas.width > 0 && canvas.height > 0) {
+            const ratio = frameW / frameRect.width; 
+            exCtx.save();
+            exCtx.translate(startX, startY);
+            exCtx.scale(ratio, ratio);
+            exCtx.translate(-frameRect.left, -frameRect.top);
+            try { exCtx.drawImage(canvas, 0, 0); } catch(e) {}
+            exCtx.restore();
+        }
+    }
+
+    const link = document.createElement('a');
+    link.download = `rekenrek_canari_export.png`;
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+  }
+
+  function drawRekenrekBead(ctx, x, y, size, colorLight, colorDark, forceStroke) {
+      const cx = x + size/2;
+      const cy = y + size/2;
+      const r = size/2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      const grad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, r*0.1, cx, cy, r);
+      grad.addColorStop(0, colorLight);
+      grad.addColorStop(1, colorDark);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = forceStroke ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)";
+      ctx.lineWidth = forceStroke ? 1.5 : 1;
+      ctx.stroke();
+  }
+
+  init();
+</script>
+</body>
+</html>
