@@ -142,7 +142,7 @@
       flex:1;
       display:flex;
       align-items:center;
-      justify-content:flex-start; /* collé à gauche */
+      justify-content:center;
       border-bottom:none;
       margin-bottom:2px;
       padding:2px;
@@ -731,74 +731,141 @@ function renderPages(sizeSelect){
   }
 }
 
-/* --- REKENREK SVG : repris tel quel (avec gris sur les 5 premières billes en mode coloriage 0-10 / 0-20) --- */
+/* --- REKENREK SVG --- */
 function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
-  let W = 140;
-  let H, rows, r, spacingY, startY;
-
+  // CONFIGURATION DES DIMENSIONS
+  // On calcule W dynamiquement pour qu'il contienne EXACTEMENT 20 emplacements de billes.
+  // 20 * d + 2 * frameW
+  let r, spacingY, startY, d;
+  let frameW = 8;
+  
   let layoutType = 100;
   if (maxValSetting <= 10) layoutType = 10;
   else if (maxValSetting <= 20) layoutType = 20;
 
+  let H, rows;
+  
   if (layoutType === 100) {
       H = 160;
       rows = 10;
-      r = 4;
-      spacingY = 12;
-      startY = 20;
+      r = 5;
+      d = 10.5; // Diamètre 10 + 0.5 marge
+      spacingY = 14;
+      startY = 18;
   } else if (layoutType === 20) {
-      H = 60;
+      H = 70;
       rows = 2;
-      r = 5.5;
-      spacingY = 20;
+      r = 6;
+      d = 12.5; // Diamètre 12 + 0.5 marge
+      spacingY = 30;
       startY = 20;
   } else {
-      H = 40;
+      H = 50;
       rows = 1;
-      r = 5.5;
+      r = 6;
+      d = 12.5;
       spacingY = 0;
-      startY = 20;
+      startY = 25;
   }
+
+  // Largeur EXACTE : 2 montants + 20 emplacements de billes
+  let W = (frameW * 2) + (20 * d);
+
+  // Définition des couleurs
+  const colRed = '#dc2626';
+  const colBlue = (theme === 'blue') ? '#2563eb' : '#ffffff';
+  
+  // Mode "À colorier" (exercice) : Billes neutres
+  const colGhost1 = '#e5e7eb'; // Gris clair pour 0-4
+  const colGhost2 = '#ffffff'; // Blanc pour 5-9
+
+  // Montants marron
+  const colWood = '#8B4513';
 
   let svg = `<svg class="rr-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
 
+  // Helper: Retourne la position X du centre d'un slot (0 à 19)
+  const getSlotX = (slotIndex) => {
+    return frameW + (d / 2) + (slotIndex * d);
+  };
+
   const drawLine = (y, valOnLine, hiddenMode, rowId) => {
       let str = "";
-      str += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#9ca3af" stroke-width="1.5" />`;
 
-      const d_active = (layoutType === 100) ? 8.2 : 11.2;
-      const d_tight = (layoutType === 100) ? 7.8 : 10.8;
-      let startX = 15;
-
-      const inverted = (layoutType === 100 && rowId >= 5);
-
-      if (hiddenMode) {
-          let cx = startX;
-          for(let i=0; i<10; i++) {
-              let fill;
-              if (layoutType === 100) {
-                  if (inverted) fill = (i < 5) ? 'white' : '#e5e7eb';
-                  else fill = (i < 5) ? '#e5e7eb' : 'white';
-              } else {
-                  fill = (i < 5) ? '#e5e7eb' : 'white';
-              }
-              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
-              cx += d_tight;
-          }
+      // Si c'est le mode "Visible" (Indice), on dessine le cadre marron
+      if (!hiddenMode) {
+          // Tige
+          str += `<line x1="${frameW}" y1="${y}" x2="${W-frameW}" y2="${y}" stroke="#9ca3af" stroke-width="2" />`;
+          // Montant Gauche
+          str += `<rect x="0" y="${y-12}" width="${frameW}" height="24" fill="${colWood}" rx="2" />`;
+          // Montant Droit
+          str += `<rect x="${W-frameW}" y="${y-12}" width="${frameW}" height="24" fill="${colWood}" rx="2" />`;
       } else {
-          let cx = startX;
+          // Tige simple sans cadre pour l'exercice
+          str += `<line x1="2" y1="${y}" x2="${W-2}" y2="${y}" stroke="#9ca3af" stroke-width="2" />`;
+      }
+
+      let inverted = (layoutType === 100 && rowId >= 5); // Inversion couleurs lignes 6-10
+
+      if (!hiddenMode) {
+          // -- MODE INDICE (Vrai boulier split) --
+          // Les billes actives (0 à val-1) prennent les slots de GAUCHE (0, 1, ..., val-1)
+          // Les billes inactives (val à 9) prennent les slots de DROITE (20-(10-val), ..., 19)
+          // Ex: val=3 (3 actives, 7 inactives).
+          // Actives: slots 0, 1, 2.
+          // Inactives (7 billes) : slots 13, 14, 15, 16, 17, 18, 19.
+          // Gap: slots 3 à 12 (10 slots vides).
+
+          // 1. Billes Actives (à gauche)
           for(let i=0; i<valOnLine; i++) {
-             let isFirstFive = (i < 5);
-             let colMain = '#dc2626';
-             let colSec = (theme === 'blue') ? '#2563eb' : '#f8fafc';
+              let slot = i;
+              let cx = getSlotX(slot);
+              
+              let isFirstFive = (i < 5);
+              let fill;
+              if(inverted) fill = isFirstFive ? colBlue : colRed;
+              else fill = isFirstFive ? colRed : colBlue;
 
-             let fill;
-             if (layoutType === 100 && inverted) fill = isFirstFive ? colSec : colMain;
-             else fill = isFirstFive ? colMain : colSec;
+              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
+          }
 
-             let stroke = (fill === '#f8fafc' || fill === '#ffffff' || fill === 'white') ? '#333' : 'none';
-             str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1" />`;
-             cx += d_active;
+          // 2. Billes Inactives (à droite)
+          // Nombre de billes inactives = 10 - valOnLine
+          // Elles commencent au slot : 20 - (nombre_inactives) = 10 + valOnLine
+          let startSlotInactive = 10 + valOnLine;
+          
+          for(let i=valOnLine; i<10; i++) {
+              // i est l'index de la bille (de 0 à 9).
+              // Mais ici on boucle seulement sur les inactives.
+              // La position relative dans le groupe inactif est (i - valOnLine)
+              let relativeIndex = i - valOnLine;
+              let slot = startSlotInactive + relativeIndex;
+              let cx = getSlotX(slot);
+
+              let isFirstFive = (i < 5);
+              let fill;
+              if(inverted) fill = isFirstFive ? colBlue : colRed;
+              else fill = isFirstFive ? colRed : colBlue;
+
+              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
+          }
+
+      } else {
+          // -- MODE EXERCICE (À colorier) --
+          // On affiche 10 billes fantômes centrées sur les 20 slots.
+          // Centrer 10 billes sur 20 slots => slots 5 à 14.
+          let startSlot = 5;
+
+          for(let i=0; i<10; i++) {
+              let slot = startSlot + i;
+              let cx = getSlotX(slot);
+
+              let isFirstFive = (i < 5);
+              let fill;
+              if(inverted) fill = isFirstFive ? colGhost2 : colGhost1;
+              else fill = isFirstFive ? colGhost1 : colGhost2;
+
+              str += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${fill}" stroke="#333" stroke-width="1" />`;
           }
       }
       return str;
@@ -812,16 +879,11 @@ function getRekenrekSvg(n, isVisible, theme, maxValSetting) {
       } else {
           let fullRows = Math.floor(n / 10);
           let remainder = n % 10;
-
           let valOnThisRow = 0;
           if (row < fullRows) valOnThisRow = 10;
           else if (row === fullRows) valOnThisRow = remainder;
-
-          if(valOnThisRow > 0) {
-              svg += drawLine(y, valOnThisRow, false, row);
-          } else {
-              svg += `<line x1="5" y1="${y}" x2="${W-5}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
-          }
+          
+          svg += drawLine(y, valOnThisRow, false, row);
       }
   }
 
