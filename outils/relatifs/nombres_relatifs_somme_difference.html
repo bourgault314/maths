@@ -1141,22 +1141,101 @@
             });
 
             // 2. Ensuite, on cherche les NOUVELLES paires parmi les célibataires
-            // TRI GÉOGRAPHIQUE : On trie par X (puis Y) pour que ce soit ceux à gauche qui partent en premier
-            // ou ceux les plus proches qui soient pris. Cela évite de prendre un jeton tout au fond.
+            // Objectif :
+            // - après ALIGNER, annuler "en face" (même colonne) même si les rangées ne font pas la même longueur
+            //   (ex: 5 verts / 3 rouges -> on annule les 3 verts de droite avec les 3 rouges de droite)
+            // - sinon, annuler l'opposé le plus proche (en privilégiant fortement l'écart en X)
             const activeGreens = state.tokens
-                .filter(t => t.type === 'green' && t.pairId === null)
-                .sort((a,b) => (a.x - b.x) || (a.y - b.y));
-            
+                .filter(t => t.type === 'green' && t.pairId === null);
+
             const activeReds = state.tokens
-                .filter(t => t.type === 'red' && t.pairId === null)
-                .sort((a,b) => (a.x - b.x) || (a.y - b.y));
-            
+                .filter(t => t.type === 'red' && t.pairId === null);
+
             const newPairs = [];
-            const count = Math.min(activeGreens.length, activeReds.length);
-            for(let i=0; i<count; i++) {
-                newPairs.push([activeGreens[i], activeReds[i]]);
+            const remainingReds = activeReds.slice();
+
+            // --- Déterminer si c'est plutôt aligné à droite ou à gauche (pour éviter les diagonales) ---
+            let orderDesc = false;
+            if (activeGreens.length && activeReds.length) {
+                const gMin = Math.min(...activeGreens.map(t => t.x));
+                const gMax = Math.max(...activeGreens.map(t => t.x));
+                const rMin = Math.min(...activeReds.map(t => t.x));
+                const rMax = Math.max(...activeReds.map(t => t.x));
+                const leftDiff = Math.abs(gMin - rMin);
+                const rightDiff = Math.abs(gMax - rMax);
+                orderDesc = rightDiff < leftDiff; // plutôt aligné à droite
             }
 
+            // --- Pass 1 : annuler "en face" (même colonne) ---
+            const FACE_EPS = 8; // tolérance en pixels pour considérer "même colonne"
+            const greensUnpaired = [];
+
+            const greensOrdered = activeGreens
+                .slice()
+                .sort((a,b) => (a.y - b.y) || ((orderDesc ? b.x - a.x : a.x - b.x)) || (a.id - b.id));
+
+            for (const g of greensOrdered) {
+                let bestIdx = -1;
+                let bestDx = Infinity;
+                let bestDy = Infinity;
+
+                for (let i = 0; i < remainingReds.length; i++) {
+                    const r = remainingReds[i];
+                    const dx = Math.abs(g.x - r.x);
+                    if (dx > FACE_EPS) continue; // pas "en face"
+                    const dy = Math.abs(g.y - r.y);
+
+                    // on privilégie d'abord dx (colonne), puis dy
+                    if (dx < bestDx || (dx === bestDx && dy < bestDy)) {
+                        bestIdx = i;
+                        bestDx = dx;
+                        bestDy = dy;
+                    }
+                }
+
+                if (bestIdx >= 0) {
+                    const r = remainingReds.splice(bestIdx, 1)[0];
+                    newPairs.push([g, r]);
+                } else {
+                    greensUnpaired.push(g);
+                }
+            }
+
+            // --- Pass 2 : fallback = l'opposé le plus proche ---
+            const X_WEIGHT = 3; // plus c'est grand, plus on privilégie l'alignement vertical (même X)
+
+            const remainingGreens = greensUnpaired
+                .slice()
+                .sort((a,b) => (a.y - b.y) || ((orderDesc ? b.x - a.x : a.x - b.x)) || (a.id - b.id));
+
+            for (const g of remainingGreens) {
+                if (remainingReds.length === 0) break;
+
+                let bestIdx = 0;
+                let bestCost = Infinity;
+                let bestDx = Infinity;
+                let bestDy = Infinity;
+
+                for (let i = 0; i < remainingReds.length; i++) {
+                    const r = remainingReds[i];
+                    const dx = Math.abs(g.x - r.x);
+                    const dy = Math.abs(g.y - r.y);
+                    const cost = (dx * X_WEIGHT) + dy;
+
+                    if (
+                        cost < bestCost ||
+                        (cost === bestCost && (dx < bestDx || (dx === bestDx && dy < bestDy)))
+                    ) {
+                        bestCost = cost;
+                        bestIdx = i;
+                        bestDx = dx;
+                        bestDy = dy;
+                    }
+                }
+
+                const r = remainingReds.splice(bestIdx, 1)[0];
+                newPairs.push([g, r]);
+            }
             if (existingPairs.length === 0 && newPairs.length === 0) return;
 
             state.locked = true;
