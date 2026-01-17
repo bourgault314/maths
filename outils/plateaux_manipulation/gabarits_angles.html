@@ -2,152 +2,1354 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page en construction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gabarit d'Angle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #f8fafc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #1e293b;
-            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f4f8;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
         }
 
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 90%;
-            width: 400px;
-            border: 2px solid #f1f5f9;
+        .tool-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .tool-btn:active { transform: scale(0.9); }
+        .tool-btn.active {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* L'Emoji animé */
-        .icon {
-            font-size: 5rem;
-            display: inline-block;
-            margin-bottom: 1rem;
+        #layer-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            background-color: #fdfbf7;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        #geometry-tools-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .geo-tool {
+            pointer-events: auto;
+            position: absolute;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            touch-action: none;
+        }
+
+        .geo-handle {
+            background-color: white;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            z-index: 50;
             cursor: pointer;
-            /* Animation douce par défaut */
-            animation: float 3s ease-in-out infinite;
-        }
-
-        /* Titre */
-        h1 {
-            color: #b45309; /* Couleur brique/orange */
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-
-        /* Le texte rigolo */
-        #message {
-            margin: 1.5rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #64748b;
-            min-height: 3.5rem; /* Pour éviter que ça saute selon la longueur du texte */
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 9999px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            user-select: none;
+        }
+        .geo-handle:hover { border-color: #3b82f6; color: #3b82f6; }
+
+        .hide-cursor, .hide-cursor * { cursor: none !important; }
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            transform-origin: top left;
         }
 
-        /* Bouton Retour */
-        .btn-back {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
+        .template-dragger { cursor: grab; transition: transform 0.2s; }
+        .template-dragger:active { transform: scale(1.08); cursor: grabbing; }
 
-        .btn-back:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(59, 130, 246, 0.3);
-        }
 
-        /* --- ANIMATIONS --- */
-        
-        /* Flottement doux */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* Secousse (si on clique sur l'icone) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shaking {
-            animation: shake 0.5s;
-        }
+        /* Mode tablette (auto: pointeur grossier ou écran étroit) */
+        body.tablet-mode .tool-btn { padding: 0.75rem; }
+        body.tablet-mode aside { width: 7rem; }
+        body.tablet-mode .geo-handle.rotate-handle { transform: scale(1.1); }
+        body.tablet-mode .geo-handle.resize-handle { transform: scale(1.1); }
     </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col overflow-hidden text-slate-700">
 
-    <div class="container">
-        <div class="icon" onclick="shakeMe(this)">🚧</div>
-        
-        <h1>Oups ! Pas fini...</h1>
-        
-        <p id="message">Chargement de l'excuse...</p>
+    <input type="file" id="bg-uploader" accept="image/*,.pdf" class="hidden">
 
-        <a href="javascript:history.back()" class="btn-back">
-            Retour en arrière
-        </a>
+    <!-- CURSEUR (Crayon) -->
+    <div id="custom-cursor" style="--pen-color:#111827">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+            <!-- corps du crayon -->
+            <path d="M28 6 L12 22" stroke="var(--pen-color)" stroke-width="6" stroke-linecap="round"/>
+            <!-- bague -->
+            <path d="M22.5 11.5 L17.5 16.5" stroke="#0f172a" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+            <!-- mine -->
+            <path d="M12 22 L6 28" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <!-- pointe -->
+            <path d="M6 28 L9 29 L7 32 Z" fill="#0f172a"/>
+        </svg>
     </div>
 
-    <script>
-        // Liste des messages rigolos
-        const phrases = [
-            "Le développeur est parti chercher du café... Il revient (peut-être).",
-            "C'est en chantier ! Attention aux chutes de pixels.",
-            "J'ai perdu la clé de 12 pour finir cette page.",
-            "Patience, c'est comme les maths, ça prend du temps à construire.",
-            "Les lutins du code sont en grève. Repassez plus tard !",
-            "Page en cours de téléchargement cérébral...",
-            "404 ? Non, juste 'Pas encore prêt' !"
-        ];
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm z-50 flex items-center justify-between p-2 shrink-0 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-extrabold text-slate-800 ml-2">Gabarit d'angle</h1>
+            <button onclick="document.getElementById('bg-uploader').click()" class="tool-btn text-slate-500 hover:bg-slate-50 p-2 rounded-xl border border-slate-200" title="Importer Image ou PDF">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </button>
+            <button onclick="resetApp()" class="tool-btn bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-xl border border-rose-100" title="Effacer tout">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+        </div>
 
-        // Choisir une phrase au hasard au chargement
-        const texteElement = document.getElementById('message');
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        texteElement.innerText = randomPhrase;
+        <div class="flex items-center gap-2">
+            <!-- Rapporteur & Equerre -->
+            <button id="btn-protractor" onclick="toggleTool('protractor')" class="tool-btn bg-indigo-50 text-indigo-600 p-2 rounded-xl border border-indigo-100" title="Rapporteur">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20H3C3 15 7 11 12 11s9 4 9 9h-9Z"/></svg>
+            </button>
+            <button id="btn-setsquare" onclick="toggleTool('setsquare')" class="tool-btn bg-amber-50 text-amber-600 p-2 rounded-xl border border-amber-100" title="Équerre">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V4l16 16H4Z"/></svg>
+            </button>
+            <button id="btn-ruler" onclick="toggleTool('ruler')" class="tool-btn bg-slate-50 text-slate-700 p-2 rounded-xl border border-slate-200" title="Règle (angle plat)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7h18v10H3z"/>
+                    <path d="M5 12h14"/>
+                </svg>
+            </button>
 
-        // Fonction pour secouer l'icone au clic
-        function shakeMe(element) {
-            element.classList.remove('shaking'); // Reset
-            void element.offsetWidth; // Force le reflow
-            element.classList.add('shaking'); // Re-lance
+            <div class="w-px h-8 bg-slate-200 mx-2"></div>
+
+            <!-- Outils Dessin -->
+            <div class="bg-slate-100 rounded-xl p-1 flex gap-1 border border-slate-200">
+                <button id="tool-hand" onclick="setMode('hand')" class="tool-btn mode-btn active p-2 rounded-lg" title="Déplacer / manipuler">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+                </button>
+                <button id="tool-pen" onclick="setMode('pen')" class="tool-btn mode-btn p-2 rounded-lg text-slate-900" title="Stylo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/><path d="M15 5l4 4"/></svg>
+                </button>
+                <button id="tool-angle" onclick="setMode('angle')" class="tool-btn mode-btn p-2 rounded-lg" title="Tracer un angle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 20h16"/>
+                        <path d="M4 20L16 8"/>
+                        <path d="M7 20a5 5 0 0 1 3-3"/>
+                    </svg>
+                </button>
+                <div class="flex items-center gap-1 ml-1" title="Couleur du stylo">
+                    <button id="pen-color-black" class="tool-btn pen-color-btn active w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center" title="Noir">
+                        <span class="w-4 h-4 rounded-full bg-slate-900"></span>
+                    </button>
+                    <button id="pen-color-red" class="tool-btn pen-color-btn w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center" title="Rouge">
+                        <span class="w-4 h-4 rounded-full bg-red-500"></span>
+                    </button>
+                </div>
+
+</div>
+
             
-            // Changer le texte aussi quand on clique, pour le fun
-            const newPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            texteElement.innerText = newPhrase;
-        }
-    </script>
 
+            <div id="angle-controls" class="hidden flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-2 py-1" title="Tracer un angle">
+                <span id="angle-instructions" class="text-xs font-bold text-slate-600">Angle : clique un point sur le 1er côté, puis le sommet.</span>
+            </div>
+<button onclick="clearDrawings()" class="tool-btn p-2 rounded-xl text-slate-400 hover:text-rose-600" title="Effacer traits">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside class="w-28 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-6 shrink-0 shadow-lg overflow-y-auto">
+            <div class="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Angles</div>
+
+            <div class="template-dragger" data-angle="90" data-stroke="#ef4444" data-fill="#fee2e2" title="90°">
+                <svg width="58" height="58" viewBox="0 0 100 100">
+                    <path d="M10 90 L90 90 A 80 80 0 0 0 10 10 Z" fill="#fee2e2" stroke="#ef4444" stroke-width="3"/>
+                    <rect x="10" y="72" width="18" height="18" fill="none" stroke="#ef4444" stroke-width="3"/>
+                    <text x="50" y="60" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#991b1b">90°</text>
+                </svg>
+            </div>
+
+            <div class="template-dragger" data-angle="60" data-stroke="#f59e0b" data-fill="#fef3c7" title="60°">
+                <svg width="58" height="58" viewBox="0 0 100 100">
+                    <path d="M10 90 L90 90 A 80 80 0 0 0 50 20 Z" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+                    <path d="M36 90 A26 26 0 0 0 23 68" fill="none" stroke="#b45309" stroke-width="3" stroke-linecap="round"/>
+                    <text x="54" y="66" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#92400e">60°</text>
+                </svg>
+            </div>
+
+            <div class="template-dragger" data-angle="45" data-stroke="#10b981" data-fill="#d1fae5" title="45°">
+                <svg width="58" height="58" viewBox="0 0 100 100">
+                    <path d="M10 90 L90 90 A 80 80 0 0 0 66 33 Z" fill="#d1fae5" stroke="#10b981" stroke-width="3"/>
+                    <path d="M36 90 A26 26 0 0 0 28 72" fill="none" stroke="#047857" stroke-width="3" stroke-linecap="round"/>
+                    <text x="56" y="70" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#065f46">45°</text>
+                </svg>
+            </div>
+
+            <div class="template-dragger" data-angle="30" data-stroke="#3b82f6" data-fill="#dbeafe" title="30°">
+                <svg width="58" height="58" viewBox="0 0 100 100">
+                    <path d="M10 90 L90 90 A 80 80 0 0 0 80 50 Z" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>
+                    <path d="M36 90 A26 26 0 0 0 33 77" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+                    <text x="58" y="82" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#1e3a8a">30°</text>
+                </svg>
+            </div>
+
+            <div class="template-dragger" data-angle="15" data-stroke="#8b5cf6" data-fill="#ede9fe" title="15°">
+                <svg width="58" height="58" viewBox="0 0 100 100">
+                    <path d="M10 90 L90 90 A 80 80 0 0 0 87 69 Z" fill="#ede9fe" stroke="#8b5cf6" stroke-width="3"/>
+                    <path d="M36 90 A26 26 0 0 0 35 83" fill="none" stroke="#6d28d9" stroke-width="3" stroke-linecap="round"/>
+                    <text x="62" y="58" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="800" fill="#4c1d95">15°</text>
+                </svg>
+            </div>
+        </aside>
+
+        <!-- PLATEAU -->
+        <main id="layer-container">
+            <div id="bg-layer" class="absolute inset-0 pointer-events-none opacity-60 bg-center bg-no-repeat bg-contain"></div>
+            <canvas id="drawing-canvas"></canvas>
+            <canvas id="templates-canvas"></canvas>
+            <div id="geometry-tools-layer"></div>
+        </main>
+    </div>
+
+	<!-- Modale de saisie pour l'outil Angle -->
+	<div id="angle-modal" class="fixed inset-0 hidden z-50 bg-black/30 items-center justify-center">
+	    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
+	        <div class="text-sm font-extrabold text-slate-800">Mesure de l’angle</div>
+	        <div class="text-xs text-slate-500 mt-1">Entre 1 et 179.</div>
+	        <div class="flex items-center gap-2 mt-3">
+	            <input id="angle-modal-input" type="number" min="1" max="179" step="1" class="w-24 text-lg font-extrabold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+	            <span class="text-lg font-extrabold text-slate-600">°</span>
+	        </div>
+	        <div class="flex gap-2 justify-end mt-4">
+	            <button id="angle-modal-cancel" class="tool-btn px-3 py-2 rounded-xl border border-slate-200 text-slate-600 bg-white hover:bg-slate-50">Annuler</button>
+	            <button id="angle-modal-ok" class="tool-btn px-3 py-2 rounded-xl border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-bold">Tracer</button>
+	        </div>
+	    </div>
+	</div>
+
+    <script>
+        const canvasT = document.getElementById('templates-canvas');
+        const ctxT = canvasT.getContext('2d');
+        const canvasD = document.getElementById('drawing-canvas');
+        const ctxD = canvasD.getContext('2d');
+        const container = document.getElementById('layer-container');
+        const toolsLayer = document.getElementById('geometry-tools-layer');
+        const bgLayer = document.getElementById('bg-layer');
+        const bgUploader = document.getElementById('bg-uploader');
+        const cursorDiv = document.getElementById('custom-cursor');
+
+        const TAU = Math.PI * 2;
+        const BASE_LEN = 220;
+        const SNAP_DIST = 30;
+        const SNAP_ANG = 0.12;
+
+
+        // Règle : positions des bords (local, dans le SVG 360x70)
+        const RULER_EDGE_TOP_Y = 16;
+        const RULER_EDGE_BOTTOM_Y = 54;
+
+        function toolLocalToWorld(tool, lx, ly) {
+            const dx = (lx - tool.pivot.x) * tool.scale;
+            const dy = (ly - tool.pivot.y) * tool.scale;
+            const c = Math.cos(tool.rot), s = Math.sin(tool.rot);
+            const rx = dx * c - dy * s;
+            const ry = dx * s + dy * c;
+            return { x: tool.x + tool.pivot.x + rx, y: tool.y + tool.pivot.y + ry };
+        }
+
+        function nearestTemplateSegmentForRuler(tool, th) {
+            const ptTop = toolLocalToWorld(tool, tool.pivot.x, RULER_EDGE_TOP_Y);
+            const ptBot = toolLocalToWorld(tool, tool.pivot.x, RULER_EDGE_BOTTOM_Y);
+            const bestTop = nearestTemplateSegment(ptTop, th);
+            const bestBot = nearestTemplateSegment(ptBot, th);
+            if (!bestTop && !bestBot) return null;
+            if (bestTop && (!bestBot || bestTop.d <= bestBot.d)) return { ...bestTop, edge: 'top' };
+            return { ...bestBot, edge: 'bottom' };
+        }
+
+        function rulerEdgeWorldPoint(tool, edge) {
+            const y = (edge === 'top') ? RULER_EDGE_TOP_Y : RULER_EDGE_BOTTOM_Y;
+            return toolLocalToWorld(tool, tool.pivot.x, y);
+        }
+
+        // Icône de rotation (identique à celle du rapporteur) pour les gabarits
+        const rotateIconSVG = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='#0f172a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8'/><path d='M21 3v5h-5'/></svg>`;
+        const rotateIconImg = new Image();
+        rotateIconImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(rotateIconSVG);
+
+
+        let state = {
+            mode: 'hand',
+            templates: [],
+            dragTarget: null,
+            dragOffset: { x: 0, y: 0 },
+            activePointerId: null,
+            penHover: null,
+            penColor: '#111827',
+	            // Tracer un angle : 2 clics (point sur le 1er côté -> sommet), puis saisie de la mesure
+	            angleMeasure: 60,          // dernière mesure utilisée
+	            angleP1: null,             // premier point (sur le 1er côté)
+	            angleMouse: null,          // position souris (feedback léger)
+	            anglePrompt: null,         // { p1, v } en attente de saisie
+	            anglePromptOpen: false,
+
+            isDrawing: false,
+            lastPenPos: null,
+
+            // aide écriture au stylo
+            penPendingSeg: null,
+            penDownPos: null,
+            penStrokeStarted: false,
+            penLastMid: null,
+            penDownTime: 0,
+
+
+
+            view: { w: 0, h: 0, dpr: 1 },
+
+            tools: {
+                protractor: { visible: false, x: 200, y: 200, rot: 0, scale: 1.5, gradMode: 0, direction: 0, showNumbers: true, pivot: {x: 120, y: 120} },
+                setsquare: { visible: false, x: 400, y: 200, rot: 0, scale: 1.2, pivot: {x: 20, y: 220} },
+                ruler: { visible: false, x: 320, y: 360, rot: 0, scale: 1.1, pivot: {x: 180, y: 35} }
+            }
+        };
+
+        window.onload = () => {
+            resize();
+            initTools();
+            initSidebarDrag();
+            initPenColorUI();
+            initAngleUI();
+            applyTabletMode();
+
+requestAnimationFrame(renderLoop);
+        };
+        window.onresize = () => { resize(); applyTabletMode(); };
+
+        function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+        function normRad(a) { a = a % TAU; if (a < 0) a += TAU; return a; }
+        function ccwDist(start, ang) { return normRad(start - ang); } // angles positifs = rotation horaire
+
+        function getPosFromClient(clientX, clientY) {
+            const rect = container.getBoundingClientRect();
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+        function getPos(e) { return getPosFromClient(e.clientX, e.clientY); }
+
+        function resize() {
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            state.view = { w: rect.width, h: rect.height, dpr };
+
+            canvasT.width = Math.round(rect.width * dpr);
+            canvasT.height = Math.round(rect.height * dpr);
+            canvasD.width = Math.round(rect.width * dpr);
+            canvasD.height = Math.round(rect.height * dpr);
+
+            ctxT.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctxD.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        // --- GESTION GABARITS ---
+        function createTemplate(angle, stroke, fill, x, y) {
+            return {
+                id: Math.random(),
+                x,
+                y,
+                angle,
+                stroke,
+                fill,
+                rot: 0,
+                scale: 1,
+                isSelected: true,
+                // vrai drag depuis le menu : on autorise des coordonnées hors-plateau pendant le déplacement
+                freeDrag: false
+            };
+        }
+        function spawnTemplateAt(angle, stroke, fill, x, y, startDrag, pointerId) {
+            // Drag depuis le menu : ne PAS clamper ici, sinon le gabarit saute en haut/gauche.
+            const newT = createTemplate(angle, stroke, fill, x, y);
+            newT.freeDrag = !!startDrag;
+            state.templates.forEach(t => t.isSelected = false);
+            state.templates.push(newT);
+
+            if (startDrag) {
+                state.dragTarget = { type: 'temp', ref: newT, part: 'body' };
+                state.dragOffset = { x: 0, y: 0 }; // le sommet suit le curseur
+                state.activePointerId = pointerId ?? null;
+            }
+        }
+
+        function initSidebarDrag() {
+            document.querySelectorAll('.template-dragger').forEach(el => {
+                el.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const angle = parseInt(el.dataset.angle, 10);
+                    const stroke = el.dataset.stroke;
+                    const fill = el.dataset.fill;
+                    const pos = getPosFromClient(e.clientX, e.clientY);
+                    spawnTemplateAt(angle, stroke, fill, pos.x, pos.y, true, e.pointerId);
+                });
+            });
+        }
+
+        function getGeom(t) {
+            const len = BASE_LEN * t.scale;
+            const ang = t.angle * Math.PI / 180;
+            const S = { x: t.x, y: t.y };
+            const E1 = { x: t.x + len * Math.cos(t.rot), y: t.y + len * Math.sin(t.rot) };
+            const E2 = { x: t.x + len * Math.cos(t.rot - ang), y: t.y + len * Math.sin(t.rot - ang) };
+            const mid = t.rot - (ang / 2);
+            const Pivot = { x: t.x + (len * 1.07) * Math.cos(mid), y: t.y + (len * 1.07) * Math.sin(mid) };
+            return { S, E1, E2, Pivot, len, ang };
+        }
+
+        function isPointInPie(px, py, t) {
+            const g = getGeom(t);
+            const dx = px - t.x, dy = py - t.y;
+            if (Math.hypot(dx, dy) > g.len) return false;
+            const a = normRad(Math.atan2(dy, dx));
+            const start = normRad(t.rot);
+            const end = normRad(t.rot - g.ang);
+            const arcLen = ccwDist(start, end);
+            const ptLen = ccwDist(start, a);
+            return ptLen <= arcLen;
+        }
+
+        function nearestTemplateSnap(mx, my, th) {
+            let best = null;
+            for (const t of state.templates) {
+                const g = getGeom(t);
+                const candidates = [
+                    { kind: 'pt', p: g.S },
+                    { kind: 'pt', p: g.E1 },
+                    { kind: 'pt', p: g.E2 },
+                ];
+                for (const c of candidates) {
+                    const d = Math.hypot(mx - c.p.x, my - c.p.y);
+                    if (d < th && (!best || d < best.d)) best = { type: 'point', p: c.p, d };
+                }
+
+                const s1 = snapToSeg({x:mx,y:my}, g.S, g.E1, th);
+                if (s1) {
+                    const d = Math.hypot(mx - s1.x, my - s1.y);
+                    if (!best || d < best.d) best = { type: 'seg', p: s1, d, a: g.S, b: g.E1 };
+                }
+                const s2 = snapToSeg({x:mx,y:my}, g.S, g.E2, th);
+                if (s2) {
+                    const d = Math.hypot(mx - s2.x, my - s2.y);
+                    if (!best || d < best.d) best = { type: 'seg', p: s2, d, a: g.S, b: g.E2 };
+                }
+            }
+            return best;
+        }
+
+        // --- OUTILS GÉOMÉTRIQUES ---
+        function initTools() {
+            createToolElement('protractor');
+            createToolElement('setsquare');
+            createToolElement('ruler');
+        }
+
+        function createToolElement(key) {
+            const tool = state.tools[key];
+            const el = document.createElement('div');
+            el.id = `tool-${key}`;
+            el.className = 'geo-tool hidden absolute';
+            el.style.width = key === 'ruler' ? '360px' : (key === 'protractor' ? '240px' : '240px');
+            el.style.height = key === 'ruler' ? '70px' : (key === 'protractor' ? '140px' : '240px');
+            el.innerHTML = getToolSVG(key);
+            setupToolEvents(el, key);
+            toolsLayer.appendChild(el);
+        }
+
+        function getToolSVG(key) {
+            if (key === 'protractor') {
+                const p = state.tools.protractor;
+                let marks = "";
+                for (let i = 0; i <= 180; i++) {
+                    if (p.gradMode === 0 && i % 10 !== 0) continue;
+                    if (p.gradMode === 1 && i % 5 !== 0) continue;
+
+                    const ang = Math.PI - (i * Math.PI / 180);
+                    const cos = Math.cos(ang), sin = Math.sin(ang);
+
+                    let x1 = 120 + 100 * cos;
+                    let y1 = 120 - 100 * sin;
+
+                    let x2 = 120 + 90 * cos;
+                    let y2 = 120 - 90 * sin;
+
+                    if (i % 10 === 0) {
+                        // prolonger jusqu'au centre (demande utilisateur)
+                        x2 = 120;
+                        y2 = 120;
+                    }
+
+                    marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${i%10===0?1.4:1}" opacity="${i%10===0?0.9:0.6}"/>`;
+
+                    if (p.showNumbers && i % 10 === 0) {
+                        const val = p.direction === 0 ? i : 180 - i;
+                        marks += `<text x="${120+112*cos}" y="${120-112*sin}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="bold" fill="#4338ca">${val}°</text>`;
+                    }
+                }
+
+                return `
+                    <svg width="240" height="240" viewBox="0 0 240 240" style="overflow:visible">
+                        <path d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255,255,255,0.82)" stroke="#4f46e5" stroke-width="2"/>
+                        <line x1="20" y1="120" x2="220" y2="120" stroke="#ef4444" stroke-width="1.5"/>
+<line x1="120" y1="120" x2="120" y2="20" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5 4"/>
+                        <circle cx="120" cy="120" r="4" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+                        ${marks}
+                    </svg>
+                    <div class="geo-handle rotate-handle absolute w-8 h-8" style="top:-28px; left:104px" title="Tourner">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/><path d="M21 3v5h-5"/></svg>
+                    </div>
+                    <div class="geo-handle resize-handle absolute w-6 h-6" style="bottom:-5px; right:-5px" title="Taille">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </div>
+                    <div class="absolute flex gap-1" style="bottom:-25px; left:50%; transform:translateX(-50%)">
+                        <div class="geo-handle btn-prec h-5 px-2 text-[10px] font-bold">${p.gradMode===0?'10°':p.gradMode===1?'5°':'1°'}</div>
+                        <div class="geo-handle btn-num h-5 w-5 text-[10px] font-bold">123</div>
+                        <div class="geo-handle btn-dir h-5 w-5 text-[10px] font-bold">⇄</div>
+                    </div>`;
+            }
+
+            
+            if (key === 'ruler') {
+                return `
+	                    <svg width="360" height="70" viewBox="0 0 360 70">
+	                        <!-- Règle d'alignement (sans graduations) -->
+	                        <rect x="8" y="16" width="344" height="38" rx="0" fill="rgba(255,255,255,0.88)" stroke="#0f172a" stroke-width="1.3"/>
+	                        <line x1="18" y1="35" x2="342" y2="35" stroke="#0f172a" stroke-width="1.2" opacity="0.9"/>
+	                        <text x="180" y="28" text-anchor="middle" font-size="11" font-weight="800" fill="#0f172a" opacity="0.7">Règle</text>
+	                    </svg>
+                    <div class="geo-handle rotate-handle absolute w-8 h-8" style="top:-30px; left:166px" title="Tourner">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/><path d="M21 3v5h-5"/></svg>
+                    </div>
+                    <div class="geo-handle resize-handle absolute w-6 h-6" style="bottom:-6px; right:-6px" title="Taille">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </div>`;
+            }
+
+// setsquare
+            return `
+                <svg width="240" height="240" viewBox="0 0 240 240">
+                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.82)" stroke="#ca8a04" stroke-width="2"/>
+                    <path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
+                </svg>
+                <div class="geo-handle rotate-handle absolute w-8 h-8" style="top:80px; left:140px" title="Tourner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/><path d="M21 3v5h-5"/></svg>
+                </div>
+                <div class="geo-handle resize-handle absolute w-6 h-6" style="bottom:5px; right:5px" title="Taille">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                </div>`;
+        }
+
+        
+        
+        function initAngleUI() {
+	            updateAngleInstructions();
+
+	            const modal = document.getElementById('angle-modal');
+	            const input = document.getElementById('angle-modal-input');
+	            const ok = document.getElementById('angle-modal-ok');
+	            const cancel = document.getElementById('angle-modal-cancel');
+	            if (!modal || !input || !ok || !cancel) return;
+
+	            const applyClamp = () => {
+	                let v = parseInt(input.value, 10);
+	                if (Number.isNaN(v)) v = state.angleMeasure || 60;
+	                v = Math.max(1, Math.min(179, v));
+	                input.value = v;
+	                return v;
+	            };
+
+	            const close = (commit) => {
+	                if (!state.anglePromptOpen) return;
+	                modal.classList.add('hidden');
+	                modal.classList.remove('flex');
+	                state.anglePromptOpen = false;
+
+	                if (commit && state.anglePrompt) {
+	                    const deg = applyClamp();
+	                    state.angleMeasure = deg;
+	                    drawAngleFromTwoPoints(state.anglePrompt.p1, state.anglePrompt.v, deg);
+	                }
+	                state.anglePrompt = null;
+	                updateAngleInstructions();
+	            };
+
+	            ok.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); close(true); });
+	            cancel.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); close(false); });
+	            modal.addEventListener('pointerdown', (e) => {
+	                if (e.target === modal) close(false);
+	            });
+	            input.addEventListener('input', applyClamp);
+	            input.addEventListener('change', applyClamp);
+	            input.addEventListener('keydown', (e) => {
+	                if (e.key === 'Enter') close(true);
+	                if (e.key === 'Escape') close(false);
+	            });
+
+	            // expose une fonction simple pour ouvrir la modale
+	            window.__openAngleModal = (p1, v) => {
+	                state.anglePrompt = { p1, v };
+	                state.anglePromptOpen = true;
+	                modal.classList.remove('hidden');
+	                modal.classList.add('flex');
+	                input.value = state.angleMeasure || 60;
+	                applyClamp();
+	                setTimeout(() => { try { input.focus(); input.select(); } catch(_) {} }, 0);
+	                updateAngleInstructions();
+	            };
+        }
+
+	        function updateAngleInstructions() {
+	            const el = document.getElementById('angle-instructions');
+	            if (!el) return;
+	            if (state.mode !== 'angle') {
+	                el.textContent = "Angle : clique un point sur le 1er côté, puis le sommet.";
+	                return;
+	            }
+	            if (state.anglePromptOpen) {
+	                el.textContent = "Angle : saisis la mesure, puis ‘Tracer’.";
+	            } else if (state.angleP1) {
+	                el.textContent = "Angle : clique maintenant le sommet.";
+	            } else {
+	                el.textContent = "Angle : clique un point sur le 1er côté, puis le sommet.";
+	            }
+	        }
+
+	        function openAnglePrompt(p1, v) {
+	            if (typeof window.__openAngleModal === 'function') {
+	                window.__openAngleModal(p1, v);
+	            }
+	        }
+
+	        function drawAngleFromTwoPoints(p1, v, deg) {
+	            const mrad = (deg || 60) * Math.PI / 180;
+	            const base = Math.atan2(p1.y - v.y, p1.x - v.x);
+	            const len = Math.max(10, Math.hypot(p1.x - v.x, p1.y - v.y));
+	            const a2 = base - mrad; // cohérent avec le reste (rotation horaire)
+	            const p2 = { x: v.x + len * Math.cos(a2), y: v.y + len * Math.sin(a2) };
+
+	            ctxD.save();
+	            ctxD.beginPath();
+	            ctxD.strokeStyle = '#111827';
+	            ctxD.lineWidth = 1.6;
+	            ctxD.lineCap = 'round';
+	            ctxD.lineJoin = 'round';
+	            ctxD.moveTo(v.x, v.y);
+	            ctxD.lineTo(p1.x, p1.y);
+	            ctxD.moveTo(v.x, v.y);
+	            ctxD.lineTo(p2.x, p2.y);
+	            ctxD.stroke();
+	            ctxD.restore();
+	        }
+
+function initPenColorUI() {
+            const bBlack = document.getElementById('pen-color-black');
+            const bRed = document.getElementById('pen-color-red');
+            if (!bBlack || !bRed) return;
+
+            const set = (hex) => {
+                state.penColor = hex;
+                bBlack.classList.toggle('active', hex === '#111827');
+                bRed.classList.toggle('active', hex === '#ef4444');
+                // curseur crayon : couleur de la mine
+                cursorDiv.style.setProperty('--pen-color', hex);
+                // icône bouton stylo : teinte
+                const penBtn = document.getElementById('tool-pen');
+                if (penBtn) {
+                    penBtn.classList.toggle('text-red-600', hex === '#ef4444');
+                    penBtn.classList.toggle('text-slate-900', hex === '#111827');
+                }
+            };
+
+            bBlack.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); set('#111827'); });
+            bRed.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); set('#ef4444'); });
+
+            // noir par défaut
+            set('#111827');
+        }
+
+        function applyTabletMode() {
+            const coarse = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 900;
+            document.body.classList.toggle('tablet-mode', coarse);
+        }
+
+// --- INTERACTION (POINTER EVENTS) ---
+        container.addEventListener('pointerdown', hStart);
+        window.addEventListener('pointermove', hMove, { passive: false });
+        window.addEventListener('pointerup', hEnd);
+        window.addEventListener('pointercancel', hEnd);
+
+        function hStart(e) {
+            // bouton droit: ignore
+            if (e.button !== undefined && e.button !== 0) return;
+
+            const pos = getPos(e);
+            const mx = pos.x, my = pos.y;
+
+	            if (state.mode === 'angle') {
+	                e.preventDefault();
+	                if (state.anglePromptOpen) return;
+	                state.angleMouse = { x: mx, y: my };
+	
+	                // 1er clic : point sur le 1er côté
+	                if (!state.angleP1) {
+	                    state.angleP1 = { x: mx, y: my };
+	                    updateAngleInstructions();
+	                    return;
+	                }
+
+	                // 2e clic : sommet
+	                const p1 = state.angleP1;
+	                const v = { x: mx, y: my };
+	                state.angleP1 = null;
+	                updateAngleInstructions();
+	                openAnglePrompt(p1, v);
+	                return;
+	            }
+
+            
+
+            if (state.mode === 'pen') {
+                e.preventDefault();
+                updateCustomCursor(e);
+
+                // garder le flux même si on sort du plateau pendant le trait
+                try { container.setPointerCapture(e.pointerId); } catch(_) {}
+
+                const snap = nearestTemplateSnap(mx, my, 18);
+                // Survol en noir (uniquement le côté)
+                state.penHover = (snap && snap.type === 'seg') ? { a: snap.a, b: snap.b } : null;
+
+                // On ne trace PAS immédiatement :
+                // - si c'est un simple clic près d'un côté => on tracera le segment au relâcher
+                // - si l'utilisateur commence à "écrire" (déplacement) => on bascule en dessin libre
+                state.isDrawing = true;
+                state.penStrokeStarted = false;
+                state.penLastMid = null;
+                state.penDownPos = { x: mx, y: my };
+                state.penDownTime = performance.now();
+                state.lastPenPos = { x: mx, y: my };
+                state.penPendingSeg = (snap && snap.type === 'seg') ? { a: snap.a, b: snap.b } : null;
+
+                state.activePointerId = e.pointerId;
+                return;
+            
+            }
+
+            // main: gabarits
+            for (let i = state.templates.length - 1; i >= 0; i--) {
+                const t = state.templates[i];
+                const g = getGeom(t);
+
+                if (Math.hypot(mx - g.Pivot.x, my - g.Pivot.y) < 26) {
+                    state.dragTarget = { type: 'temp', ref: t, part: 'rot' };
+                    state.templates.forEach(tmp => tmp.isSelected = false);
+                    t.isSelected = true;
+                    state.activePointerId = e.pointerId;
+                    return;
+                }
+
+                if (Math.hypot(mx - g.E1.x, my - g.E1.y) < 22 || Math.hypot(mx - g.E2.x, my - g.E2.y) < 22) {
+                    state.dragTarget = { type: 'temp', ref: t, part: 'resize' };
+                    state.templates.forEach(tmp => tmp.isSelected = false);
+                    t.isSelected = true;
+                    state.activePointerId = e.pointerId;
+                    return;
+                }
+
+                if (isPointInPie(mx, my, t)) {
+                    state.dragTarget = { type: 'temp', ref: t, part: 'body' };
+                    state.dragOffset = { x: mx - t.x, y: my - t.y };
+                    state.templates.forEach(tmp => tmp.isSelected = false);
+                    t.isSelected = true;
+                    state.templates.splice(i, 1);
+                    state.templates.push(t);
+                    state.activePointerId = e.pointerId;
+                    return;
+                }
+            }
+
+            state.templates.forEach(t => t.isSelected = false);
+        }
+
+        function hMove(e) {
+            if (state.activePointerId !== null && e.pointerId !== state.activePointerId) return;
+
+            const pos = getPos(e);
+            const mx = pos.x, my = pos.y;
+
+            if (state.mode === 'angle') {
+                e.preventDefault();
+	                if (state.anglePromptOpen) return;
+	                state.angleMouse = { x: mx, y: my };
+                return;
+            }
+
+
+            if (state.mode === 'pen') {
+                e.preventDefault();
+                updateCustomCursor(e);
+
+                // si on est en train d'écrire/dessiner
+                if (state.isDrawing && state.lastPenPos) {
+                    const dx = mx - (state.penDownPos?.x ?? mx);
+                    const dy = my - (state.penDownPos?.y ?? my);
+                    const dist = Math.hypot(dx, dy);
+
+                    // Si on a cliqué près d'un côté : tant qu'on ne bouge pas vraiment, on attend (clic = segment)
+                    if (!state.penStrokeStarted && state.penPendingSeg && dist < 6) {
+                        return;
+                    }
+
+                    // Dès qu'on bouge un peu : on passe en écriture libre
+                    if (!state.penStrokeStarted) {
+                        state.penStrokeStarted = true;
+                        state.penPendingSeg = null;
+                        state.penLastMid = { x: state.lastPenPos.x, y: state.lastPenPos.y };
+                    }
+
+                    // Lissage (quadratique) : beaucoup plus agréable à la souris
+                    const p1 = state.lastPenPos;
+                    const p2 = { x: mx, y: my };
+                    const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+                    ctxD.save();
+                    ctxD.beginPath();
+                    ctxD.strokeStyle = state.penColor;
+                    ctxD.lineWidth = 2.6;
+                    ctxD.lineCap = 'round';
+                    ctxD.lineJoin = 'round';
+                    ctxD.moveTo(state.penLastMid.x, state.penLastMid.y);
+                    ctxD.quadraticCurveTo(p1.x, p1.y, mid.x, mid.y);
+                    ctxD.stroke();
+                    ctxD.restore();
+
+                    state.penLastMid = mid;
+                    state.lastPenPos = p2;
+                    return;
+                }
+
+                const snap = nearestTemplateSnap(mx, my, 18);
+                state.penHover = (snap && snap.type === 'seg') ? { a: snap.a, b: snap.b } : null;
+                return;
+            }
+
+            if (!state.dragTarget) return;
+
+            const t = state.dragTarget.ref;
+            if (state.dragTarget.type === 'temp') {
+                if (state.dragTarget.part === 'body') {
+                    if (t.freeDrag) {
+                        t.x = mx - state.dragOffset.x;
+                        t.y = my - state.dragOffset.y;
+                    } else {
+                        t.x = clamp(mx - state.dragOffset.x, 10, state.view.w - 10);
+                        t.y = clamp(my - state.dragOffset.y, 10, state.view.h - 10);
+                    }
+
+                    // snap sommet a sommet
+                    state.templates.forEach(o => {
+                        if (o !== t && Math.hypot(t.x - o.x, t.y - o.y) < SNAP_DIST) {
+                            t.x = o.x;
+                            t.y = o.y;
+                        }
+                    });
+
+                } else if (state.dragTarget.part === 'rot') {
+                    t.rot = Math.atan2(my - t.y, mx - t.x) + (t.angle * Math.PI / 360);
+
+                    // snap angles
+                    state.templates.forEach(o => {
+                        if (o === t || Math.hypot(t.x - o.x, t.y - o.y) > 5) return;
+                        const diff = (a, b) => {
+                            let d = (a - b) % TAU;
+                            if (d > Math.PI) d -= TAU;
+                            if (d < -Math.PI) d += TAU;
+                            return Math.abs(d) < SNAP_ANG ? d : null;
+                        };
+                        let d;
+                        if ((d = diff(t.rot, o.rot)) !== null) t.rot -= d;
+                        else if ((d = diff(t.rot, o.rot - (o.angle * Math.PI / 180))) !== null) t.rot -= d;
+                        else if ((d = diff(t.rot - (t.angle * Math.PI / 180), o.rot)) !== null) t.rot -= d;
+                        else if ((d = diff(t.rot - (t.angle * Math.PI / 180), o.rot - (o.angle * Math.PI / 180))) !== null) t.rot -= d;
+                    });
+
+                } else if (state.dragTarget.part === 'resize') {
+                    t.scale = Math.max(0.4, Math.hypot(mx - t.x, my - t.y) / BASE_LEN);
+                }
+
+            } else if (state.dragTarget.type === 'tool') {
+                const pivotX = t.x + t.pivot.x;
+                const pivotY = t.y + t.pivot.y;
+
+                if (state.dragTarget.part === 'body') {
+                    t.x = clamp(mx - state.dragOffset.x, 10, state.view.w - 10);
+                    t.y = clamp(my - state.dragOffset.y, 10, state.view.h - 10);
+
+                    /* ruler snap (aimantation sur les BORDS, pas le milieu) */
+                    if (state.dragTarget.key === 'ruler') {
+                        const best = nearestTemplateSegmentForRuler(t, 22);
+                        if (best) {
+                            t.rot = best.ang;
+                            // Aligner le bord (haut/bas) le plus proche sur le segment
+                            const edgePt = rulerEdgeWorldPoint(t, best.edge);
+                            const proj = snapToSeg(edgePt, best.a, best.b, 1e9);
+                            t.x += (proj.x - edgePt.x);
+                            t.y += (proj.y - edgePt.y);
+                        }
+                    }
+
+                } else if (state.dragTarget.part === 'rot') {
+                    t.rot = Math.atan2(my - pivotY, mx - pivotX) + state.dragOffset.rot;
+
+                    /* ruler snap rot (référence sur bords) */
+                    if (state.dragTarget.key === 'ruler') {
+                        const best = nearestTemplateSegmentForRuler(t, 22);
+                        if (best && Math.abs(angDelta(t.rot, best.ang)) < 0.18) {
+                            t.rot = best.ang;
+                        }
+                    }
+
+                } else if (state.dragTarget.part === 'resize') {
+                    t.scale = Math.max(0.5, state.dragOffset.scale * (Math.hypot(mx - pivotX, my - pivotY) / state.dragOffset.dist));
+                }
+
+                updateToolUI(state.dragTarget.key);
+            }
+        }
+
+        function hEnd(e) {
+            if (state.activePointerId !== null && e.pointerId !== state.activePointerId) return;
+            // Fin du tracé d'angle
+            if (state.mode === 'angle') {
+	                state.activePointerId = null;
+	                return;
+            }
+
+            // Fin du dessin au stylo
+            if (state.mode === 'pen') {
+                // Si on était en mode 'clic sur côté' (sans déplacement), tracer maintenant le segment
+                if (state.isDrawing && !state.penStrokeStarted && state.penPendingSeg) {
+                    const seg = state.penPendingSeg;
+                    ctxD.save();
+                    ctxD.beginPath();
+                    ctxD.strokeStyle = state.penColor;
+                    ctxD.lineWidth = 3;
+                    ctxD.lineCap = 'round';
+                    ctxD.lineJoin = 'round';
+                    ctxD.moveTo(seg.a.x, seg.a.y);
+                    ctxD.lineTo(seg.b.x, seg.b.y);
+                    ctxD.stroke();
+                    ctxD.restore();
+                } else if (state.isDrawing && state.penStrokeStarted && state.lastPenPos && state.penLastMid) {
+                    // finir proprement le dernier petit bout du trait
+                    ctxD.save();
+                    ctxD.beginPath();
+                    ctxD.strokeStyle = state.penColor;
+                    ctxD.lineWidth = 2.6;
+                    ctxD.lineCap = 'round';
+                    ctxD.lineJoin = 'round';
+                    ctxD.moveTo(state.penLastMid.x, state.penLastMid.y);
+                    ctxD.lineTo(state.lastPenPos.x, state.lastPenPos.y);
+                    ctxD.stroke();
+                    ctxD.restore();
+                }
+
+                state.isDrawing = false;
+                state.lastPenPos = null;
+                state.penPendingSeg = null;
+                state.penDownPos = null;
+                state.penStrokeStarted = false;
+                state.penLastMid = null;
+                state.activePointerId = null;
+
+                try { container.releasePointerCapture(e.pointerId); } catch(_) {}
+                return;
+            }
+            // Auto-désélection : noir uniquement pendant l'action (porter / tourner / redimensionner)
+            if (state.dragTarget && state.dragTarget.type === 'temp') {
+                const tt = state.dragTarget.ref;
+                tt.isSelected = false;
+                tt.freeDrag = false;
+                // on replace proprement dans le plateau au lâcher
+                tt.x = clamp(tt.x, 10, state.view.w - 10);
+                tt.y = clamp(tt.y, 10, state.view.h - 10);
+            }
+            state.dragTarget = null;
+            state.activePointerId = null;
+        }
+
+        function setupToolEvents(el, key) {
+            const startDrag = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const pos = getPos(e);
+                const tool = state.tools[key];
+                const pivotX = tool.x + tool.pivot.x;
+                const pivotY = tool.y + tool.pivot.y;
+
+                if (e.target.closest('.rotate-handle')) {
+                    state.dragTarget = { type: 'tool', ref: tool, part: 'rot', key };
+                    state.dragOffset = { rot: tool.rot - Math.atan2(pos.y - pivotY, pos.x - pivotX) };
+                } else if (e.target.closest('.resize-handle')) {
+                    state.dragTarget = { type: 'tool', ref: tool, part: 'resize', key };
+                    state.dragOffset = { scale: tool.scale, dist: Math.hypot(pos.x - pivotX, pos.y - pivotY) };
+                } else if (e.target.closest('.btn-prec')) {
+                    tool.gradMode = (tool.gradMode + 1) % 3;
+                    el.innerHTML = getToolSVG(key);
+                } else if (e.target.closest('.btn-num')) {
+                    tool.showNumbers = !tool.showNumbers;
+                    el.innerHTML = getToolSVG(key);
+                } else if (e.target.closest('.btn-dir')) {
+                    tool.direction = 1 - tool.direction;
+                    el.innerHTML = getToolSVG(key);
+                } else {
+                    state.dragTarget = { type: 'tool', ref: tool, part: 'body', key };
+                    state.dragOffset = { x: pos.x - tool.x, y: pos.y - tool.y };
+                }
+
+                state.activePointerId = e.pointerId;
+            };
+
+            el.addEventListener('pointerdown', startDrag);
+        }
+
+        // --- RENDU ---
+        function roundedRectPath(ctx, x, y, w, h, r) {
+            const rr = Math.min(r, w/2, h/2);
+            ctx.beginPath();
+            ctx.moveTo(x + rr, y);
+            ctx.lineTo(x + w - rr, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+            ctx.lineTo(x + w, y + h - rr);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+            ctx.lineTo(x + rr, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+            ctx.lineTo(x, y + rr);
+            ctx.quadraticCurveTo(x, y, x + rr, y);
+            ctx.closePath();
+        }
+
+        function renderLoop() {
+            const W = state.view.w;
+            const H = state.view.h;
+            ctxT.clearRect(0, 0, W, H);
+
+            state.templates.forEach(t => {
+                const g = getGeom(t);
+
+                // secteur
+                ctxT.save();
+                ctxT.beginPath();
+                ctxT.moveTo(g.S.x, g.S.y);
+                ctxT.lineTo(g.E1.x, g.E1.y);
+                ctxT.arc(g.S.x, g.S.y, g.len, t.rot, t.rot - g.ang, true);
+                ctxT.lineTo(g.S.x, g.S.y);
+
+                ctxT.globalAlpha = 0.45;
+                ctxT.fillStyle = t.fill;
+                ctxT.fill();
+                ctxT.globalAlpha = 1;
+
+                ctxT.strokeStyle = t.isSelected ? "#0f172a" : t.stroke;
+                ctxT.lineWidth = t.isSelected ? 4 : 2;
+                ctxT.stroke();
+
+                // marquage du sommet
+                ctxT.beginPath();
+                ctxT.strokeStyle = t.isSelected ? "#0f172a" : t.stroke;
+                ctxT.lineWidth = 2;
+                if (t.angle === 90) {
+                    const s = 18 * t.scale;
+                    const u1 = { x: Math.cos(t.rot), y: Math.sin(t.rot) };
+                    const u2 = { x: Math.cos(t.rot - g.ang), y: Math.sin(t.rot - g.ang) };
+                    const V = g.S;
+                    const A = { x: V.x + u1.x * s, y: V.y + u1.y * s };
+                    const C = { x: V.x + (u1.x + u2.x) * s, y: V.y + (u1.y + u2.y) * s };
+                    const B = { x: V.x + u2.x * s, y: V.y + u2.y * s };
+                    ctxT.moveTo(V.x, V.y);
+                    ctxT.lineTo(A.x, A.y);
+                    ctxT.lineTo(C.x, C.y);
+                    ctxT.lineTo(B.x, B.y);
+                    ctxT.closePath();
+                    ctxT.stroke();
+                } else {
+                    ctxT.arc(g.S.x, g.S.y, 30 * t.scale, t.rot, t.rot - g.ang, true);
+                    ctxT.stroke();
+                }
+
+                // texte (avec pastille)
+                ctxT.save();
+                ctxT.translate(t.x, t.y);
+                ctxT.rotate(t.rot - (g.ang / 2));
+
+                const label = t.angle + "°";
+                const fontSize = 18 * t.scale;
+                ctxT.font = `800 ${fontSize}px Fredoka`;
+                const m = ctxT.measureText(label);
+                const padX = 8 * t.scale;
+                const padY = 5 * t.scale;
+                const w = m.width + 2 * padX;
+                const h = fontSize + 2 * padY;
+                const lx = g.len * 0.62;
+                const ly = 0;
+
+                roundedRectPath(ctxT, lx - w/2, ly - h/2, w, h, 8 * t.scale);
+                ctxT.fillStyle = 'rgba(255,255,255,0.92)';
+                ctxT.fill();
+                ctxT.strokeStyle = t.stroke;
+                ctxT.lineWidth = 1.5 * t.scale;
+                ctxT.stroke();
+
+                ctxT.fillStyle = '#111827';
+                ctxT.textAlign = 'center';
+                ctxT.textBaseline = 'middle';
+                ctxT.fillText(label, lx, ly);
+                ctxT.restore();
+                // pivot (poignée de rotation)
+                ctxT.save();
+                ctxT.translate(g.Pivot.x, g.Pivot.y);
+
+                // bouton
+                ctxT.fillStyle = "#fff";
+                ctxT.beginPath();
+                ctxT.arc(0, 0, 15, 0, TAU);
+                ctxT.fill();
+                ctxT.strokeStyle = "#0f172a";
+                ctxT.lineWidth = 2;
+                ctxT.stroke();
+
+                // icône tourner : identique à celle du rapporteur (SVG)
+                if (rotateIconImg && rotateIconImg.complete) {
+                    // Dessin centré dans le bouton
+                    const s = 16;
+                    ctxT.drawImage(rotateIconImg, -s/2, -s/2, s, s);
+                }
+
+                ctxT.restore();
+                ctxT.restore();
+
+                // poignées de redimensionnement : 2 petits points aux extrémités des côtés
+                {
+                    const active = !!t.isSelected;
+                    ctxT.save();
+                    ctxT.fillStyle = "rgba(255,255,255,0.95)";
+                    ctxT.strokeStyle = active ? "#0f172a" : "#94a3b8";
+                    ctxT.lineWidth = active ? 2 : 1.4;
+                    const rr = active ? 4 : 3;
+                    [g.E1, g.E2].forEach(p => {
+                        ctxT.beginPath();
+                        ctxT.arc(p.x, p.y, rr, 0, TAU);
+                        ctxT.fill();
+                        ctxT.stroke();
+                    });
+                    ctxT.restore();
+                }
+                ctxT.restore();
+            });
+
+            // feedback stylo (petite aide visuelle)
+            if (state.mode === 'pen' && state.penHover) {
+                ctxT.save();
+                ctxT.globalAlpha = 1;
+                ctxT.lineWidth = 4;
+                ctxT.strokeStyle = '#111827';
+                if (state.penHover.a && state.penHover.b) {
+                    ctxT.beginPath();
+                    ctxT.moveTo(state.penHover.a.x, state.penHover.a.y);
+                    ctxT.lineTo(state.penHover.b.x, state.penHover.b.y);
+                    ctxT.stroke();
+                }
+                ctxT.restore();
+            }
+
+            
+
+	            // feedback léger pour l'outil Angle : repère sur le 1er point
+	            if (state.mode === 'angle' && state.angleP1) {
+	                ctxT.save();
+	                ctxT.globalAlpha = 0.95;
+	                ctxT.fillStyle = '#111827';
+	                ctxT.strokeStyle = '#111827';
+	                ctxT.lineWidth = 2;
+	                ctxT.beginPath();
+	                ctxT.arc(state.angleP1.x, state.angleP1.y, 3.5, 0, TAU);
+	                ctxT.fill();
+	                ctxT.globalAlpha = 0.35;
+	                ctxT.beginPath();
+	                ctxT.arc(state.angleP1.x, state.angleP1.y, 9, 0, TAU);
+	                ctxT.stroke();
+	                ctxT.restore();
+	            }
+requestAnimationFrame(renderLoop);
+        }
+
+        // --- UTILITAIRES ---
+        function setMode(m) {
+            state.mode = m;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('tool-' + m);
+            if (btn) btn.classList.add('active');
+
+            container.classList.toggle('hide-cursor', m === 'pen');
+            cursorDiv.style.display = (m === 'pen') ? 'block' : 'none';
+
+            const controlsAngle = document.getElementById('angle-controls');
+            if (controlsAngle) controlsAngle.classList.toggle('hidden', m !== 'angle');
+
+	            // reset workflow outil Angle
+	            if (m !== 'angle') {
+	                state.angleP1 = null;
+	                state.angleMouse = null;
+	                state.anglePrompt = null;
+	                state.anglePromptOpen = false;
+	                const modal = document.getElementById('angle-modal');
+	                if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+	            }
+	            if (typeof updateAngleInstructions === 'function') updateAngleInstructions();
+
+
+            // reset feedback
+            state.penHover = null;
+            state.penLock = null;
+            state.isDrawing = false;
+        }
+
+        function toggleTool(key) {
+            state.tools[key].visible = !state.tools[key].visible;
+            const el = document.getElementById(`tool-${key}`);
+            const btn = document.getElementById(`btn-${key}`);
+            if (state.tools[key].visible) {
+                el.classList.remove('hidden');
+                btn.classList.add('active');
+                updateToolUI(key);
+            } else {
+                el.classList.add('hidden');
+                btn.classList.remove('active');
+            }
+        }
+
+        function updateToolUI(key) {
+            const t = state.tools[key];
+            const el = document.getElementById(`tool-${key}`);
+            el.style.left = t.x + 'px';
+            el.style.top = t.y + 'px';
+            el.style.transform = `rotate(${t.rot}rad) scale(${t.scale})`;
+            el.style.transformOrigin = `${t.pivot.x}px ${t.pivot.y}px`;
+        }
+
+        function updateCustomCursor(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+            cursorDiv.style.left = x + 'px';
+            cursorDiv.style.top = y + 'px';
+            cursorDiv.style.transform = 'translate(-6px, -28px)';
+        }
+
+
+
+        function angDelta(a, b) {
+            let d = (a - b) % TAU;
+            if (d > Math.PI) d -= TAU;
+            if (d < -Math.PI) d += TAU;
+            return d;
+        }
+
+        function nearestTemplateSegment(p, th) {
+            let best = null;
+            for (const t of state.templates) {
+                const g = getGeom(t);
+                const segs = [
+                    { a: g.S, b: g.E1 },
+                    { a: g.S, b: g.E2 },
+                ];
+                for (const s of segs) {
+                    const proj = snapToSeg(p, s.a, s.b, th);
+                    if (!proj) continue;
+                    const d = Math.hypot(p.x - proj.x, p.y - proj.y);
+                    if (!best || d < best.d) {
+                        best = { a: s.a, b: s.b, proj, d, ang: Math.atan2(s.b.y - s.a.y, s.b.x - s.a.x) };
+                    }
+                }
+            }
+            return best;
+        }
+
+        function snapToSeg(p, a, b, th) {
+            const abx = b.x - a.x;
+            const aby = b.y - a.y;
+            const l2 = abx * abx + aby * aby;
+            if (l2 === 0) return null;
+            let t = ((p.x - a.x) * abx + (p.y - a.y) * aby) / l2;
+            t = Math.max(0, Math.min(1, t));
+            const proj = { x: a.x + t * abx, y: a.y + t * aby };
+            return Math.hypot(p.x - proj.x, p.y - proj.y) < th ? proj : null;
+        }
+
+        function clearDrawings() {
+            ctxD.clearRect(0, 0, state.view.w, state.view.h);
+        }
+        function resetApp() {
+            state.templates = [];
+            clearDrawings();
+            bgLayer.style.backgroundImage = 'none';
+        }
+
+        // --- IMPORT IMAGE / PDF ---
+        bgUploader.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.type === "application/pdf") {
+                const reader = new FileReader();
+                reader.onload = async function() {
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+                    const page = await pdf.getPage(1);
+                    const vp = page.getViewport({ scale: 2 });
+                    const cv = document.createElement('canvas');
+                    cv.height = vp.height;
+                    cv.width = vp.width;
+                    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                    bgLayer.style.backgroundImage = `url(${cv.toDataURL()})`;
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                bgLayer.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
+            }
+        });
+    </script>
 </body>
 </html>
