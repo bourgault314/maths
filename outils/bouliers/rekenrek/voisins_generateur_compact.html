@@ -55,17 +55,7 @@
       line-height:1;
     }
     .lang-btn:hover{border-color:var(--accent);}
-    .corr-toggle{
-      display:flex;align-items:center;gap:8px;
-      margin-top:6px;
-      font-size:12px;font-weight:900;
-      color:#334155;
-      user-select:none;
-      cursor:pointer;
-    }
-    .corr-toggle input{transform:scale(1.05);cursor:pointer;}
-    .corr-text{letter-spacing:.3px;}
-
+    
     .sb-scroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:14px;}
     .section{border-bottom:1px solid #f1f5f9;padding-bottom:10px;}
     .sec-title{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;margin-bottom:6px;}
@@ -118,6 +108,16 @@
       right:var(--page-margin);
       display:flex;
       flex-direction:column;
+    }
+    .page-label {
+      position: absolute;
+      bottom: -25px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
     }
 
     .grid{
@@ -238,6 +238,7 @@
       aside{display:none!important;}
       main{padding:0;margin:0;display:block;overflow:visible;height:auto;}
       .page{margin:0 auto;box-shadow:none;border:none;width:210mm;height:297mm;overflow:hidden;page-break-after:always;}
+      .page-label {display:none;}
       .grid{border:2px solid #000;}
       .cell{border:1px solid #999;page-break-inside:avoid;}
       *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -252,13 +253,22 @@
       <h2 class="sb-title" id="sbTitle">Voisins</h2>
       <button class="lang-btn" id="langBtn" type="button" title="English">EN</button>
     </div>
-    <label class="corr-toggle">
-      <input type="checkbox" id="checkCorr" onchange="renderPages(document.getElementById('gridSize').value)">
-      <span class="corr-text" id="corrText">👁️ CORRECTION</span>
-    </label>
   </div>
 
   <div class="sb-scroll">
+    <!-- NOUVEAU: Section Mode d'Impression -->
+    <div class="section">
+      <div class="sec-title" id="secPrintMode">Impression</div>
+      <div class="control" style="flex-direction:column;align-items:flex-start;">
+        <select id="printMode" onchange="renderPages(document.getElementById('gridSize').value)">
+          <option id="optModeExo" value="exo" selected>Exercices (Elève)</option>
+          <option id="optModeCorr" value="corr">Correction (Prof)</option>
+          <option id="optModeDossier" value="dossier">Dossier (Exo + Corrigé)</option>
+          <option id="optModeFlash" value="flash">Flashcards (R/V)</option>
+        </select>
+      </div>
+    </div>
+
     <div class="section">
       <div class="sec-title" id="secLayout">Mise en page</div>
       <div class="control" style="flex-direction:column;align-items:flex-start;">
@@ -357,7 +367,12 @@ const I18N = {
   fr: {
     pageTitle: "Voisins — Générateur",
     title: "Voisins",
-    correction: "CORRECTION",
+
+    secPrintMode: "Impression",
+    optModeExo: "Exercices (Elève)",
+    optModeCorr: "Correction (Prof)",
+    optModeDossier: "Dossier (Exo + Corrigé)",
+    optModeFlash: "Flashcards (R/V)",
 
     secLayout: "Mise en page",
     secContent: "Contenu",
@@ -416,7 +431,12 @@ const I18N = {
   en: {
     pageTitle: "Neighbors — Generator",
     title: "Neighbors",
-    correction: "ANSWER KEY",
+
+    secPrintMode: "Print Mode",
+    optModeExo: "Exercises (Student)",
+    optModeCorr: "Answer Key (Teacher)",
+    optModeDossier: "Full Set (Exo + Key)",
+    optModeFlash: "Flashcards (F/B)",
 
     secLayout: "Layout",
     secContent: "Content",
@@ -486,8 +506,6 @@ function applyLang(newLang){
   // Header
   const sbTitle = document.getElementById("sbTitle");
   if(sbTitle) sbTitle.textContent = tr("title");
-  const corrText = document.getElementById("corrText");
-  if(corrText) corrText.textContent = "👁️ " + tr("correction");
 
   const langBtn = document.getElementById("langBtn");
   if(langBtn){
@@ -496,13 +514,15 @@ function applyLang(newLang){
   }
 
   // Sections
-  const ids = ["secLayout","secContent","secExercise","secStyle","lblGrid","lblOrder","lblStart","lblEnd","lblRange","lblType","lblClue","lblBeadColor","btnShuffle","btnPrint",
+  const ids = ["secPrintMode","optModeExo","optModeCorr","optModeDossier","optModeFlash",
+               "secLayout","secContent","secExercise","secStyle","lblGrid","lblOrder","lblStart","lblEnd","lblRange","lblType","lblClue","lblBeadColor","btnShuffle","btnPrint",
                "optOrderRandom","optOrderSeq","optGrid45","optGrid35","optGrid34","optGrid24","optTypeA","optTypeB","optTypeC","optTypeD","optTypeE","optTypeModel",
                "optClueMix","optClueBead","optClueDigit","optBeadRB","optBeadRW"];
   ids.forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     const map = {
+      secPrintMode:"secPrintMode", optModeExo:"optModeExo", optModeCorr:"optModeCorr", optModeDossier:"optModeDossier", optModeFlash:"optModeFlash",
       secLayout:"secLayout", secContent:"secContent", secExercise:"secExercise", secStyle:"secStyle",
       lblGrid:"grid", lblOrder:"order", lblStart:"start", lblEnd:"end", lblRange:"range",
       lblType:"type", lblClue:"clue", lblBeadColor:"beadColor",
@@ -657,78 +677,175 @@ function createItem(n, maxVal, mode, clueSel){
   return { n, prev, next, max:maxVal, showBead, showDigit, showPrev, showNext };
 }
 
+/* --- LOGIQUE D'AFFICHAGE MULTI-MODES --- */
+
 function renderPages(sizeSelect){
   const main = document.getElementById('mainArea');
   main.innerHTML = "";
 
-  const isCorr = document.getElementById('checkCorr') ? document.getElementById('checkCorr').checked : false;
-  const theme = document.getElementById('beadColor').value;
+  // Récupération du mode d'impression
+  const printMode = document.getElementById('printMode').value; // 'exo', 'corr', 'dossier', 'flash'
   const [cols, rows] = sizeSelect.split('x').map(Number);
   const itemsPerPage = cols * rows;
 
+  // Découpage en pages
+  let chunks = [];
   for(let i = 0; i < state.length; i += itemsPerPage){
-    const chunk = state.slice(i, i + itemsPerPage);
+    chunks.push(state.slice(i, i + itemsPerPage));
+  }
 
-    const page = document.createElement('div');
-    page.className = 'page';
+  if(chunks.length === 0) return;
 
-    const inner = document.createElement('div');
-    inner.className = 'page-inner';
-
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    grid.setAttribute('data-size', sizeSelect);
-
-    chunk.forEach(item => {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-
-      const top = document.createElement('div');
-      top.className = 'part-boulier';
-      top.innerHTML = getRekenrekSvg(item.n, (item.showBead || isCorr), theme, item.max);
-      cell.appendChild(top);
-
-      const mid = document.createElement('div');
-      mid.className = 'part-number';
-      const nb = document.createElement('div');
-      nb.className = 'number-box';
-      if(item.showDigit || isCorr) nb.innerHTML = `<span class="val-main">${item.n}</span>`;
-      else nb.innerHTML = `<div class="empty-zone"></div>`;
-      mid.appendChild(nb);
-      cell.appendChild(mid);
-
-      const bot = document.createElement('div');
-      bot.className = 'part-neighbors';
-
-      const left = document.createElement('div');
-      left.className = 'neighbor';
-      left.innerHTML = `<div class="neighbor-label">${tr("previous")}</div>`;
-      const lb = document.createElement('div');
-      lb.className = 'neighbor-box';
-      if(item.showPrev || isCorr) lb.innerHTML = `<span class="val-small">${item.prev}</span>`;
-      else lb.innerHTML = `<div class="empty-zone"></div>`;
-      left.appendChild(lb);
-
-      const right = document.createElement('div');
-      right.className = 'neighbor';
-      right.innerHTML = `<div class="neighbor-label">${tr("next")}</div>`;
-      const rb = document.createElement('div');
-      rb.className = 'neighbor-box';
-      if(item.showNext || isCorr) rb.innerHTML = `<span class="val-small">${item.next}</span>`;
-      else rb.innerHTML = `<div class="empty-zone"></div>`;
-      right.appendChild(rb);
-
-      bot.appendChild(left);
-      bot.appendChild(right);
-
-      cell.appendChild(bot);
-      grid.appendChild(cell);
+  if (printMode === 'exo') {
+    // Mode EXERCICE : Juste les fiches élèves sans correction
+    chunks.forEach((chunk, idx) => {
+      renderOnePage(main, chunk, sizeSelect, false, `Page ${idx+1}`);
     });
 
-    inner.appendChild(grid);
-    page.appendChild(inner);
-    main.appendChild(page);
+  } else if (printMode === 'corr') {
+    // Mode CORRECTION : Juste les corrigés
+    chunks.forEach((chunk, idx) => {
+      renderOnePage(main, chunk, sizeSelect, true, `Correction ${idx+1}`);
+    });
+
+  } else if (printMode === 'dossier') {
+    // Mode DOSSIER : Tout Exercices, puis Tout Corrigés
+    chunks.forEach((chunk, idx) => {
+      renderOnePage(main, chunk, sizeSelect, false, `Page ${idx+1}`);
+    });
+    // Saut de page explicite pas nécessaire car chaque .page a un break-after, mais visuellement ok
+    chunks.forEach((chunk, idx) => {
+      renderOnePage(main, chunk, sizeSelect, true, `Correction ${idx+1}`);
+    });
+
+  } else if (printMode === 'flash') {
+    // Mode FLASHCARDS (Recto/Verso)
+    chunks.forEach((chunk, idx) => {
+      // 1. RECTO (Question)
+      renderOnePage(main, chunk, sizeSelect, false, `Recto ${idx+1}`);
+
+      // 2. VERSO (Réponse) - Doit être "miroir" par ligne pour impression duplex bord long
+      const mirroredChunk = mirrorRowsForDuplex(chunk, cols);
+      renderOnePage(main, mirroredChunk, sizeSelect, true, `Verso ${idx+1}`);
+    });
   }
+}
+
+// Fonction pour inverser l'ordre des cartes LIGNE par LIGNE
+// Cela permet que la carte en haut à gauche du Recto corresponde à la carte en haut à droite du Verso
+function mirrorRowsForDuplex(chunk, cols) {
+  let newChunk = [];
+  // On découpe le chunk en lignes
+  for (let i = 0; i < chunk.length; i += cols) {
+    let row = chunk.slice(i, i + cols);
+    // On inverse la ligne (ex: [A, B, C] devient [C, B, A])
+    // Cependant, si la dernière ligne est incomplète (ex: 2 items sur 3 cols),
+    // il faut faire attention au placement.
+    // Pour une grille, l'impression reste une grille.
+    // Si on a [A, B] sur une ligne de 3 colonnes => A est col 1, B est col 2.
+    // Au verso, la réponse de A doit être en col 3, la réponse de B en col 2.
+    // Donc il faut remplir la ligne avec des "vides" si nécessaire pour inverser correctement ?
+    // Simplification : On suppose que la grille CSS remplit de gauche à droite.
+    // Si on inverse juste le tableau [A, B], on aura [B, A] -> B en col 1, A en col 2.
+    // Réponse A (col 2 verso) derrière B (col 2 recto) -> FAUX.
+    // Réponse A (col 2 verso) derrière A (col 1 recto) -> NON.
+    
+    // Il faut vraiment simuler les positions.
+    // Pour simplifier ici, on inverse le tableau 'row' mais si la ligne n'est pas pleine, 
+    // ça va décaler si on n'a pas des objets "vides".
+    // Mais renderOnePage itère juste sur la liste.
+    
+    // Si la ligne est complète (cas général sauf dernière page), row.reverse() suffit.
+    // Si incomplète : [A, B] sur grille 3 cols.
+    // Recto : A(1), B(2), Vide(3).
+    // Verso souhaité : Vide(1), B(2), A(3).
+    // Donc il faut padder la row avec des nulls/placeholders avant de reverse.
+    
+    while(row.length < cols) {
+      row.push(null); // Placeholder vide
+    }
+    row.reverse();
+    newChunk = newChunk.concat(row);
+  }
+  return newChunk;
+}
+
+function renderOnePage(container, chunk, sizeSelect, isCorr, labelText){
+  const theme = document.getElementById('beadColor').value;
+  const page = document.createElement('div');
+  page.className = 'page';
+
+  const inner = document.createElement('div');
+  inner.className = 'page-inner';
+
+  // Label discret pour savoir ce qu'on imprime
+  if(labelText) {
+    const lbl = document.createElement('div');
+    lbl.className = 'page-label';
+    lbl.innerText = labelText;
+    inner.appendChild(lbl);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  grid.setAttribute('data-size', sizeSelect);
+
+  chunk.forEach(item => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    
+    // Gestion des cases vides (pour l'inversion flashcard)
+    if(item === null) {
+      cell.style.visibility = 'hidden'; // Case invisible mais occupe l'espace
+      grid.appendChild(cell);
+      return;
+    }
+
+    const top = document.createElement('div');
+    top.className = 'part-boulier';
+    top.innerHTML = getRekenrekSvg(item.n, (item.showBead || isCorr), theme, item.max);
+    cell.appendChild(top);
+
+    const mid = document.createElement('div');
+    mid.className = 'part-number';
+    const nb = document.createElement('div');
+    nb.className = 'number-box';
+    if(item.showDigit || isCorr) nb.innerHTML = `<span class="val-main">${item.n}</span>`;
+    else nb.innerHTML = `<div class="empty-zone"></div>`;
+    mid.appendChild(nb);
+    cell.appendChild(mid);
+
+    const bot = document.createElement('div');
+    bot.className = 'part-neighbors';
+
+    const left = document.createElement('div');
+    left.className = 'neighbor';
+    left.innerHTML = `<div class="neighbor-label">${tr("previous")}</div>`;
+    const lb = document.createElement('div');
+    lb.className = 'neighbor-box';
+    if(item.showPrev || isCorr) lb.innerHTML = `<span class="val-small">${item.prev}</span>`;
+    else lb.innerHTML = `<div class="empty-zone"></div>`;
+    left.appendChild(lb);
+
+    const right = document.createElement('div');
+    right.className = 'neighbor';
+    right.innerHTML = `<div class="neighbor-label">${tr("next")}</div>`;
+    const rb = document.createElement('div');
+    rb.className = 'neighbor-box';
+    if(item.showNext || isCorr) rb.innerHTML = `<span class="val-small">${item.next}</span>`;
+    else rb.innerHTML = `<div class="empty-zone"></div>`;
+    right.appendChild(rb);
+
+    bot.appendChild(left);
+    bot.appendChild(right);
+
+    cell.appendChild(bot);
+    grid.appendChild(cell);
+  });
+
+  inner.appendChild(grid);
+  page.appendChild(inner);
+  container.appendChild(page);
 }
 
 /* --- REKENREK SVG --- */
