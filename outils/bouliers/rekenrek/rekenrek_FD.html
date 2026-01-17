@@ -143,7 +143,7 @@
   .bead.white { background: radial-gradient(circle at 30% 30%, var(--bead-white), #bbb); color: black; }
   .bead.blue-mode.white { background: radial-gradient(circle at 30% 30%, var(--bead-blue), #0d47a1); color: white; }
 
-  /* Style pour l'étiquette 0,01 DANS la bille */
+  /* Style pour l'étiquette DANS la bille (centrée) */
   .bead-label {
     position: absolute; 
     top: 50%; 
@@ -197,11 +197,11 @@
     <button class="btn" id="btn-cache" onclick="toggleCache()">🌑 Cache</button>
     
     <!-- Boutons Séparés -->
-    <!-- Ajout de la classe active par défaut pour décimal -->
     <button class="btn active" id="btn-dec" onclick="toggleDecimal()">Décimale</button>
     <button class="btn" id="btn-frac" onclick="toggleFraction()">Fractionnaire</button>
+    <button class="btn" id="btn-cent" onclick="toggleCentimes()">Centimes</button>
     
-    <!-- Bouton à 3 états -->
+    <!-- Bouton à 4 états -->
     <button class="btn" id="btn-label" onclick="toggleLabels()">Étiquette</button>
     <button class="btn" id="btn-export" onclick="exportImage()" title="Télécharger Photo HD">📷 Photo</button>
   </div>
@@ -234,14 +234,16 @@
   const topBar = document.getElementById('top-bar');
   const btnDec = document.getElementById('btn-dec');
   const btnFrac = document.getElementById('btn-frac');
+  const btnCent = document.getElementById('btn-cent');
   const btnLabel = document.getElementById('btn-label');
   
   // Paramètres par défaut
   let rowsCount = 10;
-  let showDecimal = true; // ACTIVÉ PAR DÉFAUT
+  let showDecimal = true;
   let showFraction = false;
+  let showCentimes = false;
   
-  // labelMode: 0=Rien, 1=0,01(dedans), 2=1/100(dedans)
+  // labelMode: 0=Rien, 1=0,01(dedans), 2=1/100(dedans), 3=1c(dedans)
   let labelMode = 0; 
   
   let isPen = false, isBlue = false, isCache = false, currentScale = 1;
@@ -253,15 +255,15 @@
   const i18n = {
     fr: {
       btnReset: "Départ", btnColorBlue: "🔵 Bleu", btnColorWhite: "⚪ Blanc", btnCache: "🌑 Cache",
-      btnDec: "Décimale", btnFrac: "Fractionnaire", // Orthographe harmonisée
+      btnDec: "Décimale", btnFrac: "Fractionnaire", btnCent: "Centimes",
       btnTheme: "☀️ Fond", titleEraser: "Effacer tout", langLabel: "ENG",
-      labels: ["Étiquette", "0,01", "1/100"]
+      labels: ["Étiquette", "0,01", "1/100", "1 c"]
     },
     en: {
       btnReset: "Reset", btnColorBlue: "🔵 Blue", btnColorWhite: "⚪ White", btnCache: "🌑 Cover",
-      btnDec: "Decimal", btnFrac: "Fraction",
+      btnDec: "Decimal", btnFrac: "Fraction", btnCent: "Cents",
       btnTheme: "☀️ Theme", titleEraser: "Clear all", langLabel: "FR",
-      labels: ["Label", "0.01", "1/100"]
+      labels: ["Label", "0.01", "1/100", "1 c"]
     }
   };
 
@@ -369,15 +371,17 @@
         const labelEl = b.querySelector('.bead-label');
         const fracEl = b.querySelector('.bead-fraction');
         
+        labelEl.style.display = 'none';
+        fracEl.style.display = 'none';
+
         if (labelMode === 1) { // 0,01
+            labelEl.textContent = "0,01";
             labelEl.style.display = 'block';
-            fracEl.style.display = 'none';
         } else if (labelMode === 2) { // 1/100
-            labelEl.style.display = 'none';
             fracEl.style.display = 'flex';
-        } else { // Rien
-            labelEl.style.display = 'none';
-            fracEl.style.display = 'none';
+        } else if (labelMode === 3) { // 1 c
+            labelEl.textContent = "1 c";
+            labelEl.style.display = 'block';
         }
       });
     });
@@ -391,28 +395,38 @@
     let strDecimal = valDecimal.toLocaleString(currentLang === 'fr' ? 'fr-FR' : 'en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
     let strFraction = getFractionString(totalCount);
     
+    // Adaptation pour afficher "centime" ou "centimes"
+    let unit = (currentLang === 'fr') 
+        ? (totalCount > 1 ? "centimes" : "centime") 
+        : (totalCount !== 1 ? "cents" : "cent");
+        
+    let strCentimes = `${totalCount} ${unit}`;
+
+    // Cas spécial pour 100 (1 Euro)
+    if (totalCount === 100) {
+        strCentimes += " = 1 €";
+    }
+
     let parts = [];
     if (showDecimal) parts.push(strDecimal);
     if (showFraction) parts.push(strFraction);
+    if (showCentimes) parts.push(strCentimes);
     
     totalDiv.innerText = parts.join(" = ");
   }
 
   function getFractionString(n) {
     if (n === 0) return "0";
-    if (n === 100) return "1";
+    if (n === 100) return "100/100 = 10/10 = 1"; // Cas spécial demandé
 
     let parts = [];
 
-    // 1. D'ABORD les Dixièmes si possible
     if (n % 10 === 0) {
         parts.push(`${n/10}/10`);
     }
 
-    // 2. PUIS les Centièmes (toujours)
     parts.push(`${n}/100`);
 
-    // 3. ENFIN la simplification spéciale (si différente des dixièmes)
     let simp = null;
     if (n === 50) simp = "1/2";
     else if (n === 25) simp = "1/4";
@@ -506,9 +520,17 @@
       btnFrac.classList.toggle('active', showFraction);
       updateTotalDisplay();
   }
+  
+  function toggleCentimes() {
+      showCentimes = !showCentimes;
+      btnCent.classList.toggle('active', showCentimes);
+      updateTotalDisplay();
+  }
 
   function toggleLabels() {
-      labelMode = (labelMode + 1) % 3;
+      // Cycle: 0 -> 1 -> 2 -> 3 -> 0
+      labelMode = (labelMode + 1) % 4;
+      
       btnLabel.classList.toggle('active', labelMode !== 0);
       updateLabelButtonText();
       updateBeads(false);
@@ -529,6 +551,7 @@
   function toggleLang() {
     currentLang = (currentLang === 'fr') ? 'en' : 'fr';
     updateLanguageUI();
+    updateTotalDisplay();
   }
   
   function toggleTheme() {
@@ -546,6 +569,7 @@
     
     btnDec.innerText = t.btnDec;
     btnFrac.innerText = t.btnFrac;
+    btnCent.innerText = t.btnCent;
     updateLabelButtonText();
     
     document.getElementById('btn-theme').innerText = t.btnTheme;
@@ -575,7 +599,7 @@
     const frameW = frameInternalW + borderW*2; 
     const frameH = rows * rowH;
     
-    const displayH = (showDecimal || showFraction) ? 80 : 0;
+    const displayH = (showDecimal || showFraction || showCentimes) ? 80 : 0;
     
     const cvsW = frameW + margin*2;
     const cvsH = displayH + frameH + margin*2;
@@ -593,7 +617,7 @@
     const startY = margin + displayH;
 
     // Valeur
-    if (showDecimal || showFraction) {
+    if (showDecimal || showFraction || showCentimes) {
         exCtx.fillStyle = '#0f6cf9'; 
         exCtx.font = "bold 58px sans-serif";
         exCtx.textAlign = "center";
@@ -656,24 +680,24 @@
                 const cx = xPos + beadSize/2;
                 const cy = yPos + beadSize/2;
                 
+                exCtx.fillStyle = (isRedBead || (isBlue && !isRedBead)) ? 'white' : 'black';
+                exCtx.textAlign = 'center';
+                exCtx.textBaseline = 'middle';
+                
                 if (labelMode === 1) { 
-                    // Mode 1: 0,01 DEDANS (Centré)
-                    exCtx.fillStyle = (isRedBead || (isBlue && !isRedBead)) ? 'white' : 'black';
-                    exCtx.textAlign = 'center';
-                    exCtx.textBaseline = 'middle';
+                    // Mode 1: 0,01
                     exCtx.font = "bold 10px sans-serif";
                     exCtx.fillText("0,01", cx, cy);
-
                 } else if (labelMode === 2) {
-                    // Mode 2: 1/100 DEDANS
-                    exCtx.fillStyle = (isRedBead || (isBlue && !isRedBead)) ? 'white' : 'black';
-                    exCtx.textAlign = 'center';
-                    exCtx.textBaseline = 'middle';
-                    
+                    // Mode 2: 1/100
                     exCtx.font = "bold 9px sans-serif";
                     exCtx.fillText("1", cx, cy - 6);
                     exCtx.fillRect(cx - 6, cy, 12, 1);
                     exCtx.fillText("100", cx, cy + 8);
+                } else if (labelMode === 3) {
+                    // Mode 3: 1 c
+                    exCtx.font = "bold 10px sans-serif";
+                    exCtx.fillText("1 c", cx, cy);
                 }
             }
         }
