@@ -11,21 +11,26 @@
   .app{max-width:1100px;margin:16px auto;padding:0 12px}
   .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
   .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-weight:900}
   .btn{border:none;background:var(--accent);color:#fff;font-weight:900;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent)}
   .btn.secondary{background:#6b7280}
+  .btn.small{padding:7px 10px;border-radius:10px}
+  .zoomLabel{font-weight:900;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff}
   .btn:active{transform:translateY(1px)}
 
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px}
 
-  .inner{position:relative;margin-top:4px}
+  /* espace interne (sans marge qui s'écrase) pour que la poignée ne chevauche pas le titre */
+  .inner{position:relative;padding-top:70px}
   .head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;position:relative;z-index:1}
 
-  /* curseur légèrement plus haut */
+  /* curseur (bandeau) */
   .cursor{
-    position:absolute;left:0;top:-21px;bottom:-3px;width:calc((100% - 6px*6)/7);
+    /* on l'allonge un peu en haut et en bas : effet "bandeau" */
+    position:absolute;left:0;top:40px;bottom:-12px;width:calc((100% - 6px*6)/7);
     transform:translateX(var(--x,0));
     background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
     border:3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
@@ -37,6 +42,30 @@
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.15))
   }
   .cursor::after{content:"";position:absolute;top:0;right:-3px;width:3px;bottom:0;background:color-mix(in srgb, var(--accent-dark) 70%, transparent);border-radius:2px}
+
+  /* poignée de glisse (interactive) */
+  .handle{
+    position:absolute;left:0;top:12px;
+    width:calc((100% - 6px*6)/7);
+    transform:translateX(var(--x,0));
+    height:28px;
+    background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 92%, #000), color-mix(in srgb, var(--accent-dark) 92%, #000));
+    border:2px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
+    border-radius:999px;
+    z-index:4;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:900;
+    font-size:16px;line-height:1;
+    user-select:none;
+    cursor:grab;
+    box-shadow:0 10px 20px rgba(0,0,0,.18);
+  }
+  .handle::before{
+    content:"⋮⋮";
+    position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    opacity:.85;font-weight:900;letter-spacing:-2px
+  }
+  .handle.dragging{cursor:grabbing;filter:drop-shadow(0 10px 14px rgba(0,0,0,.22))}
 
   .unitBtn{background:color-mix(in srgb, var(--accent) 12%, #fff);border:2px solid var(--accent);border-radius:8px;padding:8px 4px;text-align:center;font-weight:900;cursor:pointer}
   .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
@@ -75,6 +104,12 @@
       <button class="btn" id="toggleShow">Afficher</button>
       <button class="btn secondary" id="reset">Remise à zéro</button>
     </div>
+    <div class="right" aria-label="Zoom">
+      <button class="btn secondary small" id="zoomOut" title="Zoom -" aria-label="Zoom arrière">−</button>
+      <span class="zoomLabel" id="zoomLabel" aria-label="Niveau de zoom">100%</span>
+      <button class="btn secondary small" id="zoomIn" title="Zoom +" aria-label="Zoom avant">+</button>
+      <button class="btn secondary small" id="zoomReset" title="Réinitialiser le zoom" aria-label="Réinitialiser le zoom">⟲</button>
+    </div>
   </div>
 
   <div class="board">
@@ -82,6 +117,7 @@
 
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
+      <div class="handle" id="handle" title="Glisse pour choisir l’unité" aria-label="Glisser pour choisir l’unité">🖐️</div>
       <div class="head" id="head"></div>
 
       <!-- Repères couplés -->
@@ -119,10 +155,18 @@
   const head    = document.getElementById('head');
   const grid    = document.getElementById('grid');
   const inner   = document.getElementById('inner');
+  const board   = document.querySelector('.board');
   const cursor  = document.getElementById('cursor');
+  const handle  = document.getElementById('handle');
   const btnTog  = document.getElementById('toggleShow');
   const btnRst  = document.getElementById('reset');
   const result  = document.getElementById('result');
+
+  // Zoom UI
+  const zoomOut   = document.getElementById('zoomOut');
+  const zoomIn    = document.getElementById('zoomIn');
+  const zoomReset = document.getElementById('zoomReset');
+  const zoomLabel = document.getElementById('zoomLabel');
 
   const subhead = document.getElementById('subhead');
   const labKL   = document.getElementById('labKL');
@@ -131,9 +175,23 @@
 
   let schema = SCHEMAS.length;
   let targetIdx = 3;
+  let currentX = 0;
   let isShown = false;
   let inputs = [];
   let savedStudent = null;
+
+  let zoomScale = 1;
+
+  function applyZoom(){
+    if(!board) return;
+    // zoom "visuel" sans toucher au fonctionnement : on compense les deltas de glisse en JS
+    board.style.transform = `scale(${zoomScale})`;
+    board.style.transformOrigin = 'top center';
+    if(zoomLabel) zoomLabel.textContent = `${Math.round(zoomScale*100)}%`;
+    // Recaler les repères (mode L↔m³) et le bandeau
+    positionCoupleLabels();
+    setTarget(targetIdx,false);
+  }
 
   function setTheme(kind){
     const [c,cd] = THEMES[kind];
@@ -196,7 +254,8 @@
       const el = inputs?.[ci]?.[si]; if(!el) return 0;
       const r = el.getBoundingClientRect();
       const base = inner.getBoundingClientRect();
-      return (r.left - base.left) + r.width/2;
+      // getBoundingClientRect() donne des px "écran" (après transform:scale). On revient en px logiques.
+      return ((r.left - base.left) + r.width/2) / zoomScale;
     };
     const last = schema.slots-1; // sous-case droite
     const nudge = 3;
@@ -204,7 +263,8 @@
     labL .style.left = (getCenter(4,last) + nudge) + 'px'; // dm³ → L
     labML.style.left = (getCenter(5,last) + nudge) + 'px'; // cm³ → mL
   }
-  window.addEventListener('resize', positionCoupleLabels);
+  // Sur redimensionnement, on recale le bandeau sur la colonne choisie
+  window.addEventListener('resize', ()=>setTarget(targetIdx,false));
 
   function findIndex(inp){
     for(let ci=0;ci<inputs.length;ci++){
@@ -218,9 +278,63 @@
   function setTarget(i,refresh){
     targetIdx=i;
     const colW = head.clientWidth/7;
-    cursor.style.setProperty('--x', `${i*colW}px`);
+    currentX = i*colW;
+    cursor.style.setProperty('--x', `${currentX}px`);
+    // poignée (interactive)
+    if(handle){
+      handle.style.setProperty('--x', `${currentX}px`);
+      // on ne réécrit pas l'unité dans la poignée : l'unité est déjà visible dans l'en-tête
+      handle.textContent = '🖐️';
+      handle.setAttribute('aria-label', `Glisser pour choisir l’unité (sélection : ${schema.units[targetIdx]})`);
+    }
     positionCoupleLabels();
     if(isShown && refresh){ completeZerosInTable(); updateResult(); }
+  }
+
+  /* --------- GLISSE DU BANDEAU (POIGNÉE) --------- */
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartPx = 0;
+  let dragX = 0;
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  if(handle){
+    handle.addEventListener('pointerdown', (e)=>{
+      // empêche sélection/scroll pendant la glisse
+      e.preventDefault();
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartPx = currentX;
+      dragX = currentX;
+      handle.classList.add('dragging');
+      cursor.style.transition = 'none';
+      try{ handle.setPointerCapture(e.pointerId); }catch(_){/* ignore */}
+    });
+
+    handle.addEventListener('pointermove', (e)=>{
+      if(!isDragging) return;
+      const colW = head.clientWidth/7;
+      const maxX = colW*6;
+      // si on a zoomé, on compense le delta souris (en pixels écran) pour rester cohérent
+      dragX = clamp(dragStartPx + ((e.clientX - dragStartX)/zoomScale), 0, maxX);
+      cursor.style.setProperty('--x', `${dragX}px`);
+      handle.style.setProperty('--x', `${dragX}px`);
+    });
+
+    function endDrag(e){
+      if(!isDragging) return;
+      isDragging = false;
+      handle.classList.remove('dragging');
+      try{ handle.releasePointerCapture(e.pointerId); }catch(_){/* ignore */}
+      // on remet l'animation juste pour le "plop" de snap
+      cursor.style.transition = 'transform .12s ease';
+      const colW = head.clientWidth/7;
+      const i = clamp(Math.round(dragX/colW), 0, 6);
+      setTarget(i, true);
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
   }
 
   /* --------- COMPLÉTION DES ZÉROS (CORRIGÉE) --------- */
@@ -331,9 +445,23 @@
     setTarget(schema.units.indexOf(schema.base),false);
     result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null;
   });
-  kindSel.addEventListener('change', rebuild);
+  // Zoom controls
+  if(zoomIn) zoomIn.addEventListener('click', ()=>{
+    zoomScale = Math.min(1.6, Math.round((zoomScale + 0.1) * 100) / 100);
+    applyZoom();
+  });
+  if(zoomOut) zoomOut.addEventListener('click', ()=>{
+    zoomScale = Math.max(0.8, Math.round((zoomScale - 0.1) * 100) / 100);
+    applyZoom();
+  });
+  if(zoomReset) zoomReset.addEventListener('click', ()=>{
+    zoomScale = 1;
+    applyZoom();
+  });
 
-  setTheme('length'); rebuild();
+  kindSel.addEventListener('change', ()=>{ rebuild(); applyZoom(); });
+
+  setTheme('length'); rebuild(); applyZoom();
 })();
 </script>
 </body>
