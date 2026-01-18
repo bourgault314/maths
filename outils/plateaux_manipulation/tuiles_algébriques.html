@@ -83,7 +83,7 @@
         
         .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
         .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
-.token.is-zero {
+        .token.is-zero {
             background: #9ca3af !important;
             opacity: 0.6;
             border: 2px solid #6b7280;
@@ -100,7 +100,7 @@
             box-shadow: none !important;
             filter: grayscale(1);
         }
-/* FORMES */
+        /* FORMES */
         .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
         .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
         .token.type-x2 { width: 90px; height: 90px; border-radius: 4px; }
@@ -115,7 +115,6 @@
             text-shadow: 0 0 10px rgba(255,255,255,1);
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        /* Les "0" doivent disparaître un peu plus vite que les tuiles pour éviter l'effet "ça traîne" */
         .zero-badge.vanish { animation: vanish 0.25s ease-in forwards; }
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
@@ -151,7 +150,7 @@
         .ps-red { background: #f87171; border: 1px solid #b91c1c; }
 
         .mode-active-minus { border: 2px solid #f97316; background-color: #fff7ed; }
-@keyframes pulse-orange {
+        @keyframes pulse-orange {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
         }
@@ -196,7 +195,6 @@
             <div class="flex gap-1 items-center">
                 <div class="flex gap-1 items-center bg-blue-50 rounded-full p-1 border border-blue-100">
                     <button id="btn-op-plus" onclick="separatePack()" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Séparer les groupes">+</button>
-                    <!-- FERMER PARENTHÈSE (cas : +(- ... ) ) -->
                 </div>
                 
                 <div class="flex gap-1 items-center bg-orange-50 rounded-full p-1 border border-orange-100">
@@ -284,7 +282,7 @@
                 </div>
             </div>
 
-            <!-- ORDONNER --><!-- ORDONNER -->
+            <!-- ORDONNER -->
             <button id="btn-order" onclick="orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 hover:bg-slate-50 transition" title="Ordonner les tuiles">ordonner</button>
             <!-- RÉDUIRE -->
             <button id="btn-reduce" onclick="reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">réduire</button>
@@ -315,7 +313,6 @@
             'x2': { w: 90, h: 90 }
         };
 
-        // Couleurs de l'écriture (comme les tuiles)
         const COLORS = {
             pos: 'green',   // vert
             neg: 'red',     // rouge
@@ -326,27 +323,24 @@
         const state = {
             tokens: [],
             nextId: 1,
-            // "Pack" = un paquet de tuiles issues d'une même action (utile pour ORDONNER sans réduire)
             nextPackId: 1,
             nextPackOrder: 1,
-            packMeta: {}, // packId -> { order: number }
-            lastPack: null, // {packId,type,sign,stepIndex,ts}
+            packMeta: {}, 
+            lastPack: null, 
             steps: [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }],
             currentStepIndex: 0,
             isSubtractingInput: false,
             isMultiplyingInput: false,
-            _internalAdd: false, // utilisé pour dupliquer des tuiles sans créer de nouveau step
+            _internalAdd: false,
             isAnimating: false,
             displayMode: 'normal',
             isReduced: false,
             currentTool: 'hand',
             lastPos: { x: 40, y: 60, maxYInRow: 0 },
-            // Pour garder des espaces entre paquets dès la saisie (avant ORDONNER)
             lastSequentialPackId: null,
             pendingPackGap: 0
         };
 
-        // Espace entre paquets (même logique que l'affichage ORDONNER non réduit)
         const PACK_GAP = 18;
 
         const board = document.getElementById('board');
@@ -399,10 +393,7 @@
         function getOrCreatePackId({ type, sign, stepIndex }) {
             const now = Date.now();
             const lp = state.lastPack;
-            // Si l'utilisateur clique plusieurs fois d'affilée sur la même tuile,
-            // on "colle" dans le même pack (ex: 3 fois x² -> 3x² collés).
-            // Fenêtre courte pour éviter de fusionner des actions pédagogiquement distinctes.
-            const MERGE_WINDOW_MS = 1000000000000;// no time-based split (pause-friendly)
+            const MERGE_WINDOW_MS = 1000000000000;
             if (
                 lp &&
                 lp.type === type &&
@@ -418,28 +409,24 @@
             return pid;
         }
 
-        function addTile(type, sign, x = null, y = null, packId = null) {
-            // Si on était en mode ordonné/réduit, on revient en mode normal dès qu'on ajoute une tuile
+        // MODIFICATION ICI: ajout du paramètre isGhost pour la prévisualisation immédiate
+        function addTile(type, sign, x = null, y = null, packId = null, isGhost = false) {
             if (state.displayMode !== 'normal') {
                 state.displayMode = 'normal';
                 state.isReduced = false;
             }
 
-            // Si on repart de zéro (plus aucune tuile), on recrée en haut
             if (state.tokens.length === 0) {
                 state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
             }
-            playSound('pop');
+            if (!isGhost) playSound('pop');
 
-            // Si le step courant est une parenthèse déjà fermée (soustraction ou multiplication),
-            // et qu'on ajoute une nouvelle tuile (action utilisateur), on ouvre automatiquement un nouveau step.
             let currentStep = state.steps[state.currentStepIndex];
-            if (!state._internalAdd && currentStep && currentStep.isClosed && !state.isSubtractingInput && !state.isMultiplyingInput) {
+            if (!state._internalAdd && !isGhost && currentStep && currentStep.isClosed && !state.isSubtractingInput && !state.isMultiplyingInput) {
                 const newStep = { id: state.steps.length, operator: '+', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false };
                 state.steps.push(newStep);
                 state.currentStepIndex = state.steps.length - 1;
                 currentStep = newStep;
-                // Nouveau pack logique
                 state.lastPack = null;
             }
 
@@ -450,14 +437,9 @@
             const isMultInput = (state.isMultiplyingInput && currentStep.type === 'multiplication' && !currentStep.distributed);
             const isNegMultInput = (isMultInput && currentStep.operator === '-');
 
-            // Sur le tapis :
-            // - soustraction en cours => on pose directement l'opposé.
-            // - multiplication négative en cours (-2(…)) => on pose aussi l'opposé (représentation matérielle).
-            // Dans le calcul : on garde l'écriture saisie (displaySign), jusqu'aux boutons OPPOSÉ / DÉVELOPPER.
             const displaySign = sign;
             const tileSign = (isSubInput || isNegMultInput) ? -sign : sign;
 
-            // Pack (pour ORDONNER sans réduire) : un pack = une action (ou une rafale de clics identiques)
             const stepIndex = state.currentStepIndex;
             let pid;
             if (packId !== null && packId !== undefined) {
@@ -465,7 +447,7 @@
                 if (!state.packMeta[pid]) {
                     state.packMeta[pid] = { order: state.nextPackOrder++ };
                 }
-                state.lastPack = { packId: pid, type, sign: tileSign, stepIndex, ts: Date.now() };
+                if (!isGhost) state.lastPack = { packId: pid, type, sign: tileSign, stepIndex, ts: Date.now() };
             } else {
                 pid = getOrCreatePackId({ type, sign: tileSign, stepIndex });
             }
@@ -475,6 +457,11 @@
 
             const isSubStep = (currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
             if (isSubStep) el.classList.add('in-bracket');
+            
+            // Les copies fantômes en mode multiplication sont entourées de bleu immédiatement
+            if (isGhost) {
+                el.classList.add('pending-mult');
+            }
 
             let label = "";
             if (type === 'x2') label = tileSign === 1 ? "x²" : "-x²";
@@ -488,8 +475,6 @@
             if (x !== null && y !== null) {
                 pos = {x, y};
             } else {
-                // Avant ORDONNER : on garde un petit espace entre les paquets (packs) visibles
-                // (ex : 3x² puis -3x² => deux groupes séparés).
                 if (!state._internalAdd) {
                     let gap = 0;
                     if (state.pendingPackGap && state.pendingPackGap > 0) {
@@ -512,14 +497,34 @@
             const tokenObj = {
                 id, type, sign: tileSign, displaySign: displaySign, element: el, x: pos.x, y: pos.y,
                 pairId: null,
-                packId: pid
+                packId: pid,
+                ghostIds: [] // Pour stocker les IDs des copies liées
             };
 
             state.tokens.push(tokenObj);
-            state.steps[state.currentStepIndex].tokenIds.push(id);
+            
+            // IMPORTANT : On n'ajoute pas les fantômes au step tout de suite,
+            // pour ne pas fausser l'affichage de l'équation (ex: 2(x^2))
+            if (!isGhost) {
+                state.steps[state.currentStepIndex].tokenIds.push(id);
+                if (x === null && y === null && !state._internalAdd) {
+                    state.lastSequentialPackId = pid;
+                }
+            }
 
-            if (x === null && y === null && !state._internalAdd) {
-                state.lastSequentialPackId = pid;
+            // --- AUTO CREATION DES FANTÔMES (Visualisation immédiate) ---
+            if (!isGhost && state.isMultiplyingInput && currentStep.type === 'multiplication' && currentStep.factor > 1) {
+                const factor = currentStep.factor;
+                const vGap = 18;
+                const blockH = SIZES[type].h + vGap;
+                
+                // On crée (factor - 1) copies en dessous
+                for (let i = 1; i < factor; i++) {
+                    addTile(type, sign, pos.x, pos.y + i * blockH, pid, true);
+                    // Lier la copie au token maître
+                    const ghostToken = state.tokens[state.tokens.length - 1];
+                    tokenObj.ghostIds.push(ghostToken.id);
+                }
             }
 
             updateEquation();
@@ -543,8 +548,6 @@
         // --- MULTIPLICATION (entrée + développer) ---
 
         function startMultiplication(factor) {
-            // Interprétation : si l'utilisateur vient juste de faire "-" (parenthèse ouverte) et n'a posé aucune tuile,
-            // alors "-" puis "2 fois/3 fois/4 fois" devient : "- {}" k( … ) (multiplication négative).
             const cur = state.steps[state.currentStepIndex];
             const canConvertMinusToMult = state.isSubtractingInput && cur && cur.type === 'subtraction' && (cur.tokenIds?.length || 0) === 0;
 
@@ -553,8 +556,6 @@
                 cur.factor = factor;
                 cur.distributed = false;
                 cur.isClosed = false;
-                cur._multVisualized = false;
-                cur._multLayout = null;
                 state.isSubtractingInput = false;
                 state.isMultiplyingInput = true;
                 btnCloseP.classList.remove('hidden');
@@ -564,7 +565,6 @@
                 return;
             }
 
-            // Si une parenthèse (soustraction ou multiplication) est en cours, on ne démarre pas une nouvelle multiplication.
             if (state.isSubtractingInput || state.isMultiplyingInput) return;
 
             const step = {
@@ -575,14 +575,11 @@
                 factor: factor,
                 oppositeApplied: false,
                 distributed: false,
-                isClosed: false,
-                _multVisualized: false,
-                _multLayout: null
+                isClosed: false
             };
             state.steps.push(step);
             state.currentStepIndex = state.steps.length - 1;
             state.lastPack = null;
-            // Nouvelle "famille" (multiplication) : espace entre le paquet précédent et ce bloc
             state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
 
             state.isMultiplyingInput = true;
@@ -610,165 +607,113 @@
             step.isClosed = true;
             state.isMultiplyingInput = false;
             btnCloseP.classList.add('hidden');
-
-            // Visualisation matérielle : empiler k copies en bleu
-            if (step.factor > 1 && step.tokenIds.length > 0 && !step.distributed) {
-                visualizeMultiplication(step);
+            
+            // Si on a des éléments, on affiche le bouton développer
+            if (step.tokenIds.length > 0 && step.factor > 1) {
+                btnDistribute.classList.remove('hidden');
             }
+            
             updateEquation();
-        }
-
-        function visualizeMultiplication(step) {
-            if (!step || step.type !== 'multiplication') return;
-            if (step._multVisualized) return;
-            if (!step.factor || step.factor < 2) return;
-
-            // On conserve les tuiles "source" (1 seule fois) pour l'affichage du calcul : 2( x^2 - 1 )
-            // Les duplications bleues sur le tapis ne doivent pas contaminer l'écriture dans le calcul.
-            if (!step._multBaseTokenIds) step._multBaseTokenIds = step.tokenIds.slice();
-            const baseIds = step._multBaseTokenIds.slice();
-            const baseTokens = baseIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
-            if (baseTokens.length === 0) return;
-
-            // Bounding box du groupe de base
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            for (const t of baseTokens) {
-                const w = SIZES[t.type].w, h = SIZES[t.type].h;
-                minX = Math.min(minX, t.x);
-                minY = Math.min(minY, t.y);
-                maxX = Math.max(maxX, t.x + w);
-                maxY = Math.max(maxY, t.y + h);
-            }
-            const groupWidth = Math.max(60, maxX - minX);
-            const groupHeight = Math.max(40, maxY - minY);
-            const vGap = 18;
-            const blockH = groupHeight + vGap;
-
-            step._multLayout = { minX, minY, groupWidth, groupHeight, vGap, blockH };
-            step._multVisualized = true;
-
-            // Marque la copie de base
-            baseTokens.forEach(t => t.element.classList.add('pending-mult'));
-
-            // Duplication verticale
-            const prevInternal = state._internalAdd;
-            const prevMult = state.isMultiplyingInput;
-            const prevClosed = step.isClosed;
-
-            state._internalAdd = true;
-            state.isMultiplyingInput = true; // pour conserver l'inversion de signe si operator === '-'
-            step.isClosed = false;
-
-            const prevIdx = state.currentStepIndex;
-            // Assure qu'on duplique bien dans ce step
-            const stepIdx = state.steps.indexOf(step);
-            if (stepIdx >= 0) state.currentStepIndex = stepIdx;
-
-            for (let i = 1; i < step.factor; i++) {
-                for (const bt of baseTokens) {
-                    addTile(bt.type, bt.displaySign, bt.x, bt.y + i * blockH, bt.packId);
-                    const newTok = state.tokens[state.tokens.length - 1];
-                    if (newTok && newTok.element) newTok.element.classList.add('pending-mult');
-                }
-            }
-
-            state.currentStepIndex = prevIdx;
-            step.isClosed = prevClosed;
-            state.isMultiplyingInput = prevMult;
-            state._internalAdd = prevInternal;
-
-            btnDistribute.classList.remove('hidden');
         }
 
         function applyDistribution() {
             const step = state.steps[state.currentStepIndex];
             if (!step || step.type !== 'multiplication') return;
             if (step.distributed) return;
-            if (!step._multLayout) return;
 
-            const layout = step._multLayout;
-            const blockH = layout.blockH;
-            const copyGapX = 28;
+            // Récupérer tous les tokens concernés (maîtres + fantômes)
+            const masterTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
+            if (masterTokens.length === 0) return;
 
-            const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
-            if (stepTokens.length === 0) return;
-
-            // Détermine le nombre de copies à partir des positions empilées
-            let maxCopy = 0;
-            for (const t of stepTokens) {
-                const ci = Math.round((t.y - layout.minY) / blockH);
-                t._copyIndex = ci;
-                if (ci > maxCopy) maxCopy = ci;
-            }
-            const copies = maxCopy + 1;
-            if (copies <= 1) return;
-
-            // PackIds de la copie 0 (pour recréer des packs distincts pour les copies 1..)
-            const basePackIds = [];
-            const seen = new Set();
-            const baseTokens = stepTokens.filter(t => t._copyIndex === 0);
-            // On trie par ordre de pack (stable)
-            baseTokens.sort((a,b) => (state.packMeta[a.packId]?.order ?? 0) - (state.packMeta[b.packId]?.order ?? 0));
-            for (const t of baseTokens) {
-                if (!seen.has(t.packId)) {
-                    seen.add(t.packId);
-                    basePackIds.push(t.packId);
-                }
-            }
-
-            // Remap packId pour chaque copie
-            for (let ci = 1; ci < copies; ci++) {
-                const map = new Map();
-                for (const pid of basePackIds) {
-                    const np = newPackId();
-                    map.set(pid, np);
-                }
-                for (const t of stepTokens) {
-                    if (t._copyIndex !== ci) continue;
-                    const np = map.get(t.packId);
-                    if (np !== undefined) t.packId = np;
-                }
-            }
-
-            // Dé-empile : on met les copies côte à côte
-            for (const t of stepTokens) {
-                const ci = t._copyIndex || 0;
-                if (ci === 0) continue;
-                moveToken(t, t.x + ci * (layout.groupWidth + copyGapX), t.y - ci * blockH);
-            }
-
-            // Nettoyage visuel
-            stepTokens.forEach(t => {
+            // Promouvoir les fantômes en tokens réels dans le step
+            const allTokens = [];
+            masterTokens.forEach(t => {
+                allTokens.push(t);
+                t.ghostIds.forEach(gid => {
+                    const g = state.tokens.find(tk => tk.id === gid);
+                    if (g) {
+                        step.tokenIds.push(gid);
+                        allTokens.push(g);
+                        // Nettoyer l'état fantôme
+                        g.element.classList.remove('pending-mult');
+                    }
+                });
+                t.ghostIds = []; // Plus de lien fantôme, ils sont tous égaux maintenant
                 t.element.classList.remove('pending-mult');
-                delete t._copyIndex;
             });
 
             step.distributed = true;
             btnDistribute.classList.add('hidden');
+
+            // --- NOUVELLE MISE EN PAGE : Groupes séparés (en long) ---
+            // On veut séparer visuellement les familles : 2x² d'un côté, -4x de l'autre
+            
+            // 1. Calculer le point de départ (Bounding Box actuelle)
+            let minX = Infinity, minY = Infinity;
+            allTokens.forEach(t => {
+                minX = Math.min(minX, t.x);
+                minY = Math.min(minY, t.y);
+            });
+            // Si pas trouvé, fallback
+            if (minX === Infinity) { minX = 40; minY = 60; }
+
+            // 2. Trier et grouper par type
+            // Ordre souhaité : x², x, unit
+            const groups = {
+                'x2': [],
+                'x': [],
+                'unit': []
+            };
+
+            allTokens.forEach(t => {
+                if (groups[t.type]) groups[t.type].push(t);
+            });
+
+            // 3. Placer les groupes "en long" (côte à côte) avec un écart
+            let cursorX = minX;
+            const gapBetweenGroups = 40; // Grand espace entre 2x² et -4x
+            const gapInGroup = 2; // Espace serré entre les tuiles d'un même groupe
+
+            ['x2', 'x', 'unit'].forEach(type => {
+                const list = groups[type];
+                if (list.length === 0) return;
+
+                // Trier pour que ce soit joli (positifs, puis négatifs ou mélangés ?)
+                // Généralement on a soit tout positif soit tout négatif par bloc après dév simple
+                list.sort((a,b) => b.sign - a.sign); // Positifs d'abord
+
+                const w = SIZES[type].w;
+                
+                list.forEach(t => {
+                    t.element.classList.add('animating');
+                    moveToken(t, cursorX, minY);
+                    setTimeout(() => t.element.classList.remove('animating'), 500);
+                    cursorX += w + gapInGroup;
+                });
+
+                // Espace après le groupe
+                cursorX += gapBetweenGroups;
+            });
+            
+            // Mettre à jour la position globale pour la suite
+            state.lastPos.x = cursorX;
+            state.lastPos.y = minY;
+
             updateEquation();
         }
 
         // --- GESTION OPÉRATEURS ---
 
         function separatePack() {
-            // Bouton + : ne crée pas d'opération.
-            // Sert uniquement à séparer les groupes (packs) : 2x² + x² reste visible en deux blocs avant Réduire.
             playSound('pop');
-            // Force un nouveau pack au prochain clic de tuile, même si c'est la même tuile/sign.
             state.lastPack = null;
-            // Demande un espace visible entre paquets dès la saisie.
             state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
         }
 
         function setOperator(op) {
-            // Gestion des opérateurs réels : soustraction et multiplication.
-            // Le bouton '+' est géré par separatePack() (séparation de packs), donc ici pas de op==='add'.
-
-            // On empêche d'ouvrir un nouvel opérateur si une parenthèse de soustraction est en cours.
             if (state.isSubtractingInput) return;
 
             if (op === 'subtract') {
-                // Nouvelle "famille" (soustraction) -> on veut un espace visible avant le prochain paquet
                 state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
                 state.steps.push({
                     id: state.steps.length,
@@ -815,10 +760,8 @@
                     if (typeof t.displaySign === 'number') {
                         t.displaySign *= -1;
                     } else {
-                        // sécurité
                         t.displaySign = -(t.sign || 0);
                     }
-                    // visuel : on enlève le contour "en-bracket" une fois l'opposé validé
                     t.element.classList.remove('in-bracket');
                 });
 
@@ -829,12 +772,9 @@
             updateEquation();
         }
 
-// --- ORDONNER ---
+        // --- ORDONNER ---
 
         function orderAll() {
-            // ORDONNER :
-            // - ordonne l'affichage du calcul (x² puis x puis 1, puis + avant -) SANS réduire
-            // - sur le tapis : regroupe par types en gardant des séparations entre paquets
             playSound('pop');
             state.displayMode = 'ordered';
             state.isReduced = false;
@@ -850,13 +790,8 @@
             updateEquation();
         }
 
-        // --- ORDONNER / RÉDUIRE (mise en page des tuiles) ---
         function organizeBoard(reduced = false) {
             playSound('pop');
-
-            // Packs :
-            // - AVANT réduction : on respecte les "paquets" (packId) pour laisser des séparations entre 3x² et +x², etc.
-            // - APRÈS réduction : on colle tout (un seul pack par type/signe).
             const getPacks = (type, sign) => {
                 const eligible = state.tokens
                     .filter(t => t.pairId === null && t.type === type && t.sign === sign);
@@ -866,7 +801,7 @@
                     return [eligible];
                 }
 
-                const map = new Map(); // packId -> tokens[]
+                const map = new Map();
                 eligible.forEach(t => {
                     const pid = (typeof t.packId === 'number') ? t.packId : 0;
                     if (!map.has(pid)) map.set(pid, []);
@@ -886,10 +821,10 @@
             const startX = 20;
             let y = 60;
 
-            const innerGap = 2;                  // serré à l'intérieur d'un paquet (ex : 3x²)
-            const packGap = reduced ? 2 : 18;    // espace ENTRE paquets (ex : 2x² + x²)
-            const lineGap = reduced ? 10 : packGap; // même gap en hauteur/largeur lors des retours à la ligne
-            const rowGap = reduced ? 18 : 18;    // espace entre familles (x², -x², x, -x, 1, -1)
+            const innerGap = 2;
+            const packGap = reduced ? 2 : 18; 
+            const lineGap = reduced ? 10 : packGap;
+            const rowGap = reduced ? 18 : 18;
 
             const placeRow = (packs, y0) => {
                 let x = startX;
@@ -901,7 +836,6 @@
                     for (const t of pack) {
                         const size = SIZES[t.type] || { w: 50, h: 50 };
 
-                        // Retour à la ligne si nécessaire (dans la même famille)
                         if (x + size.w > maxX) {
                             x = startX;
                             yy += rowH + lineGap;
@@ -936,11 +870,10 @@
                 y = placeRow(packs, y) + rowGap;
             });
 
-            // Après un ordonnancement / réduction, on garde l'affichage en haut tel quel
             state.lastPos = { x: 20, y: board.clientHeight - 100, maxYInRow: 0 };
         }
 
-function moveToken(t, x, y) {
+        function moveToken(t, x, y) {
             t.x = x; t.y = y;
             t.element.style.left = x + 'px';
             t.element.style.top = y + 'px';
@@ -949,13 +882,8 @@ function moveToken(t, x, y) {
         // --- GÉNÉRATION ÉQUATION ---
 
         function tokensToSeparatedLatex(tokens, scaleFactor = 1) {
-            // Regroupe uniquement les termes CONSÉCUTIFS identiques,
-            // en utilisant displaySign pour l'écriture.
-            // Couleurs dans le calcul : vert (positif) / rouge (négatif).
             if (!tokens || tokens.length === 0) return "";
-
             const colorFor = (sgn) => (sgn === -1 ? COLORS.neg : COLORS.pos);
-            // IMPORTANT : on met \color dans la chaîne JS pour obtenir \color dans le LaTeX.
             const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
             const plus = colorWrap(COLORS.pos, '+');
 
@@ -982,7 +910,6 @@ function moveToken(t, x, y) {
                 count = Math.round(count * 100) / 100;
                 if (count <= 0) return;
 
-                // Terme sans signe (le signe est géré séparément)
                 let termCore = "";
                 if (g.type === 'unit') {
                     termCore = String(count);
@@ -1000,20 +927,15 @@ function moveToken(t, x, y) {
                     if (g.writtenSign === -1) {
                         latex += `\\;${coloredMinus}\\;` + coloredTerm;
                     } else {
-                        // Plus en vert
                         latex += `\\;${plus}\\;` + coloredTerm;
                     }
                 }
-
                 isFirst = false;
             });
-
             return latex || "0";
         }
 
         function tokensToReducedSumLatex(tokens) {
-            // Reduced display: group by type+sign (local to this step), without touching other groups.
-            // Uses the real tile sign (t.sign). This matches the expected writing after DEVELOPPER.
             if (!tokens || tokens.length === 0) return "0";
 
             const counts = {
@@ -1065,73 +987,22 @@ function moveToken(t, x, y) {
             return latex || "0";
         }
 
-        function tokensToExpandedLatex(tokens, scaleFactor = 1, hasPrevInEquation = false) {
-            // Après "Ajouter l'opposé" : on enlève les parenthèses et on distribue le signe.
-            // On évite les écritures du type +(-3x). On écrit directement ... - 3x ...
-            // Règle :
-            //  - si hasPrevInEquation : chaque terme (y compris le premier) est précédé par + ou -
-            //  - sinon : le premier terme n'a pas de +, mais peut commencer par -
-            //  - "+" en vert, "-" en rouge, termes pos en vert / neg en rouge
-
-            if (!tokens || tokens.length === 0) return "";
-
-            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
-            const plus = colorWrap(COLORS.pos, '+');
-            const minus = colorWrap(COLORS.neg, '-');
-
-            // Regrouper uniquement des tuiles consécutives de même type/signe (pour garder l'esprit "pictural")
-            const groups = [];
-            let cur = null;
-            tokens.forEach(t => {
-                const raw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
-                const sgn = (raw === -1) ? -1 : 1;
-                if (cur && cur.type === t.type && cur.sign === sgn) {
-                    cur.count += 1;
-                } else {
-                    if (cur) groups.push(cur);
-                    cur = { type: t.type, sign: sgn, count: 1 };
-                }
-            });
-            if (cur) groups.push(cur);
-
-            const termCoreOf = (type, count) => {
-                let c = count / scaleFactor;
-                c = Math.round(c * 100) / 100;
-                if (c <= 0) return "";
-                if (type === 'unit') return String(c);
-                return (c === 1 ? "" : String(c)) + (type === 'x2' ? 'x^2' : 'x');
-            };
-
-            let latex = "";
-            groups.forEach((g, idx) => {
-                const core = termCoreOf(g.type, g.count);
-                if (!core) return;
-
-                const col = (g.sign === -1) ? COLORS.neg : COLORS.pos;
-                const coloredCore = colorWrap(col, core);
-
-                const op = (g.sign === -1) ? minus : plus;
-
-                if (hasPrevInEquation) {
-                    // Toujours un opérateur devant
-                    latex += `\\;${op}\\;` + coloredCore;
-                } else {
-                    if (idx === 0) {
-                        latex += (g.sign === -1 ? minus : "") + coloredCore;
-                    } else {
-                        latex += `\\;${op}\\;` + coloredCore;
-                    }
-                }
-            });
-
-            return latex;
+        function latexForTokenCore(type) {
+            if (type === 'x2') return 'x^2';
+            if (type === 'x') return 'x';
+            return '';
         }
+        function coloredSpan(text, sign) {
+            const color = sign === 1 ? COLORS.pos : COLORS.neg;
+            return `{\\color{${color}}{${text}}}`;
+        }
+        function plusGreen() { return `{\\color{${COLORS.pos}}{+}}`; }
+        function minusRed() { return `{\\color{${COLORS.neg}}{-}}`; }
 
-function latexStartsWithMinus(str) {
+        function latexStartsWithMinus(str) {
             const s = (str || '').trim();
             if (!s) return false;
             if (s.startsWith('-')) return true;
-            // Cas : la chaîne commence par un "-" coloré : {\\color{...}{-}}
             return /^\{\\color\{[^}]+\}\{-\}\}/.test(s);
         }
 
@@ -1155,13 +1026,7 @@ function latexStartsWithMinus(str) {
             let isEmpty = true;
 
             state.steps.forEach((step, index) => {
-                // Pour une multiplication non développée : l'écriture dans le calcul doit rester
-                // k( ... ) avec le contenu saisi UNE seule fois, même si le plateau affiche k copies en bleu.
-                let stepIds = step.tokenIds;
-                if (step.type === 'multiplication' && !step.distributed && Array.isArray(step._multBaseTokenIds) && step._multBaseTokenIds.length) {
-                    stepIds = step._multBaseTokenIds;
-                }
-                const stepTokens = stepIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
                 const isCurrent = (index === state.currentStepIndex);
                 if (stepTokens.length === 0 && !isCurrent) return;
 
@@ -1169,25 +1034,16 @@ function latexStartsWithMinus(str) {
                     const plus = `{\\color{${COLORS.pos}}{+}}`;
                     const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
 
-                    // Cas particulier : une soustraction "opposée" devient une succession de termes signés
-                    // (on gère le signe d'entrée en fonction du 1er terme après inversion).
                     if (step.type === 'subtraction' && step.oppositeApplied) {
-                        // prefix géré plus bas
                     } else if (step.operator === '+' && step.type !== 'addition') {
                         latex += `\\;${plus}\\;`;
                     } else if (step.operator === '-') {
-                        // Soustraction non encore "opposée" : le "-" devant la parenthèse est ORANGE.
                         if (step.type === 'subtraction' && !step.oppositeApplied) latex += `\\;${minusOrange}\\;`;
                         else latex += ' - ';
                     }
                 }
 
-                // Facteur
-                // IMPORTANT : on n'applique JAMAIS de division (pas de 0.5x^2).
-                // Le facteur s'affiche uniquement devant la parenthèse (2(...), 3(...)).
                 let currentFactor = 1;
-
-                // CONTENU GÉNÉRÉ SANS SIMPLIFICATION
                 let content = tokensToSeparatedLatex(stepTokens, 1);
                 if (stepTokens.length === 0) content = "\\dots";
 
@@ -1195,9 +1051,10 @@ function latexStartsWithMinus(str) {
 
                 if (step.type === 'multiplication') {
                     if (step.distributed) {
-                        // After develop, show reduced expanded form (no parentheses)
+                        // Une fois développé, on affiche la somme réduite : 2x^2 - 4x
                         pStr = tokensToReducedSumLatex(stepTokens);
                     } else {
+                        // Avant développement, on ne montre que le contenu "maître", pas les copies
                         pStr = step.factor + "(" + content + ")";
                     }
                 }
@@ -1205,24 +1062,14 @@ function latexStartsWithMinus(str) {
                     if (step.distributed && !step.oppositeApplied) {
                         pStr = "(" + content + ")";
                     } 
-                    else if (step.factor > 1 && !step.distributed) {
-                        pStr = step.factor + "(" + content + ")";
-                    }
                     else if (!step.oppositeApplied) {
                         pStr = "(" + content + ")";
                     } else {
-                        // Opposé appliqué : on enlève les parenthèses et on distribue le signe.
-                        // On veut une écriture naturelle :
-                        //   A - (2x-3) -> A -2x + 3
-                        //   A - (-3x+2) -> A +3x - 2
-                        // (pas de "+(-...)", pas de "+ - ...", pas de double "+").
                         const hasPrev = hasNonEmptyBefore(index);
-
                         const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
                         const plus = colorWrap(COLORS.pos, '+');
                         const minus = colorWrap(COLORS.neg, '-');
 
-                        // Regrouper uniquement des tuiles consécutives de même type/signe (pictural)
                         const groups = [];
                         let cur = null;
                         stepTokens.forEach(t => {
@@ -1238,18 +1085,15 @@ function latexStartsWithMinus(str) {
                         if (cur) groups.push(cur);
 
                         const termCoreOf = (type, count) => {
-                            let c = count / currentFactor;
+                            let c = count;
                             c = Math.round(c * 100) / 100;
                             if (c <= 0) return '';
                             if (type === 'unit') return String(c);
                             return (c === 1 ? '' : String(c)) + (type === 'x2' ? 'x^2' : 'x');
                         };
 
-                        // Construire une chaîne SANS signe en tête (le signe d'entrée est traité à part)
                         let body = '';
                         let leadingSign = 1;
-
-                        // Trouver le premier groupe non vide
                         let firstIdx = -1;
                         for (let i = 0; i < groups.length; i++) {
                             const core = termCoreOf(groups[i].type, groups[i].count);
@@ -1276,11 +1120,9 @@ function latexStartsWithMinus(str) {
                             }
 
                             if (hasPrev) {
-                                // On injecte le signe d'entrée entre les étapes : + si 1er terme pos, - si 1er terme neg
                                 const prefix = (leadingSign === -1) ? minus : plus;
                                 pStr = `\\;${prefix}\\;` + body;
                             } else {
-                                // Début du calcul : pas de "+" au début
                                 pStr = (leadingSign === -1 ? minus : '') + body;
                             }
                         }
@@ -1298,11 +1140,7 @@ function latexStartsWithMinus(str) {
         }
 
         function renderTermsToLatex(terms) {
-            // terms: [{type:'x2'|'x'|'unit', sign:1|-1, count:int}]
-            // Écriture colorée : vert (positif) / rouge (négatif)
-            // Le signe "+" est aussi en vert.
             if (!terms || terms.length === 0) return '0';
-
             const colorFor = (sgn) => (sgn === -1 ? COLORS.neg : COLORS.pos);
             const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
             const plus = colorWrap(COLORS.pos, '+');
@@ -1317,11 +1155,9 @@ function latexStartsWithMinus(str) {
             terms.forEach((t, i) => {
                 const core = termStr(t.type, t.count);
                 if (!core) return;
-
                 const col = colorFor(t.sign);
                 const coloredCore = colorWrap(col, core);
                 const coloredMinus = colorWrap(col, '-');
-
                 if (i === 0) {
                     latex += (t.sign === -1 ? coloredMinus : '') + coloredCore;
                 } else {
@@ -1329,19 +1165,10 @@ function latexStartsWithMinus(str) {
                     else latex += `\\;${plus}\\;` + coloredCore;
                 }
             });
-
             return latex || '0';
         }
 
         function generateOrderedLatex() {
-            // ORDONNER (en haut) :
-            // - Trie sans reduire (pas de fusion des packs)
-            // - Affichage EN LIGNE uniquement (pas de colonnes / aligned)
-            // - Ordre : +x^2, -x^2, +x, -x, +1, -1
-            // - Conserve les packs (separateur "+") : 2x^2 puis +x^2 restent deux blocs tant qu\'on n\'a pas reduit.
-
-            // Securite : si une soustraction n\'a pas encore applique l\'oppose,
-            // ou si une multiplication n\'est pas distribuee, on conserve l\'affichage normal.
             const hasLocked = state.steps.some(s =>
                 (s.type === 'subtraction' && !s.oppositeApplied) ||
                 (s.type === 'multiplication' && s.factor > 1 && !s.distributed)
@@ -1350,7 +1177,6 @@ function latexStartsWithMinus(str) {
                 return generateEquationString('normal');
             }
 
-            // Regroupement par packs (packId) pour ne PAS reduire.
             const byPack = new Map();
             state.tokens.forEach(t => {
                 if (t.pairId !== null) return;
@@ -1375,8 +1201,6 @@ function latexStartsWithMinus(str) {
                 return coef + (type === 'x2' ? 'x^2' : 'x');
             };
 
-            // Construit une liste ordonnee de termes AU NIVEAU DES PACKS
-            // (on garde les groupes, on ne fusionne pas).
             const orderedTerms = [];
             const pushPackTerms = (tp, sgn) => {
                 packs.forEach(p => {
@@ -1416,10 +1240,7 @@ function latexStartsWithMinus(str) {
             return latex || '0';
         }
 
-function generateGroupedLatex() {
-            // RÉDUIRE (en haut) :
-            // - regroupe : tout ce qui est +x² ensemble, puis -x² ensemble, etc.
-            // - IMPORTANT : on NE FAIT PAS de simplification (+ et - ne s'annulent pas ici).
+        function generateGroupedLatex() {
             const order = ['x2', 'x', 'unit'];
             const pos = { x2: 0, x: 0, unit: 0 };
             const neg = { x2: 0, x: 0, unit: 0 };
@@ -1440,43 +1261,13 @@ function generateGroupedLatex() {
             return renderTermsToLatex(terms);
         }
 
-        // Ancienne réduction nette (x² et -x² se combinent), gardée au cas où.
-        function generateReducedLatex() {
-            const coeff = { x2: 0, x: 0, unit: 0 };
-            state.tokens.forEach(t => {
-                if (t.pairId !== null) return;
-                if (t.type in coeff) coeff[t.type] += (t.sign || 0);
-            });
-
-            const order = ['x2', 'x', 'unit'];
-            let latex = '';
-            let first = true;
-            function addTerm(type) {
-                const c = coeff[type];
-                if (!c) return;
-                const abs = Math.abs(c);
-                let base = '';
-                if (type === 'unit') base = String(abs);
-                else if (type === 'x') base = (abs === 1 ? '' : String(abs)) + 'x';
-                else base = (abs === 1 ? '' : String(abs)) + 'x^2';
-                if (first) {
-                    latex += (c < 0 ? '-' : '') + base;
-                    first = false;
-                } else {
-                    latex += (c < 0 ? ' - ' : ' + ') + base;
-                }
-            }
-            order.forEach(addTerm);
-            return first ? '0' : latex;
+        function tightenLatex(latex){
+            return (latex || "")
+                .replace(/(\\;|\\,|\\quad|\\qquad)/g, "")
+                .replace(/\s+/g, "");
         }
 
-function tightenLatex(latex){
-    return (latex || "")
-        .replace(/(\\;|\\,|\\quad|\\qquad)/g, "")
-        .replace(/\s+/g, "");
-}
-
-function updateEquation() {
+        function updateEquation() {
             if (state.isAnimating) return;
             let displayString = tightenLatex(generateEquationString(state.displayMode));
             const isMultiLine = (displayString || '').includes('\\begin{aligned}');
@@ -1486,19 +1277,12 @@ function updateEquation() {
         // --- OUTILS & HELPERS ---
 
         function animateCancelPair(t1, t2, badgeEl=null) {
-            // On veut visualiser : le vert "saute" dans le rouge, puis tout devient gris et disparaît.
-            // Si le zéro a déjà été formé (badgeEl), on ne fait pas "sauter" : on grise et on efface.
-
-            // Ensure t1 is the positive one for the "jump" animation
             if (t1.sign === -1 && t2.sign === 1) {
                 [t1, t2] = [t2, t1];
             }
-
-            // Break pair link
             if (t1.pairedWith === t2.id) t1.pairedWith = null;
             if (t2.pairedWith === t1.id) t2.pairedWith = null;
 
-            // --- Cas : zéro déjà combiné (effacement direct, sans vert visible) ---
             if (badgeEl) {
                 const badge = badgeEl;
                 t1._canceling = true;
@@ -1508,14 +1292,12 @@ function updateEquation() {
                 t1.element.classList.add('animating', 'fading-gray');
                 t2.element.classList.add('animating', 'fading-gray');
 
-                // keep the 0 visible a bit, then fade everything (plus rapide : le 0 ne doit pas "traîner")
                 setTimeout(() => {
                     t1.element.classList.add('vanish');
                     t2.element.classList.add('vanish');
                     badge.classList.add('vanish');
                 }, 250);
 
-                // on enlève le badge un peu plus tôt que les tuiles pour éviter l'effet "0 qui reste"...
                 setTimeout(() => {
                     try { badge.remove(); } catch(e) {}
                 }, 650);
@@ -1527,11 +1309,9 @@ function updateEquation() {
                 return;
             }
 
-            // --- Cas : annulation automatique (saut + grisé + disparition) ---
             const startX = t1.x, startY = t1.y;
             const endX = t2.x, endY = t2.y;
 
-            // Remove any pre-existing "zero" styling
             t1.element.classList.remove('is-zero');
             t2.element.classList.remove('is-zero');
 
@@ -1542,10 +1322,8 @@ function updateEquation() {
             t1.element.classList.add('animating', 'fading-gray');
             t2.element.classList.add('animating', 'fading-gray');
 
-            // Move positive tile to negative tile
             moveToken(t1, endX, endY);
 
-            // Create a gray 0 in the middle
             const badge = document.createElement('div');
             badge.className = 'zero-badge';
             badge.textContent = '0';
@@ -1554,7 +1332,6 @@ function updateEquation() {
             badge.style.pointerEvents = 'none';
             board.appendChild(badge);
 
-            // Once the jump completes, gray-out both tiles, then fade out
             setTimeout(() => {
                 t1.element.classList.add('fading-gray');
                 t2.element.classList.add('fading-gray');
@@ -1566,12 +1343,10 @@ function updateEquation() {
                 badge.classList.add('vanish');
             }, 520);
 
-            // badge : il disparaît vite
             setTimeout(() => {
                 try { badge.remove(); } catch(e) {}
             }, 820);
 
-            // tuiles : on attend la fin de l'animation vanish (0.45s)
             setTimeout(() => {
                 removeTokenById(t1.id);
                 removeTokenById(t2.id);
@@ -1579,10 +1354,6 @@ function updateEquation() {
         }
 
         function autoSimplify() {
-            // Bouton SIMPLIFIER :
-            // 1) si des zéros ont déjà été formés manuellement (superposition), ils disparaissent d'abord.
-            // 2) sinon, annulations automatiques par type (x², x, 1).
-            // IMPORTANT : pas de boucles qui ré-annulent les mêmes tuiles (flag _canceling + timer unique).
             if (state._autoSimplifyActive) return;
             state._autoSimplifyActive = true;
             if (state._autoSimplifyTimer) {
@@ -1594,7 +1365,6 @@ function updateEquation() {
         }
 
         function runAutoSimplifyPass() {
-            // 1) PAIRES MANUELLES (0 déjà visibles)
             const manualPairs = [];
             const processedIds = new Set();
             for (const t of state.tokens) {
@@ -1626,7 +1396,6 @@ function updateEquation() {
                 return;
             }
 
-            // 2) AUTO PAIRING
             const available = state.tokens.filter(t =>
                 !t._canceling &&
                 t.pairId === null &&
@@ -1694,7 +1463,16 @@ function updateEquation() {
         function removeTokenById(id) {
             const t = state.tokens.find(x => x.id === id);
             if (!t) return;
-            removeTokens([t]);
+            
+            // Si le token a des fantômes, les supprimer aussi
+            const ghosts = [];
+            if (t.ghostIds && t.ghostIds.length > 0) {
+                t.ghostIds.forEach(gid => {
+                    const g = state.tokens.find(x => x.id === gid);
+                    if (g) ghosts.push(g);
+                });
+            }
+            removeTokens([t, ...ghosts]);
         }
 
         function removeTokens(list) {
@@ -1703,7 +1481,6 @@ function updateEquation() {
             state.tokens = state.tokens.filter(t => !idsToRemove.includes(t.id));
             state.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => !idsToRemove.includes(id)));
 
-            // Si tout a disparu, on remet la zone de création en haut (pratique pour "recommencer")
             if (state.tokens.length === 0) {
                 state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
                 state.lastSequentialPackId = null;
