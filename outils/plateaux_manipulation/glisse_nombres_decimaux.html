@@ -1,637 +1,814 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Glisse-nombres (décimaux)</title>
-<style>
-  :root {
-    --gap: 6px;
-    --cell: 60px;
-    --headH: 36px;
-    --primary: #4f46e5; /* Indigo 600 */
-    --primary-hover: #4338ca;
-    --bg-page: #f3f4f6;
-    --bg-card: #ffffff;
-    --text-main: #1f2937;
-    --border-color: #e5e7eb;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Glisse-nombres</title>
+  <style>
+    :root{
+      --gap: 6px;
+      --cell: 72px;       /* recalcule en JS */
+      --headH: 38px;      /* recalcule en JS */
+      --cols: 12;
+      --strip-cols: 34;   /* recalcule en JS */
+      --comma-step: 7;    /* virgule apres "Unités" (index 6) */
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  html { -webkit-text-size-adjust: 100%; }
+      --bg-page: #f3f4f6;
+      --bg-card: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --cell-border: #111827; /* noir */
+    }
 
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--bg-page);
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: clamp(10px, 3vw, 24px);
-    -webkit-font-smoothing: antialiased;
-  }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg-page);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding: clamp(10px, 3vw, 24px);
+      -webkit-font-smoothing: antialiased;
+      overflow-x:hidden;
+      overscroll-behavior-x:none;
+    }
 
-  .app {
-    width: min(1100px, 100%);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+    .app{ width:min(1400px, 100%); display:flex; flex-direction:column; gap:16px; }
 
-  /* --- CARD STYLES --- */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  }
+    .card{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    }
 
-  /* --- HEADER & CONTROLS --- */
-  .header-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-  }
+    .header-card{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+    h1{ margin:0; font-weight:900; font-size: clamp(20px, 4vw, 28px); color:#111827; text-align:center; }
 
-  h1 {
-    margin: 0;
-    font-weight: 800;
-    font-size: clamp(20px, 4vw, 28px);
-    color: #111827;
-    text-align: center;
-  }
+    .actions-bar{ width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; }
 
-  /* Main Action Bar (Movement) */
-  .actions-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-  }
+    #opPill{
+      background:#e0e7ff;
+      color: var(--primary);
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-weight: 950;
+      font-size: 22px;
+      border: 1px solid rgba(79,70,229,0.25);
+      box-shadow: 0 2px 6px rgba(17,24,39,0.08);
+      user-select:none;
+    }
 
-  .btn-action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 12px 24px;
-    font-size: clamp(18px, 3vw, 22px);
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s, background-color 0.2s;
-    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-    min-width: 140px;
-  }
-  .btn-action:active { transform: translateY(1px); box-shadow: none; }
-  .btn-action:hover { background-color: var(--primary-hover); }
+    .btn-reset{
+      background:#f3f4f6;
+      color:#374151;
+      border:1px solid #d1d5db;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 16px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn-reset:hover{ background:#e5e7eb; }
 
-  .btn-reset {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-reset:hover { background: #e5e7eb; }
-  
-  /* Status Display */
-  #status-pill {
-    background: #e0e7ff;
-    color: var(--primary);
-    padding: 6px 12px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 14px;
-    margin-top: -8px; /* Tweak visual spacing */
-    min-width: 60px;
-    text-align: center;
-  }
+    .settings-bar{
+      width:100%;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+    }
 
-  /* --- SETTINGS BAR (Secondary controls) --- */
-  .settings-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
-    width: 100%;
-  }
+    .seg-control{ display:flex; background:#f3f4f6; padding:4px; border-radius: 10px; gap:2px; }
+    .seg-btn{
+      border:none;
+      background:transparent;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color:#6b7280;
+      cursor:pointer;
+    }
+    .seg-btn.active{
+      background:#fff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
 
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid #d1d5db;
-    color: #4b5563;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
-  .btn-secondary.active {
-    background: #ecfccb; /* Light lime/green for active toggles */
-    color: #365314;
-    border-color: #84cc16;
-  }
+    .btn-secondary{
+      background:transparent;
+      border:1px solid #d1d5db;
+      color:#4b5563;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .btn-secondary:hover{ background:#f9fafb; border-color:#9ca3af; }
+    .btn-secondary.active{ background:#ecfccb; color:#365314; border-color:#84cc16; }
 
-  /* Segmented Control for Zeros */
-  .seg-control {
-    display: flex;
-    background: #f3f4f6;
-    padding: 4px;
-    border-radius: 10px;
-    gap: 2px;
-  }
-  .seg-btn {
-    border: none;
-    background: transparent;
-    padding: 6px 12px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  .seg-btn.active {
-    background: white;
-    color: var(--primary);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  }
+    /* Grille */
+    .grid-container{ overflow:hidden; padding-bottom: 8px; }
 
-  /* --- GRID AREA --- */
-  .grid-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 12px; /* Scrollbar space */
-  }
+    .grid-shell{
+      width: calc(var(--cols) * var(--cell) + (var(--cols) - 1) * var(--gap));
+      margin: 0 auto;
+      display:flex;
+      flex-direction: column;
+      gap: var(--gap);
+      position: relative;
+    }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(12, var(--cell));
-    gap: var(--gap);
-    justify-content: center;
-    min-width: calc(12 * var(--cell) + 11 * var(--gap) + 12px);
-    margin: 0 auto;
-  }
+    .grid-row{
+      width:100%;
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      gap: var(--gap);
+    }
 
-  /* Headers */
-  .head {
-    height: var(--headH);
-    text-align: center;
-    background: #e5e7eb;
-    color: #374151;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    font-size: 11px;
-    line-height: 1.1;
-    font-weight: 700;
-    padding: 2px;
-  }
-  .head .lbl { display: flex; flex-direction: column; }
-  
-  /* Cells */
-  .cell {
-    height: var(--cell);
-    background: #fff;
-    border: 2px solid #9ca3af;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .cell:focus-within { border-color: var(--primary); }
+    .head{
+      height: var(--headH);
+      text-align:center;
+      background:#e5e7eb;
+      color:#374151;
+      border-radius: 8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      font-size: 11px;
+      line-height: 1.05;
+      font-weight: 900;
+      padding: 2px;
+      overflow:hidden;
+    }
+    .head .lbl{ display:flex; flex-direction: column; align-items:center; }
 
-  .cell.comma {
-    background: #dbeafe; /* Light blue */
-    border-color: #2563eb;
-    border-width: 0;
-  }
-  .cell.comma span {
-    font-size: clamp(24px, calc(var(--cell)*0.5), 32px);
-    font-weight: 900;
-    color: #2563eb;
-    margin-top: 10px; /* Aligne visuellement la virgule vers le bas */
-  }
+    /* Titres en long (vertical) */
+    .grid-shell.long-titles .head{
+      height: calc(var(--headH) * 2.35);
+      padding: 0;
+    }
+    .grid-shell.long-titles .head .lbl{
+      transform: rotate(-90deg);
+      transform-origin: center;
+      white-space: nowrap;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+      flex-direction: row;
+      gap: 6px;
+    }
+    .grid-shell.long-titles .head[data-key="ck"] .lbl{ font-size: 16px; }
 
-  /* Inputs */
-  .digit {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: transparent;
-    text-align: center;
-    font-family: inherit;
-    font-weight: 800;
-    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
-    color: #111827;
-    outline: none;
-    padding: 0;
-    margin: 0;
-  }
-  .digit::placeholder { color: #d1d5db; }
+    .cell{
+      height: var(--cell);
+      background:#ffffff;
+      border: 2px solid var(--cell-border);
+      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      overflow:hidden;
+    }
+    .cell:focus-within{ border-color: var(--primary); }
 
-  /* Ghost Zeros */
-  .ghost {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
-    color: #9ca3af; /* Gris clair pour différencier */
-    pointer-events: none;
-    background: rgba(255,255,255,0.8);
-  }
+    /* Virgule rouge */
+    .comma-mark{
+      position:absolute;
+      left: calc((var(--cell) + var(--gap)) * var(--comma-step) - (var(--gap) / 2));
+      bottom: 8px;
+      transform: translateX(-50%);
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.55), 38px);
+      color:#ef4444;
+      pointer-events:none;
+      user-select:none;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+      z-index: 6;
+    }
 
-  /* Responsive Adjustments */
-  @media (max-width: 600px) {
-    .actions-bar { gap: 8px; }
-    .btn-action { padding: 10px 16px; font-size: 16px; flex: 1; }
-    .btn-reset { order: 3; width: 100%; justify-content: center; margin-top: 4px; }
-    .settings-bar { flex-direction: column; align-items: center; }
-  }
-</style>
+    /* Inputs (rangee blanche = repere fixe) */
+    form{ display: contents; }
+    .digit{
+      width:100%;
+      height:100%;
+      border:none;
+      background:transparent;
+      text-align:center;
+      font: inherit;
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
+      color:#111827;
+      outline:none;
+      padding:0;
+      margin:0;
+    }
+
+    /* Rangee grise (haut) : fenetres + bandeau derriere */
+    .preview-wrap, .input-wrap{ position: relative; width: 100%; height: var(--cell); }
+
+    /* Fenetres (traits au-dessus) */
+    .preview-slots{
+      position: relative;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .preview-slots .cell{ background: transparent; }
+
+    /* Vue (contenu qui glisse) */
+    .preview-viewport{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      pointer-events:none;
+      z-index: 3;
+    }
+
+    .preview-layer{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: repeat(var(--strip-cols), var(--cell));
+      gap: var(--gap);
+      align-items:center;
+      justify-items:center;
+      pointer-events:none;
+      transform: translateX(0px);
+      will-change: transform;
+    }
+
+    .pDigit{
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
+      color:#111827;
+      line-height: 1;
+    }
+    .pDigit.ghost0{ color:#111827; }
+    .pDigit.empty{ opacity: 0; }
+
+    /* Bandeau gris (rectangulaire) */
+    .drag-bar{
+      position:absolute;
+      left: calc(var(--cell) * -0.32);
+      right: calc(var(--cell) * -0.32);
+      top: calc(var(--cell) * 0.08);
+      height: calc(var(--cell) * 0.84);
+      cursor: grab;
+      touch-action: none;
+      user-select:none;
+      z-index: 2;
+      will-change: transform;
+      transform: translateX(0px);
+    }
+    .drag-bar.dragging{ cursor: grabbing; }
+
+    .drag-track{
+      width:100%;
+      height:100%;
+      border-radius: 0px;
+      background: rgba(209,213,219,0.55);
+      box-shadow: inset 0 2px 3px rgba(0,0,0,0.12), inset 0 -2px 3px rgba(255,255,255,0.55);
+      border: 1px solid rgba(107,114,128,0.25);
+    }
+
+    .snapping{ transition: transform 140ms cubic-bezier(.2,.9,.2,1); }
+
+    .credit{
+      text-align:center;
+      font-size: 12px;
+      color:#6b7280;
+      margin-top: -6px;
+    }
+    .credit a{ color:#4b5563; text-decoration:none; border-bottom: 1px dotted #9ca3af; }
+    .credit a:hover{ color:#111827; }
+
+    @media (max-width: 600px){
+      .settings-bar{ flex-direction: column; align-items: center; }
+      .btn-reset{ width:100%; justify-content:center; }
+    }
+  </style>
 </head>
 <body>
 
 <main class="app" id="app">
-  
-  <!-- CONTROLS CARD -->
+
   <section class="card header-card">
     <h1>Glisse-nombres</h1>
-    
+
+    <!-- Bulle de multiplication (sous le titre) -->
+    <div class="actions-bar" style="margin-top:-2px;">
+      <div id="opPill" aria-live="polite">×1</div>
+    </div>
+
     <div class="actions-bar">
-      <button class="btn-action" id="times10" title="Décaler les chiffres vers la gauche">
-        <span>←</span> ×10
-      </button>
-      
-      <div id="status-pill">×1</div>
-
-      <button class="btn-action" id="div10" title="Décaler les chiffres vers la droite">
-        ÷10 <span>→</span>
-      </button>
-
-      <button class="btn-reset" id="resetBtn" type="button">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        Réinitialiser
-      </button>
+      <button class="btn-reset" id="resetBtn" type="button" aria-label="Réinitialiser">Réinitialiser</button>
     </div>
 
     <div class="settings-bar">
-      <!-- Segmented Control for Zeros -->
-      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros">
+      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros (rangée grise)">
         <button data-mode="none" class="seg-btn active" type="button">Sans zéros</button>
         <button data-mode="needed" class="seg-btn" type="button">Zéros utiles</button>
         <button data-mode="all" class="seg-btn" type="button">Tous les zéros</button>
       </div>
 
-      <button class="btn-secondary" id="exitZerosBtn" type="button" title="Afficher les zéros qui sortent du tableau">
-        Gestion de la sortie
-      </button>
-      <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">
-        Titres compacts
-      </button>
+      <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">Titres compacts</button>
+      <button class="btn-secondary" id="toggleLongTitles" type="button" title="Libellés verticaux (90 degrés)">Titres en long</button>
     </div>
   </section>
 
-  <!-- GRID CARD -->
-  <section class="card" style="padding: 10px 0;">
+  <section class="card" style="padding: 10px 0;" id="gridCard">
     <div class="grid-container">
-      <div class="grid" id="grid">
-        <!-- HEADERS -->
-        <div class="head" data-col="0"><div class="lbl"><span>Centaines</span><span>de milliers</span></div></div>
-        <div class="head" data-col="1"><div class="lbl"><span>Dizaines</span><span>de milliers</span></div></div>
-        <div class="head" data-col="2"><div class="lbl"><span>Milliers</span></div></div>
-        <div class="head" data-col="3"><div class="lbl"><span>Centaines</span></div></div>
-        <div class="head" data-col="4"><div class="lbl"><span>Dizaines</span></div></div>
-        <div class="head" data-col="5"><div class="lbl"><span>Unités</span></div></div>
-        <div class="head" data-col="6"><div class="lbl"><span>,</span></div></div>
-        <div class="head" data-col="7"><div class="lbl"><span>Dixièmes</span></div></div>
-        <div class="head" data-col="8"><div class="lbl"><span>Centièmes</span></div></div>
-        <div class="head" data-col="9"><div class="lbl"><span>Millièmes</span></div></div>
-        <div class="head" data-col="10"><div class="lbl"><span>Dix</span><span>millièmes</span></div></div>
-        <div class="head" data-col="11"><div class="lbl"><span>Cent</span><span>millièmes</span></div></div>
+      <div class="grid-shell" id="gridShell">
+        <div class="grid-row" id="headRow"></div>
 
-        <!-- CELLS -->
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c00" aria-label="Centaines de milliers" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c0"  aria-label="Dizaines de milliers" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c1"  aria-label="Milliers" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c2"  aria-label="Centaines" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c3"  aria-label="Dizaines" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c4"  aria-label="Unités" /></div>
-        <div class="cell comma" aria-hidden="true"><span>,</span></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c6"  aria-label="Dixièmes" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c7"  aria-label="Centièmes" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c8"  aria-label="Millièmes" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c9"  aria-label="Dix millièmes" /></div>
-        <div class="cell"><input class="digit" maxlength="1" inputmode="numeric" id="c10" aria-label="Cent millièmes" /></div>
+        <!-- PREVIEW (haut) -->
+        <div class="preview-wrap" id="previewWrap">
+          <div class="grid-row preview-slots" id="previewSlots" aria-hidden="true"></div>
+          <div class="preview-viewport" aria-hidden="true">
+            <div class="preview-layer" id="previewLayer" aria-hidden="true"></div>
+          </div>
+          <div class="comma-mark" aria-hidden="true">,</div>
+          <div class="drag-bar" id="dragBar" role="slider" aria-label="Glisser" tabindex="0">
+            <div class="drag-track"></div>
+          </div>
+        </div>
+
+        <!-- INPUTS (bas = repere fixe) -->
+        <div class="input-wrap" id="inputWrap">
+          <form id="inputForm" autocomplete="off" aria-autocomplete="none">
+            <div class="grid-row" id="inputRow"></div>
+          </form>
+          <div class="comma-mark" aria-hidden="true">,</div>
+        </div>
+
       </div>
     </div>
   </section>
+
+  <div class="credit">Inspiré de : <a href="https://mathix.org/glisse-nombre/" target="_blank" rel="noopener">mathix.org/glisse-nombre/</a></div>
 
 </main>
 
 <script>
 (() => {
-  // CONFIGURATION DU TABLEAU
-  const ids=["c00","c0","c1","c2","c3","c4",null,"c6","c7","c8","c9","c10"];
-  const INT=[0,1,2,3,4,5];  // indices entiers
-  const DEC=[7,8,9,10,11];  // indices décimales
-  const UNITS=5;
-  const COMMA=6;
-  const order=[0,1,2,3,4,5,7,8,9,10,11]; // indices logiques sans la virgule
-
-  // DOM ELEMENTS
-  const app=document.getElementById('app');
-  const grid=document.getElementById('grid');
-  const zerosSeg=document.getElementById('zerosSeg');
-  const resetBtn=document.getElementById('resetBtn');
-  const times10=document.getElementById('times10');
-  const div10=document.getElementById('div10');
-  const status=document.getElementById('status-pill');
-  const toggleCompact=document.getElementById('toggleCompact');
-  const exitZerosBtn=document.getElementById('exitZerosBtn');
-
-  const inputs=order.map(i=>document.getElementById(ids[i]));
-
-  // STATE
-  let zeroMode='none'; // 'none' | 'needed' | 'all'
-  let exp10=0;         // cumul ×10/÷10
-  let exitZeros=false; // afficher des zéros fantômes du côté du débordement
-  const leftStack=[];  // ce qui sort à gauche (×10)
-  const rightStack=[]; // ce qui sort à droite (÷10)
-  let overflowSide=null; // 'left' | 'right' | null
-  let forceCompact=false;
-
-  // LABELS
-  const labelsNormal = [
-    ['Centaines','de milliers'], ['Dizaines','de milliers'], ['Milliers'], ['Centaines'], ['Dizaines'], ['Unités'],
-    [','],
-    ['Dixièmes'], ['Centièmes'], ['Millièmes'], ['Dix','millièmes'], ['Cent','millièmes']
-  ];
-  const labelsCompact = [
-    ['Cent.','de mill.'], ['Diz.','de mill.'], ['Milliers'], ['Cent.'], ['Diz.'], ['Unités'],
-    [','],
-    ['Dixièmes'], ['Centièmes'], ['Millièmes'], ['Dix','mill.'], ['Cent','mill.']
+  const COLS = [
+    { key: 'm',  aria: 'Unité de million',        normal: ['Unité','de million'],       compact: ['U.','million'] },
+    { key: 'ck', aria: 'Centaines de milliers',  normal: ['Centaines','de milliers'],  compact: ['Cent.','de mill.'] },
+    { key: 'dk', aria: 'Dizaines de milliers',   normal: ['Dizaines','de milliers'],   compact: ['Diz.','de mill.'] },
+    { key: 'uk', aria: 'Milliers',               normal: ['Milliers'],                compact: ['Milliers'] },
+    { key: 'c',  aria: 'Centaines',              normal: ['Centaines'],               compact: ['Cent.'] },
+    { key: 'd',  aria: 'Dizaines',               normal: ['Dizaines'],                compact: ['Diz.'] },
+    { key: 'u',  aria: 'Unités',                 normal: ['Unités'],                  compact: ['Unités'] },
+    { key: 'di', aria: 'Dixièmes',               normal: ['Dixièmes'],                compact: ['Dixièmes'] },
+    { key: 'ce', aria: 'Centièmes',              normal: ['Centièmes'],               compact: ['Centièmes'] },
+    { key: 'mi', aria: 'Millièmes',              normal: ['Millièmes'],               compact: ['Millièmes'] },
+    { key: 'dm', aria: 'Dix millièmes',          normal: ['Dix','millièmes'],         compact: ['Dix','mill.'] },
+    { key: 'cm', aria: 'Cent millièmes',         normal: ['Cent','millièmes'],        compact: ['Cent','mill.'] },
   ];
 
-  function renderLabels(useCompact){
-    document.querySelectorAll('.head').forEach((head, idx)=>{
-      const lbl=head.querySelector('.lbl');
-      const set=useCompact?labelsCompact:labelsNormal;
-      const parts=set[idx]||[''];
-      lbl.innerHTML=parts.map(t=>`<span>${t}</span>`).join('');
-    });
+  const COL_COUNT = COLS.length;
+  const PAD = COL_COUNT - 1;
+  const STRIP_COLS = COL_COUNT + PAD * 2;
+  const UNITS_INDEX = 6;
+  const COMMA_STEP = UNITS_INDEX + 1;
+
+  const root = document.documentElement;
+  const headRow = document.getElementById('headRow');
+  const previewSlots = document.getElementById('previewSlots');
+  const previewLayer = document.getElementById('previewLayer');
+  const inputRow = document.getElementById('inputRow');
+  const dragBar = document.getElementById('dragBar');
+  const opPill = document.getElementById('opPill');
+  const resetBtn = document.getElementById('resetBtn');
+  const zerosSeg = document.getElementById('zerosSeg');
+  const toggleCompact = document.getElementById('toggleCompact');
+  const toggleLongTitles = document.getElementById('toggleLongTitles');
+  const gridShell = document.getElementById('gridShell');
+  const gridCard = document.getElementById('gridCard');
+
+  // CSS vars
+  root.style.setProperty('--cols', String(COL_COUNT));
+  root.style.setProperty('--strip-cols', String(STRIP_COLS));
+  root.style.setProperty('--comma-step', String(COMMA_STEP));
+
+  // Etat UI
+  let zeroMode = 'none';
+  let compactTitles = false; // doit etre DESACTIVE au chargement
+  let longTitles = false;
+
+  // Glissement
+  let shiftTotal = 0;      // >0 vers la gauche (multiplication)
+  let currentPx = 0;       // position courante du bandeau (px)
+  let stepPx = 0;          // largeur d'une case + gap (px)
+  let baseOffsetPx = 0;    // decalage du strip (pour le padding)
+
+  // Drag
+  let dragging = false;
+  let dragStartX = 0;
+  let dragStartPx = 0;
+  let lastTempShift = 0;
+  let rafPending = false;
+  let lastClientX = 0;
+
+  const inputEls = [];
+  const stripDigitEls = [];
+
+  function makeHead(parts, key){
+    const h = document.createElement('div');
+    h.className = 'head';
+    h.dataset.key = key;
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    for(const t of parts){
+      const s = document.createElement('span');
+      s.textContent = t;
+      lbl.appendChild(s);
+    }
+    h.appendChild(lbl);
+    return h;
   }
 
-  function applyCompactAutoOrForced(){
-    if(forceCompact){ renderLabels(true); return; }
-    const w=Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth);
-    renderLabels(w < 500); // Seuil un peu plus large
+  function buildHeaders(){
+    headRow.innerHTML = '';
+    for(let i=0;i<COL_COUNT;i++){
+      const parts = compactTitles ? COLS[i].compact : COLS[i].normal;
+      headRow.appendChild(makeHead(parts, COLS[i].key));
+    }
   }
 
-  // RESPONSIVE SIZING
-  function calcCell(){
-    const root=document.documentElement;
-    // On calcule l'espace dispo moins le padding
-    const containerW = app.clientWidth; 
-    // Marge de sécurité (padding + borders)
-    const margin = 32; 
-    const gap = 6;
-    const nbCols = 12;
-    
-    // Calcul de la taille max possible
-    let c = Math.floor( (containerW - margin - (nbCols-1)*gap) / nbCols );
-    
-    // Bornes
-    c = Math.max(34, Math.min(70, c));
+  function buildRows(){
+    previewSlots.innerHTML = '';
+    previewLayer.innerHTML = '';
+    inputRow.innerHTML = '';
+    inputEls.length = 0;
+    stripDigitEls.length = 0;
 
-    root.style.setProperty('--cell', c+'px');
-    root.style.setProperty('--headH', Math.max(32, Math.round(c*0.6))+'px');
-  }
-
-  function initLayoutWatchers(){
-    calcCell();
-    window.addEventListener('resize', () => { calcCell(); applyCompactAutoOrForced(); });
-    // Délai pour orientation change sur mobile
-    window.addEventListener('orientationchange', ()=>setTimeout(()=> { calcCell(); applyCompactAutoOrForced(); }, 100));
-    applyCompactAutoOrForced();
-  }
-
-  // UTILS
-  function sanitizeToDigit(v){ const m=(v||'').toString().match(/[0-9]/); return m?m[0]:''; }
-  function indexOfInput(el){ return order.findIndex(i=>ids[i]===el.id); }
-  function focusMove(delta){
-    const active=document.activeElement; 
-    if(!active||!active.classList.contains('digit')) return;
-    let idx=indexOfInput(active); if(idx<0) return;
-    idx=Math.min(order.length-1, Math.max(0, idx+delta));
-    inputs[idx].focus(); inputs[idx].select();
-  }
-  function readRaw(){ const a=new Array(ids.length).fill(''); for(const i of order){ a[i]=document.getElementById(ids[i]).value; } return a; }
-  function writeRaw(arr){ for(const i of order){ document.getElementById(ids[i]).value=arr[i]||''; } }
-  function clearGhosts(){ grid.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
-
-  // LOGIC: ZEROS
-  function applyZeroMode(){
-    clearGhosts();
-    const raw=readRaw();
-    const hasInt=INT.some(i=>raw[i]!=='' );
-    const hasDec=DEC.some(i=>raw[i]!=='' );
-    
-    function addGhost(i){
-      const cell=document.getElementById(ids[i]).parentElement;
-      if(!cell.querySelector('.ghost')){
-        const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g);
-      }
+    // Fenetres (12)
+    for(let i=0;i<COL_COUNT;i++){
+      const slot = document.createElement('div');
+      slot.className = 'cell preview-slot';
+      previewSlots.appendChild(slot);
     }
 
-    if(zeroMode==='all'){
-      for(const i of INT){ if(raw[i]==='') addGhost(i); }
-      for(const i of DEC){ if(raw[i]==='') addGhost(i); }
-    } else if(zeroMode==='needed'){
-      // Partie décimale : zéros à droite jusqu'au dernier chiffre
-      if(hasDec){ 
-        // On ne met des zéros que ENTRE la virgule et le dernier chiffre non nul, ou pour combler
-        // Simplification pédagogique : afficher tous les 0 à gauche du dernier chiffre décimal
-        // Non, "needed" pour décimale = 0.50 -> le 0 de droite est inutile. 0.05 -> le 0 de gauche est utile.
-        // Algo : on part de la gauche (dixièmes), on remplit les trous jusqu'au dernier chiffre rempli
-        let lastFilledDec = -1;
-        for(let k=DEC.length-1; k>=0; k--){ if(raw[DEC[k]]!=='') { lastFilledDec=k; break; } }
-        if(lastFilledDec !== -1) {
-           for(let k=0; k<lastFilledDec; k++){
-             if(raw[DEC[k]]==='') addGhost(DEC[k]);
-           }
+    // Strip (padding + 12 + padding)
+    for(let j=0;j<STRIP_COLS;j++){
+      const pd = document.createElement('div');
+      pd.className = 'pDigit empty';
+      pd.dataset.j = String(j);
+      previewLayer.appendChild(pd);
+      stripDigitEls.push(pd);
+    }
+
+    // Inputs (12)
+    const nameSalt = Math.random().toString(36).slice(2);
+    for(let i=0;i<COL_COUNT;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      const inp = document.createElement('input');
+      inp.className = 'digit';
+      inp.maxLength = 1;
+      inp.inputMode = 'numeric';
+
+      // anti-historique / suggestions
+      inp.setAttribute('autocomplete','new-password');
+      inp.setAttribute('autocorrect','off');
+      inp.setAttribute('autocapitalize','off');
+      inp.setAttribute('spellcheck','false');
+      inp.setAttribute('aria-autocomplete','none');
+      inp.setAttribute('name', `d_${nameSalt}_${i}`);
+      inp.setAttribute('aria-label', COLS[i].aria);
+
+      inp.addEventListener('input', () => {
+        const v = (inp.value || '').replace(/\D/g,'');
+        inp.value = v.slice(-1);
+        renderPreview(lastTempShift);
+
+        // Auto-avance : apres saisie d'un chiffre, passer a la case suivante
+        if(inp.value !== '' && i < COL_COUNT - 1){
+          inputEls[i+1].focus();
         }
-      }
-      
-      // Partie entière : zéros utiles = unités si vide, et trous entre chiffres
-      if(hasInt){
-        let firstFilledInt = -1;
-        for(let k=0; k<INT.length; k++){ if(raw[INT[k]]!=='') { firstFilledInt=k; break; } }
-        
-        // Combler les trous entre le premier chiffre et les unités
-        for(let k=firstFilledInt+1; k<INT.length; k++){
-            if(raw[INT[k]]==='') addGhost(INT[k]);
+      });
+
+      inp.addEventListener('keydown', (e) => {
+        const k = e.key;
+        if(k === 'ArrowLeft'){
+          e.preventDefault();
+          (inputEls[i-1] || inputEls[i]).focus();
+        } else if(k === 'ArrowRight'){
+          e.preventDefault();
+          (inputEls[i+1] || inputEls[i]).focus();
+        } else if(k === 'Backspace'){
+          if(inp.value === '' && inputEls[i-1]){
+            inputEls[i-1].focus();
+            inputEls[i-1].value = '';
+            renderPreview(lastTempShift);
+          }
         }
-      } else {
-        // Si aucun entier mais qu'il y a des décimales, on met un 0 aux unités
-        if(hasDec) addGhost(UNITS);
-      }
+      });
+
+      cell.appendChild(inp);
+      inputRow.appendChild(cell);
+      inputEls.push(inp);
     }
   }
 
-  function ensureExitZeros(){
-    if(!exitZeros || !overflowSide) return;
-    const raw=readRaw();
-    function addGhost(i){
-      const cell=document.getElementById(ids[i]).parentElement;
-      if(!cell.querySelector('.ghost')){
-        const g=document.createElement('div'); g.className='ghost'; g.textContent='0'; cell.appendChild(g);
-      }
-    }
-    if(overflowSide==='left'){ for(const i of INT){ if(raw[i]==='') addGhost(i); } }
-    if(overflowSide==='right'){ for(const i of DEC){ if(raw[i]==='') addGhost(i); } }
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function pow10Str(exp){
+    const n = Math.abs(exp);
+    if(n === 0) return '1';
+    return '1' + '0'.repeat(n);
   }
 
-  // LOGIC: SHIFT
-  function shift(dir){
-    const prev=readRaw();
-    const next=prev.slice();
-    const orderLinear=[0,1,2,3,4,5,7,8,9,10,11]; 
-    const first=orderLinear[0];
-    const last =orderLinear[orderLinear.length-1];
+  function setOp(exp){
+    if(exp === 0){ opPill.textContent = '×1'; return; }
+    const s = pow10Str(exp);
+    opPill.textContent = (exp > 0 ? '×' : '÷') + s;
+  }
 
-    if(dir==='left'){ // ×10
-      exp10++;
-      const lost=prev[first]; if(lost!=='') leftStack.push(lost);
-      for(const i of orderLinear){
-        const nxt=(i+1===COMMA)?COMMA+1:(i+1);
-        next[i]=(nxt<ids.length)?prev[nxt]:''; 
-      }
-      if(rightStack.length){ next[last]=rightStack.pop(); }
-    } else { // ÷10
-      exp10--;
-      const lost=prev[last]; if(lost!=='') rightStack.push(lost);
-      for(let k=orderLinear.length-1;k>=0;k--){
-        const i=orderLinear[k];
-        const prv=(i-1===COMMA)?UNITS:(i-1);
-        next[i]=(prv>=0)?prev[prv]:''; 
-      }
-      if(leftStack.length){ next[first]=leftStack.pop(); }
+  function getBaseDigits(){
+    return inputEls.map(el => (el.value ?? ''));
+  }
+
+  // Fenetre w lit la valeur situee en base[w + shift]
+  function computeMappedDigits(base, shift){
+    const out = Array(COL_COUNT).fill('');
+    for(let w=0; w<COL_COUNT; w++){
+      const src = w + shift;
+      out[w] = (src >= 0 && src < COL_COUNT) ? (base[src] ?? '') : '';
+    }
+    return out;
+  }
+
+  function applyZeros(mapped){
+    const display = Array(COL_COUNT).fill('');
+    const ghost = Array(COL_COUNT).fill(false);
+
+    if(zeroMode === 'none'){
+      for(let i=0;i<COL_COUNT;i++) display[i] = mapped[i];
+      return {display, ghost};
     }
 
-    if(overflowSide===null){
-      if(leftStack.length>0 && rightStack.length===0) overflowSide='left';
-      else if(rightStack.length>0 && leftStack.length===0) overflowSide='right';
+    if(zeroMode === 'all'){
+      for(let i=0;i<COL_COUNT;i++){
+        if(mapped[i] === ''){ display[i] = '0'; ghost[i] = true; }
+        else display[i] = mapped[i];
+      }
+      return {display, ghost};
     }
-    if(leftStack.length===0 && rightStack.length===0) overflowSide=null;
 
-    writeRaw(next);
-    applyZeroMode();
-    ensureExitZeros();
-    updateStatus();
+    // zeroMode === 'needed'
+    const nonEmpty = [];
+    for(let i=0;i<COL_COUNT;i++) if(mapped[i] !== '') nonEmpty.push(i);
+    if(nonEmpty.length === 0) return {display, ghost};
+
+    const hasNonZero = nonEmpty.some(i => mapped[i] !== '0');
+    if(!hasNonZero){
+      // si tout est 0, afficher un seul 0 aux unites
+      display[UNITS_INDEX] = mapped[UNITS_INDEX] || '0';
+      ghost[UNITS_INDEX] = (mapped[UNITS_INDEX] === '');
+      return {display, ghost};
+    }
+
+    let rawLeft = nonEmpty[0];
+    let rawRight = nonEmpty[nonEmpty.length - 1];
+
+    // Trim des zeros en tete (partie entiere), ex: 04,5 -> 4,5
+    let leftMostSig = rawLeft;
+    const existsRight = (idx) => nonEmpty.some(j => j > idx);
+    while(leftMostSig < UNITS_INDEX && mapped[leftMostSig] === '0' && existsRight(leftMostSig)){
+      leftMostSig++;
+    }
+
+    const leftLimit = (leftMostSig <= UNITS_INDEX) ? leftMostSig : UNITS_INDEX;
+    const rightLimit = (rawRight > UNITS_INDEX) ? rawRight : UNITS_INDEX;
+
+    for(let i=leftLimit;i<=rightLimit;i++){
+      if(mapped[i] === ''){ display[i] = '0'; ghost[i] = true; }
+      else display[i] = mapped[i];
+    }
+
+    return {display, ghost};
+  }
+
+  // Ecrit le resultat sur le STRIP, a l'endroit qui passera sous les fenetres
+  function renderPreview(shift){
+    const base = getBaseDigits();
+    const mappedW = computeMappedDigits(base, shift);
+    const {display, ghost} = applyZeros(mappedW);
+
+    // Clear strip
+    for(let j=0;j<STRIP_COLS;j++){
+      const el = stripDigitEls[j];
+      el.textContent = '';
+      el.classList.remove('ghost0');
+      el.classList.add('empty');
+    }
+
+    // Window w voit strip index (PAD + w + shift)
+    for(let w=0; w<COL_COUNT; w++){
+      const idx = PAD + w + shift;
+      if(idx < 0 || idx >= STRIP_COLS) continue;
+      const t = display[w];
+      const el = stripDigitEls[idx];
+      el.textContent = t;
+      el.classList.toggle('ghost0', !!ghost[w] && t !== '');
+      el.classList.toggle('empty', t === '');
+    }
+  }
+
+  function setTransforms(px, snap){
+    if(snap){
+      dragBar.classList.add('snapping');
+      previewLayer.classList.add('snapping');
+    } else {
+      dragBar.classList.remove('snapping');
+      previewLayer.classList.remove('snapping');
+    }
+
+    dragBar.style.transform = `translateX(${px}px)`;
+    previewLayer.style.transform = `translateX(${baseOffsetPx + px}px)`;
+  }
+
+  function computeSizes(){
+    const gap = parseFloat(getComputedStyle(root).getPropertyValue('--gap')) || 6;
+    const avail = Math.max(320, gridCard.clientWidth - 24);
+    const minCell = 54;
+    const maxCell = 82;
+    let cell = Math.floor((avail - (COL_COUNT - 1) * gap) / COL_COUNT);
+    cell = clamp(cell, minCell, maxCell);
+
+    root.style.setProperty('--cell', cell + 'px');
+    root.style.setProperty('--headH', Math.round(cell * 0.55) + 'px');
+
+    stepPx = cell + gap;
+    baseOffsetPx = -PAD * stepPx;
+
+    // recale
+    currentPx = -shiftTotal * stepPx;
+    setTransforms(currentPx, false);
+  }
+
+  function setZeroMode(mode){
+    zeroMode = mode;
+    for(const btn of zerosSeg.querySelectorAll('.seg-btn')){
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    }
+    renderPreview(lastTempShift);
+  }
+
+  function setCompact(on){
+    compactTitles = on;
+    toggleCompact.classList.toggle('active', on);
+    buildHeaders();
+  }
+
+  function setLongTitles(on){
+    longTitles = on;
+    toggleLongTitles.classList.toggle('active', on);
+    gridShell.classList.toggle('long-titles', on);
   }
 
   function resetAll(){
-    inputs.forEach(i=>i.value='');
-    clearGhosts();
-    zeroMode='none';
-    zerosSeg.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('active'));
-    zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
-    
-    exitZeros=false;
-    exitZerosBtn.classList.remove('active');
-    
-    exp10=0; overflowSide=null; leftStack.length=0; rightStack.length=0;
-    updateStatus();
-    inputs[5].focus(); // Focus Unités
+    for(const el of inputEls) el.value = '';
+    shiftTotal = 0;
+    lastTempShift = 0;
+    currentPx = 0;
+    setOp(0);
+    setTransforms(0, false);
+    renderPreview(0);
   }
 
-  function updateStatus(){
-    let label='×1';
-    if(exp10!==0){
-      const n=Math.abs(exp10);
-      if(n<=6) {
-        label = exp10>0 ? '×'+(10**n).toLocaleString() : '÷'+(10**n).toLocaleString();
-      } else {
-        label = exp10>0 ? '×10^'+n : '÷10^'+n;
-      }
+  function clampShift(s){
+    const maxShift = COL_COUNT - 1;
+    return clamp(s, -maxShift, maxShift);
+  }
+
+  function startDrag(clientX){
+    dragging = true;
+    dragStartX = clientX;
+    dragStartPx = currentPx;
+    dragBar.classList.add('dragging');
+    // important : aucun snapping pendant le drag
+    dragBar.classList.remove('snapping');
+    previewLayer.classList.remove('snapping');
+  }
+
+  function updateDrag(){
+    rafPending = false;
+    if(!dragging) return;
+
+    const dx = lastClientX - dragStartX;
+    const maxShift = COL_COUNT - 1;
+    const maxPx = maxShift * stepPx;
+    currentPx = clamp(dragStartPx + dx, -maxPx, maxPx);
+
+    setTransforms(currentPx, false);
+
+    // IMPORTANT : mise a jour seulement quand on ENTRE dans une nouvelle case
+    const tempShift = clampShift(Math.trunc(-currentPx / stepPx));
+    if(tempShift !== lastTempShift){
+      lastTempShift = tempShift;
+      setOp(tempShift);
+      renderPreview(tempShift);
     }
-    status.textContent=label;
   }
 
-  // EVENT LISTENERS
-  inputs.forEach(inp=>{
-    inp.addEventListener('focus',()=>{ inp.setAttribute('autocomplete','off'); });
-    inp.addEventListener('beforeinput',e=>{
-      if(e.inputType==='insertText' || e.inputType==='insertFromPaste'){
-        const ch=(e.data||'').replace(/[^0-9]/g,''); if(ch==='') e.preventDefault();
-      }
-    });
-    inp.addEventListener('input',e=>{
-      const v=sanitizeToDigit(e.target.value); e.target.value=v;
-      if(v!=='') focusMove(+1);
-      applyZeroMode(); ensureExitZeros();
-    });
-    inp.addEventListener('keydown',e=>{
-      if(e.key==='ArrowLeft'){ e.preventDefault(); focusMove(-1); }
-      if(e.key==='ArrowRight'){ e.preventDefault(); focusMove(+1); }
-      if(e.key==='Backspace' && e.target.value===''){ e.preventDefault(); focusMove(-1); }
-    });
+  function moveDrag(clientX){
+    if(!dragging) return;
+    lastClientX = clientX;
+    if(!rafPending){
+      rafPending = true;
+      requestAnimationFrame(updateDrag);
+    }
+  }
+
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    dragBar.classList.remove('dragging');
+
+    // Snap a la case la plus proche
+    shiftTotal = clampShift(Math.round(-currentPx / stepPx));
+    lastTempShift = shiftTotal;
+    currentPx = -shiftTotal * stepPx;
+
+    setOp(shiftTotal);
+    renderPreview(shiftTotal);
+    setTransforms(currentPx, true);
+
+    window.setTimeout(() => {
+      dragBar.classList.remove('snapping');
+      previewLayer.classList.remove('snapping');
+    }, 170);
+  }
+
+  // Init
+  buildHeaders();
+  buildRows();
+
+  // Etat initial (compact DESACTIVE)
+  setCompact(false);
+  setLongTitles(false);
+  setZeroMode('none');
+
+  computeSizes();
+  renderPreview(0);
+  setOp(0);
+
+  // Events
+  window.addEventListener('resize', computeSizes);
+
+  zerosSeg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if(!btn) return;
+    setZeroMode(btn.dataset.mode);
   });
 
-  zerosSeg.addEventListener('click',e=>{
-    const b=e.target.closest('.seg-btn'); if(!b) return;
-    zerosSeg.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active'); zeroMode=b.dataset.mode;
-    applyZeroMode(); ensureExitZeros();
+  toggleCompact.addEventListener('click', () => setCompact(!compactTitles));
+  toggleLongTitles.addEventListener('click', () => setLongTitles(!longTitles));
+  resetBtn.addEventListener('click', resetAll);
+
+  // Quand on clique ailleurs (bandeau, fond...), on enlève la sélection de la case du bas
+  document.addEventListener('pointerdown', (e) => {
+    const t = e.target;
+    if (t && t.closest && t.closest('input.digit')) return;
+    const ae = document.activeElement;
+    if (ae && ae.classList && ae.classList.contains('digit')) ae.blur();
+  }, true);
+
+  dragBar.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragBar.setPointerCapture(e.pointerId);
+    startDrag(e.clientX);
   });
 
-  resetBtn.addEventListener('click',resetAll);
-  times10.addEventListener('click',()=>shift('left'));
-  div10.addEventListener('click',()=>shift('right'));
-
-  toggleCompact.addEventListener('click', ()=>{
-    forceCompact=!forceCompact;
-    toggleCompact.classList.toggle('active', forceCompact);
-    applyCompactAutoOrForced();
+  dragBar.addEventListener('pointermove', (e) => {
+    if(!dragging) return;
+    moveDrag(e.clientX);
   });
 
-  exitZerosBtn.addEventListener('click', ()=>{
-    exitZeros=!exitZeros;
-    exitZerosBtn.classList.toggle('active', exitZeros);
-    ensureExitZeros();
+  dragBar.addEventListener('pointerup', (e) => {
+    endDrag();
+    try{ dragBar.releasePointerCapture(e.pointerId); }catch(_){ }
   });
 
-  // START
-  initLayoutWatchers();
-  updateStatus();
+  dragBar.addEventListener('pointercancel', endDrag);
 })();
 </script>
 </body>
