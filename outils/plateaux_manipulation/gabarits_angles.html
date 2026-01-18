@@ -152,6 +152,26 @@
                 </svg>
             </button>
 
+            <!-- Zoom plateau -->
+            <div class="bg-slate-100 rounded-xl p-1 flex gap-1 border border-slate-200" title="Zoom du plateau">
+                <button id="btn-zoom-out" onclick="zoomOut()" class="tool-btn p-2 rounded-lg text-slate-700 hover:bg-white" title="Zoom -">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M8 11h6"/>
+                        <path d="M21 21l-4.3-4.3"/>
+                    </svg>
+                </button>
+                <button id="btn-zoom-reset" onclick="zoomReset()" class="tool-btn px-3 py-2 rounded-lg text-[12px] font-extrabold text-slate-700 hover:bg-white" title="Réinitialiser (100%)">100%</button>
+                <button id="btn-zoom-in" onclick="zoomIn()" class="tool-btn p-2 rounded-lg text-slate-700 hover:bg-white" title="Zoom +">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="M11 8v6"/>
+                        <path d="M8 11h6"/>
+                        <path d="M21 21l-4.3-4.3"/>
+                    </svg>
+                </button>
+            </div>
+
             <div class="w-px h-8 bg-slate-200 mx-2"></div>
 
             <!-- Outils Dessin -->
@@ -272,6 +292,10 @@
         const bgUploader = document.getElementById('bg-uploader');
         const cursorDiv = document.getElementById('custom-cursor');
 
+        // Éléments du plateau qui doivent être zoomés ensemble
+        const stageEls = [bgLayer, canvasD, canvasT, toolsLayer];
+        stageEls.forEach(el => { el.style.transformOrigin = '0 0'; });
+
         const TAU = Math.PI * 2;
         const BASE_LEN = 220;
         const SNAP_DIST = 30;
@@ -344,6 +368,9 @@
 
             view: { w: 0, h: 0, dpr: 1 },
 
+            // Caméra (zoom du plateau)
+            camera: { scale: 1, tx: 0, ty: 0, min: 0.5, max: 3 },
+
             tools: {
                 protractor: { visible: false, x: 200, y: 200, rot: 0, scale: 1.5, gradMode: 0, direction: 0, showNumbers: true, pivot: {x: 120, y: 120} },
                 setsquare: { visible: false, x: 400, y: 200, rot: 0, scale: 1.2, pivot: {x: 20, y: 220} },
@@ -353,6 +380,7 @@
 
         window.onload = () => {
             resize();
+            applyCamera();
             initTools();
             initSidebarDrag();
             initPenColorUI();
@@ -368,9 +396,55 @@ requestAnimationFrame(renderLoop);
         function normRad(a) { a = a % TAU; if (a < 0) a += TAU; return a; }
         function ccwDist(start, ang) { return normRad(start - ang); } // angles positifs = rotation horaire
 
+        function applyCamera() {
+            const s = state.camera.scale;
+            const tx = state.camera.tx;
+            const ty = state.camera.ty;
+            stageEls.forEach(el => {
+                el.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+            });
+            const zbtn = document.getElementById('btn-zoom-reset');
+            if (zbtn) zbtn.textContent = Math.round(s * 100) + '%';
+        }
+
+        function setZoom(newScale) {
+            const s0 = state.camera.scale;
+            const s1 = clamp(newScale, state.camera.min, state.camera.max);
+            if (Math.abs(s1 - s0) < 1e-6) return;
+
+            // Zoom centré sur le centre de l'écran (on garde le même point du monde sous le centre)
+            const cx_world = (state.view.w / 2 - state.camera.tx) / s0;
+            const cy_world = (state.view.h / 2 - state.camera.ty) / s0;
+            state.camera.scale = s1;
+            state.camera.tx = state.view.w / 2 - cx_world * s1;
+            state.camera.ty = state.view.h / 2 - cy_world * s1;
+            applyCamera();
+        }
+        function zoomIn() { setZoom(state.camera.scale * 1.18); }
+        function zoomOut() { setZoom(state.camera.scale / 1.18); }
+        function zoomReset() {
+            state.camera.scale = 1;
+            state.camera.tx = 0;
+            state.camera.ty = 0;
+            applyCamera();
+        }
+
+        function viewBoundsWorld(margin = 0) {
+            const s = state.camera.scale;
+            const left = (-state.camera.tx) / s + margin;
+            const top = (-state.camera.ty) / s + margin;
+            const right = (-state.camera.tx + state.view.w) / s - margin;
+            const bottom = (-state.camera.ty + state.view.h) / s - margin;
+            return { left, top, right, bottom };
+        }
+
+
         function getPosFromClient(clientX, clientY) {
             const rect = container.getBoundingClientRect();
-            return { x: clientX - rect.left, y: clientY - rect.top };
+            const sx = clientX - rect.left;
+            const sy = clientY - rect.top;
+            const s = state.camera.scale;
+            return { x: (sx - state.camera.tx) / s, y: (sy - state.camera.ty) / s };
         }
         function getPos(e) { return getPosFromClient(e.clientX, e.clientY); }
 
@@ -386,6 +460,9 @@ requestAnimationFrame(renderLoop);
 
             ctxT.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctxD.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            // maintenir le zoom après redimensionnement
+            applyCamera();
         }
 
         // --- GESTION GABARITS ---
@@ -1028,8 +1105,9 @@ function initPenColorUI() {
                         t.x = mx - state.dragOffset.x;
                         t.y = my - state.dragOffset.y;
                     } else {
-                        t.x = clamp(mx - state.dragOffset.x, 10, state.view.w - 10);
-                        t.y = clamp(my - state.dragOffset.y, 10, state.view.h - 10);
+                        const b = viewBoundsWorld(10);
+                        t.x = clamp(mx - state.dragOffset.x, b.left, b.right);
+                        t.y = clamp(my - state.dragOffset.y, b.top, b.bottom);
                     }
 
                     // snap sommet a sommet
@@ -1120,8 +1198,9 @@ function initPenColorUI() {
                 const pivotY = t.y + t.pivot.y;
 
                 if (state.dragTarget.part === 'body') {
-                    t.x = clamp(mx - state.dragOffset.x, 10, state.view.w - 10);
-                    t.y = clamp(my - state.dragOffset.y, 10, state.view.h - 10);
+                    const b = viewBoundsWorld(10);
+                    t.x = clamp(mx - state.dragOffset.x, b.left, b.right);
+                    t.y = clamp(my - state.dragOffset.y, b.top, b.bottom);
 
                     /* ruler snap (aimantation sur les BORDS, pas le milieu) */
                     if (state.dragTarget.key === 'ruler') {
@@ -1220,8 +1299,9 @@ function initPenColorUI() {
                 tt.isSelected = false;
                 tt.freeDrag = false;
                 // on replace proprement dans le plateau au lâcher
-                tt.x = clamp(tt.x, 10, state.view.w - 10);
-                tt.y = clamp(tt.y, 10, state.view.h - 10);
+                const b = viewBoundsWorld(10);
+                tt.x = clamp(tt.x, b.left, b.right);
+                tt.y = clamp(tt.y, b.top, b.bottom);
             }
             state.dragTarget = null;
             state.activePointerId = null;
