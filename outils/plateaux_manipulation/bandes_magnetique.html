@@ -145,6 +145,19 @@
             touch-action: none;
         }
         
+        /* Rapporteur : le rectangle vide laisse passer les clics (utile quand des segments passent dessous) */
+        .geo-protractor {
+            pointer-events: none;
+        }
+        .geo-protractor .geo-handle,
+        .geo-protractor .protractor-body {
+            pointer-events: auto;
+        }
+        /* Le corps du rapporteur ne capture les clics que sur son trait : l'intérieur reste cliquable */
+        .geo-protractor .protractor-body {
+            pointer-events: stroke;
+        }
+
         .geo-handle {
             transition: transform 0.1s, background-color 0.1s, border-color 0.1s;
             background-color: white;
@@ -229,6 +242,8 @@
                         class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none" title="Zoom Avant">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                     </button>
+                    <button onclick="setZoom(-0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom -">-</button>
+                    <button onclick="setZoom(0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom +">+</button>
                 </div>
 
                 <!-- Bouton Image Fond -->
@@ -427,7 +442,7 @@
         const CONFIG = {
             snapDistance: 45, 
             normalStripWidth: 26,
-            thinStripWidth: 3, // Encore plus fin (était 8)
+            thinStripWidth: 0.7, // Encore plus fin (était 1.0)
             currentStripWidth: 26, 
             colors: {
                 yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, 
@@ -468,6 +483,7 @@
                     gradMode: 0, 
                     direction: 0,
                     showNumbers: false,
+                    attachedPointId: null,
                     pivot: {x: 120, y: 120} 
                 }
             },
@@ -535,7 +551,7 @@
                     <line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
                     <line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
                 </svg>
-                
+
                 <!-- Rotation Handle (Déplacé plus loin à l'extérieur de l'hypoténuse) -->
                 <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
                      style="top: 90px; left: 150px; --t: translate(-50%, -50%);" 
@@ -594,7 +610,7 @@
                     y2 = 120 - 92 * sin;
                 }
                 
-                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" />`;
+                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none" />`;
                 
                 // Numbers (Maintenant inclus 0 et 180)
                 if (showNumbers && i % 10 === 0) {
@@ -610,19 +626,23 @@
             }
             
             return `
-                <svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible;" shape-rendering="geometricPrecision">
-                     <path d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+                <svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible; pointer-events: auto;" shape-rendering="geometricPrecision">
+                     <!-- Zone de prise (invisible) pour déplacer le rapporteur sans bloquer le centre -->
+                     <path class="protractor-drag-hit" d="M20 120 A 100 100 0 0 1 220 120" fill="none" stroke="transparent" stroke-width="18" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-drag-hit" d="M20 120 L105 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-drag-hit" d="M135 120 L220 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-body" pointer-events="stroke" d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" />
                      
                      <!-- MARQUES ROUGES (Plus fines) -->
-                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9" />
-                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4" />
+                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9"  pointer-events="none"/>
+                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4"  pointer-events="none"/>
 
                      <!-- Arc de cercle interieur (au niveau ou les rayons s'arretent) -->
-                     <path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linecap="round"/>
+                     <path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>
 
                      ${marks}
                 </svg>
-                
+
                 <!-- Rotation Handle (Rapproché) -->
                 <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -44px; left: 50%; --t: translate(-50%, 0);" title="Tourner">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -655,6 +675,7 @@
             const el = document.createElement('div');
             el.id = `tool-${toolState.id}`;
             el.className = 'geo-tool hidden absolute select-none';
+            if (key === 'protractor') el.classList.add('geo-protractor');
             el.style.width = w;
             el.style.height = h;
             el.style.transformOrigin = origin;
@@ -850,6 +871,7 @@
             } else {
                 el.classList.add('hidden');
                 btn.classList.remove('active', 'bg-yellow-100', 'bg-indigo-100');
+                if (key === 'protractor') tool.attachedPointId = null;
             }
         }
 
@@ -978,6 +1000,9 @@
                     if (best) {
                         tool.x = best.x - tool.pivot.x;
                         tool.y = best.y - tool.pivot.y;
+                        tool.attachedPointId = best.id;
+                    } else {
+                        tool.attachedPointId = null;
                     }
                 }
                 
@@ -1124,6 +1149,23 @@
         }
         initSidebarDrag();
 
+        /* --- AIDE : Point aimanté par le rapporteur (pour stabiliser les rotations) --- */
+        function protractorAnchorShouldPin(pointId) {
+            const tool = state.tools.protractor;
+            if (!tool || !tool.visible || !tool.attachedPointId) return false;
+            if (tool.attachedPointId !== pointId) return false;
+
+            // Si l'utilisateur est en train de déplacer ce point / ce groupe, on ne le bloque pas.
+            if (state.draggingPoint && state.draggingPoint.id === pointId) return false;
+            if (state.draggingStrip && state.draggingStrip.some(p => p.id === pointId)) return false;
+            if (state.draggingAngleMove) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g && g.vertexId === pointId) return false;
+            }
+
+            return true;
+        }
+
         /* --- MOTEUR PHYSIQUE --- */
         function solveConstraints() {
             for (let i = 0; i < 5; i++) {
@@ -1131,6 +1173,9 @@
                     const p1 = state.points.find(p => p.id === strip.p1);
                     const p2 = state.points.find(p => p.id === strip.p2);
                     if (!p1 || !p2) return;
+
+                    const pinned1 = p1.pinned || protractorAnchorShouldPin(p1.id);
+                    const pinned2 = p2.pinned || protractorAnchorShouldPin(p2.id);
 
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
@@ -1142,10 +1187,10 @@
                     const offsetX = dx * diff * 0.5;
                     const offsetY = dy * diff * 0.5;
 
-                    if (!p1.pinned) { p1.x += offsetX; p1.y += offsetY; }
-                    if (!p2.pinned) { p2.x -= offsetX; p2.y -= offsetY; }
-                    if (p1.pinned && !p2.pinned) { p2.x -= offsetX; p2.y -= offsetY; }
-                    if (!p1.pinned && p2.pinned) { p1.x += offsetX; p1.y += offsetY; }
+                    if (!pinned1) { p1.x += offsetX; p1.y += offsetY; }
+                    if (!pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
+                    if (pinned1 && !pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
+                    if (!pinned1 && pinned2) { p1.x += offsetX; p1.y += offsetY; }
                 });
             }
         }
@@ -1282,7 +1327,10 @@
         function handleStart(e) {
             if (state.tool === 'pen') return;
             const pos = getPos(e);
-            
+
+            // Détache le rapporteur s'il était aimanté sur le point qu'on commence à déplacer
+            const proTool = state.tools.protractor;
+            const attachedId = proTool && proTool.attachedPointId;
 
             const point = getPointAt(pos.x, pos.y);
             if (point) {
@@ -1315,6 +1363,8 @@
                     }
                 }
 
+                if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
+
                 state.draggingPoint = point; point.pinned = true; return;
             }
 
@@ -1323,6 +1373,10 @@
             if (strip) {
                 state.draggingStrip = getAllConnectedPoints(strip);
                 state.draggingStripRef = strip; state.dragOffset = pos;
+                // Si ce groupe contenait le point sur lequel le rapporteur était aimanté, on autorise le déplacement libre
+                if (attachedId && state.draggingStrip.some(p => p && p.id === attachedId)) {
+                    proTool.attachedPointId = null;
+                }
                 state.draggingStrip.forEach(p => p.pinned = true); return;
             }
         }
@@ -1399,10 +1453,47 @@
             if (state.draggingPoint) {
                 e.preventDefault();
                 let targetX = pos.x; let targetY = pos.y;
-                
+
                 const self = state.draggingPoint;
-                const snapTarget = state.points.find(p => p.id !== self.id && Math.hypot(p.x - pos.x, p.y - pos.y) < CONFIG.snapDistance);
-                if (snapTarget) { targetX = snapTarget.x; targetY = snapTarget.y; }
+
+                // Si le rapporteur est aimanté sur un sommet, et qu'on déplace l'extrémité d'une bande reliée à ce sommet,
+                // on force une rotation autour du sommet (longueur conservée), ce qui évite que le sommet glisse.
+                const proT = state.tools.protractor;
+                let rotLocked = false;
+                if (proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
+                    const pivotP = state.points.find(p => p.id === proT.attachedPointId);
+                    if (pivotP) {
+                        const link = state.strips.find(s => (s.p1 === self.id && s.p2 === pivotP.id) || (s.p2 === self.id && s.p1 === pivotP.id));
+                        if (link) {
+                            rotLocked = true;
+                            const r = CONFIG.colors[link.type].length;
+                            const th = Math.atan2(pos.y - pivotP.y, pos.x - pivotP.x);
+                            targetX = pivotP.x + r * Math.cos(th);
+                            targetY = pivotP.y + r * Math.sin(th);
+                        }
+                    }
+                }
+
+                let bestD = CONFIG.snapDistance;
+                if (!rotLocked) {
+                    const snapTarget = state.points.find(p => p.id !== self.id && Math.hypot(p.x - pos.x, p.y - pos.y) < CONFIG.snapDistance);
+                    if (snapTarget) {
+                        targetX = snapTarget.x; targetY = snapTarget.y;
+                        bestD = Math.hypot(snapTarget.x - pos.x, snapTarget.y - pos.y);
+                    }
+
+                    // Snap possible sur le centre du rapporteur (aimant virtuel)
+                    if (state.tools.protractor.visible) {
+                        const t = state.tools.protractor;
+                        const pivotX = t.x + t.pivot.x;
+                        const pivotY = t.y + t.pivot.y;
+                        const dPivot = Math.hypot(pivotX - pos.x, pivotY - pos.y);
+                        if (dPivot < bestD) {
+                            targetX = pivotX; targetY = pivotY;
+                            bestD = dPivot;
+                        }
+                    }
+                }
 
                 state.draggingPoint.x = targetX; state.draggingPoint.y = targetY;
                 solveConstraints(); render();
@@ -1494,6 +1585,30 @@
                 const headerRect = header.getBoundingClientRect();
                 if (clientY <= headerRect.bottom) { if (state.draggingStripRef) removeStrip(state.draggingStripRef); }
                 
+                // Snap du groupe sur le centre du rapporteur (aimant virtuel)
+                if (state.tools.protractor.visible) {
+                    const t = state.tools.protractor;
+                    const pivotX = t.x + t.pivot.x;
+                    const pivotY = t.y + t.pivot.y;
+                    // On cherche le point du groupe le plus proche du centre
+                    let bestP = null;
+                    let bestD = CONFIG.snapDistance;
+                    for (const p of state.draggingStrip) {
+                        if (!p || p.toBeRemoved) continue;
+                        const d = Math.hypot(pivotX - p.x, pivotY - p.y);
+                        if (d < bestD) { bestD = d; bestP = p; }
+                    }
+                    if (bestP) {
+                        const dx = pivotX - bestP.x;
+                        const dy = pivotY - bestP.y;
+                        state.draggingStrip.forEach(p => {
+                            if (!p || p.toBeRemoved) return;
+                            p.x += dx; p.y += dy;
+                        });
+                        playSound('snap');
+                    }
+                }
+
                 // NOUVEAU: Logique d'aimantage pour le drag de bandes
                 let snapped = false;
                 state.draggingStrip.forEach(p => {
@@ -1534,10 +1649,29 @@
         }
         
         container.addEventListener('dblclick', (e) => {
-            if (state.tool === 'pen' || e.target.closest('.geo-tool')) return;
+            if (state.tool === 'pen') return;
+
+            const geo = e.target.closest('.geo-tool');
+            const isProtractor = geo && geo.id === 'tool-protractor';
+
+            // Par défaut on évite le dblclick sur les outils géométriques,
+            // MAIS on l'autorise sur le rapporteur pour pouvoir 'déclipser' un aimant dessous.
+            if (geo && !isProtractor) return;
+            // Si on dblclick sur une poignée / un bouton du rapporteur, on ne détache rien.
+            if (isProtractor && e.target.closest('.geo-handle')) return;
+
             const pos = getPos(e);
-            const point = getPointAt(pos.x, pos.y);
-            
+            let point = getPointAt(pos.x, pos.y);
+
+            // Si le dblclick est sur le rapporteur (au-dessus du sommet), on vise le point sous le pivot.
+            if (!point && isProtractor) {
+                const tool = state.tools.protractor;
+                const pivotX = tool.x + tool.pivot.x;
+                const pivotY = tool.y + tool.pivot.y;
+                // on cherche un point très proche du pivot (aimant sous le centre)
+                point = state.points.find(p => Math.hypot(p.x - pivotX, p.y - pivotY) < CONFIG.snapDistance);
+            }
+
             if (point) {
                 const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
                 if (connectedStrips.length > 1) {
@@ -1593,8 +1727,8 @@
                 
                 ctxStrips.beginPath();
                 // Adapter la taille du rivet si le trait est fin
-                const rivetSize = state.stripMode === 'thin' ? 2.5 : 6;
-                const strokeSize = state.stripMode === 'thin' ? 1.5 : 2;
+                const rivetSize = state.stripMode === 'thin' ? 2.0 : 6;
+                const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
 
                 ctxStrips.arc(p.x, p.y, rivetSize, 0, Math.PI * 2);
                 ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9'; 
