@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gliss-unité – conversions</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --accent:#1283ff; --accent-dark:#0b67c6; --bg:#fbfbfe; --panel:#fff; --ink:#1b1b1b; --border:#d5d7de }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .app{max-width:1100px;margin:16px auto;padding:0 12px}
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+  .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-weight:900}
+  .btn{border:none;background:var(--accent);color:#fff;font-weight:900;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent)}
+  .btn.secondary{background:#6b7280}
+  .btn:active{transform:translateY(1px)}
+
+  .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
+  .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px}
+
+  .inner{position:relative;margin-top:4px}
+  .head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;position:relative;z-index:1}
+
+  /* curseur légèrement plus haut */
+  .cursor{
+    position:absolute;left:0;top:-21px;bottom:-3px;width:calc((100% - 6px*6)/7);
+    transform:translateX(var(--x,0));
+    background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
+    border:3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
+    border-radius:12px;pointer-events:none;transition:transform .12s ease;z-index:0
+  }
+  .cursor::before{
+    content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+    border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.15))
+  }
+  .cursor::after{content:"";position:absolute;top:0;right:-3px;width:3px;bottom:0;background:color-mix(in srgb, var(--accent-dark) 70%, transparent);border-radius:2px}
+
+  .unitBtn{background:color-mix(in srgb, var(--accent) 12%, #fff);border:2px solid var(--accent);border-radius:8px;padding:8px 4px;text-align:center;font-weight:900;cursor:pointer}
+  .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
+
+  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:78px;display:flex;align-items:center;justify-content:center}
+  /* Suppression du margin-top pour un centrage vertical parfait */
+  .slots{margin-top:0;display:flex;gap:0;width:calc(100% - 12px);}
+  .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:900;font-size:1.45rem;line-height:1.45rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px}
+  .slots[data-slots="2"] .digit:nth-child(2),
+  .slots[data-slots="3"] .digit:nth-child(2),
+  .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
+
+  .result{margin-top:12px;padding:10px;border-radius:10px;background:#f2f6ff;border:1px solid #d7e6ff;font-weight:900;font-size:1.2rem}
+
+  /* Repères kL / L / mL (mode couplé) */
+  .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:3;pointer-events:none}
+  .sub-lab{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black)}
+
+  /* marque les zéros auto pour pouvoir les purger proprement */
+  .ghost0{}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="left">
+      <label for="kind"><strong>Grandeur :</strong></label>
+      <select id="kind">
+        <option value="length" selected>Longueur (m)</option>
+        <option value="mass">Masse (g)</option>
+        <option value="volL">Volume (L)</option>
+        <option value="area">Aire (m²)</option>
+        <option value="volM3">Volume (m³)</option>
+        <option value="cross">L ↔ m³</option>
+      </select>
+      <button class="btn" id="toggleShow">Afficher</button>
+      <button class="btn secondary" id="reset">Remise à zéro</button>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="title" id="title">CONVERSIONS – Longueur (m)</div>
+
+    <div class="inner" id="inner">
+      <div class="cursor" id="cursor"></div>
+      <div class="head" id="head"></div>
+
+      <!-- Repères couplés -->
+      <div class="subhead" id="subhead">
+        <div class="sub-lab" id="labKL">kL</div>
+        <div class="sub-lab" id="labL">L</div>
+        <div class="sub-lab" id="labML">mL</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="result" id="result" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const THEMES = {
+    length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'],
+    volL:['#06b6d4','#0a8aa3'],   area:['#f59e0b','#b77207'],
+    volM3:['#7c3aed','#5a27b0'],  cross:['#db2777','#a81d5a'],
+  };
+  const SCHEMAS = {
+    length:{label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], base:'m',  slots:1},
+    mass:  {label:'Masse (g)',    units:['kg','hg','dag','g','dg','cg','mg'],  base:'g',  slots:1},
+    volL:  {label:'Volume (L)',   units:['kL','hL','daL','L','dL','cL','mL'],   base:'L',  slots:1},
+    area:  {label:'Aire (m²)',    units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], base:'m²', slots:2},
+    volM3: {label:'Volume (m³)',  units:['km³','hm³','dam³','m³','dm³','cm³','mm³'],  base:'m³', slots:3},
+    cross: {label:'Litres ↔ mètres cubes', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], base:'m³', slots:3},
+  };
+
+  const kindSel = document.getElementById('kind');
+  const titleEl = document.getElementById('title');
+  const head    = document.getElementById('head');
+  const grid    = document.getElementById('grid');
+  const inner   = document.getElementById('inner');
+  const cursor  = document.getElementById('cursor');
+  const btnTog  = document.getElementById('toggleShow');
+  const btnRst  = document.getElementById('reset');
+  const result  = document.getElementById('result');
+
+  const subhead = document.getElementById('subhead');
+  const labKL   = document.getElementById('labKL');
+  const labL    = document.getElementById('labL');
+  const labML   = document.getElementById('labML');
+
+  let schema = SCHEMAS.length;
+  let targetIdx = 3;
+  let isShown = false;
+  let inputs = [];
+  let savedStudent = null;
+
+  function setTheme(kind){
+    const [c,cd] = THEMES[kind];
+    document.documentElement.style.setProperty('--accent', c);
+    document.documentElement.style.setProperty('--accent-dark', cd);
+  }
+
+  function rebuild(){
+    const kind = kindSel.value;
+    schema = SCHEMAS[kind];
+    setTheme(kind);
+    titleEl.textContent = `CONVERSIONS – ${schema.label}`;
+
+    head.innerHTML=''; grid.innerHTML=''; inputs=[];
+    schema.units.forEach((u,i)=>{
+      const b=document.createElement('div');
+      b.className='unitBtn'; b.textContent=u;
+      b.addEventListener('click', ()=>setTarget(i,true));
+      head.appendChild(b);
+    });
+
+    subhead.style.display = (kind==='cross')?'block':'none';
+
+    schema.units.forEach((u,i)=>{
+      const cell=document.createElement('div'); cell.className='cell';
+      const wrap=document.createElement('div');
+      wrap.className='slots'; wrap.dataset.slots=String(schema.slots);
+      wrap.style.setProperty('--S', schema.slots);
+      const slots=[];
+      for(let s=0;s<schema.slots;s++){
+        const inp=document.createElement('input');
+        inp.className='digit'; inp.maxLength=1; inp.inputMode='numeric';
+        inp.addEventListener('input', ()=>{
+          const m=inp.value.match(/[0-9]/); inp.value=m?m[0]:'';
+          if(isShown){ completeZerosInTable(); updateResult(); }
+          if(inp.value){ const [ci,si]=findIndex(inp); focusNext(ci,si); }
+        });
+        inp.addEventListener('keydown',(e)=>{
+          const [ci,si]=findIndex(inp);
+          if(e.key==='ArrowLeft'){ e.preventDefault(); focusPrev(ci,si); }
+          else if(e.key==='ArrowRight'){ e.preventDefault(); focusNext(ci,si); }
+          else if(e.key==='Backspace' && inp.value===''){ e.preventDefault(); focusPrev(ci,si); }
+          else if(/^[0-9]$/.test(e.key)){ e.preventDefault(); inp.value=e.key; focusNext(ci,si); if(isShown){ completeZerosInTable(); updateResult(); } }
+        });
+        inp.addEventListener('focus', ()=>inp.select());
+        wrap.appendChild(inp); slots.push(inp);
+      }
+      cell.appendChild(wrap); grid.appendChild(cell); inputs.push(slots);
+    });
+
+    setTarget(schema.units.indexOf(schema.base),false);
+    positionCoupleLabels();
+    if(isShown){ completeZerosInTable(); updateResult(); }
+  }
+
+  /* Repères kL/L/mL centrés sur la SOUS-CASE DROITE */
+  function positionCoupleLabels(){
+    if(kindSel.value!=='cross') return;
+    const getCenter = (ci,si)=>{
+      const el = inputs?.[ci]?.[si]; if(!el) return 0;
+      const r = el.getBoundingClientRect();
+      const base = inner.getBoundingClientRect();
+      return (r.left - base.left) + r.width/2;
+    };
+    const last = schema.slots-1; // sous-case droite
+    const nudge = 3;
+    labKL.style.left = (getCenter(3,last) + nudge) + 'px'; // m³ → kL
+    labL .style.left = (getCenter(4,last) + nudge) + 'px'; // dm³ → L
+    labML.style.left = (getCenter(5,last) + nudge) + 'px'; // cm³ → mL
+  }
+  window.addEventListener('resize', positionCoupleLabels);
+
+  function findIndex(inp){
+    for(let ci=0;ci<inputs.length;ci++){
+      const si=inputs[ci].indexOf(inp);
+      if(si!==-1) return [ci,si];
+    } return [-1,-1];
+  }
+  function focusNext(ci,si){ if(si<schema.slots-1) inputs[ci][si+1].focus(); else if(ci<inputs.length-1) inputs[ci+1][0].focus(); }
+  function focusPrev(ci,si){ if(si>0) inputs[ci][si-1].focus(); else if(ci>0) inputs[ci-1][schema.slots-1].focus(); }
+
+  function setTarget(i,refresh){
+    targetIdx=i;
+    const colW = head.clientWidth/7;
+    cursor.style.setProperty('--x', `${i*colW}px`);
+    positionCoupleLabels();
+    if(isShown && refresh){ completeZerosInTable(); updateResult(); }
+  }
+
+  /* --------- COMPLÉTION DES ZÉROS (CORRIGÉE) --------- */
+  function completeZerosInTable(){
+    const S = schema.slots;
+    const total = schema.units.length * S;
+    const slot = (k)=> inputs[Math.floor(k/S)][k%S];
+
+    // (0) purger anciens zéros auto
+    for(let k=0;k<total;k++){
+      const el = slot(k);
+      if(el.classList.contains('ghost0')){ el.value=''; el.classList.remove('ghost0'); }
+    }
+
+    // repérer 1er et dernier chiffre saisi par l'utilisateur
+    let first=-1, last=-1;
+    for(let k=0;k<total;k++){
+      const v = slot(k).value.trim();
+      if(/^[0-9]$/.test(v)){ if(first===-1) first=k; last=k; }
+    }
+    if(first===-1) return;
+
+    // Unité cible : on vise le slot "unités" (le plus à droite) de la colonne cible
+    const targetRightSlot = targetIdx * S + (S - 1);
+
+    // Fin du nombre utilisateur : on vise le slot "unités" de la colonne qui contient le dernier chiffre saisi
+    const lastUserCol = Math.floor(last / S);
+    const userNumberEnd = lastUserCol * S + (S - 1);
+
+    // Plage à remplir
+    const start = Math.min(first, targetRightSlot);
+    const end   = Math.max(userNumberEnd, targetRightSlot);
+
+    for(let k=start; k<=end; k++){
+      const el = slot(k);
+      if(el.value===''){
+        el.value='0';
+        el.classList.add('ghost0');
+      }
+    }
+  }
+
+  function saveStudent(){ savedStudent = inputs.map(col=>col.map(inp=>inp.value)); }
+  function restoreStudent(){
+    if(!savedStudent) return;
+    for(let i=0;i<inputs.length;i++)
+      for(let s=0;s<inputs[i].length;s++){
+        inputs[i][s].value=savedStudent[i][s];
+        inputs[i][s].classList.remove('ghost0');
+      }
+  }
+
+  /* Lecture → valeur dans l’unité cible */
+  function valueInTarget(){
+    const S=schema.slots, baseIdx=schema.units.indexOf(schema.base);
+    let sum=0;
+    for(let ci=0;ci<schema.units.length;ci++){
+      let colVal=0;
+      for(let si=0;si<S;si++){
+        const ch=inputs[ci][si].value.trim();
+        colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0);
+      }
+      const pow=(baseIdx-ci)*S;   // vers l’unité de base
+      sum += colVal * Math.pow(10, pow);
+    }
+    const powToTarget=(baseIdx-targetIdx)*S;
+    return sum * Math.pow(10, -powToTarget);
+  }
+
+  /* ---- Décimales minimales nécessaires (anti-arrondis) ---- */
+  function minFractionDigitsForTarget(){
+    const S = schema.slots;
+    let minFrac = 0;
+    for(let ci=0; ci<inputs.length; ci++){
+      let hasUserDigit = false;
+      for(let si=0; si<S; si++){
+        const el = inputs[ci][si];
+        const v  = el.value.trim();
+        if(/^[0-9]$/.test(v) && !el.classList.contains('ghost0')){
+          hasUserDigit = true; break;
+        }
+      }
+      if(hasUserDigit){
+        const delta = (ci - targetIdx) * S; // nb de sous-cases à droite de la cible
+        if(delta > minFrac) minFrac = delta;
+      }
+    }
+    return minFrac;
+  }
+
+  function updateResult(){
+    const u = schema.units[targetIdx];
+    const val = valueInTarget();
+    const minFrac = minFractionDigitsForTarget();
+    const s = val.toLocaleString('fr-FR', {
+      minimumFractionDigits: minFrac,
+      maximumFractionDigits: Math.max(minFrac, 12)
+    });
+    result.textContent = `${s} ${u}`;
+  }
+
+  document.getElementById('toggleShow').addEventListener('click', ()=>{
+    if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display=''; btnTog.textContent='Masquer'; isShown=true; }
+    else{ restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null; }
+  });
+  document.getElementById('reset').addEventListener('click', ()=>{
+    inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); }));
+    setTarget(schema.units.indexOf(schema.base),false);
+    result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null;
+  });
+  kindSel.addEventListener('change', rebuild);
+
+  setTheme('length'); rebuild();
+})();
+</script>
+</body>
+</html>
