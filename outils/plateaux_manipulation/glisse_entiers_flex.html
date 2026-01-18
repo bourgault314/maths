@@ -1,338 +1,400 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Glisse-entiers (Primaire)</title>
-<style>
-  :root {
-    --gap: 6px;
-    --cell: 60px;
-    --headH: 36px;
-    --primary: #4f46e5; /* Indigo 600 */
-    --primary-hover: #4338ca;
-    --bg-page: #f3f4f6;
-    --bg-card: #ffffff;
-    --text-main: #1f2937;
-    --border-color: #e5e7eb;
-    --cols: 10; /* Valeur par défaut, changée par JS */
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Glisse-entiers</title>
+  <style>
+    :root{
+      --gap: 6px;
+      --cell: 72px;       /* recalculé en JS */
+      --headH: 38px;      /* recalculé en JS */
+      --cols: 10;         /* recalculé en JS */
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  html { -webkit-text-size-adjust: 100%; }
+      --bg-page: #f3f4f6;
+      --bg-card: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --cell-border: #111827; /* noir */
+    }
 
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--bg-page);
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: clamp(10px, 3vw, 24px);
-    -webkit-font-smoothing: antialiased;
-  }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg-page);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding: clamp(10px, 3vw, 24px);
+      -webkit-font-smoothing: antialiased;
+      overflow-x:hidden;
+      overscroll-behavior-x:none;
+    }
 
-  .app {
-    width: min(1100px, 100%);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+    .app{ width:min(1400px, 100%); display:flex; flex-direction:column; gap:16px; }
 
-  /* --- CARD STYLES --- */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  }
+    .card{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    }
 
-  /* --- HEADER & CONTROLS --- */
-  .header-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-  }
+    .header-card{ display:flex; flex-direction:column; align-items:center; gap:14px; }
 
-  h1 {
-    margin: 0;
-    font-weight: 800;
-    font-size: clamp(20px, 4vw, 28px);
-    color: #111827;
-    text-align: center;
-  }
+    h1{
+      margin:0;
+      font-weight: 900;
+      font-size: clamp(20px, 4vw, 30px);
+      color:#111827;
+      text-align:center;
+    }
 
-  /* Main Action Bar (Movement) */
-  .actions-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-  }
+    .actions-bar{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      width:100%;
+    }
 
-  .btn-action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 12px 24px;
-    font-size: clamp(18px, 3vw, 22px);
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s, background-color 0.2s;
-    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-    min-width: 140px;
-  }
-  .btn-action:active { transform: translateY(1px); box-shadow: none; }
-  .btn-action:hover { background-color: var(--primary-hover); }
+    /* Bulle d'opération */
+    #opPill{
+      background:#e0e7ff;
+      color: var(--primary);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: clamp(18px, 3vw, 24px);
+      min-width: 90px;
+      text-align:center;
+      user-select:none;
+    }
 
-  .btn-reset {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-reset:hover { background: #e5e7eb; }
-  
-  /* Status Display */
-  #status-pill {
-    background: #e0e7ff;
-    color: var(--primary);
-    padding: 6px 12px;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 14px;
-    margin-top: -8px; 
-    min-width: 60px;
-    text-align: center;
-  }
+    .btn-reset{
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content:center;
+      gap: 6px;
+      user-select:none;
+    }
+    .btn-reset:hover{ background:#e5e7eb; }
 
-  /* --- SETTINGS BAR --- */
-  .settings-bar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #f3f4f6;
-    width: 100%;
-    align-items: center;
-  }
+    .settings-bar{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      width:100%;
+    }
 
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid #d1d5db;
-    color: #4b5563;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
-  .btn-secondary.active {
-    background: #ecfccb;
-    color: #365314;
-    border-color: #84cc16;
-  }
+    .picker-container{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background:#fff;
+      font-size: 14px;
+      font-weight: 800;
+      color:#4b5563;
+      user-select:none;
+    }
+    .picker-container select{
+      border:none;
+      background:transparent;
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--primary);
+      cursor:pointer;
+      outline:none;
+    }
 
-  /* Picker styled like a button */
-  .picker-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    color: #4b5563;
-  }
-  .picker-container select {
-    border: none;
-    background: transparent;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--primary);
-    cursor: pointer;
-    outline: none;
-  }
+    .seg-control{
+      display:flex;
+      background:#f3f4f6;
+      padding:4px;
+      border-radius: 10px;
+      gap:2px;
+      user-select:none;
+    }
+    .seg-btn{
+      border:none;
+      background:transparent;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 900;
+      color:#6b7280;
+      cursor:pointer;
+      user-select:none;
+    }
+    .seg-btn.active{
+      background:#fff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
 
-  /* Segmented Control */
-  .seg-control {
-    display: flex;
-    background: #f3f4f6;
-    padding: 4px;
-    border-radius: 10px;
-    gap: 2px;
-  }
-  .seg-btn {
-    border: none;
-    background: transparent;
-    padding: 6px 12px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #6b7280;
-    cursor: pointer;
-  }
-  .seg-btn.active {
-    background: white;
-    color: var(--primary);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  }
+    .btn-secondary{
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #4b5563;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select:none;
+    }
+    .btn-secondary:hover{ background:#f9fafb; border-color:#9ca3af; }
+    .btn-secondary.active{
+      background: #ecfccb;
+      color:#365314;
+      border-color:#84cc16;
+    }
 
-  /* --- GRID AREA --- */
-  .grid-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+    .zoom-control{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background:#fff;
+      user-select:none;
+    }
+    .zoom-btn{
+      width: 34px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background:#f9fafb;
+      color:#111827;
+      font-weight: 1000;
+      font-size: 18px;
+      cursor:pointer;
+      line-height: 1;
+      user-select:none;
+    }
+    .zoom-btn:hover{ background:#eef2ff; border-color:#a5b4fc; }
+    #zoomLabel{
+      min-width: 56px;
+      text-align:center;
+      font-weight: 900;
+      font-size: 13px;
+      color:#4b5563;
+    }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(var(--cols), var(--cell));
-    gap: var(--gap);
-    justify-content: center;
-    /* Largeur minimale pour contenir toutes les colonnes + espaces */
-    min-width: calc(var(--cols) * var(--cell) + (var(--cols) - 1) * var(--gap) + 12px);
-    margin: 0 auto;
-  }
+    /* --- Grille --- */
+    .grid-container{ width:100%; display:flex; justify-content:center; }
 
-  .head {
-    height: var(--headH);
-    text-align: center;
-    background: #e5e7eb;
-    color: #374151;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    font-size: 11px;
-    line-height: 1.1;
-    font-weight: 700;
-    padding: 2px;
-  }
-  .head .lbl { display: flex; flex-direction: column; }
-  
-  .cell {
-    height: var(--cell);
-    background: #fff;
-    border: 2px solid #9ca3af;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .cell:focus-within { border-color: var(--primary); }
+    .grid-shell{ width:max-content; display:flex; flex-direction:column; gap: var(--gap); }
 
-  .digit {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: transparent;
-    text-align: center;
-    font-family: inherit;
-    font-weight: 800;
-    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
-    color: #111827;
-    outline: none;
-    padding: 0;
-    margin: 0;
-  }
-  .digit::placeholder { color: #d1d5db; }
+    .grid-row{
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      gap: var(--gap);
+      align-items:center;
+      width: max-content;
+    }
 
-  .ghost {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
-    color: #9ca3af;
-    pointer-events: none;
-    background: rgba(255,255,255,0.8);
-  }
+    .head{
+      height: var(--headH);
+      text-align:center;
+      background:#e5e7eb;
+      color:#374151;
+      border-radius: 8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      font-size: 11px;
+      line-height: 1.1;
+      font-weight: 950;
+      padding: 2px;
+    }
+    .head .lbl{ display:flex; flex-direction:column; }
 
-  /* Euclid Info Box */
-  #euclid-box {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: #fef3c7; /* Light amber */
-    color: #92400e;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 16px;
-    display: none; /* Hidden by default */
-    align-items: center;
-    gap: 8px;
-    border: 1px solid #fcd34d;
-  }
-  #euclid-box.visible { display: flex; }
+    /* Titres en long (pivot 90°) */
+    .head.long{ padding: 0; }
+    .head.long .lbl{ flex-direction:row; justify-content:center; align-items:center; }
+    .head.long .lbl span{
+      display:block;
+      transform: rotate(-90deg);
+      white-space: nowrap;
+      font-size: clamp(12px, calc(var(--cell)*0.23), 18px);
+      font-weight: 1000;
+    }
 
-  @media (max-width: 600px) {
-    .actions-bar { gap: 8px; }
-    .btn-action { padding: 10px 16px; font-size: 16px; flex: 1; }
-    .btn-reset { order: 3; width: 100%; justify-content: center; margin-top: 4px; }
-    .settings-bar { flex-direction: column; align-items: stretch; }
-    .picker-container, .seg-control { justify-content: center; }
-  }
-</style>
+    .cell{
+      height: var(--cell);
+      background:#fff;
+      border: 2px solid var(--cell-border);
+      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      overflow:hidden;
+    }
+    .cell:focus-within{ border-color: var(--primary); }
+
+    /* Inputs (rangée blanche = repère fixe) */
+    form{ display: contents; }
+    .digit{
+      width:100%;
+      height:100%;
+      border:none;
+      background:transparent;
+      text-align:center;
+      font: inherit;
+      font-weight: 1000;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 40px);
+      color:#111827;
+      outline:none;
+      padding:0;
+      margin:0;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+
+    /* Rangée grise (résultat) : fenêtres + bandeau derrière */
+    .preview-wrap, .input-wrap{ position: relative; width: 100%; height: var(--cell); }
+
+    .preview-slots{
+      position: relative;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .preview-slots .cell{ background: rgba(255,255,255,0.08); }
+
+    .preview-viewport{
+      position:absolute;
+      inset:0;
+      overflow:hidden; /* IMPORTANT : effet "ça passe derrière" */
+      pointer-events:none;
+      z-index: 3;
+    }
+
+    .preview-layer{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      gap: var(--gap);
+      align-items:center;
+      justify-items:center;
+      pointer-events:none;
+      transform: translateX(0px);
+      will-change: transform;
+    }
+
+    .pDigit{
+      font-weight: 1000;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 40px);
+      color:#111827; /* noir */
+      line-height: 1;
+    }
+    .pDigit.ghost0{ color:#111827; opacity: 0.75; }
+
+    /* Bandeau gris (rectangulaire) */
+    .drag-bar{
+      position:absolute;
+      /* +2 cases de chaque cote (environ) */
+      left: calc(var(--cell) * -2 - var(--gap) * 2 - 10px);
+      right: calc(var(--cell) * -2 - var(--gap) * 2 - 10px);
+      top: calc(var(--cell) * 0.08);
+      height: calc(var(--cell) * 0.84);
+      cursor: grab;
+      touch-action: none;
+      user-select:none;
+      z-index: 2;
+      will-change: transform;
+      transform: translateX(0px);
+    }
+    .drag-bar.dragging{ cursor: grabbing; }
+
+    .drag-track{
+      width:100%;
+      height:100%;
+      border-radius: 0px;
+      background: rgba(209,213,219,0.62);
+      box-shadow: inset 0 2px 3px rgba(0,0,0,0.12), inset 0 -2px 3px rgba(255,255,255,0.55);
+      border: 1px solid rgba(107,114,128,0.25);
+    }
+
+    .snapping{ transition: transform 140ms cubic-bezier(.2,.9,.2,1); }
+
+    .remainder{
+      margin-top: 8px;
+      align-self: center;
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 950;
+      user-select:none;
+      display: inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .credit{
+      text-align:center;
+      font-size: 12px;
+      color:#6b7280;
+      margin-top: -6px;
+    }
+    .credit a{ color:#4b5563; text-decoration:none; border-bottom: 1px dotted #9ca3af; }
+    .credit a:hover{ color:#111827; }
+
+    @media (max-width: 600px){
+      .settings-bar{ flex-direction: column; align-items: center; }
+      .btn-reset{ width:100%; justify-content:center; }
+    }
+  </style>
 </head>
 <body>
 
 <main class="app" id="app">
-  
-  <!-- CONTROLS CARD -->
+
   <section class="card header-card">
     <h1>Glisse-entiers</h1>
-    
+
+    <!-- Bulle de multiplication (sous le titre) -->
+    <div class="actions-bar" style="margin-top:-2px;">
+      <div id="opPill" aria-live="polite">×1</div>
+    </div>
+
     <div class="actions-bar">
-      <button class="btn-action" id="times10" title="Décaler les chiffres vers la gauche (Multiplier)">
-        <span>←</span> ×10
-      </button>
-      
-      <div id="status-pill">×1</div>
-
-      <button class="btn-action" id="div10" title="Décaler les chiffres vers la droite (Diviser)">
-        ÷10 <span>→</span>
-      </button>
-
-      <button class="btn-reset" id="resetBtn" type="button">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      <button class="btn-reset" id="resetBtn" type="button" aria-label="Réinitialiser">
         Réinitialiser
       </button>
     </div>
 
     <div class="settings-bar">
-      
       <div class="picker-container">
         <label for="colCount">Colonnes :</label>
         <select id="colCount">
@@ -346,44 +408,69 @@
         </select>
       </div>
 
-      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros">
+      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros (rangée grise)">
         <button data-mode="none" class="seg-btn active" type="button">Sans zéros</button>
         <button data-mode="needed" class="seg-btn" type="button">Zéros utiles</button>
-        <button data-mode="all" class="seg-btn" type="button">Tous</button>
+        <button data-mode="all" class="seg-btn" type="button">Tous les zéros</button>
       </div>
 
       <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">
         Titres compacts
       </button>
+      <button class="btn-secondary" id="toggleLong" type="button" title="Libellés verticaux (pivotés à 90°)">
+        Titres en long
+      </button>
+
+      <div class="zoom-control" aria-label="Zoom">
+        <button class="zoom-btn" id="zoomOut" type="button" aria-label="Dézoomer">−</button>
+        <div id="zoomLabel">100%</div>
+        <button class="zoom-btn" id="zoomIn" type="button" aria-label="Zoomer">+</button>
+      </div>
     </div>
   </section>
 
-  <!-- GRID CARD -->
-  <section class="card" style="padding: 10px 0;">
+  <section class="card" style="padding: 10px 0;" id="gridCard">
     <div class="grid-container">
-      <div class="grid" id="grid">
-        <!-- Grid Generated by JS -->
-      </div>
-      
-      <div id="euclid-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v2m0 4h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-        <span id="euclid-text"></span>
+      <div class="grid-shell" id="gridShell">
+        <div class="grid-row" id="headRow"></div>
+
+        <!-- PREVIEW (haut) -->
+        <div class="preview-wrap" id="previewWrap">
+          <div class="grid-row preview-slots" id="previewSlots" aria-hidden="true"></div>
+          <div class="preview-viewport" aria-hidden="true">
+            <div class="preview-layer" id="previewLayer" aria-hidden="true"></div>
+          </div>
+          <div class="drag-bar" id="dragBar" role="slider" aria-label="Glisser" tabindex="0">
+            <div class="drag-track"></div>
+          </div>
+        </div>
+
+        <!-- INPUTS (bas = repère fixe) -->
+        <div class="input-wrap" id="inputWrap">
+          <form id="inputForm" autocomplete="off" aria-autocomplete="none">
+            <div class="grid-row" id="inputRow"></div>
+          </form>
+        </div>
+
+        <div class="remainder" id="remainderBox" hidden>Reste 0</div>
       </div>
     </div>
   </section>
+
+  <div class="credit">Inspiré de : <a href="https://mathix.org/glisse-nombre/" target="_blank" rel="noopener">mathix.org/glisse-nombre/</a></div>
 
 </main>
 
 <script>
 (() => {
-  // --- CONFIGURATION ---
+  // --- Libellés (12 colonnes max) ---
   const LABELS_LONG = [
     ['Centaines','de milliards'],
     ['Dizaines','de milliards'],
     ['Milliards'],
     ['Centaines','de millions'],
     ['Dizaines','de millions'],
-    ['Millions'],
+    ['Unités','de million'],
     ['Centaines','de milliers'],
     ['Dizaines','de milliers'],
     ['Milliers'],
@@ -392,285 +479,375 @@
     ['Unités']
   ];
   const LABELS_SHORT = [
-    ['Cent.','de mill.'],
-    ['Diz.','de mill.'],
-    ['Milliards'],
-    ['Cent.','de mill.'],
-    ['Diz.','de mill.'],
-    ['Millions'],
-    ['Cent.','de mill.'],
-    ['Diz.','de mill.'],
-    ['Milliers'],
+    ['Cent.','de mrd'],
+    ['Diz.','de mrd'],
+    ['Mrd'],
+    ['Cent.','de M'],
+    ['Diz.','de M'],
+    ['U.','de M'],
+    ['Cent.','de k'],
+    ['Diz.','de k'],
+    ['k'],
     ['Cent.'],
     ['Diz.'],
-    ['Unités']
+    ['U']
   ];
 
-  // --- DOM ELEMENTS ---
+  const root = document.documentElement;
   const app = document.getElementById('app');
-  const grid = document.getElementById('grid');
-  const colSelect = document.getElementById('colCount');
-  const zerosSeg = document.getElementById('zerosSeg');
+
+  const headRow = document.getElementById('headRow');
+  const inputRow = document.getElementById('inputRow');
+  const previewSlots = document.getElementById('previewSlots');
+  const previewLayer = document.getElementById('previewLayer');
+  const dragBar = document.getElementById('dragBar');
+  const opPill = document.getElementById('opPill');
+  const remainderBox = document.getElementById('remainderBox');
+
   const resetBtn = document.getElementById('resetBtn');
-  const times10 = document.getElementById('times10');
-  const div10 = document.getElementById('div10');
-  const status = document.getElementById('status-pill');
+  const zerosSeg = document.getElementById('zerosSeg');
   const toggleCompact = document.getElementById('toggleCompact');
-  const euclidBox = document.getElementById('euclid-box');
-  const euclidText = document.getElementById('euclid-text');
+  const toggleLong = document.getElementById('toggleLong');
+  const colSelect = document.getElementById('colCount');
 
-  // --- STATE ---
-  let COLS = 10;
-  let ids = [], order = [], inputs = [];
-  let zeroMode = 'none'; // 'none' | 'needed' | 'all'
-  let exp10 = 0;
-  let forceCompact = false;
-  
-  // Stacks for handling shifts
-  const leftStack = [];
-  const rightStack = [];
+  const zoomInBtn = document.getElementById('zoomIn');
+  const zoomOutBtn = document.getElementById('zoomOut');
+  const zoomLabel = document.getElementById('zoomLabel');
 
-  // --- INITIALIZATION ---
-  function buildGrid(n) {
-    COLS = Math.max(6, Math.min(12, n | 0));
-    grid.style.setProperty('--cols', COLS);
-    grid.innerHTML = '';
+  // --- Etat ---
+  let COL_COUNT = parseInt(colSelect.value, 10) || 10;
+  let zeroMode = 'none';  // none | needed | all
+  let exp10 = 0;          // exp10>0 => ×10^exp10, exp10<0 => ÷10^|exp10|
+  let isCompact = false;  // par défaut désactivé
+  let isLong = false;
+  let zoomFactor = 1.0;
 
-    // Choose labels based on width or setting
-    const useCompact = forceCompact || (window.innerWidth < 500) || (COLS >= 11);
-    const allLabels = useCompact ? LABELS_SHORT : LABELS_LONG;
-    const labels = allLabels.slice(allLabels.length - COLS);
+  let stepPx = 70;
+  let inputIds = [];
+  let inputs = [];
+  let previewDigits = [];
+  let activeLabels = [];
 
-    // HEADERS
-    labels.forEach(parts => {
-      const head = document.createElement('div'); head.className = 'head';
-      const lbl = document.createElement('div'); lbl.className = 'lbl';
-      lbl.innerHTML = parts.map(t => `<span>${t}</span>`).join('');
-      head.appendChild(lbl); grid.appendChild(head);
-    });
+  // Anti-historique / autosuggestions
+  const INPUT_ATTRS = {
+    autocomplete: 'off',
+    autocorrect: 'off',
+    autocapitalize: 'off',
+    spellcheck: 'false',
+    inputmode: 'numeric',
+    pattern: '[0-9]*',
+    'aria-autocomplete': 'none'
+  };
 
-    // INPUTS
-    ids = []; 
-    order = Array.from({ length: COLS }, (_, i) => i);
-    
-    for (let i = 0; i < COLS; i++) {
-      const cell = document.createElement('div'); cell.className = 'cell';
-      const inp = document.createElement('input'); 
-      inp.className = 'digit'; 
-      inp.maxLength = 1; 
-      inp.inputMode = 'numeric';
-      const id = 'c' + i; 
-      inp.id = id; 
-      inp.setAttribute('aria-label', labels[i].join(' '));
-      
-      cell.appendChild(inp); 
-      grid.appendChild(cell); 
-      ids.push(id);
-    }
-
-    inputs = order.map(i => document.getElementById(ids[i]));
-    attachInputHandlers();
-    
-    // Reset state but keep visual coherence if rebuilding during use? 
-    // Usually buildGrid is called on init or change config, so reset is fine.
-    resetAll(false); 
-    calcCell();
+  function sanitizeToDigit(v){
+    const m = (v||'').toString().match(/[0-9]/);
+    return m ? m[0] : '';
   }
 
-  // --- LAYOUT & SIZING ---
-  function calcCell() {
-    const root = document.documentElement;
+  function formatExpLabel(exp){
+    if (exp === 0) return '×1';
+    const n = Math.abs(exp);
+    const pow = (n <= 6) ? (10 ** n).toLocaleString('fr-FR') : ('10^' + n);
+    return (exp > 0) ? ('×' + pow) : ('÷' + pow);
+  }
+
+  function updateOpLabel(expShown){
+    opPill.textContent = formatExpLabel(expShown);
+  }
+
+  function setZoomLabel(){
+    zoomLabel.textContent = Math.round(zoomFactor * 100) + '%';
+  }
+
+  function getStepPx(){
+    const cs = getComputedStyle(root);
+    const cell = parseFloat(cs.getPropertyValue('--cell')) || 60;
+    const gap = parseFloat(cs.getPropertyValue('--gap')) || 6;
+    return cell + gap;
+  }
+
+  function calcCell(){
     const containerW = app.clientWidth;
-    const margin = 32; 
+    const margin = 40;
     const gap = 6;
-    
-    let c = Math.floor((containerW - margin - (COLS - 1) * gap) / COLS);
-    c = Math.max(34, Math.min(70, c)); // Limits
+    const nbCols = COL_COUNT;
+
+    // Taille maximale qui tient a l'ecran (sans debordement)
+    const cFit = Math.max(48, Math.floor((containerW - margin - (nbCols-1)*gap) / nbCols));
+
+    // Base volontairement un peu plus petite pour que le zoom soit utile
+    const cBase = Math.max(48, Math.min(110, cFit));
+
+    // Zoom sans depasser la taille qui tient a l'ecran
+    let c = Math.round(cBase * zoomFactor);
+    c = Math.max(48, Math.min(cFit, c));
 
     root.style.setProperty('--cell', c + 'px');
-    // Height adapts to font size roughly
-    root.style.setProperty('--headH', Math.max(32, Math.round(c * 0.6)) + 'px');
+    const headFactor = isLong ? 1.35 : 0.60;
+    root.style.setProperty('--headH', Math.max(32, Math.round(c * headFactor)) + 'px');
+
+    stepPx = getStepPx();
   }
 
-  function toggleCompactMode() {
-    forceCompact = !forceCompact;
-    toggleCompact.classList.toggle('active', forceCompact);
-    // Rebuild grid to apply labels
-    // Note: preserving values would be better
-    const vals = readRaw();
-    buildGrid(COLS);
-    writeRaw(vals);
-    applyZeroMode();
-  }
+  function renderHeaders(){
+    headRow.innerHTML = '';
+    const src = isCompact ? LABELS_SHORT : LABELS_LONG;
+    activeLabels = src.slice(src.length - COL_COUNT);
 
-  // --- LOGIC ---
-  function readRaw() { return order.map(i => document.getElementById(ids[i]).value || ''); }
-  function writeRaw(arr) { order.forEach((i, idx) => { document.getElementById(ids[i]).value = arr[idx] || ''; }); }
-
-  function clearGhosts() { grid.querySelectorAll('.cell .ghost').forEach(g => g.remove()); }
-  function addGhost(i) {
-    const cell = document.getElementById(ids[i]).parentElement;
-    if (!cell.querySelector('.ghost')) {
-      const g = document.createElement('div'); g.className = 'ghost'; g.textContent = '0'; cell.appendChild(g);
+    for (let i=0;i<COL_COUNT;i++){
+      const head = document.createElement('div');
+      head.className = 'head' + (isLong ? ' long' : '');
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      const parts = activeLabels[i];
+      lbl.innerHTML = parts.map(t => `<span>${t}</span>`).join('');
+      head.appendChild(lbl);
+      headRow.appendChild(head);
     }
   }
 
-  function applyZeroMode() {
-    clearGhosts();
-    const raw = readRaw();
-    const hasAny = raw.some(v => v !== '');
-    
-    if (zeroMode === 'all') {
-      order.forEach((i, idx) => { if (raw[idx] === '') addGhost(i); });
-    } else if (zeroMode === 'needed' && hasAny) {
-      // Find last filled digit
-      let last = -1; 
-      for (let i = 0; i < order.length; i++) { if (raw[i] !== '') last = i; }
-      
-      // Fill zeros to the right of the last digit (up to Units)
-      // Since it's integers, the last column is units.
-      // So we fill everything after the last non-empty digit.
-      for (let i = last + 1; i < order.length; i++) {
-        addGhost(order[i]);
-      }
-    }
-  }
+  function buildGrid(){
+    root.style.setProperty('--cols', String(COL_COUNT));
 
-  function shift(dir) {
-    const prev = readRaw(); 
-    const next = prev.slice();
-    const first = 0;
-    const last = order.length - 1;
+    renderHeaders();
 
-    if (dir === 'left') { // Multiplier (x10)
-      exp10++;
-      // Lost on left?
-      const lost = prev[first]; 
-      if (lost !== '') leftStack.push(lost);
-      
-      // Shift left
-      for (let i = first; i <= last; i++) { 
-        next[i] = (i + 1 <= last) ? prev[i + 1] : ''; 
-      }
-      
-      // Retrieve from right stack if any (cancelling a previous div10)
-      if (rightStack.length) { next[last] = rightStack.pop(); }
-    
-    } else { // Diviser (/10)
-      exp10--;
-      // Lost on right (remainder)
-      const lost = prev[last]; 
-      if (lost !== '') rightStack.push(lost);
-      
-      // Shift right
-      for (let i = last; i >= first; i--) { 
-        next[i] = (i - 1 >= first) ? prev[i - 1] : ''; 
-      }
-      
-      // Retrieve from left stack if any (cancelling a previous x10)
-      if (leftStack.length) { next[first] = leftStack.pop(); }
+    // Inputs
+    inputRow.innerHTML = '';
+    inputIds = [];
+    inputs = [];
+
+    for (let i=0;i<COL_COUNT;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+
+      const inp = document.createElement('input');
+      inp.className = 'digit';
+      inp.maxLength = 1;
+      inp.id = 'd' + i;
+      inp.setAttribute('aria-label', activeLabels[i].join(' '));
+
+      Object.entries(INPUT_ATTRS).forEach(([k,v]) => inp.setAttribute(k, v));
+
+      cell.appendChild(inp);
+      inputRow.appendChild(cell);
+
+      inputIds.push(inp.id);
+      inputs.push(inp);
     }
 
-    writeRaw(next);
-    applyZeroMode();
-    updateStatus();
+    // Preview slots (fenetres)
+    previewSlots.innerHTML = '';
+    for (let i=0;i<COL_COUNT;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      previewSlots.appendChild(cell);
+    }
+
+    // Preview digits
+    previewLayer.innerHTML = '';
+    previewDigits = [];
+    for (let i=0;i<COL_COUNT;i++){
+      const d = document.createElement('div');
+      d.className = 'pDigit';
+      previewLayer.appendChild(d);
+      previewDigits.push(d);
+    }
+
+    attachInputHandlers();
+    calcCell();
+    renderAll();
   }
 
-  function updateStatus() {
-    // Label pill
-    let label = '×1';
-    if (exp10 !== 0) {
-      const n = Math.abs(exp10);
-      if(n <= 9) {
-          label = exp10 > 0 ? '×' + (10 ** n).toLocaleString() : '÷' + (10 ** n).toLocaleString();
+  function readBase(){
+    const a = new Array(COL_COUNT).fill('');
+    for (let i=0;i<COL_COUNT;i++) a[i] = document.getElementById(inputIds[i]).value;
+    return a;
+  }
+
+  function shiftedDigits(base, exp){
+    const out = new Array(COL_COUNT).fill('');
+    for (let i=0;i<COL_COUNT;i++){
+      const src = i + exp;
+      out[i] = (src >= 0 && src < COL_COUNT) ? (base[src] || '') : '';
+    }
+    return out;
+  }
+
+  function computeGhostSet(raw){
+    const ghost = new Set();
+
+    if (zeroMode === 'all'){
+      for (let i=0;i<COL_COUNT;i++) if (raw[i] === '') ghost.add(i);
+      return ghost;
+    }
+
+    if (zeroMode === 'needed'){
+      const hasAny = raw.some(v => v !== '');
+      if (!hasAny) return ghost;
+
+      let firstFilled = -1;
+      for (let i=0;i<COL_COUNT;i++){
+        if (raw[i] !== '') { firstFilled = i; break; }
+      }
+      if (firstFilled === -1) return ghost;
+
+      for (let i=firstFilled+1; i<COL_COUNT; i++){
+        if (raw[i] === '') ghost.add(i);
+      }
+    }
+
+    return ghost;
+  }
+
+  function renderPreview(base, expShown){
+    const raw = shiftedDigits(base, expShown);
+    const ghostSet = computeGhostSet(raw);
+
+    for (let i=0;i<COL_COUNT;i++){
+      const el = previewDigits[i];
+      const v = raw[i] || '';
+      if (v !== ''){
+        el.textContent = v;
+        el.classList.remove('ghost0');
+      } else if (ghostSet.has(i)){
+        el.textContent = '0';
+        el.classList.add('ghost0');
       } else {
-          label = exp10 > 0 ? '×10^' + n : '÷10^' + n;
+        el.textContent = '';
+        el.classList.remove('ghost0');
       }
     }
-    status.textContent = label;
+  }
 
-    // Euclid remainder
-    const k = rightStack.length;
-    if (k === 0) {
-      euclidBox.classList.remove('visible');
-    } else {
-      euclidBox.classList.add('visible');
-      // The remainder is the stack read in reverse (LIFO is correct for digits: first popped is unit, second is ten...)
-      // Wait: if I push "5" then "2", stack is [5, 2]. 
-      // Original was 25. First shift right -> 5 lost (stack [5]). Remainder 5.
-      // Second shift right -> 2 lost (stack [5, 2]). Remainder 25.
-      // So simple join reversed is correct? 
-      // Stack: [units, tens, hundreds...] of the remainder.
-      // [5, 2] -> 2 is tens, 5 is units -> 25. 
-      const remainder = rightStack.slice().reverse().join('');
-      const divisor = (k <= 6) ? (10 ** k).toLocaleString() : `10^${k}`;
-      euclidText.textContent = `Division par ${divisor} : Reste = ${remainder}`;
+  function canonicalNumberString(base){
+    let first = -1;
+    for (let i=0;i<base.length;i++){
+      if (base[i] !== '') { first = i; break; }
     }
+    if (first === -1) return '0';
+
+    let s = '';
+    for (let i=first;i<base.length;i++){
+      s += (base[i] !== '' ? base[i] : '0');
+    }
+    s = s.replace(/^0+(?=\d)/, '');
+    return s === '' ? '0' : s;
   }
 
-  function resetAll(focus = true) {
-    inputs.forEach(i => i.value = '');
-    clearGhosts();
-    zeroMode = 'none';
-    zerosSeg.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
-    zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
-    
-    exp10 = 0;
-    leftStack.length = 0; 
-    rightStack.length = 0;
-    
-    updateStatus();
-    if(focus && inputs.length > 0) inputs[inputs.length-1].focus(); // Focus Units
+  function remainderString(base, k){
+    if (k <= 0) return '0';
+    const s = canonicalNumberString(base);
+    if (s === '0') return '0';
+
+    const take = Math.min(k, s.length);
+    let r = s.slice(s.length - take);
+    r = r.replace(/^0+(?=\d)/, '');
+    return r === '' ? '0' : r;
   }
 
-  // --- EVENT HANDLERS ---
-  function sanitizeToDigit(v) { const m = (v || '').toString().match(/[0-9]/); return m ? m[0] : ''; }
-  function focusMove(el, delta) {
+  function renderRemainder(base, expShown){
+    if (expShown >= 0){
+      remainderBox.hidden = true;
+      return;
+    }
+
+    const k = Math.abs(expShown);
+    const r = remainderString(base, k);
+    remainderBox.textContent = 'Reste ' + r;
+    remainderBox.hidden = false;
+  }
+
+  function renderAll(){
+    const base = readBase();
+    updateOpLabel(exp10);
+    renderPreview(base, exp10);
+    renderRemainder(base, exp10);
+  }
+
+  // --- Drag logic ---
+  let dragging = false;
+  let startX = 0;
+  let dragDx = 0;
+  let tentativeSteps = 0;
+
+  function setTranslate(dx){
+    dragBar.style.transform = `translateX(${dx}px)`;
+    previewLayer.style.transform = `translateX(${dx}px)`;
+  }
+
+  function onDragStart(e){
+    dragging = true;
+    startX = e.clientX;
+    dragDx = 0;
+    tentativeSteps = 0;
+    dragBar.classList.add('dragging');
+    dragBar.classList.remove('snapping');
+    previewLayer.classList.remove('snapping');
+    dragBar.setPointerCapture?.(e.pointerId);
+  }
+
+  function onDragMove(e){
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    dragDx = dx;
+    setTranslate(dragDx);
+
+    tentativeSteps = -Math.round(dragDx / stepPx);
+    const expShown = exp10 + tentativeSteps;
+    updateOpLabel(expShown);
+
+    // Reste (pendant le glisser)
+    const base = readBase();
+    renderRemainder(base, expShown);
+  }
+
+  function onDragEnd(){
+    if (!dragging) return;
+    dragging = false;
+    dragBar.classList.remove('dragging');
+
+    const steps = tentativeSteps;
+    const targetDx = -steps * stepPx;
+
+    dragBar.classList.add('snapping');
+    previewLayer.classList.add('snapping');
+    setTranslate(targetDx);
+
+    window.setTimeout(() => {
+      exp10 += steps;
+      dragBar.classList.remove('snapping');
+      previewLayer.classList.remove('snapping');
+      setTranslate(0);
+      renderAll();
+    }, 160);
+  }
+
+  // --- Inputs ---
+  function focusMove(el, delta){
     const idx = inputs.indexOf(el);
     if (idx < 0) return;
     const nextIdx = Math.min(inputs.length - 1, Math.max(0, idx + delta));
     inputs[nextIdx].focus();
-    inputs[nextIdx].select();
+    inputs[nextIdx].select?.();
   }
 
-  function attachInputHandlers() {
+  function attachInputHandlers(){
     inputs.forEach(inp => {
-      inp.addEventListener('focus', () => { inp.setAttribute('autocomplete', 'off'); });
-      inp.addEventListener('beforeinput', e => {
-        if (e.inputType === 'insertText' || e.inputType === 'insertFromPaste') {
-          const ch = (e.data || '').replace(/[^0-9]/g, ''); 
+      inp.addEventListener('beforeinput', (e) => {
+        if (e.inputType === 'insertText' || e.inputType === 'insertFromPaste'){
+          const ch = (e.data || '').replace(/[^0-9]/g, '');
           if (ch === '') e.preventDefault();
         }
       });
-      inp.addEventListener('input', e => {
-        const v = sanitizeToDigit(e.target.value); 
-        e.target.value = v;
-        if (v !== '') focusMove(e.target, -1); // Move Left naturally when typing numbers? Or right? 
-        // Standard calculator style input often goes left, but here we fill cells manually.
-        // Let's keep standard left-to-right logic? Or right-to-left for integers?
-        // User behavior: Types "1", then wants to type "2" in the next box to the right?
-        // Let's stick to Right (+1) logic for consistency with previous tool
-        if (v !== '') focusMove(e.target, -1); // Actually for integers we often fill from right... 
-        // Let's check previous file logic: "inputs[idx+1].focus()" was logic in old file.
-        // But "focusMove(-1)" moves to higher index? No, order 0 is Left.
-        // In previous file: ids=[c0, c1...]. c0 is left.
-        // If I type in Thousands (c8), I want Hundreds (c9) next? -> +1
-        // Let's change this to +1
-        
-        // Wait, correction: In the code above: focusMove(e.target, -1) moves LEFT.
-        // If I write "1" in Thousands, usually I write "2" in Hundreds next.
-        // Thousands is index X. Hundreds is index X+1.
-        // So I should move +1 (Right).
-      });
-      // Override input listener to be safe
-      inp.oninput = (e) => {
-         const v = sanitizeToDigit(e.target.value); 
-         e.target.value = v;
-         applyZeroMode();
-         if(v!=='') focusMove(e.target, +1); // Right
-      };
 
-      inp.addEventListener('keydown', e => {
+      inp.addEventListener('input', (e) => {
+        const v = sanitizeToDigit(e.target.value);
+        e.target.value = v;
+        renderAll();
+        if (v !== '') focusMove(e.target, +1);
+      });
+
+      inp.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') { e.preventDefault(); focusMove(e.target, -1); }
         if (e.key === 'ArrowRight') { e.preventDefault(); focusMove(e.target, +1); }
         if (e.key === 'Backspace' && e.target.value === '') { e.preventDefault(); focusMove(e.target, -1); }
@@ -678,44 +855,82 @@
     });
   }
 
-  // --- LISTENERS ---
-  zerosSeg.addEventListener('click', e => {
-    const b = e.target.closest('.seg-btn'); if (!b) return;
-    zerosSeg.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active'); 
-    zeroMode = b.dataset.mode;
-    applyZeroMode();
-  });
-
-  resetBtn.addEventListener('click', () => resetAll(true));
-  times10.addEventListener('click', () => shift('left'));
-  div10.addEventListener('click', () => shift('right'));
-
-  toggleCompact.addEventListener('click', toggleCompactMode);
-  
-  colSelect.addEventListener('change', () => {
-    buildGrid(parseInt(colSelect.value, 10));
-  });
-
-  window.addEventListener('resize', () => {
-    calcCell();
-    // Maybe auto-compact if very small
-    if(!forceCompact && window.innerWidth < 420) {
-       // logic handled in buildGrid but we don't rebuild on resize usually
-       // unless we want responsive labels.
-       // Let's keep it simple: just resize cells.
+  // Blur input when clicking elsewhere (bandeau, fond, etc.)
+  document.addEventListener('pointerdown', (e) => {
+    const a = document.activeElement;
+    if (a && a.classList && a.classList.contains('digit')){
+      const inputWrap = document.getElementById('inputWrap');
+      if (!inputWrap.contains(e.target)){
+        a.blur();
+      }
     }
+  }, true);
+
+  // --- Controls ---
+  zerosSeg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    zeroMode = btn.dataset.mode;
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b === btn));
+    renderAll();
   });
+
+  toggleCompact.addEventListener('click', () => {
+    if (isLong) return;
+    isCompact = !isCompact;
+    toggleCompact.classList.toggle('active', isCompact);
+    buildGrid();
+  });
+
+  toggleLong.addEventListener('click', () => {
+    isLong = !isLong;
+    toggleLong.classList.toggle('active', isLong);
+    if (isLong){
+      isCompact = false;
+      toggleCompact.classList.remove('active');
+    }
+    buildGrid();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    exp10 = 0;
+    setTranslate(0);
+    inputs.forEach(i => i.value = '');
+    remainderBox.hidden = true;
+    renderAll();
+    inputs[0]?.focus();
+  });
+
+  colSelect.addEventListener('change', () => {
+    COL_COUNT = parseInt(colSelect.value, 10) || 10;
+    buildGrid();
+  });
+
+  zoomInBtn.addEventListener('click', () => {
+    zoomFactor = Math.min(1.8, Math.round((zoomFactor + 0.1) * 10) / 10);
+    setZoomLabel();
+    calcCell();
+  });
+
+  zoomOutBtn.addEventListener('click', () => {
+    zoomFactor = Math.max(0.8, Math.round((zoomFactor - 0.1) * 10) / 10);
+    setZoomLabel();
+    calcCell();
+  });
+
+  // Drag events
+  dragBar.addEventListener('pointerdown', onDragStart);
+  window.addEventListener('pointermove', onDragMove, { passive: true });
+  window.addEventListener('pointerup', onDragEnd, { passive: true });
+  window.addEventListener('pointercancel', onDragEnd, { passive: true });
 
   // Init
-  buildGrid(parseInt(colSelect.value, 10));
-  initLayoutWatchers(); // reuse from V2 if needed, simplified here
-  
-  function initLayoutWatchers(){
-      calcCell();
-      window.addEventListener('orientationchange', ()=>setTimeout(calcCell,100));
-  }
+  setZoomLabel();
+  buildGrid();
+  window.addEventListener('resize', () => { calcCell(); });
+  window.addEventListener('orientationchange', () => setTimeout(calcCell, 100));
 })();
 </script>
+
 </body>
 </html>
