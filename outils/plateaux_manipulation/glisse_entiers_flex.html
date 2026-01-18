@@ -7,17 +7,21 @@
   <style>
     :root{
       --gap: 6px;
-      --cell: 72px;       /* recalculé en JS */
-      --headH: 38px;      /* recalculé en JS */
-      --cols: 10;         /* recalculé en JS */
+      --cell: 72px;         /* recalculé en JS (et modulé par le zoom) */
+      --headH: 38px;        /* recalculé en JS */
+      --cols: 10;           /* recalculé en JS */
+      --strip-cols: 30;     /* recalculé en JS */
+      --overhang: 0px;      /* recalculé en CSS avec cell+gap */
 
       --bg-page: #f3f4f6;
       --bg-card: #ffffff;
       --text: #1f2937;
       --border: #e5e7eb;
       --primary: #4f46e5;
-      --primary-hover: #4338ca;
       --cell-border: #111827; /* noir */
+
+      --band-fill: rgba(209,213,219,0.62);
+      --band-stroke: rgba(107,114,128,0.25);
     }
 
     *{ box-sizing:border-box; }
@@ -45,6 +49,8 @@
       border-radius: 20px;
       padding: 20px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      /* Pour le scroll horizontal si zoom fort */
+      max-width: 100%;
     }
 
     .header-card{ display:flex; flex-direction:column; align-items:center; gap:14px; }
@@ -66,7 +72,7 @@
       width:100%;
     }
 
-    /* Bulle d'opération */
+    /* Bulle d'opération (sous le titre) */
     #opPill{
       background:#e0e7ff;
       color: var(--primary);
@@ -85,12 +91,11 @@
       border: 1px solid #d1d5db;
       padding: 10px 16px;
       border-radius: 10px;
-      font-weight: 800;
+      font-weight: 700;
       font-size: 16px;
       cursor: pointer;
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      justify-content:center;
       gap: 6px;
       user-select:none;
     }
@@ -116,7 +121,7 @@
       border-radius: 8px;
       background:#fff;
       font-size: 14px;
-      font-weight: 800;
+      font-weight: 700;
       color:#4b5563;
       user-select:none;
     }
@@ -136,7 +141,6 @@
       padding:4px;
       border-radius: 10px;
       gap:2px;
-      user-select:none;
     }
     .seg-btn{
       border:none;
@@ -144,7 +148,7 @@
       padding: 6px 12px;
       border-radius: 7px;
       font-size: 13px;
-      font-weight: 900;
+      font-weight: 800;
       color:#6b7280;
       cursor:pointer;
       user-select:none;
@@ -162,7 +166,7 @@
       padding: 6px 12px;
       border-radius: 8px;
       font-size: 14px;
-      font-weight: 900;
+      font-weight: 800;
       cursor: pointer;
       transition: all 0.2s;
       user-select:none;
@@ -174,7 +178,8 @@
       border-color:#84cc16;
     }
 
-    .zoom-control{
+    /* Zoom */
+    .zoom-box{
       display:flex;
       align-items:center;
       gap:8px;
@@ -190,26 +195,32 @@
       border-radius: 8px;
       border: 1px solid #d1d5db;
       background:#f9fafb;
-      color:#111827;
-      font-weight: 1000;
-      font-size: 18px;
       cursor:pointer;
-      line-height: 1;
-      user-select:none;
-    }
-    .zoom-btn:hover{ background:#eef2ff; border-color:#a5b4fc; }
-    #zoomLabel{
-      min-width: 56px;
-      text-align:center;
       font-weight: 900;
-      font-size: 13px;
-      color:#4b5563;
+      color:#374151;
     }
+    .zoom-btn:hover{ background:#f3f4f6; }
+    #zoomLabel{ font-weight: 900; color:#4b5563; min-width: 56px; text-align:center; }
 
     /* --- Grille --- */
-    .grid-container{ width:100%; display:flex; justify-content:center; }
-
-    .grid-shell{ width:max-content; display:flex; flex-direction:column; gap: var(--gap); }
+    /* Permettre le scroll si zoom fort */
+    .grid-container{
+      width:100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      /* Centrage si contenu plus petit */
+      display: flex;
+      justify-content: center;
+    }
+    /* Mais si contenu plus grand, on veut qu'il commence à gauche.
+       L'astuce margin: auto sur l'enfant dans un flex gère les deux cas. */
+    .grid-shell{
+      width:max-content;
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+      margin: auto; /* Centre si petit, aligne gauche si overflow */
+    }
 
     .grid-row{
       display:grid;
@@ -231,21 +242,10 @@
       user-select:none;
       font-size: 11px;
       line-height: 1.1;
-      font-weight: 950;
+      font-weight: 900;
       padding: 2px;
     }
     .head .lbl{ display:flex; flex-direction:column; }
-
-    /* Titres en long (pivot 90°) */
-    .head.long{ padding: 0; }
-    .head.long .lbl{ flex-direction:row; justify-content:center; align-items:center; }
-    .head.long .lbl span{
-      display:block;
-      transform: rotate(-90deg);
-      white-space: nowrap;
-      font-size: clamp(12px, calc(var(--cell)*0.23), 18px);
-      font-weight: 1000;
-    }
 
     .cell{
       height: var(--cell);
@@ -269,39 +269,49 @@
       background:transparent;
       text-align:center;
       font: inherit;
-      font-weight: 1000;
-      font-size: clamp(22px, calc(var(--cell) * 0.50), 40px);
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
       color:#111827;
       outline:none;
       padding:0;
       margin:0;
-      -webkit-appearance:none;
-      appearance:none;
     }
 
-    /* Rangée grise (résultat) : fenêtres + bandeau derrière */
-    .preview-wrap, .input-wrap{ position: relative; width: 100%; height: var(--cell); }
+    /* Rangée grise : fenêtres + bandeau derrière */
+    .preview-wrap{ position: relative; width:max-content; height: var(--cell); }
 
     .preview-slots{
       position: relative;
-      z-index: 4;
+      z-index: 5;
       pointer-events: none;
     }
+    /* mêmes traits que la rangée blanche */
     .preview-slots .cell{ background: rgba(255,255,255,0.08); }
 
+    /* Fenêtre de découpe (effet matériel) */
     .preview-viewport{
       position:absolute;
       inset:0;
       overflow:hidden; /* IMPORTANT : effet "ça passe derrière" */
       pointer-events:none;
-      z-index: 3;
+      z-index: 4;
+    }
+
+    /* Sur-débord (pour une apparition plus fluide des zéros utiles) */
+    :root{ --overhang: calc(2 * (var(--cell) + var(--gap))); }
+    .preview-viewport{
+      left:  calc(-1 * var(--overhang));
+      right: calc(-1 * var(--overhang));
     }
 
     .preview-layer{
       position:absolute;
-      inset:0;
+      top:0;
+      left: var(--overhang); /* compensation */
+      height:100%;
+      width:max-content;
       display:grid;
-      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-template-columns: repeat(var(--strip-cols), var(--cell));
       gap: var(--gap);
       align-items:center;
       justify-items:center;
@@ -311,25 +321,24 @@
     }
 
     .pDigit{
-      font-weight: 1000;
-      font-size: clamp(22px, calc(var(--cell) * 0.50), 40px);
-      color:#111827; /* noir */
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
+      color:#111827;
       line-height: 1;
     }
-    .pDigit.ghost0{ color:#111827; opacity: 0.75; }
+    .pDigit.ghost0{ color:#111827; opacity: 0.78; }
 
     /* Bandeau gris (rectangulaire) */
     .drag-bar{
       position:absolute;
-      /* +2 cases de chaque cote (environ) */
-      left: calc(var(--cell) * -2 - var(--gap) * 2 - 10px);
-      right: calc(var(--cell) * -2 - var(--gap) * 2 - 10px);
+      left:  calc(-1 * var(--overhang) - 10px);
+      right: calc(-1 * var(--overhang) - 10px);
       top: calc(var(--cell) * 0.08);
       height: calc(var(--cell) * 0.84);
       cursor: grab;
       touch-action: none;
       user-select:none;
-      z-index: 2;
+      z-index: 3;
       will-change: transform;
       transform: translateX(0px);
     }
@@ -339,27 +348,29 @@
       width:100%;
       height:100%;
       border-radius: 0px;
-      background: rgba(209,213,219,0.62);
+      background: var(--band-fill);
       box-shadow: inset 0 2px 3px rgba(0,0,0,0.12), inset 0 -2px 3px rgba(255,255,255,0.55);
-      border: 1px solid rgba(107,114,128,0.25);
+      border: 1px solid var(--band-stroke);
     }
 
     .snapping{ transition: transform 140ms cubic-bezier(.2,.9,.2,1); }
 
-    .remainder{
-      margin-top: 8px;
-      align-self: center;
-      background: #fffbeb;
-      border: 1px solid #f59e0b;
-      color: #92400e;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-weight: 950;
-      user-select:none;
-      display: inline-flex;
+    /* Reste */
+    #remainderBox{
+      margin-top: 12px;
+      display:none;
       align-items:center;
-      gap: 8px;
+      justify-content:center;
+      gap:10px;
+      font-weight: 900;
+      color:#92400e;
+      background:#fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 12px;
+      padding: 10px 14px;
+      user-select:none;
     }
+    #remainderBox.visible{ display:flex; }
 
     .credit{
       text-align:center;
@@ -383,7 +394,6 @@
   <section class="card header-card">
     <h1>Glisse-entiers</h1>
 
-    <!-- Bulle de multiplication (sous le titre) -->
     <div class="actions-bar" style="margin-top:-2px;">
       <div id="opPill" aria-live="polite">×1</div>
     </div>
@@ -417,47 +427,40 @@
       <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">
         Titres compacts
       </button>
-      <button class="btn-secondary" id="toggleLong" type="button" title="Libellés verticaux (pivotés à 90°)">
-        Titres en long
-      </button>
 
-      <div class="zoom-control" aria-label="Zoom">
-        <button class="zoom-btn" id="zoomOut" type="button" aria-label="Dézoomer">−</button>
+      <div class="zoom-box" aria-label="Zoom">
+        <button class="zoom-btn" id="zoomOut" type="button" title="Dézoomer">−</button>
         <div id="zoomLabel">100%</div>
-        <button class="zoom-btn" id="zoomIn" type="button" aria-label="Zoomer">+</button>
+        <button class="zoom-btn" id="zoomIn" type="button" title="Zoomer">+</button>
       </div>
     </div>
   </section>
 
-  <section class="card" style="padding: 10px 0;" id="gridCard">
+  <section class="card" style="padding: 14px 0;" id="gridCard">
     <div class="grid-container">
       <div class="grid-shell" id="gridShell">
         <div class="grid-row" id="headRow"></div>
 
-        <!-- PREVIEW (haut) -->
         <div class="preview-wrap" id="previewWrap">
-          <div class="grid-row preview-slots" id="previewSlots" aria-hidden="true"></div>
-          <div class="preview-viewport" aria-hidden="true">
-            <div class="preview-layer" id="previewLayer" aria-hidden="true"></div>
+          <div class="grid-row preview-slots" id="previewSlots"></div>
+          <div class="preview-viewport" id="previewViewport">
+            <div class="preview-layer" id="previewLayer"></div>
           </div>
-          <div class="drag-bar" id="dragBar" role="slider" aria-label="Glisser" tabindex="0">
+          <div class="drag-bar" id="dragBar" aria-label="Bandeau à glisser" role="slider">
             <div class="drag-track"></div>
           </div>
         </div>
 
-        <!-- INPUTS (bas = repère fixe) -->
-        <div class="input-wrap" id="inputWrap">
-          <form id="inputForm" autocomplete="off" aria-autocomplete="none">
-            <div class="grid-row" id="inputRow"></div>
-          </form>
-        </div>
+        <form class="grid-row" id="inputRow" autocomplete="off" spellcheck="false"></form>
 
-        <div class="remainder" id="remainderBox" hidden>Reste 0</div>
+        <div id="remainderBox" aria-live="polite"><span id="remainderText"></span></div>
       </div>
     </div>
   </section>
 
-  <div class="credit">Inspiré de : <a href="https://mathix.org/glisse-nombre/" target="_blank" rel="noopener">mathix.org/glisse-nombre/</a></div>
+  <div class="credit">
+    Inspiré de <a href="https://mathix.org/glisse-nombre/" target="_blank" rel="noopener">mathix.org/glisse-nombre/</a>
+  </div>
 
 </main>
 
@@ -470,7 +473,7 @@
     ['Milliards'],
     ['Centaines','de millions'],
     ['Dizaines','de millions'],
-    ['Unités','de million'],
+    ['Millions'],
     ['Centaines','de milliers'],
     ['Dizaines','de milliers'],
     ['Milliers'],
@@ -478,184 +481,219 @@
     ['Dizaines'],
     ['Unités']
   ];
+
   const LABELS_SHORT = [
-    ['Cent.','de mrd'],
-    ['Diz.','de mrd'],
-    ['Mrd'],
-    ['Cent.','de M'],
-    ['Diz.','de M'],
-    ['U.','de M'],
-    ['Cent.','de k'],
-    ['Diz.','de k'],
-    ['k'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliards'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Millions'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliers'],
     ['Cent.'],
     ['Diz.'],
-    ['U']
+    ['Unités']
   ];
 
+  // --- DOM ---
   const root = document.documentElement;
-  const app = document.getElementById('app');
-
   const headRow = document.getElementById('headRow');
   const inputRow = document.getElementById('inputRow');
   const previewSlots = document.getElementById('previewSlots');
   const previewLayer = document.getElementById('previewLayer');
+  const previewWrap = document.getElementById('previewWrap');
   const dragBar = document.getElementById('dragBar');
-  const opPill = document.getElementById('opPill');
-  const remainderBox = document.getElementById('remainderBox');
 
-  const resetBtn = document.getElementById('resetBtn');
-  const zerosSeg = document.getElementById('zerosSeg');
-  const toggleCompact = document.getElementById('toggleCompact');
-  const toggleLong = document.getElementById('toggleLong');
   const colSelect = document.getElementById('colCount');
+  const zerosSeg = document.getElementById('zerosSeg');
+  const resetBtn = document.getElementById('resetBtn');
+  const toggleCompact = document.getElementById('toggleCompact');
+  const opPill = document.getElementById('opPill');
 
-  const zoomInBtn = document.getElementById('zoomIn');
-  const zoomOutBtn = document.getElementById('zoomOut');
+  const zoomOut = document.getElementById('zoomOut');
+  const zoomIn  = document.getElementById('zoomIn');
   const zoomLabel = document.getElementById('zoomLabel');
 
-  // --- Etat ---
-  let COL_COUNT = parseInt(colSelect.value, 10) || 10;
-  let zeroMode = 'none';  // none | needed | all
-  let exp10 = 0;          // exp10>0 => ×10^exp10, exp10<0 => ÷10^|exp10|
-  let isCompact = false;  // par défaut désactivé
-  let isLong = false;
-  let zoomFactor = 1.0;
+  const remainderBox = document.getElementById('remainderBox');
+  const remainderText = document.getElementById('remainderText');
 
-  let stepPx = 70;
+  // --- State ---
+  let COL_COUNT = parseInt(colSelect.value, 10) || 10;
+  let isCompact = false;            // par défaut : désactivé
+  let zeroMode = 'none';            // 'none' | 'needed' | 'all'
+  let exp10 = 0;                    // + : ×10^k ; - : ÷10^k
+
+  let zoomFactor = 1.0;             // 0.8 -> 1.6
+
+  // Ruban : on veut pouvoir multiplier TRES loin
+  // AUGMENTÉ ENCORE PLUS (était 40, maintenant 100)
+  const EXTRA_RIGHT_BASE = 100;      // en plus de COL_COUNT
+
+  // Calcul du pas (1 colonne)
+  let stepPx = 72 + parseFloat(getComputedStyle(root).getPropertyValue('--gap'));
+
+  // Inputs + preview digits
   let inputIds = [];
   let inputs = [];
   let previewDigits = [];
   let activeLabels = [];
 
-  // Anti-historique / autosuggestions
+  // Pour enlever les suggestions/historique :
   const INPUT_ATTRS = {
-    autocomplete: 'off',
-    autocorrect: 'off',
-    autocapitalize: 'off',
-    spellcheck: 'false',
     inputmode: 'numeric',
     pattern: '[0-9]*',
+    autocomplete: 'off',
+    autocapitalize: 'off',
+    spellcheck: 'false',
     'aria-autocomplete': 'none'
   };
 
-  function sanitizeToDigit(v){
-    const m = (v||'').toString().match(/[0-9]/);
+  function sanitizeToDigit(s){
+    if (!s) return '';
+    const m = String(s).match(/[0-9]/);
     return m ? m[0] : '';
   }
 
-  function formatExpLabel(exp){
-    if (exp === 0) return '×1';
-    const n = Math.abs(exp);
-    const pow = (n <= 6) ? (10 ** n).toLocaleString('fr-FR') : ('10^' + n);
-    return (exp > 0) ? ('×' + pow) : ('÷' + pow);
-  }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
-  function updateOpLabel(expShown){
-    opPill.textContent = formatExpLabel(expShown);
-  }
-
-  function setZoomLabel(){
-    zoomLabel.textContent = Math.round(zoomFactor * 100) + '%';
-  }
-
-  function getStepPx(){
-    const cs = getComputedStyle(root);
-    const cell = parseFloat(cs.getPropertyValue('--cell')) || 60;
-    const gap = parseFloat(cs.getPropertyValue('--gap')) || 6;
-    return cell + gap;
+  function updateOpLabel(exp){
+    if (exp === 0) { opPill.textContent = '×1'; return; }
+    if (exp > 0) { opPill.textContent = `×${Math.pow(10, exp)}`; return; }
+    opPill.textContent = `÷${Math.pow(10, -exp)}`;
   }
 
   function calcCell(){
-    const containerW = app.clientWidth;
-    const margin = 40;
-    const gap = 6;
-    const nbCols = COL_COUNT;
+    const gridCard = document.getElementById('gridCard');
+    const cardWidth = gridCard.getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(root).getPropertyValue('--gap')) || 6;
 
-    // Taille maximale qui tient a l'ecran (sans debordement)
-    const cFit = Math.max(48, Math.floor((containerW - margin - (nbCols-1)*gap) / nbCols));
+    // On cible une taille qui rentre dans l'écran, puis on applique le zoom.
+    const padding = 40; // marges internes approx.
+    const usable = Math.max(320, cardWidth - padding);
+    const base = (usable - gap*(COL_COUNT-1)) / COL_COUNT;
 
-    // Base volontairement un peu plus petite pour que le zoom soit utile
-    const cBase = Math.max(48, Math.min(110, cFit));
+    // Augmentation de la limite MAX pour que le zoom marche même avec peu de colonnes
+    // (passé de 120 à 250)
+    const cell = clamp(base * zoomFactor, 30, 250);
+    const headH = clamp(cell * 0.55, 28, 54);
 
-    // Zoom sans depasser la taille qui tient a l'ecran
-    let c = Math.round(cBase * zoomFactor);
-    c = Math.max(48, Math.min(cFit, c));
+    root.style.setProperty('--cell', `${cell}px`);
+    root.style.setProperty('--headH', `${headH}px`);
 
-    root.style.setProperty('--cell', c + 'px');
-    const headFactor = isLong ? 1.35 : 0.60;
-    root.style.setProperty('--headH', Math.max(32, Math.round(c * headFactor)) + 'px');
-
-    stepPx = getStepPx();
+    stepPx = cell + gap;
   }
 
   function renderHeaders(){
-    headRow.innerHTML = '';
-    const src = isCompact ? LABELS_SHORT : LABELS_LONG;
-    activeLabels = src.slice(src.length - COL_COUNT);
+    const heads = headRow.querySelectorAll('.head');
+    heads.forEach((h, idx) => {
+      const lbl = h.querySelector('.lbl');
+      lbl.innerHTML = '';
+      const parts = (isCompact ? LABELS_SHORT : LABELS_LONG).slice(12 - COL_COUNT)[idx] || [''];
+      for (const p of parts){
+        const s = document.createElement('span');
+        s.textContent = p;
+        lbl.appendChild(s);
+      }
+    });
 
-    for (let i=0;i<COL_COUNT;i++){
-      const head = document.createElement('div');
-      head.className = 'head' + (isLong ? ' long' : '');
-      const lbl = document.createElement('div');
-      lbl.className = 'lbl';
-      const parts = activeLabels[i];
-      lbl.innerHTML = parts.map(t => `<span>${t}</span>`).join('');
-      head.appendChild(lbl);
-      headRow.appendChild(head);
-    }
+    toggleCompact.classList.toggle('active', isCompact);
   }
 
   function buildGrid(){
     root.style.setProperty('--cols', String(COL_COUNT));
 
-    renderHeaders();
+    // Longueur du ruban
+    const STRIP_COLS = COL_COUNT + (COL_COUNT + EXTRA_RIGHT_BASE);
+    root.style.setProperty('--strip-cols', String(STRIP_COLS));
 
-    // Inputs
+    // HEAD
+    headRow.innerHTML = '';
+    for (let i=0;i<COL_COUNT;i++){
+      const h = document.createElement('div');
+      h.className = 'head';
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      h.appendChild(lbl);
+      headRow.appendChild(h);
+    }
+
+    // INPUTS
     inputRow.innerHTML = '';
-    inputIds = [];
+    inputIds = Array.from({length: COL_COUNT}, (_,i)=>`d${i}`);
     inputs = [];
 
     for (let i=0;i<COL_COUNT;i++){
       const cell = document.createElement('div');
       cell.className = 'cell';
-
       const inp = document.createElement('input');
       inp.className = 'digit';
+      inp.type = 'text';
       inp.maxLength = 1;
-      inp.id = 'd' + i;
-      inp.setAttribute('aria-label', activeLabels[i].join(' '));
-
-      Object.entries(INPUT_ATTRS).forEach(([k,v]) => inp.setAttribute(k, v));
+      inp.id = inputIds[i];
+      inp.name = `digit_${i}_${Math.random().toString(36).slice(2,7)}`;
+      for (const [k,v] of Object.entries(INPUT_ATTRS)) inp.setAttribute(k, v);
+      // aria
+      const labels = (isCompact ? LABELS_SHORT : LABELS_LONG).slice(12 - COL_COUNT);
+      inp.setAttribute('aria-label', (labels[i] || ['']).join(' '));
 
       cell.appendChild(inp);
       inputRow.appendChild(cell);
-
-      inputIds.push(inp.id);
       inputs.push(inp);
     }
 
-    // Preview slots (fenetres)
+    // PREVIEW WINDOWS
     previewSlots.innerHTML = '';
     for (let i=0;i<COL_COUNT;i++){
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      previewSlots.appendChild(cell);
+      const c = document.createElement('div');
+      c.className = 'cell';
+      previewSlots.appendChild(c);
     }
 
-    // Preview digits
+    // PREVIEW DIGITS (ruban)
     previewLayer.innerHTML = '';
     previewDigits = [];
-    for (let i=0;i<COL_COUNT;i++){
+    for (let i=0;i<STRIP_COLS;i++){
       const d = document.createElement('div');
       d.className = 'pDigit';
       previewLayer.appendChild(d);
       previewDigits.push(d);
     }
 
-    attachInputHandlers();
-    calcCell();
+    wireInputs();
+    renderHeaders();
     renderAll();
+    calcCell();
+    syncOffset();
+  }
+
+  function wireInputs(){
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener('input', () => {
+        const v = sanitizeToDigit(inp.value);
+        inp.value = v;
+        renderAll();
+        if (v && idx < inputs.length-1){
+          inputs[idx+1].focus();
+          inputs[idx+1].select();
+        }
+      });
+
+      inp.addEventListener('keydown', (e) => {
+        const k = e.key;
+        if (k === 'ArrowLeft'){ e.preventDefault(); if(idx>0) inputs[idx-1].focus(); }
+        if (k === 'ArrowRight'){ e.preventDefault(); if(idx<inputs.length-1) inputs[idx+1].focus(); }
+        if (k === 'Backspace'){
+          if (inp.value === '' && idx>0){ inputs[idx-1].focus(); }
+        }
+      });
+
+      inp.addEventListener('focus', () => {
+        // certains navigateurs insistent
+        inp.setAttribute('autocomplete','off');
+      });
+    });
   }
 
   function readBase(){
@@ -691,6 +729,7 @@
       }
       if (firstFilled === -1) return ghost;
 
+      // Zéros utiles : trous entre le 1er chiffre et les unités (dernière colonne)
       for (let i=firstFilled+1; i<COL_COUNT; i++){
         if (raw[i] === '') ghost.add(i);
       }
@@ -700,18 +739,36 @@
   }
 
   function renderPreview(base, expShown){
-    const raw = shiftedDigits(base, expShown);
-    const ghostSet = computeGhostSet(raw);
+    const STRIP_COLS = previewDigits.length;
 
-    for (let i=0;i<COL_COUNT;i++){
-      const el = previewDigits[i];
-      const v = raw[i] || '';
+    // Ce qui apparaitrait dans les fenêtres
+    const rawWindows = shiftedDigits(base, expShown);
+    const ghostSetWin = computeGhostSet(rawWindows);
+
+    // Ruban : chiffres de base + zone supplémentaire à droite
+    const strip = new Array(STRIP_COLS).fill('');
+    for (let j=0;j<COL_COUNT;j++) strip[j] = base[j] || '';
+
+    const ghostStrip = new Set();
+
+    // Pour que les zéros apparaissent "dans" les cases, on les place sur le ruban
+    // à l'indice qui passera sous la fenêtre après décalage.
+    if (zeroMode !== 'none'){
+      ghostSetWin.forEach((i) => {
+        const j = i + expShown;
+        if (j >= 0 && j < STRIP_COLS && strip[j] === ''){
+          strip[j] = '0';
+          ghostStrip.add(j);
+        }
+      });
+    }
+
+    for (let j=0;j<STRIP_COLS;j++){
+      const el = previewDigits[j];
+      const v = strip[j] || '';
       if (v !== ''){
         el.textContent = v;
-        el.classList.remove('ghost0');
-      } else if (ghostSet.has(i)){
-        el.textContent = '0';
-        el.classList.add('ghost0');
+        el.classList.toggle('ghost0', ghostStrip.has(j));
       } else {
         el.textContent = '';
         el.classList.remove('ghost0');
@@ -719,67 +776,88 @@
     }
   }
 
-  function canonicalNumberString(base){
-    let first = -1;
-    for (let i=0;i<base.length;i++){
-      if (base[i] !== '') { first = i; break; }
-    }
-    if (first === -1) return '0';
+  function computeRemainder(base, exp){
+    // Reste seulement si division (exp < 0)
+    if (exp >= 0) return null;
 
+    const k = Math.min(-exp, COL_COUNT);
+    if (k <= 0) return null;
+
+    // dernières k colonnes (à droite)
     let s = '';
-    for (let i=first;i<base.length;i++){
-      s += (base[i] !== '' ? base[i] : '0');
+    for (let i = COL_COUNT - k; i < COL_COUNT; i++){
+      const d = base[i];
+      s += (d === '' ? '0' : d);
     }
-    s = s.replace(/^0+(?=\d)/, '');
-    return s === '' ? '0' : s;
+
+    // valeur int
+    const val = parseInt(s, 10) || 0;
+    if (val === 0) return null;
+    return String(val);
   }
 
-  function remainderString(base, k){
-    if (k <= 0) return '0';
-    const s = canonicalNumberString(base);
-    if (s === '0') return '0';
-
-    const take = Math.min(k, s.length);
-    let r = s.slice(s.length - take);
-    r = r.replace(/^0+(?=\d)/, '');
-    return r === '' ? '0' : r;
-  }
-
-  function renderRemainder(base, expShown){
-    if (expShown >= 0){
-      remainderBox.hidden = true;
+  function renderRemainder(){
+    const base = readBase();
+    const r = computeRemainder(base, exp10);
+    if (r === null){
+      remainderBox.classList.remove('visible');
+      remainderText.textContent = '';
       return;
     }
-
-    const k = Math.abs(expShown);
-    const r = remainderString(base, k);
-    remainderBox.textContent = 'Reste ' + r;
-    remainderBox.hidden = false;
+    remainderText.textContent = `Reste ${r}`;
+    remainderBox.classList.add('visible');
   }
 
   function renderAll(){
     const base = readBase();
     updateOpLabel(exp10);
     renderPreview(base, exp10);
-    renderRemainder(base, exp10);
+    renderRemainder();
   }
 
-  // --- Drag logic ---
+  // --- Drag (fluide + snap) ---
   let dragging = false;
   let startX = 0;
-  let dragDx = 0;
-  let tentativeSteps = 0;
+  let startOffset = 0;
+  let offsetPx = 0;
+  let tentativeExp = 0;
 
-  function setTranslate(dx){
-    dragBar.style.transform = `translateX(${dx}px)`;
-    previewLayer.style.transform = `translateX(${dx}px)`;
+  function expToOffset(exp){
+    return -exp * stepPx;
+  }
+  function offsetToExp(offset){
+    return -Math.round(offset / stepPx);
+  }
+
+  function setTranslate(offset){
+    dragBar.style.transform = `translateX(${offset}px)`;
+    previewLayer.style.transform = `translateX(${offset}px)`;
+  }
+
+  function syncOffset(){
+    offsetPx = expToOffset(exp10);
+    setTranslate(offsetPx);
+  }
+
+  function blurActiveInput(){
+    const ae = document.activeElement;
+    if (ae && ae.classList && ae.classList.contains('digit')) ae.blur();
+  }
+
+  function clampExp(exp){
+    // limite raisonnable pour éviter de partir dans l'infini, tout en restant souple
+    const minExp = -(COL_COUNT + 2);
+    // On permet d'aller plus loin à droite (multiplication) grâce au buffer augmenté
+    const maxExp = (COL_COUNT + 90);
+    return clamp(exp, minExp, maxExp);
   }
 
   function onDragStart(e){
+    blurActiveInput();
     dragging = true;
     startX = e.clientX;
-    dragDx = 0;
-    tentativeSteps = 0;
+    startOffset = offsetPx;
+    tentativeExp = exp10;
     dragBar.classList.add('dragging');
     dragBar.classList.remove('snapping');
     previewLayer.classList.remove('snapping');
@@ -789,16 +867,27 @@
   function onDragMove(e){
     if (!dragging) return;
     const dx = e.clientX - startX;
-    dragDx = dx;
-    setTranslate(dragDx);
+    const newOffset = startOffset + dx;
+    offsetPx = newOffset;
+    setTranslate(offsetPx);
 
-    tentativeSteps = -Math.round(dragDx / stepPx);
-    const expShown = exp10 + tentativeSteps;
-    updateOpLabel(expShown);
+    tentativeExp = clampExp(offsetToExp(offsetPx));
+    updateOpLabel(tentativeExp);
 
-    // Reste (pendant le glisser)
     const base = readBase();
-    renderRemainder(base, expShown);
+    renderPreview(base, tentativeExp);
+
+    // reste en live (quand on divise)
+    if (tentativeExp !== exp10){
+      const r = computeRemainder(base, tentativeExp);
+      if (r === null){
+        remainderBox.classList.remove('visible');
+        remainderText.textContent = '';
+      } else {
+        remainderText.textContent = `Reste ${r}`;
+        remainderBox.classList.add('visible');
+      }
+    }
   }
 
   function onDragEnd(){
@@ -806,67 +895,29 @@
     dragging = false;
     dragBar.classList.remove('dragging');
 
-    const steps = tentativeSteps;
-    const targetDx = -steps * stepPx;
+    const finalExp = clampExp(offsetToExp(offsetPx));
+    const finalOffset = expToOffset(finalExp);
 
     dragBar.classList.add('snapping');
     previewLayer.classList.add('snapping');
-    setTranslate(targetDx);
+    setTranslate(finalOffset);
 
     window.setTimeout(() => {
-      exp10 += steps;
+      exp10 = finalExp;
+      offsetPx = finalOffset;
       dragBar.classList.remove('snapping');
       previewLayer.classList.remove('snapping');
-      setTranslate(0);
       renderAll();
+      syncOffset();
     }, 160);
   }
 
-  // --- Inputs ---
-  function focusMove(el, delta){
-    const idx = inputs.indexOf(el);
-    if (idx < 0) return;
-    const nextIdx = Math.min(inputs.length - 1, Math.max(0, idx + delta));
-    inputs[nextIdx].focus();
-    inputs[nextIdx].select?.();
-  }
-
-  function attachInputHandlers(){
-    inputs.forEach(inp => {
-      inp.addEventListener('beforeinput', (e) => {
-        if (e.inputType === 'insertText' || e.inputType === 'insertFromPaste'){
-          const ch = (e.data || '').replace(/[^0-9]/g, '');
-          if (ch === '') e.preventDefault();
-        }
-      });
-
-      inp.addEventListener('input', (e) => {
-        const v = sanitizeToDigit(e.target.value);
-        e.target.value = v;
-        renderAll();
-        if (v !== '') focusMove(e.target, +1);
-      });
-
-      inp.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); focusMove(e.target, -1); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); focusMove(e.target, +1); }
-        if (e.key === 'Backspace' && e.target.value === '') { e.preventDefault(); focusMove(e.target, -1); }
-      });
-    });
-  }
-
-  // Blur input when clicking elsewhere (bandeau, fond, etc.)
+  // Click ailleurs => désélectionner la case
   document.addEventListener('pointerdown', (e) => {
-    const a = document.activeElement;
-    if (a && a.classList && a.classList.contains('digit')){
-      const inputWrap = document.getElementById('inputWrap');
-      if (!inputWrap.contains(e.target)){
-        a.blur();
-      }
-    }
+    if (!e.target.closest('.digit')) blurActiveInput();
   }, true);
 
-  // --- Controls ---
+  // --- Contrôles ---
   zerosSeg.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-mode]');
     if (!btn) return;
@@ -876,47 +927,38 @@
   });
 
   toggleCompact.addEventListener('click', () => {
-    if (isLong) return;
     isCompact = !isCompact;
-    toggleCompact.classList.toggle('active', isCompact);
     buildGrid();
   });
 
-  toggleLong.addEventListener('click', () => {
-    isLong = !isLong;
-    toggleLong.classList.toggle('active', isLong);
-    if (isLong){
-      isCompact = false;
-      toggleCompact.classList.remove('active');
-    }
+  colSelect.addEventListener('change', () => {
+    COL_COUNT = parseInt(colSelect.value, 10) || 10;
+    exp10 = 0;
+    zeroMode = 'none';
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'none'));
     buildGrid();
   });
 
   resetBtn.addEventListener('click', () => {
     exp10 = 0;
+    offsetPx = 0;
     setTranslate(0);
     inputs.forEach(i => i.value = '');
-    remainderBox.hidden = true;
+    zeroMode = 'none';
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'none'));
     renderAll();
     inputs[0]?.focus();
   });
 
-  colSelect.addEventListener('change', () => {
-    COL_COUNT = parseInt(colSelect.value, 10) || 10;
-    buildGrid();
-  });
-
-  zoomInBtn.addEventListener('click', () => {
-    zoomFactor = Math.min(1.8, Math.round((zoomFactor + 0.1) * 10) / 10);
-    setZoomLabel();
+  function setZoom(newZoom){
+    zoomFactor = clamp(newZoom, 0.8, 1.6);
+    zoomLabel.textContent = `${Math.round(zoomFactor*100)}%`;
     calcCell();
-  });
+    syncOffset();
+  }
 
-  zoomOutBtn.addEventListener('click', () => {
-    zoomFactor = Math.max(0.8, Math.round((zoomFactor - 0.1) * 10) / 10);
-    setZoomLabel();
-    calcCell();
-  });
+  zoomOut.addEventListener('click', () => setZoom(Math.round((zoomFactor - 0.1)*10)/10));
+  zoomIn.addEventListener('click', () => setZoom(Math.round((zoomFactor + 0.1)*10)/10));
 
   // Drag events
   dragBar.addEventListener('pointerdown', onDragStart);
@@ -924,11 +966,14 @@
   window.addEventListener('pointerup', onDragEnd, { passive: true });
   window.addEventListener('pointercancel', onDragEnd, { passive: true });
 
+  window.addEventListener('resize', () => { calcCell(); syncOffset(); });
+  window.addEventListener('orientationchange', () => setTimeout(() => { calcCell(); syncOffset(); }, 100));
+
   // Init
-  setZoomLabel();
   buildGrid();
-  window.addEventListener('resize', () => { calcCell(); });
-  window.addEventListener('orientationchange', () => setTimeout(calcCell, 100));
+  setZoom(1.0);
+  calcCell();
+  syncOffset();
 })();
 </script>
 
