@@ -57,6 +57,13 @@
         }
         .flying { animation: flyAway 0.6s ease-in forwards; pointer-events: none; }
 
+        @keyframes vanish {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.1); opacity: 0; }
+        }
+        .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
+
+
         .token:active {
             cursor: grabbing;
             transform: scale(1.05);
@@ -76,9 +83,7 @@
         
         .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
         .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
-        .token.in-group { box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.6); }
-
-        .token.is-zero {
+.token.is-zero {
             background: #9ca3af !important;
             opacity: 0.6;
             border: 2px solid #6b7280;
@@ -88,7 +93,14 @@
             color: rgba(255,255,255,0.5);
         }
 
-        /* FORMES */
+        
+        .token.fading-gray {
+            background: #9ca3af !important;
+            border-color: #6b7280 !important;
+            box-shadow: none !important;
+            filter: grayscale(1);
+        }
+/* FORMES */
         .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
         .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
         .token.type-x2 { width: 90px; height: 90px; border-radius: 4px; }
@@ -103,6 +115,8 @@
             text-shadow: 0 0 10px rgba(255,255,255,1);
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        /* Les "0" doivent disparaître un peu plus vite que les tuiles pour éviter l'effet "ça traîne" */
+        .zero-badge.vanish { animation: vanish 0.25s ease-in forwards; }
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         #drawing-canvas {
@@ -137,9 +151,7 @@
         .ps-red { background: #f87171; border: 1px solid #b91c1c; }
 
         .mode-active-minus { border: 2px solid #f97316; background-color: #fff7ed; }
-        .mode-active-group { border: 2px solid #3b82f6; background-color: #eff6ff; }
-
-        @keyframes pulse-orange {
+@keyframes pulse-orange {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
         }
@@ -175,25 +187,27 @@
             
             <!-- BOUTON DISTRIBUER -->
             <button id="btn-distribute" onclick="applyDistribution()" class="hidden btn-distribute bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-lg shadow-md border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition text-sm">
-                Distribuer
+                Développer
             </button>
             
             <div class="h-8 w-px bg-slate-200 mx-1"></div>
             
             <!-- OPÉRATEURS -->
             <div class="flex gap-1 items-center">
-                <button onclick="setOperator('add')" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Ajouter">+</button>
+                <div class="flex gap-1 items-center bg-blue-50 rounded-full p-1 border border-blue-100">
+                    <button id="btn-op-plus" onclick="separatePack()" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Séparer les groupes">+</button>
+                    <!-- FERMER PARENTHÈSE (cas : +(- ... ) ) -->
+                </div>
                 
                 <div class="flex gap-1 items-center bg-orange-50 rounded-full p-1 border border-orange-100">
                     <button id="btn-op-minus" onclick="setOperator('subtract')" class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full border-2 border-orange-400 font-bold text-xl active:scale-95 transition hover:bg-orange-200" title="Soustraire (Ouvrir parenthèse)">-</button>
                     <!-- BOUTON FERMER PARENTHÈSE -->
-                    <button id="btn-close-parenthesis" onclick="closeSubtraction()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
+                    <button id="btn-close-parenthesis" onclick="closeParenthesis()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
                 </div>
 
                 <!-- BOUTON OPPOSÉ -->
                 <button id="btn-opposite" onclick="applyOpposite()" class="hidden btn-opposite ml-2 bg-orange-600 text-white px-3 py-1 rounded-full font-bold shadow-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1 text-xs sm:text-sm uppercase tracking-wide flex flex-col items-center leading-none py-2">
-                    <span>OPPOSÉ</span>
-                    <span class="text-[10px] opacity-80">(Changer signes)</span>
+                    <span class="text-xs sm:text-sm leading-none">Ajouter l'opposé</span>
                 </button>
             </div>
         </div>
@@ -251,40 +265,32 @@
                 </button>
             </div>
 
-            <!-- BOUTON GROUPE -->
+            <!-- MULTIPLICATION -->
             <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button id="btn-group" onclick="toggleGroupMode()" class="w-full py-1 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 transition shadow-sm">
-                    GROUPE ( )
-                </button>
-            </div>
-
-            <!-- MULTIPLICATEUR -->
-            <div class="flex flex-col gap-1 w-full px-2 items-center mt-1">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
-                <div class="grid grid-cols-2 gap-1 w-full">
-                    <button onclick="multiplyGroup(2)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100">x2</button>
-                    <button onclick="multiplyGroup(3)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100">x3</button>
-                    <button onclick="multiplyGroup(4)" class="text-xs font-bold text-indigo-600 py-1 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 col-span-2">x4</button>
+                <div class="flex flex-col gap-1 w-full">
+                    <button onclick="startMultiplication(2)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="2 fois ( … )">
+                        <span>2 fois</span>
+                        <span class="text-[10px] text-indigo-500">( ? )</span>
+                    </button>
+                    <button onclick="startMultiplication(3)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="3 fois ( … )">
+                        <span>3 fois</span>
+                        <span class="text-[10px] text-indigo-500">( ? )</span>
+                    </button>
+                    <button onclick="startMultiplication(4)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="4 fois ( … )">
+                        <span>4 fois</span>
+                        <span class="text-[10px] text-indigo-500">( ? )</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- ORDONNER -->
-            <button onclick="orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 flex flex-col items-center gap-1 hover:bg-slate-50 transition" title="Ordonner les tuiles">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                ORDONNER
-            </button>
+            <!-- ORDONNER --><!-- ORDONNER -->
+            <button id="btn-order" onclick="orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 hover:bg-slate-50 transition" title="Ordonner les tuiles">ordonner</button>
             <!-- RÉDUIRE -->
-            <button id="btn-reduce" onclick="reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 flex flex-col items-center gap-1 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">
-                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h6M4 12h10M4 18h6M14 6h6M18 6v12M14 18h6"/></svg>
-                RÉDUIRE
-            </button>
+            <button id="btn-reduce" onclick="reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">réduire</button>
 
             <!-- FLASH / SIMPLIFIER -->
-            <button id="btn-simplify" onclick="autoSimplify()" class="w-14 h-14 mt-2 rounded-full bg-yellow-100 border-4 border-yellow-300 text-yellow-600 shadow-md flex items-center justify-center hover:bg-yellow-200 active:scale-95 transition" title="Simplifier (annuler + et -)">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-            </button>
+            <button id="btn-simplify" onclick="autoSimplify()" class="w-20 py-2 mt-2 bg-white border border-amber-300 rounded text-xs font-bold text-amber-700 shadow-sm active:bg-amber-50 hover:bg-amber-50 transition" title="Simplifier (annuler + et -)">simplifier</button>
 
         </aside>
 
@@ -311,9 +317,9 @@
 
         // Couleurs de l'écriture (comme les tuiles)
         const COLORS = {
-            pos: '#16a34a',   // vert
-            neg: '#dc2626',   // rouge
-            orange: '#f97316' // orange (soustraction avant opposé)
+            pos: 'green',   // vert
+            neg: 'red',     // rouge
+            orange: 'orange' // orange (soustraction avant opposé)
         };
 
 
@@ -327,22 +333,27 @@
             lastPack: null, // {packId,type,sign,stepIndex,ts}
             steps: [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }],
             currentStepIndex: 0,
-            isGrouping: false,
-            currentGroupId: null,
             isSubtractingInput: false,
+            isMultiplyingInput: false,
+            _internalAdd: false, // utilisé pour dupliquer des tuiles sans créer de nouveau step
             isAnimating: false,
             displayMode: 'normal',
-            isReduced: false, 
+            isReduced: false,
             currentTool: 'hand',
-            lastPos: { x: 40, y: 60, maxYInRow: 0 }
+            lastPos: { x: 40, y: 60, maxYInRow: 0 },
+            // Pour garder des espaces entre paquets dès la saisie (avant ORDONNER)
+            lastSequentialPackId: null,
+            pendingPackGap: 0
         };
+
+        // Espace entre paquets (même logique que l'affichage ORDONNER non réduit)
+        const PACK_GAP = 18;
 
         const board = document.getElementById('board');
         const eqDisplay = document.getElementById('equation-display');
         const btnOpposite = document.getElementById('btn-opposite');
         const btnMinus = document.getElementById('btn-op-minus');
         const btnCloseP = document.getElementById('btn-close-parenthesis');
-        const btnGroup = document.getElementById('btn-group');
         const btnDistribute = document.getElementById('btn-distribute');
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -391,7 +402,7 @@
             // Si l'utilisateur clique plusieurs fois d'affilée sur la même tuile,
             // on "colle" dans le même pack (ex: 3 fois x² -> 3x² collés).
             // Fenêtre courte pour éviter de fusionner des actions pédagogiquement distinctes.
-            const MERGE_WINDOW_MS = 650;
+            const MERGE_WINDOW_MS = 1000000000000;// no time-based split (pause-friendly)
             if (
                 lp &&
                 lp.type === type &&
@@ -419,15 +430,32 @@
                 state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
             }
             playSound('pop');
+
+            // Si le step courant est une parenthèse déjà fermée (soustraction ou multiplication),
+            // et qu'on ajoute une nouvelle tuile (action utilisateur), on ouvre automatiquement un nouveau step.
+            let currentStep = state.steps[state.currentStepIndex];
+            if (!state._internalAdd && currentStep && currentStep.isClosed && !state.isSubtractingInput && !state.isMultiplyingInput) {
+                const newStep = { id: state.steps.length, operator: '+', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false };
+                state.steps.push(newStep);
+                state.currentStepIndex = state.steps.length - 1;
+                currentStep = newStep;
+                // Nouveau pack logique
+                state.lastPack = null;
+            }
+
             const id = state.nextId++;
             const el = document.createElement('div');
-            const currentStep = state.steps[state.currentStepIndex];
-            const isSubInput = (state.isSubtractingInput && currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
 
-            // Sur le tapis : dans une soustraction en cours, on pose directement l'opposé.
-            // Dans le calcul : on garde l'écriture telle que saisie (displaySign), jusqu'au bouton OPPOSÉ.
+            const isSubInput = (state.isSubtractingInput && currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
+            const isMultInput = (state.isMultiplyingInput && currentStep.type === 'multiplication' && !currentStep.distributed);
+            const isNegMultInput = (isMultInput && currentStep.operator === '-');
+
+            // Sur le tapis :
+            // - soustraction en cours => on pose directement l'opposé.
+            // - multiplication négative en cours (-2(…)) => on pose aussi l'opposé (représentation matérielle).
+            // Dans le calcul : on garde l'écriture saisie (displaySign), jusqu'aux boutons OPPOSÉ / DÉVELOPPER.
             const displaySign = sign;
-            const tileSign = isSubInput ? -sign : sign;
+            const tileSign = (isSubInput || isNegMultInput) ? -sign : sign;
 
             // Pack (pour ORDONNER sans réduire) : un pack = une action (ou une rafale de clics identiques)
             const stepIndex = state.currentStepIndex;
@@ -437,7 +465,6 @@
                 if (!state.packMeta[pid]) {
                     state.packMeta[pid] = { order: state.nextPackOrder++ };
                 }
-                // on met à jour le dernier pack pour ne pas créer de "micro-packs" ensuite
                 state.lastPack = { packId: pid, type, sign: tileSign, stepIndex, ts: Date.now() };
             } else {
                 pid = getOrCreatePackId({ type, sign: tileSign, stepIndex });
@@ -448,34 +475,52 @@
 
             const isSubStep = (currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
             if (isSubStep) el.classList.add('in-bracket');
-            if (state.isGrouping) el.classList.add('in-group');
 
             let label = "";
             if (type === 'x2') label = tileSign === 1 ? "x²" : "-x²";
             else if (type === 'x') label = tileSign === 1 ? "x" : "-x";
             else label = tileSign === 1 ? "1" : "-1";
 
-            
             el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
             el.id = `t-${id}`;
-            
-            let pos = (x !== null && y !== null) ? {x, y} : getSequentialPosition(SIZES[type].w, SIZES[type].h);
+
+            let pos;
+            if (x !== null && y !== null) {
+                pos = {x, y};
+            } else {
+                // Avant ORDONNER : on garde un petit espace entre les paquets (packs) visibles
+                // (ex : 3x² puis -3x² => deux groupes séparés).
+                if (!state._internalAdd) {
+                    let gap = 0;
+                    if (state.pendingPackGap && state.pendingPackGap > 0) {
+                        gap = state.pendingPackGap;
+                        state.pendingPackGap = 0;
+                    } else if (state.lastSequentialPackId !== null && pid !== state.lastSequentialPackId) {
+                        gap = PACK_GAP;
+                    }
+                    if (gap > 0) state.lastPos.x += gap;
+                }
+                pos = getSequentialPosition(SIZES[type].w, SIZES[type].h);
+            }
             el.style.left = pos.x + 'px';
             el.style.top = pos.y + 'px';
-            
+
             el.addEventListener('mousedown', handleDragStart);
             el.addEventListener('touchstart', handleDragStart, {passive: false});
 
             board.appendChild(el);
             const tokenObj = {
-                id, type, sign: tileSign, displaySign: displaySign, element: el, x: pos.x, y: pos.y, 
+                id, type, sign: tileSign, displaySign: displaySign, element: el, x: pos.x, y: pos.y,
                 pairId: null,
-                inGroup: state.isGrouping ? state.currentGroupId : null,
                 packId: pid
             };
-            
+
             state.tokens.push(tokenObj);
             state.steps[state.currentStepIndex].tokenIds.push(id);
+
+            if (x === null && y === null && !state._internalAdd) {
+                state.lastSequentialPackId = pid;
+            }
 
             updateEquation();
         }
@@ -495,110 +540,236 @@
             return {x, y};
         }
 
-        // --- MODE GROUPE ---
+        // --- MULTIPLICATION (entrée + développer) ---
 
-        function toggleGroupMode() {
-            if (state.isSubtractingInput) return;
-            state.isGrouping = !state.isGrouping;
-            if (state.isGrouping) {
-                state.currentGroupId = Date.now();
-                btnGroup.classList.add('mode-active-group');
-                btnGroup.innerText = 'FIN GROUPE';
-                state.lastPos.x += 20; 
-                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
-            } else {
-                btnGroup.classList.remove('mode-active-group');
-                btnGroup.innerText = 'GROUPE ( )';
-                state.currentGroupId = null;
+        function startMultiplication(factor) {
+            // Interprétation : si l'utilisateur vient juste de faire "-" (parenthèse ouverte) et n'a posé aucune tuile,
+            // alors "-" puis "2 fois/3 fois/4 fois" devient : "- {}" k( … ) (multiplication négative).
+            const cur = state.steps[state.currentStepIndex];
+            const canConvertMinusToMult = state.isSubtractingInput && cur && cur.type === 'subtraction' && (cur.tokenIds?.length || 0) === 0;
+
+            if (canConvertMinusToMult) {
+                cur.type = 'multiplication';
+                cur.factor = factor;
+                cur.distributed = false;
+                cur.isClosed = false;
+                cur._multVisualized = false;
+                cur._multLayout = null;
+                state.isSubtractingInput = false;
+                state.isMultiplyingInput = true;
+                btnCloseP.classList.remove('hidden');
+                btnDistribute.classList.add('hidden');
+                btnOpposite.classList.add('hidden');
+                updateEquation();
+                return;
             }
-        }
 
-        function multiplyGroup(factor) {
-            if (state.isGrouping) toggleGroupMode();
+            // Si une parenthèse (soustraction ou multiplication) est en cours, on ne démarre pas une nouvelle multiplication.
+            if (state.isSubtractingInput || state.isMultiplyingInput) return;
 
-            const currentStep = state.steps[state.currentStepIndex];
-            if (currentStep.tokenIds.length === 0) return;
+            const step = {
+                id: state.steps.length,
+                operator: '+',
+                type: 'multiplication',
+                tokenIds: [],
+                factor: factor,
+                oppositeApplied: false,
+                distributed: false,
+                isClosed: false,
+                _multVisualized: false,
+                _multLayout: null
+            };
+            state.steps.push(step);
+            state.currentStepIndex = state.steps.length - 1;
+            state.lastPack = null;
+            // Nouvelle "famille" (multiplication) : espace entre le paquet précédent et ce bloc
+            state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
 
-            playSound('magic');
-
-            currentStep.type = (currentStep.type === 'subtraction') ? 'subtraction' : 'multiplication';
-            currentStep.factor = factor;
-            currentStep.distributed = false; 
-
-            const stepTokens = currentStep.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
-            stepTokens.forEach(t => t.element.classList.add('pending-mult'));
-
-            state.isAnimating = true;
-            
-            const baseTokens = [...stepTokens];
-            let minY = Infinity, maxY = -Infinity;
-            baseTokens.forEach(t => {
-                if(t.y < minY) minY = t.y;
-                if(t.y + SIZES[t.type].h > maxY) maxY = t.y + SIZES[t.type].h;
-            });
-            const groupHeight = maxY - minY;
-            const verticalGap = 15;
-
-            for (let i = 1; i < factor; i++) {
-                const shiftY = i * (groupHeight + verticalGap);
-                baseTokens.forEach(original => {
-                    addTile(original.type, original.sign, original.x, original.y + shiftY);
-                    
-                    const newId = state.tokens[state.tokens.length - 1].id;
-                    const newEl = document.getElementById(`t-${newId}`);
-                    newEl.classList.add('pending-mult'); 
-                    if (currentStep.type === 'subtraction' && !currentStep.oppositeApplied) {
-                        newEl.classList.add('in-bracket');
-                    }
-                });
-            }
-            
-            state.isAnimating = false;
-            
-            btnDistribute.classList.remove('hidden');
+            state.isMultiplyingInput = true;
+            btnCloseP.classList.remove('hidden');
+            btnDistribute.classList.add('hidden');
             updateEquation();
         }
 
+        function closeParenthesis() {
+            const step = state.steps[state.currentStepIndex];
+            if (!step) return;
+            if (state.isSubtractingInput && step.type === 'subtraction') {
+                closeSubtraction();
+                return;
+            }
+            if (state.isMultiplyingInput && step.type === 'multiplication') {
+                closeMultiplication();
+                return;
+            }
+        }
+
+        function closeMultiplication() {
+            const step = state.steps[state.currentStepIndex];
+            if (!step || step.type !== 'multiplication') return;
+            step.isClosed = true;
+            state.isMultiplyingInput = false;
+            btnCloseP.classList.add('hidden');
+
+            // Visualisation matérielle : empiler k copies en bleu
+            if (step.factor > 1 && step.tokenIds.length > 0 && !step.distributed) {
+                visualizeMultiplication(step);
+            }
+            updateEquation();
+        }
+
+        function visualizeMultiplication(step) {
+            if (!step || step.type !== 'multiplication') return;
+            if (step._multVisualized) return;
+            if (!step.factor || step.factor < 2) return;
+
+            // On conserve les tuiles "source" (1 seule fois) pour l'affichage du calcul : 2( x^2 - 1 )
+            // Les duplications bleues sur le tapis ne doivent pas contaminer l'écriture dans le calcul.
+            if (!step._multBaseTokenIds) step._multBaseTokenIds = step.tokenIds.slice();
+            const baseIds = step._multBaseTokenIds.slice();
+            const baseTokens = baseIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
+            if (baseTokens.length === 0) return;
+
+            // Bounding box du groupe de base
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            for (const t of baseTokens) {
+                const w = SIZES[t.type].w, h = SIZES[t.type].h;
+                minX = Math.min(minX, t.x);
+                minY = Math.min(minY, t.y);
+                maxX = Math.max(maxX, t.x + w);
+                maxY = Math.max(maxY, t.y + h);
+            }
+            const groupWidth = Math.max(60, maxX - minX);
+            const groupHeight = Math.max(40, maxY - minY);
+            const vGap = 18;
+            const blockH = groupHeight + vGap;
+
+            step._multLayout = { minX, minY, groupWidth, groupHeight, vGap, blockH };
+            step._multVisualized = true;
+
+            // Marque la copie de base
+            baseTokens.forEach(t => t.element.classList.add('pending-mult'));
+
+            // Duplication verticale
+            const prevInternal = state._internalAdd;
+            const prevMult = state.isMultiplyingInput;
+            const prevClosed = step.isClosed;
+
+            state._internalAdd = true;
+            state.isMultiplyingInput = true; // pour conserver l'inversion de signe si operator === '-'
+            step.isClosed = false;
+
+            const prevIdx = state.currentStepIndex;
+            // Assure qu'on duplique bien dans ce step
+            const stepIdx = state.steps.indexOf(step);
+            if (stepIdx >= 0) state.currentStepIndex = stepIdx;
+
+            for (let i = 1; i < step.factor; i++) {
+                for (const bt of baseTokens) {
+                    addTile(bt.type, bt.displaySign, bt.x, bt.y + i * blockH, bt.packId);
+                    const newTok = state.tokens[state.tokens.length - 1];
+                    if (newTok && newTok.element) newTok.element.classList.add('pending-mult');
+                }
+            }
+
+            state.currentStepIndex = prevIdx;
+            step.isClosed = prevClosed;
+            state.isMultiplyingInput = prevMult;
+            state._internalAdd = prevInternal;
+
+            btnDistribute.classList.remove('hidden');
+        }
+
         function applyDistribution() {
-            const currentStep = state.steps[state.currentStepIndex];
-            if (!currentStep || currentStep.factor <= 1) return;
+            const step = state.steps[state.currentStepIndex];
+            if (!step || step.type !== 'multiplication') return;
+            if (step.distributed) return;
+            if (!step._multLayout) return;
 
-            playSound('whoosh');
+            const layout = step._multLayout;
+            const blockH = layout.blockH;
+            const copyGapX = 28;
 
-            const allTokens = currentStep.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
-            allTokens.forEach(t => t.element.classList.remove('pending-mult'));
+            const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
+            if (stepTokens.length === 0) return;
 
-            currentStep.distributed = true;
+            // Détermine le nombre de copies à partir des positions empilées
+            let maxCopy = 0;
+            for (const t of stepTokens) {
+                const ci = Math.round((t.y - layout.minY) / blockH);
+                t._copyIndex = ci;
+                if (ci > maxCopy) maxCopy = ci;
+            }
+            const copies = maxCopy + 1;
+            if (copies <= 1) return;
+
+            // PackIds de la copie 0 (pour recréer des packs distincts pour les copies 1..)
+            const basePackIds = [];
+            const seen = new Set();
+            const baseTokens = stepTokens.filter(t => t._copyIndex === 0);
+            // On trie par ordre de pack (stable)
+            baseTokens.sort((a,b) => (state.packMeta[a.packId]?.order ?? 0) - (state.packMeta[b.packId]?.order ?? 0));
+            for (const t of baseTokens) {
+                if (!seen.has(t.packId)) {
+                    seen.add(t.packId);
+                    basePackIds.push(t.packId);
+                }
+            }
+
+            // Remap packId pour chaque copie
+            for (let ci = 1; ci < copies; ci++) {
+                const map = new Map();
+                for (const pid of basePackIds) {
+                    const np = newPackId();
+                    map.set(pid, np);
+                }
+                for (const t of stepTokens) {
+                    if (t._copyIndex !== ci) continue;
+                    const np = map.get(t.packId);
+                    if (np !== undefined) t.packId = np;
+                }
+            }
+
+            // Dé-empile : on met les copies côte à côte
+            for (const t of stepTokens) {
+                const ci = t._copyIndex || 0;
+                if (ci === 0) continue;
+                moveToken(t, t.x + ci * (layout.groupWidth + copyGapX), t.y - ci * blockH);
+            }
+
+            // Nettoyage visuel
+            stepTokens.forEach(t => {
+                t.element.classList.remove('pending-mult');
+                delete t._copyIndex;
+            });
+
+            step.distributed = true;
             btnDistribute.classList.add('hidden');
             updateEquation();
         }
 
         // --- GESTION OPÉRATEURS ---
 
+        function separatePack() {
+            // Bouton + : ne crée pas d'opération.
+            // Sert uniquement à séparer les groupes (packs) : 2x² + x² reste visible en deux blocs avant Réduire.
+            playSound('pop');
+            // Force un nouveau pack au prochain clic de tuile, même si c'est la même tuile/sign.
+            state.lastPack = null;
+            // Demande un espace visible entre paquets dès la saisie.
+            state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
+        }
+
         function setOperator(op) {
+            // Gestion des opérateurs réels : soustraction et multiplication.
+            // Le bouton '+' est géré par separatePack() (séparation de packs), donc ici pas de op==='add'.
+
+            // On empêche d'ouvrir un nouvel opérateur si une parenthèse de soustraction est en cours.
             if (state.isSubtractingInput) return;
-            if (state.isGrouping) {
-                state.lastPos.x += 20; 
-                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
-                return;
-            }
 
-            if (op === 'add') {
-                state.lastPos.x += 30; 
-                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
-                state.steps.push({
-                    id: state.steps.length,
-                    operator: '+',
-                    type: 'simple',
-                    tokenIds: [],
-                    factor: 1,
-                    oppositeApplied: false, distributed: false, isClosed: false
-                });
-                state.currentStepIndex++;
-
-            } else if (op === 'subtract') {
-                state.lastPos.x += 30;
-                state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, 40);
+            if (op === 'subtract') {
+                // Nouvelle "famille" (soustraction) -> on veut un espace visible avant le prochain paquet
+                state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
                 state.steps.push({
                     id: state.steps.length,
                     operator: '-',
@@ -609,6 +780,7 @@
                 });
                 state.currentStepIndex++;
                 state.isSubtractingInput = true;
+                state.lastPack = null;
                 btnCloseP.classList.remove('hidden');
             }
             updateEquation();
@@ -711,56 +883,60 @@
             };
 
             const boardW = board.clientWidth;
-            const startY = 60;
+            const startX = 20;
+            let y = 60;
 
-            const placePacks = (packs, colStartX, widthLimit, y0, innerGap, packGap, lineGap) => {
-                let x = colStartX;
-                let y = y0;
+            const innerGap = 2;                  // serré à l'intérieur d'un paquet (ex : 3x²)
+            const packGap = reduced ? 2 : 18;    // espace ENTRE paquets (ex : 2x² + x²)
+            const lineGap = reduced ? 10 : packGap; // même gap en hauteur/largeur lors des retours à la ligne
+            const rowGap = reduced ? 18 : 18;    // espace entre familles (x², -x², x, -x, 1, -1)
+
+            const placeRow = (packs, y0) => {
+                let x = startX;
+                let yy = y0;
                 let rowH = 0;
+                const maxX = boardW - 20;
 
                 for (const pack of packs) {
                     for (const t of pack) {
                         const size = SIZES[t.type] || { w: 50, h: 50 };
-                        if (x + size.w > colStartX + widthLimit) {
-                            x = colStartX;
-                            y += rowH + lineGap;
+
+                        // Retour à la ligne si nécessaire (dans la même famille)
+                        if (x + size.w > maxX) {
+                            x = startX;
+                            yy += rowH + lineGap;
                             rowH = 0;
                         }
+
                         t.element.classList.add('animating');
-                        moveToken(t, x, y);
+                        moveToken(t, x, yy);
                         setTimeout(() => t.element.classList.remove('animating'), 500);
+
                         x += size.w + innerGap;
                         rowH = Math.max(rowH, size.h);
                     }
                     x += packGap;
                 }
-                return y + rowH;
+
+                return yy + rowH;
             };
 
-            const colW = (boardW - 40) / 3;
-            const cols = {
-                x2: { x: 20, w: colW },
-                x: { x: 20 + colW, w: colW },
-                unit: { x: 20 + colW * 2, w: colW }
-            };
+            const rows = [
+                { type: 'x2', sign: 1 },
+                { type: 'x2', sign: -1 },
+                { type: 'x', sign: 1 },
+                { type: 'x', sign: -1 },
+                { type: 'unit', sign: 1 },
+                { type: 'unit', sign: -1 }
+            ];
 
-            const innerGap = 2;
-            const packGap = reduced ? 2 : 20;          // espace entre paquets AVANT réduction (ex: 3x² puis +x²)
-            const lineGap = reduced ? 10 : packGap;    // même espace en hauteur qu'en largeur (avant réduction)
-            const groupGap = reduced ? 20 : 30;        // espace entre + et -
-
-            ['x2', 'x', 'unit'].forEach(type => {
-                const col = cols[type];
-
-                const posPacks = getPacks(type, 1);
-                const negPacks = getPacks(type, -1);
-
-                const bottomPos = placePacks(posPacks, col.x, col.w, startY, innerGap, packGap, lineGap);
-                let negStartY = Math.max(bottomPos + groupGap, startY + 180);
-                placePacks(negPacks, col.x, col.w, negStartY, innerGap, packGap, lineGap);
+            rows.forEach(r => {
+                const packs = getPacks(r.type, r.sign);
+                if (!packs.length) return;
+                y = placeRow(packs, y) + rowGap;
             });
 
-            // Après un ordonnancement, on garde l'affichage en haut tel quel
+            // Après un ordonnancement / réduction, on garde l'affichage en haut tel quel
             state.lastPos = { x: 20, y: board.clientHeight - 100, maxYInRow: 0 };
         }
 
@@ -789,11 +965,11 @@ function moveToken(t, x, y) {
             tokens.forEach(t => {
                 const writtenSignRaw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
                 const writtenSign = (writtenSignRaw === -1) ? -1 : 1;
-                if (current && current.type === t.type && current.writtenSign === writtenSign) {
+                if (current && current.type === t.type && current.writtenSign === writtenSign && current.packId === t.packId) {
                     current.count++;
                 } else {
                     if (current) groups.push(current);
-                    current = { type: t.type, writtenSign, count: 1 };
+                    current = { type: t.type, writtenSign, packId: t.packId, count: 1 };
                 }
             });
             if (current) groups.push(current);
@@ -835,9 +1011,123 @@ function moveToken(t, x, y) {
             return latex || "0";
         }
 
+        function tokensToReducedSumLatex(tokens) {
+            // Reduced display: group by type+sign (local to this step), without touching other groups.
+            // Uses the real tile sign (t.sign). This matches the expected writing after DEVELOPPER.
+            if (!tokens || tokens.length === 0) return "0";
 
+            const counts = {
+                x2: { pos: 0, neg: 0 },
+                x: { pos: 0, neg: 0 },
+                unit: { pos: 0, neg: 0 }
+            };
 
-        function latexStartsWithMinus(str) {
+            for (const t of tokens) {
+                if (!t || t._canceling) continue;
+                if (!counts[t.type]) continue;
+                if (t.sign === -1) counts[t.type].neg += 1;
+                else counts[t.type].pos += 1;
+            }
+
+            const ordered = [
+                ['x2', 1], ['x2', -1],
+                ['x', 1], ['x', -1],
+                ['unit', 1], ['unit', -1]
+            ];
+
+            let latex = '';
+            let hasPrev = false;
+
+            const coreOf = (type, count) => {
+                if (type === 'unit') return String(count);
+                const core = latexForTokenCore(type);
+                return (count === 1) ? core : String(count) + core;
+            };
+
+            const addTerm = (type, sign, count) => {
+                if (!count) return;
+                const core = coreOf(type, count);
+                const coloredCore = coloredSpan(core, sign);
+                if (!hasPrev) {
+                    if (sign === -1) latex += ` ${minusRed()} ${coloredCore}`;
+                    else latex += coloredCore;
+                } else {
+                    latex += (sign === 1) ? ` ${plusGreen()} ${coloredCore}` : ` ${minusRed()} ${coloredCore}`;
+                }
+                hasPrev = true;
+            };
+
+            for (const [type, sign] of ordered) {
+                const count = sign === 1 ? counts[type].pos : counts[type].neg;
+                addTerm(type, sign, count);
+            }
+
+            return latex || "0";
+        }
+
+        function tokensToExpandedLatex(tokens, scaleFactor = 1, hasPrevInEquation = false) {
+            // Après "Ajouter l'opposé" : on enlève les parenthèses et on distribue le signe.
+            // On évite les écritures du type +(-3x). On écrit directement ... - 3x ...
+            // Règle :
+            //  - si hasPrevInEquation : chaque terme (y compris le premier) est précédé par + ou -
+            //  - sinon : le premier terme n'a pas de +, mais peut commencer par -
+            //  - "+" en vert, "-" en rouge, termes pos en vert / neg en rouge
+
+            if (!tokens || tokens.length === 0) return "";
+
+            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
+            const plus = colorWrap(COLORS.pos, '+');
+            const minus = colorWrap(COLORS.neg, '-');
+
+            // Regrouper uniquement des tuiles consécutives de même type/signe (pour garder l'esprit "pictural")
+            const groups = [];
+            let cur = null;
+            tokens.forEach(t => {
+                const raw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
+                const sgn = (raw === -1) ? -1 : 1;
+                if (cur && cur.type === t.type && cur.sign === sgn) {
+                    cur.count += 1;
+                } else {
+                    if (cur) groups.push(cur);
+                    cur = { type: t.type, sign: sgn, count: 1 };
+                }
+            });
+            if (cur) groups.push(cur);
+
+            const termCoreOf = (type, count) => {
+                let c = count / scaleFactor;
+                c = Math.round(c * 100) / 100;
+                if (c <= 0) return "";
+                if (type === 'unit') return String(c);
+                return (c === 1 ? "" : String(c)) + (type === 'x2' ? 'x^2' : 'x');
+            };
+
+            let latex = "";
+            groups.forEach((g, idx) => {
+                const core = termCoreOf(g.type, g.count);
+                if (!core) return;
+
+                const col = (g.sign === -1) ? COLORS.neg : COLORS.pos;
+                const coloredCore = colorWrap(col, core);
+
+                const op = (g.sign === -1) ? minus : plus;
+
+                if (hasPrevInEquation) {
+                    // Toujours un opérateur devant
+                    latex += `\\;${op}\\;` + coloredCore;
+                } else {
+                    if (idx === 0) {
+                        latex += (g.sign === -1 ? minus : "") + coloredCore;
+                    } else {
+                        latex += `\\;${op}\\;` + coloredCore;
+                    }
+                }
+            });
+
+            return latex;
+        }
+
+function latexStartsWithMinus(str) {
             const s = (str || '').trim();
             if (!s) return false;
             if (s.startsWith('-')) return true;
@@ -854,21 +1144,36 @@ function moveToken(t, x, y) {
                 return generateGroupedLatex();
             }
 
+            const hasNonEmptyBefore = (idx) => {
+                for (let i = 0; i < idx; i++) {
+                    if (state.steps[i] && state.steps[i].tokenIds && state.steps[i].tokenIds.length > 0) return true;
+                }
+                return false;
+            };
+
             let latex = "";
             let isEmpty = true;
 
             state.steps.forEach((step, index) => {
-                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
+                // Pour une multiplication non développée : l'écriture dans le calcul doit rester
+                // k( ... ) avec le contenu saisi UNE seule fois, même si le plateau affiche k copies en bleu.
+                let stepIds = step.tokenIds;
+                if (step.type === 'multiplication' && !step.distributed && Array.isArray(step._multBaseTokenIds) && step._multBaseTokenIds.length) {
+                    stepIds = step._multBaseTokenIds;
+                }
+                const stepTokens = stepIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
                 const isCurrent = (index === state.currentStepIndex);
                 if (stepTokens.length === 0 && !isCurrent) return;
 
-                if (index > 0) {
+                if (index > 0 && hasNonEmptyBefore(index)) {
                     const plus = `{\\color{${COLORS.pos}}{+}}`;
                     const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
 
+                    // Cas particulier : une soustraction "opposée" devient une succession de termes signés
+                    // (on gère le signe d'entrée en fonction du 1er terme après inversion).
                     if (step.type === 'subtraction' && step.oppositeApplied) {
-                        latex += `\\;${plus}\\;`;
-                    } else if (step.operator === '+') {
+                        // prefix géré plus bas
+                    } else if (step.operator === '+' && step.type !== 'addition') {
                         latex += `\\;${plus}\\;`;
                     } else if (step.operator === '-') {
                         // Soustraction non encore "opposée" : le "-" devant la parenthèse est ORANGE.
@@ -878,21 +1183,20 @@ function moveToken(t, x, y) {
                 }
 
                 // Facteur
+                // IMPORTANT : on n'applique JAMAIS de division (pas de 0.5x^2).
+                // Le facteur s'affiche uniquement devant la parenthèse (2(...), 3(...)).
                 let currentFactor = 1;
-                if (!step.distributed && step.factor > 1) {
-                    currentFactor = step.factor;
-                }
 
                 // CONTENU GÉNÉRÉ SANS SIMPLIFICATION
-                let content = tokensToSeparatedLatex(stepTokens, currentFactor);
+                let content = tokensToSeparatedLatex(stepTokens, 1);
                 if (stepTokens.length === 0) content = "\\dots";
 
                 let pStr = "";
 
                 if (step.type === 'multiplication') {
                     if (step.distributed) {
-                        pStr = content;
-                        if (index > 0 && (stepTokens.length > 1 || latexStartsWithMinus(pStr))) pStr = "(" + pStr + ")";
+                        // After develop, show reduced expanded form (no parentheses)
+                        pStr = tokensToReducedSumLatex(stepTokens);
                     } else {
                         pStr = step.factor + "(" + content + ")";
                     }
@@ -907,8 +1211,79 @@ function moveToken(t, x, y) {
                     else if (!step.oppositeApplied) {
                         pStr = "(" + content + ")";
                     } else {
-                        // Opposé appliqué : on peut enlever les parenthèses si un seul terme
-                        pStr = (stepTokens.length <= 1) ? content : "(" + content + ")";
+                        // Opposé appliqué : on enlève les parenthèses et on distribue le signe.
+                        // On veut une écriture naturelle :
+                        //   A - (2x-3) -> A -2x + 3
+                        //   A - (-3x+2) -> A +3x - 2
+                        // (pas de "+(-...)", pas de "+ - ...", pas de double "+").
+                        const hasPrev = hasNonEmptyBefore(index);
+
+                        const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
+                        const plus = colorWrap(COLORS.pos, '+');
+                        const minus = colorWrap(COLORS.neg, '-');
+
+                        // Regrouper uniquement des tuiles consécutives de même type/signe (pictural)
+                        const groups = [];
+                        let cur = null;
+                        stepTokens.forEach(t => {
+                            const raw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
+                            const sgn = (raw === -1) ? -1 : 1;
+                            if (cur && cur.type === t.type && cur.sign === sgn) {
+                                cur.count += 1;
+                            } else {
+                                if (cur) groups.push(cur);
+                                cur = { type: t.type, sign: sgn, count: 1 };
+                            }
+                        });
+                        if (cur) groups.push(cur);
+
+                        const termCoreOf = (type, count) => {
+                            let c = count / currentFactor;
+                            c = Math.round(c * 100) / 100;
+                            if (c <= 0) return '';
+                            if (type === 'unit') return String(c);
+                            return (c === 1 ? '' : String(c)) + (type === 'x2' ? 'x^2' : 'x');
+                        };
+
+                        // Construire une chaîne SANS signe en tête (le signe d'entrée est traité à part)
+                        let body = '';
+                        let leadingSign = 1;
+
+                        // Trouver le premier groupe non vide
+                        let firstIdx = -1;
+                        for (let i = 0; i < groups.length; i++) {
+                            const core = termCoreOf(groups[i].type, groups[i].count);
+                            if (core) { firstIdx = i; break; }
+                        }
+
+                        if (firstIdx === -1) {
+                            pStr = '0';
+                        } else {
+                            const first = groups[firstIdx];
+                            leadingSign = first.sign;
+                            const firstCol = (first.sign === -1) ? COLORS.neg : COLORS.pos;
+                            const firstCore = termCoreOf(first.type, first.count);
+                            body = colorWrap(firstCol, firstCore);
+
+                            for (let i = firstIdx + 1; i < groups.length; i++) {
+                                const g = groups[i];
+                                const core = termCoreOf(g.type, g.count);
+                                if (!core) continue;
+                                const col = (g.sign === -1) ? COLORS.neg : COLORS.pos;
+                                const coloredCore = colorWrap(col, core);
+                                const op = (g.sign === -1) ? minus : plus;
+                                body += `\\;${op}\\;` + coloredCore;
+                            }
+
+                            if (hasPrev) {
+                                // On injecte le signe d'entrée entre les étapes : + si 1er terme pos, - si 1er terme neg
+                                const prefix = (leadingSign === -1) ? minus : plus;
+                                pStr = `\\;${prefix}\\;` + body;
+                            } else {
+                                // Début du calcul : pas de "+" au début
+                                pStr = (leadingSign === -1 ? minus : '') + body;
+                            }
+                        }
                     }
                 }
                 else {
@@ -958,16 +1333,15 @@ function moveToken(t, x, y) {
             return latex || '0';
         }
 
-
-
         function generateOrderedLatex() {
             // ORDONNER (en haut) :
-            // - met d'abord tous les x², puis x, puis unités
-            // - à l'intérieur : + puis -
-            // - IMPORTANT : ne réduit PAS (pas de 3x² + 2x² -> 5x²)
-            //   On conserve les "paquets" (packs) : ex. 3x² + 2x²
-            // Sécurité : si une soustraction n'a pas encore appliqué l'opposé,
-            // ou si une multiplication n'est pas distribuée, on conserve l'affichage normal.
+            // - Trie sans reduire (pas de fusion des packs)
+            // - Affichage EN LIGNE uniquement (pas de colonnes / aligned)
+            // - Ordre : +x^2, -x^2, +x, -x, +1, -1
+            // - Conserve les packs (separateur "+") : 2x^2 puis +x^2 restent deux blocs tant qu\'on n\'a pas reduit.
+
+            // Securite : si une soustraction n\'a pas encore applique l\'oppose,
+            // ou si une multiplication n\'est pas distribuee, on conserve l\'affichage normal.
             const hasLocked = state.steps.some(s =>
                 (s.type === 'subtraction' && !s.oppositeApplied) ||
                 (s.type === 'multiplication' && s.factor > 1 && !s.distributed)
@@ -976,12 +1350,7 @@ function moveToken(t, x, y) {
                 return generateEquationString('normal');
             }
 
-            const typeOrder = { x2: 0, x: 1, unit: 2 };
-            const signOrder = (s) => (s === 1 ? 0 : 1); // + avant -
-            const terms = [];
-
-            // On travaille au niveau des packs (packId), pas au niveau des steps,
-            // pour obtenir : 3x^2 + 2x^2 (et pas 5x^2).
+            // Regroupement par packs (packId) pour ne PAS reduire.
             const byPack = new Map();
             state.tokens.forEach(t => {
                 if (t.pairId !== null) return;
@@ -996,37 +1365,58 @@ function moveToken(t, x, y) {
                 tokens: byPack.get(pid)
             })).sort((a, b) => a.order - b.order);
 
-            packs.forEach(pack => {
-                const counts = {
-                    x2: { pos: 0, neg: 0 },
-                    x: { pos: 0, neg: 0 },
-                    unit: { pos: 0, neg: 0 }
-                };
-                pack.tokens.forEach(t => {
-                    const s = t.sign;
-                    if (!s) return;
-                    const bucket = (s === 1) ? 'pos' : 'neg';
-                    if (counts[t.type]) counts[t.type][bucket] += 1;
-                });
+            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
+            const plus = colorWrap(COLORS.pos, '+');
+            const minus = colorWrap(COLORS.neg, '-');
 
-                ['x2', 'x', 'unit'].forEach(tp => {
-                    if (counts[tp].pos) terms.push({ type: tp, sign: 1, count: counts[tp].pos, order: pack.order });
-                    if (counts[tp].neg) terms.push({ type: tp, sign: -1, count: counts[tp].neg, order: pack.order });
+            const termCore = (type, count) => {
+                if (type === 'unit') return String(count);
+                const coef = (count === 1) ? '' : String(count);
+                return coef + (type === 'x2' ? 'x^2' : 'x');
+            };
+
+            // Construit une liste ordonnee de termes AU NIVEAU DES PACKS
+            // (on garde les groupes, on ne fusionne pas).
+            const orderedTerms = [];
+            const pushPackTerms = (tp, sgn) => {
+                packs.forEach(p => {
+                    let c = 0;
+                    p.tokens.forEach(t => {
+                        if (t.type === tp && t.sign === sgn) c += 1;
+                    });
+                    if (!c) return;
+                    orderedTerms.push({ type: tp, sign: sgn, count: c });
                 });
+            };
+
+            pushPackTerms('x2',  1);
+            pushPackTerms('x2', -1);
+            pushPackTerms('x',   1);
+            pushPackTerms('x',  -1);
+            pushPackTerms('unit', 1);
+            pushPackTerms('unit',-1);
+
+            if (orderedTerms.length === 0) return '0';
+
+            let latex = '';
+            orderedTerms.forEach((t, i) => {
+                const col = (t.sign === -1) ? COLORS.neg : COLORS.pos;
+                const core = termCore(t.type, t.count);
+                const coloredCore = colorWrap(col, core);
+
+                if (i === 0) {
+                    if (t.sign === -1) latex += `${minus}`;
+                    latex += coloredCore;
+                } else {
+                    const op = (t.sign === -1) ? minus : plus;
+                    latex += `\\;${op}\\;` + coloredCore;
+                }
             });
 
-            terms.sort((a, b) => {
-                const t = typeOrder[a.type] - typeOrder[b.type];
-                if (t !== 0) return t;
-                const s = signOrder(a.sign) - signOrder(b.sign);
-                if (s !== 0) return s;
-                return a.order - b.order;
-            });
-
-            return renderTermsToLatex(terms);
+            return latex || '0';
         }
 
-        function generateGroupedLatex() {
+function generateGroupedLatex() {
             // RÉDUIRE (en haut) :
             // - regroupe : tout ce qui est +x² ensemble, puis -x² ensemble, etc.
             // - IMPORTANT : on NE FAIT PAS de simplification (+ et - ne s'annulent pas ici).
@@ -1080,120 +1470,174 @@ function moveToken(t, x, y) {
             return first ? '0' : latex;
         }
 
+function tightenLatex(latex){
+    return (latex || "")
+        .replace(/(\\;|\\,|\\quad|\\qquad)/g, "")
+        .replace(/\s+/g, "");
+}
+
 function updateEquation() {
             if (state.isAnimating) return;
-            let displayString = generateEquationString(state.displayMode);
-            katex.render(displayString, eqDisplay, { throwOnError: false });
+            let displayString = tightenLatex(generateEquationString(state.displayMode));
+            const isMultiLine = (displayString || '').includes('\\begin{aligned}');
+            katex.render(displayString, eqDisplay, { throwOnError: false, displayMode: isMultiLine });
         }
 
         // --- OUTILS & HELPERS ---
 
-        function animateCancelPair(t1, t2, badgeEl = null) {
-            // Animation : un vert "saute" dans un rouge, puis disparition.
-            // On part du principe que t1 et t2 sont de même type, signes opposés.
-            // Sécurité : on force toujours vert -> rouge.
-            if (t1.sign === -1 && t2.sign === 1) { const tmp = t1; t1 = t2; t2 = tmp; }
+        function animateCancelPair(t1, t2, badgeEl=null) {
+            // On veut visualiser : le vert "saute" dans le rouge, puis tout devient gris et disparaît.
+            // Si le zéro a déjà été formé (badgeEl), on ne fait pas "sauter" : on grise et on efface.
 
-            const targetX = t2.x;
-            const targetY = t2.y;
+            // Ensure t1 is the positive one for the "jump" animation
+            if (t1.sign === -1 && t2.sign === 1) {
+                [t1, t2] = [t2, t1];
+            }
 
-            // Si on vient d'un 0 manuel, on casse le lien SANS supprimer le badge déjà présent.
+            // Break pair link
+            if (t1.pairedWith === t2.id) t1.pairedWith = null;
+            if (t2.pairedWith === t1.id) t2.pairedWith = null;
+
+            // --- Cas : zéro déjà combiné (effacement direct, sans vert visible) ---
             if (badgeEl) {
-                const p1 = state.tokens.find(tok => tok.id === t1.pairId);
-                const p2 = state.tokens.find(tok => tok.id === t2.pairId);
-                if (p1) p1.pairId = null;
-                if (p2) p2.pairId = null;
-                t1.pairId = null;
-                t2.pairId = null;
-                t1.element.classList.remove('is-zero');
-                t2.element.classList.remove('is-zero');
-            } else {
-                // Auto : on casse proprement (et on supprime un éventuel badge)
-                unpair(t1);
-                unpair(t2);
+                const badge = badgeEl;
+                t1._canceling = true;
+                t2._canceling = true;
+                if (t1.pairId === t2.id) t1.pairId = null;
+                if (t2.pairId === t1.id) t2.pairId = null;
+                t1.element.classList.add('animating', 'fading-gray');
+                t2.element.classList.add('animating', 'fading-gray');
+
+                // keep the 0 visible a bit, then fade everything (plus rapide : le 0 ne doit pas "traîner")
+                setTimeout(() => {
+                    t1.element.classList.add('vanish');
+                    t2.element.classList.add('vanish');
+                    badge.classList.add('vanish');
+                }, 250);
+
+                // on enlève le badge un peu plus tôt que les tuiles pour éviter l'effet "0 qui reste"...
+                setTimeout(() => {
+                    try { badge.remove(); } catch(e) {}
+                }, 650);
+
+                setTimeout(() => {
+                    removeTokenById(t1.id);
+                    removeTokenById(t2.id);
+                }, 820);
+                return;
             }
 
-            t1.element.classList.add('animating');
-            t2.element.classList.add('animating');
+            // --- Cas : annulation automatique (saut + grisé + disparition) ---
+            const startX = t1.x, startY = t1.y;
+            const endX = t2.x, endY = t2.y;
 
-            // Saut : le vert va rejoindre le rouge
-            t1.element.style.zIndex = 2000;
-            moveToken(t1, targetX, targetY);
+            // Remove any pre-existing "zero" styling
+            t1.element.classList.remove('is-zero');
+            t2.element.classList.remove('is-zero');
 
-            // Badge "0" (si déjà présent, on le réutilise)
-            let badge = badgeEl;
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.className = 'zero-badge';
-                badge.innerText = '0';
-                badge.style.left = (targetX + SIZES[t1.type].w / 2 - 10) + 'px';
-                badge.style.top = (targetY + SIZES[t1.type].h / 2 - 20) + 'px';
-                board.appendChild(badge);
-            }
+            t1._canceling = true;
+            t2._canceling = true;
+            if (t1.pairId === t2.id) t1.pairId = null;
+            if (t2.pairId === t1.id) t2.pairId = null;
+            t1.element.classList.add('animating', 'fading-gray');
+            t2.element.classList.add('animating', 'fading-gray');
+
+            // Move positive tile to negative tile
+            moveToken(t1, endX, endY);
+
+            // Create a gray 0 in the middle
+            const badge = document.createElement('div');
+            badge.className = 'zero-badge';
+            badge.textContent = '0';
+            badge.style.left = (endX + 18) + 'px';
+            badge.style.top = (endY - 8) + 'px';
+            badge.style.pointerEvents = 'none';
+            board.appendChild(badge);
+
+            // Once the jump completes, gray-out both tiles, then fade out
+            setTimeout(() => {
+                t1.element.classList.add('fading-gray');
+                t2.element.classList.add('fading-gray');
+            }, 420);
 
             setTimeout(() => {
-                t1.element.classList.add('flying');
-                t2.element.classList.add('flying');
-                badge.classList.add('flying');
-            }, 260);
+                t1.element.classList.add('vanish');
+                t2.element.classList.add('vanish');
+                badge.classList.add('vanish');
+            }, 520);
 
+            // badge : il disparaît vite
             setTimeout(() => {
-                removeTokens([t1, t2]);
-                badge.remove();
-            }, 860);
+                try { badge.remove(); } catch(e) {}
+            }, 820);
+
+            // tuiles : on attend la fin de l'animation vanish (0.45s)
+            setTimeout(() => {
+                removeTokenById(t1.id);
+                removeTokenById(t2.id);
+            }, 1100);
         }
 
         function autoSimplify() {
             // Bouton SIMPLIFIER :
-            // 1) s'il y a des paires déjà superposées (0 manuel), elles s'annulent d'abord.
-            // 2) sinon, appairage automatique par type (x², x, 1).
+            // 1) si des zéros ont déjà été formés manuellement (superposition), ils disparaissent d'abord.
+            // 2) sinon, annulations automatiques par type (x², x, 1).
+            // IMPORTANT : pas de boucles qui ré-annulent les mêmes tuiles (flag _canceling + timer unique).
+            if (state._autoSimplifyActive) return;
+            state._autoSimplifyActive = true;
+            if (state._autoSimplifyTimer) {
+                clearTimeout(state._autoSimplifyTimer);
+                state._autoSimplifyTimer = null;
+            }
+            playSound('whoosh');
+            runAutoSimplifyPass();
+        }
 
-            // 1. PAIRES MANUELLES
+        function runAutoSimplifyPass() {
+            // 1) PAIRES MANUELLES (0 déjà visibles)
             const manualPairs = [];
             const processedIds = new Set();
-            state.tokens.forEach(t => {
+            for (const t of state.tokens) {
+                if (t._canceling) continue;
+                if (t.element.classList.contains('in-bracket') || t.element.classList.contains('pending-mult')) continue;
                 if (t.pairId !== null && !processedIds.has(t.id)) {
                     const partner = state.tokens.find(p => p.id === t.pairId);
-                    if (partner) {
-                        const badge = document.getElementById(`badge-${t.id}-${partner.id}`) || document.getElementById(`badge-${partner.id}-${t.id}`);
+                    if (partner && !partner._canceling && !partner.element.classList.contains('in-bracket') && !partner.element.classList.contains('pending-mult')) {
+                        const badge = document.getElementById(`badge-${t.id}-${partner.id}`) ||
+                                      document.getElementById(`badge-${partner.id}-${t.id}`);
                         manualPairs.push([t, partner, badge]);
                         processedIds.add(t.id);
                         processedIds.add(partner.id);
                     }
                 }
-            });
+            }
+
             if (manualPairs.length > 0) {
-                playSound('whoosh');
                 manualPairs.forEach((pair, idx) => {
                     setTimeout(() => {
                         let [a, b, badge] = pair;
-                        // On force vert -> rouge pour une animation lisible
-                        if (a.sign === -1 && b.sign === 1) { const tmp = a; a = b; b = tmp; }
+                        if (a.sign === -1 && b.sign === 1) [a, b] = [b, a];
                         animateCancelPair(a, b, badge);
-                    }, idx * 150);
+                    }, idx * 160);
                 });
 
-                // Puis, automatiquement, on continue avec les annulations restantes (auto), sans 2e clic.
-                const totalDelay = manualPairs.length * 150 + 980;
-                setTimeout(() => {
-                    autoSimplify();
-                }, totalDelay);
+                const totalDelay = manualPairs.length * 160 + 1500;
+                state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), totalDelay);
                 return;
             }
 
-            // 2. AUTO PAIRING
-            playSound('whoosh');
+            // 2) AUTO PAIRING
             const available = state.tokens.filter(t =>
+                !t._canceling &&
                 t.pairId === null &&
                 !t.element.classList.contains('in-bracket') &&
-                !t.element.classList.contains('pending-mult')
+                !t.element.classList.contains('pending-mult') &&
+                !t.element.classList.contains('animating')
             );
 
             const pairs = [];
             const types = ['x2', 'x', 'unit'];
 
-            // Objectif : quand c'est ordonné, annuler avec la tuile "en face" (la plus proche),
-            // pour une animation lisible (pas de sauts bizarres).
             const centerOf = (t) => {
                 const s = SIZES[t.type] || { w: 50, h: 50 };
                 return { cx: t.x + s.w / 2, cy: t.y + s.h / 2 };
@@ -1203,15 +1647,12 @@ function updateEquation() {
                 const greens = available.filter(t => t.type === ty && t.sign === 1);
                 let reds = available.filter(t => t.type === ty && t.sign === -1);
 
-                // On parcourt dans l'ordre de lecture (haut->bas, gauche->droite)
                 greens.sort((a, b) => (a.y - b.y) || (a.x - b.x));
                 reds.sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
                 for (const g of greens) {
-                    if (reds.length === 0) break;
+                    if (!reds.length) break;
                     const gc = centerOf(g);
-
-                    // Choisir le rouge le plus proche (souvent "en face" en mode ordonné)
                     let bestIdx = -1;
                     let bestD = Infinity;
                     for (let i = 0; i < reds.length; i++) {
@@ -1219,10 +1660,12 @@ function updateEquation() {
                         const rc = centerOf(r);
                         const dx = gc.cx - rc.cx;
                         const dy = gc.cy - rc.cy;
-                        const d2 = dx*dx + dy*dy;
-                        if (d2 < bestD) { bestD = d2; bestIdx = i; }
+                        const d2 = dx * dx + dy * dy;
+                        if (d2 < bestD) {
+                            bestD = d2;
+                            bestIdx = i;
+                        }
                     }
-
                     if (bestIdx !== -1) {
                         const r = reds.splice(bestIdx, 1)[0];
                         pairs.push([g, r]);
@@ -1230,14 +1673,28 @@ function updateEquation() {
                 }
             }
 
-            if (pairs.length === 0) return;
+            if (pairs.length === 0) {
+                state._autoSimplifyActive = false;
+                state._autoSimplifyTimer = null;
+                updateEquation();
+                return;
+            }
 
             pairs.forEach((pair, idx) => {
                 setTimeout(() => {
                     const [t1, t2] = pair;
                     animateCancelPair(t1, t2);
-                }, idx * 200);
+                }, idx * 220);
             });
+
+            const nextDelay = pairs.length * 220 + 1500;
+            state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), nextDelay);
+        }
+
+        function removeTokenById(id) {
+            const t = state.tokens.find(x => x.id === id);
+            if (!t) return;
+            removeTokens([t]);
         }
 
         function removeTokens(list) {
@@ -1249,6 +1706,9 @@ function updateEquation() {
             // Si tout a disparu, on remet la zone de création en haut (pratique pour "recommencer")
             if (state.tokens.length === 0) {
                 state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+                state.lastSequentialPackId = null;
+                state.pendingPackGap = 0;
+                state.lastPack = null;
             }
 
             updateEquation();
@@ -1332,12 +1792,15 @@ function updateEquation() {
             state.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
             state.currentStepIndex = 0;
             state.displayMode = 'normal';
-            state.isGrouping = false; state.currentGroupId = null;
             state.isSubtractingInput = false;
+            state.isMultiplyingInput = false;
             state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+            state.lastSequentialPackId = null;
+            state.pendingPackGap = 0;
+            state.lastPack = null;
             
-            btnOpposite.classList.add('hidden'); btnCloseP.classList.add('hidden');
-            btnGroup.classList.remove('mode-active-group'); btnGroup.innerText = 'GROUPE ( )';
+            btnOpposite.classList.add('hidden');
+            btnCloseP.classList.add('hidden');
             btnDistribute.classList.add('hidden'); 
             clearCanvas(); updateEquation();
         }
