@@ -82,7 +82,10 @@
         }
         
         .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
+        
+        /* Bleu pour la multiplication (maître et fantômes) */
         .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
+        
         .token.is-zero {
             background: #9ca3af !important;
             opacity: 0.6;
@@ -409,7 +412,6 @@
             return pid;
         }
 
-        // MODIFICATION ICI: ajout du paramètre isGhost pour la prévisualisation immédiate
         function addTile(type, sign, x = null, y = null, packId = null, isGhost = false) {
             if (state.displayMode !== 'normal') {
                 state.displayMode = 'normal';
@@ -458,7 +460,11 @@
             const isSubStep = (currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
             if (isSubStep) el.classList.add('in-bracket');
             
-            // Les copies fantômes en mode multiplication sont entourées de bleu immédiatement
+            // --- CORRECTION: Maître en bleu ---
+            if (!isGhost && state.isMultiplyingInput && currentStep.type === 'multiplication' && !currentStep.distributed) {
+                el.classList.add('pending-mult');
+            }
+            // Les copies fantômes aussi
             if (isGhost) {
                 el.classList.add('pending-mult');
             }
@@ -498,13 +504,11 @@
                 id, type, sign: tileSign, displaySign: displaySign, element: el, x: pos.x, y: pos.y,
                 pairId: null,
                 packId: pid,
-                ghostIds: [] // Pour stocker les IDs des copies liées
+                ghostIds: [] 
             };
 
             state.tokens.push(tokenObj);
             
-            // IMPORTANT : On n'ajoute pas les fantômes au step tout de suite,
-            // pour ne pas fausser l'affichage de l'équation (ex: 2(x^2))
             if (!isGhost) {
                 state.steps[state.currentStepIndex].tokenIds.push(id);
                 if (x === null && y === null && !state._internalAdd) {
@@ -512,16 +516,14 @@
                 }
             }
 
-            // --- AUTO CREATION DES FANTÔMES (Visualisation immédiate) ---
+            // --- CORRECTION: Alignement constant ---
             if (!isGhost && state.isMultiplyingInput && currentStep.type === 'multiplication' && currentStep.factor > 1) {
                 const factor = currentStep.factor;
-                const vGap = 18;
-                const blockH = SIZES[type].h + vGap;
+                const vGap = 20;
+                const strideH = 90 + vGap; 
                 
-                // On crée (factor - 1) copies en dessous
                 for (let i = 1; i < factor; i++) {
-                    addTile(type, sign, pos.x, pos.y + i * blockH, pid, true);
-                    // Lier la copie au token maître
+                    addTile(type, sign, pos.x, pos.y + i * strideH, pid, true);
                     const ghostToken = state.tokens[state.tokens.length - 1];
                     tokenObj.ghostIds.push(ghostToken.id);
                 }
@@ -531,7 +533,7 @@
         }
 
         function getSequentialPosition(w, h) {
-            const padding = 10;
+            const padding = 2; // Reduced from 10
             const boardW = board.clientWidth;
             if (state.lastPos.x + w + padding > boardW) {
                 state.lastPos.x = 40;
@@ -608,98 +610,127 @@
             state.isMultiplyingInput = false;
             btnCloseP.classList.add('hidden');
             
-            // Si on a des éléments, on affiche le bouton développer
-            if (step.tokenIds.length > 0 && step.factor > 1) {
-                btnDistribute.classList.remove('hidden');
-            }
-            
+            // Le bouton sera géré dans updateEquation maintenant pour la persistance
             updateEquation();
         }
 
         function applyDistribution() {
-            const step = state.steps[state.currentStepIndex];
-            if (!step || step.type !== 'multiplication') return;
-            if (step.distributed) return;
+            const step = state.steps.find(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
+            if (!step) return;
 
-            // Récupérer tous les tokens concernés (maîtres + fantômes)
             const masterTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
             if (masterTokens.length === 0) return;
 
-            // Promouvoir les fantômes en tokens réels dans le step
-            const allTokens = [];
+            const shouldFlip = (step.operator === '-');
+            if (shouldFlip) {
+                step.operator = '+'; 
+            }
+
+            // Promouvoir les fantômes en tokens réels
             masterTokens.forEach(t => {
-                allTokens.push(t);
                 t.ghostIds.forEach(gid => {
                     const g = state.tokens.find(tk => tk.id === gid);
                     if (g) {
                         step.tokenIds.push(gid);
-                        allTokens.push(g);
-                        // Nettoyer l'état fantôme
                         g.element.classList.remove('pending-mult');
                     }
                 });
-                t.ghostIds = []; // Plus de lien fantôme, ils sont tous égaux maintenant
+                t.ghostIds = []; 
                 t.element.classList.remove('pending-mult');
             });
 
             step.distributed = true;
             btnDistribute.classList.add('hidden');
 
-            // --- NOUVELLE MISE EN PAGE : Groupes séparés (en long) ---
-            // On veut séparer visuellement les familles : 2x² d'un côté, -4x de l'autre
-            
-            // 1. Calculer le point de départ (Bounding Box actuelle)
-            let minX = Infinity, minY = Infinity;
-            allTokens.forEach(t => {
-                minX = Math.min(minX, t.x);
-                minY = Math.min(minY, t.y);
-            });
-            // Si pas trouvé, fallback
-            if (minX === Infinity) { minX = 40; minY = 60; }
-
-            // 2. Trier et grouper par type
-            // Ordre souhaité : x², x, unit
-            const groups = {
-                'x2': [],
-                'x': [],
-                'unit': []
-            };
-
-            allTokens.forEach(t => {
-                if (groups[t.type]) groups[t.type].push(t);
-            });
-
-            // 3. Placer les groupes "en long" (côte à côte) avec un écart
-            let cursorX = minX;
-            const gapBetweenGroups = 40; // Grand espace entre 2x² et -4x
-            const gapInGroup = 2; // Espace serré entre les tuiles d'un même groupe
-
-            ['x2', 'x', 'unit'].forEach(type => {
-                const list = groups[type];
-                if (list.length === 0) return;
-
-                // Trier pour que ce soit joli (positifs, puis négatifs ou mélangés ?)
-                // Généralement on a soit tout positif soit tout négatif par bloc après dév simple
-                list.sort((a,b) => b.sign - a.sign); // Positifs d'abord
-
-                const w = SIZES[type].w;
-                
-                list.forEach(t => {
-                    t.element.classList.add('animating');
-                    moveToken(t, cursorX, minY);
-                    setTimeout(() => t.element.classList.remove('animating'), 500);
-                    cursorX += w + gapInGroup;
-                });
-
-                // Espace après le groupe
-                cursorX += gapBetweenGroups;
-            });
-            
-            // Mettre à jour la position globale pour la suite
-            state.lastPos.x = cursorX;
-            state.lastPos.y = minY;
+            // --- REFLOW COMPLET (Réorganisation séquentielle) ---
+            reflowBoardSequential();
 
             updateEquation();
+        }
+
+        function flipTokenData(t) {
+            t.sign *= -1;
+            t.displaySign = t.sign;
+            t.element.classList.remove('green', 'red');
+            t.element.classList.add(t.sign === 1 ? 'green' : 'red');
+            
+            let label = "";
+            if (t.type === 'x2') label = t.sign === 1 ? "x²" : "-x²";
+            else if (t.type === 'x') label = t.sign === 1 ? "x" : "-x";
+            else label = t.sign === 1 ? "1" : "-1";
+            
+            t.element.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+        }
+
+        function reflowBoardSequential() {
+            // Reset position curseur
+            state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+            
+            state.steps.forEach((step, idx) => {
+                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
+                if (stepTokens.length === 0) return;
+
+                // Cas Spécial : Multiplication Distribuée -> Affichage en "Groupes Séparés" MAIS SÉQUENTIELS
+                if (step.type === 'multiplication' && step.distributed) {
+                    let startX = state.lastPos.x;
+                    let startY = state.lastPos.y; 
+                    
+                    if (startX > 40 && startX + 200 > board.clientWidth) {
+                         startX = 40;
+                         startY += state.lastPos.maxYInRow + 20;
+                    }
+
+                    // --- ORDRE DYNAMIQUE : On détecte l'ordre des types dans la parenthèse ---
+                    const typesOrder = [];
+                    stepTokens.forEach(t => {
+                        if (!typesOrder.includes(t.type)) typesOrder.push(t.type);
+                    });
+
+                    const groups = { 'x2': [], 'x': [], 'unit': [] };
+                    stepTokens.forEach(t => { if (groups[t.type]) groups[t.type].push(t); });
+
+                    let cursorX = startX;
+                    let maxH = 0;
+                    const gapBetweenGroups = 40; 
+                    const gapInGroup = 2; 
+
+                    // On itère selon l'ordre d'apparition
+                    typesOrder.forEach(type => {
+                        const list = groups[type];
+                        if (list.length === 0) return;
+                        // On garde le tri par signe pour la propreté (vert d'abord)
+                        list.sort((a,b) => b.sign - a.sign); 
+
+                        const w = SIZES[type].w;
+                        const h = SIZES[type].h;
+                        maxH = Math.max(maxH, h);
+
+                        list.forEach(t => {
+                            t.element.classList.add('animating');
+                            moveToken(t, cursorX, startY);
+                            setTimeout(() => t.element.classList.remove('animating'), 500);
+                            cursorX += w + gapInGroup;
+                        });
+                        cursorX += gapBetweenGroups;
+                    });
+                    
+                    state.lastPos.x = cursorX;
+                    state.lastPos.y = startY;
+                    state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, maxH);
+                } 
+                else {
+                    // Cas Standard
+                    if (idx > 0 && state.lastPos.x > 40) state.lastPos.x += PACK_GAP;
+
+                    stepTokens.forEach(t => {
+                        const s = SIZES[t.type];
+                        const pos = getSequentialPosition(s.w, s.h);
+                        t.element.classList.add('animating');
+                        moveToken(t, pos.x, pos.y);
+                        setTimeout(() => t.element.classList.remove('animating'), 500);
+                    });
+                }
+            });
         }
 
         // --- GESTION OPÉRATEURS ---
@@ -757,11 +788,7 @@
                     .filter(Boolean);
 
                 tokensToFlip.forEach(t => {
-                    if (typeof t.displaySign === 'number') {
-                        t.displaySign *= -1;
-                    } else {
-                        t.displaySign = -(t.sign || 0);
-                    }
+                    t.displaySign = t.sign;
                     t.element.classList.remove('in-bracket');
                 });
 
@@ -938,6 +965,13 @@
         function tokensToReducedSumLatex(tokens) {
             if (!tokens || tokens.length === 0) return "0";
 
+            // --- NOUVEAU: On détecte l'ordre d'apparition des types dans le step ---
+            const typesOrder = [];
+            tokens.forEach(t => {
+               if(!typesOrder.includes(t.type)) typesOrder.push(t.type);
+            });
+
+            // On compte les éléments
             const counts = {
                 x2: { pos: 0, neg: 0 },
                 x: { pos: 0, neg: 0 },
@@ -950,12 +984,6 @@
                 if (t.sign === -1) counts[t.type].neg += 1;
                 else counts[t.type].pos += 1;
             }
-
-            const ordered = [
-                ['x2', 1], ['x2', -1],
-                ['x', 1], ['x', -1],
-                ['unit', 1], ['unit', -1]
-            ];
 
             let latex = '';
             let hasPrev = false;
@@ -979,9 +1007,17 @@
                 hasPrev = true;
             };
 
-            for (const [type, sign] of ordered) {
-                const count = sign === 1 ? counts[type].pos : counts[type].neg;
-                addTerm(type, sign, count);
+            // On itère selon l'ordre découvert, au lieu de l'ordre fixe
+            for (const type of typesOrder) {
+                // On affiche d'abord les positifs puis négatifs ou l'inverse ?
+                // Généralement on groupe tout : 4x (si 2x+2x)
+                // Ici on simplifie visuellement en affichant la somme nette par type ? 
+                // Non, tokensToReducedSumLatex sert à afficher le résultat du développement (ex: 4x^2 - 2)
+                
+                // Si on a des positifs
+                addTerm(type, 1, counts[type].pos);
+                // Si on a des négatifs
+                addTerm(type, -1, counts[type].neg);
             }
 
             return latex || "0";
@@ -1029,32 +1065,18 @@
                 const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
                 const isCurrent = (index === state.currentStepIndex);
                 if (stepTokens.length === 0 && !isCurrent) return;
-
-                if (index > 0 && hasNonEmptyBefore(index)) {
-                    const plus = `{\\color{${COLORS.pos}}{+}}`;
-                    const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
-
-                    if (step.type === 'subtraction' && step.oppositeApplied) {
-                    } else if (step.operator === '+' && step.type !== 'addition') {
-                        latex += `\\;${plus}\\;`;
-                    } else if (step.operator === '-') {
-                        if (step.type === 'subtraction' && !step.oppositeApplied) latex += `\\;${minusOrange}\\;`;
-                        else latex += ' - ';
-                    }
-                }
-
+                
+                // Pré-calculer le contenu pour savoir s'il commence par "-"
                 let currentFactor = 1;
                 let content = tokensToSeparatedLatex(stepTokens, 1);
                 if (stepTokens.length === 0) content = "\\dots";
-
                 let pStr = "";
-
+                
+                // --- LOGIQUE CONTENU ---
                 if (step.type === 'multiplication') {
                     if (step.distributed) {
-                        // Une fois développé, on affiche la somme réduite : 2x^2 - 4x
                         pStr = tokensToReducedSumLatex(stepTokens);
                     } else {
-                        // Avant développement, on ne montre que le contenu "maître", pas les copies
                         pStr = step.factor + "(" + content + ")";
                     }
                 }
@@ -1065,7 +1087,8 @@
                     else if (!step.oppositeApplied) {
                         pStr = "(" + content + ")";
                     } else {
-                        const hasPrev = hasNonEmptyBefore(index);
+                        // Logique spécifique pour soustraction opposée (déjà gérée avec signes)
+                         const hasPrev = hasNonEmptyBefore(index);
                         const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
                         const plus = colorWrap(COLORS.pos, '+');
                         const minus = colorWrap(COLORS.neg, '-');
@@ -1120,6 +1143,8 @@
                             }
 
                             if (hasPrev) {
+                                // Important : on ajoute le signe ici manuellement, 
+                                // donc on évitera le "+" automatique plus bas
                                 const prefix = (leadingSign === -1) ? minus : plus;
                                 pStr = `\\;${prefix}\\;` + body;
                             } else {
@@ -1132,10 +1157,44 @@
                     pStr = content;
                     if (index > 0 && latexStartsWithMinus(pStr)) pStr = "(" + pStr + ")";
                 }
+
+                // --- LOGIQUE SÉPARATEUR (+ / -) ---
+                if (index > 0 && hasNonEmptyBefore(index)) {
+                    const plus = `{\\color{${COLORS.pos}}{+}}`;
+                    const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
+
+                    // Si c'est une soustraction "opposée", le signe est DÉJÀ dans pStr (voir ci-dessus)
+                    if (step.type === 'subtraction' && step.oppositeApplied) {
+                        // Rien à faire, pStr contient déjà le lien
+                    }
+                    // Si c'est une multiplication distribuée qui commence par un "-", on ne met pas de "+"
+                    else if (step.type === 'multiplication' && step.distributed && latexStartsWithMinus(pStr)) {
+                        // Rien à faire, le "-" est dans pStr (ex: -4x^2)
+                    }
+                    else if (step.operator === '+' && step.type !== 'addition') {
+                         // Ajout standard du "+" sauf si pStr commence déjà par "-"
+                         if (!latexStartsWithMinus(pStr)) {
+                             latex += `\\;${plus}\\;`;
+                         }
+                    } else if (step.operator === '-') {
+                        if (step.type === 'subtraction' && !step.oppositeApplied) latex += `\\;${minusOrange}\\;`;
+                        else latex += ' - ';
+                    }
+                }
                 
                 latex += pStr;
                 isEmpty = false;
             });
+
+            // --- MISE A JOUR BOUTON DISTRIBUER ---
+            // On vérifie s'il existe une étape de multiplication non distribuée et fermée
+            const hasPendingDistribute = state.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
+            if (hasPendingDistribute) {
+                btnDistribute.classList.remove('hidden');
+            } else {
+                btnDistribute.classList.add('hidden');
+            }
+
             return isEmpty ? "\\dots" : latex;
         }
 
@@ -1283,74 +1342,80 @@
             if (t1.pairedWith === t2.id) t1.pairedWith = null;
             if (t2.pairedWith === t1.id) t2.pairedWith = null;
 
+            // --- CAS 1 : Paire manuelle (badge déjà là) ---
             if (badgeEl) {
                 const badge = badgeEl;
-                t1._canceling = true;
-                t2._canceling = true;
+                t1._canceling = true; t2._canceling = true;
                 if (t1.pairId === t2.id) t1.pairId = null;
                 if (t2.pairId === t1.id) t2.pairId = null;
+
+                // Grisé d'abord
                 t1.element.classList.add('animating', 'fading-gray');
                 t2.element.classList.add('animating', 'fading-gray');
 
+                // Disparition
                 setTimeout(() => {
                     t1.element.classList.add('vanish');
                     t2.element.classList.add('vanish');
                     badge.classList.add('vanish');
-                }, 250);
+                }, 300);
 
-                setTimeout(() => {
-                    try { badge.remove(); } catch(e) {}
-                }, 650);
-
-                setTimeout(() => {
-                    removeTokenById(t1.id);
-                    removeTokenById(t2.id);
-                }, 820);
+                setTimeout(() => { try { badge.remove(); } catch(e) {} }, 800);
+                setTimeout(() => { removeTokenById(t1.id); removeTokenById(t2.id); }, 1000);
                 return;
             }
 
+            // --- CAS 2 : Annulation Automatique (Séquentielle) ---
             const startX = t1.x, startY = t1.y;
             const endX = t2.x, endY = t2.y;
 
             t1.element.classList.remove('is-zero');
             t2.element.classList.remove('is-zero');
-
             t1._canceling = true;
             t2._canceling = true;
             if (t1.pairId === t2.id) t1.pairId = null;
             if (t2.pairId === t1.id) t2.pairId = null;
-            t1.element.classList.add('animating', 'fading-gray');
-            t2.element.classList.add('animating', 'fading-gray');
+            
+            t1.element.classList.add('animating'); // Pas de fading tout de suite
+            t2.element.classList.add('animating');
 
+            // 1. Déplacement de A vers B (plus rapide pour le dynamisme)
             moveToken(t1, endX, endY);
-
-            const badge = document.createElement('div');
-            badge.className = 'zero-badge';
-            badge.textContent = '0';
-            badge.style.left = (endX + 18) + 'px';
-            badge.style.top = (endY - 8) + 'px';
-            badge.style.pointerEvents = 'none';
-            board.appendChild(badge);
-
+            
+            // 2. Affichage du badge quasi-immédiat (synchronisé avec l'arrivée)
             setTimeout(() => {
+                // Création du Zéro centré
+                const badge = document.createElement('div');
+                badge.className = 'zero-badge';
+                badge.textContent = '0';
+                // Centrage plus précis
+                const size = SIZES[t2.type] || {w:50, h:50};
+                // badge ~20px large ? on centre sur la tuile
+                const cx = endX + size.w / 2;
+                const cy = endY + size.h / 2;
+                badge.style.left = (cx - 12) + 'px'; // approx half width of badge
+                badge.style.top = (cy - 20) + 'px';
+                badge.style.pointerEvents = 'none';
+                board.appendChild(badge);
+
+                // Griser les tuiles en dessous
                 t1.element.classList.add('fading-gray');
                 t2.element.classList.add('fading-gray');
-            }, 420);
 
-            setTimeout(() => {
-                t1.element.classList.add('vanish');
-                t2.element.classList.add('vanish');
-                badge.classList.add('vanish');
-            }, 520);
+                // 3. Pause visible (on voit le zéro) puis disparition
+                setTimeout(() => {
+                    t1.element.classList.add('vanish');
+                    t2.element.classList.add('vanish');
+                    badge.classList.add('vanish');
+                }, 400); // Temps de lecture du zéro
 
-            setTimeout(() => {
-                try { badge.remove(); } catch(e) {}
-            }, 820);
+                setTimeout(() => { try { badge.remove(); } catch(e) {} }, 800);
+                setTimeout(() => {
+                    removeTokenById(t1.id);
+                    removeTokenById(t2.id);
+                }, 900);
 
-            setTimeout(() => {
-                removeTokenById(t1.id);
-                removeTokenById(t2.id);
-            }, 1100);
+            }, 300); // 300ms correspond à la fin du mouvement
         }
 
         function autoSimplify() {
@@ -1365,6 +1430,7 @@
         }
 
         function runAutoSimplifyPass() {
+            // ... (logique manuelle identique) ...
             const manualPairs = [];
             const processedIds = new Set();
             for (const t of state.tokens) {
@@ -1381,21 +1447,20 @@
                     }
                 }
             }
-
             if (manualPairs.length > 0) {
                 manualPairs.forEach((pair, idx) => {
                     setTimeout(() => {
                         let [a, b, badge] = pair;
                         if (a.sign === -1 && b.sign === 1) [a, b] = [b, a];
                         animateCancelPair(a, b, badge);
-                    }, idx * 160);
+                    }, idx * 250); // un peu plus lent pour être clair
                 });
-
-                const totalDelay = manualPairs.length * 160 + 1500;
+                const totalDelay = manualPairs.length * 250 + 1500;
                 state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), totalDelay);
                 return;
             }
 
+            // AUTO PAIRING
             const available = state.tokens.filter(t =>
                 !t._canceling &&
                 t.pairId === null &&
@@ -1406,7 +1471,6 @@
 
             const pairs = [];
             const types = ['x2', 'x', 'unit'];
-
             const centerOf = (t) => {
                 const s = SIZES[t.type] || { w: 50, h: 50 };
                 return { cx: t.x + s.w / 2, cy: t.y + s.h / 2 };
@@ -1415,25 +1479,18 @@
             for (const ty of types) {
                 const greens = available.filter(t => t.type === ty && t.sign === 1);
                 let reds = available.filter(t => t.type === ty && t.sign === -1);
-
                 greens.sort((a, b) => (a.y - b.y) || (a.x - b.x));
                 reds.sort((a, b) => (a.y - b.y) || (a.x - b.x));
 
                 for (const g of greens) {
                     if (!reds.length) break;
                     const gc = centerOf(g);
-                    let bestIdx = -1;
-                    let bestD = Infinity;
+                    let bestIdx = -1; let bestD = Infinity;
                     for (let i = 0; i < reds.length; i++) {
-                        const r = reds[i];
-                        const rc = centerOf(r);
-                        const dx = gc.cx - rc.cx;
-                        const dy = gc.cy - rc.cy;
+                        const r = reds[i]; const rc = centerOf(r);
+                        const dx = gc.cx - rc.cx; const dy = gc.cy - rc.cy;
                         const d2 = dx * dx + dy * dy;
-                        if (d2 < bestD) {
-                            bestD = d2;
-                            bestIdx = i;
-                        }
+                        if (d2 < bestD) { bestD = d2; bestIdx = i; }
                     }
                     if (bestIdx !== -1) {
                         const r = reds.splice(bestIdx, 1)[0];
@@ -1449,22 +1506,21 @@
                 return;
             }
 
+            // Délai pour bien voir "l'un après l'autre"
             pairs.forEach((pair, idx) => {
                 setTimeout(() => {
                     const [t1, t2] = pair;
                     animateCancelPair(t1, t2);
-                }, idx * 220);
+                }, idx * 400); 
             });
 
-            const nextDelay = pairs.length * 220 + 1500;
+            const nextDelay = pairs.length * 400 + 1500;
             state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), nextDelay);
         }
 
         function removeTokenById(id) {
             const t = state.tokens.find(x => x.id === id);
             if (!t) return;
-            
-            // Si le token a des fantômes, les supprimer aussi
             const ghosts = [];
             if (t.ghostIds && t.ghostIds.length > 0) {
                 t.ghostIds.forEach(gid => {
@@ -1487,7 +1543,6 @@
                 state.pendingPackGap = 0;
                 state.lastPack = null;
             }
-
             updateEquation();
         }
 
