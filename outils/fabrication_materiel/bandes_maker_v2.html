@@ -204,6 +204,73 @@
     }
     @page { size: A4 landscape; margin: 0; }
   }
+
+
+  /* --- APERÇU : barre d'outils + résumé --- */
+  .preview-toolbar{
+      width: min(980px, 100%);
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .preview-toolbar-left{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-width: 220px;
+  }
+  .preview-label{
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-main);
+      margin: 0;
+  }
+  #previewFilter{
+      width: 180px;
+      max-width: 100%;
+  }
+  .preview-hint{
+      font-size: 12px;
+      color: #b45309;
+      font-weight: 600;
+  }
+  .preview-summary{
+      font-size: 12px;
+      color: var(--text-main);
+      line-height: 1.35;
+      text-align: right;
+  }
+  .preview-summary strong{ color: var(--text-muted); font-weight: 700; }
+  .preview-pages{ width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  /* --- Messages d'info dans les onglets --- */
+  .notice{
+      border: 1px solid #fdba74;
+      background: #fff7ed;
+      color: #9a3412;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      font-weight: 600;
+  }
+
+  /* --- Filtre d'aperçu (visuel seulement) --- */
+  .preview-hidden{ display: none !important; }
+
+  @media print{
+    .preview-toolbar{ display:none !important; }
+    .preview-hidden{ display:block !important; }
+  }
+
 </style>
 </head>
 <body>
@@ -270,6 +337,7 @@
 
         <!-- ONGLET 2 : RECTO (UNIFORMISÉ AVEC LE VERSO) -->
         <div id="tab-recto" class="tab-content">
+            <div id="noticeRecto" class="notice" style="display:none;"></div>
             
             <!-- BLOC 1 : BANDE UNITÉ RECTO -->
             <fieldset>
@@ -348,6 +416,7 @@
 
         <!-- ONGLET 3 : VERSO -->
         <div id="tab-verso" class="tab-content">
+            <div id="noticeVerso" class="notice" style="display:none;"></div>
             
             <!-- BLOC 1 : BANDE UNITÉ VERSO -->
             <fieldset>
@@ -495,8 +564,22 @@
   </section>
 
   <!-- APERÇU -->
-  <section class="preview-area" id="preview">
-      <!-- Les pages SVG seront générées ici -->
+  <section class="preview-area" id="previewShell">
+      <div class="preview-toolbar">
+          <div class="preview-toolbar-left">
+              <label for="previewFilter" class="preview-label">Aperçu :</label>
+              <select id="previewFilter">
+                  <option value="all" selected>Tout</option>
+                  <option value="recto">Recto</option>
+                  <option value="verso">Verso</option>
+              </select>
+              <span id="previewFilterHint" class="preview-hint" aria-live="polite"></span>
+          </div>
+          <div class="preview-summary" id="previewSummary" aria-live="polite"></div>
+      </div>
+      <div id="preview" class="preview-pages">
+          <!-- Les pages SVG seront générées ici -->
+      </div>
   </section>
 </main>
 
@@ -521,6 +604,143 @@ function openTab(tabId) {
 
 
 // --- LOGIQUE GÉNÉRATEUR (Code original conservé et optimisé) ---
+
+// --- APERÇU : Filtre visuel (Option 2) + Résumé + Messages ---
+function getModeLabel(mode){
+    if(mode === 'recto_verso_alternating') return 'Recto / Verso alterné';
+    if(mode === 'recto_only') return 'Recto seul';
+    if(mode === 'verso_only') return 'Verso seul';
+    return mode;
+}
+
+function applyPreviewFilter(){
+    var sel = document.getElementById('previewFilter');
+    if(!sel) return;
+    var filter = sel.value || 'all';
+    var pages = document.querySelectorAll('#preview .page');
+    pages.forEach(function(p){
+        var side = (p.dataset && p.dataset.side) ? p.dataset.side : 'recto';
+        var shouldHide = (filter !== 'all' && side !== filter);
+        p.classList.toggle('preview-hidden', shouldHide);
+    });
+    updatePreviewFilterHint();
+}
+
+function updatePreviewFilterHint(){
+    var hint = document.getElementById('previewFilterHint');
+    if(!hint) return;
+    var modeEl = document.getElementById('mode');
+    var mode = modeEl ? modeEl.value : '';
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+
+    // Indiquer clairement quand le filtre demande un côté non généré
+    var noRecto = (mode === 'verso_only');
+    var noVerso = (mode === 'recto_only');
+
+    var msg = '';
+    if(filter === 'recto' && noRecto) msg = "⚠️ Aucun recto n'est généré dans la séquence actuelle.";
+    if(filter === 'verso' && noVerso) msg = "⚠️ Aucun verso n'est généré dans la séquence actuelle.";
+
+    hint.textContent = msg;
+}
+
+function updateModeNotices(){
+    var form = document.getElementById('form');
+    if(!form) return;
+    var mode = form.mode.value;
+    var nR = document.getElementById('noticeRecto');
+    var nV = document.getElementById('noticeVerso');
+
+    if(nR){
+        if(mode === 'verso_only'){
+            nR.style.display = 'block';
+            nR.textContent = "⚠️ Le recto n'est pas généré dans la séquence actuelle (Verso seul).";
+        } else {
+            nR.style.display = 'none';
+            nR.textContent = '';
+        }
+    }
+
+    if(nV){
+        if(mode === 'recto_only'){
+            nV.style.display = 'block';
+            nV.textContent = "⚠️ Le verso n'est pas généré dans la séquence actuelle (Recto seul).";
+        } else {
+            nV.style.display = 'none';
+            nV.textContent = '';
+        }
+    }
+}
+
+function updatePreviewSummary(){
+    var box = document.getElementById('previewSummary');
+    if(!box) return;
+    var form = document.getElementById('form');
+    if(!form) return;
+
+    var { denomsList, includeUnit } = parseDenoms(form.denoms.value);
+    var all = [];
+    if(includeUnit) all.push(1);
+    all = all.concat(denomsList);
+
+    var mode = form.mode.value;
+    var pages = 0, rectos = 0, versos = 0;
+
+    if(mode === 'recto_verso_alternating'){
+        pages = all.length * 2;
+        rectos = all.length;
+        versos = all.length;
+    } else if(mode === 'recto_only'){
+        pages = all.length;
+        rectos = all.length;
+        versos = 0;
+    } else if(mode === 'verso_only'){
+        pages = all.length;
+        rectos = 0;
+        versos = all.length;
+    }
+
+    var bandLen = parseFloat(form.bandLen.value);
+    var bandHeight = parseFloat(form.bandHeight.value);
+    var gapV = parseFloat(form.gapV.value);
+
+    var denomsStr = all.length ? all.join(',') : '—';
+    var sizeStr = (isFinite(bandLen) && isFinite(bandHeight)) ? `${bandLen}×${bandHeight} mm` : '—';
+    var gapStr = isFinite(gapV) ? `${gapV} mm` : '—';
+
+    box.innerHTML = `
+      <div><strong>Mode :</strong> ${getModeLabel(mode)}</div>
+      <div><strong>Dénominateurs :</strong> ${denomsStr}</div>
+      <div><strong>Bande :</strong> ${sizeStr} · <strong>Écart :</strong> ${gapStr}</div>
+      <div><strong>Pages :</strong> ${pages} (recto ${rectos} · verso ${versos})</div>
+    `.trim();
+}
+
+function revealAllPagesForPrint(){
+    // Ne PAS dépendre du filtre visuel pour l'impression
+    var pages = document.querySelectorAll('#preview .page.preview-hidden');
+    pages.forEach(function(p){ p.classList.remove('preview-hidden'); });
+}
+
+function safePrint(){
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+    if(filter !== 'all') revealAllPagesForPrint();
+    window.print();
+    // Après fermeture de la fenêtre d'impression
+    applyPreviewFilter();
+}
+
+window.addEventListener('beforeprint', function(){
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+    if(filter !== 'all') revealAllPagesForPrint();
+});
+window.addEventListener('afterprint', function(){
+    applyPreviewFilter();
+});
+
 
 var W = 297; // mm (A4 paysage)
 var H = 210; // mm
@@ -723,6 +943,7 @@ function unitSVG(cx, cy, sizePt, unitMode, customText, barWmm, rectoUnitMode, re
 function drawPage({bandLen, bandHeight, gapV, denom, isVerso, contentMode, colorMode, rectoStyles, versoStyles, rectoUnitInfo, versoUnitInfo}){
   var page = document.createElement("div");
   page.className = "page";
+  page.dataset.side = isVerso ? 'verso' : 'recto';
 
   var svg = document.createElementNS(SVG_NS,"svg");
   svg.setAttribute("xmlns",SVG_NS);
@@ -920,7 +1141,7 @@ function generate(){
   }
 }
 
-document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
+document.getElementById("print").addEventListener("click", safePrint);
 
 function updateUI() {
     var form = document.getElementById('form');
@@ -951,6 +1172,10 @@ function updateUI() {
     }
 
     generate();
+    updateModeNotices();
+    updatePreviewSummary();
+    applyPreviewFilter();
+
 }
 
 document.getElementById('form').addEventListener('change', updateUI);
@@ -963,6 +1188,15 @@ document.getElementById('form').addEventListener('input', (e) => {
 });
 
 window.addEventListener("load", updateUI);
+
+// Filtre d'aperçu : réagit immédiatement
+var pf = document.getElementById('previewFilter');
+if(pf){
+    pf.addEventListener('change', function(){
+        applyPreviewFilter();
+    });
+}
+
 </script>
 </body>
 </html>
