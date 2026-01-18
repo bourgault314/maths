@@ -205,6 +205,91 @@
     }
     @page { size: A4 landscape; margin: 0; }
   }
+
+
+  /* --- APERÇU : CONTROLES (Filtre + résumé) --- */
+  .preview-controls {
+      width: 100%;
+      max-width: calc(var(--page-w) + 40px);
+      margin-bottom: 14px;
+  }
+  .preview-toolbar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      backdrop-filter: blur(4px);
+  }
+  .preview-toolbar-title {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+  }
+  .segmented {
+      display: inline-flex;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #fff;
+  }
+  .seg-btn {
+      border: none;
+      background: transparent;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+  }
+  .seg-btn:hover { background: #f1f5f9; color: var(--text-main); }
+  .seg-btn.active { background: var(--primary-color); color: #fff; }
+
+  .preview-warning {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      color: #b45309; /* amber */
+      min-height: 1em;
+  }
+
+  .preview-summary {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--text-main);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      line-height: 1.35;
+  }
+  .preview-summary .muted { color: var(--text-muted); font-weight: 600; }
+
+  /* --- Notices dans les onglets --- */
+  .notice {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+      line-height: 1.35;
+  }
+  .notice-warn { border-color: rgba(245,158,11,0.35); background: rgba(255,251,235,0.9); color: #92400e; }
+
+  /* Helpers */
+  .no-print { }
+
+
 </style>
 </head>
 <body>
@@ -279,6 +364,7 @@
 
         <!-- ONGLET 2 : RECTO -->
         <div id="tab-recto" class="tab-content">
+            <div class="notice notice-warn" id="modeNoticeRecto" style="display:none;"></div>
             <fieldset>
                 <legend>Bande UNITÉ (d=1)</legend>
                 <label>Contenu affiché</label>
@@ -355,6 +441,7 @@
 
         <!-- ONGLET 3 : VERSO -->
         <div id="tab-verso" class="tab-content">
+            <div class="notice notice-warn" id="modeNoticeVerso" style="display:none;"></div>
             
             <fieldset>
                 <legend>Bande UNITÉ (d=1)</legend>
@@ -501,7 +588,19 @@
 
   <!-- APERÇU -->
   <section class="preview-area" id="preview">
-      <!-- Les pages SVG seront générées ici -->
+      <div class="preview-controls no-print" id="previewControls">
+          <div class="preview-toolbar">
+              <span class="preview-toolbar-title">Aperçu</span>
+              <div class="segmented" role="group" aria-label="Filtre d'aperçu">
+                  <button type="button" class="seg-btn active" data-filter="all">Tout</button>
+                  <button type="button" class="seg-btn" data-filter="recto">Recto</button>
+                  <button type="button" class="seg-btn" data-filter="verso">Verso</button>
+              </div>
+              <span class="preview-warning" id="previewWarning" aria-live="polite"></span>
+          </div>
+          <div class="preview-summary" id="printSummary"></div>
+      </div>
+      <div id="pagesContainer"></div>
   </section>
 </main>
 
@@ -518,6 +617,146 @@ function openTab(tabId) {
         }
     });
 }
+
+
+
+// --- APERÇU : filtre manuel + infos (ergonomie uniquement) ---
+let previewFilter = 'all'; // 'all' | 'recto' | 'verso'
+let _restoreFilterAfterPrint = null;
+
+function getModeValue(){
+    const m = document.getElementById('mode');
+    return m ? m.value : 'interleaved';
+}
+
+function setPreviewFilter(filter, opts={}){
+    previewFilter = (filter === 'recto' || filter === 'verso') ? filter : 'all';
+
+    // Boutons UI
+    const btns = document.querySelectorAll('.seg-btn');
+    btns.forEach(b => {
+        const f = b.getAttribute('data-filter');
+        b.classList.toggle('active', f === previewFilter);
+    });
+
+    applyPreviewFilter();
+    updatePreviewWarning();
+}
+
+function applyPreviewFilter(){
+    const pages = document.querySelectorAll('#pagesContainer .page');
+    pages.forEach(p => {
+        const side = p.dataset.side || 'recto';
+        const show = (previewFilter === 'all') || (side === previewFilter);
+        p.style.display = show ? '' : 'none';
+    });
+}
+
+function updatePreviewWarning(){
+    const el = document.getElementById('previewWarning');
+    if(!el) return;
+
+    const mode = getModeValue();
+    let msg = '';
+
+    if (previewFilter === 'recto' && mode === 'verso_only') {
+        msg = "⚠️ Séquence = ‘Verso seul’ : aucun recto n’est généré.";
+    }
+    if (previewFilter === 'verso' && mode === 'recto_only') {
+        msg = "⚠️ Séquence = ‘Recto seul’ : aucun verso n’est généré.";
+    }
+
+    el.textContent = msg;
+}
+
+function updateModeNotices(){
+    const mode = getModeValue();
+    const nRecto = document.getElementById('modeNoticeRecto');
+    const nVerso = document.getElementById('modeNoticeVerso');
+
+    if(nRecto){
+        if(mode === 'verso_only'){
+            nRecto.style.display = 'block';
+            nRecto.textContent = "⚠️ Info : la séquence d’impression est réglée sur ‘Verso seul’. Les pages recto ne seront pas générées dans l’aperçu ni à l’impression.";
+        } else {
+            nRecto.style.display = 'none';
+            nRecto.textContent = '';
+        }
+    }
+
+    if(nVerso){
+        if(mode === 'recto_only'){
+            nVerso.style.display = 'block';
+            nVerso.textContent = "⚠️ Info : la séquence d’impression est réglée sur ‘Recto seul’. Les pages verso ne seront pas générées dans l’aperçu ni à l’impression.";
+        } else {
+            nVerso.style.display = 'none';
+            nVerso.textContent = '';
+        }
+    }
+}
+
+function updatePrintSummary(actualDenoms){
+    const el = document.getElementById('printSummary');
+    if(!el) return;
+
+    const mode = getModeValue();
+    const modeLabel = (mode === 'interleaved') ? 'Recto / Verso alterné'
+                    : (mode === 'recto_only') ? 'Recto seul'
+                    : 'Verso seul';
+
+    const denomsText = (actualDenoms && actualDenoms.length) ? actualDenoms.join(', ') : '—';
+
+    const cols = Number(document.getElementById('N_cols')?.value || 0);
+    const rows = Number(document.getElementById('N_rows')?.value || 0);
+    const gap  = Number(document.getElementById('discGap')?.value || 0);
+
+    const rectoPages = (mode === 'verso_only') ? 0 : (actualDenoms?.length || 0);
+    const versoPages = (mode === 'recto_only') ? 0 : (actualDenoms?.length || 0);
+    const totalPages = (mode === 'interleaved') ? (rectoPages + versoPages) : Math.max(rectoPages, versoPages);
+
+    el.innerHTML = `
+      <div><span class="muted">Mode :</span> ${modeLabel}</div>
+      <div><span class="muted">Dénominateurs :</span> ${denomsText}</div>
+      <div><span class="muted">Grille :</span> ${cols} × ${rows} — <span class="muted">Écart :</span> ${isFinite(gap) ? gap : '—'} mm</div>
+      <div><span class="muted">Pages :</span> ${totalPages} (recto ${rectoPages} / verso ${versoPages})</div>
+    `;
+}
+
+function initPreviewControls(){
+    const btns = document.querySelectorAll('.seg-btn');
+    btns.forEach(b => {
+        b.addEventListener('click', () => {
+            const f = b.getAttribute('data-filter') || 'all';
+            setPreviewFilter(f, {fromUser:true});
+        });
+    });
+    setPreviewFilter('all');
+}
+
+function safePrint(){
+    // Important : le filtre d'aperçu ne doit pas impacter l'impression
+    _restoreFilterAfterPrint = previewFilter;
+    setPreviewFilter('all', {fromUser:false});
+
+    // Lance l'impression
+    window.print();
+
+    // Fallback : certains navigateurs ne déclenchent pas afterprint
+    setTimeout(() => {
+        if(_restoreFilterAfterPrint){
+            setPreviewFilter(_restoreFilterAfterPrint, {fromUser:false});
+            _restoreFilterAfterPrint = null;
+        }
+    }, 500);
+}
+
+window.addEventListener('afterprint', () => {
+    if(_restoreFilterAfterPrint){
+        setPreviewFilter(_restoreFilterAfterPrint, {fromUser:false});
+        _restoreFilterAfterPrint = null;
+    }
+});
+
 
 // --- MOTEUR DE GÉNÉRATION (Code Original) ---
 
@@ -908,9 +1147,10 @@ function generate(){
       customTextDgt1: form.customTextVersoDgt1.value || '1 unité (Verso D>1)',
   };
   
-  const preview = document.getElementById("preview");
-  preview.innerHTML = "";
-  const push = (el)=>preview.appendChild(el);
+  const pagesContainer = document.getElementById("pagesContainer");
+  if (!pagesContainer) return;
+  pagesContainer.innerHTML = "";
+  const push = (el)=>pagesContainer.appendChild(el);
   
   const totalDiscsPerPage = N_cols * N_rows;
   if (totalDiscsPerPage === 0 || isNaN(N_cols) || isNaN(N_rows)) return;
@@ -924,7 +1164,9 @@ function generate(){
         denom: denom, 
         contentMode: contentMode, 
     }));
-    return drawPage(discs, baseOptions, isVersoPage);
+    const pageEl = drawPage(discs, baseOptions, isVersoPage);
+    pageEl.dataset.side = isVersoPage ? 'verso' : 'recto';
+    return pageEl;
   };
   
   for(const d of actualDenoms){
@@ -950,9 +1192,15 @@ function generate(){
           push(generatePage(d, versoMode, true)); 
       }
   }
+
+  // Ergonomie : filtre d'aperçu + résumé + notices
+  updateModeNotices();
+  updatePrintSummary(actualDenoms);
+  applyPreviewFilter();
+  updatePreviewWarning();
 }
 
-document.getElementById("print").addEventListener("click", ()=>{ window.print(); });
+document.getElementById("print").addEventListener("click", ()=>{ safePrint(); });
 
 function updateUI() {
     const form = document.getElementById('form');
@@ -994,7 +1242,7 @@ document.getElementById('form').addEventListener('input', (e) => {
     }
 });
 
-window.addEventListener("load", updateUI);
+window.addEventListener("load", () => { initPreviewControls(); updateUI(); });
 </script>
 </body>
 </html>
