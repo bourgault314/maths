@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Glisse-entiers (Primaire)</title>
+<style>
+  :root {
+    --gap: 6px;
+    --cell: 60px;
+    --headH: 36px;
+    --primary: #4f46e5; /* Indigo 600 */
+    --primary-hover: #4338ca;
+    --bg-page: #f3f4f6;
+    --bg-card: #ffffff;
+    --text-main: #1f2937;
+    --border-color: #e5e7eb;
+    --cols: 10; /* Valeur par défaut, changée par JS */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(10px, 3vw, 24px);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    width: min(1100px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* --- CARD STYLES --- */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  /* --- HEADER & CONTROLS --- */
+  .header-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  h1 {
+    margin: 0;
+    font-weight: 800;
+    font-size: clamp(20px, 4vw, 28px);
+    color: #111827;
+    text-align: center;
+  }
+
+  /* Main Action Bar (Movement) */
+  .actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: clamp(18px, 3vw, 22px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+    min-width: 140px;
+  }
+  .btn-action:active { transform: translateY(1px); box-shadow: none; }
+  .btn-action:hover { background-color: var(--primary-hover); }
+
+  .btn-reset {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-reset:hover { background: #e5e7eb; }
+  
+  /* Status Display */
+  #status-pill {
+    background: #e0e7ff;
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: -8px; 
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* --- SETTINGS BAR --- */
+  .settings-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    width: 100%;
+    align-items: center;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+  .btn-secondary.active {
+    background: #ecfccb;
+    color: #365314;
+    border-color: #84cc16;
+  }
+
+  /* Picker styled like a button */
+  .picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+  }
+  .picker-container select {
+    border: none;
+    background: transparent;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* Segmented Control */
+  .seg-control {
+    display: flex;
+    background: #f3f4f6;
+    padding: 4px;
+    border-radius: 10px;
+    gap: 2px;
+  }
+  .seg-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+  }
+  .seg-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  /* --- GRID AREA --- */
+  .grid-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), var(--cell));
+    gap: var(--gap);
+    justify-content: center;
+    /* Largeur minimale pour contenir toutes les colonnes + espaces */
+    min-width: calc(var(--cols) * var(--cell) + (var(--cols) - 1) * var(--gap) + 12px);
+    margin: 0 auto;
+  }
+
+  .head {
+    height: var(--headH);
+    text-align: center;
+    background: #e5e7eb;
+    color: #374151;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    font-size: 11px;
+    line-height: 1.1;
+    font-weight: 700;
+    padding: 2px;
+  }
+  .head .lbl { display: flex; flex-direction: column; }
+  
+  .cell {
+    height: var(--cell);
+    background: #fff;
+    border: 2px solid #9ca3af;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .cell:focus-within { border-color: var(--primary); }
+
+  .digit {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
+    color: #111827;
+    outline: none;
+    padding: 0;
+    margin: 0;
+  }
+  .digit::placeholder { color: #d1d5db; }
+
+  .ghost {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: clamp(20px, calc(var(--cell)*0.45), 32px);
+    color: #9ca3af;
+    pointer-events: none;
+    background: rgba(255,255,255,0.8);
+  }
+
+  /* Euclid Info Box */
+  #euclid-box {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #fef3c7; /* Light amber */
+    color: #92400e;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    display: none; /* Hidden by default */
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #fcd34d;
+  }
+  #euclid-box.visible { display: flex; }
+
+  @media (max-width: 600px) {
+    .actions-bar { gap: 8px; }
+    .btn-action { padding: 10px 16px; font-size: 16px; flex: 1; }
+    .btn-reset { order: 3; width: 100%; justify-content: center; margin-top: 4px; }
+    .settings-bar { flex-direction: column; align-items: stretch; }
+    .picker-container, .seg-control { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<main class="app" id="app">
+  
+  <!-- CONTROLS CARD -->
+  <section class="card header-card">
+    <h1>Glisse-entiers</h1>
+    
+    <div class="actions-bar">
+      <button class="btn-action" id="times10" title="Décaler les chiffres vers la gauche (Multiplier)">
+        <span>←</span> ×10
+      </button>
+      
+      <div id="status-pill">×1</div>
+
+      <button class="btn-action" id="div10" title="Décaler les chiffres vers la droite (Diviser)">
+        ÷10 <span>→</span>
+      </button>
+
+      <button class="btn-reset" id="resetBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Réinitialiser
+      </button>
+    </div>
+
+    <div class="settings-bar">
+      
+      <div class="picker-container">
+        <label for="colCount">Colonnes :</label>
+        <select id="colCount">
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10" selected>10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+
+      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros">
+        <button data-mode="none" class="seg-btn active" type="button">Sans zéros</button>
+        <button data-mode="needed" class="seg-btn" type="button">Zéros utiles</button>
+        <button data-mode="all" class="seg-btn" type="button">Tous</button>
+      </div>
+
+      <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">
+        Titres compacts
+      </button>
+    </div>
+  </section>
+
+  <!-- GRID CARD -->
+  <section class="card" style="padding: 10px 0;">
+    <div class="grid-container">
+      <div class="grid" id="grid">
+        <!-- Grid Generated by JS -->
+      </div>
+      
+      <div id="euclid-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v2m0 4h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        <span id="euclid-text"></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(() => {
+  // --- CONFIGURATION ---
+  const LABELS_LONG = [
+    ['Centaines','de milliards'],
+    ['Dizaines','de milliards'],
+    ['Milliards'],
+    ['Centaines','de millions'],
+    ['Dizaines','de millions'],
+    ['Millions'],
+    ['Centaines','de milliers'],
+    ['Dizaines','de milliers'],
+    ['Milliers'],
+    ['Centaines'],
+    ['Dizaines'],
+    ['Unités']
+  ];
+  const LABELS_SHORT = [
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliards'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Millions'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliers'],
+    ['Cent.'],
+    ['Diz.'],
+    ['Unités']
+  ];
+
+  // --- DOM ELEMENTS ---
+  const app = document.getElementById('app');
+  const grid = document.getElementById('grid');
+  const colSelect = document.getElementById('colCount');
+  const zerosSeg = document.getElementById('zerosSeg');
+  const resetBtn = document.getElementById('resetBtn');
+  const times10 = document.getElementById('times10');
+  const div10 = document.getElementById('div10');
+  const status = document.getElementById('status-pill');
+  const toggleCompact = document.getElementById('toggleCompact');
+  const euclidBox = document.getElementById('euclid-box');
+  const euclidText = document.getElementById('euclid-text');
+
+  // --- STATE ---
+  let COLS = 10;
+  let ids = [], order = [], inputs = [];
+  let zeroMode = 'none'; // 'none' | 'needed' | 'all'
+  let exp10 = 0;
+  let forceCompact = false;
+  
+  // Stacks for handling shifts
+  const leftStack = [];
+  const rightStack = [];
+
+  // --- INITIALIZATION ---
+  function buildGrid(n) {
+    COLS = Math.max(6, Math.min(12, n | 0));
+    grid.style.setProperty('--cols', COLS);
+    grid.innerHTML = '';
+
+    // Choose labels based on width or setting
+    const useCompact = forceCompact || (window.innerWidth < 500) || (COLS >= 11);
+    const allLabels = useCompact ? LABELS_SHORT : LABELS_LONG;
+    const labels = allLabels.slice(allLabels.length - COLS);
+
+    // HEADERS
+    labels.forEach(parts => {
+      const head = document.createElement('div'); head.className = 'head';
+      const lbl = document.createElement('div'); lbl.className = 'lbl';
+      lbl.innerHTML = parts.map(t => `<span>${t}</span>`).join('');
+      head.appendChild(lbl); grid.appendChild(head);
+    });
+
+    // INPUTS
+    ids = []; 
+    order = Array.from({ length: COLS }, (_, i) => i);
+    
+    for (let i = 0; i < COLS; i++) {
+      const cell = document.createElement('div'); cell.className = 'cell';
+      const inp = document.createElement('input'); 
+      inp.className = 'digit'; 
+      inp.maxLength = 1; 
+      inp.inputMode = 'numeric';
+      const id = 'c' + i; 
+      inp.id = id; 
+      inp.setAttribute('aria-label', labels[i].join(' '));
+      
+      cell.appendChild(inp); 
+      grid.appendChild(cell); 
+      ids.push(id);
+    }
+
+    inputs = order.map(i => document.getElementById(ids[i]));
+    attachInputHandlers();
+    
+    // Reset state but keep visual coherence if rebuilding during use? 
+    // Usually buildGrid is called on init or change config, so reset is fine.
+    resetAll(false); 
+    calcCell();
+  }
+
+  // --- LAYOUT & SIZING ---
+  function calcCell() {
+    const root = document.documentElement;
+    const containerW = app.clientWidth;
+    const margin = 32; 
+    const gap = 6;
+    
+    let c = Math.floor((containerW - margin - (COLS - 1) * gap) / COLS);
+    c = Math.max(34, Math.min(70, c)); // Limits
+
+    root.style.setProperty('--cell', c + 'px');
+    // Height adapts to font size roughly
+    root.style.setProperty('--headH', Math.max(32, Math.round(c * 0.6)) + 'px');
+  }
+
+  function toggleCompactMode() {
+    forceCompact = !forceCompact;
+    toggleCompact.classList.toggle('active', forceCompact);
+    // Rebuild grid to apply labels
+    // Note: preserving values would be better
+    const vals = readRaw();
+    buildGrid(COLS);
+    writeRaw(vals);
+    applyZeroMode();
+  }
+
+  // --- LOGIC ---
+  function readRaw() { return order.map(i => document.getElementById(ids[i]).value || ''); }
+  function writeRaw(arr) { order.forEach((i, idx) => { document.getElementById(ids[i]).value = arr[idx] || ''; }); }
+
+  function clearGhosts() { grid.querySelectorAll('.cell .ghost').forEach(g => g.remove()); }
+  function addGhost(i) {
+    const cell = document.getElementById(ids[i]).parentElement;
+    if (!cell.querySelector('.ghost')) {
+      const g = document.createElement('div'); g.className = 'ghost'; g.textContent = '0'; cell.appendChild(g);
+    }
+  }
+
+  function applyZeroMode() {
+    clearGhosts();
+    const raw = readRaw();
+    const hasAny = raw.some(v => v !== '');
+    
+    if (zeroMode === 'all') {
+      order.forEach((i, idx) => { if (raw[idx] === '') addGhost(i); });
+    } else if (zeroMode === 'needed' && hasAny) {
+      // Find last filled digit
+      let last = -1; 
+      for (let i = 0; i < order.length; i++) { if (raw[i] !== '') last = i; }
+      
+      // Fill zeros to the right of the last digit (up to Units)
+      // Since it's integers, the last column is units.
+      // So we fill everything after the last non-empty digit.
+      for (let i = last + 1; i < order.length; i++) {
+        addGhost(order[i]);
+      }
+    }
+  }
+
+  function shift(dir) {
+    const prev = readRaw(); 
+    const next = prev.slice();
+    const first = 0;
+    const last = order.length - 1;
+
+    if (dir === 'left') { // Multiplier (x10)
+      exp10++;
+      // Lost on left?
+      const lost = prev[first]; 
+      if (lost !== '') leftStack.push(lost);
+      
+      // Shift left
+      for (let i = first; i <= last; i++) { 
+        next[i] = (i + 1 <= last) ? prev[i + 1] : ''; 
+      }
+      
+      // Retrieve from right stack if any (cancelling a previous div10)
+      if (rightStack.length) { next[last] = rightStack.pop(); }
+    
+    } else { // Diviser (/10)
+      exp10--;
+      // Lost on right (remainder)
+      const lost = prev[last]; 
+      if (lost !== '') rightStack.push(lost);
+      
+      // Shift right
+      for (let i = last; i >= first; i--) { 
+        next[i] = (i - 1 >= first) ? prev[i - 1] : ''; 
+      }
+      
+      // Retrieve from left stack if any (cancelling a previous x10)
+      if (leftStack.length) { next[first] = leftStack.pop(); }
+    }
+
+    writeRaw(next);
+    applyZeroMode();
+    updateStatus();
+  }
+
+  function updateStatus() {
+    // Label pill
+    let label = '×1';
+    if (exp10 !== 0) {
+      const n = Math.abs(exp10);
+      if(n <= 9) {
+          label = exp10 > 0 ? '×' + (10 ** n).toLocaleString() : '÷' + (10 ** n).toLocaleString();
+      } else {
+          label = exp10 > 0 ? '×10^' + n : '÷10^' + n;
+      }
+    }
+    status.textContent = label;
+
+    // Euclid remainder
+    const k = rightStack.length;
+    if (k === 0) {
+      euclidBox.classList.remove('visible');
+    } else {
+      euclidBox.classList.add('visible');
+      // The remainder is the stack read in reverse (LIFO is correct for digits: first popped is unit, second is ten...)
+      // Wait: if I push "5" then "2", stack is [5, 2]. 
+      // Original was 25. First shift right -> 5 lost (stack [5]). Remainder 5.
+      // Second shift right -> 2 lost (stack [5, 2]). Remainder 25.
+      // So simple join reversed is correct? 
+      // Stack: [units, tens, hundreds...] of the remainder.
+      // [5, 2] -> 2 is tens, 5 is units -> 25. 
+      const remainder = rightStack.slice().reverse().join('');
+      const divisor = (k <= 6) ? (10 ** k).toLocaleString() : `10^${k}`;
+      euclidText.textContent = `Division par ${divisor} : Reste = ${remainder}`;
+    }
+  }
+
+  function resetAll(focus = true) {
+    inputs.forEach(i => i.value = '');
+    clearGhosts();
+    zeroMode = 'none';
+    zerosSeg.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
+    zerosSeg.querySelector('[data-mode="none"]').classList.add('active');
+    
+    exp10 = 0;
+    leftStack.length = 0; 
+    rightStack.length = 0;
+    
+    updateStatus();
+    if(focus && inputs.length > 0) inputs[inputs.length-1].focus(); // Focus Units
+  }
+
+  // --- EVENT HANDLERS ---
+  function sanitizeToDigit(v) { const m = (v || '').toString().match(/[0-9]/); return m ? m[0] : ''; }
+  function focusMove(el, delta) {
+    const idx = inputs.indexOf(el);
+    if (idx < 0) return;
+    const nextIdx = Math.min(inputs.length - 1, Math.max(0, idx + delta));
+    inputs[nextIdx].focus();
+    inputs[nextIdx].select();
+  }
+
+  function attachInputHandlers() {
+    inputs.forEach(inp => {
+      inp.addEventListener('focus', () => { inp.setAttribute('autocomplete', 'off'); });
+      inp.addEventListener('beforeinput', e => {
+        if (e.inputType === 'insertText' || e.inputType === 'insertFromPaste') {
+          const ch = (e.data || '').replace(/[^0-9]/g, ''); 
+          if (ch === '') e.preventDefault();
+        }
+      });
+      inp.addEventListener('input', e => {
+        const v = sanitizeToDigit(e.target.value); 
+        e.target.value = v;
+        if (v !== '') focusMove(e.target, -1); // Move Left naturally when typing numbers? Or right? 
+        // Standard calculator style input often goes left, but here we fill cells manually.
+        // Let's keep standard left-to-right logic? Or right-to-left for integers?
+        // User behavior: Types "1", then wants to type "2" in the next box to the right?
+        // Let's stick to Right (+1) logic for consistency with previous tool
+        if (v !== '') focusMove(e.target, -1); // Actually for integers we often fill from right... 
+        // Let's check previous file logic: "inputs[idx+1].focus()" was logic in old file.
+        // But "focusMove(-1)" moves to higher index? No, order 0 is Left.
+        // In previous file: ids=[c0, c1...]. c0 is left.
+        // If I type in Thousands (c8), I want Hundreds (c9) next? -> +1
+        // Let's change this to +1
+        
+        // Wait, correction: In the code above: focusMove(e.target, -1) moves LEFT.
+        // If I write "1" in Thousands, usually I write "2" in Hundreds next.
+        // Thousands is index X. Hundreds is index X+1.
+        // So I should move +1 (Right).
+      });
+      // Override input listener to be safe
+      inp.oninput = (e) => {
+         const v = sanitizeToDigit(e.target.value); 
+         e.target.value = v;
+         applyZeroMode();
+         if(v!=='') focusMove(e.target, +1); // Right
+      };
+
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); focusMove(e.target, -1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); focusMove(e.target, +1); }
+        if (e.key === 'Backspace' && e.target.value === '') { e.preventDefault(); focusMove(e.target, -1); }
+      });
+    });
+  }
+
+  // --- LISTENERS ---
+  zerosSeg.addEventListener('click', e => {
+    const b = e.target.closest('.seg-btn'); if (!b) return;
+    zerosSeg.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); 
+    zeroMode = b.dataset.mode;
+    applyZeroMode();
+  });
+
+  resetBtn.addEventListener('click', () => resetAll(true));
+  times10.addEventListener('click', () => shift('left'));
+  div10.addEventListener('click', () => shift('right'));
+
+  toggleCompact.addEventListener('click', toggleCompactMode);
+  
+  colSelect.addEventListener('change', () => {
+    buildGrid(parseInt(colSelect.value, 10));
+  });
+
+  window.addEventListener('resize', () => {
+    calcCell();
+    // Maybe auto-compact if very small
+    if(!forceCompact && window.innerWidth < 420) {
+       // logic handled in buildGrid but we don't rebuild on resize usually
+       // unless we want responsive labels.
+       // Let's keep it simple: just resize cells.
+    }
+  });
+
+  // Init
+  buildGrid(parseInt(colSelect.value, 10));
+  initLayoutWatchers(); // reuse from V2 if needed, simplified here
+  
+  function initLayoutWatchers(){
+      calcCell();
+      window.addEventListener('orientationchange', ()=>setTimeout(calcCell,100));
+  }
+})();
+</script>
+</body>
+</html>
