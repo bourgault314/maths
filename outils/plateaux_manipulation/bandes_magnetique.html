@@ -151,28 +151,17 @@
             border: 2px solid #e5e7eb;
             color: #4b5563;
             z-index: 50; /* Ensure clickable */
+            transform: var(--t, none);
+            transform-origin: center;
         }
         
         .geo-handle:hover {
             border-color: #3b82f6;
             color: #3b82f6;
-        }
+            transform: var(--t, none) scale(1.1);
+                }
 
-        /* Specific hover scales to avoid layout shift / jitter */
-        /* Rotation handle centered at top */
-        .rotate-handle:hover {
-            transform: translate(-50%, -50%) scale(1.1) !important;
-        }
-        
-        /* Resize handle at bottom right */
-        .resize-handle:hover {
-            transform: translate(-50%, -50%) scale(1.1) !important;
-        }
-        
-        /* Control buttons inside the row */
-        .geo-control-row .geo-handle:hover {
-            transform: scale(1.1);
-        }
+        /* (Geo handles) Anti-tremblement: la translation est stockee dans --t et conservee au survol */
 
         /* CURSEUR VIRTUEL */
         #custom-cursor {
@@ -261,22 +250,16 @@
             <div class="flex items-center gap-2 shrink-0">
                 
                 <!-- EXERCICE GENERATOR -->
-                <div class="flex items-center bg-orange-50 p-1 rounded-xl border border-orange-200 gap-2">
-                    <input type="number" id="angle-input" placeholder="Angle°" class="w-16 p-1 text-sm border border-orange-200 rounded text-center focus:outline-none focus:border-orange-400 font-bold text-orange-600 bg-white" min="0" max="360">
-                    <button onclick="createSpecificAngle()" class="tool-btn text-orange-600 hover:bg-orange-100 p-2 rounded-lg" title="Ajouter l'angle">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="flex items-center bg-orange-50 p-1 rounded-xl border border-orange-200">
+                    <button onclick="promptCreateAngle()" class="tool-btn text-orange-600 hover:bg-orange-100 px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2" title="Créer un angle">
+                        <span>Créer un angle</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
                     </button>
                 </div>
 
-                <!-- Toggle Fine Strips -->
-                <button onclick="toggleStripMode()" id="btn-stripmode" class="tool-btn text-teal-600 hover:bg-teal-50 p-2 rounded-xl border border-teal-200" title="Bandes/Segments">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="4" y="12" width="16" height="2" rx="0.5" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </button>
-
+                <!-- (Déplacé) Bandes / Segments -> menu de gauche -->
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
 
                 <!-- Toggle Équerre -->
@@ -360,6 +343,16 @@
                 </div>
             </div>
 
+            <!-- Mode : Bandes / Segments (interrupteur dans le menu) -->
+            <div class="flex flex-col items-center gap-1">
+                <button id="btn-mode-bandes" onclick="setStripMode('normal')" class="tool-btn w-14 sm:w-16 text-teal-700 hover:bg-teal-50 px-2 py-1 rounded-lg font-bold text-[10px] border border-teal-200" title="Mode Bandes" aria-pressed="true">
+                    Bandes
+                </button>
+                <button id="btn-mode-segments" onclick="setStripMode('thin')" class="tool-btn w-14 sm:w-16 text-teal-700 hover:bg-teal-50 px-2 py-1 rounded-lg font-bold text-[10px] border border-teal-200" title="Mode Segments" aria-pressed="false">
+                    Segments
+                </button>
+            </div>
+
             <div class="flex-1"></div>
 
             <div class="w-8 h-px bg-slate-100 my-2"></div>
@@ -437,7 +430,11 @@
                     pivot: {x: 120, y: 120} 
                 }
             },
-            activeGeoTool: null
+            activeGeoTool: null,
+            angleGroups: [],
+            draggingAngle: null,
+            draggingAngleMove: null,
+            nextAngleGroupId: 1
         };
 
         const canvasStrips = document.getElementById('strips-canvas');
@@ -455,7 +452,7 @@
         let zoomInterval;
         
         function setZoom(delta) {
-            state.zoom = Math.max(0.5, Math.min(3, state.zoom + delta));
+            state.zoom = Math.max(0.5, Math.min(10, state.zoom + delta));
             zoomWorld.style.transform = `scale(${state.zoom})`;
         }
 
@@ -492,7 +489,7 @@
             // Hypoténuse: (20, 20) à (220, 220).
             return `
                 <svg width="100%" height="100%" viewBox="0 0 240 240" style="overflow: visible;">
-                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" />
+                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" />
                     <path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
                     <line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
                     <line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
@@ -500,7 +497,7 @@
                 
                 <!-- Rotation Handle (Déplacé plus loin à l'extérieur de l'hypoténuse) -->
                 <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
-                     style="top: 90px; left: 150px; transform: translate(-50%, -50%);" 
+                     style="top: 90px; left: 150px; --t: translate(-50%, -50%);" 
                      title="Tourner">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
@@ -510,7 +507,7 @@
                 
                 <!-- Resize Handle (Déplacé vers la droite de la pointe) -->
                 <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
-                     style="top: 220px; left: 255px; transform: translate(-50%, -50%);" 
+                     style="top: 220px; left: 255px; --t: translate(-50%, -50%);" 
                      title="Redimensionner">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                 </div>
@@ -532,21 +529,23 @@
                 const sin = Math.sin(angle);
                 
                 let x1, y1, x2, y2;
-                let width = 0.8;
-                let opacity = 0.5;
+                let width = 0.32;
+                let opacity = 0.42;
 
                 if (i % 10 === 0) {
                     x1 = 120 + 100 * cos;
                     y1 = 120 - 100 * sin;
-                    x2 = 120 + 25 * cos;
-                    y2 = 120 - 25 * sin;
-                    width = 1.2;
-                    opacity = 0.4;
+                    x2 = 120 + 22 * cos;
+                    y2 = 120 - 22 * sin;
+                    width = 0.55;
+                    opacity = 0.32;
                 } else if (i % 5 === 0) {
                     x1 = 120 + 100 * cos;
                     y1 = 120 - 100 * sin;
                     x2 = 120 + 85 * cos;
                     y2 = 120 - 85 * sin;
+                    width = 0.4;
+                    opacity = 0.38;
                 } else {
                     x1 = 120 + 100 * cos;
                     y1 = 120 - 100 * sin;
@@ -554,53 +553,56 @@
                     y2 = 120 - 92 * sin;
                 }
                 
-                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" />`;
+                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" />`;
                 
                 // Numbers (Maintenant inclus 0 et 180)
                 if (showNumbers && i % 10 === 0) {
                     const val = direction === 0 ? i : (180 - i);
-                    const tx = 120 + 115 * cos;
-                    const ty = 120 - 115 * sin;
-                    marks += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="#4338ca" style="pointer-events: none;">${val}°</text>`;
+                    const tx = 120 + 108 * cos;
+                    const ty = 120 - 108 * sin;
+                    const isWide = val >= 100;
+                    const fontSize = isWide ? 8 : 10;
+                    const degSize = isWide ? 6 : 7;
+                    const letter = isWide ? '-0.4px' : '0px';
+                    marks += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="800" fill="#4338ca" style="pointer-events: none; font-variant-numeric: tabular-nums; letter-spacing: ${letter};">${val}<tspan font-size="${degSize}">°</tspan></text>`;
                 }
             }
             
             return `
-                <svg width="100%" height="100%" viewBox="-30 -30 300 200" style="overflow: visible;">
-                     <path d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="2" />
+                <svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible;" shape-rendering="geometricPrecision">
+                     <path d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" />
                      
                      <!-- MARQUES ROUGES (Plus fines) -->
-                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="1.5" opacity="0.9" />
-                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="1.5" opacity="0.6" stroke-dasharray="6 4" />
+                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9" />
+                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4" />
 
-                     <!-- Centre -->
-                     <circle cx="120" cy="120" r="4" fill="none" stroke="#dc2626" stroke-width="1.5"/>
-                     <line x1="120" y1="110" x2="120" y2="130" stroke="#dc2626" stroke-width="1.5" />
-                     
+                     <!-- Arc de cercle interieur (au niveau ou les rayons s'arretent) -->
+                     <path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linecap="round"/>
+
                      ${marks}
                 </svg>
                 
                 <!-- Rotation Handle (Rapproché) -->
-                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -25px; left: 50%; transform: translate(-50%, 0);" title="Tourner">
+                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -44px; left: 50%; --t: translate(-50%, 0);" title="Tourner">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
                         <path d="M21 3v5h-5"/>
                     </svg>
                 </div>
                 <!-- Resize Handle (Rapproché) -->
-                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="bottom: 5px; right: 0px;" title="Redimensionner">
+                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="bottom: -14px; right: -18px;" title="Redimensionner">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                 </div>
                 
                 <!-- Controls Row (Rapproché et plus petit) -->
-                <div class="geo-control-row absolute flex gap-1 items-center justify-center" style="bottom: -15px; left: 50%; transform: translate(-50%, 0);">
-                    <div class="geo-handle style-handle no-translate h-4 px-1.5 bg-indigo-600 text-white font-bold text-[8px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Précision">
+                <div class="geo-control-row absolute flex gap-1 items-center justify-center" style="bottom: -8px; left: 50%; transform: translate(-50%, 0);">
+                    <div class="geo-handle style-handle no-translate h-5 px-2 bg-indigo-600 text-white font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Précision">
                         ${mode === 0 ? "10°" : (mode === 1 ? "5°" : "1°")}
                     </div>
-                    <div class="geo-handle numbers-handle no-translate h-4 w-4 text-indigo-600 font-bold text-[8px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Afficher Valeurs">
+                    <div class="geo-handle numbers-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Afficher Valeurs">
                         ${showNumbers ? "123" : "..."}
                     </div>
-                    <div class="geo-handle direction-handle no-translate h-4 w-4 text-indigo-600 font-bold text-[8px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Inverser Sens">
+                    <div class="geo-handle direction-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Inverser Sens">
                         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 12l4-4m-4 4l4 4M20 12l-4-4m4 4l-4 4"/></svg>
                     </div>
                 </div>
@@ -626,32 +628,21 @@
         }
 
         /* --- EXERCICE GENERATOR (UPDATED) --- */
-        function createSpecificAngle() {
-            const input = document.getElementById('angle-input');
-            const val = parseFloat(input.value);
-            
-            if (isNaN(val) || val < 0) return; // Basic validation
+        function promptCreateAngle() {
+            // Demande la valeur au clic (pas de champ permanent)
+            const raw = window.prompt("Valeur de l'angle (en degrés) :", "60");
+            if (raw === null) return;
+            const val = parseFloat(String(raw).replace(',', '.'));
+            if (!Number.isFinite(val) || val < 0 || val > 360) { playSound('click'); return; }
 
-            // resetBoard(); // <--- REMOVED TO KEEP EXISTING CONTENT
-            
             const rect = container.getBoundingClientRect();
-            // Position at bottom center
             const cx = rect.width / 2;
-            const cy = rect.height - 150; 
-            
+            const cy = rect.height - 150;
+
             createAngleFromValue(cx, cy, val);
-            
-            input.value = ''; // Clear input for secrecy
             playSound('pop');
             render();
         }
-
-        // Ajout de l'écouteur d'événement pour la touche Entrée
-        document.getElementById('angle-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                createSpecificAngle();
-            }
-        });
 
         function createAngleFromValue(cx, cy, degrees) {
             // Random orientation for the base leg (batons aléatoires)
@@ -684,23 +675,76 @@
                 pinned: false 
             };
 
+
             state.points.push(S, A, B);
-            state.strips.push({ id: state.nextId++, p1: S.id, p2: A.id, type: type1 });
-            state.strips.push({ id: state.nextId++, p1: S.id, p2: B.id, type: type2 });
+
+            const groupId = state.nextAngleGroupId++;
+            const strip1 = { id: state.nextId++, p1: S.id, p2: A.id, type: type1, angleGroupId: groupId, role: 'leg1' };
+            const strip2 = { id: state.nextId++, p1: S.id, p2: B.id, type: type2, angleGroupId: groupId, role: 'leg2' };
+            state.strips.push(strip1);
+            state.strips.push(strip2);
+
+            // Groupe rigide : l'angle reste constant, on peut le faire pivoter en tirant sur une branche.
+            state.angleGroups.push({
+                id: groupId,
+                vertexId: S.id,
+                aId: A.id,
+                bId: B.id,
+                degrees: degrees,
+                leg1Len: L1,
+                leg2Len: L2,
+                baseAngle: baseAngle,
+                strip1Id: strip1.id,
+                strip2Id: strip2.id
+            });
         }
 
         /* --- TOGGLES --- */
-        function toggleStripMode() {
-            state.stripMode = state.stripMode === 'normal' ? 'thin' : 'normal';
-            CONFIG.currentStripWidth = state.stripMode === 'normal' ? CONFIG.normalStripWidth : CONFIG.thinStripWidth;
-            
-            const btn = document.getElementById('btn-stripmode');
-            if (state.stripMode === 'thin') {
-                btn.classList.add('active-teal');
-            } else {
-                btn.classList.remove('active-teal');
+        function updateStripModeUI() {
+            const isThin = state.stripMode === 'thin';
+
+            // (Legacy) bouton d'en-tête : peut ne plus exister
+            const headerBtn = document.getElementById('btn-stripmode');
+            if (headerBtn) {
+                if (isThin) headerBtn.classList.add('active-teal');
+                else headerBtn.classList.remove('active-teal');
             }
+
+            // Interrupteur dans le menu de gauche
+            const btnBandes = document.getElementById('btn-mode-bandes');
+            const btnSegments = document.getElementById('btn-mode-segments');
+
+            const setBtnState = (btn, active) => {
+                if (!btn) return;
+                if (active) {
+                    btn.classList.add('active-teal');
+                    btn.classList.remove('opacity-60');
+                    btn.setAttribute('aria-pressed', 'true');
+                } else {
+                    btn.classList.remove('active-teal');
+                    btn.classList.add('opacity-60');
+                    btn.setAttribute('aria-pressed', 'false');
+                }
+            };
+
+            setBtnState(btnBandes, !isThin);
+            setBtnState(btnSegments, isThin);
+        }
+
+        function setStripMode(mode) {
+            // Si on reclique sur le mode déjà actif, on inverse (vrai "interrupteur")
+            const requested = (mode === 'thin') ? 'thin' : 'normal';
+            const next = (requested === state.stripMode)
+                ? (state.stripMode === 'normal' ? 'thin' : 'normal')
+                : requested;
+            state.stripMode = next;
+            CONFIG.currentStripWidth = next === 'normal' ? CONFIG.normalStripWidth : CONFIG.thinStripWidth;
+            updateStripModeUI();
             render();
+        }
+
+        function toggleStripMode() {
+            setStripMode(state.stripMode === 'normal' ? 'thin' : 'normal');
         }
 
         function toggleSetSquare() { toggleTool('setSquare'); }
@@ -744,6 +788,23 @@
             const el = document.getElementById(`tool-protractor`);
             el.innerHTML = getProtractorSVG();
         }
+
+        // --- Keyboard: rotate protractor with Left/Right arrows ---
+        // Shift = 5 degrees step, otherwise 1 degree
+        document.addEventListener('keydown', (e) => {
+            if (!state.tools.protractor.visible) return;
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+
+            const ae = document.activeElement;
+            const tag = ae ? ae.tagName : '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+            e.preventDefault();
+            const stepDeg = e.shiftKey ? 5 : 1;
+            const sign = (e.key === 'ArrowLeft') ? -1 : 1;
+            state.tools.protractor.rotation += sign * stepDeg * (Math.PI / 180);
+            updateGeoToolTransform('protractor');
+        });
 
         /* --- LOGIQUE OUTILS GÉOMÉTRIQUES --- */
         let geoDragState = {
@@ -824,6 +885,23 @@
             if (geoDragState.mode === 'drag') {
                 tool.x = pos.x - geoDragState.offsetX;
                 tool.y = pos.y - geoDragState.offsetY;
+
+                // Aimantation du sommet (pivot) du rapporteur sur les points du dessin
+                if (geoDragState.key === 'protractor') {
+                    const snapDist = CONFIG.snapDistance;
+                    const pivotX = tool.x + tool.pivot.x;
+                    const pivotY = tool.y + tool.pivot.y;
+                    let best = null;
+                    let bestD = snapDist;
+                    for (const p of state.points) {
+                        const d = Math.hypot(p.x - pivotX, p.y - pivotY);
+                        if (d < bestD) { bestD = d; best = p; }
+                    }
+                    if (best) {
+                        tool.x = best.x - tool.pivot.x;
+                        tool.y = best.y - tool.pivot.y;
+                    }
+                }
                 
                 const clientPos = getClientPos(e);
                 const headerRect = header.getBoundingClientRect();
@@ -836,7 +914,7 @@
             } else if (geoDragState.mode === 'resize') {
                 const currentDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY);
                 let newScale = geoDragState.initialScale * (currentDist / geoDragState.initialDist);
-                newScale = Math.max(0.5, Math.min(newScale, 4.0)); // up to 4.0
+                newScale = Math.max(0.5, Math.min(newScale, 12.0)); // up to 12.0
                 tool.scale = newScale;
             }
             updateGeoToolTransform(geoDragState.key);
@@ -1013,6 +1091,7 @@
 
         function removeStrip(strip) {
             state.strips = state.strips.filter(s => s.id !== strip.id);
+            cleanupAngleGroups();
             const usedPointIds = new Set();
             state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
             state.points = state.points.filter(p => usedPointIds.has(p.id));
@@ -1023,6 +1102,8 @@
         function resetBoard() {
             state.points = [];
             state.strips = [];
+            state.angleGroups = [];
+            state.draggingAngle = null;
             state.zoom = 1; // Reset zoom also
             zoomWorld.style.transform = `scale(1)`;
             ['setSquare', 'protractor'].forEach(key => {
@@ -1089,6 +1170,34 @@
             return Array.from(pointsToMove).map(id => state.points.find(p => p.id === id));
         }
 
+        // --- Angles fixes (créés via le bouton +) : groupes rigides tournables ---
+        function findAngleGroupByPointId(pointId) {
+            for (const g of state.angleGroups) {
+                if (g.vertexId === pointId) return { group: g, role: 'vertex' };
+                if (g.aId === pointId) return { group: g, role: 'a' };
+                if (g.bId === pointId) return { group: g, role: 'b' };
+            }
+            return null;
+        }
+
+        function replaceAnglePointId(oldId, newId) {
+            state.angleGroups.forEach(g => {
+                if (g.vertexId === oldId) g.vertexId = newId;
+                if (g.aId === oldId) g.aId = newId;
+                if (g.bId === oldId) g.bId = newId;
+            });
+        }
+
+        function cleanupAngleGroups() {
+            const pointIds = new Set(state.points.map(p => p.id));
+            const stripIds = new Set(state.strips.map(s => s.id));
+            state.angleGroups = state.angleGroups.filter(g =>
+                pointIds.has(g.vertexId) && pointIds.has(g.aId) && pointIds.has(g.bId) &&
+                stripIds.has(g.strip1Id) && stripIds.has(g.strip2Id)
+            );
+        }
+
+
         container.addEventListener('mousedown', handleStart);
         container.addEventListener('touchstart', handleStart, {passive: false});
 
@@ -1096,10 +1205,41 @@
             if (state.tool === 'pen') return;
             const pos = getPos(e);
             
+
             const point = getPointAt(pos.x, pos.y);
             if (point) {
+                // Angles fixes (créés via +) :
+                // - si on attrape une branche => rotation rigide
+                // - si on attrape le sommet => déplacement rigide (sans changer la valeur)
+                const hit = findAngleGroupByPointId(point.id);
+                if (hit) {
+                    if (hit.role === 'a' || hit.role === 'b') {
+                        state.draggingAngle = { groupId: hit.group.id, endpoint: hit.role };
+                        point.pinned = true;
+                        const vtx = state.points.find(p => p.id === hit.group.vertexId);
+                        if (vtx) vtx.pinned = true;
+                        return;
+                    }
+                    if (hit.role === 'vertex') {
+                        const g = hit.group;
+                        const S = state.points.find(p => p.id === g.vertexId);
+                        const A = state.points.find(p => p.id === g.aId);
+                        const B = state.points.find(p => p.id === g.bId);
+                        if (S && A && B) {
+                            state.draggingAngleMove = {
+                                groupId: g.id,
+                                offsetX: S.x - pos.x,
+                                offsetY: S.y - pos.y
+                            };
+                            S.pinned = true; A.pinned = true; B.pinned = true;
+                            return;
+                        }
+                    }
+                }
+
                 state.draggingPoint = point; point.pinned = true; return;
             }
+
 
             const strip = getStripAt(pos.x, pos.y);
             if (strip) {
@@ -1124,6 +1264,60 @@
                 container.style.cursor = hoverPoint ? 'crosshair' : (getStripAt(pos.x, pos.y) ? 'move' : 'default');
             }
 
+            // Déplacement rigide d'un angle fixe quand on attrape le sommet
+            if (state.draggingAngleMove) {
+                e.preventDefault();
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+                    if (S && A && B) {
+                        let targetX = pos.x + state.draggingAngleMove.offsetX;
+                        let targetY = pos.y + state.draggingAngleMove.offsetY;
+
+                        // Snap du sommet (comme un magnet normal), mais translation du groupe entier.
+                        const groupIds = new Set([S.id, A.id, B.id]);
+                        const snapTarget = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - targetX, p.y - targetY) < CONFIG.snapDistance);
+                        if (snapTarget) { targetX = snapTarget.x; targetY = snapTarget.y; }
+
+                        const dx = targetX - S.x;
+                        const dy = targetY - S.y;
+                        S.x += dx; S.y += dy;
+                        A.x += dx; A.y += dy;
+                        B.x += dx; B.y += dy;
+                    }
+                }
+                solveConstraints();
+                render();
+                return;
+            }
+
+
+            if (state.draggingAngle) {
+                e.preventDefault();
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+                    if (S && A && B) {
+                        const angleRad = g.degrees * (Math.PI / 180);
+                        let base = Math.atan2(pos.y - S.y, pos.x - S.x);
+                        if (state.draggingAngle.endpoint === 'b') base -= angleRad;
+
+                        // Mettre à jour les deux branches : angle rigide
+                        A.x = S.x + g.leg1Len * Math.cos(base);
+                        A.y = S.y + g.leg1Len * Math.sin(base);
+                        B.x = S.x + g.leg2Len * Math.cos(base + angleRad);
+                        B.y = S.y + g.leg2Len * Math.sin(base + angleRad);
+                        g.baseAngle = base;
+                    }
+                }
+                solveConstraints();
+                render();
+                return;
+            }
             if (state.draggingPoint) {
                 e.preventDefault();
                 let targetX = pos.x; let targetY = pos.y;
@@ -1153,12 +1347,61 @@
         function handleEnd(e) {
             header.classList.remove('trash-active');
 
+            // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
+            if (state.draggingAngleMove) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+
+                    // Fusion du sommet si on relâche sur un autre magnet
+                    if (S) {
+                        const groupIds = new Set([g.vertexId, g.aId, g.bId]);
+                        const target = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - S.x, p.y - S.y) < CONFIG.snapDistance);
+                        if (target) {
+                            playSound('snap');
+                            replaceAnglePointId(S.id, target.id);
+                            state.strips.forEach(s => {
+                                if (s.p1 === S.id) s.p1 = target.id;
+                                if (s.p2 === S.id) s.p2 = target.id;
+                            });
+                            state.points = state.points.filter(p => p.id !== S.id);
+                        }
+                    }
+
+                    if (S) S.pinned = false;
+                    if (A) A.pinned = false;
+                    if (B) B.pinned = false;
+                }
+                state.draggingAngleMove = null;
+                cleanupAngleGroups();
+                render();
+                return;
+            }
+
+
+            if (state.draggingAngle) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
+                if (g) {
+                    const vtx = state.points.find(p => p.id === g.vertexId);
+                    const endP = state.points.find(p => p.id === (state.draggingAngle.endpoint === 'a' ? g.aId : g.bId));
+                    if (vtx) vtx.pinned = false;
+                    if (endP) endP.pinned = false;
+                }
+                state.draggingAngle = null;
+                cleanupAngleGroups();
+                render();
+                return;
+            }
+
             if (state.draggingPoint) {
                 const self = state.draggingPoint;
                 const target = state.points.find(p => p.id !== self.id && Math.hypot(p.x - self.x, p.y - self.y) < CONFIG.snapDistance);
 
                 if (target) {
                     playSound('snap');
+                    replaceAnglePointId(self.id, target.id);
                     state.strips.forEach(s => {
                         if (s.p1 === self.id) s.p1 = target.id;
                         if (s.p2 === self.id) s.p2 = target.id;
@@ -1184,6 +1427,7 @@
 
                     if (target) {
                         snapped = true;
+                        replaceAnglePointId(p.id, target.id);
                         // Fusionner p vers target
                         state.strips.forEach(s => {
                             if (s.p1 === p.id) s.p1 = target.id;
@@ -1205,6 +1449,7 @@
                      if (!p.toBeRemoved) p.pinned = false; 
                 });
                 
+                cleanupAngleGroups();
                 state.draggingStrip = null; state.draggingStripRef = null;
                 render();
             }
@@ -1368,6 +1613,7 @@
 
         // Init
         initGeometryTools();
+        updateStripModeUI();
         render();
 
     </script>
