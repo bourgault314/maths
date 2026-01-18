@@ -3,151 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page en construction</title>
+    <title>Recommandation SCÈNE3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: #f8fafc;
-            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #1e293b;
-            text-align: center;
-        }
-
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 90%;
-            width: 400px;
-            border: 2px solid #f1f5f9;
-        }
-
-        /* L'Emoji animé */
-        .icon {
-            font-size: 5rem;
-            display: inline-block;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            /* Animation douce par défaut */
-            animation: float 3s ease-in-out infinite;
-        }
-
-        /* Titre */
-        h1 {
-            color: #b45309; /* Couleur brique/orange */
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-
-        /* Le texte rigolo */
-        #message {
-            margin: 1.5rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #64748b;
-            min-height: 3.5rem; /* Pour éviter que ça saute selon la longueur du texte */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Bouton Retour */
-        .btn-back {
-            display: inline-block;
-            text-decoration: none;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-back:hover {
-            background-color: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(59, 130, 246, 0.3);
-        }
-
-        /* --- ANIMATIONS --- */
-        
-        /* Flottement doux */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* Secousse (si on clique sur l'icone) */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        .shaking {
-            animation: shake 0.5s;
+            min-height: 100vh;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="icon" onclick="shakeMe(this)">🚧</div>
-        
-        <h1>Oups ! Pas fini...</h1>
-        
-        <p id="message">Chargement de l'excuse...</p>
+    <!-- Carte SCÈNE3D/Cubes -->
+    <div class="max-w-2xl w-full bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+        <div class="p-6 sm:p-8">
+            <div class="flex items-start justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-cyan-100 rounded-lg text-cyan-600">
+                        <!-- Icône Cube/3D -->
+                        <i data-lucide="box" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">SCÈNE3D / Cubes</h3>
+                        <p class="text-sm text-cyan-600 font-medium">Géométrie dans l'espace & Volumes</p>
+                    </div>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 border border-cyan-200">
+                    <i data-lucide="cuboid" class="w-3 h-3 mr-1"></i> Outil 3D
+                </span>
+            </div>
 
-        <a href="javascript:history.back()" class="btn-back">
-            Retour en arrière
-        </a>
+            <div class="mt-6">
+                <p class="text-gray-600 leading-relaxed">
+                    Pour travailler la vision dans l'espace, je vous recommande vivement cet outil co-construit par <strong>Mathix.org</strong> et l'<strong>IREM de Paris Nord</strong>.
+                </p>
+                <p class="mt-2 text-gray-600 leading-relaxed">
+                    Il permet de manipuler des assemblages de cubes en 3D sans formule, idéal pour :
+                </p>
+                <ul class="mt-3 space-y-2">
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>Exploration & Construction :</strong> Manipuler, tourner et assembler.</span>
+                    </li>
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>Volume par comptage :</strong> Dénombrer des cubes (visibles et cachés).</span>
+                    </li>
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"></i>
+                        <span><strong>Défis progressifs :</strong> Reproduire des solides complexes (escaliers, croix...).</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between pt-6 border-t border-gray-100">
+                <div class="text-xs text-gray-400 italic">
+                    Lien vers l'article officiel sur mathix.org
+                </div>
+                
+                <a href="https://mathix.org/linux/archives/21823" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg transition-colors duration-200 group">
+                    Découvrir l'outil 3D
+                    <i data-lucide="external-link" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Liste des messages rigolos
-        const phrases = [
-            "Le développeur est parti chercher du café... Il revient (peut-être).",
-            "C'est en chantier ! Attention aux chutes de pixels.",
-            "J'ai perdu la clé de 12 pour finir cette page.",
-            "Patience, c'est comme les maths, ça prend du temps à construire.",
-            "Les lutins du code sont en grève. Repassez plus tard !",
-            "Page en cours de téléchargement cérébral...",
-            "404 ? Non, juste 'Pas encore prêt' !"
-        ];
-
-        // Choisir une phrase au hasard au chargement
-        const texteElement = document.getElementById('message');
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        texteElement.innerText = randomPhrase;
-
-        // Fonction pour secouer l'icone au clic
-        function shakeMe(element) {
-            element.classList.remove('shaking'); // Reset
-            void element.offsetWidth; // Force le reflow
-            element.classList.add('shaking'); // Re-lance
-            
-            // Changer le texte aussi quand on clique, pour le fun
-            const newPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            texteElement.innerText = newPhrase;
-        }
+        lucide.createIcons();
     </script>
-
 </body>
 </html>
