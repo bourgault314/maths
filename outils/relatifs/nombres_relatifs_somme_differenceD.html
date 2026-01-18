@@ -678,6 +678,10 @@
         // Wrapper pour les boutons d'opérateurs pour gérer l'historique
         function handleOperatorClick(opType) {
             saveState();
+            // IMPORTANT: si on vient de faire 'AJOUTER L'OPPOSÉ', le flag forceNewGroup
+            // ne doit PAS s'appliquer quand l'utilisateur choisit explicitement un opérateur (+ ou -).
+            // Sinon, le prochain jeton auto-insère un '+' et annule la soustraction (bug : '- puis +1' affiche '+1').
+            state.forceNewGroup = false;
             setOperator(opType);
         }
 
