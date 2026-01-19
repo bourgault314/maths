@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calcul Littéral - Tuiles Algébriques</title>
+    <title>Calcul Littéral - Développement</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -38,24 +38,19 @@
             font-size: 1.2rem;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             overflow: hidden;
+            transform-origin: 0 0; 
         }
         
+        .token.dragging {
+            transition: none !important;
+            z-index: 1000 !important;
+            cursor: grabbing;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
         .token.animating {
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s ease-in-out, top 0.5s ease-in-out, background-color 0.5s !important;
         }
-
-        @keyframes flipToken {
-            0% { transform: rotateY(0deg) scale(1); }
-            50% { transform: rotateY(90deg) scale(1.1); }
-            100% { transform: rotateY(0deg) scale(1); }
-        }
-        .flipping { animation: flipToken 0.6s ease-in-out; }
-
-        @keyframes flyAway {
-            0% { transform: scale(1) translateY(0); opacity: 1; }
-            100% { transform: scale(0.1) translateY(-150px); opacity: 0; }
-        }
-        .flying { animation: flyAway 0.6s ease-in forwards; pointer-events: none; }
 
         @keyframes vanish {
             0% { transform: scale(1); opacity: 1; }
@@ -63,82 +58,50 @@
         }
         .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
 
-
-        .token:active {
-            cursor: grabbing;
-            transform: scale(1.05);
-            z-index: 100 !important;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
-            transition: none !important;
-        }
-
-        .token.green {
-            background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a);
-            border: 2px solid #14532d;
-        }
-        .token.red {
-            background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
-            border: 2px solid #7f1d1d;
-        }
-        
+        .token.green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 2px solid #14532d; }
+        .token.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 2px solid #7f1d1d; }
         .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
-        
-        /* Bleu pour la multiplication (maître et fantômes) */
         .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
         
         .token.is-zero {
-            background: #9ca3af !important;
-            opacity: 0.6;
-            border: 2px solid #6b7280;
-            box-shadow: none;
-            z-index: 5;
-            transform: scale(0.95);
-            color: rgba(255,255,255,0.5);
+            background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280;
+            box-shadow: none; z-index: 5; color: rgba(255,255,255,0.5);
+        }
+        .token.fading-gray {
+            background: #9ca3af !important; border-color: #6b7280 !important;
+            box-shadow: none !important; filter: grayscale(1);
         }
 
-        
-        .token.fading-gray {
-            background: #9ca3af !important;
-            border-color: #6b7280 !important;
-            box-shadow: none !important;
-            filter: grayscale(1);
-        }
-        /* FORMES */
         .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
         .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
         .token.type-x2 { width: 90px; height: 90px; border-radius: 4px; }
 
         .zero-badge {
-            position: absolute;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #374151;
-            pointer-events: none;
-            z-index: 20;
-            text-shadow: 0 0 10px rgba(255,255,255,1);
+            position: absolute; font-size: 2rem; font-weight: 800; color: #374151;
+            pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(255,255,255,1);
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .zero-badge.vanish { animation: vanish 0.25s ease-in forwards; }
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        #drawing-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; touch-action: none;
-        }
-        .hide-cursor, .hide-cursor * { cursor: none !important; }
         #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
+        .hide-cursor, .hide-cursor * { cursor: none !important; }
 
-        /* SIDEBAR BOUTONS - MODIFIÉ (Transparent) */
+        #board-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; cursor: grab;
+        }
+        #board-container.panning { cursor: grabbing; }
+        #board-world {
+            position: absolute; top: 0; left: 0; transform-origin: 0 0;
+            width: 0; height: 0; 
+        }
+        #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+
         .tile-btn {
-            position: relative;
-            background: transparent;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: none;
+            position: relative; background: transparent; border: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.1s, background 0.2s;
+            display: flex; align-items: center; justify-content: center; box-shadow: none;
         }
         .tile-btn:active { transform: scale(0.95); }
         .tile-btn:hover { background: rgba(0,0,0,0.05); }
@@ -148,12 +111,12 @@
             border-radius: 2px; color: white; font-weight: bold; 
             font-family: 'Times New Roman', serif; font-style: italic;
             text-shadow: 0 1px 1px rgba(0,0,0,0.3);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Ombre légère sur la tuile elle-même */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            pointer-events: none; 
         }
         .ps-green { background: #4ade80; border: 1px solid #15803d; }
         .ps-red { background: #f87171; border: 1px solid #b91c1c; }
-
-        .mode-active-minus { border: 2px solid #f97316; background-color: #fff7ed; }
+        
         @keyframes pulse-orange {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
             50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
@@ -169,7 +132,6 @@
 </head>
 <body class="h-screen w-screen flex flex-col">
 
-    <!-- CURSEUR -->
     <div id="custom-cursor">
         <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
             <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
@@ -179,1496 +141,710 @@
         </svg>
     </div>
 
-    <!-- HEADER -->
     <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0">
         <div class="flex items-center gap-2">
-            <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
+            <!-- UNDO BUTTON -->
+            <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+            </button>
+
+            <!-- TRASH BUTTON -->
+            <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </button>
-            
-            <!-- BOUTON DISTRIBUER -->
-            <button id="btn-distribute" onclick="applyDistribution()" class="hidden btn-distribute bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-lg shadow-md border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition text-sm">
-                Développer
-            </button>
-            
+            <button id="btn-distribute" onclick="app.applyDistribution()" class="hidden btn-distribute bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-lg shadow-md border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition text-sm">Développer</button>
             <div class="h-8 w-px bg-slate-200 mx-1"></div>
             
-            <!-- OPÉRATEURS -->
-            <div class="flex gap-1 items-center">
+            <div id="ops-panel" class="flex gap-1 items-center">
                 <div class="flex gap-1 items-center bg-blue-50 rounded-full p-1 border border-blue-100">
-                    <button id="btn-op-plus" onclick="separatePack()" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Séparer les groupes">+</button>
+                    <button onclick="app.separatePack()" class="w-10 h-10 bg-blue-100 text-blue-700 rounded-full border-2 border-blue-400 font-bold text-xl active:scale-95 transition hover:bg-blue-200" title="Séparer les groupes">+</button>
                 </div>
-                
                 <div class="flex gap-1 items-center bg-orange-50 rounded-full p-1 border border-orange-100">
-                    <button id="btn-op-minus" onclick="setOperator('subtract')" class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full border-2 border-orange-400 font-bold text-xl active:scale-95 transition hover:bg-orange-200" title="Soustraire (Ouvrir parenthèse)">-</button>
-                    <!-- BOUTON FERMER PARENTHÈSE -->
-                    <button id="btn-close-parenthesis" onclick="closeParenthesis()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
+                    <button onclick="app.setOperator('subtract')" class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full border-2 border-orange-400 font-bold text-xl active:scale-95 transition hover:bg-orange-200" title="Soustraire (Ouvrir parenthèse)">-</button>
+                    <button id="btn-close-parenthesis" onclick="app.closeParenthesis()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
                 </div>
-
-                <!-- BOUTON OPPOSÉ -->
-                <button id="btn-opposite" onclick="applyOpposite()" class="hidden btn-opposite ml-2 bg-orange-600 text-white px-3 py-1 rounded-full font-bold shadow-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1 text-xs sm:text-sm uppercase tracking-wide flex flex-col items-center leading-none py-2">
-                    <span class="text-xs sm:text-sm leading-none">Ajouter l'opposé</span>
-                </button>
+                <button id="btn-opposite" onclick="app.applyOpposite()" class="hidden btn-opposite ml-2 bg-orange-600 text-white px-3 py-1 rounded-full font-bold shadow-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1 text-xs sm:text-sm uppercase tracking-wide flex flex-col items-center leading-none py-2"><span class="text-xs sm:text-sm leading-none">Ajouter l'opposé</span></button>
             </div>
         </div>
 
-        <!-- ZONE EQUATION -->
         <div class="flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
             <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar min-h-[60px]">
-                <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">
-                    (...)
-                </div>
+                <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">(...)</div>
             </div>
         </div>
 
-        <!-- OUTILS STYLO -->
         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
-            <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-            <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+            <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
+            <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+            <button onclick="app.clearDrawing()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-
-        <!-- SIDEBAR -->
         <aside class="w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-2 z-20 shadow-lg shrink-0 overflow-y-auto">
             <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tuiles</span>
-
-            <!-- X² -->
             <div class="flex flex-col gap-1 w-full px-2 items-center">
-                <button onclick="addTile('x2', 1)" class="tile-btn w-12 h-12" title="+x²">
-                    <div class="preview-shape ps-green w-8 h-8 text-sm">x²</div>
-                </button>
-                <button onclick="addTile('x2', -1)" class="tile-btn w-12 h-12" title="-x²">
-                    <div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div>
-                </button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x2', 1)" onclick="app.addTile('x2', 1)" class="tile-btn w-12 h-12" title="+x²"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x2', -1)" onclick="app.addTile('x2', -1)" class="tile-btn w-12 h-12" title="-x²"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
             </div>
-
-            <!-- X -->
             <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button onclick="addTile('x', 1)" class="tile-btn w-16 h-10" title="+x">
-                    <div class="preview-shape ps-green w-10 h-5 text-sm">x</div>
-                </button>
-                <button onclick="addTile('x', -1)" class="tile-btn w-16 h-10" title="-x">
-                    <div class="preview-shape ps-red w-10 h-5 text-sm">-x</div>
-                </button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x', 1)" onclick="app.addTile('x', 1)" class="tile-btn w-16 h-10" title="+x"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x', -1)" onclick="app.addTile('x', -1)" class="tile-btn w-16 h-10" title="-x"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
             </div>
-
-            <!-- Unit -->
             <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button onclick="addTile('unit', 1)" class="tile-btn w-10 h-10" title="+1">
-                    <div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div>
-                </button>
-                <button onclick="addTile('unit', -1)" class="tile-btn w-10 h-10" title="-1">
-                    <div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div>
-                </button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'unit', 1)" onclick="app.addTile('unit', 1)" class="tile-btn w-10 h-10" title="+1"><div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div></button>
+                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'unit', -1)" onclick="app.addTile('unit', -1)" class="tile-btn w-10 h-10" title="-1"><div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div></button>
             </div>
-
-            <!-- MULTIPLICATION -->
-            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
+            <div id="multiplication-panel" class="flex flex-col gap-1 w-full px-2 items-center mt-2">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
                 <div class="flex flex-col gap-1 w-full">
-                    <button onclick="startMultiplication(2)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="2 fois ( … )">
-                        <span>2 fois</span>
-                        <span class="text-[10px] text-indigo-500">( ? )</span>
-                    </button>
-                    <button onclick="startMultiplication(3)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="3 fois ( … )">
-                        <span>3 fois</span>
-                        <span class="text-[10px] text-indigo-500">( ? )</span>
-                    </button>
-                    <button onclick="startMultiplication(4)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none" title="4 fois ( … )">
-                        <span>4 fois</span>
-                        <span class="text-[10px] text-indigo-500">( ? )</span>
-                    </button>
+                    <button onclick="app.startMultiplication(2)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>2 x ( ? )</span></button>
+                    <button onclick="app.startMultiplication(3)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>3 x ( ? )</span></button>
+                    <button onclick="app.startMultiplication(4)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>4 x ( ? )</span></button>
                 </div>
             </div>
-
-            <!-- ORDONNER -->
-            <button id="btn-order" onclick="orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 hover:bg-slate-50 transition" title="Ordonner les tuiles">ordonner</button>
-            <!-- RÉDUIRE -->
-            <button id="btn-reduce" onclick="reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">réduire</button>
-
-            <!-- FLASH / SIMPLIFIER -->
-            <button id="btn-simplify" onclick="autoSimplify()" class="w-20 py-2 mt-2 bg-white border border-amber-300 rounded text-xs font-bold text-amber-700 shadow-sm active:bg-amber-50 hover:bg-amber-50 transition" title="Simplifier (annuler + et -)">simplifier</button>
-
+            <button id="btn-order" onclick="app.orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 hover:bg-slate-50 transition" title="Ordonner les tuiles">ordonner</button>
+            <button id="btn-reduce" onclick="app.reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">réduire</button>
+            <button id="btn-simplify" onclick="app.autoSimplify()" class="w-20 py-2 mt-2 bg-white border border-amber-300 rounded text-xs font-bold text-amber-700 shadow-sm active:bg-amber-50 hover:bg-amber-50 transition" title="Simplifier (annuler + et -)">simplifier</button>
         </aside>
 
-        <!-- PLATEAU -->
-        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none">
-            <div class="absolute inset-0 opacity-10 pointer-events-none" 
-                 style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;">
+        <main id="board" class="flex-1 relative bg-white overflow-hidden">
+            <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;"></div>
+            <div id="board-container">
+                <div id="board-world">
+                    <canvas id="drawing-canvas"></canvas>
+                </div>
             </div>
             <div class="absolute top-2 left-2 pointer-events-none opacity-40">
-                <p class="text-xs text-slate-400">Zone de manipulation</p>
+                <p class="text-xs text-slate-400">Molette: Zoom | Clic-droit/glisser: Pan</p>
             </div>
-            <canvas id="drawing-canvas"></canvas>
         </main>
     </div>
 
     <script>
         const SNAP_THRESHOLD = 60;
-        
-        const SIZES = {
-            'unit': { w: 40, h: 40 },
-            'x': { w: 90, h: 40 }, 
-            'x2': { w: 90, h: 90 }
-        };
-
-        const COLORS = {
-            pos: 'green',   // vert
-            neg: 'red',     // rouge
-            orange: 'orange' // orange (soustraction avant opposé)
-        };
-
-
-        const state = {
-            tokens: [],
-            nextId: 1,
-            nextPackId: 1,
-            nextPackOrder: 1,
-            packMeta: {}, 
-            lastPack: null, 
-            steps: [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }],
-            currentStepIndex: 0,
-            isSubtractingInput: false,
-            isMultiplyingInput: false,
-            _internalAdd: false,
-            isAnimating: false,
-            displayMode: 'normal',
-            isReduced: false,
-            currentTool: 'hand',
-            lastPos: { x: 40, y: 60, maxYInRow: 0 },
-            lastSequentialPackId: null,
-            pendingPackGap: 0
-        };
-
-        const PACK_GAP = 18;
-
-        const board = document.getElementById('board');
-        const eqDisplay = document.getElementById('equation-display');
-        const btnOpposite = document.getElementById('btn-opposite');
-        const btnMinus = document.getElementById('btn-op-minus');
-        const btnCloseP = document.getElementById('btn-close-parenthesis');
-        const btnDistribute = document.getElementById('btn-distribute');
-
+        const PACK_GAP = 25; // Espace constant de 25px
+        const SIZES = { 'unit': { w: 40, h: 40 }, 'x': { w: 90, h: 40 }, 'x2': { w: 90, h: 90 } };
+        const COLORS = { pos: 'green', neg: 'red', orange: 'orange' };
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-            
-            if (type === 'pop') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1);
-                osc.start(now); osc.stop(now+0.1);
-            } else if (type === 'snap') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.05);
-                osc.start(now); osc.stop(now+0.05);
-            } else if (type === 'flip') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now+0.2);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2);
-                osc.start(now); osc.stop(now+0.2);
-            } else if (type === 'magic') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.3);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.3);
-                osc.start(now); osc.stop(now+0.3);
-            } else if (type === 'whoosh') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.3);
-                osc.start(now); osc.stop(now+0.3);
-            }
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
+            if (type === 'pop') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
+            else if (type === 'snap') { osc.type = 'square'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.05); osc.start(now); osc.stop(now+0.05); }
+            else if (type === 'flip') { osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+            else if (type === 'magic') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
+            else if (type === 'whoosh') { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
         }
 
-        // --- GESTION DES TUILES ---
-
-        function newPackId() {
-            const pid = state.nextPackId++;
-            state.packMeta[pid] = { order: state.nextPackOrder++ };
-            return pid;
-        }
-
-        function getOrCreatePackId({ type, sign, stepIndex }) {
-            const now = Date.now();
-            const lp = state.lastPack;
-            const MERGE_WINDOW_MS = 1000000000000;
-            if (
-                lp &&
-                lp.type === type &&
-                lp.sign === sign &&
-                lp.stepIndex === stepIndex &&
-                (now - lp.ts) < MERGE_WINDOW_MS
-            ) {
-                lp.ts = now;
-                return lp.packId;
-            }
-            const pid = newPackId();
-            state.lastPack = { packId: pid, type, sign, stepIndex, ts: now };
-            return pid;
-        }
-
-        function addTile(type, sign, x = null, y = null, packId = null, isGhost = false) {
-            if (state.displayMode !== 'normal') {
-                state.displayMode = 'normal';
-                state.isReduced = false;
+        class AlgebraApp {
+            constructor() {
+                this.history = [];
+                this.tokens = [];
+                this.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
+                this.currentStepIndex = 0;
+                this.nextId = 1; this.nextPackId = 1; this.nextPackOrder = 1; this.packMeta = {}; this.lastPack = null;
+                this.isSubtractingInput = false; this.isMultiplyingInput = false; this.isReduced = false;
+                this.displayMode = 'normal'; 
+                this.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+                this.lastSequentialPackId = null; // Important for gaps
+                this.pendingPackGap = 0;
+                this.scale = 1; this.pan = { x: 0, y: 0 }; this.isPanning = false; this.panStart = { x: 0, y: 0 };
+                this.currentTool = 'hand'; this.isDrawing = false; this.lastDrawPos = {x:0, y:0};
+                
+                this.boardContainer = document.getElementById('board-container');
+                this.boardWorld = document.getElementById('board-world');
+                this.canvas = document.getElementById('drawing-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.initListeners(); this.resizeCanvas(); this.updateEquation();
             }
 
-            if (state.tokens.length === 0) {
-                state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
-            }
-            if (!isGhost) playSound('pop');
-
-            let currentStep = state.steps[state.currentStepIndex];
-            if (!state._internalAdd && !isGhost && currentStep && currentStep.isClosed && !state.isSubtractingInput && !state.isMultiplyingInput) {
-                const newStep = { id: state.steps.length, operator: '+', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false };
-                state.steps.push(newStep);
-                state.currentStepIndex = state.steps.length - 1;
-                currentStep = newStep;
-                state.lastPack = null;
+            // --- DRAG FROM SIDEBAR ---
+            handleSidebarDragStart(e, type, sign) {
+                e.dataTransfer.setData('type', type);
+                e.dataTransfer.setData('sign', sign);
             }
 
-            const id = state.nextId++;
-            const el = document.createElement('div');
+            handleBoardDragOver(e) {
+                e.preventDefault(); 
+            }
 
-            const isSubInput = (state.isSubtractingInput && currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
-            const isMultInput = (state.isMultiplyingInput && currentStep.type === 'multiplication' && !currentStep.distributed);
-            const isNegMultInput = (isMultInput && currentStep.operator === '-');
-
-            const displaySign = sign;
-            const tileSign = (isSubInput || isNegMultInput) ? -sign : sign;
-
-            const stepIndex = state.currentStepIndex;
-            let pid;
-            if (packId !== null && packId !== undefined) {
-                pid = packId;
-                if (!state.packMeta[pid]) {
-                    state.packMeta[pid] = { order: state.nextPackOrder++ };
+            handleBoardDrop(e) {
+                e.preventDefault();
+                const type = e.dataTransfer.getData('type');
+                const sign = parseInt(e.dataTransfer.getData('sign'));
+                if (type && !isNaN(sign)) {
+                    const pos = this.getWorldPos(e.clientX, e.clientY);
+                    const size = SIZES[type];
+                    this.addTile(type, sign, pos.x - size.w/2, pos.y - size.h/2);
                 }
-                if (!isGhost) state.lastPack = { packId: pid, type, sign: tileSign, stepIndex, ts: Date.now() };
-            } else {
-                pid = getOrCreatePackId({ type, sign: tileSign, stepIndex });
             }
 
-            let colorClass = tileSign === 1 ? 'green' : 'red';
-            el.classList.add('token', colorClass, `type-${type}`);
-
-            const isSubStep = (currentStep.type === 'subtraction' && !currentStep.oppositeApplied);
-            if (isSubStep) el.classList.add('in-bracket');
-            
-            // --- CORRECTION: Maître en bleu ---
-            if (!isGhost && state.isMultiplyingInput && currentStep.type === 'multiplication' && !currentStep.distributed) {
-                el.classList.add('pending-mult');
+            // --- UNDO / HISTORY ---
+            saveState() {
+                if (this.history.length > 20) this.history.shift();
+                const state = {
+                    tokens: this.tokens.map(t => ({...t, element: null, classes: [...t.element.classList]})),
+                    steps: JSON.parse(JSON.stringify(this.steps)),
+                    currentStepIndex: this.currentStepIndex,
+                    nextId: this.nextId,
+                    nextPackId: this.nextPackId,
+                    nextPackOrder: this.nextPackOrder,
+                    packMeta: JSON.parse(JSON.stringify(this.packMeta)),
+                    lastPack: this.lastPack ? {...this.lastPack} : null,
+                    isSubtractingInput: this.isSubtractingInput,
+                    isMultiplyingInput: this.isMultiplyingInput,
+                    displayMode: this.displayMode,
+                    lastPos: {...this.lastPos},
+                    lastSequentialPackId: this.lastSequentialPackId,
+                    pendingPackGap: this.pendingPackGap
+                };
+                this.history.push(state);
             }
-            // Les copies fantômes aussi
-            if (isGhost) {
-                el.classList.add('pending-mult');
+
+            undo() {
+                if (this.history.length === 0) return;
+                const state = this.history.pop();
+                
+                this.tokens.forEach(t => t.element && t.element.remove());
+                document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+                
+                this.steps = state.steps;
+                this.currentStepIndex = state.currentStepIndex;
+                this.nextId = state.nextId;
+                this.nextPackId = state.nextPackId;
+                this.nextPackOrder = state.nextPackOrder;
+                this.packMeta = state.packMeta;
+                this.lastPack = state.lastPack;
+                this.isSubtractingInput = state.isSubtractingInput;
+                this.isMultiplyingInput = state.isMultiplyingInput;
+                this.displayMode = state.displayMode;
+                this.lastPos = state.lastPos;
+                this.lastSequentialPackId = state.lastSequentialPackId;
+                this.pendingPackGap = state.pendingPackGap;
+                
+                this.tokens = state.tokens.map(data => {
+                    const el = document.createElement('div');
+                    data.classes.forEach(c => el.classList.add(c));
+                    let label = "";
+                    if (data.type === 'x2') label = data.sign === 1 ? "x²" : "-x²";
+                    else if (data.type === 'x') label = data.sign === 1 ? "x" : "-x";
+                    else label = data.sign === 1 ? "1" : "-1";
+                    el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                    el.id = `t-${data.id}`;
+                    el.style.left = data.x + 'px';
+                    el.style.top = data.y + 'px';
+                    
+                    el.addEventListener('mousedown', (e) => this.handleDragStart(e));
+                    el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
+                    this.boardWorld.appendChild(el);
+                    
+                    return { ...data, element: el };
+                });
+                
+                const btnClose = document.getElementById('btn-close-parenthesis');
+                if (this.isSubtractingInput || this.isMultiplyingInput) btnClose.classList.remove('hidden'); else btnClose.classList.add('hidden');
+                
+                this.checkOppositeAvailable();
+                this.updateEquation();
             }
 
-            let label = "";
-            if (type === 'x2') label = tileSign === 1 ? "x²" : "-x²";
-            else if (type === 'x') label = tileSign === 1 ? "x" : "-x";
-            else label = tileSign === 1 ? "1" : "-1";
+            initListeners() {
+                this.boardContainer.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = -e.deltaY * 0.001;
+                    this.scale = Math.min(Math.max(0.5, this.scale + delta), 3);
+                    this.updateTransform();
+                }, { passive: false });
+                this.boardContainer.addEventListener('mousedown', (e) => {
+                    if (this.currentTool === 'pen' || e.target.closest('.token')) return;
+                    this.isPanning = true;
+                    this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+                    this.boardContainer.classList.add('panning');
+                });
+                window.addEventListener('mousemove', (e) => {
+                    this.moveCursor(e);
+                    if (this.isPanning) {
+                        this.pan.x = e.clientX - this.panStart.x;
+                        this.pan.y = e.clientY - this.panStart.y;
+                        this.updateTransform();
+                    } else if (this.isDrawing && this.currentTool === 'pen') this.draw(e);
+                });
+                window.addEventListener('mouseup', () => {
+                    this.isPanning = false; this.isDrawing = false;
+                    this.boardContainer.classList.remove('panning');
+                });
+                this.boardContainer.addEventListener('mousedown', (e) => { if(this.currentTool === 'pen') this.startDraw(e); });
+                this.boardContainer.addEventListener('dragover', (e) => this.handleBoardDragOver(e));
+                this.boardContainer.addEventListener('drop', (e) => this.handleBoardDrop(e));
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
 
-            el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
-            el.id = `t-${id}`;
+            updateTransform() { this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`; }
+            getWorldPos(cx, cy) {
+                const r = this.boardContainer.getBoundingClientRect();
+                return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale };
+            }
 
-            let pos;
-            if (x !== null && y !== null) {
-                pos = {x, y};
-            } else {
-                if (!state._internalAdd) {
+            addTile(type, sign, x = null, y = null) {
+                this.saveState();
+                if(this.displayMode !== 'normal') { this.displayMode = 'normal'; this.isReduced = false; }
+                playSound('pop');
+                this.createTileToken(type, sign, (x!==null)?'manual':'auto', x, y);
+                this.updateEquation();
+            }
+
+            createTileToken(type, sign, placementMode, customX=null, customY=null) {
+                let tileSign = sign;
+                let step = this.steps[this.currentStepIndex];
+                
+                if (this.isSubtractingInput && step.type === 'subtraction' && !step.oppositeApplied) tileSign = -sign;
+                if (this.isMultiplyingInput && step.operator === '-') tileSign = -sign;
+
+                // Pack Logic for Spacing - REMOVED TIME CHECK
+                let pid;
+                if (placementMode === 'auto') {
+                    const lp = this.lastPack;
+                    if (lp && lp.type === type && lp.sign === tileSign && lp.stepIndex === this.currentStepIndex) {
+                        pid = lp.packId;
+                    } else {
+                        pid = this.nextPackId++;
+                        this.packMeta[pid] = { order: this.nextPackOrder++ };
+                        this.lastPack = { packId: pid, type, sign: tileSign, stepIndex: this.currentStepIndex };
+                    }
+                } else {
+                    pid = this.nextPackId++;
+                    this.packMeta[pid] = { order: this.nextPackOrder++ };
+                }
+
+                const id = this.nextId++;
+                const el = document.createElement('div');
+                const colorClass = tileSign === 1 ? 'green' : 'red';
+                el.classList.add('token', colorClass, `type-${type}`);
+                
+                if (this.isSubtractingInput) el.classList.add('in-bracket');
+                if ((this.isMultiplyingInput && !step.distributed)) el.classList.add('pending-mult');
+
+                let label = "";
+                if (type === 'x2') label = tileSign === 1 ? "x²" : "-x²";
+                else if (type === 'x') label = tileSign === 1 ? "x" : "-x";
+                else label = tileSign === 1 ? "1" : "-1";
+                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                el.id = `t-${id}`;
+
+                let pos;
+                if (placementMode === 'manual' && customX !== null) {
+                    pos = { x: customX, y: customY };
+                } else {
+                    // Logic to add gap if pack changed
                     let gap = 0;
-                    if (state.pendingPackGap && state.pendingPackGap > 0) {
-                        gap = state.pendingPackGap;
-                        state.pendingPackGap = 0;
-                    } else if (state.lastSequentialPackId !== null && pid !== state.lastSequentialPackId) {
+                    if (this.pendingPackGap > 0) {
+                        gap = this.pendingPackGap;
+                        this.pendingPackGap = 0;
+                    } else if (this.lastSequentialPackId !== null && pid !== this.lastSequentialPackId) {
                         gap = PACK_GAP;
                     }
-                    if (gap > 0) state.lastPos.x += gap;
+                    pos = this.getSequentialPosition(SIZES[type].w, SIZES[type].h, gap);
                 }
-                pos = getSequentialPosition(SIZES[type].w, SIZES[type].h);
-            }
-            el.style.left = pos.x + 'px';
-            el.style.top = pos.y + 'px';
 
-            el.addEventListener('mousedown', handleDragStart);
-            el.addEventListener('touchstart', handleDragStart, {passive: false});
-
-            board.appendChild(el);
-            const tokenObj = {
-                id, type, sign: tileSign, displaySign: displaySign, element: el, x: pos.x, y: pos.y,
-                pairId: null,
-                packId: pid,
-                ghostIds: [] 
-            };
-
-            state.tokens.push(tokenObj);
-            
-            if (!isGhost) {
-                state.steps[state.currentStepIndex].tokenIds.push(id);
-                if (x === null && y === null && !state._internalAdd) {
-                    state.lastSequentialPackId = pid;
-                }
-            }
-
-            // --- CORRECTION: Alignement constant ---
-            if (!isGhost && state.isMultiplyingInput && currentStep.type === 'multiplication' && currentStep.factor > 1) {
-                const factor = currentStep.factor;
-                const vGap = 20;
-                const strideH = 90 + vGap; 
+                el.style.left = pos.x + 'px';
+                el.style.top = pos.y + 'px';
                 
-                for (let i = 1; i < factor; i++) {
-                    addTile(type, sign, pos.x, pos.y + i * strideH, pid, true);
-                    const ghostToken = state.tokens[state.tokens.length - 1];
-                    tokenObj.ghostIds.push(ghostToken.id);
+                el.addEventListener('mousedown', (e) => this.handleDragStart(e));
+                el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
+                this.boardWorld.appendChild(el);
+
+                const tokenObj = {
+                    id, type, sign: tileSign, displaySign: sign, element: el, x: pos.x, y: pos.y,
+                    pairId: null, packId: pid, ghostIds: []
+                };
+                this.tokens.push(tokenObj);
+
+                this.steps[this.currentStepIndex].tokenIds.push(id);
+                if (placementMode === 'auto') {
+                    this.lastSequentialPackId = pid;
+                }
+                if (this.isMultiplyingInput && step.type === 'multiplication' && step.factor > 1) {
+                    const strideH = 90 + 20;
+                    for(let i=1; i<step.factor; i++) {
+                        const gid = this.nextId++;
+                        const gel = el.cloneNode(true);
+                        gel.id = `t-${gid}`;
+                        const gpos = { x: pos.x, y: pos.y + i * strideH };
+                        gel.style.top = gpos.y + 'px';
+                        gel.addEventListener('mousedown', (e) => this.handleDragStart(e));
+                        gel.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
+                        this.boardWorld.appendChild(gel);
+                        const gToken = { id: gid, type, sign: tileSign, displaySign: sign, element: gel, x: gpos.x, y: gpos.y, pairId: null, packId: null, ghostIds: [] };
+                        this.tokens.push(gToken);
+                        tokenObj.ghostIds.push(gid);
+                    }
                 }
             }
 
-            updateEquation();
-        }
+            getSequentialPosition(w, h, gap = 0) {
+                const padding = 2; // tight spacing inside pack
+                const viewW = this.boardContainer.clientWidth / this.scale;
+                const wrapLimit = viewW - 50; 
 
-        function getSequentialPosition(w, h) {
-            const padding = 2; // Reduced from 10
-            const boardW = board.clientWidth;
-            if (state.lastPos.x + w + padding > boardW) {
-                state.lastPos.x = 40;
-                state.lastPos.y += state.lastPos.maxYInRow + padding;
-                state.lastPos.maxYInRow = 0;
-            }
-            const x = state.lastPos.x;
-            const y = state.lastPos.y; 
-            state.lastPos.x += w + padding;
-            if (h > state.lastPos.maxYInRow) state.lastPos.maxYInRow = h;
-            return {x, y};
-        }
+                this.lastPos.x += gap;
 
-        // --- MULTIPLICATION (entrée + développer) ---
-
-        function startMultiplication(factor) {
-            const cur = state.steps[state.currentStepIndex];
-            const canConvertMinusToMult = state.isSubtractingInput && cur && cur.type === 'subtraction' && (cur.tokenIds?.length || 0) === 0;
-
-            if (canConvertMinusToMult) {
-                cur.type = 'multiplication';
-                cur.factor = factor;
-                cur.distributed = false;
-                cur.isClosed = false;
-                state.isSubtractingInput = false;
-                state.isMultiplyingInput = true;
-                btnCloseP.classList.remove('hidden');
-                btnDistribute.classList.add('hidden');
-                btnOpposite.classList.add('hidden');
-                updateEquation();
-                return;
+                if (this.lastPos.x + w + padding > wrapLimit) {
+                    this.lastPos.x = 40;
+                    this.lastPos.y += this.lastPos.maxYInRow + 20;
+                    this.lastPos.maxYInRow = 0;
+                }
+                const x = this.lastPos.x;
+                const y = this.lastPos.y; 
+                this.lastPos.x += w + padding;
+                if (h > this.lastPos.maxYInRow) this.lastPos.maxYInRow = h;
+                return {x, y};
             }
 
-            if (state.isSubtractingInput || state.isMultiplyingInput) return;
-
-            const step = {
-                id: state.steps.length,
-                operator: '+',
-                type: 'multiplication',
-                tokenIds: [],
-                factor: factor,
-                oppositeApplied: false,
-                distributed: false,
-                isClosed: false
-            };
-            state.steps.push(step);
-            state.currentStepIndex = state.steps.length - 1;
-            state.lastPack = null;
-            state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
-
-            state.isMultiplyingInput = true;
-            btnCloseP.classList.remove('hidden');
-            btnDistribute.classList.add('hidden');
-            updateEquation();
-        }
-
-        function closeParenthesis() {
-            const step = state.steps[state.currentStepIndex];
-            if (!step) return;
-            if (state.isSubtractingInput && step.type === 'subtraction') {
-                closeSubtraction();
-                return;
+            separatePack() { this.saveState(); playSound('pop'); this.lastPack = null; this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP); }
+            setOperator(op) { 
+                this.saveState();
+                if(this.isSubtractingInput) return; 
+                this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP);
+                this.steps.push({id:this.steps.length, operator:'-', type:'subtraction', tokenIds:[], factor:1, oppositeApplied:false, distributed:false, isClosed:false});
+                this.currentStepIndex++; this.isSubtractingInput = true;
+                document.getElementById('btn-close-parenthesis').classList.remove('hidden');
+                this.updateEquation();
             }
-            if (state.isMultiplyingInput && step.type === 'multiplication') {
-                closeMultiplication();
-                return;
+            closeParenthesis() { 
+                this.saveState();
+                const s = this.steps[this.currentStepIndex];
+                if(this.isSubtractingInput) { this.isSubtractingInput=false; s.isClosed=true; document.getElementById('btn-close-parenthesis').classList.add('hidden'); this.checkOppositeAvailable(); }
+                else if(this.isMultiplyingInput) { s.isClosed=true; this.isMultiplyingInput=false; document.getElementById('btn-close-parenthesis').classList.add('hidden'); }
+                this.updateEquation();
             }
-        }
-
-        function closeMultiplication() {
-            const step = state.steps[state.currentStepIndex];
-            if (!step || step.type !== 'multiplication') return;
-            step.isClosed = true;
-            state.isMultiplyingInput = false;
-            btnCloseP.classList.add('hidden');
-            
-            // Le bouton sera géré dans updateEquation maintenant pour la persistance
-            updateEquation();
-        }
-
-        function applyDistribution() {
-            const step = state.steps.find(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
-            if (!step) return;
-
-            const masterTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
-            if (masterTokens.length === 0) return;
-
-            const shouldFlip = (step.operator === '-');
-            if (shouldFlip) {
-                step.operator = '+'; 
+            checkOppositeAvailable() { 
+                const has = this.steps.some(s=>s.type==='subtraction'&&!s.oppositeApplied); 
+                const btn=document.getElementById('btn-opposite'); if(has)btn.classList.remove('hidden'); else btn.classList.add('hidden');
             }
-
-            // Promouvoir les fantômes en tokens réels
-            masterTokens.forEach(t => {
-                t.ghostIds.forEach(gid => {
-                    const g = state.tokens.find(tk => tk.id === gid);
-                    if (g) {
-                        step.tokenIds.push(gid);
-                        g.element.classList.remove('pending-mult');
-                    }
+            applyOpposite() {
+                this.saveState();
+                const p = this.steps.filter(s=>s.type==='subtraction'&&!s.oppositeApplied);
+                if(!p.length) return; playSound('flip');
+                p.forEach(s => {
+                    s.tokenIds.forEach(id => { const t=this.tokens.find(x=>x.id===id); if(t){ t.displaySign=t.sign; t.element.classList.remove('in-bracket'); } });
+                    s.oppositeApplied=true;
                 });
-                t.ghostIds = []; 
-                t.element.classList.remove('pending-mult');
-            });
-
-            step.distributed = true;
-            btnDistribute.classList.add('hidden');
-
-            // --- REFLOW COMPLET (Réorganisation séquentielle) ---
-            reflowBoardSequential();
-
-            updateEquation();
-        }
-
-        function flipTokenData(t) {
-            t.sign *= -1;
-            t.displaySign = t.sign;
-            t.element.classList.remove('green', 'red');
-            t.element.classList.add(t.sign === 1 ? 'green' : 'red');
+                this.checkOppositeAvailable(); this.updateEquation();
+            }
+            startMultiplication(f) { 
+                this.saveState();
+                const cur = this.steps[this.currentStepIndex];
+                if (this.isSubtractingInput && cur.type==='subtraction' && cur.tokenIds.length===0) {
+                    cur.type='multiplication'; cur.factor=f; this.isSubtractingInput=false; this.isMultiplyingInput=true;
+                    document.getElementById('btn-close-parenthesis').classList.remove('hidden');
+                    this.updateEquation(); return;
+                }
+                if(this.isSubtractingInput||this.isMultiplyingInput)return;
+                this.steps.push({id:this.steps.length, operator:'+', type:'multiplication', tokenIds:[], factor:f, distributed:false, isClosed:false});
+                this.currentStepIndex = this.steps.length-1; this.isMultiplyingInput=true;
+                document.getElementById('btn-close-parenthesis').classList.remove('hidden');
+                this.updateEquation();
+            }
+            applyDistribution() {
+                this.saveState();
+                const step = this.steps.find(s=>s.type==='multiplication'&&!s.distributed&&s.isClosed);
+                if(!step) return;
+                const masters = step.tokenIds.map(id=>this.tokens.find(t=>t.id===id)).filter(Boolean);
+                if(step.operator==='-') step.operator='+';
+                masters.forEach(t=>{
+                    t.ghostIds.forEach(gid=>{ const g=this.tokens.find(tk=>tk.id===gid); if(g){ step.tokenIds.push(gid); g.element.classList.remove('pending-mult'); } });
+                    t.ghostIds=[]; t.element.classList.remove('pending-mult');
+                });
+                step.distributed=true; document.getElementById('btn-distribute').classList.add('hidden');
+                this.reflowBoardSequential(); this.updateEquation();
+            }
             
-            let label = "";
-            if (t.type === 'x2') label = t.sign === 1 ? "x²" : "-x²";
-            else if (t.type === 'x') label = t.sign === 1 ? "x" : "-x";
-            else label = t.sign === 1 ? "1" : "-1";
-            
-            t.element.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
-        }
+            reflowBoardSequential() {
+                this.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+                this.lastSequentialPackId = null; // Reset for reflow tracking
+                
+                this.steps.forEach((step, idx) => {
+                    const toks = step.tokenIds.map(id=>this.tokens.find(t=>t.id===id)).filter(Boolean);
+                    if(!toks.length) return;
+                    if(step.type==='multiplication'&&step.distributed) {
+                        const groups = { 'x2': [], 'x': [], 'unit': [] };
+                        toks.forEach(t => { if (groups[t.type]) groups[t.type].push(t); });
+                        let cx = this.lastPos.x; let cy = this.lastPos.y;
+                        
+                        // ADD GAP BEFORE DISTRIBUTED BLOCK IF NOT FIRST
+                        if (idx > 0 && cx > 40) cx += PACK_GAP;
 
-        function reflowBoardSequential() {
-            // Reset position curseur
-            state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
-            
-            state.steps.forEach((step, idx) => {
-                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(Boolean);
-                if (stepTokens.length === 0) return;
-
-                // Cas Spécial : Multiplication Distribuée -> Affichage en "Groupes Séparés" MAIS SÉQUENTIELS
-                if (step.type === 'multiplication' && step.distributed) {
-                    let startX = state.lastPos.x;
-                    let startY = state.lastPos.y; 
-                    
-                    if (startX > 40 && startX + 200 > board.clientWidth) {
-                         startX = 40;
-                         startY += state.lastPos.maxYInRow + 20;
-                    }
-
-                    // --- ORDRE DYNAMIQUE : On détecte l'ordre des types dans la parenthèse ---
-                    const typesOrder = [];
-                    stepTokens.forEach(t => {
-                        if (!typesOrder.includes(t.type)) typesOrder.push(t.type);
-                    });
-
-                    const groups = { 'x2': [], 'x': [], 'unit': [] };
-                    stepTokens.forEach(t => { if (groups[t.type]) groups[t.type].push(t); });
-
-                    let cursorX = startX;
-                    let maxH = 0;
-                    const gapBetweenGroups = 40; 
-                    const gapInGroup = 2; 
-
-                    // On itère selon l'ordre d'apparition
-                    typesOrder.forEach(type => {
-                        const list = groups[type];
-                        if (list.length === 0) return;
-                        // On garde le tri par signe pour la propreté (vert d'abord)
-                        list.sort((a,b) => b.sign - a.sign); 
-
-                        const w = SIZES[type].w;
-                        const h = SIZES[type].h;
-                        maxH = Math.max(maxH, h);
-
-                        list.forEach(t => {
-                            t.element.classList.add('animating');
-                            moveToken(t, cursorX, startY);
-                            setTimeout(() => t.element.classList.remove('animating'), 500);
-                            cursorX += w + gapInGroup;
+                        if(cx>40 && cx+200 > (this.boardContainer.clientWidth/this.scale)) { 
+                            cx=40; cy+=this.lastPos.maxYInRow+20; 
+                            this.lastPos.maxYInRow = 0; // Reset row height on wrap
+                        }
+                        let maxH=0;
+                        const typesOrder = [];
+                        toks.forEach(t => { if (!typesOrder.includes(t.type)) typesOrder.push(t.type); });
+                        
+                        typesOrder.forEach(type=>{
+                            const l=groups[type]; if(!l.length)return;
+                            l.sort((a,b)=>b.sign-a.sign);
+                            const w=SIZES[type].w; maxH=Math.max(maxH, SIZES[type].h);
+                            l.forEach(t=>{ t.element.classList.add('animating'); this.moveToken(t,cx,cy); setTimeout(()=>t.element.classList.remove('animating'),500); cx+=w+2; });
+                            cx+=PACK_GAP; // Use constant gap
                         });
-                        cursorX += gapBetweenGroups;
-                    });
-                    
-                    state.lastPos.x = cursorX;
-                    state.lastPos.y = startY;
-                    state.lastPos.maxYInRow = Math.max(state.lastPos.maxYInRow, maxH);
-                } 
-                else {
-                    // Cas Standard
-                    if (idx > 0 && state.lastPos.x > 40) state.lastPos.x += PACK_GAP;
-
-                    stepTokens.forEach(t => {
-                        const s = SIZES[t.type];
-                        const pos = getSequentialPosition(s.w, s.h);
-                        t.element.classList.add('animating');
-                        moveToken(t, pos.x, pos.y);
-                        setTimeout(() => t.element.classList.remove('animating'), 500);
-                    });
-                }
-            });
-        }
-
-        // --- GESTION OPÉRATEURS ---
-
-        function separatePack() {
-            playSound('pop');
-            state.lastPack = null;
-            state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
-        }
-
-        function setOperator(op) {
-            if (state.isSubtractingInput) return;
-
-            if (op === 'subtract') {
-                state.pendingPackGap = Math.max(state.pendingPackGap, PACK_GAP);
-                state.steps.push({
-                    id: state.steps.length,
-                    operator: '-',
-                    type: 'subtraction',
-                    tokenIds: [],
-                    factor: 1,
-                    oppositeApplied: false, distributed: false, isClosed: false
-                });
-                state.currentStepIndex++;
-                state.isSubtractingInput = true;
-                state.lastPack = null;
-                btnCloseP.classList.remove('hidden');
-            }
-            updateEquation();
-        }
-
-        function closeSubtraction() {
-            state.isSubtractingInput = false;
-            state.steps[state.currentStepIndex].isClosed = true;
-            btnCloseP.classList.add('hidden');
-            checkOppositeAvailable();
-            updateEquation();
-        }
-
-        function checkOppositeAvailable() {
-            const hasPending = state.steps.some(s => s.type === 'subtraction' && !s.oppositeApplied);
-            if (hasPending) btnOpposite.classList.remove('hidden');
-            else btnOpposite.classList.add('hidden');
-        }
-
-        function applyOpposite() {
-            const pendingSteps = state.steps.filter(s => s.type === 'subtraction' && !s.oppositeApplied);
-            if (pendingSteps.length === 0) return;
-
-            playSound('flip');
-
-            pendingSteps.forEach(step => {
-                const tokensToFlip = step.tokenIds
-                    .map(id => state.tokens.find(t => t.id === id))
-                    .filter(Boolean);
-
-                tokensToFlip.forEach(t => {
-                    t.displaySign = t.sign;
-                    t.element.classList.remove('in-bracket');
-                });
-
-                step.oppositeApplied = true;
-            });
-
-            checkOppositeAvailable();
-            updateEquation();
-        }
-
-        // --- ORDONNER ---
-
-        function orderAll() {
-            playSound('pop');
-            state.displayMode = 'ordered';
-            state.isReduced = false;
-            organizeBoard(false);
-            updateEquation();
-        }
-
-        function reduceExpression() {
-            playSound('magic');
-            state.displayMode = 'reduced';
-            state.isReduced = true;
-            organizeBoard(true);
-            updateEquation();
-        }
-
-        function organizeBoard(reduced = false) {
-            playSound('pop');
-            const getPacks = (type, sign) => {
-                const eligible = state.tokens
-                    .filter(t => t.pairId === null && t.type === type && t.sign === sign);
-
-                if (eligible.length === 0) return [];
-                if (reduced) {
-                    return [eligible];
-                }
-
-                const map = new Map();
-                eligible.forEach(t => {
-                    const pid = (typeof t.packId === 'number') ? t.packId : 0;
-                    if (!map.has(pid)) map.set(pid, []);
-                    map.get(pid).push(t);
-                });
-
-                const packIds = Array.from(map.keys()).sort((a, b) => {
-                    const oa = state.packMeta[a]?.order ?? a;
-                    const ob = state.packMeta[b]?.order ?? b;
-                    return oa - ob;
-                });
-
-                return packIds.map(pid => map.get(pid));
-            };
-
-            const boardW = board.clientWidth;
-            const startX = 20;
-            let y = 60;
-
-            const innerGap = 2;
-            const packGap = reduced ? 2 : 18; 
-            const lineGap = reduced ? 10 : packGap;
-            const rowGap = reduced ? 18 : 18;
-
-            const placeRow = (packs, y0) => {
-                let x = startX;
-                let yy = y0;
-                let rowH = 0;
-                const maxX = boardW - 20;
-
-                for (const pack of packs) {
-                    for (const t of pack) {
-                        const size = SIZES[t.type] || { w: 50, h: 50 };
-
-                        if (x + size.w > maxX) {
-                            x = startX;
-                            yy += rowH + lineGap;
-                            rowH = 0;
-                        }
-
-                        t.element.classList.add('animating');
-                        moveToken(t, x, yy);
-                        setTimeout(() => t.element.classList.remove('animating'), 500);
-
-                        x += size.w + innerGap;
-                        rowH = Math.max(rowH, size.h);
-                    }
-                    x += packGap;
-                }
-
-                return yy + rowH;
-            };
-
-            const rows = [
-                { type: 'x2', sign: 1 },
-                { type: 'x2', sign: -1 },
-                { type: 'x', sign: 1 },
-                { type: 'x', sign: -1 },
-                { type: 'unit', sign: 1 },
-                { type: 'unit', sign: -1 }
-            ];
-
-            rows.forEach(r => {
-                const packs = getPacks(r.type, r.sign);
-                if (!packs.length) return;
-                y = placeRow(packs, y) + rowGap;
-            });
-
-            state.lastPos = { x: 20, y: board.clientHeight - 100, maxYInRow: 0 };
-        }
-
-        function moveToken(t, x, y) {
-            t.x = x; t.y = y;
-            t.element.style.left = x + 'px';
-            t.element.style.top = y + 'px';
-        }
-
-        // --- GÉNÉRATION ÉQUATION ---
-
-        function tokensToSeparatedLatex(tokens, scaleFactor = 1) {
-            if (!tokens || tokens.length === 0) return "";
-            const colorFor = (sgn) => (sgn === -1 ? COLORS.neg : COLORS.pos);
-            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
-            const plus = colorWrap(COLORS.pos, '+');
-
-            const groups = [];
-            let current = null;
-
-            tokens.forEach(t => {
-                const writtenSignRaw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
-                const writtenSign = (writtenSignRaw === -1) ? -1 : 1;
-                if (current && current.type === t.type && current.writtenSign === writtenSign && current.packId === t.packId) {
-                    current.count++;
-                } else {
-                    if (current) groups.push(current);
-                    current = { type: t.type, writtenSign, packId: t.packId, count: 1 };
-                }
-            });
-            if (current) groups.push(current);
-
-            let latex = "";
-            let isFirst = true;
-
-            groups.forEach(g => {
-                let count = g.count / scaleFactor;
-                count = Math.round(count * 100) / 100;
-                if (count <= 0) return;
-
-                let termCore = "";
-                if (g.type === 'unit') {
-                    termCore = String(count);
-                } else {
-                    termCore = (count === 1 ? "" : count) + (g.type === 'x2' ? "x^2" : "x");
-                }
-
-                const termColor = colorFor(g.writtenSign);
-                const coloredTerm = colorWrap(termColor, termCore);
-                const coloredMinus = colorWrap(termColor, '-');
-
-                if (isFirst) {
-                    latex += (g.writtenSign === -1 ? coloredMinus : "") + coloredTerm;
-                } else {
-                    if (g.writtenSign === -1) {
-                        latex += `\\;${coloredMinus}\\;` + coloredTerm;
+                        this.lastPos.x=cx; this.lastPos.y=cy; this.lastPos.maxYInRow=Math.max(this.lastPos.maxYInRow,maxH);
                     } else {
-                        latex += `\\;${plus}\\;` + coloredTerm;
-                    }
-                }
-                isFirst = false;
-            });
-            return latex || "0";
-        }
-
-        function tokensToReducedSumLatex(tokens) {
-            if (!tokens || tokens.length === 0) return "0";
-
-            // --- NOUVEAU: On détecte l'ordre d'apparition des types dans le step ---
-            const typesOrder = [];
-            tokens.forEach(t => {
-               if(!typesOrder.includes(t.type)) typesOrder.push(t.type);
-            });
-
-            // On compte les éléments
-            const counts = {
-                x2: { pos: 0, neg: 0 },
-                x: { pos: 0, neg: 0 },
-                unit: { pos: 0, neg: 0 }
-            };
-
-            for (const t of tokens) {
-                if (!t || t._canceling) continue;
-                if (!counts[t.type]) continue;
-                if (t.sign === -1) counts[t.type].neg += 1;
-                else counts[t.type].pos += 1;
-            }
-
-            let latex = '';
-            let hasPrev = false;
-
-            const coreOf = (type, count) => {
-                if (type === 'unit') return String(count);
-                const core = latexForTokenCore(type);
-                return (count === 1) ? core : String(count) + core;
-            };
-
-            const addTerm = (type, sign, count) => {
-                if (!count) return;
-                const core = coreOf(type, count);
-                const coloredCore = coloredSpan(core, sign);
-                if (!hasPrev) {
-                    if (sign === -1) latex += ` ${minusRed()} ${coloredCore}`;
-                    else latex += coloredCore;
-                } else {
-                    latex += (sign === 1) ? ` ${plusGreen()} ${coloredCore}` : ` ${minusRed()} ${coloredCore}`;
-                }
-                hasPrev = true;
-            };
-
-            // On itère selon l'ordre découvert, au lieu de l'ordre fixe
-            for (const type of typesOrder) {
-                // On affiche d'abord les positifs puis négatifs ou l'inverse ?
-                // Généralement on groupe tout : 4x (si 2x+2x)
-                // Ici on simplifie visuellement en affichant la somme nette par type ? 
-                // Non, tokensToReducedSumLatex sert à afficher le résultat du développement (ex: 4x^2 - 2)
-                
-                // Si on a des positifs
-                addTerm(type, 1, counts[type].pos);
-                // Si on a des négatifs
-                addTerm(type, -1, counts[type].neg);
-            }
-
-            return latex || "0";
-        }
-
-        function latexForTokenCore(type) {
-            if (type === 'x2') return 'x^2';
-            if (type === 'x') return 'x';
-            return '';
-        }
-        function coloredSpan(text, sign) {
-            const color = sign === 1 ? COLORS.pos : COLORS.neg;
-            return `{\\color{${color}}{${text}}}`;
-        }
-        function plusGreen() { return `{\\color{${COLORS.pos}}{+}}`; }
-        function minusRed() { return `{\\color{${COLORS.neg}}{-}}`; }
-
-        function latexStartsWithMinus(str) {
-            const s = (str || '').trim();
-            if (!s) return false;
-            if (s.startsWith('-')) return true;
-            return /^\{\\color\{[^}]+\}\{-\}\}/.test(s);
-        }
-
-
-        function generateEquationString(mode) {
-            if (mode === 'ordered') {
-                return generateOrderedLatex();
-            }
-            if (mode === 'reduced') {
-                return generateGroupedLatex();
-            }
-
-            const hasNonEmptyBefore = (idx) => {
-                for (let i = 0; i < idx; i++) {
-                    if (state.steps[i] && state.steps[i].tokenIds && state.steps[i].tokenIds.length > 0) return true;
-                }
-                return false;
-            };
-
-            let latex = "";
-            let isEmpty = true;
-
-            state.steps.forEach((step, index) => {
-                const stepTokens = step.tokenIds.map(id => state.tokens.find(t => t.id === id)).filter(t => t);
-                const isCurrent = (index === state.currentStepIndex);
-                if (stepTokens.length === 0 && !isCurrent) return;
-                
-                // Pré-calculer le contenu pour savoir s'il commence par "-"
-                let currentFactor = 1;
-                let content = tokensToSeparatedLatex(stepTokens, 1);
-                if (stepTokens.length === 0) content = "\\dots";
-                let pStr = "";
-                
-                // --- LOGIQUE CONTENU ---
-                if (step.type === 'multiplication') {
-                    if (step.distributed) {
-                        pStr = tokensToReducedSumLatex(stepTokens);
-                    } else {
-                        pStr = step.factor + "(" + content + ")";
-                    }
-                }
-                else if (step.type === 'subtraction') {
-                    if (step.distributed && !step.oppositeApplied) {
-                        pStr = "(" + content + ")";
-                    } 
-                    else if (!step.oppositeApplied) {
-                        pStr = "(" + content + ")";
-                    } else {
-                        // Logique spécifique pour soustraction opposée (déjà gérée avec signes)
-                         const hasPrev = hasNonEmptyBefore(index);
-                        const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
-                        const plus = colorWrap(COLORS.pos, '+');
-                        const minus = colorWrap(COLORS.neg, '-');
-
-                        const groups = [];
-                        let cur = null;
-                        stepTokens.forEach(t => {
-                            const raw = (typeof t.displaySign === 'number') ? t.displaySign : t.sign;
-                            const sgn = (raw === -1) ? -1 : 1;
-                            if (cur && cur.type === t.type && cur.sign === sgn) {
-                                cur.count += 1;
-                            } else {
-                                if (cur) groups.push(cur);
-                                cur = { type: t.type, sign: sgn, count: 1 };
+                        // Standard sequential reflow
+                        if(idx>0 && this.lastPos.x>40) this.lastPos.x+=PACK_GAP;
+                        let localLastPackId = null;
+                        
+                        toks.forEach(t=>{
+                            let gap = 0;
+                            // Check for pack changes within the step
+                            if (localLastPackId !== null && t.packId !== localLastPackId) {
+                                gap = PACK_GAP;
                             }
+                            const pos = this.getSequentialPosition(SIZES[t.type].w, SIZES[t.type].h, gap);
+                            t.element.classList.add('animating'); this.moveToken(t, pos.x, pos.y); setTimeout(()=>t.element.classList.remove('animating'),500);
+                            localLastPackId = t.packId;
                         });
-                        if (cur) groups.push(cur);
-
-                        const termCoreOf = (type, count) => {
-                            let c = count;
-                            c = Math.round(c * 100) / 100;
-                            if (c <= 0) return '';
-                            if (type === 'unit') return String(c);
-                            return (c === 1 ? '' : String(c)) + (type === 'x2' ? 'x^2' : 'x');
-                        };
-
-                        let body = '';
-                        let leadingSign = 1;
-                        let firstIdx = -1;
-                        for (let i = 0; i < groups.length; i++) {
-                            const core = termCoreOf(groups[i].type, groups[i].count);
-                            if (core) { firstIdx = i; break; }
-                        }
-
-                        if (firstIdx === -1) {
-                            pStr = '0';
-                        } else {
-                            const first = groups[firstIdx];
-                            leadingSign = first.sign;
-                            const firstCol = (first.sign === -1) ? COLORS.neg : COLORS.pos;
-                            const firstCore = termCoreOf(first.type, first.count);
-                            body = colorWrap(firstCol, firstCore);
-
-                            for (let i = firstIdx + 1; i < groups.length; i++) {
-                                const g = groups[i];
-                                const core = termCoreOf(g.type, g.count);
-                                if (!core) continue;
-                                const col = (g.sign === -1) ? COLORS.neg : COLORS.pos;
-                                const coloredCore = colorWrap(col, core);
-                                const op = (g.sign === -1) ? minus : plus;
-                                body += `\\;${op}\\;` + coloredCore;
-                            }
-
-                            if (hasPrev) {
-                                // Important : on ajoute le signe ici manuellement, 
-                                // donc on évitera le "+" automatique plus bas
-                                const prefix = (leadingSign === -1) ? minus : plus;
-                                pStr = `\\;${prefix}\\;` + body;
-                            } else {
-                                pStr = (leadingSign === -1 ? minus : '') + body;
-                            }
-                        }
                     }
-                }
-                else {
-                    pStr = content;
-                    if (index > 0 && latexStartsWithMinus(pStr)) pStr = "(" + pStr + ")";
-                }
-
-                // --- LOGIQUE SÉPARATEUR (+ / -) ---
-                if (index > 0 && hasNonEmptyBefore(index)) {
-                    const plus = `{\\color{${COLORS.pos}}{+}}`;
-                    const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
-
-                    // Si c'est une soustraction "opposée", le signe est DÉJÀ dans pStr (voir ci-dessus)
-                    if (step.type === 'subtraction' && step.oppositeApplied) {
-                        // Rien à faire, pStr contient déjà le lien
-                    }
-                    // Si c'est une multiplication distribuée qui commence par un "-", on ne met pas de "+"
-                    else if (step.type === 'multiplication' && step.distributed && latexStartsWithMinus(pStr)) {
-                        // Rien à faire, le "-" est dans pStr (ex: -4x^2)
-                    }
-                    else if (step.operator === '+' && step.type !== 'addition') {
-                         // Ajout standard du "+" sauf si pStr commence déjà par "-"
-                         if (!latexStartsWithMinus(pStr)) {
-                             latex += `\\;${plus}\\;`;
-                         }
-                    } else if (step.operator === '-') {
-                        if (step.type === 'subtraction' && !step.oppositeApplied) latex += `\\;${minusOrange}\\;`;
-                        else latex += ' - ';
-                    }
-                }
-                
-                latex += pStr;
-                isEmpty = false;
-            });
-
-            // --- MISE A JOUR BOUTON DISTRIBUER ---
-            // On vérifie s'il existe une étape de multiplication non distribuée et fermée
-            const hasPendingDistribute = state.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
-            if (hasPendingDistribute) {
-                btnDistribute.classList.remove('hidden');
-            } else {
-                btnDistribute.classList.add('hidden');
-            }
-
-            return isEmpty ? "\\dots" : latex;
-        }
-
-        function renderTermsToLatex(terms) {
-            if (!terms || terms.length === 0) return '0';
-            const colorFor = (sgn) => (sgn === -1 ? COLORS.neg : COLORS.pos);
-            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
-            const plus = colorWrap(COLORS.pos, '+');
-
-            const termStr = (type, count) => {
-                if (type === 'unit') return String(count);
-                const coef = (count === 1) ? '' : String(count);
-                return coef + (type === 'x2' ? 'x^2' : 'x');
-            };
-
-            let latex = '';
-            terms.forEach((t, i) => {
-                const core = termStr(t.type, t.count);
-                if (!core) return;
-                const col = colorFor(t.sign);
-                const coloredCore = colorWrap(col, core);
-                const coloredMinus = colorWrap(col, '-');
-                if (i === 0) {
-                    latex += (t.sign === -1 ? coloredMinus : '') + coloredCore;
-                } else {
-                    if (t.sign === -1) latex += `\\;${coloredMinus}\\;` + coloredCore;
-                    else latex += `\\;${plus}\\;` + coloredCore;
-                }
-            });
-            return latex || '0';
-        }
-
-        function generateOrderedLatex() {
-            const hasLocked = state.steps.some(s =>
-                (s.type === 'subtraction' && !s.oppositeApplied) ||
-                (s.type === 'multiplication' && s.factor > 1 && !s.distributed)
-            );
-            if (hasLocked) {
-                return generateEquationString('normal');
-            }
-
-            const byPack = new Map();
-            state.tokens.forEach(t => {
-                if (t.pairId !== null) return;
-                const pid = (typeof t.packId === 'number') ? t.packId : 0;
-                if (!byPack.has(pid)) byPack.set(pid, []);
-                byPack.get(pid).push(t);
-            });
-
-            const packs = Array.from(byPack.keys()).map(pid => ({
-                pid,
-                order: state.packMeta[pid]?.order ?? pid,
-                tokens: byPack.get(pid)
-            })).sort((a, b) => a.order - b.order);
-
-            const colorWrap = (color, str) => `{\\color{${color}}{${str}}}`;
-            const plus = colorWrap(COLORS.pos, '+');
-            const minus = colorWrap(COLORS.neg, '-');
-
-            const termCore = (type, count) => {
-                if (type === 'unit') return String(count);
-                const coef = (count === 1) ? '' : String(count);
-                return coef + (type === 'x2' ? 'x^2' : 'x');
-            };
-
-            const orderedTerms = [];
-            const pushPackTerms = (tp, sgn) => {
-                packs.forEach(p => {
-                    let c = 0;
-                    p.tokens.forEach(t => {
-                        if (t.type === tp && t.sign === sgn) c += 1;
-                    });
-                    if (!c) return;
-                    orderedTerms.push({ type: tp, sign: sgn, count: c });
                 });
-            };
-
-            pushPackTerms('x2',  1);
-            pushPackTerms('x2', -1);
-            pushPackTerms('x',   1);
-            pushPackTerms('x',  -1);
-            pushPackTerms('unit', 1);
-            pushPackTerms('unit',-1);
-
-            if (orderedTerms.length === 0) return '0';
-
-            let latex = '';
-            orderedTerms.forEach((t, i) => {
-                const col = (t.sign === -1) ? COLORS.neg : COLORS.pos;
-                const core = termCore(t.type, t.count);
-                const coloredCore = colorWrap(col, core);
-
-                if (i === 0) {
-                    if (t.sign === -1) latex += `${minus}`;
-                    latex += coloredCore;
-                } else {
-                    const op = (t.sign === -1) ? minus : plus;
-                    latex += `\\;${op}\\;` + coloredCore;
-                }
-            });
-
-            return latex || '0';
-        }
-
-        function generateGroupedLatex() {
-            const order = ['x2', 'x', 'unit'];
-            const pos = { x2: 0, x: 0, unit: 0 };
-            const neg = { x2: 0, x: 0, unit: 0 };
-
-            state.tokens.forEach(t => {
-                if (t.pairId !== null) return;
-                if (!(t.type in pos)) return;
-                if (t.sign === 1) pos[t.type] += 1;
-                else if (t.sign === -1) neg[t.type] += 1;
-            });
-
-            const terms = [];
-            order.forEach(tp => {
-                if (pos[tp]) terms.push({ type: tp, sign: 1, count: pos[tp] });
-                if (neg[tp]) terms.push({ type: tp, sign: -1, count: neg[tp] });
-            });
-
-            return renderTermsToLatex(terms);
-        }
-
-        function tightenLatex(latex){
-            return (latex || "")
-                .replace(/(\\;|\\,|\\quad|\\qquad)/g, "")
-                .replace(/\s+/g, "");
-        }
-
-        function updateEquation() {
-            if (state.isAnimating) return;
-            let displayString = tightenLatex(generateEquationString(state.displayMode));
-            const isMultiLine = (displayString || '').includes('\\begin{aligned}');
-            katex.render(displayString, eqDisplay, { throwOnError: false, displayMode: isMultiLine });
-        }
-
-        // --- OUTILS & HELPERS ---
-
-        function animateCancelPair(t1, t2, badgeEl=null) {
-            if (t1.sign === -1 && t2.sign === 1) {
-                [t1, t2] = [t2, t1];
             }
-            if (t1.pairedWith === t2.id) t1.pairedWith = null;
-            if (t2.pairedWith === t1.id) t2.pairedWith = null;
 
-            // --- CAS 1 : Paire manuelle (badge déjà là) ---
-            if (badgeEl) {
-                const badge = badgeEl;
-                t1._canceling = true; t2._canceling = true;
-                if (t1.pairId === t2.id) t1.pairId = null;
-                if (t2.pairId === t1.id) t2.pairId = null;
+            orderAll() { this.saveState(); playSound('pop'); this.displayMode='ordered'; this.isReduced=false; this.organizeBoard(false); this.updateEquation(); }
+            reduceExpression() { this.saveState(); playSound('magic'); this.displayMode='reduced'; this.isReduced=true; this.organizeBoard(true); this.updateEquation(); }
+            organizeBoard(reduced) {
+                this.organizeSubset(this.tokens, 20, 60, (this.boardContainer.clientWidth/this.scale)-20, reduced);
+            }
+            organizeSubset(subset, startX, startY, limitX, reduced) {
+                const rows = [{type:'x2',s:1},{type:'x2',s:-1},{type:'x',s:1},{type:'x',s:-1},{type:'unit',s:1},{type:'unit',s:-1}];
+                let y = startY;
+                rows.forEach(r => {
+                    const ts = subset.filter(t => t.type===r.type && t.sign===r.s && t.pairId===null);
+                    if(!ts.length) return;
+                    let cx = startX; let rowH=0;
+                    ts.forEach(t => {
+                        const s=SIZES[t.type];
+                        if(cx+s.w > limitX) { cx=startX; y+=rowH+(reduced?10:18); rowH=0; }
+                        t.element.classList.add('animating'); this.moveToken(t,cx,y); setTimeout(()=>t.element.classList.remove('animating'),500);
+                        cx+=s.w+(reduced?2:2); rowH=Math.max(rowH,s.h);
+                    });
+                    y += rowH+(reduced?18:18);
+                });
+            }
+            moveToken(t,x,y) { t.x=x; t.y=y; t.element.style.left=x+'px'; t.element.style.top=y+'px'; }
 
-                // Grisé d'abord
-                t1.element.classList.add('animating', 'fading-gray');
-                t2.element.classList.add('animating', 'fading-gray');
-
-                // Disparition
-                setTimeout(() => {
-                    t1.element.classList.add('vanish');
-                    t2.element.classList.add('vanish');
-                    badge.classList.add('vanish');
+            autoSimplify() { if(this._autoSimplifyActive)return; this.saveState(); this._autoSimplifyActive=true; if(this._timer) clearTimeout(this._timer); playSound('whoosh'); this.runSimplify(); }
+            runSimplify() {
+                const pairs = [];
+                const available = this.tokens.filter(t=>!t._canceling && t.pairId===null && !t.element.classList.contains('in-bracket'));
+                const types=['x2','x','unit'];
+                types.forEach(ty=>{
+                    const g = available.filter(t=>t.type===ty && t.sign===1);
+                    const r = available.filter(t=>t.type===ty && t.sign===-1);
+                    g.sort((a,b)=>(a.y-b.y)||(a.x-b.x)); r.sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+                    g.forEach(gg=>{
+                        if(!r.length)return;
+                        let best=-1, dist=Infinity;
+                        r.forEach((rr,i)=>{
+                            const d = Math.hypot(gg.x-rr.x, gg.y-rr.y);
+                            if(d<dist){ dist=d; best=i; }
+                        });
+                        if(best!==-1) pairs.push([gg, r.splice(best,1)[0]]);
+                    });
+                });
+                if(!pairs.length) { this._autoSimplifyActive=false; this.updateEquation(); return; }
+                pairs.forEach((p,i)=>setTimeout(()=>this.animateCancel(p[0],p[1]), i*400));
+                this._timer = setTimeout(()=>this.runSimplify(), pairs.length*400+1500);
+            }
+            animateCancel(t1, t2) {
+                const endX=t2.x; const endY=t2.y;
+                t1._canceling=true; t2._canceling=true;
+                t1.element.classList.add('animating'); t2.element.classList.add('animating');
+                this.moveToken(t1, endX, endY);
+                setTimeout(()=>{
+                    const b=document.createElement('div'); b.className='zero-badge'; b.textContent='0';
+                    b.style.left=(endX+10)+'px'; b.style.top=(endY+10)+'px'; this.boardWorld.appendChild(b);
+                    t1.element.classList.add('vanish'); t2.element.classList.add('vanish'); b.classList.add('vanish');
+                    setTimeout(()=>{ this.removeTokens([t1,t2]); b.remove(); }, 900);
                 }, 300);
-
-                setTimeout(() => { try { badge.remove(); } catch(e) {} }, 800);
-                setTimeout(() => { removeTokenById(t1.id); removeTokenById(t2.id); }, 1000);
-                return;
             }
 
-            // --- CAS 2 : Annulation Automatique (Séquentielle) ---
-            const startX = t1.x, startY = t1.y;
-            const endX = t2.x, endY = t2.y;
-
-            t1.element.classList.remove('is-zero');
-            t2.element.classList.remove('is-zero');
-            t1._canceling = true;
-            t2._canceling = true;
-            if (t1.pairId === t2.id) t1.pairId = null;
-            if (t2.pairId === t1.id) t2.pairId = null;
-            
-            t1.element.classList.add('animating'); // Pas de fading tout de suite
-            t2.element.classList.add('animating');
-
-            // 1. Déplacement de A vers B (plus rapide pour le dynamisme)
-            moveToken(t1, endX, endY);
-            
-            // 2. Affichage du badge quasi-immédiat (synchronisé avec l'arrivée)
-            setTimeout(() => {
-                // Création du Zéro centré
-                const badge = document.createElement('div');
-                badge.className = 'zero-badge';
-                badge.textContent = '0';
-                // Centrage plus précis
-                const size = SIZES[t2.type] || {w:50, h:50};
-                // badge ~20px large ? on centre sur la tuile
-                const cx = endX + size.w / 2;
-                const cy = endY + size.h / 2;
-                badge.style.left = (cx - 12) + 'px'; // approx half width of badge
-                badge.style.top = (cy - 20) + 'px';
-                badge.style.pointerEvents = 'none';
-                board.appendChild(badge);
-
-                // Griser les tuiles en dessous
-                t1.element.classList.add('fading-gray');
-                t2.element.classList.add('fading-gray');
-
-                // 3. Pause visible (on voit le zéro) puis disparition
-                setTimeout(() => {
-                    t1.element.classList.add('vanish');
-                    t2.element.classList.add('vanish');
-                    badge.classList.add('vanish');
-                }, 400); // Temps de lecture du zéro
-
-                setTimeout(() => { try { badge.remove(); } catch(e) {} }, 800);
-                setTimeout(() => {
-                    removeTokenById(t1.id);
-                    removeTokenById(t2.id);
-                }, 900);
-
-            }, 300); // 300ms correspond à la fin du mouvement
-        }
-
-        function autoSimplify() {
-            if (state._autoSimplifyActive) return;
-            state._autoSimplifyActive = true;
-            if (state._autoSimplifyTimer) {
-                clearTimeout(state._autoSimplifyTimer);
-                state._autoSimplifyTimer = null;
+            removeTokens(list) {
+                list.forEach(t=>t.element.remove());
+                const ids=list.map(t=>t.id);
+                this.tokens=this.tokens.filter(t=>!ids.includes(t.id));
+                this.steps.forEach(s=>s.tokenIds=s.tokenIds.filter(id=>!ids.includes(id)));
+                this.updateEquation();
             }
-            playSound('whoosh');
-            runAutoSimplifyPass();
-        }
 
-        function runAutoSimplifyPass() {
-            // ... (logique manuelle identique) ...
-            const manualPairs = [];
-            const processedIds = new Set();
-            for (const t of state.tokens) {
-                if (t._canceling) continue;
-                if (t.element.classList.contains('in-bracket') || t.element.classList.contains('pending-mult')) continue;
-                if (t.pairId !== null && !processedIds.has(t.id)) {
-                    const partner = state.tokens.find(p => p.id === t.pairId);
-                    if (partner && !partner._canceling && !partner.element.classList.contains('in-bracket') && !partner.element.classList.contains('pending-mult')) {
-                        const badge = document.getElementById(`badge-${t.id}-${partner.id}`) ||
-                                      document.getElementById(`badge-${partner.id}-${t.id}`);
-                        manualPairs.push([t, partner, badge]);
-                        processedIds.add(t.id);
-                        processedIds.add(partner.id);
-                    }
+            resetBoard(keepEquationMode = false) {
+                playSound('pop');
+                this.tokens.forEach(t => t.element.remove());
+                document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+                this.tokens = [];
+                if (!keepEquationMode) {
+                    this.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
+                    this.currentStepIndex = 0;
                 }
+                
+                this.lastPos = { x: 40, y: 60, maxYInRow: 0 };
+                this.lastSequentialPackId = null;
+                this.scale = 1; this.pan = {x:0, y:0};
+                
+                // FORCE UI RESET
+                this.isSubtractingInput = false;
+                this.isMultiplyingInput = false;
+                document.getElementById('btn-close-parenthesis').classList.add('hidden');
+                document.getElementById('btn-opposite').classList.add('hidden');
+                document.getElementById('btn-distribute').classList.add('hidden');
+                
+                this.updateTransform();
+                this.clearDrawing();
+                this.updateEquation();
             }
-            if (manualPairs.length > 0) {
-                manualPairs.forEach((pair, idx) => {
-                    setTimeout(() => {
-                        let [a, b, badge] = pair;
-                        if (a.sign === -1 && b.sign === 1) [a, b] = [b, a];
-                        animateCancelPair(a, b, badge);
-                    }, idx * 250); // un peu plus lent pour être clair
-                });
-                const totalDelay = manualPairs.length * 250 + 1500;
-                state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), totalDelay);
-                return;
+
+            // --- EQUATION TEXT ---
+            updateEquation() {
+                let displayString = "";
+                displayString = this.generateExpressionString(this.displayMode);
+                displayString = displayString.replace(/(\\;|\\,|\\quad|\\qquad)/g, "").replace(/\s+/g, "");
+                katex.render(displayString, document.getElementById('equation-display'), { throwOnError: false });
+                
+                const hasPending = this.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
+                const distBtn = document.getElementById('btn-distribute');
+                if (hasPending) distBtn.classList.remove('hidden'); else distBtn.classList.add('hidden');
             }
 
-            // AUTO PAIRING
-            const available = state.tokens.filter(t =>
-                !t._canceling &&
-                t.pairId === null &&
-                !t.element.classList.contains('in-bracket') &&
-                !t.element.classList.contains('pending-mult') &&
-                !t.element.classList.contains('animating')
-            );
-
-            const pairs = [];
-            const types = ['x2', 'x', 'unit'];
-            const centerOf = (t) => {
-                const s = SIZES[t.type] || { w: 50, h: 50 };
-                return { cx: t.x + s.w / 2, cy: t.y + s.h / 2 };
-            };
-
-            for (const ty of types) {
-                const greens = available.filter(t => t.type === ty && t.sign === 1);
-                let reds = available.filter(t => t.type === ty && t.sign === -1);
-                greens.sort((a, b) => (a.y - b.y) || (a.x - b.x));
-                reds.sort((a, b) => (a.y - b.y) || (a.x - b.x));
-
-                for (const g of greens) {
-                    if (!reds.length) break;
-                    const gc = centerOf(g);
-                    let bestIdx = -1; let bestD = Infinity;
-                    for (let i = 0; i < reds.length; i++) {
-                        const r = reds[i]; const rc = centerOf(r);
-                        const dx = gc.cx - rc.cx; const dy = gc.cy - rc.cy;
-                        const d2 = dx * dx + dy * dy;
-                        if (d2 < bestD) { bestD = d2; bestIdx = i; }
+            generateExpressionString(mode) {
+                if (mode === 'ordered') return this.generateOrderedLatex();
+                if (mode === 'reduced') return this.generateGroupedLatex();
+                let latex = ""; let isEmpty = true;
+                const hasNonEmptyBefore = (idx) => { for(let i=0; i<idx; i++) if(this.steps[i]?.tokenIds?.length > 0) return true; return false; };
+                this.steps.forEach((step, index) => {
+                    const toks = step.tokenIds.map(id => this.tokens.find(t => t.id === id)).filter(Boolean);
+                    if (!toks.length && index !== this.currentStepIndex) return;
+                    let content = this.tokensToSeparatedLatex(toks); if (!toks.length) content = "\\dots";
+                    let pStr = "";
+                    if (step.type === 'multiplication') {
+                        if (step.distributed) pStr = this.tokensToReducedSumLatex(toks);
+                        else pStr = step.factor + "(" + content + ")";
+                    } else if (step.type === 'subtraction') {
+                        if (step.distributed || !step.oppositeApplied) pStr = "(" + content + ")";
+                        else pStr = this.tokensToSeparatedLatex(toks);
+                    } else {
+                        pStr = content; if (index > 0 && this.latexStartsWithMinus(pStr)) pStr = "(" + pStr + ")";
                     }
-                    if (bestIdx !== -1) {
-                        const r = reds.splice(bestIdx, 1)[0];
-                        pairs.push([g, r]);
+                    if (index > 0 && hasNonEmptyBefore(index)) {
+                        const plus = `{\\color{${COLORS.pos}}{+}}`; const minusOrange = `{\\color{${COLORS.orange}}{-}}`;
+                        if (step.type === 'subtraction' && step.oppositeApplied) { if (!this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`; }
+                        else if (step.type === 'multiplication' && step.distributed && this.latexStartsWithMinus(pStr)) {}
+                        else if (step.operator === '+' && !this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`;
+                        else if (step.operator === '-') latex += (step.type==='subtraction'&&!step.oppositeApplied) ? `\\;${minusOrange}\\;` : ' - ';
                     }
-                }
-            }
-
-            if (pairs.length === 0) {
-                state._autoSimplifyActive = false;
-                state._autoSimplifyTimer = null;
-                updateEquation();
-                return;
-            }
-
-            // Délai pour bien voir "l'un après l'autre"
-            pairs.forEach((pair, idx) => {
-                setTimeout(() => {
-                    const [t1, t2] = pair;
-                    animateCancelPair(t1, t2);
-                }, idx * 400); 
-            });
-
-            const nextDelay = pairs.length * 400 + 1500;
-            state._autoSimplifyTimer = setTimeout(() => runAutoSimplifyPass(), nextDelay);
-        }
-
-        function removeTokenById(id) {
-            const t = state.tokens.find(x => x.id === id);
-            if (!t) return;
-            const ghosts = [];
-            if (t.ghostIds && t.ghostIds.length > 0) {
-                t.ghostIds.forEach(gid => {
-                    const g = state.tokens.find(x => x.id === gid);
-                    if (g) ghosts.push(g);
+                    latex += pStr; isEmpty = false;
                 });
+                return isEmpty ? "\\dots" : latex;
             }
-            removeTokens([t, ...ghosts]);
-        }
-
-        function removeTokens(list) {
-            list.forEach(t => t.element.remove());
-            const idsToRemove = list.map(t => t.id);
-            state.tokens = state.tokens.filter(t => !idsToRemove.includes(t.id));
-            state.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => !idsToRemove.includes(id)));
-
-            if (state.tokens.length === 0) {
-                state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
-                state.lastSequentialPackId = null;
-                state.pendingPackGap = 0;
-                state.lastPack = null;
+            tokensToSeparatedLatex(tokens) {
+                if (!tokens || !tokens.length) return "";
+                const groups=[]; let cur=null;
+                tokens.forEach(t=>{ const s=(t.displaySign===-1)?-1:1; if(cur&&cur.type===t.type&&cur.s===s&&cur.pid===t.packId){cur.c++;} else { if(cur)groups.push(cur); cur={type:t.type,s:s,pid:t.packId,c:1}; } });
+                if(cur)groups.push(cur);
+                let l=""; let first=true;
+                groups.forEach(g=>{
+                    let term = (g.c===1?"":g.c)+(g.type==='x2'?"x^2":(g.type==='x'?"x":"")); if(g.type==='unit')term=String(g.c);
+                    const col=g.s===-1?COLORS.neg:COLORS.pos; const cTerm=`{\\color{${col}}{${term}}}`;
+                    if(first) l+=(g.s===-1?`{\\color{${col}}{-}}`:"")+cTerm; else l+=(g.s===-1?`\\;{\\color{${col}}{-}}\\;`:`\\;{\\color{${COLORS.pos}}{+}}\\;`)+cTerm;
+                    first=false;
+                });
+                return l;
             }
-            updateEquation();
-        }
-
-        // --- DRAG & DROP ---
-        let draggedToken = null; let dragOffset = {x:0, y:0};
-        function handleDragStart(e) {
-            if (state.currentTool !== 'hand') return;
-            e.preventDefault();
-            const el = e.target.closest('.token');
-            if(!el) return;
-            const id = parseInt(el.id.split('-')[1]);
-            draggedToken = state.tokens.find(t => t.id === id);
-            unpair(draggedToken);
-            el.style.zIndex = 1000;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const rect = el.getBoundingClientRect();
-            dragOffset.x = clientX - rect.left; dragOffset.y = clientY - rect.top;
-            document.addEventListener('mousemove', handleDragMove); document.addEventListener('touchmove', handleDragMove, {passive: false});
-            document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchend', handleDragEnd);
-        }
-        function handleDragMove(e) {
-            if (!draggedToken) return;
-            e.preventDefault();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const bRect = board.getBoundingClientRect();
-            let nx = clientX - bRect.left - dragOffset.x; let ny = clientY - bRect.top - dragOffset.y;
-            draggedToken.element.style.left = nx + 'px'; draggedToken.element.style.top = ny + 'px';
-            draggedToken.x = nx; draggedToken.y = ny;
-        }
-        function handleDragEnd(e) {
-            if (!draggedToken) return;
-            const partner = findOverlap(draggedToken);
-            if (partner) createZeroPair(draggedToken, partner);
-            draggedToken.element.style.zIndex = ''; draggedToken = null;
-            document.removeEventListener('mousemove', handleDragMove); document.removeEventListener('touchmove', handleDragMove);
-            document.removeEventListener('mouseup', handleDragEnd); document.removeEventListener('touchend', handleDragEnd);
-            updateEquation();
-        }
-        function findOverlap(token) {
-            const center = { x: token.x + SIZES[token.type].w/2, y: token.y + SIZES[token.type].h/2 };
-            for (let t of state.tokens) {
-                if (t === token) continue;
-                if (t.pairId !== null) continue; 
-                if (t.type !== token.type) continue;
-                if (t.sign === token.sign) continue;
-                const tCenter = { x: t.x + SIZES[t.type].w/2, y: t.y + SIZES[t.type].h/2 };
-                const dist = Math.hypot(center.x - tCenter.x, center.y - tCenter.y);
-                if (dist < SNAP_THRESHOLD) return t;
+            tokensToReducedSumLatex(tokens) {
+                if (!tokens || !tokens.length) return "";
+                const ord=[]; tokens.forEach(t=>{if(!ord.includes(t.type))ord.push(t.type)});
+                const c={x2:{p:0,n:0},x:{p:0,n:0},unit:{p:0,n:0}};
+                tokens.forEach(t=>{ if(t._canceling)return; if(t.sign===1)c[t.type].p++; else c[t.type].n++; });
+                let l=""; let has=false;
+                ord.forEach(ty=>{
+                    if(c[ty].p>0) { 
+                        const core=(c[ty].p===1&&ty!=='unit')?'':c[ty].p; const s=(ty==='x2'?'x^2':(ty==='x'?'x':'')); 
+                        const t=`{\\color{${COLORS.pos}}{${core}${s}}}`; if(!has)l+=t; else l+=`\\;{\\color{${COLORS.pos}}{+}}\\;`+t; has=true; 
+                    }
+                    if(c[ty].n>0) {
+                        const core=(c[ty].n===1&&ty!=='unit')?'':c[ty].n; const s=(ty==='x2'?'x^2':(ty==='x'?'x':''));
+                        const t=`{\\color{${COLORS.neg}}{${core}${s}}}`; if(!has)l+=`{\\color{${COLORS.neg}}{-}}`+t; else l+=`\\;{\\color{${COLORS.neg}}{-}}\\;`+t; has=true;
+                    }
+                });
+                return l||"0";
             }
-            return null;
-        }
-        function createZeroPair(t1, t2) {
-            playSound('snap');
-            const mx = (t1.x + t2.x) / 2; const my = (t1.y + t2.y) / 2;
-            moveToken(t1, mx, my); moveToken(t2, mx, my);
-            t1.pairId = t2.id; t2.pairId = t1.id;
-            t1.element.classList.add('is-zero'); t2.element.classList.add('is-zero');
-            const badge = document.createElement('div');
-            badge.className = 'zero-badge'; badge.innerText = '0'; badge.id = `badge-${t1.id}-${t2.id}`;
-            badge.style.left = (mx + SIZES[t1.type].w/2 - 10) + 'px'; badge.style.top = (my + SIZES[t1.type].h/2 - 20) + 'px';
-            board.appendChild(badge);
-        }
-        function unpair(t) {
-            if (t.pairId === null) return;
-            const p = state.tokens.find(tok => tok.id === t.pairId);
-            if (p) { p.pairId = null; p.element.classList.remove('is-zero'); }
-            t.pairId = null; t.element.classList.remove('is-zero');
-            let b = document.getElementById(`badge-${t.id}-${p?.id}`) || document.getElementById(`badge-${p?.id}-${t.id}`);
-            if(b) b.remove();
-        }
-        
-        function resetBoard() {
-            playSound('pop');
-            state.tokens.forEach(t => t.element.remove());
-            document.querySelectorAll('.zero-badge').forEach(b => b.remove());
-            state.tokens = []; 
-            state.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
-            state.currentStepIndex = 0;
-            state.displayMode = 'normal';
-            state.isSubtractingInput = false;
-            state.isMultiplyingInput = false;
-            state.lastPos = { x: 40, y: 60, maxYInRow: 0 };
-            state.lastSequentialPackId = null;
-            state.pendingPackGap = 0;
-            state.lastPack = null;
+            generateOrderedLatex() { return this.tokensToSeparatedLatex(this.tokens); } 
+            generateGroupedLatex() { return this.tokensToReducedSumLatex(this.tokens); }
+            latexStartsWithMinus(s) { return (s||'').trim().startsWith('-') || /^\{\\color\{[^}]+\}\{-\}\}/.test(s||''); }
             
-            btnOpposite.classList.add('hidden');
-            btnCloseP.classList.add('hidden');
-            btnDistribute.classList.add('hidden'); 
-            clearCanvas(); updateEquation();
+            handleDragStart(e) { 
+                if (this.currentTool !== 'hand') return; e.stopPropagation();
+                const el = e.target.closest('.token'); if(!el) return;
+                const id = parseInt(el.id.split('-')[1]);
+                this.draggedToken = this.tokens.find(t => t.id === id);
+                if(this.draggedToken.pairId) { 
+                     const p=this.tokens.find(x=>x.id===this.draggedToken.pairId); if(p){p.pairId=null;p.element.classList.remove('is-zero');}
+                     this.draggedToken.pairId=null; this.draggedToken.element.classList.remove('is-zero');
+                     const b=document.getElementById(`badge-${this.draggedToken.id}-${p?.id}`)||document.getElementById(`badge-${p?.id}-${this.draggedToken.id}`); if(b)b.remove();
+                }
+                el.classList.add('dragging');
+                const r = el.getBoundingClientRect(); 
+                this.dragOffset = { x: (e.touches?e.touches[0].clientX:e.clientX) - r.left, y: (e.touches?e.touches[0].clientY:e.clientY) - r.top };
+                
+                const move=(ev)=>{
+                    ev.preventDefault();
+                    const cx = ev.touches?ev.touches[0].clientX:ev.clientX; const cy = ev.touches?ev.touches[0].clientY:ev.clientY;
+                    const br = this.boardContainer.getBoundingClientRect();
+                    const wx = (cx - br.left - this.pan.x - this.dragOffset.x)/this.scale;
+                    const wy = (cy - br.top - this.pan.y - this.dragOffset.y)/this.scale;
+                    this.draggedToken.element.style.left=wx+'px'; this.draggedToken.element.style.top=wy+'px';
+                    this.draggedToken.x=wx; this.draggedToken.y=wy;
+                };
+                const end=()=>{
+                    document.removeEventListener('mousemove',move); document.removeEventListener('touchmove',move);
+                    document.removeEventListener('mouseup',end); document.removeEventListener('touchend',end);
+                    if(this.draggedToken) {
+                        this.draggedToken.element.classList.remove('dragging');
+                        const s1=SIZES[this.draggedToken.type]; const c1={x:this.draggedToken.x+s1.w/2,y:this.draggedToken.y+s1.h/2};
+                        for(let t of this.tokens) {
+                            if(t===this.draggedToken||t.pairId||t.type!==this.draggedToken.type||t.sign===this.draggedToken.sign)continue;
+                            const s2=SIZES[t.type]; const c2={x:t.x+s2.w/2,y:t.y+s2.h/2};
+                            if(Math.hypot(c1.x-c2.x, c1.y-c2.y)<SNAP_THRESHOLD) {
+                                playSound('snap');
+                                const mx=(this.draggedToken.x+t.x)/2; const my=(this.draggedToken.y+t.y)/2;
+                                this.moveToken(this.draggedToken,mx,my); this.moveToken(t,mx,my);
+                                this.draggedToken.pairId=t.id; t.pairId=this.draggedToken.id;
+                                this.draggedToken.element.classList.add('is-zero'); t.element.classList.add('is-zero');
+                                const b=document.createElement('div'); b.className='zero-badge'; b.textContent='0'; b.id=`badge-${this.draggedToken.id}-${t.id}`;
+                                b.style.left=(mx+s1.w/2-10)+'px'; b.style.top=(my+s1.h/2-20)+'px'; this.boardWorld.appendChild(b);
+                                break;
+                            }
+                        }
+                        this.draggedToken=null; this.updateEquation();
+                    }
+                };
+                document.addEventListener('mousemove',move); document.addEventListener('touchmove',move,{passive:false});
+                document.addEventListener('mouseup',end); document.addEventListener('touchend',end);
+            }
+            setTool(t){this.currentTool=t;const p=t==='pen';this.boardContainer.classList.toggle('hide-cursor',p);document.getElementById('custom-cursor').style.display=p?'block':'none';}
+            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
+            draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
+            clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
+            resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
+            moveCursor(e){if(this.currentTool!=='pen')return;const c=document.getElementById('custom-cursor');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';c.style.transform='translate(-6px,-28px)';}
         }
-        function setTool(t) {
-            state.currentTool = t; const penMode = t === 'pen';
-            board.classList.toggle('hide-cursor', penMode);
-            document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
-            document.getElementById('drawing-canvas').style.pointerEvents = penMode ? 'auto' : 'none';
-        }
-        const dCanvas = document.getElementById('drawing-canvas'); const ctx = dCanvas.getContext('2d');
-        let isDrawing = false, lastX = 0, lastY = 0;
-        function resizeCanvas() {
-            const rect = board.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            dCanvas.style.width = rect.width + 'px';
-            dCanvas.style.height = rect.height + 'px';
-            dCanvas.width = Math.round(rect.width * dpr);
-            dCanvas.height = Math.round(rect.height * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.strokeStyle = '#2563eb';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-        }
-        window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
-        function getMousePos(e) { const r = dCanvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx - r.left, y: cy - r.top }; }
-        dCanvas.addEventListener('mousedown', startDraw); dCanvas.addEventListener('touchstart', startDraw, {passive:false});
-        dCanvas.addEventListener('mousemove', draw); dCanvas.addEventListener('touchmove', draw, {passive:false});
-        dCanvas.addEventListener('mouseup', endDraw); dCanvas.addEventListener('touchend', endDraw);
-        window.addEventListener('mousemove', moveCursor);
-        function startDraw(e) { if(state.currentTool!=='pen')return; isDrawing=true; const p=getMousePos(e); lastX=p.x; lastY=p.y; }
-        function draw(e) { if(!isDrawing||state.currentTool!=='pen')return; e.preventDefault(); const p=getMousePos(e); ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(p.x,p.y); ctx.stroke(); lastX=p.x; lastY=p.y; }
-        function endDraw() { isDrawing=false; }
-        function clearCanvas() { ctx.clearRect(0,0,dCanvas.width,dCanvas.height); }
-        function moveCursor(e) { if(state.currentTool!=='pen')return; const c=document.getElementById('custom-cursor'); c.style.left=e.clientX+'px'; c.style.top=e.clientY+'px'; c.style.transform='translate(-6px,-28px)'; }
-        updateEquation();
+
+        const app = new AlgebraApp();
     </script>
 </body>
 </html>
