@@ -202,10 +202,8 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        <!-- SIDEBAR IMPROVED: Slightly wider, cleaner organization -->
         <aside class="w-28 bg-slate-50 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto select-none">
             
-            <!-- SECTION TUILES (TITRE RAJOUTÉ) -->
             <span class="text-[9px] font-bold text-slate-400 uppercase leading-tight">Tuiles</span>
             <div class="flex flex-col gap-2 w-full px-1 items-center">
                 <!-- x² pair -->
@@ -227,7 +225,6 @@
 
             <div class="w-16 h-px bg-slate-200"></div>
 
-            <!-- SECTION MULTIPLIER -->
             <div id="multiplication-panel" class="flex flex-col gap-1 w-full px-2 items-center">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
                 <div class="flex flex-col gap-1 w-full">
@@ -239,11 +236,10 @@
 
             <div class="w-16 h-px bg-slate-200"></div>
 
-            <!-- SECTION ACTIONS (Tous jaunes maintenant) -->
             <div class="flex flex-col gap-2 w-full px-2 items-center">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Actions</span>
                 
-                <button id="btn-order" onclick="app.orderAll()" class="w-full py-2 bg-white border border-yellow-300 rounded text-[11px] font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Ordonner les tuiles">Ordonner</button>
+                <button id="btn-order" onclick="app.orderAll()" class="w-full py-2 bg-white border border-blue-300 rounded text-[11px] font-bold text-blue-700 shadow-sm active:bg-blue-50 hover:bg-blue-50 transition" title="Ordonner les tuiles">Ordonner</button>
                 
                 <button id="btn-reduce" onclick="app.reduceExpression()" class="w-full py-2 bg-white border border-yellow-300 rounded text-[11px] font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">Réduire</button>
                 
@@ -304,48 +300,20 @@
                 this.initListeners(); this.resizeCanvas(); this.updateEquation();
             }
 
-            // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (STYLE FANTÔME) ---
+            // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (STYLE FANTÔME AVEC SEUIL) ---
             handleSidebarTouchStart(e, type, sign) {
                 e.preventDefault();
-                // 1. Créer un élément "fantôme" temporaire attaché au BODY (au-dessus de tout)
-                // Il suit la souris mais n'existe pas encore dans le monde du jeu
-                const el = document.createElement('div');
-                const colorClass = sign === 1 ? 'green' : 'red';
-                el.classList.add('token', colorClass, `type-${type}`, 'drag-ghost');
-                
-                let label = "";
-                if (type === 'x2') label = sign === 1 ? "x²" : "-x²";
-                else if (type === 'x') label = sign === 1 ? "x" : "-x";
-                else label = sign === 1 ? "1" : "-1";
-                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
-                
-                // On met à l'échelle pour correspondre au zoom actuel du plateau (pour éviter le changement de taille brusque au drop)
-                el.style.transform = `scale(${this.scale})`;
-                el.style.transformOrigin = 'center';
-
-                document.body.appendChild(el);
-
-                // Initialisation
                 const cx = e.touches ? e.touches[0].clientX : e.clientX;
                 const cy = e.touches ? e.touches[0].clientY : e.clientY;
-                
-                const size = SIZES[type];
-                // Offset pour centrer sous la souris
-                const offset = { 
-                    x: (size.w * this.scale) / 2, 
-                    y: (size.h * this.scale) / 2 
-                };
 
-                // Position initiale
-                el.style.left = (cx - offset.x) + 'px';
-                el.style.top = (cy - offset.y) + 'px';
-
+                // On initialise l'état du drag sans créer l'élément visuel tout de suite
                 this.menuDrag = {
-                    el: el,
+                    isDragging: false, // On attend de bouger pour passer à true
                     type: type,
                     sign: sign,
-                    offset: offset,
-                    startPos: { x: cx, y: cy }
+                    startPos: { x: cx, y: cy },
+                    el: null,
+                    offset: null
                 };
 
                 // Attacher les écouteurs globaux
@@ -370,43 +338,96 @@
                 const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
                 const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
                 
-                this.menuDrag.el.style.left = (cx - this.menuDrag.offset.x) + 'px';
-                this.menuDrag.el.style.top = (cy - this.menuDrag.offset.y) + 'px';
+                // Si on n'a pas encore commencé à 'draguer' visuellement
+                if (!this.menuDrag.isDragging) {
+                    const dist = Math.hypot(cx - this.menuDrag.startPos.x, cy - this.menuDrag.startPos.y);
+                    if (dist > 5) {
+                        // SEUIL DÉPASSÉ : On crée le fantôme maintenant
+                        this.menuDrag.isDragging = true;
+                        this.createMenuGhost(cx, cy);
+                    }
+                }
+
+                // Si le fantôme existe, on le bouge
+                if (this.menuDrag.isDragging && this.menuDrag.el) {
+                    this.menuDrag.el.style.left = (cx - this.menuDrag.offset.x) + 'px';
+                    this.menuDrag.el.style.top = (cy - this.menuDrag.offset.y) + 'px';
+                    
+                    // Gestion taille (Menu vs Plateau)
+                    const sidebarWidth = 112;
+                    if (cx < sidebarWidth) {
+                        const s = this.getPreviewScale(this.menuDrag.type);
+                        this.menuDrag.el.style.transform = `scale(${s})`;
+                    } else {
+                        this.menuDrag.el.style.transform = `scale(${this.scale})`;
+                    }
+                }
+            }
+
+            createMenuGhost(cx, cy) {
+                const type = this.menuDrag.type;
+                const sign = this.menuDrag.sign;
+                
+                const el = document.createElement('div');
+                const colorClass = sign === 1 ? 'green' : 'red';
+                el.classList.add('token', colorClass, `type-${type}`, 'drag-ghost');
+                
+                let label = "";
+                if (type === 'x2') label = sign === 1 ? "x²" : "-x²";
+                else if (type === 'x') label = sign === 1 ? "x" : "-x";
+                else label = sign === 1 ? "1" : "-1";
+                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                
+                // Style initial
+                el.style.transformOrigin = 'center';
+                document.body.appendChild(el);
+
+                const size = SIZES[type];
+                // Offset
+                const offset = { 
+                    x: (size.w * this.scale) / 2, 
+                    y: (size.h * this.scale) / 2 
+                };
+                this.menuDrag.offset = offset;
+                this.menuDrag.el = el;
+
+                // Position immédiate
+                el.style.left = (cx - offset.x) + 'px';
+                el.style.top = (cy - offset.y) + 'px';
+                
+                // Initial scale check
+                const sidebarWidth = 112;
+                if (cx < sidebarWidth) {
+                    const s = this.getPreviewScale(type);
+                    el.style.transform = `scale(${s})`;
+                } else {
+                    el.style.transform = `scale(${this.scale})`;
+                }
             }
 
             handleMenuDragEnd(ev) {
                 if (!this.menuDrag) return;
                 
-                const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
-                const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
-                
-                // Nettoyage du fantôme
-                this.menuDrag.el.remove();
-                
-                // Largeur du menu ajustée (w-28 = 7rem = 112px)
-                const sidebarWidth = 112; 
-                
-                // LOGIQUE DE DÉPÔT :
-                // Si on relâche hors du menu (sur le plateau) -> Pose manuelle
-                // Si on relâche dans le menu (ou tout petit mouvement) -> Ajout auto (Clic)
-                
-                if (endX > sidebarWidth) {
-                    // C'est un DROP sur le plateau
-                    // Convertir coordonnées écran -> coordonnées monde
-                    const worldPos = this.getWorldPos(endX, endY);
-                    const size = SIZES[this.menuDrag.type];
+                if (this.menuDrag.isDragging && this.menuDrag.el) {
+                    // C'était un vrai DRAG
+                    const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
+                    const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
                     
-                    // Créer la vraie pièce
-                    this.addTile(this.menuDrag.type, this.menuDrag.sign, worldPos.x - size.w/2, worldPos.y - size.h/2);
+                    this.menuDrag.el.remove();
                     
-                    // Vérifier immédiatement si on doit snapper avec une autre pièce (puisqu'on vient de lâcher)
-                    // On récupère la dernière pièce créée (celle qu'on vient d'ajouter)
-                    const newToken = this.tokens[this.tokens.length - 1];
-                    if (newToken) {
-                        this.checkSnapAndFinalize(newToken);
+                    const sidebarWidth = 112;
+                    if (endX > sidebarWidth) {
+                        // Drop sur plateau
+                        const worldPos = this.getWorldPos(endX, endY);
+                        const size = SIZES[this.menuDrag.type];
+                        this.addTile(this.menuDrag.type, this.menuDrag.sign, worldPos.x - size.w/2, worldPos.y - size.h/2);
+                        const newToken = this.tokens[this.tokens.length - 1];
+                        if (newToken) this.checkSnapAndFinalize(newToken);
                     }
+                    // Si drop dans menu, on annule (rien ne se passe)
                 } else {
-                    // C'est un CLIC (ou drop annulé dans le menu) -> Ajout automatique
+                    // C'était un CLIC (pas de mouvement suffisant pour créer le fantôme)
+                    // Ajout automatique direct
                     this.addTile(this.menuDrag.type, this.menuDrag.sign);
                 }
                 
