@@ -618,25 +618,63 @@
 
             orderAll() { this.saveState(); playSound('pop'); this.displayMode='ordered'; this.isReduced=false; this.organizeBoard(false); this.updateEquation(); }
             reduceExpression() { this.saveState(); playSound('magic'); this.displayMode='reduced'; this.isReduced=true; this.organizeBoard(true); this.updateEquation(); }
+            
             organizeBoard(reduced) {
                 this.organizeSubset(this.tokens, 20, 60, (this.boardContainer.clientWidth/this.scale)-20, reduced);
             }
+            
+            // --- FIX 1: Respect Packs in Order Mode ---
             organizeSubset(subset, startX, startY, limitX, reduced) {
                 const rows = [{type:'x2',s:1},{type:'x2',s:-1},{type:'x',s:1},{type:'x',s:-1},{type:'unit',s:1},{type:'unit',s:-1}];
                 let y = startY;
                 rows.forEach(r => {
-                    const ts = subset.filter(t => t.type===r.type && t.sign===r.s && t.pairId===null);
-                    if(!ts.length) return;
-                    let cx = startX; let rowH=0;
-                    ts.forEach(t => {
-                        const s=SIZES[t.type];
-                        if(cx+s.w > limitX) { cx=startX; y+=rowH+(reduced?10:18); rowH=0; }
-                        t.element.classList.add('animating'); this.moveToken(t,cx,y); setTimeout(()=>t.element.classList.remove('animating'),500);
-                        cx+=s.w+(reduced?2:2); rowH=Math.max(rowH,s.h);
+                    const eligible = subset.filter(t => t.type===r.type && t.sign===r.s && t.pairId===null);
+                    if(!eligible.length) return;
+
+                    // Group by packs to preserve spacing in "Order" mode
+                    let packs = [];
+                    if (reduced) {
+                        packs = [eligible]; // One big pack per type/sign
+                    } else {
+                        const map = new Map();
+                        eligible.forEach(t => {
+                            const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
+                            if(!map.has(pid)) map.set(pid, []);
+                            map.get(pid).push(t);
+                        });
+                        // Sort packs by packMeta order to keep chronological input order
+                        const sortedPids = Array.from(map.keys()).sort((a,b) => {
+                            const oa = this.packMeta[a]?.order ?? a;
+                            const ob = this.packMeta[b]?.order ?? b;
+                            return oa - ob;
+                        });
+                        packs = sortedPids.map(pid => map.get(pid));
+                    }
+
+                    let cx = startX; 
+                    let rowH = 0;
+                    
+                    packs.forEach(pack => {
+                        pack.forEach(t => {
+                            const s = SIZES[t.type];
+                            if(cx + s.w > limitX) { 
+                                cx = startX; 
+                                y += rowH + (reduced?10:18); 
+                                rowH = 0; 
+                            }
+                            t.element.classList.add('animating'); 
+                            this.moveToken(t, cx, y); 
+                            setTimeout(()=>t.element.classList.remove('animating'), 500);
+                            cx += s.w + 2; 
+                            rowH = Math.max(rowH, s.h);
+                        });
+                        if (!reduced) cx += 25; // Add visual gap between packs
                     });
-                    y += rowH+(reduced?18:18);
+                    
+                    y += rowH + (reduced?18:18);
                 });
             }
+
             moveToken(t,x,y) { t.x=x; t.y=y; t.element.style.left=x+'px'; t.element.style.top=y+'px'; }
 
             autoSimplify() { if(this._autoSimplifyActive)return; this.saveState(); this._autoSimplifyActive=true; if(this._timer) clearTimeout(this._timer); playSound('whoosh'); this.runSimplify(); }
@@ -783,7 +821,59 @@
                 });
                 return l||"0";
             }
-            generateOrderedLatex() { return this.tokensToSeparatedLatex(this.tokens); } 
+            
+            // --- FIX 2: Generate Ordered Latex per Pack ---
+            generateOrderedLatex() { 
+                // Group by Pack ID first
+                const byPack = new Map();
+                this.tokens.forEach(t => {
+                    if (t.pairId !== null) return;
+                    const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
+                    if (!byPack.has(pid)) byPack.set(pid, []);
+                    byPack.get(pid).push(t);
+                });
+
+                // Sort packs by order (preserves input sequence)
+                const packs = Array.from(byPack.keys()).map(pid => ({
+                    pid,
+                    order: this.packMeta[pid]?.order ?? pid,
+                    tokens: byPack.get(pid)
+                })).sort((a, b) => a.order - b.order);
+
+                let l = "";
+                let first = true;
+                
+                // Standard Sort Order for types
+                const types = [
+                    {type:'x2', s:1}, {type:'x2', s:-1},
+                    {type:'x', s:1}, {type:'x', s:-1},
+                    {type:'unit', s:1}, {type:'unit', s:-1}
+                ];
+
+                types.forEach(spec => {
+                    packs.forEach(p => {
+                        const count = p.tokens.filter(t => t.type === spec.type && t.sign === spec.s).length;
+                        if (count > 0) {
+                            let term = (count === 1 && spec.type !== 'unit') ? "" : String(count);
+                            if (spec.type === 'x2') term += "x^2";
+                            else if (spec.type === 'x') term += "x";
+                            
+                            const col = spec.s === 1 ? COLORS.pos : COLORS.neg;
+                            const cTerm = `{\\color{${col}}{${term}}}`;
+                            
+                            if (first) {
+                                l += (spec.s === -1 ? `{\\color{${col}}{-}}` : "") + cTerm;
+                            } else {
+                                l += (spec.s === -1 ? `\\;{\\color{${col}}{-}}\\;` : `\\;{\\color{${COLORS.pos}}{+}}\\;`) + cTerm;
+                            }
+                            first = false;
+                        }
+                    });
+                });
+                
+                return l || "0";
+            } 
+            
             generateGroupedLatex() { return this.tokensToReducedSumLatex(this.tokens); }
             latexStartsWithMinus(s) { return (s||'').trim().startsWith('-') || /^\{\\color\{[^}]+\}\{-\}\}/.test(s||''); }
             
