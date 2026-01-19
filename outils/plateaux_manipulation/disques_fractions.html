@@ -177,7 +177,7 @@
     .frac.menu .den{ margin-top: 2px; }
 
     /* poignées de rotation (sur les secteurs) */
-    .rotate-handle{ opacity: 0; transition: opacity 120ms ease; }
+    .rotate-handle{ opacity: 0; transition: opacity 120ms ease; cursor: grab; }
     .strip.selected .rotate-handle{ opacity: 1; }
 
     /* outils */
@@ -468,7 +468,7 @@
 
         const label = document.createElement('div');
         label.className = 'text-sm font-extrabold text-slate-700 flex items-center gap-2 select-none';
-        label.innerHTML = `<span>${f.name}</span><span class="text-slate-400 font-bold">•</span>${this._menuFractionHTML(f.denom)}`;
+        label.innerHTML = this._menuFractionHTML(f.denom);
 
         line.appendChild(picks);
         line.appendChild(label);
@@ -531,21 +531,31 @@
     }
 
     fontSizeFor(denom, kind){
-      // Ajusté pour les disques
+      // Police volontairement généreuse pour les petits dénominateurs.
+      // 10e reste plus petit (peu d'espace) ; 3/4/5/6/8 peuvent être nettement plus gros.
       if(kind === 'piece'){
-        if(denom >= 10) return 12;
-        if(denom >= 8)  return 13;
-        if(denom >= 6)  return 14;
-        if(denom >= 5)  return 15;
-        return 16;
+        if(denom >= 10) return 14; // ne pas grossir les 10e (et au-delà)
+        if(denom === 9)  return 15;
+        if(denom === 8)  return 17;
+        if(denom === 7)  return 17;
+        if(denom === 6)  return 18;
+        if(denom === 5)  return 19;
+        if(denom === 4)  return 20;
+        if(denom === 3)  return 21;
+        if(denom === 2)  return 22;
+        return 18;
       }
-      // disk
-      if(denom >= 10) return 11;
-      if(denom >= 8)  return 12;
-      if(denom >= 6)  return 13;
-      if(denom >= 5)  return 13;
-      if(denom >= 4)  return 14;
-      return 15;
+      // disk (étiquettes répétées) : un poil plus petit que sur une pièce
+      if(denom >= 10) return 13;
+      if(denom === 9)  return 14;
+      if(denom === 8)  return 15;
+      if(denom === 7)  return 16;
+      if(denom === 6)  return 17;
+      if(denom === 5)  return 17;
+      if(denom === 4)  return 18;
+      if(denom === 3)  return 19;
+      if(denom === 2)  return 20;
+      return 17;
     }
 
     // --- Géométrie ---
@@ -715,16 +725,19 @@
       const rr = R * 0.62;
       const tx = cx + rr*Math.cos(mid);
       const ty = cy + rr*Math.sin(mid);
-      // poignées de rotation (toujours présentes pour les pièces ; visibles via CSS quand sélectionné)
+      // poignées de rotation (points aux extrémités des rayons) :
+      // visuelles petites (points), mais zone de capture large via _hitRotateHandle.
+      const handleR = 5.2;
       const hrH = R - 14;
       const h1x = cx + hrH*Math.cos(a0);
       const h1y = cy + hrH*Math.sin(a0);
       const h2x = cx + hrH*Math.cos(a1);
       const h2y = cy + hrH*Math.sin(a1);
       const handles = `
-        <circle class="rotate-handle" data-handle="a0" cx="${h1x}" cy="${h1y}" r="11" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.50)" stroke-width="1.2" />
-        <circle class="rotate-handle" data-handle="a1" cx="${h2x}" cy="${h2y}" r="11" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.50)" stroke-width="1.2" />
+        <circle class="rotate-handle" data-handle="a0" cx="${h1x}" cy="${h1y}" r="${handleR}" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.55)" stroke-width="1.2" />
+        <circle class="rotate-handle" data-handle="a1" cx="${h2x}" cy="${h2y}" r="${handleR}" fill="rgba(255,255,255,0.95)" stroke="rgba(0,0,0,0.55)" stroke-width="1.2" />
       `;
+
 
       return `
         <svg class="token-svg" viewBox="0 0 ${D} ${D}" xmlns="http://www.w3.org/2000/svg">
@@ -1314,6 +1327,32 @@
     }
 
 
+    isPointInDisk(disk, wx, wy){
+      if(!disk || disk.kind !== 'disk') return true;
+      const D = this.diskD;
+      const R = D/2;
+      const cx = disk.x + R;
+      const cy = disk.y + R;
+      return Math.hypot(wx - cx, wy - cy) <= R;
+    }
+
+    // Pick le token réellement sous le pointeur (forme peinte), du plus haut au plus bas.
+    _pickTokenAt(wx, wy){
+      // z-order: on se base sur l'id (comme le zIndex = 10+id)
+      const ordered = [...this.tokens].sort((a,b) => (b.id - a.id));
+      for(const t of ordered){
+        if(!t) continue;
+        if(t.kind === 'piece'){
+          const rh = this._hitRotateHandle(t, wx, wy);
+          if(rh) return { token: t, rotateWhich: rh };
+          if(this.isPointInPiece(t, wx, wy)) return { token: t, rotateWhich: null };
+        } else {
+          if(this.isPointInDisk(t, wx, wy)) return { token: t, rotateWhich: null };
+        }
+      }
+      return null;
+    }
+
 
 
     // ---- Rotation : poignées (extrémités des rayons) ----
@@ -1346,7 +1385,7 @@
 
     _hitRotateHandle(piece, wx, wy){
       if(!piece || piece.kind !== 'piece') return null;
-      const hitR = 18 / this.scale;
+      const hitR = 26 / this.scale;
       let best = null;
       let bestD = Infinity;
       for(const p of this._pieceHandlePoints(piece)){
@@ -1362,12 +1401,12 @@
     // avec une arête déjà présente au même centre.
     snapToCenterAndMaybeClip(token, opts={}){
       const t = token;
-      if(!t) return;
+      if(!t) return false;
       const D = this.diskD;
       const thresh = (12 / this.scale);
 
       const candidates = this.tokens.filter(o => o.id !== t.id && o.side === t.side);
-      if(!candidates.length) return;
+      if(!candidates.length) return false;
 
       const tcx = t.x + D/2;
       const tcy = t.y + D/2;
@@ -1379,7 +1418,7 @@
         const d = Math.hypot(tcx - ocx, tcy - ocy);
         if(d < bestDist){ bestDist = d; best = o; }
       }
-      if(!best || bestDist > thresh) return;
+      if(!best || bestDist > thresh) return false;
 
       const target = { x: best.x, y: best.y };
 
@@ -1454,6 +1493,7 @@
       }
 
       this._animateTokenTo(t, target, {duration: 110, ...opts});
+      return true;
     }
     // ---- Aimantation (pièces ↔ centre, et disque ↔ centre si proche) ----
 
@@ -1816,27 +1856,23 @@
     handleDragStart(e){
       if(this.currentTool !== 'hand') return;
       e.stopPropagation();
-      const el = e.target.closest('.strip');
-      if(!el) return;
-
-      const id = parseInt(el.dataset.id, 10);
-      const token = this.tokens.find(t => t.id === id);
-      if(!token) return;
 
       // Position au down (monde)
       const pt0 = e.touches ? e.touches[0] : e;
       const wp0 = this.getWorldPos(pt0.clientX, pt0.clientY);
 
-      // Rotation si on attrape une poignée (extrémités des rayons)
-      const rotateWhich = (token.kind === 'piece') ? this._hitRotateHandle(token, wp0.x, wp0.y) : null;
-
-      // hit test wedge (sauf si on a attrapé une poignée)
-      if(token.kind === 'piece' && !rotateWhich && !this.isPointInPiece(token, wp0.x, wp0.y)) return;
+      // IMPORTANT : on choisit le token réellement sous le pointeur (forme),
+      // pour éviter que les zones transparentes des carrés englobants bloquent la sélection
+      // quand plusieurs pièces se touchent.
+      const picked = this._pickTokenAt(wp0.x, wp0.y);
+      if(!picked) return;
+      const token = picked.token;
+      const rotateWhich = picked.rotateWhich;
 
       this.saveState();
       this.selectToken(token.id);
 
-      token._el.classList.add('dragging');
+      if(token._el) token._el.classList.add('dragging');
 
       // --- Mode rotation ---
       if(rotateWhich){
@@ -1847,6 +1883,7 @@
 
         let lastPointer = Math.atan2(wp0.y - cy, wp0.x - cx);
         let rotDeg = (typeof token.rot === 'number') ? token.rot : 0;
+        document.body.style.cursor = 'grabbing';
 
         const move = (ev) => {
           ev.preventDefault();
@@ -1871,7 +1908,9 @@
           document.removeEventListener('touchend', end);
           if(token._el) token._el.classList.remove('dragging');
           // aimantation centre↔centre + clip angle (si proche)
-          this.snapToCenterAndMaybeClip(token);
+          const snapped = this.snapToCenterAndMaybeClip(token);
+          if(snapped) this.selectToken(null);
+          document.body.style.cursor = "";
         };
 
         document.addEventListener('mousemove', move);
@@ -1909,7 +1948,8 @@
         document.removeEventListener('touchend', end);
         if(token._el) token._el.classList.remove('dragging');
         // aimantation centre↔centre + clip angle (si proche)
-        this.snapToCenterAndMaybeClip(token);
+        const snapped = this.snapToCenterAndMaybeClip(token);
+        if(snapped) this.selectToken(null);
       };
 
       document.addEventListener('mousemove', move);
