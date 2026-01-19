@@ -188,16 +188,17 @@
         <aside class="w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-2 z-20 shadow-lg shrink-0 overflow-y-auto">
             <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tuiles</span>
             <div class="flex flex-col gap-1 w-full px-2 items-center">
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x2', 1)" onclick="app.addTile('x2', 1)" class="tile-btn w-12 h-12" title="+x²"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x2', -1)" onclick="app.addTile('x2', -1)" class="tile-btn w-12 h-12" title="-x²"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
+                <!-- MODIFICATION: Remplacement du drag-and-drop HTML5 par une simulation manuelle (mousedown) -->
+                <button onmousedown="app.handleSidebarTouchStart(event, 'x2', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', 1)" class="tile-btn w-12 h-12" title="+x²"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
+                <button onmousedown="app.handleSidebarTouchStart(event, 'x2', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', -1)" class="tile-btn w-12 h-12" title="-x²"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
             </div>
             <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x', 1)" onclick="app.addTile('x', 1)" class="tile-btn w-16 h-10" title="+x"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'x', -1)" onclick="app.addTile('x', -1)" class="tile-btn w-16 h-10" title="-x"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
+                <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1)" class="tile-btn w-16 h-10" title="+x"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
+                <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1)" class="tile-btn w-16 h-10" title="-x"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
             </div>
             <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'unit', 1)" onclick="app.addTile('unit', 1)" class="tile-btn w-10 h-10" title="+1"><div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div></button>
-                <button draggable="true" ondragstart="app.handleSidebarDragStart(event, 'unit', -1)" onclick="app.addTile('unit', -1)" class="tile-btn w-10 h-10" title="-1"><div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div></button>
+                <button onmousedown="app.handleSidebarTouchStart(event, 'unit', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', 1)" class="tile-btn w-10 h-10" title="+1"><div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div></button>
+                <button onmousedown="app.handleSidebarTouchStart(event, 'unit', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', -1)" class="tile-btn w-10 h-10" title="-1"><div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div></button>
             </div>
             <div id="multiplication-panel" class="flex flex-col gap-1 w-full px-2 items-center mt-2">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
@@ -265,24 +266,122 @@
                 this.initListeners(); this.resizeCanvas(); this.updateEquation();
             }
 
-            // --- DRAG FROM SIDEBAR ---
-            handleSidebarDragStart(e, type, sign) {
-                e.dataTransfer.setData('type', type);
-                e.dataTransfer.setData('sign', sign);
-            }
-
-            handleBoardDragOver(e) {
-                e.preventDefault(); 
-            }
-
-            handleBoardDrop(e) {
+            // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (SANS DRAG NATIF) ---
+            handleSidebarTouchStart(e, type, sign) {
                 e.preventDefault();
-                const type = e.dataTransfer.getData('type');
-                const sign = parseInt(e.dataTransfer.getData('sign'));
-                if (type && !isNaN(sign)) {
-                    const pos = this.getWorldPos(e.clientX, e.clientY);
-                    const size = SIZES[type];
-                    this.addTile(type, sign, pos.x - size.w/2, pos.y - size.h/2);
+                // 1. Calculer la position pour que la tuile apparaisse centrée sous la souris
+                const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                const worldPos = this.getWorldPos(cx, cy);
+                const size = SIZES[type];
+                
+                // 2. Créer la tuile immédiatement en mode manuel (elle "grossit" tout de suite)
+                this.addTile(type, sign, worldPos.x - size.w/2, worldPos.y - size.h/2);
+                
+                // 3. Récupérer la tuile fraîchement créée
+                const token = this.tokens[this.tokens.length - 1];
+                
+                // 4. Initialiser les données pour le déplacement simulé
+                this.draggedToken = token;
+                token.element.classList.add('dragging');
+                
+                // Calcul de l'offset pour que la souris reste au centre de la tuile
+                // Comme on l'a placée centrée, l'offset est simplement la moitié de la taille (ajustée par le scale si nécessaire pour le calcul de mouvement)
+                // Dans startDraggingLogic, on utilise (clientX - left). Ici left = cx - w/2 * scale. Donc offset = w/2 * scale.
+                this.dragOffset = { 
+                    x: (size.w * this.scale) / 2, 
+                    y: (size.h * this.scale) / 2 
+                };
+                
+                this.startPos = { x: cx, y: cy }; // Pour détecter si c'est un clic ou un drag
+
+                // 5. Attacher les écouteurs de mouvement globaux
+                const move = (ev) => this.dragMove(ev);
+                const end = (ev) => {
+                    document.removeEventListener('mousemove', move);
+                    document.removeEventListener('touchmove', move);
+                    document.removeEventListener('mouseup', end);
+                    document.removeEventListener('touchend', end);
+                    
+                    if (this.draggedToken) {
+                        this.draggedToken.element.classList.remove('dragging');
+                        const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
+                        
+                        // Si on relâche dans la barre latérale (ou tout près du point de départ sans bouger)
+                        const sidebarWidth = 96; // 24 * 4px (w-24)
+                        const dist = Math.hypot(endX - this.startPos.x, (ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY) - this.startPos.y);
+
+                        // Comportement : Si relâché dans la barre latérale (annulation)
+                        // SAUF si c'était juste un clic rapide (dist < 5), dans ce cas on considère que l'utilisateur voulait "Ajouter" (comportement clic classique)
+                        if (endX < sidebarWidth) {
+                            if (dist < 5) {
+                                // C'était un clic : on annule la pose manuelle et on met en auto
+                                this.undo(); // Enlève la tuile manuelle
+                                // FIX: Supprimer le son lors de la ré-ajout automatique (car le son a déjà joué au mousedown)
+                                this.addTile(type, sign, null, null, false); 
+                            } else {
+                                // C'était un drag annulé (ramené vers le menu)
+                                this.undo();
+                            }
+                        } else {
+                            // Relâché sur le plateau : on vérifie le magnétisme (snap)
+                            this.checkSnapAndFinalize(this.draggedToken);
+                        }
+                        this.draggedToken = null;
+                        this.updateEquation();
+                    }
+                };
+                
+                document.addEventListener('mousemove', move);
+                document.addEventListener('touchmove', move, { passive: false });
+                document.addEventListener('mouseup', end);
+                document.addEventListener('touchend', end);
+            }
+
+            dragMove(ev) {
+                ev.preventDefault();
+                if (!this.draggedToken) return;
+                const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                const br = this.boardContainer.getBoundingClientRect();
+                
+                const wx = (cx - br.left - this.pan.x - this.dragOffset.x) / this.scale;
+                const wy = (cy - br.top - this.pan.y - this.dragOffset.y) / this.scale;
+                
+                this.draggedToken.element.style.left = wx + 'px';
+                this.draggedToken.element.style.top = wy + 'px';
+                this.draggedToken.x = wx;
+                this.draggedToken.y = wy;
+            }
+
+            checkSnapAndFinalize(token) {
+                const s1 = SIZES[token.type];
+                const c1 = { x: token.x + s1.w/2, y: token.y + s1.h/2 };
+                
+                for (let t of this.tokens) {
+                    if (t === token || t.pairId || t.type !== token.type || t.sign === token.sign) continue;
+                    const s2 = SIZES[t.type];
+                    const c2 = { x: t.x + s2.w/2, y: t.y + s2.h/2 };
+                    
+                    if (Math.hypot(c1.x - c2.x, c1.y - c2.y) < SNAP_THRESHOLD) {
+                        playSound('snap');
+                        const mx = (token.x + t.x) / 2;
+                        const my = (token.y + t.y) / 2;
+                        this.moveToken(token, mx, my);
+                        this.moveToken(t, mx, my);
+                        token.pairId = t.id;
+                        t.pairId = token.id;
+                        token.element.classList.add('is-zero');
+                        t.element.classList.add('is-zero');
+                        const b = document.createElement('div');
+                        b.className = 'zero-badge';
+                        b.textContent = '0';
+                        b.id = `badge-${token.id}-${t.id}`;
+                        b.style.left = (mx + s1.w/2 - 10) + 'px';
+                        b.style.top = (my + s1.h/2 - 20) + 'px';
+                        this.boardWorld.appendChild(b);
+                        break;
+                    }
                 }
             }
 
@@ -381,8 +480,7 @@
                     this.boardContainer.classList.remove('panning');
                 });
                 this.boardContainer.addEventListener('mousedown', (e) => { if(this.currentTool === 'pen') this.startDraw(e); });
-                this.boardContainer.addEventListener('dragover', (e) => this.handleBoardDragOver(e));
-                this.boardContainer.addEventListener('drop', (e) => this.handleBoardDrop(e));
+                // REMOVED: handleBoardDragOver, handleBoardDrop (since we use manual dragging now)
                 window.addEventListener('resize', () => this.resizeCanvas());
             }
 
@@ -392,10 +490,10 @@
                 return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale };
             }
 
-            addTile(type, sign, x = null, y = null) {
+            addTile(type, sign, x = null, y = null, withSound = true) {
                 this.saveState();
                 if(this.displayMode !== 'normal') { this.displayMode = 'normal'; this.isReduced = false; }
-                playSound('pop');
+                if (withSound) playSound('pop');
                 this.createTileToken(type, sign, (x!==null)?'manual':'auto', x, y);
                 this.updateEquation();
             }
@@ -774,6 +872,9 @@
                 // FORCE UI RESET
                 this.isSubtractingInput = false;
                 this.isMultiplyingInput = false;
+                // FIX 2: Reset display mode to normal to show (...) instead of 0
+                this.displayMode = 'normal';
+                
                 document.getElementById('btn-close-parenthesis').classList.add('hidden');
                 document.getElementById('btn-opposite').classList.add('hidden');
                 document.getElementById('btn-distribute').classList.add('hidden');
@@ -796,6 +897,9 @@
             }
 
             generateExpressionString(mode) {
+                // FIX 2: Check for empty tokens and return dots
+                if (this.tokens.length === 0) return "\\dots";
+
                 if (mode === 'ordered') return this.generateOrderedLatex();
                 if (mode === 'reduced') return this.generateGroupedLatex();
                 let latex = ""; let isEmpty = true;
@@ -844,7 +948,10 @@
             }
             tokensToReducedSumLatex(tokens) {
                 if (!tokens || !tokens.length) return "";
-                const ord=[]; tokens.forEach(t=>{if(!ord.includes(t.type))ord.push(t.type)});
+                
+                // CORRECTION : Ordre imposé (x² -> x -> unit) au lieu de l'ordre de découverte
+                const ord = ['x2', 'x', 'unit'];
+                
                 const c={x2:{p:0,n:0},x:{p:0,n:0},unit:{p:0,n:0}};
                 tokens.forEach(t=>{ if(t._canceling || t.pairId !== null)return; if(t.sign===1)c[t.type].p++; else c[t.type].n++; });
                 let l=""; let has=false;
@@ -943,21 +1050,7 @@
                     document.removeEventListener('mouseup',end); document.removeEventListener('touchend',end);
                     if(this.draggedToken) {
                         this.draggedToken.element.classList.remove('dragging');
-                        const s1=SIZES[this.draggedToken.type]; const c1={x:this.draggedToken.x+s1.w/2,y:this.draggedToken.y+s1.h/2};
-                        for(let t of this.tokens) {
-                            if(t===this.draggedToken||t.pairId||t.type!==this.draggedToken.type||t.sign===this.draggedToken.sign)continue;
-                            const s2=SIZES[t.type]; const c2={x:t.x+s2.w/2,y:t.y+s2.h/2};
-                            if(Math.hypot(c1.x-c2.x, c1.y-c2.y)<SNAP_THRESHOLD) {
-                                playSound('snap');
-                                const mx=(this.draggedToken.x+t.x)/2; const my=(this.draggedToken.y+t.y)/2;
-                                this.moveToken(this.draggedToken,mx,my); this.moveToken(t,mx,my);
-                                this.draggedToken.pairId=t.id; t.pairId=this.draggedToken.id;
-                                this.draggedToken.element.classList.add('is-zero'); t.element.classList.add('is-zero');
-                                const b=document.createElement('div'); b.className='zero-badge'; b.textContent='0'; b.id=`badge-${this.draggedToken.id}-${t.id}`;
-                                b.style.left=(mx+s1.w/2-10)+'px'; b.style.top=(my+s1.h/2-20)+'px'; this.boardWorld.appendChild(b);
-                                break;
-                            }
-                        }
+                        this.checkSnapAndFinalize(this.draggedToken);
                         this.draggedToken=null; this.updateEquation();
                     }
                 };
