@@ -269,9 +269,9 @@
 	<div id="angle-modal" class="fixed inset-0 hidden z-50 bg-black/30 items-center justify-center">
 	    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-72">
 	        <div class="text-sm font-extrabold text-slate-800">Mesure de l’angle</div>
-	        <div class="text-xs text-slate-500 mt-1">Entre 1 et 179.</div>
+	        <div class="text-xs text-slate-500 mt-1">Entre 0 et 180.</div>
 	        <div class="flex items-center gap-2 mt-3">
-	            <input id="angle-modal-input" type="number" min="1" max="179" step="1" class="w-24 text-lg font-extrabold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
+	            <input id="angle-modal-input" type="number" min="0" max="180" step="1" class="w-24 text-lg font-extrabold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2" />
 	            <span class="text-lg font-extrabold text-slate-600">°</span>
 	        </div>
 	        <div class="flex gap-2 justify-end mt-4">
@@ -722,12 +722,15 @@ function initTools() {
 	            const cancel = document.getElementById('angle-modal-cancel');
 	            if (!modal || !input || !ok || !cancel) return;
 
-	            const applyClamp = () => {
+	            // Fonction qui calcule la valeur finale valide sans modifier l'input brutalement
+	            const getSafeValue = () => {
 	                let v = parseInt(input.value, 10);
-	                if (Number.isNaN(v)) v = state.angleMeasure || 60;
-	                v = Math.max(1, Math.min(179, v));
-	                input.value = v;
-	                return v;
+	                if (Number.isNaN(v)) {
+	                    // Si vide ou invalide, on utilise la dernière mesure connue ou 60 par défaut
+	                    return (state.angleMeasure !== undefined && state.angleMeasure !== null) ? state.angleMeasure : 60;
+	                }
+	                // On garde la valeur dans les bornes 0-180
+	                return Math.max(0, Math.min(180, v));
 	            };
 
 	            const close = (commit) => {
@@ -737,7 +740,7 @@ function initTools() {
 	                state.anglePromptOpen = false;
 
 	                if (commit && state.anglePrompt) {
-	                    const deg = applyClamp();
+	                    const deg = getSafeValue();
 	                    state.angleMeasure = deg;
 	                    if (state.anglePrompt && state.anglePrompt.mode === 'spawn') {
                         spawnExerciseAngleAt(state.anglePrompt.x, state.anglePrompt.y, deg);
@@ -754,8 +757,9 @@ function initTools() {
 	            modal.addEventListener('pointerdown', (e) => {
 	                if (e.target === modal) close(false);
 	            });
-	            input.addEventListener('input', applyClamp);
-	            input.addEventListener('change', applyClamp);
+	            
+	            // Suppression des écouteurs 'input' et 'change' qui bloquaient la saisie
+	            
 	            input.addEventListener('keydown', (e) => {
 	                if (e.key === 'Enter') close(true);
 	                if (e.key === 'Escape') close(false);
@@ -767,8 +771,8 @@ function initTools() {
                 state.anglePromptOpen = true;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                input.value = state.angleMeasure || 60;
-                applyClamp();
+                // On met la valeur actuelle, mais on laisse l'utilisateur la changer librement
+                input.value = (state.angleMeasure !== undefined) ? state.angleMeasure : 60;
                 setTimeout(() => { try { input.focus(); input.select(); } catch(_) {} }, 0);
                 updateAngleInstructions();
             };
@@ -779,8 +783,7 @@ function initTools() {
                 state.anglePromptOpen = true;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                input.value = state.angleMeasure || 60;
-                applyClamp();
+                input.value = (state.angleMeasure !== undefined) ? state.angleMeasure : 60;
                 setTimeout(() => { try { input.focus(); input.select(); } catch(_) {} }, 0);
                 updateAngleInstructions();
             };
@@ -795,11 +798,12 @@ function initTools() {
         }
 
         function spawnExerciseAngleAt(x, y, deg) {
-            const mrad = (deg || 60) * Math.PI / 180;
+            const finalDeg = (deg !== undefined && deg !== null) ? deg : 60;
+            const mrad = finalDeg * Math.PI / 180;
             // orientation par défaut : base horizontale, ouverture vers le haut
             const rot = mrad;
             const label = nextExerciseAngleLabel();
-            const t = createExerciseAngleTemplate(deg || 60, x, y, rot, 1, label);
+            const t = createExerciseAngleTemplate(finalDeg, x, y, rot, 1, label);
             state.templates.forEach(tmp => tmp.isSelected = false);
             state.templates.push(t);
             // au-dessus
@@ -864,13 +868,14 @@ function initTools() {
         }
 
         function spawnExerciseAngleFromTwoPoints(p1, v, deg) {
-            const mrad = (deg || 60) * Math.PI / 180;
+            const finalDeg = (deg !== undefined && deg !== null) ? deg : 60;
+            const mrad = finalDeg * Math.PI / 180;
             const base = Math.atan2(p1.y - v.y, p1.x - v.x);
             const len = Math.max(10, Math.hypot(p1.x - v.x, p1.y - v.y));
             const scale = len / BASE_LEN;
             const label = nextExerciseAngleLabel();
 
-            const t = createExerciseAngleTemplate(deg || 60, v.x, v.y, base, scale, label);
+            const t = createExerciseAngleTemplate(finalDeg, v.x, v.y, base, scale, label);
             // Désélectionner les autres
             state.templates.forEach(tmp => tmp.isSelected = false);
             state.templates.push(t);
@@ -880,7 +885,8 @@ function initTools() {
         }
 
 function drawAngleFromTwoPoints(p1, v, deg) {
-	            const mrad = (deg || 60) * Math.PI / 180;
+                const finalDeg = (deg !== undefined && deg !== null) ? deg : 60;
+	            const mrad = finalDeg * Math.PI / 180;
 	            const base = Math.atan2(p1.y - v.y, p1.x - v.x);
 	            const len = Math.max(10, Math.hypot(p1.x - v.x, p1.y - v.y));
 	            const a2 = base - mrad; // cohérent avec le reste (rotation horaire)
@@ -1019,7 +1025,20 @@ function initPenColorUI() {
                     return;
                 }
 
-                if (isPointInPie(mx, my, t)) {
+                // Détection du clic pour le déplacement
+                let hitBody = isPointInPie(mx, my, t);
+                
+                // CORRECTIF 0 DEGRES:
+                // Si l'angle est très petit (< 2°), isPointInPie échoue car la surface est nulle.
+                // On autorise donc d'attraper le gabarit en cliquant sur le segment lui-même.
+                if (!hitBody && t.angle < 2) {
+                     // Tolérance confortable (12px) autour du segment S-E1
+                     if (snapToSeg({x:mx, y:my}, g.S, g.E1, 12)) {
+                         hitBody = true;
+                     }
+                }
+
+                if (hitBody) {
                     state.dragTarget = { type: 'temp', ref: t, part: 'body' };
                     state.dragOffset = { x: mx - t.x, y: my - t.y };
                     state.templates.forEach(tmp => tmp.isSelected = false);
