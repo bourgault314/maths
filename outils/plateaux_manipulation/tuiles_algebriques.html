@@ -48,6 +48,17 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         }
 
+        /* STYLE DU FANTÔME (DRAG MENU) */
+        .drag-ghost {
+            position: fixed; /* Fixé à l'écran, au-dessus de tout */
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.8;       /* Un peu transparent */
+            filter: blur(1px);  /* Un peu flou */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            cursor: grabbing;
+        }
+
         /* Classe pour la transition fluide de taille lors du drag */
         .token.scaling-transition {
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
@@ -113,14 +124,15 @@
         
         .preview-shape { 
             display: flex; align-items: center; justify-content: center; 
-            border-radius: 2px; color: white; font-weight: bold; 
+            border-radius: 4px; 
+            color: white; font-weight: bold; 
             font-family: 'Times New Roman', serif; font-style: italic;
             text-shadow: 0 1px 1px rgba(0,0,0,0.3);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2); 
             pointer-events: none; 
         }
-        .ps-green { background: #4ade80; border: 1px solid #15803d; }
-        .ps-red { background: #f87171; border: 1px solid #b91c1c; }
+        .ps-green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 1px solid #14532d; }
+        .ps-red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 1px solid #7f1d1d; }
         
         @keyframes pulse-orange {
             0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
@@ -177,7 +189,6 @@
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
-            <!-- MODIFICATION: Hauteur fixe (h-[72px]) au lieu de min-height pour éviter le layout shift quand des symboles hauts apparaissent -->
             <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar h-[72px]">
                 <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">(...)</div>
             </div>
@@ -191,32 +202,53 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        <aside class="w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-2 z-20 shadow-lg shrink-0 overflow-y-auto">
-            <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tuiles</span>
-            <div class="flex flex-col gap-1 w-full px-2 items-center">
-                <!-- MODIFICATION: Remplacement du drag-and-drop HTML5 par une simulation manuelle (mousedown) -->
-                <button onmousedown="app.handleSidebarTouchStart(event, 'x2', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', 1)" class="tile-btn w-12 h-12" title="+x²"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
-                <button onmousedown="app.handleSidebarTouchStart(event, 'x2', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', -1)" class="tile-btn w-12 h-12" title="-x²"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
-            </div>
-            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1)" class="tile-btn w-16 h-10" title="+x"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
-                <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1)" class="tile-btn w-16 h-10" title="-x"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
-            </div>
-            <div class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <button onmousedown="app.handleSidebarTouchStart(event, 'unit', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', 1)" class="tile-btn w-10 h-10" title="+1"><div class="preview-shape ps-green w-5 h-5 text-xs font-normal">1</div></button>
-                <button onmousedown="app.handleSidebarTouchStart(event, 'unit', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', -1)" class="tile-btn w-10 h-10" title="-1"><div class="preview-shape ps-red w-5 h-5 text-xs font-normal">-1</div></button>
-            </div>
-            <div id="multiplication-panel" class="flex flex-col gap-1 w-full px-2 items-center mt-2">
-                <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
-                <div class="flex flex-col gap-1 w-full">
-                    <button onclick="app.startMultiplication(2)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>2 x ( ? )</span></button>
-                    <button onclick="app.startMultiplication(3)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>3 x ( ? )</span></button>
-                    <button onclick="app.startMultiplication(4)" class="text-[11px] font-bold text-indigo-700 py-2 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none"><span>4 x ( ? )</span></button>
+        <!-- SIDEBAR IMPROVED: Slightly wider, cleaner organization -->
+        <aside class="w-28 bg-slate-50 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto select-none">
+            
+            <!-- SECTION TUILES (TITRE RAJOUTÉ) -->
+            <span class="text-[9px] font-bold text-slate-400 uppercase leading-tight">Tuiles</span>
+            <div class="flex flex-col gap-2 w-full px-1 items-center">
+                <!-- x² pair -->
+                <div class="flex gap-2">
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', 1)" class="tile-btn w-10 h-10" title="+x²"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', -1)" class="tile-btn w-10 h-10" title="-x²"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
+                </div>
+                <!-- x pair -->
+                <div class="flex gap-2">
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1)" class="tile-btn w-12 h-8" title="+x"><div class="preview-shape ps-green w-10 h-6 text-sm">x</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1)" class="tile-btn w-12 h-8" title="-x"><div class="preview-shape ps-red w-10 h-6 text-sm">-x</div></button>
+                </div>
+                <!-- 1 pair -->
+                <div class="flex gap-2">
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'unit', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', 1)" class="tile-btn w-8 h-8" title="+1"><div class="preview-shape ps-green w-6 h-6 text-xs font-normal">1</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'unit', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'unit', -1)" class="tile-btn w-8 h-8" title="-1"><div class="preview-shape ps-red w-6 h-6 text-xs font-normal">-1</div></button>
                 </div>
             </div>
-            <button id="btn-order" onclick="app.orderAll()" class="w-20 py-2 mt-4 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm active:bg-slate-100 hover:bg-slate-50 transition" title="Ordonner les tuiles">ordonner</button>
-            <button id="btn-reduce" onclick="app.reduceExpression()" class="w-20 py-2 mt-2 bg-white border border-yellow-300 rounded text-xs font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">réduire</button>
-            <button id="btn-simplify" onclick="app.autoSimplify()" class="w-20 py-2 mt-2 bg-white border border-amber-300 rounded text-xs font-bold text-amber-700 shadow-sm active:bg-amber-50 hover:bg-amber-50 transition" title="Simplifier (annuler + et -)">simplifier</button>
+
+            <div class="w-16 h-px bg-slate-200"></div>
+
+            <!-- SECTION MULTIPLIER -->
+            <div id="multiplication-panel" class="flex flex-col gap-1 w-full px-2 items-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Multiplier</span>
+                <div class="flex flex-col gap-1 w-full">
+                    <button onclick="app.startMultiplication(2)" class="text-[10px] font-bold text-indigo-700 py-1.5 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none shadow-sm"><span>2 x ( ? )</span></button>
+                    <button onclick="app.startMultiplication(3)" class="text-[10px] font-bold text-indigo-700 py-1.5 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none shadow-sm"><span>3 x ( ? )</span></button>
+                    <button onclick="app.startMultiplication(4)" class="text-[10px] font-bold text-indigo-700 py-1.5 border border-indigo-200 rounded bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center leading-none shadow-sm"><span>4 x ( ? )</span></button>
+                </div>
+            </div>
+
+            <div class="w-16 h-px bg-slate-200"></div>
+
+            <!-- SECTION ACTIONS (Tous jaunes maintenant) -->
+            <div class="flex flex-col gap-2 w-full px-2 items-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Actions</span>
+                
+                <button id="btn-order" onclick="app.orderAll()" class="w-full py-2 bg-white border border-yellow-300 rounded text-[11px] font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Ordonner les tuiles">Ordonner</button>
+                
+                <button id="btn-reduce" onclick="app.reduceExpression()" class="w-full py-2 bg-white border border-yellow-300 rounded text-[11px] font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Réduire (regrouper les termes)">Réduire</button>
+                
+                <button id="btn-simplify" onclick="app.autoSimplify()" class="w-full py-2 bg-white border border-yellow-300 rounded text-[11px] font-bold text-yellow-700 shadow-sm active:bg-yellow-50 hover:bg-yellow-50 transition" title="Simplifier (annuler + et -)">Simplifier</button>
+            </div>
         </aside>
 
         <main id="board" class="flex-1 relative bg-white overflow-hidden">
@@ -272,84 +304,58 @@
                 this.initListeners(); this.resizeCanvas(); this.updateEquation();
             }
 
-            // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (SANS DRAG NATIF) ---
+            // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (STYLE FANTÔME) ---
             handleSidebarTouchStart(e, type, sign) {
                 e.preventDefault();
-                // 1. Calculer la position pour que la tuile apparaisse centrée sous la souris
+                // 1. Créer un élément "fantôme" temporaire attaché au BODY (au-dessus de tout)
+                // Il suit la souris mais n'existe pas encore dans le monde du jeu
+                const el = document.createElement('div');
+                const colorClass = sign === 1 ? 'green' : 'red';
+                el.classList.add('token', colorClass, `type-${type}`, 'drag-ghost');
+                
+                let label = "";
+                if (type === 'x2') label = sign === 1 ? "x²" : "-x²";
+                else if (type === 'x') label = sign === 1 ? "x" : "-x";
+                else label = sign === 1 ? "1" : "-1";
+                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                
+                // On met à l'échelle pour correspondre au zoom actuel du plateau (pour éviter le changement de taille brusque au drop)
+                el.style.transform = `scale(${this.scale})`;
+                el.style.transformOrigin = 'center';
+
+                document.body.appendChild(el);
+
+                // Initialisation
                 const cx = e.touches ? e.touches[0].clientX : e.clientX;
                 const cy = e.touches ? e.touches[0].clientY : e.clientY;
-                const worldPos = this.getWorldPos(cx, cy);
+                
                 const size = SIZES[type];
-                
-                // 2. Créer la tuile immédiatement en mode manuel (elle "grossit" tout de suite)
-                this.addTile(type, sign, worldPos.x - size.w/2, worldPos.y - size.h/2);
-                
-                // 3. Récupérer la tuile fraîchement créée
-                const token = this.tokens[this.tokens.length - 1];
-                
-                // 4. Initialiser les données pour le déplacement simulé
-                this.draggedToken = token;
-                token.element.classList.add('dragging');
-                // AJOUT : Ajouter une classe de transition pour que le redimensionnement soit fluide
-                token.element.classList.add('scaling-transition');
-                
-                // Calcul de l'offset pour que la souris reste au centre de la tuile
-                this.dragOffset = { 
+                // Offset pour centrer sous la souris
+                const offset = { 
                     x: (size.w * this.scale) / 2, 
                     y: (size.h * this.scale) / 2 
                 };
-                
-                this.startPos = { x: cx, y: cy }; // Pour détecter si c'est un clic ou un drag
 
-                // AJOUT : Vérification initiale de la zone (si on clique et qu'on est encore dans la barre)
-                // On met à l'échelle "petite" immédiatement
-                const sidebarWidth = 96;
-                if (cx < sidebarWidth) {
-                     const s = this.getPreviewScale(type);
-                     token.element.style.transform = `scale(${s})`;
-                     token.element.style.transformOrigin = 'center';
-                }
+                // Position initiale
+                el.style.left = (cx - offset.x) + 'px';
+                el.style.top = (cy - offset.y) + 'px';
 
-                // 5. Attacher les écouteurs de mouvement globaux
-                const move = (ev) => this.dragMove(ev);
+                this.menuDrag = {
+                    el: el,
+                    type: type,
+                    sign: sign,
+                    offset: offset,
+                    startPos: { x: cx, y: cy }
+                };
+
+                // Attacher les écouteurs globaux
+                const move = (ev) => this.handleMenuDragMove(ev);
                 const end = (ev) => {
                     document.removeEventListener('mousemove', move);
                     document.removeEventListener('touchmove', move);
                     document.removeEventListener('mouseup', end);
                     document.removeEventListener('touchend', end);
-                    
-                    if (this.draggedToken) {
-                        this.draggedToken.element.classList.remove('dragging');
-                        this.draggedToken.element.classList.remove('scaling-transition');
-                        
-                        // Nettoyage des styles de transformation temporaires
-                        this.draggedToken.element.style.transform = '';
-                        this.draggedToken.element.style.transformOrigin = '';
-
-                        const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
-                        
-                        // Si on relâche dans la barre latérale (ou tout près du point de départ sans bouger)
-                        const dist = Math.hypot(endX - this.startPos.x, (ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY) - this.startPos.y);
-
-                        // Comportement : Si relâché dans la barre latérale (annulation)
-                        // SAUF si c'était juste un clic rapide (dist < 5), dans ce cas on considère que l'utilisateur voulait "Ajouter" (comportement clic classique)
-                        if (endX < sidebarWidth) {
-                            if (dist < 5) {
-                                // C'était un clic : on annule la pose manuelle et on met en auto
-                                this.undo(); // Enlève la tuile manuelle
-                                // FIX: Supprimer le son lors de la ré-ajout automatique (car le son a déjà joué au mousedown)
-                                this.addTile(type, sign, null, null, false); 
-                            } else {
-                                // C'était un drag annulé (ramené vers le menu)
-                                this.undo();
-                            }
-                        } else {
-                            // Relâché sur le plateau : on vérifie le magnétisme (snap)
-                            this.checkSnapAndFinalize(this.draggedToken);
-                        }
-                        this.draggedToken = null;
-                        this.updateEquation();
-                    }
+                    this.handleMenuDragEnd(ev);
                 };
                 
                 document.addEventListener('mousemove', move);
@@ -358,13 +364,62 @@
                 document.addEventListener('touchend', end);
             }
 
-            // Nouvelle méthode pour calculer l'échelle visuelle "petite"
+            handleMenuDragMove(ev) {
+                if (!this.menuDrag) return;
+                ev.preventDefault();
+                const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                
+                this.menuDrag.el.style.left = (cx - this.menuDrag.offset.x) + 'px';
+                this.menuDrag.el.style.top = (cy - this.menuDrag.offset.y) + 'px';
+            }
+
+            handleMenuDragEnd(ev) {
+                if (!this.menuDrag) return;
+                
+                const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
+                const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
+                
+                // Nettoyage du fantôme
+                this.menuDrag.el.remove();
+                
+                // Largeur du menu ajustée (w-28 = 7rem = 112px)
+                const sidebarWidth = 112; 
+                
+                // LOGIQUE DE DÉPÔT :
+                // Si on relâche hors du menu (sur le plateau) -> Pose manuelle
+                // Si on relâche dans le menu (ou tout petit mouvement) -> Ajout auto (Clic)
+                
+                if (endX > sidebarWidth) {
+                    // C'est un DROP sur le plateau
+                    // Convertir coordonnées écran -> coordonnées monde
+                    const worldPos = this.getWorldPos(endX, endY);
+                    const size = SIZES[this.menuDrag.type];
+                    
+                    // Créer la vraie pièce
+                    this.addTile(this.menuDrag.type, this.menuDrag.sign, worldPos.x - size.w/2, worldPos.y - size.h/2);
+                    
+                    // Vérifier immédiatement si on doit snapper avec une autre pièce (puisqu'on vient de lâcher)
+                    // On récupère la dernière pièce créée (celle qu'on vient d'ajouter)
+                    const newToken = this.tokens[this.tokens.length - 1];
+                    if (newToken) {
+                        this.checkSnapAndFinalize(newToken);
+                    }
+                } else {
+                    // C'est un CLIC (ou drop annulé dans le menu) -> Ajout automatique
+                    this.addTile(this.menuDrag.type, this.menuDrag.sign);
+                }
+                
+                this.menuDrag = null;
+            }
+
             getPreviewScale(type) {
                 // Tailles visuelles approximatives dans le menu (pixels)
+                // Pour que les icones aient l'air d'avoir la même taille que dans le menu
                 let previewW = 0;
-                if (type === 'x2') previewW = 32;      // w-8
+                if (type === 'x2') previewW = 32;      // w-8 equivalent visuel (40px dans bouton w-10)
                 else if (type === 'x') previewW = 40;  // w-10
-                else previewW = 20;                    // w-5 (unit)
+                else previewW = 24;                    // w-6
                 
                 const realW = SIZES[type].w;
                 // On calcule le ratio pour que la taille affichée corresponde à la taille du menu, peu importe le zoom du plateau
@@ -387,7 +442,7 @@
                 this.draggedToken.y = wy;
 
                 // AJOUT : Gestion de la taille dynamique (Menu vs Plateau)
-                const sidebarWidth = 96; // Largeur de la barre latérale (w-24 = 96px)
+                const sidebarWidth = 112; // Largeur de la barre latérale ajustée
                 
                 if (cx < sidebarWidth) {
                     // Dans le menu : on réduit la taille
@@ -539,7 +594,7 @@
             addTile(type, sign, x = null, y = null, withSound = true) {
                 this.saveState();
                 if(this.displayMode !== 'normal') { this.displayMode = 'normal'; this.isReduced = false; }
-                if (withSound) playSound('pop');
+                if (withSound) playSound('pop'); // Son joué lors de l'ajout réel (drop ou clic)
                 this.createTileToken(type, sign, (x!==null)?'manual':'auto', x, y);
                 this.updateEquation();
             }
