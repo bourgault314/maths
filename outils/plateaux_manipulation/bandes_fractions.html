@@ -43,7 +43,20 @@
       position: absolute;
       top: 0; left: 0;
       pointer-events: none;
+      z-index: 3000; /* au-dessus de tout le plateau */
     }
+
+    /* --- Demi-droite graduée (guide) --- */
+    #number-line{
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+    #number-line.hidden{ display:none; }
+    #number-line text{ font-family:'Fredoka', sans-serif; font-weight:800; }
 
     .no-scrollbar::-webkit-scrollbar{ display:none; }
     .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
@@ -79,6 +92,7 @@
       box-sizing: border-box;
       border: none;
       perspective: 900px;
+      z-index: 10;
     }
     .strip.dragging{ cursor: grabbing; z-index: 2000 !important; }
     .strip.selected{ --selRing: 0 0 0 3px rgba(59,130,246,0.85); }
@@ -90,7 +104,7 @@
       height: 100%;
       flex: 1 1 auto;
       transform-style: preserve-3d;
-      transition: transform 820ms cubic-bezier(0.22, 0.8, 0.2, 1);
+      transition: transform 980ms cubic-bezier(0.22, 0.8, 0.2, 1);
     }
     .strip.is-back .strip-inner{ transform: rotateX(180deg); }
 
@@ -131,7 +145,7 @@
       line-height: 1;
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
     }
-    .seg + .seg{ border-left: 1px dashed rgba(0,0,0,0.28); }
+    .seg + .seg{ border-left: 1px dashed rgba(0,0,0,0.22); }
 
     /* fraction verticale */
     .frac{
@@ -163,6 +177,7 @@
       border-radius: 12px;
       transition: none;
     }
+    /* IMPORTANT: pas de surbrillance au survol */
     .palette-item:hover{ background: transparent; }
 
     .spawn-tile{
@@ -185,14 +200,16 @@
     .spawn-tile:active{ cursor: grabbing; }
 
     .spawn-seg{ flex: 1 1 auto; display:flex; align-items:center; justify-content:center; font-weight:800; font-size: 10px; }
-    .spawn-seg + .spawn-seg{ border-left: 1px dashed rgba(0,0,0,0.28); }
+    .spawn-seg + .spawn-seg{ border-left: 1px dashed rgba(0,0,0,0.22); }
 
     .frac.menu{ transform: none; filter: none; font-size: inherit; }
     .frac.menu .bar{ width: 0.9em; height: 2px; margin: 2px 0; background: rgba(0,0,0,0.70); }
 
-    /* outils */
-    #custom-cursor{ position: fixed; pointer-events:none; z-index: 9999; display:none; }
-    .hide-cursor, .hide-cursor * { cursor: none !important; }
+    /* Mode crayon */
+    body.pen-mode #board-container{ cursor: crosshair; }
+    body.pen-mode #board-container.panning{ cursor: grabbing; }
+    body.pen-mode .strip{ cursor: crosshair; }
+    body.pen-mode .strip.dragging{ cursor: grabbing; }
 
     @media (max-width: 640px){
       :root{ --stripH: 52; }
@@ -201,16 +218,6 @@
 </head>
 
 <body class="h-screen w-screen flex flex-col">
-
-  <!-- Curseur stylo (optionnel) -->
-  <div id="custom-cursor">
-    <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
-      <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
-      <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-      <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-      <circle cx="8" cy="32" r="1" fill="white"/>
-    </svg>
-  </div>
 
   <!-- Barre haute -->
   <header class="bg-blue-50 p-2 shadow-md z-30 flex flex-wrap items-center gap-3 shrink-0">
@@ -227,10 +234,20 @@
         </svg>
       </button>
 
-      <button id="btn-export-png" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm active:scale-95 transition" title="Exporter en PNG (photo du plateau)">
+      <button id="btn-export-png" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Exporter une image (PNG)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"/>
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"/>
           <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </button>
+
+      <!-- Demi-droite (icône) -->
+      <button id="btn-numberline" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Afficher / masquer la demi-droite">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 14H18" />
+          <path d="M18 14l-3-3" />
+          <path d="M18 14l-3 3" />
+          <path d="M4 10v8" />
         </svg>
       </button>
 
@@ -299,13 +316,23 @@
     <!-- Outils -->
     <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
       <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main (déplacer / sélectionner)">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+        </svg>
       </button>
-      <button id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+
+      <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon (annoter)">
+        <!-- Crayon simple + petit trait en bas (comme tu aimes) -->
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
+        </svg>
       </button>
+
       <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
       </button>
     </div>
   </header>
@@ -322,6 +349,7 @@
         <ul class="text-[11px] text-slate-500 leading-snug list-disc ml-4 mt-1">
           <li>Double-clic sur une bande = retourner.</li>
           <li>Molette = zoom, glisser sur fond = déplacer le plateau.</li>
+          <li>Crayon : clic gauche = écrire, clic droit sur une bande = la déplacer, clic droit sur le fond = déplacer le plateau.</li>
         </ul>
       </div>
     </aside>
@@ -330,6 +358,7 @@
       <div id="board-container">
         <div id="board-world">
           <canvas id="drawing-canvas"></canvas>
+          <div id="number-line" class="hidden"></div>
         </div>
       </div>
     </main>
@@ -399,7 +428,8 @@
 
       this.currentTool = 'hand';
       this.isDrawing = false;
-      this.lastDrawPos = {x:0,y:0};
+      this.drawPoints = [];
+      this.basePenPx = 2.55; // crayon un peu plus épais (écriture plus lisible)
 
       // Drag réaliste depuis le menu (ghost pleine taille)
       this.spawnDrag = null;
@@ -412,6 +442,17 @@
       this.canvas = document.getElementById('drawing-canvas');
       this.ctx = this.canvas.getContext('2d');
 
+      this.numberLineEl = document.getElementById('number-line');
+      this.numberLine = {
+        active: false,
+        x: 0,
+        y: 0,
+        // plus longue, mais on ne force pas à voir le bout
+        len: Math.max(this.unitW * 10.0, 6000),
+        baselineOffset: 18,
+        height: 46
+      };
+
       this.DENOM_SET = new Set(FRACTIONS.map(f => f.denom));
 
       this.buildPalette();
@@ -420,6 +461,7 @@
       this.resizeCanvas();
       this.updateTransform();
       this.updateSelectionUI();
+      this.updateNumberLineEl();
     }
 
     // ---- Dimensions ----
@@ -472,7 +514,6 @@
         const picks = document.createElement('div');
         picks.className = 'flex items-center gap-3 flex-nowrap';
 
-        // Unité : uniquement la bande
         picks.appendChild(this.makeSpawnTile(f.denom, 'band'));
         if(f.denom !== 1) picks.appendChild(this.makeSpawnTile(f.denom, 'piece'));
 
@@ -518,14 +559,12 @@
       tile.setAttribute('draggable', 'false');
       tile.title = (kind === 'band') ? 'Ajouter une bande' : 'Ajouter une pièce';
 
-      // longueur horizontale dans le menu
       const menuBandW = 170;
       const w = (kind === 'band') ? menuBandW : Math.max(18, Math.round(menuBandW / denom));
       tile.style.width = w + 'px';
 
       const fsMenu = (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
 
-      // fraction dans chaque part
       const segCount = (kind === 'band') ? denom : 1;
       for(let i=0;i<segCount;i++){
         const seg = document.createElement('div');
@@ -572,7 +611,6 @@
         if(side === 'front'){
           seg.innerHTML = (denom === 1) ? `<span class="back-one">1</span>` : this.labelHTML(denom);
         } else {
-          // verso : bande => 1 ; pièce => 1/denom
           if(kind === 'band' || denom === 1) seg.innerHTML = `<span class="back-one" style="color:${cfg.text}">1</span>`;
           else seg.innerHTML = this.labelHTML(denom);
         }
@@ -649,7 +687,6 @@
       const insideBoard = (cx >= br.left && cx <= br.right && cy >= br.top && cy <= br.bottom);
 
       if(insideBoard){
-        // IMPORTANT: aimantation immédiate dès le premier dépôt (sans devoir re-bouger la bande)
         const p = this.getWorldPos(cx, cy);
         const created = this.addToken({denom: sd.denom, kind: sd.kind, x: p.x, y: p.y});
         this.snapToken(created, {silent:true});
@@ -667,15 +704,76 @@
       this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
     }
 
-    setZoom(z){
-      this.scale = Math.min(Math.max(0.45, z), 3);
+    // Zoom en gardant le point sous la souris
+    zoomAt(clientX, clientY, newScale){
+      const oldScale = this.scale;
+      const z = Math.min(Math.max(0.45, newScale), 3);
+      if(z === oldScale) return;
+
+      const r = this.boardContainer.getBoundingClientRect();
+      const wx = (clientX - r.left - this.pan.x) / oldScale;
+      const wy = (clientY - r.top  - this.pan.y) / oldScale;
+
+      this.scale = z;
+      this.pan.x = clientX - r.left - wx * this.scale;
+      this.pan.y = clientY - r.top  - wy * this.scale;
       this.updateTransform();
+    }
+
+    setZoom(z){
+      const br = this.boardContainer.getBoundingClientRect();
+      this.zoomAt(br.left + br.width/2, br.top + br.height/2, z);
     }
 
     resetView(){
       this.pan = {x:0, y:0};
       this.scale = 1;
       this.updateTransform();
+    }
+
+    toggleNumberLine(){
+      this.numberLine.active = !this.numberLine.active;
+      if(this.numberLine.active){
+        const br = this.boardContainer.getBoundingClientRect();
+        const p = this.getWorldPos(br.left + 120, br.top + br.height * 0.72);
+        this.numberLine.x = p.x;
+        this.numberLine.y = p.y;
+        playSound('pop');
+      } else {
+        playSound('whoosh');
+      }
+      this.updateNumberLineEl();
+    }
+
+    updateNumberLineEl(){
+      if(!this.numberLineEl) return;
+      if(!this.numberLine.active){
+        this.numberLineEl.classList.add('hidden');
+        this.numberLineEl.innerHTML = '';
+        return;
+      }
+
+      const nl = this.numberLine;
+      const len = Math.round(nl.len);
+      const base = nl.baselineOffset;
+      const H = nl.height;
+
+      this.numberLineEl.style.left = `${nl.x}px`;
+      this.numberLineEl.style.top  = `${nl.y - base}px`;
+
+      const arrowX = len;
+      const a = 12;
+      const y = base;
+
+      this.numberLineEl.classList.remove('hidden');
+      this.numberLineEl.innerHTML = `
+        <svg width="${len}" height="${H}" viewBox="0 0 ${len} ${H}" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="${y}" x2="${len}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+          <line x1="0" y1="${y-10}" x2="0" y2="${y+10}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+          <polygon points="${arrowX},${y} ${arrowX-a},${y-a*0.7} ${arrowX-a},${y+a*0.7}" fill="rgba(17,24,39,0.9)" />
+          <text x="2" y="${y+20}" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>
+        </svg>
+      `;
     }
 
     getWorldPos(clientX, clientY){
@@ -692,6 +790,7 @@
       const edge = 'rgba(0,0,0,0.55)';
       const transparent = 'transparent';
 
+      // reset
       for(const t of this.tokens){
         if(!t._el) continue;
         t._el.style.setProperty('--edgeL', edge);
@@ -703,35 +802,40 @@
       const dims = (t)=>this.tokenDims(t);
       const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
 
+      // pairwise seams
       for(let i=0;i<this.tokens.length;i++){
-        const a = this.tokens[i];
-        if(!a._el) continue;
-        const ad = dims(a);
-        const ax0 = a.x, ax1 = a.x + ad.w;
-        const ay0 = a.y, ay1 = a.y + ad.h;
+        const aT = this.tokens[i];
+        if(!aT._el) continue;
+        const ad = dims(aT);
+        const ax0 = aT.x, ax1 = aT.x + ad.w;
+        const ay0 = aT.y, ay1 = aT.y + ad.h;
 
         for(let j=i+1;j<this.tokens.length;j++){
-          const b = this.tokens[j];
-          if(!b._el) continue;
-          const bd = dims(b);
-          const bx0 = b.x, bx1 = b.x + bd.w;
-          const by0 = b.y, by1 = b.y + bd.h;
+          const bT = this.tokens[j];
+          if(!bT._el) continue;
+          const bd = dims(bT);
+          const bx0 = bT.x, bx1 = bT.x + bd.w;
+          const by0 = bT.y, by1 = bT.y + bd.h;
 
           const ovX = overlapLen(ax0, ax1, bx0, bx1);
           const ovY = overlapLen(ay0, ay1, by0, by1);
 
+          // horizontal adjacency
           if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            b._el.style.setProperty('--edgeL', transparent);
+            bT._el.style.setProperty('--edgeL', transparent);
           }
           if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            a._el.style.setProperty('--edgeL', transparent);
+            aT._el.style.setProperty('--edgeR', transparent);
           }
 
+          // vertical adjacency: on enlève UN SEUL trait => on cache le bord BAS de la bande du dessus
           if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            b._el.style.setProperty('--edgeT', transparent);
+            // a au-dessus de b
+            aT._el.style.setProperty('--edgeB', transparent);
           }
           if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            a._el.style.setProperty('--edgeT', transparent);
+            // b au-dessus de a
+            bT._el.style.setProperty('--edgeB', transparent);
           }
         }
       }
@@ -760,6 +864,7 @@
       this._bind('btn-undo','click', () => this.undo());
       this._bind('btn-clear','click', () => this.resetAll());
       this._bind('btn-export-png','click', () => this.exportPNG());
+      this._bind('btn-numberline','click', () => this.toggleNumberLine());
       this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
       this._bind('btn-zoom-out','click', () => this.setZoom(this.scale - 0.15));
       this._bind('btn-reset-view','click', () => this.resetView());
@@ -807,27 +912,36 @@
       // zoom molette
       this.boardContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const delta = -e.deltaY * 0.001;
-        this.setZoom(this.scale + delta);
+        const dir = (e.deltaY > 0) ? -1 : 1;
+        const step = 0.12;
+        this.zoomAt(e.clientX, e.clientY, this.scale + dir * step);
       }, {passive:false});
+
+      // empêche le menu contextuel quand on pan au clic droit en mode stylo
+      this.boardContainer.addEventListener('contextmenu', (e) => {
+        if(this.currentTool === 'pen') e.preventDefault();
+      });
 
       // pan sur fond
       this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool === 'pen') return;
+        const isPen  = (this.currentTool === 'pen');
+        const wantsPan = (!isPen && e.button === 0) || (isPen && e.button === 2);
+        if(!wantsPan) return;
+
         if(e.target.closest('.strip')) return;
+
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
-        this.selectToken(null);
+        if(!isPen) this.selectToken(null);
       });
 
       // dessin
       this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool === 'pen') this.startDraw(e);
+        if(this.currentTool === 'pen' && e.button === 0) this.startDraw(e);
       });
 
       window.addEventListener('mousemove', (e) => {
-        this.moveCursor(e);
         if(this.isPanning){
           this.pan.x = e.clientX - this.panStart.x;
           this.pan.y = e.clientY - this.panStart.y;
@@ -839,6 +953,7 @@
 
       window.addEventListener('mouseup', () => {
         this.isPanning = false;
+        if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
         this.isDrawing = false;
         this.boardContainer.classList.remove('panning');
       });
@@ -1035,7 +1150,6 @@
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       const pw = this.pieceW(denom);
-      // Pièces "collées" (pas d'explosion) : les séparations deviennent des traits pleins (contours)
       for(let i=0;i<denom;i++){
         const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY };
         this.tokens.push(piece);
@@ -1115,16 +1229,14 @@
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       if(s.kind === 'band'){
-        // bande entière : devient une bande en 2d parts (même largeur totale)
         const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
       } else {
-        // pièce : devient 2 pièces de 1/(2d) qui remplissent exactement la largeur d'origine
         const pw2 = this.pieceW(d2);
-        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,         y };
-        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x + pw2,    y };
+        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y };
+        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y };
         this.tokens.push(p1, p2);
         this.mountToken(p1);
         this.mountToken(p2);
@@ -1135,109 +1247,8 @@
       playSound('pop');
     }
 
-    // ---- Export PNG (photo du plateau, comme à l'écran) ----
-    _exportComputeEdges(){
-      const tol = 2.2;
-      const vis = new Map();
-      for(const t of this.tokens){
-        vis.set(t.id, {L:true,R:true,T:true,B:true});
-      }
-      const dims = (t)=>this.tokenDims(t);
-      const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
-
-      for(let i=0;i<this.tokens.length;i++){
-        const a = this.tokens[i];
-        const ad = dims(a);
-        const ax0=a.x, ax1=a.x+ad.w;
-        const ay0=a.y, ay1=a.y+ad.h;
-
-        for(let j=i+1;j<this.tokens.length;j++){
-          const b = this.tokens[j];
-          const bd = dims(b);
-          const bx0=b.x, bx1=b.x+bd.w;
-          const by0=b.y, by1=b.y+bd.h;
-
-          const ovX = overlapLen(ax0, ax1, bx0, bx1);
-          const ovY = overlapLen(ay0, ay1, by0, by1);
-
-          if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            vis.get(b.id).L = false;
-          }
-          if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            vis.get(a.id).L = false;
-          }
-
-          if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            vis.get(b.id).T = false;
-          }
-          if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            vis.get(a.id).T = false;
-          }
-        }
-      }
-      return vis;
-    }
-    async ensureFontsReady(){
-      // Assure que la police (Fredoka) est bien chargée avant un rendu canvas (export)
-      try{
-        if(document.fonts && document.fonts.ready){
-          await document.fonts.ready;
-          await document.fonts.load('800 18px Fredoka');
-        }
-      }catch(_){ /* ignore */ }
-    }
-
-    _drawFraction(ctx, denom, cx, cy, fontSize, color){
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      const embossText = (txt, x, y, fs, weight='800') => {
-        const size = Math.max(9, fs);
-        ctx.font = `${weight} ${size}px Fredoka, sans-serif`;
-        // léger emboss blanc comme sur le plateau
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.fillText(txt, x, y + 1);
-        ctx.fillStyle = color;
-        ctx.fillText(txt, x, y);
-      };
-
-      if(denom === 1){
-        embossText('1', cx, cy, fontSize * 1.05, '800');
-        ctx.restore();
-        return;
-      }
-
-      const fs = Math.max(9, fontSize);
-      const numY = cy - fs * 0.34;
-      const denY = cy + fs * 0.40;
-      const barY = cy + fs * 0.02;
-      const barW = fs * 1.15;
-
-      embossText('1', cx, numY, fs, '800');
-
-      // barre de fraction (avec emboss)
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 2; // en "unités monde" : se scale comme à l'écran
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.beginPath();
-      ctx.moveTo(cx - barW/2, barY + 1);
-      ctx.lineTo(cx + barW/2, barY + 1);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'rgba(0,0,0,0.70)';
-      ctx.beginPath();
-      ctx.moveTo(cx - barW/2, barY);
-      ctx.lineTo(cx + barW/2, barY);
-      ctx.stroke();
-
-      embossText(String(denom), cx, denY, fs, '800');
-      ctx.restore();
-    }
-
+    // ---- Export PNG ----
     async exportPNG(){
-      await this.ensureFontsReady();
-      // rendu à l'écran : on exporte le rectangle visible du plateau
       const r = this.boardContainer.getBoundingClientRect();
       const w = Math.max(1, Math.round(r.width));
       const h = Math.max(1, Math.round(r.height));
@@ -1246,116 +1257,76 @@
       const out = document.createElement('canvas');
       out.width = Math.round(w * dpr);
       out.height = Math.round(h * dpr);
-      out.style.width = w + 'px';
-      out.style.height = h + 'px';
-
       const ctx = out.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(0,0,w,h);
 
-      // transform "world" -> écran
       ctx.translate(this.pan.x, this.pan.y);
       ctx.scale(this.scale, this.scale);
 
-      // 1) annotations
-      try{
-        ctx.drawImage(this.canvas, 0, 0);
-      }catch(_){ /* ignore */ }
-
-      // 2) bandes/pièces
-      const edgeVis = this._exportComputeEdges();
-      const ordered = [...this.tokens].sort((a,b) => (a.id - b.id));
-
-      for(const t of ordered){
-        const cfg = this.getFractionConfig(t.denom);
-        const {w:tw, h:th} = this.tokenDims(t);
-
-        // fond
-        ctx.fillStyle = cfg.color;
-        ctx.fillRect(t.x, t.y, tw, th);
-
-        // séparations internes (recto seulement)
-        if(t.side === 'front' && t.kind === 'band' && t.denom > 1){
-          ctx.save();
-          ctx.strokeStyle = 'rgba(0,0,0,0.28)';
-          ctx.lineWidth = 1;
-          ctx.setLineDash([6, 4]);
-          const step = tw / t.denom;
-          for(let k=1;k<t.denom;k++){
-            const gx = t.x + k*step;
-            ctx.beginPath();
-            ctx.moveTo(gx, t.y);
-            ctx.lineTo(gx, t.y + th);
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
-
-        // texte
-        const fs = this.fontSizeFor(t.denom, t.kind);
-        if(t.side === 'front'){
-          const segCount = (t.kind === 'band') ? t.denom : 1;
-          if(segCount === 1){
-            this._drawFraction(ctx, t.denom, t.x + tw/2, t.y + th/2, fs, cfg.text);
-          } else {
-            const step = tw / segCount;
-            for(let i=0;i<segCount;i++){
-              this._drawFraction(ctx, t.denom, t.x + (i+0.5)*step, t.y + th/2, fs, cfg.text);
-            }
-          }
-        } else {
-          // verso : bande => 1 ; pièce => 1/denom
-          const backDen = (t.kind === 'band' || t.denom === 1) ? 1 : t.denom;
-          this._drawFraction(ctx, backDen, t.x + tw/2, t.y + th/2, Math.max(fs, 16), cfg.text);
-        }
-
-        // contours fins (1 trait)
-        const ev = edgeVis.get(t.id) || {L:true,R:true,T:true,B:true};
+      if(this.numberLine && this.numberLine.active){
+        const nl = this.numberLine;
         ctx.save();
-        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(17,24,39,0.9)';
+        ctx.fillStyle = 'rgba(17,24,39,0.9)';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        if(ev.T){ ctx.moveTo(t.x, t.y); ctx.lineTo(t.x + tw, t.y); }
-        if(ev.B){ ctx.moveTo(t.x, t.y + th); ctx.lineTo(t.x + tw, t.y + th); }
-        if(ev.L){ ctx.moveTo(t.x, t.y); ctx.lineTo(t.x, t.y + th); }
-        if(ev.R){ ctx.moveTo(t.x + tw, t.y); ctx.lineTo(t.x + tw, t.y + th); }
+        ctx.moveTo(nl.x, nl.y);
+        ctx.lineTo(nl.x + nl.len, nl.y);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(nl.x, nl.y-10);
+        ctx.lineTo(nl.x, nl.y+10);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(nl.x + nl.len, nl.y);
+        ctx.lineTo(nl.x + nl.len - 12, nl.y - 8);
+        ctx.lineTo(nl.x + nl.len - 12, nl.y + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.font = '800 18px Fredoka, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('0', nl.x + 2, nl.y + 12);
         ctx.restore();
-
-        // sélection (anneau)
-        if(t.id === this.selectedId){
-          ctx.save();
-          ctx.strokeStyle = 'rgba(59,130,246,0.85)';
-          ctx.lineWidth = 3;
-          const pad = 1.5;
-          ctx.strokeRect(t.x - pad, t.y - pad, tw + 2*pad, th + 2*pad);
-          ctx.restore();
-        }
       }
 
-      // download
-      const stamp = new Date();
-      const pad2 = (n)=>String(n).padStart(2,'0');
-      const name = `plateau-fractions-${stamp.getFullYear()}-${pad2(stamp.getMonth()+1)}-${pad2(stamp.getDate())}_${pad2(stamp.getHours())}-${pad2(stamp.getMinutes())}-${pad2(stamp.getSeconds())}.png`;
+      try{
+        const ws = this._canvasWorldSize || 4000;
+        ctx.drawImage(this.canvas, 0, 0, ws, ws);
+      }catch(_){ }
 
-      out.toBlob((blob) => {
-        if(!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }, 'image/png');
+      for(const t of this.tokens){
+        const cfg = this.getFractionConfig(t.denom);
+        const {w:tw, h:th} = this.tokenDims(t);
+        ctx.fillStyle = cfg.color;
+        ctx.fillRect(t.x, t.y, tw, th);
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(t.x, t.y, tw, th);
+      }
+
+      const url = out.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plateau-fractions.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
     // ---- Drag tokens ----
     handleDragStart(e){
-      if(this.currentTool !== 'hand') return;
+      const isTouch = !!e.touches;
+      const btn = isTouch ? 0 : (typeof e.button === 'number' ? e.button : 0);
+      const allow =
+        (this.currentTool === 'hand' && (isTouch || btn === 0)) ||
+        (this.currentTool === 'pen' && !isTouch && btn === 2);
+      if(!allow) return;
+
+      e.preventDefault();
       e.stopPropagation();
       const el = e.target.closest('.strip');
       if(!el) return;
@@ -1380,7 +1351,20 @@
         const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
         const br = this.boardContainer.getBoundingClientRect();
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
-        const wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
+        let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
+
+        // aimantation vers la demi-droite (si visible) : au-dessus ET au-dessous
+        const {h} = this.tokenDims(token);
+        if(this.numberLine && this.numberLine.active){
+          const lockThresh = 18 / this.scale;
+          const dAbove = Math.abs((wy + h) - this.numberLine.y);
+          const dBelow = Math.abs(wy - this.numberLine.y);
+          const d = Math.min(dAbove, dBelow);
+          if(d < lockThresh){
+            wy = (dAbove <= dBelow) ? (this.numberLine.y - h) : this.numberLine.y;
+          }
+        }
+
         token.x = wx;
         token.y = wy;
         token._el.style.left = wx + 'px';
@@ -1403,27 +1387,35 @@
       document.addEventListener('touchend', end);
     }
 
-    snapToken(token, opts={}){
-      const t = token;
+    snapToken(t, opts={}){
       if(!t) return;
 
       const {w, h} = this.tokenDims(t);
       const threshPx = 28;
       const thresh = threshPx / this.scale;
 
-      let bestX = null, bestDx = Infinity;
-      let bestY = null, bestDy = Infinity;
+      let bestX = null, bestDx = Infinity, bestXPrio = 9;
+      let bestY = null, bestDy = Infinity, bestYPrio = 9;
 
-      const considerX = (nx) => {
-        const dx = nx - t.x;
-        const adx = Math.abs(dx);
-        if(adx <= thresh && adx < bestDx){ bestDx = adx; bestX = nx; }
+      const considerX = (nx, prio=1) => {
+        const adx = Math.abs(nx - t.x);
+        if(adx <= thresh && (prio < bestXPrio || (prio === bestXPrio && adx < bestDx))){
+          bestXPrio = prio;
+          bestDx = adx;
+          bestX = nx;
+        }
       };
-      const considerY = (ny) => {
-        const dy = ny - t.y;
-        const ady = Math.abs(dy);
-        if(ady <= thresh && ady < bestDy){ bestDy = ady; bestY = ny; }
+
+      const considerY = (ny, prio=1) => {
+        const ady = Math.abs(ny - t.y);
+        if(ady <= thresh && (prio < bestYPrio || (prio === bestYPrio && ady < bestDy))){
+          bestYPrio = prio;
+          bestDy = ady;
+          bestY = ny;
+        }
       };
+
+      const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
 
       const xLinesFor = (o) => {
         const {w:ow} = this.tokenDims(o);
@@ -1438,22 +1430,42 @@
         return lines;
       };
 
+      // Demi-droite graduée : priorité max
+      if(this.numberLine && this.numberLine.active){
+        considerY(this.numberLine.y - h, 0);
+        considerY(this.numberLine.y, 0);
+        considerX(this.numberLine.x, 0);
+      }
+
+      // Accroche aux autres bandes/pièces
       for(const o of this.tokens){
         if(o.id === t.id) continue;
+
         const od = this.tokenDims(o);
         const ox = o.x, oy = o.y, ow = od.w, oh = od.h;
 
-        considerY(oy);
-        considerY(oy - h);
-        considerY(oy + oh);
+        const ovY = overlapLen(t.y, t.y + h, oy, oy + oh);
+        const ovX = overlapLen(t.x, t.x + w, ox, ox + ow);
+
+        const neighX = Math.min(Math.abs(t.x - (ox + ow)), Math.abs((t.x + w) - ox));
+        const neighY = Math.min(Math.abs(t.y - (oy + oh)), Math.abs((t.y + h) - oy));
+        const neighborX = neighX <= thresh;
+        const neighborY = neighY <= thresh;
+
+        const prioX = (ovY > Math.min(h, oh) * 0.35 || neighborY) ? 0 : 1;
+        const prioY = (ovX > Math.min(w, ow) * 0.35 || neighborX) ? 0 : 1;
+
+        considerY(oy, prioY);
+        considerY(oy - h, prioY);
+        considerY(oy + oh, prioY);
 
         const lines = xLinesFor(o);
         for(const gx of lines){
-          considerX(gx);
-          considerX(gx - w);
+          considerX(gx, prioX);
+          considerX(gx - w, prioX);
         }
-        considerX(ox + ow);
-        considerX(ox - w);
+        considerX(ox + ow, prioX);
+        considerX(ox - w, prioX);
       }
 
       let snapped = false;
@@ -1481,26 +1493,40 @@
       if(pen){  pen.classList.toggle('bg-white', tool==='pen');   pen.classList.toggle('shadow', tool==='pen'); }
 
       const penMode = (tool === 'pen');
-      this.boardContainer.classList.toggle('hide-cursor', penMode);
-      document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
+      document.body.classList.toggle('pen-mode', penMode);
     }
 
     resizeCanvas(){
-      this.canvas.width = 4000;
-      this.canvas.height = 4000;
-      this.canvas.style.width = '4000px';
-      this.canvas.style.height = '4000px';
-      this.ctx.lineWidth = 3;
+      // Canevas "monde" : on augmente la résolution (DPR) pour éviter l'effet pixelisé au zoom
+      const worldSize = 4000;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      this._canvasWorldSize = worldSize;
+      this._canvasDpr = dpr;
+
+      this.canvas.width = Math.round(worldSize * dpr);
+      this.canvas.height = Math.round(worldSize * dpr);
+      this.canvas.style.width = `${worldSize}px`;
+      this.canvas.style.height = `${worldSize}px`;
+
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
+      this.ctx.miterLimit = 2;
       this.ctx.strokeStyle = '#111827';
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.globalCompositeOperation = 'source-over';
     }
 
     startDraw(e){
       this.isDrawing = true;
+      this.drawPoints = [];
+
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
-      this.lastDrawPos = p;
+
+      this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+      this.drawPoints.push(p);
       this.ctx.beginPath();
       this.ctx.moveTo(p.x, p.y);
     }
@@ -1510,21 +1536,43 @@
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
-      this.ctx.lineTo(p.x, p.y);
+
+      this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+
+      const pts = this.drawPoints;
+      pts.push(p);
+
+      if(pts.length === 2){
+        this.ctx.lineTo(p.x, p.y);
+        this.ctx.stroke();
+        return;
+      }
+
+      const p1 = pts[pts.length - 2];
+      const p2 = pts[pts.length - 1];
+      const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+      this.ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
       this.ctx.stroke();
-      this.lastDrawPos = p;
+    }
+
+    endDraw(){
+      const pts = this.drawPoints || [];
+      if(!pts.length) return;
+      const last = pts[pts.length - 1];
+      this.ctx.lineTo(last.x, last.y);
+      this.ctx.stroke();
+      this.drawPoints = [];
     }
 
     clearDrawing(){
+      this.ctx.save();
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+      this.ctx.restore();
 
-    moveCursor(e){
-      if(this.currentTool !== 'pen') return;
-      const c = document.getElementById('custom-cursor');
-      c.style.left = e.clientX + 'px';
-      c.style.top = e.clientY + 'px';
-      c.style.transform = 'translate(-6px,-28px)';
+      const dpr = this._canvasDpr || 1;
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     clearAllTokens(withHistory=true){
@@ -1547,23 +1595,40 @@
   // --- Mini tests (sécurité) ---
   function runSelfTests(){
     const required = [
-      'btn-undo','btn-clear','btn-export-png','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','btn-export-png','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-clear-drawing',
-      'board-container','board-world','palette','drawing-canvas'
+      'board-container','board-world','palette','drawing-canvas','number-line'
     ];
     const missing = required.filter(id => !document.getElementById(id));
     if(missing.length){
       console.error('[SelfTest] IDs manquants:', missing);
-    } else {
-      console.log('[SelfTest] OK');
+      return { ok:false, missing };
     }
+
+    // tests supplémentaires (non intrusifs)
+    try{
+      // Vérifie que le script s'exécute bien et qu'on peut instancier
+      const tmp = new FractionStripsApp();
+      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','exportPNG','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
+      if(!okMethods) throw new Error('Méthodes clés manquantes');
+      // Nettoyage visuel minimal
+      tmp.resetAll();
+    }catch(err){
+      console.error('[SelfTest] Erreur instanciation/app:', err);
+      return { ok:false, missing:[], err };
+    }
+
+    console.log('[SelfTest] OK');
+    return { ok:true, missing:[] };
   }
 
-  // IMPORTANT: instancier après que le DOM est prêt (évite le null.addEventListener)
   window.addEventListener('DOMContentLoaded', () => {
-    runSelfTests();
+    const t = runSelfTests();
+    if(!t.ok) return;
+    // Instance réelle utilisée par l'utilisateur
     window.app = new FractionStripsApp();
+    console.log('[SelfTest] App instanciée OK');
   });
 </script>
 
