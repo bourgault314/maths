@@ -11,7 +11,7 @@
     <style>
         body { font-family: 'Fredoka', sans-serif; background-color: #f0f9ff; overflow: hidden; user-select: none; }
         
-        /* --- TUILES --- */
+        /* --- TUILES PLATEAU --- */
         .token {
             position: absolute; display: flex; align-items: center; justify-content: center;
             font-weight: 600; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.25);
@@ -19,67 +19,121 @@
             font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.2rem;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3); transform-origin: 0 0;
         }
-        .token.dragging { transition: none !important; z-index: 1000 !important; cursor: grabbing; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .token.dragging { transition: none !important; z-index: 1000 !important; cursor: grabbing; box-shadow: 0 15px 30px rgba(0,0,0,0.4); transform: scale(1.1); }
         .token.animating { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s ease-in-out, top 0.5s ease-in-out, background-color 0.5s !important; }
         .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
         @keyframes vanish { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
 
+        /* Couleurs */
         .token.green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 2px solid #14532d; }
         .token.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 2px solid #7f1d1d; }
+        
+        /* Etats spéciaux */
+        .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
+        .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
         .token.is-zero { background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280; box-shadow: none; z-index: 5; color: rgba(255,255,255,0.5); }
         .token.fading-gray { background: #9ca3af !important; border-color: #6b7280 !important; box-shadow: none !important; filter: grayscale(1); }
+        .token.ghost { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
 
+        /* Tailles */
         .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
         .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
         .token.type-x2 { width: 90px; height: 90px; border-radius: 4px; }
 
-        .zero-badge { position: absolute; font-size: 2rem; font-weight: 800; color: #374151; pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(255,255,255,1); animation: popIn 0.3s; }
-        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        /* Badge Zéro */
+        .zero-badge { 
+            position: absolute; font-size: 2rem; font-weight: 800; color: #374151; 
+            pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(255,255,255,1); 
+            animation: popIn 0.3s; transform: translate(-50%, -50%);
+        }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
-        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; cursor: grab; padding-bottom: 100px; /* Space for bottom bar */ }
+        /* STRUCTURE */
+        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; cursor: grab; padding-bottom: 140px; }
         #board-container.panning { cursor: grabbing; }
         #board-world { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 0; height: 0; }
         
-        /* AXE CENTRAL */
         #equation-divider {
-            position: absolute; top: -5000px; bottom: -5000px; left: 0; width: 6px;
-            background-color: #e2e8f0; border-left: 2px dashed #94a3b8; border-right: 2px dashed #94a3b8;
-            transform: translateX(-3px); pointer-events: none; z-index: 0;
+            position: absolute; top: -5000px; bottom: -5000px; left: 0; width: 4px;
+            background-color: #cbd5e1; border-left: 2px dashed #94a3b8; border-right: 2px dashed #94a3b8;
+            transform: translateX(-2px); pointer-events: none; z-index: 0;
         }
 
-        /* BOTTOM BAR */
+        /* MENU BAS */
         #bottom-bar {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 90px;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 140px;
             background: white; border-top: 1px solid #cbd5e1;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; z-index: 50; box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex; z-index: 50; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
         }
-        .deck-section { display: flex; align-items: center; gap: 10px; padding: 5px 15px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
-        .deck-label { font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; text-align: center; }
+        .side-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px 10px; gap: 10px; position: relative; }
+        .side-panel.left { border-right: none; background: #f8fafc; }
+        .side-panel.right { background: #fff; }
+        
+        #menu-divider {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+            background-color: #cbd5e1; border-left: 2px dashed #94a3b8; border-right: 2px dashed #94a3b8;
+            transform: translateX(-2px); pointer-events: none; z-index: 51;
+        }
 
-        .tile-btn { position: relative; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
-        .tile-btn:active { transform: scale(0.9); } .tile-btn:hover { transform: translateY(-2px); }
-        .preview-shape { display: flex; align-items: center; justify-content: center; border-radius: 2px; color: white; font-weight: bold; font-family: 'Times New Roman', serif; font-style: italic; text-shadow: 0 1px 1px rgba(0,0,0,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.2); pointer-events: none; }
-        .ps-green { background: #4ade80; border: 1px solid #15803d; } .ps-red { background: #f87171; border: 1px solid #b91c1c; }
+        .tiles-zone { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 5px; }
+        .tools-zone { display: flex; flex-direction: column; gap: 6px; }
+        .tools-row { display: flex; gap: 4px; }
+
+        /* Tuiles Menu (Preview) */
+        .tile-btn { 
+            position: relative; background: transparent; border: none; cursor: grab; 
+            display: flex; align-items: center; justify-content: center; transition: transform 0.1s; 
+        }
+        .tile-btn:active { cursor: grabbing; transform: scale(0.95); }
+        .tile-btn:hover { transform: translateY(-2px); }
+        
+        .preview-shape { 
+            display: flex; align-items: center; justify-content: center; border-radius: 4px; 
+            color: white; font-weight: bold; font-family: 'Times New Roman', serif; font-style: italic; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3); box-shadow: 0 3px 5px rgba(0,0,0,0.2); pointer-events: none; 
+        }
+        .ps-green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 1px solid #14532d; } 
+        .ps-red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 1px solid #7f1d1d; }
+
+        /* Ghost spécifique pour le Drag du menu (attaché au body) */
+        .token.menu-ghost {
+            position: fixed; /* Fixé à l'écran, pas au monde */
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.9;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+        }
+        
+        .action-btn { font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; background: white; color: #475569; transition: all 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .action-btn:hover { background: #f1f5f9; border-color: #94a3b8; } .action-btn:active { transform: translateY(1px); }
+        
+        .btn-op { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .btn-opp-style { background-color: #fff7ed; color: #c2410c; border: 1px solid #fb923c; font-size: 0.65rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
+        .btn-opp-style:hover { background-color: #ffedd5; }
         
         .toggle-mode { background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; }
         .toggle-mode.solve { background-color: #dcfce7; color: #166534; border-color: #22c55e; }
-
-        /* EQUATION VISIBILITY */
-        .equation-hidden { opacity: 0; pointer-events: none; }
         .equation-blur { filter: blur(5px); opacity: 0.5; }
+        
+        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
+        .hide-cursor, .hide-cursor * { cursor: none !important; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden">
 
+    <div id="custom-cursor" class="fixed pointer-events-none z-50 hidden">
+        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
+            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
+            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
+            <circle cx="8" cy="32" r="1" fill="white"/>
+        </svg>
+    </div>
+
     <!-- HEADER -->
     <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 justify-between">
-        
-        <!-- GAUCHE : ACTIONS -->
         <div class="flex items-center gap-2">
-            <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm" title="Annuler">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-            </button>
             <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm" title="Tout effacer">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
@@ -89,7 +143,6 @@
             </button>
         </div>
 
-        <!-- CENTRE : EQUATION -->
         <div class="flex-1 flex flex-col items-center justify-center px-4">
             <div class="flex items-center gap-2 bg-slate-50 px-6 py-2 rounded-full border border-slate-200 shadow-inner">
                 <div id="equation-display" class="text-3xl font-bold text-slate-700 tracking-tight font-mono transition-all duration-300">0 = 0</div>
@@ -102,56 +155,82 @@
             </div>
         </div>
 
-        <!-- DROITE : OUTILS -->
-        <div class="flex items-center gap-2">
-            <button onclick="app.organizeBoard()" class="px-3 py-1 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 shadow-sm hover:bg-slate-50">Ranger</button>
-            <button onclick="app.autoSimplify()" class="px-3 py-1 bg-white border border-amber-300 rounded text-xs font-bold text-amber-700 shadow-sm hover:bg-amber-50">Simplifier</button>
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+            <button onclick="app.setTool('hand')" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
+            <button onclick="app.setTool('pen')" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+            <button onclick="app.clearDrawing()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
         </div>
     </header>
 
-    <!-- PLATEAU -->
     <main id="board" class="flex-1 relative bg-white overflow-hidden cursor-move">
         <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;"></div>
         <div id="board-container">
             <div id="board-world">
-                <!-- LE TRAIT EST AU CENTRE (x=0) -->
                 <div id="equation-divider"></div>
+                <canvas id="drawing-canvas"></canvas>
             </div>
         </div>
-        
-        <!-- Badges Joueurs -->
-        <div class="absolute top-4 left-10 opacity-30 text-2xl font-bold font-serif italic text-slate-500 pointer-events-none">Membre de Gauche</div>
-        <div class="absolute top-4 right-10 opacity-30 text-2xl font-bold font-serif italic text-slate-500 pointer-events-none">Membre de Droite</div>
     </main>
 
-    <!-- BARRE D'OUTILS BAS (PIÈCES) -->
     <div id="bottom-bar">
-        <!-- DECKS GAUCHE -->
-        <div class="deck-section" id="deck-left">
-            <div class="flex flex-col items-center mr-4">
-                <span class="deck-label">Gauche</span>
-                <div class="flex gap-2">
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x2', 1, 'left')" onclick="app.menuClick('x2', 1, 'left')" class="tile-btn w-12 h-12"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x2', -1, 'left')" onclick="app.menuClick('x2', -1, 'left')" class="tile-btn w-12 h-12"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x', 1, 'left')" onclick="app.menuClick('x', 1, 'left')" class="tile-btn w-16 h-10"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x', -1, 'left')" onclick="app.menuClick('x', -1, 'left')" class="tile-btn w-16 h-10"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'unit', 1, 'left')" onclick="app.menuClick('unit', 1, 'left')" class="tile-btn w-10 h-10"><div class="preview-shape ps-green w-5 h-5 text-xs">1</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'unit', -1, 'left')" onclick="app.menuClick('unit', -1, 'left')" class="tile-btn w-10 h-10"><div class="preview-shape ps-red w-5 h-5 text-xs">-1</div></button>
+        <div id="menu-divider"></div>
+
+        <!-- GAUCHE -->
+        <div class="side-panel left">
+            <div class="tiles-zone">
+                <button onmousedown="app.handleMenuTouchStart(event, 'x2', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-12 h-12 text-lg">x²</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x2', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-12 h-12 text-lg">-x²</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
+            </div>
+            <div class="tools-zone">
+                <div class="tools-row">
+                    <button onclick="app.sideLeft.addOperator('separate')" class="btn-op bg-blue-100 text-blue-700 hover:bg-blue-200" title="Séparer">+</button>
+                    <button onclick="app.sideLeft.addOperator('subtract')" class="btn-op bg-orange-100 text-orange-700 hover:bg-orange-200" title="Soustraire">-</button>
+                    <button onclick="app.sideLeft.addOperator('close')" id="btn-close-l" class="hidden btn-op bg-orange-500 text-white hover:bg-orange-600">)</button>
+                </div>
+                <div class="tools-row">
+                    <button onclick="app.sideLeft.startMult(2)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">2x(?)</button>
+                    <button onclick="app.sideLeft.startMult(3)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">3x(?)</button>
+                </div>
+                <div class="tools-row flex-wrap justify-end">
+                    <button onclick="app.sideLeft.order()" class="action-btn">Ranger</button>
+                    <button onclick="app.sideLeft.reduce()" class="action-btn">Réduire</button>
+                    <button onclick="app.sideLeft.simplify()" class="action-btn">Simplifier</button>
+                    <button onclick="app.sideLeft.applyOpposite()" id="btn-opp-l" class="hidden btn-opp-style">Opposé</button>
+                    <button onclick="app.sideLeft.distribute()" id="btn-dist-l" class="hidden action-btn bg-blue-500 text-white hover:bg-blue-600">Développer</button>
                 </div>
             </div>
         </div>
 
-        <!-- DECKS DROITE -->
-        <div class="deck-section" id="deck-right">
-            <div class="flex flex-col items-center ml-4">
-                <span class="deck-label">Droite</span>
-                <div class="flex gap-2">
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x2', 1, 'right')" onclick="app.menuClick('x2', 1, 'right')" class="tile-btn w-12 h-12"><div class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x2', -1, 'right')" onclick="app.menuClick('x2', -1, 'right')" class="tile-btn w-12 h-12"><div class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x', 1, 'right')" onclick="app.menuClick('x', 1, 'right')" class="tile-btn w-16 h-10"><div class="preview-shape ps-green w-10 h-5 text-sm">x</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'x', -1, 'right')" onclick="app.menuClick('x', -1, 'right')" class="tile-btn w-16 h-10"><div class="preview-shape ps-red w-10 h-5 text-sm">-x</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'unit', 1, 'right')" onclick="app.menuClick('unit', 1, 'right')" class="tile-btn w-10 h-10"><div class="preview-shape ps-green w-5 h-5 text-xs">1</div></button>
-                    <button draggable="true" ondragstart="app.handleDragFromMenu(event, 'unit', -1, 'right')" onclick="app.menuClick('unit', -1, 'right')" class="tile-btn w-10 h-10"><div class="preview-shape ps-red w-5 h-5 text-xs">-1</div></button>
+        <!-- DROITE -->
+        <div class="side-panel right">
+            <div class="tiles-zone">
+                <button onmousedown="app.handleMenuTouchStart(event, 'x2', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-12 h-12 text-lg">x²</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x2', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-12 h-12 text-lg">-x²</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
+            </div>
+            <div class="tools-zone">
+                <div class="tools-row">
+                    <button onclick="app.sideRight.addOperator('separate')" class="btn-op bg-blue-100 text-blue-700 hover:bg-blue-200">+</button>
+                    <button onclick="app.sideRight.addOperator('subtract')" class="btn-op bg-orange-100 text-orange-700 hover:bg-orange-200">-</button>
+                    <button onclick="app.sideRight.addOperator('close')" id="btn-close-r" class="hidden btn-op bg-orange-500 text-white hover:bg-orange-600">)</button>
+                </div>
+                <div class="tools-row">
+                    <button onclick="app.sideRight.startMult(2)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">2x(?)</button>
+                    <button onclick="app.sideRight.startMult(3)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">3x(?)</button>
+                </div>
+                <div class="tools-row flex-wrap">
+                    <button onclick="app.sideRight.order()" class="action-btn">Ranger</button>
+                    <button onclick="app.sideRight.reduce()" class="action-btn">Réduire</button>
+                    <button onclick="app.sideRight.simplify()" class="action-btn">Simplifier</button>
+                    <button onclick="app.sideRight.applyOpposite()" id="btn-opp-r" class="hidden btn-opp-style">Opposé</button>
+                    <button onclick="app.sideRight.distribute()" id="btn-dist-r" class="hidden action-btn bg-blue-500 text-white hover:bg-blue-600">Développer</button>
                 </div>
             </div>
         </div>
@@ -159,221 +238,463 @@
 
     <script>
         const SNAP = 60;
+        const PACK_GAP = 25;
         const SIZES = { 'unit': { w: 40, h: 40 }, 'x': { w: 90, h: 40 }, 'x2': { w: 90, h: 90 } };
-        const COLORS = { pos: 'green', neg: 'red' };
+        const COLORS = { pos: 'green', neg: 'red', orange: 'orange' };
         
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
+            if (type === 'pop') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
+            else if (type === 'snap') { osc.type = 'square'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.05); osc.start(now); osc.stop(now+0.05); }
+            else if (type === 'whoosh') { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
+            else if (type === 'flip') { osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+        }
+
+        // --- ALGEBRA SIDE ENGINE ---
+        class AlgebraSide {
+            constructor(id, parentApp) {
+                this.id = id;
+                this.app = parentApp;
+                this.tokens = [];
+                this.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
+                this.currStepIdx = 0;
+                this.nextPackId = 1; this.packMeta = {}; this.lastPack = null;
+                this.isSubInput = false; this.isMultInput = false;
+                this.lastPos = { x: 0, y: 0, maxY: 0 };
+                this.pendingGap = 0;
+                this.lastSeqPackId = null;
+            }
+
+            getStartPos() {
+                const screenW = this.app.container.clientWidth / this.app.scale;
+                const screenH = this.app.container.clientHeight / this.app.scale;
+                const topY = -screenH/2 + 60;
+                if (this.id === 'left') return { x: -screenW/2 + 40, y: topY, maxY: 0 };
+                else return { x: 40, y: topY, maxY: 0 };
+            }
+
+            addTile(type, sign, isGhost=false, manualX=null, manualY=null, mirrorTrigger=false) {
+                if (this.tokens.length === 0 && !manualX) this.lastPos = this.getStartPos();
+
+                if (!isGhost && !mirrorTrigger && this.app.mode === 'solve') {
+                    const otherSide = this.id === 'left' ? this.app.sideRight : this.app.sideLeft;
+                    otherSide.addTile(type, sign, false, null, null, true);
+                }
+
+                if(!isGhost) playSound('pop');
+                
+                let step = this.steps[this.currStepIdx];
+                if (!isGhost && step.isClosed && !this.isSubInput && !this.isMultInput) {
+                    this.steps.push({ id: this.steps.length, operator: '+', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
+                    this.currStepIdx++;
+                    step = this.steps[this.currStepIdx];
+                    this.lastPack = null;
+                }
+
+                let tileSign = sign;
+                if (this.isSubInput && step.type === 'subtraction') tileSign = -sign;
+                if (this.isMultInput && step.operator === '-') tileSign = -sign;
+
+                let pid;
+                if (manualX===null && !isGhost) {
+                    const now = Date.now();
+                    if (this.lastPack && this.lastPack.type === type && this.lastPack.sign === tileSign && this.lastPack.step === this.currStepIdx) {
+                        pid = this.lastPack.pid;
+                    } else {
+                        pid = this.nextPackId++;
+                        this.lastPack = { pid, type, sign: tileSign, step: this.currStepIdx };
+                    }
+                } else {
+                    pid = this.nextPackId++;
+                }
+
+                const el = document.createElement('div');
+                el.className = `token ${type==='unit'?'type-unit':(type==='x'?'type-x':'type-x2')} ${tileSign===1?'green':'red'}`;
+                if (isGhost) el.classList.add('ghost');
+                if (this.isSubInput) el.classList.add('in-bracket');
+                if (this.isMultInput && !step.distributed) el.classList.add('pending-mult');
+                
+                let lbl = type==='unit' ? (tileSign===1?'1':'-1') : (type==='x' ? (tileSign===1?'x':'-x') : (tileSign===1?'x²':'-x²'));
+                el.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
+                
+                const tId = this.app.nextId++;
+                el.id = `t-${tId}`;
+
+                let x, y;
+                if (manualX !== null) { x=manualX; y=manualY; }
+                else {
+                    let gap = 0;
+                    if (this.pendingGap > 0) { gap = this.pendingGap; this.pendingGap = 0; }
+                    else if (this.lastSeqPackId !== null && pid !== this.lastSeqPackId) gap = PACK_GAP;
+                    
+                    const pos = this.getPos(SIZES[type].w, SIZES[type].h, gap);
+                    x = pos.x; y = pos.y;
+                }
+
+                el.style.left = x+'px'; el.style.top = y+'px';
+                el.addEventListener('mousedown', e => this.app.handleDragStart(e, tId));
+                el.addEventListener('touchstart', e => this.app.handleDragStart(e, tId), {passive:false});
+                this.app.world.appendChild(el);
+
+                const token = { id: tId, side: this.id, type, sign: tileSign, displaySign: sign, x, y, element: el, pairId: null, packId: pid, ghostIds: [] };
+                this.tokens.push(token);
+                this.app.allTokens.push(token);
+
+                if (!isGhost) {
+                    step.tokenIds.push(tId);
+                    if (manualX === null) this.lastSeqPackId = pid;
+                    
+                    if (this.isMultInput && step.factor > 1) {
+                        const stride = 90+20;
+                        for(let i=1; i<step.factor; i++) {
+                            const g = this.addTile(type, sign, true, x, y + i*stride);
+                            token.ghostIds.push(g.id);
+                        }
+                    }
+                }
+                this.app.updateEquation();
+                return token;
+            }
+
+            getPos(w, h, gap) {
+                const padding = 2;
+                this.lastPos.x += gap;
+                const screenW = this.app.container.clientWidth / this.app.scale;
+                const limit = (this.id === 'left') ? -20 : (screenW/2 - 20);
+                const start = (this.id === 'left') ? (-screenW/2 + 40) : 40; 
+                
+                if (this.lastPos.x + w + padding > limit) {
+                    this.lastPos.x = start;
+                    this.lastPos.y += this.lastPos.maxY + 20;
+                    this.lastPos.maxY = 0;
+                }
+                const res = { x: this.lastPos.x, y: this.lastPos.y };
+                this.lastPos.x += w + padding;
+                this.lastPos.maxY = Math.max(this.lastPos.maxY, h);
+                return res;
+            }
+
+            addOperator(op) {
+                if (op === 'separate') { playSound('pop'); this.lastPack=null; this.pendingGap = PACK_GAP; }
+                else if (op === 'subtract') {
+                    if (this.isSubInput) return;
+                    this.pendingGap = PACK_GAP;
+                    this.steps.push({ id: this.steps.length, operator: '-', type: 'subtraction', tokenIds: [], factor:1, distributed:false, isClosed:false });
+                    this.currStepIdx++; this.isSubInput = true;
+                    document.getElementById(`btn-close-${this.id === 'left' ? 'l' : 'r'}`).classList.remove('hidden');
+                }
+                else if (op === 'close') {
+                    const s = this.steps[this.currStepIdx];
+                    if (this.isSubInput) { this.isSubInput=false; s.isClosed=true; }
+                    else if (this.isMultInput) { this.isMultInput=false; s.isClosed=true; }
+                    document.getElementById(`btn-close-${this.id === 'left' ? 'l' : 'r'}`).classList.add('hidden');
+                    this.updateUI();
+                }
+                this.app.updateEquation();
+            }
+
+            startMult(f) {
+                if (this.isSubInput || this.isMultInput) return;
+                this.steps.push({ id: this.steps.length, operator: '+', type: 'multiplication', tokenIds: [], factor: f, distributed:false, isClosed:false });
+                this.currStepIdx++; this.isMultInput = true;
+                document.getElementById(`btn-close-${this.id === 'left' ? 'l' : 'r'}`).classList.remove('hidden');
+                this.app.updateEquation();
+            }
+
+            applyOpposite() {
+                const p = this.steps.filter(s=>s.type==='subtraction' && !s.oppositeApplied);
+                if(!p.length) return; 
+                playSound('flip');
+                p.forEach(s => {
+                    s.tokenIds.forEach(id => { 
+                        const t = this.tokens.find(x=>x.id===id); 
+                        if(t){ 
+                            t.displaySign = t.sign;
+                            t.element.classList.remove('in-bracket'); 
+                        } 
+                    });
+                    s.oppositeApplied = true;
+                });
+                this.updateUI();
+                this.app.updateEquation();
+            }
+
+            distribute() {
+                const s = this.steps.find(x => x.type === 'multiplication' && !x.distributed && x.isClosed);
+                if (!s) return;
+                s.tokenIds.forEach(mid => {
+                    const m = this.tokens.find(t => t.id === mid);
+                    if (m && m.ghostIds) {
+                        m.ghostIds.forEach(gid => {
+                            const g = this.tokens.find(t => t.id === gid);
+                            if (g) {
+                                g.element.classList.remove('ghost', 'pending-mult');
+                                s.tokenIds.push(gid);
+                            }
+                        });
+                        m.element.classList.remove('pending-mult');
+                    }
+                });
+                s.distributed = true;
+                this.reflow();
+                this.updateUI();
+                this.app.updateEquation();
+            }
+
+            reflow() {
+                this.lastPos = this.getStartPos();
+                this.lastSeqPackId = null;
+                this.steps.forEach((step, idx) => {
+                    const toks = step.tokenIds.map(id => this.tokens.find(t=>t.id===id)).filter(Boolean);
+                    if (!toks.length) return;
+
+                    if (step.type === 'multiplication' && step.distributed) {
+                        if (idx > 0) this.lastPos.x += PACK_GAP;
+                        const groups = { 'x2': [], 'x': [], 'unit': [] };
+                        toks.forEach(t => groups[t.type].push(t));
+                        
+                        let cx = this.lastPos.x; let cy = this.lastPos.y;
+                        const screenW = this.app.container.clientWidth / this.app.scale;
+                        const limit = (this.id==='left' ? -20 : (screenW/2 - 20));
+                        const start = (this.id==='left' ? (-screenW/2 + 40) : 40);
+
+                        if (cx + 200 > limit) { cx = start; cy += this.lastPos.maxY + 20; }
+                        let mh = 0;
+                        ['x2','x','unit'].forEach(type => {
+                            const l = groups[type];
+                            if(!l.length) return;
+                            l.sort((a,b)=>b.sign - a.sign);
+                            l.forEach(t => {
+                                t.element.classList.add('animating');
+                                t.x = cx; t.y = cy; t.element.style.left = cx+'px'; t.element.style.top = cy+'px';
+                                setTimeout(()=>t.element.classList.remove('animating'),500);
+                                cx += SIZES[type].w + 2;
+                            });
+                            cx += PACK_GAP; mh = Math.max(mh, SIZES[type].h);
+                        });
+                        this.lastPos.x = cx; this.lastPos.y = cy; this.lastPos.maxY = Math.max(this.lastPos.maxY, mh);
+                    } else {
+                        if (idx > 0) this.lastPos.x += PACK_GAP;
+                        let lastPid = null;
+                        toks.forEach(t => {
+                            let gap = 0;
+                            if (lastPid !== null && t.packId !== lastPid) gap = PACK_GAP;
+                            const pos = this.getPos(SIZES[t.type].w, SIZES[t.type].h, gap);
+                            t.element.classList.add('animating');
+                            t.x = pos.x; t.y = pos.y; t.element.style.left = t.x+'px'; t.element.style.top = t.y+'px';
+                            setTimeout(()=>t.element.classList.remove('animating'),500);
+                            lastPid = t.packId;
+                        });
+                    }
+                });
+            }
+
+            organize() { this.orderAllInternal(false); }
+            reduce() { this.orderAllInternal(true); }
+            orderAllInternal(reduced) {
+                const screenW = this.app.container.clientWidth / this.app.scale;
+                const startX = (this.id === 'left') ? (-screenW/2 + 40) : 40;
+                const limitX = (this.id === 'left') ? -20 : (screenW/2 - 20);
+                const screenH = this.app.container.clientHeight / this.app.scale;
+                let y = -screenH/2 + 60;
+                const rows = [{t:'x2',s:1},{t:'x2',s:-1},{t:'x',s:1},{t:'x',s:-1},{t:'unit',s:1},{t:'unit',s:-1}];
+                rows.forEach(r => {
+                    const subset = this.tokens.filter(t => t.type===r.t && t.sign===r.s && !t.pairId && !t.element.classList.contains('ghost'));
+                    if (!subset.length) return;
+                    let x = startX; let rh = 0;
+                    subset.forEach(t => {
+                        if (x + SIZES[t.type].w > limitX) { x = startX; y += rh + 10; rh = 0; }
+                        t.element.classList.add('animating');
+                        t.x = x; t.y = y; t.element.style.left=x+'px'; t.element.style.top=y+'px';
+                        setTimeout(()=>t.element.classList.remove('animating'), 500);
+                        x += SIZES[t.type].w + 2; rh = Math.max(rh, SIZES[t.type].h);
+                    });
+                    y += rh + (reduced ? 10 : 20);
+                });
+            }
+
+            simplify() {
+                playSound('whoosh');
+                const available = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('in-bracket') && !t.element.classList.contains('ghost'));
+                const pairs = [];
+                ['x2','x','unit'].forEach(type => {
+                    const pos = available.filter(t => t.type === type && t.sign === 1);
+                    const neg = available.filter(t => t.type === type && t.sign === -1);
+                    while(pos.length && neg.length) pairs.push([pos.pop(), neg.pop()]);
+                });
+                pairs.forEach((p, i) => {
+                    setTimeout(() => {
+                        const t1 = p[0]; const t2 = p[1];
+                        this.app.createZeroPair(t1, t2, true);
+                    }, i * 300);
+                });
+            }
+
+            updateUI() {
+                const btnDist = document.getElementById(`btn-dist-${this.id === 'left' ? 'l' : 'r'}`);
+                const hasPendingDist = this.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed);
+                if (hasPendingDist) btnDist.classList.remove('hidden'); else btnDist.classList.add('hidden');
+                const btnOpp = document.getElementById(`btn-opp-${this.id === 'left' ? 'l' : 'r'}`);
+                const hasPendingOpp = this.steps.some(s => s.type === 'subtraction' && !s.oppositeApplied);
+                if (hasPendingOpp) btnOpp.classList.remove('hidden'); else btnOpp.classList.add('hidden');
+            }
+        }
+
+        // --- MAIN APP ---
         class AlgebraEqApp {
             constructor() {
-                this.tokens = []; this.history = []; this.nextId = 1;
-                this.scale = 1; this.pan = {x:0, y:0}; this.isPanning = false; this.panStart = {x:0,y:0};
-                this.mode = 'setup'; // 'setup' | 'solve'
+                this.nextId = 1;
+                this.allTokens = [];
+                this.mode = 'setup';
                 this.equationVisible = true;
-
-                // Cursors for auto-placement (relative to x=0 center)
-                this.leftCursor = { x: -300, y: -100, maxY: 0 };
-                this.rightCursor = { x: 50, y: -100, maxY: 0 };
-
                 this.container = document.getElementById('board-container');
                 this.world = document.getElementById('board-world');
                 this.eqDisplay = document.getElementById('equation-display');
-                
+                this.scale = 1; this.pan = {x:0, y:0};
+                this.menuDrag = null;
+                this.sideLeft = new AlgebraSide('left', this);
+                this.sideRight = new AlgebraSide('right', this);
                 this.initListeners();
                 this.centerView();
-                this.saveState();
+                this.updateEquation();
             }
 
             initListeners() {
-                // Zoom
-                this.container.addEventListener('wheel', e => {
-                    e.preventDefault();
-                    this.scale = Math.min(Math.max(0.5, this.scale - e.deltaY * 0.001), 2.5);
-                    this.updateTransform();
-                }, {passive:false});
-                
-                // Pan
+                this.container.addEventListener('wheel', e => { e.preventDefault(); this.scale = Math.min(Math.max(0.5, this.scale - e.deltaY * 0.001), 2.5); this.updateTransform(); }, {passive:false});
                 this.container.addEventListener('mousedown', e => {
-                    if(e.target.closest('.token')) return;
+                    if (e.target.closest('.token') || e.target.closest('button')) return;
                     this.isPanning = true; this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
                     this.container.classList.add('panning');
                 });
-                
                 window.addEventListener('mousemove', e => {
-                    if(this.isPanning) {
-                        this.pan.x = e.clientX - this.panStart.x;
-                        this.pan.y = e.clientY - this.panStart.y;
-                        this.updateTransform();
-                    }
+                    if (this.isPanning) { this.pan.x = e.clientX - this.panStart.x; this.pan.y = e.clientY - this.panStart.y; this.updateTransform(); }
+                    else if (this.menuDrag) this.handleMenuDragMove(e);
                 });
-                window.addEventListener('mouseup', () => { this.isPanning = false; this.container.classList.remove('panning'); });
-
-                // Drag & Drop from Menu
+                window.addEventListener('mouseup', e => {
+                    this.isPanning = false; this.container.classList.remove('panning');
+                    if(this.menuDrag) this.handleMenuDragEnd(e);
+                });
                 this.container.addEventListener('dragover', e => e.preventDefault());
-                this.container.addEventListener('drop', e => this.handleDrop(e));
-                
-                window.addEventListener('resize', () => this.centerView());
+                this.container.addEventListener('drop', e => e.preventDefault());
+                window.addEventListener('resize', () => { this.centerView(); });
+                document.addEventListener('touchmove', e => { if (this.menuDrag) { e.preventDefault(); this.handleMenuDragMove(e); } }, {passive:false});
+                document.addEventListener('touchend', e => { if (this.menuDrag) this.handleMenuDragEnd(e); });
             }
 
             centerView() {
-                // Center (0,0) of world on screen center
                 const cx = this.container.clientWidth / 2;
                 const cy = this.container.clientHeight / 2;
-                this.pan.x = cx;
-                this.pan.y = cy;
+                this.pan.x = cx; this.pan.y = cy - 50;
                 this.updateTransform();
             }
-
             updateTransform() { this.world.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`; }
-            getWorldPos(cx, cy) {
-                const r = this.container.getBoundingClientRect();
-                return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale };
-            }
-
-            // --- INTERACTION ---
-
-            toggleMode() {
-                this.saveState();
-                const btn = document.getElementById('btn-mode');
-                const txt = document.getElementById('mode-text');
-                if (this.mode === 'setup') {
-                    this.mode = 'solve';
-                    btn.classList.add('solve');
-                    txt.innerText = "Phase 2 : Résoudre (Balance)";
-                    // Initialize solving cursors below existing setup (lowest Y + margin)
-                    let maxY = -100;
-                    this.tokens.forEach(t => maxY = Math.max(maxY, t.y + SIZES[t.type].h));
-                    maxY += 40;
-                    this.leftCursor = { x: -300, y: maxY, maxY: 0 };
-                    this.rightCursor = { x: 50, y: maxY, maxY: 0 };
-                } else {
-                    this.mode = 'setup';
-                    btn.classList.remove('solve');
-                    txt.innerText = "Phase 1 : Poser l'équation";
-                }
-            }
-
-            toggleEquationVisibility() {
-                this.equationVisible = !this.equationVisible;
-                if(this.equationVisible) {
-                    this.eqDisplay.classList.remove('equation-blur');
-                    document.getElementById('eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
-                } else {
-                    this.eqDisplay.classList.add('equation-blur');
-                    document.getElementById('eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />';
-                }
-            }
-
-            // --- TILE ADDITION ---
-
-            handleDragFromMenu(e, type, sign, side) {
-                e.dataTransfer.setData('type', type);
-                e.dataTransfer.setData('sign', sign);
-                e.dataTransfer.setData('source', side); // 'left' or 'right' menu
-            }
-
-            handleDrop(e) {
+            
+            // --- MENU DRAG ---
+            handleMenuTouchStart(e, type, sign, side) {
                 e.preventDefault();
-                const type = e.dataTransfer.getData('type');
-                const sign = parseInt(e.dataTransfer.getData('sign'));
-                const source = e.dataTransfer.getData('source');
-                if (!type) return;
+                const touch = e.touches ? e.touches[0] : e;
+                
+                // CRUCIAL FIX: Attach ghost to BODY, using FIXED position (screen coords)
+                // This ensures it floats ABOVE everything (menus, container clipping)
+                const dragEl = document.createElement('div');
+                dragEl.className = `token menu-ghost ${type==='unit'?'type-unit':(type==='x'?'type-x':'type-x2')} ${sign==1?'green':'red'}`;
+                
+                let lbl = type==='unit' ? (sign===1?'1':'-1') : (type==='x' ? (sign===1?'x':'-x') : (sign===1?'x²':'-x²'));
+                dragEl.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
+                
+                document.body.appendChild(dragEl); // Append to BODY
 
-                this.saveState();
-                const pos = this.getWorldPos(e.clientX, e.clientY);
-                const centeredX = pos.x - SIZES[type].w/2;
-                const centeredY = pos.y - SIZES[type].h/2;
-
-                if (this.mode === 'solve') {
-                    // MIRROR LOGIC: If dropped on left, add mirror on right (and vice versa) based on position
-                    // Actually simple rule: Add +1 tile at drop pos, and +1 tile at "mirror" pos
-                    // But usually solve mode is auto-stacked. Let's make it auto-stack for clarity
-                    // If user insists on drag-drop in solve mode:
-                    // Drop on Left -> Creates tile on Left + Mirror on Right
-                    const dropSide = (pos.x < 0) ? 'left' : 'right';
-                    this.createToken(type, sign, centeredX, centeredY); // The one dropped
-                    this.createToken(type, sign, dropSide==='left'?'right':'left', 'auto'); // The mirror
-                } else {
-                    // Setup Mode: Just place it
-                    this.createToken(type, sign, centeredX, centeredY);
-                }
-                this.updateEquation();
+                this.menuDrag = { type, sign, side, el: dragEl };
+                this.handleMenuDragMove(e);
+            }
+            
+            handleMenuDragMove(e) {
+                const touch = e.touches ? e.touches[0] : e;
+                const w = SIZES[this.menuDrag.type].w; const h = SIZES[this.menuDrag.type].h;
+                // Use ClientX/Y directly for Fixed Position
+                this.menuDrag.el.style.left = (touch.clientX - w/2) + 'px';
+                this.menuDrag.el.style.top = (touch.clientY - h/2) + 'px';
             }
 
-            menuClick(type, sign, side) {
-                this.saveState();
-                if (this.mode === 'solve') {
-                    // MIRROR ADDITION
-                    this.createToken(type, sign, 'left', 'auto');
-                    this.createToken(type, sign, 'right', 'auto');
-                } else {
-                    // SETUP ADDITION: Add to the side of the clicked menu
-                    this.createToken(type, sign, side, 'auto');
-                }
-                this.updateEquation();
-            }
-
-            createToken(type, sign, xOrSide, yOrMode) {
-                const id = this.nextId++;
-                const el = document.createElement('div');
-                el.className = `token ${type==='unit'?'type-unit':(type==='x'?'type-x':'type-x2')} ${sign===1?'green':'red'}`;
-                el.innerHTML = `<span style="pointer-events:none;">${this.getLabel(type, sign)}</span>`;
-                el.id = `t-${id}`;
+            handleMenuDragEnd(e) {
+                const touch = e.changedTouches ? e.changedTouches[0] : e;
                 
-                let x, y;
+                // Get World Position for Drop Logic
+                const pos = this.getWorldPos(touch.clientX, touch.clientY);
+                const w = SIZES[this.menuDrag.type].w; const h = SIZES[this.menuDrag.type].h;
+                const x = pos.x - w/2; const y = pos.y - h/2;
                 
-                // Determine Position
-                if (typeof xOrSide === 'number') {
-                    x = xOrSide; y = yOrMode;
-                } else {
-                    // Auto placement based on side ('left' or 'right')
-                    const side = xOrSide;
-                    let cursor = (side === 'left') ? this.leftCursor : this.rightCursor;
-                    // Wrap logic
-                    const limitX = (side === 'left') ? -20 : 480; 
-                    const startX = (side === 'left') ? -300 : 50;
-                    
-                    if (cursor.x + SIZES[type].w > limitX) {
-                        cursor.x = startX; cursor.y += cursor.maxY + 10; cursor.maxY = 0;
+                this.menuDrag.el.remove(); // Cleanup ghost
+                
+                // Check if dropped on board (above menu)
+                const menuHeight = 140;
+                const isOverBoard = touch.clientY < (window.innerHeight - menuHeight);
+                const dropSide = (x < 0) ? 'left' : 'right';
+                
+                if (isOverBoard) {
+                    if (this.mode === 'setup') {
+                        const targetSide = (dropSide === 'left') ? this.sideLeft : this.sideRight;
+                        targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y);
+                    } else {
+                        // Solve Mode: Mirror Logic
+                        const targetSide = (dropSide === 'left') ? this.sideLeft : this.sideRight;
+                        targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y, true);
+                        const otherSide = (dropSide === 'left') ? this.sideRight : this.sideLeft;
+                        otherSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, null, null, true);
                     }
-                    x = cursor.x; y = cursor.y;
-                    
-                    cursor.x += SIZES[type].w + 5;
-                    cursor.maxY = Math.max(cursor.maxY, SIZES[type].h);
+                } else {
+                    // Clicked or dropped back in menu -> Auto Add
+                    const targetSide = (this.menuDrag.side === 'left') ? this.sideLeft : this.sideRight;
+                    targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, null, null); 
                 }
-
-                el.style.left = x + 'px'; el.style.top = y + 'px';
                 
-                // Drag Logic
-                el.addEventListener('mousedown', e => this.handleDragStart(e, id));
-                el.addEventListener('touchstart', e => this.handleDragStart(e, id), {passive:false});
-
-                this.world.appendChild(el);
-                this.tokens.push({ id, type, sign, x, y, element: el, pairId: null });
+                this.menuDrag = null;
             }
 
-            getLabel(t, s) { if(t==='unit') return s===1?'1':'-1'; if(t==='x') return s===1?'x':'-x'; return s===1?'x²':'-x²'; }
-
-            // --- DRAG ---
+            // --- BOARD DRAG ---
             handleDragStart(e, id) {
                 e.stopPropagation();
-                const t = this.tokens.find(x => x.id === id);
-                if(!t) return;
+                const t = this.allTokens.find(x => x.id === id);
+                if (!t) return;
+                
+                if (t.pairId) {
+                    const p = this.allTokens.find(x => x.id === t.pairId);
+                    if(p) { p.pairId=null; p.element.classList.remove('is-zero'); const b = document.getElementById(`badge-${t.id}-${p.id}`)||document.getElementById(`badge-${p.id}-${t.id}`); if(b)b.remove(); }
+                    t.pairId=null; t.element.classList.remove('is-zero');
+                    this.updateEquation();
+                }
+
                 t.element.classList.add('dragging');
                 const r = t.element.getBoundingClientRect();
                 const offset = { x: (e.touches?e.touches[0].clientX:e.clientX) - r.left, y: (e.touches?e.touches[0].clientY:e.clientY) - r.top };
                 
+                const startSide = t.x < 0 ? 'left' : 'right';
+
                 const move = ev => {
                     ev.preventDefault();
                     const cx = ev.touches?ev.touches[0].clientX:ev.clientX; const cy = ev.touches?ev.touches[0].clientY:ev.clientY;
-                    const br = this.container.getBoundingClientRect();
-                    t.x = (cx - br.left - this.pan.x - offset.x)/this.scale;
-                    t.y = (cy - br.top - this.pan.y - offset.y)/this.scale;
+                    let wx = (cx - this.container.getBoundingClientRect().left - this.pan.x - offset.x)/this.scale;
+                    let wy = (cy - this.container.getBoundingClientRect().top - this.pan.y - offset.y)/this.scale;
+
+                    if (this.mode === 'solve') {
+                        const w = SIZES[t.type].w;
+                        // HARD BARRIER
+                        if (startSide === 'left') { 
+                             if (wx > -5 - w) wx = -5 - w; 
+                        } else { 
+                             if (wx < 5) wx = 5; 
+                        }
+                    }
+                    t.x = wx; t.y = wy;
                     t.element.style.left = t.x+'px'; t.element.style.top = t.y+'px';
                 };
                 const end = () => {
                     document.removeEventListener('mousemove', move); document.removeEventListener('touchmove', move);
                     document.removeEventListener('mouseup', end); document.removeEventListener('touchend', end);
                     t.element.classList.remove('dragging');
-                    // Zero Pair Logic
                     this.checkOverlap(t);
                     this.updateEquation();
                 };
@@ -382,147 +703,149 @@
             }
 
             checkOverlap(t1) {
-                const s1=SIZES[t1.type]; const c1={x:t1.x+s1.w/2,y:t1.y+s1.h/2};
-                for(let t2 of this.tokens) {
-                    if(t2===t1||t2.pairId||t2.type!==t1.type||t2.sign===t1.sign)continue;
-                    // Strict side check in solving mode: can only cancel if on same side
-                    if (this.mode === 'solve') {
-                        if ((t1.x < 0 && t2.x > 0) || (t1.x > 0 && t2.x < 0)) continue; 
-                    }
-                    const s2=SIZES[t2.type]; const c2={x:t2.x+s2.w/2,y:t2.y+s2.h/2};
-                    if(Math.hypot(c1.x-c2.x, c1.y-c2.y)<SNAP) {
+                for(let t2 of this.allTokens) {
+                    if (t1===t2 || t2.pairId || t1.type!==t2.type || t1.sign===t2.sign) continue;
+                    if ((t1.x < 0 && t2.x > 0) || (t1.x > 0 && t2.x < 0)) continue;
+                    
+                    const d = Math.hypot(t1.x - t2.x, t1.y - t2.y);
+                    if (d < SNAP) {
                         this.createZeroPair(t1, t2);
                         break;
                     }
                 }
             }
 
-            createZeroPair(t1, t2) {
-                const audio = new AudioContext(); // Simple beep or reuse playSound logic
+            createZeroPair(t1, t2, isAuto=false) {
+                playSound('snap');
                 const mx=(t1.x+t2.x)/2; const my=(t1.y+t2.y)/2;
                 t1.x=mx; t1.y=my; t2.x=mx; t2.y=my;
                 t1.element.style.left=mx+'px'; t1.element.style.top=my+'px';
                 t2.element.style.left=mx+'px'; t2.element.style.top=my+'px';
                 t1.pairId=t2.id; t2.pairId=t1.id;
                 t1.element.classList.add('is-zero'); t2.element.classList.add('is-zero');
-                const b=document.createElement('div'); b.className='zero-badge'; b.textContent='0'; b.id=`badge-${t1.id}-${t2.id}`;
-                b.style.left=(mx+SIZES[t1.type].w/2-10)+'px'; b.style.top=(my+SIZES[t1.type].h/2-20)+'px';
+                
+                const b = document.createElement('div'); b.className='zero-badge'; b.textContent='0'; b.id=`badge-${t1.id}-${t2.id}`;
+                
+                // CENTERED ZERO BADGE
+                const w = SIZES[t1.type].w; const h = SIZES[t1.type].h;
+                b.style.left = (mx + w/2) + 'px'; 
+                b.style.top = (my + h/2) + 'px';
+                
                 this.world.appendChild(b);
-            }
+                
+                this.updateEquation(); 
 
-            // --- ACTIONS ---
-            organizeBoard() {
-                this.saveState();
-                const organize = (subset, startX, limitX) => {
-                    let y = -100;
-                    ['x2','x','unit'].forEach(type=>{
-                        [1,-1].forEach(s=>{
-                            const ts = subset.filter(t=>t.type===type && t.sign===s && !t.pairId);
-                            if(!ts.length)return;
-                            let x=startX; let rh=0;
-                            ts.forEach(t=>{
-                                if(x+SIZES[type].w > limitX){ x=startX; y+=rh+10; rh=0; }
-                                t.x=x; t.y=y; t.element.classList.add('animating');
-                                t.element.style.left=x+'px'; t.element.style.top=y+'px';
-                                setTimeout(()=>t.element.classList.remove('animating'),500);
-                                x+=SIZES[type].w+2; rh=Math.max(rh,SIZES[type].h);
-                            });
-                            y+=rh+10;
-                        });
-                    });
-                    return y;
-                };
-                const ly = organize(this.tokens.filter(t=>t.x<0), -300, -20);
-                const ry = organize(this.tokens.filter(t=>t.x>=0), 50, 480);
-                // Update cursors
-                const my = Math.max(ly, ry)+20;
-                this.leftCursor = {x:-300, y:my, maxY:0}; this.rightCursor = {x:50, y:my, maxY:0};
-            }
-
-            autoSimplify() {
-                this.saveState();
-                const process = (subset) => {
-                    const toDel = [];
-                    ['x2','x','unit'].forEach(type => {
-                        const p = subset.filter(t=>t.type===type && t.sign===1 && !t.pairId);
-                        const n = subset.filter(t=>t.type===type && t.sign===-1 && !t.pairId);
-                        while(p.length && n.length) {
-                            const t1=p.pop(); const t2=n.pop();
-                            t1.element.classList.add('vanish'); t2.element.classList.add('vanish');
-                            toDel.push(t1.id, t2.id);
-                        }
-                    });
-                    return toDel;
-                };
-                const delL = process(this.tokens.filter(t=>t.x<0));
-                const delR = process(this.tokens.filter(t=>t.x>=0));
-                const all = [...delL, ...delR];
-                if(all.length) {
+                if(isAuto) {
                     setTimeout(() => {
-                        this.tokens = this.tokens.filter(t => !all.includes(t.id));
-                        this.tokens.forEach(t=>t.element.classList.contains('vanish') && t.element.remove()); // Cleanup DOM
-                        this.updateEquation();
+                        t1.element.classList.add('vanish'); t2.element.classList.add('vanish'); b.classList.add('vanish');
+                        setTimeout(() => {
+                            t1.element.remove(); t2.element.remove(); b.remove();
+                            this.allTokens = this.allTokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                            this.sideLeft.tokens = this.sideLeft.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                            this.sideRight.tokens = this.sideRight.tokens.filter(t => t.id !== t1.id && t.id !== t2.id);
+                            this.sideLeft.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => id !== t1.id && id !== t2.id));
+                            this.sideRight.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => id !== t1.id && id !== t2.id));
+                        }, 500);
                     }, 500);
                 }
             }
 
-            // --- STATE & EQUATION ---
-            updateEquation() {
-                const sum = (subset) => {
-                    const c = {x2:0,x:0,unit:0}; subset.forEach(t=>{c[t.type]+=t.sign});
-                    let s="";
-                    ['x2','x','unit'].forEach(k=>{
-                        if(c[k]!==0) {
-                            const v=c[k]; const lbl=k==='unit'?'':(k==='x'?'x':'x^2');
-                            const p=(v>0&&s.length)?"+":"";
-                            const n=(Math.abs(v)===1&&k!=='unit')?(v===-1?"-":""):v;
-                            s+=`${p}${n}${lbl}`;
-                        }
-                    });
-                    return s||"0";
-                };
-                const l = sum(this.tokens.filter(t=>t.x<0 && !t.pairId));
-                const r = sum(this.tokens.filter(t=>t.x>=0 && !t.pairId));
-                katex.render(`${l} = ${r}`, this.eqDisplay);
-            }
-
-            undo() {
-                if(!this.history.length) return;
-                const s = this.history.pop();
-                this.tokens.forEach(t=>t.element.remove());
-                this.tokens = [];
-                s.tokens.forEach(d => {
-                    const el=document.createElement('div');
-                    el.className=`token ${d.type==='unit'?'type-unit':(d.type==='x'?'type-x':'type-x2')} ${d.sign===1?'green':'red'}`;
-                    el.innerHTML=`<span style="pointer-events:none;">${this.getLabel(d.type,d.sign)}</span>`;
-                    el.id=`t-${this.nextId++}`; el.style.left=d.x+'px'; el.style.top=d.y+'px';
-                    el.addEventListener('mousedown', e=>this.handleDragStart(e, parseInt(el.id.split('-')[1])));
-                    this.world.appendChild(el);
-                    this.tokens.push({id:parseInt(el.id.split('-')[1]), type:d.type, sign:d.sign, x:d.x, y:d.y, element:el, pairId:null});
-                });
-                this.mode = s.mode;
+            toggleMode() {
                 const btn = document.getElementById('btn-mode');
-                if(this.mode==='solve') { btn.classList.add('solve'); document.getElementById('mode-text').innerText="Phase 2 : Résoudre (Balance)"; }
-                else { btn.classList.remove('solve'); document.getElementById('mode-text').innerText="Phase 1 : Poser l'équation"; }
-                this.updateEquation();
+                const txt = document.getElementById('mode-text');
+                if (this.mode === 'setup') {
+                    this.mode = 'solve';
+                    btn.classList.add('solve'); txt.innerText = "Phase 2 : Résoudre (Balance)";
+                } else {
+                    this.mode = 'setup';
+                    btn.classList.remove('solve'); txt.innerText = "Phase 1 : Poser l'équation";
+                }
             }
 
-            saveState() {
-                if(this.history.length>20) this.history.shift();
-                this.history.push({ tokens: this.tokens.map(t=>({type:t.type, sign:t.sign, x:t.x, y:t.y})), mode:this.mode });
+            toggleEquationVisibility() {
+                this.equationVisible = !this.equationVisible;
+                const eq = document.getElementById('equation-display');
+                if(this.equationVisible) eq.classList.remove('equation-blur'); else eq.classList.add('equation-blur');
             }
 
             resetBoard() {
-                this.saveState();
-                this.tokens.forEach(t=>t.element.remove()); this.tokens=[];
-                this.mode='setup'; 
+                this.allTokens.forEach(t => t.element.remove());
+                document.querySelectorAll('.zero-badge').forEach(b=>b.remove());
+                this.allTokens = [];
+                this.sideLeft = new AlgebraSide('left', this);
+                this.sideRight = new AlgebraSide('right', this);
+                this.mode = 'setup';
                 document.getElementById('btn-mode').classList.remove('solve');
-                document.getElementById('mode-text').innerText="Phase 1 : Poser l'équation";
+                document.getElementById('mode-text').innerText = "Phase 1 : Poser l'équation";
+                this.centerView();
                 this.updateEquation();
             }
-        }
 
+            updateEquation() {
+                const getStr = (side) => {
+                    let s = "";
+                    const hasNonEmptyBefore = (i) => { for(let k=0; k<i; k++) if(side.steps[k].tokenIds.length > 0) return true; return false; };
+                    
+                    side.steps.forEach((step, idx) => {
+                        const toks = step.tokenIds.map(id => this.allTokens.find(t=>t.id===id)).filter(t => t && !t.pairId);
+                        if (!toks.length && idx !== side.currStepIdx) return;
+                        
+                        let content = "";
+                        const groups = []; let cur=null;
+                        toks.forEach(t=>{ if(cur && cur.type===t.type && cur.sign===t.displaySign) cur.c++; else { if(cur) groups.push(cur); cur={type:t.type, sign:t.displaySign, c:1}; } });
+                        if(cur) groups.push(cur);
+                        
+                        groups.forEach((g, i) => {
+                            const lbl = g.type==='unit' ? '' : (g.type==='x'?'x':'x^2');
+                            const val = g.c;
+                            const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
+                            const prefix = (i>0 && g.sign===1) ? `{\\color{${COLORS.pos}}{+}}` : (g.sign===-1?`{\\color{${COLORS.neg}}{-}}`:'');
+                            const leadMinus = (i===0 && g.sign===-1) ? `{\\color{${COLORS.neg}}{-}}` : '';
+                            const num = (val===1 && g.type!=='unit') ? '' : val;
+                            content += (i===0 ? leadMinus : `\\;${prefix}\\;`) + `{\\color{${col}}{${num}${lbl}}}`;
+                        });
+                        
+                        if(!content) content = "\\dots";
+                        
+                        let pStr = content;
+                        if (step.type === 'multiplication' && !step.distributed) pStr = `${step.factor}(${content})`;
+                        if (step.type === 'subtraction' && !step.oppositeApplied) pStr = `-(${content})`;
+                        
+                        if (idx > 0 && hasNonEmptyBefore(idx)) {
+                            const rawStr = pStr.replace(/<[^>]*>|{[^}]*}/g, '');
+                            if (!pStr.includes('{red}{-}') && !pStr.startsWith('-')) s += `\\;{\\color{${COLORS.pos}}{+}}\\;`;
+                        }
+                        s += pStr;
+                    });
+                    return s || "0";
+                };
+
+                const l = getStr(this.sideLeft);
+                const r = getStr(this.sideRight);
+                katex.render(`${l} = ${r}`, document.getElementById('equation-display'));
+            }
+
+            undo() { /* ... */ }
+            setTool(t){this.currentTool=t;const p=t==='pen';this.container.classList.toggle('hide-cursor',p);document.getElementById('custom-cursor').style.display=p?'block':'none';}
+            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
+            draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
+            clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
+            resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
+            moveCursor(e){if(this.currentTool!=='pen')return;const c=document.getElementById('custom-cursor');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';c.style.transform='translate(-6px,-28px)';}
+            getWorldPos(cx, cy) { const r = this.container.getBoundingClientRect(); return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale }; }
+        }
+        
+        const cvs = document.getElementById('drawing-canvas');
+        const ctx = cvs.getContext('2d');
+        let isDrawing=false; let lastP={x:0,y:0};
+        function resizeCvs() { cvs.width=4000; cvs.height=4000; cvs.style.width='4000px'; cvs.style.height='4000px'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.strokeStyle='#2563eb'; }
+        window.addEventListener('resize', resizeCvs); resizeCvs();
         const app = new AlgebraEqApp();
+        app.setTool = function(t){ app.currentTool=t; if(t==='pen'){document.getElementById('custom-cursor').classList.remove('hidden');document.body.style.cursor='none';}else{document.getElementById('custom-cursor').classList.add('hidden');document.body.style.cursor='default';} };
+        app.clearDrawing = function(){ ctx.clearRect(0,0,cvs.width,cvs.height); };
+        document.addEventListener('mousemove', e => { if(app.currentTool==='pen') { const c=document.getElementById('custom-cursor'); c.style.left=e.clientX+'px'; c.style.top=e.clientY+'px'; c.style.transform='translate(-6px,-28px)'; if(isDrawing) { const p = app.getWorldPos(e.clientX, e.clientY); ctx.beginPath(); ctx.moveTo(lastP.x, lastP.y); ctx.lineTo(p.x, p.y); ctx.stroke(); lastP = p; } } });
+        document.addEventListener('mousedown', e => { if(app.currentTool==='pen') { isDrawing=true; lastP = app.getWorldPos(e.clientX, e.clientY); } });
+        document.addEventListener('mouseup', () => isDrawing=false);
     </script>
 </body>
 </html>
