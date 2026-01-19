@@ -42,6 +42,7 @@
             transform: scale(1.02);
         }
 
+        /* Contour Bleu rétabli pour la sélection (même à l'arrêt) */
         .token-group.selected {
             outline: 3px solid #3b82f6;
             z-index: 50;
@@ -54,11 +55,10 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            color: #1e293b;
+            color: #000000;
             box-sizing: border-box;
-            border-right: 1px dashed rgba(0,0,0,0.2); 
+            border-right: 1px dashed rgba(0,0,0,0.3);
             overflow: hidden;
-            background-color: white; 
         }
         
         .token-cell:last-child {
@@ -71,83 +71,80 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.1em;
+            font-size: 1.2em;
             line-height: 1;
             font-family: 'Times New Roman', serif;
-            font-style: italic;
+            font-style: normal;
         }
         .numerator {
             border-bottom: 2px solid currentColor;
-            padding: 0 4px;
+            padding: 0 2px;
             margin-bottom: 2px;
             text-align: center;
-            display: block;
+            width: 100%;
         }
         .denominator {
             text-align: center;
-            display: block;
+            width: 100%;
         }
-        .single-number {
-            font-size: 1.4em;
+        
+        .number-one {
+            font-size: 2rem;
             font-family: 'Fredoka', sans-serif;
-            font-style: normal;
+            font-weight: 600;
         }
 
         /* --- COULEURS --- */
-        /* d-1: Blanc */
-        .bg-d-1  { background-color: #ffffff; border: 2px solid #cbd5e1; color: #334155 !important; }
         
-        /* d-2: Jaune */
-        .bg-d-2  { background-color: #facc15; color: #333 !important; }
+        /* d-1: Blanc Crème (#fdfbf7) et pas de cadre gris */
+        .bg-d-1  { background-color: #fdfbf7; border: none; color: #000000 !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .token-group.bg-d-1 { background-color: #fdfbf7; border: none; }
+
+        /* d-2: Jaune Soleil */
+        .bg-d-2  { background-color: #FFD700; color: #000000 !important; }
         
-        /* d-3: Fuchsia / Violet clair */
-        .bg-d-3  { background-color: #e879f9; color: white !important; }
+        /* d-3: Lilas */
+        .bg-d-3  { background-color: #d8b4fe; color: #000000 !important; }
         
         /* d-4: Vert */
-        .bg-d-4  { background-color: #4ade80; color: #064e3b !important; }
+        .bg-d-4  { background-color: #4ade80; color: #000000 !important; } 
         
-        /* d-5: Bleu */
-        .bg-d-5  { background-color: #3b82f6; color: white !important; }
+        /* d-5: Bleu Foncé */
+        .bg-d-5  { background-color: #3b82f6; color: #000000 !important; } 
         
-        /* d-6: Orange */
-        .bg-d-6  { background-color: #fb923c; color: white !important; }
+        /* d-6: Orange Foncé */
+        .bg-d-6  { background-color: #f97316; color: #000000 !important; }
         
         /* d-8: Rose */
-        .bg-d-8  { background-color: #f472b6; color: white !important; }
+        .bg-d-8  { background-color: #f472b6; color: #000000 !important; }
         
-        /* d-10: Rouge */
-        .bg-d-10 { background-color: #ef4444; color: white !important; }
+        /* d-10: Rouge Cardinal */
+        .bg-d-10 { background-color: #ef4444; color: #000000 !important; }
 
-        /* Styles spécifiques bordures pour contraste */
-        .token-cell { border-top: 1px solid rgba(0,0,0,0.1); border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .token-group .token-cell:first-child { border-left: 1px solid rgba(0,0,0,0.1); }
-        .token-group .token-cell:last-child { border-right: 1px solid rgba(0,0,0,0.1); }
+        /* Styles spécifiques bordures */
+        .bg-d-1 .token-cell { border-top: 1px solid rgba(0,0,0,0.05); border-bottom: 1px solid rgba(0,0,0,0.05); }
+
+        .token-group:not(.bg-d-1) .token-cell { border-top: 1px solid rgba(0,0,0,0.1); border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .token-group:not(.bg-d-1) .token-cell:first-child { border-left: 1px solid rgba(0,0,0,0.1); }
+        .token-group:not(.bg-d-1) .token-cell:last-child { border-right: 1px solid rgba(0,0,0,0.1); }
 
         /* État "Retourné" (Verso) */
         .token-group.flipped {
-            background-color: #f8fafc; /* Fond très clair pour le dos */
-            border: 2px solid #94a3b8;
+            opacity: 0.95; 
         }
         
-        .token-group.flipped .token-cell {
-            background-color: transparent !important;
-            border: none !important;
-            color: transparent !important; 
-        }
-        
-        .token-group.flipped .back-label { display: flex; }
-        .token-group:not(.flipped) .back-label { display: none; }
+        .token-group.flipped .token-cell > * { display: none; }
+        .token-group.flipped .token-cell { border-right-color: transparent; }
 
         .back-label {
             position: absolute;
             inset: 0;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #64748b;
             pointer-events: none;
+            color: #000000;
+            z-index: 20; /* Force le 1 à être au dessus de la couleur */
         }
 
         /* --- INTERFACE --- */
@@ -165,22 +162,19 @@
         }
         #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
 
-        /* Sidebar Styling */
-        .sidebar-item {
-            cursor: grab;
-            transition: transform 0.1s;
-            margin-bottom: 10px;
-        }
+        .sidebar-item { cursor: grab; transition: transform 0.1s; }
         .sidebar-item:active { cursor: grabbing; transform: scale(0.95); }
         
         .sidebar-preview {
-            display: flex;
-            height: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex; height: 36px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none;
         }
-        .sidebar-preview .token-cell {
-            font-size: 0.7rem; 
-            border-right: 1px dashed rgba(0,0,0,0.3);
+        .sidebar-preview .token-cell { font-size: 0.65rem; border-right: 1px dashed rgba(0,0,0,0.3); }
+        
+        #drag-ghost {
+            position: fixed; pointer-events: none; z-index: 9999;
+            opacity: 0.9; box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+            display: none; transform-origin: top left;
         }
 
     </style>
@@ -217,27 +211,20 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        <!-- SIDEBAR -->
         <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-20 shadow-lg shrink-0 h-full">
             <div class="p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
                 Pièces
             </div>
-            <div class="overflow-y-auto p-4 flex-1 scrollbar-hide" id="sidebar-list">
-                <!-- Généré par JS -->
-            </div>
+            <div class="overflow-y-auto p-4 flex-1 scrollbar-hide" id="sidebar-list"></div>
         </aside>
 
-        <!-- MAIN BOARD -->
         <main id="board" class="flex-1 relative bg-slate-50 overflow-hidden">
-            <!-- Background Grid -->
             <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 20px 20px;"></div>
-            
             <div id="board-container">
                 <div id="board-world">
                     <canvas id="drawing-canvas"></canvas>
                 </div>
             </div>
-            
             <div id="custom-cursor">
                 <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
                     <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
@@ -248,15 +235,15 @@
             </div>
         </main>
     </div>
+    
+    <div id="drag-ghost"></div>
 
     <script>
-        // CONFIGURATION
         const UNIT_WIDTH = 320; 
         const UNIT_HEIGHT = 60; 
-        const SNAP_DIST = 20;   
-        const SIDEBAR_SCALE = 0.6; // Echelle pour le menu
+        const SNAP_DIST = 30;   
+        const SIDEBAR_SCALE = 0.55; 
         
-        // Palette mise à jour
         const FRACTIONS = [
             { d: 1,  colorClass: 'bg-d-1',  label: '1',     count: 1 },
             { d: 2,  colorClass: 'bg-d-2',  label: '1/2',   count: 2 },
@@ -300,6 +287,10 @@
                 this.currentTool = 'hand'; 
                 this.selectedGroupId = null;
                 
+                this.sidebarDragging = false;
+                this.sidebarDragData = null; 
+                this.dragGhost = document.getElementById('drag-ghost');
+                
                 this.boardContainer = document.getElementById('board-container');
                 this.boardWorld = document.getElementById('board-world');
                 this.canvas = document.getElementById('drawing-canvas');
@@ -311,22 +302,17 @@
                 this.updateTransform();
             }
 
-            // --- MENU LATÉRAL ---
             initSidebar() {
                 const list = document.getElementById('sidebar-list');
                 FRACTIONS.forEach(f => {
-                    // Conteneur pour ce type de fraction
                     const wrapper = document.createElement('div');
-                    wrapper.className = "mb-6";
-                    
-                    // 1. Pièce unique
-                    this.createSidebarItem(wrapper, f, 1);
-                    
-                    // 2. Bande complète (si plus de 1 pièce)
+                    wrapper.className = "mb-4 flex flex-wrap items-center gap-3";
                     if (f.count > 1) {
                         this.createSidebarItem(wrapper, f, f.count);
+                        this.createSidebarItem(wrapper, f, 1);
+                    } else {
+                        this.createSidebarItem(wrapper, f, 1);
                     }
-                    
                     list.appendChild(wrapper);
                 });
             }
@@ -334,55 +320,67 @@
             createSidebarItem(parent, f, count) {
                 const item = document.createElement('div');
                 item.className = "sidebar-item flex items-center";
-                item.draggable = true;
                 item.title = count === 1 ? `Ajouter 1/${f.d}` : `Ajouter bande ${f.d}`;
                 
-                // Calcul de la largeur visuelle dans la sidebar
                 const unitW = (UNIT_WIDTH * SIDEBAR_SCALE);
                 const pieceW = unitW / f.d;
                 const totalW = pieceW * count;
                 
-                // Construction visuelle (preview)
                 const preview = document.createElement('div');
                 preview.className = `sidebar-preview`;
                 preview.style.width = totalW + 'px';
                 
-                // Remplir les cellules
                 for(let i=0; i<count; i++) {
                     const cell = document.createElement('div');
                     cell.className = `token-cell flex-1 h-full ${f.colorClass}`;
-                    
-                    // HTML MathML-like
-                    if (f.d === 1) cell.innerHTML = '<span class="single-number text-sm">1</span>';
-                    else cell.innerHTML = `<div class="fraction text-[10px]"><span class="numerator">1</span><span class="denominator">${f.d}</span></div>`;
+                    if (f.d === 1) cell.innerHTML = '<span class="single-number text-[10px]">1</span>';
+                    else cell.innerHTML = `<div class="fraction text-[8px]"><span class="numerator">1</span><span class="denominator">${f.d}</span></div>`;
                     preview.appendChild(cell);
                 }
-
                 item.appendChild(preview);
                 
-                // Events
-                item.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('d', f.d);
-                    e.dataTransfer.setData('c', count);
-                });
-                item.addEventListener('click', () => this.addGroup(f.d, count));
-                
+                item.addEventListener('mousedown', (e) => this.handleSidebarDragStart(e, f, count));
+                item.addEventListener('touchstart', (e) => this.handleSidebarDragStart(e, f, count), {passive: false});
                 parent.appendChild(item);
             }
 
-            handleBoardDragOver(e) { e.preventDefault(); }
-            handleBoardDrop(e) {
+            handleSidebarDragStart(e, f, count) {
                 e.preventDefault();
-                const d = parseInt(e.dataTransfer.getData('d'));
-                const c = parseInt(e.dataTransfer.getData('c'));
-                if (!isNaN(d)) {
-                    const pos = this.getWorldPos(e.clientX, e.clientY);
-                    const w = (UNIT_WIDTH/d) * c;
-                    this.addGroup(d, c, pos.x - w/2, pos.y - UNIT_HEIGHT/2);
+                this.sidebarDragging = true;
+                this.sidebarDragData = { d: f.d, c: count };
+                
+                this.dragGhost.innerHTML = '';
+                this.dragGhost.style.display = 'block';
+                
+                const groupEl = document.createElement('div');
+                groupEl.className = `token-group ${f.colorClass}`;
+                groupEl.style.height = UNIT_HEIGHT + 'px';
+                
+                const segW = UNIT_WIDTH / f.d;
+                const totalW = segW * count;
+                groupEl.style.width = totalW + 'px';
+                
+                for(let i=0; i<count; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = `token-cell ${f.colorClass}`;
+                    cell.style.width = segW + 'px';
+                    if (f.d === 1) cell.innerHTML = `<span class="number-one">1</span>`;
+                    else cell.innerHTML = `<div class="fraction"><span class="numerator">1</span><span class="denominator">${f.d}</span></div>`;
+                    groupEl.appendChild(cell);
                 }
+                this.dragGhost.appendChild(groupEl);
+                
+                const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                this.updateGhostPosition(cx, cy);
             }
 
-            // --- LOGIQUE PRINCIPALE ---
+            updateGhostPosition(cx, cy) {
+                const rect = this.dragGhost.firstElementChild.getBoundingClientRect();
+                this.dragGhost.style.left = (cx - rect.width/2) + 'px';
+                this.dragGhost.style.top = (cy - rect.height/2) + 'px';
+            }
+
             saveState() {
                 if (this.history.length > 20) this.history.shift();
                 this.history.push(JSON.stringify(this.groups));
@@ -398,7 +396,6 @@
                 this.saveState();
                 playSound('pop');
                 if (x === null) { x = 50 - this.pan.x + Math.random()*20; y = 100 - this.pan.y + Math.random()*20; }
-                
                 const g = { id: this.nextId++, d: d, count: count, x: x, y: y, flipped: false, element: null };
                 this.renderGroup(g);
                 this.groups.push(g);
@@ -413,7 +410,8 @@
 
             renderGroup(g) {
                 const el = document.createElement('div');
-                el.className = `token-group`;
+                const f = FRACTIONS.find(fr => fr.d === g.d);
+                el.className = `token-group ${f ? f.colorClass : ''}`; 
                 el.style.height = UNIT_HEIGHT + 'px';
                 el.id = `g-${g.id}`;
                 
@@ -439,37 +437,31 @@
                 if (g.flipped) el.classList.add('flipped');
                 else el.classList.remove('flipped');
                 
-                el.innerHTML = ''; // Reset content
-
-                // Label VERSO (Uniquement si bande complète = 1)
+                el.innerHTML = ''; 
                 const isFullUnit = (g.count % g.d === 0);
                 if (g.flipped && isFullUnit) {
                     const lbl = document.createElement('div');
-                    lbl.className = 'back-label';
+                    lbl.className = 'back-label number-one'; 
                     lbl.innerText = (g.count / g.d);
                     el.appendChild(lbl);
                 }
 
-                // Cellules RECTO (ou structure invisible VERSO)
                 const colorClass = FRACTIONS.find(f => f.d === g.d)?.colorClass || 'bg-white';
                 for(let i=0; i<g.count; i++) {
                     const cell = document.createElement('div');
                     cell.className = `token-cell ${colorClass}`;
                     cell.style.width = segW + 'px';
                     
-                    if (!g.flipped) {
-                        if (g.d === 1) cell.innerHTML = `<span class="single-number">1</span>`;
-                        else cell.innerHTML = `
-                            <div class="fraction">
-                                <span class="numerator">1</span>
-                                <span class="denominator">${g.d}</span>
-                            </div>`;
-                    }
+                    if (g.d === 1) cell.innerHTML = `<span class="number-one">1</span>`;
+                    else cell.innerHTML = `
+                        <div class="fraction">
+                            <span class="numerator">1</span>
+                            <span class="denominator">${g.d}</span>
+                        </div>`;
                     el.appendChild(cell);
                 }
             }
 
-            // --- INTERACTIONS ---
             flipGroup(g) {
                 this.saveState();
                 playSound('flip');
@@ -526,11 +518,10 @@
                 this.clearDrawing();
             }
 
-            // --- DRAG & DROP & SNAP ---
             handleGroupDown(e, g) {
                 if (this.currentTool !== 'hand') return;
                 e.stopPropagation();
-                if(!e.touches) e.preventDefault(); // allow touch scroll if needed? no, preventDefault usually better for drag
+                if(!e.touches) e.preventDefault(); 
                 
                 this.selectGroup(g.id);
                 g.element.classList.add('dragging');
@@ -579,29 +570,45 @@
                     const otherSegW = UNIT_WIDTH / other.d;
                     const otherW = otherSegW * other.count;
 
-                    // 1. Fusion Horizontale (Même dénominateur, même état flip)
+                    // 1. Fusion Horizontale (Même dénominateur)
                     if (activeG.d === other.d && activeG.flipped === other.flipped) {
                         if (Math.abs(activeG.y - other.y) < SNAP_DIST) {
-                            // Active à Droite de Other
                             if (Math.abs(activeG.x - (other.x + otherW)) < SNAP_DIST) {
                                 this.fuseGroups(other, activeG); return; 
                             }
-                            // Active à Gauche de Other
                             if (Math.abs((activeG.x + myW) - other.x) < SNAP_DIST) {
                                 this.fuseGroups(activeG, other); return;
                             }
                         }
                     }
 
-                    // 2. Alignement Vertical (Comparaison)
-                    if (Math.abs(activeG.x - other.x) < SNAP_DIST) {
-                         // Colle en bas
+                    // 2. Aimantation Horizontale pour Dénominateurs DIFFÉRENTS (Sans fusion)
+                    // (Permet de coller 1/3 et 1/4 côte à côte)
+                    if (activeG.d !== other.d) {
+                        // Alignement vertical proche
+                        if (Math.abs(activeG.y - other.y) < SNAP_DIST) {
+                            // Active à Droite de Other
+                            if (Math.abs(activeG.x - (other.x + otherW)) < SNAP_DIST) {
+                                activeG.y = other.y;
+                                activeG.x = other.x + otherW;
+                                snapped = true;
+                            }
+                            // Active à Gauche de Other
+                            else if (Math.abs((activeG.x + myW) - other.x) < SNAP_DIST) {
+                                activeG.y = other.y;
+                                activeG.x = other.x - myW;
+                                snapped = true;
+                            }
+                        }
+                    }
+
+                    // 3. Alignement Vertical (Empilement)
+                    if (!snapped && Math.abs(activeG.x - other.x) < SNAP_DIST) {
                         if (Math.abs(activeG.y - (other.y + UNIT_HEIGHT)) < SNAP_DIST) {
                             activeG.x = other.x;
                             activeG.y = other.y + UNIT_HEIGHT;
                             snapped = true;
                         }
-                        // Colle en haut
                         else if (Math.abs((activeG.y + UNIT_HEIGHT) - other.y) < SNAP_DIST) {
                             activeG.x = other.x;
                             activeG.y = other.y - UNIT_HEIGHT;
@@ -623,9 +630,7 @@
                 this.selectGroup(leftG.id);
             }
 
-            // --- VIEWPORT ---
             initListeners() {
-                // Zoom Molette (Sans Ctrl)
                 this.boardContainer.addEventListener('wheel', (e) => {
                     e.preventDefault();
                     const delta = -e.deltaY * 0.001;
@@ -633,7 +638,6 @@
                     this.updateTransform();
                 }, { passive: false });
 
-                // Pan avec Clic Droit
                 this.boardContainer.addEventListener('mousedown', (e) => {
                     const isRightClick = e.button === 2;
                     const isBg = e.target === this.boardContainer || e.target === this.boardWorld;
@@ -649,18 +653,55 @@
                 });
                 
                 this.boardContainer.addEventListener('contextmenu', e => e.preventDefault());
+                
                 window.addEventListener('mousemove', (e) => {
                     this.moveCursor(e);
-                    if (this.isPanning) {
+                    
+                    if (this.sidebarDragging) {
+                        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                        this.updateGhostPosition(cx, cy);
+                    }
+                    else if (this.isPanning) {
                         this.pan.x = e.clientX - this.panStart.x;
                         this.pan.y = e.clientY - this.panStart.y;
                         this.updateTransform();
                     } else if (this.isDrawing) this.draw(e);
                 });
-                window.addEventListener('mouseup', () => { this.isPanning = false; this.isDrawing = false; this.boardContainer.classList.remove('panning'); });
                 
-                this.boardContainer.addEventListener('dragover', (e) => this.handleBoardDragOver(e));
-                this.boardContainer.addEventListener('drop', (e) => this.handleBoardDrop(e));
+                window.addEventListener('touchmove', (e) => {
+                    if (this.sidebarDragging) {
+                        e.preventDefault();
+                        const cx = e.touches[0].clientX;
+                        const cy = e.touches[0].clientY;
+                        this.updateGhostPosition(cx, cy);
+                    }
+                }, {passive:false});
+
+                const endDrag = (e) => {
+                    if (this.sidebarDragging) {
+                        this.sidebarDragging = false;
+                        this.dragGhost.style.display = 'none';
+                        const cx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+                        const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                        
+                        const rect = this.boardContainer.getBoundingClientRect();
+                        if (cx > rect.left && cx < rect.right && cy > rect.top && cy < rect.bottom) {
+                            const pos = this.getWorldPos(cx, cy);
+                            const segW = UNIT_WIDTH / this.sidebarDragData.d;
+                            const totalW = segW * this.sidebarDragData.c;
+                            
+                            this.addGroup(this.sidebarDragData.d, this.sidebarDragData.c, pos.x - totalW/2, pos.y - UNIT_HEIGHT/2);
+                        }
+                        this.sidebarDragData = null;
+                    }
+                    this.isPanning = false; 
+                    this.isDrawing = false; 
+                    this.boardContainer.classList.remove('panning'); 
+                };
+
+                window.addEventListener('mouseup', endDrag);
+                window.addEventListener('touchend', endDrag);
                 window.addEventListener('resize', () => this.resizeCanvas());
             }
 
