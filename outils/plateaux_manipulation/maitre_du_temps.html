@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Glisse-entiers</title>
+  <style>
+    :root{
+      --gap: 6px;
+      --cell: 72px;         /* recalculé en JS (et modulé par le zoom) */
+      --headH: 38px;        /* recalculé en JS */
+      --cols: 10;           /* recalculé en JS */
+      --strip-cols: 30;     /* recalculé en JS */
+      --overhang: 0px;      /* recalculé en CSS avec cell+gap */
+
+      --bg-page: #f3f4f6;
+      --bg-card: #ffffff;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --primary: #4f46e5;
+      --cell-border: #111827; /* noir */
+
+      --band-fill: rgba(209,213,219,0.62);
+      --band-stroke: rgba(107,114,128,0.25);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg-page);
+      color: var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding: clamp(10px, 3vw, 24px);
+      -webkit-font-smoothing: antialiased;
+      overflow-x:hidden;
+      overscroll-behavior-x:none;
+    }
+
+    .app{ width:min(1400px, 100%); display:flex; flex-direction:column; gap:16px; }
+
+    .card{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    }
+
+    .header-card{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+
+    h1{
+      margin:0;
+      font-weight: 900;
+      font-size: clamp(20px, 4vw, 30px);
+      color:#111827;
+      text-align:center;
+    }
+
+    .actions-bar{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      width:100%;
+    }
+
+    /* Bulle d'opération (sous le titre) */
+    #opPill{
+      background:#e0e7ff;
+      color: var(--primary);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: clamp(18px, 3vw, 24px);
+      min-width: 90px;
+      text-align:center;
+      user-select:none;
+    }
+
+    .btn-reset{
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select:none;
+    }
+    .btn-reset:hover{ background:#e5e7eb; }
+
+    .settings-bar{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      width:100%;
+    }
+
+    .picker-container{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background:#fff;
+      font-size: 14px;
+      font-weight: 700;
+      color:#4b5563;
+      user-select:none;
+    }
+    .picker-container select{
+      border:none;
+      background:transparent;
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--primary);
+      cursor:pointer;
+      outline:none;
+    }
+
+    .seg-control{
+      display:flex;
+      background:#f3f4f6;
+      padding:4px;
+      border-radius: 10px;
+      gap:2px;
+    }
+    .seg-btn{
+      border:none;
+      background:transparent;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color:#6b7280;
+      cursor:pointer;
+      user-select:none;
+    }
+    .seg-btn.active{
+      background:#fff;
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+
+    .btn-secondary{
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #4b5563;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select:none;
+    }
+    .btn-secondary:hover{ background:#f9fafb; border-color:#9ca3af; }
+    .btn-secondary.active{
+      background: #ecfccb;
+      color:#365314;
+      border-color:#84cc16;
+    }
+
+    /* Zoom */
+    .zoom-box{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background:#fff;
+      user-select:none;
+    }
+    .zoom-btn{
+      width: 34px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background:#f9fafb;
+      cursor:pointer;
+      font-weight: 900;
+      color:#374151;
+    }
+    .zoom-btn:hover{ background:#f3f4f6; }
+    #zoomLabel{ font-weight: 900; color:#4b5563; min-width: 56px; text-align:center; }
+
+    /* --- Grille --- */
+    .grid-container{ width:100%; display:flex; justify-content:center; }
+
+    .grid-shell{ width:max-content; display:flex; flex-direction:column; gap: var(--gap); }
+
+    .grid-row{
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      gap: var(--gap);
+      align-items:center;
+      width: max-content;
+    }
+
+    .head{
+      height: var(--headH);
+      text-align:center;
+      background:#e5e7eb;
+      color:#374151;
+      border-radius: 8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      font-size: 11px;
+      line-height: 1.1;
+      font-weight: 900;
+      padding: 2px;
+    }
+    .head .lbl{ display:flex; flex-direction:column; }
+
+    .cell{
+      height: var(--cell);
+      background:#fff;
+      border: 2px solid var(--cell-border);
+      border-radius: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position: relative;
+      overflow:hidden;
+    }
+    .cell:focus-within{ border-color: var(--primary); }
+
+    /* Inputs (rangée blanche = repère fixe) */
+    form{ display: contents; }
+    .digit{
+      width:100%;
+      height:100%;
+      border:none;
+      background:transparent;
+      text-align:center;
+      font: inherit;
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
+      color:#111827;
+      outline:none;
+      padding:0;
+      margin:0;
+    }
+
+    /* Rangée grise : fenêtres + bandeau derrière */
+    .preview-wrap{ position: relative; width:max-content; height: var(--cell); }
+
+    .preview-slots{
+      position: relative;
+      z-index: 5;
+      pointer-events: none;
+    }
+    /* mêmes traits que la rangée blanche */
+    .preview-slots .cell{ background: rgba(255,255,255,0.08); }
+
+    /* Fenêtre de découpe (effet matériel) */
+    .preview-viewport{
+      position:absolute;
+      inset:0;
+      overflow:hidden; /* IMPORTANT : effet "ça passe derrière" */
+      pointer-events:none;
+      z-index: 4;
+    }
+
+    /* Sur-débord (pour une apparition plus fluide des zéros utiles) */
+    :root{ --overhangL: calc(2 * (var(--cell) + var(--gap))); --overhangR: calc(10 * (var(--cell) + var(--gap))); }
+    .preview-viewport{
+      left:  calc(-1 * var(--overhangL));
+      right: calc(-1 * var(--overhangR));
+    }
+
+    .preview-layer{
+      position:absolute;
+      top:0;
+      left: var(--overhangL); /* compensation */
+      height:100%;
+      width:max-content;
+      display:grid;
+      grid-template-columns: repeat(var(--strip-cols), var(--cell));
+      gap: var(--gap);
+      align-items:center;
+      justify-items:center;
+      pointer-events:none;
+      transform: translateX(0px);
+      will-change: transform;
+    }
+
+    .pDigit{
+      font-weight: 950;
+      font-size: clamp(22px, calc(var(--cell) * 0.50), 38px);
+      color:#111827;
+      line-height: 1;
+    }
+    .pDigit.ghost0{ color:#111827; opacity: 0.78; }
+
+    /* Bandeau gris (rectangulaire) */
+    .drag-bar{
+      position:absolute;
+      left:  calc(-1 * var(--overhangL) - 10px);
+      right: calc(-1 * var(--overhangR) - 10px);
+      top: calc(var(--cell) * 0.08);
+      height: calc(var(--cell) * 0.84);
+      cursor: grab;
+      touch-action: none;
+      user-select:none;
+      z-index: 3;
+      will-change: transform;
+      transform: translateX(0px);
+    }
+    .drag-bar.dragging{ cursor: grabbing; }
+
+    .drag-track{
+      width:100%;
+      height:100%;
+      border-radius: 0px;
+      background: var(--band-fill);
+      box-shadow: inset 0 2px 3px rgba(0,0,0,0.12), inset 0 -2px 3px rgba(255,255,255,0.55);
+      border: 1px solid var(--band-stroke);
+    }
+
+    .snapping{ transition: transform 140ms cubic-bezier(.2,.9,.2,1); }
+
+    /* Reste */
+    #remainderBox{
+      margin-top: 12px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      font-weight: 900;
+      color:#92400e;
+      background:#fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 12px;
+      padding: 10px 14px;
+      user-select:none;
+    }
+    #remainderBox.visible{ display:flex; }
+
+    .credit{
+      text-align:center;
+      font-size: 12px;
+      color:#6b7280;
+      margin-top: -6px;
+    }
+    .credit a{ color:#4b5563; text-decoration:none; border-bottom: 1px dotted #9ca3af; }
+    .credit a:hover{ color:#111827; }
+
+    @media (max-width: 600px){
+      .settings-bar{ flex-direction: column; align-items: center; }
+      .btn-reset{ width:100%; justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+
+<main class="app" id="app">
+
+  <section class="card header-card">
+    <h1>Glisse-entiers</h1>
+
+    <div class="actions-bar" style="margin-top:-2px;">
+      <div id="opPill" aria-live="polite">×1</div>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn-reset" id="resetBtn" type="button" aria-label="Réinitialiser">
+        Réinitialiser
+      </button>
+    </div>
+
+    <div class="settings-bar">
+      <div class="picker-container">
+        <label for="colCount">Colonnes :</label>
+        <select id="colCount">
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10" selected>10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+
+      <div class="seg-control" id="zerosSeg" role="group" aria-label="Affichage des zéros (rangée grise)">
+        <button data-mode="none" class="seg-btn active" type="button">Sans zéros</button>
+        <button data-mode="needed" class="seg-btn" type="button">Zéros utiles</button>
+        <button data-mode="all" class="seg-btn" type="button">Tous les zéros</button>
+      </div>
+
+      <button class="btn-secondary" id="toggleCompact" type="button" title="Abréger les libellés">
+        Titres compacts
+      </button>
+
+      <div class="zoom-box" aria-label="Zoom">
+        <button class="zoom-btn" id="zoomOut" type="button" title="Dézoomer">−</button>
+        <div id="zoomLabel">100%</div>
+        <button class="zoom-btn" id="zoomIn" type="button" title="Zoomer">+</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="padding: 14px 0;" id="gridCard">
+    <div class="grid-container">
+      <div class="grid-shell" id="gridShell">
+        <div class="grid-row" id="headRow"></div>
+
+        <div class="preview-wrap" id="previewWrap">
+          <div class="grid-row preview-slots" id="previewSlots"></div>
+          <div class="preview-viewport" id="previewViewport">
+            <div class="preview-layer" id="previewLayer"></div>
+          </div>
+          <div class="drag-bar" id="dragBar" aria-label="Bandeau à glisser" role="slider">
+            <div class="drag-track"></div>
+          </div>
+        </div>
+
+        <form class="grid-row" id="inputRow" autocomplete="off" spellcheck="false"></form>
+
+        <div id="remainderBox" aria-live="polite"><span id="remainderText"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="credit">
+    Inspiré de <a href="https://mathix.org/glisse-nombre/" target="_blank" rel="noopener">mathix.org/glisse-nombre/</a>
+  </div>
+
+</main>
+
+<script>
+(() => {
+  // --- Libellés (12 colonnes max) ---
+  const LABELS_LONG = [
+    ['Centaines','de milliards'],
+    ['Dizaines','de milliards'],
+    ['Milliards'],
+    ['Centaines','de millions'],
+    ['Dizaines','de millions'],
+    ['Millions'],
+    ['Centaines','de milliers'],
+    ['Dizaines','de milliers'],
+    ['Milliers'],
+    ['Centaines'],
+    ['Dizaines'],
+    ['Unités']
+  ];
+
+  const LABELS_SHORT = [
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliards'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Millions'],
+    ['Cent.','de mill.'],
+    ['Diz.','de mill.'],
+    ['Milliers'],
+    ['Cent.'],
+    ['Diz.'],
+    ['Unités']
+  ];
+
+  // --- DOM ---
+  const root = document.documentElement;
+  const headRow = document.getElementById('headRow');
+  const inputRow = document.getElementById('inputRow');
+  const previewSlots = document.getElementById('previewSlots');
+  const previewLayer = document.getElementById('previewLayer');
+  const previewWrap = document.getElementById('previewWrap');
+  const dragBar = document.getElementById('dragBar');
+
+  const colSelect = document.getElementById('colCount');
+  const zerosSeg = document.getElementById('zerosSeg');
+  const resetBtn = document.getElementById('resetBtn');
+  const toggleCompact = document.getElementById('toggleCompact');
+  const opPill = document.getElementById('opPill');
+
+  const zoomOut = document.getElementById('zoomOut');
+  const zoomIn  = document.getElementById('zoomIn');
+  const zoomLabel = document.getElementById('zoomLabel');
+
+  const remainderBox = document.getElementById('remainderBox');
+  const remainderText = document.getElementById('remainderText');
+
+  // --- State ---
+  let COL_COUNT = parseInt(colSelect.value, 10) || 10;
+  let isCompact = false;            // par défaut : désactivé
+  let zeroMode = 'none';            // 'none' | 'needed' | 'all'
+  let exp10 = 0;                    // + : ×10^k ; - : ÷10^k
+
+  let zoomFactor = 1.0;             // 0.6 -> 2.0
+
+  // Ruban : on veut pouvoir multiplier assez loin
+  const EXTRA_RIGHT_BASE = 10;      // en plus de COL_COUNT
+
+  // Calcul du pas (1 colonne)
+  let stepPx = 72 + parseFloat(getComputedStyle(root).getPropertyValue('--gap'));
+
+  // Inputs + preview digits
+  let inputIds = [];
+  let inputs = [];
+  let previewDigits = [];
+  let activeLabels = [];
+
+  // Pour enlever les suggestions/historique :
+  const INPUT_ATTRS = {
+    inputmode: 'numeric',
+    pattern: '[0-9]*',
+    autocomplete: 'off',
+    autocapitalize: 'off',
+    spellcheck: 'false',
+    'aria-autocomplete': 'none'
+  };
+
+  function sanitizeToDigit(s){
+    if (!s) return '';
+    const m = String(s).match(/[0-9]/);
+    return m ? m[0] : '';
+  }
+
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  function updateOpLabel(exp){
+    if (exp === 0) { opPill.textContent = '×1'; return; }
+    if (exp > 0) { opPill.textContent = `×${Math.pow(10, exp)}`; return; }
+    opPill.textContent = `÷${Math.pow(10, -exp)}`;
+  }
+
+  function calcCell(){
+    const gridCard = document.getElementById('gridCard');
+    const cardWidth = gridCard.getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(root).getPropertyValue('--gap')) || 6;
+
+    // On cible une taille qui rentre dans l'écran, puis on applique le zoom.
+    const padding = 40; // marges internes approx.
+    const usable = Math.max(320, cardWidth - padding);
+    const base = (usable - gap*(COL_COUNT-1)) / COL_COUNT;
+
+    const cell = clamp(base * zoomFactor, 44, 180);
+    const headH = clamp(cell * 0.55, 28, 54);
+
+    root.style.setProperty('--cell', `${cell}px`);
+    root.style.setProperty('--headH', `${headH}px`);
+
+    stepPx = cell + gap;
+  }
+
+  function renderHeaders(){
+    const heads = headRow.querySelectorAll('.head');
+    heads.forEach((h, idx) => {
+      const lbl = h.querySelector('.lbl');
+      lbl.innerHTML = '';
+      const parts = (isCompact ? LABELS_SHORT : LABELS_LONG).slice(12 - COL_COUNT)[idx] || [''];
+      for (const p of parts){
+        const s = document.createElement('span');
+        s.textContent = p;
+        lbl.appendChild(s);
+      }
+    });
+
+    toggleCompact.classList.toggle('active', isCompact);
+  }
+
+  function buildGrid(){
+    root.style.setProperty('--cols', String(COL_COUNT));
+
+    // Longueur du ruban
+    const STRIP_COLS = COL_COUNT + (COL_COUNT + EXTRA_RIGHT_BASE);
+    root.style.setProperty('--strip-cols', String(STRIP_COLS));
+
+    // HEAD
+    headRow.innerHTML = '';
+    for (let i=0;i<COL_COUNT;i++){
+      const h = document.createElement('div');
+      h.className = 'head';
+      const lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      h.appendChild(lbl);
+      headRow.appendChild(h);
+    }
+
+    // INPUTS
+    inputRow.innerHTML = '';
+    inputIds = Array.from({length: COL_COUNT}, (_,i)=>`d${i}`);
+    inputs = [];
+
+    for (let i=0;i<COL_COUNT;i++){
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const inp = document.createElement('input');
+      inp.className = 'digit';
+      inp.type = 'text';
+      inp.maxLength = 1;
+      inp.id = inputIds[i];
+      inp.name = `digit_${i}_${Math.random().toString(36).slice(2,7)}`;
+      for (const [k,v] of Object.entries(INPUT_ATTRS)) inp.setAttribute(k, v);
+      // aria
+      const labels = (isCompact ? LABELS_SHORT : LABELS_LONG).slice(12 - COL_COUNT);
+      inp.setAttribute('aria-label', (labels[i] || ['']).join(' '));
+
+      cell.appendChild(inp);
+      inputRow.appendChild(cell);
+      inputs.push(inp);
+    }
+
+    // PREVIEW WINDOWS
+    previewSlots.innerHTML = '';
+    for (let i=0;i<COL_COUNT;i++){
+      const c = document.createElement('div');
+      c.className = 'cell';
+      previewSlots.appendChild(c);
+    }
+
+    // PREVIEW DIGITS (ruban)
+    previewLayer.innerHTML = '';
+    previewDigits = [];
+    for (let i=0;i<STRIP_COLS;i++){
+      const d = document.createElement('div');
+      d.className = 'pDigit';
+      previewLayer.appendChild(d);
+      previewDigits.push(d);
+    }
+
+    wireInputs();
+    renderHeaders();
+    renderAll();
+    calcCell();
+    syncOffset();
+  }
+
+  function wireInputs(){
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener('input', () => {
+        const v = sanitizeToDigit(inp.value);
+        inp.value = v;
+        renderAll();
+        if (v && idx < inputs.length-1){
+          inputs[idx+1].focus();
+          inputs[idx+1].select();
+        }
+      });
+
+      inp.addEventListener('keydown', (e) => {
+        const k = e.key;
+        if (k === 'ArrowLeft'){ e.preventDefault(); if(idx>0) inputs[idx-1].focus(); }
+        if (k === 'ArrowRight'){ e.preventDefault(); if(idx<inputs.length-1) inputs[idx+1].focus(); }
+        if (k === 'Backspace'){
+          if (inp.value === '' && idx>0){ inputs[idx-1].focus(); }
+        }
+      });
+
+      inp.addEventListener('focus', () => {
+        // certains navigateurs insistent
+        inp.setAttribute('autocomplete','off');
+      });
+    });
+  }
+
+  function readBase(){
+    const a = new Array(COL_COUNT).fill('');
+    for (let i=0;i<COL_COUNT;i++) a[i] = document.getElementById(inputIds[i]).value;
+    return a;
+  }
+
+  function shiftedDigits(base, exp){
+    const out = new Array(COL_COUNT).fill('');
+    for (let i=0;i<COL_COUNT;i++){
+      const src = i + exp;
+      out[i] = (src >= 0 && src < COL_COUNT) ? (base[src] || '') : '';
+    }
+    return out;
+  }
+
+  function computeGhostSet(raw){
+    const ghost = new Set();
+
+    if (zeroMode === 'all'){
+      for (let i=0;i<COL_COUNT;i++) if (raw[i] === '') ghost.add(i);
+      return ghost;
+    }
+
+    if (zeroMode === 'needed'){
+      const hasAny = raw.some(v => v !== '');
+      if (!hasAny) return ghost;
+
+      let firstFilled = -1;
+      for (let i=0;i<COL_COUNT;i++){
+        if (raw[i] !== '') { firstFilled = i; break; }
+      }
+      if (firstFilled === -1) return ghost;
+
+      // Zéros utiles : trous entre le 1er chiffre et les unités (dernière colonne)
+      for (let i=firstFilled+1; i<COL_COUNT; i++){
+        if (raw[i] === '') ghost.add(i);
+      }
+    }
+
+    return ghost;
+  }
+
+  function renderPreview(base, expShown){
+    const STRIP_COLS = previewDigits.length;
+
+    // Ce qui apparaitrait dans les fenêtres
+    const rawWindows = shiftedDigits(base, expShown);
+    const ghostSetWin = computeGhostSet(rawWindows);
+
+    // Ruban : chiffres de base + zone supplémentaire à droite
+    const strip = new Array(STRIP_COLS).fill('');
+    for (let j=0;j<COL_COUNT;j++) strip[j] = base[j] || '';
+
+    const ghostStrip = new Set();
+
+    // Pour que les zéros apparaissent "dans" les cases, on les place sur le ruban
+    // à l'indice qui passera sous la fenêtre après décalage.
+    if (zeroMode !== 'none'){
+      ghostSetWin.forEach((i) => {
+        const j = i + expShown;
+        if (j >= 0 && j < STRIP_COLS && strip[j] === ''){
+          strip[j] = '0';
+          ghostStrip.add(j);
+        }
+      });
+    }
+
+    for (let j=0;j<STRIP_COLS;j++){
+      const el = previewDigits[j];
+      const v = strip[j] || '';
+      if (v !== ''){
+        el.textContent = v;
+        el.classList.toggle('ghost0', ghostStrip.has(j));
+      } else {
+        el.textContent = '';
+        el.classList.remove('ghost0');
+      }
+    }
+  }
+
+  function computeRemainder(base, exp){
+    // Reste seulement si division (exp < 0)
+    if (exp >= 0) return null;
+
+    const k = Math.min(-exp, COL_COUNT);
+    if (k <= 0) return null;
+
+    // dernières k colonnes (à droite)
+    let s = '';
+    for (let i = COL_COUNT - k; i < COL_COUNT; i++){
+      const d = base[i];
+      s += (d === '' ? '0' : d);
+    }
+
+    // valeur int
+    const val = parseInt(s, 10) || 0;
+    if (val === 0) return null;
+    return String(val);
+  }
+
+  function renderRemainder(){
+    const base = readBase();
+    const r = computeRemainder(base, exp10);
+    if (r === null){
+      remainderBox.classList.remove('visible');
+      remainderText.textContent = '';
+      return;
+    }
+    remainderText.textContent = `Reste ${r}`;
+    remainderBox.classList.add('visible');
+  }
+
+  function renderAll(){
+    const base = readBase();
+    updateOpLabel(exp10);
+    renderPreview(base, exp10);
+    renderRemainder();
+  }
+
+  // --- Drag (fluide + snap) ---
+  let dragging = false;
+  let startX = 0;
+  let startOffset = 0;
+  let offsetPx = 0;
+  let tentativeExp = 0;
+
+  function expToOffset(exp){
+    return -exp * stepPx;
+  }
+  function offsetToExp(offset){
+    return -Math.round(offset / stepPx);
+  }
+
+  function setTranslate(offset){
+    dragBar.style.transform = `translateX(${offset}px)`;
+    previewLayer.style.transform = `translateX(${offset}px)`;
+  }
+
+  function syncOffset(){
+    offsetPx = expToOffset(exp10);
+    setTranslate(offsetPx);
+  }
+
+  function blurActiveInput(){
+    const ae = document.activeElement;
+    if (ae && ae.classList && ae.classList.contains('digit')) ae.blur();
+  }
+
+  function clampExp(exp){
+    // limite raisonnable pour éviter de partir dans l'infini, tout en restant souple
+    const minExp = -(COL_COUNT + 2);
+    const maxExp = (COL_COUNT + 6);
+    return clamp(exp, minExp, maxExp);
+  }
+
+  function onDragStart(e){
+    blurActiveInput();
+    dragging = true;
+    startX = e.clientX;
+    startOffset = offsetPx;
+    tentativeExp = exp10;
+    dragBar.classList.add('dragging');
+    dragBar.classList.remove('snapping');
+    previewLayer.classList.remove('snapping');
+    dragBar.setPointerCapture?.(e.pointerId);
+  }
+
+  function onDragMove(e){
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const newOffset = startOffset + dx;
+    offsetPx = newOffset;
+    setTranslate(offsetPx);
+
+    tentativeExp = clampExp(offsetToExp(offsetPx));
+    updateOpLabel(tentativeExp);
+
+    const base = readBase();
+    renderPreview(base, tentativeExp);
+
+    // reste en live (quand on divise)
+    if (tentativeExp !== exp10){
+      const r = computeRemainder(base, tentativeExp);
+      if (r === null){
+        remainderBox.classList.remove('visible');
+        remainderText.textContent = '';
+      } else {
+        remainderText.textContent = `Reste ${r}`;
+        remainderBox.classList.add('visible');
+      }
+    }
+  }
+
+  function onDragEnd(){
+    if (!dragging) return;
+    dragging = false;
+    dragBar.classList.remove('dragging');
+
+    const finalExp = clampExp(offsetToExp(offsetPx));
+    const finalOffset = expToOffset(finalExp);
+
+    dragBar.classList.add('snapping');
+    previewLayer.classList.add('snapping');
+    setTranslate(finalOffset);
+
+    window.setTimeout(() => {
+      exp10 = finalExp;
+      offsetPx = finalOffset;
+      dragBar.classList.remove('snapping');
+      previewLayer.classList.remove('snapping');
+      renderAll();
+      syncOffset();
+    }, 160);
+  }
+
+  // Click ailleurs => désélectionner la case
+  document.addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.digit')) blurActiveInput();
+  }, true);
+
+  // --- Contrôles ---
+  zerosSeg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if (!btn) return;
+    zeroMode = btn.dataset.mode;
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b === btn));
+    renderAll();
+  });
+
+  toggleCompact.addEventListener('click', () => {
+    isCompact = !isCompact;
+    buildGrid();
+  });
+
+  colSelect.addEventListener('change', () => {
+    COL_COUNT = parseInt(colSelect.value, 10) || 10;
+    exp10 = 0;
+    zeroMode = 'none';
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'none'));
+    buildGrid();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    exp10 = 0;
+    offsetPx = 0;
+    setTranslate(0);
+    inputs.forEach(i => i.value = '');
+    zeroMode = 'none';
+    zerosSeg.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'none'));
+    renderAll();
+    inputs[0]?.focus();
+  });
+
+  function setZoom(newZoom){
+    zoomFactor = clamp(newZoom, 0.6, 2.0);
+    zoomLabel.textContent = `${Math.round(zoomFactor*100)}%`;
+    calcCell();
+    syncOffset();
+  }
+
+  zoomOut.addEventListener('click', () => setZoom(Math.round((zoomFactor - 0.1)*10)/10));
+  zoomIn.addEventListener('click', () => setZoom(Math.round((zoomFactor + 0.1)*10)/10));
+
+  // Drag events
+  dragBar.addEventListener('pointerdown', onDragStart);
+  window.addEventListener('pointermove', onDragMove, { passive: true });
+  window.addEventListener('pointerup', onDragEnd, { passive: true });
+  window.addEventListener('pointercancel', onDragEnd, { passive: true });
+
+  window.addEventListener('resize', () => { calcCell(); syncOffset(); });
+  window.addEventListener('orientationchange', () => setTimeout(() => { calcCell(); syncOffset(); }, 100));
+
+  // Init
+  buildGrid();
+  setZoom(1.0);
+  calcCell();
+  syncOffset();
+})();
+</script>
+
+</body>
+</html>
