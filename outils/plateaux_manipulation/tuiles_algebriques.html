@@ -177,7 +177,8 @@
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
-            <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar min-h-[60px]">
+            <!-- MODIFICATION: Hauteur fixe (h-[72px]) au lieu de min-height pour éviter le layout shift quand des symboles hauts apparaissent -->
+            <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar h-[72px]">
                 <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">(...)</div>
             </div>
         </div>
@@ -526,7 +527,6 @@
                     this.boardContainer.classList.remove('panning');
                 });
                 this.boardContainer.addEventListener('mousedown', (e) => { if(this.currentTool === 'pen') this.startDraw(e); });
-                // REMOVED: handleBoardDragOver, handleBoardDrop (since we use manual dragging now)
                 window.addEventListener('resize', () => this.resizeCanvas());
             }
 
@@ -635,7 +635,8 @@
                         gel.addEventListener('mousedown', (e) => this.handleDragStart(e));
                         gel.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
                         this.boardWorld.appendChild(gel);
-                        const gToken = { id: gid, type, sign: tileSign, displaySign: sign, element: gel, x: gpos.x, y: gpos.y, pairId: null, packId: null, ghostIds: [] };
+                        // FIX: Assign correct packId to ghosts (same as master) to fix "Order" grouping
+                        const gToken = { id: gid, type, sign: tileSign, displaySign: sign, element: gel, x: gpos.x, y: gpos.y, pairId: null, packId: pid, ghostIds: [] };
                         this.tokens.push(gToken);
                         tokenObj.ghostIds.push(gid);
                     }
@@ -712,8 +713,20 @@
                 if(!step) return;
                 const masters = step.tokenIds.map(id=>this.tokens.find(t=>t.id===id)).filter(Boolean);
                 if(step.operator==='-') step.operator='+';
+                
                 masters.forEach(t=>{
-                    t.ghostIds.forEach(gid=>{ const g=this.tokens.find(tk=>tk.id===gid); if(g){ step.tokenIds.push(gid); g.element.classList.remove('pending-mult'); } });
+                    // FIX: Ensure master displays its true sign now that brackets are gone
+                    t.displaySign = t.sign;
+                    
+                    t.ghostIds.forEach(gid=>{ 
+                        const g=this.tokens.find(tk=>tk.id===gid); 
+                        if(g){ 
+                            step.tokenIds.push(gid); 
+                            g.element.classList.remove('pending-mult'); 
+                            // FIX: Ensure ghost displays true sign
+                            g.displaySign = g.sign;
+                        } 
+                    });
                     t.ghostIds=[]; t.element.classList.remove('pending-mult');
                 });
                 step.distributed=true; document.getElementById('btn-distribute').classList.add('hidden');
@@ -730,35 +743,29 @@
                     
                     // FIX: Replaced custom layout logic with getSequentialPosition to ensure wrapping works
                     if(step.type==='multiplication'&&step.distributed) {
-                        const groups = { 'x2': [], 'x': [], 'unit': [] };
-                        toks.forEach(t => { if (groups[t.type]) groups[t.type].push(t); });
+                        // FIX: Sort by ID to preserve chronological input order (e.g. 1, 1, x2, x2)
+                        // instead of grouping by type.
+                        toks.sort((a,b) => a.id - b.id);
                         
-                        const typesOrder = [];
-                        toks.forEach(t => { if (!typesOrder.includes(t.type)) typesOrder.push(t.type); });
+                        // Add gap before distributed block
+                        if (idx > 0 && this.lastPos.x > 40) this.lastPos.x += PACK_GAP;
 
-                        let isFirstTokenOfBlock = true;
+                        let localLastPackId = null;
 
-                        typesOrder.forEach(type=>{
-                            const l=groups[type]; if(!l.length)return;
-                            l.sort((a,b)=>b.sign-a.sign);
+                        toks.forEach(t => {
+                            // FIX: Add gap if pack ID changes to separate groups visually
+                            let gap = 0;
+                            if (localLastPackId !== null && t.packId !== localLastPackId) {
+                                gap = PACK_GAP;
+                            }
+
+                            const pos = this.getSequentialPosition(SIZES[t.type].w, SIZES[t.type].h, gap);
                             
-                            l.forEach(t=>{
-                                let gap = 0;
-                                // Apply gap logic for distributed blocks
-                                if (isFirstTokenOfBlock) {
-                                    if (idx > 0) gap = PACK_GAP; 
-                                    isFirstTokenOfBlock = false;
-                                } else if (l.indexOf(t) === 0) {
-                                    gap = PACK_GAP; // Gap between type groups within distribution
-                                }
-
-                                // Use standard positioning logic which handles wrapping
-                                const pos = this.getSequentialPosition(SIZES[t.type].w, SIZES[t.type].h, gap);
-                                
-                                t.element.classList.add('animating'); 
-                                this.moveToken(t, pos.x, pos.y); 
-                                setTimeout(()=>t.element.classList.remove('animating'),500); 
-                            });
+                            t.element.classList.add('animating'); 
+                            this.moveToken(t, pos.x, pos.y); 
+                            setTimeout(()=>t.element.classList.remove('animating'),500); 
+                            
+                            localLastPackId = t.packId;
                         });
                     } else {
                         // Standard sequential reflow
@@ -956,7 +963,12 @@
                     let content = this.tokensToSeparatedLatex(toks); if (!toks.length || content === "") content = (content==="" && toks.length>0) ? "" : "\\dots";
                     let pStr = "";
                     if (step.type === 'multiplication') {
-                        if (step.distributed) pStr = this.tokensToReducedSumLatex(toks);
+                        if (step.distributed) {
+                            // FIX: Sort tokens by ID (creation order) instead of type
+                            // Use tokensToSeparatedLatex to preserve the group structure (e.g. -4x^2 instead of -2x^2 -2x^2)
+                            const distributedToks = [...toks].sort((a,b) => a.id - b.id);
+                            pStr = this.tokensToSeparatedLatex(distributedToks);
+                        }
                         else pStr = step.factor + "(" + content + ")";
                     } else if (step.type === 'subtraction') {
                         if (step.distributed || !step.oppositeApplied) pStr = "(" + content + ")";
