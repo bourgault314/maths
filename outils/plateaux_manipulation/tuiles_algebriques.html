@@ -407,11 +407,13 @@
                 if (this.isSubtractingInput && step.type === 'subtraction' && !step.oppositeApplied) tileSign = -sign;
                 if (this.isMultiplyingInput && step.operator === '-') tileSign = -sign;
 
-                // Pack Logic for Spacing - REMOVED TIME CHECK
+                // FIX 1: Allow manual placement to reuse the last pack if types match
                 let pid;
+                const lp = this.lastPack;
+                const canReusePack = lp && lp.type === type && lp.sign === tileSign && lp.stepIndex === this.currentStepIndex;
+
                 if (placementMode === 'auto') {
-                    const lp = this.lastPack;
-                    if (lp && lp.type === type && lp.sign === tileSign && lp.stepIndex === this.currentStepIndex) {
+                    if (canReusePack) {
                         pid = lp.packId;
                     } else {
                         pid = this.nextPackId++;
@@ -419,8 +421,15 @@
                         this.lastPack = { packId: pid, type, sign: tileSign, stepIndex: this.currentStepIndex };
                     }
                 } else {
-                    pid = this.nextPackId++;
-                    this.packMeta[pid] = { order: this.nextPackOrder++ };
+                    // Manual placement
+                    if (canReusePack) {
+                        pid = lp.packId;
+                    } else {
+                        pid = this.nextPackId++;
+                        this.packMeta[pid] = { order: this.nextPackOrder++ };
+                        // Update lastPack so subsequent drags/clicks group with this one
+                        this.lastPack = { packId: pid, type, sign: tileSign, stepIndex: this.currentStepIndex };
+                    }
                 }
 
                 const id = this.nextId++;
@@ -467,9 +476,10 @@
                 this.tokens.push(tokenObj);
 
                 this.steps[this.currentStepIndex].tokenIds.push(id);
-                if (placementMode === 'auto') {
-                    this.lastSequentialPackId = pid;
-                }
+                
+                // Update sequential pack tracking for both auto and manual
+                this.lastSequentialPackId = pid;
+
                 if (this.isMultiplyingInput && step.type === 'multiplication' && step.factor > 1) {
                     const strideH = 90 + 20;
                     for(let i=1; i<step.factor; i++) {
@@ -573,30 +583,39 @@
                 this.steps.forEach((step, idx) => {
                     const toks = step.tokenIds.map(id=>this.tokens.find(t=>t.id===id)).filter(Boolean);
                     if(!toks.length) return;
+                    
+                    // FIX: Replaced custom layout logic with getSequentialPosition to ensure wrapping works
                     if(step.type==='multiplication'&&step.distributed) {
                         const groups = { 'x2': [], 'x': [], 'unit': [] };
                         toks.forEach(t => { if (groups[t.type]) groups[t.type].push(t); });
-                        let cx = this.lastPos.x; let cy = this.lastPos.y;
                         
-                        // ADD GAP BEFORE DISTRIBUTED BLOCK IF NOT FIRST
-                        if (idx > 0 && cx > 40) cx += PACK_GAP;
-
-                        if(cx>40 && cx+200 > (this.boardContainer.clientWidth/this.scale)) { 
-                            cx=40; cy+=this.lastPos.maxYInRow+20; 
-                            this.lastPos.maxYInRow = 0; // Reset row height on wrap
-                        }
-                        let maxH=0;
                         const typesOrder = [];
                         toks.forEach(t => { if (!typesOrder.includes(t.type)) typesOrder.push(t.type); });
-                        
+
+                        let isFirstTokenOfBlock = true;
+
                         typesOrder.forEach(type=>{
                             const l=groups[type]; if(!l.length)return;
                             l.sort((a,b)=>b.sign-a.sign);
-                            const w=SIZES[type].w; maxH=Math.max(maxH, SIZES[type].h);
-                            l.forEach(t=>{ t.element.classList.add('animating'); this.moveToken(t,cx,cy); setTimeout(()=>t.element.classList.remove('animating'),500); cx+=w+2; });
-                            cx+=PACK_GAP; // Use constant gap
+                            
+                            l.forEach(t=>{
+                                let gap = 0;
+                                // Apply gap logic for distributed blocks
+                                if (isFirstTokenOfBlock) {
+                                    if (idx > 0) gap = PACK_GAP; 
+                                    isFirstTokenOfBlock = false;
+                                } else if (l.indexOf(t) === 0) {
+                                    gap = PACK_GAP; // Gap between type groups within distribution
+                                }
+
+                                // Use standard positioning logic which handles wrapping
+                                const pos = this.getSequentialPosition(SIZES[t.type].w, SIZES[t.type].h, gap);
+                                
+                                t.element.classList.add('animating'); 
+                                this.moveToken(t, pos.x, pos.y); 
+                                setTimeout(()=>t.element.classList.remove('animating'),500); 
+                            });
                         });
-                        this.lastPos.x=cx; this.lastPos.y=cy; this.lastPos.maxYInRow=Math.max(this.lastPos.maxYInRow,maxH);
                     } else {
                         // Standard sequential reflow
                         if(idx>0 && this.lastPos.x>40) this.lastPos.x+=PACK_GAP;
@@ -623,7 +642,6 @@
                 this.organizeSubset(this.tokens, 20, 60, (this.boardContainer.clientWidth/this.scale)-20, reduced);
             }
             
-            // --- FIX 1: Respect Packs in Order Mode ---
             organizeSubset(subset, startX, startY, limitX, reduced) {
                 const rows = [{type:'x2',s:1},{type:'x2',s:-1},{type:'x',s:1},{type:'x',s:-1},{type:'unit',s:1},{type:'unit',s:-1}];
                 let y = startY;
@@ -680,6 +698,20 @@
             autoSimplify() { if(this._autoSimplifyActive)return; this.saveState(); this._autoSimplifyActive=true; if(this._timer) clearTimeout(this._timer); playSound('whoosh'); this.runSimplify(); }
             runSimplify() {
                 const pairs = [];
+                
+                // FIX 3: Collect existing manual pairs (is-zero) first
+                const processedManual = new Set();
+                this.tokens.filter(t => t.pairId !== null && !t._canceling).forEach(t => {
+                    if (processedManual.has(t.id)) return;
+                    const partner = this.tokens.find(p => p.id === t.pairId);
+                    if (partner && !partner._canceling) {
+                        pairs.push([t, partner]);
+                        processedManual.add(t.id);
+                        processedManual.add(partner.id);
+                    }
+                });
+
+                // Then find new pairs among available tokens
                 const available = this.tokens.filter(t=>!t._canceling && t.pairId===null && !t.element.classList.contains('in-bracket'));
                 const types=['x2','x','unit'];
                 types.forEach(ty=>{
@@ -709,6 +741,10 @@
                     const b=document.createElement('div'); b.className='zero-badge'; b.textContent='0';
                     b.style.left=(endX+10)+'px'; b.style.top=(endY+10)+'px'; this.boardWorld.appendChild(b);
                     t1.element.classList.add('vanish'); t2.element.classList.add('vanish'); b.classList.add('vanish');
+                    // Remove old pair badge if exists
+                    const oldBadge = document.getElementById(`badge-${t1.id}-${t2.id}`) || document.getElementById(`badge-${t2.id}-${t1.id}`);
+                    if(oldBadge) oldBadge.remove();
+
                     setTimeout(()=>{ this.removeTokens([t1,t2]); b.remove(); }, 900);
                 }, 300);
             }
@@ -767,7 +803,7 @@
                 this.steps.forEach((step, index) => {
                     const toks = step.tokenIds.map(id => this.tokens.find(t => t.id === id)).filter(Boolean);
                     if (!toks.length && index !== this.currentStepIndex) return;
-                    let content = this.tokensToSeparatedLatex(toks); if (!toks.length) content = "\\dots";
+                    let content = this.tokensToSeparatedLatex(toks); if (!toks.length || content === "") content = (content==="" && toks.length>0) ? "" : "\\dots";
                     let pStr = "";
                     if (step.type === 'multiplication') {
                         if (step.distributed) pStr = this.tokensToReducedSumLatex(toks);
@@ -791,6 +827,9 @@
             }
             tokensToSeparatedLatex(tokens) {
                 if (!tokens || !tokens.length) return "";
+                // FIX 2: Filter out tokens involved in a zero pair
+                tokens = tokens.filter(t => t.pairId === null);
+                
                 const groups=[]; let cur=null;
                 tokens.forEach(t=>{ const s=(t.displaySign===-1)?-1:1; if(cur&&cur.type===t.type&&cur.s===s&&cur.pid===t.packId){cur.c++;} else { if(cur)groups.push(cur); cur={type:t.type,s:s,pid:t.packId,c:1}; } });
                 if(cur)groups.push(cur);
@@ -807,7 +846,7 @@
                 if (!tokens || !tokens.length) return "";
                 const ord=[]; tokens.forEach(t=>{if(!ord.includes(t.type))ord.push(t.type)});
                 const c={x2:{p:0,n:0},x:{p:0,n:0},unit:{p:0,n:0}};
-                tokens.forEach(t=>{ if(t._canceling)return; if(t.sign===1)c[t.type].p++; else c[t.type].n++; });
+                tokens.forEach(t=>{ if(t._canceling || t.pairId !== null)return; if(t.sign===1)c[t.type].p++; else c[t.type].n++; });
                 let l=""; let has=false;
                 ord.forEach(ty=>{
                     if(c[ty].p>0) { 
@@ -822,7 +861,6 @@
                 return l||"0";
             }
             
-            // --- FIX 2: Generate Ordered Latex per Pack ---
             generateOrderedLatex() { 
                 // Group by Pack ID first
                 const byPack = new Map();
