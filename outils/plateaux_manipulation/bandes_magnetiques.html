@@ -18,322 +18,129 @@
         }
 
         /* --- UI ELEMENTS --- */
-        .tool-btn {
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .tool-btn:active {
-            transform: scale(0.9);
-        }
-        .tool-btn.active {
-            background-color: #dbeafe; /* blue-100 */
-            border-color: #3b82f6; /* blue-500 */
-            color: #1d4ed8;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tool-btn.active-red {
-            background-color: #fee2e2; /* red-100 */
-            border-color: #ef4444; /* red-500 */
-            color: #b91c1c;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tool-btn.active-teal { 
-            background-color: #ccfbf1; /* teal-100 */
-            border-color: #14b8a6; /* teal-500 */
-            color: #0f766e;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .tool-btn.active-orange {
-            background-color: #ffedd5; /* orange-100 */
-            border-color: #f97316; /* orange-500 */
-            color: #c2410c;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
+        .tool-btn { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .tool-btn:active { transform: scale(0.9); }
+        .tool-btn.active { background-color: #dbeafe; border-color: #3b82f6; color: #1d4ed8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .tool-btn.active-red { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .tool-btn.active-teal { background-color: #ccfbf1; border-color: #14b8a6; color: #0f766e; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
 
-        /* Classes pour le Drag & Drop sidebar */
-        .strip-dragger {
-            cursor: grab;
-            touch-action: none;
-        }
-        .strip-dragger:active {
-            cursor: grabbing;
-        }
+        .strip-dragger { cursor: grab; touch-action: none; }
+        .strip-dragger:active { cursor: grabbing; }
 
-        /* Header Trash Zone State */
-        header {
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        header.trash-active {
-            background-color: #fef2f2 !important; /* red-50 */
-            border-color: #fecaca !important; /* red-200 */
-        }
-        header.trash-active .trash-label {
-            display: flex !important;
-            opacity: 1 !important;
-        }
-        header.trash-active .header-tools {
-            opacity: 0.2;
-            pointer-events: none;
-        }
+        header { transition: background-color 0.2s, border-color 0.2s; }
+        header.trash-active { background-color: #fef2f2 !important; border-color: #fecaca !important; }
+        header.trash-active .trash-label { display: flex !important; opacity: 1 !important; }
+        header.trash-active .header-tools { opacity: 0.2; pointer-events: none; }
 
-        /* Background Image Styling */
-        #bg-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            background-size: cover; 
-            background-position: center;
-            background-repeat: no-repeat;
-            pointer-events: none;
-            opacity: 0.9;
-        }
-
-        /* Scrollbar masquée */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* --- DESSIN & CANVAS --- */
-        #layer-container {
-            position: relative;
-            flex: 1;
-            overflow: hidden;
-            background-color: white;
-            cursor: crosshair;
-        }
+        #layer-container { position: relative; flex: 1; overflow: hidden; background-color: white; cursor: default; }
         
-        /* Container pour le Zoom */
         #zoom-world {
-            position: absolute;
-            top: 0; 
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform-origin: top left;
-            transition: transform 0.1s linear; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            transform-origin: 0 0; 
         }
 
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; }
         #strips-canvas { z-index: 10; }
         #drawing-canvas { z-index: 20; pointer-events: none; }
         
-        /* Outils Géométrie (Équerre/Rapporteur) - Au dessus du dessin */
-        #geometry-tools-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 30;
-            pointer-events: none; /* Laisse passer les clics sauf sur les outils */
-            overflow: hidden;
-        }
+        #geometry-tools-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; pointer-events: none; overflow: hidden; }
 
-        .geo-tool {
-            pointer-events: auto;
-            position: absolute;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-            touch-action: none;
-        }
-        
-        /* Rapporteur : le rectangle vide laisse passer les clics (utile quand des segments passent dessous) */
-        .geo-protractor {
-            pointer-events: none;
-        }
-        .geo-protractor .geo-handle,
-        .geo-protractor .protractor-body {
-            pointer-events: auto;
-        }
-        /* Le corps du rapporteur ne capture les clics que sur son trait : l'intérieur reste cliquable */
-        .geo-protractor .protractor-body {
-            pointer-events: stroke;
-        }
+        .geo-tool { pointer-events: auto; position: absolute; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); touch-action: none; }
+        .geo-protractor { pointer-events: none; }
+        .geo-protractor .geo-handle, .geo-protractor .protractor-body { pointer-events: auto; }
+        .geo-protractor .protractor-body { pointer-events: stroke; }
 
-        .geo-handle {
-            transition: transform 0.1s, background-color 0.1s, border-color 0.1s;
-            background-color: white;
-            border: 2px solid #e5e7eb;
-            color: #4b5563;
-            z-index: 50; /* Ensure clickable */
-            transform: var(--t, none);
-            transform-origin: center;
-        }
-        
-        .geo-handle:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
-            transform: var(--t, none) scale(1.1);
-                }
+        .geo-handle { transition: transform 0.1s; background-color: white; border: 2px solid #e5e7eb; color: #4b5563; z-index: 50; transform: var(--t, none); transform-origin: center; }
+        .geo-handle:hover { border-color: #3b82f6; color: #3b82f6; transform: var(--t, none) scale(1.1); }
 
-        /* (Geo handles) Anti-tremblement: la translation est stockee dans --t et conservee au survol */
-
-        /* CURSEUR VIRTUEL */
-        #custom-cursor {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            display: none;
-            transform-origin: top left;
-        }
-        .hide-cursor, .hide-cursor * {
-            cursor: none !important;
-        }
+        .cursor-pen-active { cursor: crosshair !important; }
+        .cursor-grab-bg { cursor: grab; }
+        .cursor-grabbing-bg { cursor: grabbing !important; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden text-slate-700">
 
-    <!-- INPUT FICHIER CACHÉ -->
-    <input type="file" id="bg-uploader" accept="image/*,.pdf" class="hidden">
-
-    <!-- CURSEUR PERSONNALISÉ (Crayon) -->
-    <div id="custom-cursor">
-        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path id="cursor-color-1" d="M27 7 L13 21" stroke="#2563eb" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-            <circle cx="8" cy="32" r="1" fill="white"/>
-        </svg>
-    </div>
-
-    <!-- HEADER (Zone de suppression) -->
     <header id="main-header" class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative transition-colors duration-200">
-        
-        <!-- Overlay Supprimer -->
         <div class="trash-label absolute inset-0 hidden items-center justify-center pointer-events-none z-50">
              <div class="flex items-center gap-2 text-rose-500 font-bold text-lg bg-white/80 px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-rose-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 <span>Relâcher pour jeter</span>
              </div>
         </div>
 
         <div class="header-tools flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[60px] transition-opacity">
-            
-            <!-- GAUCHE : Reset & Zoom -->
             <div class="flex items-center gap-2">
                  <button onclick="resetBoard()" class="tool-btn bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-xl font-bold border-2 border-rose-100 flex items-center gap-2" title="Tout effacer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     <span class="hidden sm:inline text-sm">Reset</span>
                 </button>
-                
-                <!-- Zoom Controls (Hold to zoom) -->
                 <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                    <button 
-                        onmousedown="startZoom(-0.02)" ontouchstart="startZoom(-0.02)" 
-                        onmouseup="stopZoom()" onmouseleave="stopZoom()" ontouchend="stopZoom()"
-                        class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none" title="Zoom Arrière">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                    </button>
-                    <button 
-                        onmousedown="startZoom(0.02)" ontouchstart="startZoom(0.02)" 
-                        onmouseup="stopZoom()" onmouseleave="stopZoom()" ontouchend="stopZoom()"
-                        class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none" title="Zoom Avant">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                    </button>
-                    <button onclick="setZoom(-0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom -">-</button>
-                    <button onclick="setZoom(0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom +">+</button>
+                    <button onclick="zoomCenter(-1)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom -">-</button>
+                    <button onclick="zoomCenter(1)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom +">+</button>
                 </div>
-
-                <!-- Bouton Image Fond -->
-                <button onclick="document.getElementById('bg-uploader').click()" class="tool-btn text-slate-500 hover:bg-slate-50 p-2 rounded-xl border border-slate-200" title="Image de fond">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                </button>
             </div>
 
-            <!-- CENTRE : Titre -->
             <div class="flex-1 flex justify-center items-center gap-4">
                 <span class="text-slate-400 font-bold text-lg tracking-tight pointer-events-none hidden md:inline">Bandes Magnétiques</span>
             </div>
 
-            <!-- DROITE : Outils -->
             <div class="flex items-center gap-2 shrink-0">
                 
-                <!-- EXERCICE GENERATOR -->
+                <button onclick="toggleRigidMode()" id="btn-rigid" class="tool-btn text-slate-500 hover:bg-slate-100 p-2 rounded-xl border border-slate-200" title="Mode Rigide (Cadenas)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </button>
+
                 <div class="relative flex items-center bg-orange-50 p-1 rounded-xl border border-orange-200">
                     <button id="btn-create-angle" onclick="toggleAnglePanel()" class="tool-btn text-orange-600 hover:bg-orange-100 px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2" title="Créer un angle">
                         <span>Créer un angle</span>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                     </button>
-
-                    <!-- Pavé numérique (tablette-friendly) -->
                     <div id="angle-panel" class="hidden absolute right-0 top-full mt-2 z-50 w-64 bg-white rounded-xl border border-orange-200 shadow-lg p-2">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <div class="text-xs font-extrabold text-slate-500">Valeur de l’angle (°)</div>
                             <button onclick="closeAnglePanel()" class="tool-btn px-2 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs font-bold">Fermer</button>
                         </div>
-
                         <div class="flex items-center gap-2 mb-2">
                             <div id="angle-display" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-lg font-extrabold text-slate-700 text-center select-none">60</div>
                             <button onclick="angleBackspace()" class="tool-btn px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold" title="Effacer">⌫</button>
                         </div>
-
                         <div class="grid grid-cols-3 gap-2">
                             <button onclick="angleDigit('1')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">1</button>
                             <button onclick="angleDigit('2')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">2</button>
                             <button onclick="angleDigit('3')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">3</button>
-
                             <button onclick="angleDigit('4')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">4</button>
                             <button onclick="angleDigit('5')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">5</button>
                             <button onclick="angleDigit('6')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">6</button>
-
                             <button onclick="angleDigit('7')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">7</button>
                             <button onclick="angleDigit('8')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">8</button>
                             <button onclick="angleDigit('9')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">9</button>
-
                             <button onclick="angleClear()" class="tool-btn py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold text-slate-700">C</button>
                             <button onclick="angleDigit('0')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">0</button>
                             <button onclick="confirmAnglePanel()" class="tool-btn py-2 bg-orange-100 hover:bg-orange-200 rounded-lg font-extrabold text-orange-700">OK</button>
-                        </div>
-
-                        <div class="mt-2 text-[11px] leading-snug text-slate-400">
-                            Astuce : 0 à 360. Le pavé fonctionne sans clavier (tablette).
                         </div>
                     </div>
                 </div>
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
 
-                <!-- Toggle Équerre -->
                 <button onclick="toggleSetSquare()" id="btn-setsquare" class="tool-btn bg-yellow-50 text-yellow-600 hover:bg-yellow-100 p-2 rounded-xl border border-yellow-200" title="Équerre">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 20L4 4L20 20H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
-                    </svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 20L4 4L20 20H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/></svg>
                 </button>
 
-                <!-- Toggle Rapporteur -->
                 <button onclick="toggleProtractor()" id="btn-protractor" class="tool-btn bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2 rounded-xl border border-indigo-200" title="Rapporteur">
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 20H3C3 15.0294 7.02944 11 12 11C16.9706 11 21 15.0294 21 20H12Z" stroke="currentColor" stroke-width="2"/>
-                        <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
-                    </svg>
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 20H3C3 15.0294 7.02944 11 12 11C16.9706 11 21 15.0294 21 20H12Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="20" r="1.5" fill="currentColor"/></svg>
                 </button>
 
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
 
-                <!-- Stylo -->
                 <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
                     <button onclick="setTool('hand')" id="tool-hand" class="tool-btn active p-2 rounded-lg" title="Main">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
                     </button>
                     <button onclick="setTool('pen', 'blue')" id="tool-pen-blue" class="tool-btn text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="Stylo Bleu">
                         <div class="w-4 h-4 bg-blue-600 rounded-full border border-blue-700"></div>
@@ -342,9 +149,7 @@
                         <div class="w-4 h-4 bg-red-600 rounded-full border border-red-700"></div>
                     </button>
                     <button onclick="clearDrawings()" class="tool-btn text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg" title="Effacer Annotations">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                 </div>
             </div>
@@ -352,12 +157,7 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        
-        <!-- SIDEBAR -->
         <aside class="w-20 sm:w-24 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-6 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 overflow-y-auto">
-            
-
-            <!-- Sélecteur Bandes / Segments (tablette-friendly) -->
             <div class="flex flex-col items-center gap-2 w-full px-2">
                 <button id="btn-stripmode-normal" onclick="setStripMode('normal')" class="tool-btn w-full bg-white text-teal-700 hover:bg-teal-50 px-1 py-2 rounded-xl border border-teal-200" title="Bandes épaisses">
                     <div class="flex flex-col items-center gap-1">
@@ -373,1484 +173,445 @@
                 </button>
                 <div class="w-10 h-px bg-slate-200 my-1"></div>
             </div>
-
             <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="yellow" title="Bande XL">
                 <div class="w-3 h-20 bg-amber-400 rounded-full shadow-md border border-amber-500 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div></div>
                 </div>
             </div>
-
             <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="red" title="Bande Longue (5)">
                 <div class="w-3 h-16 bg-red-500 rounded-full shadow-md border border-red-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div></div>
                 </div>
             </div>
-
             <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="blue" title="Bande Moyenne (4)">
                 <div class="w-3 h-12 bg-blue-500 rounded-full shadow-md border border-blue-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div></div>
                 </div>
             </div>
-
             <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="green" title="Bande Courte (3)">
                 <div class="w-3 h-8 bg-green-500 rounded-full shadow-md border border-green-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div></div>
                 </div>
             </div>
-            
             <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="purple" title="Bande Mini (2)">
                 <div class="w-3 h-6 bg-purple-500 rounded-full shadow-md border border-purple-600 group-hover:scale-110 transition-transform relative pointer-events-none">
-                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
-                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div></div>
                 </div>
             </div>
-
             <div class="flex-1"></div>
-
             <div class="w-8 h-px bg-slate-100 my-2"></div>
-            <div class="text-[10px] text-center text-slate-300 px-2 leading-tight pb-4">
-                Double-clic sur un magnet pour détacher
-            </div>
-
+            <div class="text-[10px] text-center text-slate-300 px-2 leading-tight pb-4">Double-clic sur un magnet pour détacher</div>
         </aside>
 
-        <!-- ESPACE DE TRAVAIL -->
-        <main id="layer-container" class="cursor-grab active:cursor-grabbing">
-            
-            <!-- CONTENEUR ZOOMABLE -->
+        <main id="layer-container" class="cursor-grab-bg">
             <div id="zoom-world">
-                <!-- BACKGROUND LAYER -->
-                <div id="bg-layer"></div>
-                
                 <canvas id="strips-canvas"></canvas>
                 <canvas id="drawing-canvas"></canvas>
-
-                <!-- Layer Outils -->
                 <div id="geometry-tools-layer"></div>
             </div>
-
         </main>
     </div>
 
-    <!-- SCRIPT -->
     <script>
-        /* --- CONFIGURATION --- */
-        const CONFIG = {
-            snapDistance: 45, 
-            normalStripWidth: 26,
-            thinStripWidth: 0.7, // Encore plus fin (était 1.0)
-            currentStripWidth: 26, 
-            colors: {
-                yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, 
-                red:    { fill: '#ef4444', stroke: '#b91c1c', length: 250 }, 
-                blue:   { fill: '#3b82f6', stroke: '#1d4ed8', length: 200 }, 
-                green:  { fill: '#22c55e', stroke: '#15803d', length: 150 }, 
-                purple: { fill: '#a855f7', stroke: '#7e22ce', length: 100 }  
-            }
+        const CONFIG = { snapDistance: 45, normalStripWidth: 26, thinStripWidth: 0.7, currentStripWidth: 26, colors: { yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, red: { fill: '#ef4444', stroke: '#b91c1c', length: 250 }, blue: { fill: '#3b82f6', stroke: '#1d4ed8', length: 200 }, green: { fill: '#22c55e', stroke: '#15803d', length: 150 }, purple: { fill: '#a855f7', stroke: '#7e22ce', length: 100 } } };
+        const state = { 
+            zoom: 1, pan: { x: 0, y: 0 }, isPanning: false, panStart: { x: 0, y: 0 }, 
+            points: [], strips: [], tool: 'hand', rigidMode: false, penColor: 'blue', stripMode: 'normal', 
+            draggingPoint: null, draggingStrip: null, dragOffset: {x:0, y:0}, 
+            // Rigid Rotation state
+            rigidDrag: null, 
+            nextId: 1, 
+            tools: { setSquare: { id: 'setSquare', visible: false, x: 0, y: 0, rotation: 0, scale: 1, pivot: {x: 20, y: 220} }, protractor: { id: 'protractor', visible: false, x: 0, y: 0, rotation: 0, scale: 1.5, gradMode: 0, direction: 0, showNumbers: false, attachedPointId: null, pivot: {x: 120, y: 120} } }, 
+            angleGroups: [], draggingAngle: null, draggingAngleMove: null, nextAngleGroupId: 1 
         };
 
-        /* --- ÉTAT GLOBAL --- */
-        const state = {
-            zoom: 1,
-            points: [], 
-            strips: [], 
-            tool: 'hand', 
-            penColor: 'blue', 
-            stripMode: 'normal', 
-            draggingPoint: null,
-            draggingStrip: null, 
-            dragOffset: {x:0, y:0},
-            nextId: 1,
-            tools: {
-                setSquare: {
-                    id: 'setSquare',
-                    visible: false,
-                    x: 0, y: 0,
-                    rotation: 0,
-                    scale: 1,
-                    pivot: {x: 20, y: 220} 
-                },
-                protractor: {
-                    id: 'protractor',
-                    visible: false,
-                    x: 0, y: 0,
-                    rotation: 0,
-                    scale: 1.5,
-                    gradMode: 0, 
-                    direction: 0,
-                    showNumbers: false,
-                    attachedPointId: null,
-                    pivot: {x: 120, y: 120} 
-                }
-            },
-            activeGeoTool: null,
-            angleGroups: [],
-            draggingAngle: null,
-            draggingAngleMove: null,
-            nextAngleGroupId: 1
-        };
+        const canvasStrips = document.getElementById('strips-canvas'); const ctxStrips = canvasStrips.getContext('2d');
+        const canvasDraw = document.getElementById('drawing-canvas'); const ctxDraw = canvasDraw.getContext('2d');
+        const container = document.getElementById('layer-container'); const zoomWorld = document.getElementById('zoom-world');
+        const toolsLayer = document.getElementById('geometry-tools-layer'); const header = document.getElementById('main-header');
 
-        const canvasStrips = document.getElementById('strips-canvas');
-        const ctxStrips = canvasStrips.getContext('2d');
-        const canvasDraw = document.getElementById('drawing-canvas');
-        const ctxDraw = canvasDraw.getContext('2d');
-        const container = document.getElementById('layer-container');
-        const zoomWorld = document.getElementById('zoom-world');
-        const toolsLayer = document.getElementById('geometry-tools-layer');
-        const header = document.getElementById('main-header');
-        const bgLayer = document.getElementById('bg-layer');
-        const bgUploader = document.getElementById('bg-uploader');
-
-        /* --- ZOOM CONTINU --- */
-        let zoomInterval;
+        function updateTransform() { zoomWorld.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`; }
         
-        function setZoom(delta) {
-            state.zoom = Math.max(0.5, Math.min(10, state.zoom + delta));
-            zoomWorld.style.transform = `scale(${state.zoom})`;
-        }
-
-        function startZoom(delta) {
-            if(zoomInterval) clearInterval(zoomInterval);
-            setZoom(delta); // Zoom immédiat
-            zoomInterval = setInterval(() => setZoom(delta), 50); // Zoom continu
-        }
-
-        function stopZoom() {
-            if(zoomInterval) clearInterval(zoomInterval);
-            zoomInterval = null;
-        }
-
-        /* --- IMAGE DE FOND --- */
-        bgUploader.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                bgLayer.style.backgroundImage = `url(${evt.target.result})`;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        /* --- INIT OUTILS --- */
-        function initGeometryTools() {
-            createGeoToolElement('setSquare', getSetSquareSVG(), '20px 220px');
-            createGeoToolElement('protractor', getProtractorSVG(), '120px 120px', '240px', '140px');
-        }
-
-        function getSetSquareSVG() {
-            // Équerre: (20, 220) [Angle Droit] -> (20, 20) [Haut] -> (220, 220) [Droit]
-            // Hypoténuse: (20, 20) à (220, 220).
-            return `
-                <svg width="100%" height="100%" viewBox="0 0 240 240" style="overflow: visible;">
-                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" />
-                    <path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
-                    <line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
-                    <line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
-                </svg>
-
-                <!-- Rotation Handle (Déplacé plus loin à l'extérieur de l'hypoténuse) -->
-                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
-                     style="top: 90px; left: 150px; --t: translate(-50%, -50%);" 
-                     title="Tourner">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
-                        <path d="M21 3v5h-5"/>
-                    </svg>
-                </div>
-                
-                <!-- Resize Handle (Déplacé vers la droite de la pointe) -->
-                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
-                     style="top: 220px; left: 255px; --t: translate(-50%, -50%);" 
-                     title="Redimensionner">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                </div>
-            `;
-        }
-
-        function getProtractorSVG() {
-            const mode = state.tools.protractor.gradMode;
-            const direction = state.tools.protractor.direction;
-            const showNumbers = state.tools.protractor.showNumbers;
-            let marks = "";
-            
-            for (let i = 0; i <= 180; i++) {
-                if (mode === 0 && i % 10 !== 0) continue;
-                if (mode === 1 && i % 5 !== 0) continue;
-                
-                const angle = Math.PI - (i * Math.PI / 180);
-                const cos = Math.cos(angle);
-                const sin = Math.sin(angle);
-                
-                let x1, y1, x2, y2;
-                let width = 0.32;
-                let opacity = 0.42;
-
-                if (i % 10 === 0) {
-                    x1 = 120 + 100 * cos;
-                    y1 = 120 - 100 * sin;
-                    x2 = 120 + 22 * cos;
-                    y2 = 120 - 22 * sin;
-                    width = 0.55;
-                    opacity = 0.32;
-                } else if (i % 5 === 0) {
-                    x1 = 120 + 100 * cos;
-                    y1 = 120 - 100 * sin;
-                    x2 = 120 + 85 * cos;
-                    y2 = 120 - 85 * sin;
-                    width = 0.4;
-                    opacity = 0.38;
-                } else {
-                    x1 = 120 + 100 * cos;
-                    y1 = 120 - 100 * sin;
-                    x2 = 120 + 92 * cos;
-                    y2 = 120 - 92 * sin;
-                }
-                
-                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none" />`;
-                
-                // Numbers (Maintenant inclus 0 et 180)
-                if (showNumbers && i % 10 === 0) {
-                    const val = direction === 0 ? i : (180 - i);
-                    const tx = 120 + 108 * cos;
-                    const ty = 120 - 108 * sin;
-                    const isWide = val >= 100;
-                    const fontSize = isWide ? 8 : 10;
-                    const degSize = isWide ? 6 : 7;
-                    const letter = isWide ? '-0.4px' : '0px';
-                    marks += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="800" fill="#4338ca" style="pointer-events: none; font-variant-numeric: tabular-nums; letter-spacing: ${letter};">${val}<tspan font-size="${degSize}">°</tspan></text>`;
-                }
-            }
-            
-            return `
-                <svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible; pointer-events: auto;" shape-rendering="geometricPrecision">
-                     <!-- Zone de prise (invisible) pour déplacer le rapporteur sans bloquer le centre -->
-                     <path class="protractor-drag-hit" d="M20 120 A 100 100 0 0 1 220 120" fill="none" stroke="transparent" stroke-width="18" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
-                     <path class="protractor-drag-hit" d="M20 120 L105 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
-                     <path class="protractor-drag-hit" d="M135 120 L220 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
-                     <path class="protractor-body" pointer-events="stroke" d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" />
-                     
-                     <!-- MARQUES ROUGES (Plus fines) -->
-                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9"  pointer-events="none"/>
-                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4"  pointer-events="none"/>
-
-                     <!-- Arc de cercle interieur (au niveau ou les rayons s'arretent) -->
-                     <path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>
-
-                     ${marks}
-                </svg>
-
-                <!-- Rotation Handle (Rapproché) -->
-                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -44px; left: 50%; --t: translate(-50%, 0);" title="Tourner">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
-                        <path d="M21 3v5h-5"/>
-                    </svg>
-                </div>
-                <!-- Resize Handle (Rapproché) -->
-                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="bottom: -14px; right: -18px;" title="Redimensionner">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                </div>
-                
-                <!-- Controls Row (Rapproché et plus petit) -->
-                <div class="geo-control-row absolute flex gap-1 items-center justify-center" style="bottom: -8px; left: 50%; transform: translate(-50%, 0);">
-                    <div class="geo-handle style-handle no-translate h-5 px-2 bg-indigo-600 text-white font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Précision">
-                        ${mode === 0 ? "10°" : (mode === 1 ? "5°" : "1°")}
-                    </div>
-                    <div class="geo-handle numbers-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Afficher Valeurs">
-                        ${showNumbers ? "123" : "..."}
-                    </div>
-                    <div class="geo-handle direction-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Inverser Sens">
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 12l4-4m-4 4l4 4M20 12l-4-4m4 4l-4 4"/></svg>
-                    </div>
-                </div>
-            `;
-        }
-
-        function createGeoToolElement(key, html, origin, w='240px', h='240px') {
-            const toolState = state.tools[key];
-            const el = document.createElement('div');
-            el.id = `tool-${toolState.id}`;
-            el.className = 'geo-tool hidden absolute select-none';
-            if (key === 'protractor') el.classList.add('geo-protractor');
-            el.style.width = w;
-            el.style.height = h;
-            el.style.transformOrigin = origin;
-            el.innerHTML = html;
-            setupToolEvents(el, key);
-            toolsLayer.appendChild(el);
-        }
-
-        function setupToolEvents(el, key) {
-            el.addEventListener('mousedown', (e) => handleGeoToolStart(e, key));
-            el.addEventListener('touchstart', (e) => handleGeoToolStart(e, key), {passive: false});
-        }
-
-        /* --- EXERCICE GENERATOR (UPDATED) --- */
-        
-        /* --- EXERCICE GENERATOR (TABLETTE-FRIENDLY) --- */
-        let anglePanelOpen = false;
-        let angleBuffer = '60';
-
-        function updateAngleDisplay() {
-            const d = document.getElementById('angle-display');
-            if (!d) return;
-            d.textContent = angleBuffer === '' ? '—' : angleBuffer;
-        }
-
-        function openAnglePanel() {
-            const panel = document.getElementById('angle-panel');
-            if (!panel) return;
-            anglePanelOpen = true;
-            panel.classList.remove('hidden');
-            updateAngleDisplay();
-        }
-
-        function closeAnglePanel() {
-            const panel = document.getElementById('angle-panel');
-            if (!panel) return;
-            anglePanelOpen = false;
-            panel.classList.add('hidden');
-        }
-
-        function toggleAnglePanel() {
-            const panel = document.getElementById('angle-panel');
-            if (!panel) return;
-            if (panel.classList.contains('hidden')) openAnglePanel();
-            else closeAnglePanel();
-        }
-
-        function angleDigit(d) {
-            // Max 3 chiffres (0–360)
-            if (angleBuffer.length >= 3) return;
-            if (angleBuffer === '0') angleBuffer = d;
-            else angleBuffer += d;
-            updateAngleDisplay();
-            playSound('click');
-        }
-
-        function angleBackspace() {
-            angleBuffer = angleBuffer.slice(0, -1);
-            updateAngleDisplay();
-            playSound('click');
-        }
-
-        function angleClear() {
-            angleBuffer = '';
-            updateAngleDisplay();
-            playSound('click');
-        }
-
-        function confirmAnglePanel() {
-            const val = parseInt(angleBuffer, 10);
-            if (!Number.isFinite(val) || val < 0 || val > 360) {
-                playSound('click');
-                // petit feedback visuel
-                const d = document.getElementById('angle-display');
-                if (d) { d.classList.add('ring-2','ring-red-300'); setTimeout(()=>d.classList.remove('ring-2','ring-red-300'), 250); }
-                return;
-            }
-
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
             const rect = container.getBoundingClientRect();
-            const cx = rect.width / 2;
-            const cy = rect.height - 150;
+            const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+            const worldX = (mouseX - state.pan.x) / state.zoom; const worldY = (mouseY - state.pan.y) / state.zoom;
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            let newZoom = state.zoom * delta; newZoom = Math.max(0.2, Math.min(10, newZoom));
+            state.pan.x = mouseX - worldX * newZoom; state.pan.y = mouseY - worldY * newZoom;
+            state.zoom = newZoom; updateTransform();
+        }, { passive: false });
 
-            createAngleFromValue(cx, cy, val);
-            playSound('pop');
-            closeAnglePanel();
-            render();
+        function zoomCenter(dir) {
+            const rect = container.getBoundingClientRect();
+            const cx = rect.width / 2; const cy = rect.height / 2;
+            const worldX = (cx - state.pan.x) / state.zoom; const worldY = (cy - state.pan.y) / state.zoom;
+            const delta = dir > 0 ? 1.2 : 0.8;
+            let newZoom = state.zoom * delta; newZoom = Math.max(0.2, Math.min(10, newZoom));
+            state.pan.x = cx - worldX * newZoom; state.pan.y = cy - worldY * newZoom;
+            state.zoom = newZoom; updateTransform();
         }
 
-        function createAngleFromValue(cx, cy, degrees) {
-            // Random orientation for the base leg (batons aléatoires)
-            const baseAngle = Math.random() * Math.PI * 2; 
-            
-            // Random colors/sizes
-            const availableTypes = ['red', 'yellow', 'blue', 'green', 'purple'];
-            const type1 = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-            const type2 = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-            
-            const L1 = CONFIG.colors[type1].length;
-            const L2 = CONFIG.colors[type2].length;
+        function initGeometryTools() { createGeoToolElement('setSquare', getSetSquareSVG(), '20px 220px'); createGeoToolElement('protractor', getProtractorSVG(), '120px 120px', '240px', '140px'); }
+        function getSetSquareSVG() { return `<svg width="100%" height="100%" viewBox="0 0 240 240" style="overflow: visible;"><path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" /><path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/><line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" /><line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" /></svg><div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: 90px; left: 150px; --t: translate(-50%, -50%);" title="Tourner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/><path d="M21 3v5h-5"/></svg></div><div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: 220px; left: 255px; --t: translate(-50%, -50%);" title="Redimensionner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div>`; }
+        function getProtractorSVG() { const mode = state.tools.protractor.gradMode; const direction = state.tools.protractor.direction; const showNumbers = state.tools.protractor.showNumbers; let marks = ""; for (let i = 0; i <= 180; i++) { if (mode === 0 && i % 10 !== 0) continue; if (mode === 1 && i % 5 !== 0) continue; const angle = Math.PI - (i * Math.PI / 180); const cos = Math.cos(angle); const sin = Math.sin(angle); let x1, y1, x2, y2, width = 0.32, opacity = 0.42; if (i % 10 === 0) { x1 = 120 + 100 * cos; y1 = 120 - 100 * sin; x2 = 120 + 22 * cos; y2 = 120 - 22 * sin; width = 0.55; opacity = 0.32; } else if (i % 5 === 0) { x1 = 120 + 100 * cos; y1 = 120 - 100 * sin; x2 = 120 + 85 * cos; y2 = 120 - 85 * sin; width = 0.4; opacity = 0.38; } else { x1 = 120 + 100 * cos; y1 = 120 - 100 * sin; x2 = 120 + 92 * cos; y2 = 120 - 92 * sin; } marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none" />`; if (showNumbers && i % 10 === 0) { const val = direction === 0 ? i : (180 - i); const tx = 120 + 108 * cos; const ty = 120 - 108 * sin; const fontSize = val >= 100 ? 8 : 10; marks += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="800" fill="#4338ca" style="pointer-events: none; font-variant-numeric: tabular-nums;">${val}<tspan font-size="7">°</tspan></text>`; } } return `<svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible; pointer-events: auto;" shape-rendering="geometricPrecision"><path class="protractor-drag-hit" d="M20 120 A 100 100 0 0 1 220 120" fill="none" stroke="transparent" stroke-width="18" vector-effect="non-scaling-stroke" pointer-events="stroke"/><path class="protractor-drag-hit" d="M20 120 L105 120" fill="none" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" pointer-events="stroke"/><path class="protractor-drag-hit" d="M135 120 L220 120" fill="none" stroke="transparent" stroke-width="14" vector-effect="non-scaling-stroke" pointer-events="stroke"/><path class="protractor-body" pointer-events="stroke" d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" /><line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9" pointer-events="none"/><line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4" pointer-events="none"/><path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" pointer-events="none"/>${marks}</svg><div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -44px; left: 50%; --t: translate(-50%, 0);" title="Tourner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/><path d="M21 3v5h-5"/></svg></div><div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="bottom: -14px; right: -18px;" title="Redimensionner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div><div class="geo-control-row absolute flex gap-1 items-center justify-center" style="bottom: -8px; left: 50%; transform: translate(-50%, 0);"><div class="geo-handle style-handle no-translate h-5 px-2 bg-indigo-600 text-white font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Précision">${mode === 0 ? "10°" : (mode === 1 ? "5°" : "1°")}</div><div class="geo-handle numbers-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Afficher Valeurs">${showNumbers ? "123" : "..."}</div><div class="geo-handle direction-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Inverser Sens"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 12l4-4m-4 4l4 4M20 12l-4-4m4 4l-4 4"/></svg></div></div>`; }
+        function createGeoToolElement(key, html, origin, w='240px', h='240px') { const toolState = state.tools[key]; const el = document.createElement('div'); el.id = `tool-${toolState.id}`; el.className = 'geo-tool hidden absolute select-none'; if (key === 'protractor') el.classList.add('geo-protractor'); el.style.width = w; el.style.height = h; el.style.transformOrigin = origin; el.innerHTML = html; setupToolEvents(el, key); toolsLayer.appendChild(el); }
+        function setupToolEvents(el, key) { el.addEventListener('mousedown', (e) => handleGeoToolStart(e, key)); el.addEventListener('touchstart', (e) => handleGeoToolStart(e, key), {passive: false}); }
 
-            const S = { id: state.nextId++, x: cx, y: cy, pinned: false };
-            
-            // Leg 1
-            const A = { 
-                id: state.nextId++, 
-                x: cx + L1 * Math.cos(baseAngle), 
-                y: cy + L1 * Math.sin(baseAngle), 
-                pinned: false 
-            };
-            
-            // Leg 2
-            const angleRad = degrees * (Math.PI / 180);
-            const B = { 
-                id: state.nextId++, 
-                x: cx + L2 * Math.cos(baseAngle + angleRad), 
-                y: cy + L2 * Math.sin(baseAngle + angleRad), 
-                pinned: false 
-            };
-
-
-            state.points.push(S, A, B);
-
-            const groupId = state.nextAngleGroupId++;
-            const strip1 = { id: state.nextId++, p1: S.id, p2: A.id, type: type1, angleGroupId: groupId, role: 'leg1' };
-            const strip2 = { id: state.nextId++, p1: S.id, p2: B.id, type: type2, angleGroupId: groupId, role: 'leg2' };
-            state.strips.push(strip1);
-            state.strips.push(strip2);
-
-            // Groupe rigide : l'angle reste constant, on peut le faire pivoter en tirant sur une branche.
-            state.angleGroups.push({
-                id: groupId,
-                vertexId: S.id,
-                aId: A.id,
-                bId: B.id,
-                degrees: degrees,
-                leg1Len: L1,
-                leg2Len: L2,
-                baseAngle: baseAngle,
-                strip1Id: strip1.id,
-                strip2Id: strip2.id
-            });
-        }
-
-        /* --- TOGGLES --- */
-        function updateStripModeUI() {
-            const btnNormal = document.getElementById('btn-stripmode-normal');
-            const btnThin = document.getElementById('btn-stripmode-thin');
-            if (!btnNormal || !btnThin) return;
-
-            if (state.stripMode === 'thin') {
-                btnThin.classList.add('active-teal');
-                btnNormal.classList.remove('active-teal');
-            } else {
-                btnNormal.classList.add('active-teal');
-                btnThin.classList.remove('active-teal');
+        let geoDragState = { active: false, key: null, mode: null, offsetX: 0, offsetY: 0, rotationOffset: 0, initialScale: 1, initialDist: 0 };
+        function handleGeoToolStart(e, key) {
+            e.stopPropagation(); e.preventDefault();
+            if (key === 'protractor') {
+                if (e.target.closest('.style-handle')) { state.tools.protractor.gradMode = (state.tools.protractor.gradMode + 1) % 3; updateProtractorVisuals(); return; }
+                if (e.target.closest('.numbers-handle')) { state.tools.protractor.showNumbers = !state.tools.protractor.showNumbers; updateProtractorVisuals(); return; }
+                if (e.target.closest('.direction-handle')) { state.tools.protractor.direction = state.tools.protractor.direction === 0 ? 1 : 0; updateProtractorVisuals(); return; }
             }
+            const pos = getPos(e); const tool = state.tools[key]; const pivotAbsX = tool.x + tool.pivot.x; const pivotAbsY = tool.y + tool.pivot.y;
+            if (e.target.closest('.rotate-handle')) { geoDragState.mode = 'rotate'; const currentMouseAngle = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX); geoDragState.rotationOffset = tool.rotation - currentMouseAngle; } 
+            else if (e.target.closest('.resize-handle')) { geoDragState.mode = 'resize'; geoDragState.initialScale = tool.scale; geoDragState.initialDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY); } 
+            else { geoDragState.mode = 'drag'; geoDragState.offsetX = pos.x - tool.x; geoDragState.offsetY = pos.y - tool.y; }
+            geoDragState.active = true; geoDragState.key = key;
+            document.addEventListener('mousemove', handleGeoToolMove); document.addEventListener('touchmove', handleGeoToolMove, {passive: false}); document.addEventListener('mouseup', handleGeoToolEnd); document.addEventListener('touchend', handleGeoToolEnd);
+        }
+        function handleGeoToolMove(e) {
+            e.preventDefault(); if (!geoDragState.active) return; const pos = getPos(e); const tool = state.tools[geoDragState.key]; const pivotAbsX = tool.x + tool.pivot.x; const pivotAbsY = tool.y + tool.pivot.y;
+            if (geoDragState.mode === 'drag') {
+                tool.x = pos.x - geoDragState.offsetX; tool.y = pos.y - geoDragState.offsetY;
+                if (geoDragState.key === 'protractor') {
+                    const snapDist = CONFIG.snapDistance; let best = null, bestD = snapDist;
+                    for (const p of state.points) { const d = Math.hypot(p.x - (tool.x + tool.pivot.x), p.y - (tool.y + tool.pivot.y)); if (d < bestD) { bestD = d; best = p; } }
+                    if (best) { tool.x = best.x - tool.pivot.x; tool.y = best.y - tool.pivot.y; tool.attachedPointId = best.id; } else { tool.attachedPointId = null; }
+                }
+                const clientPos = getClientPos(e); const hr = header.getBoundingClientRect(); if (clientPos.y <= hr.bottom) header.classList.add('trash-active'); else header.classList.remove('trash-active');
+            } else if (geoDragState.mode === 'rotate') { tool.rotation = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX) + geoDragState.rotationOffset; } 
+            else if (geoDragState.mode === 'resize') { tool.scale = Math.max(0.5, Math.min(geoDragState.initialScale * (Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY) / geoDragState.initialDist), 12.0)); }
+            updateGeoToolTransform(geoDragState.key);
+        }
+        function handleGeoToolEnd(e) {
+            if (geoDragState.mode === 'drag') { const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY; if (cy <= header.getBoundingClientRect().bottom) { toggleTool(geoDragState.key); playSound('trash'); } }
+            header.classList.remove('trash-active'); geoDragState.active = false;
+            document.removeEventListener('mousemove', handleGeoToolMove); document.removeEventListener('touchmove', handleGeoToolMove); document.removeEventListener('mouseup', handleGeoToolEnd); document.removeEventListener('touchend', handleGeoToolEnd);
         }
 
-        function setStripMode(mode) {
-            state.stripMode = (mode === 'thin') ? 'thin' : 'normal';
-            CONFIG.currentStripWidth = state.stripMode === 'normal' ? CONFIG.normalStripWidth : CONFIG.thinStripWidth;
-            updateStripModeUI();
-            render();
+        let anglePanelOpen = false, angleBuffer = '60';
+        function updateAngleDisplay() { const d = document.getElementById('angle-display'); if (d) d.textContent = angleBuffer === '' ? '—' : angleBuffer; }
+        function toggleAnglePanel() { const p = document.getElementById('angle-panel'); if (p) { if (p.classList.contains('hidden')) { anglePanelOpen = true; p.classList.remove('hidden'); updateAngleDisplay(); } else { closeAnglePanel(); } } }
+        function closeAnglePanel() { anglePanelOpen = false; document.getElementById('angle-panel')?.classList.add('hidden'); }
+        function angleDigit(d) { if (angleBuffer.length >= 3) return; if (angleBuffer === '0') angleBuffer = d; else angleBuffer += d; updateAngleDisplay(); playSound('click'); }
+        function angleBackspace() { angleBuffer = angleBuffer.slice(0, -1); updateAngleDisplay(); playSound('click'); }
+        function angleClear() { angleBuffer = ''; updateAngleDisplay(); playSound('click'); }
+        function confirmAnglePanel() {
+            const val = parseInt(angleBuffer, 10); if (!Number.isFinite(val) || val < 0 || val > 360) { playSound('click'); return; }
+            const rect = container.getBoundingClientRect(); const cx = (rect.width/2 - state.pan.x)/state.zoom; const cy = ((rect.height - 150) - state.pan.y)/state.zoom;
+            createAngleFromValue(cx, cy, val); playSound('pop'); closeAnglePanel(); render();
         }
-
-        // Compat : ancien toggle (si jamais réutilisé ailleurs)
-        function toggleStripMode() {
-            setStripMode(state.stripMode === 'normal' ? 'thin' : 'normal');
+        function createAngleFromValue(cx, cy, degrees) {
+            const baseAngle = Math.random() * Math.PI * 2; const types = ['red', 'yellow', 'blue', 'green', 'purple'];
+            const t1 = types[Math.floor(Math.random()*types.length)], t2 = types[Math.floor(Math.random()*types.length)];
+            const L1 = CONFIG.colors[t1].length, L2 = CONFIG.colors[t2].length;
+            const S = { id: state.nextId++, x: cx, y: cy, pinned: false };
+            const A = { id: state.nextId++, x: cx + L1 * Math.cos(baseAngle), y: cy + L1 * Math.sin(baseAngle), pinned: false };
+            const B = { id: state.nextId++, x: cx + L2 * Math.cos(baseAngle + degrees*(Math.PI/180)), y: cy + L2 * Math.sin(baseAngle + degrees*(Math.PI/180)), pinned: false };
+            state.points.push(S, A, B); const gid = state.nextAngleGroupId++;
+            state.strips.push({ id: state.nextId++, p1: S.id, p2: A.id, type: t1, angleGroupId: gid, role: 'leg1' });
+            state.strips.push({ id: state.nextId++, p1: S.id, p2: B.id, type: t2, angleGroupId: gid, role: 'leg2' });
+            state.angleGroups.push({ id: gid, vertexId: S.id, aId: A.id, bId: B.id, degrees: degrees, leg1Len: L1, leg2Len: L2, baseAngle: baseAngle, strip1Id: state.strips[state.strips.length-2].id, strip2Id: state.strips[state.strips.length-1].id });
         }
 
         function toggleSetSquare() { toggleTool('setSquare'); }
         function toggleProtractor() { toggleTool('protractor'); }
-
         function toggleTool(key) {
-            const tool = state.tools[key];
-            tool.visible = !tool.visible;
-            const el = document.getElementById(`tool-${tool.id}`);
-            const btn = document.getElementById(key === 'setSquare' ? 'btn-setsquare' : 'btn-protractor');
-            
+            const tool = state.tools[key]; tool.visible = !tool.visible; const el = document.getElementById(`tool-${tool.id}`); const btn = document.getElementById(key==='setSquare'?'btn-setsquare':'btn-protractor');
             if (tool.visible) {
-                el.classList.remove('hidden');
-                const colorClass = key === 'setSquare' ? 'bg-yellow-100' : 'bg-indigo-100';
-                btn.classList.add('active', colorClass);
-                
-                if (tool.x === 0 && tool.y === 0) {
-                    const rect = container.getBoundingClientRect();
-                    // Centre sans zoom correction initialement, mais à l'intérieur du monde zoomable
-                    tool.x = rect.width / 2 - tool.pivot.x; 
-                    tool.y = rect.height / 2 - tool.pivot.y; 
-                }
-                updateGeoToolTransform(key);
-                playSound('pop');
-            } else {
-                el.classList.add('hidden');
-                btn.classList.remove('active', 'bg-yellow-100', 'bg-indigo-100');
-                if (key === 'protractor') tool.attachedPointId = null;
-            }
+                el.classList.remove('hidden'); btn.classList.add('active', key==='setSquare'?'bg-yellow-100':'bg-indigo-100');
+                if (tool.x === 0 && tool.y === 0) { const rect = container.getBoundingClientRect(); tool.x = (rect.width/2 - state.pan.x)/state.zoom - tool.pivot.x; tool.y = (rect.height/2 - state.pan.y)/state.zoom - tool.pivot.y; }
+                updateGeoToolTransform(key); playSound('pop');
+            } else { el.classList.add('hidden'); btn.classList.remove('active','bg-yellow-100','bg-indigo-100'); if (key === 'protractor') tool.attachedPointId = null; }
         }
-
-        function updateGeoToolTransform(key) {
-            const tool = state.tools[key];
-            const el = document.getElementById(`tool-${tool.id}`);
-            if (!el) return;
-            el.style.left = tool.x + 'px';
-            el.style.top = tool.y + 'px';
-            el.style.transform = `rotate(${tool.rotation}rad) scale(${tool.scale})`;
-        }
-
-        function updateProtractorVisuals() {
-            const el = document.getElementById(`tool-protractor`);
-            el.innerHTML = getProtractorSVG();
-        }
-
-        // --- Keyboard: rotate protractor with Left/Right arrows ---
-        // Shift = 5 degrees step, otherwise 1 degree
-        document.addEventListener('keydown', (e) => {
-            if (!state.tools.protractor.visible) return;
-            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-
-            const ae = document.activeElement;
-            const tag = ae ? ae.tagName : '';
-            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-
-            e.preventDefault();
-            const stepDeg = e.shiftKey ? 5 : 1;
-            const sign = (e.key === 'ArrowLeft') ? -1 : 1;
-            state.tools.protractor.rotation += sign * stepDeg * (Math.PI / 180);
-            updateGeoToolTransform('protractor');
-        });
-
-        /* --- LOGIQUE OUTILS GÉOMÉTRIQUES --- */
-        let geoDragState = {
-            active: false,
-            key: null,
-            mode: null, 
-            offsetX: 0, offsetY: 0,
-            rotationOffset: 0,
-            initialScale: 1,
-            initialDist: 0
-        };
-
-        function handleGeoToolStart(e, key) {
-            e.stopPropagation();
-            e.preventDefault();
-            
-            if (key === 'protractor') {
-                if (e.target.closest('.style-handle')) {
-                    const tool = state.tools.protractor;
-                    tool.gradMode = (tool.gradMode + 1) % 3;
-                    updateProtractorVisuals();
-                    playSound('click');
-                    return;
-                }
-                if (e.target.closest('.numbers-handle')) {
-                    const tool = state.tools.protractor;
-                    tool.showNumbers = !tool.showNumbers;
-                    updateProtractorVisuals();
-                    playSound('click');
-                    return;
-                }
-                if (e.target.closest('.direction-handle')) {
-                    const tool = state.tools.protractor;
-                    tool.direction = tool.direction === 0 ? 1 : 0;
-                    updateProtractorVisuals();
-                    playSound('click');
-                    return;
-                }
-            }
-
-            const pos = getPos(e);
-            const tool = state.tools[key];
-            const pivotAbsX = tool.x + tool.pivot.x;
-            const pivotAbsY = tool.y + tool.pivot.y;
-
-            if (e.target.closest('.rotate-handle')) {
-                geoDragState.mode = 'rotate';
-                const currentMouseAngle = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX);
-                geoDragState.rotationOffset = tool.rotation - currentMouseAngle;
-            } else if (e.target.closest('.resize-handle')) {
-                geoDragState.mode = 'resize';
-                geoDragState.initialScale = tool.scale;
-                geoDragState.initialDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY);
-            } else {
-                geoDragState.mode = 'drag';
-                geoDragState.offsetX = pos.x - tool.x;
-                geoDragState.offsetY = pos.y - tool.y;
-            }
-
-            geoDragState.active = true;
-            geoDragState.key = key;
-
-            document.addEventListener('mousemove', handleGeoToolMove);
-            document.addEventListener('touchmove', handleGeoToolMove, {passive: false});
-            document.addEventListener('mouseup', handleGeoToolEnd);
-            document.addEventListener('touchend', handleGeoToolEnd);
-        }
-
-        function handleGeoToolMove(e) {
-            e.preventDefault();
-            if (!geoDragState.active) return;
-            
-            const pos = getPos(e);
-            const tool = state.tools[geoDragState.key];
-            const pivotAbsX = tool.x + tool.pivot.x;
-            const pivotAbsY = tool.y + tool.pivot.y;
-
-            if (geoDragState.mode === 'drag') {
-                tool.x = pos.x - geoDragState.offsetX;
-                tool.y = pos.y - geoDragState.offsetY;
-
-                // Aimantation du sommet (pivot) du rapporteur sur les points du dessin
-                if (geoDragState.key === 'protractor') {
-                    const snapDist = CONFIG.snapDistance;
-                    const pivotX = tool.x + tool.pivot.x;
-                    const pivotY = tool.y + tool.pivot.y;
-                    let best = null;
-                    let bestD = snapDist;
-                    for (const p of state.points) {
-                        const d = Math.hypot(p.x - pivotX, p.y - pivotY);
-                        if (d < bestD) { bestD = d; best = p; }
-                    }
-                    if (best) {
-                        tool.x = best.x - tool.pivot.x;
-                        tool.y = best.y - tool.pivot.y;
-                        tool.attachedPointId = best.id;
-                    } else {
-                        tool.attachedPointId = null;
-                    }
-                }
-                
-                const clientPos = getClientPos(e);
-                const headerRect = header.getBoundingClientRect();
-                if (clientPos.y <= headerRect.bottom) header.classList.add('trash-active');
-                else header.classList.remove('trash-active');
-
-            } else if (geoDragState.mode === 'rotate') {
-                const currentMouseAngle = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX);
-                tool.rotation = currentMouseAngle + geoDragState.rotationOffset;
-            } else if (geoDragState.mode === 'resize') {
-                const currentDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY);
-                let newScale = geoDragState.initialScale * (currentDist / geoDragState.initialDist);
-                newScale = Math.max(0.5, Math.min(newScale, 12.0)); // up to 12.0
-                tool.scale = newScale;
-            }
-            updateGeoToolTransform(geoDragState.key);
-        }
-
-        function handleGeoToolEnd(e) {
-            if (geoDragState.mode === 'drag') {
-                const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-                const headerRect = header.getBoundingClientRect();
-                if (cy <= headerRect.bottom) {
-                    toggleTool(geoDragState.key);
-                    playSound('trash');
-                }
-            }
-            header.classList.remove('trash-active');
-
-            geoDragState.active = false;
-            document.removeEventListener('mousemove', handleGeoToolMove);
-            document.removeEventListener('touchmove', handleGeoToolMove);
-            document.removeEventListener('mouseup', handleGeoToolEnd);
-            document.removeEventListener('touchend', handleGeoToolEnd);
-        }
-
-
-        /* --- COMMON EVENTS & LOGIC --- */
+        function updateGeoToolTransform(key) { const tool = state.tools[key]; const el = document.getElementById(`tool-${tool.id}`); if (el) { el.style.left = tool.x+'px'; el.style.top = tool.y+'px'; el.style.transform = `rotate(${tool.rotation}rad) scale(${tool.scale})`; } }
+        function updateProtractorVisuals() { document.getElementById(`tool-protractor`).innerHTML = getProtractorSVG(); }
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'snap') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'pop') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'detach') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now); osc.stop(now + 0.15);
-            } else if (type === 'trash') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'click') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(600, now);
-                gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now + 0.05);
-                osc.start(now); osc.stop(now + 0.05);
-            }
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
+            if (type === 'snap') { osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now+0.1); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
+            else if (type === 'pop') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(600, now+0.1); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
+            else if (type === 'detach') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.15); osc.start(now); osc.stop(now+0.15); }
+            else if (type === 'trash') { osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+            else if (type === 'click') { osc.type = 'square'; osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now+0.05); osc.start(now); osc.stop(now+0.05); }
         }
 
-        /* --- GESTION DES TAILLES --- */
         function resize() {
-            const rect = container.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            [canvasStrips, canvasDraw].forEach(c => {
-                c.width = rect.width * dpr;
-                c.height = rect.height * dpr;
-                c.style.width = rect.width + 'px';
-                c.style.height = rect.height + 'px';
-                c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
-            });
+            const rect = container.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+            [canvasStrips, canvasDraw].forEach(c => { c.width = rect.width * dpr; c.height = rect.height * dpr; c.style.width = rect.width+'px'; c.style.height = rect.height+'px'; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); });
             render();
         }
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
+        window.addEventListener('resize', resize); setTimeout(resize, 100);
 
-        /* --- LOGIQUE DRAG & DROP DEPUIS LA SIDEBAR --- */
+        function setStripMode(mode) { state.stripMode = (mode === 'thin') ? 'thin' : 'normal'; CONFIG.currentStripWidth = state.stripMode === 'normal' ? CONFIG.normalStripWidth : CONFIG.thinStripWidth; updateStripModeUI(); render(); }
+        function updateStripModeUI() { const btnNormal = document.getElementById('btn-stripmode-normal'); const btnThin = document.getElementById('btn-stripmode-thin'); if (state.stripMode === 'thin') { btnThin.classList.add('active-teal'); btnNormal.classList.remove('active-teal'); } else { btnNormal.classList.add('active-teal'); btnThin.classList.remove('active-teal'); } }
+
         function initSidebarDrag() {
-            const draggers = document.querySelectorAll('.strip-dragger');
-            draggers.forEach(btn => {
+            document.querySelectorAll('.strip-dragger').forEach(btn => {
                 const startDrag = (e) => {
-                    const type = btn.dataset.type;
-                    const length = CONFIG.colors[type].length;
-                    const color = CONFIG.colors[type].fill;
-                    const border = CONFIG.colors[type].stroke;
-                    
+                    const type = btn.dataset.type, color = CONFIG.colors[type].fill, border = CONFIG.colors[type].stroke;
                     const ghost = document.createElement('div');
-                    ghost.style.position = 'fixed';
-                    ghost.style.width = length + 'px';
-                    ghost.style.height = CONFIG.currentStripWidth + 'px'; 
-                    ghost.style.backgroundColor = color;
-                    ghost.style.border = `2px solid ${border}`;
-                    ghost.style.borderRadius = (CONFIG.currentStripWidth/2) + 'px';
-                    ghost.style.opacity = '0.8';
-                    ghost.style.zIndex = '9999';
-                    ghost.style.pointerEvents = 'none';
-                    ghost.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
-                    ghost.style.transform = 'translate(-50%, -50%)'; 
+                    ghost.style.cssText = `position:fixed; width:${CONFIG.colors[type].length}px; height:${CONFIG.currentStripWidth}px; background-color:${color}; border:2px solid ${border}; border-radius:${CONFIG.currentStripWidth/2}px; opacity:0.8; z-index:9999; pointer-events:none; box-shadow:0 10px 15px -3px rgba(0,0,0,0.3); transform:translate(-50%, -50%);`;
                     document.body.appendChild(ghost);
-                    
-                    const startX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const startY = e.touches ? e.touches[0].clientY : e.clientY;
-                    ghost.style.left = startX + 'px'; ghost.style.top = startY + 'px';
-
-                    const moveDrag = (ev) => {
-                        ev.preventDefault(); 
-                        const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-                        const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-                        ghost.style.left = clientX + 'px'; ghost.style.top = clientY + 'px';
-                    };
-                    
+                    const moveDrag = (ev) => { const c = ev.touches?ev.touches[0]:ev; ghost.style.left = c.clientX+'px'; ghost.style.top = c.clientY+'px'; };
                     const endDrag = (ev) => {
-                        const clientX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
-                        const clientY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
-                        const canvasRect = container.getBoundingClientRect();
-                        if (clientX >= canvasRect.left && clientX <= canvasRect.right && clientY >= canvasRect.top && clientY <= canvasRect.bottom) {
-                            // Correction pour le Zoom
-                            const x = (clientX - canvasRect.left) / state.zoom;
-                            const y = (clientY - canvasRect.top) / state.zoom;
-                            addStrip(type, x, y);
-                        }
-                        ghost.remove();
-                        document.removeEventListener('mousemove', moveDrag); document.removeEventListener('touchmove', moveDrag);
-                        document.removeEventListener('mouseup', endDrag); document.removeEventListener('touchend', endDrag);
+                        const c = ev.changedTouches?ev.changedTouches[0]:ev; const r = container.getBoundingClientRect();
+                        if (c.clientX>=r.left && c.clientX<=r.right && c.clientY>=r.top && c.clientY<=r.bottom) { addStrip(type, (c.clientX - r.left - state.pan.x)/state.zoom, (c.clientY - r.top - state.pan.y)/state.zoom); }
+                        ghost.remove(); document.removeEventListener('mousemove', moveDrag); document.removeEventListener('touchmove', moveDrag); document.removeEventListener('mouseup', endDrag); document.removeEventListener('touchend', endDrag);
                     };
-                    document.addEventListener('mousemove', moveDrag); document.addEventListener('touchmove', moveDrag, {passive: false});
-                    document.addEventListener('mouseup', endDrag); document.addEventListener('touchend', endDrag);
+                    const startC = e.touches?e.touches[0]:e; ghost.style.left = startC.clientX+'px'; ghost.style.top = startC.clientY+'px';
+                    document.addEventListener('mousemove', moveDrag); document.addEventListener('touchmove', moveDrag, {passive: false}); document.addEventListener('mouseup', endDrag); document.addEventListener('touchend', endDrag);
                 };
                 btn.addEventListener('mousedown', startDrag); btn.addEventListener('touchstart', startDrag, {passive: false});
             });
         }
         initSidebarDrag();
 
-        /* --- AIDE : Point aimanté par le rapporteur (pour stabiliser les rotations) --- */
-        function protractorAnchorShouldPin(pointId) {
-            const tool = state.tools.protractor;
-            if (!tool || !tool.visible || !tool.attachedPointId) return false;
-            if (tool.attachedPointId !== pointId) return false;
-
-            // Si l'utilisateur est en train de déplacer ce point / ce groupe, on ne le bloque pas.
-            if (state.draggingPoint && state.draggingPoint.id === pointId) return false;
-            if (state.draggingStrip && state.draggingStrip.some(p => p.id === pointId)) return false;
-            if (state.draggingAngleMove) {
-                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
-                if (g && g.vertexId === pointId) return false;
-            }
-
-            return true;
-        }
-
-        /* --- MOTEUR PHYSIQUE --- */
-        function solveConstraints() {
-            for (let i = 0; i < 5; i++) {
-                state.strips.forEach(strip => {
-                    const p1 = state.points.find(p => p.id === strip.p1);
-                    const p2 = state.points.find(p => p.id === strip.p2);
-                    if (!p1 || !p2) return;
-
-                    const pinned1 = p1.pinned || protractorAnchorShouldPin(p1.id);
-                    const pinned2 = p2.pinned || protractorAnchorShouldPin(p2.id);
-
-                    const dx = p2.x - p1.x;
-                    const dy = p2.y - p1.y;
-                    const dist = Math.hypot(dx, dy);
-                    const targetLen = CONFIG.colors[strip.type].length;
-                    
-                    if (dist === 0) return;
-                    const diff = (dist - targetLen) / dist;
-                    const offsetX = dx * diff * 0.5;
-                    const offsetY = dy * diff * 0.5;
-
-                    if (!pinned1) { p1.x += offsetX; p1.y += offsetY; }
-                    if (!pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
-                    if (pinned1 && !pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
-                    if (!pinned1 && pinned2) { p1.x += offsetX; p1.y += offsetY; }
-                });
-            }
-        }
-
-        /* --- ACTIONS --- */
-        function addStrip(type, x = null, y = null) {
-            playSound('pop');
-            const rect = container.getBoundingClientRect();
-            // Correction coordonnées si non fournies
-            const cx = x !== null ? x : (rect.width / state.zoom) / 2;
-            const cy = y !== null ? y : (rect.height / state.zoom) / 2;
-            const len = CONFIG.colors[type].length;
-
-            const p1 = { id: state.nextId++, x: cx - len/2, y: cy, pinned: false };
-            const p2 = { id: state.nextId++, x: cx + len/2, y: cy, pinned: false };
-            
-            state.points.push(p1, p2);
-            state.strips.push({ id: state.nextId++, p1: p1.id, p2: p2.id, type: type });
-            render();
-        }
-
-        function removeStrip(strip) {
-            state.strips = state.strips.filter(s => s.id !== strip.id);
-            cleanupAngleGroups();
-            const usedPointIds = new Set();
-            state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
-            state.points = state.points.filter(p => usedPointIds.has(p.id));
-            playSound('trash');
-            render();
-        }
-
-        function resetBoard() {
-            state.points = [];
-            state.strips = [];
-            state.angleGroups = [];
-            state.draggingAngle = null;
-            state.zoom = 1; // Reset zoom also
-            zoomWorld.style.transform = `scale(1)`;
-            ['setSquare', 'protractor'].forEach(key => {
-                state.tools[key].visible = false;
-                const el = document.getElementById(`tool-${state.tools[key].id}`);
-                el.classList.add('hidden');
-            });
-            document.getElementById('btn-setsquare').classList.remove('active', 'bg-yellow-100');
-            document.getElementById('btn-protractor').classList.remove('active', 'bg-indigo-100');
-            bgLayer.style.backgroundImage = ''; 
-            clearDrawings();
-            render();
-        }
-
-        /* --- GESTION SOURIS / TOUCH --- */
-        function getPos(e) {
-            const rect = container.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            // Correction pour le Zoom
-            return { 
-                x: (clientX - rect.left) / state.zoom, 
-                y: (clientY - rect.top) / state.zoom 
-            };
-        }
+        function addStrip(type, x, y) { playSound('pop'); const rect = container.getBoundingClientRect(); const cx = x; const cy = y; const len = CONFIG.colors[type].length; const p1 = {id:state.nextId++, x:cx-len/2, y:cy, pinned:false}, p2 = {id:state.nextId++, x:cx+len/2, y:cy, pinned:false}; state.points.push(p1,p2); state.strips.push({id:state.nextId++, p1:p1.id, p2:p2.id, type:type}); render(); }
+        function removeStrip(strip) { state.strips = state.strips.filter(s=>s.id!==strip.id); cleanupAngleGroups(); const used = new Set(); state.strips.forEach(s=>{used.add(s.p1);used.add(s.p2);}); state.points = state.points.filter(p=>used.has(p.id)); playSound('trash'); render(); }
+        function resetBoard() { state.points=[]; state.strips=[]; state.angleGroups=[]; state.draggingAngle=null; state.zoom=1; state.pan={x:0, y:0}; updateTransform(); ['setSquare','protractor'].forEach(k=>{state.tools[k].visible=false; document.getElementById(`tool-${state.tools[k].id}`).classList.add('hidden');}); document.getElementById('btn-setsquare').classList.remove('active','bg-yellow-100'); document.getElementById('btn-protractor').classList.remove('active','bg-indigo-100'); state.rigidMode=false; document.getElementById('btn-rigid').classList.remove('active-red'); clearDrawings(); render(); }
         
-        function getClientPos(e) {
-             return {
-                x: e.touches ? e.touches[0].clientX : e.clientX,
-                y: e.touches ? e.touches[0].clientY : e.clientY
+        function toggleRigidMode() { state.rigidMode = !state.rigidMode; const btn = document.getElementById('btn-rigid'); if(state.rigidMode) btn.classList.add('active-red'); else btn.classList.remove('active-red'); playSound('click'); }
+
+        function getPos(e) { const rect = container.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left - state.pan.x) / state.zoom, y: (clientY - rect.top - state.pan.y) / state.zoom }; }
+        function getClientPos(e) { return { x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY }; }
+        function getPointAt(x, y) { return state.points.find(p => Math.hypot(p.x - x, p.y - y) < 45); }
+        function getStripAt(x, y) { return state.strips.find(s => { const p1=state.points.find(p=>p.id===s.p1), p2=state.points.find(p=>p.id===s.p2); if(!p1||!p2) return false; const A=x-p1.x, B=y-p1.y, C=p2.x-p1.x, D=p2.y-p1.y; const lenSq=C*C+D*D; let param=-1; if(lenSq!==0) param=(A*C+B*D)/lenSq; let xx,yy; if(param<0){xx=p1.x;yy=p1.y;}else if(param>1){xx=p2.x;yy=p2.y;}else{xx=p1.x+param*C;yy=p1.y+param*D;} return Math.hypot(x-xx,y-yy)<(CONFIG.normalStripWidth/2); }); }
+        function getAllConnectedPoints(startStrip) { const pts=new Set(), strips=new Set(), q=[startStrip]; while(q.length>0){ const s=q.shift(); if(strips.has(s.id)) continue; strips.add(s.id); pts.add(s.p1); pts.add(s.p2); state.strips.forEach(n=>{ if(!strips.has(n.id) && (n.p1===s.p1||n.p1===s.p2||n.p2===s.p1||n.p2===s.p2)) q.push(n); }); } return Array.from(pts).map(id=>state.points.find(p=>p.id===id)); }
+        
+        // --- Rigid Component Helper ---
+        function getRigidComponentTopology(startPointId) {
+            const visitedPts = new Set(); const queue = [startPointId]; 
+            const componentPoints = [];
+            while(queue.length > 0) {
+                const pid = queue.shift(); if(visitedPts.has(pid)) continue; visitedPts.add(pid);
+                const p = state.points.find(pt=>pt.id===pid); if(p) componentPoints.push(p);
+                state.strips.forEach(s => { if(s.p1===pid && !visitedPts.has(s.p2)) queue.push(s.p2); if(s.p2===pid && !visitedPts.has(s.p1)) queue.push(s.p1); });
+            }
+            // Topology Logic: If dragged point has 1 connection -> Extremity (Rotate). Else -> Node (Translate).
+            const draggedP = componentPoints.find(p=>p.id===startPointId);
+            if(!draggedP) return null;
+            
+            const connections = state.strips.filter(s => s.p1===startPointId || s.p2===startPointId);
+            const isExtremity = (connections.length === 1);
+            
+            let pivot = null;
+            if (isExtremity && componentPoints.length > 1) {
+                // Find immediate neighbor to act as pivot
+                const strip = connections[0];
+                const neighborId = (strip.p1 === startPointId) ? strip.p2 : strip.p1;
+                pivot = state.points.find(p=>p.id===neighborId);
+            }
+
+            return {
+                points: componentPoints,
+                mode: (isExtremity && pivot) ? 'rotate' : 'translate',
+                pivot: pivot
             };
         }
 
-        function getPointAt(x, y) { return state.points.find(p => Math.hypot(p.x - x, p.y - y) < 45); }
-
-        function getStripAt(x, y) {
-            return state.strips.find(s => {
-                const p1 = state.points.find(p => p.id === s.p1);
-                const p2 = state.points.find(p => p.id === s.p2);
-                if(!p1 || !p2) return false;
-                const A = x - p1.x; const B = y - p1.y; const C = p2.x - p1.x; const D = p2.y - p1.y;
-                const dot = A * C + B * D; const lenSq = C * C + D * D;
-                let param = -1; if (lenSq !== 0) param = dot / lenSq;
-                let xx, yy;
-                if (param < 0) { xx = p1.x; yy = p1.y; } else if (param > 1) { xx = p2.x; yy = p2.y; } else { xx = p1.x + param * C; yy = p1.y + param * D; }
-                const dx = x - xx; const dy = y - yy;
-                return Math.hypot(dx, dy) < (CONFIG.normalStripWidth / 2); 
-            });
+        function solveConstraints() {
+            for(let i=0;i<5;i++){ state.strips.forEach(s=>{ const p1=state.points.find(p=>p.id===s.p1), p2=state.points.find(p=>p.id===s.p2); if(!p1||!p2)return; const pinned1 = p1.pinned || protractorAnchorShouldPin(p1.id); const pinned2 = p2.pinned || protractorAnchorShouldPin(p2.id); const dx=p2.x-p1.x, dy=p2.y-p1.y, d=Math.hypot(dx,dy), t=CONFIG.colors[s.type].length; if(d===0)return; const diff=(d-t)/d, ox=dx*diff*0.5, oy=dy*diff*0.5; if(!pinned1){p1.x+=ox;p1.y+=oy;} if(!pinned2){p2.x-=ox;p2.y-=oy;} if(pinned1 && !pinned2){p2.x-=ox;p2.y-=oy;} if(!pinned1 && pinned2){p1.x+=ox;p1.y+=oy;} }); }
         }
+        function protractorAnchorShouldPin(pid) { const t=state.tools.protractor; if(!t||!t.visible||!t.attachedPointId) return false; if(t.attachedPointId!==pid) return false; if(state.draggingPoint && state.draggingPoint.id===pid) return false; if(state.draggingStrip && state.draggingStrip.some(p=>p.id===pid)) return false; if(state.draggingAngleMove && state.angleGroups.find(ag=>ag.id===state.draggingAngleMove.groupId)?.vertexId===pid) return false; return true; }
 
-        function getAllConnectedPoints(startStrip) {
-            const pointsToMove = new Set(); const stripsChecked = new Set(); const queue = [startStrip];
-            while(queue.length > 0) {
-                const s = queue.shift();
-                if(stripsChecked.has(s.id)) continue;
-                stripsChecked.add(s.id);
-                pointsToMove.add(s.p1); pointsToMove.add(s.p2);
-                state.strips.forEach(neighbor => {
-                    if(!stripsChecked.has(neighbor.id)) {
-                        if(neighbor.p1 === s.p1 || neighbor.p1 === s.p2 || neighbor.p2 === s.p1 || neighbor.p2 === s.p2) queue.push(neighbor);
-                    }
-                });
-            }
-            return Array.from(pointsToMove).map(id => state.points.find(p => p.id === id));
-        }
+        function findAngleGroupByPointId(pid) { for(const g of state.angleGroups) { if(g.vertexId===pid) return{group:g,role:'vertex'}; if(g.aId===pid) return{group:g,role:'a'}; if(g.bId===pid) return{group:g,role:'b'}; } return null; }
+        function cleanupAngleGroups() { const pids=new Set(state.points.map(p=>p.id)), sids=new Set(state.strips.map(s=>s.id)); state.angleGroups = state.angleGroups.filter(g=>pids.has(g.vertexId)&&pids.has(g.aId)&&pids.has(g.bId)&&sids.has(g.strip1Id)&&sids.has(g.strip2Id)); }
+        function replaceAnglePointId(oldId, newId) { state.angleGroups.forEach(g=>{ if(g.vertexId===oldId)g.vertexId=newId; if(g.aId===oldId)g.aId=newId; if(g.bId===oldId)g.bId=newId; }); }
 
-        // --- Angles fixes (créés via le bouton +) : groupes rigides tournables ---
-        function findAngleGroupByPointId(pointId) {
-            for (const g of state.angleGroups) {
-                if (g.vertexId === pointId) return { group: g, role: 'vertex' };
-                if (g.aId === pointId) return { group: g, role: 'a' };
-                if (g.bId === pointId) return { group: g, role: 'b' };
-            }
-            return null;
-        }
-
-        function replaceAnglePointId(oldId, newId) {
-            state.angleGroups.forEach(g => {
-                if (g.vertexId === oldId) g.vertexId = newId;
-                if (g.aId === oldId) g.aId = newId;
-                if (g.bId === oldId) g.bId = newId;
-            });
-        }
-
-        function cleanupAngleGroups() {
-            const pointIds = new Set(state.points.map(p => p.id));
-            const stripIds = new Set(state.strips.map(s => s.id));
-            state.angleGroups = state.angleGroups.filter(g =>
-                pointIds.has(g.vertexId) && pointIds.has(g.aId) && pointIds.has(g.bId) &&
-                stripIds.has(g.strip1Id) && stripIds.has(g.strip2Id)
-            );
-        }
-
-
-        container.addEventListener('mousedown', handleStart);
-        container.addEventListener('touchstart', handleStart, {passive: false});
+        container.addEventListener('mousedown', handleStart); container.addEventListener('touchstart', handleStart, {passive:false});
+        window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove, {passive:false});
+        window.addEventListener('mouseup', handleEnd); window.addEventListener('touchend', handleEnd);
 
         function handleStart(e) {
             if (state.tool === 'pen') return;
             const pos = getPos(e);
-
-            // Détache le rapporteur s'il était aimanté sur le point qu'on commence à déplacer
-            const proTool = state.tools.protractor;
-            const attachedId = proTool && proTool.attachedPointId;
-
+            
             const point = getPointAt(pos.x, pos.y);
             if (point) {
-                // Angles fixes (créés via +) :
-                // - si on attrape une branche => rotation rigide
-                // - si on attrape le sommet => déplacement rigide (sans changer la valeur)
+                // Check Fixed Angle Groups first (they always win)
                 const hit = findAngleGroupByPointId(point.id);
                 if (hit) {
-                    if (hit.role === 'a' || hit.role === 'b') {
-                        state.draggingAngle = { groupId: hit.group.id, endpoint: hit.role };
-                        point.pinned = true;
-                        const vtx = state.points.find(p => p.id === hit.group.vertexId);
-                        if (vtx) vtx.pinned = true;
-                        return;
-                    }
-                    if (hit.role === 'vertex') {
-                        const g = hit.group;
-                        const S = state.points.find(p => p.id === g.vertexId);
-                        const A = state.points.find(p => p.id === g.aId);
-                        const B = state.points.find(p => p.id === g.bId);
-                        if (S && A && B) {
-                            state.draggingAngleMove = {
-                                groupId: g.id,
-                                offsetX: S.x - pos.x,
-                                offsetY: S.y - pos.y
-                            };
-                            S.pinned = true; A.pinned = true; B.pinned = true;
-                            return;
-                        }
+                    if (hit.role === 'a' || hit.role === 'b') { state.draggingAngle = { groupId: hit.group.id, endpoint: hit.role }; point.pinned = true; const vtx = state.points.find(p => p.id === hit.group.vertexId); if (vtx) vtx.pinned = true; return; }
+                    if (hit.role === 'vertex') { const g = hit.group; const S = state.points.find(p => p.id === g.vertexId); state.draggingAngleMove = { groupId: g.id, offsetX: S.x - pos.x, offsetY: S.y - pos.y }; [S, state.points.find(p=>p.id===g.aId), state.points.find(p=>p.id===g.bId)].forEach(p=>{if(p)p.pinned=true;}); return; }
+                }
+
+                // Check Rigid Mode (Ctrl or Button)
+                if (state.rigidMode || e.ctrlKey) {
+                    const topology = getRigidComponentTopology(point.id);
+                    if (topology) {
+                        state.rigidDrag = {
+                            points: topology.points,
+                            mode: topology.mode, // 'rotate' or 'translate'
+                            pivot: topology.pivot,
+                            startPos: pos,
+                            baseAngle: topology.mode === 'rotate' ? Math.atan2(pos.y - topology.pivot.y, pos.x - topology.pivot.x) : 0,
+                            initialPointPos: topology.points.map(p => ({id: p.id, x: p.x, y: p.y})) // Snapshot for rotation relative coords
+                        };
+                        topology.points.forEach(p => p.pinned = true);
+                        return; // Capture rigid drag
                     }
                 }
 
-                if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
-
+                const ptTool = state.tools.protractor; if(ptTool.visible && ptTool.attachedPointId === point.id) ptTool.attachedPointId = null;
                 state.draggingPoint = point; point.pinned = true; return;
             }
 
-
             const strip = getStripAt(pos.x, pos.y);
             if (strip) {
-                state.draggingStrip = getAllConnectedPoints(strip);
-                state.draggingStripRef = strip; state.dragOffset = pos;
-                // Si ce groupe contenait le point sur lequel le rapporteur était aimanté, on autorise le déplacement libre
-                if (attachedId && state.draggingStrip.some(p => p && p.id === attachedId)) {
-                    proTool.attachedPointId = null;
+                // If rigid mode is on and we click a strip -> Translate Group
+                if (state.rigidMode || e.ctrlKey) {
+                    const points = getAllConnectedPoints(strip);
+                    state.rigidDrag = {
+                        points: points,
+                        mode: 'translate',
+                        startPos: pos,
+                        pivot: null
+                    };
+                    points.forEach(p => p.pinned = true);
+                    return;
                 }
+
+                state.draggingStrip = getAllConnectedPoints(strip); state.draggingStripRef = strip; state.dragOffset = pos;
+                if(state.tools.protractor.visible && state.tools.protractor.attachedPointId && state.draggingStrip.some(p=>p.id===state.tools.protractor.attachedPointId)) state.tools.protractor.attachedPointId = null;
                 state.draggingStrip.forEach(p => p.pinned = true); return;
             }
+            if (!e.target.closest('.geo-tool') && !e.target.closest('.strip-dragger')) { state.isPanning = true; const clientPos = getClientPos(e); state.panStart = { x: clientPos.x - state.pan.x, y: clientPos.y - state.pan.y }; container.classList.remove('cursor-grab-bg'); container.classList.add('cursor-grabbing-bg'); }
         }
-
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('touchmove', handleMove, {passive: false});
 
         function handleMove(e) {
+            if (state.tool === 'pen') return;
             if (geoDragState.active) return;
+            if (state.isPanning) { e.preventDefault(); const clientPos = getClientPos(e); state.pan.x = clientPos.x - state.panStart.x; state.pan.y = clientPos.y - state.panStart.y; updateTransform(); return; }
             const pos = getPos(e);
-            const clientPos = getClientPos(e);
-
-            if (state.tool === 'pen') { updateCustomCursor(e); return; }
-
-            const hoverPoint = getPointAt(pos.x, pos.y);
-            if (!e.target.closest('.geo-tool')) {
-                container.style.cursor = hoverPoint ? 'crosshair' : (getStripAt(pos.x, pos.y) ? 'move' : 'default');
+            if (!state.draggingPoint && !state.draggingStrip && !state.draggingAngle && !state.draggingAngleMove && !state.rigidDrag) { if(!e.target.closest('.geo-tool')) { const hP = getPointAt(pos.x, pos.y), hS = getStripAt(pos.x, pos.y); container.style.cursor = hP ? 'crosshair' : (hS ? 'move' : 'default'); } }
+            
+            // --- RIGID DRAG (Special Mode) ---
+            if (state.rigidDrag) {
+                e.preventDefault();
+                const rd = state.rigidDrag;
+                
+                if (rd.mode === 'translate') {
+                    // Simple Translation
+                    const dx = pos.x - (state.dragOffset.x || rd.startPos.x); 
+                    // Note: need to track delta since last frame or use initial offset. 
+                    // Let's use simple delta tracking
+                    if(!state.dragOffset.x) state.dragOffset = rd.startPos;
+                    const deltaX = pos.x - state.dragOffset.x;
+                    const deltaY = pos.y - state.dragOffset.y;
+                    
+                    rd.points.forEach(p => { p.x += deltaX; p.y += deltaY; });
+                    state.dragOffset = pos;
+                } 
+                else if (rd.mode === 'rotate') {
+                    // Rotation around pivot
+                    const currentAngle = Math.atan2(pos.y - rd.pivot.y, pos.x - rd.pivot.x);
+                    const rotationDelta = currentAngle - rd.baseAngle;
+                    
+                    // Re-calculate positions from initial snapshot to avoid drift
+                    const sin = Math.sin(rotationDelta), cos = Math.cos(rotationDelta);
+                    rd.initialPointPos.forEach(snap => {
+                        const p = state.points.find(pt => pt.id === snap.id);
+                        if (p) {
+                            // Relative to pivot
+                            const rx = snap.x - rd.pivot.x;
+                            const ry = snap.y - rd.pivot.y;
+                            p.x = rd.pivot.x + (rx * cos - ry * sin);
+                            p.y = rd.pivot.y + (rx * sin + ry * cos);
+                        }
+                    });
+                }
+                solveConstraints(); render(); return;
             }
 
-            // Déplacement rigide d'un angle fixe quand on attrape le sommet
+            // Normal Physics Dragging
             if (state.draggingAngleMove) {
-                e.preventDefault();
-                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
-                if (g) {
-                    const S = state.points.find(p => p.id === g.vertexId);
-                    const A = state.points.find(p => p.id === g.aId);
-                    const B = state.points.find(p => p.id === g.bId);
-                    if (S && A && B) {
-                        let targetX = pos.x + state.draggingAngleMove.offsetX;
-                        let targetY = pos.y + state.draggingAngleMove.offsetY;
-
-                        // Snap du sommet (comme un magnet normal), mais translation du groupe entier.
-                        const groupIds = new Set([S.id, A.id, B.id]);
-                        const snapTarget = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - targetX, p.y - targetY) < CONFIG.snapDistance);
-                        if (snapTarget) { targetX = snapTarget.x; targetY = snapTarget.y; }
-
-                        const dx = targetX - S.x;
-                        const dy = targetY - S.y;
-                        S.x += dx; S.y += dy;
-                        A.x += dx; A.y += dy;
-                        B.x += dx; B.y += dy;
+                e.preventDefault(); const g = state.angleGroups.find(ag=>ag.id===state.draggingAngleMove.groupId);
+                if(g){
+                    const S=state.points.find(p=>p.id===g.vertexId), A=state.points.find(p=>p.id===g.aId), B=state.points.find(p=>p.id===g.bId);
+                    if(S&&A&&B){
+                        let tx = pos.x+state.draggingAngleMove.offsetX, ty=pos.y+state.draggingAngleMove.offsetY; const gids=new Set([S.id,A.id,B.id]); const snap=state.points.find(p=>!gids.has(p.id)&&Math.hypot(p.x-tx,p.y-ty)<CONFIG.snapDistance); if(snap){tx=snap.x;ty=snap.y;} const dx=tx-S.x, dy=ty-S.y; S.x+=dx;S.y+=dy;A.x+=dx;A.y+=dy;B.x+=dx;B.y+=dy;
                     }
-                }
-                solveConstraints();
-                render();
-                return;
+                } solveConstraints(); render(); return;
             }
-
-
             if (state.draggingAngle) {
-                e.preventDefault();
-                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
-                if (g) {
-                    const S = state.points.find(p => p.id === g.vertexId);
-                    const A = state.points.find(p => p.id === g.aId);
-                    const B = state.points.find(p => p.id === g.bId);
-                    if (S && A && B) {
-                        const angleRad = g.degrees * (Math.PI / 180);
-                        let base = Math.atan2(pos.y - S.y, pos.x - S.x);
-                        if (state.draggingAngle.endpoint === 'b') base -= angleRad;
-
-                        // Mettre à jour les deux branches : angle rigide
-                        A.x = S.x + g.leg1Len * Math.cos(base);
-                        A.y = S.y + g.leg1Len * Math.sin(base);
-                        B.x = S.x + g.leg2Len * Math.cos(base + angleRad);
-                        B.y = S.y + g.leg2Len * Math.sin(base + angleRad);
-                        g.baseAngle = base;
-                    }
-                }
-                solveConstraints();
-                render();
-                return;
+                e.preventDefault(); const g = state.angleGroups.find(ag=>ag.id===state.draggingAngle.groupId);
+                if(g){ const S=state.points.find(p=>p.id===g.vertexId), A=state.points.find(p=>p.id===g.aId), B=state.points.find(p=>p.id===g.bId); if(S&&A&&B){ const rad=g.degrees*(Math.PI/180); let base=Math.atan2(pos.y-S.y, pos.x-S.x); if(state.draggingAngle.endpoint==='b') base-=rad; A.x=S.x+g.leg1Len*Math.cos(base); A.y=S.y+g.leg1Len*Math.sin(base); B.x=S.x+g.leg2Len*Math.cos(base+rad); B.y=S.y+g.leg2Len*Math.sin(base+rad); g.baseAngle=base; } } solveConstraints(); render(); return;
             }
             if (state.draggingPoint) {
-                e.preventDefault();
-                let targetX = pos.x; let targetY = pos.y;
-
-                const self = state.draggingPoint;
-
-                // Si le rapporteur est aimanté sur un sommet, et qu'on déplace l'extrémité d'une bande reliée à ce sommet,
-                // on force une rotation autour du sommet (longueur conservée), ce qui évite que le sommet glisse.
-                const proT = state.tools.protractor;
-                let rotLocked = false;
-                if (proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
-                    const pivotP = state.points.find(p => p.id === proT.attachedPointId);
-                    if (pivotP) {
-                        const link = state.strips.find(s => (s.p1 === self.id && s.p2 === pivotP.id) || (s.p2 === self.id && s.p1 === pivotP.id));
-                        if (link) {
-                            rotLocked = true;
-                            const r = CONFIG.colors[link.type].length;
-                            const th = Math.atan2(pos.y - pivotP.y, pos.x - pivotP.x);
-                            targetX = pivotP.x + r * Math.cos(th);
-                            targetY = pivotP.y + r * Math.sin(th);
-                        }
-                    }
-                }
-
-                let bestD = CONFIG.snapDistance;
-                if (!rotLocked) {
-                    const snapTarget = state.points.find(p => p.id !== self.id && Math.hypot(p.x - pos.x, p.y - pos.y) < CONFIG.snapDistance);
-                    if (snapTarget) {
-                        targetX = snapTarget.x; targetY = snapTarget.y;
-                        bestD = Math.hypot(snapTarget.x - pos.x, snapTarget.y - pos.y);
-                    }
-
-                    // Snap possible sur le centre du rapporteur (aimant virtuel)
-                    if (state.tools.protractor.visible) {
-                        const t = state.tools.protractor;
-                        const pivotX = t.x + t.pivot.x;
-                        const pivotY = t.y + t.pivot.y;
-                        const dPivot = Math.hypot(pivotX - pos.x, pivotY - pos.y);
-                        if (dPivot < bestD) {
-                            targetX = pivotX; targetY = pivotY;
-                            bestD = dPivot;
-                        }
-                    }
-                }
-
-                state.draggingPoint.x = targetX; state.draggingPoint.y = targetY;
-                solveConstraints(); render();
-
+                e.preventDefault(); let tx=pos.x, ty=pos.y, self=state.draggingPoint;
+                const pt=state.tools.protractor; let locked=false;
+                if(pt.visible && pt.attachedPointId && pt.attachedPointId!==self.id && protractorAnchorShouldPin(pt.attachedPointId)){ const piv=state.points.find(p=>p.id===pt.attachedPointId); if(piv){ const l=state.strips.find(s=>(s.p1===self.id&&s.p2===piv.id)||(s.p2===self.id&&s.p1===piv.id)); if(l){ locked=true; const r=CONFIG.colors[l.type].length, th=Math.atan2(pos.y-piv.y,pos.x-piv.x); tx=piv.x+r*Math.cos(th); ty=piv.y+r*Math.sin(th); } } }
+                let bestD=CONFIG.snapDistance;
+                if(!locked){ const snap=state.points.find(p=>p.id!==self.id && Math.hypot(p.x-pos.x,p.y-pos.y)<CONFIG.snapDistance); if(snap){ tx=snap.x; ty=snap.y; bestD=Math.hypot(snap.x-pos.x,snap.y-pos.y); } if(pt.visible){ const px=pt.x+pt.pivot.x, py=pt.y+pt.pivot.y, dp=Math.hypot(px-pos.x,py-pos.y); if(dp<bestD){ tx=px; ty=py; } } }
+                self.x=tx; self.y=ty; solveConstraints(); render();
             } else if (state.draggingStrip) {
-                e.preventDefault();
-                const headerRect = header.getBoundingClientRect();
-                if (clientPos.y <= headerRect.bottom) header.classList.add('trash-active'); else header.classList.remove('trash-active');
-
-                const dx = pos.x - state.dragOffset.x; const dy = pos.y - state.dragOffset.y;
-                state.draggingStrip.forEach(p => { p.x += dx; p.y += dy; });
-                state.dragOffset = pos;
-                solveConstraints(); render();
+                e.preventDefault(); const cp=getClientPos(e); const hr=header.getBoundingClientRect(); if(cp.y<=hr.bottom) header.classList.add('trash-active'); else header.classList.remove('trash-active');
+                const dx=pos.x-state.dragOffset.x, dy=pos.y-state.dragOffset.y; state.draggingStrip.forEach(p=>{p.x+=dx;p.y+=dy;}); state.dragOffset=pos; solveConstraints(); render();
             }
         }
-
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchend', handleEnd);
 
         function handleEnd(e) {
             header.classList.remove('trash-active');
-
-            // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
-            if (state.draggingAngleMove) {
-                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
-                if (g) {
-                    const S = state.points.find(p => p.id === g.vertexId);
-                    const A = state.points.find(p => p.id === g.aId);
-                    const B = state.points.find(p => p.id === g.bId);
-
-                    // Fusion du sommet si on relâche sur un autre magnet
-                    if (S) {
-                        const groupIds = new Set([g.vertexId, g.aId, g.bId]);
-                        const target = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - S.x, p.y - S.y) < CONFIG.snapDistance);
-                        if (target) {
-                            playSound('snap');
-                            replaceAnglePointId(S.id, target.id);
-                            state.strips.forEach(s => {
-                                if (s.p1 === S.id) s.p1 = target.id;
-                                if (s.p2 === S.id) s.p2 = target.id;
-                            });
-                            state.points = state.points.filter(p => p.id !== S.id);
-                        }
-                    }
-
-                    if (S) S.pinned = false;
-                    if (A) A.pinned = false;
-                    if (B) B.pinned = false;
-                }
-                state.draggingAngleMove = null;
-                cleanupAngleGroups();
-                render();
-                return;
+            if(state.isPanning) { state.isPanning=false; container.classList.remove('cursor-grabbing-bg'); container.classList.add('cursor-grab-bg'); return; }
+            
+            if (state.rigidDrag) {
+                state.rigidDrag.points.forEach(p => p.pinned = false);
+                state.rigidDrag = null; state.dragOffset={x:0,y:0};
+                render(); return;
             }
 
-
-            if (state.draggingAngle) {
-                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
-                if (g) {
-                    const vtx = state.points.find(p => p.id === g.vertexId);
-                    const endP = state.points.find(p => p.id === (state.draggingAngle.endpoint === 'a' ? g.aId : g.bId));
-                    if (vtx) vtx.pinned = false;
-                    if (endP) endP.pinned = false;
-                }
-                state.draggingAngle = null;
-                cleanupAngleGroups();
-                render();
-                return;
-            }
-
-            if (state.draggingPoint) {
-                const self = state.draggingPoint;
-                const target = state.points.find(p => p.id !== self.id && Math.hypot(p.x - self.x, p.y - self.y) < CONFIG.snapDistance);
-
-                if (target) {
-                    playSound('snap');
-                    replaceAnglePointId(self.id, target.id);
-                    state.strips.forEach(s => {
-                        if (s.p1 === self.id) s.p1 = target.id;
-                        if (s.p2 === self.id) s.p2 = target.id;
-                    });
-                    state.points = state.points.filter(p => p.id !== self.id);
-                } 
-                self.pinned = false; state.draggingPoint = null; render();
-            }
-
+            if (state.draggingAngleMove) { const g=state.angleGroups.find(ag=>ag.id===state.draggingAngleMove.groupId); if(g){ const S=state.points.find(p=>p.id===g.vertexId), A=state.points.find(p=>p.id===g.aId), B=state.points.find(p=>p.id===g.bId); if(S){ const gids=new Set([g.vertexId,g.aId,g.bId]); const t=state.points.find(p=>!gids.has(p.id)&&Math.hypot(p.x-S.x,p.y-S.y)<CONFIG.snapDistance); if(t){ playSound('snap'); replaceAnglePointId(S.id,t.id); state.strips.forEach(s=>{if(s.p1===S.id)s.p1=t.id;if(s.p2===S.id)s.p2=t.id;}); state.points=state.points.filter(p=>p.id!==S.id); } } [S,A,B].forEach(p=>{if(p)p.pinned=false;}); } state.draggingAngleMove=null; cleanupAngleGroups(); render(); return; }
+            if (state.draggingAngle) { const g=state.angleGroups.find(ag=>ag.id===state.draggingAngle.groupId); if(g){ const v=state.points.find(p=>p.id===g.vertexId), ep=state.points.find(p=>p.id===(state.draggingAngle.endpoint==='a'?g.aId:g.bId)); if(v)v.pinned=false; if(ep)ep.pinned=false; } state.draggingAngle=null; cleanupAngleGroups(); render(); return; }
+            if (state.draggingPoint) { const s=state.draggingPoint; const t=state.points.find(p=>p.id!==s.id && Math.hypot(p.x-s.x,p.y-s.y)<CONFIG.snapDistance); if(t){ playSound('snap'); replaceAnglePointId(s.id,t.id); state.strips.forEach(k=>{if(k.p1===s.id)k.p1=t.id;if(k.p2===s.id)k.p2=t.id;}); state.points=state.points.filter(p=>p.id!==s.id); } s.pinned=false; state.draggingPoint=null; render(); }
             if (state.draggingStrip) {
-                const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-                const headerRect = header.getBoundingClientRect();
-                if (clientY <= headerRect.bottom) { if (state.draggingStripRef) removeStrip(state.draggingStripRef); }
-                
-                // Snap du groupe sur le centre du rapporteur (aimant virtuel)
-                if (state.tools.protractor.visible) {
-                    const t = state.tools.protractor;
-                    const pivotX = t.x + t.pivot.x;
-                    const pivotY = t.y + t.pivot.y;
-                    // On cherche le point du groupe le plus proche du centre
-                    let bestP = null;
-                    let bestD = CONFIG.snapDistance;
-                    for (const p of state.draggingStrip) {
-                        if (!p || p.toBeRemoved) continue;
-                        const d = Math.hypot(pivotX - p.x, pivotY - p.y);
-                        if (d < bestD) { bestD = d; bestP = p; }
-                    }
-                    if (bestP) {
-                        const dx = pivotX - bestP.x;
-                        const dy = pivotY - bestP.y;
-                        state.draggingStrip.forEach(p => {
-                            if (!p || p.toBeRemoved) return;
-                            p.x += dx; p.y += dy;
-                        });
-                        playSound('snap');
-                    }
-                }
-
-                // NOUVEAU: Logique d'aimantage pour le drag de bandes
-                let snapped = false;
-                state.draggingStrip.forEach(p => {
-                    // Chercher un point cible qui n'est PAS dans le groupe en cours de déplacement
-                    const target = state.points.find(targetP => 
-                        !state.draggingStrip.some(dp => dp.id === targetP.id) && 
-                        Math.hypot(targetP.x - p.x, targetP.y - p.y) < CONFIG.snapDistance
-                    );
-
-                    if (target) {
-                        snapped = true;
-                        replaceAnglePointId(p.id, target.id);
-                        // Fusionner p vers target
-                        state.strips.forEach(s => {
-                            if (s.p1 === p.id) s.p1 = target.id;
-                            if (s.p2 === p.id) s.p2 = target.id;
-                        });
-                        // Marquer pour suppression (ID à supprimer)
-                        p.toBeRemoved = true;
-                    }
-                });
-
-                if (snapped) {
-                    playSound('snap');
-                    // Nettoyer les points fusionnés
-                    state.points = state.points.filter(p => !p.toBeRemoved);
-                }
-
-                state.draggingStrip.forEach(p => {
-                     // S'il n'a pas été supprimé, on relâche le pin
-                     if (!p.toBeRemoved) p.pinned = false; 
-                });
-                
-                cleanupAngleGroups();
-                state.draggingStrip = null; state.draggingStripRef = null;
-                render();
+                const cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY; if(cy<=header.getBoundingClientRect().bottom){ if(state.draggingStripRef) removeStrip(state.draggingStripRef); }
+                if(state.tools.protractor.visible){ const t=state.tools.protractor, px=t.x+t.pivot.x, py=t.y+t.pivot.y; let bp=null, bd=CONFIG.snapDistance; for(const p of state.draggingStrip){ if(!p||p.toBeRemoved)continue; const d=Math.hypot(px-p.x,py-p.y); if(d<bd){bd=d;bp=p;} } if(bp){ const dx=px-bp.x, dy=py-bp.y; state.draggingStrip.forEach(p=>{if(!p||p.toBeRemoved)return; p.x+=dx;p.y+=dy;}); playSound('snap'); } }
+                let snapped=false; state.draggingStrip.forEach(p=>{ const t=state.points.find(tp=>!state.draggingStrip.some(dp=>dp.id===tp.id)&&Math.hypot(tp.x-p.x,tp.y-p.y)<CONFIG.snapDistance); if(t){ snapped=true; replaceAnglePointId(p.id,t.id); state.strips.forEach(s=>{if(s.p1===p.id)s.p1=t.id;if(s.p2===p.id)s.p2=t.id;}); p.toBeRemoved=true; } });
+                if(snapped){ playSound('snap'); state.points=state.points.filter(p=>!p.toBeRemoved); } state.draggingStrip.forEach(p=>{ if(!p.toBeRemoved) p.pinned=false; }); cleanupAngleGroups(); state.draggingStrip=null; state.draggingStripRef=null; render();
             }
         }
-        
+
         container.addEventListener('dblclick', (e) => {
-            if (state.tool === 'pen') return;
-
-            const geo = e.target.closest('.geo-tool');
-            const isProtractor = geo && geo.id === 'tool-protractor';
-
-            // Par défaut on évite le dblclick sur les outils géométriques,
-            // MAIS on l'autorise sur le rapporteur pour pouvoir 'déclipser' un aimant dessous.
-            if (geo && !isProtractor) return;
-            // Si on dblclick sur une poignée / un bouton du rapporteur, on ne détache rien.
-            if (isProtractor && e.target.closest('.geo-handle')) return;
-
-            const pos = getPos(e);
-            let point = getPointAt(pos.x, pos.y);
-
-            // Si le dblclick est sur le rapporteur (au-dessus du sommet), on vise le point sous le pivot.
-            if (!point && isProtractor) {
-                const tool = state.tools.protractor;
-                const pivotX = tool.x + tool.pivot.x;
-                const pivotY = tool.y + tool.pivot.y;
-                // on cherche un point très proche du pivot (aimant sous le centre)
-                point = state.points.find(p => Math.hypot(p.x - pivotX, p.y - pivotY) < CONFIG.snapDistance);
-            }
-
-            if (point) {
-                const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
-                if (connectedStrips.length > 1) {
-                    playSound('detach');
-                    for (let i = 1; i < connectedStrips.length; i++) {
-                        const s = connectedStrips[i];
-                        const newP = { id: state.nextId++, x: point.x + (Math.random()*20 - 10), y: point.y + (Math.random()*20 - 10), pinned: false };
-                        state.points.push(newP);
-                        if (s.p1 === point.id) s.p1 = newP.id; else s.p2 = newP.id;
-                    }
-                    render();
-                }
-            }
+            if (state.tool === 'pen') return; const geo = e.target.closest('.geo-tool'); const isProtractor = geo && geo.id === 'tool-protractor'; if (geo && !isProtractor) return; if (isProtractor && e.target.closest('.geo-handle')) return;
+            const pos = getPos(e); let point = getPointAt(pos.x, pos.y); if (!point && isProtractor) { const t=state.tools.protractor; point = state.points.find(p => Math.hypot(p.x - (t.x+t.pivot.x), p.y - (t.y+t.pivot.y)) < CONFIG.snapDistance); }
+            if (point) { const conns = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id); if (conns.length > 1) { playSound('detach'); for (let i = 1; i < conns.length; i++) { const s = conns[i], newP = { id: state.nextId++, x: point.x + (Math.random()*20 - 10), y: point.y + (Math.random()*20 - 10), pinned: false }; state.points.push(newP); if (s.p1 === point.id) s.p1 = newP.id; else s.p2 = newP.id; } render(); } }
         });
 
-        /* --- RENDU --- */
+        let isDrawing = false, lastX = 0, lastY = 0;
+        function setTool(t, c=null) {
+            state.tool = t; if(c) state.penColor = c;
+            ['tool-hand','tool-pen-blue','tool-pen-red'].forEach(id=>document.getElementById(id).classList.remove('active','bg-blue-100','active-red','bg-red-50','bg-slate-200'));
+            const canv = canvasDraw;
+            if (t === 'hand') { canv.style.pointerEvents = 'none'; document.getElementById('tool-hand').classList.add('active','bg-slate-200'); container.classList.remove('cursor-pen-active'); } 
+            else { canv.style.pointerEvents = 'auto'; container.classList.add('cursor-pen-active'); if (state.penColor === 'blue') { document.getElementById('tool-pen-blue').classList.add('active','bg-blue-100'); ctxDraw.strokeStyle = '#2563eb'; } else { document.getElementById('tool-pen-red').classList.add('active-red','bg-red-50'); ctxDraw.strokeStyle = '#dc2626'; } ctxDraw.lineWidth = 3; ctxDraw.lineCap = 'round'; ctxDraw.lineJoin = 'round'; }
+        }
+        function startDraw(e) { if(state.tool!=='pen')return; isDrawing=true; const pos=getPos(e); lastX=pos.x; lastY=pos.y; ctxDraw.beginPath(); ctxDraw.moveTo(lastX,lastY); }
+        function draw(e) { if(!isDrawing||state.tool!=='pen')return; e.preventDefault(); const pos=getPos(e); ctxDraw.lineTo(pos.x,pos.y); ctxDraw.stroke(); lastX=pos.x; lastY=pos.y; }
+        function stopDraw() { isDrawing=false; }
+        function clearDrawings() { ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height); }
+        canvasDraw.addEventListener('mousedown', startDraw); canvasDraw.addEventListener('mousemove', draw); canvasDraw.addEventListener('mouseup', stopDraw); canvasDraw.addEventListener('touchstart', startDraw, {passive:false}); canvasDraw.addEventListener('touchmove', draw, {passive:false}); canvasDraw.addEventListener('touchend', stopDraw);
+
         function render() {
             ctxStrips.clearRect(0, 0, canvasStrips.width, canvasStrips.height);
-
-            // 2. Bandes
-            const sortedStrips = [...state.strips].sort((a, b) => {
-                const lenA = CONFIG.colors[a.type].length;
-                const lenB = CONFIG.colors[b.type].length;
-                return lenB - lenA; 
-            });
-
-            ctxStrips.shadowColor = "rgba(0,0,0,0.2)";
-            ctxStrips.shadowBlur = 6;
-            ctxStrips.shadowOffsetY = 3;
-
-            sortedStrips.forEach(strip => {
-                const p1 = state.points.find(p => p.id === strip.p1);
-                const p2 = state.points.find(p => p.id === strip.p2);
-                if (!p1 || !p2) return;
-
-                const style = CONFIG.colors[strip.type];
-                
-                ctxStrips.beginPath();
-                ctxStrips.lineWidth = CONFIG.currentStripWidth;
-                ctxStrips.lineCap = 'round';
-                ctxStrips.strokeStyle = style.fill;
-                ctxStrips.moveTo(p1.x, p1.y);
-                ctxStrips.lineTo(p2.x, p2.y);
-                ctxStrips.stroke();
-            });
-            
-            ctxStrips.shadowColor = "rgba(0,0,0,0.3)";
-            ctxStrips.shadowBlur = 2;
-            ctxStrips.shadowOffsetY = 1;
-
-            state.points.forEach(p => {
-                const connectionCount = state.strips.filter(s => s.p1 === p.id || s.p2 === p.id).length;
-                
-                ctxStrips.beginPath();
-                // Adapter la taille du rivet si le trait est fin
-                const rivetSize = state.stripMode === 'thin' ? 2.0 : 6;
-                const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
-
-                ctxStrips.arc(p.x, p.y, rivetSize, 0, Math.PI * 2);
-                ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9'; 
-                ctxStrips.fill();
-                ctxStrips.strokeStyle = '#334155';
-                ctxStrips.lineWidth = strokeSize;
-                ctxStrips.stroke();
-            });
+            const sorted = [...state.strips].sort((a, b) => CONFIG.colors[b.type].length - CONFIG.colors[a.type].length);
+            ctxStrips.shadowColor="rgba(0,0,0,0.2)"; ctxStrips.shadowBlur=6; ctxStrips.shadowOffsetY=3;
+            sorted.forEach(s => { const p1=state.points.find(p=>p.id===s.p1), p2=state.points.find(p=>p.id===s.p2); if(!p1||!p2)return; ctxStrips.beginPath(); ctxStrips.lineWidth=CONFIG.currentStripWidth; ctxStrips.lineCap='round'; ctxStrips.strokeStyle=CONFIG.colors[s.type].fill; ctxStrips.moveTo(p1.x,p1.y); ctxStrips.lineTo(p2.x,p2.y); ctxStrips.stroke(); });
+            ctxStrips.shadowColor="rgba(0,0,0,0.3)"; ctxStrips.shadowBlur=2; ctxStrips.shadowOffsetY=1;
+            state.points.forEach(p => { const n = state.strips.filter(s => s.p1===p.id || s.p2===p.id).length; ctxStrips.beginPath(); ctxStrips.arc(p.x, p.y, state.stripMode==='thin'?2:6, 0, Math.PI*2); ctxStrips.fillStyle=n>1?'#475569':'#f1f5f9'; ctxStrips.fill(); ctxStrips.strokeStyle='#334155'; ctxStrips.lineWidth=state.stripMode==='thin'?1:2; ctxStrips.stroke(); });
         }
 
-        /* --- LOGIQUE CRAYON --- */
-        let isDrawing = false;
-        let lastX = 0, lastY = 0;
-
-        function setTool(t, color = null) {
-            state.tool = t;
-            if (color) state.penColor = color;
-
-            const cursorDiv = document.getElementById('custom-cursor');
-            const handBtn = document.getElementById('tool-hand');
-            const penBlueBtn = document.getElementById('tool-pen-blue');
-            const penRedBtn = document.getElementById('tool-pen-red');
-            const cursorPath = document.getElementById('cursor-color-1');
-
-            handBtn.classList.remove('active', 'bg-slate-200');
-            penBlueBtn.classList.remove('active', 'bg-blue-100');
-            penRedBtn.classList.remove('active-red', 'bg-red-50');
-
-            if (t === 'hand') {
-                container.classList.remove('hide-cursor');
-                cursorDiv.style.display = 'none';
-                canvasDraw.style.pointerEvents = 'none';
-                handBtn.classList.add('active', 'bg-slate-200');
-            } else {
-                container.classList.add('hide-cursor');
-                cursorDiv.style.display = 'block';
-                canvasDraw.style.pointerEvents = 'auto';
-                
-                if (state.penColor === 'blue') {
-                    penBlueBtn.classList.add('active', 'bg-blue-100');
-                    ctxDraw.strokeStyle = '#2563eb';
-                    cursorPath.setAttribute('stroke', '#2563eb');
-                } else {
-                    penRedBtn.classList.add('active-red', 'bg-red-50');
-                    ctxDraw.strokeStyle = '#dc2626';
-                    cursorPath.setAttribute('stroke', '#dc2626');
-                }
-                
-                ctxDraw.lineCap = 'round';
-                ctxDraw.lineJoin = 'round';
-                ctxDraw.lineWidth = 3;
-            }
-        }
-
-        function updateCustomCursor(e) {
-            const cursorDiv = document.getElementById('custom-cursor');
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            cursorDiv.style.left = clientX + 'px';
-            cursorDiv.style.top = clientY + 'px';
-            cursorDiv.style.transform = 'translate(-2px, -30px)';
-        }
-
-        function startDraw(e) {
-            if (state.tool !== 'pen') return;
-            isDrawing = true;
-            const pos = getPos(e);
-            lastX = pos.x; lastY = pos.y;
-            ctxDraw.beginPath();
-            ctxDraw.moveTo(lastX, lastY);
-        }
-
-        function draw(e) {
-            if (!isDrawing || state.tool !== 'pen') return;
-            e.preventDefault(); 
-            const pos = getPos(e);
-            ctxDraw.lineTo(pos.x, pos.y);
-            ctxDraw.stroke();
-            lastX = pos.x; lastY = pos.y;
-        }
-
-        function stopDraw() { isDrawing = false; }
-        
-        function clearDrawings() {
-            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
-        }
-
-        canvasDraw.addEventListener('mousedown', startDraw);
-        canvasDraw.addEventListener('mousemove', draw);
-        canvasDraw.addEventListener('mouseup', stopDraw);
-        canvasDraw.addEventListener('touchstart', startDraw, {passive: false});
-        canvasDraw.addEventListener('touchmove', draw, {passive: false});
-        canvasDraw.addEventListener('touchend', stopDraw);
-
-        // Init
-        initGeometryTools();
-        updateStripModeUI();
-        render();
-
-    
-
-        // Fermer le pavé numérique si on clique/touche ailleurs
-        function handleAnglePanelOutside(e) {
-            if (!anglePanelOpen) return;
-            const panel = document.getElementById('angle-panel');
-            const btn = document.getElementById('btn-create-angle');
-            if (!panel || !btn) return;
-            const t = e.target;
-            if (panel.contains(t) || btn.contains(t)) return;
-            closeAnglePanel();
-        }
-        document.addEventListener('mousedown', handleAnglePanelOutside);
-        document.addEventListener('touchstart', handleAnglePanelOutside, {passive: true});
-
-        // Option : Entrée valide
-        document.addEventListener('keydown', (e) => {
-            if (!anglePanelOpen) return;
-            if (e.key === 'Enter') { confirmAnglePanel(); }
-            if (e.key === 'Escape') { closeAnglePanel(); }
-            if (/^[0-9]$/.test(e.key)) { angleDigit(e.key); }
-            if (e.key === 'Backspace') { angleBackspace(); }
-        });
-</script>
+        initGeometryTools(); updateStripModeUI(); render();
+        document.addEventListener('mousedown', (e) => { if(!anglePanelOpen)return; if(!document.getElementById('angle-panel').contains(e.target) && !document.getElementById('btn-create-angle').contains(e.target)) closeAnglePanel(); });
+        document.addEventListener('keydown', (e) => { if(!anglePanelOpen)return; if(e.key==='Enter')confirmAnglePanel(); if(e.key==='Escape')closeAnglePanel(); if(/^[0-9]$/.test(e.key))angleDigit(e.key); if(e.key==='Backspace')angleBackspace(); });
+    </script>
 </body>
 </html>
