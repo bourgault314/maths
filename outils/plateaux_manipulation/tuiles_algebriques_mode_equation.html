@@ -379,50 +379,51 @@
                 const w = SIZES[type].w; 
                 const h = SIZES[type].h;
                 const gap = 10;
-                
                 const screenH = this.app.container.clientHeight / this.app.scale;
-                const startY = -screenH/2 + 60;
+                const startY = -screenH/2 + 60; // Top margin
                 
-                // Logic: Fill Lines (Rows), Starting from Center outwards
-                let row = 0;
+                const maxCols = 8;
                 const maxRows = 20;
-                const maxCols = 8; // Safety width limit
 
-                while(row < maxRows) {
-                    let col = 0;
-                    while(col < maxCols) {
+                // Loop through rows first, then columns
+                for(let row = 0; row < maxRows; row++) {
+                    for(let col = 0; col < maxCols; col++) {
                         let tx, ty;
                         
                         if (this.id === 'left') {
-                            // Grow Left from Center (-20)
-                            // Col 0: -20 - w
-                            // Col 1: -20 - w - (w+gap)
-                            const startX = -20;
+                            // Fill Right-to-Left starting from center (-25)
+                            const startX = -25;
+                            // Shift left by width of token + column offset
                             tx = startX - w - (col * (w + gap));
                         } else {
-                            // Grow Right from Center (20)
-                            // Col 0: 20
-                            // Col 1: 20 + w + gap
-                            const startX = 20;
+                            // Fill Left-to-Right starting from center (+25)
+                            const startX = 25;
                             tx = startX + (col * (w + gap));
                         }
                         
                         ty = startY + (row * (h + gap));
                         
+                        // Strict AABB Collision Check against ALL existing tokens
                         let collision = false;
                         for(let t of this.tokens) {
-                            if (Math.abs(t.x - tx) < w - 2 && Math.abs(t.y - ty) < h - 2) {
+                            // Existing token dimensions
+                            const tw = SIZES[t.type].w;
+                            const th = SIZES[t.type].h;
+                            
+                            // Check overlap with buffer
+                            if (tx < t.x + tw + 5 && 
+                                tx + w + 5 > t.x && 
+                                ty < t.y + th + 5 && 
+                                ty + h + 5 > t.y) {
                                 collision = true;
                                 break;
                             }
                         }
                         
                         if (!collision) return {x: tx, y: ty};
-                        col++;
                     }
-                    row++;
                 }
-                return {x: 0, y: 0};
+                return {x: 0, y: 0}; // Fallback
             }
 
             // ... (methods) ...
