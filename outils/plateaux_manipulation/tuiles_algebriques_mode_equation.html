@@ -46,7 +46,7 @@
         @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
         /* STRUCTURE */
-        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; padding-bottom: 150px; cursor: ns-resize; } /* Cursor indicates vertical scroll */
+        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; padding-bottom: 150px; cursor: ns-resize; }
         #board-container.panning { cursor: grabbing; }
         #board-world { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 0; height: 0; }
         
@@ -103,7 +103,15 @@
         .action-btn { font-size: 0.7rem; font-weight: bold; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; color: #475569; transition: all 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
         .action-btn:hover { background: #f1f5f9; border-color: #94a3b8; } .action-btn:active { transform: translateY(1px); }
         
-        .btn-op { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
+        
+        .action-btn.big { font-size: 0.85rem; padding: 9px 14px; border-radius: 8px; }
+
+        /* Equation: keep '=' centered on the vertical divider */
+        .equation-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 10px; width: 100%; }
+        .equation-grid .eq-left { justify-self: end; text-align: right; }
+        .equation-grid .eq-right { justify-self: start; text-align: left; }
+        .equation-grid .eq-equal { justify-self: center; }
+.btn-op { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
         .btn-opp-style { background-color: #fff7ed; color: #c2410c; border: 1px solid #fb923c; font-size: 0.7rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
         
         .toggle-mode { background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; }
@@ -151,8 +159,12 @@
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center px-4">
-            <div class="flex items-center gap-2 bg-slate-50 px-6 py-2 rounded-full border border-slate-200 shadow-inner">
-                <div id="equation-display" class="text-3xl font-bold text-slate-700 tracking-tight font-mono transition-all duration-300">0 = 0</div>
+            <div class="flex items-center gap-2 bg-slate-50 px-6 py-2 rounded-full border border-slate-200 shadow-inner w-full max-w-5xl">
+                <div id="equation-display" class="equation-grid text-3xl font-bold text-slate-700 tracking-tight font-mono transition-all duration-300">
+                    <span id="eq-left" class="eq-left"></span>
+                    <span id="eq-eq" class="eq-equal"></span>
+                    <span id="eq-right" class="eq-right"></span>
+                </div>
                 <button onclick="app.toggleEquationVisibility()" class="ml-2 text-slate-400 hover:text-slate-600 focus:outline-none">
                     <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -182,7 +194,7 @@
     <div id="bottom-bar">
         <div id="menu-divider"></div>
         <div id="center-actions">
-            <button onclick="app.performDivision()" class="action-btn bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 shadow-md">Diviser</button>
+            <button onclick="app.performDivision()" class="action-btn big bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 shadow-md">Diviser</button>
         </div>
 
         <!-- GAUCHE -->
@@ -195,23 +207,10 @@
                 <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
             </div>
             <div class="tools-zone">
-                <div class="tools-row">
-                    <button onclick="app.sideLeft.addOperator('separate')" class="btn-op bg-blue-100 text-blue-700 hover:bg-blue-200" title="Ajouter terme">+</button>
-                    <button onclick="app.sideLeft.addOperator('subtract')" class="btn-op bg-orange-100 text-orange-700 hover:bg-orange-200" title="Soustraire terme">-</button>
-                    <button onclick="app.sideLeft.addOperator('close')" id="btn-close-l" class="hidden btn-op bg-orange-500 text-white hover:bg-orange-600">)</button>
-                </div>
-                <div class="tools-row">
-                    <button onclick="app.sideLeft.startMult(2)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">2(...)</button>
-                    <button onclick="app.sideLeft.startMult(3)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">3(...)</button>
-                </div>
                 <div class="tools-row flex-wrap justify-center">
                     <button onclick="app.sideLeft.order()" class="action-btn">Ranger</button>
-                    <button onclick="app.sideLeft.reduce()" class="action-btn bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100">Réduire</button>
+                    <button onclick="app.sideLeft.reduce()" class="action-btn">Réduire</button>
                     <button onclick="app.sideLeft.simplify()" class="action-btn">Simplifier</button>
-                </div>
-                <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideLeft.applyOpposite()" id="btn-opp-l" class="hidden btn-opp-style">Opposé</button>
-                    <button onclick="app.sideLeft.distribute()" id="btn-dist-l" class="hidden action-btn bg-blue-500 text-white hover:bg-blue-600">Développer</button>
                 </div>
             </div>
         </div>
@@ -226,23 +225,10 @@
                 <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
             </div>
             <div class="tools-zone">
-                <div class="tools-row">
-                    <button onclick="app.sideRight.addOperator('separate')" class="btn-op bg-blue-100 text-blue-700 hover:bg-blue-200">+</button>
-                    <button onclick="app.sideRight.addOperator('subtract')" class="btn-op bg-orange-100 text-orange-700 hover:bg-orange-200">-</button>
-                    <button onclick="app.sideRight.addOperator('close')" id="btn-close-r" class="hidden btn-op bg-orange-500 text-white hover:bg-orange-600">)</button>
-                </div>
-                <div class="tools-row">
-                    <button onclick="app.sideRight.startMult(2)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">2(...)</button>
-                    <button onclick="app.sideRight.startMult(3)" class="text-xs font-bold text-indigo-700 px-2 py-1 bg-indigo-50 rounded hover:bg-indigo-100">3(...)</button>
-                </div>
                 <div class="tools-row flex-wrap justify-center">
                     <button onclick="app.sideRight.order()" class="action-btn">Ranger</button>
-                    <button onclick="app.sideRight.reduce()" class="action-btn bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100">Réduire</button>
+                    <button onclick="app.sideRight.reduce()" class="action-btn">Réduire</button>
                     <button onclick="app.sideRight.simplify()" class="action-btn">Simplifier</button>
-                </div>
-                <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideRight.applyOpposite()" id="btn-opp-r" class="hidden btn-opp-style">Opposé</button>
-                    <button onclick="app.sideRight.distribute()" id="btn-dist-r" class="hidden action-btn bg-blue-500 text-white hover:bg-blue-600">Développer</button>
                 </div>
             </div>
         </div>
@@ -254,6 +240,9 @@
         const SIZES = { 'unit': { w: 40, h: 40 }, 'x': { w: 90, h: 40 } };
         const COLORS = { pos: 'green', neg: 'red', orange: 'orange' };
         
+        // LIMIT CONSTANT FOR CONSISTENT WRAPPING
+        const MAX_ROW_WIDTH = 450; 
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -379,17 +368,29 @@
                 const w = SIZES[type].w; 
                 const h = SIZES[type].h;
                 const gap = 10;
+                const rowHeight = 60;
+                
                 const screenH = this.app.container.clientHeight / this.app.scale;
                 const startY = -screenH/2 + 60; // Top margin
                 
-                const maxCols = 8;
+                // Logic: Fill Lines (Rows), Starting from Center outwards
+                // USE MAX_ROW_WIDTH for consistent wrapping
+                let row = 0;
                 const maxRows = 20;
+                const maxCols = 15; 
 
-                // Loop through rows first, then columns
-                for(let row = 0; row < maxRows; row++) {
-                    for(let col = 0; col < maxCols; col++) {
+                while(row < maxRows) {
+                    let col = 0;
+                    while(col < maxCols) {
                         let tx, ty;
                         
+                        // Check if we exceeded the fixed row width
+                        let dist = (col * (w + gap));
+                        if (dist > MAX_ROW_WIDTH) {
+                            // Break to next row if we exceed width
+                            break; 
+                        }
+
                         if (this.id === 'left') {
                             // Fill Right-to-Left starting from center (-25)
                             const startX = -25;
@@ -421,7 +422,9 @@
                         }
                         
                         if (!collision) return {x: tx, y: ty};
+                        col++;
                     }
+                    row++;
                 }
                 return {x: 0, y: 0}; // Fallback
             }
@@ -562,7 +565,9 @@
                     let currentLine = [];
                     let currentW = 0;
                     let lineMaxH = 0;
-                    const maxW = 450; // Max line width before wrap
+                    
+                    // USE CONSTANT WIDTH LIMIT
+                    const maxW = MAX_ROW_WIDTH; 
 
                     tokensInOrder.forEach(item => {
                         if (item.isGap) {
@@ -692,14 +697,7 @@
                 });
             }
 
-            updateUI() {
-                const btnDist = document.getElementById(`btn-dist-${this.id === 'left' ? 'l' : 'r'}`);
-                const hasPendingDist = this.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed);
-                if (hasPendingDist) btnDist.classList.remove('hidden'); else btnDist.classList.add('hidden');
-                const btnOpp = document.getElementById(`btn-opp-${this.id === 'left' ? 'l' : 'r'}`);
-                const hasPendingOpp = this.steps.some(s => s.type === 'subtraction' && !s.oppositeApplied);
-                if (hasPendingOpp) btnOpp.classList.remove('hidden'); else btnOpp.classList.add('hidden');
-            }
+            updateUI() { /* épuré : plus de boutons d'opérateurs */ }
         }
 
         // --- MAIN APP ---
@@ -799,7 +797,13 @@
                     isSubL: this.sideLeft.isSubInput, isMultL: this.sideLeft.isMultInput,
                     isSubR: this.sideRight.isSubInput, isMultR: this.sideRight.isMultInput,
                     displayModeL: this.sideLeft.displayMode,
-                    displayModeR: this.sideRight.displayMode
+                    displayModeR: this.sideRight.displayMode,
+                    nextPackIdL: this.sideLeft.nextPackId,
+                    nextPackIdR: this.sideRight.nextPackId,
+                    lastPackL: this.sideLeft.lastPack,
+                    lastPackR: this.sideRight.lastPack,
+                    lastSeqPackIdL: this.sideLeft.lastSeqPackId,
+                    lastSeqPackIdR: this.sideRight.lastSeqPackId
                 };
                 this.history.push(JSON.stringify(state));
                 if(this.history.length > 50) this.history.shift();
@@ -818,6 +822,13 @@
                 this.sideRight.isSubInput = state.isSubR; this.sideRight.isMultInput = state.isMultR;
                 this.sideLeft.displayMode = state.displayModeL || 'normal';
                 this.sideRight.displayMode = state.displayModeR || 'normal';
+
+                this.sideLeft.nextPackId = state.nextPackIdL || this.sideLeft.nextPackId;
+                this.sideRight.nextPackId = state.nextPackIdR || this.sideRight.nextPackId;
+                this.sideLeft.lastPack = state.lastPackL || null;
+                this.sideRight.lastPack = state.lastPackR || null;
+                this.sideLeft.lastSeqPackId = state.lastSeqPackIdL || null;
+                this.sideRight.lastSeqPackId = state.lastSeqPackIdR || null;
 
                 state.tokens.forEach(data => {
                     const el = document.createElement('div');
@@ -973,6 +984,7 @@
                         
                         if (dropSide === this.menuDrag.side) {
                             const targetSide = (dropSide === 'left') ? this.sideLeft : this.sideRight;
+                            // JUST CALL ADD TILE. The internal logic handles mode check and mirroring.
                             targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y); 
                         }
                     }
@@ -1109,58 +1121,98 @@
 
                 const l = getStr(this.sideLeft);
                 const r = getStr(this.sideRight);
-                katex.render(`${l} = ${r}`, document.getElementById('equation-display'));
-            }
 
+                const leftEl = document.getElementById('eq-left');
+                const eqEl = document.getElementById('eq-eq');
+                const rightEl = document.getElementById('eq-right');
+
+                if (leftEl && eqEl && rightEl) {
+                    katex.render(l, leftEl, { throwOnError: false });
+                    katex.render('=', eqEl, { throwOnError: false });
+                    katex.render(r, rightEl, { throwOnError: false });
+                } else {
+                    katex.render(`${l} = ${r}`, document.getElementById('equation-display'), { throwOnError: false });
+                }
+            }
             getReducedStr(side) {
                 const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                if (!active.length) return "0";
-                
-                let xCount = 0; let unitCount = 0;
-                active.forEach(t => { if (t.type === 'x') xCount += t.sign; else if (t.type === 'unit') unitCount += t.sign; });
-                
-                let parts = [];
-                if (xCount !== 0) {
-                    const col = xCount > 0 ? COLORS.pos : COLORS.neg;
-                    const val = Math.abs(xCount) === 1 ? "" : Math.abs(xCount);
-                    const sign = xCount < 0 ? "-" : "";
-                    parts.push(`{\\color{${col}}{${sign}${val}x}}`);
-                }
-                if (unitCount !== 0) {
-                    const col = unitCount > 0 ? COLORS.pos : COLORS.neg;
-                    const signStr = unitCount > 0 ? "+" : "-";
-                    const displaySign = (parts.length > 0) ? `\\;{\\color{${col}}{${signStr}}}\\;` : (unitCount < 0 ? `{\\color{${COLORS.neg}}{-}}` : "");
-                    parts.push(`${displaySign}{\\color{${col}}{${Math.abs(unitCount)}}}`);
-                }
-                return parts.join("") || "0";
+                if (!active.length) return '0';
+
+                let xPos = 0, xNeg = 0, uPos = 0, uNeg = 0;
+                active.forEach(t => {
+                    if (t.type === 'x') {
+                        if (t.sign === 1) xPos++; else xNeg++;
+                    } else if (t.type === 'unit') {
+                        if (t.sign === 1) uPos++; else uNeg++;
+                    }
+                });
+
+                const parts = [];
+                const addTerm = (sign, body) => {
+                    const col = sign > 0 ? COLORS.pos : COLORS.neg;
+                    if (parts.length === 0) {
+                        if (sign < 0) {
+                            parts.push(`{\\color{${COLORS.neg}}{-}}{\\color{${col}}{${body}}}`);
+                        } else {
+                            parts.push(`{\\color{${col}}{${body}}}`);
+                        }
+                    } else {
+                        const sym = sign > 0 ? '+' : '-';
+                        parts.push(`\\;{\\color{${col}}{${sym}}}\\;{\\color{${col}}{${body}}}`);
+                    }
+                };
+
+                // Réduire = regrouper verts avec verts, rouges avec rouges (sans annuler vert/rouge)
+                if (xPos) addTerm(+1, `${xPos === 1 ? '' : xPos}x`);
+                if (xNeg) addTerm(-1, `${xNeg === 1 ? '' : xNeg}x`);
+                if (uPos) addTerm(+1, `${uPos}`);
+                if (uNeg) addTerm(-1, `${uNeg}`);
+
+                return parts.join('') || '0';
             }
 
             getOrderedStr(side) {
                 const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                if (!active.length) return "0";
-                const packs = new Map();
-                active.forEach(t => {
+                if (!active.length) return '0';
+
+                // Ranger = trier par (x verts) puis (x rouges) puis (unit verts) puis (unit rouges)
+                // en conservant les paquets (packId) sans les additionner entre eux.
+                const groups = new Map();
+                for (const t of active) {
                     const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
-                    if (!packs.has(pid)) packs.set(pid, { type: t.type, count: 0 });
-                    packs.get(pid).count += t.sign;
-                });
-                let packList = Array.from(packs.entries()).map(([pid, data]) => ({ pid, ...data })).filter(p => p.count !== 0);
-                packList.sort((a, b) => {
-                    if (a.type !== b.type) { return a.type === 'x' ? -1 : 1; }
+                    const key = `${t.type}|${t.sign}|${pid}`;
+                    if (!groups.has(key)) groups.set(key, { type: t.type, sign: t.sign, pid, count: 0 });
+                    groups.get(key).count += 1;
+                }
+
+                const list = Array.from(groups.values()).filter(g => g.count > 0);
+                list.sort((a, b) => {
+                    const typeA = a.type === 'x' ? 0 : 1;
+                    const typeB = b.type === 'x' ? 0 : 1;
+                    if (typeA !== typeB) return typeA - typeB;
+                    const signA = a.sign === 1 ? 0 : 1;
+                    const signB = b.sign === 1 ? 0 : 1;
+                    if (signA !== signB) return signA - signB;
                     return a.pid - b.pid;
                 });
-                let s = "";
-                packList.forEach((p, i) => {
-                    const col = p.count > 0 ? COLORS.pos : COLORS.neg;
-                    const isNeg = p.count < 0;
-                    const val = Math.abs(p.count) === 1 && p.type === 'x' ? "" : Math.abs(p.count);
-                    const lbl = p.type === 'x' ? "x" : "";
-                    let prefix = "";
-                    if (i === 0) { if (isNeg) prefix = `{\\color{${COLORS.neg}}{-}}`; } 
-                    else { if (isNeg) prefix = `\\;{\\color{${COLORS.neg}}{-}}\\;`; else prefix = `\\;{\\color{${COLORS.pos}}{+}}\\;`; }
+
+                let s = '';
+                list.forEach((g, i) => {
+                    const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
+                    const isNeg = g.sign === -1;
+                    const val = (g.count === 1 && g.type === 'x') ? '' : g.count;
+                    const lbl = g.type === 'x' ? 'x' : '';
+
+                    let prefix = '';
+                    if (i === 0) {
+                        if (isNeg) prefix = `{\\color{${COLORS.neg}}{-}}`;
+                    } else {
+                        prefix = isNeg ? `\\;{\\color{${COLORS.neg}}{-}}\\;` : `\\;{\\color{${COLORS.pos}}{+}}\\;`;
+                    }
                     s += `${prefix}{\\color{${col}}{${val}${lbl}}}`;
                 });
-                return s || "0";
+
+                return s || '0';
             }
             
             // --- TOOLS ---
