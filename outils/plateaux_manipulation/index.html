@@ -4,230 +4,296 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Menu des Ateliers</title>
-    <!-- On charge la librairie d'icônes -->
     <script src="https://unpkg.com/lucide@latest"></script> 
     <style>
         :root {
             --bg-page: #f8fafc;
+            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
+                           radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), 
+                           radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
             --text-main: #1e293b;
+            --text-muted: #64748b;
             --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --primary: #3b82f6; 
         }
 
         body {
             background-color: var(--bg-page);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             color: var(--text-main);
         }
 
-        /* En-tête */
-        .top-nav {
-            padding: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            background: rgba(255,255,255,0.5);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+        /* --- EN-TÊTE --- */
+        .header-section {
+            padding: 1.5rem 1rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
         }
 
+        .back-nav {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 1rem;
+        }
+        
         .back-link {
             text-decoration: none;
-            color: #64748b;
-            font-weight: 600;
+            color: var(--text-muted);
+            font-weight: 500;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.05);
             transition: all 0.2s;
         }
         .back-link:hover {
-            background: rgba(0,0,0,0.05);
-            color: #1e293b;
+            background: #fff;
+            transform: translateX(-3px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* Conteneur Principal */
-        .main-container {
-            flex: 1;
-            padding: 2rem 1rem;
-            max-width: 1400px; 
-            margin: 0 auto;
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0.5rem 0 1.5rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- CONTROLES --- */
+        .controls-wrapper {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
             width: 100%;
+            max-width: 500px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            outline: none;
+            background: #f8fafc;
+            transition: all 0.2s;
             box-sizing: border-box;
         }
-
-        .page-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 2rem;
-            text-align: center;
-            color: #334155;
-            letter-spacing: -0.5px;
+        .search-input:focus {
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* GRILLE COMPACTE */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .chip {
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chip:hover {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+        .chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        /* --- GRILLE --- */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
         .choice-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-            gap: 1rem; 
-            width: 100%;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 1.25rem;
         }
 
-        /* Carte Compacte */
         .choice-card {
             text-decoration: none;
-            position: relative;
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 1rem;
+            border-radius: 18px;
+            padding: 1.5rem 1rem;
             text-align: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid transparent; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 130px;
-            overflow: hidden;
+            min-height: 140px;
+            position: relative;
             color: var(--text-main);
         }
 
         .choice-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
-            border-color: currentColor; 
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+            border-color: rgba(0,0,0,0.05);
         }
 
-        /* Icones */
+        .choice-card.hidden { display: none; }
+
         .icon-wrapper {
-            height: 2.5rem;
-            width: 2.5rem;
-            margin-bottom: 0.6rem;
+            height: 3rem;
+            width: 3rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            background: #f1f5f9;
-            border-radius: 12px;
-            color: inherit;
-            position: relative;
+            border-radius: 14px;
+            transition: transform 0.2s;
         }
+        .choice-card:hover .icon-wrapper { transform: scale(1.1); }
         
-        /* Pour les icônes Lucide */
-        .icon-wrapper svg.lucide-main {
-            width: 24px;
-            height: 24px;
+        .icon-wrapper svg {
+            width: 32px;
+            height: 32px;
             stroke-width: 2;
-        }
-
-        /* Petit badge "En construction" */
-        .construction-badge {
-            position: absolute;
-            bottom: -4px;
-            right: -4px;
-            background: white;
-            border-radius: 50%;
-            padding: 2px;
-            display: flex;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .construction-badge svg {
-            width: 12px;
-            height: 12px;
-            stroke-width: 2.5;
-            color: #f59e0b;
         }
 
         .card-title {
             font-size: 0.95rem;
             font-weight: 600;
             margin: 0;
-            line-height: 1.2;
-            width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            line-height: 1.3;
+            color: #334155;
         }
 
-        /* Couleurs automatiques (cycle de 6 couleurs) */
-        .choice-card:nth-child(6n+1) { color: #2563eb; }
+        /* Couleurs dynamiques (cycle de 6) */
         .choice-card:nth-child(6n+1) .icon-wrapper { background: #eff6ff; color: #2563eb; }
+        .choice-card:nth-child(6n+1):hover { border-bottom: 3px solid #2563eb; }
         
-        .choice-card:nth-child(6n+2) { color: #059669; }
-        .choice-card:nth-child(6n+2) .icon-wrapper { background: #f0fdf4; color: #059669; }
+        .choice-card:nth-child(6n+2) .icon-wrapper { background: #f0fdf4; color: #16a34a; }
+        .choice-card:nth-child(6n+2):hover { border-bottom: 3px solid #16a34a; }
 
-        .choice-card:nth-child(6n+3) { color: #7c3aed; }
         .choice-card:nth-child(6n+3) .icon-wrapper { background: #f5f3ff; color: #7c3aed; }
+        .choice-card:nth-child(6n+3):hover { border-bottom: 3px solid #7c3aed; }
 
-        .choice-card:nth-child(6n+4) { color: #ea580c; }
         .choice-card:nth-child(6n+4) .icon-wrapper { background: #fff7ed; color: #ea580c; }
+        .choice-card:nth-child(6n+4):hover { border-bottom: 3px solid #ea580c; }
 
-        .choice-card:nth-child(6n+5) { color: #db2777; }
         .choice-card:nth-child(6n+5) .icon-wrapper { background: #fdf2f8; color: #db2777; }
+        .choice-card:nth-child(6n+5):hover { border-bottom: 3px solid #db2777; }
 
-        .choice-card:nth-child(6n+6) { color: #4f46e5; }
         .choice-card:nth-child(6n+6) .icon-wrapper { background: #eef2ff; color: #4f46e5; }
+        .choice-card:nth-child(6n+6):hover { border-bottom: 3px solid #4f46e5; }
 
-        footer {
+        .empty-state {
+            grid-column: 1 / -1;
             text-align: center;
-            padding: 2rem;
-            color: #cbd5e1;
-            font-size: 0.8rem;
+            padding: 3rem;
+            color: var(--text-muted);
+            display: none;
+            font-style: italic;
         }
+        
+        .construction-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #fff;
+            border-radius: 50%;
+            padding: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #f59e0b;
+        }
+        .construction-badge svg { width: 14px; height: 14px; }
+
     </style>
 </head>
 <body>
 
-    <nav class="top-nav">
-        <a href="../" class="back-link">
-            <i data-lucide="arrow-left"></i>
-            Retour
-        </a>
-    </nav>
+    <header class="header-section">
+        <nav class="back-nav">
+            <a href="../" class="back-link">
+                <i data-lucide="arrow-left"></i> Retour
+            </a>
+        </nav>
+        
+        <h1>Les Plateaux</h1>
+
+        <div class="controls-wrapper">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Chercher un outil..." autocomplete="off">
+            </div>
+            
+            <div class="filters">
+                <span class="chip active" data-filter="all">Tout</span>
+                <span class="chip" data-filter="relatifs">Relatifs</span>
+                <span class="chip" data-filter="geometrie">Géométrie</span>
+                <span class="chip" data-filter="fractions">Fractions</span>
+                <span class="chip" data-filter="algebre">Algèbre</span>
+                <span class="chip" data-filter="mesures">Mesures</span>
+                <span class="chip" data-filter="donnees">Données</span>
+            </div>
+        </div>
+    </header>
 
     <div class="main-container">
         
-        <h1 class="page-title">
-            Les plateaux
-        </h1>
-
-        <div class="choice-grid">
+        <div class="choice-grid" id="grid">
             
-            <!-- VOS LIENS -->
-
-            <a href="bandes_magnetiques.html" class="choice-card">
+            <a href="bandes_fractions.html" class="choice-card" data-tags="fractions partage">
                 <div class="icon-wrapper">
-                    <i data-lucide="magnet" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Bandes Magnétiques</h2>
-            </a>
-
-            <!-- AJOUT : Bandes de fractions -->
-            <a href="bandes_fractions.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <!-- SVG personnalisé : bandes fractionnées -->
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide-main">
-                        <!-- bande 1 (en 3) -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="4" width="18" height="4" rx="1"/>
                         <line x1="9" y1="4" x2="9" y2="8"/>
                         <line x1="15" y1="4" x2="15" y2="8"/>
-                        <!-- bande 2 (en 2) -->
                         <rect x="3" y="10" width="18" height="4" rx="1"/>
                         <line x1="12" y1="10" x2="12" y2="14"/>
-                        <!-- bande 3 (en 4) -->
                         <rect x="3" y="16" width="18" height="4" rx="1"/>
                         <line x1="7" y1="16" x2="7" y2="20"/>
                         <line x1="12" y1="16" x2="12" y2="20"/>
@@ -237,143 +303,204 @@
                 <h2 class="card-title">Bandes de fractions</h2>
             </a>
 
-            <!-- AJOUT : Disques de fractions -->
-            <a href="disque_fractions.html" class="choice-card">
+            <a href="bandes_magnetiques.html" class="choice-card" data-tags="geometrie construction">
+                <div class="icon-wrapper"><i data-lucide="magnet"></i></div>
+                <h2 class="card-title">Bandes Magnétiques</h2>
+            </a>
+
+            <a href="conversions.html" class="choice-card" data-tags="mesures longueur">
+                <div class="icon-wrapper"><i data-lucide="arrow-left-right"></i></div>
+                <h2 class="card-title">Conversions</h2>
+            </a>
+
+            <a href="cubes_construction.html" class="choice-card" data-tags="geometrie 3d volume">
+                <div class="icon-wrapper"><i data-lucide="box"></i></div>
+                <h2 class="card-title">Cubes Construction</h2>
+            </a>
+
+            <a href="disque_fractions.html" class="choice-card" data-tags="fractions camembert">
                 <div class="icon-wrapper">
-                    <!-- SVG personnalisé : disque fractionné -->
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide-main">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="9"/>
-                        <!-- 4 quarts -->
                         <line x1="12" y1="3" x2="12" y2="21"/>
                         <line x1="3" y1="12" x2="21" y2="12"/>
-                        <!-- petit arc pour suggérer une part -->
                         <path d="M12 12 L12 3 A9 9 0 0 1 21 12 Z"/>
                     </svg>
                 </div>
                 <h2 class="card-title">Disques de fractions</h2>
             </a>
 
-            <!-- AJOUT : Maître du temps -->
-            <a href="maitre_du_temps.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="clock" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Maître du temps</h2>
-            </a>
-
-            <a href="cubes_construction.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="box" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Cubes Construction</h2>
-            </a>
-
-            <a href="gabarits_angles.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="triangle" class="lucide-main"></i>
-                </div>
+            <a href="gabarits_angles.html" class="choice-card" data-tags="geometrie angle rapporteur">
+                <div class="icon-wrapper"><i data-lucide="triangle"></i></div>
                 <h2 class="card-title">Gabarits Angles</h2>
             </a>
 
-            <a href="moyennes.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="bar-chart-3" class="lucide-main"></i>
-                </div>
+            <a href="glisse_nombres_decimaux.html" class="choice-card" data-tags="mesures decimal">
+                <div class="icon-wrapper"><i data-lucide="move"></i></div>
+                <h2 class="card-title">Glisse décimaux</h2>
+            </a>
+
+            <a href="glisse_entiers_flex.html" class="choice-card" data-tags="mesures tableau numeration">
+                <div class="icon-wrapper"><i data-lucide="move"></i></div>
+                <h2 class="card-title">Glisse entiers</h2>
+            </a>
+
+            <a href="maitre_du_temps.html" class="choice-card" data-tags="mesures temps horloge">
+                <div class="icon-wrapper"><i data-lucide="clock"></i></div>
+                <h2 class="card-title">Maître du temps</h2>
+            </a>
+
+            <a href="moyennes.html" class="choice-card" data-tags="donnees statistique">
+                <div class="icon-wrapper"><i data-lucide="bar-chart-3"></i></div>
                 <h2 class="card-title">Moyennes</h2>
             </a>
 
-            <a href="stats_city.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="activity" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Stats city</h2>
-            </a>
-
-            <a href="ratio.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="divide" class="lucide-main"></i>
-                </div>
+            <a href="ratio.html" class="choice-card" data-tags="donnees proportionnalite">
+                <div class="icon-wrapper"><i data-lucide="divide"></i></div>
                 <h2 class="card-title">Ratio</h2>
             </a>
 
-            <!-- TUILES ALGÉBRIQUES -->
-            <a href="tuiles_algebriques.html" class="choice-card">
+            <a href="nombres_relatifs_somme_difference.html" class="choice-card" data-tags="relatifs addition soustraction">
                 <div class="icon-wrapper">
-                    <!-- SVG personnalisé : petit carré + rectangle -->
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide-main">
-                        <rect x="2" y="14" width="8" height="8" rx="1"/>
-                        <rect x="12" y="2" width="8" height="20" rx="1"/>
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="7" cy="12" r="4.5" fill="#ef4444" /> <circle cx="17" cy="12" r="4.5" fill="#22c55e" /> </svg>
+                </div>
+                <h2 class="card-title">Relatifs : Découverte</h2>
+            </a>
+
+            <a href="nombres_relatifs_somme_differenceB.html" class="choice-card" data-tags="relatifs automatique">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="5" cy="8" r="2.5" fill="#ef4444" stroke="none" />
+                        <circle cx="5" cy="16" r="2.5" fill="#22c55e" stroke="none" />
+                         <polygon points="17 2 17 10 23 10 15 22 15 14 9 14 17 2" />
+                    </svg>
+                </div>
+                <h2 class="card-title">Relatifs : Méthode auto</h2>
+            </a>
+
+            <a href="nombres_relatifs_somme_differenceC.html" class="choice-card" data-tags="relatifs opposé">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="6" cy="8" r="3" fill="#ef4444" stroke="none" />
+                        <circle cx="6" cy="16" r="3" fill="#22c55e" stroke="none" />
+                        <path d="M12 8h8" />
+                        <path d="M16 5l4 3-4 3" />
+                        <path d="M20 16h-8" />
+                        <path d="M16 13l-4 3 4 3" />
+                    </svg>
+                </div>
+                <h2 class="card-title">Relatifs : Opposé</h2>
+            </a>
+
+            <a href="nombres_relatifs_somme_differenceD.html" class="choice-card" data-tags="relatifs parentheses">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 4 Q 1 12 5 20" /> <path d="M19 4 Q 23 12 19 20" /> <circle cx="8.5" cy="12" r="3.5" fill="#ef4444" stroke="none" />
+                        <circle cx="15.5" cy="12" r="3.5" fill="#22c55e" stroke="none" />
+                    </svg>
+                </div>
+                <h2 class="card-title">Relatifs : Parenthèses</h2>
+            </a>
+
+            <a href="stats_city.html" class="choice-card" data-tags="donnees graphiques">
+                <div class="icon-wrapper"><i data-lucide="activity"></i></div>
+                <h2 class="card-title">Stats city</h2>
+            </a>
+
+            <a href="tuiles_algebriques.html" class="choice-card" data-tags="algebre calcul litteral">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="14" width="8" height="8" rx="1" fill="#ef4444" stroke="none"/>
+                        <rect x="12" y="2" width="8" height="20" rx="1" fill="#22c55e" stroke="none"/>
                     </svg>
                 </div>
                 <h2 class="card-title">Tuiles algébriques</h2>
             </a>
 
-            <a href="tuiles_algebriques_mode_equation.html" class="choice-card">
+            <a href="tuiles_algebriques_mode_equation.html" class="choice-card" data-tags="algebre equation egalite">
                 <div class="icon-wrapper">
-                    <!-- SVG personnalisé : tuiles = tuiles -->
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide-main">
-                        <!-- bloc gauche -->
-                        <rect x="2" y="4" width="6" height="10" rx="1"/>
-                        <rect x="2" y="16" width="6" height="6" rx="1"/>
-
-                        <!-- égal -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="6" height="10" rx="1" fill="#22c55e" stroke="none"/>
+                        <rect x="2" y="16" width="6" height="6" rx="1" fill="#ef4444" stroke="none"/>
                         <line x1="10.5" y1="11" x2="13.5" y2="11"/>
                         <line x1="10.5" y1="13" x2="13.5" y2="13"/>
-
-                        <!-- bloc droit -->
-                        <rect x="16" y="4" width="6" height="10" rx="1"/>
-                        <rect x="16" y="16" width="6" height="6" rx="1"/>
+                        <rect x="16" y="4" width="6" height="10" rx="1" fill="#22c55e" stroke="none"/>
+                        <rect x="16" y="16" width="6" height="6" rx="1" fill="#ef4444" stroke="none"/>
                     </svg>
-
                     <div class="construction-badge"><i data-lucide="hammer"></i></div>
                 </div>
                 <h2 class="card-title">Tuiles équations</h2>
             </a>
 
-            <a href="unites_d_aires.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="maximize" class="lucide-main"></i>
-                </div>
+            <a href="unites_aires.html" class="choice-card" data-tags="mesures aire surface">
+                <div class="icon-wrapper"><i data-lucide="maximize"></i></div>
                 <h2 class="card-title">Unités d'Aires</h2>
-            </a>
-
-            <a href="glisse_entiers_flex.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="move" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Glisse entiers</h2>
-            </a>
-
-            <a href="glisse_nombres_decimaux.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="move" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Glisse nombres décimaux</h2>
-            </a>
-
-            <a href="conversions.html" class="choice-card">
-                <div class="icon-wrapper">
-                    <i data-lucide="arrow-left-right" class="lucide-main"></i>
-                </div>
-                <h2 class="card-title">Conversions</h2>
             </a>
 
         </div>
 
-    </div>
+        <div id="emptyMsg" class="empty-state">
+            Aucun outil ne correspond à votre recherche... 🕵️‍♂️
+        </div>
 
-    <footer>
-        <!-- Pied de page -->
-    </footer>
+    </div>
 
     <script>
         lucide.createIcons();
+
+        const searchInput = document.getElementById('searchInput');
+        const chips = document.querySelectorAll('.chip');
+        const cards = document.querySelectorAll('.choice-card');
+        const emptyMsg = document.getElementById('emptyMsg');
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function normalize(str) {
+            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function filterCards() {
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = normalize(card.querySelector('.card-title').textContent);
+                const tags = card.getAttribute('data-tags') || '';
+                const searchMatch = title.includes(currentSearch) || tags.includes(currentSearch);
+                const filterMatch = currentFilter === 'all' || tags.includes(currentFilter);
+
+                if (searchMatch && filterMatch) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            currentSearch = normalize(e.target.value);
+            filterCards();
+        });
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentFilter = chip.getAttribute('data-filter');
+                filterCards();
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
     </script>
 </body>
 </html>
