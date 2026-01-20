@@ -316,8 +316,9 @@
                 <legend>Apparence Globale</legend>
                 <label>Style des fonds</label>
                 <select id="colorMode">
-                    <option value="white" selected>Uniforme (Blanc - Éco)</option>
-                    <option value="colored">Couleurs Pédagogiques (Style Montessori)</option>
+                    <option value="white">Uniforme blanc - pour papier coloré</option>
+                    <option value="colored_gwenael" selected>Couleur pédagogique</option>
+                    <option value="colored_montessori">Couleur pédagogique (Style Montessori)</option>
                 </select>
 
                 <div class="row">
@@ -754,10 +755,47 @@ var denomToLetters = {
 };
 
 var denomColors = {
-    1: '#fff', 2: '#ffb3b3', 3: '#6699ff', 4: '#b3ffc6', 5: '#ff9966', 
-    6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
-    11: '#cc99ff', 12: '#99ffff',
+    // Palette 'classe Gwenaël' (jusqu'au dixième) — alignée avec le plateau bandes_fractions.html
+    1: '#fff7e6',  // unité
+    2: '#facc15',  // demi
+    3: '#e9d5ff',  // tiers
+    4: '#84cc16',  // quart
+    5: '#38bdf8',  // cinquième
+    6: '#f97316',  // sixième
+    7: '#99ccff',  // (non défini dans le plateau) — palette Montessori par défaut
+    8: '#f472b6',  // huitième
+    9: '#ffccff',  // (non défini dans le plateau) — palette Montessori par défaut
+    10: '#b91c1c', // dixième
+
+    // Au-delà du dixième : couleurs 'Montessori' (ou libres)
+    11: '#cc99ff',
+    12: '#99ffff',
+    13: '#ffd6a5',
+    14: '#caffbf',
+    15: '#9bf6ff',
+    16: '#bdb2ff',
+    17: '#ffc6ff',
+    18: '#fdffb6',
+    19: '#a0c4ff',
+    20: '#d0f4de',
 };
+
+// Palette Montessori (plus claire) — l'ancienne palette du générateur
+var denomColorsMontessori = {
+    1: '#fff', 2: '#ffb3b3', 3: '#6699ff', 4: '#b3ffc6', 5: '#ff9966',
+    6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3',
+    11: '#cc99ff', 12: '#99ffff',
+    // Extensions (pastel)
+    13: '#ffd6a5',
+    14: '#caffbf',
+    15: '#9bf6ff',
+    16: '#bdb2ff',
+    17: '#ffc6ff',
+    18: '#fdffb6',
+    19: '#a0c4ff',
+    20: '#d0f4de',
+};
+
 
 var FIXED_BAR_RATIO = 80;
 var FIXED_BAR_WMM = 0.10; 
@@ -968,7 +1006,10 @@ function drawPage({bandLen, bandHeight, gapV, denom, isVerso, contentMode, color
   var y1 = y3 + bandHeight + gapV;
   var ys = [y1, y3, y2]; 
   
-  var fillColor = (colorMode === 'colored' && denomColors[denom]) ? denomColors[denom] : 'white';
+  var palette = null;
+  if (colorMode === 'colored_gwenael') palette = denomColors;
+  if (colorMode === 'colored_montessori') palette = denomColorsMontessori;
+  var fillColor = (palette && palette[denom]) ? palette[denom] : 'white';
   var sepDash = styles.dash.trim() === '0' || styles.dash.trim() === '' ? '0' : styles.dash;
 
   var segmentUnitSymbol = getUnitSymbolFromContentMode(contentMode);
