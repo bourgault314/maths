@@ -350,8 +350,9 @@
 
                 <label style="margin-top:12px;">Style des fonds</label>
                 <select id="colorMode">
-                    <option value="white" selected>Uniforme (Blanc - Éco)</option>
-                    <option value="colored">Couleurs Pédagogiques</option>
+                    <option value="colored" selected>Couleurs pédagogiques</option>
+                    <option value="montessori">Couleurs pédagogiques style Montessori</option>
+                    <option value="white">Uniforme blanc - pour papier coloré</option>
                 </select>
             </fieldset>
             
@@ -780,11 +781,32 @@ var denomToLetters = {
     10: "un dixième", 11: "un onzième", 12: "un douzième", 
 };
 
-var denomColors = {
+var denomColorsMontessori = {
     1: '#fff', 2: '#ffb3b3', 3: '#6699ff', 4: '#b3ffc6', 5: '#ff9966', 
     6: '#e0b3ff', 7: '#99ccff', 8: '#ccff99', 9: '#ffccff', 10: '#ffffb3', 
     11: '#cc99ff', 12: '#99ffff',
 };
+
+// Couleur pédagogique (palette de classe de Gwenaël) : unité -> dixième identiques au plateau
+var denomColorsPedago = {
+    1: '#fff7e6',
+    2: '#facc15',
+    3: '#e9d5ff',
+    4: '#84cc16',
+    5: '#38bdf8',
+    6: '#f97316',
+    8: '#f472b6',
+    10: '#b91c1c',
+};
+
+function getDiscFillColor(d, colorMode){
+    if(colorMode === 'white') return 'white';
+    if(colorMode === 'montessori') return denomColorsMontessori[d] || 'white';
+    // 'colored' = Couleur pédagogique (puis fallback Montessori au-delà du dixième)
+    if(colorMode === 'colored') return denomColorsPedago[d] || denomColorsMontessori[d] || 'white';
+    return 'white';
+}
+
 
 function getUnitSymbolFromContentMode(contentMode) {
     if (contentMode === 'numeric_unit' || contentMode === 'decimal_unit') return 'u';
@@ -967,7 +989,7 @@ function discSVG(r, cx, cy, d, contentMode, commonStyles, currentStyles, rectoUn
   const { frameW, colorMode } = commonStyles;
   const { labelPt, textDistRatio, innerBorders, dashStyle, dotW, versoStructureDgt1 } = currentStyles;
   
-  const fillColor = (colorMode === 'colored' && denomColors[d]) ? denomColors[d] : 'white';
+  const fillColor = getDiscFillColor(d, colorMode);
   const dash = dashStyle.trim() === '0' || dashStyle.trim() === '' ? '0' : dashStyle;
   
   const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
