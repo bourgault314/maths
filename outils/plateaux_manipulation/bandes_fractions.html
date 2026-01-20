@@ -11,7 +11,9 @@
     :root{
       --unitW: 420; /* largeur d'une unité */
       --stripH: 58;
-      --boardBg: #ffffff; /* plateau blanc */
+      --boardBg: #ffffff;
+      /* Couleur de la grille (bordures) */
+      --gridColor: rgba(0,0,0,0.6); 
     }
 
     body{
@@ -41,16 +43,17 @@
 
     #drawing-canvas{
       position: absolute;
-      top: 0; left: 0;
+      /* CORRECTION STYLO : On étend la zone de dessin vers le haut et la gauche */
+      top: -4000px; 
+      left: -4000px;
       pointer-events: none;
-      z-index: 3000; /* au-dessus de tout le plateau */
+      z-index: 3000;
     }
 
-    /* --- Demi-droite graduée (guide) --- */
+    /* --- Demi-droite --- */
     #number-line{
       position: absolute;
-      left: 0;
-      top: 0;
+      left: 0; top: 0;
       z-index: 2;
       pointer-events: none;
       opacity: 0.95;
@@ -63,63 +66,66 @@
 
     /* --- Bandes / pièces --- */
     .strip{
-      /* Contours fins noirs (sans double épaisseur quand ça colle) */
-      --edgeL: rgba(0,0,0,0.55);
-      --edgeR: rgba(0,0,0,0.55);
-      --edgeT: rgba(0,0,0,0.55);
-      --edgeB: rgba(0,0,0,0.55);
-
-      /* anneau de sélection */
-      --selRing: 0 0 0 0 rgba(59,130,246,0);
-
       position: absolute;
+      overflow: visible; 
       display: flex;
       align-items: stretch;
       justify-content: stretch;
       border-radius: 0px;
-
-      box-shadow:
-        var(--selRing),
-        inset 1px 0 0 var(--edgeL),
-        inset -1px 0 0 var(--edgeR),
-        inset 0 1px 0 var(--edgeT),
-        inset 0 -1px 0 var(--edgeB);
-
+      box-shadow: none; 
       cursor: grab;
       touch-action: none;
       transform-origin: 0 0;
-      overflow: hidden;
       box-sizing: border-box;
       border: none;
-      perspective: 900px;
       z-index: 10;
     }
     .strip.dragging{ cursor: grabbing; z-index: 2000 !important; }
-    .strip.selected{ --selRing: 0 0 0 3px rgba(59,130,246,0.85); }
+    
+    .strip.selected{ 
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.85); 
+      z-index: 100 !important;
+    }
 
-    /* --- Animation de retournement --- */
+    /* LE "TABLEAU" : Bordure partagée via superposition */
+    .strip::after {
+      content: "";
+      position: absolute;
+      top: 0; 
+      left: 0;
+      width: calc(100% + 1px);
+      height: calc(100% + 1px);
+      border: 1px solid var(--gridColor);
+      box-sizing: border-box;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* --- Conteneur interne --- */
     .strip-inner{
       position: relative;
       width: 100%;
       height: 100%;
       flex: 1 1 auto;
-      transform-style: preserve-3d;
-      transition: transform 980ms cubic-bezier(0.22, 0.8, 0.2, 1);
+      overflow: hidden; 
     }
-    .strip.is-back .strip-inner{ transform: rotateX(180deg); }
-
+    
     .face{
       position: absolute;
       inset: 0;
       display: flex;
       align-items: stretch;
       justify-content: stretch;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
-    .face-back{ transform: rotateX(180deg); }
+    
+    /* GESTION DE L'AFFICHAGE FACE / DOS SANS ROTATION */
+    .face-front { display: flex; }
+    .face-back  { display: none; }
 
-    /* Ghost drag depuis menu */
+    .strip.is-back .face-front { display: none; }
+    .strip.is-back .face-back  { display: flex; }
+
+    /* Ghost drag */
     .strip.ghost{
       position: fixed;
       pointer-events: none;
@@ -128,7 +134,10 @@
       box-shadow: 0 22px 38px rgba(0,0,0,0.30);
       transform: scale(0.98);
       transition: transform 120ms ease-out, opacity 120ms ease-out;
+      overflow: hidden;
     }
+    .strip.ghost::after { content: none; }
+    .strip.ghost { border: 1px solid var(--gridColor); }
     .strip.ghost.ready{ transform: scale(1); }
 
     .strip.spawn-pop{ animation: popIn 140ms ease-out; }
@@ -144,10 +153,11 @@
       letter-spacing: 0;
       line-height: 1;
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      text-align: center;
     }
     .seg + .seg{ border-left: 1px dashed rgba(0,0,0,0.22); }
 
-    /* fraction verticale */
+    /* fraction verticale (Mode 1/2) */
     .frac{
       display: inline-flex;
       flex-direction: column;
@@ -171,14 +181,36 @@
       text-shadow: 0 2px 0 rgba(255,255,255,0.35);
     }
 
-    /* --- Menu gauche (palette) --- */
+    /* Mode Texte (ABC) */
+    .text-label {
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    }
+    /* Rotation pour 1/5, 1/6, 1/8, 1/10 */
+    .text-rotated {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+    }
+
+    /* --- Menu gauche --- */
     .palette-item{
       padding: 6px 8px;
       border-radius: 12px;
       transition: none;
     }
-    /* IMPORTANT: pas de surbrillance au survol */
     .palette-item:hover{ background: transparent; }
+
+    /* Titres dans le menu (Unités, Demis...) : masqués par défaut */
+    .palette-label {
+      display: none;
+    }
+    /* ... et affichés UNIQUEMENT quand le body a la classe show-text-labels */
+    body.show-text-labels .palette-label {
+      display: block;
+    }
 
     .spawn-tile{
       height: 40px;
@@ -234,11 +266,13 @@
         </svg>
       </button>
 
-      <button id="btn-export-png" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Exporter une image (PNG)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
+      <!-- Bouton bascule 1/2 <=> ABC -->
+      <button id="btn-toggle-labels" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 px-3 rounded-lg font-bold border border-indigo-200 shadow-sm active:scale-95 transition flex items-center gap-1" title="Changer l'affichage (Fractions / Texte)">
+        <span id="label-icon-num" class="text-sm font-extrabold">1/2</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
         </svg>
+        <span id="label-icon-txt" class="text-sm font-extrabold opacity-50">ABC</span>
       </button>
 
       <!-- Demi-droite (icône) -->
@@ -258,9 +292,9 @@
       <button id="btn-reset-view" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg border border-slate-200 font-bold active:scale-95 transition" title="Recentrer">⤾</button>
     </div>
 
-    <!-- Actions sélection (toujours visibles, activées/désactivées) -->
+    <!-- Actions sélection -->
     <div id="selection-actions" class="flex items-center gap-2">
-      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
+      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 0 1 9-9"/>
           <path d="M3 4v8h8"/>
@@ -270,7 +304,7 @@
         <span class="text-[10px] font-extrabold leading-none">Retourner</span>
       </button>
 
-      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer la bande en pièces">
+      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 4l16 16"/>
           <path d="M4 20L20 4"/>
@@ -278,7 +312,7 @@
         <span class="text-[10px] font-extrabold leading-none">Séparer</span>
       </button>
 
-      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper en 2 (si le double existe)">
+      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="6" cy="6" r="2"/>
           <circle cx="6" cy="18" r="2"/>
@@ -289,7 +323,7 @@
         <span class="text-[10px] font-extrabold leading-none">Couper</span>
       </button>
 
-      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner des pièces alignées en une bande">
+      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"/>
           <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1"/>
@@ -313,23 +347,21 @@
       </button>
     </div>
 
-    <!-- Outils -->
     <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-      <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main (déplacer / sélectionner)">
+      <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
         </svg>
       </button>
 
-      <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon (annoter)">
-        <!-- Crayon simple + petit trait en bas (comme tu aimes) -->
+      <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
         </svg>
       </button>
 
-      <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
+      <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
@@ -337,13 +369,10 @@
     </div>
   </header>
 
-  <!-- Corps: menu gauche + plateau -->
   <div class="flex flex-1 overflow-hidden relative">
-
     <aside class="w-[340px] bg-blue-50 border-r border-blue-200 flex flex-col py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
       <div class="px-3"></div>
       <div id="palette" class="px-3 flex flex-col gap-3"></div>
-
       <div class="mt-2 px-3">
         <div class="text-[10px] font-bold text-slate-400 uppercase">Astuces</div>
         <ul class="text-[11px] text-slate-500 leading-snug list-disc ml-4 mt-1">
@@ -362,11 +391,9 @@
         </div>
       </div>
     </main>
-
   </div>
 
 <script>
-  // --- Configuration couleurs ---
   const FRACTIONS = [
     { denom: 1,  name: 'Unité',     color: '#fff7e6', border: '#cbd5e1', text: '#111827' },
     { denom: 2,  name: 'Demi',      color: '#facc15', border: '#a16207', text: '#111827' },
@@ -378,7 +405,6 @@
     { denom: 10, name: 'Dixième',   color: '#b91c1c', border: '#7f1d1d', text: '#111827' },
   ];
 
-  // Audio (optionnel) – protège si indisponible
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
 
@@ -417,9 +443,10 @@
   class FractionStripsApp {
     constructor(){
       this.history = [];
-      this.tokens = []; // {id, denom, kind:'band'|'piece', side:'front'|'back', x,y, _el}
+      this.tokens = []; 
       this.nextId = 1;
       this.selectedId = null;
+      this.labelMode = 'numeric'; // 'numeric' | 'text'
 
       this.scale = 1;
       this.pan = {x: 0, y: 0};
@@ -429,9 +456,8 @@
       this.currentTool = 'hand';
       this.isDrawing = false;
       this.drawPoints = [];
-      this.basePenPx = 2.55; // crayon un peu plus épais (écriture plus lisible)
+      this.basePenPx = 2.55;
 
-      // Drag réaliste depuis le menu (ghost pleine taille)
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
 
@@ -445,9 +471,7 @@
       this.numberLineEl = document.getElementById('number-line');
       this.numberLine = {
         active: false,
-        x: 0,
-        y: 0,
-        // plus longue, mais on ne force pas à voir le bout
+        x: 0, y: 0,
         len: Math.max(this.unitW * 10.0, 6000),
         baselineOffset: 18,
         height: 46
@@ -464,7 +488,6 @@
       this.updateNumberLineEl();
     }
 
-    // ---- Dimensions ----
     get unitW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--unitW')) || 420; }
     get stripH(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stripH')) || 58; }
     pieceW(denom){ return this.unitW / denom; }
@@ -476,7 +499,10 @@
       };
     }
 
-    // ---- Historique ----
+    roundPos(v){
+      return Math.round(v * 2) / 2;
+    }
+
     saveState(){
       const snapshot = {
         tokens: this.tokens.map(t => ({id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y})),
@@ -484,6 +510,7 @@
         selectedId: this.selectedId,
         pan: {...this.pan},
         scale: this.scale,
+        labelMode: this.labelMode
       };
       this.history.push(snapshot);
       if(this.history.length > 30) this.history.shift();
@@ -498,46 +525,73 @@
       this.selectedId = snap.selectedId;
       this.pan = snap.pan;
       this.scale = snap.scale;
+      this.labelMode = snap.labelMode || 'numeric';
+      this.updateToggleBtnUI();
       this.tokens.forEach(t => this.mountToken(t));
       this.updateTransform();
       this.updateSelectionUI();
       playSound('whoosh');
     }
 
-    // ---- Palette ----
-    buildPalette(){
-      this.palette.innerHTML = '';
-      FRACTIONS.forEach(f => {
-        const row = document.createElement('div');
-        row.className = 'palette-item';
-
-        const picks = document.createElement('div');
-        picks.className = 'flex items-center gap-3 flex-nowrap';
-
-        picks.appendChild(this.makeSpawnTile(f.denom, 'band'));
-        if(f.denom !== 1) picks.appendChild(this.makeSpawnTile(f.denom, 'piece'));
-
-        row.appendChild(picks);
-        this.palette.appendChild(row);
-      });
+    // --- Texte / Labels ---
+    getTextLabel(denom){
+      const map = {
+        1: 'une unité',
+        2: 'un demi',
+        3: 'un tiers',
+        4: 'un quart',
+        5: 'un cinquième',
+        6: 'un sixième',
+        8: 'un huitième',
+        10: 'un dixième'
+      };
+      return map[denom] || '';
     }
 
-    getFractionConfig(denom){
-      return FRACTIONS.find(f => f.denom === denom) || FRACTIONS[0];
+    isRotatedText(denom){
+      return (denom >= 5 && denom !== 7 && denom !== 9); 
     }
 
-    labelHTML(denom){
-      if(denom === 1) return `<span class="back-one">1</span>`;
-      return `
-        <span class="frac">
-          <span class="num">1</span>
-          <span class="bar"></span>
-          <span class="den">${denom}</span>
-        </span>
-      `;
+    getLabelHTML(denom, isBackOfBand = false){
+      // 1. Cas "Dos d'une bande complète" (ex: 2/2 retournée)
+      if(isBackOfBand){
+        if(this.labelMode === 'text'){
+          // "une unité", horizontal
+          return `<span class="text-label" style="font-size:18px;">une unité</span>`;
+        } else {
+          // "1", gros
+          return `<span class="back-one">1</span>`;
+        }
+      }
+
+      // 2. Cas normal (recto ou pièce détachée)
+      if(this.labelMode === 'text'){
+        const txt = this.getTextLabel(denom);
+        const rotated = this.isRotatedText(denom);
+        
+        // CORRECTION TAILLE DE POLICE
+        // "un cinquième" et "un dixième" (5 et 10) réduits un peu plus
+        let fs;
+        if(rotated){
+           if(denom === 5 || denom === 10) fs = '10px'; // Réduit pour 5 et 10
+           else fs = '12px';
+        } else {
+           // Horizontal
+           fs = (denom >= 5) ? '13px' : '15px';
+        }
+
+        const cls = rotated ? 'text-label text-rotated' : 'text-label';
+        return `<span class="${cls}" style="font-size:${fs};">${txt}</span>`;
+      } else {
+        // Mode numérique (1/2)
+        if(denom === 1) return `<span class="back-one">1</span>`;
+        return `<span class="frac"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
+      }
     }
 
     fontSizeFor(denom, kind){
+      // Utilisé pour la taille du conteneur de police, ajustement fin
+      if(this.labelMode === 'text') return 16;
       if(kind === 'piece'){
         if(denom >= 10) return 14;
         if(denom >= 8) return 15;
@@ -550,6 +604,41 @@
       return 18;
     }
 
+    // --- Palette ---
+    buildPalette(){
+      this.palette.innerHTML = '';
+      FRACTIONS.forEach(f => {
+        // Conteneur de la ligne (Label + Bandes)
+        const row = document.createElement('div');
+        row.className = 'palette-item flex flex-col'; // flex-col pour empiler le label et les tuiles
+
+        // Label au-dessus (invisible par défaut via CSS .palette-label)
+        const label = document.createElement('div');
+        // On ajoute la classe palette-label
+        label.className = 'palette-label text-xs font-bold text-slate-500 mb-1 ml-1 capitalize';
+        
+        let text = f.name;
+        // Pluriel simple si dénominateur > 1
+        if(f.denom > 1 && !text.endsWith('s')) text += 's';
+        
+        label.textContent = text;
+        row.appendChild(label);
+
+        // Conteneur des tuiles
+        const picks = document.createElement('div');
+        picks.className = 'flex items-center gap-3 flex-nowrap';
+        picks.appendChild(this.makeSpawnTile(f.denom, 'band'));
+        if(f.denom !== 1) picks.appendChild(this.makeSpawnTile(f.denom, 'piece'));
+
+        row.appendChild(picks);
+        this.palette.appendChild(row);
+      });
+    }
+
+    getFractionConfig(denom){
+      return FRACTIONS.find(f => f.denom === denom) || FRACTIONS[0];
+    }
+
     makeSpawnTile(denom, kind){
       const cfg = this.getFractionConfig(denom);
       const tile = document.createElement('div');
@@ -558,34 +647,25 @@
       tile.style.borderColor = cfg.border;
       tile.setAttribute('draggable', 'false');
       tile.title = (kind === 'band') ? 'Ajouter une bande' : 'Ajouter une pièce';
-
       const menuBandW = 170;
       const w = (kind === 'band') ? menuBandW : Math.max(18, Math.round(menuBandW / denom));
       tile.style.width = w + 'px';
-
       const fsMenu = (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
-
       const segCount = (kind === 'band') ? denom : 1;
       for(let i=0;i<segCount;i++){
         const seg = document.createElement('div');
         seg.className = 'spawn-seg';
         seg.style.color = cfg.text;
         seg.style.fontSize = fsMenu + 'px';
-
+        
+        // Dans le menu, on garde l'affichage numérique classique (plus compact)
         if(denom === 1){
           seg.innerHTML = `<span class="back-one" style="font-size:${Math.max(fsMenu,12)}px;color:${cfg.text}">1</span>`;
         } else {
-          seg.innerHTML = `
-            <span class="frac menu" style="color:${cfg.text};font-size:${fsMenu}px">
-              <span class="num">1</span>
-              <span class="bar"></span>
-              <span class="den">${denom}</span>
-            </span>
-          `;
+          seg.innerHTML = `<span class="frac menu" style="color:${cfg.text};font-size:${fsMenu}px"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
         }
         tile.appendChild(seg);
       }
-
       const start = (e) => this.startSpawnDrag(e, denom, kind);
       tile.addEventListener('mousedown', start);
       tile.addEventListener('touchstart', start, {passive:false});
@@ -598,21 +678,21 @@
       el.className = 'strip ghost';
       el.style.background = cfg.color;
       el.style.borderColor = cfg.border;
-
       const segCount = (side === 'back') ? 1 : ((kind === 'band') ? denom : 1);
       const fs = this.fontSizeFor(denom, kind) * this.scale;
-
       for(let i=0;i<segCount;i++){
         const seg = document.createElement('div');
         seg.className = 'seg';
         seg.style.color = cfg.text;
         seg.style.fontSize = `${fs}px`;
-
+        
+        // Ghost suit le mode actuel
         if(side === 'front'){
-          seg.innerHTML = (denom === 1) ? `<span class="back-one">1</span>` : this.labelHTML(denom);
+          seg.innerHTML = this.getLabelHTML(denom, false);
         } else {
-          if(kind === 'band' || denom === 1) seg.innerHTML = `<span class="back-one" style="color:${cfg.text}">1</span>`;
-          else seg.innerHTML = this.labelHTML(denom);
+          // Back ghost
+          const isBandBack = (kind === 'band' || denom === 1);
+          seg.innerHTML = this.getLabelHTML(denom, isBandBack);
         }
         el.appendChild(seg);
       }
@@ -623,17 +703,14 @@
       if(e.type === 'mousedown' && e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
-
       const pt = e.touches ? e.touches[0] : e;
       const cx = pt.clientX;
       const cy = pt.clientY;
       this._lastSpawnClient = {x: cx, y: cy};
-
       const wWorld = (kind === 'band') ? this.unitW : this.pieceW(denom);
       const hWorld = this.stripH;
       const w = wWorld * this.scale;
       const h = hWorld * this.scale;
-
       const ghost = this.buildGhostStrip(denom, kind, 'front');
       ghost.style.width = `${w}px`;
       ghost.style.height = `${h}px`;
@@ -641,9 +718,7 @@
       ghost.style.top  = `${cy - h/2}px`;
       document.body.appendChild(ghost);
       requestAnimationFrame(() => ghost.classList.add('ready'));
-
       this.spawnDrag = { denom, kind, start: {x: cx, y: cy}, moved: false, ghost, w, h };
-
       const move = (ev) => this.onSpawnMove(ev);
       const end  = (ev) => this.onSpawnEnd(ev, move, end);
       document.addEventListener('mousemove', move);
@@ -657,15 +732,12 @@
       const sd = this.spawnDrag;
       if(!sd) return;
       ev.preventDefault();
-
       const pt = ev.touches ? ev.touches[0] : ev;
       const cx = pt.clientX;
       const cy = pt.clientY;
       this._lastSpawnClient = {x: cx, y: cy};
-
       const dist = Math.hypot(cx - sd.start.x, cy - sd.start.y);
       if(dist > 6) sd.moved = true;
-
       sd.ghost.style.left = `${cx - sd.w/2}px`;
       sd.ghost.style.top  = `${cy - sd.h/2}px`;
     }
@@ -673,19 +745,15 @@
     onSpawnEnd(ev, moveFn, endFn){
       const sd = this.spawnDrag;
       if(!sd) return;
-
       document.removeEventListener('mousemove', moveFn);
       document.removeEventListener('mouseup', endFn);
       document.removeEventListener('touchmove', moveFn);
       document.removeEventListener('touchend', endFn);
       document.removeEventListener('touchcancel', endFn);
-
       const cx = (ev.changedTouches && ev.changedTouches[0]) ? ev.changedTouches[0].clientX : this._lastSpawnClient.x;
       const cy = (ev.changedTouches && ev.changedTouches[0]) ? ev.changedTouches[0].clientY : this._lastSpawnClient.y;
-
       const br = this.boardContainer.getBoundingClientRect();
       const insideBoard = (cx >= br.left && cx <= br.right && cy >= br.top && cy <= br.bottom);
-
       if(insideBoard){
         const p = this.getWorldPos(cx, cy);
         const created = this.addToken({denom: sd.denom, kind: sd.kind, x: p.x, y: p.y});
@@ -694,26 +762,21 @@
         const center = this.getWorldPos(br.left + br.width*0.5, br.top + br.height*0.35);
         this.addToken({denom: sd.denom, kind: sd.kind, x: center.x, y: center.y});
       }
-
       if(sd.ghost) sd.ghost.remove();
       this.spawnDrag = null;
     }
 
-    // ---- Plateau / transformation ----
     updateTransform(){
       this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
     }
 
-    // Zoom en gardant le point sous la souris
     zoomAt(clientX, clientY, newScale){
       const oldScale = this.scale;
       const z = Math.min(Math.max(0.45, newScale), 3);
       if(z === oldScale) return;
-
       const r = this.boardContainer.getBoundingClientRect();
       const wx = (clientX - r.left - this.pan.x) / oldScale;
       const wy = (clientY - r.top  - this.pan.y) / oldScale;
-
       this.scale = z;
       this.pan.x = clientX - r.left - wx * this.scale;
       this.pan.y = clientY - r.top  - wy * this.scale;
@@ -752,19 +815,15 @@
         this.numberLineEl.innerHTML = '';
         return;
       }
-
       const nl = this.numberLine;
       const len = Math.round(nl.len);
       const base = nl.baselineOffset;
       const H = nl.height;
-
       this.numberLineEl.style.left = `${nl.x}px`;
       this.numberLineEl.style.top  = `${nl.y - base}px`;
-
       const arrowX = len;
       const a = 12;
       const y = base;
-
       this.numberLineEl.classList.remove('hidden');
       this.numberLineEl.innerHTML = `
         <svg width="${len}" height="${H}" viewBox="0 0 ${len} ${H}" xmlns="http://www.w3.org/2000/svg">
@@ -784,78 +843,9 @@
       };
     }
 
-    // ---- Contours "1 trait" quand ça colle ----
-    updateSeamBorders(){
-      const tol = 2.2;
-      const edge = 'rgba(0,0,0,0.55)';
-      const transparent = 'transparent';
-
-      // reset
-      for(const t of this.tokens){
-        if(!t._el) continue;
-        t._el.style.setProperty('--edgeL', edge);
-        t._el.style.setProperty('--edgeR', edge);
-        t._el.style.setProperty('--edgeT', edge);
-        t._el.style.setProperty('--edgeB', edge);
-      }
-
-      const dims = (t)=>this.tokenDims(t);
-      const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
-
-      // pairwise seams
-      for(let i=0;i<this.tokens.length;i++){
-        const aT = this.tokens[i];
-        if(!aT._el) continue;
-        const ad = dims(aT);
-        const ax0 = aT.x, ax1 = aT.x + ad.w;
-        const ay0 = aT.y, ay1 = aT.y + ad.h;
-
-        for(let j=i+1;j<this.tokens.length;j++){
-          const bT = this.tokens[j];
-          if(!bT._el) continue;
-          const bd = dims(bT);
-          const bx0 = bT.x, bx1 = bT.x + bd.w;
-          const by0 = bT.y, by1 = bT.y + bd.h;
-
-          const ovX = overlapLen(ax0, ax1, bx0, bx1);
-          const ovY = overlapLen(ay0, ay1, by0, by1);
-
-          // horizontal adjacency
-          if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            bT._el.style.setProperty('--edgeL', transparent);
-          }
-          if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            aT._el.style.setProperty('--edgeR', transparent);
-          }
-
-          // vertical adjacency: on enlève UN SEUL trait => on cache le bord BAS de la bande du dessus
-          if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            // a au-dessus de b
-            aT._el.style.setProperty('--edgeB', transparent);
-          }
-          if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            // b au-dessus de a
-            bT._el.style.setProperty('--edgeB', transparent);
-          }
-        }
-      }
-    }
-
-    scheduleSeamUpdate(){
-      if(this._seamRAF) return;
-      this._seamRAF = requestAnimationFrame(() => {
-        this._seamRAF = null;
-        this.updateSeamBorders();
-      });
-    }
-
-    // ---- UI ----
     _bind(id, evt, fn){
       const el = document.getElementById(id);
-      if(!el){
-        console.warn(`[UI] Élément manquant: #${id} (listener ${evt} ignoré)`);
-        return null;
-      }
+      if(!el) return null;
       el.addEventListener(evt, fn);
       return el;
     }
@@ -863,28 +853,52 @@
     initUI(){
       this._bind('btn-undo','click', () => this.undo());
       this._bind('btn-clear','click', () => this.resetAll());
-      this._bind('btn-export-png','click', () => this.exportPNG());
+      // Plus d'export PNG ici
+      
+      this._bind('btn-toggle-labels','click', () => this.toggleLabelMode());
+
       this._bind('btn-numberline','click', () => this.toggleNumberLine());
       this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
       this._bind('btn-zoom-out','click', () => this.setZoom(this.scale - 0.15));
       this._bind('btn-reset-view','click', () => this.resetView());
-
       this._bind('btn-flip','click', () => this.flipSelected());
       this._bind('btn-separate','click', () => this.separateSelected());
       this._bind('btn-cut','click', () => this.cutSelected());
       this._bind('btn-fuse','click', () => this.fuseSelected());
       this._bind('btn-duplicate','click', () => this.duplicateSelected());
       this._bind('btn-delete','click', () => this.deleteSelected());
-
       this._bind('tool-hand','click', () => this.setTool('hand'));
       this._bind('tool-pen','click', () => this.setTool('pen'));
       this._bind('btn-clear-drawing','click', () => this.clearDrawing());
-
       window.addEventListener('keydown', (e) => {
         if(e.key === 'Escape') this.selectToken(null);
         if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); this.undo(); }
         if(e.key === 'Delete' || e.key === 'Backspace') this.deleteSelected();
       });
+    }
+
+    toggleLabelMode(){
+      this.labelMode = (this.labelMode === 'numeric') ? 'text' : 'numeric';
+      document.body.classList.toggle('show-text-labels', this.labelMode === 'text');
+      this.updateToggleBtnUI();
+      const selId = this.selectedId;
+      this.tokens.forEach(t => { if(t._el) t._el.remove(); });
+      this.tokens.forEach(t => this.mountToken(t));
+      if(selId) this.selectToken(selId);
+      playSound('pop');
+    }
+
+    updateToggleBtnUI(){
+      const numSpan = document.getElementById('label-icon-num');
+      const txtSpan = document.getElementById('label-icon-txt');
+      if(!numSpan || !txtSpan) return;
+      if(this.labelMode === 'numeric'){
+        numSpan.style.opacity = '1';
+        txtSpan.style.opacity = '0.4';
+      } else {
+        numSpan.style.opacity = '0.4';
+        txtSpan.style.opacity = '1';
+      }
     }
 
     updateSelectionUI(){
@@ -894,53 +908,39 @@
       const btnFuse = document.getElementById('btn-fuse');
       const btnDup  = document.getElementById('btn-duplicate');
       const btnDel  = document.getElementById('btn-delete');
-
       const s = this.selected;
       const has = !!s;
-
       if(btnFlip) btnFlip.disabled = !has;
       if(btnDup)  btnDup.disabled  = !has;
       if(btnDel)  btnDel.disabled  = !has;
-
       if(btnSep)  btnSep.disabled  = !(has && s.kind === 'band'  && s.denom > 1);
       if(btnFuse) btnFuse.disabled = !(has && s.kind === 'piece' && s.denom > 1);
       if(btnCut)  btnCut.disabled  = !(has && this.canCut(s));
     }
 
-    // ---- Plateau listeners ----
     initBoardListeners(){
-      // zoom molette
       this.boardContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
         const dir = (e.deltaY > 0) ? -1 : 1;
         const step = 0.12;
         this.zoomAt(e.clientX, e.clientY, this.scale + dir * step);
       }, {passive:false});
-
-      // empêche le menu contextuel quand on pan au clic droit en mode stylo
       this.boardContainer.addEventListener('contextmenu', (e) => {
         if(this.currentTool === 'pen') e.preventDefault();
       });
-
-      // pan sur fond
       this.boardContainer.addEventListener('mousedown', (e) => {
         const isPen  = (this.currentTool === 'pen');
         const wantsPan = (!isPen && e.button === 0) || (isPen && e.button === 2);
         if(!wantsPan) return;
-
         if(e.target.closest('.strip')) return;
-
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
         if(!isPen) this.selectToken(null);
       });
-
-      // dessin
       this.boardContainer.addEventListener('mousedown', (e) => {
         if(this.currentTool === 'pen' && e.button === 0) this.startDraw(e);
       });
-
       window.addEventListener('mousemove', (e) => {
         if(this.isPanning){
           this.pan.x = e.clientX - this.panStart.x;
@@ -950,71 +950,68 @@
           this.draw(e);
         }
       });
-
       window.addEventListener('mouseup', () => {
         this.isPanning = false;
         if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
         this.isDrawing = false;
         this.boardContainer.classList.remove('panning');
       });
-
       window.addEventListener('resize', () => this.resizeCanvas());
     }
 
-    // ---- Création / rendu tokens ----
     mountToken(token){
       const cfg = this.getFractionConfig(token.denom);
       const el = document.createElement('div');
       el.className = 'strip';
       el.dataset.id = String(token.id);
-
       const h = this.stripH;
       const w = (token.kind === 'band') ? this.unitW : this.pieceW(token.denom);
-
       el.style.width = `${w}px`;
       el.style.height = `${h}px`;
       el.style.left = `${token.x}px`;
       el.style.top = `${token.y}px`;
       el.style.background = cfg.color;
-      el.style.borderColor = cfg.border;
       el.style.zIndex = String(10 + token.id);
-
+      
+      // Pas de rotation 3D animée
+      // On utilise simplement display:none pour switch
       if(token.side === 'back') el.classList.add('is-back');
-
+      
       const inner = document.createElement('div');
       inner.className = 'strip-inner';
-
+      
       const faceFront = document.createElement('div');
       faceFront.className = 'face face-front';
-
       const faceBack = document.createElement('div');
       faceBack.className = 'face face-back';
-
-      // recto
+      
+      // RECTO
       const segCountFront = (token.kind === 'band') ? token.denom : 1;
       for(let i=0;i<segCountFront;i++){
         const seg = document.createElement('div');
         seg.className = 'seg';
         seg.style.color = cfg.text;
         seg.style.fontSize = `${this.fontSizeFor(token.denom, token.kind)}px`;
-        seg.innerHTML = (token.denom === 1) ? `<span class="back-one">1</span>` : this.labelHTML(token.denom);
+        seg.innerHTML = this.getLabelHTML(token.denom, false);
         faceFront.appendChild(seg);
       }
 
-      // verso : bande => 1, pièce => 1/denom
+      // VERSO
+      // Une seule case pour le verso
       const backSeg = document.createElement('div');
       backSeg.className = 'seg';
       backSeg.style.color = cfg.text;
-      backSeg.style.fontSize = `${this.fontSizeFor(token.denom, token.kind)}px`;
-      if(token.kind === 'band' || token.denom === 1) backSeg.innerHTML = `<span class="back-one" style="color:${cfg.text}">1</span>`;
-      else backSeg.innerHTML = this.labelHTML(token.denom);
+      
+      const isBandBack = (token.kind === 'band' || token.denom === 1);
+      backSeg.style.fontSize = `${this.fontSizeFor(isBandBack ? 1 : token.denom, isBandBack ? 'band' : 'piece')}px`;
+      backSeg.innerHTML = this.getLabelHTML(token.denom, isBandBack);
+      
       faceBack.appendChild(backSeg);
-
+      
       inner.appendChild(faceFront);
       inner.appendChild(faceBack);
       el.appendChild(inner);
 
-      // interactions
       el.addEventListener('mousedown', (e) => this.handleDragStart(e));
       el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive:false});
       el.addEventListener('click', (e) => {
@@ -1026,8 +1023,6 @@
         this.selectToken(token.id);
         this.flipSelected();
       });
-
-      // double-tap mobile
       let lastTap = 0;
       el.addEventListener('touchend', (e) => {
         const now = Date.now();
@@ -1038,18 +1033,15 @@
         }
         lastTap = now;
       });
-
       this.boardWorld.appendChild(el);
       token._el = el;
-
       if(token._new){
         el.classList.add('spawn-pop');
         el.addEventListener('animationend', () => el.classList.remove('spawn-pop'), {once:true});
         delete token._new;
       }
-
       this.refreshTokenSelectedClass(token.id);
-      this.updateSeamBorders();
+      // CORRECTION: plus d'appel à updateSeamBorders ici, c'est géré par CSS
     }
 
     refreshTokenSelectedClass(id){
@@ -1063,16 +1055,19 @@
       this.saveState();
       playSound('pop');
       const pos = (x===null || y===null) ? {x: 40 + Math.random()*40, y: 40 + Math.random()*30} : {x, y};
-
       const w = (kind === 'band') ? this.unitW : this.pieceW(denom);
       const h = this.stripH;
+      // FIXE: Définition de rawX et rawY avant utilisation
+      const rawX = pos.x - w/2;
+      const rawY = pos.y - h/2;
+      
       const token = {
         id: this.nextId++,
         denom,
         kind,
         side: 'front',
-        x: pos.x - w/2,
-        y: pos.y - h/2,
+        x: this.roundPos(rawX),
+        y: this.roundPos(rawY),
         _new: true,
       };
       this.tokens.push(token);
@@ -1094,15 +1089,12 @@
     flipSelected(){
       const s = this.selected;
       if(!s) return;
+      if(s.kind !== 'band') return;
       this.saveState();
       s.side = (s.side === 'front') ? 'back' : 'front';
-
       if(s._el){
-        requestAnimationFrame(() => {
-          s._el.classList.toggle('is-back', s.side === 'back');
-        });
+        s._el.classList.toggle('is-back', s.side === 'back');
       }
-
       this.updateSelectionUI();
       playSound('flip');
     }
@@ -1132,7 +1124,7 @@
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
       this.selectToken(null);
-      this.updateSeamBorders();
+      // CORRECTION: plus d'appel à updateSeamBorders
       playSound('whoosh');
     }
 
@@ -1140,15 +1132,12 @@
       const s = this.selected;
       if(!s || s.kind !== 'band' || s.denom <= 1) return;
       this.saveState();
-
       const baseX = s.x;
       const baseY = s.y;
       const denom = s.denom;
       const side = s.side;
-
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
-
       const pw = this.pieceW(denom);
       for(let i=0;i<denom;i++){
         const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY };
@@ -1156,29 +1145,24 @@
         this.mountToken(piece);
       }
       this.selectToken(this.tokens[this.tokens.length - denom].id);
-      this.updateSeamBorders();
+      // CORRECTION: plus d'appel à updateSeamBorders
       playSound('pop');
     }
 
     fuseSelected(){
       const s = this.selected;
       if(!s || s.kind !== 'piece' || s.denom <= 1) return;
-
       const d = s.denom;
       const pw = this.pieceW(d);
       const yTol = 10;
       const xTol = 12;
-
       const rowPieces = this.tokens
         .filter(t => t.kind === 'piece' && t.denom === d && t.side === s.side && Math.abs(t.y - s.y) < yTol)
         .sort((a,b) => a.x - b.x);
-
       if(rowPieces.length < d){ playSound('whoosh'); return; }
-
       for(let start=0; start <= rowPieces.length - d; start++){
         const seq = rowPieces.slice(start, start + d);
         if(!seq.some(t => t.id === s.id)) continue;
-
         const baseX = seq[0].x;
         const baseY = seq[0].y;
         let ok = true;
@@ -1188,12 +1172,10 @@
           if(Math.abs(seq[i].y - baseY) > yTol) { ok = false; break; }
         }
         if(!ok) continue;
-
         this.saveState();
         const ids = new Set(seq.map(t => t.id));
         seq.forEach(t => { if(t._el) t._el.remove(); });
         this.tokens = this.tokens.filter(t => !ids.has(t.id));
-
         const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY };
         this.tokens.push(band);
         this.mountToken(band);
@@ -1201,11 +1183,9 @@
         playSound('pop');
         return;
       }
-
       playSound('whoosh');
     }
 
-    // ---- Ciseaux : couper en 2 (uniquement si le double existe) ----
     canCut(t){
       if(!t) return false;
       if(t.denom <= 0) return false;
@@ -1216,18 +1196,14 @@
     cutSelected(){
       const s = this.selected;
       if(!s || !this.canCut(s)) return;
-
       const d = s.denom;
       const d2 = d * 2;
       const side = s.side;
       const x = s.x;
       const y = s.y;
-
       this.saveState();
-
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
-
       if(s.kind === 'band'){
         const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y };
         this.tokens.push(band);
@@ -1242,82 +1218,10 @@
         this.mountToken(p2);
         this.selectToken(p1.id);
       }
-
-      this.updateSeamBorders();
+      // CORRECTION: plus d'appel à updateSeamBorders
       playSound('pop');
     }
 
-    // ---- Export PNG ----
-    async exportPNG(){
-      const r = this.boardContainer.getBoundingClientRect();
-      const w = Math.max(1, Math.round(r.width));
-      const h = Math.max(1, Math.round(r.height));
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-
-      const out = document.createElement('canvas');
-      out.width = Math.round(w * dpr);
-      out.height = Math.round(h * dpr);
-      const ctx = out.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0,0,w,h);
-
-      ctx.translate(this.pan.x, this.pan.y);
-      ctx.scale(this.scale, this.scale);
-
-      if(this.numberLine && this.numberLine.active){
-        const nl = this.numberLine;
-        ctx.save();
-        ctx.strokeStyle = 'rgba(17,24,39,0.9)';
-        ctx.fillStyle = 'rgba(17,24,39,0.9)';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(nl.x, nl.y);
-        ctx.lineTo(nl.x + nl.len, nl.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(nl.x, nl.y-10);
-        ctx.lineTo(nl.x, nl.y+10);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(nl.x + nl.len, nl.y);
-        ctx.lineTo(nl.x + nl.len - 12, nl.y - 8);
-        ctx.lineTo(nl.x + nl.len - 12, nl.y + 8);
-        ctx.closePath();
-        ctx.fill();
-        ctx.font = '800 18px Fredoka, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText('0', nl.x + 2, nl.y + 12);
-        ctx.restore();
-      }
-
-      try{
-        const ws = this._canvasWorldSize || 4000;
-        ctx.drawImage(this.canvas, 0, 0, ws, ws);
-      }catch(_){ }
-
-      for(const t of this.tokens){
-        const cfg = this.getFractionConfig(t.denom);
-        const {w:tw, h:th} = this.tokenDims(t);
-        ctx.fillStyle = cfg.color;
-        ctx.fillRect(t.x, t.y, tw, th);
-        ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(t.x, t.y, tw, th);
-      }
-
-      const url = out.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'plateau-fractions.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-
-    // ---- Drag tokens ----
     handleDragStart(e){
       const isTouch = !!e.touches;
       const btn = isTouch ? 0 : (typeof e.button === 'number' ? e.button : 0);
@@ -1325,26 +1229,20 @@
         (this.currentTool === 'hand' && (isTouch || btn === 0)) ||
         (this.currentTool === 'pen' && !isTouch && btn === 2);
       if(!allow) return;
-
       e.preventDefault();
       e.stopPropagation();
       const el = e.target.closest('.strip');
       if(!el) return;
-
       const id = parseInt(el.dataset.id, 10);
       const token = this.tokens.find(t => t.id === id);
       if(!token) return;
-
       this.saveState();
       this.selectToken(token.id);
-
       token._el.classList.add('dragging');
-
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const rect = token._el.getBoundingClientRect();
       const offset = { x: clientX - rect.left, y: clientY - rect.top };
-
       const move = (ev) => {
         ev.preventDefault();
         const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
@@ -1352,8 +1250,6 @@
         const br = this.boardContainer.getBoundingClientRect();
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
         let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
-
-        // aimantation vers la demi-droite (si visible) : au-dessus ET au-dessous
         const {h} = this.tokenDims(token);
         if(this.numberLine && this.numberLine.active){
           const lockThresh = 18 / this.scale;
@@ -1364,14 +1260,11 @@
             wy = (dAbove <= dBelow) ? (this.numberLine.y - h) : this.numberLine.y;
           }
         }
-
         token.x = wx;
         token.y = wy;
         token._el.style.left = wx + 'px';
         token._el.style.top = wy + 'px';
-        this.scheduleSeamUpdate();
       };
-
       const end = () => {
         document.removeEventListener('mousemove', move);
         document.removeEventListener('touchmove', move);
@@ -1380,7 +1273,6 @@
         if(token._el) token._el.classList.remove('dragging');
         this.snapToken(token);
       };
-
       document.addEventListener('mousemove', move);
       document.addEventListener('touchmove', move, {passive:false});
       document.addEventListener('mouseup', end);
@@ -1389,11 +1281,9 @@
 
     snapToken(t, opts={}){
       if(!t) return;
-
       const {w, h} = this.tokenDims(t);
       const threshPx = 28;
       const thresh = threshPx / this.scale;
-
       let bestX = null, bestDx = Infinity, bestXPrio = 9;
       let bestY = null, bestDy = Infinity, bestYPrio = 9;
 
@@ -1405,7 +1295,6 @@
           bestX = nx;
         }
       };
-
       const considerY = (ny, prio=1) => {
         const ady = Math.abs(ny - t.y);
         if(ady <= thresh && (prio < bestYPrio || (prio === bestYPrio && ady < bestDy))){
@@ -1416,7 +1305,6 @@
       };
 
       const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
-
       const xLinesFor = (o) => {
         const {w:ow} = this.tokenDims(o);
         const ox = o.x;
@@ -1430,35 +1318,27 @@
         return lines;
       };
 
-      // Demi-droite graduée : priorité max
       if(this.numberLine && this.numberLine.active){
         considerY(this.numberLine.y - h, 0);
         considerY(this.numberLine.y, 0);
         considerX(this.numberLine.x, 0);
       }
 
-      // Accroche aux autres bandes/pièces
       for(const o of this.tokens){
         if(o.id === t.id) continue;
-
         const od = this.tokenDims(o);
         const ox = o.x, oy = o.y, ow = od.w, oh = od.h;
-
         const ovY = overlapLen(t.y, t.y + h, oy, oy + oh);
         const ovX = overlapLen(t.x, t.x + w, ox, ox + ow);
-
         const neighX = Math.min(Math.abs(t.x - (ox + ow)), Math.abs((t.x + w) - ox));
         const neighY = Math.min(Math.abs(t.y - (oy + oh)), Math.abs((t.y + h) - oy));
         const neighborX = neighX <= thresh;
         const neighborY = neighY <= thresh;
-
         const prioX = (ovY > Math.min(h, oh) * 0.35 || neighborY) ? 0 : 1;
         const prioY = (ovX > Math.min(w, ow) * 0.35 || neighborX) ? 0 : 1;
-
         considerY(oy, prioY);
         considerY(oy - h, prioY);
         considerY(oy + oh, prioY);
-
         const lines = xLinesFor(o);
         for(const gx of lines){
           considerX(gx, prioX);
@@ -1473,18 +1353,29 @@
         t.x = bestX;
         if(t._el) t._el.style.left = t.x + 'px';
         snapped = true;
+      } else {
+        const rx = this.roundPos(t.x);
+        if(Math.abs(rx - t.x) > 0.001){
+          t.x = rx;
+          if(t._el) t._el.style.left = t.x + 'px';
+        }
       }
+
       if(bestY !== null){
         t.y = bestY;
         if(t._el) t._el.style.top = t.y + 'px';
         snapped = true;
+      } else {
+        const ry = this.roundPos(t.y);
+        if(Math.abs(ry - t.y) > 0.001){
+          t.y = ry;
+          if(t._el) t._el.style.top = t.y + 'px';
+        }
       }
 
       if(snapped && !opts.silent) playSound('pop');
-      this.updateSeamBorders();
     }
 
-    // ---- Outils dessin ----
     setTool(tool){
       this.currentTool = tool;
       const hand = document.getElementById('tool-hand');
@@ -1497,18 +1388,16 @@
     }
 
     resizeCanvas(){
-      // Canevas "monde" : on augmente la résolution (DPR) pour éviter l'effet pixelisé au zoom
       const worldSize = 4000;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       this._canvasWorldSize = worldSize;
       this._canvasDpr = dpr;
-
       this.canvas.width = Math.round(worldSize * dpr);
       this.canvas.height = Math.round(worldSize * dpr);
       this.canvas.style.width = `${worldSize}px`;
       this.canvas.style.height = `${worldSize}px`;
-
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const offset = 2000;
+      this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
       this.ctx.miterLimit = 2;
@@ -1520,11 +1409,9 @@
     startDraw(e){
       this.isDrawing = true;
       this.drawPoints = [];
-
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
-
       this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
       this.drawPoints.push(p);
       this.ctx.beginPath();
@@ -1536,18 +1423,14 @@
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
-
       this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
-
       const pts = this.drawPoints;
       pts.push(p);
-
       if(pts.length === 2){
         this.ctx.lineTo(p.x, p.y);
         this.ctx.stroke();
         return;
       }
-
       const p1 = pts[pts.length - 2];
       const p2 = pts[pts.length - 1];
       const midX = (p1.x + p2.x) / 2;
@@ -1570,9 +1453,9 @@
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.restore();
-
+      const offset = 2000;
       const dpr = this._canvasDpr || 1;
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
     }
 
     clearAllTokens(withHistory=true){
@@ -1592,10 +1475,9 @@
     }
   }
 
-  // --- Mini tests (sécurité) ---
   function runSelfTests(){
     const required = [
-      'btn-undo','btn-clear','btn-export-png','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','btn-toggle-labels','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas','number-line'
@@ -1605,20 +1487,16 @@
       console.error('[SelfTest] IDs manquants:', missing);
       return { ok:false, missing };
     }
-
-    // tests supplémentaires (non intrusifs)
     try{
-      // Vérifie que le script s'exécute bien et qu'on peut instancier
       const tmp = new FractionStripsApp();
-      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','exportPNG','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
+      // On retire updateSeamBorders car cette méthode n'est plus utilisée (CSS ::after)
+      const okMethods = ['addToken','snapToken','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
       if(!okMethods) throw new Error('Méthodes clés manquantes');
-      // Nettoyage visuel minimal
       tmp.resetAll();
     }catch(err){
       console.error('[SelfTest] Erreur instanciation/app:', err);
       return { ok:false, missing:[], err };
     }
-
     console.log('[SelfTest] OK');
     return { ok:true, missing:[] };
   }
@@ -1626,7 +1504,6 @@
   window.addEventListener('DOMContentLoaded', () => {
     const t = runSelfTests();
     if(!t.ok) return;
-    // Instance réelle utilisée par l'utilisateur
     window.app = new FractionStripsApp();
     console.log('[SelfTest] App instanciée OK');
   });
