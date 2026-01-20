@@ -67,7 +67,9 @@
       background: transparent;
     }
     .strip.dragging{ cursor: grabbing; z-index: 2000 !important; }
-    .strip.is-disk.selected{ --selRing: 0 0 0 3px rgba(59,130,246,0.85); }
+    /* Sélection : désormais gérée par le tracé SVG (.sel-outline) pour TOUS les types
+       (y compris les disques), afin que le contour bleu suive aussi l'animation de retournement. */
+    /* .strip.is-disk.selected{ --selRing: 0 0 0 3px rgba(59,130,246,0.85); } */
 
     @keyframes snapPop{
       0%{ transform: scale(1); }
@@ -181,7 +183,7 @@
     .strip.selected .rotate-handle{ opacity: 1; }
 
     /* outils */
-    #custom-cursor{ position: fixed; pointer-events:none; z-index: 9999; display:none; }
+    #custom-cursor{ position: fixed; pointer-events:none; z-index: 9999; display:none; transform: translate(-50%, -50%); }
     .hide-cursor, .hide-cursor * { cursor: none !important; }
 
     /* Boutons de mode actifs */
@@ -210,11 +212,10 @@
 <body class="h-screen w-screen flex flex-col">
 
   <div id="custom-cursor">
-    <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
-      <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
-      <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-      <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-      <circle cx="8" cy="32" r="1" fill="white"/>
+    <!-- Curseur "petite croix" pour le mode stylo -->
+    <svg class="drop-shadow" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 2 V18" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M2 10 H18" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round"/>
     </svg>
   </div>
 
@@ -321,7 +322,10 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
       </button>
       <button id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        <!-- Icône : petite croix (pas de stylo) -->
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v14M5 12h14"/>
+        </svg>
       </button>
       <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -412,6 +416,9 @@
       this.nextId = 1;
       this.selectedId = null;
 
+      // Ordre d'empilement (z-index dynamique : la dernière pièce manipulée reste au-dessus)
+      this.zTop = 0;
+
       this.scale = 1;
       this.pan = {x: 0, y: 0};
       this.isPanning = false;
@@ -454,7 +461,7 @@
     saveState(){
       const snapshot = {
         tokens: this.tokens.map(t => ({
-          id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y,
+          id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y, z: (typeof t.z === 'number') ? t.z : null,
           rot: (typeof t.rot === 'number') ? t.rot : 0,
           slot: (typeof t.slot === 'number') ? t.slot : null,
           hideLabel: !!t.hideLabel
@@ -477,6 +484,9 @@
       this.selectedId = snap.selectedId;
       this.pan = snap.pan;
       this.scale = snap.scale;
+
+      // Réinitialise l'empilement
+      this.zTop = Math.max(0, ...this.tokens.map(t => (typeof t.z === 'number') ? t.z : 0));
       this.tokens.forEach(t => this.mountToken(t));
       this.updateTransform();
       this.updateSelectionUI();
@@ -778,7 +788,9 @@
           }
           // étiquettes (seulement si non masquées par le bouton Oeil)
           if(!token.hideLabel){
-            const rr = R * 0.62;
+            // Rapprocher le texte du centre pour les demis (denom=2)
+            let rr = R * 0.62;
+            if(token.denom === 2) rr = R * 0.45;
             for(let i=0;i<token.denom;i++){
               const mid = start + (i+0.5)*step;
               const tx = cx + rr*Math.cos(mid);
@@ -802,6 +814,7 @@
             ${circle}
             ${lines}
             ${labels}
+            <circle class="sel-outline" cx="${cx}" cy="${cy}" r="${R-2}" fill="none" stroke="rgba(59,130,246,0.85)" stroke-width="4" />
           </svg>
         `;
       }
@@ -1105,9 +1118,14 @@
         this.setZoom(this.scale + delta);
       }, {passive:false});
 
+      // empêche le menu contextuel : indispensable pour le glisser au bouton droit
+      this.boardContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+
       // pan sur fond
       this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool === 'pen') return;
+        // En mode stylo : on autorise le déplacement du plateau au bouton droit uniquement
+        if(this.currentTool === 'pen' && e.button !== 2) return;
+        if(e.button === 2) e.preventDefault();
         if(e.target.closest('.strip')) return;
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
@@ -1117,7 +1135,10 @@
 
       // dessin
       this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool === 'pen') this.startDraw(e);
+        if(this.currentTool !== 'pen') return;
+        // Le dessin se fait au clic gauche (le bouton droit sert à bouger pièces/plateau)
+        if(typeof e.button === 'number' && e.button !== 0) return;
+        this.startDraw(e);
       });
 
       window.addEventListener('mousemove', (e) => {
@@ -1141,6 +1162,21 @@
     }
 
     // ---- Création / rendu tokens ----
+    _ensureZ(token){
+      if(!token) return;
+      if(typeof token.z !== 'number'){
+        token.z = ++this.zTop;
+      }
+      if(token.z > this.zTop) this.zTop = token.z;
+    }
+
+    bringToFront(token){
+      if(!token) return;
+      this._ensureZ(token);
+      token.z = ++this.zTop;
+      if(token._el) token._el.style.zIndex = String(10 + token.z);
+    }
+
     _renderToken(token){
       if(!token._el) return;
       const {w,h} = this.tokenDims(token);
@@ -1148,7 +1184,8 @@
       token._el.style.height = `${h}px`;
       token._el.style.left = `${token.x}px`;
       token._el.style.top  = `${token.y}px`;
-      token._el.style.zIndex = String(10 + token.id);
+      this._ensureZ(token);
+      token._el.style.zIndex = String(10 + token.z);
       token._el.classList.toggle('is-back', token.side === 'back');
 
       const front = token._el.querySelector('.face-front');
@@ -1243,6 +1280,7 @@
       const D = this.diskD;
       const token = {
         id: this.nextId++,
+        z: ++this.zTop,
         denom,
         kind,
         side: 'front',
@@ -1298,6 +1336,7 @@
       this.saveState();
       const copy = {
         id: this.nextId++,
+        z: ++this.zTop,
         denom: s.denom,
         kind: s.kind,
         side: s.side,
@@ -1341,6 +1380,7 @@
       for(let i=0;i<denom;i++){
         const piece = {
           id: this.nextId++,
+          z: ++this.zTop,
           denom,
           kind:'piece',
           side,
@@ -1367,7 +1407,7 @@
       const baseY = s.y;
 
       const group = this.tokens
-        .filter(t => t.kind === 'piece' && t.denom === d && t.side === s.side && Math.abs(t.x - baseX) < tol && Math.abs(t.y - baseY) < tol);
+        .filter(t => t.kind === 'piece' && t.denom === d  && Math.abs(t.x - baseX) < tol && Math.abs(t.y - baseY) < tol);
 
       if(group.length < d){ playSound('whoosh'); return; }
 
@@ -1392,7 +1432,7 @@
       });
       this.tokens = this.tokens.filter(t => !ids.has(t.id));
 
-      const disk = { id: this.nextId++, denom: d, kind:'disk', side: s.side, x: baseX, y: baseY, rot:0, slot:null, hideLabel:false };
+      const disk = { id: this.nextId++, z: ++this.zTop, denom: d, kind:'disk', side: s.side, x: baseX, y: baseY, rot:0, slot:null, hideLabel:false };
       this.tokens.push(disk);
       this.mountToken(disk);
       this.selectToken(disk.id);
@@ -1424,7 +1464,7 @@
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       if(s.kind === 'disk'){
-        const disk = { id: this.nextId++, denom: d2, kind:'disk', side, x, y, rot:0, slot:null, hideLabel: hidden };
+        const disk = { id: this.nextId++, z: ++this.zTop, denom: d2, kind:'disk', side, x, y, rot:0, slot:null, hideLabel: hidden };
         this.tokens.push(disk);
         this.mountToken(disk);
         this.selectToken(disk.id);
@@ -1437,8 +1477,8 @@
         const slot1 = ((Math.round(r1/step2)%d2)+d2)%d2;
         const slot2 = ((Math.round(r2/step2)%d2)+d2)%d2;
 
-        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x, y, rot: r1, slot: slot1, hideLabel: hidden };
-        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x, y, rot: r2, slot: slot2, hideLabel: hidden };
+        const p1 = { id: this.nextId++, z: ++this.zTop, denom: d2, kind:'piece', side, x, y, rot: r1, slot: slot1, hideLabel: hidden };
+        const p2 = { id: this.nextId++, z: ++this.zTop, denom: d2, kind:'piece', side, x, y, rot: r2, slot: slot2, hideLabel: hidden };
         this.tokens.push(p1, p2);
         this.mountToken(p1);
         this.mountToken(p2);
@@ -1479,8 +1519,8 @@
 
     // Pick le token réellement sous le pointeur (forme peinte), du plus haut au plus bas.
     _pickTokenAt(wx, wy){
-      // z-order: on se base sur l'id (comme le zIndex = 10+id)
-      const ordered = [...this.tokens].sort((a,b) => (b.id - a.id));
+      // z-order: on se base sur token.z (zIndex = 10+z)
+      const ordered = [...this.tokens].sort((a,b) => (( (typeof b.z==='number'? b.z : b.id) ) - ( (typeof a.z==='number'? a.z : a.id) )));
       for(const t of ordered){
         if(!t) continue;
         if(t.kind === 'piece'){
@@ -1546,7 +1586,7 @@
       const D = this.diskD;
       const thresh = (12 / this.scale);
 
-      const candidates = this.tokens.filter(o => o.id !== t.id && o.side === t.side);
+      const candidates = this.tokens.filter(o => o.id !== t.id);
       if(!candidates.length) return false;
 
       const tcx = t.x + D/2;
@@ -1572,7 +1612,7 @@
         const cy = best.y + D/2;
         const sameCenterTol = 2.6;
         const around = this.tokens.filter(o => {
-          if(o.id === t.id || o.side !== t.side) return false;
+          if(o.id === t.id) return false;
           const ocx = o.x + D/2;
           const ocy = o.y + D/2;
           return Math.hypot(ocx - cx, ocy - cy) < sameCenterTol;
@@ -1714,7 +1754,7 @@
       const D = this.diskD;
       const thresh = (12 / this.scale);
 
-      const candidates = this.tokens.filter(o => o.id !== t.id && o.side === t.side);
+      const candidates = this.tokens.filter(o => o.id !== t.id);
       if(!candidates.length){ return; }
 
       const tcx = t.x + D/2;
@@ -1746,7 +1786,7 @@
       let target = null;
       for(const o of this.tokens){
         if(o.id === t.id) continue;
-        if(o.side !== t.side) continue;
+        
         const ocx = o.x + D/2;
         const ocy = o.y + D/2;
         if(Math.hypot(tcx - ocx, tcy - ocy) <= centerThresh){
@@ -1770,7 +1810,10 @@
 
     // ---- Drag tokens ----
     handleDragStart(e){
-      if(this.currentTool !== 'hand') return;
+      const isRightMouse = (!e.touches && typeof e.button === 'number' && e.button === 2);
+      // En mode stylo : on autorise la manipulation des pièces au bouton droit
+      if(this.currentTool !== 'hand' && !(this.currentTool === 'pen' && isRightMouse)) return;
+      if(isRightMouse) e.preventDefault();
       e.stopPropagation();
 
       // Position au down (monde)
@@ -1787,6 +1830,7 @@
 
       this.saveState();
       this.selectToken(token.id);
+      this.bringToFront(token);
 
       if(token._el) token._el.classList.add('dragging');
 
@@ -1825,7 +1869,6 @@
           if(token._el) token._el.classList.remove('dragging');
           // aimantation centre↔centre + clip angle (si proche)
           const snapped = this.snapToCenterAndMaybeClip(token);
-          if(snapped) this.selectToken(null);
           document.body.style.cursor = "";
         };
 
@@ -1865,7 +1908,6 @@
         if(token._el) token._el.classList.remove('dragging');
         // aimantation centre↔centre + clip angle (si proche)
         const snapped = this.snapToCenterAndMaybeClip(token);
-        if(snapped) this.selectToken(null);
       };
 
       document.addEventListener('mousemove', move);
@@ -1886,6 +1928,17 @@
       const penMode = (tool === 'pen');
       this.boardContainer.classList.toggle('hide-cursor', penMode);
       document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
+    }
+
+    // Suit le pointeur pour afficher une "petite croix" en mode stylo
+    moveCursor(e){
+      const cur = document.getElementById('custom-cursor');
+      if(!cur) return;
+      if(this.currentTool !== 'pen') return;
+      const pt = e.touches ? e.touches[0] : e;
+      if(!pt) return;
+      cur.style.left = pt.clientX + 'px';
+      cur.style.top  = pt.clientY + 'px';
     }
 
     resizeCanvas(){
@@ -1927,6 +1980,9 @@
       this.tokens.forEach(t => t._el && t._el.remove());
       this.tokens = [];
       this.selectedId = null;
+
+      // Ordre d'empilement (z-index dynamique : la dernière pièce manipulée reste au-dessus)
+      this.zTop = 0;
       this.updateSelectionUI();
     }
 
