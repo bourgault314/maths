@@ -813,7 +813,11 @@
       const a1 = a0 + step;
       const path = this._sectorPath(cx, cy, R-1.2, a0, a1);
       const mid = a0 + step/2;
-      const rr = R * 0.62;
+      
+      // MODIFICATION ICI : Rapprochement du centre pour les demis (denom=2)
+      let rr = R * 0.62;
+      if(token.denom === 2) rr = R * 0.45;
+
       const tx = cx + rr*Math.cos(mid);
       const ty = cy + rr*Math.sin(mid);
 
@@ -1916,14 +1920,6 @@
 
     clearDrawing(){
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-
-    moveCursor(e){
-      if(this.currentTool !== 'pen') return;
-      const c = document.getElementById('custom-cursor');
-      c.style.left = e.clientX + 'px';
-      c.style.top = e.clientY + 'px';
-      c.style.transform = 'translate(-6px,-28px)';
     }
 
     clearAllTokens(withHistory=true){
