@@ -43,7 +43,6 @@
 
     #drawing-canvas{
       position: absolute;
-      /* CORRECTION FINALE : On cale le CSS sur -2500px */
       top: -2500px; 
       left: -2500px;
       pointer-events: none;
@@ -78,36 +77,43 @@
       transform-origin: 0 0;
       box-sizing: border-box;
       border: none;
+      /* On initialise à 10, mais le JS va gérer l'ordre d'empilement */
       z-index: 10;
+      /* Perspective 3D sur le conteneur parent */
+      perspective: 1000px;
     }
-    .strip.dragging{ cursor: grabbing; z-index: 2000 !important; }
     
-    .strip.selected{ 
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.85); 
-      z-index: 100 !important;
+    /* z-index très haut pour le drag, pour être sûr de passer au-dessus de tout */
+    .strip.dragging{ cursor: grabbing; z-index: 99000 !important; }
+    
+    /* z-index très haut pour la sélection aussi */
+    .strip.selected {
+      z-index: 88000 !important;
     }
 
-    /* LE "TABLEAU" : Bordure partagée via superposition */
-    .strip::after {
-      content: "";
-      position: absolute;
-      top: 0; 
-      left: 0;
-      width: calc(100% + 1px);
-      height: calc(100% + 1px);
-      border: 1px solid var(--gridColor);
-      box-sizing: border-box;
-      pointer-events: none;
-      z-index: 50;
-    }
-
-    /* --- Conteneur interne --- */
+    /* --- Conteneur interne (celui qui tourne) --- */
     .strip-inner{
       position: relative;
       width: 100%;
       height: 100%;
       flex: 1 1 auto;
-      overflow: hidden; 
+      
+      /* IMPORTANT : visible pour voir la box-shadow (sélection) dépasser */
+      overflow: visible; 
+
+      /* Transition et style 3D */
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    /* La sélection bleue est appliquée ici, donc elle tourne avec la carte */
+    .strip.selected .strip-inner {
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.85); 
+    }
+    
+    /* Rotation du conteneur quand on est sur le dos */
+    .strip.is-back .strip-inner {
+      transform: rotateY(180deg);
     }
     
     .face{
@@ -116,28 +122,47 @@
       display: flex;
       align-items: stretch;
       justify-content: stretch;
+      
+      /* Masquer le dos des faces */
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      
+      overflow: hidden;
+
+      /* BORDURE NOIRE : Intégrée à la face. */
+      border-left:   1px solid var(--edgeL, var(--gridColor));
+      border-right:  1px solid var(--edgeR, var(--gridColor));
+      border-top:    1px solid var(--edgeT, var(--gridColor));
+      border-bottom: 1px solid var(--edgeB, var(--gridColor));
+      box-sizing: border-box; 
     }
     
-    /* GESTION DE L'AFFICHAGE FACE / DOS SANS ROTATION */
-    .face-front { display: flex; }
-    .face-back  { display: none; }
+    /* FACE AVANT */
+    .face-front {
+      z-index: 2;
+      transform: rotateY(0deg);
+    }
 
-    .strip.is-back .face-front { display: none; }
-    .strip.is-back .face-back  { display: flex; }
+    /* FACE ARRIÈRE */
+    .face-back {
+      transform: rotateY(180deg);
+    }
 
     /* Ghost drag */
     .strip.ghost{
       position: fixed;
       pointer-events: none;
       opacity: 0.96;
-      z-index: 9998;
+      /* Ghost toujours au-dessus de tout */
+      z-index: 99999;
       box-shadow: 0 22px 38px rgba(0,0,0,0.30);
       transform: scale(0.98);
       transition: transform 120ms ease-out, opacity 120ms ease-out;
       overflow: hidden;
+      /* Le ghost a sa propre bordure simple */
+      border: 1px solid var(--gridColor);
     }
     .strip.ghost::after { content: none; }
-    .strip.ghost { border: 1px solid var(--gridColor); }
     .strip.ghost.ready{ transform: scale(1); }
 
     .strip.spawn-pop{ animation: popIn 140ms ease-out; }
@@ -251,7 +276,6 @@
 
 <body class="h-screen w-screen flex flex-col">
 
-  <!-- Barre haute -->
   <header class="bg-blue-50 p-2 shadow-md z-30 flex flex-wrap items-center gap-3 shrink-0">
     <div class="flex items-center gap-2">
       <button id="btn-undo" class="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm active:scale-95 transition" title="Annuler">
@@ -266,7 +290,6 @@
         </svg>
       </button>
 
-      <!-- Bouton bascule 1/2 <=> ABC -->
       <button id="btn-toggle-labels" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 px-3 rounded-lg font-bold border border-indigo-200 shadow-sm active:scale-95 transition flex items-center gap-1" title="Changer l'affichage (Fractions / Texte)">
         <span id="label-icon-num" class="text-sm font-extrabold">1/2</span>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -275,7 +298,6 @@
         <span id="label-icon-txt" class="text-sm font-extrabold opacity-50">ABC</span>
       </button>
 
-      <!-- Demi-droite (icône) -->
       <button id="btn-numberline" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Afficher / masquer la demi-droite">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 14H18" />
@@ -292,7 +314,6 @@
       <button id="btn-reset-view" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg border border-slate-200 font-bold active:scale-95 transition" title="Recentrer">⤾</button>
     </div>
 
-    <!-- Actions sélection -->
     <div id="selection-actions" class="flex items-center gap-2">
       <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -347,7 +368,6 @@
       </button>
     </div>
 
-    <!-- Outils -->
     <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
       <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main (déplacer / sélectionner)">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,7 +376,6 @@
       </button>
 
       <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon (annoter)">
-        <!-- Crayon simple + petit trait en bas (comme tu aimes) -->
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
@@ -371,7 +390,6 @@
     </div>
   </header>
 
-  <!-- Corps: menu gauche + plateau -->
   <div class="flex flex-1 overflow-hidden relative">
 
     <aside class="w-[340px] bg-blue-50 border-r border-blue-200 flex flex-col py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
@@ -453,6 +471,9 @@
       this.history = [];
       this.tokens = []; // {id, denom, kind:'band'|'piece', side:'front'|'back', x,y, _el}
       this.nextId = 1;
+      // Compteur de profondeur global (Z)
+      this.topZ = 200; 
+      
       this.selectedId = null;
       this.labelMode = 'numeric'; // 'numeric' | 'text'
 
@@ -520,8 +541,11 @@
     // ---- Historique ----
     saveState(){
       const snapshot = {
-        tokens: this.tokens.map(t => ({id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y})),
+        // Sauvegarde du Z-index pour le undo
+        tokens: this.tokens.map(t => ({id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y, z:t.z})),
         nextId: this.nextId,
+        // Sauvegarde du topZ
+        topZ: this.topZ,
         selectedId: this.selectedId,
         pan: {...this.pan},
         scale: this.scale,
@@ -537,6 +561,9 @@
       this.clearAllTokens(false);
       this.tokens = snap.tokens.map(t => ({...t}));
       this.nextId = snap.nextId;
+      // Restauration topZ
+      this.topZ = snap.topZ || 200;
+      
       this.selectedId = snap.selectedId;
       this.pan = snap.pan;
       this.scale = snap.scale;
@@ -584,12 +611,13 @@
         const txt = this.getTextLabel(denom);
         const rotated = this.isRotatedText(denom);
         
-        // CORRECTION TAILLE DE POLICE
-        // "un cinquième" et "un dixième" (5 et 10) réduits un peu plus
+        // CORRECTION TAILLE DE POLICE (AJUSTEMENTS FINAUX)
         let fs;
         if(rotated){
-           if(denom === 5 || denom === 10) fs = '10px'; // Réduit pour 5 et 10
-           else fs = '12px';
+           // Vertical writing (1/5, 1/6, 1/8, 1/10)
+           if(denom === 6) fs = '11px';      // Un peu limite à 12, ok à 11
+           else if(denom === 8) fs = '10px'; // Trop grand à 12, parfait à 10
+           else fs = '10px';                 // 1/5 et 1/10 parfaits à 10
         } else {
            // Horizontal
            fs = (denom >= 5) ? '13px' : '15px';
@@ -987,8 +1015,9 @@
       el.style.height = `${h}px`;
       el.style.left = `${token.x}px`;
       el.style.top = `${token.y}px`;
-      el.style.background = cfg.color;
-      el.style.zIndex = String(10 + token.id);
+      
+      // On applique le Z-index stocké, ou le Z par défaut
+      el.style.zIndex = token.z || String(10 + token.id);
 
       if(token.side === 'back') el.classList.add('is-back');
 
@@ -997,9 +1026,11 @@
 
       const faceFront = document.createElement('div');
       faceFront.className = 'face face-front';
+      faceFront.style.background = cfg.color;
 
       const faceBack = document.createElement('div');
       faceBack.className = 'face face-back';
+      faceBack.style.background = cfg.color;
 
       // recto
       const segCountFront = (token.kind === 'band') ? token.denom : 1;
@@ -1090,6 +1121,8 @@
         side: 'front',
         x: this.roundPos(rawX),
         y: this.roundPos(rawY),
+        // Z-index incrémental
+        z: ++this.topZ,
         _new: true,
       };
       this.tokens.push(token);
@@ -1111,10 +1144,11 @@
     flipSelected(){
       const s = this.selected;
       if(!s) return;
-      if(s.kind !== 'band') return;
+      
       this.saveState();
       s.side = (s.side === 'front') ? 'back' : 'front';
       if(s._el){
+        // 1. Lance l'animation CSS
         s._el.classList.toggle('is-back', s.side === 'back');
       }
       this.updateSelectionUI();
@@ -1132,6 +1166,7 @@
         side: s.side,
         x: s.x + 24,
         y: s.y + 24,
+        z: ++this.topZ
       };
       this.tokens.push(copy);
       this.mountToken(copy);
@@ -1165,7 +1200,7 @@
 
       const pw = this.pieceW(denom);
       for(let i=0;i<denom;i++){
-        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY };
+        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY, z: ++this.topZ };
         this.tokens.push(piece);
         this.mountToken(piece);
       }
@@ -1208,7 +1243,7 @@
         seq.forEach(t => { if(t._el) t._el.remove(); });
         this.tokens = this.tokens.filter(t => !ids.has(t.id));
 
-        const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY };
+        const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY, z: ++this.topZ };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
@@ -1242,14 +1277,14 @@
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       if(s.kind === 'band'){
-        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y };
+        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y, z: ++this.topZ };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
       } else {
         const pw2 = this.pieceW(d2);
-        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y };
-        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y };
+        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y, z: ++this.topZ };
+        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y, z: ++this.topZ };
         this.tokens.push(p1, p2);
         this.mountToken(p1);
         this.mountToken(p2);
@@ -1277,6 +1312,11 @@
       if(!token) return;
 
       this.saveState();
+      
+      // Mise à jour du Z-index pour passer au-dessus
+      token.z = ++this.topZ;
+      if(token._el) token._el.style.zIndex = token.z;
+      
       this.selectToken(token.id);
 
       token._el.classList.add('dragging');
