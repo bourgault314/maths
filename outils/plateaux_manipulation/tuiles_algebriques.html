@@ -189,8 +189,19 @@
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
-            <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar h-[72px]">
-                <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap">(...)</div>
+            <div class="relative w-full">
+                <div class="flex items-center gap-2 bg-slate-50 pl-4 pr-12 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar h-[72px]">
+                    <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap transition-all duration-300">(...)</div>
+                </div>
+                <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition z-10" title="Afficher/Masquer l'équation">
+                    <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -291,13 +302,32 @@
                 this.pendingPackGap = 0;
                 this.scale = 1; this.pan = { x: 0, y: 0 }; this.isPanning = false; this.panStart = { x: 0, y: 0 };
                 this.currentTool = 'hand'; this.isDrawing = false; this.lastDrawPos = {x:0, y:0};
-                
+                this.isEquationVisible = true; // État de visibilité de l'équation
+
                 this.boardContainer = document.getElementById('board-container');
                 this.boardWorld = document.getElementById('board-world');
                 this.canvas = document.getElementById('drawing-canvas');
                 this.ctx = this.canvas.getContext('2d');
                 
                 this.initListeners(); this.resizeCanvas(); this.updateEquation();
+            }
+
+            // --- TOGGLE EQUATION VISIBILITY ---
+            toggleVisibility() {
+                this.isEquationVisible = !this.isEquationVisible;
+                const eq = document.getElementById('equation-display');
+                const eyeOpen = document.getElementById('icon-eye-open');
+                const eyeClosed = document.getElementById('icon-eye-closed');
+                
+                if (this.isEquationVisible) {
+                    eq.classList.remove('opacity-0');
+                    eyeOpen.classList.remove('hidden');
+                    eyeClosed.classList.add('hidden');
+                } else {
+                    eq.classList.add('opacity-0');
+                    eyeOpen.classList.add('hidden');
+                    eyeClosed.classList.remove('hidden');
+                }
             }
 
             // --- NOUVELLE GESTION DE CRÉATION DEPUIS LE MENU (STYLE FANTÔME AVEC SEUIL) ---
@@ -1196,7 +1226,7 @@
                 document.addEventListener('mouseup',end); document.addEventListener('touchend',end);
             }
             setTool(t){this.currentTool=t;const p=t==='pen';this.boardContainer.classList.toggle('hide-cursor',p);document.getElementById('custom-cursor').style.display=p?'block':'none';}
-            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
+            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
             draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
             clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
             resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
