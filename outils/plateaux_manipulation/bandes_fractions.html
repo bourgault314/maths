@@ -77,41 +77,45 @@
       transform-origin: 0 0;
       box-sizing: border-box;
       border: none;
-      /* On initialise à 10, mais le JS va gérer l'ordre d'empilement */
       z-index: 10;
-      /* Perspective 3D sur le conteneur parent */
       perspective: 1000px;
     }
     
-    /* z-index très haut pour le drag, pour être sûr de passer au-dessus de tout */
     .strip.dragging{ cursor: grabbing; z-index: 99000 !important; }
-    
-    /* z-index très haut pour la sélection aussi */
-    .strip.selected {
-      z-index: 88000 !important;
+    .strip.selected { z-index: 88000 !important; }
+
+    /* --- GESTION DU MASQUAGE --- */
+    .strip.content-hidden .seg {
+      color: transparent !important;
+      text-shadow: none !important;
+    }
+    .strip.content-hidden .frac .bar {
+      background-color: transparent !important;
+    }
+    .strip.content-hidden .back-one {
+      color: transparent !important;
+      text-shadow: none !important;
+    }
+    .strip.content-hidden .text-label {
+      color: transparent !important;
+      text-shadow: none !important;
     }
 
-    /* --- Conteneur interne (celui qui tourne) --- */
+    /* --- Conteneur interne --- */
     .strip-inner{
       position: relative;
       width: 100%;
       height: 100%;
       flex: 1 1 auto;
-      
-      /* IMPORTANT : visible pour voir la box-shadow (sélection) dépasser */
       overflow: visible; 
-
-      /* Transition et style 3D */
       transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
       transform-style: preserve-3d;
     }
 
-    /* La sélection bleue est appliquée ici, donc elle tourne avec la carte */
     .strip.selected .strip-inner {
       box-shadow: 0 0 0 3px rgba(59,130,246,0.85); 
     }
     
-    /* Rotation du conteneur quand on est sur le dos */
     .strip.is-back .strip-inner {
       transform: rotateY(180deg);
     }
@@ -122,44 +126,39 @@
       display: flex;
       align-items: stretch;
       justify-content: stretch;
-      
-      /* Masquer le dos des faces */
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
-      
       overflow: hidden;
-
-      /* BORDURE NOIRE : Intégrée à la face. */
-      border-left:   1px solid var(--edgeL, var(--gridColor));
-      border-right:  1px solid var(--edgeR, var(--gridColor));
-      border-top:    1px solid var(--edgeT, var(--gridColor));
-      border-bottom: 1px solid var(--edgeB, var(--gridColor));
+      
+      /* MODIFICATION MAJEURE ICI : 
+         On supprime les 'border' classiques qui créent des diagonales aux coins.
+         On utilise 'box-shadow inset' qui crée des carrés parfaits.
+      */
+      border: none; 
       box-sizing: border-box; 
+      
+      /* Les variables --wL, --wR, etc. définiront l'épaisseur (1px ou 0px) */
+      box-shadow: 
+        inset var(--wL, 1px) 0 0 0 var(--gridColor),
+        inset calc(var(--wR, 1px) * -1) 0 0 0 var(--gridColor),
+        inset 0 var(--wT, 1px) 0 0 var(--gridColor),
+        inset 0 calc(var(--wB, 1px) * -1) 0 0 var(--gridColor);
     }
     
-    /* FACE AVANT */
-    .face-front {
-      z-index: 2;
-      transform: rotateY(0deg);
-    }
-
-    /* FACE ARRIÈRE */
-    .face-back {
-      transform: rotateY(180deg);
-    }
+    .face-front { z-index: 2; transform: rotateY(0deg); }
+    .face-back { transform: rotateY(180deg); }
 
     /* Ghost drag */
     .strip.ghost{
       position: fixed;
       pointer-events: none;
       opacity: 0.96;
-      /* Ghost toujours au-dessus de tout */
       z-index: 99999;
       box-shadow: 0 22px 38px rgba(0,0,0,0.30);
       transform: scale(0.98);
       transition: transform 120ms ease-out, opacity 120ms ease-out;
       overflow: hidden;
-      /* Le ghost a sa propre bordure simple */
+      /* Pour le ghost, on garde une bordure simple */
       border: 1px solid var(--gridColor);
     }
     .strip.ghost::after { content: none; }
@@ -168,7 +167,7 @@
     .strip.spawn-pop{ animation: popIn 140ms ease-out; }
     @keyframes popIn{ from{ transform: scale(0.92); } to{ transform: scale(1); } }
 
-    /* segments (les parts) */
+    /* segments */
     .seg{
       flex: 1 1 auto;
       display:flex;
@@ -179,10 +178,11 @@
       line-height: 1;
       text-shadow: 0 1px 0 rgba(255,255,255,0.35);
       text-align: center;
+      transition: opacity 0.2s; 
     }
     .seg + .seg{ border-left: 1px dashed rgba(0,0,0,0.22); }
 
-    /* fraction verticale (Mode 1/2) */
+    /* fraction verticale */
     .frac{
       display: inline-flex;
       flex-direction: column;
@@ -206,14 +206,13 @@
       text-shadow: 0 2px 0 rgba(255,255,255,0.35);
     }
 
-    /* Mode Texte (ABC) */
     .text-label {
       font-weight: 800;
       line-height: 1;
       text-align: center;
       text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+      white-space: nowrap;
     }
-    /* Rotation pour 1/5, 1/6, 1/8, 1/10 */
     .text-rotated {
       writing-mode: vertical-rl;
       transform: rotate(180deg);
@@ -228,14 +227,8 @@
     }
     .palette-item:hover{ background: transparent; }
 
-    /* Titres dans le menu (Unités, Demis...) : masqués par défaut */
-    .palette-label {
-      display: none;
-    }
-    /* ... et affichés UNIQUEMENT quand le body a la classe show-text-labels */
-    body.show-text-labels .palette-label {
-      display: block;
-    }
+    .palette-label { display: none; }
+    body.show-text-labels .palette-label { display: block; }
 
     .spawn-tile{
       height: 40px;
@@ -268,6 +261,24 @@
     body.pen-mode .strip{ cursor: crosshair; }
     body.pen-mode .strip.dragging{ cursor: grabbing; }
 
+    .mode-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155; 
+      transition: all 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mode-btn:hover { background-color: rgba(255,255,255,0.6); }
+    .mode-btn.active {
+      background-color: #2563eb; 
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
     @media (max-width: 640px){
       :root{ --stripH: 52; }
     }
@@ -290,13 +301,15 @@
         </svg>
       </button>
 
-      <button id="btn-toggle-labels" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 px-3 rounded-lg font-bold border border-indigo-200 shadow-sm active:scale-95 transition flex items-center gap-1" title="Changer l'affichage (Fractions / Texte)">
-        <span id="label-icon-num" class="text-sm font-extrabold">1/2</span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
-        <span id="label-icon-txt" class="text-sm font-extrabold opacity-50">ABC</span>
-      </button>
+      <div id="mode-selector" class="flex bg-blue-200/50 rounded-lg p-1 gap-0.5 border border-blue-200 shadow-inner">
+        <button class="mode-btn active" data-mode="numeric" title="Fraction">1/2</button>
+        <button class="mode-btn" data-mode="text" title="Lettres">ABC</button>
+        <button class="mode-btn" data-mode="percent" title="Pourcentage">%</button>
+        <button class="mode-btn" data-mode="decimal" title="Décimal">0,5</button>
+        <button class="mode-btn" data-mode="empty" title="Vide (sans texte)">
+            <div class="w-3.5 h-3.5 border-2 border-current rounded-sm"></div>
+        </button>
+      </div>
 
       <button id="btn-numberline" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Afficher / masquer la demi-droite">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -315,6 +328,14 @@
     </div>
 
     <div id="selection-actions" class="flex items-center gap-2">
+      <button id="btn-hide" disabled class="bg-slate-500 hover:bg-slate-600 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Masquer / Afficher le contenu de cette pièce">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+        <span class="text-[10px] font-extrabold leading-none">Masquer</span>
+      </button>
+
       <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 0 1 9-9"/>
@@ -395,15 +416,6 @@
     <aside class="w-[340px] bg-blue-50 border-r border-blue-200 flex flex-col py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
       <div class="px-3"></div>
       <div id="palette" class="px-3 flex flex-col gap-3"></div>
-
-      <div class="mt-2 px-3">
-        <div class="text-[10px] font-bold text-slate-400 uppercase">Astuces</div>
-        <ul class="text-[11px] text-slate-500 leading-snug list-disc ml-4 mt-1">
-          <li>Double-clic sur une bande = retourner.</li>
-          <li>Molette = zoom, glisser sur fond = déplacer le plateau.</li>
-          <li>Crayon : clic gauche = écrire, clic droit sur une bande = la déplacer, clic droit sur le fond = déplacer le plateau.</li>
-        </ul>
-      </div>
     </aside>
 
     <main class="flex-1 relative overflow-hidden">
@@ -430,7 +442,6 @@
     { denom: 10, name: 'Dixième',   color: '#b91c1c', border: '#7f1d1d', text: '#111827' },
   ];
 
-  // Audio (optionnel) – protège si indisponible
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
 
@@ -469,13 +480,13 @@
   class FractionStripsApp {
     constructor(){
       this.history = [];
-      this.tokens = []; // {id, denom, kind:'band'|'piece', side:'front'|'back', x,y, _el}
+      this.tokens = []; 
       this.nextId = 1;
-      // Compteur de profondeur global (Z)
       this.topZ = 200; 
       
       this.selectedId = null;
-      this.labelMode = 'numeric'; // 'numeric' | 'text'
+      // 'numeric', 'text', 'percent', 'decimal', 'empty'
+      this.labelMode = 'numeric';
 
       this.scale = 1;
       this.pan = {x: 0, y: 0};
@@ -485,9 +496,8 @@
       this.currentTool = 'hand';
       this.isDrawing = false;
       this.drawPoints = [];
-      this.basePenPx = 2.55; // crayon un peu plus épais (écriture plus lisible)
+      this.basePenPx = 2.55;
 
-      // Drag réaliste depuis le menu (ghost pleine taille)
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
 
@@ -503,7 +513,6 @@
         active: false,
         x: 0,
         y: 0,
-        // plus longue, mais on ne force pas à voir le bout
         len: Math.max(this.unitW * 10.0, 6000),
         baselineOffset: 18,
         height: 46
@@ -520,7 +529,6 @@
       this.updateNumberLineEl();
     }
 
-    // ---- Dimensions ----
     get unitW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--unitW')) || 420; }
     get stripH(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stripH')) || 58; }
     pieceW(denom){ return this.unitW / denom; }
@@ -532,19 +540,23 @@
       };
     }
 
-    // ---- Helper arrondis ----
     roundPos(v){
-      // Arrondi au 0.5 pixel le plus proche pour netteté + support des 1/8èmes (52.5px)
       return Math.round(v * 2) / 2;
     }
 
-    // ---- Historique ----
     saveState(){
       const snapshot = {
-        // Sauvegarde du Z-index pour le undo
-        tokens: this.tokens.map(t => ({id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y, z:t.z})),
+        tokens: this.tokens.map(t => ({
+          id:t.id, 
+          denom:t.denom, 
+          kind:t.kind, 
+          side:t.side, 
+          x:t.x, 
+          y:t.y, 
+          z:t.z, 
+          hidden: t.hidden 
+        })),
         nextId: this.nextId,
-        // Sauvegarde du topZ
         topZ: this.topZ,
         selectedId: this.selectedId,
         pan: {...this.pan},
@@ -561,31 +573,26 @@
       this.clearAllTokens(false);
       this.tokens = snap.tokens.map(t => ({...t}));
       this.nextId = snap.nextId;
-      // Restauration topZ
       this.topZ = snap.topZ || 200;
       
       this.selectedId = snap.selectedId;
       this.pan = snap.pan;
       this.scale = snap.scale;
       this.labelMode = snap.labelMode || 'numeric';
-      this.updateToggleBtnUI();
+      this.updateModeUI();
+      
+      this.buildPalette();
+      
       this.tokens.forEach(t => this.mountToken(t));
       this.updateTransform();
       this.updateSelectionUI();
       playSound('whoosh');
     }
 
-    // --- Texte / Labels ---
     getTextLabel(denom){
       const map = {
-        1: 'une unité',
-        2: 'un demi',
-        3: 'un tiers',
-        4: 'un quart',
-        5: 'un cinquième',
-        6: 'un sixième',
-        8: 'un huitième',
-        10: 'un dixième'
+        1: 'une unité', 2: 'un demi', 3: 'un tiers', 4: 'un quart',
+        5: 'un cinquième', 6: 'un sixième', 8: 'un huitième', 10: 'un dixième'
       };
       return map[denom] || '';
     }
@@ -595,46 +602,61 @@
     }
 
     getLabelHTML(denom, isBackOfBand = false){
-      // 1. Cas "Dos d'une bande complète" (ex: 2/2 retournée)
+      if(this.labelMode === 'empty') return '';
+
       if(isBackOfBand){
         if(this.labelMode === 'text'){
-          // "une unité", horizontal
           return `<span class="text-label" style="font-size:18px;">une unité</span>`;
+        } else if(this.labelMode === 'percent'){
+          return `<span class="back-one" style="font-size:22px;">100 %</span>`;
         } else {
-          // "1", gros
           return `<span class="back-one">1</span>`;
         }
       }
 
-      // 2. Cas normal (recto ou pièce détachée)
       if(this.labelMode === 'text'){
         const txt = this.getTextLabel(denom);
         const rotated = this.isRotatedText(denom);
-        
-        // CORRECTION TAILLE DE POLICE (AJUSTEMENTS FINAUX)
         let fs;
         if(rotated){
-           // Vertical writing (1/5, 1/6, 1/8, 1/10)
-           if(denom === 6) fs = '11px';      // Un peu limite à 12, ok à 11
-           else if(denom === 8) fs = '10px'; // Trop grand à 12, parfait à 10
-           else fs = '10px';                 // 1/5 et 1/10 parfaits à 10
+           if(denom === 6) fs = '11px';      
+           else if(denom === 8) fs = '10px'; 
+           else fs = '10px';                 
         } else {
-           // Horizontal
            fs = (denom >= 5) ? '13px' : '15px';
         }
-
         const cls = rotated ? 'text-label text-rotated' : 'text-label';
         return `<span class="${cls}" style="font-size:${fs};">${txt}</span>`;
-      } else {
-        // Mode numérique (1/2)
+      } 
+      else if(this.labelMode === 'percent'){
+        const val = (100 / denom);
+        const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %';
+        let fs = '14px';
+        if(denom >= 10) fs = '10px';
+        else if(denom >= 8) fs = '10px';
+        else if(denom >= 6) fs = '11px';
+        else if(denom === 5) fs = '12px';
+        return `<span class="text-label" style="font-size:${fs};">${txt}</span>`;
+      }
+      else if(this.labelMode === 'decimal'){
+        const val = (1 / denom);
+        const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 3 });
+        let fs = '15px';
+        if(denom >= 10) fs = '10px';
+        else if(denom >= 8) fs = '10px';
+        else if(denom >= 6) fs = '11px';
+        else if(denom === 5) fs = '12px';
+        return `<span class="text-label" style="font-size:${fs};">${txt}</span>`;
+      }
+      else {
         if(denom === 1) return `<span class="back-one">1</span>`;
         return `<span class="frac"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
       }
     }
 
     fontSizeFor(denom, kind){
-      // Utilisé pour la taille du conteneur de police, ajustement fin
-      if(this.labelMode === 'text') return 16;
+      if(this.labelMode === 'empty') return 0;
+      if(this.labelMode !== 'numeric') return 16;
       if(kind === 'piece'){
         if(denom >= 10) return 14;
         if(denom >= 8) return 15;
@@ -647,32 +669,21 @@
       return 18;
     }
 
-    // --- Palette ---
     buildPalette(){
       this.palette.innerHTML = '';
       FRACTIONS.forEach(f => {
-        // Conteneur de la ligne (Label + Bandes)
         const row = document.createElement('div');
-        row.className = 'palette-item flex flex-col'; // flex-col pour empiler le label et les tuiles
-
-        // Label au-dessus (invisible par défaut via CSS .palette-label)
+        row.className = 'palette-item flex flex-col'; 
         const label = document.createElement('div');
-        // On ajoute la classe palette-label
         label.className = 'palette-label text-xs font-bold text-slate-500 mb-1 ml-1 capitalize';
-        
         let text = f.name;
-        // Pluriel simple si dénominateur > 1
         if(f.denom > 1 && !text.endsWith('s')) text += 's';
-        
         label.textContent = text;
         row.appendChild(label);
-
-        // Conteneur des tuiles
         const picks = document.createElement('div');
         picks.className = 'flex items-center gap-3 flex-nowrap';
         picks.appendChild(this.makeSpawnTile(f.denom, 'band'));
         if(f.denom !== 1) picks.appendChild(this.makeSpawnTile(f.denom, 'piece'));
-
         row.appendChild(picks);
         this.palette.appendChild(row);
       });
@@ -693,19 +704,23 @@
       const menuBandW = 170;
       const w = (kind === 'band') ? menuBandW : Math.max(18, Math.round(menuBandW / denom));
       tile.style.width = w + 'px';
-      const fsMenu = (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
+      
       const segCount = (kind === 'band') ? denom : 1;
       for(let i=0;i<segCount;i++){
         const seg = document.createElement('div');
         seg.className = 'spawn-seg';
         seg.style.color = cfg.text;
-        seg.style.fontSize = fsMenu + 'px';
         
-        // Dans le menu, on garde l'affichage numérique classique (plus compact)
-        if(denom === 1){
-          seg.innerHTML = `<span class="back-one" style="font-size:${Math.max(fsMenu,12)}px;color:${cfg.text}">1</span>`;
+        if(this.labelMode === 'empty'){
+           seg.innerHTML = '';
         } else {
-          seg.innerHTML = `<span class="frac menu" style="color:${cfg.text};font-size:${fsMenu}px"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
+           const fsMenu = (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
+           seg.style.fontSize = fsMenu + 'px';
+           if(denom === 1){
+             seg.innerHTML = `<span class="back-one" style="font-size:${Math.max(fsMenu,12)}px;color:${cfg.text}">1</span>`;
+           } else {
+             seg.innerHTML = `<span class="frac menu" style="color:${cfg.text};font-size:${fsMenu}px"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
+           }
         }
         tile.appendChild(seg);
       }
@@ -728,12 +743,9 @@
         seg.className = 'seg';
         seg.style.color = cfg.text;
         seg.style.fontSize = `${fs}px`;
-        
-        // Ghost suit le mode actuel
         if(side === 'front'){
           seg.innerHTML = this.getLabelHTML(denom, false);
         } else {
-          // Back ghost
           const isBandBack = (kind === 'band' || denom === 1);
           seg.innerHTML = this.getLabelHTML(denom, isBandBack);
         }
@@ -897,7 +909,16 @@
       this._bind('btn-undo','click', () => this.undo());
       this._bind('btn-clear','click', () => this.resetAll());
       
-      this._bind('btn-toggle-labels','click', () => this.toggleLabelMode());
+      const modeButtons = document.querySelectorAll('.mode-btn');
+      modeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = e.currentTarget; 
+          const newMode = target.dataset.mode;
+          if(newMode && newMode !== this.labelMode){
+             this.setLabelMode(newMode);
+          }
+        });
+      });
 
       this._bind('btn-numberline','click', () => this.toggleNumberLine());
       this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
@@ -909,6 +930,9 @@
       this._bind('btn-fuse','click', () => this.fuseSelected());
       this._bind('btn-duplicate','click', () => this.duplicateSelected());
       this._bind('btn-delete','click', () => this.deleteSelected());
+      
+      this._bind('btn-hide','click', () => this.toggleHideSelected());
+
       this._bind('tool-hand','click', () => this.setTool('hand'));
       this._bind('tool-pen','click', () => this.setTool('pen'));
       this._bind('btn-clear-drawing','click', () => this.clearDrawing());
@@ -919,10 +943,13 @@
       });
     }
 
-    toggleLabelMode(){
-      this.labelMode = (this.labelMode === 'numeric') ? 'text' : 'numeric';
+    setLabelMode(newMode){
+      this.labelMode = newMode;
       document.body.classList.toggle('show-text-labels', this.labelMode === 'text');
-      this.updateToggleBtnUI();
+      this.updateModeUI();
+      
+      this.buildPalette();
+
       const selId = this.selectedId;
       this.tokens.forEach(t => { if(t._el) t._el.remove(); });
       this.tokens.forEach(t => this.mountToken(t));
@@ -930,17 +957,12 @@
       playSound('pop');
     }
 
-    updateToggleBtnUI(){
-      const numSpan = document.getElementById('label-icon-num');
-      const txtSpan = document.getElementById('label-icon-txt');
-      if(!numSpan || !txtSpan) return;
-      if(this.labelMode === 'numeric'){
-        numSpan.style.opacity = '1';
-        txtSpan.style.opacity = '0.4';
-      } else {
-        numSpan.style.opacity = '0.4';
-        txtSpan.style.opacity = '1';
-      }
+    updateModeUI(){
+       const modeButtons = document.querySelectorAll('.mode-btn');
+       modeButtons.forEach(btn => {
+         if(btn.dataset.mode === this.labelMode) btn.classList.add('active');
+         else btn.classList.remove('active');
+       });
     }
 
     updateSelectionUI(){
@@ -950,11 +972,15 @@
       const btnFuse = document.getElementById('btn-fuse');
       const btnDup  = document.getElementById('btn-duplicate');
       const btnDel  = document.getElementById('btn-delete');
+      const btnHide = document.getElementById('btn-hide');
+      
       const s = this.selected;
       const has = !!s;
       if(btnFlip) btnFlip.disabled = !has;
       if(btnDup)  btnDup.disabled  = !has;
       if(btnDel)  btnDel.disabled  = !has;
+      if(btnHide) btnHide.disabled = !has;
+      
       if(btnSep)  btnSep.disabled  = !(has && s.kind === 'band'  && s.denom > 1);
       if(btnFuse) btnFuse.disabled = !(has && s.kind === 'piece' && s.denom > 1);
       if(btnCut)  btnCut.disabled  = !(has && this.canCut(s));
@@ -1001,13 +1027,12 @@
       window.addEventListener('resize', () => this.resizeCanvas());
     }
 
-    // ---- Création / rendu tokens ----
     mountToken(token){
       const cfg = this.getFractionConfig(token.denom);
       const el = document.createElement('div');
       el.className = 'strip';
       el.dataset.id = String(token.id);
-
+      
       const h = this.stripH;
       const w = (token.kind === 'band') ? this.unitW : this.pieceW(token.denom);
 
@@ -1015,9 +1040,9 @@
       el.style.height = `${h}px`;
       el.style.left = `${token.x}px`;
       el.style.top = `${token.y}px`;
-      
-      // On applique le Z-index stocké, ou le Z par défaut
       el.style.zIndex = token.z || String(10 + token.id);
+
+      if(token.hidden) el.classList.add('content-hidden');
 
       if(token.side === 'back') el.classList.add('is-back');
 
@@ -1032,7 +1057,6 @@
       faceBack.className = 'face face-back';
       faceBack.style.background = cfg.color;
 
-      // recto
       const segCountFront = (token.kind === 'band') ? token.denom : 1;
       for(let i=0;i<segCountFront;i++){
         const seg = document.createElement('div');
@@ -1043,7 +1067,6 @@
         faceFront.appendChild(seg);
       }
 
-      // verso : bande => 1, pièce => 1/denom
       const backSeg = document.createElement('div');
       backSeg.className = 'seg';
       backSeg.style.color = cfg.text;
@@ -1058,7 +1081,6 @@
       inner.appendChild(faceBack);
       el.appendChild(inner);
 
-      // interactions
       el.addEventListener('mousedown', (e) => this.handleDragStart(e));
       el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive:false});
       el.addEventListener('click', (e) => {
@@ -1071,7 +1093,6 @@
         this.flipSelected();
       });
 
-      // double-tap mobile
       let lastTap = 0;
       el.addEventListener('touchend', (e) => {
         const now = Date.now();
@@ -1110,7 +1131,6 @@
 
       const w = (kind === 'band') ? this.unitW : this.pieceW(denom);
       const h = this.stripH;
-      // FIXE: Définition de rawX et rawY avant utilisation
       const rawX = pos.x - w/2;
       const rawY = pos.y - h/2;
       
@@ -1121,8 +1141,8 @@
         side: 'front',
         x: this.roundPos(rawX),
         y: this.roundPos(rawY),
-        // Z-index incrémental
         z: ++this.topZ,
+        hidden: false, 
         _new: true,
       };
       this.tokens.push(token);
@@ -1148,11 +1168,22 @@
       this.saveState();
       s.side = (s.side === 'front') ? 'back' : 'front';
       if(s._el){
-        // 1. Lance l'animation CSS
         s._el.classList.toggle('is-back', s.side === 'back');
       }
       this.updateSelectionUI();
       playSound('flip');
+    }
+
+    toggleHideSelected(){
+      const s = this.selected;
+      if(!s) return;
+      
+      this.saveState();
+      s.hidden = !s.hidden; 
+      if(s._el){
+        s._el.classList.toggle('content-hidden', s.hidden);
+      }
+      playSound('pop');
     }
 
     duplicateSelected(){
@@ -1166,7 +1197,8 @@
         side: s.side,
         x: s.x + 24,
         y: s.y + 24,
-        z: ++this.topZ
+        z: ++this.topZ,
+        hidden: s.hidden 
       };
       this.tokens.push(copy);
       this.mountToken(copy);
@@ -1194,13 +1226,14 @@
       const baseY = s.y;
       const denom = s.denom;
       const side = s.side;
+      const wasHidden = s.hidden;
 
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       const pw = this.pieceW(denom);
       for(let i=0;i<denom;i++){
-        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY, z: ++this.topZ };
+        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY, z: ++this.topZ, hidden: wasHidden };
         this.tokens.push(piece);
         this.mountToken(piece);
       }
@@ -1240,10 +1273,12 @@
 
         this.saveState();
         const ids = new Set(seq.map(t => t.id));
+        const anyHidden = seq.some(t => t.hidden);
+        
         seq.forEach(t => { if(t._el) t._el.remove(); });
         this.tokens = this.tokens.filter(t => !ids.has(t.id));
 
-        const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY, z: ++this.topZ };
+        const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY, z: ++this.topZ, hidden: anyHidden };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
@@ -1270,6 +1305,7 @@
       const side = s.side;
       const x = s.x;
       const y = s.y;
+      const wasHidden = s.hidden;
 
       this.saveState();
 
@@ -1277,14 +1313,14 @@
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       if(s.kind === 'band'){
-        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y, z: ++this.topZ };
+        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y, z: ++this.topZ, hidden: wasHidden };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
       } else {
         const pw2 = this.pieceW(d2);
-        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y, z: ++this.topZ };
-        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y, z: ++this.topZ };
+        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y, z: ++this.topZ, hidden: wasHidden };
+        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y, z: ++this.topZ, hidden: wasHidden };
         this.tokens.push(p1, p2);
         this.mountToken(p1);
         this.mountToken(p2);
@@ -1313,7 +1349,6 @@
 
       this.saveState();
       
-      // Mise à jour du Z-index pour passer au-dessus
       token.z = ++this.topZ;
       if(token._el) token._el.style.zIndex = token.z;
       
@@ -1334,7 +1369,6 @@
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
         let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
 
-        // aimantation vers la demi-droite (si visible) : au-dessus ET au-dessous
         const {h} = this.tokenDims(token);
         if(this.numberLine && this.numberLine.active){
           const lockThresh = 18 / this.scale;
@@ -1350,6 +1384,8 @@
         token.y = wy;
         token._el.style.left = wx + 'px';
         token._el.style.top = wy + 'px';
+        
+        this.scheduleSeamUpdate();
       };
 
       const end = () => {
@@ -1410,14 +1446,12 @@
         return lines;
       };
 
-      // Demi-droite graduée : priorité max
       if(this.numberLine && this.numberLine.active){
         considerY(this.numberLine.y - h, 0);
         considerY(this.numberLine.y, 0);
         considerX(this.numberLine.x, 0);
       }
 
-      // Accroche aux autres bandes/pièces
       for(const o of this.tokens){
         if(o.id === t.id) continue;
 
@@ -1477,25 +1511,25 @@
       this.updateSeamBorders();
     }
 
-    // ---- Contours "1 trait" quand ça colle ----
     updateSeamBorders(){
       const tol = 2.2;
-      const edge = 'rgba(0,0,0,0.55)';
-      const transparent = 'transparent';
+      
+      // LOGIQUE REVUE : On contrôle l'épaisseur (1px ou 0px) au lieu de la couleur.
+      // Cela évite l'effet "biseau" (miter) des bordures CSS.
+      const wVisible = '1px';
+      const wHidden  = '0px';
 
-      // reset
       for(const t of this.tokens){
         if(!t._el) continue;
-        t._el.style.setProperty('--edgeL', edge);
-        t._el.style.setProperty('--edgeR', edge);
-        t._el.style.setProperty('--edgeT', edge);
-        t._el.style.setProperty('--edgeB', edge);
+        t._el.style.setProperty('--wL', wVisible);
+        t._el.style.setProperty('--wR', wVisible);
+        t._el.style.setProperty('--wT', wVisible);
+        t._el.style.setProperty('--wB', wVisible);
       }
 
       const dims = (t)=>this.tokenDims(t);
       const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
 
-      // pairwise seams
       for(let i=0;i<this.tokens.length;i++){
         const aT = this.tokens[i];
         if(!aT._el) continue;
@@ -1513,27 +1547,18 @@
           const ovX = overlapLen(ax0, ax1, bx0, bx1);
           const ovY = overlapLen(ay0, ay1, by0, by1);
 
-          // horizontal adjacency
           if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            bT._el.style.setProperty('--edgeL', transparent);
+            bT._el.style.setProperty('--wL', wHidden);
           }
           if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            // Correction ici : on cache le bord GAUCHE de l'élément de droite (aT), et non son bord droit
-            aT._el.style.setProperty('--edgeL', transparent);
+            aT._el.style.setProperty('--wL', wHidden);
           }
 
-          // vertical adjacency: on enlève UN SEUL trait
-          // IMPORTANT : On cache TOUJOURS le bord de l'élément du BAS (Top Border)
-          // pour garder l'alignement avec les éléments voisins qui n'ont personne en dessous.
           if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            // a (Top) au-dessus de b (Bottom)
-            // On cache le bord HAUT de b
-            bT._el.style.setProperty('--edgeT', transparent);
+            bT._el.style.setProperty('--wT', wHidden);
           }
           if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            // b (Top) au-dessus de a (Bottom)
-            // On cache le bord HAUT de a
-            aT._el.style.setProperty('--edgeT', transparent);
+            aT._el.style.setProperty('--wT', wHidden);
           }
         }
       }
@@ -1547,7 +1572,6 @@
       });
     }
 
-    // ---- Outils dessin ----
     setTool(tool){
       this.currentTool = tool;
       const hand = document.getElementById('tool-hand');
@@ -1560,9 +1584,8 @@
     }
 
     resizeCanvas(){
-      // CORRECTION STYLO : Zone de dessin plus grande et décalée
-      const offset = 2500; // Correction de l'offset pour correspondre au CSS top/left -2500px
-      const worldSize = 5000; // Plus grand
+      const offset = 2500;
+      const worldSize = 5000;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       this._canvasWorldSize = worldSize;
       this._canvasDpr = dpr;
@@ -1572,7 +1595,6 @@
       this.canvas.style.width = `${worldSize}px`;
       this.canvas.style.height = `${worldSize}px`;
 
-      // On décale le contexte de dessin pour correspondre au CSS top/left -2500px
       this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
@@ -1632,13 +1654,11 @@
 
     clearDrawing(){
       this.ctx.save();
-      // Reset transform temporairement pour tout effacer
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.restore();
       
-      // On s'assure de garder la transformation correcte (offset)
-      const offset = 2500; // Correction de l'offset ici aussi
+      const offset = 2500;
       const dpr = this._canvasDpr || 1;
       this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
     }
@@ -1660,10 +1680,9 @@
     }
   }
 
-  // --- Mini tests (sécurité) ---
   function runSelfTests(){
     const required = [
-      'btn-undo','btn-clear','btn-toggle-labels','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','mode-selector','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas','number-line'
@@ -1674,13 +1693,10 @@
       return { ok:false, missing };
     }
 
-    // tests supplémentaires (non intrusifs)
     try{
-      // Vérifie que le script s'exécute bien et qu'on peut instancier
       const tmp = new FractionStripsApp();
       const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
       if(!okMethods) throw new Error('Méthodes clés manquantes');
-      // Nettoyage visuel minimal
       tmp.resetAll();
     }catch(err){
       console.error('[SelfTest] Erreur instanciation/app:', err);
@@ -1694,7 +1710,6 @@
   window.addEventListener('DOMContentLoaded', () => {
     const t = runSelfTests();
     if(!t.ok) return;
-    // Instance réelle utilisée par l'utilisateur
     window.app = new FractionStripsApp();
     console.log('[SelfTest] App instanciée OK');
   });
