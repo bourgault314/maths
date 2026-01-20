@@ -43,9 +43,9 @@
 
     #drawing-canvas{
       position: absolute;
-      /* CORRECTION STYLO : On étend la zone de dessin vers le haut et la gauche */
-      top: -4000px; 
-      left: -4000px;
+      /* CORRECTION FINALE : On cale le CSS sur -2500px */
+      top: -2500px; 
+      left: -2500px;
       pointer-events: none;
       z-index: 3000;
     }
@@ -294,7 +294,7 @@
 
     <!-- Actions sélection -->
     <div id="selection-actions" class="flex items-center gap-2">
-      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner">
+      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 0 1 9-9"/>
           <path d="M3 4v8h8"/>
@@ -304,7 +304,7 @@
         <span class="text-[10px] font-extrabold leading-none">Retourner</span>
       </button>
 
-      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer">
+      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer la bande en pièces">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 4l16 16"/>
           <path d="M4 20L20 4"/>
@@ -312,7 +312,7 @@
         <span class="text-[10px] font-extrabold leading-none">Séparer</span>
       </button>
 
-      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper">
+      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper en 2 (si le double existe)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="6" cy="6" r="2"/>
           <circle cx="6" cy="18" r="2"/>
@@ -323,7 +323,7 @@
         <span class="text-[10px] font-extrabold leading-none">Couper</span>
       </button>
 
-      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner">
+      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner des pièces alignées en une bande">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"/>
           <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1"/>
@@ -347,21 +347,23 @@
       </button>
     </div>
 
+    <!-- Outils -->
     <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-      <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main">
+      <button id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700" title="Main (déplacer / sélectionner)">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
         </svg>
       </button>
 
-      <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon">
+      <button id="tool-pen" class="p-2 rounded text-gray-700 hover:bg-white" title="Crayon (annoter)">
+        <!-- Crayon simple + petit trait en bas (comme tu aimes) -->
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" />
         </svg>
       </button>
 
-      <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer">
+      <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
@@ -369,10 +371,13 @@
     </div>
   </header>
 
+  <!-- Corps: menu gauche + plateau -->
   <div class="flex flex-1 overflow-hidden relative">
+
     <aside class="w-[340px] bg-blue-50 border-r border-blue-200 flex flex-col py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
       <div class="px-3"></div>
       <div id="palette" class="px-3 flex flex-col gap-3"></div>
+
       <div class="mt-2 px-3">
         <div class="text-[10px] font-bold text-slate-400 uppercase">Astuces</div>
         <ul class="text-[11px] text-slate-500 leading-snug list-disc ml-4 mt-1">
@@ -391,9 +396,11 @@
         </div>
       </div>
     </main>
+
   </div>
 
 <script>
+  // --- Configuration couleurs ---
   const FRACTIONS = [
     { denom: 1,  name: 'Unité',     color: '#fff7e6', border: '#cbd5e1', text: '#111827' },
     { denom: 2,  name: 'Demi',      color: '#facc15', border: '#a16207', text: '#111827' },
@@ -405,6 +412,7 @@
     { denom: 10, name: 'Dixième',   color: '#b91c1c', border: '#7f1d1d', text: '#111827' },
   ];
 
+  // Audio (optionnel) – protège si indisponible
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
 
@@ -443,7 +451,7 @@
   class FractionStripsApp {
     constructor(){
       this.history = [];
-      this.tokens = []; 
+      this.tokens = []; // {id, denom, kind:'band'|'piece', side:'front'|'back', x,y, _el}
       this.nextId = 1;
       this.selectedId = null;
       this.labelMode = 'numeric'; // 'numeric' | 'text'
@@ -456,8 +464,9 @@
       this.currentTool = 'hand';
       this.isDrawing = false;
       this.drawPoints = [];
-      this.basePenPx = 2.55;
+      this.basePenPx = 2.55; // crayon un peu plus épais (écriture plus lisible)
 
+      // Drag réaliste depuis le menu (ghost pleine taille)
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
 
@@ -471,7 +480,9 @@
       this.numberLineEl = document.getElementById('number-line');
       this.numberLine = {
         active: false,
-        x: 0, y: 0,
+        x: 0,
+        y: 0,
+        // plus longue, mais on ne force pas à voir le bout
         len: Math.max(this.unitW * 10.0, 6000),
         baselineOffset: 18,
         height: 46
@@ -488,6 +499,7 @@
       this.updateNumberLineEl();
     }
 
+    // ---- Dimensions ----
     get unitW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--unitW')) || 420; }
     get stripH(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stripH')) || 58; }
     pieceW(denom){ return this.unitW / denom; }
@@ -499,10 +511,13 @@
       };
     }
 
+    // ---- Helper arrondis ----
     roundPos(v){
+      // Arrondi au 0.5 pixel le plus proche pour netteté + support des 1/8èmes (52.5px)
       return Math.round(v * 2) / 2;
     }
 
+    // ---- Historique ----
     saveState(){
       const snapshot = {
         tokens: this.tokens.map(t => ({id:t.id, denom:t.denom, kind:t.kind, side:t.side, x:t.x, y:t.y})),
@@ -853,7 +868,6 @@
     initUI(){
       this._bind('btn-undo','click', () => this.undo());
       this._bind('btn-clear','click', () => this.resetAll());
-      // Plus d'export PNG ici
       
       this._bind('btn-toggle-labels','click', () => this.toggleLabelMode());
 
@@ -959,33 +973,35 @@
       window.addEventListener('resize', () => this.resizeCanvas());
     }
 
+    // ---- Création / rendu tokens ----
     mountToken(token){
       const cfg = this.getFractionConfig(token.denom);
       const el = document.createElement('div');
       el.className = 'strip';
       el.dataset.id = String(token.id);
+
       const h = this.stripH;
       const w = (token.kind === 'band') ? this.unitW : this.pieceW(token.denom);
+
       el.style.width = `${w}px`;
       el.style.height = `${h}px`;
       el.style.left = `${token.x}px`;
       el.style.top = `${token.y}px`;
       el.style.background = cfg.color;
       el.style.zIndex = String(10 + token.id);
-      
-      // Pas de rotation 3D animée
-      // On utilise simplement display:none pour switch
+
       if(token.side === 'back') el.classList.add('is-back');
-      
+
       const inner = document.createElement('div');
       inner.className = 'strip-inner';
-      
+
       const faceFront = document.createElement('div');
       faceFront.className = 'face face-front';
+
       const faceBack = document.createElement('div');
       faceBack.className = 'face face-back';
-      
-      // RECTO
+
+      // recto
       const segCountFront = (token.kind === 'band') ? token.denom : 1;
       for(let i=0;i<segCountFront;i++){
         const seg = document.createElement('div');
@@ -996,8 +1012,7 @@
         faceFront.appendChild(seg);
       }
 
-      // VERSO
-      // Une seule case pour le verso
+      // verso : bande => 1, pièce => 1/denom
       const backSeg = document.createElement('div');
       backSeg.className = 'seg';
       backSeg.style.color = cfg.text;
@@ -1007,11 +1022,12 @@
       backSeg.innerHTML = this.getLabelHTML(token.denom, isBandBack);
       
       faceBack.appendChild(backSeg);
-      
+
       inner.appendChild(faceFront);
       inner.appendChild(faceBack);
       el.appendChild(inner);
 
+      // interactions
       el.addEventListener('mousedown', (e) => this.handleDragStart(e));
       el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive:false});
       el.addEventListener('click', (e) => {
@@ -1023,6 +1039,8 @@
         this.selectToken(token.id);
         this.flipSelected();
       });
+
+      // double-tap mobile
       let lastTap = 0;
       el.addEventListener('touchend', (e) => {
         const now = Date.now();
@@ -1033,15 +1051,18 @@
         }
         lastTap = now;
       });
+
       this.boardWorld.appendChild(el);
       token._el = el;
+
       if(token._new){
         el.classList.add('spawn-pop');
         el.addEventListener('animationend', () => el.classList.remove('spawn-pop'), {once:true});
         delete token._new;
       }
+
       this.refreshTokenSelectedClass(token.id);
-      // CORRECTION: plus d'appel à updateSeamBorders ici, c'est géré par CSS
+      this.updateSeamBorders();
     }
 
     refreshTokenSelectedClass(id){
@@ -1055,6 +1076,7 @@
       this.saveState();
       playSound('pop');
       const pos = (x===null || y===null) ? {x: 40 + Math.random()*40, y: 40 + Math.random()*30} : {x, y};
+
       const w = (kind === 'band') ? this.unitW : this.pieceW(denom);
       const h = this.stripH;
       // FIXE: Définition de rawX et rawY avant utilisation
@@ -1124,7 +1146,7 @@
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
       this.selectToken(null);
-      // CORRECTION: plus d'appel à updateSeamBorders
+      this.updateSeamBorders();
       playSound('whoosh');
     }
 
@@ -1132,12 +1154,15 @@
       const s = this.selected;
       if(!s || s.kind !== 'band' || s.denom <= 1) return;
       this.saveState();
+
       const baseX = s.x;
       const baseY = s.y;
       const denom = s.denom;
       const side = s.side;
+
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
+
       const pw = this.pieceW(denom);
       for(let i=0;i<denom;i++){
         const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY };
@@ -1145,24 +1170,29 @@
         this.mountToken(piece);
       }
       this.selectToken(this.tokens[this.tokens.length - denom].id);
-      // CORRECTION: plus d'appel à updateSeamBorders
+      this.updateSeamBorders();
       playSound('pop');
     }
 
     fuseSelected(){
       const s = this.selected;
       if(!s || s.kind !== 'piece' || s.denom <= 1) return;
+
       const d = s.denom;
       const pw = this.pieceW(d);
       const yTol = 10;
       const xTol = 12;
+
       const rowPieces = this.tokens
         .filter(t => t.kind === 'piece' && t.denom === d && t.side === s.side && Math.abs(t.y - s.y) < yTol)
         .sort((a,b) => a.x - b.x);
+
       if(rowPieces.length < d){ playSound('whoosh'); return; }
+
       for(let start=0; start <= rowPieces.length - d; start++){
         const seq = rowPieces.slice(start, start + d);
         if(!seq.some(t => t.id === s.id)) continue;
+
         const baseX = seq[0].x;
         const baseY = seq[0].y;
         let ok = true;
@@ -1172,10 +1202,12 @@
           if(Math.abs(seq[i].y - baseY) > yTol) { ok = false; break; }
         }
         if(!ok) continue;
+
         this.saveState();
         const ids = new Set(seq.map(t => t.id));
         seq.forEach(t => { if(t._el) t._el.remove(); });
         this.tokens = this.tokens.filter(t => !ids.has(t.id));
+
         const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY };
         this.tokens.push(band);
         this.mountToken(band);
@@ -1183,6 +1215,7 @@
         playSound('pop');
         return;
       }
+
       playSound('whoosh');
     }
 
@@ -1196,14 +1229,18 @@
     cutSelected(){
       const s = this.selected;
       if(!s || !this.canCut(s)) return;
+
       const d = s.denom;
       const d2 = d * 2;
       const side = s.side;
       const x = s.x;
       const y = s.y;
+
       this.saveState();
+
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
+
       if(s.kind === 'band'){
         const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y };
         this.tokens.push(band);
@@ -1218,7 +1255,7 @@
         this.mountToken(p2);
         this.selectToken(p1.id);
       }
-      // CORRECTION: plus d'appel à updateSeamBorders
+      this.updateSeamBorders();
       playSound('pop');
     }
 
@@ -1229,20 +1266,26 @@
         (this.currentTool === 'hand' && (isTouch || btn === 0)) ||
         (this.currentTool === 'pen' && !isTouch && btn === 2);
       if(!allow) return;
+
       e.preventDefault();
       e.stopPropagation();
       const el = e.target.closest('.strip');
       if(!el) return;
+
       const id = parseInt(el.dataset.id, 10);
       const token = this.tokens.find(t => t.id === id);
       if(!token) return;
+
       this.saveState();
       this.selectToken(token.id);
+
       token._el.classList.add('dragging');
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const rect = token._el.getBoundingClientRect();
       const offset = { x: clientX - rect.left, y: clientY - rect.top };
+
       const move = (ev) => {
         ev.preventDefault();
         const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
@@ -1250,6 +1293,8 @@
         const br = this.boardContainer.getBoundingClientRect();
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
         let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
+
+        // aimantation vers la demi-droite (si visible) : au-dessus ET au-dessous
         const {h} = this.tokenDims(token);
         if(this.numberLine && this.numberLine.active){
           const lockThresh = 18 / this.scale;
@@ -1260,11 +1305,13 @@
             wy = (dAbove <= dBelow) ? (this.numberLine.y - h) : this.numberLine.y;
           }
         }
+
         token.x = wx;
         token.y = wy;
         token._el.style.left = wx + 'px';
         token._el.style.top = wy + 'px';
       };
+
       const end = () => {
         document.removeEventListener('mousemove', move);
         document.removeEventListener('touchmove', move);
@@ -1273,6 +1320,7 @@
         if(token._el) token._el.classList.remove('dragging');
         this.snapToken(token);
       };
+
       document.addEventListener('mousemove', move);
       document.addEventListener('touchmove', move, {passive:false});
       document.addEventListener('mouseup', end);
@@ -1281,9 +1329,11 @@
 
     snapToken(t, opts={}){
       if(!t) return;
+
       const {w, h} = this.tokenDims(t);
       const threshPx = 28;
       const thresh = threshPx / this.scale;
+
       let bestX = null, bestDx = Infinity, bestXPrio = 9;
       let bestY = null, bestDy = Infinity, bestYPrio = 9;
 
@@ -1295,6 +1345,7 @@
           bestX = nx;
         }
       };
+
       const considerY = (ny, prio=1) => {
         const ady = Math.abs(ny - t.y);
         if(ady <= thresh && (prio < bestYPrio || (prio === bestYPrio && ady < bestDy))){
@@ -1305,6 +1356,7 @@
       };
 
       const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
+
       const xLinesFor = (o) => {
         const {w:ow} = this.tokenDims(o);
         const ox = o.x;
@@ -1318,27 +1370,35 @@
         return lines;
       };
 
+      // Demi-droite graduée : priorité max
       if(this.numberLine && this.numberLine.active){
         considerY(this.numberLine.y - h, 0);
         considerY(this.numberLine.y, 0);
         considerX(this.numberLine.x, 0);
       }
 
+      // Accroche aux autres bandes/pièces
       for(const o of this.tokens){
         if(o.id === t.id) continue;
+
         const od = this.tokenDims(o);
         const ox = o.x, oy = o.y, ow = od.w, oh = od.h;
+
         const ovY = overlapLen(t.y, t.y + h, oy, oy + oh);
         const ovX = overlapLen(t.x, t.x + w, ox, ox + ow);
+
         const neighX = Math.min(Math.abs(t.x - (ox + ow)), Math.abs((t.x + w) - ox));
         const neighY = Math.min(Math.abs(t.y - (oy + oh)), Math.abs((t.y + h) - oy));
         const neighborX = neighX <= thresh;
         const neighborY = neighY <= thresh;
+
         const prioX = (ovY > Math.min(h, oh) * 0.35 || neighborY) ? 0 : 1;
         const prioY = (ovX > Math.min(w, ow) * 0.35 || neighborX) ? 0 : 1;
+
         considerY(oy, prioY);
         considerY(oy - h, prioY);
         considerY(oy + oh, prioY);
+
         const lines = xLinesFor(o);
         for(const gx of lines){
           considerX(gx, prioX);
@@ -1374,8 +1434,80 @@
       }
 
       if(snapped && !opts.silent) playSound('pop');
+      this.updateSeamBorders();
     }
 
+    // ---- Contours "1 trait" quand ça colle ----
+    updateSeamBorders(){
+      const tol = 2.2;
+      const edge = 'rgba(0,0,0,0.55)';
+      const transparent = 'transparent';
+
+      // reset
+      for(const t of this.tokens){
+        if(!t._el) continue;
+        t._el.style.setProperty('--edgeL', edge);
+        t._el.style.setProperty('--edgeR', edge);
+        t._el.style.setProperty('--edgeT', edge);
+        t._el.style.setProperty('--edgeB', edge);
+      }
+
+      const dims = (t)=>this.tokenDims(t);
+      const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
+
+      // pairwise seams
+      for(let i=0;i<this.tokens.length;i++){
+        const aT = this.tokens[i];
+        if(!aT._el) continue;
+        const ad = dims(aT);
+        const ax0 = aT.x, ax1 = aT.x + ad.w;
+        const ay0 = aT.y, ay1 = aT.y + ad.h;
+
+        for(let j=i+1;j<this.tokens.length;j++){
+          const bT = this.tokens[j];
+          if(!bT._el) continue;
+          const bd = dims(bT);
+          const bx0 = bT.x, bx1 = bT.x + bd.w;
+          const by0 = bT.y, by1 = bT.y + bd.h;
+
+          const ovX = overlapLen(ax0, ax1, bx0, bx1);
+          const ovY = overlapLen(ay0, ay1, by0, by1);
+
+          // horizontal adjacency
+          if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
+            bT._el.style.setProperty('--edgeL', transparent);
+          }
+          if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
+            // Correction ici : on cache le bord GAUCHE de l'élément de droite (aT), et non son bord droit
+            aT._el.style.setProperty('--edgeL', transparent);
+          }
+
+          // vertical adjacency: on enlève UN SEUL trait
+          // IMPORTANT : On cache TOUJOURS le bord de l'élément du BAS (Top Border)
+          // pour garder l'alignement avec les éléments voisins qui n'ont personne en dessous.
+          if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
+            // a (Top) au-dessus de b (Bottom)
+            // On cache le bord HAUT de b
+            bT._el.style.setProperty('--edgeT', transparent);
+          }
+          if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
+            // b (Top) au-dessus de a (Bottom)
+            // On cache le bord HAUT de a
+            aT._el.style.setProperty('--edgeT', transparent);
+          }
+        }
+      }
+    }
+
+    scheduleSeamUpdate(){
+      if(this._seamRAF) return;
+      this._seamRAF = requestAnimationFrame(() => {
+        this._seamRAF = null;
+        this.updateSeamBorders();
+      });
+    }
+
+    // ---- Outils dessin ----
     setTool(tool){
       this.currentTool = tool;
       const hand = document.getElementById('tool-hand');
@@ -1388,15 +1520,19 @@
     }
 
     resizeCanvas(){
-      const worldSize = 4000;
+      // CORRECTION STYLO : Zone de dessin plus grande et décalée
+      const offset = 2500; // Correction de l'offset pour correspondre au CSS top/left -2500px
+      const worldSize = 5000; // Plus grand
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       this._canvasWorldSize = worldSize;
       this._canvasDpr = dpr;
+
       this.canvas.width = Math.round(worldSize * dpr);
       this.canvas.height = Math.round(worldSize * dpr);
       this.canvas.style.width = `${worldSize}px`;
       this.canvas.style.height = `${worldSize}px`;
-      const offset = 2000;
+
+      // On décale le contexte de dessin pour correspondre au CSS top/left -2500px
       this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
@@ -1409,9 +1545,11 @@
     startDraw(e){
       this.isDrawing = true;
       this.drawPoints = [];
+
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
+
       this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
       this.drawPoints.push(p);
       this.ctx.beginPath();
@@ -1423,14 +1561,18 @@
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
+
       this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+
       const pts = this.drawPoints;
       pts.push(p);
+
       if(pts.length === 2){
         this.ctx.lineTo(p.x, p.y);
         this.ctx.stroke();
         return;
       }
+
       const p1 = pts[pts.length - 2];
       const p2 = pts[pts.length - 1];
       const midX = (p1.x + p2.x) / 2;
@@ -1450,10 +1592,13 @@
 
     clearDrawing(){
       this.ctx.save();
+      // Reset transform temporairement pour tout effacer
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.restore();
-      const offset = 2000;
+      
+      // On s'assure de garder la transformation correcte (offset)
+      const offset = 2500; // Correction de l'offset ici aussi
       const dpr = this._canvasDpr || 1;
       this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
     }
@@ -1475,6 +1620,7 @@
     }
   }
 
+  // --- Mini tests (sécurité) ---
   function runSelfTests(){
     const required = [
       'btn-undo','btn-clear','btn-toggle-labels','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
@@ -1487,16 +1633,20 @@
       console.error('[SelfTest] IDs manquants:', missing);
       return { ok:false, missing };
     }
+
+    // tests supplémentaires (non intrusifs)
     try{
+      // Vérifie que le script s'exécute bien et qu'on peut instancier
       const tmp = new FractionStripsApp();
-      // On retire updateSeamBorders car cette méthode n'est plus utilisée (CSS ::after)
-      const okMethods = ['addToken','snapToken','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
+      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
       if(!okMethods) throw new Error('Méthodes clés manquantes');
+      // Nettoyage visuel minimal
       tmp.resetAll();
     }catch(err){
       console.error('[SelfTest] Erreur instanciation/app:', err);
       return { ok:false, missing:[], err };
     }
+
     console.log('[SelfTest] OK');
     return { ok:true, missing:[] };
   }
@@ -1504,6 +1654,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     const t = runSelfTests();
     if(!t.ok) return;
+    // Instance réelle utilisée par l'utilisateur
     window.app = new FractionStripsApp();
     console.log('[SelfTest] App instanciée OK');
   });
