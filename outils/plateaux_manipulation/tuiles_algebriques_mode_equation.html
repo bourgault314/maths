@@ -24,25 +24,20 @@
         .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
         @keyframes vanish { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
 
-        /* Transition fluide pour le grossissement du fantôme */
         .token.scaling-transition { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
 
-        /* Couleurs */
         .token.green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 2px solid #14532d; }
         .token.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 2px solid #7f1d1d; }
         
-        /* Etats spéciaux */
         .token.in-bracket { opacity: 0.95; box-shadow: none !important; }
         .token.pending-mult { box-shadow: 0 0 0 3px #3b82f6 !important; }
         .token.is-zero { background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280; box-shadow: none; z-index: 5; color: rgba(255,255,255,0.5); }
         .token.fading-gray { background: #9ca3af !important; border-color: #6b7280 !important; box-shadow: none !important; filter: grayscale(1); }
         .token.ghost { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
 
-        /* Tailles */
         .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
         .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
 
-        /* Badge Zéro */
         .zero-badge { 
             position: absolute; font-size: 2rem; font-weight: 800; color: #374151; 
             pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(255,255,255,1); 
@@ -51,7 +46,8 @@
         @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
         /* STRUCTURE */
-        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; padding-bottom: 150px; } /* Cursor grab removed from here */
+        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; padding-bottom: 150px; cursor: ns-resize; } /* Cursor indicates vertical scroll */
+        #board-container.panning { cursor: grabbing; }
         #board-world { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 0; height: 0; }
         
         #equation-divider {
@@ -60,7 +56,6 @@
             transform: translateX(-2px); pointer-events: none; z-index: 0;
         }
 
-        /* MENU BAS */
         #bottom-bar {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 150px;
             background: white; border-top: 1px solid #cbd5e1;
@@ -76,7 +71,6 @@
             transform: translateX(-2px); pointer-events: none; z-index: 51;
         }
 
-        /* BOUTON CENTRAL DIVISER */
         #center-actions {
             position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
             z-index: 60; display: flex; flex-direction: column; align-items: center;
@@ -86,7 +80,6 @@
         .tools-zone { display: flex; flex-direction: column; gap: 4px; align-items: stretch; min-width: 120px; }
         .tools-row { display: flex; gap: 4px; justify-content: center; }
 
-        /* Tuiles Menu (Preview) */
         .tile-btn { 
             position: relative; background: transparent; border: none; cursor: grab; 
             display: flex; align-items: center; justify-content: center; transition: transform 0.1s; 
@@ -125,6 +118,10 @@
             background: #e2e8f0; color: #64748b; font-size: 0.6rem; padding: 2px 8px;
             border-radius: 10px; font-weight: bold; z-index: 5;
         }
+        
+        /* CANEVAS DESSIN */
+        #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+        .drawing-active #drawing-canvas { pointer-events: auto; z-index: 100; }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden">
@@ -284,14 +281,6 @@
                 this.displayMode = 'normal'; // 'normal', 'ordered', 'reduced'
             }
 
-            getStartPos() {
-                // Not strictly used for initial placement via click anymore, dynamic calculation preferred
-                const screenH = this.app.container.clientHeight / this.app.scale;
-                const topY = -screenH/2 + 60;
-                if (this.id === 'left') return { x: -40, y: topY, maxY: 0 }; // Start near center
-                else return { x: 40, y: topY, maxY: 0 }; // Start near center
-            }
-
             addTile(type, sign, isGhost=false, manualX=null, manualY=null, mirrorTrigger=false) {
                 if(!isGhost && !mirrorTrigger) {
                     this.app.saveState();
@@ -343,15 +332,13 @@
                     // MIRROR LOGIC FOR SOLVE MODE
                     if (!isGhost && !mirrorTrigger && this.app.mode === 'solve') {
                         const otherSide = this.id === 'left' ? this.app.sideRight : this.app.sideLeft;
-                        // Calculate symmetrical X
-                        // Center is 0. If Left is at x=-100, Right should be at x=100 - width
                         const w = SIZES[type].w;
                         const mirrorX = -x - w; 
                         otherSide.addTile(type, sign, false, mirrorX, y, true);
                     }
                 }
                 else {
-                    // AUTO PLACEMENT (CLICK) - Find free spot
+                    // AUTO PLACEMENT (CLICK) - Mirror Logic
                     const pos = this.findFreeSpot(type);
                     x = pos.x; y = pos.y;
                     
@@ -389,7 +376,6 @@
             }
 
             findFreeSpot(type) {
-                // Simple grid search starting from center outwards
                 const w = SIZES[type].w; 
                 const h = SIZES[type].h;
                 const gap = 10;
@@ -397,45 +383,50 @@
                 const screenH = this.app.container.clientHeight / this.app.scale;
                 const startY = -screenH/2 + 60;
                 
-                // For Left side: start at x = -20 - w (near center), go left
-                // For Right side: start at x = 20 (near center), go right
-                
-                let col = 0;
+                // Logic: Fill Lines (Rows), Starting from Center outwards
                 let row = 0;
-                let maxRows = 10;
-                
-                while(true) {
-                    let tx, ty;
-                    if (this.id === 'left') {
-                        tx = -20 - w - (col * (w + gap));
-                    } else {
-                        tx = 20 + (col * (w + gap));
-                    }
-                    ty = startY + (row * (h + gap));
-                    
-                    // Check collision
-                    let collision = false;
-                    for(let t of this.tokens) {
-                        if (Math.abs(t.x - tx) < w && Math.abs(t.y - ty) < h) {
-                            collision = true;
-                            break;
+                const maxRows = 20;
+                const maxCols = 8; // Safety width limit
+
+                while(row < maxRows) {
+                    let col = 0;
+                    while(col < maxCols) {
+                        let tx, ty;
+                        
+                        if (this.id === 'left') {
+                            // Grow Left from Center (-20)
+                            // Col 0: -20 - w
+                            // Col 1: -20 - w - (w+gap)
+                            const startX = -20;
+                            tx = startX - w - (col * (w + gap));
+                        } else {
+                            // Grow Right from Center (20)
+                            // Col 0: 20
+                            // Col 1: 20 + w + gap
+                            const startX = 20;
+                            tx = startX + (col * (w + gap));
                         }
-                    }
-                    
-                    if (!collision) return {x: tx, y: ty};
-                    
-                    row++;
-                    if (row > maxRows) {
-                        row = 0;
+                        
+                        ty = startY + (row * (h + gap));
+                        
+                        let collision = false;
+                        for(let t of this.tokens) {
+                            if (Math.abs(t.x - tx) < w - 2 && Math.abs(t.y - ty) < h - 2) {
+                                collision = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!collision) return {x: tx, y: ty};
                         col++;
                     }
-                    if (col > 20) return {x: tx, y: ty}; // Fallback
+                    row++;
                 }
+                return {x: 0, y: 0};
             }
 
-            // ... (rest of methods like getPos, addOperator etc kept mostly same) ...
-            
-            getPos(w, h, gap) { return {x:0,y:0}; } // Not used with findFreeSpot
+            // ... (methods) ...
+            getPos(w, h, gap) { return {x:0,y:0}; }
 
             addOperator(op) {
                 this.app.saveState();
@@ -512,7 +503,6 @@
                 this.app.updateEquation();
             }
 
-            // Placeholder reflow, logic handled in organize
             reflow() { }
 
             order() {
@@ -534,26 +524,18 @@
                 const screenH = this.app.container.clientHeight / this.app.scale;
                 let y = -screenH/2 + 60;
                 
-                // Filter eligible tokens
                 const subset = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-
-                // Define Sort Order: X then Units
-                // Visual Order: 
-                // Left Side:  [...Units] [Unit] [X] [X] |  (Aligned to Right/Center)
-                // Right Side: | [X] [X] [Unit] [Unit]...  (Aligned to Left/Center)
-                
-                // We process groups: X+, X-, U+, U-
                 const rows = [{t:'x',s:1},{t:'x',s:-1},{t:'unit',s:1},{t:'unit',s:-1}];
 
+                // REVISED LAYOUT LOGIC: Center -> Outwards, Lines (Rows)
                 rows.forEach(r => {
                     const eligible = subset.filter(t => t.type===r.t && t.sign===r.s);
                     if (!eligible.length) return;
 
                     let packs = [];
                     if (reduced) {
-                        packs = [eligible]; // One big pack
+                        packs = [eligible]; 
                     } else {
-                        // Original packs logic
                         const map = new Map();
                         eligible.forEach(t => {
                             const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
@@ -565,79 +547,71 @@
                     }
 
                     // --- PLACEMENT LOGIC ---
-                    if (this.id === 'right') {
-                        // STANDARD: Left to Right, starting from center + margin
-                        let cx = 25; // Margin from center
-                        let rowH = 0;
-                        packs.forEach(pack => {
-                            pack.forEach(t => {
-                                const s = SIZES[t.type];
-                                // Simple line wrap if needed (arbitrary limit)
-                                if (cx > 400) { cx = 25; y += rowH + 10; rowH = 0; }
-                                
-                                this.moveTile(t, cx, y);
-                                cx += s.w + 2; 
-                                rowH = Math.max(rowH, s.h);
-                            });
-                            if (!reduced) cx += 15; // Gap between packs
-                        });
-                        y += rowH + 15;
-                    } else {
-                        // LEFT SIDE: Right to Left, starting from center - margin
-                        // We want to fill from the center outwards to the left.
-                        // Order of packs: Pack 1 is closest to center? Or Pack 1 is furthest?
-                        // Math reading: 2x + 3. Visual: [2x] [3] |. 
-                        // So the first pack (2x) is furthest left. The last pack (3) is closest to center.
-                        // So we reverse iterate packs or calculate total width.
-                        
-                        // Let's stack them visually Left to Right BUT right-aligned.
-                        // Easier: Calculate total width of the line, then start x.
-                        
-                        let currentLineTokens = [];
-                        let gap = reduced ? 0 : 15;
-                        
-                        // Flatten packs with gaps
-                        packs.forEach((pack, pIdx) => {
-                            pack.forEach(t => currentLineTokens.push({t, w: SIZES[t.type].w, h: SIZES[t.type].h}));
-                            if (pIdx < packs.length -1) currentLineTokens.push({isGap: true, w: gap});
-                        });
-                        
-                        // Determine lines (naive wrapping)
-                        let lines = []; 
-                        let curLine = []; let curW = 0; let maxH = 0;
-                        
-                        currentLineTokens.forEach(item => {
-                            if (item.isGap) {
-                                curW += item.w;
-                                curLine.push(item);
-                            } else {
-                                if (curW + item.w > 400) { // Wrap
-                                    lines.push({items: curLine, w: curW, h: maxH});
-                                    curLine = []; curW = 0; maxH = 0;
-                                }
-                                curLine.push(item);
-                                curW += item.w + 2;
-                                maxH = Math.max(maxH, item.h);
+                    
+                    // Flatten tokens for line filling
+                    let tokensInOrder = [];
+                    let gap = reduced ? 0 : 15;
+                    packs.forEach((pack, pIdx) => {
+                        pack.forEach(t => tokensInOrder.push({t, w: SIZES[t.type].w, h: SIZES[t.type].h}));
+                        if (pIdx < packs.length - 1) tokensInOrder.push({isGap: true, w: gap});
+                    });
+
+                    // Break into lines based on width limit
+                    let lines = [];
+                    let currentLine = [];
+                    let currentW = 0;
+                    let lineMaxH = 0;
+                    const maxW = 450; // Max line width before wrap
+
+                    tokensInOrder.forEach(item => {
+                        if (item.isGap) {
+                            currentW += item.w;
+                            currentLine.push(item);
+                        } else {
+                            if (currentW + item.w > maxW) {
+                                lines.push({items: currentLine, w: currentW, h: lineMaxH});
+                                currentLine = []; currentW = 0; lineMaxH = 0;
                             }
-                        });
-                        if(curLine.length) lines.push({items: curLine, w: curW, h: maxH});
-                        
-                        // Render Lines Right-Aligned
-                        lines.forEach(line => {
-                            let startX = -25 - line.w; // End at -25 (center margin)
-                            let lx = startX;
-                            
+                            currentLine.push(item);
+                            currentW += item.w + 2;
+                            lineMaxH = Math.max(lineMaxH, item.h);
+                        }
+                    });
+                    if (currentLine.length) lines.push({items: currentLine, w: currentW, h: lineMaxH});
+
+                    // Render Lines
+                    lines.forEach(line => {
+                        let startX;
+                        // RIGHT SIDE: Start from Center (25) -> Right
+                        if (this.id === 'right') {
+                            startX = 25;
+                            let cx = startX;
                             line.items.forEach(item => {
-                                if(item.isGap) {
-                                    lx += item.w;
-                                } else {
-                                    this.moveTile(item.t, lx, y);
-                                    lx += item.w + 2;
+                                if (item.isGap) cx += item.w;
+                                else {
+                                    this.moveTile(item.t, cx, y);
+                                    cx += item.w + 2;
                                 }
                             });
-                            y += line.h + 15;
-                        });
-                    }
+                        } 
+                        // LEFT SIDE: Start from Center (-25) -> Left
+                        else {
+                            // To fill R -> L starting from center, we simply decrement X
+                            startX = -25;
+                            let cx = startX;
+                            line.items.forEach(item => {
+                                if (item.isGap) cx -= item.w;
+                                else {
+                                    // item position is its top-left.
+                                    // If we are at -25 and want to place an item of width 40 to its left:
+                                    // it occupies [-65, -25]. The pos is -65.
+                                    cx -= (item.w + 2);
+                                    this.moveTile(item.t, cx, y); // Position is top-left
+                                }
+                            });
+                        }
+                        y += line.h + 15;
+                    });
                 });
             }
 
@@ -652,33 +626,11 @@
                 this.app.saveState();
                 playSound('whoosh');
                 
-                // ALSO INCLUDE EXISTING ZERO PAIRS (grey ones)
-                // Filter any tokens that are part of a pair OR free
-                // Actually, simplify usually means remove existing zeros AND find new ones.
-                
-                // 1. Remove existing visible zeros immediately
+                // 1. Mark existing zeros for removal
                 const existingZeros = this.tokens.filter(t => t.pairId !== null);
-                existingZeros.forEach(t => {
-                    t.element.classList.add('vanish');
-                    // Remove logic is typically handled by createZeroPair timeout, 
-                    // but if they are stagnant, we force remove.
-                    setTimeout(() => {
-                        t.element.remove();
-                        // Remove badge if exists
-                        const b = document.getElementById(`badge-${t.id}-${t.pairId}`) || document.getElementById(`badge-${t.pairId}-${t.id}`);
-                        if(b) b.remove();
-                    }, 500);
-                });
+                existingZeros.forEach(t => t.element.classList.add('vanish'));
                 
-                // Cleanup data for existing zeros
-                if(existingZeros.length > 0) {
-                    setTimeout(() => {
-                        this.app.removeTokens(existingZeros.map(t=>t.id));
-                    }, 500);
-                }
-
-                // 2. Find NEW pairs among remaining free tokens
-                // Filter only truly free tokens (no pairId)
+                // 2. Find new zeros
                 const available = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('in-bracket') && !t.element.classList.contains('ghost') && !existingZeros.includes(t));
                 
                 const pairs = [];
@@ -688,6 +640,16 @@
                     while(pos.length && neg.length) pairs.push([pos.pop(), neg.pop()]);
                 });
                 
+                // 3. Remove existing zeros after short delay
+                if (existingZeros.length > 0) {
+                    setTimeout(() => {
+                        this.app.removeTokens(existingZeros.map(t => t.id));
+                        // Remove badges
+                        document.querySelectorAll('.zero-badge').forEach(b => b.remove());
+                    }, 500);
+                }
+
+                // 4. Animate new pairs
                 pairs.forEach((p, i) => {
                     setTimeout(() => {
                         const t1 = p[0]; const t2 = p[1];
@@ -699,10 +661,6 @@
             divide() { this.app.performDivision(); }
             
             layoutForDivision(n, keepIndex) {
-                // ... same logic but respecting symmetry for X position?
-                // Simplification: We use the same collision-free logic or simple grid 
-                // For division, simple grid is fine.
-                
                 const active = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 const screenH = this.app.container.clientHeight / this.app.scale;
                 const startY = -screenH/2 + 80;
@@ -711,24 +669,18 @@
                 const xs = active.filter(t => t.type === 'x');
                 const us = active.filter(t => t.type === 'unit');
                 
-                // Left side: fill from -25 leftwards
-                // Right side: fill from 25 rightwards
-                
                 const isLeft = (this.id === 'left');
                 const startX = isLeft ? -40 : 40; 
                 const dir = isLeft ? -1 : 1;
                 
-                // X Group
                 xs.forEach((t, i) => {
                     const row = i % n;
                     const col = Math.floor(i / n);
-                    // Stack outwards
                     const tx = startX + (col * 100 * dir); 
                     this.moveTile(t, tx, startY + row * gapY);
                     if (row !== keepIndex) t.toDelete = true;
                 });
                 
-                // Unit Group (offset by X width)
                 const uStartOffset = (xs.length > 0 ? (Math.ceil(xs.length/n)*100 + 20) : 0) * dir;
                 us.forEach((t, i) => {
                     const row = i % n;
@@ -761,7 +713,7 @@
                 this.world = document.getElementById('board-world');
                 this.eqDisplay = document.getElementById('equation-display');
                 this.scale = 1; 
-                this.pan = {x:0, y:0}; // Panning is fixed center
+                this.pan = {x:0, y:0};
                 this.menuDrag = null;
                 this.sideLeft = new AlgebraSide('left', this);
                 this.sideRight = new AlgebraSide('right', this);
@@ -770,7 +722,23 @@
                 this.updateEquation();
             }
             
-            // ... (performDivision, applyDivisionDeletion, saveState, undo kept same) ...
+            toggleMode() {
+                const btn = document.getElementById('btn-mode');
+                const txt = document.getElementById('mode-text');
+                if (this.mode === 'setup') {
+                    this.mode = 'solve';
+                    btn.classList.add('solve'); txt.innerText = "Phase 2 : Résoudre (Balance)";
+                } else {
+                    this.mode = 'setup';
+                    btn.classList.remove('solve'); txt.innerText = "Phase 1 : Poser l'équation";
+                }
+            }
+
+            toggleEquationVisibility() {
+                this.equationVisible = !this.equationVisible;
+                const eq = document.getElementById('equation-display');
+                if(this.equationVisible) eq.classList.remove('equation-blur'); else eq.classList.add('equation-blur');
+            }
             
             performDivision() {
                 const leftX = this.sideLeft.tokens.filter(t => t.type === 'x' && !t.pairId).length;
@@ -815,9 +783,14 @@
             }
 
             saveState() {
+                // IMPORTANT: Clone deeply to avoid reference issues
                 const state = {
                     nextId: this.nextId,
-                    tokens: this.allTokens.map(t => ({...t, element: null})),
+                    // Serialize token data only
+                    tokens: this.allTokens.map(t => {
+                        const { element, ...data } = t; 
+                        return data; 
+                    }),
                     stepsL: JSON.parse(JSON.stringify(this.sideLeft.steps)),
                     stepsR: JSON.parse(JSON.stringify(this.sideRight.steps)),
                     currStepL: this.sideLeft.currStepIdx,
@@ -836,6 +809,7 @@
                 const json = this.history.pop();
                 const state = JSON.parse(json);
                 this.resetBoard(false);
+                
                 this.nextId = state.nextId;
                 this.sideLeft.steps = state.stepsL; this.sideRight.steps = state.stepsR;
                 this.sideLeft.currStepIdx = state.currStepL; this.sideRight.currStepIdx = state.currStepR;
@@ -856,6 +830,7 @@
                     el.addEventListener('mousedown', e => this.handleDragStart(e, data.id));
                     el.addEventListener('touchstart', e => this.handleDragStart(e, data.id), {passive:false});
                     this.world.appendChild(el);
+                    
                     const token = { ...data, element: el };
                     this.allTokens.push(token);
                     if(token.side === 'left') this.sideLeft.tokens.push(token);
@@ -880,15 +855,29 @@
             }
 
             initListeners() {
-                // Mouse wheel zoom only - NO PANNING
                 this.container.addEventListener('wheel', e => { e.preventDefault(); this.scale = Math.min(Math.max(0.5, this.scale - e.deltaY * 0.001), 2.5); this.updateTransform(); }, {passive:false});
                 
-                // NO MOUSE DOWN PANNING
-                
-                window.addEventListener('mousemove', e => {
-                    if (this.menuDrag) this.handleMenuDragMove(e);
+                // RESTORE PANNING (Vertical Only)
+                this.container.addEventListener('mousedown', e => {
+                    if (e.target.closest('.token') || e.target.closest('button')) return;
+                    this.isPanning = true; 
+                    // We only care about Y start relative to current pan.y
+                    this.panStart = { y: e.clientY - this.pan.y };
+                    this.container.classList.add('panning');
                 });
+
+                window.addEventListener('mousemove', e => {
+                    if (this.isPanning) {
+                        // Update ONLY Y
+                        this.pan.y = e.clientY - this.panStart.y; 
+                        this.updateTransform(); 
+                    }
+                    else if (this.menuDrag) this.handleMenuDragMove(e);
+                });
+                
                 window.addEventListener('mouseup', e => {
+                    this.isPanning = false; 
+                    this.container.classList.remove('panning');
                     if(this.menuDrag) this.handleMenuDragEnd(e);
                 });
                 
@@ -902,14 +891,11 @@
             centerView() {
                 const cx = this.container.clientWidth / 2;
                 const cy = this.container.clientHeight / 2;
-                // FIXED Center
                 this.pan.x = cx; 
                 this.pan.y = cy - 50;
                 this.updateTransform();
             }
             updateTransform() { this.world.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`; }
-            
-            // ... (Menu Drag handlers kept same, they are correct) ...
             
             // --- MENU DRAG ---
             handleMenuTouchStart(e, type, sign, side) {
@@ -986,7 +972,7 @@
                         
                         if (dropSide === this.menuDrag.side) {
                             const targetSide = (dropSide === 'left') ? this.sideLeft : this.sideRight;
-                            targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y); // will trigger mirror logic inside addTile
+                            targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y); 
                         }
                     }
                 } else {
@@ -1075,8 +1061,6 @@
                 }
             }
 
-            // ... (rest kept same) ...
-            
             updateEquation() {
                 const getStr = (side) => {
                     if (side.displayMode === 'reduced') {
@@ -1085,7 +1069,6 @@
                         return this.getOrderedStr(side);
                     }
                     
-                    // NORMAL MODE (Step based)
                     let s = "";
                     const hasNonEmptyBefore = (i) => { for(let k=0; k<i; k++) if(side.steps[k].tokenIds.length > 0) return true; return false; };
                     
@@ -1127,7 +1110,7 @@
                 const r = getStr(this.sideRight);
                 katex.render(`${l} = ${r}`, document.getElementById('equation-display'));
             }
-            // ...
+
             getReducedStr(side) {
                 const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 if (!active.length) return "0";
@@ -1179,14 +1162,52 @@
                 return s || "0";
             }
             
-            // ... (tools kept same) ...
-            setTool(t){this.currentTool=t;const p=t==='pen';this.container.classList.toggle('hide-cursor',p);document.getElementById('custom-cursor').style.display=p?'block':'none';}
+            // --- TOOLS ---
+            setTool(t){
+                this.currentTool=t;
+                const p=t==='pen';
+                // Toggle active class on body to allow click-through for tokens if needed, 
+                // or ensure canvas is top.
+                if(p) document.body.classList.add('drawing-active');
+                else document.body.classList.remove('drawing-active');
+                
+                document.getElementById('custom-cursor').style.display=p?'block':'none';
+                if(p) document.body.style.cursor = 'none';
+                else document.body.style.cursor = 'default';
+            }
+            
             startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
             draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
             clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
             resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
             moveCursor(e){if(this.currentTool!=='pen')return;const c=document.getElementById('custom-cursor');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';c.style.transform='translate(-6px,-28px)';}
             getWorldPos(cx, cy) { const r = this.container.getBoundingClientRect(); return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale }; }
+            
+            resetBoard(clearHistory=true) {
+                // Remove DOM elements properly
+                this.allTokens.forEach(t => t.element.remove());
+                document.querySelectorAll('.zero-badge').forEach(b=>b.remove());
+                
+                // Clear Data
+                this.allTokens = [];
+                
+                // Reset Sides
+                this.sideLeft = new AlgebraSide('left', this);
+                this.sideRight = new AlgebraSide('right', this);
+                
+                // Clear Drawing
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+                
+                if(clearHistory) {
+                    this.history = [];
+                    this.mode = 'setup';
+                    document.getElementById('btn-mode').classList.remove('solve');
+                    document.getElementById('mode-text').innerText = "Phase 1 : Poser l'équation";
+                }
+                
+                this.centerView();
+                this.updateEquation();
+            }
         }
         
         const cvs = document.getElementById('drawing-canvas');
@@ -1194,11 +1215,49 @@
         let isDrawing=false; let lastP={x:0,y:0};
         function resizeCvs() { cvs.width=4000; cvs.height=4000; cvs.style.width='4000px'; cvs.style.height='4000px'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.strokeStyle='#2563eb'; }
         window.addEventListener('resize', resizeCvs); resizeCvs();
+        
         const app = new AlgebraEqApp();
-        app.setTool = function(t){ app.currentTool=t; if(t==='pen'){document.getElementById('custom-cursor').classList.remove('hidden');document.body.style.cursor='none';}else{document.getElementById('custom-cursor').classList.add('hidden');document.body.style.cursor='default';} };
+        app.canvas = cvs;
+        app.ctx = ctx;
+        
+        // Correct Tool binding
+        app.setTool = function(t){ 
+            app.currentTool=t; 
+            if(t==='pen'){
+                document.getElementById('custom-cursor').classList.remove('hidden');
+                document.body.style.cursor='none';
+                document.body.classList.add('drawing-active');
+            } else {
+                document.getElementById('custom-cursor').classList.add('hidden');
+                document.body.style.cursor='default';
+                document.body.classList.remove('drawing-active');
+            } 
+        };
         app.clearDrawing = function(){ ctx.clearRect(0,0,cvs.width,cvs.height); };
-        document.addEventListener('mousemove', e => { if(app.currentTool==='pen') { const c=document.getElementById('custom-cursor'); c.style.left=e.clientX+'px'; c.style.top=e.clientY+'px'; c.style.transform='translate(-6px,-28px)'; if(isDrawing) { const p = app.getWorldPos(e.clientX, e.clientY); ctx.beginPath(); ctx.moveTo(lastP.x, lastP.y); ctx.lineTo(p.x, p.y); ctx.stroke(); lastP = p; } } });
-        document.addEventListener('mousedown', e => { if(app.currentTool==='pen') { isDrawing=true; lastP = app.getWorldPos(e.clientX, e.clientY); } });
+        
+        // Drawing Events attached to WINDOW/DOCUMENT to catch them over overlay
+        document.addEventListener('mousemove', e => { 
+            if(app.currentTool==='pen') { 
+                const c=document.getElementById('custom-cursor'); 
+                c.style.left=e.clientX+'px'; 
+                c.style.top=e.clientY+'px'; 
+                c.style.transform='translate(-6px,-28px)'; 
+                if(isDrawing) { 
+                    const p = app.getWorldPos(e.clientX, e.clientY); 
+                    ctx.beginPath(); ctx.moveTo(lastP.x, lastP.y); ctx.lineTo(p.x, p.y); ctx.stroke(); 
+                    lastP = p; 
+                } 
+            } 
+        });
+        
+        document.addEventListener('mousedown', e => { 
+            if(app.currentTool==='pen') { 
+                if (e.target.closest('button')) return; // Don't draw on buttons
+                isDrawing=true; 
+                lastP = app.getWorldPos(e.clientX, e.clientY); 
+            } 
+        });
+        
         document.addEventListener('mouseup', () => isDrawing=false);
     </script>
 </body>
