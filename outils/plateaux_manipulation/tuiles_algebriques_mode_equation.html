@@ -3,1328 +3,2076 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calcul Littéral - Équations (1er Degré)</title>
+    <title>Géométrie : Bandes Magnétiques</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Fredoka', sans-serif; background-color: #f0f9ff; overflow: hidden; user-select: none; touch-action: none; }
-        
-        /* --- TUILES PLATEAU --- */
-        .token {
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            font-weight: 600; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-            cursor: grab; transition: transform 0.1s, background-color 0.5s; z-index: 10;
-            font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.2rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3); transform-origin: 0 0;
-        }
-        .token.dragging { transition: none !important; z-index: 1000 !important; cursor: grabbing; box-shadow: 0 15px 30px rgba(0,0,0,0.4); transform: scale(1.1); }
-        .token.animating { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s ease-in-out, top 0.5s ease-in-out, background-color 0.5s !important; }
-        .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
-        @keyframes vanish { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
-
-        .token.scaling-transition { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
-
-        .token.green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 2px solid #14532d; }
-        .token.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 2px solid #7f1d1d; }
-.token.is-zero { background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280; box-shadow: none; z-index: 5; color: rgba(255,255,255,0.5); }
-        .token.fading-gray { background: #9ca3af !important; border-color: #6b7280 !important; box-shadow: none !important; filter: grayscale(1); }
-        .token.ghost { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
-
-        .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
-        .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
-
-        .zero-badge { 
-            position: absolute; font-size: 2rem; font-weight: 800; color: #374151; 
-            pointer-events: none; z-index: 20; text-shadow: 0 0 10px rgba(255,255,255,1); 
-            animation: popIn 0.3s; transform: translate(-50%, -50%);
-        }
-        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
-
-        /* STRUCTURE */
-        #board-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; padding-bottom: 150px; cursor: ns-resize; }
-        #board-container.panning { cursor: grabbing; }
-        #board-world { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 0; height: 0; }
-        
-        #equation-divider {
-            position: absolute; top: -5000px; bottom: -5000px; left: 0; width: 4px;
-            background-color: #cbd5e1; border-left: 2px dashed #94a3b8; border-right: 2px dashed #94a3b8;
-            transform: translateX(-2px); pointer-events: none; z-index: 0;
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default;
         }
 
-        #bottom-bar {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 150px;
-            background: white; border-top: 1px solid #cbd5e1;
-            display: flex; z-index: 50; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        /* --- UI ELEMENTS --- */
+        .tool-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .side-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px 10px; gap: 10px; position: relative; }
-        .side-panel.left { border-right: none; background: #f8fafc; }
-        .side-panel.right { background: #fff; }
-        
-        #menu-divider {
-            position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
-            background-color: #cbd5e1; border-left: 2px dashed #94a3b8; border-right: 2px dashed #94a3b8;
-            transform: translateX(-2px); pointer-events: none; z-index: 51;
+        .tool-btn:active {
+            transform: scale(0.9);
+        }
+        .tool-btn.active {
+            background-color: #dbeafe; /* blue-100 */
+            border-color: #3b82f6; /* blue-500 */
+            color: #1d4ed8;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tool-btn.active-red {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+            color: #b91c1c;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tool-btn.active-teal { 
+            background-color: #ccfbf1; /* teal-100 */
+            border-color: #14b8a6; /* teal-500 */
+            color: #0f766e;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tool-btn.active-orange {
+            background-color: #ffedd5; /* orange-100 */
+            border-color: #f97316; /* orange-500 */
+            color: #c2410c;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        #center-actions {
-            position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
-            z-index: 60; display: flex; flex-direction: column; align-items: center;
+        /* Classes pour le Drag & Drop sidebar */
+        .strip-dragger {
+            cursor: grab;
+            touch-action: none;
+        }
+        .strip-dragger:active {
+            cursor: grabbing;
         }
 
-        .tiles-zone { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 5px; }
-        .tools-zone { display: flex; flex-direction: column; gap: 4px; align-items: stretch; min-width: 120px; }
-        .tools-row { display: flex; gap: 4px; justify-content: center; }
-
-        .tile-btn { 
-            position: relative; background: transparent; border: none; cursor: grab; 
-            display: flex; align-items: center; justify-content: center; transition: transform 0.1s; 
+        /* Header Trash Zone State */
+        header {
+            transition: background-color 0.2s, border-color 0.2s;
         }
-        .tile-btn:active { cursor: grabbing; transform: scale(0.95); }
-        .tile-btn:hover { transform: translateY(-2px); }
-        
-        .preview-shape { 
-            display: flex; align-items: center; justify-content: center; border-radius: 4px; 
-            color: white; font-weight: bold; font-family: 'Times New Roman', serif; font-style: italic; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3); box-shadow: 0 3px 5px rgba(0,0,0,0.2); pointer-events: none; 
+        header.trash-active {
+            background-color: #fef2f2 !important; /* red-50 */
+            border-color: #fecaca !important; /* red-200 */
         }
-        .ps-green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 1px solid #14532d; } 
-        .ps-red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 1px solid #7f1d1d; }
-
-        .token.menu-ghost {
-            position: fixed; z-index: 9999; pointer-events: none; opacity: 0.9;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); transform-origin: center;
+        header.trash-active .trash-label {
+            display: flex !important;
+            opacity: 1 !important;
         }
-        
-        .action-btn { font-size: 0.7rem; font-weight: bold; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; color: #475569; transition: all 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
-        .action-btn:hover { background: #f1f5f9; border-color: #94a3b8; } .action-btn:active { transform: translateY(1px); }
-        
-        
-        .action-btn.big { font-size: 0.95rem; padding: 10px 16px; border-radius: 9px; }
+        header.trash-active .header-tools {
+            opacity: 0.2;
+            pointer-events: none;
+        }
 
-        /* Equation: keep '=' centered on the vertical divider */
-        .equation-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 10px; width: 100%; }
-        .equation-grid .eq-left { justify-self: end; text-align: right; }
-        .equation-grid .eq-right { justify-self: start; text-align: left; }
-        .equation-grid .eq-equal { justify-self: center; }
+        /* Background Image Styling */
+        #bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            opacity: 0.9;
+        }
 
-        .topbar { position: relative; }
-        .topbar .left-controls { position: relative; z-index: 70; }
-        .topbar .equation-holder { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 60; width: min(1100px, calc(100% - 520px)); }
-        @media (max-width: 900px) { .topbar .equation-holder { width: calc(100% - 40px); } }
-.toggle-mode { background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; }
-        .toggle-mode.solve { background-color: #dcfce7; color: #166534; border-color: #22c55e; }
-        .equation-blur { filter: blur(5px); opacity: 0.5; }
-        
-        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
-        .hide-cursor, .hide-cursor * { cursor: none !important; }
+        /* Scrollbar masquée */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .side-label {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            background: #e2e8f0; color: #64748b; font-size: 0.6rem; padding: 2px 8px;
-            border-radius: 10px; font-weight: bold; z-index: 5;
+        /* --- DESSIN & CANVAS --- */
+        #layer-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            background-color: white;
+            cursor: crosshair;
         }
         
-        /* CANEVAS DESSIN */
-        #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
-        .drawing-active #drawing-canvas { pointer-events: auto; z-index: 100; }
+        /* Container pour le Zoom */
+        #zoom-world {
+            position: absolute;
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-origin: top left;
+            transition: transform 0.1s linear; 
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        #strips-canvas { z-index: 10; }
+        #drawing-canvas { z-index: 20; pointer-events: none; }
+        
+        /* Outils Géométrie (Équerre/Rapporteur) - Au dessus du dessin */
+        #geometry-tools-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 30;
+            pointer-events: none; /* Laisse passer les clics sauf sur les outils */
+            overflow: hidden;
+        }
+
+        .geo-tool {
+            pointer-events: auto;
+            position: absolute;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            touch-action: none;
+        }
+        
+        /* Rapporteur : le rectangle vide laisse passer les clics (utile quand des segments passent dessous) */
+        .geo-protractor {
+            pointer-events: none;
+        }
+        .geo-protractor .geo-handle,
+        .geo-protractor .protractor-body {
+            pointer-events: auto;
+        }
+        /* Le corps du rapporteur ne capture les clics que sur son trait : l'intérieur reste cliquable */
+        .geo-protractor .protractor-body {
+            pointer-events: stroke;
+        }
+
+        .geo-handle {
+            transition: transform 0.1s, background-color 0.1s, border-color 0.1s;
+            background-color: white;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            z-index: 50; /* Ensure clickable */
+            transform: var(--t, none);
+            transform-origin: center;
+        }
+        
+        .geo-handle:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: var(--t, none) scale(1.1);
+                }
+
+        /* (Geo handles) Anti-tremblement: la translation est stockee dans --t et conservee au survol */
+
+        /* CURSEUR VIRTUEL */
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            transform-origin: top left;
+        }
+        .hide-cursor, .hide-cursor * {
+            cursor: none !important;
+        }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col overflow-hidden">
+<body class="h-screen w-screen flex flex-col overflow-hidden text-slate-700">
 
-    <div id="custom-cursor" class="fixed pointer-events-none z-50 hidden">
-        <svg class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-            <circle cx="8" cy="32" r="1" fill="white"/>
+    <!-- INPUT FICHIER CACHÉ -->
+    <input type="file" id="bg-uploader" accept="image/*,.pdf" class="hidden">
+
+    <!-- CURSEUR PERSONNALISÉ (Crayon) -->
+    <div id="custom-cursor">
+        <svg class="drop-shadow-lg" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path id="cursor-color-1" d="M10 1 V19 M1 10 H19" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
     </div>
 
-    <!-- HEADER -->
-    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 justify-between topbar">
-        <div class="left-controls flex items-center gap-2">
-            <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm" title="Tout effacer">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
-            <button onclick="app.undo()" class="bg-slate-100 text-slate-600 hover:bg-slate-200 p-2 rounded-lg font-bold border border-slate-200 shadow-sm" title="Annuler">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-            </button>
-            <div class="h-8 w-px bg-slate-200 mx-1"></div>
-            <button id="btn-mode" onclick="app.toggleMode()" class="toggle-mode px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 shadow-sm">
-                <span id="mode-text">Phase 1 : Poser l'équation</span>
-            </button>
+    <!-- HEADER (Zone de suppression) -->
+    <header id="main-header" class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative transition-colors duration-200">
+        
+        <!-- Overlay Supprimer -->
+        <div class="trash-label absolute inset-0 hidden items-center justify-center pointer-events-none z-50">
+             <div class="flex items-center gap-2 text-rose-500 font-bold text-lg bg-white/80 px-4 py-2 rounded-full shadow-sm backdrop-blur-sm border border-rose-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Relâcher pour jeter</span>
+             </div>
         </div>
 
-        <div class="equation-holder">
-            <div class="flex items-center gap-2 bg-slate-50 px-6 py-2 rounded-full border border-slate-200 shadow-inner w-full max-w-5xl">
-                <div id="equation-display" class="equation-grid text-3xl font-bold text-slate-700 tracking-tight font-mono transition-all duration-300">
-                    <span id="eq-left" class="eq-left"></span>
-                    <span id="eq-eq" class="eq-equal"></span>
-                    <span id="eq-right" class="eq-right"></span>
+        <div class="header-tools flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[60px] transition-opacity">
+            
+            <!-- GAUCHE : Reset & Zoom -->
+            <div class="flex items-center gap-2">
+                 <button onclick="resetBoard()" class="tool-btn bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 rounded-xl font-bold border-2 border-rose-100 flex items-center gap-2" title="Tout effacer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span class="hidden sm:inline text-sm">Reset</span>
+                </button>
+                
+                <!-- Zoom Controls (Hold to zoom) -->
+                <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                    <button 
+                        onmousedown="startZoom(-0.02)" ontouchstart="startZoom(-0.02)" 
+                        onmouseup="stopZoom()" onmouseleave="stopZoom()" ontouchend="stopZoom()"
+                        class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none" title="Zoom Arrière">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                    <button 
+                        onmousedown="startZoom(0.02)" ontouchstart="startZoom(0.02)" 
+                        onmouseup="stopZoom()" onmouseleave="stopZoom()" ontouchend="stopZoom()"
+                        class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none" title="Zoom Avant">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </button>
+                    <button onclick="setZoom(-0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom -">-</button>
+                    <button onclick="setZoom(0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom +">+</button>
                 </div>
-                <button onclick="app.toggleEquationVisibility()" class="ml-2 text-slate-400 hover:text-slate-600 focus:outline-none">
-                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+
+                <!-- Bouton Image Fond -->
+                <button onclick="document.getElementById('bg-uploader').click()" class="tool-btn text-slate-500 hover:bg-slate-50 p-2 rounded-xl border border-slate-200" title="Image de fond">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
                     </svg>
                 </button>
             </div>
-        </div>
 
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onclick="app.setTool('hand')" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
-            <button onclick="app.setTool('pen')" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-            <button onclick="app.clearDrawing()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+            <!-- CENTRE : Titre -->
+            <div class="flex-1 flex justify-center items-center gap-4">
+                <span class="text-slate-400 font-bold text-lg tracking-tight pointer-events-none hidden md:inline">Bandes Magnétiques</span>
+            </div>
+
+            <!-- DROITE : Outils -->
+            <div class="flex items-center gap-2 shrink-0">
+                
+                <!-- EXERCICE GENERATOR -->
+                <div class="relative flex items-center bg-orange-50 p-1 rounded-xl border border-orange-200">
+                    <button id="btn-create-angle" onclick="toggleAnglePanel()" class="tool-btn text-orange-600 hover:bg-orange-100 px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2" title="Créer un angle">
+                        <span>Créer un angle</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                    </button>
+
+                    <!-- Pavé numérique (tablette-friendly) -->
+                    <div id="angle-panel" class="hidden absolute right-0 top-full mt-2 z-50 w-64 bg-white rounded-xl border border-orange-200 shadow-lg p-2">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div class="text-xs font-extrabold text-slate-500">Valeur de l’angle (°)</div>
+                            <button onclick="closeAnglePanel()" class="tool-btn px-2 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs font-bold">Fermer</button>
+                        </div>
+
+                        <div class="flex items-center gap-2 mb-2">
+                            <div id="angle-display" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-lg font-extrabold text-slate-700 text-center select-none">60</div>
+                            <button onclick="angleBackspace()" class="tool-btn px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold" title="Effacer">⌫</button>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="angleDigit('1')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">1</button>
+                            <button onclick="angleDigit('2')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">2</button>
+                            <button onclick="angleDigit('3')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">3</button>
+
+                            <button onclick="angleDigit('4')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">4</button>
+                            <button onclick="angleDigit('5')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">5</button>
+                            <button onclick="angleDigit('6')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">6</button>
+
+                            <button onclick="angleDigit('7')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">7</button>
+                            <button onclick="angleDigit('8')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">8</button>
+                            <button onclick="angleDigit('9')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">9</button>
+
+                            <button onclick="angleClear()" class="tool-btn py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold text-slate-700">C</button>
+                            <button onclick="angleDigit('0')" class="tool-btn py-2 bg-slate-50 hover:bg-slate-100 rounded-lg font-extrabold text-slate-700">0</button>
+                            <button onclick="confirmAnglePanel()" class="tool-btn py-2 bg-orange-100 hover:bg-orange-200 rounded-lg font-extrabold text-orange-700">OK</button>
+                        </div>
+
+                        <div class="mt-2 text-[11px] leading-snug text-slate-400">
+                            Astuce : 0 à 360. Le pavé fonctionne sans clavier (tablette).
+                        </div>
+                    </div>
+                </div>
+                <div class="w-px h-8 bg-slate-200 mx-1"></div>
+
+                <!-- Toggle Équerre -->
+                <button onclick="toggleSetSquare()" id="btn-setsquare" class="tool-btn bg-yellow-50 text-yellow-600 hover:bg-yellow-100 p-2 rounded-xl border border-yellow-200" title="Équerre">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 20L4 4L20 20H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                    </svg>
+                </button>
+
+                <!-- Toggle Rapporteur -->
+                <button onclick="toggleProtractor()" id="btn-protractor" class="tool-btn bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2 rounded-xl border border-indigo-200" title="Rapporteur">
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 20H3C3 15.0294 7.02944 11 12 11C16.9706 11 21 15.0294 21 20H12Z" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
+                    </svg>
+                </button>
+
+                <div class="w-px h-8 bg-slate-200 mx-1"></div>
+
+                <!-- Stylo -->
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button onclick="setTool('hand')" id="tool-hand" class="tool-btn active p-2 rounded-lg" title="Main">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+                        </svg>
+                    </button>
+                    <button onclick="setTool('pen', 'blue')" id="tool-pen-blue" class="tool-btn text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="Stylo Bleu">
+                        <div class="w-4 h-4 bg-blue-600 rounded-full border border-blue-700"></div>
+                    </button>
+                    <button onclick="setTool('pen', 'red')" id="tool-pen-red" class="tool-btn text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Stylo Rouge">
+                        <div class="w-4 h-4 bg-red-600 rounded-full border border-red-700"></div>
+                    </button>
+                    <button onclick="clearDrawings()" class="tool-btn text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg" title="Effacer Annotations">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <main id="board" class="flex-1 relative bg-white overflow-hidden">
-        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;"></div>
-        <div id="board-container">
-            <div id="board-world">
-                <div id="equation-divider"></div>
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-20 sm:w-24 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-6 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0 overflow-y-auto">
+            
+
+            <!-- Sélecteur Bandes / Segments (tablette-friendly) -->
+            <div class="flex flex-col items-center gap-2 w-full px-2">
+                <button id="btn-stripmode-normal" onclick="setStripMode('normal')" class="tool-btn w-full bg-white text-teal-700 hover:bg-teal-50 px-1 py-2 rounded-xl border border-teal-200" title="Bandes épaisses">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="h-2 w-10 bg-teal-600/80 rounded-full"></div>
+                        <div class="text-[10px] leading-tight font-extrabold text-center">Bandes<br>épaisses</div>
+                    </div>
+                </button>
+                <button id="btn-stripmode-thin" onclick="setStripMode('thin')" class="tool-btn w-full bg-white text-teal-700 hover:bg-teal-50 px-1 py-2 rounded-xl border border-teal-200" title="Segments">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="h-0.5 w-10 bg-teal-600/80 rounded-full"></div>
+                        <div class="text-[10px] leading-tight font-extrabold text-center">Segments</div>
+                    </div>
+                </button>
+                <div class="w-10 h-px bg-slate-200 my-1"></div>
+            </div>
+
+            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="yellow" title="Bande XL">
+                <div class="w-3 h-20 bg-amber-400 rounded-full shadow-md border border-amber-500 group-hover:scale-110 transition-transform relative pointer-events-none">
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                </div>
+            </div>
+
+            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="red" title="Bande Longue (5)">
+                <div class="w-3 h-16 bg-red-500 rounded-full shadow-md border border-red-600 group-hover:scale-110 transition-transform relative pointer-events-none">
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                </div>
+            </div>
+
+            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="blue" title="Bande Moyenne (4)">
+                <div class="w-3 h-12 bg-blue-500 rounded-full shadow-md border border-blue-600 group-hover:scale-110 transition-transform relative pointer-events-none">
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                </div>
+            </div>
+
+            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="green" title="Bande Courte (3)">
+                <div class="w-3 h-8 bg-green-500 rounded-full shadow-md border border-green-600 group-hover:scale-110 transition-transform relative pointer-events-none">
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                </div>
+            </div>
+            
+            <div class="strip-dragger group flex flex-col items-center gap-1 transition active:scale-95" data-type="purple" title="Bande Mini (2)">
+                <div class="w-3 h-6 bg-purple-500 rounded-full shadow-md border border-purple-600 group-hover:scale-110 transition-transform relative pointer-events-none">
+                    <div class="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                </div>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <div class="w-8 h-px bg-slate-100 my-2"></div>
+            <div class="text-[10px] text-center text-slate-300 px-2 leading-tight pb-4">
+                Double-clic sur un magnet pour détacher
+            </div>
+
+        </aside>
+
+        <!-- ESPACE DE TRAVAIL -->
+        <main id="layer-container" class="cursor-grab active:cursor-grabbing">
+            
+            <!-- CONTENEUR ZOOMABLE -->
+            <div id="zoom-world">
+                <!-- BACKGROUND LAYER -->
+                <div id="bg-layer"></div>
+                
+                <canvas id="strips-canvas"></canvas>
                 <canvas id="drawing-canvas"></canvas>
-            </div>
-        </div>
-    </main>
 
-    <div id="bottom-bar">
-        <div id="menu-divider"></div>
-        <div id="center-actions">
-            <button onclick="app.performDivision()" class="action-btn big bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 shadow-md">Diviser</button>
-        </div>
+                <!-- Layer Outils -->
+                <div id="geometry-tools-layer"></div>
+            </div>
 
-        <!-- GAUCHE -->
-        <div class="side-panel left">
-            <div class="side-label">Membre de Gauche</div>
-            <div class="tiles-zone">
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
-            </div>
-            <div class="tools-zone">
-                <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideLeft.order()" class="action-btn">Ranger</button>
-                    <button onclick="app.sideLeft.reduce()" class="action-btn">Réduire</button>
-                    <button onclick="app.sideLeft.simplify()" class="action-btn">Simplifier</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- DROITE -->
-        <div class="side-panel right">
-            <div class="side-label">Membre de Droite</div>
-            <div class="tiles-zone">
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
-            </div>
-            <div class="tools-zone">
-                <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideRight.order()" class="action-btn">Ranger</button>
-                    <button onclick="app.sideRight.reduce()" class="action-btn">Réduire</button>
-                    <button onclick="app.sideRight.simplify()" class="action-btn">Simplifier</button>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
+    <!-- SCRIPT -->
     <script>
-        const SNAP = 60;
-        const PACK_GAP = 25;
-        const SIZES = { 'unit': { w: 40, h: 40 }, 'x': { w: 90, h: 40 } };
-        const COLORS = { pos: 'green', neg: 'red', orange: 'orange' };
+        /* --- CONFIGURATION --- */
+        const CONFIG = {
+            snapDistance: 45, 
+            normalStripWidth: 26,
+            thinStripWidth: 0.7, // Encore plus fin (était 1.0)
+            currentStripWidth: 26, 
+            colors: {
+                yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, 
+                red:    { fill: '#ef4444', stroke: '#b91c1c', length: 250 }, 
+                blue:   { fill: '#3b82f6', stroke: '#1d4ed8', length: 200 }, 
+                green:  { fill: '#22c55e', stroke: '#15803d', length: 150 }, 
+                purple: { fill: '#a855f7', stroke: '#7e22ce', length: 100 }  
+            }
+        };
+
+        // Marge (en px écran) ajoutée au monde pour éviter les zones blanches/inaccessibles pendant le zoom/pan.
+        // Plus la marge est grande, plus tu peux déplacer le plateau sans jamais “découvrir” du blanc.
+        const VIEW_MARGIN_PX = { x: 2000, y: 1400 };
+
+        /* --- ÉTAT GLOBAL --- */
+        const state = {
+            zoom: 1,
+            pan: {x:0, y:0},
+            isPanning: false,
+            panAnchor: {x:0, y:0},
+            points: [], 
+            strips: [], 
+            tool: 'hand', 
+            penColor: 'blue',
+            strokes: [],
+            _currentStroke: null, 
+            stripMode: 'normal', 
+            draggingPoint: null,
+            draggingStrip: null, 
+            dragOffset: {x:0, y:0},
+            nextId: 1,
+            tools: {
+                setSquare: {
+                    id: 'setSquare',
+                    visible: false,
+                    x: 0, y: 0,
+                    rotation: 0,
+                    scale: 1,
+                    pivot: {x: 20, y: 220} 
+                },
+                protractor: {
+                    id: 'protractor',
+                    visible: false,
+                    x: 0, y: 0,
+                    rotation: 0,
+                    scale: 1.5,
+                    gradMode: 0, 
+                    direction: 0,
+                    showNumbers: false,
+                    attachedPointId: null,
+                    pivot: {x: 120, y: 120} 
+                }
+            },
+            activeGeoTool: null,
+            angleGroups: [],
+            draggingAngle: null,
+            draggingAngleMove: null,
+            nextAngleGroupId: 1
+        };
+
+        const canvasStrips = document.getElementById('strips-canvas');
+        const ctxStrips = canvasStrips.getContext('2d');
+        const canvasDraw = document.getElementById('drawing-canvas');
+        const ctxDraw = canvasDraw.getContext('2d');
+        const container = document.getElementById('layer-container');
+        const zoomWorld = document.getElementById('zoom-world');
+        const toolsLayer = document.getElementById('geometry-tools-layer');
+        const header = document.getElementById('main-header');
+        const bgLayer = document.getElementById('bg-layer');
+        const bgUploader = document.getElementById('bg-uploader');
+
+        /* --- ZOOM & DÉPLACEMENT DU PLATEAU --- */
+        let zoomInterval;
+        let viewportUpdateQueued = false;
+
+        function clampPan() {
+            const rect = container.getBoundingClientRect();
+
+            // Monde un peu plus grand que la fenêtre (en coordonnées “monde”)
+            const worldW = (rect.width + VIEW_MARGIN_PX.x) / state.zoom;
+            const worldH = (rect.height + VIEW_MARGIN_PX.y) / state.zoom;
+
+            // Tailles “écran” du monde
+            const scaledW = worldW * state.zoom;
+            const scaledH = worldH * state.zoom;
+
+            // Empêcher de “découvrir” du blanc : on borne le pan pour que le monde couvre toujours la fenêtre
+            const minX = Math.min(0, rect.width - scaledW); // négatif
+            const minY = Math.min(0, rect.height - scaledH);
+            const maxX = 0;
+            const maxY = 0;
+
+            state.pan.x = Math.min(maxX, Math.max(minX, state.pan.x));
+            state.pan.y = Math.min(maxY, Math.max(minY, state.pan.y));
+        }
+
+        function applyViewportTransform() {
+            clampPan();
+            zoomWorld.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+        }
+
+        function queueViewportResizeRender() {
+            if (viewportUpdateQueued) return;
+            viewportUpdateQueued = true;
+            requestAnimationFrame(() => {
+                viewportUpdateQueued = false;
+                resize(); // resize() appelle aussi render() et redrawDrawings()
+            });
+        }
+
+        function clampZoom(z) {
+            return Math.max(0.5, Math.min(10, z));
+        }
+
+        function setZoomTo(newZoom, anchorClientX = null, anchorClientY = null) {
+            const rect = container.getBoundingClientRect();
+            const ax = (anchorClientX !== null) ? (anchorClientX - rect.left) : (rect.width / 2);
+            const ay = (anchorClientY !== null) ? (anchorClientY - rect.top) : (rect.height / 2);
+
+            // Coordonnées monde sous le pointeur (avant zoom)
+            const worldX = (ax - state.pan.x) / state.zoom;
+            const worldY = (ay - state.pan.y) / state.zoom;
+
+            const nextZoom = clampZoom(newZoom);
+            if (nextZoom === state.zoom) return;
+
+            state.zoom = nextZoom;
+
+            // Garder le point sous la souris fixe à l'écran
+            state.pan.x = ax - worldX * state.zoom;
+            state.pan.y = ay - worldY * state.zoom;
+
+            applyViewportTransform();
+            queueViewportResizeRender();
+        }
+
+        function setZoom(delta, anchorClientX = null, anchorClientY = null) {
+            setZoomTo(state.zoom + delta, anchorClientX, anchorClientY);
+        }
+
+        function startZoom(delta) {
+            if (zoomInterval) clearInterval(zoomInterval);
+            setZoom(delta); // Zoom immédiat (centré)
+            zoomInterval = setInterval(() => setZoom(delta), 50); // Zoom continu
+        }
+
+        function stopZoom() {
+            if (zoomInterval) clearInterval(zoomInterval);
+            zoomInterval = null;
+        }
+
+        function handleWheelZoom(e) {
+            // Zoom molette au niveau du pointeur
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            const ax = e.clientX - rect.left;
+            const ay = e.clientY - rect.top;
+
+            const worldX = (ax - state.pan.x) / state.zoom;
+            const worldY = (ay - state.pan.y) / state.zoom;
+
+            const factor = Math.exp(-e.deltaY * 0.0015);
+            const nextZoom = clampZoom(state.zoom * factor);
+            if (nextZoom === state.zoom) return;
+
+            state.zoom = nextZoom;
+            state.pan.x = ax - worldX * state.zoom;
+            state.pan.y = ay - worldY * state.zoom;
+
+            applyViewportTransform();
+            queueViewportResizeRender();
+        }
+
+        container.addEventListener('wheel', handleWheelZoom, { passive: false });
+
+/* --- IMAGE DE FOND --- */
+        bgUploader.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                bgLayer.style.backgroundImage = `url(${evt.target.result})`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* --- INIT OUTILS --- */
+        function initGeometryTools() {
+            createGeoToolElement('setSquare', getSetSquareSVG(), '20px 220px');
+            createGeoToolElement('protractor', getProtractorSVG(), '120px 120px', '240px', '140px');
+        }
+
+        function getSetSquareSVG() {
+            // Équerre: (20, 220) [Angle Droit] -> (20, 20) [Haut] -> (220, 220) [Droit]
+            // Hypoténuse: (20, 20) à (220, 220).
+            return `
+                <svg width="100%" height="100%" viewBox="0 0 240 240" style="overflow: visible;">
+                    <path d="M20 220 L 220 220 L 20 20 Z" fill="rgba(255, 255, 255, 0.7)" stroke="#ca8a04" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+                    <path d="M20 190 L 50 190 L 50 220" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="20" y1="220" x2="220" y2="220" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
+                    <line x1="20" y1="220" x2="20" y2="20" stroke="#ca8a04" stroke-width="1" stroke-dasharray="10 10" opacity="0.5" />
+                </svg>
+
+                <!-- Rotation Handle (Déplacé plus loin à l'extérieur de l'hypoténuse) -->
+                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
+                     style="top: 90px; left: 150px; --t: translate(-50%, -50%);" 
+                     title="Tourner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                </div>
+                
+                <!-- Resize Handle (Déplacé vers la droite de la pointe) -->
+                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" 
+                     style="top: 220px; left: 255px; --t: translate(-50%, -50%);" 
+                     title="Redimensionner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                </div>
+            `;
+        }
+
+        function getProtractorSVG() {
+            const mode = state.tools.protractor.gradMode;
+            const direction = state.tools.protractor.direction;
+            const showNumbers = state.tools.protractor.showNumbers;
+            let marks = "";
+            
+            for (let i = 0; i <= 180; i++) {
+                if (mode === 0 && i % 10 !== 0) continue;
+                if (mode === 1 && i % 5 !== 0) continue;
+                
+                const angle = Math.PI - (i * Math.PI / 180);
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                
+                let x1, y1, x2, y2;
+                let width = 0.32;
+                let opacity = 0.42;
+
+                if (i % 10 === 0) {
+                    x1 = 120 + 100 * cos;
+                    y1 = 120 - 100 * sin;
+                    x2 = 120 + 22 * cos;
+                    y2 = 120 - 22 * sin;
+                    width = 0.55;
+                    opacity = 0.32;
+                } else if (i % 5 === 0) {
+                    x1 = 120 + 100 * cos;
+                    y1 = 120 - 100 * sin;
+                    x2 = 120 + 85 * cos;
+                    y2 = 120 - 85 * sin;
+                    width = 0.4;
+                    opacity = 0.38;
+                } else {
+                    x1 = 120 + 100 * cos;
+                    y1 = 120 - 100 * sin;
+                    x2 = 120 + 92 * cos;
+                    y2 = 120 - 92 * sin;
+                }
+                
+                marks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4f46e5" stroke-width="${width}" opacity="${opacity}" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none" />`;
+                
+                // Numbers (Maintenant inclus 0 et 180)
+                if (showNumbers && i % 10 === 0) {
+                    const val = direction === 0 ? i : (180 - i);
+                    const tx = 120 + 108 * cos;
+                    const ty = 120 - 108 * sin;
+                    const isWide = val >= 100;
+                    const fontSize = isWide ? 8 : 10;
+                    const degSize = isWide ? 6 : 7;
+                    const letter = isWide ? '-0.4px' : '0px';
+                    marks += `<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="800" fill="#4338ca" style="pointer-events: none; font-variant-numeric: tabular-nums; letter-spacing: ${letter};">${val}<tspan font-size="${degSize}">°</tspan></text>`;
+                }
+            }
+            
+            return `
+                <svg width="100%" height="100%" viewBox="0 0 240 140" style="overflow: visible; pointer-events: auto;" shape-rendering="geometricPrecision">
+                     <!-- Zone de prise (invisible) pour déplacer le rapporteur sans bloquer le centre -->
+                     <path class="protractor-drag-hit" d="M20 120 A 100 100 0 0 1 220 120" fill="none" stroke="transparent" stroke-width="18" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-drag-hit" d="M20 120 L105 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-drag-hit" d="M135 120 L220 120" fill="none" stroke="transparent" stroke-width="14" stroke-linecap="round" vector-effect="non-scaling-stroke" pointer-events="stroke"/>
+                     <path class="protractor-body" pointer-events="stroke" d="M20 120 A 100 100 0 0 1 220 120 L 120 120 Z" fill="rgba(255, 255, 255, 0.4)" stroke="#4f46e5" stroke-width="0.75" vector-effect="non-scaling-stroke" stroke-linecap="round" />
+                     
+                     <!-- MARQUES ROUGES (Plus fines) -->
+                     <line x1="20" y1="120" x2="220" y2="120" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.9"  pointer-events="none"/>
+                     <line x1="120" y1="120" x2="120" y2="20" stroke="#dc2626" stroke-width="0.75" vector-effect="non-scaling-stroke" opacity="0.6" stroke-dasharray="6 4"  pointer-events="none"/>
+
+                     <!-- Arc de cercle interieur (au niveau ou les rayons s'arretent) -->
+                     <path d="M98 120 A22 22 0 0 1 142 120" fill="none" stroke="#111827" stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linecap="round" pointer-events="none"/>
+
+                     ${marks}
+                </svg>
+
+                <!-- Rotation Handle (Rapproché) -->
+                <div class="geo-handle rotate-handle absolute w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="top: -44px; left: 50%; --t: translate(-50%, 0);" title="Tourner">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.99 6.57 2.57L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                </div>
+                <!-- Resize Handle (Rapproché) -->
+                <div class="geo-handle resize-handle absolute w-8 h-8 rounded-full shadow-lg flex items-center justify-center cursor-pointer bg-white" style="bottom: -14px; right: -18px;" title="Redimensionner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                </div>
+                
+                <!-- Controls Row (Rapproché et plus petit) -->
+                <div class="geo-control-row absolute flex gap-1 items-center justify-center" style="bottom: -8px; left: 50%; transform: translate(-50%, 0);">
+                    <div class="geo-handle style-handle no-translate h-5 px-2 bg-indigo-600 text-white font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Précision">
+                        ${mode === 0 ? "10°" : (mode === 1 ? "5°" : "1°")}
+                    </div>
+                    <div class="geo-handle numbers-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Afficher Valeurs">
+                        ${showNumbers ? "123" : "..."}
+                    </div>
+                    <div class="geo-handle direction-handle no-translate h-5 w-5 text-indigo-600 font-bold text-[9px] rounded-full shadow flex items-center justify-center cursor-pointer border border-indigo-200" title="Inverser Sens">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 12l4-4m-4 4l4 4M20 12l-4-4m4 4l-4 4"/></svg>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createGeoToolElement(key, html, origin, w='240px', h='240px') {
+            const toolState = state.tools[key];
+            const el = document.createElement('div');
+            el.id = `tool-${toolState.id}`;
+            el.className = 'geo-tool hidden absolute select-none';
+            if (key === 'protractor') el.classList.add('geo-protractor');
+            el.style.width = w;
+            el.style.height = h;
+            el.style.transformOrigin = origin;
+            el.innerHTML = html;
+            setupToolEvents(el, key);
+            toolsLayer.appendChild(el);
+        }
+
+        function setupToolEvents(el, key) {
+            el.addEventListener('mousedown', (e) => handleGeoToolStart(e, key));
+            el.addEventListener('touchstart', (e) => handleGeoToolStart(e, key), {passive: false});
+        }
+
+        /* --- EXERCICE GENERATOR (UPDATED) --- */
         
-        // LIMIT CONSTANT FOR CONSISTENT WRAPPING
-        const MAX_ROW_WIDTH = 450; 
+        /* --- EXERCICE GENERATOR (TABLETTE-FRIENDLY) --- */
+        let anglePanelOpen = false;
+        let angleBuffer = '60';
+
+        function updateAngleDisplay() {
+            const d = document.getElementById('angle-display');
+            if (!d) return;
+            d.textContent = angleBuffer === '' ? '—' : angleBuffer;
+        }
+
+        function openAnglePanel() {
+            const panel = document.getElementById('angle-panel');
+            if (!panel) return;
+            anglePanelOpen = true;
+            panel.classList.remove('hidden');
+            updateAngleDisplay();
+        }
+
+        function closeAnglePanel() {
+            const panel = document.getElementById('angle-panel');
+            if (!panel) return;
+            anglePanelOpen = false;
+            panel.classList.add('hidden');
+        }
+
+        function toggleAnglePanel() {
+            const panel = document.getElementById('angle-panel');
+            if (!panel) return;
+            if (panel.classList.contains('hidden')) openAnglePanel();
+            else closeAnglePanel();
+        }
+
+        function angleDigit(d) {
+            // Max 3 chiffres (0–360)
+            if (angleBuffer.length >= 3) return;
+            if (angleBuffer === '0') angleBuffer = d;
+            else angleBuffer += d;
+            updateAngleDisplay();
+            playSound('click');
+        }
+
+        function angleBackspace() {
+            angleBuffer = angleBuffer.slice(0, -1);
+            updateAngleDisplay();
+            playSound('click');
+        }
+
+        function angleClear() {
+            angleBuffer = '';
+            updateAngleDisplay();
+            playSound('click');
+        }
+
+        function confirmAnglePanel() {
+            const val = parseInt(angleBuffer, 10);
+            if (!Number.isFinite(val) || val < 0 || val > 360) {
+                playSound('click');
+                // petit feedback visuel
+                const d = document.getElementById('angle-display');
+                if (d) { d.classList.add('ring-2','ring-red-300'); setTimeout(()=>d.classList.remove('ring-2','ring-red-300'), 250); }
+                return;
+            }
+
+            const rect = container.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height - 150;
+
+            createAngleFromValue(cx, cy, val);
+            playSound('pop');
+            closeAnglePanel();
+            render();
+        }
+
+        function createAngleFromValue(cx, cy, degrees) {
+            // Random orientation for the base leg (batons aléatoires)
+            const baseAngle = Math.random() * Math.PI * 2; 
+            
+            // Random colors/sizes
+            const availableTypes = ['red', 'yellow', 'blue', 'green', 'purple'];
+            const type1 = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            const type2 = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            
+            const L1 = CONFIG.colors[type1].length;
+            const L2 = CONFIG.colors[type2].length;
+
+            const S = { id: state.nextId++, x: cx, y: cy, pinned: false };
+            
+            // Leg 1
+            const A = { 
+                id: state.nextId++, 
+                x: cx + L1 * Math.cos(baseAngle), 
+                y: cy + L1 * Math.sin(baseAngle), 
+                pinned: false 
+            };
+            
+            // Leg 2
+            const angleRad = degrees * (Math.PI / 180);
+            const B = { 
+                id: state.nextId++, 
+                x: cx + L2 * Math.cos(baseAngle + angleRad), 
+                y: cy + L2 * Math.sin(baseAngle + angleRad), 
+                pinned: false 
+            };
+
+
+            state.points.push(S, A, B);
+
+            const groupId = state.nextAngleGroupId++;
+            const strip1 = { id: state.nextId++, p1: S.id, p2: A.id, type: type1, angleGroupId: groupId, role: 'leg1' };
+            const strip2 = { id: state.nextId++, p1: S.id, p2: B.id, type: type2, angleGroupId: groupId, role: 'leg2' };
+            state.strips.push(strip1);
+            state.strips.push(strip2);
+
+            // Groupe rigide : l'angle reste constant, on peut le faire pivoter en tirant sur une branche.
+            state.angleGroups.push({
+                id: groupId,
+                vertexId: S.id,
+                aId: A.id,
+                bId: B.id,
+                degrees: degrees,
+                leg1Len: L1,
+                leg2Len: L2,
+                baseAngle: baseAngle,
+                strip1Id: strip1.id,
+                strip2Id: strip2.id
+            });
+        }
+
+        /* --- TOGGLES --- */
+        function updateStripModeUI() {
+            const btnNormal = document.getElementById('btn-stripmode-normal');
+            const btnThin = document.getElementById('btn-stripmode-thin');
+            if (!btnNormal || !btnThin) return;
+
+            if (state.stripMode === 'thin') {
+                btnThin.classList.add('active-teal');
+                btnNormal.classList.remove('active-teal');
+            } else {
+                btnNormal.classList.add('active-teal');
+                btnThin.classList.remove('active-teal');
+            }
+        }
+
+        function setStripMode(mode) {
+            state.stripMode = (mode === 'thin') ? 'thin' : 'normal';
+            CONFIG.currentStripWidth = state.stripMode === 'normal' ? CONFIG.normalStripWidth : CONFIG.thinStripWidth;
+            updateStripModeUI();
+            render();
+        }
+
+        // Compat : ancien toggle (si jamais réutilisé ailleurs)
+        function toggleStripMode() {
+            setStripMode(state.stripMode === 'normal' ? 'thin' : 'normal');
+        }
+
+        function toggleSetSquare() { toggleTool('setSquare'); }
+        function toggleProtractor() { toggleTool('protractor'); }
+
+        function toggleTool(key) {
+            const tool = state.tools[key];
+            tool.visible = !tool.visible;
+            const el = document.getElementById(`tool-${tool.id}`);
+            const btn = document.getElementById(key === 'setSquare' ? 'btn-setsquare' : 'btn-protractor');
+            
+            if (tool.visible) {
+                el.classList.remove('hidden');
+                const colorClass = key === 'setSquare' ? 'bg-yellow-100' : 'bg-indigo-100';
+                btn.classList.add('active', colorClass);
+                
+                if (tool.x === 0 && tool.y === 0) {
+                    const rect = container.getBoundingClientRect();
+                    // Centre sans zoom correction initialement, mais à l'intérieur du monde zoomable
+                    tool.x = rect.width / 2 - tool.pivot.x; 
+                    tool.y = rect.height / 2 - tool.pivot.y; 
+                }
+                updateGeoToolTransform(key);
+                playSound('pop');
+            } else {
+                el.classList.add('hidden');
+                btn.classList.remove('active', 'bg-yellow-100', 'bg-indigo-100');
+                if (key === 'protractor') tool.attachedPointId = null;
+            }
+        }
+
+        function updateGeoToolTransform(key) {
+            const tool = state.tools[key];
+            const el = document.getElementById(`tool-${tool.id}`);
+            if (!el) return;
+            el.style.left = tool.x + 'px';
+            el.style.top = tool.y + 'px';
+            el.style.transform = `rotate(${tool.rotation}rad) scale(${tool.scale})`;
+        }
+
+        function updateProtractorVisuals() {
+            const el = document.getElementById(`tool-protractor`);
+            el.innerHTML = getProtractorSVG();
+        }
+
+        // --- Keyboard: rotate protractor with Left/Right arrows ---
+        // Shift = 5 degrees step, otherwise 1 degree
+        document.addEventListener('keydown', (e) => {
+            if (!state.tools.protractor.visible) return;
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+
+            const ae = document.activeElement;
+            const tag = ae ? ae.tagName : '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+            e.preventDefault();
+            const stepDeg = e.shiftKey ? 5 : 1;
+            const sign = (e.key === 'ArrowLeft') ? -1 : 1;
+            state.tools.protractor.rotation += sign * stepDeg * (Math.PI / 180);
+            updateGeoToolTransform('protractor');
+        });
+
+        /* --- LOGIQUE OUTILS GÉOMÉTRIQUES --- */
+        let geoDragState = {
+            active: false,
+            key: null,
+            mode: null, 
+            offsetX: 0, offsetY: 0,
+            rotationOffset: 0,
+            initialScale: 1,
+            initialDist: 0
+        };
+
+        function handleGeoToolStart(e, key) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            if (key === 'protractor') {
+                if (e.target.closest('.style-handle')) {
+                    const tool = state.tools.protractor;
+                    tool.gradMode = (tool.gradMode + 1) % 3;
+                    updateProtractorVisuals();
+                    playSound('click');
+                    return;
+                }
+                if (e.target.closest('.numbers-handle')) {
+                    const tool = state.tools.protractor;
+                    tool.showNumbers = !tool.showNumbers;
+                    updateProtractorVisuals();
+                    playSound('click');
+                    return;
+                }
+                if (e.target.closest('.direction-handle')) {
+                    const tool = state.tools.protractor;
+                    tool.direction = tool.direction === 0 ? 1 : 0;
+                    updateProtractorVisuals();
+                    playSound('click');
+                    return;
+                }
+            }
+
+            const pos = getPos(e);
+            const clientPos = getClientPos(e);
+            const tool = state.tools[key];
+            const pivotAbsX = tool.x + tool.pivot.x;
+            const pivotAbsY = tool.y + tool.pivot.y;
+
+            if (e.target.closest('.rotate-handle')) {
+                geoDragState.mode = 'rotate';
+                const currentMouseAngle = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX);
+                geoDragState.rotationOffset = tool.rotation - currentMouseAngle;
+            } else if (e.target.closest('.resize-handle')) {
+                geoDragState.mode = 'resize';
+                geoDragState.initialScale = tool.scale;
+                geoDragState.initialDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY);
+            } else {
+                geoDragState.mode = 'drag';
+                geoDragState.offsetX = pos.x - tool.x;
+                geoDragState.offsetY = pos.y - tool.y;
+            }
+
+            geoDragState.active = true;
+            geoDragState.key = key;
+
+            document.addEventListener('mousemove', handleGeoToolMove);
+            document.addEventListener('touchmove', handleGeoToolMove, {passive: false});
+            document.addEventListener('mouseup', handleGeoToolEnd);
+            document.addEventListener('touchend', handleGeoToolEnd);
+        }
+
+        function handleGeoToolMove(e) {
+            e.preventDefault();
+            if (!geoDragState.active) return;
+            
+            const pos = getPos(e);
+            const clientPos = getClientPos(e);
+            const tool = state.tools[geoDragState.key];
+            const pivotAbsX = tool.x + tool.pivot.x;
+            const pivotAbsY = tool.y + tool.pivot.y;
+
+            if (geoDragState.mode === 'drag') {
+                tool.x = pos.x - geoDragState.offsetX;
+                tool.y = pos.y - geoDragState.offsetY;
+
+                // Aimantation du sommet (pivot) du rapporteur sur les points du dessin
+                if (geoDragState.key === 'protractor') {
+                    const snapDist = CONFIG.snapDistance;
+                    const pivotX = tool.x + tool.pivot.x;
+                    const pivotY = tool.y + tool.pivot.y;
+                    let best = null;
+                    let bestD = snapDist;
+                    for (const p of state.points) {
+                        const d = Math.hypot(p.x - pivotX, p.y - pivotY);
+                        if (d < bestD) { bestD = d; best = p; }
+                    }
+                    if (best) {
+                        tool.x = best.x - tool.pivot.x;
+                        tool.y = best.y - tool.pivot.y;
+                        tool.attachedPointId = best.id;
+                    } else {
+                        tool.attachedPointId = null;
+                    }
+                }
+                
+                const clientPos = getClientPos(e);
+                const headerRect = header.getBoundingClientRect();
+                if (clientPos.y <= headerRect.bottom) header.classList.add('trash-active');
+                else header.classList.remove('trash-active');
+
+
+
+            } else if (geoDragState.mode === 'rotate') {
+                const currentMouseAngle = Math.atan2(pos.y - pivotAbsY, pos.x - pivotAbsX);
+                tool.rotation = currentMouseAngle + geoDragState.rotationOffset;
+            } else if (geoDragState.mode === 'resize') {
+                const currentDist = Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY);
+                let newScale = geoDragState.initialScale * (currentDist / geoDragState.initialDist);
+                newScale = Math.max(0.5, Math.min(newScale, 12.0)); // up to 12.0
+                tool.scale = newScale;
+            }
+            updateGeoToolTransform(geoDragState.key);
+        }
+
+        function handleGeoToolEnd(e) {
+            if (geoDragState.mode === 'drag') {
+                const cy = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                const headerRect = header.getBoundingClientRect();
+                if (cy <= headerRect.bottom) {
+                    toggleTool(geoDragState.key);
+                    playSound('trash');
+                }
+            }
+            header.classList.remove('trash-active');
+
+            geoDragState.active = false;
+            document.removeEventListener('mousemove', handleGeoToolMove);
+            document.removeEventListener('touchmove', handleGeoToolMove);
+            document.removeEventListener('mouseup', handleGeoToolEnd);
+            document.removeEventListener('touchend', handleGeoToolEnd);
+        }
+
+
+        /* --- COMMON EVENTS & LOGIC --- */
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
-            if (type === 'pop') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
-            else if (type === 'snap') { osc.type = 'square'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.05); osc.start(now); osc.stop(now+0.05); }
-            else if (type === 'whoosh') { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now+0.3); gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
-            else if (type === 'flip') { osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(400, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'snap') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'pop') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'detach') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'trash') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'click') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            }
         }
 
-        // --- ALGEBRA SIDE ENGINE ---
-        class AlgebraSide {
-            constructor(id, parentApp) {
-                this.id = id;
-                this.app = parentApp;
-                this.tokens = [];
-                this.steps = [{ id: 0, operator: '', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false }];
-                this.currStepIdx = 0;
-                this.nextPackId = 1; this.packMeta = {}; this.lastPack = null;
-                this.isSubInput = false; this.isMultInput = false;
-                this.lastPos = { x: 0, y: 0, maxY: 0 };
-                this.pendingGap = 0;
-                this.lastSeqPackId = null;
-                this.displayMode = 'normal'; // 'normal', 'ordered', 'reduced'
-                this.autoFlow = null; // curseur de placement auto (évite de remplir les trous)
-            }
+        /* --- GESTION DES TAILLES --- */
+        function resize() {
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
 
-            addTile(type, sign, isGhost=false, manualX=null, manualY=null, mirrorTrigger=false) {
-                if(!isGhost && !mirrorTrigger) {
-                    this.app.saveState();
-                    this.displayMode = 'normal';
-                }
+            // Pour éviter les "zones blanches" quand on zoome (élément CSS scale),
+            // on dimensionne le monde à l'inverse du zoom : (W/zoom) * zoom = W.
+            const worldW = (rect.width + VIEW_MARGIN_PX.x) / state.zoom;
+            const worldH = (rect.height + VIEW_MARGIN_PX.y) / state.zoom;
 
-                if(!isGhost) playSound('pop');
-                
-                let step = this.steps[this.currStepIdx];
-                if (!isGhost && step.isClosed && !this.isSubInput && !this.isMultInput) {
-                    this.steps.push({ id: this.steps.length, operator: '+', type: 'simple', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
-                    this.currStepIdx++;
-                    step = this.steps[this.currStepIdx];
-                    this.lastPack = null;
-                }
+            zoomWorld.style.width = worldW + 'px';
+            zoomWorld.style.height = worldH + 'px';
 
-                let tileSign = sign;
-                if (this.isSubInput && step.type === 'subtraction') tileSign = -sign;
-                if (this.isMultInput && step.operator === '-') tileSign = -sign;
+            [canvasStrips, canvasDraw].forEach(c => {
+                c.width = worldW * dpr;
+                c.height = worldH * dpr;
+                c.style.width = worldW + 'px';
+                c.style.height = worldH + 'px';
+                c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+            });
 
-                let pid;
-                if (manualX===null && !isGhost) {
-                    if (this.lastPack && this.lastPack.type === type && this.lastPack.sign === tileSign && this.lastPack.step === this.currStepIdx) {
-                        pid = this.lastPack.pid;
-                    } else {
-                        pid = this.nextPackId++;
-                        this.lastPack = { pid, type, sign: tileSign, step: this.currStepIdx };
-                    }
-                } else {
-                    pid = this.nextPackId++;
-                }
+            applyViewportTransform();
+            render();
+            redrawDrawings();
+        }
+        window.addEventListener('resize', resize);
+        setTimeout(resize, 100);
 
-                const el = document.createElement('div');
-                el.className = `token ${type==='unit'?'type-unit':'type-x'} ${tileSign===1?'green':'red'}`;
-                if (isGhost) el.classList.add('ghost');
-                if (this.isSubInput) el.classList.add('in-bracket');
-                if (this.isMultInput && !step.distributed) el.classList.add('pending-mult');
-                
-                let lbl = type==='unit' ? (tileSign===1?'1':'-1') : (tileSign===1?'x':'-x');
-                el.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
-                
-                const tId = this.app.nextId++;
-                el.id = `t-${tId}`;
-
-                let x, y;
-                if (manualX !== null) { 
-                    x=manualX; y=manualY;
+        /* --- LOGIQUE DRAG & DROP DEPUIS LA SIDEBAR --- */
+        function initSidebarDrag() {
+            const draggers = document.querySelectorAll('.strip-dragger');
+            draggers.forEach(btn => {
+                const startDrag = (e) => {
+                    const type = btn.dataset.type;
+                    const length = CONFIG.colors[type].length;
+                    const color = CONFIG.colors[type].fill;
+                    const border = CONFIG.colors[type].stroke;
                     
-                    // MIRROR LOGIC FOR SOLVE MODE
-                    if (!isGhost && !mirrorTrigger && this.app.mode === 'solve') {
-                        const otherSide = this.id === 'left' ? this.app.sideRight : this.app.sideLeft;
-                        const w = SIZES[type].w;
-                        const mirrorX = -x - w; 
-                        otherSide.addTile(type, sign, false, mirrorX, y, true);
-                    }
-                }
-                else {
-                    // AUTO PLACEMENT (CLICK) - Mirror Logic
-                    const pos = this.findFreeSpot(type);
-                    x = pos.x; y = pos.y;
+                    const ghost = document.createElement('div');
+ghost.style.position = 'fixed';
+ghost.style.zIndex = '9999';
+ghost.style.pointerEvents = 'none';
+ghost.style.opacity = '0.80';
+ghost.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.30)';
+ghost.style.transformOrigin = 'center center';
+
+// Ghost rendu AU PIXEL près comme une bande posée (même logique que render() : trait épais + caps ronds + aimants)
+const cssW = length + CONFIG.currentStripWidth;
+const cssH = CONFIG.currentStripWidth;
+const ghostCanvas = document.createElement('canvas');
+const dpr = window.devicePixelRatio || 1;
+ghostCanvas.width = Math.round(cssW * dpr);
+ghostCanvas.height = Math.round(cssH * dpr);
+ghostCanvas.style.width = cssW + 'px';
+ghostCanvas.style.height = cssH + 'px';
+const gctx = ghostCanvas.getContext('2d');
+gctx.scale(dpr, dpr);
+
+// 1) bande (mêmes ombres / rendu que le canvas principal)
+gctx.shadowColor = 'rgba(0,0,0,0.2)';
+gctx.shadowBlur = 6;
+gctx.shadowOffsetY = 3;
+gctx.beginPath();
+gctx.lineWidth = CONFIG.currentStripWidth;
+gctx.lineCap = 'round';
+gctx.strokeStyle = color;
+const yMid = cssH / 2;
+const x1 = CONFIG.currentStripWidth / 2;
+const x2 = x1 + length;
+gctx.moveTo(x1, yMid);
+gctx.lineTo(x2, yMid);
+gctx.stroke();
+
+// 2) aimants (mêmes tailles/couleurs que render())
+gctx.shadowColor = 'rgba(0,0,0,0.3)';
+gctx.shadowBlur = 2;
+gctx.shadowOffsetY = 1;
+const rivetSize = state.stripMode === 'thin' ? 2.0 : 6;
+const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
+function drawRivet(x) {
+  gctx.beginPath();
+  gctx.arc(x, yMid, rivetSize, 0, Math.PI * 2);
+  gctx.fillStyle = '#f1f5f9';
+  gctx.fill();
+  gctx.strokeStyle = '#334155';
+  gctx.lineWidth = strokeSize;
+  gctx.stroke();
+}
+drawRivet(x1);
+drawRivet(x2);
+
+ghost.appendChild(ghostCanvas);
+
+// Le plateau est zoomé via zoomWorld (CSS scale). Pour que le ghost soit strictement identique à la pièce posée à l'écran :
+ghost.style.transform = `translate(-50%, -50%) scale(${state.zoom})`;
+
+document.body.appendChild(ghost);
                     
-                    if (!isGhost && !mirrorTrigger && this.app.mode === 'solve') {
-                        const otherSide = this.id === 'left' ? this.app.sideRight : this.app.sideLeft;
-                        const w = SIZES[type].w;
-                        const mirrorX = -x - w; 
-                        otherSide.addTile(type, sign, false, mirrorX, y, true);
-                    }
-                }
+                    const startX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const startY = e.touches ? e.touches[0].clientY : e.clientY;
+                    ghost.style.left = startX + 'px'; ghost.style.top = startY + 'px';
 
-                el.style.left = x+'px'; el.style.top = y+'px';
-                el.addEventListener('mousedown', e => this.app.handleDragStart(e, tId));
-                el.addEventListener('touchstart', e => this.app.handleDragStart(e, tId), {passive:false});
-                this.app.world.appendChild(el);
-
-                const token = { id: tId, side: this.id, type, sign: tileSign, displaySign: sign, x, y, element: el, pairId: null, packId: pid, ghostIds: [] };
-                this.tokens.push(token);
-                this.app.allTokens.push(token);
-
-                if (!isGhost) {
-                    step.tokenIds.push(tId);
-                    if (manualX === null) this.lastSeqPackId = pid;
+                    const moveDrag = (ev) => {
+                        ev.preventDefault(); 
+                        const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                        const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                        ghost.style.left = clientX + 'px'; ghost.style.top = clientY + 'px';
+                    };
                     
-                    if (this.isMultInput && step.factor > 1) {
-                        const stride = 90+20;
-                        for(let i=1; i<step.factor; i++) {
-                            const g = this.addTile(type, sign, true, x, y + i*stride);
-                            token.ghostIds.push(g.id);
+                    const endDrag = (ev) => {
+                        const clientX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
+                        const clientY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
+                        const canvasRect = container.getBoundingClientRect();
+                        if (clientX >= canvasRect.left && clientX <= canvasRect.right && clientY >= canvasRect.top && clientY <= canvasRect.bottom) {
+                            // Correction pour le Zoom
+                            const x = (clientX - canvasRect.left - state.pan.x) / state.zoom;
+                            const y = (clientY - canvasRect.top - state.pan.y) / state.zoom;
+                            addStrip(type, x, y);
                         }
-                    }
-                }
-                this.app.updateEquation();
-                return token;
-            }
-
-            findFreeSpot(type) {
-                // Placement auto : progression "au fil" (ne remplit pas les trous),
-                // en partant du centre vers l'extérieur.
-                const w = SIZES[type].w;
-                const h = SIZES[type].h;
-                const gap = 10;
-
-                const screenH = this.app.container.clientHeight / this.app.scale;
-                const startY = -screenH/2 + 60;
-                const startX = (this.id === 'left') ? -25 : 25;
-
-                // (Ré)initialisation du curseur si besoin
-                if (!this.autoFlow || Math.abs((this.autoFlow.startY ?? startY) - startY) > 1) {
-                    this.autoFlow = { x: startX, y: startY, lineH: 0, startX, startY };
-                }
-
-                const collides = (tx, ty) => {
-                    for (let t of this.tokens) {
-                        const tw = SIZES[t.type].w;
-                        const th = SIZES[t.type].h;
-                        if (tx < t.x + tw + 5 && tx + w + 5 > t.x && ty < t.y + th + 5 && ty + h + 5 > t.y) {
-                            return true;
-                        }
-                    }
-                    return false;
+                        ghost.remove();
+                        document.removeEventListener('mousemove', moveDrag); document.removeEventListener('touchmove', moveDrag);
+                        document.removeEventListener('mouseup', endDrag); document.removeEventListener('touchend', endDrag);
+                    };
+                    document.addEventListener('mousemove', moveDrag); document.addEventListener('touchmove', moveDrag, {passive: false});
+                    document.addEventListener('mouseup', endDrag); document.addEventListener('touchend', endDrag);
                 };
+                btn.addEventListener('mousedown', startDrag); btn.addEventListener('touchstart', startDrag, {passive: false});
+            });
+        }
+        initSidebarDrag();
 
-                // On avance toujours le curseur (jamais de retour en arrière),
-                // et on saute les positions en collision.
-                let tries = 0;
-                while (tries < 300) {
-                    const usedW = (this.id === 'left') ? (startX - this.autoFlow.x) : (this.autoFlow.x - startX);
-                    if (usedW + w > MAX_ROW_WIDTH) {
-                        this.autoFlow.y += Math.max(this.autoFlow.lineH, h) + gap;
-                        this.autoFlow.x = startX;
-                        this.autoFlow.lineH = 0;
-                    }
+        /* --- AIDE : Point aimanté par le rapporteur (pour stabiliser les rotations) --- */
+        function protractorAnchorShouldPin(pointId) {
+            const tool = state.tools.protractor;
+            if (!tool || !tool.visible || !tool.attachedPointId) return false;
+            if (tool.attachedPointId !== pointId) return false;
 
-                    const tx = (this.id === 'left') ? (this.autoFlow.x - w) : this.autoFlow.x;
-                    const ty = this.autoFlow.y;
-
-                    // Avance du curseur (quoi qu'il arrive)
-                    if (this.id === 'left') this.autoFlow.x -= (w + gap);
-                    else this.autoFlow.x += (w + gap);
-                    this.autoFlow.lineH = Math.max(this.autoFlow.lineH, h);
-
-                    if (!collides(tx, ty)) return { x: tx, y: ty };
-                    tries += 1;
-                }
-
-                return { x: 0, y: 0 };
+            // Si l'utilisateur est en train de déplacer ce point / ce groupe, on ne le bloque pas.
+            if (state.draggingPoint && state.draggingPoint.id === pointId) return false;
+            if (state.draggingStrip && state.draggingStrip.some(p => p.id === pointId)) return false;
+            if (state.draggingAngleMove) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g && g.vertexId === pointId) return false;
             }
 
-
-            addOperator(op) {
-                // Opérateurs (+, -, parenthèses, x2/x3, etc.) supprimés dans cette version :
-                // outil de manipulation + automatisations via Ranger / Réduire / Simplifier / Diviser.
-                return;
-            }
-
-            startMult(f) {
-                // Désactivé (mode manipulation)
-                return;
-            }
-
-            applyOpposite() {
-                // Désactivé (mode manipulation)
-                return;
-            }
-
-            distribute() {
-                // Désactivé (mode manipulation)
-                return;
-            }
-
-            reflow() { }
-
-            order() {
-                this.displayMode = 'ordered'; 
-                this.organize(false);
-                this.app.updateEquation(); 
-            }
-            
-            reduce() {
-                this.displayMode = 'reduced'; 
-                this.organize(true);
-                this.app.updateEquation(); 
-            }
-
-            organize(reduced) { 
-                this.app.saveState();
-                playSound('whoosh');
-                
-                const screenH = this.app.container.clientHeight / this.app.scale;
-                let y = -screenH/2 + 60;
-                
-                const subset = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                const rows = [{t:'x',s:1},{t:'x',s:-1},{t:'unit',s:1},{t:'unit',s:-1}];
-
-                // REVISED LAYOUT LOGIC: Center -> Outwards, Lines (Rows)
-                rows.forEach(r => {
-                    const eligible = subset.filter(t => t.type===r.t && t.sign===r.s);
-                    if (!eligible.length) return;
-
-                    let packs = [];
-                    if (reduced) {
-                        packs = [eligible]; 
-                    } else {
-                        const map = new Map();
-                        eligible.forEach(t => {
-                            const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
-                            if(!map.has(pid)) map.set(pid, []);
-                            map.get(pid).push(t);
-                        });
-                        const sortedPids = Array.from(map.keys()).sort((a,b) => a - b);
-                        packs = sortedPids.map(pid => map.get(pid));
-                    }
-
-                    // --- PLACEMENT LOGIC ---
-                    
-                    // Flatten tokens for line filling
-                    let tokensInOrder = [];
-                    let gap = reduced ? 0 : 15;
-                    packs.forEach((pack, pIdx) => {
-                        pack.forEach(t => tokensInOrder.push({t, w: SIZES[t.type].w, h: SIZES[t.type].h}));
-                        if (pIdx < packs.length - 1) tokensInOrder.push({isGap: true, w: gap});
-                    });
-
-                    // Break into lines based on width limit
-                    let lines = [];
-                    let currentLine = [];
-                    let currentW = 0;
-                    let lineMaxH = 0;
-                    
-                    // USE CONSTANT WIDTH LIMIT
-                    const maxW = MAX_ROW_WIDTH; 
-
-                    tokensInOrder.forEach(item => {
-                        if (item.isGap) {
-                            currentW += item.w;
-                            currentLine.push(item);
-                        } else {
-                            if (currentW + item.w > maxW) {
-                                lines.push({items: currentLine, w: currentW, h: lineMaxH});
-                                currentLine = []; currentW = 0; lineMaxH = 0;
-                            }
-                            currentLine.push(item);
-                            currentW += item.w + 2;
-                            lineMaxH = Math.max(lineMaxH, item.h);
-                        }
-                    });
-                    if (currentLine.length) lines.push({items: currentLine, w: currentW, h: lineMaxH});
-
-                    // Render Lines
-                    lines.forEach(line => {
-                        let startX;
-                        // RIGHT SIDE: Start from Center (25) -> Right
-                        if (this.id === 'right') {
-                            startX = 25;
-                            let cx = startX;
-                            line.items.forEach(item => {
-                                if (item.isGap) cx += item.w;
-                                else {
-                                    this.moveTile(item.t, cx, y);
-                                    cx += item.w + 2;
-                                }
-                            });
-                        } 
-                        // LEFT SIDE: Start from Center (-25) -> Left
-                        else {
-                            // To fill R -> L starting from center, we simply decrement X
-                            startX = -25;
-                            let cx = startX;
-                            line.items.forEach(item => {
-                                if (item.isGap) cx -= item.w;
-                                else {
-                                    // item position is its top-left.
-                                    // If we are at -25 and want to place an item of width 40 to its left:
-                                    // it occupies [-65, -25]. The pos is -65.
-                                    cx -= (item.w + 2);
-                                    this.moveTile(item.t, cx, y); // Position is top-left
-                                }
-                            });
-                        }
-                        y += line.h + 15;
-                    });
-                });
-            }
-
-            moveTile(t, x, y) {
-                t.element.classList.add('animating');
-                t.x = x; t.y = y;
-                t.element.style.left = x + 'px'; t.element.style.top = y + 'px';
-                setTimeout(() => t.element.classList.remove('animating'), 500);
-            }
-
-            simplify() {
-                this.app.saveState();
-                playSound('whoosh');
-
-                const EXISTING_REMOVE_MS = 800;
-                const PAIR_INTERVAL_MS = 550;
-
-                // 1) Zéros déjà présents (créés manuellement ou automatiquement)
-                const existingZeros = this.tokens.filter(t => t.pairId !== null);
-                const badgeIds = new Set();
-
-                existingZeros.forEach(t => {
-                    t.element.classList.add('vanish');
-                    const p = this.app.allTokens.find(x => x.id === t.pairId);
-                    if (p) {
-                        const id1 = `badge-${t.id}-${p.id}`;
-                        const id2 = `badge-${p.id}-${t.id}`;
-                        [id1, id2].forEach(bid => {
-                            const b = document.getElementById(bid);
-                            if (b) { b.classList.add('vanish'); badgeIds.add(bid); }
-                        });
-                    }
-                });
-
-                if (existingZeros.length > 0) {
-                    setTimeout(() => {
-                        this.app.removeTokens(existingZeros.map(t => t.id));
-                        badgeIds.forEach(bid => { const b = document.getElementById(bid); if (b) b.remove(); });
-                    }, EXISTING_REMOVE_MS);
-                }
-
-                // 2) Nouveaux zéros à créer : uniquement parmi les pièces actives (pas ghost, pas in-bracket)
-                const available = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('in-bracket') && !t.element.classList.contains('ghost'));
-
-                const pairs = [];
-                ['x', 'unit'].forEach(type => {
-                    const pos = available.filter(t => t.type === type && t.sign === 1);
-                    const neg = available.filter(t => t.type === type && t.sign === -1);
-                    while (pos.length && neg.length) pairs.push([pos.pop(), neg.pop()]);
-                });
-
-                // 3) Animation des nouveaux couples (un peu plus lente pour être lisible)
-                pairs.forEach((p, i) => {
-                    setTimeout(() => {
-                        const t1 = p[0];
-                        const t2 = p[1];
-                        this.app.createZeroPair(t1, t2, true);
-                    }, i * PAIR_INTERVAL_MS);
-                });
-            }
-
-            divide() { this.app.performDivision(); }
-            
-            layoutForDivision(n, keepIndex) {
-                const active = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                const screenH = this.app.container.clientHeight / this.app.scale;
-                const startY = -screenH/2 + 80;
-                const gapY = Math.min(120, (screenH - 160) / n);
-                
-                const xs = active.filter(t => t.type === 'x');
-                const us = active.filter(t => t.type === 'unit');
-                
-                const isLeft = (this.id === 'left');
-                const startX = isLeft ? -40 : 40; 
-                const dir = isLeft ? -1 : 1;
-                
-                xs.forEach((t, i) => {
-                    const row = i % n;
-                    const col = Math.floor(i / n);
-                    const tx = startX + (col * 100 * dir); 
-                    this.moveTile(t, tx, startY + row * gapY);
-                    if (row !== keepIndex) t.toDelete = true;
-                });
-                
-                const uStartOffset = (xs.length > 0 ? (Math.ceil(xs.length/n)*100 + 20) : 0) * dir;
-                us.forEach((t, i) => {
-                    const row = i % n;
-                    const col = Math.floor(i / n);
-                    const tx = startX + uStartOffset + (col * 45 * dir);
-                    this.moveTile(t, tx, startY + row * gapY);
-                    if (row !== keepIndex) t.toDelete = true;
-                });
-            }
-
-            updateUI() { /* épuré : plus de boutons d'opérateurs */ }
+            return true;
         }
 
-        // --- MAIN APP ---
-        class AlgebraEqApp {
-            constructor() {
-                this.nextId = 1;
-                this.allTokens = [];
-                this.history = []; 
-                this.mode = 'setup';
-                this.equationVisible = true;
-                this.container = document.getElementById('board-container');
-                this.world = document.getElementById('board-world');
-                this.eqDisplay = document.getElementById('equation-display');
-                this.scale = 1; 
-                this.pan = {x:0, y:0};
-                this.menuDrag = null;
-                this.sideLeft = new AlgebraSide('left', this);
-                this.sideRight = new AlgebraSide('right', this);
-                this.initListeners();
-                this.centerView();
-                this.updateEquation();
-            }
-            
-            toggleMode() {
-                const btn = document.getElementById('btn-mode');
-                const txt = document.getElementById('mode-text');
-                if (this.mode === 'setup') {
-                    this.mode = 'solve';
-                    btn.classList.add('solve'); txt.innerText = "Phase 2 : Résoudre (Balance)";
-                } else {
-                    this.mode = 'setup';
-                    btn.classList.remove('solve'); txt.innerText = "Phase 1 : Poser l'équation";
-                }
-            }
+        /* --- MOTEUR PHYSIQUE --- */
+        function solveConstraints() {
+            for (let i = 0; i < 5; i++) {
+                state.strips.forEach(strip => {
+                    const p1 = state.points.find(p => p.id === strip.p1);
+                    const p2 = state.points.find(p => p.id === strip.p2);
+                    if (!p1 || !p2) return;
 
-            toggleEquationVisibility() {
-                this.equationVisible = !this.equationVisible;
-                const eq = document.getElementById('equation-display');
-                if(this.equationVisible) eq.classList.remove('equation-blur'); else eq.classList.add('equation-blur');
-            }
-            
-            performDivision() {
-                const leftX = this.sideLeft.tokens.filter(t => t.type === 'x' && !t.pairId).length;
-                const rightX = this.sideRight.tokens.filter(t => t.type === 'x' && !t.pairId).length;
-                const divisor = Math.max(leftX, rightX);
-                if (divisor <= 1) return;
-                
-                this.saveState();
-                playSound('whoosh');
-                this.sideLeft.layoutForDivision(divisor, 0);
-                this.sideRight.layoutForDivision(divisor, 0);
-                setTimeout(() => { this.applyDivisionDeletion(); }, 1000);
-            }
-            
-            applyDivisionDeletion() {
-                const toRemove = [];
-                [this.sideLeft, this.sideRight].forEach(side => {
-                    side.tokens.forEach(t => {
-                        if (t.toDelete) {
-                            t.element.classList.add('vanish');
-                            toRemove.push(t);
-                        }
-                    });
-                });
-                if (toRemove.length > 0) playSound('pop');
-                setTimeout(() => {
-                    this.removeTokens(toRemove.map(t=>t.id));
-                }, 500);
-            }
+                    const pinned1 = p1.pinned || protractorAnchorShouldPin(p1.id);
+                    const pinned2 = p2.pinned || protractorAnchorShouldPin(p2.id);
 
-            removeTokens(ids) {
-                const idSet = new Set(ids.map(x => Number(x)));
-
-                // 1) Nettoyer les zéros (paires) qui pointent vers un token supprimé
-                this.allTokens.forEach(t => {
-                    if (t && t.pairId != null) {
-                        const pid = Number(t.pairId);
-                        if (idSet.has(pid) || idSet.has(Number(t.id))) {
-                            // on va gérer via suppression des badges + classe
-                            t.pairId = null;
-                            if (t.element) t.element.classList.remove('is-zero');
-                        }
-                    }
-                });
-
-                // 2) Supprimer badges associés (avant de retirer les éléments)
-                document.querySelectorAll('.zero-badge').forEach(b => {
-                    const parts = (b.id || '').split('-');
-                    if (parts.length === 3) {
-                        const a = Number(parts[1]);
-                        const c = Number(parts[2]);
-                        if (idSet.has(a) || idSet.has(c)) b.remove();
-                    }
-                });
-
-                // 3) Supprimer éléments DOM des tokens
-                ids.forEach(id => {
-                    const nid = Number(id);
-                    const t = this.allTokens.find(x => Number(x.id) === nid);
-                    if (t && t.element) t.element.remove();
-                });
-
-                // 4) Purger les structures de données
-                this.allTokens = this.allTokens.filter(x => !idSet.has(Number(x.id)));
-                this.sideLeft.tokens = this.sideLeft.tokens.filter(x => !idSet.has(Number(x.id)));
-                this.sideRight.tokens = this.sideRight.tokens.filter(x => !idSet.has(Number(x.id)));
-                this.sideLeft.steps.forEach(s => s.tokenIds = s.tokenIds.filter(tid => !idSet.has(Number(tid))));
-                this.sideRight.steps.forEach(s => s.tokenIds = s.tokenIds.filter(tid => !idSet.has(Number(tid))));
-
-                this.updateEquation();
-            }
-
-            saveState() {
-                // IMPORTANT: Clone deeply to avoid reference issues
-                const state = {
-                    nextId: this.nextId,
-                    // Serialize token data only
-                    tokens: this.allTokens.map(t => {
-                        const { element, ...data } = t; 
-                        return data; 
-                    }),
-                    stepsL: JSON.parse(JSON.stringify(this.sideLeft.steps)),
-                    stepsR: JSON.parse(JSON.stringify(this.sideRight.steps)),
-                    currStepL: this.sideLeft.currStepIdx,
-                    currStepR: this.sideRight.currStepIdx,
-                    isSubL: this.sideLeft.isSubInput, isMultL: this.sideLeft.isMultInput,
-                    isSubR: this.sideRight.isSubInput, isMultR: this.sideRight.isMultInput,
-                    displayModeL: this.sideLeft.displayMode,
-                    displayModeR: this.sideRight.displayMode,
-                    nextPackIdL: this.sideLeft.nextPackId,
-                    nextPackIdR: this.sideRight.nextPackId,
-                    lastPackL: this.sideLeft.lastPack,
-                    lastPackR: this.sideRight.lastPack,
-                    lastSeqPackIdL: this.sideLeft.lastSeqPackId,
-                    lastSeqPackIdR: this.sideRight.lastSeqPackId,
-                    autoFlowL: this.sideLeft.autoFlow ? { ...this.sideLeft.autoFlow } : null,
-                    autoFlowR: this.sideRight.autoFlow ? { ...this.sideRight.autoFlow } : null
-                };
-                this.history.push(JSON.stringify(state));
-                if(this.history.length > 50) this.history.shift();
-            }
-
-            undo() {
-                if(this.history.length === 0) return;
-                const json = this.history.pop();
-                const state = JSON.parse(json);
-                this.resetBoard(false);
-                
-                this.nextId = state.nextId;
-                this.sideLeft.steps = state.stepsL; this.sideRight.steps = state.stepsR;
-                this.sideLeft.currStepIdx = state.currStepL; this.sideRight.currStepIdx = state.currStepR;
-                this.sideLeft.isSubInput = state.isSubL; this.sideLeft.isMultInput = state.isMultL;
-                this.sideRight.isSubInput = state.isSubR; this.sideRight.isMultInput = state.isMultR;
-                this.sideLeft.displayMode = state.displayModeL || 'normal';
-                this.sideRight.displayMode = state.displayModeR || 'normal';
-
-                this.sideLeft.nextPackId = state.nextPackIdL || this.sideLeft.nextPackId;
-                this.sideRight.nextPackId = state.nextPackIdR || this.sideRight.nextPackId;
-                this.sideLeft.lastPack = state.lastPackL || null;
-                this.sideRight.lastPack = state.lastPackR || null;
-                this.sideLeft.lastSeqPackId = state.lastSeqPackIdL || null;
-                this.sideRight.lastSeqPackId = state.lastSeqPackIdR || null;
-
-                this.sideLeft.autoFlow = state.autoFlowL || null;
-                this.sideRight.autoFlow = state.autoFlowR || null;
-
-                state.tokens.forEach(data => {
-                    const el = document.createElement('div');
-                    const tileSign = data.sign;
-                    const type = data.type;
-                    el.className = `token ${type==='unit'?'type-unit':'type-x'} ${tileSign===1?'green':'red'}`;
-                    let lbl = type==='unit' ? (tileSign===1?'1':'-1') : (tileSign===1?'x':'-x');
-                    el.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
-                    el.id = `t-${data.id}`;
-                    el.style.left = data.x+'px'; el.style.top = data.y+'px';
-                    el.addEventListener('mousedown', e => this.handleDragStart(e, data.id));
-                    el.addEventListener('touchstart', e => this.handleDragStart(e, data.id), {passive:false});
-                    this.world.appendChild(el);
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const dist = Math.hypot(dx, dy);
+                    const targetLen = CONFIG.colors[strip.type].length;
                     
-                    const token = { ...data, element: el };
-                    this.allTokens.push(token);
-                    if(token.side === 'left') this.sideLeft.tokens.push(token);
-                    else this.sideRight.tokens.push(token);
-                });
-                
-                this.allTokens.forEach(t => {
-                    if(t.pairId) {
-                        t.element.classList.add('is-zero');
-                        const p = this.allTokens.find(x => x.id === t.pairId);
-                        if(p && !document.getElementById(`badge-${t.id}-${p.id}`) && !document.getElementById(`badge-${p.id}-${t.id}`)) {
-                             const b = document.createElement('div'); b.className='zero-badge'; b.textContent='0'; 
-                             b.id=`badge-${t.id}-${p.id}`;
-                             const mx=(t.x+p.x)/2; const my=(t.y+p.y)/2;
-                             const w = SIZES[t.type].w; const h = SIZES[t.type].h;
-                             b.style.left = (mx + w/2) + 'px'; b.style.top = (my + h/2) + 'px';
-                             this.world.appendChild(b);
-                        }
-                    }
-                });
-                this.sideLeft.updateUI(); this.sideRight.updateUI(); this.updateEquation();
-            }
+                    if (dist === 0) return;
+                    const diff = (dist - targetLen) / dist;
+                    const offsetX = dx * diff * 0.5;
+                    const offsetY = dy * diff * 0.5;
 
-            initListeners() {
-                this.container.addEventListener('wheel', e => { e.preventDefault(); this.scale = Math.min(Math.max(0.5, this.scale - e.deltaY * 0.001), 2.5); this.updateTransform(); }, {passive:false});
-                
-                // RESTORE PANNING (Vertical Only)
-                this.container.addEventListener('mousedown', e => {
-                    if (e.target.closest('.token') || e.target.closest('button')) return;
-                    this.isPanning = true; 
-                    // We only care about Y start relative to current pan.y
-                    this.panStart = { y: e.clientY - this.pan.y };
-                    this.container.classList.add('panning');
+                    if (!pinned1) { p1.x += offsetX; p1.y += offsetY; }
+                    if (!pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
+                    if (pinned1 && !pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
+                    if (!pinned1 && pinned2) { p1.x += offsetX; p1.y += offsetY; }
                 });
-
-                window.addEventListener('mousemove', e => {
-                    if (this.isPanning) {
-                        // Update ONLY Y
-                        this.pan.y = e.clientY - this.panStart.y; 
-                        this.updateTransform(); 
-                    }
-                    else if (this.menuDrag) this.handleMenuDragMove(e);
-                });
-                
-                window.addEventListener('mouseup', e => {
-                    this.isPanning = false; 
-                    this.container.classList.remove('panning');
-                    if(this.menuDrag) this.handleMenuDragEnd(e);
-                });
-                
-                this.container.addEventListener('dragover', e => e.preventDefault());
-                this.container.addEventListener('drop', e => e.preventDefault());
-                window.addEventListener('resize', () => { this.centerView(); });
-                document.addEventListener('touchmove', e => { if (this.menuDrag) { e.preventDefault(); this.handleMenuDragMove(e); } }, {passive:false});
-                document.addEventListener('touchend', e => { if (this.menuDrag) this.handleMenuDragEnd(e); });
             }
+        }
 
-            centerView() {
-                const cx = this.container.clientWidth / 2;
-                const cy = this.container.clientHeight / 2;
-                this.pan.x = cx; 
-                this.pan.y = cy - 50;
-                this.updateTransform();
-            }
-            updateTransform() { this.world.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`; }
+        /* --- ACTIONS --- */
+        function addStrip(type, x = null, y = null) {
+            playSound('pop');
+            const rect = container.getBoundingClientRect();
+            // Correction coordonnées si non fournies
+            const cx = x !== null ? x : ((rect.width / 2 - state.pan.x) / state.zoom);
+            const cy = y !== null ? y : ((rect.height / 2 - state.pan.y) / state.zoom);
+            const len = CONFIG.colors[type].length;
+
+            const p1 = { id: state.nextId++, x: cx - len/2, y: cy, pinned: false };
+            const p2 = { id: state.nextId++, x: cx + len/2, y: cy, pinned: false };
             
-            // --- MENU DRAG ---
-            handleMenuTouchStart(e, type, sign, side) {
+            state.points.push(p1, p2);
+            state.strips.push({ id: state.nextId++, p1: p1.id, p2: p2.id, type: type });
+            render();
+        }
+
+        function removeStrip(strip) {
+            state.strips = state.strips.filter(s => s.id !== strip.id);
+            cleanupAngleGroups();
+            const usedPointIds = new Set();
+            state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
+            state.points = state.points.filter(p => usedPointIds.has(p.id));
+            playSound('trash');
+            render();
+        }
+
+        function resetBoard() {
+            state.points = [];
+            state.strips = [];
+            state.angleGroups = [];
+            state.draggingAngle = null;
+            state.zoom = 1;
+            state.pan = {x: 0, y: 0};
+            state.isPanning = false;
+            state.panAnchor = {x: 0, y: 0};
+
+            applyViewportTransform();
+            queueViewportResizeRender();
+
+            ['setSquare', 'protractor'].forEach(key => {
+                state.tools[key].visible = false;
+                const el = document.getElementById(`tool-${state.tools[key].id}`);
+                el.classList.add('hidden');
+            });
+            document.getElementById('btn-setsquare').classList.remove('active', 'bg-yellow-100');
+            document.getElementById('btn-protractor').classList.remove('active', 'bg-indigo-100');
+            bgLayer.style.backgroundImage = ''; 
+            clearDrawings();
+            render();
+        }
+
+        /* --- GESTION SOURIS / TOUCH --- */
+        function getPos(e) {
+            const rect = container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Correction pour le Zoom
+            return {
+                x: (clientX - rect.left - state.pan.x) / state.zoom,
+                y: (clientY - rect.top - state.pan.y) / state.zoom
+            };
+        }
+        
+        function getClientPos(e) {
+             return {
+                x: e.touches ? e.touches[0].clientX : e.clientX,
+                y: e.touches ? e.touches[0].clientY : e.clientY
+            };
+        }
+
+        function getPointAt(x, y) { return state.points.find(p => Math.hypot(p.x - x, p.y - y) < 45); }
+
+        function getStripAt(x, y) {
+            return state.strips.find(s => {
+                const p1 = state.points.find(p => p.id === s.p1);
+                const p2 = state.points.find(p => p.id === s.p2);
+                if(!p1 || !p2) return false;
+                const A = x - p1.x; const B = y - p1.y; const C = p2.x - p1.x; const D = p2.y - p1.y;
+                const dot = A * C + B * D; const lenSq = C * C + D * D;
+                let param = -1; if (lenSq !== 0) param = dot / lenSq;
+                let xx, yy;
+                if (param < 0) { xx = p1.x; yy = p1.y; } else if (param > 1) { xx = p2.x; yy = p2.y; } else { xx = p1.x + param * C; yy = p1.y + param * D; }
+                const dx = x - xx; const dy = y - yy;
+                return Math.hypot(dx, dy) < (CONFIG.normalStripWidth / 2); 
+            });
+        }
+
+        function getAllConnectedPoints(startStrip) {
+            const pointsToMove = new Set(); const stripsChecked = new Set(); const queue = [startStrip];
+            while(queue.length > 0) {
+                const s = queue.shift();
+                if(stripsChecked.has(s.id)) continue;
+                stripsChecked.add(s.id);
+                pointsToMove.add(s.p1); pointsToMove.add(s.p2);
+                state.strips.forEach(neighbor => {
+                    if(!stripsChecked.has(neighbor.id)) {
+                        if(neighbor.p1 === s.p1 || neighbor.p1 === s.p2 || neighbor.p2 === s.p1 || neighbor.p2 === s.p2) queue.push(neighbor);
+                    }
+                });
+            }
+            return Array.from(pointsToMove).map(id => state.points.find(p => p.id === id));
+        }
+
+        // --- Angles fixes (créés via le bouton +) : groupes rigides tournables ---
+        function findAngleGroupByPointId(pointId) {
+            for (const g of state.angleGroups) {
+                if (g.vertexId === pointId) return { group: g, role: 'vertex' };
+                if (g.aId === pointId) return { group: g, role: 'a' };
+                if (g.bId === pointId) return { group: g, role: 'b' };
+            }
+            return null;
+        }
+
+        function replaceAnglePointId(oldId, newId) {
+            state.angleGroups.forEach(g => {
+                if (g.vertexId === oldId) g.vertexId = newId;
+                if (g.aId === oldId) g.aId = newId;
+                if (g.bId === oldId) g.bId = newId;
+            });
+        }
+
+        function cleanupAngleGroups() {
+            const pointIds = new Set(state.points.map(p => p.id));
+            const stripIds = new Set(state.strips.map(s => s.id));
+            state.angleGroups = state.angleGroups.filter(g =>
+                pointIds.has(g.vertexId) && pointIds.has(g.aId) && pointIds.has(g.bId) &&
+                stripIds.has(g.strip1Id) && stripIds.has(g.strip2Id)
+            );
+        }
+
+
+        container.addEventListener('mousedown', handleStart);
+        container.addEventListener('touchstart', handleStart, {passive: false});
+
+        function handleStart(e) {
+            if (state.tool === 'pen') return;
+            const pos = getPos(e);
+            const clientPos = getClientPos(e);
+
+            // Détache le rapporteur s'il était aimanté sur le point qu'on commence à déplacer
+            const proTool = state.tools.protractor;
+            const attachedId = proTool && proTool.attachedPointId;
+
+            const point = getPointAt(pos.x, pos.y);
+            if (point) {
+                // Angles fixes (créés via +) :
+                // - si on attrape une branche => rotation rigide
+                // - si on attrape le sommet => déplacement normal (comme avant)
+                const hit = findAngleGroupByPointId(point.id);
+                if (hit) {
+                    if (hit.role === 'a' || hit.role === 'b') {
+                        state.draggingAngle = { groupId: hit.group.id, endpoint: hit.role };
+                        point.pinned = true;
+                        const vtx = state.points.find(p => p.id === hit.group.vertexId);
+                        if (vtx) vtx.pinned = true;
+                        return;
+                    }
+                }
+
+                if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
+
+                state.draggingPoint = point; point.pinned = true; return;
+            }
+
+
+            const strip = getStripAt(pos.x, pos.y);
+            if (strip) {
+                state.draggingStrip = getAllConnectedPoints(strip);
+                state.draggingStripRef = strip; state.dragOffset = pos;
+                // Si ce groupe contenait le point sur lequel le rapporteur était aimanté, on autorise le déplacement libre
+                if (attachedId && state.draggingStrip.some(p => p && p.id === attachedId)) {
+                    proTool.attachedPointId = null;
+                }
+                state.draggingStrip.forEach(p => p.pinned = true); return;
+            }
+
+            // Sinon : déplacement du plateau (main gauche) quand on clique sur le plateau vide
+            const isLeft = !!e.touches || e.button === 0;
+            if (isLeft && state.tool === 'hand' && !e.target.closest('.geo-tool')) {
+                state.isPanning = true;
+                state.panAnchor = { x: clientPos.x, y: clientPos.y };
+                if (e.cancelable) e.preventDefault();
+                container.style.cursor = 'grabbing';
+                return;
+            }
+        }
+
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, {passive: false});
+
+        function handleMove(e) {
+            if (geoDragState.active) return;
+            const pos = getPos(e);
+            const clientPos = getClientPos(e);
+            
+
+            if (state.tool === 'pen') { updateCustomCursor(e); return; }
+
+            if (state.isPanning) {
+                if (e.cancelable) e.preventDefault();
+                const dx = clientPos.x - state.panAnchor.x;
+                const dy = clientPos.y - state.panAnchor.y;
+                state.pan.x += dx;
+                state.pan.y += dy;
+                state.panAnchor = { x: clientPos.x, y: clientPos.y };
+                applyViewportTransform();
+                return;
+            }
+
+
+            const hoverPoint = getPointAt(pos.x, pos.y);
+            if (!e.target.closest('.geo-tool')) {
+                container.style.cursor = hoverPoint ? 'crosshair' : (getStripAt(pos.x, pos.y) ? 'move' : 'default');
+            }
+
+            // Déplacement rigide d'un angle fixe quand on attrape le sommet
+            if (state.draggingAngleMove) {
                 e.preventDefault();
-                const touch = e.touches ? e.touches[0] : e;
-                const cx = touch.clientX; const cy = touch.clientY;
-                this.menuDrag = { isDragging: false, type, sign, side, startPos: { x: cx, y: cy }, el: null, offset: null };
-                const move = (ev) => this.handleMenuDragMove(ev);
-                const end = (ev) => {
-                    document.removeEventListener('mousemove', move); document.removeEventListener('touchmove', move);
-                    document.removeEventListener('mouseup', end); document.removeEventListener('touchend', end);
-                    this.handleMenuDragEnd(ev);
-                };
-                document.addEventListener('mousemove', move); document.addEventListener('touchmove', move, { passive: false });
-                document.addEventListener('mouseup', end); document.addEventListener('touchend', end);
-            }
-            
-            handleMenuDragMove(ev) {
-                if (!this.menuDrag) return;
-                ev.preventDefault();
-                const touch = ev.touches ? ev.touches[0] : ev;
-                const cx = touch.clientX; const cy = touch.clientY;
-                if (!this.menuDrag.isDragging) {
-                    const dist = Math.hypot(cx - this.menuDrag.startPos.x, cy - this.menuDrag.startPos.y);
-                    if (dist > 5) { this.menuDrag.isDragging = true; this.createMenuGhost(cx, cy); }
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+                    if (S && A && B) {
+                        let targetX = pos.x + state.draggingAngleMove.offsetX;
+                        let targetY = pos.y + state.draggingAngleMove.offsetY;
+
+                        // Snap du sommet (comme un magnet normal), mais translation du groupe entier.
+                        const groupIds = new Set([S.id, A.id, B.id]);
+                        const snapTarget = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - targetX, p.y - targetY) < CONFIG.snapDistance);
+                        if (snapTarget) { targetX = snapTarget.x; targetY = snapTarget.y; }
+
+                        const dx = targetX - S.x;
+                        const dy = targetY - S.y;
+                        S.x += dx; S.y += dy;
+                        A.x += dx; A.y += dy;
+                        B.x += dx; B.y += dy;
+                    }
                 }
-                if (this.menuDrag.isDragging && this.menuDrag.el) {
-                    this.menuDrag.el.style.left = (cx - this.menuDrag.offset.x) + 'px';
-                    this.menuDrag.el.style.top = (cy - this.menuDrag.offset.y) + 'px';
-                    const menuBoundary = window.innerHeight - 150;
-                    if (cy > menuBoundary) { const s = this.getPreviewScale(this.menuDrag.type); this.menuDrag.el.style.transform = `scale(${s})`; } 
-                    else { this.menuDrag.el.style.transform = `scale(${this.scale})`; }
-                }
-            }
-            
-            createMenuGhost(cx, cy) {
-                const type = this.menuDrag.type; const sign = this.menuDrag.sign;
-                const el = document.createElement('div');
-                const colorClass = sign === 1 ? 'green' : 'red';
-                el.className = `token ${colorClass} type-${type==='unit'?'unit':'x'} menu-ghost scaling-transition`; 
-                let label = type==='unit' ? (sign===1?'1':'-1') : (sign===1?'x':'-x');
-                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
-                document.body.appendChild(el);
-                const size = SIZES[type];
-                const offset = { x: (size.w * this.scale) / 2, y: (size.h * this.scale) / 2 };
-                this.menuDrag.offset = offset; this.menuDrag.el = el;
-                el.style.left = (cx - offset.x) + 'px'; el.style.top = (cy - offset.y) + 'px';
-                const menuBoundary = window.innerHeight - 150;
-                if (cy > menuBoundary) { const s = this.getPreviewScale(type); el.style.transform = `scale(${s})`; } 
-                else { el.style.transform = `scale(${this.scale})`; }
-            }
-            
-            getPreviewScale(type) {
-                let previewW = type === 'x' ? 40 : 24; 
-                const realW = SIZES[type].w;
-                return previewW / (realW * this.scale);
+                solveConstraints();
+                render();
+                return;
             }
 
-            handleMenuDragEnd(e) {
-                if (!this.menuDrag) return;
-                const touch = e.changedTouches ? e.changedTouches[0] : e;
-                
-                if (this.menuDrag.isDragging && this.menuDrag.el) {
-                    const endX = touch.clientX; const endY = touch.clientY;
-                    this.menuDrag.el.remove();
-                    const menuHeight = 150;
-                    const isOverBoard = endY < (window.innerHeight - menuHeight);
-                    
-                    if (isOverBoard) {
-                        const pos = this.getWorldPos(endX, endY);
-                        const w = SIZES[this.menuDrag.type].w; const h = SIZES[this.menuDrag.type].h;
-                        const x = pos.x - w/2; const y = pos.y - h/2;
-                        const dropSide = (x < 0) ? 'left' : 'right';
-                        
-                        if (dropSide === this.menuDrag.side) {
-                            const targetSide = (dropSide === 'left') ? this.sideLeft : this.sideRight;
-                            // JUST CALL ADD TILE. The internal logic handles mode check and mirroring.
-                            targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, x, y); 
+
+            if (state.draggingAngle) {
+                e.preventDefault();
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+                    if (S && A && B) {
+                        const angleRad = g.degrees * (Math.PI / 180);
+                        let base = Math.atan2(pos.y - S.y, pos.x - S.x);
+                        if (state.draggingAngle.endpoint === 'b') base -= angleRad;
+
+                        // Mettre à jour les deux branches : angle rigide
+                        A.x = S.x + g.leg1Len * Math.cos(base);
+                        A.y = S.y + g.leg1Len * Math.sin(base);
+                        B.x = S.x + g.leg2Len * Math.cos(base + angleRad);
+                        B.y = S.y + g.leg2Len * Math.sin(base + angleRad);
+                        g.baseAngle = base;
+                    }
+                }
+                solveConstraints();
+                render();
+                return;
+            }
+            if (state.draggingPoint) {
+                e.preventDefault();
+                let targetX = pos.x; let targetY = pos.y;
+
+                const self = state.draggingPoint;
+
+                // Si le rapporteur est aimanté sur un sommet, et qu'on déplace l'extrémité d'une bande reliée à ce sommet,
+                // on force une rotation autour du sommet (longueur conservée), ce qui évite que le sommet glisse.
+                const proT = state.tools.protractor;
+                let rotLocked = false;
+                if (proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
+                    const pivotP = state.points.find(p => p.id === proT.attachedPointId);
+                    if (pivotP) {
+                        const link = state.strips.find(s => (s.p1 === self.id && s.p2 === pivotP.id) || (s.p2 === self.id && s.p1 === pivotP.id));
+                        if (link) {
+                            rotLocked = true;
+                            const r = CONFIG.colors[link.type].length;
+                            const th = Math.atan2(pos.y - pivotP.y, pos.x - pivotP.x);
+                            targetX = pivotP.x + r * Math.cos(th);
+                            targetY = pivotP.y + r * Math.sin(th);
                         }
                     }
-                } else {
-                    const targetSide = (this.menuDrag.side === 'left') ? this.sideLeft : this.sideRight;
-                    targetSide.addTile(this.menuDrag.type, parseInt(this.menuDrag.sign), false, null, null); 
-                }
-                this.menuDrag = null;
-            }
-
-            // --- BOARD DRAG ---
-            handleDragStart(e, id) {
-                e.stopPropagation();
-                const t = this.allTokens.find(x => x.id === id);
-                if (!t) return;
-                
-                this.saveState(); 
-
-                if (t.pairId) {
-                    const p = this.allTokens.find(x => x.id === t.pairId);
-                    if(p) { p.pairId=null; p.element.classList.remove('is-zero'); const b = document.getElementById(`badge-${t.id}-${p.id}`)||document.getElementById(`badge-${p.id}-${t.id}`); if(b)b.remove(); }
-                    t.pairId=null; t.element.classList.remove('is-zero');
-                    this.updateEquation();
                 }
 
-                t.element.classList.add('dragging');
-                const r = t.element.getBoundingClientRect();
-                const offset = { x: (e.touches?e.touches[0].clientX:e.clientX) - r.left, y: (e.touches?e.touches[0].clientY:e.clientY) - r.top };
-                
-                const startSide = t.x < 0 ? 'left' : 'right';
-
-                const move = ev => {
-                    ev.preventDefault();
-                    const cx = ev.touches?ev.touches[0].clientX:ev.clientX; const cy = ev.touches?ev.touches[0].clientY:ev.clientY;
-                    let wx = (cx - this.container.getBoundingClientRect().left - this.pan.x - offset.x)/this.scale;
-                    let wy = (cy - this.container.getBoundingClientRect().top - this.pan.y - offset.y)/this.scale;
-
-                    if (startSide === 'left' && wx > -5 - SIZES[t.type].w) wx = -5 - SIZES[t.type].w;
-                    if (startSide === 'right' && wx < 5) wx = 5;
-
-                    t.x = wx; t.y = wy;
-                    t.element.style.left = t.x+'px'; t.element.style.top = t.y+'px';
-                };
-                const end = () => {
-                    document.removeEventListener('mousemove', move); document.removeEventListener('touchmove', move);
-                    document.removeEventListener('mouseup', end); document.removeEventListener('touchend', end);
-                    t.element.classList.remove('dragging');
-                    this.checkOverlap(t);
-                    this.updateEquation();
-                };
-                document.addEventListener('mousemove', move); document.addEventListener('touchmove', move, {passive:false});
-                document.addEventListener('mouseup', end); document.addEventListener('touchend', end);
-            }
-
-            checkOverlap(t1) {
-                for(let t2 of this.allTokens) {
-                    if (t1===t2 || t2.pairId || t1.type!==t2.type || t1.sign===t2.sign) continue;
-                    if ((t1.x < 0 && t2.x > 0) || (t1.x > 0 && t2.x < 0)) continue;
-                    const d = Math.hypot(t1.x - t2.x, t1.y - t2.y);
-                    if (d < SNAP) { this.createZeroPair(t1, t2); break; }
-                }
-            }
-
-            createZeroPair(t1, t2, isAuto=false) {
-                playSound('snap');
-
-                const mx = (t1.x + t2.x) / 2;
-                const my = (t1.y + t2.y) / 2;
-
-                // Animation de rapprochement (plus lisible)
-                t1.element.classList.add('animating');
-                t2.element.classList.add('animating');
-                requestAnimationFrame(() => {
-                    t1.x = mx; t1.y = my;
-                    t2.x = mx; t2.y = my;
-                    t1.element.style.left = mx + 'px';
-                    t1.element.style.top = my + 'px';
-                    t2.element.style.left = mx + 'px';
-                    t2.element.style.top = my + 'px';
-                });
-                setTimeout(() => {
-                    t1.element.classList.remove('animating');
-                    t2.element.classList.remove('animating');
-                }, 520);
-
-                t1.pairId = t2.id;
-                t2.pairId = t1.id;
-                t1.element.classList.add('is-zero');
-                t2.element.classList.add('is-zero');
-
-                const b = document.createElement('div');
-                b.className = 'zero-badge';
-                b.textContent = '0';
-                b.id = `badge-${t1.id}-${t2.id}`;
-
-                const w = SIZES[t1.type].w;
-                const h = SIZES[t1.type].h;
-                b.style.left = (mx + w/2) + 'px';
-                b.style.top  = (my + h/2) + 'px';
-                this.world.appendChild(b);
-
-                this.updateEquation();
-
-                if (isAuto) {
-                    const HOLD_MS = 750;
-                    const FADE_MS = 500;
-                    setTimeout(() => {
-                        t1.element.classList.add('vanish');
-                        t2.element.classList.add('vanish');
-                        b.classList.add('vanish');
-                        setTimeout(() => {
-                            // removeTokens() supprime aussi les éléments, mais on les retire ici pour éviter tout flash
-                            t1.element.remove();
-                            t2.element.remove();
-                            b.remove();
-                            this.removeTokens([t1.id, t2.id]);
-                        }, FADE_MS);
-                    }, HOLD_MS);
-                }
-            }
-
-            updateEquation() {
-                const getStr = (side) => {
-                    if (side.displayMode === 'reduced') {
-                        return this.getReducedStr(side);
-                    } else if (side.displayMode === 'ordered') {
-                        return this.getOrderedStr(side);
+                let bestD = CONFIG.snapDistance;
+                if (!rotLocked) {
+                    const snapTarget = state.points.find(p => p.id !== self.id && Math.hypot(p.x - pos.x, p.y - pos.y) < CONFIG.snapDistance);
+                    if (snapTarget) {
+                        targetX = snapTarget.x; targetY = snapTarget.y;
+                        bestD = Math.hypot(snapTarget.x - pos.x, snapTarget.y - pos.y);
                     }
-                    
-                    let s = "";
-                    const hasNonEmptyBefore = (i) => { for(let k=0; k<i; k++) if(side.steps[k].tokenIds.length > 0) return true; return false; };
-                    
-                    side.steps.forEach((step, idx) => {
-                        const toks = step.tokenIds.map(id => this.allTokens.find(t=>t.id===id)).filter(t => t && !t.pairId);
-                        if (!toks.length && idx !== side.currStepIdx) return;
-                        
-                        let content = "";
-                        const groups = []; let cur=null;
-                        toks.forEach(t=>{ if(cur && cur.type===t.type && cur.sign===t.displaySign) cur.c++; else { if(cur) groups.push(cur); cur={type:t.type, sign:t.displaySign, c:1}; } });
-                        if(cur) groups.push(cur);
-                        
-                        groups.forEach((g, i) => {
-                            const lbl = g.type==='unit' ? '' : 'x';
-                            const val = g.c;
-                            const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
-                            const prefix = (i>0 && g.sign===1) ? `{\\color{${COLORS.pos}}{+}}` : (g.sign===-1?`{\\color{${COLORS.neg}}{-}}`:'');
-                            const leadMinus = (i===0 && g.sign===-1) ? `{\\color{${COLORS.neg}}{-}}` : '';
-                            const num = (val===1 && g.type!=='unit') ? '' : val;
-                            content += (i===0 ? leadMinus : `${prefix}`) + `{\\color{${col}}{${num}${lbl}}}`;
-                        });
-                        
-                        if(!content) content = "\\dots";
-                        
-                        let pStr = content;
-                        if (step.type === 'multiplication' && !step.distributed) pStr = `${step.factor}(${content})`;
-                        if (step.type === 'subtraction' && !step.oppositeApplied) pStr = `-(${content})`;
-                        
-                        if (idx > 0 && hasNonEmptyBefore(idx)) {
-                            const rawStr = pStr.replace(/<[^>]*>|{[^}]*}/g, '');
-                            if (!pStr.includes('{red}{-}') && !pStr.startsWith('-')) s += `{\\color{${COLORS.pos}}{+}}`;
+
+                    // Snap possible sur le centre du rapporteur (aimant virtuel)
+                    if (state.tools.protractor.visible) {
+                        const t = state.tools.protractor;
+                        const pivotX = t.x + t.pivot.x;
+                        const pivotY = t.y + t.pivot.y;
+                        const dPivot = Math.hypot(pivotX - pos.x, pivotY - pos.y);
+                        if (dPivot < bestD) {
+                            targetX = pivotX; targetY = pivotY;
+                            bestD = dPivot;
                         }
-                        s += pStr;
+                    }
+                }
+
+                state.draggingPoint.x = targetX; state.draggingPoint.y = targetY;
+                solveConstraints(); render();
+
+            } else if (state.draggingStrip) {
+                e.preventDefault();
+                const headerRect = header.getBoundingClientRect();
+                if (clientPos.y <= headerRect.bottom) header.classList.add('trash-active'); else header.classList.remove('trash-active');
+
+                const dx = pos.x - state.dragOffset.x; const dy = pos.y - state.dragOffset.y;
+                state.draggingStrip.forEach(p => { p.x += dx; p.y += dy; });
+                state.dragOffset = pos;
+                solveConstraints(); render();
+            }
+        }
+
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', handleEnd);
+        window.addEventListener('touchcancel', handleEnd);
+
+        // Sécurité : si la fenêtre perd le focus pendant un drag/pan, on relâche.
+        window.addEventListener('blur', () => {
+            if (state.isPanning) {
+                state.isPanning = false;
+                container.style.cursor = 'default';
+            }
+        });
+
+        function handleEnd(e) {
+            header.classList.remove('trash-active');
+
+            // Fin du déplacement du plateau (pan)
+            if (state.isPanning) {
+                state.isPanning = false;
+                container.style.cursor = 'default';
+            }
+
+            // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
+            if (state.draggingAngleMove) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
+                if (g) {
+                    const S = state.points.find(p => p.id === g.vertexId);
+                    const A = state.points.find(p => p.id === g.aId);
+                    const B = state.points.find(p => p.id === g.bId);
+
+                    // Fusion du sommet si on relâche sur un autre magnet
+                    if (S) {
+                        const groupIds = new Set([g.vertexId, g.aId, g.bId]);
+                        const target = state.points.find(p => !groupIds.has(p.id) && Math.hypot(p.x - S.x, p.y - S.y) < CONFIG.snapDistance);
+                        if (target) {
+                            playSound('snap');
+                            replaceAnglePointId(S.id, target.id);
+                            state.strips.forEach(s => {
+                                if (s.p1 === S.id) s.p1 = target.id;
+                                if (s.p2 === S.id) s.p2 = target.id;
+                            });
+                            state.points = state.points.filter(p => p.id !== S.id);
+                        }
+                    }
+
+                    if (S) S.pinned = false;
+                    if (A) A.pinned = false;
+                    if (B) B.pinned = false;
+                }
+                state.draggingAngleMove = null;
+                cleanupAngleGroups();
+                render();
+                return;
+            }
+
+
+            if (state.draggingAngle) {
+                const g = state.angleGroups.find(ag => ag.id === state.draggingAngle.groupId);
+                if (g) {
+                    const vtx = state.points.find(p => p.id === g.vertexId);
+                    const endP = state.points.find(p => p.id === (state.draggingAngle.endpoint === 'a' ? g.aId : g.bId));
+                    if (vtx) vtx.pinned = false;
+                    if (endP) endP.pinned = false;
+                }
+                state.draggingAngle = null;
+                cleanupAngleGroups();
+                render();
+                return;
+            }
+
+            if (state.draggingPoint) {
+                const self = state.draggingPoint;
+                const target = state.points.find(p => p.id !== self.id && Math.hypot(p.x - self.x, p.y - self.y) < CONFIG.snapDistance);
+
+                if (target) {
+                    playSound('snap');
+                    replaceAnglePointId(self.id, target.id);
+                    state.strips.forEach(s => {
+                        if (s.p1 === self.id) s.p1 = target.id;
+                        if (s.p2 === self.id) s.p2 = target.id;
                     });
-                    return s || "0";
-                };
-
-                const l = getStr(this.sideLeft);
-                const r = getStr(this.sideRight);
-
-                const leftEl = document.getElementById('eq-left');
-                const eqEl = document.getElementById('eq-eq');
-                const rightEl = document.getElementById('eq-right');
-
-                if (leftEl && eqEl && rightEl) {
-                    katex.render(l, leftEl, { throwOnError: false });
-                    katex.render('=', eqEl, { throwOnError: false });
-                    katex.render(r, rightEl, { throwOnError: false });
-                } else {
-                    katex.render(`${l} = ${r}`, document.getElementById('equation-display'), { throwOnError: false });
-                }
+                    state.points = state.points.filter(p => p.id !== self.id);
+                } 
+                self.pinned = false; state.draggingPoint = null; render();
             }
-            getReducedStr(side) {
-                const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                if (!active.length) return '0';
 
-                let xPos = 0, xNeg = 0, uPos = 0, uNeg = 0;
-                active.forEach(t => {
-                    if (t.type === 'x') {
-                        if (t.sign === 1) xPos++; else xNeg++;
-                    } else if (t.type === 'unit') {
-                        if (t.sign === 1) uPos++; else uNeg++;
+            if (state.draggingStrip) {
+                const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                const headerRect = header.getBoundingClientRect();
+                if (clientY <= headerRect.bottom) { if (state.draggingStripRef) removeStrip(state.draggingStripRef); }
+                
+                // Snap du groupe sur le centre du rapporteur (aimant virtuel)
+                if (state.tools.protractor.visible) {
+                    const t = state.tools.protractor;
+                    const pivotX = t.x + t.pivot.x;
+                    const pivotY = t.y + t.pivot.y;
+                    // On cherche le point du groupe le plus proche du centre
+                    let bestP = null;
+                    let bestD = CONFIG.snapDistance;
+                    for (const p of state.draggingStrip) {
+                        if (!p || p.toBeRemoved) continue;
+                        const d = Math.hypot(pivotX - p.x, pivotY - p.y);
+                        if (d < bestD) { bestD = d; bestP = p; }
+                    }
+                    if (bestP) {
+                        const dx = pivotX - bestP.x;
+                        const dy = pivotY - bestP.y;
+                        state.draggingStrip.forEach(p => {
+                            if (!p || p.toBeRemoved) return;
+                            p.x += dx; p.y += dy;
+                        });
+                        playSound('snap');
+                    }
+                }
+
+                // NOUVEAU: Logique d'aimantage pour le drag de bandes
+                let snapped = false;
+                state.draggingStrip.forEach(p => {
+                    // Chercher un point cible qui n'est PAS dans le groupe en cours de déplacement
+                    const target = state.points.find(targetP => 
+                        !state.draggingStrip.some(dp => dp.id === targetP.id) && 
+                        Math.hypot(targetP.x - p.x, targetP.y - p.y) < CONFIG.snapDistance
+                    );
+
+                    if (target) {
+                        snapped = true;
+                        replaceAnglePointId(p.id, target.id);
+                        // Fusionner p vers target
+                        state.strips.forEach(s => {
+                            if (s.p1 === p.id) s.p1 = target.id;
+                            if (s.p2 === p.id) s.p2 = target.id;
+                        });
+                        // Marquer pour suppression (ID à supprimer)
+                        p.toBeRemoved = true;
                     }
                 });
 
-                const parts = [];
-                const addTerm = (sign, body) => {
-                    const col = sign > 0 ? COLORS.pos : COLORS.neg;
-                    if (parts.length === 0) {
-                        if (sign < 0) {
-                            parts.push(`{\\color{${COLORS.neg}}{-}}{\\color{${col}}{${body}}}`);
-                        } else {
-                            parts.push(`{\\color{${col}}{${body}}}`);
-                        }
-                    } else {
-                        const sym = sign > 0 ? '+' : '-';
-                        parts.push(`{\\color{${col}}{${sym}}}{\\color{${col}}{${body}}}`);
-                    }
-                };
-
-                // Réduire = regrouper verts avec verts, rouges avec rouges (sans annuler vert/rouge)
-                if (xPos) addTerm(+1, `${xPos === 1 ? '' : xPos}x`);
-                if (xNeg) addTerm(-1, `${xNeg === 1 ? '' : xNeg}x`);
-                if (uPos) addTerm(+1, `${uPos}`);
-                if (uNeg) addTerm(-1, `${uNeg}`);
-
-                return parts.join('') || '0';
-            }
-
-            getOrderedStr(side) {
-                const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
-                if (!active.length) return '0';
-
-                // Ranger = trier par (x verts) puis (x rouges) puis (unit verts) puis (unit rouges)
-                // en conservant les paquets (packId) sans les additionner entre eux.
-                const groups = new Map();
-                for (const t of active) {
-                    const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
-                    const key = `${t.type}|${t.sign}|${pid}`;
-                    if (!groups.has(key)) groups.set(key, { type: t.type, sign: t.sign, pid, count: 0 });
-                    groups.get(key).count += 1;
+                if (snapped) {
+                    playSound('snap');
+                    // Nettoyer les points fusionnés
+                    state.points = state.points.filter(p => !p.toBeRemoved);
                 }
 
-                const list = Array.from(groups.values()).filter(g => g.count > 0);
-                list.sort((a, b) => {
-                    const typeA = a.type === 'x' ? 0 : 1;
-                    const typeB = b.type === 'x' ? 0 : 1;
-                    if (typeA !== typeB) return typeA - typeB;
-                    const signA = a.sign === 1 ? 0 : 1;
-                    const signB = b.sign === 1 ? 0 : 1;
-                    if (signA !== signB) return signA - signB;
-                    return a.pid - b.pid;
+                state.draggingStrip.forEach(p => {
+                     // S'il n'a pas été supprimé, on relâche le pin
+                     if (!p.toBeRemoved) p.pinned = false; 
                 });
-
-                let s = '';
-                list.forEach((g, i) => {
-                    const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
-                    const isNeg = g.sign === -1;
-                    const val = (g.count === 1 && g.type === 'x') ? '' : g.count;
-                    const lbl = g.type === 'x' ? 'x' : '';
-
-                    let prefix = '';
-                    if (i === 0) {
-                        if (isNeg) prefix = `{\\color{${COLORS.neg}}{-}}`;
-                    } else {
-                        prefix = isNeg ? `{\\color{${COLORS.neg}}{-}}` : `{\\color{${COLORS.pos}}{+}}`;
-                    }
-                    s += `${prefix}{\\color{${col}}{${val}${lbl}}}`;
-                });
-
-                return s || '0';
-            }
-            
-            // --- TOOLS ---
-            setTool(t){
-                this.currentTool=t;
-                const p=t==='pen';
-                // Toggle active class on body to allow click-through for tokens if needed, 
-                // or ensure canvas is top.
-                if(p) document.body.classList.add('drawing-active');
-                else document.body.classList.remove('drawing-active');
                 
-                document.getElementById('custom-cursor').style.display=p?'block':'none';
-                if(p) document.body.style.cursor = 'none';
-                else document.body.style.cursor = 'default';
-            }
-            
-            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
-            draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
-            clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
-            resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
-            moveCursor(e){if(this.currentTool!=='pen')return;const c=document.getElementById('custom-cursor');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';c.style.transform='translate(-6px,-28px)';}
-            getWorldPos(cx, cy) { const r = this.container.getBoundingClientRect(); return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale }; }
-            
-            resetBoard(clearHistory=true) {
-                // Remove DOM elements properly
-                this.allTokens.forEach(t => t.element.remove());
-                document.querySelectorAll('.zero-badge').forEach(b=>b.remove());
-                
-                // Clear Data
-                this.allTokens = [];
-                
-                // Reset Sides
-                this.sideLeft = new AlgebraSide('left', this);
-                this.sideRight = new AlgebraSide('right', this);
-                
-                // Clear Drawing
-                ctx.clearRect(0,0,cvs.width,cvs.height);
-                
-                if(clearHistory) {
-                    this.history = [];
-                    this.mode = 'setup';
-                    document.getElementById('btn-mode').classList.remove('solve');
-                    document.getElementById('mode-text').innerText = "Phase 1 : Poser l'équation";
-                }
-                
-                this.centerView();
-                this.updateEquation();
+                cleanupAngleGroups();
+                state.draggingStrip = null; state.draggingStripRef = null;
+                render();
             }
         }
         
-        const cvs = document.getElementById('drawing-canvas');
-        const ctx = cvs.getContext('2d');
-        let isDrawing=false; let lastP={x:0,y:0};
-        function resizeCvs() { cvs.width=4000; cvs.height=4000; cvs.style.width='4000px'; cvs.style.height='4000px'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.strokeStyle='#2563eb'; }
-        window.addEventListener('resize', resizeCvs); resizeCvs();
-        
-        const app = new AlgebraEqApp();
-        app.canvas = cvs;
-        app.ctx = ctx;
-        
-        // Correct Tool binding
-        app.setTool = function(t){ 
-            app.currentTool=t; 
-            if(t==='pen'){
-                document.getElementById('custom-cursor').classList.remove('hidden');
-                document.body.style.cursor='none';
-                document.body.classList.add('drawing-active');
+        container.addEventListener('dblclick', (e) => {
+            if (state.tool === 'pen') return;
+
+            const geo = e.target.closest('.geo-tool');
+            const isProtractor = geo && geo.id === 'tool-protractor';
+
+            // Par défaut on évite le dblclick sur les outils géométriques,
+            // MAIS on l'autorise sur le rapporteur pour pouvoir 'déclipser' un aimant dessous.
+            if (geo && !isProtractor) return;
+            // Si on dblclick sur une poignée / un bouton du rapporteur, on ne détache rien.
+            if (isProtractor && e.target.closest('.geo-handle')) return;
+
+            const pos = getPos(e);
+            const clientPos = getClientPos(e);
+            let point = getPointAt(pos.x, pos.y);
+
+            // Si le dblclick est sur le rapporteur (au-dessus du sommet), on vise le point sous le pivot.
+            if (!point && isProtractor) {
+                const tool = state.tools.protractor;
+                const pivotX = tool.x + tool.pivot.x;
+                const pivotY = tool.y + tool.pivot.y;
+                // on cherche un point très proche du pivot (aimant sous le centre)
+                point = state.points.find(p => Math.hypot(p.x - pivotX, p.y - pivotY) < CONFIG.snapDistance);
+            }
+
+            if (point) {
+                const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
+                if (connectedStrips.length > 1) {
+                    playSound('detach');
+                    for (let i = 1; i < connectedStrips.length; i++) {
+                        const s = connectedStrips[i];
+                        const newP = { id: state.nextId++, x: point.x + (Math.random()*20 - 10), y: point.y + (Math.random()*20 - 10), pinned: false };
+                        state.points.push(newP);
+                        if (s.p1 === point.id) s.p1 = newP.id; else s.p2 = newP.id;
+                    }
+                    render();
+                }
+            }
+        });
+
+        /* --- RENDU --- */
+        function render() {
+            ctxStrips.clearRect(0, 0, canvasStrips.width, canvasStrips.height);
+
+            // 2. Bandes
+            const sortedStrips = [...state.strips].sort((a, b) => {
+                const lenA = CONFIG.colors[a.type].length;
+                const lenB = CONFIG.colors[b.type].length;
+                return lenB - lenA; 
+            });
+
+            ctxStrips.shadowColor = "rgba(0,0,0,0.2)";
+            ctxStrips.shadowBlur = 6;
+            ctxStrips.shadowOffsetY = 3;
+
+            sortedStrips.forEach(strip => {
+                const p1 = state.points.find(p => p.id === strip.p1);
+                const p2 = state.points.find(p => p.id === strip.p2);
+                if (!p1 || !p2) return;
+
+                const style = CONFIG.colors[strip.type];
+                
+                ctxStrips.beginPath();
+                ctxStrips.lineWidth = CONFIG.currentStripWidth;
+                ctxStrips.lineCap = 'round';
+                ctxStrips.strokeStyle = style.fill;
+                ctxStrips.moveTo(p1.x, p1.y);
+                ctxStrips.lineTo(p2.x, p2.y);
+                ctxStrips.stroke();
+            });
+            
+            ctxStrips.shadowColor = "rgba(0,0,0,0.3)";
+            ctxStrips.shadowBlur = 2;
+            ctxStrips.shadowOffsetY = 1;
+
+            state.points.forEach(p => {
+                const connectionCount = state.strips.filter(s => s.p1 === p.id || s.p2 === p.id).length;
+                
+                ctxStrips.beginPath();
+                // Adapter la taille du rivet si le trait est fin
+                const rivetSize = state.stripMode === 'thin' ? 2.0 : 6;
+                const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
+
+                ctxStrips.arc(p.x, p.y, rivetSize, 0, Math.PI * 2);
+                ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9'; 
+                ctxStrips.fill();
+                ctxStrips.strokeStyle = '#334155';
+                ctxStrips.lineWidth = strokeSize;
+                ctxStrips.stroke();
+            });
+        }
+
+        /* --- LOGIQUE CRAYON --- */
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        function setTool(t, color = null) {
+            state.tool = t;
+            if (color) state.penColor = color;
+
+            const cursorDiv = document.getElementById('custom-cursor');
+            const handBtn = document.getElementById('tool-hand');
+            const penBlueBtn = document.getElementById('tool-pen-blue');
+            const penRedBtn = document.getElementById('tool-pen-red');
+            const cursorPath = document.getElementById('cursor-color-1');
+
+            handBtn.classList.remove('active', 'bg-slate-200');
+            penBlueBtn.classList.remove('active', 'bg-blue-100');
+            penRedBtn.classList.remove('active-red', 'bg-red-50');
+
+            if (t === 'hand') {
+                container.classList.remove('hide-cursor');
+                cursorDiv.style.display = 'none';
+                canvasDraw.style.pointerEvents = 'none';
+                handBtn.classList.add('active', 'bg-slate-200');
             } else {
-                document.getElementById('custom-cursor').classList.add('hidden');
-                document.body.style.cursor='default';
-                document.body.classList.remove('drawing-active');
-            } 
-        };
-        app.clearDrawing = function(){ ctx.clearRect(0,0,cvs.width,cvs.height); };
-        
-        // Drawing Events attached to WINDOW/DOCUMENT to catch them over overlay
-        document.addEventListener('mousemove', e => { 
-            if(app.currentTool==='pen') { 
-                const c=document.getElementById('custom-cursor'); 
-                c.style.left=e.clientX+'px'; 
-                c.style.top=e.clientY+'px'; 
-                c.style.transform='translate(-6px,-28px)'; 
-                if(isDrawing) { 
-                    const p = app.getWorldPos(e.clientX, e.clientY); 
-                    ctx.beginPath(); ctx.moveTo(lastP.x, lastP.y); ctx.lineTo(p.x, p.y); ctx.stroke(); 
-                    lastP = p; 
-                } 
-            } 
+                container.classList.add('hide-cursor');
+                cursorDiv.style.display = 'block';
+                canvasDraw.style.pointerEvents = 'auto';
+                
+                if (state.penColor === 'blue') {
+                    penBlueBtn.classList.add('active', 'bg-blue-100');
+                    ctxDraw.strokeStyle = '#2563eb';
+                    cursorPath.setAttribute('stroke', '#2563eb');
+                } else {
+                    penRedBtn.classList.add('active-red', 'bg-red-50');
+                    ctxDraw.strokeStyle = '#dc2626';
+                    cursorPath.setAttribute('stroke', '#dc2626');
+                }
+                
+                ctxDraw.lineCap = 'round';
+                ctxDraw.lineJoin = 'round';
+                ctxDraw.lineWidth = 3;
+            }
+        }
+
+        function updateCustomCursor(e) {
+            const cursorDiv = document.getElementById('custom-cursor');
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            cursorDiv.style.left = clientX + 'px';
+            cursorDiv.style.top = clientY + 'px';
+            cursorDiv.style.transform = 'translate(-10px, -10px)';
+        }
+
+        function startDraw(e) {
+            if (state.tool !== 'pen') return;
+            if (e.cancelable) e.preventDefault();
+            isDrawing = true;
+
+            const pos = getPos(e);
+            lastX = pos.x; lastY = pos.y;
+
+            const strokeStyle = (state.penColor === 'blue') ? '#2563eb' : '#dc2626';
+            const stroke = { color: strokeStyle, width: 3, points: [{x: lastX, y: lastY}] };
+            state.strokes.push(stroke);
+            state._currentStroke = stroke;
+
+            ctxDraw.strokeStyle = strokeStyle;
+            ctxDraw.lineCap = 'round';
+            ctxDraw.lineJoin = 'round';
+            ctxDraw.lineWidth = 3;
+
+            ctxDraw.beginPath();
+            ctxDraw.moveTo(lastX, lastY);
+        }
+
+        function draw(e) {
+            if (!isDrawing || state.tool !== 'pen') return;
+            if (e.cancelable) e.preventDefault();
+
+            const pos = getPos(e);
+            ctxDraw.lineTo(pos.x, pos.y);
+            ctxDraw.stroke();
+            lastX = pos.x; lastY = pos.y;
+
+            const s = state._currentStroke;
+            if (s) s.points.push({x: lastX, y: lastY});
+        }
+
+        function stopDraw() { 
+            isDrawing = false; 
+            state._currentStroke = null;
+        }
+
+        function clearDrawings() {
+            state.strokes = [];
+            state._currentStroke = null;
+            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
+        }
+
+        function redrawDrawings() {
+            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
+            for (const stroke of state.strokes) {
+                if (!stroke.points || stroke.points.length < 2) continue;
+                ctxDraw.strokeStyle = stroke.color;
+                ctxDraw.lineWidth = stroke.width;
+                ctxDraw.lineCap = 'round';
+                ctxDraw.lineJoin = 'round';
+                ctxDraw.beginPath();
+                ctxDraw.moveTo(stroke.points[0].x, stroke.points[0].y);
+                for (let i = 1; i < stroke.points.length; i++) {
+                    ctxDraw.lineTo(stroke.points[i].x, stroke.points[i].y);
+                }
+                ctxDraw.stroke();
+            }
+        }
+canvasDraw.addEventListener('mousedown', startDraw);
+        canvasDraw.addEventListener('mousemove', draw);
+        canvasDraw.addEventListener('mouseup', stopDraw);
+        canvasDraw.addEventListener('touchstart', startDraw, {passive: false});
+        canvasDraw.addEventListener('touchmove', draw, {passive: false});
+        canvasDraw.addEventListener('touchend', stopDraw);
+
+        // Init
+        initGeometryTools();
+        updateStripModeUI();
+        render();
+
+    
+
+        // Fermer le pavé numérique si on clique/touche ailleurs
+        function handleAnglePanelOutside(e) {
+            if (!anglePanelOpen) return;
+            const panel = document.getElementById('angle-panel');
+            const btn = document.getElementById('btn-create-angle');
+            if (!panel || !btn) return;
+            const t = e.target;
+            if (panel.contains(t) || btn.contains(t)) return;
+            closeAnglePanel();
+        }
+        document.addEventListener('mousedown', handleAnglePanelOutside);
+        document.addEventListener('touchstart', handleAnglePanelOutside, {passive: true});
+
+        // Option : Entrée valide
+        document.addEventListener('keydown', (e) => {
+            if (!anglePanelOpen) return;
+            if (e.key === 'Enter') { confirmAnglePanel(); }
+            if (e.key === 'Escape') { closeAnglePanel(); }
+            if (/^[0-9]$/.test(e.key)) { angleDigit(e.key); }
+            if (e.key === 'Backspace') { angleBackspace(); }
         });
-        
-        document.addEventListener('mousedown', e => { 
-            if(app.currentTool==='pen') { 
-                if (e.target.closest('button')) return; // Don't draw on buttons
-                isDrawing=true; 
-                lastP = app.getWorldPos(e.clientX, e.clientY); 
-            } 
-        });
-        
-        document.addEventListener('mouseup', () => isDrawing=false);
-    </script>
+</script>
 </body>
 </html>
