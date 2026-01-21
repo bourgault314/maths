@@ -58,6 +58,21 @@
       z-index: 3000;
     }
 
+    /* --- Jonctions "tableau" : on efface localement la double bordure puis on redessine une ligne unique --- */
+    #seam-overlay{
+      position: absolute;
+      left: 0; top: 0;
+      pointer-events: none;
+      z-index: 95000; /* au-dessus des bandes */
+    }
+    .seam-patch, .seam-line{
+      position: absolute;
+      pointer-events: none;
+    }
+    .seam-patch{ background: var(--boardBg); }
+    .seam-line{ background: var(--gridColor); }
+
+
     /* --- Demi-droite --- */
     #number-line{
       position: absolute;
@@ -122,6 +137,22 @@
       transform-style: preserve-3d;
     }
 
+/* --- Masques de jonctions (anti double-bordure, même en contact partiel) --- */
+.seam-covers{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: -1px;
+  bottom: -1px;
+  pointer-events: none;
+  z-index: 8; /* au-dessus des faces */
+}
+.seam-cover{
+  position: absolute;
+  background: var(--fillColor, transparent);
+}
+
+
     .strip.selected .strip-inner {
       box-shadow: 0 0 0 3px rgba(59,130,246,0.85); 
     }
@@ -138,11 +169,19 @@
       justify-content: stretch;
       -webkit-backface-visibility: hidden;
       backface-visibility: hidden;
-      overflow: hidden;
-      
+      overflow: visible;
+
       border: none; 
       box-sizing: border-box; 
-      
+    }
+    .face::after{
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: -1px;   /* décale la bordure droite d'1px vers l'extérieur */
+      bottom: -1px;  /* décale la bordure basse d'1px vers l'extérieur */
+      pointer-events: none;
       box-shadow: 
         inset var(--wL, 1px) 0 0 0 var(--gridColor),
         inset calc(var(--wR, 1px) * -1) 0 0 0 var(--gridColor),
@@ -426,6 +465,7 @@
     <main class="flex-1 relative overflow-hidden">
       <div id="board-container">
         <div id="board-world">
+          <div id="seam-overlay"></div>
           <canvas id="drawing-canvas"></canvas>
           <div id="number-line" class="hidden"></div>
         </div>
@@ -508,6 +548,7 @@
 
       this.boardContainer = document.getElementById('board-container');
       this.boardWorld = document.getElementById('board-world');
+      this.seamOverlay = document.getElementById('seam-overlay');
       this.palette = document.getElementById('palette');
 
       this.canvas = document.getElementById('drawing-canvas');
@@ -1053,6 +1094,7 @@
       const el = document.createElement('div');
       el.className = 'strip';
       el.dataset.id = String(token.id);
+      el.style.setProperty('--fillColor', cfg.color);
       
       const h = this.stripH;
       const w = (token.kind === 'band') ? this.unitW : this.pieceW(token.denom);
@@ -1101,6 +1143,12 @@
       inner.appendChild(faceFront);
       inner.appendChild(faceBack);
       el.appendChild(inner);
+
+      // Calque dédié aux masques de jonctions (pour éviter les doubles bordures sur contact partiel)
+      const seamCovers = document.createElement('div');
+      seamCovers.className = 'seam-covers';
+      inner.appendChild(seamCovers);
+      token._seamEl = seamCovers;
 
       el.addEventListener('mousedown', (e) => this.handleDragStart(e));
       el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive:false});
@@ -1541,22 +1589,65 @@
 
     updateSeamBorders(){
       const tol = 2.2;
-      
-      // LOGIQUE REVUE : On contrôle l'épaisseur (1px ou 0px) au lieu de la couleur.
-      // Cela évite l'effet "biseau" (miter) des bordures CSS.
       const wVisible = '1px';
-      const wHidden  = '0px';
 
+      // La bordure est dessinée par .face::after avec right:-1 / bottom:-1.
+      // Les jonctions (2 pièces qui se touchent) peuvent donc être "doublement dessinées"
+      // (même pixel, donc plus foncé). Ici on règle ça proprement :
+      // 1) on efface localement le pixel de jonction (patch couleur fond),
+      // 2) on redessine une seule ligne (couleur grille), segmentée sur la zone de contact.
+      //
+      // Avantage : pas de "marche" d'1 pixel, même si le contact est partiel.
+
+      // Reset : bords visibles + nettoyage des anciens masques (legacy)
       for(const t of this.tokens){
         if(!t._el) continue;
         t._el.style.setProperty('--wL', wVisible);
         t._el.style.setProperty('--wR', wVisible);
         t._el.style.setProperty('--wT', wVisible);
         t._el.style.setProperty('--wB', wVisible);
+        if(t._seamEl) t._seamEl.replaceChildren();
       }
+
+      // Nettoyage overlay global
+      if(this.seamOverlay) this.seamOverlay.replaceChildren();
 
       const dims = (t)=>this.tokenDims(t);
       const overlapLen = (a0,a1,b0,b1)=> Math.min(a1,b1) - Math.max(a0,b0);
+
+      // Quantification identique au snap (0.5px) pour éviter les micro-trous.
+      const q = (v)=> Math.round(v * 2) / 2;
+
+      const segX = (ax0, ax1, bx0, bx1) => {
+        const sx = q(Math.max(ax0, bx0));
+        const ex = q(Math.min(ax1, bx1));
+        if(ex - sx <= 0.5) return null;
+        return { left: sx, w: Math.max(0, ex - sx) };
+      };
+
+      const segY = (ay0, ay1, by0, by1) => {
+        const sy = q(Math.max(ay0, by0));
+        const ey = q(Math.min(ay1, by1));
+        if(ey - sy <= 0.5) return null;
+        return { top: sy, h: Math.max(0, ey - sy) };
+      };
+
+      const addSeam = (css) => {
+        if(!this.seamOverlay) return;
+
+        // Patch (efface)
+        const p = document.createElement('div');
+        p.className = 'seam-patch';
+        for(const k in css) p.style[k] = css[k];
+
+        // Ligne (redessine une seule fois)
+        const l = document.createElement('div');
+        l.className = 'seam-line';
+        for(const k in css) l.style[k] = css[k];
+
+        this.seamOverlay.appendChild(p);
+        this.seamOverlay.appendChild(l);
+      };
 
       for(let i=0;i<this.tokens.length;i++){
         const aT = this.tokens[i];
@@ -1575,22 +1666,43 @@
           const ovX = overlapLen(ax0, ax1, bx0, bx1);
           const ovY = overlapLen(ay0, ay1, by0, by1);
 
-          if(Math.abs(ax1 - bx0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            bT._el.style.setProperty('--wL', wHidden);
+          // -----------------------------------------
+          // Horizontal : A à gauche de B => jonction verticale à x = ax1
+          // -----------------------------------------
+          if(Math.abs(ax1 - bx0) < tol && ovY > 0.5){
+            const seg = segY(ay0, ay1, by0, by1);
+            if(seg){
+              addSeam({ left: `${q(ax1)}px`, top: `${seg.top}px`, width: '1px', height: `${seg.h}px` });
+            }
           }
-          if(Math.abs(bx1 - ax0) < tol && ovY > Math.min(ad.h, bd.h) * 0.35){
-            aT._el.style.setProperty('--wL', wHidden);
+          // B à gauche de A => jonction à x = bx1
+          if(Math.abs(bx1 - ax0) < tol && ovY > 0.5){
+            const seg = segY(ay0, ay1, by0, by1);
+            if(seg){
+              addSeam({ left: `${q(bx1)}px`, top: `${seg.top}px`, width: '1px', height: `${seg.h}px` });
+            }
           }
 
-          if(Math.abs(ay1 - by0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            bT._el.style.setProperty('--wT', wHidden);
+          // -----------------------------------------
+          // Vertical : A au-dessus de B => jonction horizontale à y = ay1
+          // -----------------------------------------
+          if(Math.abs(ay1 - by0) < tol && ovX > 0.5){
+            const seg = segX(ax0, ax1, bx0, bx1);
+            if(seg){
+              addSeam({ left: `${seg.left}px`, top: `${q(ay1)}px`, width: `${seg.w}px`, height: '1px' });
+            }
           }
-          if(Math.abs(by1 - ay0) < tol && ovX > Math.min(ad.w, bd.w) * 0.35){
-            aT._el.style.setProperty('--wT', wHidden);
+          // B au-dessus de A => jonction à y = by1
+          if(Math.abs(by1 - ay0) < tol && ovX > 0.5){
+            const seg = segX(ax0, ax1, bx0, bx1);
+            if(seg){
+              addSeam({ left: `${seg.left}px`, top: `${q(by1)}px`, width: `${seg.w}px`, height: '1px' });
+            }
           }
         }
       }
     }
+
 
     scheduleSeamUpdate(){
       if(this._seamRAF) return;
