@@ -206,7 +206,10 @@
       :root{ --diskD: 220; }
     }
 
-  </style>
+  
+    /* Curseur fermé pendant le drag depuis le menu (évite le retour en 'grab' sur le plateau) */
+    body.menu-dragging, body.menu-dragging * { cursor: grabbing !important; }
+</style>
 </head>
 
 <body class="h-screen w-screen flex flex-col">
@@ -331,22 +334,23 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
       </button>
     </div>
+
+    <div id="tips" class="ml-auto hidden lg:flex flex-col px-2 py-1 rounded-lg bg-blue-100/60 border border-blue-200">
+      <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Astuces</div>
+      <div class="text-[11px] text-slate-600 leading-tight mt-0.5">
+        <div>• Double-clic sur un disque/secteur = retourner.</div>
+        <div>• Molette = zoom, glisser sur fond = déplacer le plateau.</div>
+      </div>
+    </div>
+
   </header>
 
   <div class="flex flex-1 overflow-hidden relative">
 
-    <aside class="w-[340px] bg-blue-50 border-r border-blue-200 flex flex-col py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
+    <aside id="sidebar" class="w-[270px] bg-blue-50 border-r border-blue-200 flex flex-col cursor-grab py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar">
       <div class="px-3"></div>
       <div id="palette" class="px-3 flex flex-col gap-3"></div>
-
-      <div class="mt-2 px-3">
-        <div class="text-[10px] font-bold text-slate-400 uppercase">Astuces</div>
-        <ul class="text-[11px] text-slate-500 leading-snug list-disc ml-4 mt-1">
-          <li>Double-clic sur un disque/secteur = retourner.</li>
-          <li>Molette = zoom, glisser sur fond = déplacer le plateau.</li>
-        </ul>
-      </div>
-    </aside>
+</aside>
 
     <main class="flex-1 relative overflow-hidden">
       <div id="board-container">
@@ -434,6 +438,11 @@
       // Drag depuis le menu (ghost)
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
+      // Dernière position connue du curseur (pour zoom centré au pointeur)
+      this.lastPointerClient = {x: 0, y: 0};
+      // Curseur forcé pendant un drag depuis le menu (évite le retour à la flèche au survol du menu)
+      this._bodyCursorPrev = '';
+
 
       this.boardContainer = document.getElementById('board-container');
       this.boardWorld = document.getElementById('board-world');
@@ -579,6 +588,7 @@
       this.labelMode = mode;
       this.updateModeButtonsUI();
       this.buildPalette(); // Rebuild menu labels
+      this.updateSidebarWidth(); // Menu adaptatif selon le mode d'affichage
       // Update tokens on board
       for(const t of this.tokens){
         if(t._el) this._renderToken(t);
@@ -593,8 +603,19 @@
           if(m === this.labelMode) btn.classList.add('active');
           else btn.classList.remove('active');
         }
+
       });
     }
+
+    updateSidebarWidth(){
+      const sb = document.getElementById('sidebar');
+      if(!sb) return;
+      const isWide = (this.labelMode === 'word');
+      const w = isWide ? 250 : 230; // px (ABC un peu plus large pour eviter le retour a la ligne)
+      sb.style.width = w + 'px';
+      sb.style.minWidth = w + 'px';
+    }
+
 
     getFractionConfig(denom){
       return FRACTIONS.find(f => f.denom === denom) || FRACTIONS[0];
@@ -942,6 +963,11 @@
       requestAnimationFrame(() => ghost.classList.add('ready'));
 
       this.spawnDrag = { denom, kind, start: {x: cx, y: cy}, moved: false, ghost, w, h };
+      // Force un curseur « grab » partout pendant le drag (sinon, sur le menu ça redevient la flèche)
+      this._bodyCursorPrev = document.body.style.cursor || '';
+      document.body.style.cursor = 'grabbing';
+      document.body.classList.add('menu-dragging');
+
 
       const move = (ev) => this.onSpawnMove(ev);
       const end  = (ev) => this.onSpawnEnd(ev, move, end);
@@ -996,6 +1022,11 @@
       }
 
       if(sd.ghost) sd.ghost.remove();
+      // Restaure le curseur après le drag depuis le menu
+      document.body.classList.remove('menu-dragging');
+      document.body.style.cursor = this._bodyCursorPrev || '';
+      this._bodyCursorPrev = '';
+
       this.spawnDrag = null;
     }
 
@@ -1004,8 +1035,30 @@
       this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
     }
 
-    setZoom(z){
-      this.scale = Math.min(Math.max(0.45, z), 3);
+    _getZoomFocus(){
+      const r = this.boardContainer.getBoundingClientRect();
+      const lp = this.lastPointerClient || {x: r.left + r.width/2, y: r.top + r.height/2};
+      const inside = lp.x >= r.left && lp.x <= r.right && lp.y >= r.top && lp.y <= r.bottom;
+      return inside ? lp : {x: r.left + r.width/2, y: r.top + r.height/2};
+    }
+
+    setZoom(z, clientX=null, clientY=null){
+      const oldScale = this.scale;
+      const newScale = Math.min(Math.max(0.45, z), 3);
+      if(newScale === oldScale) return;
+
+      // Zoom centré sur le pointeur (si fourni) : garde le point sous le curseur au même endroit à l'écran
+      if(typeof clientX === 'number' && typeof clientY === 'number'){
+        const r = this.boardContainer.getBoundingClientRect();
+        const wx = (clientX - r.left - this.pan.x) / oldScale;
+        const wy = (clientY - r.top  - this.pan.y) / oldScale;
+        this.scale = newScale;
+        this.pan.x = (clientX - r.left) - wx * newScale;
+        this.pan.y = (clientY - r.top)  - wy * newScale;
+      }else{
+        this.scale = newScale;
+      }
+
       this.updateTransform();
     }
 
@@ -1037,8 +1090,8 @@
     initUI(){
       this._bind('btn-undo','click', () => this.undo());
       this._bind('btn-clear','click', () => this.resetAll());
-      this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
-      this._bind('btn-zoom-out','click', () => this.setZoom(this.scale - 0.15));
+      this._bind('btn-zoom-in','click', () => { const f = this._getZoomFocus(); this.setZoom(this.scale + 0.15, f.x, f.y); });
+      this._bind('btn-zoom-out','click', () => { const f = this._getZoomFocus(); this.setZoom(this.scale - 0.15, f.x, f.y); });
       this._bind('btn-reset-view','click', () => this.resetView());
       
       // Modes
@@ -1115,7 +1168,7 @@
       this.boardContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = -e.deltaY * 0.001;
-        this.setZoom(this.scale + delta);
+        this.setZoom(this.scale + delta, e.clientX, e.clientY);
       }, {passive:false});
 
       // empêche le menu contextuel : indispensable pour le glisser au bouton droit
@@ -1143,6 +1196,7 @@
 
       window.addEventListener('mousemove', (e) => {
         this.moveCursor(e);
+        this.lastPointerClient = {x: e.clientX, y: e.clientY};
         if(this.isPanning){
           this.pan.x = e.clientX - this.panStart.x;
           this.pan.y = e.clientY - this.panStart.y;
@@ -1942,13 +1996,25 @@
     }
 
     resizeCanvas(){
-      this.canvas.width = 4000;
-      this.canvas.height = 4000;
-      this.canvas.style.width = '4000px';
-      this.canvas.style.height = '4000px';
+      // Canvas HiDPI (lissage) : on augmente la résolution interne sans changer la taille « monde »
+      const base = 4000;
+      const dprRaw = window.devicePixelRatio || 1;
+      // Cap pour éviter un canvas énorme (mémoire) sur écrans très denses
+      const dpr = Math.min(dprRaw, 1.5);
+
+      this.canvas.width = Math.round(base * dpr);
+      this.canvas.height = Math.round(base * dpr);
+      this.canvas.style.width = `${base}px`;
+      this.canvas.style.height = `${base}px`;
+
+      // 1 unité de coordonnées = 1 px du « monde »
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.ctx.lineWidth = 3;
       this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
       this.ctx.strokeStyle = '#111827';
+      this.ctx.imageSmoothingEnabled = true;
+      if(this.ctx.imageSmoothingQuality) this.ctx.imageSmoothingQuality = 'high';
     }
 
     startDraw(e){
@@ -1972,7 +2038,7 @@
     }
 
     clearDrawing(){
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.clearRect(0, 0, 4000, 4000);
     }
 
     clearAllTokens(withHistory=true){
