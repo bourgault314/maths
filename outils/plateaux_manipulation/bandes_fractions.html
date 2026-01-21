@@ -25,11 +25,20 @@
       -webkit-user-select: none;
     }
 
+    /* --- NOUVEAU : Classe globale pour forcer la main fermée pendant le drag --- */
+    body.is-dragging-global {
+      cursor: grabbing !important;
+    }
+    body.is-dragging-global * {
+      cursor: grabbing !important;
+    }
+
     #board-container{
       position: absolute;
       inset: 0;
       overflow: hidden;
-      cursor: grab;
+      /* RETOUR À GRAB (Main ouverte) */
+      cursor: grab; 
       background: var(--boardBg);
     }
     #board-container.panning{ cursor: grabbing; }
@@ -72,6 +81,7 @@
       justify-content: stretch;
       border-radius: 0px;
       box-shadow: none; 
+      /* RETOUR À GRAB (Main ouverte) */
       cursor: grab;
       touch-action: none;
       transform-origin: 0 0;
@@ -130,14 +140,9 @@
       backface-visibility: hidden;
       overflow: hidden;
       
-      /* MODIFICATION MAJEURE ICI : 
-         On supprime les 'border' classiques qui créent des diagonales aux coins.
-         On utilise 'box-shadow inset' qui crée des carrés parfaits.
-      */
       border: none; 
       box-sizing: border-box; 
       
-      /* Les variables --wL, --wR, etc. définiront l'épaisseur (1px ou 0px) */
       box-shadow: 
         inset var(--wL, 1px) 0 0 0 var(--gridColor),
         inset calc(var(--wR, 1px) * -1) 0 0 0 var(--gridColor),
@@ -158,7 +163,6 @@
       transform: scale(0.98);
       transition: transform 120ms ease-out, opacity 120ms ease-out;
       overflow: hidden;
-      /* Pour le ghost, on garde une bordure simple */
       border: 1px solid var(--gridColor);
     }
     .strip.ghost::after { content: none; }
@@ -239,6 +243,7 @@
       border: none;
       overflow: hidden;
       display: flex;
+      /* Main ouverte dans le menu */
       cursor: grab;
       box-shadow:
         0 4px 10px rgba(0,0,0,0.18),
@@ -773,6 +778,10 @@
       ghost.style.top  = `${cy - h/2}px`;
       document.body.appendChild(ghost);
       requestAnimationFrame(() => ghost.classList.add('ready'));
+      
+      // AJOUT : Forcer le curseur global
+      document.body.classList.add('is-dragging-global');
+
       this.spawnDrag = { denom, kind, start: {x: cx, y: cy}, moved: false, ghost, w, h };
       const move = (ev) => this.onSpawnMove(ev);
       const end  = (ev) => this.onSpawnEnd(ev, move, end);
@@ -799,6 +808,10 @@
 
     onSpawnEnd(ev, moveFn, endFn){
       const sd = this.spawnDrag;
+      
+      // RETRAIT : Enlever le curseur global
+      document.body.classList.remove('is-dragging-global');
+
       if(!sd) return;
       document.removeEventListener('mousemove', moveFn);
       document.removeEventListener('mouseup', endFn);
@@ -1004,6 +1017,10 @@
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
+        
+        // AJOUT : Curseur global pour le panning aussi
+        document.body.classList.add('is-dragging-global');
+
         if(!isPen) this.selectToken(null);
       });
       this.boardContainer.addEventListener('mousedown', (e) => {
@@ -1020,6 +1037,10 @@
       });
       window.addEventListener('mouseup', () => {
         this.isPanning = false;
+        
+        // RETRAIT : Curseur global
+        document.body.classList.remove('is-dragging-global');
+
         if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
         this.isDrawing = false;
         this.boardContainer.classList.remove('panning');
@@ -1355,6 +1376,9 @@
       this.selectToken(token.id);
 
       token._el.classList.add('dragging');
+      
+      // AJOUT : Curseur global
+      document.body.classList.add('is-dragging-global');
 
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1393,6 +1417,10 @@
         document.removeEventListener('touchmove', move);
         document.removeEventListener('mouseup', end);
         document.removeEventListener('touchend', end);
+        
+        // RETRAIT : Curseur global
+        document.body.classList.remove('is-dragging-global');
+
         if(token._el) token._el.classList.remove('dragging');
         this.snapToken(token);
       };
