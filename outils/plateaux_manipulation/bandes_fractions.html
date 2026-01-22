@@ -1649,7 +1649,103 @@
         this.seamOverlay.appendChild(l);
       };
 
-      for(let i=0;i<this.tokens.length;i++){
+      
+
+      // --- Correction minimaliste : ne pas dessiner les jonctions (seams) là où une pièce AU-DESSUS les recouvre ---
+      // (On garde le système "patch + ligne" inchangé, on masque juste les portions invisibles.)
+      const zOf = (t)=>{
+        if(!t) return 0;
+        const z1 = (typeof t.z !== 'undefined') ? Number(t.z) : NaN;
+        if(Number.isFinite(z1)) return z1;
+        const z2 = t._el ? Number(t._el.style.zIndex) : NaN;
+        return Number.isFinite(z2) ? z2 : 0;
+      };
+
+      const mergeIntervals = (arr)=>{
+        if(!arr.length) return [];
+        arr.sort((a,b)=>a[0]-b[0]);
+        const out=[arr[0].slice()];
+        for(let i=1;i<arr.length;i++){
+          const [s,e]=arr[i];
+          const last=out[out.length-1];
+          if(s<=last[1]+0.5){
+            last[1]=Math.max(last[1],e);
+          }else{
+            out.push([s,e]);
+          }
+        }
+        return out;
+      };
+
+      const subtractIntervals = (start,end,occs)=>{
+        const out=[];
+        let cur=start;
+        for(const [s,e] of mergeIntervals(occs)){
+          if(e<=cur) continue;
+          if(s>cur+0.5) out.push([cur, Math.min(s,end)]);
+          cur=Math.max(cur,e);
+          if(cur>=end-0.5) break;
+        }
+        if(cur<end-0.5) out.push([cur,end]);
+        return out;
+      };
+
+      const occlusionsY = (x, y0, y1, zTh)=>{
+        const res=[];
+        for(const t of this.tokens){
+          if(!t._el) continue;
+          if(zOf(t) <= zTh) continue;
+
+          const d=dims(t);
+          const tx0=t.x, tx1=t.x+d.w;
+          // Le trait est sur une jonction : on tolère un petit epsilon.
+          if(x < tx0 - 0.25 || x > tx1 + 0.25) continue;
+
+          const ty0=t.y, ty1=t.y+d.h;
+          const sy=q(Math.max(y0, ty0));
+          const ey=q(Math.min(y1, ty1));
+          if(ey - sy > 0.5) res.push([sy,ey]);
+        }
+        return res;
+      };
+
+      const occlusionsX = (y, x0, x1, zTh)=>{
+        const res=[];
+        for(const t of this.tokens){
+          if(!t._el) continue;
+          if(zOf(t) <= zTh) continue;
+
+          const d=dims(t);
+          const ty0=t.y, ty1=t.y+d.h;
+          if(y < ty0 - 0.25 || y > ty1 + 0.25) continue;
+
+          const tx0=t.x, tx1=t.x+d.w;
+          const sx=q(Math.max(x0, tx0));
+          const ex=q(Math.min(x1, tx1));
+          if(ex - sx > 0.5) res.push([sx,ex]);
+        }
+        return res;
+      };
+
+      const addSeamMaskedV = (x, top, h, zTh)=>{
+        const y0=q(top), y1=q(top + h);
+        const occ = occlusionsY(x, y0, y1, zTh);
+        const vis = subtractIntervals(y0, y1, occ);
+        for(const [s,e] of vis){
+          addSeam({ left: `${x}px`, top: `${s}px`, width: '1px', height: `${Math.max(0, e-s)}px` });
+        }
+      };
+
+      const addSeamMaskedH = (left, y, w, zTh)=>{
+        const yq = q(y);
+        const x0=q(left), x1=q(left + w);
+        const occ = occlusionsX(yq, x0, x1, zTh);
+        const vis = subtractIntervals(x0, x1, occ);
+        for(const [s,e] of vis){
+          addSeam({ left: `${s}px`, top: `${yq}px`, width: `${Math.max(0, e-s)}px`, height: '1px' });
+        }
+      };
+for(let i=0;i<this.tokens.length;i++){
         const aT = this.tokens[i];
         if(!aT._el) continue;
         const ad = dims(aT);
@@ -1663,6 +1759,8 @@
           const bx0 = bT.x, bx1 = bT.x + bd.w;
           const by0 = bT.y, by1 = bT.y + bd.h;
 
+          const zTh = Math.max(zOf(aT), zOf(bT));
+
           const ovX = overlapLen(ax0, ax1, bx0, bx1);
           const ovY = overlapLen(ay0, ay1, by0, by1);
 
@@ -1672,14 +1770,14 @@
           if(Math.abs(ax1 - bx0) < tol && ovY > 0.5){
             const seg = segY(ay0, ay1, by0, by1);
             if(seg){
-              addSeam({ left: `${q(ax1)}px`, top: `${seg.top}px`, width: '1px', height: `${seg.h}px` });
+              addSeamMaskedV(q(ax1), seg.top, seg.h, zTh);
             }
           }
           // B à gauche de A => jonction à x = bx1
           if(Math.abs(bx1 - ax0) < tol && ovY > 0.5){
             const seg = segY(ay0, ay1, by0, by1);
             if(seg){
-              addSeam({ left: `${q(bx1)}px`, top: `${seg.top}px`, width: '1px', height: `${seg.h}px` });
+              addSeamMaskedV(q(bx1), seg.top, seg.h, zTh);
             }
           }
 
@@ -1689,14 +1787,14 @@
           if(Math.abs(ay1 - by0) < tol && ovX > 0.5){
             const seg = segX(ax0, ax1, bx0, bx1);
             if(seg){
-              addSeam({ left: `${seg.left}px`, top: `${q(ay1)}px`, width: `${seg.w}px`, height: '1px' });
+              addSeamMaskedH(seg.left, q(ay1), seg.w, zTh);
             }
           }
           // B au-dessus de A => jonction à y = by1
           if(Math.abs(by1 - ay0) < tol && ovX > 0.5){
             const seg = segX(ax0, ax1, bx0, bx1);
             if(seg){
-              addSeam({ left: `${seg.left}px`, top: `${q(by1)}px`, width: `${seg.w}px`, height: '1px' });
+              addSeamMaskedH(seg.left, q(by1), seg.w, zTh);
             }
           }
         }
