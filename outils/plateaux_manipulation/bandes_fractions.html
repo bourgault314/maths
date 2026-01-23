@@ -1907,6 +1907,11 @@ for(let i=0;i<this.tokens.length;i++){
       this.tokens = [];
       this.selectedId = null;
       this.updateSelectionUI();
+
+      // IMPORTANT : les jonctions (seam-overlay) sont dessinées dans un calque séparé.
+      // Si on efface toutes les bandes sans recalculer les seams,
+      // il peut rester des traits « fantômes » jusqu'au prochain placement.
+      if(this.seamOverlay) this.seamOverlay.replaceChildren();
     }
 
     resetAll(){
