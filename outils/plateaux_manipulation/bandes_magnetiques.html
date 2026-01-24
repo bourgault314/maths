@@ -241,6 +241,7 @@
                     </button>
                     <button onclick="setZoom(-0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom -">-</button>
                     <button onclick="setZoom(0.2)" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Zoom +">+</button>
+                    <button onclick="resetViewport()" class="tool-btn p-1.5 text-slate-600 hover:bg-white rounded-lg select-none font-bold" title="Recentrer la vue (R)">⟲</button>
                 </div>
 
                 <!-- Bouton Image Fond -->
@@ -305,13 +306,24 @@
                         </div>
                     </div>
                 </div>
+                <!-- Verrou global : rend les constructions rigides -->
+                <div class="relative flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
+                    <button id="btn-global-lock" onclick="toggleGlobalLock()" class="tool-btn text-slate-600 hover:bg-slate-100 p-2 rounded-lg" title="Verrouiller / Déverrouiller (constructions rigides)">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="11" width="14" height="10" rx="2"/>
+                            <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                        </svg>
+                    </button>
+                </div>
+
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
 
                 <!-- Toggle Équerre -->
                 <button onclick="toggleSetSquare()" id="btn-setsquare" class="tool-btn bg-yellow-50 text-yellow-600 hover:bg-yellow-100 p-2 rounded-xl border border-yellow-200" title="Équerre">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 20L4 4L20 20H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
+                        <!-- Petit angle droit : carré plein -->
+                        <rect x="4.8" y="16.2" width="3.8" height="3.8" fill="currentColor" />
                     </svg>
                 </button>
 
@@ -322,6 +334,28 @@
                         <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
                     </svg>
                 </button>
+
+                
+
+                <!-- Aide -->
+                <button onclick="toggleHelp()" id="btn-help" class="tool-btn bg-slate-50 text-slate-600 hover:bg-slate-100 p-2 rounded-xl border border-slate-200" title="Aide / Raccourcis">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/>
+                        <line x1="12" y1="17" x2="12" y2="17"/>
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                </button>
+
+                <!-- Plein écran -->
+                <button onclick="toggleFullscreen()" id="btn-fullscreen" class="tool-btn bg-slate-50 text-slate-600 hover:bg-slate-100 p-2 rounded-xl border border-slate-200" title="Plein écran (F)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+                        <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+                        <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+                        <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                    </svg>
+                </button>
+
 
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
 
@@ -409,9 +443,6 @@
             <div class="flex-1"></div>
 
             <div class="w-8 h-px bg-slate-100 my-2"></div>
-            <div class="text-[10px] text-center text-slate-300 px-2 leading-tight pb-4">
-                Double-clic sur un magnet pour détacher
-            </div>
 
         </aside>
 
@@ -460,6 +491,9 @@
             pan: {x:0, y:0},
             isPanning: false,
             isSidebarDragging: false,
+            // Prévisualisation de suppression (surbrillance du groupe au-dessus de la poubelle)
+            trashPreviewStripIds: null,
+            trashPreviewPointIds: null,
             panAnchor: {x:0, y:0},
             points: [], 
             strips: [], 
@@ -499,6 +533,10 @@
             angleGroups: [],
             draggingAngle: null,
             draggingAngleMove: null,
+            // Verrou global : rendre les constructions rigides (comme un angle fixe)
+            globalLock: false,
+            globalLockHold: false, // Maintenir Ctrl = verrouillage temporaire
+            draggingRigidRotate: null,
             nextAngleGroupId: 1,
             _stripsVersion: 0,
             _sortedStripsCacheVersion: -1,
@@ -548,16 +586,16 @@
         let viewportUpdateQueued = false;
         let cachedContainerRect = null; // évite getBoundingClientRect() en boucle pendant les drags
 
-        function clampPan() {
+        function getPanBounds(forZoom = state.zoom) {
             const rect = container.getBoundingClientRect();
 
             // Monde un peu plus grand que la fenêtre (en coordonnées “monde”)
-            const worldW = (rect.width + VIEW_MARGIN_PX.x) / state.zoom;
-            const worldH = (rect.height + VIEW_MARGIN_PX.y) / state.zoom;
+            const worldW = (rect.width + VIEW_MARGIN_PX.x) / forZoom;
+            const worldH = (rect.height + VIEW_MARGIN_PX.y) / forZoom;
 
             // Tailles “écran” du monde
-            const scaledW = worldW * state.zoom;
-            const scaledH = worldH * state.zoom;
+            const scaledW = worldW * forZoom;
+            const scaledH = worldH * forZoom;
 
             // Empêcher de “découvrir” du blanc : on borne le pan pour que le monde couvre toujours la fenêtre
             const minX = Math.min(0, rect.width - scaledW); // négatif
@@ -565,6 +603,18 @@
             const maxX = 0;
             const maxY = 0;
 
+            return { minX, maxX, minY, maxY };
+        }
+
+        function panWithinBounds(panX, panY, forZoom, eps = 0.5) {
+            const { minX, maxX, minY, maxY } = getPanBounds(forZoom);
+            const okX = (panX >= (minX - eps)) && (panX <= (maxX + eps));
+            const okY = (panY >= (minY - eps)) && (panY <= (maxY + eps));
+            return okX && okY;
+        }
+
+        function clampPan() {
+            const { minX, maxX, minY, maxY } = getPanBounds(state.zoom);
             state.pan.x = Math.min(maxX, Math.max(minX, state.pan.x));
             state.pan.y = Math.min(maxY, Math.max(minY, state.pan.y));
         }
@@ -599,11 +649,21 @@
             const nextZoom = clampZoom(newZoom);
             if (nextZoom === state.zoom) return;
 
-            state.zoom = nextZoom;
+            const oldZoom = state.zoom;
 
-            // Garder le point sous la souris fixe à l'écran
-            state.pan.x = ax - worldX * state.zoom;
-            state.pan.y = ay - worldY * state.zoom;
+            // Pan souhaité pour garder le point sous la souris fixe à l'écran
+            const desiredPanX = ax - worldX * nextZoom;
+            const desiredPanY = ay - worldY * nextZoom;
+
+            // 🔒 Anti-"glissement" : si, en zoomant IN, on atteindrait une limite de pan,
+            // on bloque le zoom à ce niveau plutôt que de décaler brusquement le plateau.
+            if (nextZoom > oldZoom && !panWithinBounds(desiredPanX, desiredPanY, nextZoom)) {
+                return;
+            }
+
+            state.zoom = nextZoom;
+            state.pan.x = desiredPanX;
+            state.pan.y = desiredPanY;
 
             applyViewportTransform();
             queueViewportResizeRender();
@@ -627,23 +687,8 @@
         function handleWheelZoom(e) {
             // Zoom molette au niveau du pointeur
             e.preventDefault();
-            const rect = container.getBoundingClientRect();
-            const ax = e.clientX - rect.left;
-            const ay = e.clientY - rect.top;
-
-            const worldX = (ax - state.pan.x) / state.zoom;
-            const worldY = (ay - state.pan.y) / state.zoom;
-
             const factor = Math.exp(-e.deltaY * 0.0015);
-            const nextZoom = clampZoom(state.zoom * factor);
-            if (nextZoom === state.zoom) return;
-
-            state.zoom = nextZoom;
-            state.pan.x = ax - worldX * state.zoom;
-            state.pan.y = ay - worldY * state.zoom;
-
-            applyViewportTransform();
-            queueViewportResizeRender();
+            setZoomTo(state.zoom * factor, e.clientX, e.clientY);
         }
 
         container.addEventListener('wheel', handleWheelZoom, { passive: false });
@@ -974,6 +1019,152 @@
         function toggleSetSquare() { toggleTool('setSquare'); }
         function toggleProtractor() { toggleTool('protractor'); }
 
+
+        // --- Aide (panneau raccourcis) ---
+        let helpOpen = false;
+
+        function openHelp() {
+            const modal = document.getElementById('help-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            helpOpen = true;
+            playSound('click');
+        }
+
+        function closeHelp() {
+            const modal = document.getElementById('help-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            helpOpen = false;
+            playSound('click');
+        }
+
+        function toggleHelp() {
+            if (helpOpen) closeHelp();
+            else openHelp();
+        }
+
+        
+
+        // --- Vue : plein écran & recentrage ---
+        function isFullscreenActive() {
+            return !!document.fullscreenElement;
+        }
+
+        function updateFullscreenUI() {
+            const btn = document.getElementById('btn-fullscreen');
+            if (!btn) return;
+            if (isFullscreenActive()) {
+                btn.classList.add('bg-slate-100');
+                btn.title = 'Quitter plein écran (F)';
+            } else {
+                btn.classList.remove('bg-slate-100');
+                btn.title = 'Plein écran (F)';
+            }
+        }
+
+        function toggleFullscreen() {
+            // Certains navigateurs exigent un geste utilisateur (clic/touche) : OK ici.
+            if (!isFullscreenActive()) {
+                const el = document.documentElement;
+                if (el.requestFullscreen) el.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Recentrage : retour à la vue "propre" (zoom 100% + pan centré)
+        function resetViewport() {
+            // Évite de casser un drag en cours
+            if (state.isPanning || state.draggingPoint || state.draggingStrip || (typeof geoDragState !== 'undefined' && geoDragState.active)) return;
+
+            state.zoom = 1;
+            state.pan.x = 0;
+            state.pan.y = 0;
+            applyViewportTransform();
+            queueViewportResizeRender();
+            playSound('click');
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            updateFullscreenUI();
+            queueViewportResizeRender();
+        });
+
+        // Raccourcis clavier (sans Ctrl/Alt/Meta)
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
+
+            const k = (e.key || '').toLowerCase();
+            if (k === 'f') { e.preventDefault(); toggleFullscreen(); }
+            if (k === 'r') { e.preventDefault(); resetViewport(); }
+        });
+
+// ESC ferme l'aide (et, si besoin, le pavé angle)
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            // Évite d'interrompre une saisie dans un input (si un jour on en ajoute)
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;
+
+            if (helpOpen) { closeHelp(); return; }
+            if (typeof anglePanelOpen !== 'undefined' && anglePanelOpen) { closeAnglePanel(); return; }
+        });
+
+        // --- Verrou global : constructions rigides ---
+function isGlobalLockActive() {
+    return !!(state.globalLock || state.globalLockHold);
+}
+
+function updateLockUI() {
+    const btn = document.getElementById('btn-global-lock');
+    if (!btn) return;
+
+    const active = isGlobalLockActive();
+    const tempOnly = state.globalLockHold && !state.globalLock;
+
+    if (active) {
+        btn.classList.add('bg-slate-200','ring-2','ring-slate-400','text-slate-800');
+        // Petit indice visuel : si c'est juste le Ctrl maintenu, on rend légèrement plus discret
+        if (tempOnly) btn.classList.add('opacity-80');
+        else btn.classList.remove('opacity-80');
+    } else {
+        btn.classList.remove('bg-slate-200','ring-2','ring-slate-400','text-slate-800','opacity-80');
+    }
+}
+
+function toggleGlobalLock() {
+    state.globalLock = !state.globalLock;
+    updateLockUI();
+    playSound('click');
+}
+
+// Raccourci : maintenir Ctrl pour activer le cadenas temporairement (relâcher = désactiver)
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Control' || e.key === 'Meta') && !e.repeat) {
+        state.globalLockHold = true;
+        updateLockUI();
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'Control' || e.key === 'Meta') {
+        state.globalLockHold = false;
+        updateLockUI();
+    }
+});
+
+// Si l'onglet perd le focus alors que Ctrl est maintenu, on réinitialise proprement
+window.addEventListener('blur', () => {
+    if (state.globalLockHold) {
+        state.globalLockHold = false;
+        updateLockUI();
+    }
+});
         function toggleTool(key) {
             const tool = state.tools[key];
             tool.visible = !tool.visible;
@@ -984,7 +1175,8 @@
                 el.classList.remove('hidden');
                 const colorClass = key === 'setSquare' ? 'bg-yellow-100' : 'bg-indigo-100';
                 btn.classList.add('active', colorClass);
-                
+                state.activeGeoTool = key;
+
                 if (tool.x === 0 && tool.y === 0) {
                     const rect = container.getBoundingClientRect();
                     // Centre sans zoom correction initialement, mais à l'intérieur du monde zoomable
@@ -997,6 +1189,11 @@
                 el.classList.add('hidden');
                 btn.classList.remove('active', 'bg-yellow-100', 'bg-indigo-100');
                 if (key === 'protractor') tool.attachedPointId = null;
+                if (state.activeGeoTool === key) {
+                    if (state.tools.protractor.visible) state.activeGeoTool = 'protractor';
+                    else if (state.tools.setSquare.visible) state.activeGeoTool = 'setSquare';
+                    else state.activeGeoTool = null;
+                }
             }
         }
 
@@ -1014,21 +1211,28 @@
             el.innerHTML = getProtractorSVG();
         }
 
-        // --- Keyboard: rotate protractor with Left/Right arrows ---
+        // --- Keyboard: rotate geometry tools with Left/Right arrows ---
         // Shift = 5 degrees step, otherwise 1 degree
         document.addEventListener('keydown', (e) => {
-            if (!state.tools.protractor.visible) return;
             if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
 
             const ae = document.activeElement;
             const tag = ae ? ae.tagName : '';
             if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+            // Outil à tourner : le dernier outil géométrique utilisé (sinon, on prend celui visible).
+            let keyToRotate = state.activeGeoTool;
+            if (!keyToRotate || !state.tools[keyToRotate] || !state.tools[keyToRotate].visible) {
+                if (state.tools.protractor.visible) keyToRotate = 'protractor';
+                else if (state.tools.setSquare.visible) keyToRotate = 'setSquare';
+                else return;
+            }
+
             e.preventDefault();
             const stepDeg = e.shiftKey ? 5 : 1;
             const sign = (e.key === 'ArrowLeft') ? -1 : 1;
-            state.tools.protractor.rotation += sign * stepDeg * (Math.PI / 180);
-            updateGeoToolTransform('protractor');
+            state.tools[keyToRotate].rotation += sign * stepDeg * (Math.PI / 180);
+            updateGeoToolTransform(keyToRotate);
         });
 
         /* --- LOGIQUE OUTILS GÉOMÉTRIQUES --- */
@@ -1045,7 +1249,8 @@
         function handleGeoToolStart(e, key) {
             e.stopPropagation();
             e.preventDefault();
-            
+            state.activeGeoTool = key;
+
             if (key === 'protractor') {
                 if (e.target.closest('.style-handle')) {
                     const tool = state.tools.protractor;
@@ -1113,8 +1318,8 @@
                 tool.x = pos.x - geoDragState.offsetX;
                 tool.y = pos.y - geoDragState.offsetY;
 
-                // Aimantation du sommet (pivot) du rapporteur sur les points du dessin
-                if (geoDragState.key === 'protractor') {
+                // Aimantation du pivot du rapporteur / de l’équerre sur les points du dessin
+                if (geoDragState.key === 'protractor' || geoDragState.key === 'setSquare') {
                     const snapDist = CONFIG.snapDistance;
                     const pivotX = tool.x + tool.pivot.x;
                     const pivotY = tool.y + tool.pivot.y;
@@ -1127,9 +1332,9 @@
                     if (best) {
                         tool.x = best.x - tool.pivot.x;
                         tool.y = best.y - tool.pivot.y;
-                        tool.attachedPointId = best.id;
+                        if (geoDragState.key === 'protractor') tool.attachedPointId = best.id;
                     } else {
-                        tool.attachedPointId = null;
+                        if (geoDragState.key === 'protractor') tool.attachedPointId = null;
                     }
                 }
                 
@@ -1245,6 +1450,7 @@
         }
         window.addEventListener('resize', resize);
         setTimeout(resize, 100);
+        setTimeout(updateFullscreenUI, 120);
 
         /* --- LOGIQUE DRAG & DROP DEPUIS LA SIDEBAR --- */
         function initSidebarDrag() {
@@ -1454,6 +1660,36 @@ const positionGhost = (clientX, clientY) => {
                     if (pinned1 && !pinned2) { p2.x -= offsetX; p2.y -= offsetY; }
                     if (!pinned1 && pinned2) { p1.x += offsetX; p1.y += offsetY; }
                 });
+
+                // --- Contrainte d'angle fixe : on rigidifie le triangle (A-S-B) en imposant aussi la longueur AB.
+                // But : si on "soude" d'autres bandes sur une branche, l'angle reste constant (comme un angle fixé).
+                state.angleGroups.forEach(g => {
+                    const A = pointById.get(g.aId);
+                    const B = pointById.get(g.bId);
+                    if (!A || !B) return;
+
+                    const pinnedA = A.pinned || protractorAnchorShouldPin(A.id);
+                    const pinnedB = B.pinned || protractorAnchorShouldPin(B.id);
+
+                    const angleRad = g.degrees * (Math.PI / 180);
+                    const r1 = g.leg1Len;
+                    const r2 = g.leg2Len;
+                    const targetLenAB = Math.sqrt(Math.max(0, r1*r1 + r2*r2 - 2*r1*r2*Math.cos(angleRad)));
+
+                    const dxAB = B.x - A.x;
+                    const dyAB = B.y - A.y;
+                    const distAB = Math.hypot(dxAB, dyAB);
+                    if (distAB === 0) return;
+
+                    const diffAB = (distAB - targetLenAB) / distAB;
+                    const offsetX = dxAB * diffAB * 0.5;
+                    const offsetY = dyAB * diffAB * 0.5;
+
+                    if (!pinnedA) { A.x += offsetX; A.y += offsetY; }
+                    if (!pinnedB) { B.x -= offsetX; B.y -= offsetY; }
+                    if (pinnedA && !pinnedB) { B.x -= offsetX; B.y -= offsetY; }
+                    if (!pinnedA && pinnedB) { A.x += offsetX; A.y += offsetY; }
+                });
             }
         }
 
@@ -1489,6 +1725,72 @@ const positionGhost = (clientX, clientY) => {
             playSound('trash');
             render();
         }
+
+        // Supprime toute la "grappe" de bandes connectées (soudées) à une bande donnée.
+        // Une grappe = ensemble connexe dans le graphe des bandes (connexion par points partagés).
+        function removeConnectedGroup(strip) {
+            if (!strip) return;
+
+            // Construire l'adjacence point -> points voisins (via les bandes)
+            const adj = new Map();
+            state.strips.forEach(s => {
+                if (!adj.has(s.p1)) adj.set(s.p1, []);
+                if (!adj.has(s.p2)) adj.set(s.p2, []);
+                adj.get(s.p1).push(s.p2);
+                adj.get(s.p2).push(s.p1);
+            });
+
+            // Parcours (DFS) des points connectés à la bande de départ
+            const visited = new Set();
+            const stack = [strip.p1, strip.p2];
+            visited.add(strip.p1);
+            visited.add(strip.p2);
+
+            while (stack.length) {
+                const pid = stack.pop();
+                const neigh = adj.get(pid) || [];
+                for (const nid of neigh) {
+                    if (!visited.has(nid)) {
+                        visited.add(nid);
+                        stack.push(nid);
+                    }
+                }
+            }
+
+            // Supprimer toutes les bandes qui touchent cet ensemble de points
+            state.strips = state.strips.filter(s => !(visited.has(s.p1) || visited.has(s.p2)));
+
+            cleanupAngleGroups();
+
+            // Recalculer les points encore utilisés
+            const usedPointIds = new Set();
+            state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
+            state.points = state.points.filter(p => usedPointIds.has(p.id));
+
+            playSound('trash');
+            render();
+        }
+
+        // --- Prévisualisation poubelle : surbrillance du groupe qui sera supprimé ---
+        function setTrashPreviewFromDraggingStrip() {
+            if (!state.draggingStrip) return;
+            const pointIds = new Set();
+            state.draggingStrip.forEach(p => {
+                if (p && !p.toBeRemoved) pointIds.add(p.id);
+            });
+            const stripIds = new Set();
+            state.strips.forEach(s => {
+                if (pointIds.has(s.p1) || pointIds.has(s.p2)) stripIds.add(s.id);
+            });
+            state.trashPreviewPointIds = pointIds;
+            state.trashPreviewStripIds = stripIds;
+        }
+
+        function clearTrashPreview() {
+            state.trashPreviewPointIds = null;
+            state.trashPreviewStripIds = null;
+        }
+
 
         function resetBoard() {
             state.points = [];
@@ -1665,7 +1967,63 @@ const positionGhost = (clientX, clientY) => {
 
                 if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
 
-                state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grabbing'; return;
+                
+
+                // Verrou global : au lieu de déformer en tirant un aimant, on manipule la construction comme un objet rigide
+                // (comportement similaire aux angles fixes : translation en prenant un aimant "interne", rotation en prenant une extrémité).
+                if (isGlobalLockActive()) {
+                    const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
+                    if (connectedStrips.length > 0) {
+                        const refStrip = connectedStrips[0];
+                        // Extrémité (1 seule bande) => rotation rigide autour du point voisin
+                        if (connectedStrips.length === 1) {
+                            const neighborId = (refStrip.p1 === point.id) ? refStrip.p2 : refStrip.p1;
+                            const pivot = state.points.find(p => p.id === neighborId);
+                            const group = getAllConnectedPoints(refStrip).filter(Boolean);
+
+                            if (pivot && group && group.length) {
+                                // Détache le rapporteur si son aimant est dans le groupe (on autorise la rotation libre)
+                                if (attachedId && group.some(p => p.id === attachedId)) proTool.attachedPointId = null;
+
+                                const startMouseAngle = Math.atan2(pos.y - pivot.y, pos.x - pivot.x);
+
+                                const startPos = new Map();
+                                const pointRef = new Map();
+                                group.forEach(p => {
+                                    p.pinned = true;
+                                    startPos.set(p.id, {x: p.x, y: p.y});
+                                    pointRef.set(p.id, p);
+                                });
+
+                                state.draggingRigidRotate = {
+                                    pivotId: pivot.id,
+                                    grabId: point.id,
+                                    groupIds: new Set(group.map(p => p.id)),
+                                    startMouseAngle,
+                                    startPos,
+                                    pointRef
+                                };
+
+                                container.style.cursor = 'grabbing';
+                                return;
+                            }
+                        }
+
+                        // Jonction (2+ bandes) => translation rigide du groupe (comme quand on attrape un bâton)
+                        state.draggingStrip = getAllConnectedPoints(refStrip);
+                        state.draggingStripRef = refStrip;
+                        state.dragOffset = pos;
+
+                        if (attachedId && state.draggingStrip.some(p => p && p.id === attachedId)) {
+                            proTool.attachedPointId = null;
+                        }
+                        state.draggingStrip.forEach(p => { if (p) p.pinned = true; });
+                        container.style.cursor = 'grabbing';
+                        return;
+                    }
+                }
+
+state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grabbing'; return;
             }
 
 
@@ -1698,7 +2056,7 @@ const positionGhost = (clientX, clientY) => {
             // Plateau fixe : pas de pan.
 
             // Curseurs (sans écraser le "grabbing" pendant un drag)
-            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.isSidebarDragging);
+            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.draggingRigidRotate || state.isSidebarDragging);
             if (!e.target.closest('.geo-tool')) {
                 if (isDraggingSomething) {
                     container.style.cursor = 'grabbing';
@@ -1775,6 +2133,34 @@ const positionGhost = (clientX, clientY) => {
                 queueSolveRender(2);
                 return;
             }
+
+            // Rotation rigide (verrou global) : on tourne tout le groupe autour du pivot
+            if (state.draggingRigidRotate) {
+                e.preventDefault();
+                const rr = state.draggingRigidRotate;
+                const pivot = rr.pointRef ? rr.pointRef.get(rr.pivotId) : state.points.find(p => p.id === rr.pivotId);
+                if (pivot) {
+                    const ang = Math.atan2(pos.y - pivot.y, pos.x - pivot.x);
+                    const delta = ang - rr.startMouseAngle;
+
+                    const c = Math.cos(delta);
+                    const s = Math.sin(delta);
+
+                    rr.groupIds.forEach((pid) => {
+                        if (pid === rr.pivotId) return;
+                        const sp = rr.startPos.get(pid);
+                        const p = rr.pointRef ? rr.pointRef.get(pid) : state.points.find(pp => pp.id === pid);
+                        if (!sp || !p) return;
+                        const dx = sp.x - pivot.x;
+                        const dy = sp.y - pivot.y;
+                        p.x = pivot.x + dx * c - dy * s;
+                        p.y = pivot.y + dx * s + dy * c;
+                    });
+                }
+                queueRenderOnly();
+                return;
+            }
+
             if (state.draggingPoint) {
                 e.preventDefault();
                 let targetX = pos.x; let targetY = pos.y;
@@ -1831,7 +2217,14 @@ const positionGhost = (clientX, clientY) => {
             } else if (state.draggingStrip) {
                 e.preventDefault();
                 const headerRect = header.getBoundingClientRect();
-                if (clientPos.y <= headerRect.bottom) header.classList.add('trash-active'); else header.classList.remove('trash-active');
+                const inTrash = clientPos.y <= headerRect.bottom;
+                if (inTrash) {
+                    header.classList.add('trash-active');
+                    if (!state.trashPreviewStripIds) setTrashPreviewFromDraggingStrip();
+                } else {
+                    header.classList.remove('trash-active');
+                    if (state.trashPreviewStripIds) clearTrashPreview();
+                }
 
                 const dx = pos.x - state.dragOffset.x; const dy = pos.y - state.dragOffset.y;
                 state.draggingStrip.forEach(p => { p.x += dx; p.y += dy; });
@@ -1853,6 +2246,7 @@ const positionGhost = (clientX, clientY) => {
 
         function handleEnd(e) {
             header.classList.remove('trash-active');
+            clearTrashPreview();
 
             // Fin du mode "main" au bouton droit en mode stylo
             if (!e.touches && state.penRightOverride) {
@@ -1912,7 +2306,49 @@ const positionGhost = (clientX, clientY) => {
                 return;
             }
 
-            if (state.draggingPoint) {
+            
+            // Fin rotation rigide (verrou global)
+            if (state.draggingRigidRotate) {
+                const rr = state.draggingRigidRotate;
+
+                const self = rr.pointRef ? rr.pointRef.get(rr.grabId) : state.points.find(p => p.id === rr.grabId);
+                if (self) {
+                    const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
+                    const target = state.points.find(p => {
+                        if (p.id === self.id) return false;
+                        if (rr.groupIds && rr.groupIds.has(p.id)) return false;
+                        const dx = p.x - self.x, dy = p.y - self.y;
+                        return (dx*dx + dy*dy) < snap2;
+                    });
+
+                    if (target) {
+                        playSound('snap');
+                        replaceAnglePointId(self.id, target.id);
+                        state.strips.forEach(s => {
+                            if (s.p1 === self.id) s.p1 = target.id;
+                            if (s.p2 === self.id) s.p2 = target.id;
+                        });
+                        state.points = state.points.filter(p => p.id !== self.id);
+                    }
+                }
+
+                // Relâcher les pins
+                if (rr.pointRef) {
+                    rr.pointRef.forEach(p => { if (p) p.pinned = false; });
+                } else if (rr.groupIds) {
+                    rr.groupIds.forEach(pid => {
+                        const p = state.points.find(pp => pp.id === pid);
+                        if (p) p.pinned = false;
+                    });
+                }
+
+                state.draggingRigidRotate = null;
+                cleanupAngleGroups();
+                render();
+                return;
+            }
+
+if (state.draggingPoint) {
                 const self = state.draggingPoint;
                 const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                 const target = state.points.find(p => {
@@ -1921,7 +2357,9 @@ const positionGhost = (clientX, clientY) => {
                     return (dx*dx + dy*dy) < snap2;
                 });
 
+                let snapped = false;
                 if (target) {
+                    snapped = true;
                     playSound('snap');
                     replaceAnglePointId(self.id, target.id);
                     state.strips.forEach(s => {
@@ -1929,14 +2367,34 @@ const positionGhost = (clientX, clientY) => {
                         if (s.p2 === self.id) s.p2 = target.id;
                     });
                     state.points = state.points.filter(p => p.id !== self.id);
+                    // Évite les bandes dégénérées (p1 == p2) si plusieurs aimants ont fusionné.
+                    state.strips = state.strips.filter(s => s.p1 !== s.p2);
                 } 
-                self.pinned = false; state.draggingPoint = null; render();
+
+                self.pinned = false;
+                state.draggingPoint = null;
+                cleanupAngleGroups();
+                // IMPORTANT : après une fusion (clip), on résout quelques itérations pour stabiliser les figures (boucles/quadrilatères).
+                queueSolveRender(snapped ? 20 : 3);
             }
 
             if (state.draggingStrip) {
                 const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
                 const headerRect = header.getBoundingClientRect();
-                if (clientY <= headerRect.bottom) { if (state.draggingStripRef) removeStrip(state.draggingStripRef); }
+                if (clientY <= headerRect.bottom) {
+                    // Si on jette une bande "soudée", on jette tout l'ensemble connecté.
+                    const ref = state.draggingStripRef;
+
+                    // On relâche l'état de drag AVANT de supprimer (évite des incohérences pendant le render()).
+                    state.draggingStrip.forEach(p => {
+                        if (p && !p.toBeRemoved) p.pinned = false;
+                    });
+                    state.draggingStrip = null;
+                    state.draggingStripRef = null;
+
+                    if (ref) removeConnectedGroup(ref);
+                    return; // Important: ne pas continuer la logique de snap après suppression
+                }
                 
                 // Snap du groupe sur le centre du rapporteur (aimant virtuel)
                 if (state.tools.protractor.visible) {
@@ -1997,7 +2455,9 @@ const positionGhost = (clientX, clientY) => {
                 
                 cleanupAngleGroups();
                 state.draggingStrip = null; state.draggingStripRef = null;
-                render();
+                // IMPORTANT : après une fusion (clip/aimantation), on résout quelques itérations
+                // pour garantir que les longueurs et les angles fixes se “recalent” immédiatement.
+                queueSolveRender(snapped ? 14 : 3);
             }
         }
         
@@ -2051,7 +2511,7 @@ const positionGhost = (clientX, clientY) => {
         function render() {
             ctxStrips.clearRect(0, 0, canvasStrips.width, canvasStrips.height);
 
-            const isDragging = !!(state.draggingPoint || state.draggingStrip || state.draggingAngle || state.draggingAngleMove || state.isSidebarDragging);
+            const isDragging = !!(state.draggingPoint || state.draggingStrip || state.draggingAngle || state.draggingAngleMove || state.draggingRigidRotate || state.isSidebarDragging);
 
             // Cache du tri (coûteux) : on ne retrie que si on ajoute/supprime une bande.
             let sortedStrips = state._sortedStripsCache;
@@ -2094,13 +2554,61 @@ const positionGhost = (clientX, clientY) => {
                 if (!p1 || !p2) continue;
 
                 const style = CONFIG.colors[strip.type];
-                ctxStrips.beginPath();
-                ctxStrips.lineWidth = CONFIG.currentStripWidth;
                 ctxStrips.lineCap = 'round';
-                ctxStrips.strokeStyle = style.fill;
-                ctxStrips.moveTo(p1.x, p1.y);
-                ctxStrips.lineTo(p2.x, p2.y);
-                ctxStrips.stroke();
+
+                if (state.stripMode === 'thin') {
+                    // Option B : "double-trait" pour des segments plus lisibles (projection / outils par-dessus)
+                    // 1) sous-trait : léger contour sombre un peu plus épais
+                    ctxStrips.beginPath();
+                    ctxStrips.lineWidth = Math.max(CONFIG.thinStripWidth * 4, 2.8);
+                    ctxStrips.strokeStyle = 'rgba(15, 23, 42, 0.22)'; // slate-900, discret
+                    ctxStrips.moveTo(p1.x, p1.y);
+                    ctxStrips.lineTo(p2.x, p2.y);
+                    ctxStrips.stroke();
+
+                    // 2) trait principal : couleur, un peu plus épais que 0.7px pour éviter l'effet "trop pâle"
+                    ctxStrips.beginPath();
+                    ctxStrips.lineWidth = Math.max(CONFIG.thinStripWidth * 2, 1.2);
+                    ctxStrips.strokeStyle = style.fill;
+                    ctxStrips.moveTo(p1.x, p1.y);
+                    ctxStrips.lineTo(p2.x, p2.y);
+                    ctxStrips.stroke();
+                } else {
+                    ctxStrips.beginPath();
+                    ctxStrips.lineWidth = CONFIG.currentStripWidth;
+                    ctxStrips.strokeStyle = style.fill;
+                    ctxStrips.moveTo(p1.x, p1.y);
+                    ctxStrips.lineTo(p2.x, p2.y);
+                    ctxStrips.stroke();
+                }
+            }
+
+            // Prévisualisation suppression (poubelle) : surbrillance du groupe
+            if (state.trashPreviewStripIds && state.trashPreviewStripIds.size) {
+                ctxStrips.save();
+                // Halo léger rouge + trait en pointillés pour bien montrer "ça va être supprimé"
+                ctxStrips.shadowColor = "rgba(239,68,68,0.25)";
+                ctxStrips.shadowBlur = 10;
+                ctxStrips.shadowOffsetY = 0;
+                ctxStrips.lineCap = 'round';
+                ctxStrips.setLineDash([10, 8]);
+
+                const outlineW = CONFIG.currentStripWidth + (state.stripMode === 'thin' ? 6 : 10);
+                ctxStrips.lineWidth = outlineW;
+                ctxStrips.strokeStyle = "rgba(239,68,68,0.85)";
+
+                for (const strip of sortedStrips) {
+                    if (!state.trashPreviewStripIds.has(strip.id)) continue;
+                    const p1 = pointById.get(strip.p1);
+                    const p2 = pointById.get(strip.p2);
+                    if (!p1 || !p2) continue;
+                    ctxStrips.beginPath();
+                    ctxStrips.moveTo(p1.x, p1.y);
+                    ctxStrips.lineTo(p2.x, p2.y);
+                    ctxStrips.stroke();
+                }
+
+                ctxStrips.restore();
             }
 
             // Rivets
@@ -2127,6 +2635,16 @@ const positionGhost = (clientX, clientY) => {
                 ctxStrips.strokeStyle = '#334155';
                 ctxStrips.lineWidth = strokeSize;
                 ctxStrips.stroke();
+
+                // Surbrillance du magnet si fait partie du groupe "poubelle"
+                if (state.trashPreviewPointIds && state.trashPreviewPointIds.has(p.id)) {
+                    ctxStrips.beginPath();
+                    const ring = rivetSize + (state.stripMode === 'thin' ? 4 : 7);
+                    ctxStrips.arc(p.x, p.y, ring, 0, Math.PI * 2);
+                    ctxStrips.strokeStyle = 'rgba(239,68,68,0.9)';
+                    ctxStrips.lineWidth = (state.stripMode === 'thin' ? 1.5 : 3);
+                    ctxStrips.stroke();
+                }
             }
         }
 
@@ -2258,6 +2776,7 @@ canvasDraw.addEventListener('mousedown', startDraw);
         // Init
         initGeometryTools();
         updateStripModeUI();
+        updateLockUI();
         render();
 
     
@@ -2284,5 +2803,65 @@ canvasDraw.addEventListener('mousedown', startDraw);
             if (e.key === 'Backspace') { angleBackspace(); }
         });
 </script>
+
+    <!-- AIDE : panneau des raccourcis -->
+    <div id="help-modal" class="hidden fixed inset-0 z-[9999]">
+        <div class="absolute inset-0 bg-black/30" onclick="closeHelp()"></div>
+        <div class="relative mx-auto mt-14 sm:mt-20 max-w-2xl px-3">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-4 sm:p-6">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div class="font-extrabold text-slate-700 text-lg">Aide (raccourcis &amp; gestes)</div>
+                    <button onclick="closeHelp()" class="tool-btn px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-600">Fermer</button>
+                </div>
+
+                <div class="text-sm text-slate-600 leading-relaxed space-y-3">
+                    <div>
+                        <div class="font-extrabold text-slate-700">Manipulation</div>
+                        <ul class="list-disc ml-5 mt-1 space-y-1">
+                            <li><b>Glisser</b> une bande / un aimant pour déplacer.</li>
+                            <li><b>Double-clic</b> sur un aimant (connecté à plusieurs bandes) : <b>détacher</b> (crée un nouveau magnet).</li>
+                            <li><b>Jeter</b> : glisser vers le haut (zone du header). Le groupe supprimé est <b>surligné</b> avant de lâcher.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div class="font-extrabold text-slate-700">Zoom</div>
+                        <ul class="list-disc ml-5 mt-1 space-y-1">
+                            <li><b>Molette</b> : zoom <b>au pointeur</b>.</li>
+                            <li>Boutons <b>+</b> / <b>-</b> : zoom avant/arrière.</li>
+                            <li><b>R</b> : recentrer la vue (zoom 100%).</li>
+                            <li><b>F</b> : plein écran / quitter plein écran.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div class="font-extrabold text-slate-700">Outils géométriques</div>
+                        <ul class="list-disc ml-5 mt-1 space-y-1">
+                            <li><b>← / →</b> : tourner l’outil géométrique actif (rapporteur / équerre).</li>
+                            <li><b>Shift + ← / →</b> : pas de 5° (sinon 1°).</li>
+                            <li>Le <b>centre</b> du rapporteur et le <b>coin</b> de l’équerre sont <b>aimantés</b>.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div class="font-extrabold text-slate-700">Verrou (cadenas)</div>
+                        <div class="mt-1">
+                            Quand le cadenas est <b>activé</b>, les constructions se comportent comme un <b>objet rigide</b> (ça ne se déforme pas en tirant).
+                            <ul class="list-disc ml-5 mt-1 space-y-1">
+                                <li>Attraper un aimant <b>au milieu</b> d’une connexion : <b>déplacement rigide</b> du groupe.</li>
+                                <li>Attraper un aimant <b>au bout</b> (extrémité) : <b>rotation rigide</b> du groupe autour du point voisin.</li>
+                                                            <li><b>Maintenir Ctrl</b> : verrouillage <b>temporaire</b> (relâcher = retour).</li>
+</ul>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-slate-400 pt-2 border-t border-slate-200">
+                        Astuce : touche <b>Échap</b> pour fermer ce panneau.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
