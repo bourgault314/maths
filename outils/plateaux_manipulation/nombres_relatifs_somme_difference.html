@@ -266,6 +266,24 @@
                 </svg>
                             </button>
 
+
+            <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-slate-200 shadow-sm flex items-center gap-1 active:bg-slate-300 transition" title="Plein écran">
+                <!-- Icône entrer plein écran -->
+                <svg data-icon="enter" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+                <!-- Icône sortir plein écran -->
+                <svg data-icon="exit" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 3 3 3 3 9"></polyline>
+                    <polyline points="15 21 21 21 21 15"></polyline>
+                    <line x1="3" y1="3" x2="10" y2="10"></line>
+                    <line x1="21" y1="21" x2="14" y2="14"></line>
+                </svg>
+            </button>
+
             <button onclick="showAnswer()" class="bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-md border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base" title="Raccourci: Entrée">
                 Réponse
             </button>
@@ -502,7 +520,57 @@
                 playSound('click');
             }
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
+            if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) { toggleFullscreen(); playSound('click'); }
         });
+
+        
+        // --- PLEIN ÉCRAN ---
+        function _isFullscreen() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        }
+
+        function updateFullscreenButton() {
+            const btn = document.getElementById('btn-fullscreen');
+            if (!btn) return;
+
+            const fs = !!_isFullscreen();
+            const enterIcon = btn.querySelector('[data-icon="enter"]');
+            const exitIcon = btn.querySelector('[data-icon="exit"]');
+
+            if (enterIcon && exitIcon) {
+                enterIcon.classList.toggle('hidden', fs);
+                exitIcon.classList.toggle('hidden', !fs);
+            }
+
+            const title = fs ? "Quitter le plein écran (Échap)" : "Plein écran";
+            btn.title = title;
+            btn.setAttribute('aria-label', title);
+        }
+
+        async function toggleFullscreen() {
+            // Le plein écran doit être déclenché par un geste utilisateur (clic / touche)
+            try {
+                const fs = !!_isFullscreen();
+                if (!fs) {
+                    const el = document.documentElement;
+                    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+                    if (req) await req.call(el);
+                } else {
+                    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) await exit.call(document);
+                }
+            } catch (e) {
+                console.warn("Fullscreen error:", e);
+            }
+            updateFullscreenButton();
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        setTimeout(updateFullscreenButton, 0);
+
 
         // --- DESSIN & CURSEUR ---
         let isDrawing = false;
