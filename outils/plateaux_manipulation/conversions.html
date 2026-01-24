@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gliss-unité – conversions</title>
+<title>Glisse unité</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root{ --accent:#1283ff; --accent-dark:#0b67c6; --bg:#fbfbfe; --panel:#fff; --ink:#1b1b1b; --border:#d5d7de }
@@ -34,15 +34,14 @@
     transform:translateX(var(--x,0));
     background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent) 15%, transparent));
     border:3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
-    border-radius:12px;pointer-events:none;transition:transform .12s ease;z-index:0
+    border-radius:12px;pointer-events:none;transition:transform .12s ease;z-index:0;
+    box-shadow: inset -3px 0 0 color-mix(in srgb, var(--accent-dark) 70%, transparent);
   }
   .cursor::before{
     content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);
     border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
     filter:drop-shadow(0 2px 2px rgba(0,0,0,.15))
   }
-  .cursor::after{content:"";position:absolute;top:0;right:-3px;width:3px;bottom:0;background:color-mix(in srgb, var(--accent-dark) 70%, transparent);border-radius:2px}
-
   /* poignée de glisse (interactive) */
   .handle{
     position:absolute;left:0;top:12px;
@@ -70,15 +69,41 @@
   .unitBtn{background:color-mix(in srgb, var(--accent) 12%, #fff);border:2px solid var(--accent);border-radius:8px;padding:8px 4px;text-align:center;font-weight:900;cursor:pointer}
   .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
 
-  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:78px;display:flex;align-items:center;justify-content:center}
+  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:88px;display:flex;align-items:center;justify-content:center}
   /* Suppression du margin-top pour un centrage vertical parfait */
   .slots{margin-top:0;display:flex;gap:0;width:calc(100% - 12px);}
-  .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:900;font-size:1.45rem;line-height:1.45rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px}
+  .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:900;font-size:1.75rem;line-height:1.75rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px}
   .slots[data-slots="2"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
 
-  .result{margin-top:12px;padding:10px;border-radius:10px;background:#f2f6ff;border:1px solid #d7e6ff;font-weight:900;font-size:1.2rem}
+  .result{
+    display:block;
+    width:fit-content;
+    max-width:100%;
+    margin:10px auto 12px;
+    padding:10px 14px;
+    border-radius:12px;
+    background:#f5f9ff;
+    border:1px solid #cfe0ff;
+    text-align:center;
+  }
+
+  .result .mainLine{
+    display:block;
+    font-weight:900;
+    font-size:2.25rem;
+    color:#000;
+    line-height:1.12;
+  }
+  .result .eqLine{
+    display:block;
+    margin-top:6px;
+    font-weight:800;
+    font-size:1rem;
+    color:#000;
+    opacity:.65;
+  }
 
   /* Repères kL / L / mL (mode couplé) */
   .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:3;pointer-events:none}
@@ -115,6 +140,8 @@
   <div class="board">
     <div class="title" id="title">CONVERSIONS – Longueur (m)</div>
 
+    <div class="result" id="result" style="display:none;"></div>
+
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
       <div class="handle" id="handle" title="Glisse pour choisir l’unité" aria-label="Glisser pour choisir l’unité">🖐️</div>
@@ -130,7 +157,6 @@
       <div class="grid" id="grid"></div>
     </div>
 
-    <div class="result" id="result" style="display:none;"></div>
   </div>
 </div>
 
@@ -425,16 +451,61 @@
     return minFrac;
   }
 
+  function compactFR(str){
+    const p = str.split(',');
+    if(p.length===1) return str;
+    let dec = p[1].replace(/0+$/,'');
+    return dec.length ? (p[0]+','+dec) : p[0];
+  }
+
+  function formatFR(x){
+    const y = Number.isFinite(x) ? Number(x.toFixed(12)) : x;
+    return y.toLocaleString('fr-FR', { minimumFractionDigits:0, maximumFractionDigits:12 });
+  }
+
+  function addEqLine(txt){
+    const eq = document.createElement('span');
+    eq.className = 'eqLine';
+    eq.textContent = txt;
+    result.appendChild(eq);
+  }
+
   function updateResult(){
     const u = schema.units[targetIdx];
     const val = valueInTarget();
     const minFrac = minFractionDigitsForTarget();
-    const s = val.toLocaleString('fr-FR', {
+
+    // Écriture "tableau" (avec zéros finaux) puis version compacte (sans zéros inutiles à droite)
+    const raw = val.toLocaleString('fr-FR', {
       minimumFractionDigits: minFrac,
       maximumFractionDigits: Math.max(minFrac, 12)
     });
-    result.textContent = `${s} ${u}`;
+    const compact = compactFR(raw);
+
+    // Affichage : réponse compacte + (si besoin) une ligne d'égalité en petit
+    result.innerHTML = '';
+    const main = document.createElement('span');
+    main.className = 'mainLine';
+    main.textContent = `${compact} ${u}`;
+    result.appendChild(main);
+
+    if(raw !== compact){
+      addEqLine(`${raw} ${u} = ${compact} ${u}`);
+    }
+
+    // Équivalences utiles en mode L ↔ m³
+    if(kindSel.value === 'cross'){
+      if(u === 'm³'){
+        const lStr = formatFR(val * 1000);
+        addEqLine(`${compact} m³ = ${compact} kL = ${lStr} L`);
+      }else if(u === 'dm³'){
+        addEqLine(`${compact} dm³ = ${compact} L`);
+      }else if(u === 'cm³'){
+        addEqLine(`${compact} cm³ = ${compact} mL`);
+      }
+    }
   }
+
 
   document.getElementById('toggleShow').addEventListener('click', ()=>{
     if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display=''; btnTog.textContent='Masquer'; isShown=true; }
