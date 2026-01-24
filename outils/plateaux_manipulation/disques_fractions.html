@@ -156,6 +156,10 @@
     }
     .frac .den{ margin-top: 1px; }
 
+    /* Ajustement spécifique pour les fractions dans le menu (dénominateur un peu plus proche) */
+    .frac.menu .bar{ margin: 3px 0 4px 0; }
+    .frac.menu .den{ margin-top: 0px; transform: translateY(-1px); }
+
     .back-one{
       font-weight: 800;
       font-size: 1.35rem;
@@ -192,8 +196,8 @@
     .spawn-tile .mini-svg{ width: 44px; height: 44px; display:block; }
 
     .frac.menu{ transform: none; filter: none; font-size: inherit; }
-    .frac.menu .bar{ width: 0.9em; height: 2px; margin: 2px 0 7px 0; background: rgba(0,0,0,0.70); }
-    .frac.menu .den{ margin-top: 2px; }
+    .frac.menu .bar{ width: 0.9em; height: 2px; margin: 3px 0 4px 0; background: rgba(0,0,0,0.70); }
+    .frac.menu .den{ margin-top: 0px; transform: translateY(-1px); }
 
     /* poignées de rotation (sur les secteurs) */
     .rotate-handle{ opacity: 0; transition: opacity 120ms ease; cursor: grab; }
@@ -313,7 +317,7 @@
         <span class="text-[10px] font-extrabold leading-none">Couper</span>
       </button>
 
-      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner des secteurs alignés en un disque">
+      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner : secteurs alignés (D4) + somme vers 1/2 ou unité (D5)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"/>
           <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1"/>
@@ -857,9 +861,10 @@
           </g>
         `;
       }
-      const numY = y - fs*0.62;
-      const barY = y - fs*0.05;
-      const denY = y + fs*1.30;
+      // PATCH D6 : chiffres plus proches de la barre
+      const numY = y - fs*0.44;
+      const barY = y - fs*0.03;
+      const denY = y + fs*0.98;
       return `
         <g font-family="Fredoka, sans-serif" text-anchor="middle" font-weight="800">
           <text x="${x}" y="${numY+1}" font-size="${fs}" fill="rgba(255,255,255,0.35)">1</text>
@@ -1823,7 +1828,13 @@
       if(btnDel)  btnDel.disabled  = !hasAny;
 
       if(btnSep)  btnSep.disabled  = !(hasOne && s && s.kind === 'disk'  && s.denom > 1);
-      if(btnFuse) btnFuse.disabled = !(hasOne && s && s.kind === 'piece' && s.denom > 1);
+
+      if(btnFuse){
+        const canFuse = this._canFuseSelection();
+        btnFuse.disabled = !canFuse;
+        // “Apparaît” seulement quand c’est possible, sans faire bouger la barre (pas de shift UI)
+        btnFuse.style.visibility = canFuse ? 'visible' : 'hidden';
+      }
       if(btnCut)  btnCut.disabled  = !(hasOne && s && this.canCut(s));
     }
 
@@ -2342,7 +2353,330 @@ toggleTokenLabel(){
       playSound('pop');
     }
 
+    _getSelectedTokensArray(){
+      const ids = new Set();
+      if(this.selectedIds instanceof Set){
+        for(const id of this.selectedIds) ids.add(id);
+      }
+      if((ids.size === 0) && this.selectedId !== null && typeof this.selectedId !== 'undefined'){
+        ids.add(this.selectedId);
+      }
+      if(!ids.size) return [];
+      return this.tokens.filter(t => ids.has(t.id));
+    }
+
+    _computeFusePlanFromSelection(tokens){
+      if(!Array.isArray(tokens) || tokens.length < 2) return null;
+
+      // On fuse uniquement des "pieces" (secteurs)
+      if(tokens.some(t => !t || t.kind !== 'piece')) return null;
+
+      const d = tokens[0].denom;
+      if(typeof d !== 'number' || d <= 1) return null;
+      if(tokens.some(t => t.denom !== d)) return null;
+
+      // Même position (mêmes disques reconstitués)
+      const tol = 2.4;
+      const baseX = tokens[0].x;
+      const baseY = tokens[0].y;
+      for(const t of tokens){
+        if(Math.abs(t.x - baseX) > tol || Math.abs(t.y - baseY) > tol) return null;
+      }
+
+      const stepDeg = 360 / d;
+
+      // Slots uniques (sinon ambigu)
+      const slotToTok = new Map();
+      for(const p of tokens){
+        const slot = (typeof p.slot === 'number')
+          ? p.slot
+          : (typeof p.rot === 'number')
+              ? (((Math.round(p.rot / stepDeg) % d) + d) % d)
+              : 0;
+        if(slotToTok.has(slot)) return null;
+        slotToTok.set(slot, p);
+      }
+
+      const k = slotToTok.size;
+      if(k !== tokens.length) return null;
+
+      const slots = Array.from(slotToTok.keys());
+      const slotSet = new Set(slots);
+
+      // Trouver un run consécutif de longueur k (mod d)
+      let startSlot = null;
+      for(const s0 of slots){
+        let ok = true;
+        for(let i=0;i<k;i++){
+          if(!slotSet.has((s0 + i) % d)){ ok = false; break; }
+        }
+        if(ok){ startSlot = s0; break; }
+      }
+
+      // Cas "disque complet" : pas besoin d'être consécutif si on a tous les slots
+      if(startSlot === null){
+        if(k === d){
+          startSlot = 0;
+        }else{
+          return null;
+        }
+      }
+
+      const side = tokens.every(t => t.side === tokens[0].side) ? tokens[0].side : 'front';
+      const hideLabel = tokens.every(t => !!t.hideLabel);
+
+      // Disque complet : d secteurs -> disque d
+      if(k === d){
+        return {
+          kind: 'disk',
+          denom: d,
+          x: baseX,
+          y: baseY,
+          rot: 0,
+          side,
+          hideLabel,
+          removeIds: tokens.map(t => t.id),
+        };
+      }
+
+      // Fusion "fraction plus grande" :
+      // k * (1/d) = 1/(d/k) => denom2 = d/k, si entier.
+      if(d % k !== 0) return null;
+      const denom2 = d / k;
+      if(denom2 <= 1) return null; // pas de "piece" en 1
+
+      // Vérifier que la fraction cible existe dans l'outil
+      if(!FRACTIONS.some(f => f.denom === denom2)) return null;
+
+      // Rotation de départ = rotation réelle de la première pièce du run
+      const startTok = slotToTok.get(startSlot);
+      let rot = (startTok && typeof startTok.rot === 'number') ? startTok.rot : (startSlot * stepDeg);
+      rot = ((rot % 360) + 360) % 360;
+
+      return {
+        kind: 'piece',
+        denom: denom2,
+        x: baseX,
+        y: baseY,
+        rot,
+        side,
+        hideLabel,
+        removeIds: tokens.map(t => t.id),
+      };
+    }
+
+
+    _computeSumFusePlanHalfOrOne(tokens){
+      // PATCH D5 : fusion par somme (uniquement vers 1/2 ou unité), sur même disque et positions canoniques.
+      if(!Array.isArray(tokens) || tokens.length < 2) return null;
+      if(tokens.some(t => !t || t.kind !== 'piece' || !t.denom || t.denom <= 0)) return null;
+
+      const tol = 2.4;
+      const baseX = tokens[0].x, baseY = tokens[0].y;
+      for(const t of tokens){
+        if(Math.abs(t.x - baseX) > tol || Math.abs(t.y - baseY) > tol) return null;
+      }
+
+      // Évite les mélanges recto/verso (sinon visuels incohérents)
+      const side = tokens.every(t => t.side === tokens[0].side) ? tokens[0].side : null;
+      if(!side) return null;
+
+      const hideLabel = tokens.every(t => !!t.hideLabel);
+
+      const gcd = (a,b)=>{ a=Math.abs(a); b=Math.abs(b); while(b){ const tmp=a%b; a=b; b=tmp; } return a||0; };
+      const lcm2 = (a,b)=>{ if(!a || !b) return 0; return Math.abs((a/gcd(a,b))*b); };
+
+      let lcm = 1;
+      for(const t of tokens){
+        lcm = lcm2(lcm, t.denom);
+        if(!lcm) return null;
+        // garde-fou : ici on n'a que 2,3,4,5,6,8,10 donc c'est petit.
+        if(lcm > 3600) return null;
+      }
+
+      // Grille fine de "slots" : pas de flottants, pas de surprises
+      const slotSet = new Set();
+      const epsDeg = 1.2; // tolérance d'alignement (rot proche d'un cran canon)
+      const norm360 = (deg)=>{ deg = deg % 360; if(deg < 0) deg += 360; return deg; };
+      const angDiff = (a,b)=>{
+        const d = Math.abs(norm360(a) - norm360(b));
+        return Math.min(d, 360 - d);
+      };
+
+      for(const t of tokens){
+        const denom = t.denom;
+        const stepDeg = 360 / denom;
+        const len = lcm / denom;
+        if(!Number.isFinite(len) || len <= 0) return null;
+
+        let slotDen = null;
+        if(typeof t.slot === 'number' && t.slot !== null){
+          slotDen = ((t.slot % denom) + denom) % denom;
+        }else{
+          const rot = (typeof t.rot === 'number') ? t.rot : 0;
+          const r = norm360(rot);
+          const s = ((Math.round(r / stepDeg) % denom) + denom) % denom;
+          const target = s * stepDeg;
+          if(angDiff(r, target) > epsDeg) return null; // pas sur la grille -> pas de fusion par somme
+          slotDen = s;
+        }
+
+        const start = slotDen * len;
+        for(let i=0;i<len;i++){
+          const k = (start + i) % lcm;
+          if(slotSet.has(k)) return null; // chevauchement
+          slotSet.add(k);
+        }
+      }
+
+      const expected = tokens.reduce((acc, t) => acc + (lcm / t.denom), 0);
+      const total = slotSet.size;
+      if(total !== expected) return null;
+
+      // helper : run consécutif de longueur L (modulo lcm). Retourne startSlot ou null.
+      const hasRun = (L)=>{
+        if(L <= 0) return null;
+        if(L === lcm) return 0;
+        const slots = Array.from(slotSet.values());
+        for(const s0 of slots){
+          let ok = true;
+          for(let i=0;i<L;i++){
+            if(!slotSet.has((s0 + i) % lcm)){ ok = false; break; }
+          }
+          if(ok) return s0;
+        }
+        return null;
+      };
+
+      // Somme = 1 -> unité (disque denom=1)
+      if(total === lcm){
+        if(!FRACTIONS.some(f => f.denom === 1)) return null;
+        return {
+          kind: 'disk',
+          denom: 1,
+          x: baseX,
+          y: baseY,
+          rot: 0,
+          side,
+          hideLabel,
+          removeIds: tokens.map(t => t.id),
+        };
+      }
+
+      // Somme = 1/2 -> pièce 1/2 (arc contigu uniquement)
+      if(lcm % 2 === 0 && total === (lcm / 2)){
+        if(!FRACTIONS.some(f => f.denom === 2)) return null;
+        const startSlot = hasRun(lcm/2);
+        if(startSlot === null) return null;
+        const rot = norm360(startSlot * (360 / lcm));
+        return {
+          kind: 'piece',
+          denom: 2,
+          x: baseX,
+          y: baseY,
+          rot,
+          side,
+          hideLabel,
+          removeIds: tokens.map(t => t.id),
+        };
+      }
+
+      return null;
+    }
+
+    _applyFusePlan(plan){
+      if(!plan || !plan.removeIds || !plan.removeIds.length) return;
+
+      this.saveState();
+      playSound('pop');
+
+      const remove = new Set(plan.removeIds);
+
+      // Retire DOM + tokens
+      for(const t of this.tokens){
+        if(remove.has(t.id) && t._el){
+          try{ t._el.remove(); }catch(_){}
+        }
+      }
+      this.tokens = this.tokens.filter(t => !remove.has(t.id));
+
+      // Crée le token fusionné (sans refacto du moteur)
+      const token = {
+        id: this.nextId++,
+        z: ++this.zTop,
+        denom: plan.denom,
+        kind: plan.kind,
+        side: plan.side || 'front',
+        x: plan.x,
+        y: plan.y,
+        rot: (typeof plan.rot === 'number') ? plan.rot : 0,
+        slot: null,
+        hideLabel: !!plan.hideLabel,
+        _new: true,
+      };
+
+      this.tokens.push(token);
+      this.mountToken(token);
+      this._renderToken(token);
+      this.selectToken(token.id);
+      this.updateSelectionUI();
+    }
+
+    _canFuseSelection(){
+      const toks = this._getSelectedTokensArray();
+      if(!toks.length) return false;
+
+      // Fusion basée sur sélection (multi)
+      const plan = this._computeFusePlanFromSelection(toks);
+      if(plan) return true;
+
+      // PATCH D5 : fusion par somme (uniquement vers 1/2 ou unité)
+      const sumPlan = this._computeSumFusePlanHalfOrOne(toks);
+      if(sumPlan) return true;
+
+      // Fallback : comportement historique (1 pièce sélectionnée, et toutes les pièces autour existent)
+      if(toks.length === 1){
+        const s = toks[0];
+        if(!s || s.kind !== 'piece' || s.denom <= 1) return false;
+
+        const d = s.denom;
+        const tol = 2.4;
+        const baseX = s.x, baseY = s.y;
+        const group = this.tokens.filter(t => t.kind === 'piece' && t.denom === d &&
+          Math.abs(t.x - baseX) < tol && Math.abs(t.y - baseY) < tol);
+        if(group.length < d) return false;
+
+        const stepDeg = 360 / d;
+        const slotSet = new Set();
+        for(const p of group){
+          const slot = (typeof p.slot === 'number') ? p.slot :
+            (typeof p.rot === 'number') ? (((Math.round(p.rot/stepDeg) % d) + d) % d) : 0;
+          slotSet.add(slot);
+          if(slotSet.size >= d) break;
+        }
+        return slotSet.size >= d;
+      }
+
+      return false;
+    }
+
+
     fuseSelected(){
+      // PATCH D4 : fusion par sélection (multi) -> fraction plus grande ou disque complet
+      const selTokens = this._getSelectedTokensArray();
+      const plan = this._computeFusePlanFromSelection(selTokens);
+      if(plan){
+        this._applyFusePlan(plan);
+        return;
+      }
+
+      // PATCH D5 : fusion par somme (1/2 ou unité)
+      const sumPlan = this._computeSumFusePlanHalfOrOne(selTokens);
+      if(sumPlan){
+        this._applyFusePlan(sumPlan);
+        return;
+      }
+
       const s = this.selected;
       if(!s || s.kind !== 'piece' || s.denom <= 1) return;
 
