@@ -46,7 +46,11 @@
             box-shadow: 0 10px 15px rgba(0,0,0,0.3);
         }
 
-        .token.green {
+        
+        .token.dragging {
+            transition: none !important;
+        }
+.token.green {
             background: radial-gradient(circle at 35% 35%, #4ade80, #16a34a);
             border: 3px solid #14532d;
         }
@@ -134,20 +138,7 @@
             pointer-events: none;
             touch-action: none;
         }
-
-        /* CURSEUR VIRTUEL */
-        #custom-cursor {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            display: none;
-            transform-origin: top left;
-        }
-        .hide-cursor, .hide-cursor * {
-            cursor: none !important;
-        }
-
-        /* Bouton ENLEVER qui apparaît */
+/* Bouton ENLEVER qui apparaît */
         #btn-remove-all {
             animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
@@ -155,22 +146,19 @@
             0% { transform: scale(0); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-    </style>
+    
+        /* --- MODE PROJECTION (UI simplifiée) --- */
+        body.projection-mode #equation-terms span { 
+            font-size: clamp(2.8rem, 4vw, 4.6rem) !important;
+        }
+        body.projection-mode #action-label { display: none; }
+        body.projection-mode #grid-bg { opacity: 0.08 !important; }
+        body.projection-mode #zone-label { display: none; }
+
+</style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden">
-
-    <!-- CURSEUR PERSONNALISÉ -->
-    <div id="custom-cursor">
-        <svg id="cursor-pen-svg" class="drop-shadow-lg" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M27 7 L13 21" stroke="#1d4ed8" stroke-width="6" stroke-linecap="round"/>
-            <path d="M13 21 L8 32" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-            <path d="M8 32 L12 28 L16 32 Z" fill="#111827"/>
-            <circle cx="8" cy="32" r="1" fill="white"/>
-            <path d="M26 8 L14 20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" opacity="0.95"/>
-        </svg>
-    </div>
-
-    <!-- HEADER RESTRUCTURÉ -->
+<!-- HEADER RESTRUCTURÉ -->
     <header class="bg-white shadow-md z-30 flex flex-col shrink-0">
         
         <!-- LIGNE 1 : CONTROLES + BOUTON ENLEVER -->
@@ -184,12 +172,7 @@
                     </svg>
                     <span class="hidden sm:inline text-xs">Reset</span>
                 </button>
-
-                <button onclick="reduceEquation()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 font-bold py-1 px-3 sm:py-2 sm:px-4 rounded-lg shadow-sm border border-cyan-300 active:translate-y-1 transition-all text-sm sm:text-base leading-tight" title="Simplifier l'écriture">
-                    RÉDUIRE <br class="sm:hidden" /> / SIMPLIFIER
-                </button>
-                
-                <div class="h-8 w-px bg-slate-200 mx-1"></div>
+<div class="h-8 w-px bg-slate-200 mx-1"></div>
 
                 <div class="flex gap-1">
                     <button id="btn-plus" onclick="setOperator('add')" class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full border-4 border-blue-500 shadow-lg active:scale-95 transition flex items-center justify-center font-bold text-2xl" title="Addition">
@@ -214,21 +197,49 @@
 
             <!-- DROITE : Outils -->
             <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-300 shrink-0">
-                <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200" title="Main">
+                <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-50 border border-gray-200 flex items-center justify-center" title="Main">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
                     </svg>
                 </button>
-                <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Crayon">
+                <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Crayon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
                 </button>
-                <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer dessin">
+                <button onclick="clearCanvas()" class="p-2 rounded text-red-400 hover:bg-red-50 flex items-center justify-center" title="Effacer dessin">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </button>
+                <button onclick="toggleFullScreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Plein écran">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v3m0 0h3M3 8l4-4m10-1h3a2 2 0 012 2v3m0 0h-3m3-3l-4-4M8 21H5a2 2 0 01-2-2v-3m0 0h3m-3 3l4 4m10 0h3a2 2 0 002-2v-3m0 0h-3m3 3l-4 4" />
+                    </svg>
+                </button>
+                <button onclick="toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Son : on">
+                    <!-- icon injected by JS -->
+                </button>
+                <button onclick="toggleHelp()" id="btn-help" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Aide">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </button>
+                <button onclick="undo()" id="btn-undo" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Annuler (Ctrl+Z)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 16l-4-4 4-4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 20a8 8 0 0 0-8-8H5" />
+                    </svg>
+                </button>
+                <button onclick="toggleProjection()" id="btn-projection" class="p-2 rounded text-gray-500 hover:bg-gray-200 flex items-center justify-center" title="Mode projection">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 21h8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 17v4" />
+                    </svg>
+                </button>
+
             </div>
         </div>
 
@@ -247,7 +258,7 @@
         <canvas id="drawing-canvas"></canvas>
 
         <!-- SIDEBAR (GAUCHE) -->
-        <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
+        <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto no-scrollbar relative">
             <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
             
             <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
@@ -258,28 +269,90 @@
             </button>
 
             <div class="w-12 h-px bg-slate-300 my-1"></div>
-
-            <!-- Bouton REGROUPER -->
+            <!-- Bouton TRIER -->
             <button onclick="organizeBoard()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm" title="Raccourci: Espace">
-                REGROUPER
+                TRIER
             </button>
 
-            <button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
+            <!-- Bouton RÉDUIRE -->
+            <button onclick="reduceEquation()" class="w-full px-1 py-2 text-slate-600 text-[10px] sm:text-xs font-bold hover:bg-slate-200 flex flex-col items-center gap-1 rounded transition border border-slate-200 bg-white shadow-sm leading-tight" title="Réduire / simplifier l'écriture">
+                RÉDUIRE
+            </button>
+<button id="btn-auto-simplify" onclick="animateSimplification()" class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-700 border-2 border-indigo-200 flex flex-col items-center justify-center shadow-sm hover:bg-indigo-200 active:scale-95 transition" title="Raccourci: Entrée">
                 <span class="text-xs font-bold">AUTO</span>
                 <span class="text-lg font-bold">0</span>
             </button>
         </aside>
 
         <!-- BOARD (DROITE) -->
-        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
-            <div class="absolute inset-0 opacity-20 pointer-events-none" 
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-grab">
+            <div id="grid-bg" class="absolute inset-0 opacity-20 pointer-events-none" 
                  style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
             </div>
             
-            <div class="absolute top-2 left-2 pointer-events-none opacity-40">
+            <div id="zone-label" class="absolute top-2 left-2 pointer-events-none opacity-40">
                 <p class="text-xs text-slate-400">Zone de manipulation</p>
             </div>
         </main>
+    </div>
+
+
+    <!-- OVERLAY AIDE -->
+    <div id="help-overlay" class="hidden fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/50" onclick="toggleHelp(false)"></div>
+        <div class="relative max-w-2xl mx-auto mt-10 bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Aide rapide</h2>
+                    <p class="text-sm text-slate-500 mt-1">Raccourcis &amp; usage en classe (projection).</p>
+                </div>
+                <button class="p-2 rounded hover:bg-slate-100" onclick="toggleHelp(false)" title="Fermer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="font-bold text-slate-700 mb-2">Créer</div>
+                    <ul class="space-y-1 text-slate-600">
+                        <li><b>+</b> : ajouter <span class="text-green-700 font-bold">+1</span></li>
+                        <li><b>-</b> : ajouter <span class="text-red-700 font-bold">-1</span></li>
+                        <li><b>Suppr</b> : effacer tout</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="font-bold text-slate-700 mb-2">Actions</div>
+                    <ul class="space-y-1 text-slate-600">
+                        <li><b>Espace</b> : trier</li>
+                        <li><b>Entrée</b> : auto 0</li>
+                        <li><b>Ctrl+Z</b> : annuler</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="font-bold text-slate-700 mb-2">Outils</div>
+                    <ul class="space-y-1 text-slate-600">
+                        <li><b>Main</b> : déplacer les jetons</li>
+                        <li><b>Stylo</b> : annoter (croix)</li>
+                        <li><b>Son</b> : on/off</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="font-bold text-slate-700 mb-2">Projection</div>
+                    <ul class="space-y-1 text-slate-600">
+                        <li><b>F</b> : plein écran</li>
+                        <li><b>Mode projection</b> : interface simplifiée</li>
+                        <li><b>Ctrl + molette</b> : zoom (recommandé 125–150%)</li>
+                        <li><b>H</b> : afficher l’aide</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-5 text-xs text-slate-500">
+                Astuce : tu peux laisser le son <b>off</b> en classe et l’activer en démo si tu veux.
+            </div>
+        </div>
     </div>
 
     <script>
@@ -309,12 +382,212 @@
         const btnRemoveAll = document.getElementById('btn-remove-all');
         const canvas = document.getElementById('drawing-canvas');
         const ctx = canvas.getContext('2d');
-        const cursorDiv = document.getElementById('custom-cursor');
+        // --- UNDO (instantané, y compris stylo) ---
+        const MAX_UNDO = 40;
+        let undoStack = [];
+        let isRestoring = false;
+
+        function captureSnapshot() {
+            const tokensData = state.tokens.map(t => ({
+                id: t.id,
+                type: t.type,
+                x: t.x,
+                y: t.y,
+                left: parseFloat(t.element.style.left) || 0,
+                top: parseFloat(t.element.style.top) || 0,
+                pairId: t.pairId,
+                creationPhase: t.creationPhase,
+                isToRemove: !!t.isToRemove,
+                classes: Array.from(t.element.classList)
+            }));
+            const badgesData = Array.from(document.querySelectorAll('.zero-badge')).map(b => ({
+                id: b.id,
+                left: parseFloat(b.style.left) || 0,
+                top: parseFloat(b.style.top) || 0,
+                text: b.innerText || '0',
+                opacity: b.style.opacity || ''
+            }));
+            let canvasData = null;
+            try { canvasData = canvas.toDataURL('image/png'); } catch(e) { canvasData = null; }
+
+            return {
+                stateData: {
+                    phase: state.phase,
+                    operators: [...state.operators],
+                    nextId: state.nextId,
+                    locked: state.locked,
+                    isAligned: state.isAligned,
+                    isReduced: state.isReduced,
+                    currentPendingMode: state.currentPendingMode,
+                    currentTool: state.currentTool
+                },
+                tokensData,
+                badgesData,
+                canvasData
+            };
+        }
+
+        function pushUndoSnapshot() {
+            if (isRestoring) return;
+            if (state.locked) return; // pas d'undo pendant les animations
+            const snap = captureSnapshot();
+            // évite d'empiler 2000 snapshots identiques
+            const last = undoStack[undoStack.length - 1];
+            if (last && JSON.stringify(last.stateData) === JSON.stringify(snap.stateData) && last.tokensData.length === snap.tokensData.length) {
+                // on garde quand même si le canvas a changé
+                if (last.canvasData === snap.canvasData) return;
+            }
+            undoStack.push(snap);
+            if (undoStack.length > MAX_UNDO) undoStack.shift();
+        }
+
+        function restoreSnapshot(snap) {
+            if (!snap) return;
+            isRestoring = true;
+
+            // Nettoyage plateau
+            document.querySelectorAll('.token').forEach(el => el.remove());
+            document.querySelectorAll('.zero-badge').forEach(el => el.remove());
+            clearCanvas();
+
+            // Restore state
+            state.phase = snap.stateData.phase;
+            state.operators = [...snap.stateData.operators];
+            state.nextId = snap.stateData.nextId;
+            state.locked = snap.stateData.locked;
+            state.isAligned = snap.stateData.isAligned;
+            state.isReduced = snap.stateData.isReduced;
+            state.currentPendingMode = snap.stateData.currentPendingMode;
+            state.currentTool = snap.stateData.currentTool;
+
+            // Recrée tokens
+            state.tokens = [];
+            snap.tokensData.forEach(td => {
+                const el = document.createElement('div');
+                // classes
+                td.classes.forEach(c => el.classList.add(c));
+                if (!el.classList.contains('token')) el.classList.add('token');
+                // sécurité type
+                el.classList.remove('green', 'red');
+                el.classList.add(td.type);
+                el.innerText = td.type === 'green' ? '+1' : '-1';
+                el.id = `token-${td.id}`;
+                el.style.left = td.left + 'px';
+                el.style.top = td.top + 'px';
+
+                if (td.isToRemove) {
+                    el.classList.add('to-remove');
+                    el.setAttribute('onclick', 'removeSingleToken(this)');
+                } else {
+                    el.addEventListener('mousedown', handleDragStart);
+                    el.addEventListener('touchstart', handleDragStart, {passive: false});
+                }
+
+                board.appendChild(el);
+
+                state.tokens.push({
+                    id: td.id,
+                    type: td.type,
+                    element: el,
+                    x: td.x,
+                    y: td.y,
+                    pairId: td.pairId,
+                    creationPhase: td.creationPhase,
+                    isToRemove: td.isToRemove
+                });
+            });
+
+            // Recrée badges
+            snap.badgesData.forEach(bd => {
+                const badge = document.createElement('div');
+                badge.classList.add('zero-badge');
+                badge.id = bd.id;
+                badge.innerText = bd.text || '0';
+                badge.style.left = bd.left + 'px';
+                badge.style.top = bd.top + 'px';
+                if (bd.opacity) badge.style.opacity = bd.opacity;
+                board.appendChild(badge);
+            });
+
+            // Restore canvas
+            if (snap.canvasData) {
+                const img = new Image();
+                img.onload = () => {
+                    // canvas est en DPR, on a déjà ctx transformé par resizeCanvas()
+                    const dpr = window.devicePixelRatio || 1;
+                    ctx.save();
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    ctx.drawImage(img, 0, 0, canvas.width / dpr, canvas.height / dpr);
+                    ctx.restore();
+                };
+                img.src = snap.canvasData;
+            }
+
+            // UI
+            const hasPending = state.tokens.some(t => t.isToRemove);
+            if (hasPending) btnRemoveAll.classList.remove('hidden');
+            else btnRemoveAll.classList.add('hidden');
+
+            setTool(state.currentTool);
+            updateLogic();
+
+            isRestoring = false;
+        }
+
+        function undo() {
+            if (state.locked) return;
+            if (undoStack.length < 2) return;
+            undoStack.pop();
+            restoreSnapshot(undoStack[undoStack.length - 1]);
+        }
 
         // --- AUDIO ENGINE ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let soundEnabled = true;
+        try {
+            const saved = localStorage.getItem('soundEnabled');
+            if (saved !== null) soundEnabled = (saved === '1');
+        } catch(e) {}
+
+        let audioCtx = null;
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { audioCtx = null; }
+
+        const ICON_SOUND_ON = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H3v6h3l5 4V5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9a4 4 0 0 1 0 6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 7a7 7 0 0 1 0 10" />
+            </svg>
+        `;
+        const ICON_SOUND_OFF = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H3v6h3l5 4V5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-6 6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l6 6" />
+            </svg>
+        `;
+
+        function updateSoundButton() {
+            const btn = document.getElementById('btn-sound');
+            if (!btn) return;
+            btn.innerHTML = soundEnabled ? ICON_SOUND_ON : ICON_SOUND_OFF;
+            btn.title = soundEnabled ? 'Son : on' : 'Son : off';
+            btn.className = soundEnabled
+                ? "p-2 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200"
+                : "p-2 flex items-center justify-center rounded bg-white shadow text-gray-700 border border-gray-200 hover:bg-gray-50";
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            try { localStorage.setItem('soundEnabled', soundEnabled ? '1' : '0'); } catch(e) {}
+            if (!soundEnabled && audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend().catch(()=>{});
+            }
+            updateSoundButton();
+        }
+
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!soundEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -378,9 +651,82 @@
             if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
             if (e.key === 'Enter') { animateSimplification(); playSound('click'); }
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
-        });
+                    if (e.key === 'f' || e.key === 'F') { toggleFullScreen(); playSound('click'); }
 
-        // --- DESSIN & CURSEUR ---
+            // Aide
+            if (e.key === 'h' || e.key === 'H' || e.key === '?') { toggleHelp(); playSound('click'); }
+            // Projection
+            if (e.key === 'p' || e.key === 'P') { toggleProjection(); playSound('click'); }
+            // Undo (Ctrl/Cmd+Z)
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undo(); playSound('click'); }
+
+});
+// --- PLEIN ÉCRAN ---
+        
+        const ICON_FS_ENTER = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
+            </svg>
+        `;
+        const ICON_FS_EXIT = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l6 6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 6v3H6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 3l-6 6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 6v3h3" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21l6-6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 15h3v3" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15h-3v3" />
+            </svg>
+        `;
+
+        function updateFullScreenButton() {
+            const btn = document.getElementById('btn-fullscreen');
+            if (!btn) return;
+            const isFs = !!document.fullscreenElement;
+            btn.title = isFs ? 'Quitter le plein écran' : 'Plein écran';
+            btn.innerHTML = isFs ? ICON_FS_EXIT : ICON_FS_ENTER;
+            // Style un peu plus "propre" (comme le bouton main quand actif)
+            btn.className = isFs
+                ? "p-2 flex items-center justify-center rounded bg-white shadow text-gray-700 border border-gray-200 hover:bg-gray-50"
+                : "p-2 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200";
+        }
+        function toggleFullScreen() {
+            const root = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (root.requestFullscreen) root.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+        document.addEventListener('fullscreenchange', updateFullScreenButton);
+        updateFullScreenButton();
+
+        // --- AIDE ---
+        function toggleHelp(force) {
+            const overlay = document.getElementById('help-overlay');
+            if (!overlay) return;
+            const shouldOpen = (typeof force === 'boolean') ? force : overlay.classList.contains('hidden');
+            overlay.classList.toggle('hidden', !shouldOpen);
+        }
+
+        // --- MODE PROJECTION ---
+        function toggleProjection(force) {
+            const shouldOn = (typeof force === 'boolean') ? force : !document.body.classList.contains('projection-mode');
+            document.body.classList.toggle('projection-mode', shouldOn);
+            const btn = document.getElementById('btn-projection');
+            if (btn) {
+                btn.className = shouldOn
+                    ? "p-2 flex items-center justify-center rounded bg-white shadow text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    : "p-2 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200";
+                btn.title = shouldOn ? "Mode projection : on" : "Mode projection";
+            }
+        }
+
+
+// --- DESSIN & CURSEUR ---
         let isDrawing = false;
         let lastX = 0; let lastY = 0;
 
@@ -400,44 +746,36 @@
         }
         window.addEventListener('resize', resizeCanvas);
         setTimeout(resizeCanvas, 100);
+        setTimeout(() => { updateSoundButton(); }, 150);
+        setTimeout(() => { pushUndoSnapshot(); }, 220);
+        setTimeout(() => { toggleProjection(false); }, 230);
 
         function setTool(tool) {
             if (tool === 'hand') {
                 state.currentTool = 'hand';
                 canvas.style.pointerEvents = 'none';
-                board.classList.remove('hide-cursor');
-                cursorDiv.style.display = 'none';
-                document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
-                document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
+                board.style.cursor = 'grab';
+                canvas.style.cursor = 'default';
+                document.getElementById('tool-hand').className = "p-2 flex items-center justify-center rounded bg-white shadow text-gray-700 border border-gray-200";
+                document.getElementById('tool-pen').className = "p-2 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200";
             } else if (tool === 'pen') {
                 state.currentTool = 'pen';
                 canvas.style.pointerEvents = 'auto';
-                board.classList.add('hide-cursor');
-                cursorDiv.style.display = 'block';
+                board.style.cursor = 'crosshair';
+                canvas.style.cursor = 'crosshair';
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 3;
-                document.getElementById('tool-hand').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
-                document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
+                document.getElementById('tool-hand').className = "p-2 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200";
+                document.getElementById('tool-pen').className = "p-2 flex items-center justify-center rounded bg-white shadow text-gray-700 border border-gray-200";
             }
         }
 
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+            if (state.currentTool === 'pen') { /* rien */ }
         }
-
-        function updateCustomCursor(e) {
-            if (state.currentTool !== 'pen') return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            cursorDiv.style.left = clientX + 'px';
-            cursorDiv.style.top = clientY + 'px';
-            cursorDiv.style.transform = 'translate(-2px, -30px)';
-        }
-        window.addEventListener('mousemove', updateCustomCursor);
-        window.addEventListener('touchmove', updateCustomCursor, {passive: false});
-
-        function getPos(e) {
+function getPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -447,21 +785,23 @@
         function startDraw(e) {
             if (state.currentTool !== 'pen') return;
             isDrawing = true;
-            updateCustomCursor(e);
-            const pos = getPos(e);
+const pos = getPos(e);
             lastX = pos.x; lastY = pos.y;
         }
 
         function draw(e) {
             if (!isDrawing || state.currentTool !== 'pen') return;
             e.preventDefault();
-            updateCustomCursor(e);
-            const pos = getPos(e);
+const pos = getPos(e);
             ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
             lastX = pos.x; lastY = pos.y;
         }
 
-        function endDraw() { isDrawing = false; }
+        function endDraw() { 
+            if (!isDrawing) return; 
+            isDrawing = false; 
+            if (state.currentTool === 'pen') pushUndoSnapshot();
+        }
         canvas.addEventListener('mousedown', startDraw);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', endDraw);
@@ -557,6 +897,7 @@
 
                 btnRemoveAll.classList.remove('hidden');
                 updateLogic();
+                pushUndoSnapshot();
                 return;
             }
 
@@ -588,6 +929,7 @@
             
             state.tokens.push(tokenObj);
             updateLogic();
+            pushUndoSnapshot();
             return tokenObj;
         }
 
@@ -684,6 +1026,7 @@
                     state.currentPendingMode = null; 
                 }
                 updateLogic();
+                pushUndoSnapshot();
             }, 500);
         }
 
@@ -706,6 +1049,7 @@
                 btnRemoveAll.classList.add('hidden');
                 state.currentPendingMode = null;
                 updateLogic();
+                pushUndoSnapshot();
             }, (tokensToRemove.length * 100) + 500);
         }
 
@@ -717,6 +1061,7 @@
             state.isReduced = true;
             updateLogic();
             organizeBoard(); // Déclenche le rangement immédiat
+            // snapshot géré par organizeBoard()
         }
 
         function updateLogic() {
@@ -967,6 +1312,8 @@
             }
 
             updateLogic();
+        
+            pushUndoSnapshot();
         }
         
         function moveTokenTo(t, x, y) {
@@ -977,6 +1324,7 @@
 
         let draggedToken = null;
         let dragOffset = {x:0, y:0};
+        let dragStartLT = null;
 
         function handleDragStart(e) {
             if (state.currentTool !== 'hand') return; 
@@ -985,6 +1333,7 @@
             e.preventDefault();
             const el = e.target.closest('.token');
             if(!el) return;
+            el.classList.add('dragging');
             const id = parseInt(el.id.split('-')[1]);
             draggedToken = state.tokens.find(t => t.id === id);
             
@@ -993,6 +1342,9 @@
 
             if (draggedToken.pairId !== null) unpairTokens(draggedToken);
             
+                        board.style.cursor = 'grabbing';
+            el.style.cursor = 'grabbing';
+
             el.style.zIndex = 1000;
             el.style.transform = "scale(1.15)";
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
@@ -1000,6 +1352,7 @@
             const rect = el.getBoundingClientRect();
             dragOffset.x = clientX - rect.left;
             dragOffset.y = clientY - rect.top;
+            dragStartLT = { left: parseFloat(el.style.left)||0, top: parseFloat(el.style.top)||0 };
             document.addEventListener('mousemove', handleDragMove);
             document.addEventListener('touchmove', handleDragMove, {passive: false});
             document.addEventListener('mouseup', handleDragEnd);
@@ -1023,8 +1376,19 @@
         function handleDragEnd(e) {
             if (!draggedToken) return;
             checkForPairing(draggedToken);
+            draggedToken.element.classList.remove('dragging');
             draggedToken.element.style.zIndex = '';
             draggedToken.element.style.transform = "";
+            if (state.currentTool === 'hand') {
+                board.style.cursor = 'grab';
+            }
+            // Snapshot si le jeton a bougé
+            if (dragStartLT && draggedToken) {
+                const curLeft = parseFloat(draggedToken.element.style.left) || 0;
+                const curTop = parseFloat(draggedToken.element.style.top) || 0;
+                if (curLeft !== dragStartLT.left || curTop !== dragStartLT.top) pushUndoSnapshot();
+            }
+            dragStartLT = null;
             draggedToken = null;
             document.removeEventListener('mousemove', handleDragMove);
             document.removeEventListener('touchmove', handleDragMove);
@@ -1098,13 +1462,41 @@
 
             const activeTokens = state.tokens.filter(t => t.pairId === null && !t.isToRemove);
             
-            const logicalPositives = activeTokens.filter(t => t.type === 'green').sort((a,b) => (a.x - b.x) || (a.y - b.y));
-            const logicalNegatives = activeTokens.filter(t => t.type === 'red').sort((a,b) => (a.x - b.x) || (a.y - b.y));
+            const logicalPositives = activeTokens
+                .filter(t => t.type === 'green')
+                .sort((a,b) => (a.y - b.y) || (a.x - b.x));
+            const logicalNegatives = activeTokens
+                .filter(t => t.type === 'red')
+                .sort((a,b) => (a.y - b.y) || (a.x - b.x));
 
+            // Option B: appariement "au plus proche" (évite les annulations incohérentes quand il y a plusieurs lignes)
             const newPairs = [];
-            const count = Math.min(logicalPositives.length, logicalNegatives.length);
-            for(let i=0; i<count; i++) {
-                newPairs.push([logicalPositives[i], logicalNegatives[i]]);
+            const remainingPos = [...logicalPositives];
+            const remainingNeg = [...logicalNegatives];
+
+            while (remainingPos.length > 0 && remainingNeg.length > 0) {
+                let bestI = 0, bestJ = 0;
+                let bestD = Infinity;
+
+                for (let i = 0; i < remainingPos.length; i++) {
+                    const p = remainingPos[i];
+                    for (let j = 0; j < remainingNeg.length; j++) {
+                        const n = remainingNeg[j];
+                        const dx = p.x - n.x;
+                        const dy = p.y - n.y;
+                        const d = dx * dx + dy * dy;
+
+                        if (d < bestD) {
+                            bestD = d;
+                            bestI = i;
+                            bestJ = j;
+                        }
+                    }
+                }
+
+                newPairs.push([remainingPos[bestI], remainingNeg[bestJ]]);
+                remainingPos.splice(bestI, 1);
+                remainingNeg.splice(bestJ, 1);
             }
 
             if (existingPairs.length === 0 && newPairs.length === 0) {
@@ -1145,6 +1537,7 @@
                     updateLogic();
                     // On lance le regroupement "propre" final
                     organizeBoard();
+                    pushUndoSnapshot();
                 }, totalTime);
 
             }, delayForNewPairs);
@@ -1192,6 +1585,7 @@
             btnRemoveAll.classList.add('hidden');
             setTool('hand');
             updateLogic();
+            pushUndoSnapshot();
         }
     </script>
 </body>
