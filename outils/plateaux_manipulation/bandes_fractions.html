@@ -55,7 +55,7 @@
       top: -2500px; 
       left: -2500px;
       pointer-events: none;
-      z-index: 3000;
+      z-index: 96000;
     }
 
     /* --- Jonctions "tableau" : on efface localement la double bordure puis on redessine une ligne unique --- */
@@ -73,6 +73,21 @@
     .seam-line{ background: var(--gridColor); }
 
 
+
+/* --- Sélection rectangle (Ctrl/Cmd + glisser sur le vide) --- */
+#marquee{
+  position:absolute;
+  left:0; top:0;
+  width:0; height:0;
+  display:none;
+  pointer-events:none;
+  z-index: 94500; /* au-dessus des bandes, sous le stylo */
+  border: 2px dashed rgba(17,24,39,0.65);
+  background: rgba(59,130,246,0.10);
+  border-radius: 6px;
+}
+#board-container.selecting{ cursor: crosshair; }
+
     /* --- Demi-droite --- */
     #number-line{
       position: absolute;
@@ -83,6 +98,38 @@
     }
     #number-line.hidden{ display:none; }
     #number-line text{ font-family:'Fredoka', sans-serif; font-weight:800; }
+
+    /* --- Poignées de la demi-droite (non-scalées, au-dessus du plateau) --- */
+    #nl-handles-layer{
+      position:absolute;
+      inset:0;
+      z-index: 97000;
+      pointer-events:none;
+    }
+    .nl-handle{
+      position:absolute;
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      background:#fff;
+      border:2px solid rgba(17,24,39,0.9);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Fredoka', sans-serif;
+      font-weight:900;
+      font-size:14px;
+      color:#111827;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:none;
+      pointer-events:auto;
+    }
+    .nl-handle.hidden{ display:none; }
+    .nl-handle.origin{ cursor: grab; }
+    .nl-handle.origin:active{ cursor: grabbing; }
+    .nl-handle.end{ cursor: ew-resize; font-size:16px; letter-spacing:-2px; line-height:1; }
 
     .no-scrollbar::-webkit-scrollbar{ display:none; }
     .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
@@ -300,13 +347,13 @@
     .frac.menu .bar{ width: 0.9em; height: 2px; margin: 2px 0; background: rgba(0,0,0,0.70); }
 
     /* Mode crayon */
-    body.pen-mode #board-container{ cursor: crosshair; }
+    body.pen-mode #board-container{ cursor: crosshair; touch-action: none; }
     body.pen-mode #board-container.panning{ cursor: grabbing; }
     body.pen-mode .strip{ cursor: crosshair; }
     body.pen-mode .strip.dragging{ cursor: grabbing; }
 
     .mode-btn {
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 800;
@@ -326,12 +373,24 @@
     @media (max-width: 640px){
       :root{ --stripH: 52; }
     }
+  
+
+    /* --- UI auxiliaire --- */
+    body.modal-open { overflow: hidden; }
+
+    /* Projection : masque la palette pour maximiser le plateau (idéal vidéoprojecteur) */
+    body.projection-mode aside { display: none !important; }
+
+    /* Boutons état */
+    .is-off { opacity: 0.55; }
+
   </style>
 </head>
 
 <body class="h-screen w-screen flex flex-col">
 
-  <header class="bg-blue-50 p-2 shadow-md z-30 flex flex-wrap items-center gap-3 shrink-0">
+  <header class="bg-blue-50 p-2 shadow-md z-30 flex items-center gap-2 shrink-0">
+    <div id="header-left" class="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
     <div class="flex items-center gap-2">
       <button id="btn-undo" class="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm active:scale-95 transition" title="Annuler">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,13 +506,65 @@
         </svg>
       </button>
 
+      <button id="btn-undo-drawing" class="p-2 rounded text-slate-700 hover:bg-white" title="Annuler le dernier trait (en mode crayon : Ctrl+Z)">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 14l-4-4 4-4"/>
+          <path d="M20 20v-6a4 4 0 0 0-4-4H5"/>
+        </svg>
+      </button>
+
       <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
       </button>
     </div>
+    </div>
+
+    <div id="utility-actions" class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg flex-shrink-0">
+      <button id="btn-session" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Séance (enregistrer / charger / exporter / importer)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7V4a1 1 0 0 1 1-1h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"/>
+          <path d="M8 3v6h8V3"/>
+          <path d="M8 21v-6h8v6"/>
+        </svg>
+        <span class="text-[10px] font-extrabold leading-none">Séance</span>
+      </button>
+
+      <button id="btn-help" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Aide (raccourcis / gestes) — touche ? ou F1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4"/>
+          <path d="M12 17h.01"/>
+        </svg>
+        <span class="text-[10px] font-extrabold leading-none">Aide</span>
+      </button>
+
+      <button id="btn-sound" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Son : ON/OFF">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 5 6 9H2v6h4l5 4V5z"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <span id="sound-label" class="text-[10px] font-extrabold leading-none">Son</span>
+      </button>
+
+      <button id="btn-fullscreen" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Plein écran">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+          <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+          <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+        </svg>
+        <span class="text-[10px] font-extrabold leading-none">Écran</span>
+      </button>
+    </div>
+
   </header>
+
+  <div id="projection-palette-bar" class="bg-blue-50 border-b border-blue-200 px-2 py-2 flex justify-center overflow-x-auto no-scrollbar">
+    <!-- Palette déplacée ici en mode projection -->
+  </div>
 
   <div class="flex flex-1 overflow-hidden relative">
 
@@ -469,10 +580,106 @@
           <canvas id="drawing-canvas"></canvas>
           <div id="number-line" class="hidden"></div>
         </div>
+        <div id="nl-handles-layer" aria-hidden="true">
+          <div id="nl-handle-end" class="nl-handle end hidden" title="Régler la longueur">
+            <svg width="20" height="12" viewBox="0 0 20 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <line x1="8" y1="6" x2="12" y2="6" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+              <polygon points="4,6 8,3 8,9" fill="rgba(17,24,39,0.9)" />
+              <polygon points="16,6 12,3 12,9" fill="rgba(17,24,39,0.9)" />
+            </svg>
+          </div>
+        </div>
+        <div id="marquee" aria-hidden="true"></div>
       </div>
     </main>
 
   </div>
+
+
+  <!-- Modales / UI auxiliaire -->
+  <div id="modal-session" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-[100]">
+    <div class="bg-white rounded-2xl shadow-2xl w-[560px] max-w-[95vw] p-4 border border-slate-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-lg font-extrabold text-slate-800">Séance</div>
+        <button id="btn-session-close" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold" title="Fermer">✕</button>
+      </div>
+
+      <div class="grid gap-3">
+        <div class="text-sm text-slate-600">
+          Enregistre l’état du plateau (bandes, positions, zoom, mode d’étiquettes) dans ton navigateur — et export/import en JSON pour partager.
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <input id="scene-name" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Nom de la scène (ex : Séance 5e — fractions équivalentes)" />
+          <button id="btn-scene-save" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow active:scale-95 transition">Enregistrer</button>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <select id="scene-list" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-white"></select>
+          <button id="btn-scene-load" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow active:scale-95 transition">Charger</button>
+          <button id="btn-scene-delete" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold shadow active:scale-95 transition">Supprimer</button>
+        </div>
+
+        <div class="flex gap-2 flex-wrap">
+          <button id="btn-scene-export" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-extrabold shadow active:scale-95 transition">Exporter JSON</button>
+          <button id="btn-scene-import" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold shadow active:scale-95 transition">Importer JSON</button>
+          <input id="file-scene-import" type="file" accept="application/json" class="hidden" />
+        </div>
+
+        <div class="text-xs text-slate-500">
+          Astuce : <b>Ctrl+Z</b> (ou ⌘Z sur Mac) annule aussi après un chargement.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-help" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-[100]">
+    <div class="bg-white rounded-2xl shadow-2xl w-[660px] max-w-[95vw] p-4 border border-slate-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-lg font-extrabold text-slate-800">Aide — raccourcis & gestes</div>
+        <button id="btn-help-close" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold" title="Fermer">✕</button>
+      </div>
+
+      <div class="grid gap-3 text-sm text-slate-700">
+        <div class="grid gap-2">
+          <div class="font-extrabold text-slate-800">Manipulation</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>Main</b> : cliquer une bande pour la sélectionner, puis <b>glisser</b> pour déplacer.</li>
+            <li><b>Glisser sur le vide</b> : déplace le plateau (panoramique).</li>
+            <li><b>Molette</b> : zoom autour du pointeur (plus précis en projection).</li>
+          </ul>
+        </div>
+
+        <div class="grid gap-2">
+          <div class="font-extrabold text-slate-800">Raccourcis essentiels</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>Ctrl+Z</b> (ou ⌘Z) : annuler la dernière action.</li>
+            <li><b>Ctrl/Cmd + clic</b> (ou <b>Shift + clic</b>) : sélectionner plusieurs bandes (re-clic pour enlever).</li>
+            <li><b>Suppr</b> (Delete / Backspace) : supprimer la/les bandes sélectionnées.</li>
+            <li><b>Échap</b> : désélectionner.</li>
+          </ul>
+        </div>
+
+        <div class="grid gap-2">
+          <div class="font-extrabold text-slate-800">Raccourcis “prof”</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>D</b> : dupliquer la/les bandes sélectionnées.</li>
+            <li><b>T</b> : tourner / retourner la/les bandes sélectionnées.</li>
+            <li><b>S</b> : séparer (si bande découpée en parts).</li>
+            <li><b>C</b> : couper (si possible).</li>
+            <li><b>F</b> : fusionner (sur pièces compatibles).</li>
+            <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande (0 = unité) au centre du plateau.</li>
+            <li><b>?</b> ou <b>F1</b> : ouvrir/fermer cette aide.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 hidden z-[110]">
+    <div id="toast-inner" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold shadow-2xl"></div>
+  </div>
+
 
 <script>
   // --- Configuration couleurs ---
@@ -492,6 +699,7 @@
 
   function playSound(type){
     if (!audioCtx) return;
+    if (!window.SOUND_ENABLED) return;
     if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -522,6 +730,401 @@
     }
   }
 
+  // --- Préférences (son) ---
+  const PREFS_KEY = 'fractionstrips_prefs_v1';
+  const SCENES_KEY = 'fractionstrips_scenes_v1';
+
+  function loadPrefs(){
+    try{
+      const raw = localStorage.getItem(PREFS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(_){ return {}; }
+  }
+  function savePrefs(p){
+    try{ localStorage.setItem(PREFS_KEY, JSON.stringify(p)); }catch(_){}
+  }
+
+  function updateUtilityButtonsUI(){
+    const prefs = loadPrefs();
+    const sound = (prefs.sound !== false);
+
+    const soundBtn = document.getElementById('btn-sound');
+    const soundLab = document.getElementById('sound-label');
+    if(soundBtn){
+      soundBtn.classList.toggle('is-off', !sound);
+      if(soundLab) soundLab.textContent = sound ? 'Son' : 'Muet';
+      soundBtn.title = sound ? 'Son : ON (cliquer pour couper)' : 'Son : OFF (cliquer pour activer)';
+    }
+  }
+
+  function applyPrefs(p){
+    // Réglages imposés : projection toujours ON + bordures toujours noires
+    const theme = 'black';
+    const proj  = true;
+
+    window.SOUND_ENABLED = (p.sound !== false);
+
+    document.body.classList.add('projection-mode');
+    document.body.classList.remove('theme-soft');
+
+    // Bordures toujours noires (plus de mode gris)
+    document.documentElement.style.setProperty('--gridColor', '#000000');
+
+    // --- Projection : palette en barre horizontale (sans dupliquer, on déplace le DOM) ---
+    const palette = document.getElementById('palette');
+    const bar = document.getElementById('projection-palette-bar');
+    if(palette && bar){
+      if(!window.__paletteHome){
+        window.__paletteHome = { parent: palette.parentElement, next: palette.nextSibling };
+      }
+      if(proj){
+        bar.classList.remove('hidden');
+        if(palette.parentElement !== bar) bar.appendChild(palette);
+
+        // Mise en page projection : palette compacte en 2 lignes (blocs horizontaux)
+// Ligne 1 : unité, 1/2, 1/3, 1/4, 1/5
+// Ligne 2 : 1/6, 1/8, 1/10
+// En projection on réduit la largeur des bandes du menu pour que tout rentre sans prendre trop de hauteur.
+if(window.app){
+  const desired = 140;
+  if(window.app.menuBandW !== desired){
+    window.app.menuBandW = desired;
+    try{ window.app.buildPalette(); }catch(_){}
+  }
+}
+
+palette.classList.remove('flex','flex-col','gap-3','px-3','px-0');
+palette.classList.remove('flex-row','items-start','gap-4','flex-nowrap');
+palette.classList.add('inline-grid','grid-cols-[repeat(5,max-content)]','grid-rows-2','gap-x-4','gap-y-1','content-start','items-center','justify-items-start','px-0');
+
+// Chaque item : duo horizontal (bande + pièce), sans libellé
+palette.querySelectorAll('.palette-item').forEach(item=>{
+  item.classList.remove('flex-col');
+  item.classList.add('flex','items-center');
+
+  const lab = item.querySelector('.palette-label');
+  if(lab) lab.classList.add('hidden');
+
+  const picks = item.querySelector('.palette-picks');
+  if(picks){
+    picks.classList.remove('flex-col','items-start','gap-1');
+    picks.classList.add('items-center','flex-nowrap','gap-2');
+    picks.classList.remove('gap-3');
+  }
+
+  const denom = parseInt(item.dataset.denom || '', 10);
+  const map = {
+    1:{r:1,c:1}, 2:{r:1,c:2}, 3:{r:1,c:3}, 4:{r:1,c:4}, 5:{r:1,c:5},
+    6:{r:2,c:2}, 8:{r:2,c:3}, 10:{r:2,c:4},
+  };
+  if(map[denom]){
+    item.style.gridRowStart = map[denom].r;
+    item.style.gridColumnStart = map[denom].c;
+  }else{
+    item.style.gridRowStart = '';
+    item.style.gridColumnStart = '';
+  }
+});
+      }else{
+        bar.classList.add('hidden');
+
+        // Retour à la place d'origine
+        const home = window.__paletteHome;
+        if(home && home.parent){
+          if(home.next && home.next.parentNode === home.parent){
+            home.parent.insertBefore(palette, home.next);
+          }else{
+            home.parent.appendChild(palette);
+          }
+        }
+        // Remise en page normale
+        // (on remet la taille de menu standard)
+        if(window.app){
+          const desired = 170;
+          if(window.app.menuBandW !== desired){
+            window.app.menuBandW = desired;
+            try{ window.app.buildPalette(); }catch(_){}
+          }
+        }
+
+        palette.classList.remove(
+          'inline-grid','grid-cols-[repeat(5,max-content)]','grid-rows-2',
+          'gap-x-4','gap-y-1','gap-y-2',
+          'content-start','items-center','items-start','justify-items-start',
+          'px-0'
+        );
+        palette.classList.add('flex','flex-col','gap-3','px-3');
+
+        palette.querySelectorAll('.palette-item').forEach(item=>{
+          item.style.gridRowStart = '';
+          item.style.gridColumnStart = '';
+          item.classList.add('flex','flex-col');
+          item.classList.remove('items-center');
+          const lab = item.querySelector('.palette-label');
+          if(lab) lab.classList.remove('hidden');
+          const picks = item.querySelector('.palette-picks');
+          if(picks){
+            picks.classList.remove('gap-2');
+            picks.classList.add('items-center','gap-3','flex-nowrap');
+          }
+        });
+
+        palette.classList.remove('flex-row','items-start','gap-4','flex-nowrap');
+      }
+    }
+
+    // Recalcul dimensions après changement de layout (projection / palette)
+    requestAnimationFrame(()=>{
+      if(window.app){
+        try{ window.app.resizeCanvas?.(); }catch(_){}
+        try{ window.app.updateTransform?.(); }catch(_){}
+        try{ window.app.updateNumberLineEl?.(); }catch(_){}
+      }
+    });
+
+    updateUtilityButtonsUI();
+  }
+
+  function showToast(msg, ms=1600){
+    const t = document.getElementById('toast');
+    const inner = document.getElementById('toast-inner');
+    if(!t || !inner) return;
+    inner.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(showToast._to);
+    showToast._to = setTimeout(()=> t.classList.add('hidden'), ms);
+  }
+
+  function getScenes(){
+    try{
+      const raw = localStorage.getItem(SCENES_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      return (obj && typeof obj === 'object') ? obj : {};
+    }catch(_){ return {}; }
+  }
+  function setScenes(obj){
+    try{ localStorage.setItem(SCENES_KEY, JSON.stringify(obj)); }catch(_){}
+  }
+
+  function getSnapshot(app){
+    return {
+      version: 1,
+      createdAt: new Date().toISOString(),
+      tokens: app.tokens.map(t => ({
+        id: t.id, denom: t.denom, kind: t.kind, side: t.side,
+        x: t.x, y: t.y, z: t.z, hidden: t.hidden
+      })),
+      nextId: app.nextId,
+      topZ: app.topZ,
+      selectedId: app.selectedId,
+      pan: {...app.pan},
+      scale: app.scale,
+      labelMode: app.labelMode
+    };
+  }
+
+  function applySnapshot(app, snap, {pushUndo=true} = {}){
+    if(!snap || !Array.isArray(snap.tokens)) throw new Error('Snapshot invalide');
+    if(pushUndo) app.saveState();
+    app.clearAllTokens(false);
+    app.tokens = snap.tokens.map(t => ({...t}));
+    app.nextId = snap.nextId || (Math.max(0, ...app.tokens.map(t=>t.id)) + 1);
+    app.topZ = snap.topZ || 200;
+    app.selectedId = snap.selectedId ?? null;
+    app.pan = snap.pan || {x:0,y:0};
+    app.scale = snap.scale || 1;
+    app.labelMode = snap.labelMode || 'numeric';
+    app.updateModeUI();
+    app.buildPalette();
+    app.tokens.forEach(t => app.mountToken(t));
+    app.updateTransform();
+    app.updateSelectionUI();
+    try{ app.selectToken(app.selectedId); }catch(_){}
+  }
+
+  function openModal(id){
+    const m = document.getElementById(id);
+    if(!m) return;
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+    document.body.classList.add('modal-open');
+  }
+  function closeModal(id){
+    const m = document.getElementById(id);
+    if(!m) return;
+    m.classList.add('hidden');
+    m.classList.remove('flex');
+    document.body.classList.remove('modal-open');
+  }
+
+  function toggleHelp(forceOpen=null){
+    const m = document.getElementById('modal-help');
+    if(!m) return;
+    const isOpen = !m.classList.contains('hidden');
+    const shouldOpen = (forceOpen === null) ? !isOpen : !!forceOpen;
+    if(shouldOpen) openModal('modal-help');
+    else closeModal('modal-help');
+  }
+
+  function refreshScenesUI(){
+    const sel = document.getElementById('scene-list');
+    if(!sel) return;
+    const scenes = getScenes();
+    const names = Object.keys(scenes).sort((a,b)=>a.localeCompare(b,'fr'));
+    sel.innerHTML = '';
+    if(names.length === 0){
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '— Aucune scène enregistrée —';
+      sel.appendChild(opt);
+      sel.disabled = true;
+    }else{
+      sel.disabled = false;
+      names.forEach(n=>{
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  function openSessionModal(){
+    refreshScenesUI();
+    const nameInput = document.getElementById('scene-name');
+    if(nameInput && !nameInput.value){
+      const d = new Date();
+      const pad = (x)=> String(x).padStart(2,'0');
+      nameInput.value = `Séance ${pad(d.getDate())}/${pad(d.getMonth()+1)} — `;
+      nameInput.focus();
+      nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
+    }
+    openModal('modal-session');
+  }
+
+  function toggleFullscreen(){
+    const el = document.documentElement;
+    if(!document.fullscreenElement){
+      el.requestFullscreen?.().catch(()=>{});
+    }else{
+      document.exitFullscreen?.().catch(()=>{});
+    }
+  }
+
+  function downloadJSON(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 1000);
+  }
+
+  function setupExtraUI(app){
+    // Boutons barre du haut
+    document.getElementById('btn-help')?.addEventListener('click', ()=> toggleHelp(true));
+    document.getElementById('btn-help-close')?.addEventListener('click', ()=> toggleHelp(false));
+    document.getElementById('btn-session')?.addEventListener('click', ()=> openSessionModal());
+    document.getElementById('btn-session-close')?.addEventListener('click', ()=> closeModal('modal-session'));
+    document.getElementById('btn-fullscreen')?.addEventListener('click', ()=> toggleFullscreen());
+
+    // Toggles
+    document.getElementById('btn-sound')?.addEventListener('click', ()=>{
+      const p = loadPrefs();
+      const current = (p.sound !== false);
+      p.sound = !current;
+      savePrefs(p);
+      applyPrefs(p);
+      showToast(p.sound ? 'Son activé' : 'Son coupé');
+    });
+
+    // Session modal actions
+    document.getElementById('btn-scene-save')?.addEventListener('click', ()=>{
+      const name = (document.getElementById('scene-name')?.value || '').trim();
+      if(!name){ showToast('Donne un nom à la scène'); return; }
+      const scenes = getScenes();
+      scenes[name] = getSnapshot(app);
+      setScenes(scenes);
+      refreshScenesUI();
+      showToast('Scène enregistrée ✅');
+    });
+
+    document.getElementById('btn-scene-load')?.addEventListener('click', ()=>{
+      const sel = document.getElementById('scene-list');
+      const name = sel?.value;
+      if(!name){ showToast('Choisis une scène'); return; }
+      const scenes = getScenes();
+      const snap = scenes[name];
+      if(!snap){ showToast('Scène introuvable'); return; }
+      try{
+        applySnapshot(app, snap, {pushUndo:true});
+        closeModal('modal-session');
+        showToast('Scène chargée ✅');
+      }catch(err){
+        console.error(err);
+        showToast('JSON invalide');
+      }
+    });
+
+    document.getElementById('btn-scene-delete')?.addEventListener('click', ()=>{
+      const sel = document.getElementById('scene-list');
+      const name = sel?.value;
+      if(!name) return;
+      const scenes = getScenes();
+      if(!(name in scenes)) return;
+      delete scenes[name];
+      setScenes(scenes);
+      refreshScenesUI();
+      showToast('Scène supprimée');
+    });
+
+    document.getElementById('btn-scene-export')?.addEventListener('click', ()=>{
+      const snap = getSnapshot(app);
+      const d = new Date();
+      const pad=(x)=>String(x).padStart(2,'0');
+      const filename = `bandes_fractions_scene_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+      downloadJSON(filename, snap);
+      showToast('Export JSON ✅');
+    });
+
+    const fileInput = document.getElementById('file-scene-import');
+    document.getElementById('btn-scene-import')?.addEventListener('click', ()=> fileInput?.click());
+    fileInput?.addEventListener('change', async ()=>{
+      const f = fileInput.files?.[0];
+      if(!f) return;
+      try{
+        const txt = await f.text();
+        const snap = JSON.parse(txt);
+        applySnapshot(app, snap, {pushUndo:true});
+        closeModal('modal-session');
+        showToast('Import JSON ✅');
+      }catch(err){
+        console.error(err);
+        showToast('Import impossible (JSON)');
+      }finally{
+        fileInput.value = '';
+      }
+    });
+
+    // Fermer les modales au clic fond noir
+    document.getElementById('modal-help')?.addEventListener('click', (e)=>{
+      if(e.target?.id === 'modal-help') toggleHelp(false);
+    });
+    document.getElementById('modal-session')?.addEventListener('click', (e)=>{
+      if(e.target?.id === 'modal-session') closeModal('modal-session');
+    });
+
+    // État initial
+    const p0 = loadPrefs();
+    // Projection forcée + bordures noires : on garde uniquement la préférence du son.
+    applyPrefs(p0);
+}
+
+
+
   class FractionStripsApp {
     constructor(){
       this.history = [];
@@ -530,6 +1133,7 @@
       this.topZ = 200; 
       
       this.selectedId = null;
+      this.selectedIds = new Set();
       // 'numeric', 'text', 'percent', 'decimal', 'empty'
       this.labelMode = 'numeric';
 
@@ -542,6 +1146,9 @@
       this.isDrawing = false;
       this.drawPoints = [];
       this.basePenPx = 2.55;
+      this.menuBandW = 170; // largeur (px) des bandes dans la palette
+      this.strokes = [];
+      this._currentStroke = null;
 
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
@@ -555,20 +1162,34 @@
       this.ctx = this.canvas.getContext('2d');
 
       this.numberLineEl = document.getElementById('number-line');
+      this.nlHandlesLayer = document.getElementById('nl-handles-layer');
+      this.nlHandle0 = document.getElementById('nl-handle0');
+      this.nlHandleEnd = document.getElementById('nl-handle-end');
+
+      this.marqueeEl = document.getElementById('marquee');
+      this.isMarqueeSelecting = false;
+      this._marqueeStart = null;
+      this._marqueeNow = null;
       this.numberLine = {
         active: false,
+        initialized: false,
         x: 0,
         y: 0,
-        len: Math.max(this.unitW * 10.0, 6000),
+        // Longueur "raisonnable" au départ (en px monde). Ajustable via poignées.
+        len: 900,
+        defaultLen: 900,
         baselineOffset: 18,
         height: 46
       };
+
+      this._nlRAF = null;
 
       this.DENOM_SET = new Set(FRACTIONS.map(f => f.denom));
 
       this.buildPalette();
       this.initUI();
       this.initBoardListeners();
+      this.initNumberLineHandles();
       this.resizeCanvas();
       this.updateTransform();
       this.updateSelectionUI();
@@ -605,6 +1226,7 @@
         nextId: this.nextId,
         topZ: this.topZ,
         selectedId: this.selectedId,
+        selectedIds: this.selectedIds ? Array.from(this.selectedIds) : null,
         pan: {...this.pan},
         scale: this.scale,
         labelMode: this.labelMode
@@ -622,6 +1244,18 @@
       this.topZ = snap.topZ || 200;
       
       this.selectedId = snap.selectedId;
+
+      // Restaure multi-sélection si dispo (sinon on retombe sur selectedId)
+      this.selectedIds = new Set();
+      if(Array.isArray(snap.selectedIds) && snap.selectedIds.length){
+        for(const id of snap.selectedIds) this.selectedIds.add(id);
+        if(!this.selectedIds.has(this.selectedId)){
+          const arr = Array.from(this.selectedIds);
+          this.selectedId = arr.length ? arr[arr.length - 1] : null;
+        }
+      } else if(this.selectedId){
+        this.selectedIds.add(this.selectedId);
+      }
       this.pan = snap.pan;
       this.scale = snap.scale;
       this.labelMode = snap.labelMode || 'numeric';
@@ -630,6 +1264,7 @@
       this.buildPalette();
       
       this.tokens.forEach(t => this.mountToken(t));
+      this.refreshTokenSelectedClass();
       this.updateTransform();
       this.updateSelectionUI();
       playSound('whoosh');
@@ -720,6 +1355,7 @@
       FRACTIONS.forEach(f => {
         const row = document.createElement('div');
         row.className = 'palette-item flex flex-col'; 
+        row.dataset.denom = String(f.denom);
         const label = document.createElement('div');
         label.className = 'palette-label text-xs font-bold text-slate-500 mb-1 ml-1 capitalize';
         let text = f.name;
@@ -727,7 +1363,7 @@
         label.textContent = text;
         row.appendChild(label);
         const picks = document.createElement('div');
-        picks.className = 'flex items-center gap-3 flex-nowrap';
+        picks.className = 'palette-picks flex items-center gap-3 flex-nowrap';
         picks.appendChild(this.makeSpawnTile(f.denom, 'band'));
         if(f.denom !== 1) picks.appendChild(this.makeSpawnTile(f.denom, 'piece'));
         row.appendChild(picks);
@@ -747,7 +1383,7 @@
       tile.style.borderColor = cfg.border;
       tile.setAttribute('draggable', 'false');
       tile.title = (kind === 'band') ? 'Ajouter une bande' : 'Ajouter une pièce';
-      const menuBandW = 170;
+      const menuBandW = this.menuBandW || 170;
       const w = (kind === 'band') ? menuBandW : Math.max(18, Math.round(menuBandW / denom));
       tile.style.width = w + 'px';
       
@@ -877,6 +1513,17 @@
 
     updateTransform(){
       this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
+      if(this.numberLine && this.numberLine.active){
+        this.scheduleNumberLineUpdate();
+      }
+    }
+
+    scheduleNumberLineUpdate(){
+      if(this._nlRAF) return;
+      this._nlRAF = requestAnimationFrame(() => {
+        this._nlRAF = null;
+        this.updateNumberLineEl();
+      });
     }
 
     zoomAt(clientX, clientY, newScale){
@@ -906,10 +1553,26 @@
     toggleNumberLine(){
       this.numberLine.active = !this.numberLine.active;
       if(this.numberLine.active){
+        // Initialise une longueur par défaut une seule fois (pas d'auto-ajustement ensuite).
+        if(!this.numberLine.initialized){
+          const br0 = this.boardContainer.getBoundingClientRect();
+          const proposed = Math.max(520, Math.min(2400, (br0.width * 0.62) / this.scale));
+          this.numberLine.len = proposed;
+          this.numberLine.defaultLen = proposed;
+          this.numberLine.initialized = true;
+        }
+
         const br = this.boardContainer.getBoundingClientRect();
-        const p = this.getWorldPos(br.left + 120, br.top + br.height * 0.72);
+        // Place l'origine (0) à gauche dans la zone blanche visible (plein écran ou non)
+        const lenWorld = (this.numberLine.len || this.numberLine.defaultLen || 900);
+        const lenScreen = lenWorld * this.scale;
+        const leftMargin = 18;
+        const startScreenX = br.left + leftMargin;
+        const startScreenY = br.top + br.height * 0.50;
+        const p = this.getWorldPos(startScreenX, startScreenY);
         this.numberLine.x = p.x;
         this.numberLine.y = p.y;
+
         playSound('pop');
       } else {
         playSound('whoosh');
@@ -922,34 +1585,167 @@
       if(!this.numberLine.active){
         this.numberLineEl.classList.add('hidden');
         this.numberLineEl.innerHTML = '';
+        this.updateNumberLineHandles();
         return;
       }
       const nl = this.numberLine;
+
+      // Longueur manuelle : pas d'ajustement automatique au bord droit.
+      nl.len = Math.max(80, Math.min(20000, (nl.len || nl.defaultLen || 900)));
+
       const len = Math.round(nl.len);
       const base = nl.baselineOffset;
       const H = nl.height;
       this.numberLineEl.style.left = `${nl.x}px`;
       this.numberLineEl.style.top  = `${nl.y - base}px`;
       const arrowX = len;
-      const a = 12;
+      const a = 12;           // longueur de la flèche (en coordonnées monde)
+      const ah = 7;           // demi-hauteur de la flèche
+      const lineEnd = Math.max(0, len - a);
       const y = base;
       this.numberLineEl.classList.remove('hidden');
       this.numberLineEl.innerHTML = `
-        <svg width="${len}" height="${H}" viewBox="0 0 ${len} ${H}" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="${y}" x2="${len}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+        <svg width="${len+1}" height="${H}" viewBox="0 0 ${len+1} ${H}" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="${y}" x2="${lineEnd}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+          <polygon points="${len},${y} ${lineEnd},${y-ah} ${lineEnd},${y+ah}" fill="rgba(17,24,39,0.9)" />
           <line x1="0" y1="${y-10}" x2="0" y2="${y+10}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
-          <polygon points="${arrowX},${y} ${arrowX-a},${y-a*0.7} ${arrowX-a},${y+a*0.7}" fill="rgba(17,24,39,0.9)" />
-          <text x="2" y="${y+20}" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>
+<text x="2" y="${y+20}" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>
         </svg>
       `;
+      this.updateNumberLineHandles();
+    }
+
+
+    updateNumberLineHandles(){
+      // On ne garde que la poignée de fin (flèche). Le 0 reste dessiné dans le SVG.
+      if(!this.nlHandleEnd) return;
+
+      if(!this.numberLine || !this.numberLine.active){
+        if(this.nlHandle0) this.nlHandle0.classList.add('hidden');
+        this.nlHandleEnd.classList.add('hidden');
+        return;
+      }
+      const nl = this.numberLine;
+      const size = 28;
+
+      // Position écran (dans #board-container) de la fin
+      const baseY  = this.pan.y + nl.y * this.scale;
+      const endX   = this.pan.x + (nl.x + nl.len) * this.scale;
+
+      const top = baseY - size/2;
+
+      if(this.nlHandle0){
+        // (au cas où) — mais normalement supprimée
+        const startX = this.pan.x + nl.x * this.scale;
+        this.nlHandle0.style.left = `${startX - size/2}px`;
+        this.nlHandle0.style.top  = `${top}px`;
+        this.nlHandle0.classList.remove('hidden');
+      }
+
+      // Poignée placée à droite de la flèche (hors de la demi-droite)
+      const handleOffsetPx = 20;
+      this.nlHandleEnd.style.left = `${endX + handleOffsetPx - size/2}px`;
+      this.nlHandleEnd.style.top  = `${top}px`;
+      this.nlHandleEnd.classList.remove('hidden');
+    }
+
+    initNumberLineHandles(){
+      if(!this.nlHandleEnd) return;
+
+      const getPt = (e) => {
+        if(e.touches && e.touches[0]) return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+        return {x: e.clientX, y: e.clientY};
+      };
+
+      const startDragEnd = (e) => {
+        if(!this.numberLine || !this.numberLine.active) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const nl0 = {...this.numberLine};
+        const p0 = getPt(e);
+
+        const move = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const p = getPt(ev);
+          const dxWorld = (p.x - p0.x) / this.scale;
+
+          const newLen = nl0.len + dxWorld;
+          this.numberLine.len = Math.max(80, Math.min(20000, newLen));
+          this.scheduleNumberLineUpdate();
+        };
+
+        const end = (ev) => {
+          if(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+          }
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('mouseup', end);
+          document.removeEventListener('touchmove', move);
+          document.removeEventListener('touchend', end);
+          document.removeEventListener('touchcancel', end);
+        };
+
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchmove', move, {passive:false});
+        document.addEventListener('touchend', end);
+        document.addEventListener('touchcancel', end);
+      };
+
+      this.nlHandleEnd.addEventListener('mousedown', (e) => startDragEnd(e));
+      this.nlHandleEnd.addEventListener('touchstart', (e) => startDragEnd(e), {passive:false});
+
+      // Double-clic sur la flèche : revient à la longueur par défaut
+      this.nlHandleEnd.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nl = this.numberLine;
+        nl.len = nl.defaultLen || 900;
+        this.scheduleNumberLineUpdate();
+      });
+    }
+
+    _measurePxPerCm(){
+      // Mesure réelle (dépend du DPI/zoom navigateur). Fallback : 96 DPI => 1cm ≈ 37.8 px.
+      try{
+        const d = document.createElement('div');
+        d.style.width = '10cm';
+        d.style.position = 'absolute';
+        d.style.left = '-10000px';
+        d.style.top = '-10000px';
+        d.style.visibility = 'hidden';
+        document.body.appendChild(d);
+        const w = d.getBoundingClientRect().width;
+        d.remove();
+        if(w && w > 0) return w / 10;
+      }catch(_){ }
+      return 37.8;
     }
 
     getWorldPos(clientX, clientY){
-      const r = this.boardContainer.getBoundingClientRect();
+
+      // Perf : pendant le dessin (stylet/souris), éviter getBoundingClientRect() à chaque point.
+
+      // On met en cache le rect pour la durée du trait.
+
+      const useCached = (this.isDrawing && this.currentTool === 'pen' && this._boardRect);
+
+      const r = useCached ? this._boardRect : this.boardContainer.getBoundingClientRect();
+
+      if(this.isDrawing && this.currentTool === 'pen') this._boardRect = r;
+
+
       return {
+
         x: (clientX - r.left - this.pan.x) / this.scale,
-        y: (clientY - r.top - this.pan.y) / this.scale,
+
+        y: (clientY - r.top  - this.pan.y) / this.scale,
+
       };
+
     }
 
     _bind(id, evt, fn){
@@ -989,11 +1785,83 @@
 
       this._bind('tool-hand','click', () => this.setTool('hand'));
       this._bind('tool-pen','click', () => this.setTool('pen'));
+      this._bind('btn-undo-drawing','click', () => this.undoLastStroke());
       this._bind('btn-clear-drawing','click', () => this.clearDrawing());
       window.addEventListener('keydown', (e) => {
+        // Ne pas voler les touches quand on tape dans un champ (import / nom de scène, etc.)
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+        if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        const modalOpen = document.body.classList.contains('modal-open');
+        if(modalOpen){
+          if(e.key === 'Escape'){
+            e.preventDefault();
+            if(typeof toggleHelp === 'function') toggleHelp(false);
+            if(typeof closeModal === 'function') closeModal('modal-session');
+            if(typeof closeModal === 'function') closeModal('modal-help');
+          }
+          if(e.key === '?' || e.code === 'F1'){
+            e.preventDefault();
+            if(typeof toggleHelp === 'function') toggleHelp(false);
+          }
+          return;
+        }
+
         if(e.key === 'Escape') this.selectToken(null);
-        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); this.undo(); }
-        if(e.key === 'Delete' || e.key === 'Backspace') this.deleteSelected();
+
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          // En mode crayon : Ctrl+Z annule le dernier trait (plus naturel),
+          // sinon on annule l'historique des bandes.
+          if(this.currentTool === 'pen' && this.strokes && this.strokes.length){
+            this.undoLastStroke();
+          } else {
+            this.undo();
+          }
+          return;
+        }
+
+        if(e.key === 'Delete' || e.key === 'Backspace') {
+          this.deleteSelected();
+          return;
+        }
+
+        // Aide
+        if(e.key === '?' || e.code === 'F1') {
+          e.preventDefault();
+          if(typeof toggleHelp === 'function') toggleHelp();
+          return;
+        }
+
+        // Raccourcis “prof” (AZERTY-friendly : on se base sur e.code)
+        if(!e.ctrlKey && !e.metaKey && !e.altKey){
+          if(e.code === 'KeyD'){ this.duplicateSelected(); return; } // Dupliquer
+          if(e.code === 'KeyT'){ this.flipSelected(); return; }      // Tourner / retourner
+          if(e.code === 'KeyS'){ this.separateSelected(); return; }  // Séparer
+          if(e.code === 'KeyC'){ this.cutSelected(); return; }       // Couper
+          if(e.code === 'KeyF'){ this.fuseSelected(); return; }      // Fusionner
+
+          // Création rapide (0 = unité). On utilise e.code pour rester OK en AZERTY.
+          const map = {
+            Digit1: 1, Numpad1: 1,
+            Digit2: 2, Numpad2: 2,
+            Digit3: 3, Numpad3: 3,
+            Digit4: 4, Numpad4: 4,
+            Digit5: 5, Numpad5: 5,
+            Digit6: 6, Numpad6: 6,
+            Digit8: 8, Numpad8: 8,
+            Digit0: 0, Numpad0: 0,
+          };
+          if(e.code in map){
+            const raw = map[e.code];
+            const denom = (raw === 0) ? 1 : raw;
+            const kind = (denom === 1) ? 'band' : 'piece';
+            const br = this.boardContainer.getBoundingClientRect();
+            const center = this.getWorldPos(br.left + br.width*0.5, br.top + br.height*0.35);
+            const created = this.addToken({denom, kind, x: center.x, y: center.y});
+            this.snapToken(created, {silent:true});
+            return;
+          }
+        }
       });
     }
 
@@ -1005,9 +1873,16 @@
       this.buildPalette();
 
       const selId = this.selectedId;
+      const selIds = this.selectedIds ? Array.from(this.selectedIds) : (selId ? [selId] : []);
+
       this.tokens.forEach(t => { if(t._el) t._el.remove(); });
       this.tokens.forEach(t => this.mountToken(t));
-      if(selId) this.selectToken(selId);
+
+      // Restaure la sélection (multi si besoin)
+      this.selectToken(null);
+      for(const id of selIds){
+        if(id) this.selectToken(id, {toggle:true});
+      }
       playSound('pop');
     }
 
@@ -1018,7 +1893,6 @@
          else btn.classList.remove('active');
        });
     }
-
     updateSelectionUI(){
       const btnFlip = document.getElementById('btn-flip');
       const btnSep  = document.getElementById('btn-separate');
@@ -1027,18 +1901,128 @@
       const btnDup  = document.getElementById('btn-duplicate');
       const btnDel  = document.getElementById('btn-delete');
       const btnHide = document.getElementById('btn-hide');
-      
-      const s = this.selected;
-      const has = !!s;
+
+      const nSel = (this.selectedIds && this.selectedIds.size) ? this.selectedIds.size : (this.selectedId ? 1 : 0);
+      const has = nSel > 0;
+
       if(btnFlip) btnFlip.disabled = !has;
       if(btnDup)  btnDup.disabled  = !has;
       if(btnDel)  btnDel.disabled  = !has;
       if(btnHide) btnHide.disabled = !has;
-      
-      if(btnSep)  btnSep.disabled  = !(has && s.kind === 'band'  && s.denom > 1);
-      if(btnFuse) btnFuse.disabled = !(has && s.kind === 'piece' && s.denom > 1);
-      if(btnCut)  btnCut.disabled  = !(has && this.canCut(s));
+
+      const s = this.selected;
+      const single = (nSel === 1) && !!s;
+
+      if(btnSep)  btnSep.disabled  = !(single && s.kind === 'band'  && s.denom > 1);
+      if(btnFuse) btnFuse.disabled = !(single && s.kind === 'piece' && s.denom > 1);
+      if(btnCut)  btnCut.disabled  = !(single && this.canCut(s));
     }
+
+startMarquee(e){
+  // Ctrl/Cmd + glisser sur le vide : sélectionner plusieurs bandes via un rectangle
+  e.preventDefault();
+  const br = this.boardContainer.getBoundingClientRect();
+  const x = e.clientX - br.left;
+  const y = e.clientY - br.top;
+
+  this.isMarqueeSelecting = true;
+  this._marqueeStart = {x, y};
+  this._marqueeNow = {x, y};
+
+  // On remplace la sélection (comportement attendu : sélection rapide d'un groupe)
+  this.selectToken(null);
+
+  this.boardContainer.classList.add('selecting');
+  if(this.marqueeEl){
+    this.marqueeEl.style.display = 'block';
+    this.marqueeEl.style.left = `${x}px`;
+    this.marqueeEl.style.top = `${y}px`;
+    this.marqueeEl.style.width = `0px`;
+    this.marqueeEl.style.height = `0px`;
+  }
+}
+
+updateMarquee(e){
+  if(!this.isMarqueeSelecting || !this._marqueeStart) return;
+  const br = this.boardContainer.getBoundingClientRect();
+  const x = e.clientX - br.left;
+  const y = e.clientY - br.top;
+  this._marqueeNow = {x, y};
+
+  const x1 = this._marqueeStart.x;
+  const y1 = this._marqueeStart.y;
+  const rx = Math.min(x1, x);
+  const ry = Math.min(y1, y);
+  const rw = Math.abs(x - x1);
+  const rh = Math.abs(y - y1);
+
+  if(this.marqueeEl){
+    this.marqueeEl.style.left = `${rx}px`;
+    this.marqueeEl.style.top = `${ry}px`;
+    this.marqueeEl.style.width = `${rw}px`;
+    this.marqueeEl.style.height = `${rh}px`;
+  }
+}
+
+endMarquee(){
+  if(!this.isMarqueeSelecting) return;
+
+  this.isMarqueeSelecting = false;
+  this.boardContainer.classList.remove('selecting');
+
+  if(this.marqueeEl) this.marqueeEl.style.display = 'none';
+
+  if(!this._marqueeStart || !this._marqueeNow) return;
+
+  const x1 = this._marqueeStart.x;
+  const y1 = this._marqueeStart.y;
+  const x2 = this._marqueeNow.x;
+  const y2 = this._marqueeNow.y;
+
+  const rx = Math.min(x1, x2);
+  const ry = Math.min(y1, y2);
+  const rw = Math.abs(x2 - x1);
+  const rh = Math.abs(y2 - y1);
+
+  // Petit mouvement -> on ne change rien (évite "effacer la sélection" sur un micro-drag involontaire)
+  if(rw < 3 && rh < 3) return;
+
+  const hits = [];
+  for(const t of this.tokens){
+    if(!t || !t._el) continue;
+    const {w, h} = this.tokenDims(t);
+
+    // Rect écran (dans #board-container) en pixels
+    const sx = this.pan.x + t.x * this.scale;
+    const sy = this.pan.y + t.y * this.scale;
+    const sw = w * this.scale;
+    const sh = h * this.scale;
+
+    const intersects =
+      (sx < rx + rw) && (sx + sw > rx) &&
+      (sy < ry + rh) && (sy + sh > ry);
+
+    if(intersects) hits.push(t);
+  }
+
+  if(!this.selectedIds) this.selectedIds = new Set();
+  this.selectedIds.clear();
+
+  if(hits.length){
+    // On sélectionne tout le groupe, et on met en "principal" l'élément le plus au-dessus (z max)
+    hits.sort((a,b) => (a.z||0) - (b.z||0));
+    for(const t of hits) this.selectedIds.add(t.id);
+    this.selectedId = hits[hits.length - 1].id;
+  } else {
+    this.selectedId = null;
+  }
+
+  this.refreshTokenSelectedClass();
+  this.updateSelectionUI();
+
+  // Éviter qu'un click fantôme derrière ne casse la sélection juste après
+  this._suppressClickUntil = Date.now() + 250;
+}
 
     initBoardListeners(){
       this.boardContainer.addEventListener('wheel', (e) => {
@@ -1052,23 +2036,95 @@
       });
       this.boardContainer.addEventListener('mousedown', (e) => {
         const isPen  = (this.currentTool === 'pen');
+
+        // Ctrl/Cmd + glisser sur le vide : rectangle de sélection (plus rapide que Ctrl+clic)
+        const wantsMarquee = (!isPen && e.button === 0 && (e.ctrlKey || e.metaKey)
+          && !e.target.closest('.strip') && !e.target.closest('.nl-handle'));
+
+        if(wantsMarquee){
+          this.startMarquee(e);
+          return;
+        }
+
         const wantsPan = (!isPen && e.button === 0) || (isPen && e.button === 2);
         if(!wantsPan) return;
         if(e.target.closest('.strip')) return;
+        if(e.target.closest('.nl-handle')) return;
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
-        
+
         // AJOUT : Curseur global pour le panning aussi
         document.body.classList.add('is-dragging-global');
 
         if(!isPen) this.selectToken(null);
       });
-      this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool === 'pen' && e.button === 0) this.startDraw(e);
+
+this.boardContainer.addEventListener('mousedown', (e) => {
+        // Certains navigateurs transforment les événements du stylet en PointerEvents puis "mousedevents".
+        // On évite de démarrer deux fois le trait.
+        const ignoreMouse = (Date.now() < (this._ignoreMouseUntil || 0));
+        if(this.currentTool === 'pen' && e.button === 0 && !ignoreMouse) this.startDraw(e);
       });
-      window.addEventListener('mousemove', (e) => {
-        if(this.isPanning){
+
+      // --- Support stylet (Pointer Events) : Surface / iPad / tablettes ---
+      // Le stylet envoie souvent des PointerEvents de type "pen" (et pas forcément des mousedown/touchstart).
+      // On écoute donc pointerdown/move/up pour le crayon, sans toucher au moteur du reste.
+      this.boardContainer.addEventListener('pointerdown', (e) => {
+        if(this.currentTool !== 'pen') return;
+        if(e.pointerType !== 'pen') return;
+        // Bloque les mousedevents synthétiques qui suivent parfois.
+        this._ignoreMouseUntil = Date.now() + 500;
+        this._activePenPointerId = e.pointerId;
+        try{ this.boardContainer.setPointerCapture(e.pointerId); }catch(_){}
+        e.preventDefault();
+        e.stopPropagation();
+        this.startDraw(e);
+      }, {passive:false});
+
+      this.boardContainer.addEventListener('pointermove', (e) => {
+        if(this.currentTool !== 'pen') return;
+        if(!this.isDrawing) return;
+        if(this._activePenPointerId != null && e.pointerId !== this._activePenPointerId) return;
+        e.preventDefault();
+        this.draw(e);
+      }, {passive:false});
+
+      const endPenPointer = (e) => {
+        if(this._activePenPointerId == null) return;
+        if(e.pointerId !== this._activePenPointerId) return;
+        if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
+        this.isDrawing = false;
+        try{ this.boardContainer.releasePointerCapture(e.pointerId); }catch(_){}
+        this._activePenPointerId = null;
+      };
+      this.boardContainer.addEventListener('pointerup', endPenPointer);
+      this.boardContainer.addEventListener('pointercancel', endPenPointer);
+
+      // Fallback très ancien : si PointerEvent n'existe pas, on garde un support tactile minimal (crayon).
+      if(!('PointerEvent' in window)){
+        this.boardContainer.addEventListener('touchstart', (e) => {
+          if(this.currentTool !== 'pen') return;
+          if(e.touches && e.touches.length !== 1) return;
+          e.preventDefault();
+          this.startDraw(e);
+        }, {passive:false});
+        window.addEventListener('touchmove', (e) => {
+          if(this.isDrawing && this.currentTool === 'pen') this.draw(e);
+        }, {passive:false});
+        window.addEventListener('touchend', () => {
+          if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
+          this.isDrawing = false;
+        });
+        window.addEventListener('touchcancel', () => {
+          if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
+          this.isDrawing = false;
+        });
+      }
+window.addEventListener('mousemove', (e) => {
+        if(this.isMarqueeSelecting){
+          this.updateMarquee(e);
+        } else if(this.isPanning){
           this.pan.x = e.clientX - this.panStart.x;
           this.pan.y = e.clientY - this.panStart.y;
           this.updateTransform();
@@ -1076,9 +2132,12 @@
           this.draw(e);
         }
       });
-      window.addEventListener('mouseup', () => {
+
+window.addEventListener('mouseup', () => {
+        if(this.isMarqueeSelecting) this.endMarquee();
+
         this.isPanning = false;
-        
+
         // RETRAIT : Curseur global
         document.body.classList.remove('is-dragging-global');
 
@@ -1086,7 +2145,11 @@
         this.isDrawing = false;
         this.boardContainer.classList.remove('panning');
       });
-      window.addEventListener('resize', () => this.resizeCanvas());
+
+window.addEventListener('resize', () => {
+        this.resizeCanvas();
+        if(this.numberLine && this.numberLine.active) this.scheduleNumberLineUpdate();
+      });
     }
 
     mountToken(token){
@@ -1154,7 +2217,18 @@
       el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive:false});
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.selectToken(token.id);
+        // Après un drag : ignorer le click "fantôme" pour conserver la sélection du groupe
+        if(this._suppressClickUntil && Date.now() < this._suppressClickUntil) return;
+        // En mode crayon : on ne change pas la sélection en cliquant (sinon effet "bizarre" pendant l'écriture)
+        if(this.currentTool === 'pen') return;
+
+        const additive = (!e.touches) && (e.ctrlKey || e.metaKey || e.shiftKey);
+        if(additive){
+          // Ctrl/Cmd (ou Shift) + clic : ajouter/enlever à la sélection
+          this.selectToken(token.id, {toggle:true});
+        } else {
+          this.selectToken(token.id);
+        }
       });
       el.addEventListener('dblclick', (e) => {
         e.stopPropagation();
@@ -1182,16 +2256,17 @@
         delete token._new;
       }
 
-      this.refreshTokenSelectedClass(token.id);
+      this.refreshTokenSelectedClass();
       this.updateSeamBorders();
     }
-
-    refreshTokenSelectedClass(id){
+    refreshTokenSelectedClass(){
+      const sel = this.selectedIds || new Set();
       this.tokens.forEach(t => {
         if(!t._el) return;
-        t._el.classList.toggle('selected', t.id === id);
+        t._el.classList.toggle('selected', sel.has(t.id));
       });
     }
+
 
     addToken({denom, kind, x=null, y=null}){
       this.saveState();
@@ -1219,72 +2294,129 @@
       this.selectToken(token.id);
       return token;
     }
+    selectToken(id, opts={}){
+      const additive = !!(opts.additive || opts.toggle);
 
-    selectToken(id){
-      this.selectedId = id;
-      this.refreshTokenSelectedClass(id);
+      if(id === null || typeof id === 'undefined'){
+        this.selectedId = null;
+        if(!this.selectedIds) this.selectedIds = new Set();
+        this.selectedIds.clear();
+        this.refreshTokenSelectedClass();
+        this.updateSelectionUI();
+        return;
+      }
+
+      if(!this.selectedIds) this.selectedIds = new Set();
+
+      if(additive){
+        if(this.selectedIds.has(id)){
+          this.selectedIds.delete(id);
+          if(this.selectedId === id){
+            const arr = Array.from(this.selectedIds);
+            this.selectedId = arr.length ? arr[arr.length - 1] : null;
+          }
+        } else {
+          this.selectedIds.add(id);
+          this.selectedId = id;
+        }
+      } else {
+        this.selectedIds.clear();
+        this.selectedIds.add(id);
+        this.selectedId = id;
+      }
+
+      this.refreshTokenSelectedClass();
       this.updateSelectionUI();
     }
+
 
     get selected(){
       return this.tokens.find(t => t.id === this.selectedId) || null;
     }
 
+    get selectedTokens(){
+      if(!this.selectedIds) return [];
+      const ids = this.selectedIds;
+      return this.tokens.filter(t => ids.has(t.id));
+    }
     flipSelected(){
-      const s = this.selected;
-      if(!s) return;
-      
+      const list = this.selectedTokens;
+      if(!list.length) return;
+
       this.saveState();
-      s.side = (s.side === 'front') ? 'back' : 'front';
-      if(s._el){
-        s._el.classList.toggle('is-back', s.side === 'back');
+      for(const s of list){
+        s.side = (s.side === 'front') ? 'back' : 'front';
+        if(s._el){
+          s._el.classList.toggle('is-back', s.side === 'back');
+        }
       }
       this.updateSelectionUI();
       playSound('flip');
     }
 
     toggleHideSelected(){
-      const s = this.selected;
-      if(!s) return;
-      
+      const list = this.selectedTokens;
+      if(!list.length) return;
+
       this.saveState();
-      s.hidden = !s.hidden; 
-      if(s._el){
-        s._el.classList.toggle('content-hidden', s.hidden);
+      for(const s of list){
+        s.hidden = !s.hidden;
+        if(s._el){
+          s._el.classList.toggle('content-hidden', s.hidden);
+        }
       }
       playSound('pop');
     }
 
     duplicateSelected(){
-      const s = this.selected;
-      if(!s) return;
+      const list = this.selectedTokens;
+      if(!list.length) return;
+
       this.saveState();
-      const copy = {
-        id: this.nextId++,
-        denom: s.denom,
-        kind: s.kind,
-        side: s.side,
-        x: s.x + 24,
-        y: s.y + 24,
-        z: ++this.topZ,
-        hidden: s.hidden 
-      };
-      this.tokens.push(copy);
-      this.mountToken(copy);
-      this.selectToken(copy.id);
+
+      // Dupliquer en conservant l'agencement relatif
+      const copies = [];
+      for(const s of list){
+        const copy = {
+          id: this.nextId++,
+          denom: s.denom,
+          kind: s.kind,
+          side: s.side,
+          x: s.x + 24,
+          y: s.y + 24,
+          z: ++this.topZ,
+          hidden: s.hidden
+        };
+        this.tokens.push(copy);
+        this.mountToken(copy);
+        copies.push(copy.id);
+      }
+
+      // Sélectionner les nouvelles copies
+      this.selectedIds.clear();
+      for(const id of copies) this.selectedIds.add(id);
+      this.selectedId = copies.length ? copies[copies.length - 1] : null;
+      this.refreshTokenSelectedClass();
+      this.updateSelectionUI();
       playSound('pop');
     }
-
     deleteSelected(){
-      const s = this.selected;
-      if(!s) return;
+      const list = this.selectedTokens;
+      if(!list.length) return;
+
       this.saveState();
-      if(s._el) s._el.remove();
-      this.tokens = this.tokens.filter(t => t.id !== s.id);
+
+      const idsToDelete = new Set(list.map(t => t.id));
+      for(const t of list){
+        if(t._el) t._el.remove();
+      }
+
+      this.tokens = this.tokens.filter(t => !idsToDelete.has(t.id));
       this.selectToken(null);
       this.updateSeamBorders();
       playSound('whoosh');
     }
+
 
     separateSelected(){
       const s = this.selected;
@@ -1398,10 +2530,13 @@
       this.updateSeamBorders();
       playSound('pop');
     }
-
     handleDragStart(e){
       const isTouch = !!e.touches;
       const btn = isTouch ? 0 : (typeof e.button === 'number' ? e.button : 0);
+
+      // Ctrl/Cmd/Shift + clic : multi-sélection -> pas de drag (on laisse le click gérer)
+      if(!isTouch && this.currentTool === 'hand' && (e.ctrlKey || e.metaKey || e.shiftKey)) return;
+
       const allow =
         (this.currentTool === 'hand' && (isTouch || btn === 0)) ||
         (this.currentTool === 'pen' && !isTouch && btn === 2);
@@ -1409,6 +2544,7 @@
 
       e.preventDefault();
       e.stopPropagation();
+
       const el = e.target.closest('.strip');
       if(!el) return;
 
@@ -1416,16 +2552,35 @@
       const token = this.tokens.find(t => t.id === id);
       if(!token) return;
 
-      this.saveState();
-      
-      token.z = ++this.topZ;
-      if(token._el) token._el.style.zIndex = token.z;
-      
-      this.selectToken(token.id);
+      if(!this.selectedIds) this.selectedIds = new Set();
+      const tokenIsSelected = this.selectedIds.has(token.id);
+      const groupMode = tokenIsSelected && this.selectedIds.size > 1;
 
-      token._el.classList.add('dragging');
-      
-      // AJOUT : Curseur global
+      // Si on attrape une pièce non sélectionnée : sélection simple
+      if(!groupMode){
+        this.selectToken(token.id);
+      }
+
+      this.saveState();
+
+      const group = groupMode
+        ? this.tokens.filter(t => this.selectedIds.has(t.id))
+        : [token];
+
+      const groupIds = new Set(group.map(t => t.id));
+
+      // Mettre le groupe au-dessus
+      for(const t of group){
+        t.z = ++this.topZ;
+        if(t._el) t._el.style.zIndex = t.z;
+      }
+
+      // Visuel drag
+      for(const t of group){
+        if(t._el) t._el.classList.add('dragging');
+      }
+
+      // Curseur global
       document.body.classList.add('is-dragging-global');
 
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1433,10 +2588,23 @@
       const rect = token._el.getBoundingClientRect();
       const offset = { x: clientX - rect.left, y: clientY - rect.top };
 
+      const startMain = {x: token.x, y: token.y};
+      const startPos = new Map(group.map(t => [t.id, {x: t.x, y: t.y}]));
+      let lastMain = {x: token.x, y: token.y};
+
+      // Détection de déplacement : pour éviter que l'événement 'click' ne casse une multi-sélection après un drag
+      const startClient = {x: clientX, y: clientY};
+      let didMove = false;
+
       const move = (ev) => {
         ev.preventDefault();
         const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
         const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        if(!didMove){
+          const dx = cx - startClient.x;
+          const dy = cy - startClient.y;
+          if((dx*dx + dy*dy) > 16) didMove = true; // > 4px
+        }
         const br = this.boardContainer.getBoundingClientRect();
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
         let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
@@ -1452,25 +2620,57 @@
           }
         }
 
-        token.x = wx;
-        token.y = wy;
-        token._el.style.left = wx + 'px';
-        token._el.style.top = wy + 'px';
-        
+        lastMain = {x: wx, y: wy};
+        const dx = wx - startMain.x;
+        const dy = wy - startMain.y;
+
+        for(const t of group){
+          const sp = startPos.get(t.id);
+          if(!sp || !t._el) continue;
+          t.x = sp.x + dx;
+          t.y = sp.y + dy;
+          t._el.style.left = t.x + 'px';
+          t._el.style.top  = t.y + 'px';
+        }
+
         this.scheduleSeamUpdate();
       };
 
       const end = () => {
+        if(didMove){
+          this._suppressClickUntil = Date.now() + 250;
+        }
         document.removeEventListener('mousemove', move);
         document.removeEventListener('touchmove', move);
         document.removeEventListener('mouseup', end);
         document.removeEventListener('touchend', end);
-        
-        // RETRAIT : Curseur global
+
         document.body.classList.remove('is-dragging-global');
 
-        if(token._el) token._el.classList.remove('dragging');
-        this.snapToken(token);
+        for(const t of group){
+          if(t._el) t._el.classList.remove('dragging');
+        }
+
+        // Snap : on snap uniquement la pièce "principale", puis on ré-applique le delta au groupe
+        if(group.length === 1){
+          this.snapToken(token);
+        } else {
+          const before = {x: token.x, y: token.y};
+          this.snapToken(token, {ignoreIds: groupIds});
+          const dxSnap = token.x - before.x;
+          const dySnap = token.y - before.y;
+
+          if(dxSnap || dySnap){
+            for(const t of group){
+              if(t.id === token.id || !t._el) continue;
+              t.x += dxSnap;
+              t.y += dySnap;
+              t._el.style.left = t.x + 'px';
+              t._el.style.top  = t.y + 'px';
+            }
+            this.scheduleSeamUpdate();
+          }
+        }
       };
 
       document.addEventListener('mousemove', move);
@@ -1479,12 +2679,15 @@
       document.addEventListener('touchend', end);
     }
 
+
     snapToken(t, opts={}){
       if(!t) return;
 
       const {w, h} = this.tokenDims(t);
       const threshPx = 28;
       const thresh = threshPx / this.scale;
+
+      const ignoreIds = (opts && opts.ignoreIds && typeof opts.ignoreIds.has === 'function') ? opts.ignoreIds : null;
 
       let bestX = null, bestDx = Infinity, bestXPrio = 9;
       let bestY = null, bestDy = Infinity, bestYPrio = 9;
@@ -1530,6 +2733,8 @@
 
       for(const o of this.tokens){
         if(o.id === t.id) continue;
+        if(o.hidden) continue;
+        if(ignoreIds && ignoreIds.has(o.id)) continue;
 
         const od = this.tokenDims(o);
         const ox = o.x, oy = o.y, ow = od.w, oh = od.h;
@@ -1843,54 +3048,269 @@ for(let i=0;i<this.tokens.length;i++){
     }
 
     startDraw(e){
+
       this.isDrawing = true;
+
       this.drawPoints = [];
 
+      this._drawQueue = [];
+
+      this._drawRAF = null;
+
+      this._lastMid = null;
+
+
+      // Cache rect pour toute la durée du trait (évite un coût à chaque move)
+
+      this._boardRect = this.boardContainer.getBoundingClientRect();
+
+
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
+
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
+
       const p = this.getWorldPos(cx, cy);
 
-      this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+
+      const lw = Math.max(1.05, this.basePenPx / this.scale);
+
+      this.ctx.lineWidth = lw;
+
+      this._currentStroke = { pts: [], width: lw };
+
       this.drawPoints.push(p);
-      this.ctx.beginPath();
-      this.ctx.moveTo(p.x, p.y);
+
+      this._currentStroke.pts.push(p);
+
+
+      // On ne garde pas un path "infini" (ça lag). On dessine par petits segments.
+
     }
 
     draw(e){
+
       e.preventDefault();
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const p = this.getWorldPos(cx, cy);
 
-      this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
 
-      const pts = this.drawPoints;
-      pts.push(p);
+      if(!this.isDrawing) return;
 
-      if(pts.length === 2){
-        this.ctx.lineTo(p.x, p.y);
-        this.ctx.stroke();
-        return;
+
+      // Certains navigateurs fournissent des évènements coalescés (stylet très fluide).
+
+      // On les consomme mais en les flushant à 60fps via requestAnimationFrame.
+
+      const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+
+
+      for(const ev of events){
+
+        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+
+        const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+
+        const p = this.getWorldPos(cx, cy);
+
+        this._drawQueue.push(p);
+
       }
 
-      const p1 = pts[pts.length - 2];
-      const p2 = pts[pts.length - 1];
-      const midX = (p1.x + p2.x) / 2;
-      const midY = (p1.y + p2.y) / 2;
-      this.ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
-      this.ctx.stroke();
+
+      // Throttle : on dessine au rythme de l'écran (fluide) au lieu de dessiner N fois par move.
+
+      if(this._drawRAF) return;
+
+      this._drawRAF = requestAnimationFrame(() => {
+
+        this._drawRAF = null;
+
+        this._flushDrawQueue();
+
+      });
+
+    }
+
+
+    _flushDrawQueue(){
+
+      if(!this.isDrawing) return;
+
+      const q = this._drawQueue || [];
+
+      if(!q.length) return;
+
+      this._drawQueue = [];
+
+
+      if(this._currentStroke){
+
+        this.ctx.lineWidth = this._currentStroke.width;
+
+      } else {
+
+        this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+
+      }
+
+
+      const pts = this.drawPoints;
+
+
+      for(const p of q){
+
+        pts.push(p);
+
+        if(this._currentStroke) this._currentStroke.pts.push(p);
+
+
+        const n = pts.length;
+
+        if(n < 2) continue;
+
+
+        if(n === 2){
+
+          // Première mini-segment : du point 0 vers le milieu (donne un départ immédiat)
+
+          const p0 = pts[0];
+
+          const p1 = pts[1];
+
+          const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+
+          this.ctx.beginPath();
+
+          this.ctx.moveTo(p0.x, p0.y);
+
+          this.ctx.lineTo(mid.x, mid.y);
+
+          this.ctx.stroke();
+
+          this._lastMid = mid;
+
+          continue;
+
+        }
+
+
+        // Lissage : on dessine un petit segment quadratic entre deux milieux consécutifs.
+
+        const p1 = pts[n - 2];
+
+        const p2 = pts[n - 1];
+
+        const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+
+        const from = this._lastMid || { x: p1.x, y: p1.y };
+
+
+        this.ctx.beginPath();
+
+        this.ctx.moveTo(from.x, from.y);
+
+        this.ctx.quadraticCurveTo(p1.x, p1.y, mid.x, mid.y);
+
+        this.ctx.stroke();
+
+
+        this._lastMid = mid;
+
+      }
+
     }
 
     endDraw(){
+
+      // Finir de vider les points en attente (RAF)
+
+      if(this._drawRAF){
+
+        cancelAnimationFrame(this._drawRAF);
+
+        this._drawRAF = null;
+
+      }
+
+      if(this._drawQueue && this._drawQueue.length){
+
+        this._flushDrawQueue();
+
+      }
+
+
       const pts = this.drawPoints || [];
+
       if(!pts.length) return;
-      const last = pts[pts.length - 1];
-      this.ctx.lineTo(last.x, last.y);
-      this.ctx.stroke();
+
+
+      if(this._currentStroke){
+
+        this.ctx.lineWidth = this._currentStroke.width;
+
+      } else {
+
+        this.ctx.lineWidth = Math.max(1.05, this.basePenPx / this.scale);
+
+      }
+
+
+      // Terminer jusqu'au dernier point (sinon la pointe "manque")
+
+      if(pts.length === 1){
+
+        const p = pts[0];
+
+        this.ctx.beginPath();
+
+        this.ctx.arc(p.x, p.y, this.ctx.lineWidth / 2, 0, Math.PI * 2);
+
+        // On remplit avec la même couleur que le trait (plus joli qu'un point "vide")
+
+        const prevFill = this.ctx.fillStyle;
+
+        this.ctx.fillStyle = this.ctx.strokeStyle || '#111827';
+
+        this.ctx.fill();
+
+        this.ctx.fillStyle = prevFill;
+
+      } else {
+
+        const last = pts[pts.length - 1];
+
+        const from = this._lastMid || pts[pts.length - 2];
+
+        this.ctx.beginPath();
+
+        this.ctx.moveTo(from.x, from.y);
+
+        this.ctx.lineTo(last.x, last.y);
+
+        this.ctx.stroke();
+
+      }
+
+
       this.drawPoints = [];
+
+      this._lastMid = null;
+
+      this._boardRect = null; // rect cache : on le recalculera au prochain trait
+
+
+      if(this._currentStroke && this._currentStroke.pts && this._currentStroke.pts.length > 1){
+
+        this.strokes.push(this._currentStroke);
+
+      }
+
+      this._currentStroke = null;
+
     }
 
-    clearDrawing(){
+    clearDrawing(keepStrokes=false){
+      if(!keepStrokes){
+        this.strokes = [];
+      }
       this.ctx.save();
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1901,11 +3321,60 @@ for(let i=0;i<this.tokens.length;i++){
       this.ctx.setTransform(dpr, 0, 0, dpr, offset * dpr, offset * dpr);
     }
 
+    redrawStrokes(){
+      if(!this.strokes || !this.strokes.length) return;
+      this.ctx.save();
+      this.ctx.strokeStyle = '#111827';
+      this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
+      this.ctx.miterLimit = 2;
+
+      for(const s of this.strokes){
+        const pts = s.pts || [];
+        if(pts.length < 2) continue;
+        this.ctx.lineWidth = s.width || Math.max(1.05, this.basePenPx / this.scale);
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(pts[0].x, pts[0].y);
+        if(pts.length === 2){
+          this.ctx.lineTo(pts[1].x, pts[1].y);
+          this.ctx.stroke();
+          continue;
+        }
+
+        for(let i=1;i<pts.length;i++){
+          const p1 = pts[i-1];
+          const p2 = pts[i];
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+          this.ctx.quadraticCurveTo(p1.x, p1.y, midX, midY);
+        }
+
+        const last = pts[pts.length - 1];
+        this.ctx.lineTo(last.x, last.y);
+        this.ctx.stroke();
+      }
+
+      this.ctx.restore();
+    }
+
+    undoLastStroke(){
+      if(!this.strokes || !this.strokes.length){
+        playSound('whoosh');
+        return;
+      }
+      this.strokes.pop();
+      this.clearDrawing(true);
+      this.redrawStrokes();
+      playSound('pop');
+    }
+
     clearAllTokens(withHistory=true){
       if(withHistory) this.saveState();
       this.tokens.forEach(t => t._el && t._el.remove());
       this.tokens = [];
       this.selectedId = null;
+      if(this.selectedIds) this.selectedIds.clear();
       this.updateSelectionUI();
 
       // IMPORTANT : les jonctions (seam-overlay) sont dessinées dans un calque séparé.
@@ -1927,7 +3396,7 @@ for(let i=0;i<this.tokens.length;i++){
     const required = [
       'btn-undo','btn-clear','mode-selector','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
-      'tool-hand','tool-pen','btn-clear-drawing',
+      'tool-hand','tool-pen','btn-undo-drawing','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas','number-line'
     ];
     const missing = required.filter(id => !document.getElementById(id));
@@ -1953,7 +3422,13 @@ for(let i=0;i<this.tokens.length;i++){
   window.addEventListener('DOMContentLoaded', () => {
     const t = runSelfTests();
     if(!t.ok) return;
+
+    // Valeurs par défaut (préférences utilisateur appliquées juste après)
+    window.SOUND_ENABLED = true;
+
     window.app = new FractionStripsApp();
+    if(typeof setupExtraUI === 'function') setupExtraUI(window.app);
+
     console.log('[SelfTest] App instanciée OK');
   });
 </script>
