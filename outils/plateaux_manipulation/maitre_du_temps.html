@@ -9,7 +9,7 @@
 
   <style>
     :root{
-      --diskD: 96;   /* diamètre d'un disque (monde) */
+      --diskD: 132;   /* diamètre d'un disque (monde) */
       --boardBg: #ffffff;
     }
 
@@ -161,22 +161,37 @@
 
     /* outils */
     #custom-cursor{ position: fixed; pointer-events:none; z-index: 9999; display:none; }
-    .cursor-dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 9999px;
-      background: #111827;
-      /* petit liseré pour rester visible sur les disques clairs */
+    .cursor-cross{
+      position: relative;
+      width: 18px;
+      height: 18px;
+    }
+    .cursor-h, .cursor-v{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      background:#111827;
       box-shadow: 0 0 0 2px rgba(255,255,255,0.85);
     }
+    .cursor-h{ width:18px; height:2px; border-radius:2px; }
+    .cursor-v{ width:2px; height:18px; border-radius:2px; }
     .hide-cursor, .hide-cursor * { cursor: none !important; }
 
     /* Table 60 */
     #table60-list{ max-height: min(62vh, 520px); overflow:auto; }
 
     @media (max-width: 640px){
-      :root{ --diskD: 88; }
+      :root{ --diskD: 110; }
     }
+  
+    /* Mode projection : plein écran + UI simplifiée */
+    body.projection header{ background: rgba(239,246,255,0.75); backdrop-filter: blur(8px); }
+    body.projection .btn-label{ display:none !important; }
+    body.projection #floating-palette .mt-2{ display:none; } /* cache la zone Astuces */
+    /* Boutons toggle (état) */
+    button[aria-pressed="true"]{ outline: 2px solid rgba(99,102,241,0.35); outline-offset: 2px; }
+
   </style>
 </head>
 
@@ -184,28 +199,25 @@
 
   <!-- Curseur stylo -->
   <div id="custom-cursor">
-    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-cross" aria-hidden="true">
+      <div class="cursor-h"></div>
+      <div class="cursor-v"></div>
+    </div>
   </div>
 
   <!-- Barre haute -->
   <header class="bg-blue-50 p-2 shadow-md z-30 flex flex-wrap items-center gap-3 shrink-0">
     <div class="flex items-center gap-2">
-      <button id="btn-undo" class="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm active:scale-95 transition" title="Annuler">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-        </svg>
-      </button>
-
-      <button id="btn-clear" class="bg-rose-100 text-rose-700 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm active:scale-95 transition" title="Tout effacer">
+<button id="btn-clear" class="bg-rose-100 text-rose-700 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm active:scale-95 transition" title="Tout effacer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
       </button>
-
-      <button id="btn-export-png" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm active:scale-95 transition" title="Exporter en PNG (photo du plateau)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-2h6l2 2h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
+      <button id="btn-sound" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 rounded-xl font-bold border border-indigo-200 shadow-sm active:scale-95 transition" title="Son : activé" aria-pressed="true">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+          <path d="M15.5 8.5a4 4 0 0 1 0 7"/>
+          <path d="M18.5 5.5a8 8 0 0 1 0 13"/>
         </svg>
       </button>
 
@@ -229,6 +241,16 @@
       <button id="btn-zoom-out" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg border border-slate-200 font-bold active:scale-95 transition" title="Zoom -">−</button>
       <button id="btn-zoom-in" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg border border-slate-200 font-bold active:scale-95 transition" title="Zoom +">+</button>
       <button id="btn-reset-view" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg border border-slate-200 font-bold active:scale-95 transition" title="Recentrer">⤾</button>
+
+      <button id="btn-projection" class="bg-violet-100 text-violet-700 hover:bg-violet-200 p-2 rounded-lg font-bold border border-violet-200 shadow-sm active:scale-95 transition" title="Mode projection (plein écran)" aria-pressed="false">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+          <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+          <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+          <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </button>
+
     </div>
 
     <!-- Actions sélection -->
@@ -240,7 +262,7 @@
           <path d="M21 12a9 9 0 0 1-9 9"/>
           <path d="M21 20v-8h-8"/>
         </svg>
-        <span class="text-[10px] font-extrabold leading-none">Retourner</span>
+        <span class="btn-label text-[10px] font-extrabold leading-none">Retourner</span>
       </button>
 
       <button id="btn-duplicate" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-200 text-white px-2 py-1 rounded-lg shadow-sm border border-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Dupliquer">
@@ -248,14 +270,14 @@
           <rect x="9" y="9" width="13" height="13" rx="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
         </svg>
-        <span class="text-[10px] font-extrabold leading-none">Dupliquer</span>
+        <span class="btn-label text-[10px] font-extrabold leading-none">Dupliquer</span>
       </button>
 
       <button id="btn-delete" disabled class="bg-rose-600 hover:bg-rose-700 disabled:bg-rose-200 text-white px-2 py-1 rounded-lg shadow-sm border border-rose-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Supprimer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
-        <span class="text-[10px] font-extrabold leading-none">Supprimer</span>
+        <span class="btn-label text-[10px] font-extrabold leading-none">Supprimer</span>
       </button>
     </div>
 
@@ -265,7 +287,16 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
       </button>
       <button id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
-        <span class="w-5 h-5 inline-flex items-center justify-center font-extrabold text-[18px] leading-none">✚</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 20h9"/>
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>
+      </button>
+      <button id="btn-undo" class="p-2 rounded text-slate-700 hover:bg-gray-200" title="Annuler (Ctrl+Z)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 14 4 9l5-5"/>
+          <path d="M4 9h10a6 6 0 0 1 6 6v5"/>
+        </svg>
       </button>
       <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -334,7 +365,44 @@
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
 
+  // Toggle son (UI)
+  let soundOn = true;
+  const ICON_SOUND = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+      <path d="M15.5 8.5a4 4 0 0 1 0 7"/>
+      <path d="M18.5 5.5a8 8 0 0 1 0 13"/>
+    </svg>`;
+  const ICON_MUTE = `
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+      <path d="M23 9l-6 6"/>
+      <path d="M17 9l6 6"/>
+    </svg>`;
+
+  function setSound(on){
+    soundOn = !!on;
+    const btn = document.getElementById('btn-sound');
+    if(btn){
+      btn.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+      btn.title = soundOn ? 'Son : activé' : 'Son : coupé';
+      btn.innerHTML = soundOn ? ICON_SOUND : ICON_MUTE;
+    }
+  }
+  function toggleSound(){
+    if(soundOn){
+      // petit retour AVANT de couper
+      playSound('whoosh');
+      setSound(false);
+    } else {
+      setSound(true);
+      playSound('pop');
+    }
+  }
+
+
   function playSound(type){
+    if(!soundOn) return;
     if (!audioCtx) return;
     if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     const osc = audioCtx.createOscillator();
@@ -390,6 +458,10 @@
       this.isDrawing = false;
       this._drawLast = null; // pour lisser le trait
 
+      // Historique du stylo (pour undo complet)
+      this.strokes = []; // [{w,color,pts:[{x,y},...]}]
+      this._currentStroke = null;
+
       // Drag depuis la palette (ghost)
       this.spawnDrag = null;
       this._lastSpawnClient = {x:0, y:0};
@@ -422,22 +494,33 @@
         selectedId: this.selectedId,
         pan: {...this.pan},
         scale: this.scale,
+        strokes: this.strokes.map(s => ({ w:s.w, color:s.color, pts: s.pts.map(p=>({x:p.x,y:p.y})) })),
       };
       this.history.push(snapshot);
       if(this.history.length > 30) this.history.shift();
     }
-
     undo(){
       const snap = this.history.pop();
       if(!snap) return;
+
       this.clearAllTokens(false);
       this.tokens = snap.tokens.map(t => ({...t}));
       this.nextId = snap.nextId;
       this.selectedId = snap.selectedId;
       this.pan = snap.pan;
       this.scale = snap.scale;
+
+      // stylo
+      this.strokes = Array.isArray(snap.strokes)
+        ? snap.strokes.map(s => ({ w:s.w, color:s.color, pts: (s.pts||[]).map(p=>({x:p.x,y:p.y})) }))
+        : [];
+      this._currentStroke = null;
+      this._drawLast = null;
+      this.isDrawing = false;
+
       this.tokens.forEach(t => this.mountToken(t));
       this.updateTransform();
+      this.redrawStrokes();
       this.updateSelectionUI();
       playSound('whoosh');
     }
@@ -749,12 +832,70 @@
       this.scale = Math.min(Math.max(0.45, z), 3);
       this.updateTransform();
     }
+    setZoomAt(z, clientX, clientY){
+      // Zoom vers le curseur (préserve le point du monde sous la souris)
+      const before = this.getWorldPos(clientX, clientY);
+      const r = this.boardContainer.getBoundingClientRect();
+      this.scale = Math.min(Math.max(0.45, z), 3);
+      this.pan.x = clientX - r.left - before.x * this.scale;
+      this.pan.y = clientY - r.top - before.y * this.scale;
+      this.updateTransform();
+    }
+
 
     resetView(){
       this.pan = {x:0, y:0};
       this.scale = 1;
       this.updateTransform();
     }
+    // ---- Mode projection / plein écran ----
+    toggleProjection(force){
+      const enable = (typeof force === 'boolean') ? force : !document.body.classList.contains('projection');
+      const btn = document.getElementById('btn-projection');
+
+      const setBtn = (on) => {
+        if(btn){
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          // petit feedback visuel
+          btn.classList.toggle('bg-violet-200', on);
+          btn.classList.toggle('border-violet-300', on);
+
+          btn.title = on ? 'Quitter le mode projection' : 'Mode projection (plein écran)';
+        }
+      };
+
+      if(enable){
+        document.body.classList.add('projection');
+        setBtn(true);
+
+        // plein écran
+        const el = document.documentElement;
+        if(!document.fullscreenElement && el.requestFullscreen){
+          el.requestFullscreen().catch(()=>{});
+        }
+      } else {
+        document.body.classList.remove('projection');
+        setBtn(false);
+
+        if(document.fullscreenElement && document.exitFullscreen){
+          document.exitFullscreen().catch(()=>{});
+        }
+      }
+    }
+
+    onFullscreenChange(){
+      // Si l'utilisateur sort du plein écran (Esc), on sort aussi du mode projection
+      const isFs = !!document.fullscreenElement;
+      if(!isFs && document.body.classList.contains('projection')){
+        document.body.classList.remove('projection');
+        const btn = document.getElementById('btn-projection');
+        if(btn){
+          btn.setAttribute('aria-pressed','false');
+          btn.title = 'Mode projection (plein écran)';
+        }
+      }
+    }
+
 
     getWorldPos(clientX, clientY){
       const r = this.boardContainer.getBoundingClientRect();
@@ -790,16 +931,17 @@
 
     initUI(){
       this._bind('btn-undo','click', () => this.undo());
-      this._bind('btn-clear','click', () => this.resetAll());
-      this._bind('btn-export-png','click', () => this.exportPNG());
+      this._bind('btn-clear','click', () => this.resetAll());      this._bind('btn-sound','click', () => toggleSound());
+      this._bind('btn-projection','click', () => this.toggleProjection());
+      setSound(soundOn);
 
       this._bind('btn-table60','click', () => this.toggleTable60());
       this._bind('btn-table60-close','click', () => this.toggleTable60(false));
 
       this._bind('btn-regrouper','click', () => this.regroupByColor());
 
-      this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
-      this._bind('btn-zoom-out','click', () => this.setZoom(this.scale - 0.15));
+      this._bind('btn-zoom-in','click', () => { const r=this.boardContainer.getBoundingClientRect(); this.setZoomAt(this.scale + 0.15, r.left + r.width/2, r.top + r.height/2); });
+      this._bind('btn-zoom-out','click', () => { const r=this.boardContainer.getBoundingClientRect(); this.setZoomAt(this.scale - 0.15, r.left + r.width/2, r.top + r.height/2); });
       this._bind('btn-reset-view','click', () => this.resetView());
 
       this._bind('btn-flip','click', () => this.flipSelected());
@@ -809,6 +951,8 @@
       this._bind('tool-hand','click', () => this.setTool('hand'));
       this._bind('tool-pen','click', () => this.setTool('pen'));
       this._bind('btn-clear-drawing','click', () => this.clearDrawing());
+
+      document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
 
       window.addEventListener('keydown', (e) => {
         if(e.key === 'Escape') this.selectToken(null);
@@ -835,11 +979,11 @@
         e.preventDefault();
       });
 
-      // zoom molette
+      // zoom molette (zoom vers le curseur)
       this.boardContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = -e.deltaY * 0.001;
-        this.setZoom(this.scale + delta);
+        this.setZoomAt(this.scale + delta, e.clientX, e.clientY);
       }, {passive:false});
 
       // pan sur fond (souris) — en mode stylo : clic droit
@@ -878,9 +1022,11 @@
       });
 
       window.addEventListener('mouseup', () => {
+        const wasDrawing = this.isDrawing && this.currentTool === 'pen';
         this.isPanning = false;
         this.isDrawing = false;
         this._drawLast = null;
+        if(wasDrawing) this.finishDraw();
         this.boardContainer.classList.remove('panning');
       });
 
@@ -916,9 +1062,11 @@
       }, {passive:false});
 
       this.boardContainer.addEventListener('touchend', () => {
+        const wasDrawing = this.isDrawing && this.currentTool === 'pen';
         this.isPanning = false;
         this.isDrawing = false;
         this._drawLast = null;
+        if(wasDrawing) this.finishDraw();
         this.boardContainer.classList.remove('panning');
       });
 
@@ -1107,6 +1255,7 @@
 
       this.saveState();
       this.selectToken(token.id);
+      this.saveState();
 
       token._el.classList.add('dragging');
 
@@ -1207,38 +1356,61 @@
       this.boardContainer.classList.toggle('hide-cursor', penMode);
       document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
     }
-
     resizeCanvas(){
-      this.canvas.width = 4000;
-      this.canvas.height = 4000;
-      this.canvas.style.width = '4000px';
-      this.canvas.style.height = '4000px';
+      const SIZE = 5000;
+      const dpr = Math.min(1.3, window.devicePixelRatio || 1);
+      this._canvasSize = SIZE;
+      this._canvasDpr = dpr;
+      const W = Math.round(SIZE * dpr);
+      const H = Math.round(SIZE * dpr);
+      const needsResize = (this.canvas.width !== W || this.canvas.height !== H);
+      if(needsResize){
+        this.canvas.width = W;
+        this.canvas.height = H;
+        this.canvas.style.width = SIZE + 'px';
+        this.canvas.style.height = SIZE + 'px';
+      }
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
-      // épaisseur « agréable » à l'écran (s'adapte au zoom)
-      this.ctx.lineWidth = Math.max(1.4, 3 / this.scale);
+      const base = Math.max(1.4, 3 / this.scale);
+      this.ctx.lineWidth = base / dpr;
       this.ctx.strokeStyle = '#111827';
+      if(needsResize) this.redrawStrokes();
     }
-
     startDraw(e){
       this.isDrawing = true;
       // épaisseur adaptée au zoom pour garder un trait lisible sans devenir énorme
-      this.ctx.lineWidth = Math.max(1.4, 3 / this.scale);
+      const dpr = this._canvasDpr || 1;
+      const baseW = Math.max(1.4, 3 / this.scale);
+      this.ctx.lineWidth = baseW / dpr;
 
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
 
       this._drawLast = p;
+
+      // ouvre une nouvelle stroke (undo complet)
+      this._currentStroke = {
+        w: baseW,
+        color: this.ctx.strokeStyle || '#111827',
+        pts: [ {x:p.x, y:p.y} ]
+      };
+
       this.ctx.beginPath();
       this.ctx.moveTo(p.x, p.y);
     }
-
     draw(e){
       e.preventDefault();
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
       const p = this.getWorldPos(cx, cy);
+
+      // mémorisation (undo stylo)
+      if(this._currentStroke && this._currentStroke.pts){
+        this._currentStroke.pts.push({x:p.x, y:p.y});
+      }
 
       // lissage léger (courbe quadratique)
       const last = this._drawLast;
@@ -1254,10 +1426,58 @@
       this.ctx.stroke();
       this._drawLast = p;
     }
-
-    clearDrawing(){
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    finishDraw(){
+      // Fin d'un trait : on sauvegarde l'état AVANT d'ajouter le trait (undo complet)
+      if(this._currentStroke && Array.isArray(this._currentStroke.pts) && this._currentStroke.pts.length){
+        this.saveState();
+        this.strokes.push(this._currentStroke);
+        // limite douce : évite les explosions mémoire
+        if(this.strokes.length > 250) this.strokes.shift();
+      }
+      this._currentStroke = null;
     }
+    clearDrawing(pushHistory=true){
+      if(pushHistory) this.saveState();
+      this.strokes = [];
+      this._currentStroke = null;
+      const dpr = this._canvasDpr || 1;
+      const size = this._canvasSize || (this.canvas.width / dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.ctx.clearRect(0, 0, size, size);
+      playSound('whoosh');
+    }
+    redrawStrokes(){
+      // Redessine tout le contenu du stylo (utile après undo / resize / plein écran)
+      const dpr = this._canvasDpr || 1;
+      const size = this._canvasSize || (this.canvas.width / dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.ctx.clearRect(0, 0, size, size);
+      for(const s of (this.strokes || [])){
+        if(!s || !s.pts || !s.pts.length) continue;
+
+        this.ctx.save();
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.strokeStyle = s.color || '#111827';
+        this.ctx.lineWidth = Number.isFinite(s.w) ? s.w : Math.max(1.4, 3 / this.scale);
+
+        const pts = s.pts;
+        this.ctx.beginPath();
+        this.ctx.moveTo(pts[0].x, pts[0].y);
+
+        // même lissage que pendant le dessin
+        let last = pts[0];
+        for(let i=1;i<pts.length;i++){
+          const p = pts[i];
+          const mid = { x: (last.x + p.x)/2, y: (last.y + p.y)/2 };
+          this.ctx.quadraticCurveTo(last.x, last.y, mid.x, mid.y);
+          last = p;
+        }
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
+    }
+
 
     moveCursor(e){
       if(this.currentTool !== 'pen') return;
@@ -1278,7 +1498,7 @@
     resetAll(){
       this.saveState();
       this.clearAllTokens(false);
-      this.clearDrawing();
+      this.clearDrawing(false);
       this.resetView();
       playSound('whoosh');
     }
@@ -1345,7 +1565,11 @@
       ctx.scale(this.scale, this.scale);
 
       // 1) annotations
-      try{ ctx.drawImage(this.canvas, 0, 0); }catch(_){ /* ignore */ }
+      try{
+        const dprPen = this._canvasDpr || 1;
+        const sizePen = this._canvasSize || (this.canvas.width / dprPen);
+        ctx.drawImage(this.canvas, 0, 0, sizePen, sizePen);
+      }catch(_){ /* ignore */ }
 
       // 2) disques
       const ordered = [...this.tokens].sort((a,b) => (a.id - b.id));
@@ -1402,7 +1626,7 @@
   // --- Tests (sécurité) ---
   function runSelfTestsStatic(){
     const required = [
-      'btn-undo','btn-clear','btn-export-png','btn-table60','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','btn-table60','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas',
