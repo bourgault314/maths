@@ -32,6 +32,17 @@
     }
     #board-container.panning{ cursor: grabbing; }
 
+    /* PATCH D3 : rectangle de sélection (marquee) */
+    .marquee-box{
+      position: absolute;
+      border: 1px dashed rgba(59,130,246,0.9);
+      background: rgba(59,130,246,0.10);
+      pointer-events: none;
+      z-index: 9998;
+      box-sizing: border-box;
+    }
+
+
     #board-world{
       position: absolute;
       top: 0; left: 0;
@@ -43,6 +54,12 @@
       position: absolute;
       top: 0; left: 0;
       pointer-events: none;
+      z-index: 999999; /* toujours au-dessus des disques */
+    }
+
+    /* En mode stylo : évite scroll/zoom navigateur (tablette/stylet) */
+    #board-container.pen-active{
+      touch-action: none;
     }
 
     .no-scrollbar::-webkit-scrollbar{ display:none; }
@@ -325,22 +342,60 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
       </button>
       <button id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
-        <!-- Icône : petite croix (pas de stylo) -->
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v14M5 12h14"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5l4 4"/>
         </svg>
-      </button>
+    </button>
       <button id="btn-clear-drawing" class="p-2 rounded text-rose-500 hover:bg-rose-50" title="Effacer les annotations">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
       </button>
     </div>
 
-    <div id="tips" class="ml-auto hidden lg:flex flex-col px-2 py-1 rounded-lg bg-blue-100/60 border border-blue-200">
-      <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Astuces</div>
-      <div class="text-[11px] text-slate-600 leading-tight mt-0.5">
-        <div>• Double-clic sur un disque/secteur = retourner.</div>
-        <div>• Molette = zoom, glisser sur fond = déplacer le plateau.</div>
+    <div class="ml-auto flex items-center gap-2">
+      <div id="global-controls" class="flex items-center gap-2">
+        <button id="btn-session" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-extrabold border border-slate-200 shadow-sm active:scale-95 transition" title="Séances (enregistrer / charger)">
+          Séance
+        </button>
+        <button id="btn-help" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-extrabold border border-slate-200 shadow-sm active:scale-95 transition" title="Aide (F1 / ?)">
+          Aide
+        </button>
+        <button id="btn-sound" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-extrabold border border-slate-200 shadow-sm active:scale-95 transition" title="Son ON/OFF">
+          Son : ON
+        </button>
+        <button id="btn-fullscreen" class="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-extrabold border border-slate-200 shadow-sm active:scale-95 transition" title="Plein écran">
+          <span class="inline-flex items-center gap-1.5">
+            <svg id="ico-fs-enter" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px;height:16px">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+              <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+              <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+              <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+            </svg>
+            <svg id="ico-fs-exit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 hidden" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:16px;height:16px">
+              <path d="M5 5l4 4"/>
+              <path d="M9 9H7"/>
+              <path d="M9 9V7"/>
+
+              <path d="M19 5l-4 4"/>
+              <path d="M15 9h2"/>
+              <path d="M15 9V7"/>
+
+              <path d="M5 19l4-4"/>
+              <path d="M9 15H7"/>
+              <path d="M9 15v2"/>
+
+              <path d="M19 19l-4-4"/>
+              <path d="M15 15h2"/>
+              <path d="M15 15v2"/>
+            </svg>
+            <span id="lbl-fullscreen">Plein écran</span>
+          </span>
+        
+        </button>
       </div>
+
+      
     </div>
 
   </header>
@@ -362,6 +417,92 @@
 
   </div>
 
+
+
+  <!-- Modales (Aide / Séance) -->
+  <div id="modal-help" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" data-close="modal-help"></div>
+    <div class="relative mx-auto mt-16 w-[min(92vw,720px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <div class="font-extrabold text-slate-800">Aide</div>
+        <button id="btn-close-help" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-extrabold">Fermer (Esc)</button>
+      </div>
+      <div class="p-4 text-sm text-slate-700 leading-relaxed space-y-3">
+        <div class="text-slate-600">
+          Raccourcis (clavier) :
+        </div>
+        <ul class="list-disc pl-5 space-y-1">
+          <li><b>Ctrl/Cmd + Z</b> : annuler la dernière action (Undo)</li>
+          <li><b>Suppr / Backspace</b> : supprimer la sélection</li>
+          <li><b>Échap</b> : fermer cette aide / fermer “Séance” / désélectionner</li>
+          <li><b>D</b> : dupliquer la sélection</li>
+          <li><b>1</b> : créer l’unité (si dispo)</li>
+          <li><b>2,3,4,5,6,8</b> : créer une pièce 1/n (si dispo)</li>
+          <li><b>0</b> : créer 1/10 (si dispo)</li>
+          <li><b>F1</b> ou <b>?</b> : ouvrir/fermer l’aide</li>
+        </ul>
+
+        <div class="text-slate-600">
+          Souris / gestes :
+        </div>
+        <ul class="list-disc pl-5 space-y-1">
+          <li><b>Molette</b> : zoom (centré sur le pointeur)</li>
+          <li><b>Glisser sur le fond</b> : déplacer le plateau</li>
+          <li><b>Double-clic</b> sur un disque/secteur : retourner</li>
+        </ul>
+
+        <div class="text-[12px] text-slate-500">
+          Note : la “Séance” sauvegarde les objets + la caméra (pan/zoom) + quelques états (son, mode d’étiquettes). Le dessin crayon sera ajouté plus tard (PATCH D2).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-session" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" data-close="modal-session"></div>
+    <div class="relative mx-auto mt-16 w-[min(92vw,820px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <div class="font-extrabold text-slate-800">Séance</div>
+        <button id="btn-close-session" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-extrabold">Fermer (Esc)</button>
+      </div>
+
+      <div class="p-4 text-sm text-slate-700 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="md:col-span-1 space-y-2">
+            <div class="text-xs font-extrabold text-slate-500 uppercase">Séances enregistrées</div>
+            <select id="session-select" class="w-full p-2 rounded-lg border border-slate-200 bg-white">
+              <option value="">(aucune)</option>
+            </select>
+            <div id="session-meta" class="text-[12px] text-slate-500"></div>
+          </div>
+
+          <div class="md:col-span-2 space-y-2">
+            <div class="text-xs font-extrabold text-slate-500 uppercase">Enregistrer / Charger</div>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input id="session-name" type="text" class="flex-1 p-2 rounded-lg border border-slate-200" placeholder="Nom de séance (ex : 5e - exo 3)">
+              <button id="btn-session-save" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm">Enregistrer</button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button id="btn-session-load" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-sm">Charger</button>
+              <button id="btn-session-delete" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm">Supprimer</button>
+              <div class="w-px bg-slate-200 mx-1 hidden sm:block"></div>
+              <button id="btn-session-export" class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm">Exporter JSON</button>
+              <button id="btn-session-import" class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-extrabold shadow-sm">Importer JSON</button>
+            </div>
+
+            <div class="text-[12px] text-slate-500">
+              Stockage : navigateur (localStorage) + import/export fichier JSON.
+              <span class="text-slate-400">Le dessin crayon n’est pas inclus pour l’instant.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input id="session-import-file" type="file" accept="application/json" class="hidden" />
+  </div>
 <script>
 
   // --- Configuration couleurs ---
@@ -380,8 +521,12 @@
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
 
+  // Son ON/OFF
+  let SOUND_ENABLED = true;
+
   function playSound(type){
     if (!audioCtx) return;
+    if (!SOUND_ENABLED) return;
     if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -419,6 +564,12 @@
       this.tokens = [];
       this.nextId = 1;
       this.selectedId = null;
+      this.selectedIds = new Set();
+      this._suppressClickUntil = 0;
+      this._isMarquee = false;
+      this._marqueeEl = null;
+      this._marqueeStartClient = null;
+
 
       // Ordre d'empilement (z-index dynamique : la dernière pièce manipulée reste au-dessus)
       this.zTop = 0;
@@ -432,6 +583,16 @@
       this.isDrawing = false;
       this.lastDrawPos = {x:0,y:0};
 
+      // PATCH D2 : crayon pro (strokes + pointer events + rAF)
+      this.strokes = [];                 // [{color,width,pts:[[x,y,p?],...]}]
+      this._activeStroke = null;
+      this._drawQueue = [];
+      this._drawRAF = 0;
+      this._drawCache = null;            // {left,top,panX,panY,scale}
+      this._activeDrawPointerId = null;
+      this._lastStrokePt = {x:0,y:0};
+
+
       // Modes: 'frac' | 'word' | 'percent' | 'angle' | 'empty'
       this.labelMode = 'frac';
 
@@ -442,6 +603,14 @@
       this.lastPointerClient = {x: 0, y: 0};
       // Curseur forcé pendant un drag depuis le menu (évite le retour à la flèche au survol du menu)
       this._bodyCursorPrev = '';
+
+
+      // ---- PATCH D1 : état UI / modales / séances ----
+      this.soundEnabled = true;
+      this.SESSIONS_KEY = 'fraction_disks_sessions_v1';
+      this.PREFS_KEY = 'fraction_disks_prefs_v1';
+      this._helpOpen = false;
+      this._sessionOpen = false;
 
 
       this.boardContainer = document.getElementById('board-container');
@@ -455,6 +624,9 @@
 
       this.buildPalette();
       this.initUI();
+      // PATCH D1 : prefs (son)
+      const prefs = this._loadPrefs();
+      if(typeof prefs.soundEnabled === 'boolean') this.setSoundEnabled(!!prefs.soundEnabled, true);
       this.initBoardListeners();
       this.resizeCanvas();
       this.updateTransform();
@@ -1114,12 +1286,495 @@
       this._bind('tool-pen','click', () => this.setTool('pen'));
       this._bind('btn-clear-drawing','click', () => this.clearDrawing());
 
+
+      // PATCH D1 : nouveaux boutons
+      this._bind('btn-session','click', () => this.toggleSessionModal());
+      this._bind('btn-help','click', () => this.toggleHelpModal());
+      this._bind('btn-sound','click', () => this.toggleSound());
+      this._bind('btn-fullscreen','click', () => this.toggleFullscreen());
+
+      // Modales : clic hors panneau = fermer
+      this._bindModalBackdropClose('modal-help');
+      this._bindModalBackdropClose('modal-session');
+
+      // Import fichier JSON
+      this._bind('btn-session-import','click', () => this._triggerImportFile());
+      const f = document.getElementById('session-import-file');
+      if(f){
+        f.addEventListener('change', () => this._handleImportFile(f));
+      }
+
+      // Prépare la liste des séances
+      this.refreshSessionSelect();
+      this.updateSoundUI();
+      this.updateFullscreenUI();
+      document.addEventListener('fullscreenchange', () => this.updateFullscreenUI());
+
       window.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') this.selectToken(null);
-        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); this.undo(); }
-        if(e.key === 'Delete' || e.key === 'Backspace') this.deleteSelected();
-      });
+        if(this._shouldIgnoreKey(e)) return;
+
+        const k = e.key;
+
+        // Aide (F1 / ?)
+        if(k === 'F1' || k === '?'){
+          e.preventDefault();
+          this.toggleHelpModal();
+          return;
+        }
+
+        // Escape : ferme modales sinon désélectionne
+        if(k === 'Escape'){
+          if(this._closeAnyModal()){
+            e.preventDefault();
+            return;
+          }
+          this.selectToken(null);
+          return;
+        }
+
+        // Undo (PATCH D2 : en mode stylo, Ctrl/Cmd+Z annule le dernier trait)
+        if((e.ctrlKey || e.metaKey) && !e.shiftKey && k.toLowerCase() === 'z'){
+          e.preventDefault();
+          if(this.currentTool === 'pen' && Array.isArray(this.strokes) && this.strokes.length){
+            this.undoDrawing();
+          }else{
+            this.undo();
+          }
+          return;
+        }
+
+        // Delete selection
+        if(k === 'Delete' || k === 'Backspace'){
+          e.preventDefault();
+          this.deleteSelected();
+          return;
+        }
+
+        // Dupliquer
+        if(!e.ctrlKey && !e.metaKey && !e.altKey && k.toLowerCase() === 'd'){
+          e.preventDefault();
+          this.duplicateSelected();
+          return;
+        }
+
+        // Raccourcis "chiffres" (AZERTY-friendly) : création rapide
+        if(!e.ctrlKey && !e.metaKey && !e.altKey){
+          // AZERTY-friendly : on utilise la touche physique (e.code) plutôt que le caractère (e.key)
+          const code = e.code || '';
+          const digit = code.startsWith('Digit') ? code.slice(5) : (code.startsWith('Numpad') ? code.slice(6) : null);
+          if(!digit){
+            // pas une touche numérique : ne pas interférer avec les autres raccourcis
+          }else{
+
+          const p = this._getKeyboardSpawnPos();
+
+          // 1 => unité (disque)
+          if(digit === '1'){
+            if(this.DENOM_SET.has(1)) this.addToken({denom: 1, kind: 'disk', x: p.x, y: p.y});
+            return;
+          }
+
+          // 0 => 1/10 (pièce)
+          if(digit === '0'){
+            if(this.DENOM_SET.has(10)) this.addToken({denom: 10, kind: 'piece', x: p.x, y: p.y});
+            return;
+          }
+
+          // 2,3,4,5,6,8 => pièce 1/n
+          const map = { '2':2, '3':3, '4':4, '5':5, '6':6, '8':8 };
+          if(map[digit]){
+            const d = map[digit];
+            if(this.DENOM_SET.has(d)) this.addToken({denom: d, kind: 'piece', x: p.x, y: p.y});
+            return;
+          }
+        } // fin else(digit)
+      } // fin if(!ctrl/meta/alt)
+        });
     }
+
+    // ---- PATCH D1 : Helpers clavier ----
+    _shouldIgnoreKey(e){
+      const t = e.target;
+      if(!t) return false;
+      const tag = (t.tagName || '').toUpperCase();
+      // Ne pas voler les touches quand on tape dans un champ
+      if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+      if(t.isContentEditable) return true;
+      return false;
+    }
+
+    _getKeyboardSpawnPos(){
+      // Place les créations clavier au centre visible du plateau (coordonnées monde)
+      const r = this.boardContainer.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+      return this.getWorldPos(cx, cy);
+    }
+
+
+    // ---- PATCH D1 : Modales (Aide / Séance) ----
+    _getModal(id){ return document.getElementById(id); }
+
+    _setModalOpen(id, open){
+      const m = this._getModal(id);
+      if(!m) return;
+      m.classList.toggle('hidden', !open);
+      if(id === 'modal-help') this._helpOpen = open;
+      if(id === 'modal-session') this._sessionOpen = open;
+    }
+
+    _closeAnyModal(){
+      if(this._helpOpen){ this._setModalOpen('modal-help', false); return true; }
+      if(this._sessionOpen){ this._setModalOpen('modal-session', false); return true; }
+      return false;
+    }
+
+    toggleHelpModal(){
+      const open = !this._helpOpen;
+      if(open && this._sessionOpen) this._setModalOpen('modal-session', false);
+      this._setModalOpen('modal-help', open);
+    }
+
+    toggleSessionModal(){
+      const open = !this._sessionOpen;
+      if(open && this._helpOpen) this._setModalOpen('modal-help', false);
+      this._setModalOpen('modal-session', open);
+      if(open) this.refreshSessionSelect();
+    }
+
+    _bindModalBackdropClose(modalId){
+      const m = this._getModal(modalId);
+      if(!m) return;
+      m.addEventListener('click', (e) => {
+        const tgt = e.target;
+        if(tgt && tgt.dataset && tgt.dataset.close === modalId){
+          this._setModalOpen(modalId, false);
+        }
+      });
+      if(modalId === 'modal-help'){
+        const b = document.getElementById('btn-close-help');
+        if(b) b.addEventListener('click', () => this._setModalOpen('modal-help', false));
+      }
+      if(modalId === 'modal-session'){
+        const b = document.getElementById('btn-close-session');
+        if(b) b.addEventListener('click', () => this._setModalOpen('modal-session', false));
+      }
+    }
+
+    // ---- PATCH D1 : Son ON/OFF ----
+    _loadPrefs(){
+      try{
+        const raw = localStorage.getItem(this.PREFS_KEY);
+        if(!raw) return {};
+        const o = JSON.parse(raw);
+        return (o && typeof o === 'object') ? o : {};
+      }catch(_){ return {}; }
+    }
+
+    _savePrefs(p){
+      try{ localStorage.setItem(this.PREFS_KEY, JSON.stringify(p||{})); }catch(_){}
+    }
+
+    setSoundEnabled(on, silent=false){
+      this.soundEnabled = !!on;
+      // variable globale utilisée par playSound()
+      try{ SOUND_ENABLED = this.soundEnabled; }catch(_){}
+      this.updateSoundUI();
+      const prefs = this._loadPrefs();
+      prefs.soundEnabled = this.soundEnabled;
+      this._savePrefs(prefs);
+      if(!silent) playSound('pop');
+    }
+
+    toggleSound(){
+      this.setSoundEnabled(!this.soundEnabled);
+    }
+
+    updateSoundUI(){
+      const b = document.getElementById('btn-sound');
+      if(!b) return;
+      b.textContent = this.soundEnabled ? 'Son : ON' : 'Son : OFF';
+      b.classList.toggle('bg-rose-100', !this.soundEnabled);
+      b.classList.toggle('text-rose-700', !this.soundEnabled);
+    }
+
+    // ---- PATCH D1 : Plein écran ----
+    async toggleFullscreen(){
+      try{
+        if(!document.fullscreenElement){
+          await document.documentElement.requestFullscreen();
+        }else{
+          await document.exitFullscreen();
+        }
+      }catch(_){}
+      this.updateFullscreenUI();
+    }
+
+    updateFullscreenUI(){
+      const b = document.getElementById('btn-fullscreen');
+      if(!b) return;
+      const on = !!document.fullscreenElement;
+
+      const lbl = document.getElementById('lbl-fullscreen');
+      const enter = document.getElementById('ico-fs-enter');
+      const exit = document.getElementById('ico-fs-exit');
+
+      // Texte volontairement court et constant (évite d’élargir le menu)
+      if(lbl) lbl.textContent = 'Plein écran';
+
+      if(enter) enter.classList.toggle('hidden', on);
+      if(exit) exit.classList.toggle('hidden', !on);
+
+      b.title = on ? 'Quitter plein écran' : 'Plein écran';
+      b.setAttribute('aria-label', b.title);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    // ---- PATCH D1 : Séances (localStorage + JSON import/export) ----
+    _loadSessionsStore(){
+      try{
+        const raw = localStorage.getItem(this.SESSIONS_KEY);
+        if(!raw) return {};
+        const obj = JSON.parse(raw);
+        return (obj && typeof obj === 'object') ? obj : {};
+      }catch(_){ return {}; }
+    }
+
+    _saveSessionsStore(store){
+      try{ localStorage.setItem(this.SESSIONS_KEY, JSON.stringify(store||{})); }catch(_){}
+    }
+
+    serializeSession(){
+      return {
+        version: 2,
+        app: 'disques_fractions',
+        savedAt: new Date().toISOString(),
+        labelMode: this.labelMode,
+        soundEnabled: this.soundEnabled,
+        pan: {...this.pan},
+        scale: this.scale,
+        nextId: this.nextId,
+        tokens: this.tokens.map(t => ({
+          id: t.id,
+          z: (typeof t.z === 'number') ? t.z : null,
+          denom: t.denom,
+          kind: t.kind,
+          side: t.side,
+          x: t.x, y: t.y,
+          rot: (typeof t.rot === 'number') ? t.rot : 0,
+          slot: (typeof t.slot === 'number') ? t.slot : null,
+          hideLabel: !!t.hideLabel
+        })),
+        drawing: { strokes: Array.isArray(this.strokes) ? this.strokes : [] }
+      };
+    }
+
+    applySession(data, opts={}){
+      const withHistory = (opts.withHistory !== false);
+      if(!data || !Array.isArray(data.tokens)) return false;
+
+      if(withHistory) this.saveState();
+
+      // Ne touche pas au moteur de bordures / rendu : on remonte les tokens via mountToken()
+      this.clearAllTokens(false);
+
+      this.tokens = data.tokens.map(t => ({...t}));
+      // nextId : fallback si absent
+      const maxId = Math.max(0, ...this.tokens.map(t => Number(t.id)||0));
+      this.nextId = Number(data.nextId) || (maxId + 1);
+
+      // Empilement
+      this.zTop = Math.max(0, ...this.tokens.map(t => (typeof t.z === 'number') ? t.z : 0));
+
+      // Monte les éléments DOM
+      this.tokens.forEach(t => this.mountToken(t));
+
+      // Caméra
+      this.pan = (data.pan && typeof data.pan === 'object') ? {...data.pan} : {x:0,y:0};
+      this.scale = (typeof data.scale === 'number') ? data.scale : 1;
+
+      // États UI
+      const lm = data.labelMode || 'frac';
+      this.setLabelMode(lm);
+      if(typeof data.soundEnabled === 'boolean') this.setSoundEnabled(data.soundEnabled, true);
+
+
+      // PATCH D2 : restaure les annotations si présentes
+      if(data.drawing && Array.isArray(data.drawing.strokes)){
+        // clone léger pour éviter d'écrire dans la source
+        this.strokes = data.drawing.strokes.map(s => ({
+          color: s.color,
+          width: s.width,
+          pts: Array.isArray(s.pts) ? s.pts.map(p => [p[0], p[1], p[2]||0]) : []
+        }));
+      }else{
+        this.strokes = [];
+      }
+      this.redrawAllStrokes();
+
+      this.selectToken(null);
+      this.updateTransform();
+      this.updateSelectionUI();
+      playSound('whoosh');
+      return true;
+    }
+
+    saveSessionAs(name){
+      const n = (name || '').trim();
+      if(!n) return false;
+
+      const store = this._loadSessionsStore();
+      store[n] = {
+        meta: { name: n, updatedAt: new Date().toISOString() },
+        data: this.serializeSession()
+      };
+      this._saveSessionsStore(store);
+      this.refreshSessionSelect(n);
+      return true;
+    }
+
+    loadSessionByName(name){
+      const store = this._loadSessionsStore();
+      const rec = store[name];
+      if(!rec || !rec.data) return false;
+      return this.applySession(rec.data, {withHistory:true});
+    }
+
+    deleteSessionByName(name){
+      const store = this._loadSessionsStore();
+      if(!store[name]) return false;
+      delete store[name];
+      this._saveSessionsStore(store);
+      this.refreshSessionSelect('');
+      return true;
+    }
+
+    refreshSessionSelect(preselectName=''){
+      const sel = document.getElementById('session-select');
+      const meta = document.getElementById('session-meta');
+      if(!sel) return;
+
+      const store = this._loadSessionsStore();
+      const names = Object.keys(store).sort((a,b)=>a.localeCompare(b,'fr'));
+
+      sel.innerHTML = '';
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent = names.length ? '(sélectionner...)' : '(aucune)';
+      sel.appendChild(opt0);
+
+      for(const n of names){
+        const o = document.createElement('option');
+        o.value = n;
+        o.textContent = n;
+        sel.appendChild(o);
+      }
+
+      // préselection
+      if(preselectName && names.includes(preselectName)){
+        sel.value = preselectName;
+      }
+
+      const updateMeta = () => {
+        const v = sel.value;
+        if(!meta) return;
+        if(!v || !store[v] || !store[v].meta){
+          meta.textContent = '';
+          return;
+        }
+        const dt = store[v].meta.updatedAt || '';
+        meta.textContent = dt ? `Dernière maj : ${dt.replace('T',' ').replace('Z','')}` : '';
+      };
+      sel.addEventListener('change', updateMeta);
+      updateMeta();
+
+      // Bind boutons (une seule fois, safe)
+      const btnSave = document.getElementById('btn-session-save');
+      const btnLoad = document.getElementById('btn-session-load');
+      const btnDel  = document.getElementById('btn-session-delete');
+      const btnExp  = document.getElementById('btn-session-export');
+      const nameInp = document.getElementById('session-name');
+
+      if(btnSave && !btnSave._bound){
+        btnSave._bound = true;
+        btnSave.addEventListener('click', () => {
+          const nm = nameInp ? nameInp.value : '';
+          const finalName = (nm && nm.trim()) ? nm.trim() : prompt('Nom de la séance ?', '');
+          if(!finalName) return;
+          this.saveSessionAs(finalName);
+          if(nameInp) nameInp.value = finalName;
+          playSound('pop');
+        });
+      }
+
+      if(btnLoad && !btnLoad._bound){
+        btnLoad._bound = true;
+        btnLoad.addEventListener('click', () => {
+          const v = sel.value;
+          if(!v){ playSound('whoosh'); return; }
+          this.loadSessionByName(v);
+        });
+      }
+
+      if(btnDel && !btnDel._bound){
+        btnDel._bound = true;
+        btnDel.addEventListener('click', () => {
+          const v = sel.value;
+          if(!v) return;
+          if(confirm(`Supprimer la séance “${v}” ?`)){
+            this.deleteSessionByName(v);
+            playSound('whoosh');
+          }
+        });
+      }
+
+      if(btnExp && !btnExp._bound){
+        btnExp._bound = true;
+        btnExp.addEventListener('click', () => this.exportSessionJSON());
+      }
+    }
+
+    exportSessionJSON(){
+      const data = this.serializeSession();
+      const txt = JSON.stringify(data, null, 2);
+      const blob = new Blob([txt], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.href = url;
+      a.download = `disques_fractions_${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+      playSound('pop');
+    }
+
+    _triggerImportFile(){
+      const f = document.getElementById('session-import-file');
+      if(f) f.click();
+    }
+
+    async _handleImportFile(fileInput){
+      try{
+        const file = fileInput.files && fileInput.files[0];
+        if(!file) return;
+        const txt = await file.text();
+        const obj = JSON.parse(txt);
+        if(this.applySession(obj, {withHistory:true})){
+          // optionnel : proposer de sauvegarder
+          this.refreshSessionSelect();
+        }else{
+          alert('JSON invalide (format séance).');
+        }
+      }catch(_){
+        alert('Impossible d’importer ce fichier JSON.');
+      }finally{
+        // reset input to allow re-import same file
+        try{ fileInput.value = ''; }catch(_){}
+      }
+    }
+
 
     updateSelectionUI(){
       const btnHide = document.getElementById('btn-hide-label');
@@ -1133,12 +1788,22 @@
       const btnDup  = document.getElementById('btn-duplicate');
       const btnDel  = document.getElementById('btn-delete');
 
-      const s = this.selected;
-      const has = !!s;
+      const count = this.selectedCount;
+      const hasOne = (count === 1);
+      const s = hasOne ? this.selected : null;
+      const hasAny = (count > 0);
 
       if(btnHide){
-        btnHide.disabled = !has;
-        if(has && s.hideLabel){
+        btnHide.disabled = !hasOne;
+        if(!hasOne){
+          try{
+            iconOpen.style.display = 'block';
+            iconClosed.style.display = 'none';
+            btnHide.classList.remove('bg-rose-500', 'border-rose-300');
+            btnHide.classList.add('bg-indigo-500', 'border-indigo-200');
+          }catch(_){ }
+        }
+        if(hasOne && s && s.hideLabel){
            // Mode masqué : montrer l'oeil barré
            iconOpen.style.display = 'none';
            iconClosed.style.display = 'block';
@@ -1153,13 +1818,13 @@
         }
       }
 
-      if(btnFlip) btnFlip.disabled = !has;
-      if(btnDup)  btnDup.disabled  = !has;
-      if(btnDel)  btnDel.disabled  = !has;
+      if(btnFlip) btnFlip.disabled = !hasOne;
+      if(btnDup)  btnDup.disabled  = !hasAny;
+      if(btnDel)  btnDel.disabled  = !hasAny;
 
-      if(btnSep)  btnSep.disabled  = !(has && s.kind === 'disk'  && s.denom > 1);
-      if(btnFuse) btnFuse.disabled = !(has && s.kind === 'piece' && s.denom > 1);
-      if(btnCut)  btnCut.disabled  = !(has && this.canCut(s));
+      if(btnSep)  btnSep.disabled  = !(hasOne && s && s.kind === 'disk'  && s.denom > 1);
+      if(btnFuse) btnFuse.disabled = !(hasOne && s && s.kind === 'piece' && s.denom > 1);
+      if(btnCut)  btnCut.disabled  = !(hasOne && s && this.canCut(s));
     }
 
     // ---- Plateau listeners ----
@@ -1180,40 +1845,156 @@
         if(this.currentTool === 'pen' && e.button !== 2) return;
         if(e.button === 2) e.preventDefault();
         if(e.target.closest('.strip')) return;
+
+        // PATCH D3 : rectangle de sélection (Ctrl/Cmd + drag sur fond vide)
+        if((e.ctrlKey || e.metaKey) && e.button === 0){
+          this._startMarquee(e);
+          return;
+        }
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
         this.selectToken(null);
       });
 
-      // dessin
-      this.boardContainer.addEventListener('mousedown', (e) => {
-        if(this.currentTool !== 'pen') return;
-        // Le dessin se fait au clic gauche (le bouton droit sert à bouger pièces/plateau)
-        if(typeof e.button === 'number' && e.button !== 0) return;
-        this.startDraw(e);
-      });
+      // dessin (PATCH D2 : Pointer Events + stylet fluide)
+      this.boardContainer.addEventListener('pointerdown', (e) => {
+        // suivi curseur + point de zoom
+        this.moveCursor(e);
+        this.lastPointerClient = {x: e.clientX, y: e.clientY};
 
-      window.addEventListener('mousemove', (e) => {
+        if(this.currentTool !== 'pen') return;
+        // Le dessin se fait au clic gauche (le bouton droit reste pour déplacer)
+        if(typeof e.button === 'number' && e.button !== 0) return;
+
+        // évite gestes navigateur (scroll/zoom) pendant le trait
+        e.preventDefault();
+
+        // un seul pointeur de dessin à la fois
+        if(this._activeDrawPointerId !== null && this._activeDrawPointerId !== undefined) return;
+
+        this._penPointerDown(e);
+      }, {passive:false});
+
+      this.boardContainer.addEventListener('pointermove', (e) => {
+        this.moveCursor(e);
+        this.lastPointerClient = {x: e.clientX, y: e.clientY};
+
+        if(this.currentTool === 'pen' && this.isDrawing && this._activeDrawPointerId === e.pointerId){
+          e.preventDefault();
+          this._penPointerMove(e);
+        }
+      }, {passive:false});
+
+      this.boardContainer.addEventListener('pointerup', (e) => {
+        if(this.currentTool === 'pen' && this.isDrawing && this._activeDrawPointerId === e.pointerId){
+          e.preventDefault();
+          this._penPointerUp(e);
+        }
+      }, {passive:false});
+
+      this.boardContainer.addEventListener('pointercancel', (e) => {
+        if(this.currentTool === 'pen' && this.isDrawing && this._activeDrawPointerId === e.pointerId){
+          e.preventDefault();
+          this._penPointerUp(e, true);
+        }
+      }, {passive:false});
+
+     window.addEventListener('mousemove', (e) => {
         this.moveCursor(e);
         this.lastPointerClient = {x: e.clientX, y: e.clientY};
         if(this.isPanning){
           this.pan.x = e.clientX - this.panStart.x;
           this.pan.y = e.clientY - this.panStart.y;
           this.updateTransform();
-        } else if(this.isDrawing && this.currentTool === 'pen'){
-          this.draw(e);
         }
       });
 
       window.addEventListener('mouseup', () => {
         this.isPanning = false;
-        this.isDrawing = false;
         this.boardContainer.classList.remove('panning');
       });
 
       window.addEventListener('resize', () => this.resizeCanvas());
     }
+
+    // PATCH D3 : rectangle de sélection (Ctrl/Cmd + drag sur fond vide)
+    _startMarquee(e){
+      if(this._isMarquee) return;
+      this._isMarquee = true;
+
+      const br = this.boardContainer.getBoundingClientRect();
+      const x0 = e.clientX;
+      const y0 = e.clientY;
+      this._marqueeStartClient = {x:x0, y:y0};
+
+      // Crée le rectangle visuel
+      if(this._marqueeEl){
+        try{ this._marqueeEl.remove(); }catch(_){}
+      }
+      const box = document.createElement('div');
+      box.className = 'marquee-box';
+      box.style.left = (x0 - br.left) + 'px';
+      box.style.top  = (y0 - br.top) + 'px';
+      box.style.width = '0px';
+      box.style.height = '0px';
+      this.boardContainer.appendChild(box);
+      this._marqueeEl = box;
+
+      const move = (ev) => {
+        ev.preventDefault();
+        const x1 = ev.clientX;
+        const y1 = ev.clientY;
+        const l = Math.min(x0, x1) - br.left;
+        const t = Math.min(y0, y1) - br.top;
+        const w = Math.abs(x1 - x0);
+        const h = Math.abs(y1 - y0);
+        box.style.left = l + 'px';
+        box.style.top  = t + 'px';
+        box.style.width = w + 'px';
+        box.style.height = h + 'px';
+      };
+
+      const end = (ev) => {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', end);
+
+        // Sélection dans l'espace monde
+        const a = this.getWorldPos(x0, y0);
+        const b = this.getWorldPos(ev.clientX, ev.clientY);
+        const minX = Math.min(a.x, b.x);
+        const minY = Math.min(a.y, b.y);
+        const maxX = Math.max(a.x, b.x);
+        const maxY = Math.max(a.y, b.y);
+
+        const D = this.diskD;
+        const ids = [];
+        for(const tkn of this.tokens){
+          const cx = tkn.x + D/2;
+          const cy = tkn.y + D/2;
+          if(cx >= minX && cx <= maxX && cy >= minY && cy <= maxY){
+            ids.push(tkn.id);
+          }
+        }
+
+        // Rectangle = sélection de groupe (remplace)
+        if(ids.length){
+          this.setSelection(ids, ids[ids.length-1]);
+        }else{
+          this.selectToken(null);
+        }
+
+        if(box){
+          try{ box.remove(); }catch(_){}
+        }
+        this._marqueeEl = null;
+        this._isMarquee = false;
+      };
+
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', end);
+    }
+
 
     // ---- Création / rendu tokens ----
     _ensureZ(token){
@@ -1268,12 +2049,28 @@
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        // PATCH D3 (fix): éviter le "clic fantôme" après un drag (sinon la sélection de groupe se casse)
+        if(Date.now() < this._suppressClickUntil) return;
+
         const t = this.tokens.find(tt => tt.id === token.id);
         if(!t) return;
         const pt = e.touches ? e.touches[0] : e;
         const wp = this.getWorldPos(pt.clientX, pt.clientY);
         if(t.kind === 'piece' && !this.isPointInPiece(t, wp.x, wp.y)) return;
-        this.selectToken(token.id);
+
+        // PATCH D3 (fix): clic normal sur un élément déjà dans un groupe -> garder le groupe
+        const wantToggle = !!(e.ctrlKey || e.metaKey || e.shiftKey);
+        const inGroup = (this.selectedIds instanceof Set) && this.selectedIds.has(t.id) && this.selectedIds.size > 1;
+
+        if(wantToggle){
+          this.toggleSelectToken(t.id);
+        }else if(inGroup){
+          this.selectedId = t.id;
+          this.refreshTokenSelectedClass();
+          this.updateSelectionUI();
+        }else{
+          this.selectToken(t.id);
+        }
       });
 
       el.addEventListener('dblclick', (e) => {
@@ -1318,13 +2115,16 @@
 
       this.refreshTokenSelectedClass(token.id);
     }
-
-    refreshTokenSelectedClass(id){
+    refreshTokenSelectedClass(){
+      const sel = (this.selectedIds instanceof Set)
+        ? this.selectedIds
+        : new Set((this.selectedId === null || typeof this.selectedId === 'undefined') ? [] : [this.selectedId]);
       this.tokens.forEach(t => {
         if(!t._el) return;
-        t._el.classList.toggle('selected', t.id === id);
+        t._el.classList.toggle('selected', sel.has(t.id));
       });
     }
+
 
     addToken({denom, kind, x=null, y=null}){
       this.saveState();
@@ -1350,18 +2150,84 @@
       this.selectToken(token.id);
       return token;
     }
-
     selectToken(id){
-      this.selectedId = id;
-      this.refreshTokenSelectedClass(id);
+      // Sélection simple (compat)
+      if(id === null || typeof id === 'undefined'){
+        this.selectedIds = new Set();
+        this.selectedId = null;
+      }else{
+        this.selectedIds = new Set([id]);
+        this.selectedId = id;
+      }
+      this.refreshTokenSelectedClass();
+      this.updateSelectionUI();
+    }
+
+    toggleSelectToken(id){
+      if(id === null || typeof id === 'undefined') return;
+      if(!(this.selectedIds instanceof Set)) this.selectedIds = new Set();
+
+      if(this.selectedIds.has(id)){
+        this.selectedIds.delete(id);
+        if(this.selectedId === id){
+          this.selectedId = this.selectedIds.size ? Array.from(this.selectedIds).slice(-1)[0] : null;
+        }
+      }else{
+        this.selectedIds.add(id);
+        this.selectedId = id;
+      }
+
+      // Si on vient de vider la sélection
+      if(!this.selectedIds.size){
+        this.selectedId = null;
+      }
+
+      this.refreshTokenSelectedClass();
+      this.updateSelectionUI();
+    }
+
+    setSelection(ids, primaryId=null){
+      const arr = Array.isArray(ids) ? ids.slice() : [];
+      this.selectedIds = new Set(arr);
+      if(primaryId !== null && this.selectedIds.has(primaryId)){
+        this.selectedId = primaryId;
+      }else{
+        this.selectedId = arr.length ? arr[arr.length - 1] : null;
+      }
+      this.refreshTokenSelectedClass();
       this.updateSelectionUI();
     }
 
     get selected(){
-      return this.tokens.find(t => t.id === this.selectedId) || null;
+      const id = this.selectedId;
+      if(id === null || typeof id === 'undefined'){
+        if(this.selectedIds instanceof Set && this.selectedIds.size){
+          const first = this.selectedIds.values().next().value;
+          return this.tokens.find(t => t.id === first) || null;
+        }
+        return null;
+      }
+      return this.tokens.find(t => t.id === id) || null;
     }
 
-    toggleTokenLabel(){
+    get selectedCount(){
+      return (this.selectedIds instanceof Set) ? this.selectedIds.size : ((this.selectedId !== null && typeof this.selectedId !== 'undefined') ? 1 : 0);
+    }
+
+    getSelectedTokens(){
+      const out = [];
+      if(this.selectedIds instanceof Set){
+        for(const id of this.selectedIds){
+          const t = this.tokens.find(tt => tt.id === id);
+          if(t) out.push(t);
+        }
+      }else{
+        const s = this.selected;
+        if(s) out.push(s);
+      }
+      return out;
+    }
+toggleTokenLabel(){
       const s = this.selected;
       if(!s) return;
       this.saveState();
@@ -1385,33 +2251,58 @@
     }
 
     duplicateSelected(){
-      const s = this.selected;
-      if(!s) return;
+      const count = this.selectedCount;
+      if(!count) return;
       this.saveState();
-      const copy = {
-        id: this.nextId++,
-        z: ++this.zTop,
-        denom: s.denom,
-        kind: s.kind,
-        side: s.side,
-        x: s.x + 24,
-        y: s.y + 24,
-        rot: (typeof s.rot === 'number') ? s.rot : 0,
-        slot: (typeof s.slot === 'number') ? s.slot : null,
-        hideLabel: !!s.hideLabel
-      };
-      this.tokens.push(copy);
-      this.mountToken(copy);
-      this.selectToken(copy.id);
+
+      const selectedTokens = this.getSelectedTokens();
+      // Dupliquer dans l'ordre d'empilement (z), pour garder un rendu cohérent
+      selectedTokens.sort((a,b)=> (a.z||0) - (b.z||0));
+
+      const newIds = [];
+      for(const s of selectedTokens){
+        const copy = {
+          id: this.nextId++,
+          z: ++this.zTop,
+          denom: s.denom,
+          kind: s.kind,
+          side: s.side,
+          x: s.x + 24,
+          y: s.y + 24,
+          rot: (typeof s.rot === 'number') ? s.rot : 0,
+          slot: (typeof s.slot === 'number') ? s.slot : null,
+          hideLabel: !!s.hideLabel
+        };
+        this.tokens.push(copy);
+        this.mountToken(copy);
+        newIds.push(copy.id);
+      }
+
+      // Sélectionner les duplicatas (groupe)
+      if(newIds.length === 1){
+        this.selectToken(newIds[0]);
+      }else{
+        this.setSelection(newIds, newIds[newIds.length-1]);
+      }
       playSound('pop');
     }
 
     deleteSelected(){
-      const s = this.selected;
-      if(!s) return;
+      const count = this.selectedCount;
+      if(!count) return;
       this.saveState();
-      if(s._el) s._el.remove();
-      this.tokens = this.tokens.filter(t => t.id !== s.id);
+
+      const sel = (this.selectedIds instanceof Set) ? new Set(this.selectedIds) : new Set();
+      if(!sel.size && this.selectedId !== null && typeof this.selectedId !== 'undefined'){
+        sel.add(this.selectedId);
+      }
+
+      for(const t of this.tokens){
+        if(sel.has(t.id) && t._el){
+          try{ t._el.remove(); }catch(_){}
+        }
+      }
+      this.tokens = this.tokens.filter(t => !sel.has(t.id));
       this.selectToken(null);
       playSound('whoosh');
     }
@@ -1636,12 +2527,14 @@
     // avec une arête déjà présente au même centre.
     snapToCenterAndMaybeClip(token, opts={}){
       const t = token;
-      if(!t) return false;
+      if(!t) return (opts && opts.returnTarget) ? {snapped:false} : false;
       const D = this.diskD;
       const thresh = (12 / this.scale);
 
-      const candidates = this.tokens.filter(o => o.id !== t.id);
-      if(!candidates.length) return false;
+      const ignore = (opts && opts.ignoreIds) ? (opts.ignoreIds instanceof Set ? opts.ignoreIds : new Set(opts.ignoreIds)) : null;
+
+      const candidates = this.tokens.filter(o => o.id !== t.id && !(ignore && ignore.has(o.id)));
+      if(!candidates.length) return (opts && opts.returnTarget) ? {snapped:false} : false;
 
       const tcx = t.x + D/2;
       const tcy = t.y + D/2;
@@ -1653,7 +2546,7 @@
         const d = Math.hypot(tcx - ocx, tcy - ocy);
         if(d < bestDist){ bestDist = d; best = o; }
       }
-      if(!best || bestDist > thresh) return false;
+      if(!best || bestDist > thresh) return (opts && opts.returnTarget) ? {snapped:false} : false;
 
       const target = { x: best.x, y: best.y };
 
@@ -1727,7 +2620,12 @@
         }
       }
 
+      const dx = (target.x - t.x);
+      const dy = (target.y - t.y);
       this._animateTokenTo(t, target, {duration: 110, ...opts});
+      if(opts && opts.returnTarget){
+        return {snapped:true, target, dx, dy};
+      }
       return true;
     }
     // ---- Aimantation (pièces ↔ centre, et disque ↔ centre si proche) ----
@@ -1803,13 +2701,15 @@
     // Aimantation "manuelle" : centre sur centre uniquement (pas de placement automatique en slots)
     snapToken(token, opts={}){
       const t = token;
-      if(!t) return;
+      if(!t) return (opts && opts.returnTarget) ? {snapped:false} : undefined;
 
       const D = this.diskD;
       const thresh = (12 / this.scale);
 
-      const candidates = this.tokens.filter(o => o.id !== t.id);
-      if(!candidates.length){ return; }
+      const ignore = (opts && opts.ignoreIds) ? (opts.ignoreIds instanceof Set ? opts.ignoreIds : new Set(opts.ignoreIds)) : null;
+
+      const candidates = this.tokens.filter(o => o.id !== t.id && !(ignore && ignore.has(o.id)));
+      if(!candidates.length){ return (opts && opts.returnTarget) ? {snapped:false} : undefined; }
 
       const tcx = t.x + D/2;
       const tcy = t.y + D/2;
@@ -1823,8 +2723,14 @@
         if(d < bestDist){ bestDist = d; best = o; }
       }
 
-      if(!best || bestDist > thresh){ return; }
-      this._animateTokenTo(t, {x: best.x, y: best.y}, {duration: 80, ...opts});
+      if(!best || bestDist > thresh){ return (opts && opts.returnTarget) ? {snapped:false} : undefined; }
+      const target = {x: best.x, y: best.y};
+      const dx = (target.x - t.x);
+      const dy = (target.y - t.y);
+      this._animateTokenTo(t, target, {duration: 80, ...opts});
+      if(opts && opts.returnTarget){
+        return {snapped:true, target, dx, dy};
+      }
     }
 
     // Après une rotation, on "clipse" la pièce si elle est presque alignée (et centrée sur un autre disque/pièce)
@@ -1883,10 +2789,45 @@
       const rotateWhich = picked.rotateWhich;
 
       this.saveState();
-      this.selectToken(token.id);
+
+      // PATCH D3 : multi-sélection
+      const wantToggle = !!(e.ctrlKey || e.metaKey || e.shiftKey);
+      const hasSet = (this.selectedIds instanceof Set);
+      const isSelected = hasSet ? this.selectedIds.has(token.id) : (this.selectedId === token.id);
+      const alreadyInGroup = hasSet && this.selectedIds.has(token.id) && this.selectedIds.size > 1;
+
+      if(wantToggle){
+        // Important : si l'utilisateur garde Ctrl/Cmd (ou Shift) enfoncé pour déplacer un groupe déjà sélectionné,
+        // on ne doit PAS "dé-toggl-er" la sélection au mousedown.
+        if(isSelected){
+          // on garde la sélection existante, et on met juste à jour le primaire
+          this.selectedId = token.id;
+          this.refreshTokenSelectedClass();
+          this.updateSelectionUI();
+        } else {
+          this.toggleSelectToken(token.id);
+        }
+      }else if(!alreadyInGroup){
+        // clic normal : sélection simple (si pas déjà dans un groupe)
+        this.selectToken(token.id);
+      }else{
+        // on garde la sélection de groupe, mais on met à jour le primaire
+        this.selectedId = token.id;
+        this.refreshTokenSelectedClass();
+        this.updateSelectionUI();
+      }
+
       this.bringToFront(token);
 
       if(token._el) token._el.classList.add('dragging');
+      // PATCH D3 : si groupe, on marque aussi les autres
+      if(this.selectedIds instanceof Set && this.selectedIds.size > 1 && this.selectedIds.has(token.id)){
+        for(const id of this.selectedIds){
+          if(id === token.id) continue;
+          const t2 = this.tokens.find(tt => tt.id === id);
+          if(t2 && t2._el) t2._el.classList.add('dragging');
+        }
+      }
 
       // --- Mode rotation ---
       if(rotateWhich){
@@ -1920,8 +2861,19 @@
           document.removeEventListener('touchmove', move);
           document.removeEventListener('mouseup', end);
           document.removeEventListener('touchend', end);
-          if(token._el) token._el.classList.remove('dragging');
-          // aimantation centre↔centre + clip angle (si proche)
+          // Retire le style dragging (leader + éventuel groupe)
+        if(token._el) token._el.classList.remove('dragging');
+        if(this.selectedIds instanceof Set && this.selectedIds.size > 1 && this.selectedIds.has(token.id)){
+          for(const id of this.selectedIds){
+            if(id === token.id) continue;
+            const t2 = this.tokens.find(tt => tt.id === id);
+            if(t2 && t2._el) t2._el.classList.remove('dragging');
+          }
+        }
+          // PATCH D3 (fix): supprime le clic "fantôme" après la rotation
+        this._suppressClickUntil = Date.now() + 260;
+
+        // aimantation centre↔centre + clip angle (si proche)
           const snapped = this.snapToCenterAndMaybeClip(token);
           document.body.style.cursor = "";
         };
@@ -1936,21 +2888,53 @@
       // --- Mode déplacement ---
       const clientX = pt0.clientX;
       const clientY = pt0.clientY;
+            // PATCH D3 (fix): déplacement de groupe
+      const isGroup = (this.selectedIds instanceof Set) && this.selectedIds.size > 1 && this.selectedIds.has(token.id);
+      const groupIds = isGroup ? Array.from(this.selectedIds) : [token.id];
+      const groupTokens = groupIds.map(id => this.tokens.find(tt => tt.id === id)).filter(Boolean);
+
+      // Positions de départ (pour appliquer un même delta à tout le groupe)
+      const startPos = new Map();
+      for(const t0 of groupTokens){
+        startPos.set(t0.id, {x: t0.x, y: t0.y});
+      }
+      const leaderStart = startPos.get(token.id) || {x: token.x, y: token.y};
+
       const rect = token._el.getBoundingClientRect();
       const offset = { x: clientX - rect.left, y: clientY - rect.top };
+      const br = this.boardContainer.getBoundingClientRect();
+
+      let moved = false;
 
       const move = (ev) => {
         ev.preventDefault();
         const pt = ev.touches ? ev.touches[0] : ev;
         const cx = pt.clientX;
         const cy = pt.clientY;
-        const br = this.boardContainer.getBoundingClientRect();
+
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
-        const wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
-        token.x = wx;
-        token.y = wy;
-        token._el.style.left = wx + 'px';
-        token._el.style.top = wy + 'px';
+        const wy = (cy - br.top  - this.pan.y - offset.y) / this.scale;
+
+        const dx = (wx - leaderStart.x);
+        const dy = (wy - leaderStart.y);
+
+        if(!moved && (Math.abs(dx) > (1/this.scale) || Math.abs(dy) > (1/this.scale))){
+          moved = true;
+        }
+
+        // Applique le même delta à tout le groupe (ou au seul token si pas de groupe)
+        for(const t0 of groupTokens){
+          const sp = startPos.get(t0.id) || {x: t0.x, y: t0.y};
+          const nx = sp.x + dx;
+          const ny = sp.y + dy;
+          t0.x = nx;
+          t0.y = ny;
+          if(t0._el){
+            t0._el.style.left = nx + 'px';
+            t0._el.style.top  = ny + 'px';
+          }
+        }
+
         token._pointerWorld = this.getWorldPos(cx, cy);
       };
 
@@ -1959,12 +2943,32 @@
         document.removeEventListener('touchmove', move);
         document.removeEventListener('mouseup', end);
         document.removeEventListener('touchend', end);
-        if(token._el) token._el.classList.remove('dragging');
-        // aimantation centre↔centre + clip angle (si proche)
-        const snapped = this.snapToCenterAndMaybeClip(token);
+
+        // Retire le style dragging sur tout le groupe
+        for(const t0 of groupTokens){
+          if(t0 && t0._el) t0._el.classList.remove('dragging');
+        }
+
+        // PATCH D3 (fix): évite le clic "fantôme" après un pointerup/touchend (sinon la multi-sélection se casse)
+        this._suppressClickUntil = Date.now() + 260;
+
+        // PATCH D3 (fix): snap du groupe sans s'accrocher aux éléments du groupe
+        if(groupTokens.length > 1){
+          const ignore = new Set(groupTokens.map(t0 => t0.id));
+          const res = this.snapToCenterAndMaybeClip(token, {ignoreIds: ignore, returnTarget: true});
+          if(res && res.snapped){
+            for(const t0 of groupTokens){
+              if(t0.id === token.id) continue;
+              this._animateTokenTo(t0, {x: t0.x + res.dx, y: t0.y + res.dy}, {duration: 110, silent: true});
+            }
+          }
+        } else {
+          // aimantation centre↔centre + clip angle (si proche)
+          this.snapToCenterAndMaybeClip(token);
+        }
       };
 
-      document.addEventListener('mousemove', move);
+document.addEventListener('mousemove', move);
       document.addEventListener('touchmove', move, {passive:false});
       document.addEventListener('mouseup', end);
       document.addEventListener('touchend', end);
@@ -1981,7 +2985,8 @@
 
       const penMode = (tool === 'pen');
       this.boardContainer.classList.toggle('hide-cursor', penMode);
-      document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
+            this.boardContainer.classList.toggle('pen-active', penMode);
+document.getElementById('custom-cursor').style.display = penMode ? 'block' : 'none';
     }
 
     // Suit le pointeur pour afficher une "petite croix" en mode stylo
@@ -2015,32 +3020,148 @@
       this.ctx.strokeStyle = '#111827';
       this.ctx.imageSmoothingEnabled = true;
       if(this.ctx.imageSmoothingQuality) this.ctx.imageSmoothingQuality = 'high';
+
+      // PATCH D2 : garder les traits lors d'un resize (le resize efface le canvas)
+      this.redrawAllStrokes();
+    }
+    // ---- PATCH D2 : Crayon "pro" (Pointer Events + rAF + undo) ----
+    _penCacheFromEvent(e){
+      const r = this.boardContainer.getBoundingClientRect();
+      this._drawCache = { left: r.left, top: r.top, panX: this.pan.x, panY: this.pan.y, scale: this.scale };
     }
 
-    startDraw(e){
+    _penClientToWorld(clientX, clientY){
+      const c = this._drawCache;
+      return {
+        x: (clientX - c.left - c.panX) / c.scale,
+        y: (clientY - c.top  - c.panY) / c.scale
+      };
+    }
+
+    _penPointerDown(e){
       this.isDrawing = true;
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const p = this.getWorldPos(cx, cy);
-      this.lastDrawPos = p;
-      this.ctx.beginPath();
-      this.ctx.moveTo(p.x, p.y);
+      this._activeDrawPointerId = e.pointerId;
+
+      // capture = on continue à recevoir les move/up même si on sort du board
+      try{ this.boardContainer.setPointerCapture(e.pointerId); }catch(_){}
+
+      // cache rect/pan/zoom pour ne pas recalculer à chaque move
+      this._penCacheFromEvent(e);
+
+      // nouveau trait
+      this._activeStroke = { color: '#111827', width: 3, pts: [] };
+      this._drawQueue = [];
+
+      const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+      for(const ev of events){
+        const p = this._penClientToWorld(ev.clientX, ev.clientY);
+        const pr = (typeof ev.pressure === 'number') ? ev.pressure : 0;
+        this._activeStroke.pts.push([p.x, p.y, pr]);
+        this._drawQueue.push(p);
+      }
+
+      const first = this._drawQueue[0] || this._penClientToWorld(e.clientX, e.clientY);
+      this._lastStrokePt = {x: first.x, y: first.y};
+      this._schedulePenFlush();
     }
 
-    draw(e){
-      e.preventDefault();
-      const cx = e.touches ? e.touches[0].clientX : e.clientX;
-      const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const p = this.getWorldPos(cx, cy);
-      this.ctx.lineTo(p.x, p.y);
-      this.ctx.stroke();
-      this.lastDrawPos = p;
+    _penPointerMove(e){
+      if(!this._activeStroke) return;
+
+      const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+      for(const ev of events){
+        const p = this._penClientToWorld(ev.clientX, ev.clientY);
+        const pr = (typeof ev.pressure === 'number') ? ev.pressure : 0;
+        this._activeStroke.pts.push([p.x, p.y, pr]);
+        this._drawQueue.push(p);
+      }
+      this._schedulePenFlush();
+    }
+
+    _penPointerUp(e, cancelled=false){
+      // flush ce qu'il reste
+      this._flushPenNow();
+
+      if(this._activeStroke && Array.isArray(this._activeStroke.pts) && this._activeStroke.pts.length){
+        this.strokes.push(this._activeStroke);
+      }
+
+      this._activeStroke = null;
+      this._drawQueue = [];
+      this._drawCache = null;
+
+      this.isDrawing = false;
+      this._activeDrawPointerId = null;
+    }
+
+    _schedulePenFlush(){
+      if(this._drawRAF) return;
+      this._drawRAF = requestAnimationFrame(() => this._flushPenNow());
+    }
+
+    _flushPenNow(){
+      if(this._drawRAF){
+        // (si on est déjà dans le frame, cancelAnimationFrame est sans effet)
+        try{ cancelAnimationFrame(this._drawRAF); }catch(_){}
+        this._drawRAF = 0;
+      }
+      if(!this._activeStroke || !this._drawQueue || this._drawQueue.length === 0) return;
+
+      const ctx = this.ctx;
+      ctx.save();
+      ctx.lineWidth = this._activeStroke.width || 3;
+      ctx.strokeStyle = this._activeStroke.color || '#111827';
+      ctx.beginPath();
+      ctx.moveTo(this._lastStrokePt.x, this._lastStrokePt.y);
+
+      for(const p of this._drawQueue){
+        ctx.lineTo(p.x, p.y);
+        this._lastStrokePt = p;
+      }
+
+      ctx.stroke();
+      ctx.restore();
+      this._drawQueue.length = 0;
+    }
+
+    undoDrawing(){
+      if(!Array.isArray(this.strokes) || this.strokes.length === 0) return;
+      this.strokes.pop();
+      this.redrawAllStrokes();
+      playSound('whoosh');
+    }
+
+    redrawAllStrokes(){
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, 4000, 4000);
+
+      if(!Array.isArray(this.strokes) || this.strokes.length === 0) return;
+
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for(const s of this.strokes){
+        if(!s || !Array.isArray(s.pts) || s.pts.length === 0) continue;
+        ctx.lineWidth = s.width || 3;
+        ctx.strokeStyle = s.color || '#111827';
+        ctx.beginPath();
+        ctx.moveTo(s.pts[0][0], s.pts[0][1]);
+        for(let i=1;i<s.pts.length;i++){
+          const pt = s.pts[i];
+          ctx.lineTo(pt[0], pt[1]);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     clearDrawing(){
+      this.strokes = [];
+      this._activeStroke = null;
+      this._drawQueue = [];
+      this._drawCache = null;
       this.ctx.clearRect(0, 0, 4000, 4000);
     }
-
     clearAllTokens(withHistory=true){
       if(withHistory) this.saveState();
       this.tokens.forEach(t => t._el && t._el.remove());
@@ -2068,7 +3189,9 @@
       'btn-hide-label','btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas',
-      'mode-frac','mode-word','mode-percent','mode-angle','mode-empty'
+      'mode-frac','mode-word','mode-percent','mode-angle','mode-empty',
+      'btn-session','btn-help','btn-sound','btn-fullscreen',
+      'modal-help','modal-session','session-select','session-name'
     ];
     const missing = required.filter(id => !document.getElementById(id));
     if(missing.length){
