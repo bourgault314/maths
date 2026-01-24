@@ -28,6 +28,9 @@
 
         #layer-container {
             position: relative; flex: 1; overflow: hidden; background-color: white;
+            touch-action: none;
+            user-select: none;
+        
         }
         canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none;
@@ -42,7 +45,9 @@
         .victory-text { 
             color: #16a34a !important;
             font-weight: 800;
-            font-size: 1.5rem;
+            font-size: clamp(1.4rem, 2.0vw + 0.9rem, 2.4rem);
+            line-height: 1.15;
+            text-align: center;
         }
     </style>
 </head>
@@ -55,9 +60,27 @@
             
             <input type="text" id="numbers-input" 
                    class="w-full text-2xl font-bold text-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none mb-6 text-slate-700 placeholder-slate-400"
-                   placeholder="ex: 9 8" autocomplete="off">
+                   placeholder="ex : 12 9,5 14,25 16" autocomplete="off">
             
-            <button onclick="startGame()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg transition-transform active:scale-95 shadow-lg shadow-blue-200">
+            
+            
+    <div class="flex items-center gap-3 mb-4">
+        <label for="gen-count" class="text-sm text-slate-600 font-bold shrink-0">Nb de piles</label>
+        <input id="gen-count" type="number" min="2" max="15" value="5"
+               class="w-24 text-center font-bold bg-slate-50 border-2 border-slate-200 rounded-xl p-2 focus:border-blue-500 focus:outline-none text-slate-700">
+        <div class="flex-1"></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 mb-4">
+        <button onclick="fillExample('integers')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl transition active:scale-95" title="Génère un exemple solvable avec des entiers">
+            🎲 Exemple (entiers)
+        </button>
+        <button onclick="fillExample('decimals')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl transition active:scale-95" title="Génère un exemple solvable avec des décimaux au quart près">
+            ✨ Exemple (décimaux)
+        </button>
+    </div>
+
+<button onclick="startGame()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-lg transition-transform active:scale-95 shadow-lg shadow-blue-200">
                 Construire les piles
             </button>
             <p id="error-msg" class="text-rose-500 text-sm mt-4 hidden"></p>
@@ -65,7 +88,7 @@
     </div>
 
     <header class="bg-white shadow-sm z-30 flex flex-col shrink-0 relative">
-        <div class="flex items-center justify-between p-2 gap-2 w-full border-b border-slate-100 min-h-[70px]">
+        <div class="flex items-center justify-between p-2 gap-2 w-full border-b border-slate-100 min-h-[86px]">
             <div class="flex gap-2 shrink-0">
                 <button onclick="resetSetup()" class="tool-btn bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl font-bold flex items-center gap-2" title="Recommencer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -79,23 +102,32 @@
                     <span class="hidden sm:inline text-sm">Annuler</span>
                 </button>
 
-                <!-- NOUVEAU : Boutons de Zoom -->
-                <div class="flex items-center bg-slate-100 rounded-xl p-1 ml-2 border border-slate-200">
-                    <button onclick="adjustZoom(-0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Dézoomer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                        </svg>
-                    </button>
-                    <button onclick="adjustZoom(0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Zoomer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
+                
+    <!-- Boutons de Zoom + Plein écran -->
+    <div class="flex items-center bg-slate-100 rounded-xl p-1 ml-2 border border-slate-200">
+        <button onclick="adjustZoom(-0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Dézoomer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+        </button>
+        <button onclick="adjustZoom(0.1)" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Zoomer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+        </button>
+
+        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+
+        <button onclick="toggleFullscreen()" id="toggle-fullscreen" class="tool-btn p-2 rounded-lg text-slate-600 hover:bg-white" title="Plein écran">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v3m0 8v3a2 2 0 002 2h3m8-18h3a2 2 0 012 2v3m0 8v3a2 2 0 01-2 2h-3" />
+            </svg>
+        </button>
+    </div>
+</div>
 
             <div class="flex-1 flex flex-col justify-center items-center pointer-events-none px-2 text-center overflow-hidden">
-                <span id="header-title" class="text-slate-800 font-bold text-xl leading-tight truncate w-full">Égaliser les piles</span>
+                <span id="header-title" class="text-slate-800 font-bold text-xl leading-tight w-full px-2 whitespace-normal">Égaliser les piles</span>
                 <span id="header-subtitle" class="text-xs text-slate-400 font-bold uppercase tracking-wider">Déplace ou coupe les blocs</span>
             </div>
 
@@ -110,14 +142,30 @@
                     </svg>
                 </button>
 
-                <div class="w-px h-6 bg-slate-300 mx-1"></div>
                 
-                <button onclick="setTool('pen')" id="tool-pen" class="tool-btn text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="Stylo">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                </button>
-                <button onclick="clearDrawings()" class="tool-btn text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
+<div class="w-px h-6 bg-slate-300 mx-1"></div>
+
+<button onclick="setTool('pen')" id="tool-pen" class="tool-btn text-blue-600 hover:bg-blue-50 p-2 rounded-lg" title="Stylo">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Stylo (simple, lisible) -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.687a1.875 1.875 0 112.652 2.652L9.44 17.213a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.862 4.487z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 7.5l-3-3" />
+    </svg>
+</button>
+
+<button onclick="undoDraw()" id="btn-undo-draw" class="tool-btn text-slate-600 hover:bg-slate-200 p-2 rounded-lg" title="Annuler le dernier trait du stylo">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Même style que le bouton Annuler -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+    </svg>
+</button>
+
+<button onclick="clearDrawings()" id="btn-clear-draw" class="tool-btn text-slate-600 hover:bg-slate-200 p-2 rounded-lg" title="Effacer tous les traits">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+</button>
+
             </div>
         </div>
     </header>
@@ -141,7 +189,9 @@
             zoom: 1.0,         // Facteur de zoom manuel
             baseY: 0,
             targetAverage: 0,
-            isWin: false
+            isWin: false,
+            projection: true,
+            drawStrokes: []
         };
 
         const canvasMain = document.getElementById('main-canvas');
@@ -151,7 +201,151 @@
         const container = document.getElementById('layer-container');
 
         /* --- SETUP --- */
-        function startGame() {
+        
+        /* --- OUTILS DE FORMAT / PARSE (au quart près) --- */
+        function parseFrenchNumber(token) {
+            if (!token) return NaN;
+            const t = token.replace(',', '.');
+            const v = parseFloat(t);
+            return Number.isFinite(v) ? v : NaN;
+        }
+        function isQuarterNumber(v) {
+            const q = v * 4;
+            return Math.abs(q - Math.round(q)) < 1e-9;
+        }
+        function formatFR(v) {
+            // Values in this tool are constrained to multiples of 1/4.
+            // Format safely without trimming integer trailing zeros (e.g. 10 must stay 10).
+            const q = Math.round(v * 4);
+            const intPart = (q >= 0) ? Math.floor(q / 4) : Math.ceil(q / 4);
+            const rem = ((q % 4) + 4) % 4; // 0..3
+            let s;
+            if (rem === 0) s = String(intPart);
+            else if (rem === 1) s = String(intPart) + ".25";
+            else if (rem === 2) s = String(intPart) + ".5";
+            else s = String(intPart) + ".75";
+            return s.replace('.', ',');
+        }
+        function buildStackFromValue(v) {
+            const q = Math.round(v * 4);
+            const stack = [];
+            let remaining = q;
+            while (remaining >= 4) { stack.push(1); remaining -= 4; }
+            if (remaining >= 2) { stack.push(0.5); remaining -= 2; }
+            if (remaining >= 1) { stack.push(0.25); remaining -= 1; }
+            return stack;
+        }
+        function averageIsRepresentable(numbers) {
+            const sumQ = numbers.reduce((a,b)=>a + Math.round(b*4), 0);
+            return (sumQ % numbers.length) === 0;
+        }
+        
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+function fillExample(mode) {
+    const inputEl = document.getElementById('numbers-input');
+    const errorMsg = document.getElementById('error-msg');
+    const countEl = document.getElementById('gen-count');
+    const n = clamp(parseInt(countEl?.value || "5", 10) || 5, 2, 15);
+
+    const maxValQ = 80; // 20 * 4 (on travaille en quarts)
+
+    const randInt = (a,b) => a + Math.floor(Math.random() * (b - a + 1));
+
+    // Choix d'une moyenne cible (en quarts) avec une préférence pour des valeurs "notes sur 20",
+    // y compris parfois proches de 20.
+    function pickAvgQ() {
+        if (mode === 'integers') {
+            // 0..20 par pas de 1  => 0..80 par pas de 4
+            const hi = (Math.random() < 0.35); // parfois proche de 20
+            const minQ = hi ? 60 : 8;   // 15 ou 2
+            const maxQ = hi ? 76 : 72;  // 20 ou 18
+            const a = Math.floor(minQ / 4);
+            const b = Math.floor(maxQ / 4);
+            return randInt(a,b) * 4;
+        } else {
+            const hi = (Math.random() < 0.35);
+            const minQ = hi ? 60 : 8;   // 15 ou 2
+            const maxQ = hi ? 79 : 72;  // 20 ou 18
+            return randInt(minQ, maxQ);
+        }
+    }
+
+    // Génération "par construction" : on part de n piles égales à la moyenne
+    // puis on effectue des transferts de quarts entre piles (la somme reste constante
+    // donc la moyenne est toujours atteignable avec des blocs ≥ 1/4).
+    function buildByTransfers() {
+        const avgQ = pickAvgQ();
+        const valuesQ = Array(n).fill(avgQ);
+
+        const steps = clamp(Math.round(n * 1.6), 4, 24);
+        let moved = false;
+
+        for (let s = 0; s < steps; s++) {
+            let i = randInt(0, n-1);
+            let j = randInt(0, n-1);
+            if (i === j) continue;
+
+            // Taille du transfert (en quarts)
+            let tQ;
+            if (mode === 'integers') {
+                // transferts de 1 à 5 unités (=> 4..20 quarts)
+                tQ = 4 * randInt(1, 5);
+            } else {
+                // transferts de 0,25 à 2 unités (=> 1..8 quarts)
+                tQ = randInt(1, 8);
+            }
+
+            // Choisir le sens : j donne à i
+            if (valuesQ[i] + tQ <= maxValQ && valuesQ[j] - tQ >= 0) {
+                valuesQ[i] += tQ;
+                valuesQ[j] -= tQ;
+                moved = true;
+            }
+        }
+
+        // Assurer qu'il y a au moins un au-dessus et un en-dessous de la moyenne
+        const hasAbove = valuesQ.some(vq => vq > avgQ);
+        const hasBelow = valuesQ.some(vq => vq < avgQ);
+
+        if (!(hasAbove && hasBelow)) {
+            // On force un petit écart contrôlé
+            const i = randInt(0, n-1);
+            let j = randInt(0, n-1);
+            if (j === i) j = (j+1) % n;
+
+            const tQ = (mode === 'integers') ? 4 : 1; // 1 unité ou 0,25
+            if (valuesQ[i] + tQ <= maxValQ && valuesQ[j] - tQ >= 0) {
+                valuesQ[i] += tQ;
+                valuesQ[j] -= tQ;
+                moved = true;
+            }
+        }
+
+        // Si on n'a pas bougé (cas très rare), on fait un exemple déterministe simple
+        if (!moved) {
+            const base = (mode === 'integers') ? 48 : 49; // 12 ou 12,25
+            const v = Array(n).fill(base);
+            // créer un écart
+            if (n >= 2) {
+                v[0] += (mode === 'integers') ? 4 : 1;
+                v[1] -= (mode === 'integers') ? 4 : 1;
+            }
+            return v;
+        }
+
+        return valuesQ;
+    }
+
+    const valuesQ = buildByTransfers();
+
+    // Convertir en nombres décimaux (0.25, 0.5, etc.) et écrire dans l'input
+    const values = valuesQ.map(vq => vq / 4);
+    inputEl.value = values.map(formatFR).join(' ');
+    if (errorMsg) errorMsg.classList.add('hidden');
+}
+
+function startGame() {
             const input = document.getElementById('numbers-input').value;
             const errorMsg = document.getElementById('error-msg');
             
@@ -161,7 +355,21 @@
                  return;
             }
 
-            const numbers = input.trim().split(/\s+/).map(n => parseInt(n)).filter(n => !isNaN(n) && n >= 0);
+            const rawTokens = input.trim().split(/\s+/).filter(Boolean);
+            const numbers = rawTokens.map(parseFrenchNumber).filter(n => Number.isFinite(n) && n >= 0);
+
+            if (numbers.length !== rawTokens.length) {
+                errorMsg.textContent = "Format invalide. Exemple : 12 9,5 14,25 16";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            const bad = numbers.find(n => !isQuarterNumber(n));
+            if (bad !== undefined) {
+                errorMsg.textContent = "Ce modèle accepte uniquement des nombres au quart près (0 ; 0,25 ; 0,5 ; 0,75 ; …).";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
 
             if (numbers.length < 2) {
                 errorMsg.textContent = "Il faut au moins 2 piles.";
@@ -174,8 +382,16 @@
                 return;
             }
 
-            state.initialValues = [...numbers];
-            state.stacks = numbers.map(val => Array(val).fill(1));
+            
+            if (!averageIsRepresentable(numbers)) {
+                const sum = numbers.reduce((a,b)=>a+b,0);
+                const avg = sum / numbers.length;
+                errorMsg.textContent = `Avec ces nombres, la moyenne vaut ${formatFR(avg)} : elle n'est pas au quart près, donc on ne pourra pas l'atteindre exactement avec des blocs ≥ 1/4.`;
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+state.initialValues = [...numbers];
+            state.stacks = numbers.map(buildStackFromValue);
             state.history = []; 
             state.zoom = 1.0; // Reset du zoom au démarrage
             
@@ -185,7 +401,7 @@
 
             const title = document.getElementById('header-title');
             title.textContent = "Égaliser les piles";
-            title.className = "text-slate-800 font-bold text-xl leading-tight truncate w-full"; 
+            title.className = "text-slate-800 font-bold text-xl leading-tight w-full px-2 whitespace-normal"; 
             document.getElementById('header-subtitle').textContent = "Déplace ou coupe les blocs";
             document.getElementById('setup-modal').style.display = 'none';
             errorMsg.classList.add('hidden');
@@ -211,7 +427,9 @@
             const scaleHeightInBlocks = maxVal + 0.8; 
             
             // Hauteur dispo : on réduit la marge fixe (header + padding bas)
-            const availableHeight = rect.height - 90; 
+            const bottomPad = 70; // marge pour les nombres en bas (mode projection toujours actif)
+            const topPad = 20;
+            const availableHeight = rect.height - (bottomPad + topPad);
             let sizeByHeight = Math.floor(availableHeight / scaleHeightInBlocks);
 
             // Largeur dispo
@@ -230,7 +448,7 @@
             // Application du zoom manuel par dessus
             state.blockSize = state.baseBlockSize * state.zoom;
             
-            state.baseY = rect.height - 30;
+            state.baseY = rect.height - bottomPad;
 
             const dpr = window.devicePixelRatio || 1;
             [canvasMain, canvasDraw].forEach(c => {
@@ -240,6 +458,7 @@
                 c.style.height = rect.height + 'px';
                 c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
             });
+            redrawStrokes();
         }
 
         function adjustZoom(delta) {
@@ -252,6 +471,25 @@
             render();
         }
         
+
+        /* --- PLEIN ÉCRAN --- */
+        function toggleFullscreen() {
+            try {
+                if (!document.fullscreenElement) {
+                    (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || document.documentElement.msRequestFullscreen).call(document.documentElement);
+                } else {
+                    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+                }
+            } catch (e) {
+                // Rien : certains navigateurs bloquent si ce n'est pas un clic utilisateur
+            }
+        }
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('toggle-fullscreen');
+            if (!btn) return;
+            btn.classList.toggle('active', !!document.fullscreenElement);
+        });
+
         window.addEventListener('resize', () => {
             if(state.stacks.length > 0) {
                 calculateFixedScale();
@@ -265,12 +503,15 @@
             const h = canvasMain.height / (window.devicePixelRatio || 1);
             ctxMain.clearRect(0, 0, w, h);
 
-            // SOL
+            // SOL (ligne au sol)
+            const groundLW = 4; // mode projection toujours actif
+            const groundY = state.baseY; // les blocs reposent ici
+            const lineY = groundY + groundLW / 2; // ligne légèrement sous les blocs (évite que le trait "mange" la base)
             ctxMain.beginPath();
-            ctxMain.moveTo(0, state.baseY);
-            ctxMain.lineTo(w, state.baseY);
-            ctxMain.strokeStyle = "#cbd5e1"; 
-            ctxMain.lineWidth = 2;
+            ctxMain.moveTo(0, lineY);
+            ctxMain.lineTo(w, lineY);
+            ctxMain.strokeStyle = "#0f172a";
+            ctxMain.lineWidth = groundLW;
             ctxMain.stroke();
 
             if (state.stacks.length === 0) return;
@@ -300,47 +541,163 @@
                     if (state.dragging && state.dragging.sourceCol === i && idx === stack.length - 1) return;
 
                     const blockH = val * bs;
-                    drawBlock(ctxMain, x, currentY - blockH, bs, blockH, "#60a5fa");
+                    drawBlock(ctxMain, x, currentY - blockH, bs, blockH, getBlockColor(idx, val), val);
+                    if (idx < stack.length - 1) {
+                        ctxMain.beginPath();
+                        ctxMain.moveTo(x + bs*0.08, currentY - blockH);
+                        ctxMain.lineTo(x + bs*0.92, currentY - blockH);
+                        ctxMain.strokeStyle = "rgba(15,23,42,0.25)";
+                        ctxMain.lineWidth = state.projection ? 2 : 1;
+                        ctxMain.stroke();
+                    }
                     currentY -= blockH; 
                 });
 
-                // Chiffre
-                ctxMain.fillStyle = "#64748b"; 
-                // Police un peu plus petite relative au bloc si le bloc est énorme, pour rester lisible
-                const fontSize = Math.min(30, Math.max(20, bs * 0.35)); 
-                ctxMain.font = `bold ${fontSize}px Fredoka`;
-                ctxMain.textAlign = "center";
-                const displayNum = parseFloat(totalHeight.toFixed(2));
-                ctxMain.fillText(displayNum, x + bs/2, state.baseY + fontSize + 8);
-            });
+                
+// Chiffre (sous le sol)
+ctxMain.fillStyle = "#0f172a";
+const fontSize = Math.min(38, Math.max(22, bs * 0.34));
+ctxMain.font = `800 ${fontSize}px Fredoka`;
+ctxMain.textAlign = "center";
+ctxMain.textBaseline = "top";
+const displayNum = totalHeight;
+const labelY = Math.min(h - fontSize - 6, state.baseY + groundLW + 10);
+ctxMain.fillText(formatFR(displayNum), x + bs/2, labelY);
+
+});
 
             // Drag
             if (state.dragging) {
                 const dragH = state.dragging.value * bs;
                 ctxMain.shadowColor = "rgba(0,0,0,0.2)";
                 ctxMain.shadowBlur = 20; ctxMain.shadowOffsetY = 20;
-                drawBlock(ctxMain, state.dragging.currentX - bs/2, state.dragging.currentY - dragH/2, bs, dragH, "#3b82f6");
+                drawBlock(ctxMain, state.dragging.currentX - bs/2, state.dragging.currentY - dragH/2, bs, dragH, "#3b82f6", state.dragging.value);
                 ctxMain.shadowColor = "transparent"; ctxMain.shadowBlur = 0;
             }
         }
 
-        function drawBlock(ctx, x, y, width, height, color) {
-            ctx.fillStyle = color;
+        function adjustHex(hex, amt) {
+            const h = hex.replace('#','');
+            const num = parseInt(h, 16);
+            let r = (num >> 16) & 255;
+            let g = (num >> 8) & 255;
+            let b = num & 255;
+            r = Math.min(255, Math.max(0, r + amt));
+            g = Math.min(255, Math.max(0, g + amt));
+            b = Math.min(255, Math.max(0, b + amt));
+            return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+        function getBlockColor(idx, val) {
+            const base = "#60a5fa";
+            let amt = (idx % 2 === 0) ? 10 : -10;
+            if (val < 1) amt -= 10;
+            return adjustHex(base, amt);
+        }
+
+        function drawBlock(ctx, x, y, width, height, color, val) {
+            // Remplissage (léger volume, mais sans "flou" ni halo)
+            const grad = ctx.createLinearGradient(x, y, x, y + height);
+            grad.addColorStop(0, adjustHex(color, 10));
+            grad.addColorStop(1, adjustHex(color, -10));
+            ctx.fillStyle = grad;
+
             // Arrondi adaptatif (moins arrondi si c'est une tranche fine)
-            const r = Math.min(width * 0.12, height * 0.4); 
-            
+            const r = Math.min(width * 0.12, height * 0.35);
+
             ctx.beginPath();
             ctx.roundRect(x, y, width, height, r);
             ctx.fill();
 
-            ctx.strokeStyle = "rgba(0,0,0,0.1)";
-            ctx.lineWidth = Math.max(1, width * 0.03); 
+            // Contour net (plus franc au vidéoprojecteur)
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "rgba(0,0,0,0.65)";
+            ctx.lineWidth = 2.2;
             ctx.stroke();
+
             
-            ctx.fillStyle = "rgba(255,255,255,0.25)";
+            // Repères visuels pour les fractions (texture nette, sans flou)
+            if (val && val < 1) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.roundRect(x, y, width, height, r);
+                ctx.clip();
+
+                const baseAlpha = 0.34;
+                ctx.strokeStyle = `rgba(0, 0, 0, ${baseAlpha})`;
+                ctx.lineWidth = Math.max(1.4, Math.min(3.0, width * 0.02));
+
+                const spacing = (val === 0.5)
+                    ? Math.max(10, Math.min(26, width / 6))
+                    : Math.max(8, Math.min(22, width / 8));
+
+                // Hachures diagonales /
+                for (let i = -height; i < width + height; i += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + i, y + height);
+                    ctx.lineTo(x + i + height, y);
+                    ctx.stroke();
+                }
+
+                // Pour 1/4 : double hachure (croisillons discrets)
+                if (val === 0.25) {
+                    ctx.strokeStyle = `rgba(0, 0, 0, ${baseAlpha * 0.85})`;
+                    for (let i = -height; i < width + height; i += spacing) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + i, y);
+                        ctx.lineTo(x + i + height, y + height);
+                        ctx.stroke();
+                    }
+                }
+
+                ctx.restore();
+            }
+
+// Relief par étage (traits nets, pas d'ombre floue)
+            ctx.save();
             ctx.beginPath();
-            ctx.ellipse(x + width/2, y + height*0.15, width*0.35, height*0.1, 0, 0, Math.PI*2);
-            ctx.fill();
+            ctx.roundRect(x, y, width, height, r);
+            ctx.clip();
+
+            // Liseré de lumière en haut
+            ctx.strokeStyle = "rgba(255,255,255,0.35)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + 1);
+            ctx.lineTo(x + width - 1, y + 1);
+            ctx.stroke();
+
+            // Liseré d'ombre en bas
+            ctx.strokeStyle = "rgba(0,0,0,0.20)";
+            ctx.beginPath();
+            ctx.moveTo(x + 1, y + height - 1);
+            ctx.lineTo(x + width - 1, y + height - 1);
+            ctx.stroke();
+
+            ctx.restore();
+
+            // Etiquette interne (½ / ¼) — seulement si ça tient correctement
+            if (val === 0.5 || val === 0.25) {
+                const label = (val === 0.5) ? "½" : "¼";
+                const fontSize = Math.max(8, Math.min(height * 0.85, width * 0.22, 26));
+                if (height >= 10 && width >= 28) {
+                    ctx.save();
+                    ctx.font = `700 ${fontSize}px Fredoka, Arial, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    const cx = x + width / 2;
+                    const cy = y + height / 2;
+
+                    // Contraste vidéoprojecteur : blanc + contour sombre
+                    ctx.lineWidth = Math.max(1.6, fontSize * 0.12);
+                    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+                    ctx.fillStyle = "rgba(255,255,255,0.88)";
+                    ctx.strokeText(label, cx, cy);
+                    ctx.fillText(label, cx, cy);
+                    ctx.restore();
+                }
+            }
+
         }
 
         /* --- LOGIQUE JEU --- */
@@ -414,6 +771,7 @@
                     // On sauvegarde AVANT de couper
                     saveState();
                     cutBlock(colIdx);
+                    checkWin();
                 }
                 render();
             }
@@ -473,26 +831,25 @@
             const heights = state.stacks.map(s => s.reduce((a,b)=>a+b,0));
             const first = heights[0];
             // Petite tolérance pour les calculs flottants (ex: 8.5 vs 8.49999)
-            const allEqual = heights.every(h => Math.abs(h - first) < 0.001);
+            const allEqual = heights.every(h => Math.abs(h - first) < 1e-9);
             
             const title = document.getElementById('header-title');
             const sub = document.getElementById('header-subtitle');
             
-            if (allEqual) {
-                state.isWin = true;
-                const avg = parseFloat(first.toFixed(2));
-                title.classList.add('victory-text');
-                
-                // Modification : séparateur " ; " au lieu de ", "
-                const originalStr = state.initialValues.join(' ; ');
-                title.innerText = `BRAVO ! La moyenne de ${originalStr} est ${avg}`;
-                
-                sub.innerText = "";
-            } else {
+            
+if (allEqual) {
+    state.isWin = true;
+    const avg = first;
+    title.classList.add('victory-text');
+
+    const originalStr = state.initialValues.map(formatFR).join(' ; ');
+    title.innerHTML = `BRAVO ! <span class="block">Moyenne = ${formatFR(avg)}</span>`;
+    sub.innerText = `de ${originalStr}`;
+} else {
                  state.isWin = false;
                  title.classList.remove('victory-text');
                  title.innerText = "Égaliser les piles";
-                 sub.innerText = "Déplace ou coupe les blocs";
+                 sub.innerText = `Déplace ou coupe les blocs`;
             }
         }
 
@@ -514,11 +871,10 @@
             else {
                 penBtn.classList.add('active', 'bg-blue-100');
                 ctxDraw.strokeStyle = '#2563eb';
-                ctxDraw.lineWidth = 3;
+                ctxDraw.lineWidth = 4;
                 ctxDraw.lineCap = 'round';
             }
         }
-
         /* --- INPUTS --- */
         function getPos(e) {
             const rect = container.getBoundingClientRect();
@@ -526,25 +882,93 @@
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
-        container.addEventListener('mousedown', e => handleStart(getPos(e).x, getPos(e).y));
-        window.addEventListener('mousemove', e => handleMove(getPos(e).x, getPos(e).y));
-        window.addEventListener('mouseup', handleEnd);
-        
-        container.addEventListener('touchstart', e => {
-            const p = getPos(e); handleStart(p.x, p.y);
-        }, {passive: false});
-        container.addEventListener('touchmove', e => {
-            e.preventDefault(); const p = getPos(e); handleMove(p.x, p.y);
-        }, {passive: false});
-        container.addEventListener('touchend', handleEnd);
+        // Gestion unifiée (souris / tactile / stylet) via Pointer Events quand dispo
+        if (window.PointerEvent) {
+            container.addEventListener('pointerdown', e => {
+                e.preventDefault();
+                const p = getPos(e);
+                handleStart(p.x, p.y);
+                // Capture pour continuer à recevoir les mouvements même si on sort du conteneur
+                try { container.setPointerCapture(e.pointerId); } catch(_) {}
+            }, { passive: false });
+
+            container.addEventListener('pointermove', e => {
+                e.preventDefault();
+                const p = getPos(e);
+                handleMove(p.x, p.y);
+            }, { passive: false });
+
+            const endPointer = e => {
+                e.preventDefault();
+                handleEnd();
+            };
+            container.addEventListener('pointerup', endPointer, { passive: false });
+            container.addEventListener('pointercancel', endPointer, { passive: false });
+        } else {
+            // Fallback anciens navigateurs
+            container.addEventListener('mousedown', e => handleStart(getPos(e).x, getPos(e).y));
+            window.addEventListener('mousemove', e => handleMove(getPos(e).x, getPos(e).y));
+            window.addEventListener('mouseup', handleEnd);
+
+            container.addEventListener('touchstart', e => {
+                const p = getPos(e); handleStart(p.x, p.y);
+            }, {passive: false});
+            container.addEventListener('touchmove', e => {
+                e.preventDefault(); const p = getPos(e); handleMove(p.x, p.y);
+            }, {passive: false});
+            container.addEventListener('touchend', handleEnd);
+        }
 
         /* --- DESSIN --- */
         let isDrawing = false;
         let lastDrawX = 0, lastDrawY = 0;
-        function startDraw(pos) { isDrawing = true; lastDrawX = pos.x; lastDrawY = pos.y; ctxDraw.beginPath(); ctxDraw.moveTo(lastDrawX, lastDrawY); }
-        function draw(pos) { if (!isDrawing) return; ctxDraw.lineTo(pos.x, pos.y); ctxDraw.stroke(); lastDrawX = pos.x; lastDrawY = pos.y; }
-        function stopDraw() { isDrawing = false; }
-        function clearDrawings() { ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height); }
+        let currentStroke = null;
+        function startDraw(pos) {
+            isDrawing = true;
+            lastDrawX = pos.x; lastDrawY = pos.y;
+            currentStroke = [{x:lastDrawX, y:lastDrawY}];
+            ctxDraw.beginPath();
+            ctxDraw.moveTo(lastDrawX, lastDrawY);
+        }
+        function draw(pos) {
+            if (!isDrawing) return;
+            ctxDraw.lineTo(pos.x, pos.y);
+            ctxDraw.stroke();
+            lastDrawX = pos.x; lastDrawY = pos.y;
+            if (currentStroke) currentStroke.push({x:lastDrawX, y:lastDrawY});
+        }
+        function stopDraw() {
+            if (isDrawing && currentStroke && currentStroke.length > 1) {
+                state.drawStrokes.push(currentStroke);
+            }
+            currentStroke = null;
+            isDrawing = false;
+        }
+        function redrawStrokes() {
+            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
+            // Style du stylo (mode projection toujours actif)
+            ctxDraw.strokeStyle = "#2563eb";
+            ctxDraw.lineWidth = 4;
+            ctxDraw.lineCap = "round";
+            state.drawStrokes.forEach(stroke => {
+                if (!stroke || stroke.length < 2) return;
+                ctxDraw.beginPath();
+                ctxDraw.moveTo(stroke[0].x, stroke[0].y);
+                for (let i = 1; i < stroke.length; i++) ctxDraw.lineTo(stroke[i].x, stroke[i].y);
+                ctxDraw.stroke();
+            });
+        }
+        function undoDraw() {
+            if (isDrawing) return;
+            if (state.drawStrokes.length === 0) return;
+            state.drawStrokes.pop();
+            redrawStrokes();
+        }
+        function clearDrawings() {
+            state.drawStrokes = [];
+            currentStroke = null;
+            ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
+        }
 
     </script>
 </body>
