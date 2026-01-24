@@ -104,6 +104,15 @@
     color:#000;
     opacity:.65;
   }
+  /* Mode projection : plus lisible en classe */
+  body.projector .title{font-size:1.6rem}
+  body.projector .unitRow .unit{font-size:1.15rem}
+  body.projector .cell{min-height:92px}
+  body.projector .digit{font-size:2.1rem;line-height:2.1rem}
+  body.projector .result{padding:12px 18px}
+  body.projector .result .mainLine{font-size:2.75rem}
+  body.projector .result .eqLine{font-size:1.05rem}
+  body.projector .topbar{font-size:1.05rem}
 
   /* Repères kL / L / mL (mode couplé) */
   .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:3;pointer-events:none}
@@ -128,8 +137,10 @@
       </select>
       <button class="btn" id="toggleShow">Afficher</button>
       <button class="btn secondary" id="reset">Remise à zéro</button>
-    </div>
-    <div class="right" aria-label="Zoom">
+</div>
+    <div class="right" aria-label="Affichage">
+      <button class="btn secondary small" id="projBtn" title="Mode vidéoprojection" aria-pressed="false">VP</button>
+      <button class="btn secondary small" id="fsBtn" title="Plein écran">⛶</button>
       <button class="btn secondary small" id="zoomOut" title="Zoom -" aria-label="Zoom arrière">−</button>
       <span class="zoomLabel" id="zoomLabel" aria-label="Niveau de zoom">100%</span>
       <button class="btn secondary small" id="zoomIn" title="Zoom +" aria-label="Zoom avant">+</button>
@@ -193,8 +204,9 @@
   const zoomIn    = document.getElementById('zoomIn');
   const zoomReset = document.getElementById('zoomReset');
   const zoomLabel = document.getElementById('zoomLabel');
-
-  const subhead = document.getElementById('subhead');
+  const projBtn   = document.getElementById('projBtn');
+  const fsBtn     = document.getElementById('fsBtn');
+const subhead = document.getElementById('subhead');
   const labKL   = document.getElementById('labKL');
   const labL    = document.getElementById('labL');
   const labML   = document.getElementById('labML');
@@ -207,8 +219,8 @@
   let savedStudent = null;
 
   let zoomScale = 1;
-
-  function applyZoom(){
+  let projectorOn = false;
+function applyZoom(){
     if(!board) return;
     // zoom "visuel" sans toucher au fonctionnement : on compense les deltas de glisse en JS
     board.style.transform = `scale(${zoomScale})`;
@@ -482,19 +494,32 @@
     });
     const compact = compactFR(raw);
 
-    // Affichage : réponse compacte + (si besoin) une ligne d'égalité en petit
     result.innerHTML = '';
+
     const main = document.createElement('span');
     main.className = 'mainLine';
     main.textContent = `${compact} ${u}`;
     result.appendChild(main);
 
-    if(raw !== compact){
-      addEqLine(`${raw} ${u} = ${compact} ${u}`);
+    // Ligne(s) d'égalité : simplification + équivalences utiles
+    const kind = kindSel.value;
+
+    // Aire : uniquement hm²↔ha et dam²↔a (pas de "ca" pour m²)
+    if(kind === 'area' && (u === 'hm²' || u === 'dam²')){
+      const alt = (u === 'hm²') ? 'ha' : 'a';
+      if(raw !== compact){
+        addEqLine(`${raw} ${u} = ${compact} ${u} = ${compact} ${alt}`);
+      }else{
+        addEqLine(`${compact} ${u} = ${compact} ${alt}`);
+      }
+    }else{
+      if(raw !== compact){
+        addEqLine(`${raw} ${u} = ${compact} ${u}`);
+      }
     }
 
     // Équivalences utiles en mode L ↔ m³
-    if(kindSel.value === 'cross'){
+    if(kind === 'cross'){
       if(u === 'm³'){
         const lStr = formatFR(val * 1000);
         addEqLine(`${compact} m³ = ${compact} kL = ${lStr} L`);
@@ -504,7 +529,7 @@
         addEqLine(`${compact} cm³ = ${compact} mL`);
       }
     }
-  }
+}
 
 
   document.getElementById('toggleShow').addEventListener('click', ()=>{
@@ -516,6 +541,47 @@
     setTarget(schema.units.indexOf(schema.base),false);
     result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null;
   });
+
+  // Options d'affichage
+  if(projBtn) projBtn.addEventListener('click', ()=>{
+    projectorOn = !projectorOn;
+    document.body.classList.toggle('projector', projectorOn);
+    projBtn.setAttribute('aria-pressed', String(projectorOn));
+    projBtn.textContent = projectorOn ? 'VP ✓' : 'VP';
+  });
+
+  async function toggleFullscreen(){
+    try{
+      if(!document.fullscreenElement){
+        await document.documentElement.requestFullscreen();
+      }else{
+        await document.exitFullscreen();
+      }
+    }catch(e){
+      // silencieux : certains navigateurs bloquent selon le contexte
+    }
+  }
+
+  if(fsBtn) fsBtn.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('keydown', (e)=>{
+    // évite les raccourcis quand on est en train de saisir des chiffres
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if(tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+
+    if(e.key === 'f' || e.key === 'F'){ toggleFullscreen(); }
+
+    if(e.key === 'p' || e.key === 'P'){
+      projectorOn = !projectorOn;
+      document.body.classList.toggle('projector', projectorOn);
+      if(projBtn){
+        projBtn.setAttribute('aria-pressed', String(projectorOn));
+        projBtn.textContent = projectorOn ? 'VP ✓' : 'VP';
+      }
+    }
+    if(isShown) updateResult();
+  });
+
   // Zoom controls
   if(zoomIn) zoomIn.addEventListener('click', ()=>{
     zoomScale = Math.min(1.6, Math.round((zoomScale + 0.1) * 100) / 100);
