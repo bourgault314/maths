@@ -46,7 +46,13 @@
             box-shadow: 0 10px 15px rgba(0,0,0,0.3);
         }
 
-        .token.green {
+        
+        .token.dragging {
+            transition: none !important;
+            cursor: grabbing !important;
+        }
+
+.token.green {
             background: radial-gradient(circle at 35% 35%, #4ade80, #16a34a);
             border: 3px solid #14532d;
         }
@@ -191,6 +197,32 @@
             0% { transform: scale(0); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
+    
+        /* --- UI additions (help / projection) --- */
+        #help-overlay { display: none; }
+        #help-overlay.show { display: flex; }
+
+        body.projection-mode header { box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
+        body.projection-mode #equation-terms span { line-height: 1.22 !important; }
+        body.projection-mode #equation-terms { padding-bottom: 10px !important; }
+        @media (min-width: 640px) {
+            body.projection-mode #equation-terms span { font-size: 4.6rem !important; }
+        }
+        body.projection-mode #btn-remove-all { transform: scale(1.08); transform-origin: center; }
+        body.projection-mode .token { transform: translateZ(0); } /* avoid blur on projectors */
+
+        /* En projection, on élargit le menu gauche pour éviter que les libellés soient coupés */
+        body.projection-mode aside { width: 6.5rem !important; }
+        /* En projection, on augmente la hauteur utile du bandeau du haut (sinon le texte est coupé) */
+        body.projection-mode header > div { min-height: 140px !important; padding-top: 0.40rem !important; padding-bottom: 0.50rem !important; }
+        body.projection-mode #equation-terms span { line-height: 1.22 !important; }
+        body.projection-mode #equation-terms { padding-bottom: 10px !important; }
+
+        @media (min-width: 640px) {
+            body.projection-mode aside { width: 8rem !important; }
+        }
+
+
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col overflow-hidden">
@@ -268,6 +300,57 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </button>
+                <div class="h-8 w-px bg-gray-300 mx-1"></div>
+
+                <button onclick="undo()" id="btn-undo" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed" title="Annuler (Ctrl+Z)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 16l-4-4 4-4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 20a8 8 0 0 0-8-8H5" />
+                    </svg>
+                </button>
+
+                <button onclick="toggleSound()" id="btn-sound" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Son on/off">
+                    <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H3v6h3l5 4V5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14" />
+                    </svg>
+                    <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H3v6h3l5 4V5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 9l-6 6M17 9l6 6" />
+                    </svg>
+                </button>
+
+                <button onclick="toggleProjection()" id="btn-projection" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Mode projection (P)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 21m6-4l.75 4M4 4h16v10H4V4z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14h8" />
+                    </svg>
+                </button>
+
+                <button onclick="toggleHelp()" id="btn-help" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Aide (H)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.227 9a3.5 3.5 0 116.546 1.5c-.543 1.086-1.523 1.3-2.093 1.872-.43.43-.68.96-.68 1.628v.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 17h.01" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+
+                <button onclick="toggleFullScreen()" id="btn-fullscreen" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Plein écran (F)">
+                    <svg id="icon-fs-enter" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L5 5M5 5H8M5 5V8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9L19 5M19 5H16M19 5V8" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L5 19M5 19H8M5 19V16" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15L19 19M19 19H16M19 19V16" />
+                    </svg>
+                    <svg id="icon-fs-exit" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5L9 9M9 9H6M9 9V6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 5L15 9M15 9H18M15 9V6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19L9 15M9 15H6M9 15V18" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 19L15 15M15 15H18M15 15V18" />
+                    </svg>
+                </button>
+
             </div>
         </div>
 
@@ -309,7 +392,7 @@
         </aside>
 
         <!-- BOARD (DROITE) -->
-        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none cursor-crosshair">
+        <main id="board" class="flex-1 relative bg-white overflow-hidden touch-none">
             <div class="absolute inset-0 opacity-20 pointer-events-none" 
                  style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 24px 24px;">
             </div>
@@ -320,7 +403,52 @@
         </main>
     </div>
 
-    <script>
+    
+    <!-- HELP OVERLAY -->
+    <div id="help-overlay" class="fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-4 sm:p-6 border border-slate-200">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-lg font-extrabold text-slate-800">Aide & raccourcis</div>
+                    <div class="text-sm text-slate-500">Astuce projection : en plein écran, <span class="font-semibold">Ctrl + molette</span> (zoom navigateur) à <span class="font-semibold">125–150%</span> est souvent parfait.</div>
+                </div>
+                <button onclick="toggleHelp(false)" class="p-2 rounded-lg hover:bg-slate-100" title="Fermer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <div class="font-bold text-slate-700 mb-1">Jetons</div>
+                    <div><span class="font-mono font-semibold">+</span> : ajouter +1</div>
+                    <div><span class="font-mono font-semibold">-</span> : ajouter -1</div>
+                    <div><span class="font-mono font-semibold">Espace</span> : trier</div>
+                    <div><span class="font-mono font-semibold">Entrée</span> : Auto 0</div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 p-3">
+                    <div class="font-bold text-slate-700 mb-1">Outils</div>
+                    <div><span class="font-mono font-semibold">H</span> : aide</div>
+                    <div><span class="font-mono font-semibold">P</span> : mode projection</div>
+                    <div><span class="font-mono font-semibold">F</span> : plein écran</div>
+                    <div><span class="font-mono font-semibold">Ctrl+Z</span> : undo</div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                    <div class="font-bold text-slate-700 mb-1">Zoom (navigateur)</div>
+                    <div><span class="font-mono font-semibold">Ctrl + molette</span> : zoomer / dézoomer (recommandé 125–150%)</div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-end gap-2">
+                <button onclick="toggleHelp(false)" class="px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+<script>
         const SNAP_THRESHOLD = 80;
         const TOKEN_SIZE = 70;
         const SPACING = 80;
@@ -340,6 +468,142 @@
             currentTool: 'hand'
         };
 
+        // --- UNDO STACK ---
+        const undoStack = [];
+        const UNDO_LIMIT = 40;
+        let isRestoring = false;
+
+        function captureSnapshot() {
+            return {
+                state: {
+                    phase: state.phase,
+                    nextId: state.nextId,
+                    locked: state.locked,
+                    isAligned: state.isAligned,
+                    isReduced: state.isReduced,
+                    currentPendingMode: state.currentPendingMode,
+                    currentTool: state.currentTool
+                },
+                tokens: state.tokens.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    x: t.x,
+                    y: t.y,
+                    pairId: t.pairId,
+                    creationPhase: t.creationPhase,
+                    isToRemove: t.isToRemove,
+                    isCrossed: t.isCrossed
+                })),
+                canvasData: (() => {
+                    try { return canvas.toDataURL('image/png'); } catch(e) { return null; }
+                })()
+            };
+        }
+
+        function pushUndoState() {
+            if (state.locked || isRestoring) return;
+            undoStack.push(captureSnapshot());
+            if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+            updateUndoButton();
+            isRestoring = false;
+        }
+
+        function updateUndoButton() {
+            const btn = document.getElementById('btn-undo');
+            if (!btn) return;
+            btn.disabled = (undoStack.length === 0);
+        }
+
+        function restoreSnapshot(snap) {
+            if (!snap) return;
+            isRestoring = true;
+
+            // Clear badges
+            document.querySelectorAll('.zero-badge').forEach(el => el.remove());
+            // Clear tokens
+            state.tokens.forEach(t => { if (t.element) t.element.remove(); });
+            state.tokens = [];
+
+            // Restore state
+            state.phase = snap.state.phase;
+            state.nextId = snap.state.nextId;
+            state.locked = snap.state.locked;
+            state.isAligned = snap.state.isAligned;
+            state.isReduced = snap.state.isReduced;
+            state.currentPendingMode = snap.state.currentPendingMode;
+            state.currentTool = snap.state.currentTool;
+
+            // Rebuild tokens
+            snap.tokens.forEach(t => {
+                const el = document.createElement('div');
+                el.classList.add('token', t.type);
+                if (t.isToRemove) el.classList.add('to-remove');
+                el.innerText = t.type === 'green' ? '+1' : '-1';
+                el.id = `token-${t.id}`;
+                el.setAttribute('onclick', 'removeSingleToken(this)');
+                el.style.left = t.x + 'px';
+                el.style.top = t.y + 'px';
+                if (t.isCrossed) el.classList.add('crossed');
+
+                el.addEventListener('mousedown', handleDragStart);
+                el.addEventListener('touchstart', handleDragStart, {passive: false});
+                board.appendChild(el);
+
+                state.tokens.push({
+                    id: t.id,
+                    type: t.type,
+                    element: el,
+                    x: t.x,
+                    y: t.y,
+                    pairId: t.pairId,
+                    creationPhase: t.creationPhase,
+                    isToRemove: t.isToRemove,
+                    isCrossed: t.isCrossed
+                });
+            });
+
+            // Rebuild zero badges (without moving tokens)
+            const done = new Set();
+            state.tokens.forEach(t => {
+                if (t.pairId === null) return;
+                const key = `${Math.min(t.id, t.pairId)}-${Math.max(t.id, t.pairId)}`;
+                if (done.has(key)) return;
+                const partner = state.tokens.find(x => x.id === t.pairId);
+                if (!partner) return;
+                done.add(key);
+                t.element.classList.add('is-zero');
+                partner.element.classList.add('is-zero');
+                const midX = (t.x + partner.x) / 2;
+                const midY = (t.y + partner.y) / 2;
+                const badge = document.createElement('div');
+                badge.classList.add('zero-badge');
+                badge.innerText = '0';
+                badge.id = `badge-${Math.min(t.id, partner.id)}-${Math.max(t.id, partner.id)}`;
+                badge.style.left = (midX - 12) + 'px';
+                badge.style.top = (midY - 30) + 'px';
+                board.appendChild(badge);
+            });
+
+            // Restore canvas (sans pousser d'undo)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (snap.canvasData) {
+                const img = new Image();
+                img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width/(window.devicePixelRatio||1), canvas.height/(window.devicePixelRatio||1)); };
+                img.src = snap.canvasData;
+            }
+
+            setTool(state.currentTool);
+            updateLogic();
+            updateUndoButton();
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            const snap = undoStack.pop();
+            restoreSnapshot(snap);
+        }
+
+
         const board = document.getElementById('board');
         const equationTerms = document.getElementById('equation-terms');
         const btnPlus = document.getElementById('btn-plus');
@@ -350,8 +614,12 @@
         const cursorDiv = document.getElementById('custom-cursor');
 
         // --- AUDIO ENGINE ---
+        let soundEnabled = true;
+        try { soundEnabled = JSON.parse(localStorage.getItem('relatifs_sound') ?? 'true'); } catch(e) { soundEnabled = true; }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
+            if (!soundEnabled) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -416,7 +684,12 @@
             if (e.code === 'Space') { e.preventDefault(); organizeBoard(); playSound('whoosh'); }
             if (e.key === 'Enter') { animateSimplification(); playSound('click'); }
             if (e.key === 'Delete') { resetBoard(); playSound('whoosh'); }
-        });
+        
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undo(); return; }
+            if (e.key === 'f' || e.key === 'F') { toggleFullScreen(); }
+            if (e.key === 'p' || e.key === 'P') { toggleProjection(); }
+            if (e.key === 'h' || e.key === 'H' || e.key === '?') { toggleHelp(); }
+});
 
         // --- DESSIN & CURSEUR ---
         let isDrawing = false;
@@ -443,24 +716,38 @@
             if (tool === 'hand') {
                 state.currentTool = 'hand';
                 canvas.style.pointerEvents = 'none';
-                board.classList.remove('hide-cursor');
+
+                // Curseur main ouverte par défaut
+                board.style.cursor = 'grab';
+                canvas.style.cursor = 'grab';
+
+                // On désactive le curseur personnalisé (on garde le vrai curseur)
                 cursorDiv.style.display = 'none';
+
                 document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
                 document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
             } else if (tool === 'pen') {
                 state.currentTool = 'pen';
                 canvas.style.pointerEvents = 'auto';
-                board.classList.add('hide-cursor');
-                cursorDiv.style.display = 'block';
+
+                // Curseur croix pour écrire (simple et lisible)
+                board.style.cursor = 'crosshair';
+                canvas.style.cursor = 'crosshair';
+
+                // Pas de stylo SVG : on laisse juste la croix
+                cursorDiv.style.display = 'none';
+
                 ctx.globalCompositeOperation = 'source-over';
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 3;
+
                 document.getElementById('tool-hand').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
                 document.getElementById('tool-pen').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
             }
         }
 
         function clearCanvas() {
+            pushUndoState();
             ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
         }
 
@@ -484,6 +771,8 @@
 
         function startDraw(e) {
             if (state.currentTool !== 'pen') return;
+            // UNDO : on capture l'état avant chaque nouveau trait
+            pushUndoState();
             isDrawing = true;
             updateCustomCursor(e);
             const pos = getPos(e);
@@ -534,6 +823,7 @@
         }
 
         function addToken(type, x = null, y = null) {
+            pushUndoState();
             // SOUSTRACTION
             if (state.currentPendingMode === 'subtract') {
                 const resultType = type === 'green' ? 'red' : 'green';
@@ -708,6 +998,7 @@
         }
 
         function removeSingleToken(el) {
+            pushUndoState();
             const id = parseInt(el.id.split('-')[1]);
             const token = state.tokens.find(t => t.id === id);
 
@@ -751,6 +1042,7 @@
         }
 
         function reduceEquation() {
+            pushUndoState();
             const hasPending = state.tokens.some(t => t.isToRemove);
             if (hasPending) return; 
 
@@ -847,6 +1139,7 @@
         
         // REGROUPEMENT : Refonte pour alignement continu avec tri par couleur + phase
         function organizeBoard() {
+            pushUndoState();
             playSound('whoosh');
             state.isAligned = true;
             
@@ -1026,7 +1319,8 @@
             e.preventDefault();
             const el = e.target.closest('.token');
             if(!el) return;
-            const id = parseInt(el.id.split('-')[1]);
+                        pushUndoState();
+const id = parseInt(el.id.split('-')[1]);
             draggedToken = state.tokens.find(t => t.id === id);
             
             const hasLinkedRemoval = state.tokens.some(t => t.creationPhase === draggedToken.creationPhase && t.isToRemove);
@@ -1036,6 +1330,9 @@
             
             el.style.zIndex = 1000;
             el.style.transform = "scale(1.15)";
+            el.classList.add('dragging');
+            board.style.cursor = 'grabbing';
+            canvas.style.cursor = 'grabbing';
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             const rect = el.getBoundingClientRect();
@@ -1066,6 +1363,10 @@
             checkForPairing(draggedToken);
             draggedToken.element.style.zIndex = '';
             draggedToken.element.style.transform = "";
+            draggedToken.element.classList.remove('dragging');
+            // Retour à la main ouverte
+            board.style.cursor = 'grab';
+            canvas.style.cursor = 'grab';
             draggedToken = null;
             document.removeEventListener('mousemove', handleDragMove);
             document.removeEventListener('touchmove', handleDragMove);
@@ -1119,6 +1420,7 @@
         }
 
         function animateSimplification() {
+            pushUndoState();
             if (state.tokens.some(t => t.isToRemove)) return;
 
             state.locked = true;
@@ -1138,14 +1440,43 @@
             });
 
             const activeTokens = state.tokens.filter(t => t.pairId === null && !t.isToRemove && !t.isCrossed);
-            
-            const logicalPositives = activeTokens.filter(t => t.type === 'green').sort((a,b) => (a.x - b.x) || (a.y - b.y));
-            const logicalNegatives = activeTokens.filter(t => t.type === 'red').sort((a,b) => (a.x - b.x) || (a.y - b.y));
+
+            const logicalPositives = activeTokens.filter(t => t.type === 'green' && !t.isCrossed);
+            const logicalNegatives = activeTokens.filter(t => t.type === 'red' && !t.isCrossed);
 
             const newPairs = [];
-            const count = Math.min(logicalPositives.length, logicalNegatives.length);
-            for(let i=0; i<count; i++) {
-                newPairs.push([logicalPositives[i], logicalNegatives[i]]);
+            // Appariement par proximité : associe chaque vert avec le rouge le plus proche (visuellement)
+            const centerCache = new Map();
+            const getCenter = (tok) => {
+                const cached = centerCache.get(tok.id);
+                if (cached) return cached;
+                const r = tok.element.getBoundingClientRect();
+                const c = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+                centerCache.set(tok.id, c);
+                return c;
+            };
+
+            let pos = logicalPositives.slice();
+            let neg = logicalNegatives.slice();
+            while (pos.length > 0 && neg.length > 0) {
+                let bestI = 0, bestJ = 0, bestD = Infinity;
+                for (let i = 0; i < pos.length; i++) {
+                    const pc = getCenter(pos[i]);
+                    for (let j = 0; j < neg.length; j++) {
+                        const nc = getCenter(neg[j]);
+                        const dx = pc.x - nc.x;
+                        const dy = pc.y - nc.y;
+                        const d = dx * dx + dy * dy;
+                        if (d < bestD) {
+                            bestD = d;
+                            bestI = i;
+                            bestJ = j;
+                        }
+                    }
+                }
+                newPairs.push([pos[bestI], neg[bestJ]]);
+                pos.splice(bestI, 1);
+                neg.splice(bestJ, 1);
             }
 
             if (existingPairs.length === 0 && newPairs.length === 0) {
@@ -1213,6 +1544,7 @@
         }
 
         function resetBoard() {
+            pushUndoState();
             playSound('click');
             state.tokens.forEach(t => t.element.remove());
             document.querySelectorAll('.zero-badge').forEach(b => b.remove());
@@ -1234,6 +1566,65 @@
             setTool('hand');
             updateLogic();
         }
-    </script>
+    
+
+        
+
+        // --- HELP / PROJECTION / FULLSCREEN / SOUND ---
+        function syncSoundIcon() {
+            const on = document.getElementById('icon-sound-on');
+            const off = document.getElementById('icon-sound-off');
+            if (!on || !off) return;
+            if (soundEnabled) { on.classList.remove('hidden'); off.classList.add('hidden'); }
+            else { on.classList.add('hidden'); off.classList.remove('hidden'); }
+        }
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            try { localStorage.setItem('relatifs_sound', JSON.stringify(soundEnabled)); } catch(e) {}
+            syncSoundIcon();
+        }
+
+        function toggleHelp(force) {
+            const overlay = document.getElementById('help-overlay');
+            if (!overlay) return;
+            const shouldShow = (typeof force === 'boolean') ? force : !overlay.classList.contains('show');
+            if (shouldShow) overlay.classList.add('show');
+            else overlay.classList.remove('show');
+        }
+
+        function toggleProjection() {
+            document.body.classList.toggle('projection-mode');
+            // Pas de mémorisation automatique : toujours désactivé au démarrage (comme demandé)
+        }
+
+        function updateFullScreenIcon() {
+            const enter = document.getElementById('icon-fs-enter');
+            const exit = document.getElementById('icon-fs-exit');
+            if (!enter || !exit) return;
+            const isFs = !!document.fullscreenElement;
+            if (isFs) { enter.classList.add('hidden'); exit.classList.remove('hidden'); }
+            else { enter.classList.remove('hidden'); exit.classList.add('hidden'); }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen?.();
+            } else {
+                document.exitFullscreen?.();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', updateFullScreenIcon);
+
+// Initialisation (curseur + outils)
+        
+        // --- Init UI toggles ---
+        syncSoundIcon();
+        updateFullScreenIcon();
+        // Mode projection : toujours OFF au démarrage
+        document.body.classList.remove('projection-mode');
+updateUndoButton();
+setTool('hand');
+</script>
 </body>
 </html>
