@@ -668,7 +668,7 @@
             <li><b>S</b> : séparer (si bande découpée en parts).</li>
             <li><b>C</b> : couper (si possible).</li>
             <li><b>F</b> : fusionner (sur pièces compatibles).</li>
-            <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande (0 = unité) au centre du plateau.</li>
+            <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande (0 = dixième) au centre du plateau.</li>
             <li><b>?</b> ou <b>F1</b> : ouvrir/fermer cette aide.</li>
           </ul>
         </div>
@@ -1840,7 +1840,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
           if(e.code === 'KeyC'){ this.cutSelected(); return; }       // Couper
           if(e.code === 'KeyF'){ this.fuseSelected(); return; }      // Fusionner
 
-          // Création rapide (0 = unité). On utilise e.code pour rester OK en AZERTY.
+          // Création rapide (0 = dixième). On utilise e.code pour rester OK en AZERTY.
           const map = {
             Digit1: 1, Numpad1: 1,
             Digit2: 2, Numpad2: 2,
@@ -1853,7 +1853,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
           };
           if(e.code in map){
             const raw = map[e.code];
-            const denom = (raw === 0) ? 1 : raw;
+            const denom = (raw === 0) ? 10 : raw;
             const kind = (denom === 1) ? 'band' : 'piece';
             const br = this.boardContainer.getBoundingClientRect();
             const center = this.getWorldPos(br.left + br.width*0.5, br.top + br.height*0.35);
