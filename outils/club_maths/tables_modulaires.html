@@ -8,7 +8,7 @@
         :root {
             --primary: #00d2ff;
             --dark-bg: #1a1a1a;
-            --light-bg: #f5f5f5;
+            --sidebar-bg: #252525;
             --text-light: #eee;
             --text-dark: #333;
         }
@@ -17,176 +17,137 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-dark);
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            height: 100vh;
+            display: flex;
+            overflow: hidden; /* Pas de scroll global */
         }
 
-        /* --- STYLES ÉCRAN UNIQUEMENT --- */
-        .screen-wrapper {
-            width: 100%;
-        }
-
-        /* HEADER */
-        header {
-            background-color: #000;
-            color: white;
+        /* --- SIDEBAR GAUCHE (CONTRÔLES) --- */
+        .sidebar {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
             padding: 20px;
-            text-align: center;
-            border-bottom: 4px solid var(--primary);
-            position: relative;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            z-index: 10;
+            overflow-y: auto;
         }
 
-        /* Bouton Retour Accueil */
+        .header-mini {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+        }
+
         .home-link {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
             color: #888;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 5px;
+            margin-bottom: 10px;
             transition: color 0.2s;
         }
         .home-link:hover { color: white; }
 
-        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
-        header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
+        h1 { margin: 0; font-weight: 300; font-size: 1.4rem; letter-spacing: 1px; color: #fff; }
+        .subtitle { color: var(--primary); font-weight: bold; font-size: 0.9rem; display: block; margin-top: 5px; }
 
-        /* SECTION VISUALISATION */
-        .section-visualizer {
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .canvas-container-dark {
-            position: relative;
-            margin: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            border-radius: 50%;
-            background-color: #000;
-            max-width: 600px;
-            width: 100%;
-            aspect-ratio: 1/1;
-        }
-
-        .canvas-dark { width: 100%; height: 100%; border-radius: 50%; }
-
-        .controls-dark {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
+        /* Groupes de contrôles */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
             border: 1px solid rgba(255,255,255,0.1);
         }
 
         .control-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 15px;
         }
+        .control-row:last-child { margin-bottom: 0; }
+
+        label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #ccc; }
         
-        button.btn-anim {
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
-            border: none;
-            padding: 10px 20px;
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            width: 100%;
-        }
-        button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+        .val-display { float: right; color: var(--primary); font-weight: bold; font-family: monospace; font-size: 1.1rem; }
 
-        /* SECTION ATELIER */
-        .section-atelier {
-            padding: 50px 20px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
+        input[type=range] { width: 100%; margin-top: 5px; cursor: pointer; }
+        input[type=checkbox] { cursor: pointer; }
 
-        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: #444; }
-
-        .instructions {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-
-        .print-zone {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .print-controls {
+        /* Boutons */
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button {
             flex: 1;
-            min-width: 300px;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-
-        .preview-paper {
-            background: white;
-            width: 200px;
-            height: 282px; /* Ratio A4 */
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto;
-        }
-        
-        .btn-print {
-            background-color: #4CAF50;
-            color: white;
+            padding: 10px;
             border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
             border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-anim { background: linear-gradient(45deg, #00d2ff, #3a7bd5); color: white; }
+        .btn-anim:hover { filter: brightness(1.1); }
+        .btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+
+        .btn-speed { background: #444; color: #ccc; border: 1px solid #555; }
+        .btn-speed:hover { background: #555; color: white; }
+        .btn-speed.fast { background: #ffae00; color: black; border-color: #ffae00; }
+
+        /* Zone Impression dans la sidebar */
+        .print-section {
+            margin-top: auto; /* Pousse vers le bas si espace */
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+        .btn-print {
             width: 100%;
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            background-color: #4CAF50;
+            color: white;
+            margin-top: 10px;
         }
         .btn-print:hover { background-color: #45a049; }
 
-        /* --- ZONE D'IMPRESSION (CACHÉE PAR DÉFAUT) --- */
-        #printable-area {
-            display: none;
+        /* --- ZONE PRINCIPALE (CANVAS) --- */
+        .main-content {
+            flex-grow: 1;
+            position: relative;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        /* --- STYLES SPÉCIFIQUES À L'IMPRESSION --- */
-        @media print {
-            /* On cache tout le site normal */
-            .screen-wrapper {
-                display: none !important;
-            }
+        #canvas-container {
+            width: 95%;
+            height: 95%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-            /* On affiche la zone d'impression */
+        canvas {
+            /* Le canvas s'adaptera via JS, mais max taille CSS */
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(0,210,255,0.1);
+        }
+
+        /* --- STYLES D'IMPRESSION (CACHÉS) --- */
+        #printable-area { display: none; }
+        #hidden-canvases { display: none; }
+
+        @media print {
+            body > * { display: none !important; }
             #printable-area {
                 display: flex !important;
                 flex-direction: column;
@@ -198,397 +159,389 @@
                 top: 0;
                 left: 0;
                 background: white;
+                color: black;
                 z-index: 9999;
                 padding-top: 20px;
             }
-
-            /* Configuration de la page */
-            @page {
-                size: A4;
-                margin: 0; /* On gère les marges nous-mêmes via le padding */
-            }
-            
-            body {
-                background: white;
-            }
+            @page { size: A4; margin: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- TOUT LE CONTENU VISIBLE À L'ÉCRAN EST DANS CE WRAPPER -->
-    <div class="screen-wrapper">
-        <header>
-            <a href="index.html" class="home-link">🏠 Retour au Club</a>
+    <!-- SIDEBAR DE CONTRÔLE -->
+    <div class="sidebar">
+        <div class="header-mini">
+            <a href="index.html" class="home-link">← Retour Accueil</a>
             <h1>CLUB MATHS</h1>
-            <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
-        </header>
+            <span class="subtitle">Tables Modulaires</span>
+        </div>
 
-        <!-- PARTIE 1 : DÉCOUVERTE INTERACTIVE -->
-        <section class="section-visualizer">
-            <div style="max-width: 600px;">
-                <p>Observez comment de simples tables de multiplication créent des formes géométriques complexes.</p>
+        <div class="control-panel">
+            <div class="control-row">
+                <label>Table de... <span id="vizMultVal" class="val-display">2.00</span></label>
+                <input type="range" id="vizMultRange" min="0" max="100" step="0.01" value="2">
             </div>
-
-            <div class="canvas-container-dark">
-                <canvas id="vizCanvas" class="canvas-dark"></canvas>
-            </div>
-
-            <div class="controls-dark">
-                <div class="control-row">
-                    <label>Table de multiplication : <span id="vizMultVal" style="color:#00d2ff; font-weight:bold;">2.00</span></label>
-                    <input type="range" id="vizMultRange" min="0" max="100" step="0.01" value="2">
-                </div>
-                <div class="control-row">
-                    <label>Nombre de points : <span id="vizPointsVal">200</span></label>
-                    <input type="range" id="vizPointsRange" min="10" max="500" value="200">
-                </div>
-                <div class="control-row">
-                    <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
-                </div>
-                <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
-            </div>
-        </section>
-
-        <!-- PARTIE 2 : ATELIER PRATIQUE -->
-        <section class="section-atelier">
             
-            <h2>Comment ça marche ?</h2>
-            <div class="instructions">
-                <p><strong>La Règle du jeu :</strong></p>
-                <ol>
-                    <li>On place <strong>N</strong> points numérotés sur un cercle (comme une horloge).</li>
-                    <li>On choisit une table de multiplication (par exemple la table de <strong>2</strong>).</li>
-                    <li>Pour chaque point <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
-                    <li>On relie le point de départ au point d'arrivée.</li>
-                    <li><em>Astuce :</em> Si le résultat dépasse le nombre de points, on fait un tour de cercle (on soustrait N). C'est ce qu'on appelle le <strong>modulo</strong>.</li>
-                </ol>
-                <p>Exemple avec 60 points : 32 × 2 = 64. Comme 64 dépasse 60, on relie 32 au point 4.</p>
+            <div class="control-row">
+                <label>Points <span id="vizPointsVal" class="val-display">200</span></label>
+                <input type="range" id="vizPointsRange" min="10" max="500" value="200">
             </div>
 
-            <h2>À vous de jouer : Imprimer la fiche</h2>
-            <div class="print-zone">
+            <div class="control-row" style="margin-top:10px;">
+                <label style="cursor:pointer; display:flex; align-items:center;">
+                    <input type="checkbox" id="vizIntMode" style="width:auto; margin-right:10px;"> 
+                    Mode Entiers seulement
+                </label>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <label>Animation</label>
+            <div class="btn-group">
+                <button id="vizAnimBtn" class="btn-anim">▶ Lancer</button>
+                <button id="speedBtn" class="btn-speed" title="Changer la vitesse">Vitesse : Lente</button>
+            </div>
+        </div>
+
+        <div class="print-section">
+            <h3>🖨️ Atelier Papier</h3>
+            <div style="background:#eee; padding:10px; border-radius:8px; color:#333;">
+                <label style="color:#333; margin-bottom:0;">Config Impression :</label>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:0.9rem;">
+                    <span>Points : <b id="printPointsPreview">60</b></span>
+                    <span>Table : <b id="printTablePreview">2</b></span>
+                </div>
+                <input type="range" id="printPointsRange" min="10" max="120" value="60" style="margin-top:10px;">
+                <small style="color:#666; display:block; margin-top:2px;">Astuce: Réglez la table avec le curseur du haut.</small>
                 
-                <!-- Contrôles pour l'impression -->
-                <div class="print-controls">
-                    <h3>Paramétrer votre fiche</h3>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points sur le cercle</label>
-                        <input type="range" id="printPointsRange" min="10" max="120" value="60" style="width:100%">
-                        <div style="text-align:right; color:#666;">Valeur : <span id="printPointsVal">60</span></div>
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table (pour la consigne)</label>
-                        <input type="number" id="printTableNum" value="2" min="2" style="padding:5px; width:60px;">
-                    </div>
-
-                    <div style="margin-bottom: 20px;">
-                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                            <input type="checkbox" id="printShowLines"> 
-                            <strong>Inclure le corrigé (les traits)</strong>
-                        </label>
-                        <small style="color:#666; display:block; margin-top:5px;">Cochez pour imprimer votre modèle, décochez pour la fiche élève.</small>
-                    </div>
-
-                    <button class="btn-print" onclick="prepareAndPrint()">
-                        🖨️ Imprimer la fiche
-                    </button>
-                </div>
-
-                <!-- Aperçu visuel -->
-                <div class="preview-container">
-                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu</div>
-                    <div class="preview-paper">
-                        <canvas id="previewCanvas"></canvas>
-                    </div>
-                </div>
+                <label style="color:#333; margin-top:10px; display:flex; align-items:center; cursor:pointer;">
+                    <input type="checkbox" id="printShowLines" style="width:auto; margin-right:5px;"> 
+                    Inclure le corrigé
+                </label>
             </div>
-
-        </section>
+            <button class="btn-print" onclick="prepareAndPrint()">Imprimer la fiche</button>
+        </div>
     </div>
 
-    <!-- ZONE D'IMPRESSION : HORS DU FLUX NORMAL, S'AFFICHE UNIQUEMENT À L'IMPRESSION -->
+    <!-- ZONE PRINCIPALE -->
+    <div class="main-content">
+        <div id="canvas-container">
+            <canvas id="vizCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- ZONE D'IMPRESSION CACHÉE -->
     <div id="printable-area">
         <div style="width: 90%; max-width: 800px; font-family: 'Segoe UI', Arial, sans-serif; color: black;">
-            <!-- En-tête de la fiche -->
             <div style="border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 1.1rem;">
                     <span><strong>Nom :</strong> ............................................</span>
                     <span><strong>Date :</strong> ........................</span>
                 </div>
-                <h1 style="font-size:1.8rem; margin: 0 0 10px 0; text-align: center;">La Table de Multiplication Géométrique</h1>
+                <h1 style="font-size:1.8rem; margin: 0 0 10px 0; text-align: center; color:black;">La Table de Multiplication Géométrique</h1>
                 <div style="font-size: 1.2rem; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
                     <strong>Consigne :</strong><br>
                     Relie chaque point <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
                     <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span> autant de fois que nécessaire.)</em></small>
                 </div>
             </div>
-            
-            <!-- L'image du cercle -->
             <div style="text-align: center;">
                 <img id="finalPrintImage" style="width: 95%; max-height: 85vh; object-fit: contain;" alt="Cercle à compléter" />
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT -->
+    <!-- CANEVAS INVISIBLE POUR GÉNÉRATION HD -->
+    <div id="hidden-canvases">
+        <canvas id="printCanvas"></canvas>
+    </div>
+
     <script>
-        // ==========================================
-        // SCRIPT 1 : VISUALISATION (FOND NOIR)
-        // ==========================================
+        // --- VARIABLES GLOBALES ---
         const vizCanvas = document.getElementById('vizCanvas');
         const vizCtx = vizCanvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        
         let vizPoints = 200;
         let vizMult = 2;
         let vizAnimating = false;
         let vizAnimId;
         let vizIntMode = false;
+        let isFastSpeed = false; // Par défaut lent
 
+        // --- GESTION DU REDIMENSIONNEMENT INTELLIGENT ---
         function resizeViz() {
-            // Vérification que l'élément parent existe et a une taille
-            if (!vizCanvas.parentElement || vizCanvas.parentElement.offsetWidth === 0) return;
+            // On récupère la taille du conteneur (la partie droite de l'écran)
+            const w = container.clientWidth;
+            const h = container.clientHeight;
             
-            const size = Math.min(vizCanvas.parentElement.offsetWidth, 600);
+            // Le canvas doit être carré pour que le cercle soit rond
+            const size = Math.min(w, h);
+            
             vizCanvas.width = size;
             vizCanvas.height = size;
+            
             drawViz();
         }
 
+        window.addEventListener('resize', resizeViz);
+
+        // --- DESSIN PRINCIPAL ---
         function drawViz() {
             const w = vizCanvas.width;
             const h = vizCanvas.height;
-            
-            // Sécurité : ne pas dessiner si le canvas est trop petit
-            if (w < 10 || h < 10) return;
+            if (w === 0 || h === 0) return;
 
-            const cx = w/2; 
-            const cy = h/2;
-            let r = (w/2) - 10;
-            
-            // Sécurité : rayon positif obligatoire
-            if (r < 0) r = 0;
+            const cx = w / 2;
+            const cy = h / 2;
+            const r = (w / 2) - 10; // Marge de 10px
 
+            // Fond
             vizCtx.fillStyle = "black";
-            vizCtx.fillRect(0,0,w,h);
+            vizCtx.fillRect(0, 0, w, h);
 
-            // Cercle
+            // Cercle extérieur
             vizCtx.beginPath();
-            vizCtx.arc(cx, cy, r, 0, Math.PI*2);
-            vizCtx.strokeStyle = "#333";
+            vizCtx.arc(cx, cy, r, 0, Math.PI * 2);
+            vizCtx.strokeStyle = "#444";
+            vizCtx.lineWidth = 2;
             vizCtx.stroke();
 
-            // Points cache
-            const coords = [];
-            for(let i=0; i<vizPoints; i++){
-                const angle = (Math.PI*2*i)/vizPoints - Math.PI/2;
-                coords.push({
+            // Calcul des points sur le cercle
+            const pointsCoords = [];
+            for (let i = 0; i < vizPoints; i++) {
+                const angle = (Math.PI * 2 * i) / vizPoints - Math.PI / 2;
+                pointsCoords.push({
                     x: cx + r * Math.cos(angle),
                     y: cy + r * Math.sin(angle)
                 });
             }
 
-            // Lignes
+            // Dessin des lignes
             vizCtx.lineWidth = 1;
-            for(let i=0; i<vizPoints; i++){
+            for (let i = 0; i < vizPoints; i++) {
+                // Destination : i * table
                 const destVal = (i * vizMult) % vizPoints;
-                const destAngle = (Math.PI*2*destVal)/vizPoints - Math.PI/2;
-                const dx = cx + r * Math.cos(destAngle);
-                const dy = cy + r * Math.sin(destAngle);
-
-                const hue = (i/vizPoints)*360;
-                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.5 : 0.3})`;
                 
+                // Calcul position destination
+                const destAngle = (Math.PI * 2 * destVal) / vizPoints - Math.PI / 2;
+                const destX = cx + r * Math.cos(destAngle);
+                const destY = cy + r * Math.sin(destAngle);
+
+                // Couleur arc-en-ciel
+                const hue = (i / vizPoints) * 360;
+                // Opacité : plus faible en mode fluide pour effet traînée, plus forte en mode entier
+                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.6 : 0.4})`;
+
                 vizCtx.beginPath();
-                vizCtx.moveTo(coords[i].x, coords[i].y);
-                vizCtx.lineTo(dx, dy);
+                vizCtx.moveTo(pointsCoords[i].x, pointsCoords[i].y);
+                vizCtx.lineTo(destX, destY);
                 vizCtx.stroke();
             }
+            
+            // Afficher le numéro de la table au centre (discret)
+            /*
+            vizCtx.fillStyle = "rgba(255,255,255,0.1)";
+            vizCtx.font = `bold ${w/10}px Arial`;
+            vizCtx.textAlign = "center";
+            vizCtx.textBaseline = "middle";
+            vizCtx.fillText(vizMult.toFixed(2), cx, cy);
+            */
         }
 
-        // Listeners Visualisation
+        // --- ANIMATION ---
+        function animateViz() {
+            // Vitesse : Si rapide 0.02, si lent 0.005
+            // En mode entier : Si rapide on saute presque, si lent 0.02
+            let speed;
+            if (vizIntMode) {
+                speed = isFastSpeed ? 0.05 : 0.02;
+            } else {
+                speed = isFastSpeed ? 0.03 : 0.005;
+            }
+
+            vizMult += speed;
+            if (vizMult > 100) vizMult = 0;
+
+            // Mise à jour UI
+            document.getElementById('vizMultRange').value = vizMult;
+            updateMultDisplay();
+            
+            drawViz();
+            vizAnimId = requestAnimationFrame(animateViz);
+        }
+
+        function updateMultDisplay() {
+            const val = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
+            document.getElementById('vizMultVal').innerText = val;
+            // Mise à jour aussi de l'aperçu impression
+            document.getElementById('printTablePreview').innerText = Math.floor(vizMult);
+        }
+
+        // --- EVENTS LISTENERS ---
+        
+        // Curseurs
+        document.getElementById('vizMultRange').addEventListener('input', e => {
+            vizMult = parseFloat(e.target.value);
+            updateMultDisplay();
+            drawViz();
+        });
+
         document.getElementById('vizPointsRange').addEventListener('input', e => {
             vizPoints = parseInt(e.target.value);
             document.getElementById('vizPointsVal').innerText = vizPoints;
             drawViz();
         });
-        document.getElementById('vizMultRange').addEventListener('input', e => {
-            vizMult = parseFloat(e.target.value);
-            document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
-            drawViz();
-        });
+
+        // Toggle Entier
         document.getElementById('vizIntMode').addEventListener('change', e => {
             vizIntMode = e.target.checked;
             const slider = document.getElementById('vizMultRange');
-            if(vizIntMode) {
+            if (vizIntMode) {
                 slider.step = "1";
                 vizMult = Math.round(vizMult);
                 slider.value = vizMult;
             } else {
                 slider.step = "0.01";
             }
+            updateMultDisplay();
             drawViz();
         });
+
+        // Bouton Animation
         document.getElementById('vizAnimBtn').addEventListener('click', function() {
             vizAnimating = !vizAnimating;
-            this.classList.toggle('active');
-            this.innerText = vizAnimating ? "Arrêter" : "Lancer l'animation";
-            if(vizAnimating) animateViz();
-            else cancelAnimationFrame(vizAnimId);
+            if (vizAnimating) {
+                this.textContent = "⏸ Pause";
+                this.classList.add('active');
+                animateViz();
+            } else {
+                this.textContent = "▶ Lancer";
+                this.classList.remove('active');
+                cancelAnimationFrame(vizAnimId);
+                
+                // Snap si mode entier
+                if (vizIntMode) {
+                    vizMult = Math.round(vizMult);
+                    document.getElementById('vizMultRange').value = vizMult;
+                    updateMultDisplay();
+                    drawViz();
+                }
+            }
         });
 
-        function animateViz() {
-            vizMult += (vizIntMode ? 0.02 : 0.005); 
-            if(vizMult > 100) vizMult = 0;
-            document.getElementById('vizMultRange').value = vizMult;
-            document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
-            drawViz();
-            vizAnimId = requestAnimationFrame(animateViz);
-        }
+        // Bouton Vitesse
+        const speedBtn = document.getElementById('speedBtn');
+        speedBtn.addEventListener('click', () => {
+            isFastSpeed = !isFastSpeed;
+            if (isFastSpeed) {
+                speedBtn.textContent = "Vitesse : Rapide 🚀";
+                speedBtn.classList.add('fast');
+            } else {
+                speedBtn.textContent = "Vitesse : Lente 🐢";
+                speedBtn.classList.remove('fast');
+            }
+        });
 
-        // ==========================================
-        // SCRIPT 2 : IMPRESSION (FOND BLANC)
-        // ==========================================
-        const prevCanvas = document.getElementById('previewCanvas');
-        const prevCtx = prevCanvas.getContext('2d');
-        
-        // Canvas caché haute définition pour générer l'image d'impression
-        const printCanvas = document.createElement('canvas');
+        // Impression UI synchro
+        document.getElementById('printPointsRange').addEventListener('input', e => {
+            document.getElementById('printPointsPreview').innerText = e.target.value;
+        });
+
+        // --- IMPRESSION ---
+        const printCanvas = document.getElementById('printCanvas');
         const printCtx = printCanvas.getContext('2d');
 
-        let printPoints = 60;
-        let printTable = 2;
-        let printShowLines = false;
+        function prepareAndPrint() {
+            const pPoints = parseInt(document.getElementById('printPointsRange').value);
+            const pTable = Math.floor(vizMult); // On prend la table actuelle (arrondie)
+            const showLines = document.getElementById('printShowLines').checked;
 
-        function updatePrintPreview() {
-            // Dessin sur le petit canvas de preview
-            const w = 200;
-            const h = 200; // Carré dans l'aperçu rectangulaire
-            prevCanvas.width = w;
-            prevCanvas.height = h;
-            // On centre dans le rectangle
-            prevCanvas.style.marginTop = "40px"; 
-            drawPaper(prevCtx, w, h, 0.6); // Scale réduit pour l'aperçu
-        }
+            // Mise à jour textes
+            document.getElementById('printTableInstruction').innerText = pTable;
+            document.getElementById('printModuloInstruction').innerText = pPoints;
+            document.getElementById('printModuloInstruction2').innerText = pPoints;
 
-        function drawPaper(ctx, w, h, scale) {
-            // Sécurité taille
-            if (w < 1 || h < 1) return;
+            // Génération HD
+            const scale = 4;
+            const size = 1000 * scale;
+            printCanvas.width = size;
+            printCanvas.height = size;
 
-            const cx = w/2;
-            const cy = h/2;
-            // Rayon ajusté pour laisser place aux numéros
-            // On s'assure que le rayon est positif
-            let r = (Math.min(w,h)/2) - (25 * scale);
-            if (r < 10) r = 10;
+            // Dessin sur papier blanc
+            const cx = size / 2;
+            const cy = size / 2;
+            const r = (size / 2) - (50 * scale);
 
-            ctx.fillStyle = "white";
-            ctx.fillRect(0,0,w,h);
+            printCtx.fillStyle = "white";
+            printCtx.fillRect(0, 0, size, size);
             
-            // Cercle
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2 * scale;
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI*2);
-            ctx.stroke();
+            printCtx.strokeStyle = "black";
+            printCtx.lineWidth = 2 * scale;
+            printCtx.beginPath();
+            printCtx.arc(cx, cy, r, 0, Math.PI * 2);
+            printCtx.stroke();
 
             // Police
             let fontSize = 14 * scale;
-            if (printPoints > 80) fontSize = 10 * scale;
-            ctx.font = `bold ${fontSize}px Arial`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillStyle = "black";
+            if (pPoints > 80) fontSize = 10 * scale;
+            printCtx.font = `bold ${fontSize}px Arial`;
+            printCtx.textAlign = "center";
+            printCtx.textBaseline = "middle";
+            printCtx.fillStyle = "black";
 
+            // Points
             const coords = [];
-
-            for(let i=0; i<printPoints; i++) {
-                const angle = (Math.PI*2*i)/printPoints - Math.PI/2;
+            for(let i=0; i<pPoints; i++) {
+                const angle = (Math.PI*2*i)/pPoints - Math.PI/2;
                 const x = cx + r * Math.cos(angle);
                 const y = cy + r * Math.sin(angle);
                 coords.push({x,y});
 
-                // Point d'ancrage (petit point sur le cercle)
-                ctx.beginPath();
-                ctx.arc(x, y, 2.5*scale, 0, Math.PI*2);
-                ctx.fill();
+                // Point
+                printCtx.beginPath();
+                printCtx.arc(x, y, 2.5*scale, 0, Math.PI*2);
+                printCtx.fill();
 
-                // Graduation extérieure
+                // Graduation
                 const xOut = cx + (r + 5*scale) * Math.cos(angle);
                 const yOut = cy + (r + 5*scale) * Math.sin(angle);
-                ctx.beginPath();
-                ctx.moveTo(x,y);
-                ctx.lineTo(xOut, yOut);
-                ctx.stroke();
+                printCtx.beginPath();
+                printCtx.moveTo(x,y);
+                printCtx.lineTo(xOut, yOut);
+                printCtx.stroke();
 
                 // Numéro
-                const tDist = r + (18*scale);
+                const tDist = r + (20*scale);
                 const tx = cx + tDist * Math.cos(angle);
                 const ty = cy + tDist * Math.sin(angle);
-                ctx.fillText(i, tx, ty);
+                printCtx.fillText(i, tx, ty);
             }
 
-            if(printShowLines) {
-                ctx.strokeStyle = "rgba(0,0,255,0.6)";
-                ctx.lineWidth = 1 * scale;
-                for(let i=0; i<printPoints; i++) {
-                    const dest = (i * printTable) % printPoints;
-                    ctx.beginPath();
-                    ctx.moveTo(coords[i].x, coords[i].y);
-                    ctx.lineTo(coords[dest].x, coords[dest].y);
-                    ctx.stroke();
+            // Corrigé
+            if(showLines) {
+                printCtx.strokeStyle = "rgba(0,0,255,0.6)";
+                printCtx.lineWidth = 1 * scale;
+                for(let i=0; i<pPoints; i++) {
+                    const dest = (i * pTable) % pPoints;
+                    printCtx.beginPath();
+                    printCtx.moveTo(coords[i].x, coords[i].y);
+                    printCtx.lineTo(coords[dest].x, coords[dest].y);
+                    printCtx.stroke();
                 }
             }
-        }
 
-        // Listeners Impression
-        document.getElementById('printPointsRange').addEventListener('input', e => {
-            printPoints = parseInt(e.target.value);
-            document.getElementById('printPointsVal').innerText = printPoints;
-            updatePrintPreview();
-        });
-        document.getElementById('printTableNum').addEventListener('input', e => {
-            printTable = parseInt(e.target.value);
-            updatePrintPreview();
-        });
-        document.getElementById('printShowLines').addEventListener('change', e => {
-            printShowLines = e.target.checked;
-            updatePrintPreview();
-        });
-
-        // Fonction d'impression
-        function prepareAndPrint() {
-            // 1. Mettre à jour les textes de consigne
-            document.getElementById('printTableInstruction').innerText = printTable;
-            document.getElementById('printModuloInstruction').innerText = printPoints;
-            document.getElementById('printModuloInstruction2').innerText = printPoints;
-
-            // 2. Générer l'image Haute Résolution
-            // On augmente la taille pour une impression ultra nette
-            const scale = 5; 
-            const size = 1000 * scale; // 5000px
-            printCanvas.width = size;
-            printCanvas.height = size;
-            drawPaper(printCtx, size, size, scale);
-
-            // 3. Mettre l'image dans la zone d'impression
+            // Export image
             const dataUrl = printCanvas.toDataURL('image/png');
             document.getElementById('finalPrintImage').src = dataUrl;
 
-            // 4. Lancer l'impression avec un petit délai pour être sûr que l'image est chargée
-            // (Même si dataURL est rapide, le rendu DOM peut prendre quelques ms)
-            setTimeout(() => {
-                window.print();
-            }, 250);
+            // Print
+            setTimeout(() => window.print(), 250);
         }
 
         // Init
-        window.addEventListener('resize', resizeViz);
-        // Délai pour laisser le DOM se construire
-        setTimeout(() => {
-            resizeViz();
-            updatePrintPreview();
-        }, 100);
+        setTimeout(resizeViz, 100);
 
     </script>
 </body>
