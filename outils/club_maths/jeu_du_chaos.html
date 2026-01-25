@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Maths - Le Jeu du Chaos</title>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --accent: #ff0055;
+            --scratch: #FFAB00;
+            --dark-bg: #1a1a1a;
+            --light-bg: #f5f5f5;
+            --text-light: #eee;
+            --text-dark: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        /* --- STYLES ÉCRAN UNIQUEMENT --- */
+        .screen-wrapper { width: 100%; }
+
+        /* HEADER */
+        header {
+            background-color: #000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
+        header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
+
+        /* SECTIONS COMMUNES */
+        section {
+            padding: 50px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            border-bottom: 1px solid #ddd;
+        }
+
+        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: #444; margin-bottom: 20px; }
+
+        /* SECTION VISUALISATION */
+        .section-visualizer {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 100%; /* Full width for dark section */
+        }
+
+        .canvas-container-dark {
+            position: relative;
+            margin: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background-color: #000;
+            max-width: 600px;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 4px;
+        }
+
+        .canvas-dark { width: 100%; height: 100%; border-radius: 4px; cursor: crosshair; }
+
+        .controls-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-dark {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 120px;
+            font-weight: bold;
+        }
+        .btn-dark:hover { background: #444; }
+        .btn-primary { background: var(--primary); color: #000; border: none; }
+        .btn-danger { background: var(--accent); border: none; }
+
+        .stats { margin-top: 10px; color: #888; font-size: 0.9rem; }
+
+        /* ZONES D'IMPRESSION */
+        .instructions {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .print-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .print-controls {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .preview-paper {
+            background: white;
+            /* Dimensions gérées par JS selon orientation */
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-print {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+        .btn-print:hover { background-color: #45a049; }
+
+        /* BLOCS SCRATCH POUR L'APERÇU */
+        .scratch-block {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        .b-move { background-color: #4C97FF; }
+        .b-pen { background-color: #0fBD8C; }
+
+        /* --- ZONE D'IMPRESSION (CACHÉE PAR DÉFAUT) --- */
+        #printable-area { display: none; }
+
+        @media print {
+            .screen-wrapper { display: none !important; }
+            #printable-area {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                width: 100%;
+                height: 100vh;
+                position: fixed;
+                top: 0;
+                left: 0;
+                background: white;
+                z-index: 9999;
+                /* Padding supprimé pour gérer via @page */
+            }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="screen-wrapper">
+        <header>
+            <h1>CLUB MATHS</h1>
+            <span class="subtitle">Activité 2 : Le Jeu du Chaos (Fractales)</span>
+        </header>
+
+        <!-- PARTIE 1 : VISUALISATION -->
+        <section class="section-visualizer">
+            <div style="max-width: 600px;">
+                <p>Comment le hasard peut-il créer de l'ordre ? Lancez la simulation pour voir apparaître le Triangle de Sierpinski.</p>
+            </div>
+
+            <div class="canvas-container-dark">
+                <canvas id="chaosCanvas" class="canvas-dark"></canvas>
+            </div>
+
+            <div class="controls-dark">
+                <button class="btn-dark btn-primary" onclick="startDrawing()">▶ Lancer (Rapide)</button>
+                <button class="btn-dark" onclick="stepByStep()">🐌 Pas à pas</button>
+                <button class="btn-dark" onclick="instant()">⚡ Instantané (10k)</button>
+                <button class="btn-dark btn-danger" onclick="resetViz()">🗑️ Effacer</button>
+            </div>
+            <div class="stats">Points tracés : <span id="pointCount">0</span></div>
+        </section>
+
+        <!-- PARTIE 2 : ATELIER PAPIER -->
+        <section class="section-atelier">
+            
+            <h2>Phase 1 : Expérience Papier</h2>
+            <div class="instructions">
+                <p><strong>Règle du jeu :</strong> On part d'un point au hasard. On lance un dé pour choisir un sommet (A, B ou C). On place un point au <strong>milieu</strong> du chemin. On recommence.</p>
+            </div>
+
+            <div class="print-zone">
+                <div class="print-controls">
+                    <h3>Générer la Fiche Élève</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:10px; font-weight:bold;">Orientation de la feuille</label>
+                        <div style="display:flex; gap:10px;">
+                            <label style="cursor:pointer; background:#fff; border:1px solid #ccc; padding:10px; border-radius:5px; flex:1; text-align:center;">
+                                <input type="radio" name="orientation" value="portrait"> Portrait
+                            </label>
+                            <label style="cursor:pointer; background:#eef; border:1px solid #00d2ff; padding:10px; border-radius:5px; flex:1; text-align:center; font-weight:bold;">
+                                <input type="radio" name="orientation" value="landscape" checked> Paysage (Maxi)
+                            </label>
+                        </div>
+                        <p style="font-size:0.8rem; color:#666; margin-top:5px;">Le mode Paysage place le texte à gauche pour maximiser la taille du triangle.</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <input type="checkbox" id="printShowStart" checked> 
+                            <strong>Afficher un point de départ exemple</strong>
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Taille des sommets (A, B, C)</label>
+                        <input type="range" id="printDotSize" min="2" max="15" value="4" style="width:100%">
+                        <div style="text-align:right; font-size:0.8rem; color:#666;">Réglage actuel pour l'impression</div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; background: #eef; padding: 10px; border-radius: 8px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom: 10px;">
+                            <input type="checkbox" id="printSimulate"> 
+                            <strong>Générer un corrigé (Simulation)</strong>
+                        </label>
+                        
+                        <label style="display:block; margin-bottom:5px; font-size: 0.9rem;">Points simulés : <strong id="printSimVal">500</strong></label>
+                        <input type="range" id="printSimRange" min="100" max="5000" step="100" value="500" style="width:100%">
+                    </div>
+
+                    <button class="btn-print" onclick="printManual()">
+                        🖨️ Imprimer Fiche Papier
+                    </button>
+                </div>
+
+                <div class="preview-container">
+                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu Papier</div>
+                    <div class="preview-paper" id="paperContainer">
+                        <canvas id="previewManual"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PARTIE 3 : ATELIER SCRATCH -->
+        <section class="section-scratch" style="background-color: #fff9e6;">
+            <h2 style="border-color: var(--scratch);">Phase 2 : Mission Scratch</h2>
+            <div class="instructions">
+                <p>Après l'avoir fait à la main, l'ordinateur peut le faire 10 000 fois plus vite !<br>
+                Cette fiche contient les <strong>coordonnées Scratch</strong> (x, y) et l'algorithme à coder.</p>
+                <div style="margin-top:10px;">
+                    <span class="scratch-block b-move">aller à x: 0 y: 160</span>
+                    <span class="scratch-block b-pen">estampiller</span>
+                </div>
+            </div>
+
+            <div class="print-zone">
+                <div class="print-controls">
+                    <h3>Générer la Fiche Mission</h3>
+                    <p style="color:#666; font-size:0.9rem;">Imprime un guide complet avec la grille de coordonnées et les blocs à utiliser.</p>
+                    <button class="btn-print" style="background-color: var(--scratch);" onclick="printScratch()">
+                        🖨️ Imprimer Fiche Scratch
+                    </button>
+                </div>
+
+                <div class="preview-container">
+                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu Scratch</div>
+                    <div class="preview-paper" style="width:210px; height:297px;">
+                        <canvas id="previewScratch"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ZONE D'IMPRESSION -->
+    <div id="printable-area">
+        <!-- Le contenu sera injecté ici par JS au moment de l'impression -->
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. VISUALISATION
+        // ==========================================
+        const chaosCanvas = document.getElementById('chaosCanvas');
+        const ctx = chaosCanvas.getContext('2d');
+        const countSpan = document.getElementById('pointCount');
+
+        let width, height;
+        let vertices = [];
+        let currentPoint = {x: 0, y: 0};
+        let isDrawing = false;
+        let animationId;
+        let totalPoints = 0;
+
+        function initViz() {
+            const size = Math.min(chaosCanvas.parentElement.offsetWidth, 600);
+            chaosCanvas.width = size;
+            chaosCanvas.height = size;
+            width = size;
+            height = size;
+
+            const margin = 30;
+            vertices = [
+                {x: width / 2, y: margin, color: '#FF0055', label: 'A'}, 
+                {x: margin, y: height - margin, color: '#00FF55', label: 'B'}, 
+                {x: width - margin, y: height - margin, color: '#0055FF', label: 'C'} 
+            ];
+            resetViz();
+        }
+
+        function drawVertices() {
+            vertices.forEach(v => {
+                ctx.fillStyle = v.color;
+                ctx.beginPath();
+                ctx.arc(v.x, v.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function resetViz() {
+            isDrawing = false;
+            cancelAnimationFrame(animationId);
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, width, height);
+            totalPoints = 0;
+            countSpan.textContent = "0";
+            drawVertices();
+            currentPoint = { x: Math.random() * width, y: Math.random() * height };
+        }
+
+        function addPoint() {
+            const randIndex = Math.floor(Math.random() * 3);
+            const target = vertices[randIndex];
+            currentPoint.x = (currentPoint.x + target.x) / 2;
+            currentPoint.y = (currentPoint.y + target.y) / 2;
+            ctx.fillStyle = target.color;
+            ctx.fillRect(currentPoint.x, currentPoint.y, 1.5, 1.5);
+            totalPoints++;
+            return target.color;
+        }
+
+        function startDrawing() {
+            if (isDrawing) return;
+            isDrawing = true;
+            function loop() {
+                if (!isDrawing) return;
+                for(let i=0; i<5; i++) addPoint(); 
+                countSpan.textContent = totalPoints;
+                animationId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function stepByStep() {
+            isDrawing = false;
+            cancelAnimationFrame(animationId);
+            const color = addPoint();
+            countSpan.textContent = totalPoints;
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(currentPoint.x, currentPoint.y, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(currentPoint.x, currentPoint.y, 4, 0, Math.PI*2); ctx.stroke();
+        }
+
+        function instant() {
+            isDrawing = false;
+            cancelAnimationFrame(animationId);
+            for(let i=0; i<10000; i++) addPoint();
+            countSpan.textContent = totalPoints;
+        }
+
+        // ==========================================
+        // 2. APERÇUS IMPRESSION
+        // ==========================================
+        const manualCanvas = document.getElementById('previewManual');
+        const manualCtx = manualCanvas.getContext('2d');
+        const scratchCanvas = document.getElementById('previewScratch');
+        const scratchCtx = scratchCanvas.getContext('2d');
+        const paperContainer = document.getElementById('paperContainer');
+        
+        // Canvas invisible haute def
+        const hdCanvas = document.createElement('canvas');
+        const hdCtx = hdCanvas.getContext('2d');
+
+        // État
+        let printDotSize = 4;
+        let printShowStart = true;
+        let printSimulate = false;
+        let printSimPoints = 500;
+        let printOrientation = 'landscape'; // Default to optimized landscape
+
+        function updatePreviews() {
+            // Ajustement taille conteneur aperçu
+            if (printOrientation === 'landscape') {
+                manualCanvas.width = 297; manualCanvas.height = 210;
+                paperContainer.style.width = "297px";
+                paperContainer.style.height = "210px";
+                drawManualSheet(manualCtx, 297, 210, 0.4, 'landscape');
+            } else {
+                manualCanvas.width = 210; manualCanvas.height = 297;
+                paperContainer.style.width = "210px";
+                paperContainer.style.height = "297px";
+                drawManualSheet(manualCtx, 210, 297, 0.4, 'portrait');
+            }
+
+            // Scratch (Toujours portrait)
+            scratchCanvas.width = 210; scratchCanvas.height = 297;
+            drawScratchSheet(scratchCtx, 210, 297, 0.4);
+        }
+
+        // --- DESSIN FEUILLE MANUELLE ---
+        function drawManualSheet(ctx, w, h, scale, orientation) {
+            ctx.fillStyle = "white"; ctx.fillRect(0,0,w,h);
+
+            const margin = 20 * scale; // Marges réduites pour max taille
+            
+            // Calcul de la zone de dessin du triangle
+            let drawX, drawY, drawW, drawH;
+            
+            if (orientation === 'landscape') {
+                // Layout Paysage : Colonne texte à gauche (30%), Triangle à droite (70%)
+                const sidebarW = w * 0.25;
+                
+                // Dessin Texte Latéral
+                ctx.fillStyle = "#f0f0f0";
+                ctx.fillRect(0, 0, sidebarW, h);
+                ctx.strokeStyle = "#ddd";
+                ctx.beginPath(); ctx.moveTo(sidebarW, 0); ctx.lineTo(sidebarW, h); ctx.stroke();
+                
+                // Contenu texte
+                ctx.fillStyle = "#000";
+                ctx.textAlign = "left";
+                ctx.font = `bold ${16*scale}px Arial`;
+                ctx.fillText("Le Jeu du Chaos", margin, 40*scale);
+                
+                ctx.font = `${10*scale}px Arial`;
+                const lines = [
+                    "Nom : .....................",
+                    "",
+                    "RÈGLE DU JEU :",
+                    "1. Pars d'un point au hasard.",
+                    "2. Lance le dé (1-6) :",
+                    "   1-2 -> Vise ROUGE",
+                    "   3-4 -> Vise VERT",
+                    "   5-6 -> Vise BLEU",
+                    "3. Avance jusqu'au MILIEU.",
+                    "4. Fais un point.",
+                    "5. Recommence !",
+                    "",
+                    "Astuce :",
+                    "Si tu te trompes, continue.",
+                    "Le dessin se corrige seul !"
+                ];
+                let ly = 80*scale;
+                lines.forEach(l => {
+                    ctx.fillText(l, margin, ly);
+                    ly += 16*scale;
+                });
+
+                // Zone Triangle (Reste de la page)
+                drawX = sidebarW + margin;
+                drawY = margin;
+                drawW = w - sidebarW - 2*margin;
+                drawH = h - 2*margin;
+
+            } else {
+                // Layout Portrait : En-tête haut, Triangle bas
+                const headerH = 60 * scale;
+                
+                // Dessin En-tête
+                ctx.fillStyle = "black";
+                ctx.textAlign = "center";
+                ctx.font = `bold ${18*scale}px Arial`;
+                ctx.fillText("Le Jeu du Chaos", w/2, 30*scale);
+                ctx.font = `${10*scale}px Arial`;
+                ctx.fillText("Règle : Pars d'un point. Vise un sommet (dé). Va au milieu. Marque le point.", w/2, 50*scale);
+                ctx.beginPath(); ctx.moveTo(margin, headerH); ctx.lineTo(w-margin, headerH); ctx.stroke();
+
+                // Zone Triangle
+                drawX = margin;
+                drawY = headerH + margin;
+                drawW = w - 2*margin;
+                drawH = h - headerH - 2*margin;
+            }
+
+            // Calcul du plus grand triangle équilatéral possible dans la zone (drawW, drawH)
+            // Hauteur = Side * 0.866
+            // On teste si on est limité par la largeur ou la hauteur
+            let side = drawW;
+            let triH = side * Math.sqrt(3)/2;
+
+            if (triH > drawH) {
+                // Limité par la hauteur
+                triH = drawH;
+                side = triH / (Math.sqrt(3)/2);
+            }
+
+            // Centrage du triangle dans la zone
+            const centerX = drawX + drawW/2;
+            const centerY = drawY + drawH/2;
+            
+            // Coordonnées sommets
+            // A (Haut)
+            const pA = { x: centerX, y: centerY - triH/2, color: '#FF0055', label: 'A' };
+            // B (Bas Gauche)
+            const pB = { x: centerX - side/2, y: centerY + triH/2, color: '#00FF55', label: 'B' };
+            // C (Bas Droite)
+            const pC = { x: centerX + side/2, y: centerY + triH/2, color: '#0055FF', label: 'C' };
+            
+            const points = [pA, pB, pC];
+
+            // Simulation
+            if (printSimulate) {
+                let curr = { x: centerX, y: centerY }; // Départ centre approx
+                ctx.fillStyle = "black"; 
+                const dSize = 0.8 * scale; 
+                for(let i=0; i<printSimPoints; i++) {
+                    const t = points[Math.floor(Math.random() * 3)];
+                    curr.x = (curr.x + t.x) / 2;
+                    curr.y = (curr.y + t.y) / 2;
+                    if(i > 10) { ctx.beginPath(); ctx.arc(curr.x, curr.y, dSize, 0, Math.PI*2); ctx.fill(); }
+                }
+                // Info simulation
+                ctx.font = `bold ${12*scale}px Arial`; ctx.fillStyle = "#FF5722"; ctx.textAlign = "right";
+                ctx.fillText(`Simu: ${printSimPoints} pts`, w - margin, h - margin/2);
+            }
+
+            // Sommets (taille configurable)
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, printDotSize * scale, 0, Math.PI*2);
+                ctx.fillStyle = p.color; ctx.fill();
+                ctx.strokeStyle = "#000"; ctx.lineWidth = 1 * scale; ctx.stroke();
+            });
+
+            // Point départ
+            if (printShowStart && !printSimulate) {
+                const startX = centerX + 20*scale;
+                const startY = centerY;
+                ctx.fillStyle = "#333"; ctx.beginPath(); ctx.arc(startX, startY, 3*scale, 0, Math.PI*2); ctx.fill();
+                ctx.font = `italic ${12*scale}px Arial`; ctx.fillStyle = "#666"; ctx.textAlign = "left";
+                ctx.fillText("Départ", startX + 5*scale, startY);
+            }
+        }
+
+        // --- DESSIN FEUILLE SCRATCH ---
+        function drawScratchSheet(ctx, w, h, scale) {
+            ctx.fillStyle = "white"; ctx.fillRect(0,0,w,h);
+
+            // Header Scratch
+            ctx.fillStyle = "#4C97FF"; ctx.fillRect(0, 0, w, 30 * scale);
+            ctx.fillStyle = "white"; ctx.font = `bold ${16*scale}px Arial`; ctx.textAlign = "center";
+            ctx.fillText("MISSION SCRATCH", w/2, 20*scale);
+
+            // Grille + Points
+            const scrW = 480 * 0.6 * scale;
+            const scrH = 360 * 0.6 * scale;
+            const scrX = (w - scrW) / 2;
+            const scrY = 60 * scale;
+
+            ctx.strokeStyle = "#ccc"; ctx.lineWidth = 1; ctx.strokeRect(scrX, scrY, scrW, scrH);
+            ctx.beginPath(); ctx.moveTo(scrX+scrW/2, scrY); ctx.lineTo(scrX+scrW/2, scrY+scrH); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(scrX, scrY+scrH/2); ctx.lineTo(scrX+scrW, scrY+scrH/2); ctx.stroke();
+
+            // Coordonnées Scratch réelles
+            const pts = [ {l:"A", x:0, y:160, c:"#FF0055"}, {l:"B", x:-200, y:-140, c:"#00FF55"}, {l:"C", x:200, y:-140, c:"#0055FF"} ];
+            
+            ctx.font = `bold ${12*scale}px Arial`; ctx.textAlign = "left";
+            pts.forEach(p => {
+                const px = scrX + scrW/2 + (p.x * 0.6 * scale);
+                const py = scrY + scrH/2 - (p.y * 0.6 * scale);
+                ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(px, py, 5*scale, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "black"; ctx.fillText(`${p.l} (${p.x}, ${p.y})`, px+8*scale, py+4*scale);
+            });
+
+            // Algo texte
+            const txtY = scrY + scrH + 30*scale;
+            ctx.fillStyle = "#333"; ctx.font = `${10*scale}px Arial`;
+            const lines = [
+                "ALGORITHME :",
+                "1. Initialiser Ax, Ay, Bx, By, Cx, Cy",
+                "2. Aller à (0, 0)",
+                "3. Répéter indéfiniment :",
+                "   - Choisir nb aléatoire (1-3)",
+                "   - Calculer milieu vers A, B ou C",
+                "   - Aller à ce point et Estampiller"
+            ];
+            lines.forEach((l, i) => ctx.fillText(l, 20*scale, txtY + (i*14*scale)));
+        }
+
+        // ==========================================
+        // 3. FONCTIONS D'IMPRESSION
+        // ==========================================
+        const printArea = document.getElementById('printable-area');
+
+        function setupPrintArea(htmlContent, imageSrc, orientation) {
+            // Injection du CSS @page pour forcer l'orientation
+            const style = `<style>@media print { @page { size: ${orientation}; margin: 0; } }</style>`;
+            
+            printArea.innerHTML = style + `
+                <div style="width: 100%; height: 100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    ${htmlContent}
+                    <img src="${imageSrc}" style="max-width:98%; max-height:98%; object-fit: contain;" />
+                </div>`;
+        }
+
+        function printManual() {
+            // 1. Générer Image HD selon orientation
+            const scale = 5; 
+            let w, h;
+            
+            if(printOrientation === 'landscape') {
+                w = 3508; h = 2480; // A4 Landscape High Res
+            } else {
+                w = 2480; h = 3508; // A4 Portrait
+            }
+            
+            hdCanvas.width = w; hdCanvas.height = h;
+            drawManualSheet(hdCtx, w, h, scale, printOrientation);
+            const dataUrl = hdCanvas.toDataURL('image/png');
+
+            // 2. Setup Print (Pas de header HTML séparé, tout est dans le canvas pour maitriser la mise en page paysage)
+            setupPrintArea("", dataUrl, printOrientation);
+            setTimeout(() => window.print(), 250);
+        }
+
+        function printScratch() {
+            const scale = 5; 
+            const w = 2480; const h = 3508;
+            hdCanvas.width = w; hdCanvas.height = h;
+            drawScratchSheet(hdCtx, w, h, scale);
+            const dataUrl = hdCanvas.toDataURL('image/png');
+
+            setupPrintArea("", dataUrl, 'portrait');
+            setTimeout(() => window.print(), 250);
+        }
+
+        // Listeners
+        document.querySelectorAll('input[name="orientation"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                printOrientation = e.target.value;
+                // Update UI styles
+                document.querySelectorAll('input[name="orientation"]').forEach(r => r.parentElement.style.borderColor = "#ccc");
+                e.target.parentElement.style.borderColor = "#00d2ff";
+                updatePreviews();
+            });
+        });
+
+        document.getElementById('printDotSize').addEventListener('input', e => { printDotSize = parseInt(e.target.value); updatePreviews(); });
+        document.getElementById('printShowStart').addEventListener('change', e => { printShowStart = e.target.checked; updatePreviews(); });
+        document.getElementById('printSimulate').addEventListener('change', e => { printSimulate = e.target.checked; updatePreviews(); });
+        document.getElementById('printSimRange').addEventListener('input', e => { printSimPoints = parseInt(e.target.value); document.getElementById('printSimVal').textContent = printSimPoints; if(printSimulate) updatePreviews(); });
+
+        window.addEventListener('resize', initViz);
+        initViz();
+        updatePreviews();
+
+    </script>
+</body>
+</html>

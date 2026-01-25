@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Maths - Les Tables Modulaires</title>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --dark-bg: #1a1a1a;
+            --light-bg: #f5f5f5;
+            --text-light: #eee;
+            --text-dark: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        /* --- STYLES ÉCRAN UNIQUEMENT --- */
+        .screen-wrapper {
+            width: 100%;
+        }
+
+        /* HEADER */
+        header {
+            background-color: #000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
+        header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
+
+        /* SECTION VISUALISATION */
+        .section-visualizer {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .canvas-container-dark {
+            position: relative;
+            margin: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-radius: 50%;
+            background-color: #000;
+            max-width: 600px;
+            width: 100%;
+            aspect-ratio: 1/1;
+        }
+
+        .canvas-dark { width: 100%; height: 100%; border-radius: 50%; }
+
+        .controls-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        button.btn-anim {
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+
+        /* SECTION ATELIER */
+        .section-atelier {
+            padding: 50px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: #444; }
+
+        .instructions {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .print-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .print-controls {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .preview-paper {
+            background: white;
+            width: 200px;
+            height: 282px; /* Ratio A4 */
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+        }
+        
+        .btn-print {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-print:hover { background-color: #45a049; }
+
+        /* --- ZONE D'IMPRESSION (CACHÉE PAR DÉFAUT) --- */
+        #printable-area {
+            display: none;
+        }
+
+        /* --- STYLES SPÉCIFIQUES À L'IMPRESSION --- */
+        @media print {
+            /* On cache tout le site normal */
+            .screen-wrapper {
+                display: none !important;
+            }
+
+            /* On affiche la zone d'impression */
+            #printable-area {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                width: 100%;
+                height: 100vh;
+                position: fixed;
+                top: 0;
+                left: 0;
+                background: white;
+                z-index: 9999;
+                padding-top: 20px;
+            }
+
+            /* Configuration de la page */
+            @page {
+                size: A4;
+                margin: 0; /* On gère les marges nous-mêmes via le padding */
+            }
+            
+            body {
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOUT LE CONTENU VISIBLE À L'ÉCRAN EST DANS CE WRAPPER -->
+    <div class="screen-wrapper">
+        <header>
+            <h1>CLUB MATHS</h1>
+            <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
+        </header>
+
+        <!-- PARTIE 1 : DÉCOUVERTE INTERACTIVE -->
+        <section class="section-visualizer">
+            <div style="max-width: 600px;">
+                <p>Observez comment de simples tables de multiplication créent des formes géométriques complexes.</p>
+            </div>
+
+            <div class="canvas-container-dark">
+                <canvas id="vizCanvas" class="canvas-dark"></canvas>
+            </div>
+
+            <div class="controls-dark">
+                <div class="control-row">
+                    <label>Table de multiplication : <span id="vizMultVal" style="color:#00d2ff; font-weight:bold;">2.00</span></label>
+                    <input type="range" id="vizMultRange" min="0" max="100" step="0.01" value="2">
+                </div>
+                <div class="control-row">
+                    <label>Nombre de points : <span id="vizPointsVal">200</span></label>
+                    <input type="range" id="vizPointsRange" min="10" max="500" value="200">
+                </div>
+                <div class="control-row">
+                    <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
+                </div>
+                <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
+            </div>
+        </section>
+
+        <!-- PARTIE 2 : ATELIER PRATIQUE -->
+        <section class="section-atelier">
+            
+            <h2>Comment ça marche ?</h2>
+            <div class="instructions">
+                <p><strong>La Règle du jeu :</strong></p>
+                <ol>
+                    <li>On place <strong>N</strong> points numérotés sur un cercle (comme une horloge).</li>
+                    <li>On choisit une table de multiplication (par exemple la table de <strong>2</strong>).</li>
+                    <li>Pour chaque point <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
+                    <li>On relie le point de départ au point d'arrivée.</li>
+                    <li><em>Astuce :</em> Si le résultat dépasse le nombre de points, on fait un tour de cercle (on soustrait N). C'est ce qu'on appelle le <strong>modulo</strong>.</li>
+                </ol>
+                <p>Exemple avec 60 points : 32 × 2 = 64. Comme 64 dépasse 60, on relie 32 au point 4.</p>
+            </div>
+
+            <h2>À vous de jouer : Imprimer la fiche</h2>
+            <div class="print-zone">
+                
+                <!-- Contrôles pour l'impression -->
+                <div class="print-controls">
+                    <h3>Paramétrer votre fiche</h3>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points sur le cercle</label>
+                        <input type="range" id="printPointsRange" min="10" max="120" value="60" style="width:100%">
+                        <div style="text-align:right; color:#666;">Valeur : <span id="printPointsVal">60</span></div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table (pour la consigne)</label>
+                        <input type="number" id="printTableNum" value="2" min="2" style="padding:5px; width:60px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <input type="checkbox" id="printShowLines"> 
+                            <strong>Inclure le corrigé (les traits)</strong>
+                        </label>
+                        <small style="color:#666; display:block; margin-top:5px;">Cochez pour imprimer votre modèle, décochez pour la fiche élève.</small>
+                    </div>
+
+                    <button class="btn-print" onclick="prepareAndPrint()">
+                        🖨️ Imprimer la fiche
+                    </button>
+                </div>
+
+                <!-- Aperçu visuel -->
+                <div class="preview-container">
+                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu</div>
+                    <div class="preview-paper">
+                        <canvas id="previewCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <!-- ZONE D'IMPRESSION : HORS DU FLUX NORMAL, S'AFFICHE UNIQUEMENT À L'IMPRESSION -->
+    <div id="printable-area">
+        <div style="width: 90%; max-width: 800px; font-family: 'Segoe UI', Arial, sans-serif; color: black;">
+            <!-- En-tête de la fiche -->
+            <div style="border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 1.1rem;">
+                    <span><strong>Nom :</strong> ............................................</span>
+                    <span><strong>Date :</strong> ........................</span>
+                </div>
+                <h1 style="font-size:1.8rem; margin: 0 0 10px 0; text-align: center;">La Table de Multiplication Géométrique</h1>
+                <div style="font-size: 1.2rem; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
+                    <strong>Consigne :</strong><br>
+                    Relie chaque point <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
+                    <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span> autant de fois que nécessaire.)</em></small>
+                </div>
+            </div>
+            
+            <!-- L'image du cercle -->
+            <div style="text-align: center;">
+                <img id="finalPrintImage" style="width: 95%; max-height: 85vh; object-fit: contain;" alt="Cercle à compléter" />
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        // ==========================================
+        // SCRIPT 1 : VISUALISATION (FOND NOIR)
+        // ==========================================
+        const vizCanvas = document.getElementById('vizCanvas');
+        const vizCtx = vizCanvas.getContext('2d');
+        let vizPoints = 200;
+        let vizMult = 2;
+        let vizAnimating = false;
+        let vizAnimId;
+        let vizIntMode = false;
+
+        function resizeViz() {
+            const size = Math.min(vizCanvas.parentElement.offsetWidth, 600);
+            vizCanvas.width = size;
+            vizCanvas.height = size;
+            drawViz();
+        }
+
+        function drawViz() {
+            const w = vizCanvas.width;
+            const h = vizCanvas.height;
+            const cx = w/2; 
+            const cy = h/2;
+            const r = (w/2) - 10;
+
+            vizCtx.fillStyle = "black";
+            vizCtx.fillRect(0,0,w,h);
+
+            // Cercle
+            vizCtx.beginPath();
+            vizCtx.arc(cx, cy, r, 0, Math.PI*2);
+            vizCtx.strokeStyle = "#333";
+            vizCtx.stroke();
+
+            // Points cache
+            const coords = [];
+            for(let i=0; i<vizPoints; i++){
+                const angle = (Math.PI*2*i)/vizPoints - Math.PI/2;
+                coords.push({
+                    x: cx + r * Math.cos(angle),
+                    y: cy + r * Math.sin(angle)
+                });
+            }
+
+            // Lignes
+            vizCtx.lineWidth = 1;
+            for(let i=0; i<vizPoints; i++){
+                const destVal = (i * vizMult) % vizPoints;
+                const destAngle = (Math.PI*2*destVal)/vizPoints - Math.PI/2;
+                const dx = cx + r * Math.cos(destAngle);
+                const dy = cy + r * Math.sin(destAngle);
+
+                const hue = (i/vizPoints)*360;
+                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.5 : 0.3})`;
+                
+                vizCtx.beginPath();
+                vizCtx.moveTo(coords[i].x, coords[i].y);
+                vizCtx.lineTo(dx, dy);
+                vizCtx.stroke();
+            }
+        }
+
+        // Listeners Visualisation
+        document.getElementById('vizPointsRange').addEventListener('input', e => {
+            vizPoints = parseInt(e.target.value);
+            document.getElementById('vizPointsVal').innerText = vizPoints;
+            drawViz();
+        });
+        document.getElementById('vizMultRange').addEventListener('input', e => {
+            vizMult = parseFloat(e.target.value);
+            document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
+            drawViz();
+        });
+        document.getElementById('vizIntMode').addEventListener('change', e => {
+            vizIntMode = e.target.checked;
+            const slider = document.getElementById('vizMultRange');
+            if(vizIntMode) {
+                slider.step = "1";
+                vizMult = Math.round(vizMult);
+                slider.value = vizMult;
+            } else {
+                slider.step = "0.01";
+            }
+            drawViz();
+        });
+        document.getElementById('vizAnimBtn').addEventListener('click', function() {
+            vizAnimating = !vizAnimating;
+            this.classList.toggle('active');
+            this.innerText = vizAnimating ? "Arrêter" : "Lancer l'animation";
+            if(vizAnimating) animateViz();
+            else cancelAnimationFrame(vizAnimId);
+        });
+
+        function animateViz() {
+            vizMult += (vizIntMode ? 0.02 : 0.005); 
+            if(vizMult > 100) vizMult = 0;
+            document.getElementById('vizMultRange').value = vizMult;
+            document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
+            drawViz();
+            vizAnimId = requestAnimationFrame(animateViz);
+        }
+
+        // ==========================================
+        // SCRIPT 2 : IMPRESSION (FOND BLANC)
+        // ==========================================
+        const prevCanvas = document.getElementById('previewCanvas');
+        const prevCtx = prevCanvas.getContext('2d');
+        
+        // Canvas caché haute définition pour générer l'image d'impression
+        const printCanvas = document.createElement('canvas');
+        const printCtx = printCanvas.getContext('2d');
+
+        let printPoints = 60;
+        let printTable = 2;
+        let printShowLines = false;
+
+        function updatePrintPreview() {
+            // Dessin sur le petit canvas de preview
+            const w = 200;
+            const h = 200; // Carré dans l'aperçu rectangulaire
+            prevCanvas.width = w;
+            prevCanvas.height = h;
+            // On centre dans le rectangle
+            prevCanvas.style.marginTop = "40px"; 
+            drawPaper(prevCtx, w, h, 0.6); // Scale réduit pour l'aperçu
+        }
+
+        function drawPaper(ctx, w, h, scale) {
+            const cx = w/2;
+            const cy = h/2;
+            // Rayon ajusté pour laisser place aux numéros
+            // On s'assure que le rayon est positif
+            let r = (Math.min(w,h)/2) - (25 * scale);
+            if (r < 10) r = 10;
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0,w,h);
+            
+            // Cercle
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2 * scale;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI*2);
+            ctx.stroke();
+
+            // Police
+            let fontSize = 14 * scale;
+            if (printPoints > 80) fontSize = 10 * scale;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "black";
+
+            const coords = [];
+
+            for(let i=0; i<printPoints; i++) {
+                const angle = (Math.PI*2*i)/printPoints - Math.PI/2;
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                coords.push({x,y});
+
+                // Point d'ancrage (petit point sur le cercle)
+                ctx.beginPath();
+                ctx.arc(x, y, 2.5*scale, 0, Math.PI*2);
+                ctx.fill();
+
+                // Graduation extérieure
+                const xOut = cx + (r + 5*scale) * Math.cos(angle);
+                const yOut = cy + (r + 5*scale) * Math.sin(angle);
+                ctx.beginPath();
+                ctx.moveTo(x,y);
+                ctx.lineTo(xOut, yOut);
+                ctx.stroke();
+
+                // Numéro
+                const tDist = r + (18*scale);
+                const tx = cx + tDist * Math.cos(angle);
+                const ty = cy + tDist * Math.sin(angle);
+                ctx.fillText(i, tx, ty);
+            }
+
+            if(printShowLines) {
+                ctx.strokeStyle = "rgba(0,0,255,0.6)";
+                ctx.lineWidth = 1 * scale;
+                for(let i=0; i<printPoints; i++) {
+                    const dest = (i * printTable) % printPoints;
+                    ctx.beginPath();
+                    ctx.moveTo(coords[i].x, coords[i].y);
+                    ctx.lineTo(coords[dest].x, coords[dest].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Listeners Impression
+        document.getElementById('printPointsRange').addEventListener('input', e => {
+            printPoints = parseInt(e.target.value);
+            document.getElementById('printPointsVal').innerText = printPoints;
+            updatePrintPreview();
+        });
+        document.getElementById('printTableNum').addEventListener('input', e => {
+            printTable = parseInt(e.target.value);
+            updatePrintPreview();
+        });
+        document.getElementById('printShowLines').addEventListener('change', e => {
+            printShowLines = e.target.checked;
+            updatePrintPreview();
+        });
+
+        // Fonction d'impression
+        function prepareAndPrint() {
+            // 1. Mettre à jour les textes de consigne
+            document.getElementById('printTableInstruction').innerText = printTable;
+            document.getElementById('printModuloInstruction').innerText = printPoints;
+            document.getElementById('printModuloInstruction2').innerText = printPoints;
+
+            // 2. Générer l'image Haute Résolution
+            // On augmente la taille pour une impression ultra nette
+            const scale = 5; 
+            const size = 1000 * scale; // 5000px
+            printCanvas.width = size;
+            printCanvas.height = size;
+            drawPaper(printCtx, size, size, scale);
+
+            // 3. Mettre l'image dans la zone d'impression
+            const dataUrl = printCanvas.toDataURL('image/png');
+            document.getElementById('finalPrintImage').src = dataUrl;
+
+            // 4. Lancer l'impression avec un petit délai pour être sûr que l'image est chargée
+            // (Même si dataURL est rapide, le rendu DOM peut prendre quelques ms)
+            setTimeout(() => {
+                window.print();
+            }, 250);
+        }
+
+        // Init
+        window.addEventListener('resize', resizeViz);
+        resizeViz();
+        updatePrintPreview();
+
+    </script>
+</body>
+</html>

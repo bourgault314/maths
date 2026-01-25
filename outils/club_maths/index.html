@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Maths - Accueil</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --text-sub: #666;
+            --primary-blue: #00d2ff;
+            --primary-purple: #3a7bd5;
+            --accent-chaos: #ff0055; /* Couleur Chaos */
+            --accent-tables: #00d2ff; /* Couleur Tables */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER HERO */
+        header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* CONTENEUR GRILLE */
+        .container {
+            max-width: 1000px;
+            margin: -40px auto 40px; /* Remonte sur le header */
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            z-index: 10;
+        }
+
+        /* CARTE ACTIVITÉ */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        /* BANDEAU COULEUR DE LA CARTE */
+        .card-header {
+            height: 10px;
+            width: 100%;
+        }
+        
+        .card-content {
+            padding: 30px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            color: #222;
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+            margin: 0 0 25px 0;
+        }
+
+        .btn {
+            margin-top: auto;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        /* --- STYLES SPÉCIFIQUES --- */
+
+        /* Carte 1 : Tables */
+        .tables .card-header { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
+        .tables .btn { 
+            color: #3a7bd5; 
+            border-color: #3a7bd5; 
+            background: transparent;
+        }
+        .tables:hover .btn {
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Carte 2 : Chaos */
+        .chaos .card-header { background: linear-gradient(90deg, #ff0055, #ff4b2b); }
+        .chaos .btn { 
+            color: #ff0055; 
+            border-color: #ff0055; 
+            background: transparent;
+        }
+        .chaos:hover .btn {
+            background: linear-gradient(90deg, #ff0055, #ff4b2b);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* FOOTER */
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* Pour mobile */
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .container { margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CLUB MATHS</h1>
+        <p>Explorez la beauté des mathématiques</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- CARTE 1 : TABLES MODULAIRES -->
+        <a href="tables_modulaires.html" class="card tables">
+            <div class="card-header"></div>
+            <div class="card-content">
+                <div class="card-icon">🕸️</div>
+                <h2>Tables Modulaires</h2>
+                <p>Voyez comment de simples multiplications créent des rosaces et des formes cardioïdes complexes.</p>
+                <span class="btn">Lancer l'activité</span>
+            </div>
+        </a>
+
+        <!-- CARTE 2 : JEU DU CHAOS -->
+        <a href="jeu_du_chaos.html" class="card chaos">
+            <div class="card-header"></div>
+            <div class="card-content">
+                <div class="card-icon">🎲</div>
+                <h2>Le Jeu du Chaos</h2>
+                <p>L'ordre naît du hasard. Une expérience sur les fractales (Triangle de Sierpinski) à réaliser avec un simple dé.</p>
+                <span class="btn">Lancer l'activité</span>
+            </div>
+        </a>
+
+    </div>
+
+    <footer>
+        &copy; Club Maths - Activités Interactives
+    </footer>
+
+</body>
+</html>
