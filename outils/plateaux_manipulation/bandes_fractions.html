@@ -1918,8 +1918,13 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       const single = (nSel === 1) && !!s;
 
       if(btnSep)  btnSep.disabled  = !(single && s.kind === 'band'  && s.denom > 1);
-      if(btnFuse) btnFuse.disabled = !(single && s.kind === 'piece' && s.denom > 1);
       if(btnCut)  btnCut.disabled  = !(single && this.canCut(s));
+
+      // Fusionner : uniquement via sélection multiple valide (pièces collées)
+      if(btnFuse){
+        const plan = this.getFusionPlan(this.selectedTokens);
+        btnFuse.disabled = !plan.ok;
+      }
     }
 
 startMarquee(e){
@@ -2447,51 +2452,118 @@ window.addEventListener('resize', () => {
       playSound('pop');
     }
 
-    fuseSelected(){
-      const s = this.selected;
-      if(!s || s.kind !== 'piece' || s.denom <= 1) return;
+    getFusionPlan(list){
+      // Fusion = une commande sur la sélection (pas de "fusion automatique autour")
+      // Règles générales : uniquement des pièces (kind:'piece'), même face (side), même rangée, et collées (contiguës en X).
+      // Résultat :
+      //  - Même dénominateur :
+      //      * si on a denom pièces (ex: 6 sixièmes) => une bande denom (réversible via "Séparer")
+      //      * sinon, si denom % n == 0 et (denom/n) existe => une pièce de denom/n (ex: 2 huitièmes => 1 quart)
+      //  - Fusion mixte (ultra conservative) :
+      //      * uniquement si la somme vaut exactement 1/2 => une pièce 1/2
+      const out = { ok:false };
+      if(!Array.isArray(list) || list.length < 2) return out;
 
-      const d = s.denom;
-      const pw = this.pieceW(d);
+      if(list.some(t => !t || t.kind !== 'piece' || t.denom <= 1)) return out;
+
+      const side = list[0].side;
+      if(list.some(t => t.side !== side)) return out;
+
       const yTol = 10;
       const xTol = 12;
 
-      const rowPieces = this.tokens
-        .filter(t => t.kind === 'piece' && t.denom === d && t.side === s.side && Math.abs(t.y - s.y) < yTol)
-        .sort((a,b) => a.x - b.x);
+      const sorted = list.slice().sort((a,b) => a.x - b.x);
+      const baseX = sorted[0].x;
+      const baseY = sorted[0].y;
 
-      if(rowPieces.length < d){ playSound('whoosh'); return; }
-
-      for(let start=0; start <= rowPieces.length - d; start++){
-        const seq = rowPieces.slice(start, start + d);
-        if(!seq.some(t => t.id === s.id)) continue;
-
-        const baseX = seq[0].x;
-        const baseY = seq[0].y;
-        let ok = true;
-        for(let i=0;i<d;i++){
-          const expectedX = baseX + i * pw;
-          if(Math.abs(seq[i].x - expectedX) > xTol) { ok = false; break; }
-          if(Math.abs(seq[i].y - baseY) > yTol) { ok = false; break; }
-        }
-        if(!ok) continue;
-
-        this.saveState();
-        const ids = new Set(seq.map(t => t.id));
-        const anyHidden = seq.some(t => t.hidden);
-        
-        seq.forEach(t => { if(t._el) t._el.remove(); });
-        this.tokens = this.tokens.filter(t => !ids.has(t.id));
-
-        const band = { id: this.nextId++, denom: d, kind:'band', side: s.side, x: baseX, y: baseY, z: ++this.topZ, hidden: anyHidden };
-        this.tokens.push(band);
-        this.mountToken(band);
-        this.selectToken(band.id);
-        playSound('pop');
-        return;
+      // Même rangée (tolérance en Y)
+      for(const t of sorted){
+        if(Math.abs(t.y - baseY) > yTol) return out;
       }
 
-      playSound('whoosh');
+      // Contiguïté en X (pas de trous) : chaque pièce doit commencer là où la précédente se termine (tolérance)
+      for(let i=1;i<sorted.length;i++){
+        const prev = sorted[i-1];
+        const expectedX = prev.x + this.pieceW(prev.denom);
+        if(Math.abs(sorted[i].x - expectedX) > xTol) return out;
+      }
+
+      const anyHidden = sorted.some(t => t.hidden);
+
+      // Cas 1 : même dénominateur (comportement principal)
+      const d0 = sorted[0].denom;
+      const sameDenom = sorted.every(t => t.denom === d0);
+
+      if(sameDenom){
+        const d = d0;
+        const n = sorted.length;
+
+        if(n === d){
+          return { ok:true, resultKind:'band', resultDenom:d, baseX, baseY, side, anyHidden };
+        }
+
+        if(d % n === 0){
+          const target = d / n;
+          if(this.DENOM_SET.has(target)){
+            return { ok:true, resultKind:'piece', resultDenom:target, baseX, baseY, side, anyHidden };
+          }
+        }
+
+        return out;
+      }
+
+      // Cas 2 : fusion mixte vers 1/2 uniquement (version conservative)
+      // Somme = Σ 1/denom  (pièces unitaires) ; on accepte uniquement si somme == 1/2.
+      const gcd = (a,b) => { a = Math.abs(a); b = Math.abs(b); while(b){ const t = a % b; a = b; b = t; } return a || 1; };
+      const lcm = (a,b) => Math.abs((a / gcd(a,b)) * b);
+
+      let L = 1;
+      for(const t of sorted){
+        L = lcm(L, t.denom);
+        if(!Number.isFinite(L) || L > 1000000) return out; // garde-fou
+      }
+
+      let num = 0;
+      for(const t of sorted){
+        num += (L / t.denom);
+      }
+
+      if(num * 2 !== L) return out;
+      if(!this.DENOM_SET.has(2)) return out;
+
+      return { ok:true, resultKind:'piece', resultDenom:2, baseX, baseY, side, anyHidden };
+
+    }
+
+    fuseSelected(){
+      const list = this.selectedTokens;
+      const plan = this.getFusionPlan(list);
+      if(!plan.ok){ playSound('whoosh'); return; }
+
+      this.saveState();
+
+      const ids = new Set(list.map(t => t.id));
+      for(const t of list){
+        if(t._el) t._el.remove();
+      }
+      this.tokens = this.tokens.filter(t => !ids.has(t.id));
+
+      const merged = {
+        id: this.nextId++,
+        denom: plan.resultDenom,
+        kind: plan.resultKind,
+        side: plan.side,
+        x: plan.baseX,
+        y: plan.baseY,
+        z: ++this.topZ,
+        hidden: plan.anyHidden
+      };
+      this.tokens.push(merged);
+      this.mountToken(merged);
+      this.selectToken(merged.id);
+
+      this.updateSeamBorders();
+      playSound('pop');
     }
 
     canCut(t){
