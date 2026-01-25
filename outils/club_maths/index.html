@@ -10,10 +10,11 @@
             --card-bg: #ffffff;
             --text-main: #333;
             --text-sub: #666;
-            --primary-blue: #00d2ff;
-            --primary-purple: #3a7bd5;
-            --accent-chaos: #ff0055; /* Couleur Chaos */
-            --accent-tables: #00d2ff; /* Couleur Tables */
+            
+            /* Couleurs Activités */
+            --tables-c1: #00d2ff; --tables-c2: #3a7bd5;
+            --chaos-c1: #ff0055; --chaos-c2: #ff4b2b;
+            --scratch-c1: #FFAB00; --scratch-c2: #FFD200;
         }
 
         body {
@@ -27,26 +28,48 @@
             flex-direction: column;
         }
 
-        /* HEADER HERO */
+        /* HEADER HERO (Style Club) */
         header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
             color: white;
             padding: 60px 20px;
             text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         header h1 {
             margin: 0;
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem); /* Taille adaptative */
             font-weight: 300;
             letter-spacing: 2px;
         }
 
         header p {
             margin-top: 10px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: rgba(255,255,255,0.8);
+        }
+
+        /* BOUTON RETOUR */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
         }
 
         /* CONTENEUR GRILLE */
@@ -55,9 +78,27 @@
             margin: -40px auto 40px; /* Remonte sur le header */
             padding: 0 20px;
             display: grid;
+            
+            /* GESTION MOBILE : 
+               Si l'écran est large, on met autant de colonnes que possible (min 300px).
+               Si l'écran est petit, ça passe automatiquement à 1 colonne.
+            */
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            
             gap: 30px;
             z-index: 10;
+        }
+
+        /* Force 1 seule colonne sur les très petits écrans pour confort max */
+        @media (max-width: 600px) {
+            .container {
+                grid-template-columns: 1fr;
+                margin-top: 20px; /* Ne remonte plus sur le header sur mobile */
+                gap: 20px;
+            }
+            /* Repositionner le bouton retour pour qu'il ne gêne pas le titre sur mobile */
+            .back-btn { position: relative; top: 0; left: 0; display: inline-flex; margin-bottom: 20px;}
+            header { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 20px; }
         }
 
         /* CARTE ACTIVITÉ */
@@ -72,18 +113,16 @@
             display: flex;
             flex-direction: column;
             border: 1px solid rgba(0,0,0,0.05);
+            height: 100%;
         }
 
         .card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.12);
         }
 
-        /* BANDEAU COULEUR DE LA CARTE */
-        .card-header {
-            height: 10px;
-            width: 100%;
-        }
+        /* BANDEAU COULEUR */
+        .card-header { height: 10px; width: 100%; }
         
         .card-content {
             padding: 30px;
@@ -95,7 +134,7 @@
         }
 
         .card-icon {
-            font-size: 3.5rem;
+            font-size: 3rem;
             margin-bottom: 20px;
             background: #f8f9fa;
             width: 80px;
@@ -132,33 +171,32 @@
 
         /* --- STYLES SPÉCIFIQUES --- */
 
-        /* Carte 1 : Tables */
-        .tables .card-header { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
+        /* Tables Modulaires (Bleu) */
+        .tables .card-header { background: linear-gradient(90deg, var(--tables-c1), var(--tables-c2)); }
         .tables .btn { 
-            color: #3a7bd5; 
-            border-color: #3a7bd5; 
+            color: var(--tables-c2); 
+            border-color: var(--tables-c2); 
             background: transparent;
         }
         .tables:hover .btn {
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            background: linear-gradient(90deg, var(--tables-c1), var(--tables-c2));
             color: white;
             border-color: transparent;
         }
 
-        /* Carte 2 : Chaos */
-        .chaos .card-header { background: linear-gradient(90deg, #ff0055, #ff4b2b); }
+        /* Jeu du Chaos (Rouge) */
+        .chaos .card-header { background: linear-gradient(90deg, var(--chaos-c1), var(--chaos-c2)); }
         .chaos .btn { 
-            color: #ff0055; 
-            border-color: #ff0055; 
+            color: var(--chaos-c1); 
+            border-color: var(--chaos-c1); 
             background: transparent;
         }
         .chaos:hover .btn {
-            background: linear-gradient(90deg, #ff0055, #ff4b2b);
+            background: linear-gradient(90deg, var(--chaos-c1), var(--chaos-c2));
             color: white;
             border-color: transparent;
         }
 
-        /* FOOTER */
         footer {
             margin-top: auto;
             text-align: center;
@@ -166,19 +204,14 @@
             color: #888;
             font-size: 0.9rem;
         }
-
-        /* Pour mobile */
-        @media (max-width: 600px) {
-            header h1 { font-size: 2rem; }
-            .container { margin-top: 20px; }
-        }
     </style>
 </head>
 <body>
 
     <header>
+        <a href="../index.html" class="back-btn">← Outils pédagogiques</a>
         <h1>CLUB MATHS</h1>
-        <p>Explorez la beauté des mathématiques</p>
+        <p>Exploration, Jeux & Art</p>
     </header>
 
     <div class="container">
@@ -189,7 +222,7 @@
             <div class="card-content">
                 <div class="card-icon">🕸️</div>
                 <h2>Tables Modulaires</h2>
-                <p>Voyez comment de simples multiplications créent des rosaces et des formes cardioïdes complexes.</p>
+                <p>Voyez comment de simples multiplications créent des rosaces et des formes géométriques complexes sur un cercle.</p>
                 <span class="btn">Lancer l'activité</span>
             </div>
         </a>
@@ -200,7 +233,7 @@
             <div class="card-content">
                 <div class="card-icon">🎲</div>
                 <h2>Le Jeu du Chaos</h2>
-                <p>L'ordre naît du hasard. Une expérience sur les fractales (Triangle de Sierpinski) à réaliser avec un simple dé.</p>
+                <p>L'ordre naît du hasard. Une expérience fascinante sur les fractales et le Triangle de Sierpinski.</p>
                 <span class="btn">Lancer l'activité</span>
             </div>
         </a>
@@ -208,6 +241,7 @@
     </div>
 
     <footer>
+        
     </footer>
 
 </body>
