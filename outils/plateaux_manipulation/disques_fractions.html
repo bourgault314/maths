@@ -1979,11 +1979,26 @@
         const maxY = Math.max(a.y, b.y);
 
         const D = this.diskD;
+        const R = D/2;
         const ids = [];
         for(const tkn of this.tokens){
-          const cx = tkn.x + D/2;
-          const cy = tkn.y + D/2;
-          if(cx >= minX && cx <= maxX && cy >= minY && cy <= maxY){
+          // Par défaut : centre du disque
+          let px = tkn.x + R;
+          let py = tkn.y + R;
+
+          // PATCH S1 (sélection multiple) :
+          // Pour une pièce (secteur), le centre est identique à celui du disque,
+          // donc une sélection "demi-disque" ne prend rien si le centre n'est pas inclus.
+          // On teste un point d'ancrage situé dans la pièce (milieu d'arc) à l'extérieur.
+          if(tkn.kind === 'piece'){
+            const ang = this._pieceAngles(tkn);
+            const am = (ang.a0 + ang.a1) / 2;
+            const rr = R * 0.66;
+            px = tkn.x + R + Math.cos(am) * rr;
+            py = tkn.y + R + Math.sin(am) * rr;
+          }
+
+          if(px >= minX && px <= maxX && py >= minY && py <= maxY){
             ids.push(tkn.id);
           }
         }
