@@ -33,24 +33,7 @@
             padding: 20px;
             text-align: center;
             border-bottom: 4px solid var(--primary);
-            position: relative;
         }
-
-        /* Bouton Retour Accueil */
-        .home-link {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-            text-decoration: none;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
-        }
-        .home-link:hover { color: white; }
 
         header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
         header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
@@ -96,39 +79,17 @@
             margin-bottom: 15px;
         }
         
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        button {
+        button.btn-anim {
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
             border: none;
             padding: 10px 20px;
+            color: white;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
-            flex: 1;
-            transition: 0.2s;
-        }
-
-        button.btn-anim {
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
-            color: white;
+            width: 100%;
         }
         button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
-
-        button.btn-speed {
-            background: #444;
-            color: #ccc;
-            border: 1px solid #555;
-        }
-        button.btn-speed:hover { background: #555; color: white; }
-        button.btn-speed.fast { 
-            background: #ffae00; 
-            color: black; 
-            border-color: #ffae00;
-        }
 
         /* SECTION ATELIER */
         .section-atelier {
@@ -182,6 +143,11 @@
         .btn-print {
             background-color: #4CAF50;
             color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
             width: 100%;
             margin-top: 20px;
             display: flex;
@@ -233,15 +199,12 @@
 </head>
 <body>
 
-    <!-- TOUT LE CONTENU VISIBLE À L'ÉCRAN EST DANS CE WRAPPER -->
     <div class="screen-wrapper">
         <header>
-            <a href="index.html" class="home-link">🏠 Retour au Club</a>
             <h1>CLUB MATHS</h1>
             <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
         </header>
 
-        <!-- PARTIE 1 : DÉCOUVERTE INTERACTIVE -->
         <section class="section-visualizer">
             <div style="max-width: 600px;">
                 <p>Observez comment de simples tables de multiplication créent des formes géométriques complexes.</p>
@@ -263,25 +226,20 @@
                 <div class="control-row">
                     <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
                 </div>
-                
-                <div class="btn-group">
-                    <button id="vizAnimBtn" class="btn-anim">▶ Lancer</button>
-                    <button id="speedBtn" class="btn-speed">Vitesse : Lente</button>
-                </div>
+                <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
             </div>
         </section>
 
-        <!-- PARTIE 2 : ATELIER PRATIQUE -->
         <section class="section-atelier">
             
             <h2>Comment ça marche ?</h2>
             <div class="instructions">
                 <p><strong>La Règle du jeu :</strong></p>
                 <ol>
-                    <li>On place <strong>N</strong> points numérotés sur un cercle (comme une horloge).</li>
+                    <li>On place <strong>N</strong> graduations numérotées sur un cercle (comme une horloge).</li>
                     <li>On choisit une table de multiplication (par exemple la table de <strong>2</strong>).</li>
-                    <li>Pour chaque point <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
-                    <li>On relie le point de départ au point d'arrivée.</li>
+                    <li>Pour chaque graduation <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
+                    <li>On relie la graduation de départ à la graduation d'arrivée.</li>
                     <li><em>Astuce :</em> Si le résultat dépasse le nombre de points, on fait un tour de cercle (on soustrait N). C'est ce qu'on appelle le <strong>modulo</strong>.</li>
                 </ol>
                 <p>Exemple avec 60 points : 32 × 2 = 64. Comme 64 dépasse 60, on relie 32 au point 4.</p>
@@ -290,7 +248,6 @@
             <h2>À vous de jouer : Imprimer la fiche</h2>
             <div class="print-zone">
                 
-                <!-- Contrôles pour l'impression -->
                 <div class="print-controls">
                     <h3>Paramétrer votre fiche</h3>
                     <div style="margin-bottom: 20px;">
@@ -317,7 +274,6 @@
                     </button>
                 </div>
 
-                <!-- Aperçu visuel -->
                 <div class="preview-container">
                     <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu</div>
                     <div class="preview-paper">
@@ -329,10 +285,8 @@
         </section>
     </div>
 
-    <!-- ZONE D'IMPRESSION : HORS DU FLUX NORMAL, S'AFFICHE UNIQUEMENT À L'IMPRESSION -->
     <div id="printable-area">
         <div style="width: 90%; max-width: 800px; font-family: 'Segoe UI', Arial, sans-serif; color: black;">
-            <!-- En-tête de la fiche -->
             <div style="border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size: 1.1rem;">
                     <span><strong>Nom :</strong> ............................................</span>
@@ -341,19 +295,17 @@
                 <h1 style="font-size:1.8rem; margin: 0 0 10px 0; text-align: center;">La Table de Multiplication Géométrique</h1>
                 <div style="font-size: 1.2rem; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
                     <strong>Consigne :</strong><br>
-                    Relie chaque point <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
+                    Relie chaque graduation <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
                     <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span> autant de fois que nécessaire.)</em></small>
                 </div>
             </div>
             
-            <!-- L'image du cercle -->
             <div style="text-align: center;">
                 <img id="finalPrintImage" style="width: 95%; max-height: 85vh; object-fit: contain;" alt="Cercle à compléter" />
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT -->
     <script>
         // ==========================================
         // SCRIPT 1 : VISUALISATION (FOND NOIR)
@@ -365,11 +317,8 @@
         let vizAnimating = false;
         let vizAnimId;
         let vizIntMode = false;
-        let isFastSpeed = false; // Par défaut lent
 
         function resizeViz() {
-            // Sécurité si element pas pret
-            if (!vizCanvas.parentElement) return;
             const size = Math.min(vizCanvas.parentElement.offsetWidth, 600);
             vizCanvas.width = size;
             vizCanvas.height = size;
@@ -379,9 +328,6 @@
         function drawViz() {
             const w = vizCanvas.width;
             const h = vizCanvas.height;
-            // Sécurité taille négative
-            if (w < 10 || h < 10) return;
-
             const cx = w/2; 
             const cy = h/2;
             const r = (w/2) - 10;
@@ -414,7 +360,7 @@
                 const dy = cy + r * Math.sin(destAngle);
 
                 const hue = (i/vizPoints)*360;
-                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.6 : 0.4})`;
+                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.5 : 0.3})`;
                 
                 vizCtx.beginPath();
                 vizCtx.moveTo(coords[i].x, coords[i].y);
@@ -446,56 +392,19 @@
             }
             drawViz();
         });
-        
-        // BOUTON ANIMATION
         document.getElementById('vizAnimBtn').addEventListener('click', function() {
             vizAnimating = !vizAnimating;
-            if(vizAnimating) {
-                this.classList.add('active');
-                this.textContent = "⏸ Pause";
-                animateViz();
-            } else {
-                this.classList.remove('active');
-                this.textContent = "▶ Lancer";
-                cancelAnimationFrame(vizAnimId);
-                
-                // Snap si entier
-                if (vizIntMode) {
-                    vizMult = Math.round(vizMult);
-                    document.getElementById('vizMultRange').value = vizMult;
-                    document.getElementById('vizMultVal').innerText = vizMult;
-                    drawViz();
-                }
-            }
-        });
-
-        // BOUTON VITESSE
-        const speedBtn = document.getElementById('speedBtn');
-        speedBtn.addEventListener('click', () => {
-            isFastSpeed = !isFastSpeed;
-            if (isFastSpeed) {
-                speedBtn.textContent = "Vitesse : Rapide 🚀";
-                speedBtn.classList.add('fast');
-            } else {
-                speedBtn.textContent = "Vitesse : Lente 🐢";
-                speedBtn.classList.remove('fast');
-            }
+            this.classList.toggle('active');
+            this.innerText = vizAnimating ? "Arrêter" : "Lancer l'animation";
+            if(vizAnimating) animateViz();
+            else cancelAnimationFrame(vizAnimId);
         });
 
         function animateViz() {
-            // Logique vitesse
-            let speed;
-            if (vizIntMode) {
-                speed = isFastSpeed ? 0.05 : 0.02; // Plus lent en entier pour apprécier
-            } else {
-                speed = isFastSpeed ? 0.03 : 0.005; // Très lent par défaut pour le fluide
-            }
-
-            vizMult += speed;
+            vizMult += (vizIntMode ? 0.02 : 0.005); 
             if(vizMult > 100) vizMult = 0;
-            
             document.getElementById('vizMultRange').value = vizMult;
-            document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
+            document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
             drawViz();
             vizAnimId = requestAnimationFrame(animateViz);
         }
@@ -505,6 +414,8 @@
         // ==========================================
         const prevCanvas = document.getElementById('previewCanvas');
         const prevCtx = prevCanvas.getContext('2d');
+        
+        // Canvas caché haute définition pour générer l'image d'impression
         const printCanvas = document.createElement('canvas');
         const printCtx = printCanvas.getContext('2d');
 
@@ -513,30 +424,35 @@
         let printShowLines = false;
 
         function updatePrintPreview() {
+            // Dessin sur le petit canvas de preview
             const w = 200;
-            const h = 200; 
+            const h = 200; // Carré dans l'aperçu rectangulaire
             prevCanvas.width = w;
             prevCanvas.height = h;
+            // On centre dans le rectangle
             prevCanvas.style.marginTop = "40px"; 
-            drawPaper(prevCtx, w, h, 0.6); 
+            drawPaper(prevCtx, w, h, 0.6); // Scale réduit pour l'aperçu
         }
 
         function drawPaper(ctx, w, h, scale) {
-            if (w < 1 || h < 1) return;
             const cx = w/2;
             const cy = h/2;
-            let r = (Math.min(w,h)/2) - (25 * scale);
+            // Rayon ajusté pour laisser place aux graduations extérieures et numéros
+            // On réduit un peu plus le rayon pour que ça rentre
+            let r = (Math.min(w,h)/2) - (35 * scale);
             if (r < 10) r = 10;
 
             ctx.fillStyle = "white";
             ctx.fillRect(0,0,w,h);
             
+            // Cercle Principal
             ctx.strokeStyle = "black";
             ctx.lineWidth = 2 * scale;
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI*2);
             ctx.stroke();
 
+            // Police
             let fontSize = 14 * scale;
             if (printPoints > 80) fontSize = 10 * scale;
             ctx.font = `bold ${fontSize}px Arial`;
@@ -546,30 +462,41 @@
 
             const coords = [];
 
+            // Longueur des graduations (ticks)
+            const tickLen = 6 * scale; 
+
             for(let i=0; i<printPoints; i++) {
                 const angle = (Math.PI*2*i)/printPoints - Math.PI/2;
+                
+                // Point sur le cercle (Départ du trait)
                 const x = cx + r * Math.cos(angle);
                 const y = cy + r * Math.sin(angle);
                 coords.push({x,y});
 
+                // Graduation extérieure UNIQUEMENT (plus de point)
+                // On part du cercle (x,y) et on va vers l'extérieur (xOut, yOut)
+                const xOut = cx + (r + tickLen) * Math.cos(angle);
+                const yOut = cy + (r + tickLen) * Math.sin(angle);
+                
+                ctx.lineWidth = 2 * scale; // Même épaisseur que le cercle pour la netteté
                 ctx.beginPath();
-                ctx.arc(x, y, 2.5*scale, 0, Math.PI*2);
-                ctx.fill();
-
-                const xOut = cx + (r + 5*scale) * Math.cos(angle);
-                const yOut = cy + (r + 5*scale) * Math.sin(angle);
-                ctx.beginPath();
-                ctx.moveTo(x,y);
-                ctx.lineTo(xOut, yOut);
+                ctx.moveTo(x,y);       // Départ exact sur le bord
+                ctx.lineTo(xOut, yOut); // Vers l'extérieur
                 ctx.stroke();
 
-                const tDist = r + (18*scale);
+                // Numéro (positionné un peu après la graduation)
+                // On ajoute tickLen pour s'éloigner du trait
+                const tDist = r + tickLen + (15 * scale);
                 const tx = cx + tDist * Math.cos(angle);
                 const ty = cy + tDist * Math.sin(angle);
+                
+                // Rotation légère du texte pour suivre le cercle si beaucoup de points
+                // (Optionnel, ici on garde droit pour lisibilité max)
                 ctx.fillText(i, tx, ty);
             }
 
             if(printShowLines) {
+                // Traits de réponse (corrigé) plus fins
                 ctx.strokeStyle = "rgba(0,0,255,0.6)";
                 ctx.lineWidth = 1 * scale;
                 for(let i=0; i<printPoints; i++) {
@@ -582,6 +509,7 @@
             }
         }
 
+        // Listeners Impression
         document.getElementById('printPointsRange').addEventListener('input', e => {
             printPoints = parseInt(e.target.value);
             document.getElementById('printPointsVal').innerText = printPoints;
@@ -596,30 +524,35 @@
             updatePrintPreview();
         });
 
+        // Fonction d'impression
         function prepareAndPrint() {
+            // 1. Mettre à jour les textes de consigne
             document.getElementById('printTableInstruction').innerText = printTable;
             document.getElementById('printModuloInstruction').innerText = printPoints;
             document.getElementById('printModuloInstruction2').innerText = printPoints;
 
+            // 2. Générer l'image Haute Résolution
+            // On augmente la taille pour une impression ultra nette
             const scale = 5; 
-            const size = 1000 * scale; 
+            const size = 1000 * scale; // 5000px
             printCanvas.width = size;
             printCanvas.height = size;
             drawPaper(printCtx, size, size, scale);
 
+            // 3. Mettre l'image dans la zone d'impression
             const dataUrl = printCanvas.toDataURL('image/png');
             document.getElementById('finalPrintImage').src = dataUrl;
 
+            // 4. Lancer l'impression avec un petit délai pour être sûr que l'image est chargée
             setTimeout(() => {
                 window.print();
             }, 250);
         }
 
+        // Init
         window.addEventListener('resize', resizeViz);
-        setTimeout(() => {
-            resizeViz();
-            updatePrintPreview();
-        }, 100);
+        resizeViz();
+        updatePrintPreview();
 
     </script>
 </body>
