@@ -88,6 +88,7 @@
             cursor: pointer;
             font-weight: bold;
             width: 100%;
+            margin-top: 10px;
         }
         button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
 
@@ -223,9 +224,16 @@
                     <label>Nombre de points : <span id="vizPointsVal">200</span></label>
                     <input type="range" id="vizPointsRange" min="10" max="500" value="200">
                 </div>
+                
+                <div class="control-row">
+                    <label>Vitesse d'animation : <span id="vizSpeedVal" style="color:#aaa;">x1</span></label>
+                    <input type="range" id="vizSpeedRange" min="1" max="5" step="1" value="1">
+                </div>
+
                 <div class="control-row">
                     <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
                 </div>
+                
                 <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
             </div>
         </section>
@@ -317,6 +325,9 @@
         let vizAnimating = false;
         let vizAnimId;
         let vizIntMode = false;
+        
+        // Vitesse ajustée : max 5
+        let vizSpeed = 1;
 
         function resizeViz() {
             const size = Math.min(vizCanvas.parentElement.offsetWidth, 600);
@@ -380,6 +391,13 @@
             document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
             drawViz();
         });
+        
+        // Listener VITESSE (Limité à 5)
+        document.getElementById('vizSpeedRange').addEventListener('input', e => {
+            vizSpeed = parseInt(e.target.value);
+            document.getElementById('vizSpeedVal').innerText = "x" + vizSpeed;
+        });
+
         document.getElementById('vizIntMode').addEventListener('change', e => {
             vizIntMode = e.target.checked;
             const slider = document.getElementById('vizMultRange');
@@ -401,8 +419,13 @@
         });
 
         function animateViz() {
-            vizMult += (vizIntMode ? 0.02 : 0.005); 
+            // Vitesse de base : 0.02 (entier) ou 0.005 (decimal)
+            // Multiplié par le facteur de vitesse choisi (1 à 5)
+            const baseInc = vizIntMode ? 0.02 : 0.005;
+            vizMult += baseInc * vizSpeed; 
+            
             if(vizMult > 100) vizMult = 0;
+            
             document.getElementById('vizMultRange').value = vizMult;
             document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
             drawViz();
@@ -437,8 +460,7 @@
         function drawPaper(ctx, w, h, scale) {
             const cx = w/2;
             const cy = h/2;
-            // Rayon ajusté pour laisser place aux graduations extérieures et numéros
-            // On réduit un peu plus le rayon pour que ça rentre
+            // Rayon ajusté
             let r = (Math.min(w,h)/2) - (35 * scale);
             if (r < 10) r = 10;
 
@@ -473,25 +495,21 @@
                 const y = cy + r * Math.sin(angle);
                 coords.push({x,y});
 
-                // Graduation extérieure UNIQUEMENT (plus de point)
-                // On part du cercle (x,y) et on va vers l'extérieur (xOut, yOut)
+                // Graduation extérieure UNIQUEMENT
                 const xOut = cx + (r + tickLen) * Math.cos(angle);
                 const yOut = cy + (r + tickLen) * Math.sin(angle);
                 
-                ctx.lineWidth = 2 * scale; // Même épaisseur que le cercle pour la netteté
+                ctx.lineWidth = 2 * scale; 
                 ctx.beginPath();
-                ctx.moveTo(x,y);       // Départ exact sur le bord
-                ctx.lineTo(xOut, yOut); // Vers l'extérieur
+                ctx.moveTo(x,y);       
+                ctx.lineTo(xOut, yOut);
                 ctx.stroke();
 
-                // Numéro (positionné un peu après la graduation)
-                // On ajoute tickLen pour s'éloigner du trait
+                // Numéro
                 const tDist = r + tickLen + (15 * scale);
                 const tx = cx + tDist * Math.cos(angle);
                 const ty = cy + tDist * Math.sin(angle);
                 
-                // Rotation légère du texte pour suivre le cercle si beaucoup de points
-                // (Optionnel, ici on garde droit pour lisibilité max)
                 ctx.fillText(i, tx, ty);
             }
 
@@ -532,9 +550,8 @@
             document.getElementById('printModuloInstruction2').innerText = printPoints;
 
             // 2. Générer l'image Haute Résolution
-            // On augmente la taille pour une impression ultra nette
             const scale = 5; 
-            const size = 1000 * scale; // 5000px
+            const size = 1000 * scale; 
             printCanvas.width = size;
             printCanvas.height = size;
             drawPaper(printCtx, size, size, scale);
@@ -543,7 +560,7 @@
             const dataUrl = printCanvas.toDataURL('image/png');
             document.getElementById('finalPrintImage').src = dataUrl;
 
-            // 4. Lancer l'impression avec un petit délai pour être sûr que l'image est chargée
+            // 4. Lancer l'impression
             setTimeout(() => {
                 window.print();
             }, 250);
