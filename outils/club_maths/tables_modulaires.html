@@ -33,7 +33,24 @@
             padding: 20px;
             text-align: center;
             border-bottom: 4px solid var(--primary);
+            position: relative;
         }
+
+        /* Bouton Retour Accueil */
+        .home-link {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+        .home-link:hover { color: white; }
 
         header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
         header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
@@ -202,6 +219,7 @@
     <!-- TOUT LE CONTENU VISIBLE À L'ÉCRAN EST DANS CE WRAPPER -->
     <div class="screen-wrapper">
         <header>
+            <a href="index.html" class="home-link">🏠 Retour au Club</a>
             <h1>CLUB MATHS</h1>
             <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
         </header>
@@ -328,6 +346,9 @@
         let vizIntMode = false;
 
         function resizeViz() {
+            // Vérification que l'élément parent existe et a une taille
+            if (!vizCanvas.parentElement || vizCanvas.parentElement.offsetWidth === 0) return;
+            
             const size = Math.min(vizCanvas.parentElement.offsetWidth, 600);
             vizCanvas.width = size;
             vizCanvas.height = size;
@@ -337,9 +358,16 @@
         function drawViz() {
             const w = vizCanvas.width;
             const h = vizCanvas.height;
+            
+            // Sécurité : ne pas dessiner si le canvas est trop petit
+            if (w < 10 || h < 10) return;
+
             const cx = w/2; 
             const cy = h/2;
-            const r = (w/2) - 10;
+            let r = (w/2) - 10;
+            
+            // Sécurité : rayon positif obligatoire
+            if (r < 0) r = 0;
 
             vizCtx.fillStyle = "black";
             vizCtx.fillRect(0,0,w,h);
@@ -444,6 +472,9 @@
         }
 
         function drawPaper(ctx, w, h, scale) {
+            // Sécurité taille
+            if (w < 1 || h < 1) return;
+
             const cx = w/2;
             const cy = h/2;
             // Rayon ajusté pour laisser place aux numéros
@@ -553,8 +584,11 @@
 
         // Init
         window.addEventListener('resize', resizeViz);
-        resizeViz();
-        updatePrintPreview();
+        // Délai pour laisser le DOM se construire
+        setTimeout(() => {
+            resizeViz();
+            updatePrintPreview();
+        }, 100);
 
     </script>
 </body>
