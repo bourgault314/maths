@@ -5,142 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Maths - Les Tables Modulaires</title>
     <style>
-        /* --- VARIABLES DE COULEURS (THEMES) --- */
         :root {
-            /* VALEURS PAR DÉFAUT (Variables de structure) */
-            --primary: #00d2ff; /* Bleu cyan "Club Maths" original */
-            --bg-body: #1a1a1a;
-            --bg-card: #2a2a2a;
-            --text-main: #eeeeee;
-            --text-sub: #aaaaaa;
-            --border: #444444;
-            --shadow: rgba(0,0,0,0.5);
-            
-            /* Canvas (Mode Sombre par défaut) */
-            --canvas-bg: #000000;
-            --canvas-circle: #444444;
-            --canvas-line-sat: 80%;
-            --canvas-line-light: 60%;
-            --canvas-line-alpha: 0.4;
-        }
-
-        /* MODE CLAIR (ACTIVÉ VIA ATTRIBUT data-theme="light") */
-        [data-theme="light"] {
-            --primary: #007bff;
-            --bg-body: #f8f9fa;
-            --bg-card: #ffffff;
-            --text-main: #333333;
-            --text-sub: #666666;
-            --border: #dddddd;
-            --shadow: rgba(0,0,0,0.1);
-
-            /* Canvas (Mode Clair) */
-            --canvas-bg: #ffffff;
-            --canvas-circle: #000000;
-            --canvas-line-sat: 100%;
-            --canvas-line-light: 40%;
-            --canvas-line-alpha: 0.5;
+            --primary: #00d2ff;
+            --dark-bg: #1a1a1a;
+            --light-bg: #f5f5f5;
+            --text-light: #eee;
+            --text-dark: #333;
         }
 
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
+            background-color: var(--light-bg);
+            color: var(--text-dark);
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- HEADER (STYLE RESTAURÉ "GROS TITRE") --- */
+        /* --- STYLES ÉCRAN UNIQUEMENT --- */
+        .screen-wrapper {
+            width: 100%;
+        }
+
+        /* HEADER */
         header {
-            background-color: #000; /* Toujours noir pour l'en-tête, c'est plus classe */
+            background-color: #000;
             color: white;
-            padding: 25px 20px;
-            text-align: center; /* Centrage strict */
+            padding: 20px;
+            text-align: center;
             border-bottom: 4px solid var(--primary);
-            position: relative; /* Pour positionner le bouton */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative; /* Pour placer le bouton mode */
         }
 
-        header h1 { 
-            margin: 0; 
-            font-weight: 300; 
-            font-size: 2.5rem; /* Retour à la taille imposante */
-            letter-spacing: 2px; 
-            text-transform: uppercase;
-        }
-        
-        header .subtitle { 
-            color: var(--primary); 
-            font-weight: bold; 
-            font-size: 1.1rem; 
-            margin-top: 8px; 
-            display: block;
-            letter-spacing: 1px;
-        }
+        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
+        header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
 
-        /* BOUTON THEME (Position Absolue pour ne pas casser le titre) */
-        .theme-toggle {
+        /* BOUTON MODE CLAIR/SOMBRE */
+        .mode-btn {
             position: absolute;
-            top: 50%;
+            top: 20px;
             right: 20px;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
             color: white;
-            padding: 8px 15px;
+            padding: 5px 15px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 0.9rem;
         }
-        .theme-toggle:hover { background: rgba(255,255,255,0.2); }
+        .mode-btn:hover { background: rgba(255,255,255,0.3); }
 
-        /* Pour mobile : on remet le bouton en flux normal si l'écran est petit */
-        @media (max-width: 600px) {
-            header h1 { font-size: 1.8rem; }
-            .theme-toggle { position: static; margin: 15px auto 0 auto; transform: none; width: fit-content;}
-        }
-
-        /* --- SECTION VISUALISATION --- */
+        /* SECTION VISUALISATION */
         .section-visualizer {
-            background-color: var(--bg-body);
+            background-color: var(--dark-bg); /* Par défaut sombre */
+            color: var(--text-light);
             padding: 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            border-bottom: 1px solid var(--border);
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        .canvas-container-main {
+        /* CLASSE POUR LE MODE CLAIR (PROJECTION) */
+        .section-visualizer.light-mode {
+            background-color: white;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .canvas-container-dark {
             position: relative;
             margin: 20px;
-            box-shadow: 0 10px 30px var(--shadow);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
             border-radius: 50%;
-            background-color: var(--canvas-bg);
+            background-color: #000;
             max-width: 600px;
             width: 100%;
             aspect-ratio: 1/1;
-            border: 1px solid var(--border);
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
 
-        .canvas-main { width: 100%; height: 100%; border-radius: 50%; }
+        /* Adaptation du conteneur canvas en mode clair */
+        .section-visualizer.light-mode .canvas-container-dark {
+            background-color: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.15);
+            border: 1px solid #ddd;
+        }
 
-        .controls-panel {
-            background: var(--bg-card);
-            padding: 25px;
+        .canvas-dark { width: 100%; height: 100%; border-radius: 50%; }
+
+        .controls-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
             border-radius: 15px;
             width: 90%;
             max-width: 500px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px var(--shadow);
-            transition: background-color 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Adaptation des contrôles en mode clair */
+        .section-visualizer.light-mode .controls-dark {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
         }
 
         .control-row {
@@ -148,42 +118,37 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            font-weight: 500;
         }
         
         button.btn-anim {
-            background: linear-gradient(45deg, var(--primary), #2980b9);
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
             border: none;
-            padding: 12px 20px;
+            padding: 10px 20px;
             color: white;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
             margin-top: 10px;
-            font-size: 1rem;
-            transition: transform 0.1s;
         }
-        button.btn-anim:active { transform: scale(0.98); }
-        button.btn-anim.active { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
 
-        /* --- SECTION ATELIER --- */
+        /* SECTION ATELIER */
         .section-atelier {
             padding: 50px 20px;
             max-width: 900px;
             margin: 0 auto;
         }
 
-        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: var(--text-main); }
+        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: #444; }
 
         .instructions {
-            background: var(--bg-card);
+            background: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px var(--shadow);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             margin-bottom: 40px;
             line-height: 1.6;
-            border: 1px solid var(--border);
         }
 
         .print-zone {
@@ -197,19 +162,18 @@
         .print-controls {
             flex: 1;
             min-width: 300px;
-            background: var(--bg-card);
+            background: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px var(--shadow);
-            border: 1px solid var(--border);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
 
         .preview-paper {
-            background: white; /* Toujours blanc car c'est du papier */
+            background: white;
             width: 200px;
-            height: 282px;
-            border: 1px solid #ccc;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            height: 282px; /* Ratio A4 */
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -219,7 +183,7 @@
         }
         
         .btn-print {
-            background-color: #27ae60;
+            background-color: #4CAF50;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -233,13 +197,21 @@
             justify-content: center;
             gap: 10px;
         }
-        .btn-print:hover { background-color: #219150; }
+        .btn-print:hover { background-color: #45a049; }
 
-        /* --- IMPRESSION --- */
-        #printable-area { display: none; }
+        /* --- ZONE D'IMPRESSION (CACHÉE PAR DÉFAUT) --- */
+        #printable-area {
+            display: none;
+        }
 
+        /* --- STYLES SPÉCIFIQUES À L'IMPRESSION --- */
         @media print {
-            .screen-wrapper { display: none !important; }
+            /* On cache tout le site normal */
+            .screen-wrapper {
+                display: none !important;
+            }
+
+            /* On affiche la zone d'impression */
             #printable-area {
                 display: flex !important;
                 flex-direction: column;
@@ -248,37 +220,46 @@
                 width: 100%;
                 height: 100vh;
                 position: fixed;
-                top: 0; left: 0;
+                top: 0;
+                left: 0;
                 background: white;
                 z-index: 9999;
                 padding-top: 20px;
             }
-            @page { size: A4; margin: 0; }
-            body { background: white; color: black; }
+
+            /* Configuration de la page */
+            @page {
+                size: A4;
+                margin: 0; /* On gère les marges nous-mêmes via le padding */
+            }
+            
+            body {
+                background: white;
+            }
         }
     </style>
 </head>
-<body data-theme="dark"> <div class="screen-wrapper">
+<body>
+
+    <div class="screen-wrapper">
         <header>
-            <div class="header-titles">
-                <h1>CLUB MATHS</h1>
-                <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
-            </div>
-            
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
-                ☀️ Mode Clair
-            </button>
+            <h1>CLUB MATHS</h1>
+            <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
+            <button class="mode-btn" onclick="toggleMode()" id="modeBtn">☀️ Mode Projection</button>
         </header>
 
-        <section class="section-visualizer">
-            
-            <div class="canvas-container-main">
-                <canvas id="vizCanvas" class="canvas-main"></canvas>
+        <section class="section-visualizer" id="vizSection">
+            <div style="max-width: 600px;">
+                <p>Observez comment de simples tables de multiplication créent des formes géométriques complexes.</p>
             </div>
 
-            <div class="controls-panel">
+            <div class="canvas-container-dark">
+                <canvas id="vizCanvas" class="canvas-dark"></canvas>
+            </div>
+
+            <div class="controls-dark">
                 <div class="control-row">
-                    <label>Table de multiplication : <span id="vizMultVal" style="color:var(--primary); font-weight:bold;">2.00</span></label>
+                    <label>Table de multiplication : <span id="vizMultVal" style="color:#00d2ff; font-weight:bold;">2.00</span></label>
                     <input type="range" id="vizMultRange" min="0" max="100" step="0.01" value="2">
                 </div>
                 <div class="control-row">
@@ -287,14 +268,12 @@
                 </div>
                 
                 <div class="control-row">
-                    <label>Vitesse d'animation : <span id="vizSpeedVal" style="color:var(--text-sub);">x1</span></label>
+                    <label>Vitesse d'animation : <span id="vizSpeedVal" style="color:#aaa;">x1</span></label>
                     <input type="range" id="vizSpeedRange" min="1" max="5" step="1" value="1">
                 </div>
 
                 <div class="control-row">
-                    <label style="font-size:0.9rem; cursor:pointer;">
-                        <input type="checkbox" id="vizIntMode"> Mode Entiers seulement
-                    </label>
+                    <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
                 </div>
                 
                 <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
@@ -303,29 +282,41 @@
 
         <section class="section-atelier">
             
-            <h2>Paramétrer la fiche élève</h2>
+            <h2>Comment ça marche ?</h2>
             <div class="instructions">
-                <p>Choisissez les paramètres ci-dessous pour générer une fiche d'activité à imprimer pour vos élèves.</p>
+                <p><strong>La Règle du jeu :</strong></p>
+                <ol>
+                    <li>On place <strong>N</strong> graduations numérotées sur un cercle (comme une horloge).</li>
+                    <li>On choisit une table de multiplication (par exemple la table de <strong>2</strong>).</li>
+                    <li>Pour chaque graduation <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
+                    <li>On relie la graduation de départ à la graduation d'arrivée.</li>
+                    <li><em>Astuce :</em> Si le résultat dépasse le nombre de points, on fait un tour de cercle (on soustrait N). C'est ce qu'on appelle le <strong>modulo</strong>.</li>
+                </ol>
+                <p>Exemple avec 60 points : 32 × 2 = 64. Comme 64 dépasse 60, on relie 32 au point 4.</p>
             </div>
 
+            <h2>À vous de jouer : Imprimer la fiche</h2>
             <div class="print-zone">
+                
                 <div class="print-controls">
+                    <h3>Paramétrer votre fiche</h3>
                     <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points</label>
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points sur le cercle</label>
                         <input type="range" id="printPointsRange" min="10" max="120" value="60" style="width:100%">
-                        <div style="text-align:right; color:var(--text-sub);">Valeur : <span id="printPointsVal">60</span></div>
+                        <div style="text-align:right; color:#666;">Valeur : <span id="printPointsVal">60</span></div>
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table</label>
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table (pour la consigne)</label>
                         <input type="number" id="printTableNum" value="2" min="2" style="padding:5px; width:60px;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                             <input type="checkbox" id="printShowLines"> 
-                            <strong>Inclure le corrigé</strong>
+                            <strong>Inclure le corrigé (les traits)</strong>
                         </label>
+                        <small style="color:#666; display:block; margin-top:5px;">Cochez pour imprimer votre modèle, décochez pour la fiche élève.</small>
                     </div>
 
                     <button class="btn-print" onclick="prepareAndPrint()">
@@ -334,7 +325,7 @@
                 </div>
 
                 <div class="preview-container">
-                    <div style="text-align:center; margin-bottom:5px; color:var(--text-sub);">Aperçu</div>
+                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu</div>
                     <div class="preview-paper">
                         <canvas id="previewCanvas"></canvas>
                     </div>
@@ -355,9 +346,10 @@
                 <div style="font-size: 1.2rem; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
                     <strong>Consigne :</strong><br>
                     Relie chaque graduation <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
-                    <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span>.)</em></small>
+                    <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span> autant de fois que nécessaire.)</em></small>
                 </div>
             </div>
+            
             <div style="text-align: center;">
                 <img id="finalPrintImage" style="width: 95%; max-height: 85vh; object-fit: contain;" alt="Cercle à compléter" />
             </div>
@@ -366,33 +358,30 @@
 
     <script>
         // ==========================================
-        // GESTION DU THEME (SOMBRE PAR DEFAUT)
+        // GESTION DU MODE PROJECTION
         // ==========================================
-        // On démarre en "dark" car c'est le default du CSS root
-        // Le data-theme="dark" est dans le HTML body
-        let isDarkMode = true; 
+        let isLightMode = false;
         
-        function toggleTheme() {
-            isDarkMode = !isDarkMode;
-            const body = document.body;
-            const btn = document.getElementById('themeBtn');
+        function toggleMode() {
+            isLightMode = !isLightMode;
+            const section = document.getElementById('vizSection');
+            const btn = document.getElementById('modeBtn');
+            const speedSpan = document.getElementById('vizSpeedVal');
             
-            if (isDarkMode) {
-                // On retire l'attribut light pour revenir aux variables root par défaut (dark)
-                // OU on met data-theme="dark" si on veut expliciter
-                body.setAttribute('data-theme', 'dark');
-                btn.innerHTML = "☀️ Mode Clair";
+            if(isLightMode) {
+                section.classList.add('light-mode');
+                btn.innerText = "🌙 Mode Sombre";
+                speedSpan.style.color = "#333";
             } else {
-                // Mode clair
-                body.setAttribute('data-theme', 'light');
-                btn.innerHTML = "🌙 Mode Sombre";
+                section.classList.remove('light-mode');
+                btn.innerText = "☀️ Mode Projection";
+                speedSpan.style.color = "#aaa";
             }
-            // IMPORTANT : On redessine le canvas pour appliquer les nouvelles couleurs
-            drawViz();
+            drawViz(); // On redessine avec les nouvelles couleurs
         }
 
         // ==========================================
-        // SCRIPT VISUALISATION
+        // SCRIPT 1 : VISUALISATION (ADAPTATIF)
         // ==========================================
         const vizCanvas = document.getElementById('vizCanvas');
         const vizCtx = vizCanvas.getContext('2d');
@@ -410,11 +399,6 @@
             drawViz();
         }
 
-        // Fonction pour récupérer une variable CSS
-        function getCssVar(name) {
-            return getComputedStyle(document.body).getPropertyValue(name).trim();
-        }
-
         function drawViz() {
             const w = vizCanvas.width;
             const h = vizCanvas.height;
@@ -422,25 +406,25 @@
             const cy = h/2;
             const r = (w/2) - 10;
 
-            // Récupération des couleurs dynamiques selon le thème
-            const bg = getCssVar('--canvas-bg');
-            const circleColor = getCssVar('--canvas-circle');
-            const sat = getCssVar('--canvas-line-sat');
-            const light = getCssVar('--canvas-line-light');
-            const alpha = getCssVar('--canvas-line-alpha');
+            // COULEURS ADAPTATIVES
+            if (isLightMode) {
+                // FOND BLANC POUR PROJECTION
+                vizCtx.fillStyle = "white";
+                vizCtx.fillRect(0,0,w,h);
+                vizCtx.strokeStyle = "black"; // Cercle noir
+            } else {
+                // FOND NOIR ORIGINAL
+                vizCtx.fillStyle = "black";
+                vizCtx.fillRect(0,0,w,h);
+                vizCtx.strokeStyle = "#333"; // Cercle gris foncé
+            }
 
-            // Fond
-            vizCtx.fillStyle = bg;
-            vizCtx.fillRect(0,0,w,h);
-
-            // Cercle Extérieur
+            // Cercle
             vizCtx.beginPath();
             vizCtx.arc(cx, cy, r, 0, Math.PI*2);
-            vizCtx.strokeStyle = circleColor;
-            vizCtx.lineWidth = 2;
             vizCtx.stroke();
 
-            // Calcul coords
+            // Points cache
             const coords = [];
             for(let i=0; i<vizPoints; i++){
                 const angle = (Math.PI*2*i)/vizPoints - Math.PI/2;
@@ -460,8 +444,15 @@
 
                 const hue = (i/vizPoints)*360;
                 
-                // Application des couleurs dynamiques (HSL)
-                vizCtx.strokeStyle = `hsla(${hue}, ${sat}, ${light}, ${alpha})`;
+                // COULEUR DES LIGNES ADAPTÉE
+                if (isLightMode) {
+                    // Couleurs plus foncées et saturées pour ressortir sur le blanc
+                    // Saturation 100%, Luminosité 40% (sombre), Opacité 0.5
+                    vizCtx.strokeStyle = `hsla(${hue}, 100%, 40%, ${vizIntMode ? 0.6 : 0.4})`;
+                } else {
+                    // Couleurs originales "néon" pour le noir
+                    vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.5 : 0.3})`;
+                }
                 
                 vizCtx.beginPath();
                 vizCtx.moveTo(coords[i].x, coords[i].y);
@@ -481,10 +472,13 @@
             document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
             drawViz();
         });
+        
+        // Listener VITESSE (Limité à 5)
         document.getElementById('vizSpeedRange').addEventListener('input', e => {
             vizSpeed = parseInt(e.target.value);
             document.getElementById('vizSpeedVal').innerText = "x" + vizSpeed;
         });
+
         document.getElementById('vizIntMode').addEventListener('change', e => {
             vizIntMode = e.target.checked;
             const slider = document.getElementById('vizMultRange');
@@ -508,7 +502,9 @@
         function animateViz() {
             const baseInc = vizIntMode ? 0.02 : 0.005;
             vizMult += baseInc * vizSpeed; 
+            
             if(vizMult > 100) vizMult = 0;
+            
             document.getElementById('vizMultRange').value = vizMult;
             document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
             drawViz();
@@ -516,10 +512,12 @@
         }
 
         // ==========================================
-        // SCRIPT IMPRESSION (PREVIEW RESTE BLANCHE)
+        // SCRIPT 2 : IMPRESSION (FOND BLANC)
         // ==========================================
         const prevCanvas = document.getElementById('previewCanvas');
         const prevCtx = prevCanvas.getContext('2d');
+        
+        // Canvas caché haute définition pour générer l'image d'impression
         const printCanvas = document.createElement('canvas');
         const printCtx = printCanvas.getContext('2d');
 
@@ -528,27 +526,34 @@
         let printShowLines = false;
 
         function updatePrintPreview() {
-            const w = 200; const h = 200;
-            prevCanvas.width = w; prevCanvas.height = h;
+            // Dessin sur le petit canvas de preview
+            const w = 200;
+            const h = 200; // Carré dans l'aperçu rectangulaire
+            prevCanvas.width = w;
+            prevCanvas.height = h;
+            // On centre dans le rectangle
             prevCanvas.style.marginTop = "40px"; 
-            drawPaper(prevCtx, w, h, 0.6);
+            drawPaper(prevCtx, w, h, 0.6); // Scale réduit pour l'aperçu
         }
 
         function drawPaper(ctx, w, h, scale) {
-            const cx = w/2; const cy = h/2;
+            const cx = w/2;
+            const cy = h/2;
+            // Rayon ajusté
             let r = (Math.min(w,h)/2) - (35 * scale);
             if (r < 10) r = 10;
 
-            // TOUJOURS FOND BLANC POUR PAPIER
             ctx.fillStyle = "white";
             ctx.fillRect(0,0,w,h);
             
+            // Cercle Principal
             ctx.strokeStyle = "black";
             ctx.lineWidth = 2 * scale;
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI*2);
             ctx.stroke();
 
+            // Police
             let fontSize = 14 * scale;
             if (printPoints > 80) fontSize = 10 * scale;
             ctx.font = `bold ${fontSize}px Arial`;
@@ -557,15 +562,19 @@
             ctx.fillStyle = "black";
 
             const coords = [];
+
+            // Longueur des graduations (ticks)
             const tickLen = 6 * scale; 
 
             for(let i=0; i<printPoints; i++) {
                 const angle = (Math.PI*2*i)/printPoints - Math.PI/2;
+                
+                // Point sur le cercle (Départ du trait)
                 const x = cx + r * Math.cos(angle);
                 const y = cy + r * Math.sin(angle);
                 coords.push({x,y});
 
-                // Graduations extérieures
+                // Graduation extérieure UNIQUEMENT
                 const xOut = cx + (r + tickLen) * Math.cos(angle);
                 const yOut = cy + (r + tickLen) * Math.sin(angle);
                 
@@ -575,13 +584,16 @@
                 ctx.lineTo(xOut, yOut);
                 ctx.stroke();
 
+                // Numéro
                 const tDist = r + tickLen + (15 * scale);
                 const tx = cx + tDist * Math.cos(angle);
                 const ty = cy + tDist * Math.sin(angle);
+                
                 ctx.fillText(i, tx, ty);
             }
 
             if(printShowLines) {
+                // Traits de réponse (corrigé) plus fins
                 ctx.strokeStyle = "rgba(0,0,255,0.6)";
                 ctx.lineWidth = 1 * scale;
                 for(let i=0; i<printPoints; i++) {
@@ -594,6 +606,7 @@
             }
         }
 
+        // Listeners Impression
         document.getElementById('printPointsRange').addEventListener('input', e => {
             printPoints = parseInt(e.target.value);
             document.getElementById('printPointsVal').innerText = printPoints;
@@ -608,23 +621,31 @@
             updatePrintPreview();
         });
 
+        // Fonction d'impression
         function prepareAndPrint() {
+            // 1. Mettre à jour les textes de consigne
             document.getElementById('printTableInstruction').innerText = printTable;
             document.getElementById('printModuloInstruction').innerText = printPoints;
             document.getElementById('printModuloInstruction2').innerText = printPoints;
 
+            // 2. Générer l'image Haute Résolution
             const scale = 5; 
             const size = 1000 * scale; 
             printCanvas.width = size;
             printCanvas.height = size;
             drawPaper(printCtx, size, size, scale);
 
+            // 3. Mettre l'image dans la zone d'impression
             const dataUrl = printCanvas.toDataURL('image/png');
             document.getElementById('finalPrintImage').src = dataUrl;
 
-            setTimeout(() => { window.print(); }, 250);
+            // 4. Lancer l'impression
+            setTimeout(() => {
+                window.print();
+            }, 250);
         }
 
+        // Init
         window.addEventListener('resize', resizeViz);
         resizeViz();
         updatePrintPreview();
