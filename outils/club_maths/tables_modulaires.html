@@ -5,71 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Maths - Les Tables Modulaires</title>
     <style>
+        /* --- VARIABLES DE COULEURS (THEMES) --- */
         :root {
+            /* PAR DEFAUT : MODE CLAIR (PROJECTION) */
+            --primary: #007bff;
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --border: #dddddd;
+            --shadow: rgba(0,0,0,0.1);
+            
+            /* Couleurs spécifiques au Canvas */
+            --canvas-bg: #ffffff;
+            --canvas-circle: #000000;
+            --canvas-line-sat: 100%; /* Couleurs saturées pour fond blanc */
+            --canvas-line-light: 40%; /* Couleurs foncées pour fond blanc */
+            --canvas-line-alpha: 0.5;
+        }
+
+        /* MODE SOMBRE (ACTIVÉ VIA JS) */
+        [data-theme="dark"] {
             --primary: #00d2ff;
-            --dark-bg: #1a1a1a;
-            --light-bg: #f5f5f5;
-            --text-light: #eee;
-            --text-dark: #333;
+            --bg-body: #1a1a1a;
+            --bg-card: #2a2a2a;
+            --text-main: #eeeeee;
+            --text-sub: #aaaaaa;
+            --border: #444444;
+            --shadow: rgba(0,0,0,0.5);
+
+            /* Couleurs spécifiques au Canvas */
+            --canvas-bg: #000000;
+            --canvas-circle: #444444;
+            --canvas-line-sat: 80%; /* Couleurs pastel pour fond noir */
+            --canvas-line-light: 60%; /* Couleurs lumineuses pour fond noir */
+            --canvas-line-alpha: 0.4;
         }
 
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-dark);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- STYLES ÉCRAN UNIQUEMENT --- */
-        .screen-wrapper {
-            width: 100%;
-        }
-
-        /* HEADER */
+        /* --- HEADER & NAVIGATION --- */
         header {
-            background-color: #000;
-            color: white;
-            padding: 20px;
-            text-align: center;
+            background-color: var(--bg-card); /* S'adapte au thème */
+            color: var(--text-main);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 4px solid var(--primary);
+            box-shadow: 0 2px 10px var(--shadow);
         }
 
-        header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
-        header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
+        .header-content h1 { margin: 0; font-weight: 300; font-size: 1.5rem; letter-spacing: 1px; }
+        .header-content .subtitle { color: var(--primary); font-weight: bold; font-size: 0.9rem; display: block;}
 
-        /* SECTION VISUALISATION */
+        /* BOUTON THEME */
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .theme-toggle:hover { background-color: var(--border); }
+
+        /* --- SECTION VISUALISATION --- */
         .section-visualizer {
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            padding: 40px 20px;
+            background-color: var(--bg-body);
+            padding: 30px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            border-bottom: 1px solid var(--border);
         }
 
-        .canvas-container-dark {
+        .canvas-container-main {
             position: relative;
             margin: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px var(--shadow);
             border-radius: 50%;
-            background-color: #000;
+            background-color: var(--canvas-bg);
             max-width: 600px;
             width: 100%;
             aspect-ratio: 1/1;
+            border: 1px solid var(--border);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
-        .canvas-dark { width: 100%; height: 100%; border-radius: 50%; }
+        .canvas-main { width: 100%; height: 100%; border-radius: 50%; }
 
-        .controls-dark {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
+        .controls-panel {
+            background: var(--bg-card);
+            padding: 25px;
             border-radius: 15px;
             width: 90%;
             max-width: 500px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px var(--shadow);
+            transition: background-color 0.3s;
         }
 
         .control-row {
@@ -77,37 +124,42 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            font-weight: 500;
         }
         
         button.btn-anim {
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            background: linear-gradient(45deg, var(--primary), #0056b3);
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             color: white;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
             margin-top: 10px;
+            font-size: 1rem;
+            transition: transform 0.1s;
         }
-        button.btn-anim.active { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+        button.btn-anim:active { transform: scale(0.98); }
+        button.btn-anim.active { background: linear-gradient(45deg, #dc3545, #c82333); }
 
-        /* SECTION ATELIER */
+        /* --- SECTION ATELIER --- */
         .section-atelier {
             padding: 50px 20px;
             max-width: 900px;
             margin: 0 auto;
         }
 
-        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: #444; }
+        h2 { border-left: 5px solid var(--primary); padding-left: 15px; color: var(--text-main); }
 
         .instructions {
-            background: white;
+            background: var(--bg-card);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px var(--shadow);
             margin-bottom: 40px;
             line-height: 1.6;
+            border: 1px solid var(--border);
         }
 
         .print-zone {
@@ -121,18 +173,19 @@
         .print-controls {
             flex: 1;
             min-width: 300px;
-            background: white;
+            background: var(--bg-card);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px var(--shadow);
+            border: 1px solid var(--border);
         }
 
         .preview-paper {
-            background: white;
+            background: white; /* Toujours blanc car c'est du papier */
             width: 200px;
-            height: 282px; /* Ratio A4 */
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            height: 282px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
             position: relative;
             overflow: hidden;
             display: flex;
@@ -142,7 +195,7 @@
         }
         
         .btn-print {
-            background-color: #4CAF50;
+            background-color: #28a745;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -156,21 +209,13 @@
             justify-content: center;
             gap: 10px;
         }
-        .btn-print:hover { background-color: #45a049; }
+        .btn-print:hover { background-color: #218838; }
 
-        /* --- ZONE D'IMPRESSION (CACHÉE PAR DÉFAUT) --- */
-        #printable-area {
-            display: none;
-        }
+        /* --- IMPRESSION --- */
+        #printable-area { display: none; }
 
-        /* --- STYLES SPÉCIFIQUES À L'IMPRESSION --- */
         @media print {
-            /* On cache tout le site normal */
-            .screen-wrapper {
-                display: none !important;
-            }
-
-            /* On affiche la zone d'impression */
+            .screen-wrapper { display: none !important; }
             #printable-area {
                 display: flex !important;
                 flex-direction: column;
@@ -179,22 +224,13 @@
                 width: 100%;
                 height: 100vh;
                 position: fixed;
-                top: 0;
-                left: 0;
+                top: 0; left: 0;
                 background: white;
                 z-index: 9999;
                 padding-top: 20px;
             }
-
-            /* Configuration de la page */
-            @page {
-                size: A4;
-                margin: 0; /* On gère les marges nous-mêmes via le padding */
-            }
-            
-            body {
-                background: white;
-            }
+            @page { size: A4; margin: 0; }
+            body { background: white; color: black; }
         }
     </style>
 </head>
@@ -202,22 +238,25 @@
 
     <div class="screen-wrapper">
         <header>
-            <h1>CLUB MATHS</h1>
-            <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
+            <div class="header-content">
+                <h1>CLUB MATHS</h1>
+                <span class="subtitle">Activité 1 : Les Tables Modulaires</span>
+            </div>
+            
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+                🌙 Mode Sombre
+            </button>
         </header>
 
         <section class="section-visualizer">
-            <div style="max-width: 600px;">
-                <p>Observez comment de simples tables de multiplication créent des formes géométriques complexes.</p>
+            
+            <div class="canvas-container-main">
+                <canvas id="vizCanvas" class="canvas-main"></canvas>
             </div>
 
-            <div class="canvas-container-dark">
-                <canvas id="vizCanvas" class="canvas-dark"></canvas>
-            </div>
-
-            <div class="controls-dark">
+            <div class="controls-panel">
                 <div class="control-row">
-                    <label>Table de multiplication : <span id="vizMultVal" style="color:#00d2ff; font-weight:bold;">2.00</span></label>
+                    <label>Table de multiplication : <span id="vizMultVal" style="color:var(--primary); font-weight:bold;">2.00</span></label>
                     <input type="range" id="vizMultRange" min="0" max="100" step="0.01" value="2">
                 </div>
                 <div class="control-row">
@@ -226,12 +265,14 @@
                 </div>
                 
                 <div class="control-row">
-                    <label>Vitesse d'animation : <span id="vizSpeedVal" style="color:#aaa;">x1</span></label>
+                    <label>Vitesse d'animation : <span id="vizSpeedVal" style="color:var(--text-sub);">x1</span></label>
                     <input type="range" id="vizSpeedRange" min="1" max="5" step="1" value="1">
                 </div>
 
                 <div class="control-row">
-                    <label style="font-size:0.9rem"><input type="checkbox" id="vizIntMode"> Mode Entiers seulement</label>
+                    <label style="font-size:0.9rem; cursor:pointer;">
+                        <input type="checkbox" id="vizIntMode"> Mode Entiers seulement
+                    </label>
                 </div>
                 
                 <button id="vizAnimBtn" class="btn-anim">Lancer l'animation</button>
@@ -240,41 +281,29 @@
 
         <section class="section-atelier">
             
-            <h2>Comment ça marche ?</h2>
+            <h2>Paramétrer la fiche élève</h2>
             <div class="instructions">
-                <p><strong>La Règle du jeu :</strong></p>
-                <ol>
-                    <li>On place <strong>N</strong> graduations numérotées sur un cercle (comme une horloge).</li>
-                    <li>On choisit une table de multiplication (par exemple la table de <strong>2</strong>).</li>
-                    <li>Pour chaque graduation <em>x</em>, on calcule le résultat <em>x × 2</em>.</li>
-                    <li>On relie la graduation de départ à la graduation d'arrivée.</li>
-                    <li><em>Astuce :</em> Si le résultat dépasse le nombre de points, on fait un tour de cercle (on soustrait N). C'est ce qu'on appelle le <strong>modulo</strong>.</li>
-                </ol>
-                <p>Exemple avec 60 points : 32 × 2 = 64. Comme 64 dépasse 60, on relie 32 au point 4.</p>
+                <p>Choisissez les paramètres ci-dessous pour générer une fiche d'activité à imprimer pour vos élèves.</p>
             </div>
 
-            <h2>À vous de jouer : Imprimer la fiche</h2>
             <div class="print-zone">
-                
                 <div class="print-controls">
-                    <h3>Paramétrer votre fiche</h3>
                     <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points sur le cercle</label>
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre de points</label>
                         <input type="range" id="printPointsRange" min="10" max="120" value="60" style="width:100%">
-                        <div style="text-align:right; color:#666;">Valeur : <span id="printPointsVal">60</span></div>
+                        <div style="text-align:right; color:var(--text-sub);">Valeur : <span id="printPointsVal">60</span></div>
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table (pour la consigne)</label>
+                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Table</label>
                         <input type="number" id="printTableNum" value="2" min="2" style="padding:5px; width:60px;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                             <input type="checkbox" id="printShowLines"> 
-                            <strong>Inclure le corrigé (les traits)</strong>
+                            <strong>Inclure le corrigé</strong>
                         </label>
-                        <small style="color:#666; display:block; margin-top:5px;">Cochez pour imprimer votre modèle, décochez pour la fiche élève.</small>
                     </div>
 
                     <button class="btn-print" onclick="prepareAndPrint()">
@@ -283,7 +312,7 @@
                 </div>
 
                 <div class="preview-container">
-                    <div style="text-align:center; margin-bottom:5px; color:#888;">Aperçu</div>
+                    <div style="text-align:center; margin-bottom:5px; color:var(--text-sub);">Aperçu</div>
                     <div class="preview-paper">
                         <canvas id="previewCanvas"></canvas>
                     </div>
@@ -304,10 +333,9 @@
                 <div style="font-size: 1.2rem; background: #f0f0f0; padding: 15px; border-radius: 8px; border: 1px solid #ccc;">
                     <strong>Consigne :</strong><br>
                     Relie chaque graduation <b>n</b> au résultat de <b>n &times; <span id="printTableInstruction">2</span></b>.<br>
-                    <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span> autant de fois que nécessaire.)</em></small>
+                    <small><em>(Rappel : Si le résultat dépasse <span id="printModuloInstruction">60</span>, soustrait <span id="printModuloInstruction2">60</span>.)</em></small>
                 </div>
             </div>
-            
             <div style="text-align: center;">
                 <img id="finalPrintImage" style="width: 95%; max-height: 85vh; object-fit: contain;" alt="Cercle à compléter" />
             </div>
@@ -316,7 +344,28 @@
 
     <script>
         // ==========================================
-        // SCRIPT 1 : VISUALISATION (FOND NOIR)
+        // GESTION DU THEME (CLAIR / SOMBRE)
+        // ==========================================
+        let isDarkMode = false;
+        
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            const body = document.body;
+            const btn = document.getElementById('themeBtn');
+            
+            if (isDarkMode) {
+                body.setAttribute('data-theme', 'dark');
+                btn.innerHTML = "☀️ Mode Clair";
+            } else {
+                body.removeAttribute('data-theme');
+                btn.innerHTML = "🌙 Mode Sombre";
+            }
+            // IMPORTANT : On redessine le canvas pour appliquer les nouvelles couleurs
+            drawViz();
+        }
+
+        // ==========================================
+        // SCRIPT VISUALISATION
         // ==========================================
         const vizCanvas = document.getElementById('vizCanvas');
         const vizCtx = vizCanvas.getContext('2d');
@@ -325,8 +374,6 @@
         let vizAnimating = false;
         let vizAnimId;
         let vizIntMode = false;
-        
-        // Vitesse ajustée : max 5
         let vizSpeed = 1;
 
         function resizeViz() {
@@ -336,6 +383,11 @@
             drawViz();
         }
 
+        // Fonction pour récupérer une variable CSS
+        function getCssVar(name) {
+            return getComputedStyle(document.body).getPropertyValue(name).trim();
+        }
+
         function drawViz() {
             const w = vizCanvas.width;
             const h = vizCanvas.height;
@@ -343,16 +395,25 @@
             const cy = h/2;
             const r = (w/2) - 10;
 
-            vizCtx.fillStyle = "black";
+            // Récupération des couleurs dynamiques selon le thème
+            const bg = getCssVar('--canvas-bg');
+            const circleColor = getCssVar('--canvas-circle');
+            const sat = getCssVar('--canvas-line-sat');
+            const light = getCssVar('--canvas-line-light');
+            const alpha = getCssVar('--canvas-line-alpha');
+
+            // Fond
+            vizCtx.fillStyle = bg;
             vizCtx.fillRect(0,0,w,h);
 
-            // Cercle
+            // Cercle Extérieur
             vizCtx.beginPath();
             vizCtx.arc(cx, cy, r, 0, Math.PI*2);
-            vizCtx.strokeStyle = "#333";
+            vizCtx.strokeStyle = circleColor;
+            vizCtx.lineWidth = 2;
             vizCtx.stroke();
 
-            // Points cache
+            // Calcul coords
             const coords = [];
             for(let i=0; i<vizPoints; i++){
                 const angle = (Math.PI*2*i)/vizPoints - Math.PI/2;
@@ -371,7 +432,9 @@
                 const dy = cy + r * Math.sin(destAngle);
 
                 const hue = (i/vizPoints)*360;
-                vizCtx.strokeStyle = `hsla(${hue}, 80%, 60%, ${vizIntMode ? 0.5 : 0.3})`;
+                
+                // Application des couleurs dynamiques (HSL)
+                vizCtx.strokeStyle = `hsla(${hue}, ${sat}, ${light}, ${alpha})`;
                 
                 vizCtx.beginPath();
                 vizCtx.moveTo(coords[i].x, coords[i].y);
@@ -391,13 +454,10 @@
             document.getElementById('vizMultVal').innerText = vizIntMode ? Math.round(vizMult) : vizMult.toFixed(2);
             drawViz();
         });
-        
-        // Listener VITESSE (Limité à 5)
         document.getElementById('vizSpeedRange').addEventListener('input', e => {
             vizSpeed = parseInt(e.target.value);
             document.getElementById('vizSpeedVal').innerText = "x" + vizSpeed;
         });
-
         document.getElementById('vizIntMode').addEventListener('change', e => {
             vizIntMode = e.target.checked;
             const slider = document.getElementById('vizMultRange');
@@ -419,13 +479,9 @@
         });
 
         function animateViz() {
-            // Vitesse de base : 0.02 (entier) ou 0.005 (decimal)
-            // Multiplié par le facteur de vitesse choisi (1 à 5)
             const baseInc = vizIntMode ? 0.02 : 0.005;
             vizMult += baseInc * vizSpeed; 
-            
             if(vizMult > 100) vizMult = 0;
-            
             document.getElementById('vizMultRange').value = vizMult;
             document.getElementById('vizMultVal').innerText = vizMult.toFixed(2);
             drawViz();
@@ -433,12 +489,10 @@
         }
 
         // ==========================================
-        // SCRIPT 2 : IMPRESSION (FOND BLANC)
+        // SCRIPT IMPRESSION (PREVIEW RESTE BLANCHE)
         // ==========================================
         const prevCanvas = document.getElementById('previewCanvas');
         const prevCtx = prevCanvas.getContext('2d');
-        
-        // Canvas caché haute définition pour générer l'image d'impression
         const printCanvas = document.createElement('canvas');
         const printCtx = printCanvas.getContext('2d');
 
@@ -447,34 +501,27 @@
         let printShowLines = false;
 
         function updatePrintPreview() {
-            // Dessin sur le petit canvas de preview
-            const w = 200;
-            const h = 200; // Carré dans l'aperçu rectangulaire
-            prevCanvas.width = w;
-            prevCanvas.height = h;
-            // On centre dans le rectangle
+            const w = 200; const h = 200;
+            prevCanvas.width = w; prevCanvas.height = h;
             prevCanvas.style.marginTop = "40px"; 
-            drawPaper(prevCtx, w, h, 0.6); // Scale réduit pour l'aperçu
+            drawPaper(prevCtx, w, h, 0.6);
         }
 
         function drawPaper(ctx, w, h, scale) {
-            const cx = w/2;
-            const cy = h/2;
-            // Rayon ajusté
+            const cx = w/2; const cy = h/2;
             let r = (Math.min(w,h)/2) - (35 * scale);
             if (r < 10) r = 10;
 
+            // TOUJOURS FOND BLANC POUR PAPIER
             ctx.fillStyle = "white";
             ctx.fillRect(0,0,w,h);
             
-            // Cercle Principal
             ctx.strokeStyle = "black";
             ctx.lineWidth = 2 * scale;
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI*2);
             ctx.stroke();
 
-            // Police
             let fontSize = 14 * scale;
             if (printPoints > 80) fontSize = 10 * scale;
             ctx.font = `bold ${fontSize}px Arial`;
@@ -483,19 +530,15 @@
             ctx.fillStyle = "black";
 
             const coords = [];
-
-            // Longueur des graduations (ticks)
             const tickLen = 6 * scale; 
 
             for(let i=0; i<printPoints; i++) {
                 const angle = (Math.PI*2*i)/printPoints - Math.PI/2;
-                
-                // Point sur le cercle (Départ du trait)
                 const x = cx + r * Math.cos(angle);
                 const y = cy + r * Math.sin(angle);
                 coords.push({x,y});
 
-                // Graduation extérieure UNIQUEMENT
+                // Graduations extérieures
                 const xOut = cx + (r + tickLen) * Math.cos(angle);
                 const yOut = cy + (r + tickLen) * Math.sin(angle);
                 
@@ -505,16 +548,13 @@
                 ctx.lineTo(xOut, yOut);
                 ctx.stroke();
 
-                // Numéro
                 const tDist = r + tickLen + (15 * scale);
                 const tx = cx + tDist * Math.cos(angle);
                 const ty = cy + tDist * Math.sin(angle);
-                
                 ctx.fillText(i, tx, ty);
             }
 
             if(printShowLines) {
-                // Traits de réponse (corrigé) plus fins
                 ctx.strokeStyle = "rgba(0,0,255,0.6)";
                 ctx.lineWidth = 1 * scale;
                 for(let i=0; i<printPoints; i++) {
@@ -527,7 +567,6 @@
             }
         }
 
-        // Listeners Impression
         document.getElementById('printPointsRange').addEventListener('input', e => {
             printPoints = parseInt(e.target.value);
             document.getElementById('printPointsVal').innerText = printPoints;
@@ -542,31 +581,23 @@
             updatePrintPreview();
         });
 
-        // Fonction d'impression
         function prepareAndPrint() {
-            // 1. Mettre à jour les textes de consigne
             document.getElementById('printTableInstruction').innerText = printTable;
             document.getElementById('printModuloInstruction').innerText = printPoints;
             document.getElementById('printModuloInstruction2').innerText = printPoints;
 
-            // 2. Générer l'image Haute Résolution
             const scale = 5; 
             const size = 1000 * scale; 
             printCanvas.width = size;
             printCanvas.height = size;
             drawPaper(printCtx, size, size, scale);
 
-            // 3. Mettre l'image dans la zone d'impression
             const dataUrl = printCanvas.toDataURL('image/png');
             document.getElementById('finalPrintImage').src = dataUrl;
 
-            // 4. Lancer l'impression
-            setTimeout(() => {
-                window.print();
-            }, 250);
+            setTimeout(() => { window.print(); }, 250);
         }
 
-        // Init
         window.addEventListener('resize', resizeViz);
         resizeViz();
         updatePrintPreview();
