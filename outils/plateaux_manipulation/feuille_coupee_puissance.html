@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exposants : Narration de Recherche</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #0f172a;
+            --paper-color: #fbbf24; 
+            --paper-border: #92400e; 
+            --gap-size: 6px;         
+            --toolbar-bg: #f8fafc;
+            --btn-radius: 8px;
+        }
+
+        body.dark-mode {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --paper-color: #facc15;
+            --paper-border: #e2e8f0;
+            --toolbar-bg: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- BARRE D'OUTILS --- */
+        .toolbar {
+            background-color: var(--toolbar-bg);
+            padding: 0 20px;
+            border-bottom: 2px solid rgba(128,128,128,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80px;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .stats-group { display: flex; gap: 20px; align-items: center; }
+        .stat-box { display: flex; flex-direction: column; justify-content: center; }
+        .stat-label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; font-weight: bold; }
+        .stat-val { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+        .math { color: #6366f1; font-family: 'Courier New', monospace; }
+        .thick { color: #10b981; }
+
+        .actions-group { display: flex; gap: 12px; align-items: center; }
+
+        /* BOUTONS */
+        button { font-family: 'Segoe UI', sans-serif; transition: all 0.2s; cursor: pointer;}
+        
+        .btn-enonce {
+            background-color: white; 
+            color: #0284c7; 
+            border: 2px solid #0284c7;
+            padding: 10px 20px; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            border-radius: var(--btn-radius);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .btn-enonce:hover { background-color: #e0f2fe; transform: translateY(-1px); }
+
+        .btn-cut {
+            background-color: #2563eb; 
+            color: white; 
+            border: none;
+            padding: 12px 30px; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            border-radius: var(--btn-radius);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+        .btn-cut:hover { background-color: #1d4ed8; transform: translateY(-2px); box-shadow: 0 6px 8px rgba(37, 99, 235, 0.4); }
+        .btn-cut:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3); }
+        .btn-cut:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.7; transform: none; box-shadow: none;}
+
+        .btn-icon {
+            background: transparent; border: 1px solid rgba(128,128,128,0.4); 
+            padding: 10px 14px; border-radius: var(--btn-radius); 
+            color: var(--text-color); font-weight: 600; font-size: 1rem;
+        }
+        .btn-icon:hover { background: rgba(128,128,128,0.1); }
+        .btn-danger { color: #ef4444; border-color: #ef4444; }
+        .btn-danger:hover { background: #fee2e2; }
+
+        /* --- ZONE VISUELLE --- */
+        .visual-area {
+            flex-grow: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #paper-container {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1.3 / 1; 
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+            gap: var(--gap-size);
+            justify-content: center;
+            align-content: center;
+        }
+
+        .sheet {
+            background-color: var(--paper-color);
+            border: 1px solid var(--paper-border);
+            display: flex; justify-content: center; align-items: center;
+            color: #78350f; font-weight: bold; font-size: 1rem;
+            position: relative;
+            width: 100%; height: 100%;
+        }
+        body.dark-mode .sheet { color: #422006; }
+
+        .cut-v { position: absolute; top:0; left:50%; width:0; height:100%; border-left: 2px dashed #ef4444; opacity: 0; }
+        .cut-h { position: absolute; top:50%; left:0; width:100%; height:0; border-top: 2px dashed #ef4444; opacity: 0; }
+        .animating .cut-v, .animating .cut-h { opacity: 1; }
+        .animating { animation: tremble 0.4s ease-in-out; }
+        @keyframes tremble { 0%,100%{transform:rotate(0deg);} 25%{transform:rotate(1deg);} 75%{transform:rotate(-1deg);} }
+
+        .limit-msg {
+            position: absolute; bottom: 20px; background: rgba(0,0,0,0.8); color: white;
+            padding: 8px 16px; border-radius: 20px; display: none; pointer-events: none; z-index: 999;
+        }
+
+        /* --- MODALE (FICHE EXERCICE) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,1); /* Fond Blanc Opaque pour cacher l'appli */
+            z-index: 2000;
+            display: none; justify-content: center; align-items: flex-start;
+            overflow-y: auto; /* Permet le scroll si l'écran est petit */
+            padding-top: 20px; padding-bottom: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-content {
+            background: white; color: #0f172a;
+            width: 90%; max-width: 850px; 
+            /* Pas de max-height fixe pour permettre l'impression propre */
+            border-radius: 0; padding: 20px;
+            font-family: 'Georgia', serif; 
+        }
+
+        .close-modal {
+            position: fixed; top: 20px; right: 30px;
+            font-size: 2.5rem; cursor: pointer; color: #94a3b8;
+            background: white; border: 1px solid #cbd5e1; border-radius: 50%; 
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .close-modal:hover { color: #ef4444; border-color: #ef4444; transform: scale(1.1); }
+
+        /* Mise en page de la fiche */
+        .exo-title { 
+            text-align: center; border-bottom: 3px solid #334155; 
+            padding-bottom: 15px; margin-bottom: 25px; color: #1e293b;
+            text-transform: uppercase; letter-spacing: 1px; margin-top: 0;
+        }
+
+        /* Compétences */
+        .competences-box {
+            display: flex; gap: 25px;
+            border: 1px solid #cbd5e1; background: #f8fafc;
+            padding: 20px; margin-bottom: 25px; border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            align-items: center;
+        }
+        .comp-text { 
+            flex: 3; font-style: italic; color: #475569; 
+            line-height: 1.6; border-right: 1px solid #cbd5e1; padding-right: 20px;
+        }
+        .comp-list { 
+            flex: 1; font-weight: bold; color: #334155; font-size: 0.9rem;
+            display: flex; flex-direction: column; gap: 5px; min-width: 140px;
+        }
+        
+        .exo-steps { line-height: 1.8; font-size: 1.15rem; margin-left: 20px; color: #1e293b;}
+        .exo-steps li { margin-bottom: 12px; padding-left: 10px; }
+        
+        /* CADRE QUESTION (ROUGE) */
+        .main-question {
+            background-color: #fef2f2; 
+            border: 2px solid #fecaca; /* Bordure rouge clair */
+            color: #b91c1c; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center;
+            font-weight: bold; 
+            font-size: 1.3rem; 
+            margin: 30px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* CADRE BONUS (BLEU) */
+        .bonus-q { 
+            margin-top: 20px; padding: 20px; background: #eff6ff; 
+            border-left: 6px solid #3b82f6; border-radius: 4px; font-size: 1.1rem;
+            color: #1e3a8a;
+        }
+
+        .print-btn {
+            display: block; margin: 40px auto 0;
+            background: #334155; color: white; border: none; padding: 12px 24px;
+            border-radius: 6px; cursor: pointer; font-size: 1rem;
+        }
+        .print-btn:hover { background: #0f172a; }
+
+        /* --- STYLES D'IMPRESSION (CRITIQUE) --- */
+        @media print {
+            /* Cacher toute l'interface de l'application */
+            .toolbar, .visual-area, .limit-msg { display: none !important; }
+            
+            /* Afficher uniquement la modale */
+            #modal-exo { 
+                display: block !important; 
+                position: static !important; 
+                background: white !important;
+                height: auto !important;
+                width: 100% !important;
+                overflow: visible !important;
+            }
+            .modal-content { 
+                box-shadow: none !important; 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            /* Cacher les boutons de fermeture et d'impression */
+            .close-modal, .print-btn { display: none !important; }
+            
+            body { background: white; height: auto; overflow: visible; }
+        }
+        
+        @media (max-width: 600px) {
+            .competences-box { flex-direction: column; }
+            .comp-text { border-right: none; border-bottom: 1px solid #cbd5e1; padding-bottom: 15px; padding-right: 0;}
+            .close-modal { top: 10px; right: 10px; width: 40px; height: 40px; font-size: 1.5rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <div id="modal-exo" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeExo()">×</button>
+            
+            <h1 class="exo-title">Exercice de la feuille coupée</h1>
+            <p style="text-align:center; font-style:italic; margin-bottom:30px; font-family:'Segoe UI', sans-serif; color:#475569;">
+                Vous allez réaliser cet exercice sous forme de narration de recherche.
+            </p>
+            
+            <div class="competences-box">
+                <div class="comp-text">
+                    "Le plus important ici ce n'est pas de trouver mais de chercher. Il faudra écrire tout ce qui se passe dans ta tête, toutes tes idées mêmes celles qui n'aboutissent pas, même tes erreurs. Il faudra rédiger une bonne description de tout ce que tu as pensé et de ce que tu as fait avec soin précision et logique. 
+                    <br><br>
+                    <strong>L'évaluation se fera par compétences de résolution de problème.</strong>"
+                </div>
+                <div class="comp-list">
+                    <div>C1-Chercher</div>
+                    <div>C2-Modéliser</div>
+                    <div>C3-Représenter</div>
+                    <div>C4-Raisonner</div>
+                    <div>C5-Calculer</div>
+                    <div>C6-Communiquer</div>
+                </div>
+            </div>
+
+            <ol class="exo-steps">
+                <li>Prendre une feuille de papier (son épaisseur est de l'ordre de 0,1 mm en général).</li>
+                <li>Couper cette feuille en deux et superposer les deux parties obtenues.</li>
+                <li>Couper de nouveau en deux puis superposer, couper, superposer...</li>
+                <li>Imaginer que la feuille soit assez grande et que l'on dispose d'un massicot électrique pour pouvoir couper de grosses épaisseurs de papier.</li>
+            </ol>
+
+            <div class="main-question">
+                Quelle épaisseur totale de papier obtient-on quand on coupe vingt fois ?
+            </div>
+
+            <div class="bonus-q">
+                <strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune.. qu'en penses-tu ?
+            </div>
+
+            <button class="print-btn" onclick="window.print()">🖨️ Imprimer la fiche</button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="stats-group">
+            <div class="stat-box">
+                <span class="stat-label">Coupes</span>
+                <span class="stat-val" id="d-n">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Puissance</span>
+                <span class="stat-val math" id="d-exp">2⁰</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Feuilles</span>
+                <span class="stat-val" id="d-tot">1</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Épaisseur</span>
+                <span class="stat-val thick" id="d-th">0,1 mm</span>
+            </div>
+        </div>
+
+        <div class="actions-group">
+            <button class="btn-enonce" onclick="openExo()">📄 Énoncé</button>
+            <button class="btn-cut" id="btn-cut" onclick="goCut()">✂️ COUPER</button>
+            <button class="btn-icon btn-danger" onclick="reset()" title="Effacer">🗑️</button>
+            <button class="btn-icon" onclick="toggleTheme()" title="Mode Sombre">🌗</button>
+            <button class="btn-icon" onclick="toggleFull()" title="Plein Écran">⛶</button>
+        </div>
+    </div>
+
+    <div class="visual-area">
+        <div id="paper-container">
+            <div class="sheet">1<div class="cut-v"></div></div>
+        </div>
+        <div id="limit-msg" class="limit-msg">Limite atteinte (4096)</div>
+    </div>
+
+<script>
+    let n = 0;
+    const MAX_N = 12;
+    const THICKNESS = 0.1;
+    const container = document.getElementById('paper-container');
+    const btnCut = document.getElementById('btn-cut');
+    const modal = document.getElementById('modal-exo');
+
+    function openExo() { modal.classList.add('active'); }
+    function closeExo() { modal.classList.remove('active'); }
+
+    // Fermeture propre en cliquant sur la croix uniquement ou hors de la modale si voulu
+    // Ici on laisse la croix pour éviter les erreurs
+    
+    function goCut() {
+        if (n >= MAX_N) return;
+        if (n < 8) {
+            document.querySelectorAll('.sheet').forEach(s => s.classList.add('animating'));
+            btnCut.disabled = true;
+            setTimeout(() => { doCut(); btnCut.disabled = false; }, 450);
+        } else {
+            doCut();
+        }
+    }
+
+    function doCut() {
+        n++;
+        updateUI();
+        let cols = Math.pow(2, Math.ceil(n/2));
+        let rows = Math.pow(2, Math.floor(n/2));
+        container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        
+        // Espaces : 4px bien visibles jusqu'à 1024 feuilles (n=10)
+        if(n <= 4) container.style.gap = '8px'; 
+        else if(n <= 10) container.style.gap = '4px'; 
+        else container.style.gap = '2px';
+
+        let total = Math.pow(2, n);
+        let divs = [];
+        let showNum = (n <= 5);
+        let cutLine = (n < 9) ? ((n%2===0) ? '<div class="cut-v"></div>' : '<div class="cut-h"></div>') : '';
+
+        for(let i=0; i<total; i++) {
+            divs.push(`<div class="sheet">${showNum ? i+1 : ''}${cutLine}</div>`);
+        }
+        container.innerHTML = divs.join('');
+
+        if (n === MAX_N) {
+            btnCut.disabled = true;
+            btnCut.innerText = "MAX";
+            document.getElementById('limit-msg').style.display = 'block';
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('d-n').innerText = n;
+        document.getElementById('d-exp').innerHTML = `2<sup>${n}</sup>`;
+        let total = Math.pow(2, n);
+        document.getElementById('d-tot').innerText = total.toLocaleString('fr-FR');
+        document.getElementById('d-th').innerText = formatThick(total);
+    }
+
+    function formatThick(cnt) {
+        let mm = cnt * THICKNESS;
+        if(mm<10) return mm.toFixed(1).replace('.',',')+" mm";
+        if(mm<1000) return (mm/10).toFixed(1).replace('.',',')+" cm";
+        if(mm<1000000) return (mm/1000).toFixed(2).replace('.',',')+" m";
+        return (mm/1000000).toFixed(3).replace('.',',')+" km";
+    }
+
+    function reset() {
+        n = 0;
+        updateUI();
+        container.style.gridTemplateColumns = '1fr';
+        container.style.gridTemplateRows = '1fr';
+        container.style.gap = '6px';
+        container.innerHTML = '<div class="sheet">1<div class="cut-v"></div></div>';
+        btnCut.disabled = false;
+        btnCut.innerText = "✂️ COUPER";
+        document.getElementById('limit-msg').style.display = 'none';
+    }
+
+    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+    function toggleFull() { 
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else if(document.exitFullscreen) document.exitFullscreen();
+    }
+</script>
+</body>
+</html>
