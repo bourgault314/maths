@@ -6,6 +6,7 @@
     <title>Exposants : Narration de Recherche</title>
     <style>
         :root {
+            /* --- COULEURS ET DESIGN --- */
             --bg-color: #ffffff;
             --text-color: #0f172a;
             --paper-color: #fbbf24; 
@@ -62,16 +63,16 @@
         button { font-family: 'Segoe UI', sans-serif; transition: all 0.2s; cursor: pointer;}
         
         .btn-enonce {
-            background-color: white; 
+            background-color: #e0f2fe; /* Fond bleu pâle */
             color: #0284c7; 
-            border: 2px solid #0284c7;
+            border: 1px solid #7dd3fc;
             padding: 10px 20px; 
             font-size: 1rem; 
             font-weight: bold; 
             border-radius: var(--btn-radius);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .btn-enonce:hover { background-color: #e0f2fe; transform: translateY(-1px); }
+        .btn-enonce:hover { background-color: #bae6fd; transform: translateY(-1px); }
 
         .btn-cut {
             background-color: #2563eb; 
@@ -146,18 +147,16 @@
         /* --- MODALE (FICHE EXERCICE) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,1); /* Fond Blanc Opaque pour cacher l'appli */
+            background: rgba(255,255,255,1); /* Fond blanc opaque */
             z-index: 2000;
             display: none; justify-content: center; align-items: flex-start;
-            overflow-y: auto; /* Permet le scroll si l'écran est petit */
-            padding-top: 20px; padding-bottom: 20px;
+            overflow-y: auto; padding-top: 20px; padding-bottom: 20px;
         }
         .modal-overlay.active { display: flex; }
 
         .modal-content {
             background: white; color: #0f172a;
             width: 90%; max-width: 850px; 
-            /* Pas de max-height fixe pour permettre l'impression propre */
             border-radius: 0; padding: 20px;
             font-family: 'Georgia', serif; 
         }
@@ -172,14 +171,13 @@
         }
         .close-modal:hover { color: #ef4444; border-color: #ef4444; transform: scale(1.1); }
 
-        /* Mise en page de la fiche */
+        /* DESIGN DE LA FICHE */
         .exo-title { 
             text-align: center; border-bottom: 3px solid #334155; 
             padding-bottom: 15px; margin-bottom: 25px; color: #1e293b;
             text-transform: uppercase; letter-spacing: 1px; margin-top: 0;
         }
 
-        /* Compétences */
         .competences-box {
             display: flex; gap: 25px;
             border: 1px solid #cbd5e1; background: #f8fafc;
@@ -192,17 +190,23 @@
             line-height: 1.6; border-right: 1px solid #cbd5e1; padding-right: 20px;
         }
         .comp-list { 
-            flex: 1; font-weight: bold; color: #334155; font-size: 0.9rem;
-            display: flex; flex-direction: column; gap: 5px; min-width: 140px;
+            flex: 1; font-weight: bold; color: #334155; font-size: 0.85rem;
+            display: flex; flex-direction: column; gap: 8px; min-width: 140px;
         }
         
+        /* Petites bulles compétences */
+        .comp-item {
+            background: #e2e8f0; padding: 4px 8px; border-radius: 12px;
+            text-align: center; color: #475569;
+        }
+
         .exo-steps { line-height: 1.8; font-size: 1.15rem; margin-left: 20px; color: #1e293b;}
         .exo-steps li { margin-bottom: 12px; padding-left: 10px; }
         
-        /* CADRE QUESTION (ROUGE) */
+        /* BULLE ROUGE (Question) */
         .main-question {
             background-color: #fef2f2; 
-            border: 2px solid #fecaca; /* Bordure rouge clair */
+            border: 2px solid #fecaca; 
             color: #b91c1c; 
             padding: 20px; 
             border-radius: 12px; 
@@ -213,10 +217,13 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* CADRE BONUS (BLEU) */
+        /* BULLE BLEUE (Bonus) */
         .bonus-q { 
-            margin-top: 20px; padding: 20px; background: #eff6ff; 
-            border-left: 6px solid #3b82f6; border-radius: 4px; font-size: 1.1rem;
+            margin-top: 20px; padding: 20px; 
+            background: #eff6ff; 
+            border: 2px solid #bfdbfe;
+            border-radius: 8px; 
+            font-size: 1.1rem;
             color: #1e3a8a;
         }
 
@@ -227,31 +234,15 @@
         }
         .print-btn:hover { background: #0f172a; }
 
-        /* --- STYLES D'IMPRESSION (CRITIQUE) --- */
         @media print {
-            /* Cacher toute l'interface de l'application */
             .toolbar, .visual-area, .limit-msg { display: none !important; }
-            
-            /* Afficher uniquement la modale */
-            #modal-exo { 
-                display: block !important; 
-                position: static !important; 
-                background: white !important;
-                height: auto !important;
-                width: 100% !important;
-                overflow: visible !important;
-            }
-            .modal-content { 
-                box-shadow: none !important; 
-                width: 100% !important; 
-                max-width: 100% !important; 
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            /* Cacher les boutons de fermeture et d'impression */
+            #modal-exo { display: block !important; position: static !important; width: 100% !important; background: white !important;}
+            .modal-content { box-shadow: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .close-modal, .print-btn { display: none !important; }
-            
             body { background: white; height: auto; overflow: visible; }
+            .main-question { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .bonus-q { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .comp-item { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         
         @media (max-width: 600px) {
@@ -274,17 +265,17 @@
             
             <div class="competences-box">
                 <div class="comp-text">
-                    "Le plus important ici ce n'est pas de trouver mais de chercher. Il faudra écrire tout ce qui se passe dans ta tête, toutes tes idées mêmes celles qui n'aboutissent pas, même tes erreurs. Il faudra rédiger une bonne description de tout ce que tu as pensé et de ce que tu as fait avec soin précision et logique. 
+                    "Le plus important ici ce n'est pas de trouver mais de chercher. Il faudra écrire tout ce qui se passe dans ta tête, toutes tes idées mêmes celles qui n'aboutissent pas, même tes erreurs. Il faudra rédiger une bonne description de tout ce que tu as pensé et de ce que tu as fait avec soin précision et logique."
                     <br><br>
-                    <strong>L'évaluation se fera par compétences de résolution de problème.</strong>"
+                    <strong>L'évaluation se fera par compétences de résolution de problème.</strong>
                 </div>
                 <div class="comp-list">
-                    <div>C1-Chercher</div>
-                    <div>C2-Modéliser</div>
-                    <div>C3-Représenter</div>
-                    <div>C4-Raisonner</div>
-                    <div>C5-Calculer</div>
-                    <div>C6-Communiquer</div>
+                    <div class="comp-item">C1-Chercher</div>
+                    <div class="comp-item">C2-Modéliser</div>
+                    <div class="comp-item">C3-Représenter</div>
+                    <div class="comp-item">C4-Raisonner</div>
+                    <div class="comp-item">C5-Calculer</div>
+                    <div class="comp-item">C6-Communiquer</div>
                 </div>
             </div>
 
@@ -300,7 +291,7 @@
             </div>
 
             <div class="bonus-q">
-                <strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune.. qu'en penses-tu ?
+                <strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune.. qu'en penses-tu?
             </div>
 
             <button class="print-btn" onclick="window.print()">🖨️ Imprimer la fiche</button>
@@ -354,8 +345,7 @@
     function openExo() { modal.classList.add('active'); }
     function closeExo() { modal.classList.remove('active'); }
 
-    // Fermeture propre en cliquant sur la croix uniquement ou hors de la modale si voulu
-    // Ici on laisse la croix pour éviter les erreurs
+    // On garde juste la croix pour fermer
     
     function goCut() {
         if (n >= MAX_N) return;
@@ -376,10 +366,14 @@
         container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
         
-        // Espaces : 4px bien visibles jusqu'à 1024 feuilles (n=10)
-        if(n <= 4) container.style.gap = '8px'; 
-        else if(n <= 10) container.style.gap = '4px'; 
-        else container.style.gap = '2px';
+        // --- MODIFICATION ICI ---
+        // On garde des espaces bien visibles jusqu'au bout.
+        // 8px au début, puis 4px tout le temps (plus de réduction à 2px).
+        if(n <= 4) {
+            container.style.gap = '8px'; 
+        } else {
+            container.style.gap = '4px'; 
+        }
 
         let total = Math.pow(2, n);
         let divs = [];
