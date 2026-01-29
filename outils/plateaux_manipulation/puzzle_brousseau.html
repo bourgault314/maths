@@ -1,408 +1,1143 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Grand Pari - Probabilités</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #1a1a2e;
-            --text-color: #ffffff;
-            --accent: #ff0055;
-            --accent-hover: #ff2a70;
-            --secondary: #16213e;
-            --selected: #f1c40f;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        header { padding: 30px; text-align: center; }
-        h1 { margin: 0; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
-        .subtitle { color: #888; margin-top: 5px; font-style: italic; }
-
-        /* --- ZONE DE PARI --- */
-        .betting-area {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .bet-title { margin-bottom: 15px; font-weight: bold; color: #ccc; }
-        .bet-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        
-        .bet-btn {
-            width: 45px; height: 45px;
-            border-radius: 50%; border: 2px solid #555;
-            background: transparent; color: #fff; font-weight: bold; font-size: 1.1rem;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .bet-btn:hover { border-color: var(--selected); color: var(--selected); transform: scale(1.1); }
-        .bet-btn.active {
-            background: var(--selected); color: #000; border-color: var(--selected);
-            box-shadow: 0 0 15px var(--selected); transform: scale(1.1);
-        }
-
-        /* --- DÉS 3D --- */
-        .dice-container {
-            display: flex; gap: 60px; margin: 30px 0; perspective: 800px;
-        }
-
-        .cube {
-            width: 80px; height: 80px; position: relative;
-            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .cube__face {
-            position: absolute; width: 80px; height: 80px;
-            background: white; border: 2px solid #ccc; border-radius: 12px;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.1); font-size: 2rem; color: #333;
-        }
-
-        /* --- FEEDBACK --- */
-        #message-box {
-            height: 50px; margin: 20px 0; font-size: 1.5rem; font-weight: bold; text-align: center;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .win-anim { color: #2ecc71; animation: pulse 0.5s; }
-        .lose-anim { color: #e74c3c; }
-
-        /* --- CONTRÔLES --- */
-        .controls { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
-        
-        .btn-action {
-            padding: 15px 40px; border: none; border-radius: 50px;
-            font-weight: bold; font-size: 1.2rem; cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .btn-roll { background: var(--accent); color: white; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); }
-        .btn-roll:hover { background: var(--accent-hover); transform: scale(1.05); }
-        .btn-roll:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
-
-        .btn-sim { background: transparent; border: 2px solid #555; color: #aaa; padding: 10px 20px; font-size: 0.9rem; }
-        .btn-sim:hover { border-color: white; color: white; }
-
-        /* --- GRAPHIQUE --- */
-        #chart-container {
-            width: 90%; max-width: 800px; height: 250px;
-            border-bottom: 2px solid #555; display: flex; align-items: flex-end; 
-            justify-content: space-around; padding: 0 10px; margin-bottom: 50px;
-        }
-        .bar-group { flex: 1; margin: 0 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-        .bar { width: 100%; background: #0f3460; transition: height 0.5s; border-radius: 4px 4px 0 0; min-height: 2px; }
-        .bar-label { margin-top: 5px; font-size: 0.9rem; color: #aaa; }
-
-        /* --- FICHE MODALE --- */
-        .sheet-btn {
-            position: fixed; bottom: 20px; right: 20px;
-            background: white; color: #1a1a2e; padding: 15px 30px;
-            border-radius: 50px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5); border: none; z-index: 100;
-        }
-
-        #worksheet-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px;
-        }
-        .sheet-paper {
-            background: white; color: #000; max-width: 850px; margin: 30px auto;
-            padding: 60px; border-radius: 2px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        /* Styles Tableau Guidé */
-        .guided-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .guided-table td, .guided-table th { border: 1px solid #999; width: 40px; height: 40px; text-align: center; font-size: 16px; color: #333;}
-        
-        /* Couleurs d'en-tête */
-        .head-red { background-color: #ffcccc; color: #990000; font-weight: bold; }
-        .head-blue { background-color: #cce5ff; color: #003366; font-weight: bold; }
-        
-        /* Cellules pré-remplies (exemples) */
-        .pre-filled { background-color: #f0f0f0; font-weight: bold; color: #555; }
-
-        /* Lignes pointillées pour réponse manuscrite */
-        .fill-zone { border-bottom: 2px dotted #000; display: inline-block; min-width: 50px; text-align: center;}
-        
-        /* Boîte de recherche */
-        .research-box {
-            border: 2px dashed #999; height: 200px; width: 100%; margin: 20px 0;
-            background: #f9f9f9; border-radius: 5px;
-        }
-
-        @media print {
-            body * { visibility: hidden; }
-            #worksheet-overlay, #worksheet-overlay * { visibility: visible; }
-            #worksheet-overlay { position: absolute; top:0; left:0; background: white; padding:0; display:block !important;}
-            .sheet-paper { width: 100%; max-width: 100%; box-shadow: none; margin: 0; padding: 0; }
-            .no-print { display: none !important; }
-            .guided-table th { -webkit-print-color-adjust: exact; }
-            .head-red { background-color: #ffcccc !important; }
-            .head-blue { background-color: #cce5ff !important; }
-        }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Puzzle de Brousseau — manipulation</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --grid:#e5e7eb;
+    --ink:#0f172a;
+    --stroke:#0f172a;
+    --measure:#b91c1c;
+    --toolbar:#ffffff;
+    --border:#cbd5e1;
+    --btn:#ffffff;
+    --btnHover:#f1f5f9;
+    --primaryBg:#e0f2fe;
+    --primaryInk:#0369a1;
+    --shadow: 0 2px 10px rgba(0,0,0,.06);
+  }
+  html,body{height:100%; margin:0;}
+  body{
+    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    overflow:hidden;
+  }
+  .toolbar{
+    height:64px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    background:var(--toolbar);
+    border-bottom:1px solid var(--border);
+    box-shadow: var(--shadow);
+    gap:10px;
+  }
+  .group{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .sep{width:1px; height:28px; background:var(--border); margin:0 2px;}
+  .btn{
+    border:1px solid var(--border);
+    background:var(--btn);
+    color:#334155;
+    padding:9px 12px;
+    border-radius:10px;
+    font-weight:650;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    user-select:none;
+  }
+  .btn:hover{background:var(--btnHover); border-color:#94a3b8;}
+  .btn.primary{
+    background:var(--primaryBg);
+    color:var(--primaryInk);
+    border-color:#bae6fd;
+  }
+  .btn.primary:hover{background:#bae6fd;}
+  .seg{
+    display:flex;
+    background: rgba(148,163,184,.18);
+    padding:3px;
+    border-radius:12px;
+    gap:3px;
+  }
+  .seg button{
+    border:none;
+    background:transparent;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:750;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .seg button:hover{background:rgba(0,0,0,.04);}
+  .seg button.active{
+    background:#3b82f6;
+    color:white;
+  }
+  .seg button.wrong.active{background:#ef4444;}
+  .seg button.correct.active{background:#10b981;}
+  .canvas{
+    height: calc(100% - 64px);
+    position:relative;
+    background: var(--bg);
+  }
+  svg#stage{width:100%; height:100%; display:block;}
+  .piece path{
+    stroke: var(--stroke);
+    stroke-width: 1.4;
+    stroke-linejoin:round;
+    vector-effect: non-scaling-stroke;
+  }
+  .piece:hover path{filter: brightness(0.98); stroke-width: 1.9;}
+  .label{
+    fill: var(--measure);
+    font-weight:800;
+    font-size: 14px;
+    pointer-events:none;
+    user-select:none;
+    paint-order: stroke;
+    stroke: rgba(255,255,255,.75);
+    stroke-width: 3px;
+  }
+  .num{
+    fill:#111827;
+    font-weight:900;
+    font-size: 18px;
+    pointer-events:none;
+    user-select:none;
+    paint-order: stroke;
+    stroke: rgba(255,255,255,.8);
+    stroke-width: 3.5px;
+  }
+  .numRing{
+    fill:#ffffff;
+    stroke:#111827;
+    stroke-width:2.2;
+    vector-effect: non-scaling-stroke;
+  }
+  /* Modal énoncé */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(255,255,255,.98);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:18px;
+    overflow:auto;
+    z-index: 999;
+  }
+  .overlay.active{display:flex;}
+  .paper{
+    width: min(860px, 100%);
+    background:white;
+    border:1px solid #d1d5db;
+    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+    padding:28px 30px;
+    font-family: "Times New Roman", serif;
+    color:#111827;
+  }
+  .paper h2{
+    margin: 0 0 14px 0;
+    text-align:center;
+    text-transform: uppercase;
+    letter-spacing:.04em;
+    border-bottom:2px solid #111827;
+    padding-bottom:10px;
+  }
+  .paper .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .paper .close{
+    border:none;
+    background:transparent;
+    font-size: 30px;
+    cursor:pointer;
+    color:#94a3b8;
+    line-height:1;
+  }
+  .paper .close:hover{color:#ef4444;}
+  .paper p{font-size: 1.08rem; line-height:1.55; margin: 14px 0;}
+  .rule{
+    border-left:4px solid var(--measure);
+    padding-left:14px;
+    margin: 12px 0 6px;
+    color: var(--measure);
+    font-weight: 800;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .smallNote{font-family:"Segoe UI", system-ui, sans-serif; color:#475569; font-size:.92rem;}
+  @media print{
+    body{overflow:visible;}
+    .toolbar, .canvas{display:none !important;}
+    .overlay{display:block !important; position:static; background:white; padding:0;}
+    .paper{box-shadow:none; border:none; padding:0;}
+    .paper .topbar{display:none;}
+    /* éléments utiles à l'écran mais inutiles sur la feuille */
+    .noPrint{display:none !important;}
+  }
+</style>
 </head>
 <body>
 
-    <header>
-        <h1>LE GRAND PARI</h1>
-        <div class="subtitle">Sur quel nombre miser pour gagner ?</div>
-    </header>
+<div class="toolbar">
+  <div class="group">
+    <button class="btn" id="btnEnonce">📄 Énoncé</button>
+    <button class="btn" id="btnPrint">🖨️ Imprimer</button>
+    <button class="btn" id="btnFS">⛶ Plein écran</button>
+    <span class="sep"></span>
 
-    <div class="betting-area">
-        <div class="bet-title">1. JE MISE SUR LE NOMBRE :</div>
-        <div class="bet-buttons" id="bet-buttons">
-            </div>
+    <div class="seg" title="Choisis ce que tu veux montrer au tableau">
+      <button id="mOrig" class="active">Original</button>
+      <button id="mAdd">+3 cm</button>
     </div>
 
-    <div id="message-box">Choisissez un nombre et lancez !</div>
+    <span class="sep"></span>
 
-    <div class="dice-container">
-        <div class="cube" id="die1">
-            <div class="cube__face" style="transform: rotateY(0deg) translateZ(40px);">1</div>
-            <div class="cube__face" style="transform: rotateY(90deg) translateZ(40px);">2</div>
-            <div class="cube__face" style="transform: rotateY(180deg) translateZ(40px);">3</div>
-            <div class="cube__face" style="transform: rotateY(-90deg) translateZ(40px);">4</div>
-            <div class="cube__face" style="transform: rotateX(90deg) translateZ(40px);">5</div>
-            <div class="cube__face" style="transform: rotateX(-90deg) translateZ(40px);">6</div>
+    <button class="btn" id="btnAgrandir">Agrandir 4→7</button>
+    <button class="btn" id="btnReduire">Réduire 5→4</button>
+
+    <span class="sep"></span>
+
+    <button class="btn" id="btnLong">Longueurs : OFF</button>
+  </div>
+
+  <div class="group">
+    <span class="sep"></span>
+    <button class="btn" id="btnReset">Réinitialiser</button>
+  </div>
+</div>
+
+<div class="canvas">
+  <svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<!-- Modal énoncé -->
+<div id="overlay" class="overlay" aria-hidden="true">
+  <div class="paper">
+    <div class="topbar">
+      <button class="close" id="closeOverlay" aria-label="Fermer">×</button>
+    </div>
+    <h2>AGRANDISSEMENT ET RÉDUCTION</h2>
+
+    <h3 style="margin:18px 0 8px; font-size:1.28rem;">Le puzzle de Rousseau</h3>
+
+    <div style="display:flex; gap:25px; align-items:flex-start; flex-wrap:wrap; margin: 12px 0 8px;">
+      <div style="flex:0 0 auto;">
+        <svg width="350" height="350" viewBox="0 0 420 420" style="border:1px solid #e5e7eb; background:#fff; display:block;">
+          <g id="paperPuzzle" transform="translate(0,0)"></g>
+        </svg>
+      </div>
+
+      <div style="flex:1 1 320px; font-size:1.08rem; line-height:1.55;">
+        <p style="margin-top:0;">
+          <strong>A) AGRANDISSEMENT :</strong> Le puzzle de Rousseau ci-contre doit être agrandi.
+        </p>
+        <div class="rule">
+          Règle : Le segment qui mesure 4&nbsp;cm sur le puzzle original mesure 7&nbsp;cm sur le puzzle agrandi.
         </div>
-        <div class="cube" id="die2">
-            <div class="cube__face" style="transform: rotateY(0deg) translateZ(40px);">1</div>
-            <div class="cube__face" style="transform: rotateY(90deg) translateZ(40px);">2</div>
-            <div class="cube__face" style="transform: rotateY(180deg) translateZ(40px);">3</div>
-            <div class="cube__face" style="transform: rotateY(-90deg) translateZ(40px);">4</div>
-            <div class="cube__face" style="transform: rotateX(90deg) translateZ(40px);">5</div>
-            <div class="cube__face" style="transform: rotateX(-90deg) translateZ(40px);">6</div>
+
+        <p style="margin-top:26px;">
+          <strong>B) RÉDUCTION :</strong> Le puzzle de Rousseau ci-contre doit être réduit.
+        </p>
+        <div class="rule">
+          Règle : Les segments qui mesurent 5&nbsp;cm sur le puzzle original mesurent 4&nbsp;cm sur le puzzle réduit.
         </div>
+      </div>
     </div>
 
-    <div class="controls">
-        <button class="btn-action btn-roll" id="rollBtn" onclick="rollDice()" disabled>LANCER !</button>
-    </div>
-    
-    <div class="controls">
-        <button class="btn-sim" onclick="simulate(100)">Simuler 100 lancers</button>
-        <button class="btn-sim" onclick="simulate(1000)">Simuler 1000 lancers</button>
-        <button class="btn-sim" onclick="resetStats()" style="color:#e74c3c; border-color:#e74c3c;">Reset</button>
-    </div>
+    <h3 style="margin:18px 0 8px; font-size:1.28rem;">Question</h3>
 
-    <div id="chart-container"></div>
-
-    <button class="sheet-btn" onclick="openSheet()">📄 Fiche de Recherche</button>
-
-    <div id="worksheet-overlay">
-        <div class="sheet-paper">
-            <div class="no-print" style="text-align:right; margin-bottom:20px;">
-                <button onclick="window.print()" style="cursor:pointer; padding:10px 20px; background:#333; color:white; border:none;">🖨️ Imprimer</button>
-                <button onclick="closeSheet()" style="cursor:pointer; padding:10px 20px; margin-left:10px;">Fermer</button>
-            </div>
-
-            <h1 style="text-align:center; border-bottom:4px solid black; padding-bottom:10px;">MISSION : CASSER LA BANQUE</h1>
-            
-            <p style="font-size:16px;">
-                <strong>Le contexte :</strong> Tu participes à un jeu de dés. On lance <strong>2 dés</strong> et on fait la <strong>somme</strong>.
-                Avant de lancer, tu dois choisir UN SEUL nombre (entre 2 et 12). Si la somme est égale à ton nombre, tu gagnes.
-            </p>
-
-            <div style="background:#eee; padding:15px; border-left:5px solid #000; margin: 30px 0;">
-                <h3 style="margin-top:0;">LA QUESTION :</h3>
-                <p style="font-size:18px; font-weight:bold;">Quel nombre faut-il choisir pour maximiser ses chances de gagner ?</p>
-            </div>
-
-            <h3>1. Phase de Recherche (Brouillon)</h3>
-            <p>Utilisez cet espace pour mener votre investigation. Schémas, listes et essais sont les bienvenus.</p>
-            <div class="research-box"></div>
-
-            <h3>2. Analyse des cas extrêmes</h3>
-            <p>Pour mieux comprendre la situation, intéressons-nous aux sommes minimale et maximale.</p>
-            <ul>
-                <li>De combien de façons différentes peut-on obtenir la somme <strong>2</strong> ? <span class="fill-zone"></span></li>
-                <li>De combien de façons différentes peut-on obtenir la somme <strong>12</strong> ? <span class="fill-zone"></span></li>
-            </ul>
-
-            <h3>3. Dénombrement exhaustif</h3>
-            <p>Afin de déterminer la probabilité de chaque somme, complétez le tableau ci-dessous en additionnant la valeur du <strong>Dé Rouge</strong> et du <strong>Dé Bleu</strong>.</p>
-
-            <table class="guided-table">
-                <tr>
-                    <th style="border:none; background:white;"></th>
-                    <th class="head-blue">1</th> <th class="head-blue">2</th> <th class="head-blue">3</th> <th class="head-blue">4</th> <th class="head-blue">5</th> <th class="head-blue">6</th>
-                </tr>
-                <tr>
-                    <th class="head-red">1</th>
-                    <td class="pre-filled">2</td> <td></td> <td></td> <td></td> <td></td> <td></td>
-                </tr>
-                <tr>
-                    <th class="head-red">2</th>
-                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
-                </tr>
-                <tr>
-                    <th class="head-red">3</th>
-                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
-                </tr>
-                <tr>
-                    <th class="head-red">4</th>
-                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
-                </tr>
-                <tr>
-                    <th class="head-red">5</th>
-                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
-                </tr>
-                <tr>
-                    <th class="head-red">6</th>
-                    <td></td> <td></td> <td></td> <td></td> <td></td> <td class="pre-filled">12</td>
-                </tr>
-            </table>
-
-            <h3>4. Bilan et Conclusion</h3>
-            <ul>
-                <li>Combien y a-t-il d'issues possibles au total (nombre de cases du tableau) ? <span class="fill-zone"></span></li>
-                <li>Quelle est la somme qui apparaît le plus souvent dans le tableau ? <span class="fill-zone"></span></li>
-                <li>Quelle est la probabilité d'obtenir cette somme ? <span class="fill-zone"></span></li>
-            </ul>
-            <p style="margin-top:20px; font-weight:bold; border: 2px solid #333; padding: 10px;">
-                Conclusion : Le nombre sur lequel il faut parier est le ............
-            </p>
-
-        </div>
-    </div>
+    <p style="margin-top:6px;">
+      Comparez les <strong>angles</strong> du puzzle original avec ceux du puzzle agrandi, puis avec ceux du puzzle réduit.<br/>
+      <strong>Que remarques-tu&nbsp;?</strong>
+    </p>
+  </div>
+</div>
 
 <script>
-    let selectedBet = null;
-    const sumsCounts = new Array(13).fill(0);
-    let totalRolls = 0;
+/* =========================
+   Données (en cm) — puzzle original
+   Repère : (0,0) en bas-gauche du carré
+========================= */
 
-    // INIT
-    const betContainer = document.getElementById('bet-buttons');
-    for(let i=2; i<=12; i++) {
-        let btn = document.createElement('button');
-        btn.className = 'bet-btn';
-        btn.innerText = i;
-        btn.onclick = () => selectBet(i, btn);
-        betContainer.appendChild(btn);
+const PIECES = [
+  {
+    id:"p1", fill:"#fca5a5",
+    pts:[[0,0],[4,0],[4,9],[0,5]],
+    num:{x:1.9,y:3.3, t:"1"},
+    labels:[
+      {x:2, y:-0.25, L:4, a:0},
+      {x:-0.7, y:2.5, L:5, a:-90},
+      {x:3.65, y:4.55, L:9, a:-90}
+    ]
+  },
+  {
+    id:"p2", fill:"#fdba74",
+    pts:[[0,5],[4,9],[6,11],[0,11]],
+    num:{x:2.1,y:8.4, t:"2"},
+    labels:[
+      {x:-0.7, y:8.0, L:6, a:-90},
+      {x:3.0, y:11.35, L:6, a:0}
+    ]
+  },
+  {
+    id:"p3", fill:"#fcd34d",
+    pts:[[6,11],[11,11],[11,9],[4,9]],
+    num:{x:8.3,y:10.2, t:"3"},
+    labels:[
+      {x:8.5, y:11.35, L:5, a:0},
+      {x:11.75, y:10.0, L:2, a:90},
+      {x:7.45, y:9.25, L:7, a:0}
+    ]
+  },
+  {
+    id:"p4", fill:"#86efac",
+    pts:[[4,0],[6,0],[6,7],[4,9]],
+    num:{x:5.0,y:4.0, t:"4"},
+    labels:[
+      {x:5.0, y:-0.25, L:2, a:0},
+      {x:6.35, y:3.6, L:7, a:-90}
+    ]
+  },
+  {
+    id:"p5", fill:"#93c5fd",
+    pts:[[6,0],[11,0],[11,2],[6,7]],
+    num:{x:8.6,y:2.7, t:"5"},
+    labels:[
+      {x:8.5, y:-0.25, L:5, a:0},
+      {x:11.75, y:1.05, L:2, a:90}
+    ]
+  },
+  {
+    id:"p6", fill:"#c4b5fd",
+    pts:[[4,9],[11,9],[11,2],[6,7]],
+    num:{x:8.0,y:6.8, t:"6"},
+    labels:[
+      {x:11.75, y:5.55, L:7, a:90}
+    ]
+  }
+];
+
+const MEASURED_EDGE_BY_KEY = new Map();
+
+function edgeKey(p, q){
+  const a = `${p[0]},${p[1]}`;
+  const b = `${q[0]},${q[1]}`;
+  return (a < b) ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function buildMeasuredEdges(){
+  for(const piece of PIECES){
+    const pts = piece.pts;
+    const n = pts.length;
+    piece._edgeKeys = new Array(n);
+    piece._edgeInfoBase = new Array(n);
+    for(let i=0;i<n;i++){
+      const j = (i+1)%n;
+      const p = pts[i], q = pts[j];
+      const dx = q[0]-p[0];
+      const dy = q[1]-p[1];
+      piece._edgeKeys[i] = edgeKey(p,q);
+      piece._edgeInfoBase[i] = {
+        mx:(p[0]+q[0])/2,
+        my:(p[1]+q[1])/2,
+        dx, dy
+      };
     }
+  }
 
-    const chartContainer = document.getElementById('chart-container');
-    for(let i=2; i<=12; i++) {
-        let group = document.createElement('div');
-        group.className = 'bar-group';
-        let bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.id = `bar-${i}`;
-        let label = document.createElement('div');
-        label.className = 'bar-label';
-        label.innerText = i;
-        group.appendChild(bar);
-        group.appendChild(label);
-        chartContainer.appendChild(group);
-    }
+  for(const piece of PIECES){
+    const edges = piece._edgeInfoBase;
+    const n = edges.length;
+    const labs = piece.labels || [];
+    for(const lab of labs){
+      const a = normRot(lab.a || 0);
+      const wantH = (a === 0 || a === 180);
+      const wantV = (a === 90 || a === 270);
 
-    function selectBet(num, btnElement) {
-        selectedBet = num;
-        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
-        btnElement.classList.add('active');
-        document.getElementById('rollBtn').disabled = false;
-        document.getElementById('message-box').innerHTML = `Mise sur le <span style="color:#f1c40f; margin:0 10px; font-size:2rem;">${num}</span>... Lance !`;
-        document.getElementById('message-box').className = '';
-    }
+      let bestI = -1;
+      let bestD = 1e18;
+      for(let i=0;i<n;i++){
+        const e = edges[i];
+        const isH = Math.abs(e.dy) < 1e-6 && Math.abs(e.dx) > 1e-6;
+        const isV = Math.abs(e.dx) < 1e-6 && Math.abs(e.dy) > 1e-6;
+        if(wantH && !isH) continue;
+        if(wantV && !isV) continue;
+        const d = Math.hypot((lab.x - e.mx), (lab.y - e.my));
+        if(d < bestD){ bestD = d; bestI = i; }
+      }
 
-    function rollDice() {
-        const btn = document.getElementById('rollBtn');
-        btn.disabled = true;
-
-        const die1 = document.getElementById('die1');
-        const die2 = document.getElementById('die2');
-
-        const rx1 = Math.floor(Math.random() * 720 + 360);
-        const ry1 = Math.floor(Math.random() * 720 + 360);
-        const rx2 = Math.floor(Math.random() * 720 + 360);
-        const ry2 = Math.floor(Math.random() * 720 + 360);
-
-        die1.style.transform = `rotateX(${rx1}deg) rotateY(${ry1}deg)`;
-        die2.style.transform = `rotateX(${rx2}deg) rotateY(${ry2}deg)`;
-
-        setTimeout(() => {
-            const v1 = Math.floor(Math.random() * 6) + 1;
-            const v2 = Math.floor(Math.random() * 6) + 1;
-            const sum = v1 + v2;
-
-            setFace(die1, v1);
-            setFace(die2, v2);
-
-            const msgBox = document.getElementById('message-box');
-            if (sum === selectedBet) {
-                msgBox.innerHTML = `SOMME ${sum} : GAGNÉ ! 🎉`;
-                msgBox.className = "win-anim";
-            } else {
-                msgBox.innerHTML = `SOMME ${sum} : PERDU... (Tu avais misé ${selectedBet})`;
-                msgBox.className = "lose-anim";
-            }
-
-            updateStats(sum);
-            btn.disabled = false;
-        }, 600);
-    }
-
-    function setFace(die, val) {
-        die.style.transition = 'transform 0.2s';
-        let rx=0, ry=0;
-        switch(val){
-            case 1: rx=0; ry=0; break;
-            case 2: rx=0; ry=-90; break;
-            case 3: rx=0; ry=180; break;
-            case 4: rx=0; ry=90; break;
-            case 5: rx=-90; ry=0; break;
-            case 6: rx=90; ry=0; break;
+      if(bestI >= 0){
+        const key = piece._edgeKeys[bestI];
+        if(!MEASURED_EDGE_BY_KEY.has(key)){
+          MEASURED_EDGE_BY_KEY.set(key, lab.L);
         }
-        die.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      }
     }
+  }
 
-    function simulate(count) {
-        for(let k=0; k<count; k++) {
-            let s = Math.floor(Math.random()*6)+1 + Math.floor(Math.random()*6)+1;
-            sumsCounts[s]++;
-            totalRolls++;
+  for(const piece of PIECES){
+    const n = piece._edgeKeys.length;
+    piece._measuredEdges = new Set();
+    piece._measuredL = new Array(n).fill(null);
+    for(let i=0;i<n;i++){
+      const key = piece._edgeKeys[i];
+      if(MEASURED_EDGE_BY_KEY.has(key)){
+        const L = MEASURED_EDGE_BY_KEY.get(key);
+        piece._measuredEdges.add(i);
+        piece._measuredL[i] = L;
+      }
+    }
+  }
+}
+
+buildMeasuredEdges();
+
+let mode = "original";            // original | additive | multiplicative
+let coeff = 1;
+let viewScale = 1;
+let showLengths = false;
+let selectedId = null;
+
+// +3 cm : éclatement léger (mode additif)
+let addSnapshot = null;
+let addTouched = false;
+
+const stage = document.getElementById("stage");
+
+let piecesLayer = null;
+let labelsLayer = null;
+
+function ensureLayers(){
+  if(piecesLayer && labelsLayer) return;
+  piecesLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
+  piecesLayer.setAttribute("id","piecesLayer");
+  labelsLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
+  labelsLayer.setAttribute("id","labelsLayer");
+  labelsLayer.style.pointerEvents = "none";
+  stage.appendChild(piecesLayer);
+  stage.appendChild(labelsLayer);
+}
+
+function centroidPolygon(pts){
+  let A = 0, Cx = 0, Cy = 0;
+  const n = pts.length;
+  for(let i=0;i<n;i++){
+    const [x0,y0] = pts[i];
+    const [x1,y1] = pts[(i+1)%n];
+    const cross = x0*y1 - x1*y0;
+    A += cross;
+    Cx += (x0 + x1) * cross;
+    Cy += (y0 + y1) * cross;
+  }
+  A *= 0.5;
+  if(Math.abs(A) < 1e-9){
+    let x=0,y=0;
+    for(const p of pts){ x+=p[0]; y+=p[1]; }
+    return [x/pts.length, y/pts.length];
+  }
+  Cx /= (6*A);
+  Cy /= (6*A);
+  return [Cx, Cy];
+}
+
+let PX_PER_CM = 40;
+
+function recomputePxPerCm(){
+  const w = stage.clientWidth || stage.getBoundingClientRect().width || 1000;
+  const h = stage.clientHeight || stage.getBoundingClientRect().height || 700;
+  const margin = 80;
+  const kMax = 7/4;
+  const puzzleCm = 11;
+  let ppcm = Math.min((w - 2*margin) / (puzzleCm * kMax), (h - 2*margin) / (puzzleCm * kMax));
+  if(!isFinite(ppcm) || ppcm <= 0) ppcm = 40;
+  ppcm = Math.max(22, Math.min(72, ppcm));
+  PX_PER_CM = ppcm;
+}
+
+function toPx(cm){ return cm * PX_PER_CM; }
+function cmToStage(p){ return [toPx(p[0]), toPx(-p[1])]; }
+
+function placeLabelConsistent(ptsCm, lx, ly, ang){
+  const off = 0.22;
+  const a = ang || 0;
+
+  if(a === 0){
+    const ys = Array.from(new Set(ptsCm.map(p=>p[1])));
+    let best = ys[0], bestd = Infinity;
+    for(const y of ys){
+      const d = Math.abs(ly - y);
+      if(d < bestd){ bestd = d; best = y; }
+    }
+    const sign = (ly >= best) ? 1 : -1;
+    return [lx, best + sign*off];
+  }
+
+  if(Math.abs(a) === 90){
+    const xs = Array.from(new Set(ptsCm.map(p=>p[0])));
+    let best = xs[0], bestd = Infinity;
+    for(const x of xs){
+      const d = Math.abs(lx - x);
+      if(d < bestd){ bestd = d; best = x; }
+    }
+    const sign = (lx >= best) ? 1 : -1;
+    return [best + sign*off, ly];
+  }
+
+  return [lx, ly];
+}
+
+function pointsFor(piece){
+  const base = piece.pts.map(p => [p[0], p[1]]);
+  if(mode === "original") return base;
+
+  if(mode === "additive"){
+    const out = base.map(([x,y])=>[x,y]);
+    const add = 3;
+    const minX = Math.min(...out.map(p=>p[0]));
+    const maxX = Math.max(...out.map(p=>p[0]));
+    const minY = Math.min(...out.map(p=>p[1]));
+    const maxY = Math.max(...out.map(p=>p[1]));
+    for(const p of out){
+      if(Math.abs(p[0]-minX) < 1e-6) p[0] -= add*0.45;
+      if(Math.abs(p[0]-maxX) < 1e-6) p[0] += add*0.45;
+      if(Math.abs(p[1]-minY) < 1e-6) p[1] -= add*0.45;
+      if(Math.abs(p[1]-maxY) < 1e-6) p[1] += add*0.45;
+    }
+    return out;
+  }
+
+  if(mode === "multiplicative"){
+    const k = coeff;
+    return base.map(([x,y])=>[x*k, y*k]);
+  }
+
+  return base;
+}
+
+function clearStage(){
+  stage.innerHTML = "";
+  piecesLayer = null;
+  labelsLayer = null;
+}
+
+function lengthText(v){
+  if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return v.toFixed(2).replace(".",",");
+}
+
+function labelValue(L){
+  if(mode === "original") return L;
+  if(mode === "additive") return L + 3;
+  if(mode === "multiplicative") return L * coeff;
+  return L;
+}
+
+function addPiece(piece, initial){
+  ensureLayers();
+  const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+  g.classList.add("piece");
+  g.dataset.id = piece.id;
+  g.style.cursor = "grab";
+
+  const ptsCm = pointsFor(piece);
+  const pts = ptsCm.map(cmToStage);
+
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
+  d += " Z";
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d", d);
+  path.setAttribute("fill", piece.fill);
+  g.appendChild(path);
+
+  const [ccmX, ccmY] = centroidPolygon(ptsCm);
+  const [cpx, cpy] = cmToStage([ccmX, ccmY]);
+  g._cx = cpx;
+  g._cy = cpy;
+
+  g._verts = pts;
+
+  g._snapLocal = pts.map(p=>[p[0],p[1]]);
+
+  const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  ring.setAttribute("cx", cpx);
+  ring.setAttribute("cy", cpy);
+  ring.setAttribute("r", 15);
+  ring.setAttribute("class","numRing");
+  g.appendChild(ring);
+
+  const num = document.createElementNS("http://www.w3.org/2000/svg","text");
+  num.setAttribute("x", cpx);
+  num.setAttribute("y", cpy + 6);
+  num.setAttribute("text-anchor","middle");
+  num.setAttribute("class","num");
+  num.textContent = piece.num.t;
+  g.appendChild(num);
+
+  const lg = document.createElementNS("http://www.w3.org/2000/svg","g");
+  g._labels = lg;
+
+  if(showLengths){
+    const labs = piece.labels || [];
+    for(const lab of labs){
+      const labelValueCm = labelValue(lab.L);
+      const ang = normRot(lab.a || 0);
+      const posCm = placeLabelConsistent(ptsCm, lab.x, lab.y, ang);
+      const [px,py] = cmToStage(posCm);
+
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", px);
+      t.setAttribute("y", py);
+      t.setAttribute("text-anchor","middle");
+      t.setAttribute("class","label");
+      t.textContent = lengthText(labelValueCm);
+
+      if(ang){
+        t.setAttribute("transform", `rotate(${ang} ${px} ${py})`);
+      }
+      lg.appendChild(t);
+    }
+  }
+
+  g._tx = initial.tx;
+  g._ty = initial.ty;
+  g._rot = initial.rot || 0;
+  applyTransform(g);
+
+  g.addEventListener("pointerdown", onPieceDown);
+  piecesLayer.appendChild(g);
+  labelsLayer.appendChild(lg);
+}
+
+function applyTransform(g){
+  const id = g.dataset.id;
+  const isSel = (id === selectedId);
+  g.style.filter = isSel ? "drop-shadow(0 6px 10px rgba(0,0,0,.22))" : "none";
+  const tf = `translate(${g._tx} ${g._ty}) rotate(${g._rot} ${g._cx} ${g._cy})`;
+  g.setAttribute("transform", tf);
+  if(g._labels){
+    g._labels.setAttribute("transform", tf);
+  }
+}
+
+function normRot(r){
+  return (((r % 360) + 360) % 360);
+}
+function getAllPieceEls(){
+  return Array.from(document.querySelectorAll(".piece"));
+}
+
+function transformedPoint(g, x, y){
+  const m = g.getCTM();
+  return {x: m.a*x + m.c*y + m.e, y: m.b*x + m.d*y + m.f};
+}
+function transformedCenter(g){
+  return transformedPoint(g, g._cx, g._cy);
+}
+function transformedVerts(g){
+  const m = g.getCTM();
+  const out = [];
+  if(!g._verts) return out;
+  for(const [x,y] of g._verts){
+    out.push({x: m.a*x + m.c*y + m.e, y: m.b*x + m.d*y + m.f});
+  }
+  return out;
+}
+
+function transformedSnapPoints(g){
+  const m = g.getCTM();
+  if(!m) return [];
+  const pts = g._snapLocal || [];
+  const out = [];
+  for(const [x,y] of pts){
+    out.push({
+      x: m.a*x + m.c*y + m.e,
+      y: m.b*x + m.d*y + m.f
+    });
+  }
+  return out;
+}
+
+function countAligned(ptsA, ptsB, eps){
+  let c = 0;
+  for(const p of ptsA){
+    for(const q of ptsB){
+      if(Math.hypot(q.x-p.x, q.y-p.y) <= eps){ c++; break; }
+    }
+  }
+  return c;
+}
+
+function snapToOtherPieces(g, allowSameTxTy){
+  const EPS = 10;
+  const ptsG = transformedSnapPoints(g);
+  if(ptsG.length === 0) return false;
+
+  const others = getAllPieceEls().filter(h=>h!==g);
+
+  let best = null;
+  for(const h of others){
+    const ptsH = transformedSnapPoints(h);
+    if(ptsH.length === 0) continue;
+
+    for(const pg of ptsG){
+      for(const ph of ptsH){
+        const dx = ph.x - pg.x;
+        const dy = ph.y - pg.y;
+        const d = Math.hypot(dx,dy);
+        if(d <= EPS){
+          if(!best || d < best.d){
+            best = {d, dx, dy, h};
+          }
         }
-        updateChart();
+      }
     }
+  }
 
-    function updateStats(sum) {
-        sumsCounts[sum]++;
-        totalRolls++;
-        updateChart();
+  if(!best) return false;
+
+  const testPts = ptsG.map(p => ({x:p.x + best.dx, y:p.y + best.dy}));
+  const aligned = countAligned(testPts, transformedSnapPoints(best.h), EPS);
+
+  if(aligned >= 2 || best.d <= 12){
+    g._tx += best.dx;
+    g._ty += best.dy;
+    applyTransform(g);
+    return true;
+  }
+  return false;
+}
+
+function updateViewScale(){
+  viewScale = 1;
+}
+
+function assembledPositions(){
+  const w = stage.clientWidth || stage.getBoundingClientRect().width;
+  const h = stage.clientHeight || stage.getBoundingClientRect().height;
+
+  updateViewScale();
+  const eff = (mode==="multiplicative") ? (coeff * viewScale) : 1;
+
+  const puzzleW = toPx(11 * eff);
+  const puzzleH = toPx(11 * eff);
+
+  const M = 20;
+  const extraTop = toPx(0.55 * eff);
+  const extraBottom = toPx(0.35 * eff);
+
+  const bboxW = puzzleW;
+  const bboxH = puzzleH + extraTop + extraBottom;
+
+  let left = (w - bboxW) / 2;
+  let top = (h - bboxH) / 2 + extraTop; // top = sommet du carré (pas du bbox)
+
+  // Petit confort visuel : on descend très légèrement l'ensemble au départ.
+  top += 10;
+
+  left = Math.max(M, left);
+  top = Math.max(M + extraTop, top);
+
+  const bboxBottom = top + puzzleH + extraBottom;
+  if(bboxBottom > h - M){
+    top -= (bboxBottom - (h - M));
+  }
+  top = Math.max(M + extraTop, top);
+
+  const baseTx = left;
+  const baseTy = top + puzzleH;
+
+  const pos = {};
+  for(const piece of PIECES){
+    pos[piece.id] = { tx: baseTx, ty: baseTy, rot: 0 };
+  }
+  return pos;
+}
+
+let currentPositions = assembledPositions();
+
+/* Interaction */
+let drag = {active:false, id:null, startX:0, startY:0, baseTx:0, baseTy:0};
+
+function bringToFront(g){ piecesLayer.appendChild(g); if(g._labels){ labelsLayer.appendChild(g._labels); } }
+
+function selectPiece(id){
+  selectedId = id;
+  getAllPieceEls().forEach(g=>{
+    const isSel = (g.dataset.id === id);
+    g.style.opacity = isSel ? "1" : "1";
+    applyTransform(g);
+  });
+}
+
+function onPieceDown(e){
+  if(e.button !== undefined && e.button !== 0) return;
+  const g = e.currentTarget;
+  bringToFront(g);
+  selectPiece(g.dataset.id);
+
+  drag.active = true;
+  drag.id = g.dataset.id;
+  drag.startX = e.clientX;
+  drag.startY = e.clientY;
+  drag.baseTx = g._tx;
+  drag.baseTy = g._ty;
+
+  g.style.cursor = "grabbing";
+  g.setPointerCapture(e.pointerId);
+
+  g.addEventListener("pointermove", onPieceMove);
+  g.addEventListener("pointerup", onPieceUp);
+  g.addEventListener("pointercancel", onPieceUp);
+}
+
+function onPieceMove(e){
+  if(!drag.active) return;
+  const g = e.currentTarget;
+  const dx = e.clientX - drag.startX;
+  const dy = e.clientY - drag.startY;
+  g._tx = drag.baseTx + dx;
+  g._ty = drag.baseTy + dy;
+  applyTransform(g);
+}
+
+function onPieceUp(e){
+  const g = e.currentTarget;
+  drag.active = false;
+  g.removeEventListener("pointermove", onPieceMove);
+  g.removeEventListener("pointerup", onPieceUp);
+  g.removeEventListener("pointercancel", onPieceUp);
+  try{ g.releasePointerCapture(e.pointerId); }catch(_){ }
+
+  const id = g.dataset.id;
+  if(mode==="additive") addTouched = true;
+
+  let snapped = snapToOtherPieces(g, true);
+
+  if(!snapped){
+    const tgt = assembledPositions()[id];
+    const okRot = normRot(g._rot) === 0;
+    if(tgt && okRot){
+      const HARD = 55;
+      const dx = g._tx - tgt.tx;
+      const dy = g._ty - tgt.ty;
+      if(Math.hypot(dx,dy) < HARD){
+        g._tx = tgt.tx;
+        g._ty = tgt.ty;
+        g._rot = 0;
+        applyTransform(g);
+      }
     }
+  }
+  currentPositions[id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+}
 
-    function updateChart() {
-        let max = Math.max(...sumsCounts);
-        for(let i=2; i<=12; i++) {
-            let bar = document.getElementById(`bar-${i}`);
-            let h = max > 0 ? (sumsCounts[i]/max*100) : 0;
-            bar.style.height = Math.max(h, 2) + '%';
-        }
+/* UI */
+
+/* UI */
+function capturePositionsFromDOM(){
+  const out = {};
+  document.querySelectorAll(".piece").forEach(g=>{
+    out[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot || 0};
+  });
+  return out;
+}
+
+function applyPositions(pos){
+  if(!pos) return;
+  document.querySelectorAll(".piece").forEach(g=>{
+    const p = pos[g.dataset.id];
+    if(!p) return;
+    g._tx = p.tx; g._ty = p.ty; g._rot = p.rot || 0;
+    applyTransform(g);
+    currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+  });
+}
+
+function applyAdditiveScatter(){
+  const base = assembledPositions();
+  const center = {x:5.5, y:5.5};
+  const scatterCm = 0.65;
+
+  for(const piece of PIECES){
+    const [cx, cy] = centroidPolygon(piece.pts);
+    let vx = cx - center.x;
+    let vy = cy - center.y;
+    let L = Math.hypot(vx, vy);
+    if(L < 1e-6){ L = 1; vx = 1; vy = 0; }
+    vx /= L; vy /= L;
+
+    const dx = toPx(vx * scatterCm);
+    const dy = toPx(-vy * scatterCm);
+
+    const g = document.querySelector(`.piece[data-id="${piece.id}"]`);
+    if(!g) continue;
+
+    g._tx = base[piece.id].tx + dx;
+    g._ty = base[piece.id].ty + dy;
+    g._rot = 0;
+    applyTransform(g);
+    currentPositions[piece.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+  }
+
+  nudgeAllPiecesIntoView();
+}
+
+function setMode(newMode){
+  const prevMode = mode;
+
+  if(newMode==="additive" && prevMode!=="additive"){
+    addSnapshot = capturePositionsFromDOM();
+    addTouched = false;
+  }
+
+  const leavingAdd = (prevMode==="additive" && newMode!=="additive");
+
+  mode = newMode;
+  const bO = document.getElementById("mOrig");
+  const bA = document.getElementById("mAdd");
+
+  [bO,bA].forEach(b=>{ if(b) b.classList.remove("active","wrong","correct"); });
+
+  if(mode==="original"){ if(bO) bO.classList.add("active"); }
+  if(mode==="additive"){ if(bA) bA.classList.add("active","wrong"); }
+
+  redrawKeepingPositions();
+
+  if(mode==="additive"){
+    applyAdditiveScatter();
+  }else if(leavingAdd){
+    if(addSnapshot && !addTouched){
+      applyPositions(addSnapshot);
     }
+    addSnapshot = null;
+    addTouched = false;
+  }
+}
 
-    function resetStats() {
-        for(let i=0; i<13; i++) sumsCounts[i]=0;
-        totalRolls=0;
-        updateChart();
+function redrawKeepingPositions(){
+  updateViewScale();
+  const existing = {};
+  document.querySelectorAll(".piece").forEach(g=>{
+    existing[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+  });
+  clearStage();
+  for(const p of PIECES){
+    const init = existing[p.id] || currentPositions[p.id] || {tx:80,ty:80,rot:0};
+    addPiece(p, init);
+  }
+  if(selectedId) selectPiece(selectedId);
+}
+
+function nudgeAllPiecesIntoView(){
+  const rect = stage.getBoundingClientRect();
+  const w = rect.width || stage.clientWidth || 1000;
+  const h = rect.height || stage.clientHeight || 700;
+  const margin = 16;
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  function addElBBox(el){
+    if(!el) return;
+    let bb;
+    try{ bb = el.getBBox(); }catch(_){ return; }
+    const m = el.getCTM();
+    if(!m) return;
+
+    const corners = [
+      {x: bb.x, y: bb.y},
+      {x: bb.x + bb.width, y: bb.y},
+      {x: bb.x + bb.width, y: bb.y + bb.height},
+      {x: bb.x, y: bb.y + bb.height}
+    ];
+
+    for(const c of corners){
+      const x = m.a*c.x + m.c*c.y + m.e;
+      const y = m.b*c.x + m.d*c.y + m.f;
+      if(x < minX) minX = x;
+      if(y < minY) minY = y;
+      if(x > maxX) maxX = x;
+      if(y > maxY) maxY = y;
     }
+  }
 
-    function openSheet() { document.getElementById('worksheet-overlay').style.display = 'block'; }
-    function closeSheet() { document.getElementById('worksheet-overlay').style.display = 'none'; }
+  const pieces = getAllPieceEls();
+  for(const g of pieces){
+    addElBBox(g);
+    if(g._labels) addElBBox(g._labels);
+  }
+  if(!isFinite(minX)) return;
+
+  let dx = 0;
+  if(minX < margin) dx = (margin - minX);
+  if(maxX + dx > w - margin) dx = ((w - margin) - maxX);
+
+  let dy = 0;
+  if(minY < margin) dy += (margin - minY);
+  if(maxY + dy > h - margin) dy += ((h - margin) - (maxY + dy));
+
+  if(Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+  document.querySelectorAll('.piece').forEach(g=>{
+    g._tx += dx;
+    g._ty += dy;
+    applyTransform(g);
+    currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+  });
+}
+
+function resetAssembled(){
+  const pos = assembledPositions();
+  document.querySelectorAll(".piece").forEach(g=>{
+    const p = pos[g.dataset.id];
+    g._tx = p.tx; g._ty = p.ty; g._rot = 0;
+    applyTransform(g);
+    currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
+  });
+}
+
+function setAgrandissement(){ coeff = 7/4; setMode("multiplicative"); nudgeAllPiecesIntoView(); }
+function setReduction(){ coeff = 4/5; setMode("multiplicative"); nudgeAllPiecesIntoView(); }
+
+function toggleLengths(){
+  showLengths = !showLengths;
+  document.getElementById("btnLong").textContent = "Longueurs : " + (showLengths ? "ON" : "OFF");
+  redrawKeepingPositions();
+}
+
+// Modal
+const overlay = document.getElementById("overlay");
+function openOverlay(){
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden","false");
+}
+function closeOverlay(){
+  overlay.classList.remove("active");
+  overlay.setAttribute("aria-hidden","true");
+}
+
+function printEnonce(){
+  openOverlay();
+  setTimeout(()=>{ window.print(); }, 60);
+}
+
+document.getElementById("mOrig").addEventListener("click", ()=>{ coeff=1; setMode("original"); });
+document.getElementById("mAdd").addEventListener("click", ()=>{ setMode("additive"); });
+document.getElementById("btnAgrandir").addEventListener("click", setAgrandissement);
+document.getElementById("btnReduire").addEventListener("click", setReduction);
+document.getElementById("btnReset").addEventListener("click", resetAssembled);
+document.getElementById("btnLong").addEventListener("click", toggleLengths);
+document.getElementById("btnEnonce").addEventListener("click", openOverlay);
+document.getElementById("btnPrint").addEventListener("click", printEnonce);
+document.getElementById("closeOverlay").addEventListener("click", closeOverlay);
+
+document.getElementById("btnFS").addEventListener("click", ()=>{
+  try{
+    if(!document.fullscreenElement){
+      (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || function(){}).call(document.documentElement);
+    }else{
+      (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+    }
+  }catch(e){}
+});
+document.addEventListener("fullscreenchange", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
+document.addEventListener("webkitfullscreenchange", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
+overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeOverlay(); });
+
+/* Puzzle dans l’énoncé */
+function drawPaperPuzzle(){
+  const g = document.getElementById("paperPuzzle");
+  g.innerHTML = "";
+
+  const VB = 420;
+  const minX = -0.45, maxX = 11.45;
+  const minY = -11.5,  maxY = 0;
+  const scale = 31;
+  const tx = (VB - (maxX - minX) * scale) / 2 - (minX * scale);
+  const ty = (VB - (maxY - minY) * scale) / 2 - (minY * scale);
+
+  const outline = document.createElementNS("http://www.w3.org/2000/svg","g");
+  outline.setAttribute("transform", `translate(${tx} ${ty}) scale(${scale} ${-scale})`);
+  outline.setAttribute("fill","none");
+  outline.setAttribute("stroke","#111827");
+  outline.setAttribute("stroke-width","0.08");
+  outline.setAttribute("stroke-linejoin","round");
+
+  for(const p of PIECES){
+    const pts = p.pts;
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=1;i<pts.length;i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
+    d += " Z";
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", d);
+    outline.appendChild(path);
+  }
+  g.appendChild(outline);
+
+  const txtG = document.createElementNS("http://www.w3.org/2000/svg","g");
+  txtG.setAttribute("font-family","Arial");
+  txtG.setAttribute("font-size","16");
+  txtG.setAttribute("fill","#111827");
+  txtG.setAttribute("text-anchor","middle");
+
+  const texts = [
+    {x:2, y:-0.28, t:"4 cm"},
+    {x:5, y:-0.28, t:"2 cm"},
+    {x:8.50, y:-0.28, t:"5 cm"},
+    {x:-0.28, y:-2.50, t:"5 cm", r:-90},
+    {x:-0.28, y:-8.00, t:"6 cm", r:-90},
+    {x:3.00, y:-11.28, t:"6 cm"},
+    {x:8.50, y:-11.28, t:"5 cm"},
+    {x:11.28, y:-10.00, t:"2 cm", r:90},
+    {x:11.28, y:-5.50, t:"7 cm", r:90},
+    {x:11.28, y:-1.00, t:"2 cm", r:90},
+    {x:3.72, y:-4.50, t:"9 cm", r:-90, anchor:"end"},
+    {x:6.62, y:-3.50, t:"7 cm", r:-90, anchor:"middle"},
+    {x:7.50, y:-9.28, t:"7 cm"}
+  ];
+
+  for(const item of texts){
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.textContent = item.t;
+    const px = tx + item.x*scale;
+    const py = ty + item.y*scale;
+    t.setAttribute("x", px);
+    t.setAttribute("y", py);
+    if(item.anchor) t.setAttribute("text-anchor", item.anchor);
+    if(item.r){
+      t.setAttribute("transform", `rotate(${item.r} ${px} ${py})`);
+    }
+    txtG.appendChild(t);
+  }
+  g.appendChild(txtG);
+}
+
+function init(){
+  drawPaperPuzzle();
+  clearStage();
+  recomputePxPerCm();
+  currentPositions = assembledPositions();
+  for(const p of PIECES) addPiece(p, currentPositions[p.id]);
+  selectPiece("p1");
+}
+requestAnimationFrame(init);
+
+window.addEventListener("resize", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
 </script>
 
 </body>
