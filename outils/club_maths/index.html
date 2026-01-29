@@ -14,7 +14,8 @@
             /* Couleurs Activités */
             --tables-c1: #00d2ff; --tables-c2: #3a7bd5;
             --chaos-c1: #ff0055; --chaos-c2: #ff4b2b;
-            --scratch-c1: #FFAB00; --scratch-c2: #FFD200;
+            /* Ajout des couleurs pour Nim (Vert) */
+            --nim-c1: #11998e; --nim-c2: #38ef7d;
         }
 
         body {
@@ -40,7 +41,7 @@
 
         header h1 {
             margin: 0;
-            font-size: clamp(2rem, 5vw, 3rem); /* Taille adaptative */
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 300;
             letter-spacing: 2px;
         }
@@ -75,28 +76,20 @@
         /* CONTENEUR GRILLE */
         .container {
             max-width: 1000px;
-            margin: -40px auto 40px; /* Remonte sur le header */
+            margin: -40px auto 40px;
             padding: 0 20px;
             display: grid;
-            
-            /* GESTION MOBILE : 
-               Si l'écran est large, on met autant de colonnes que possible (min 300px).
-               Si l'écran est petit, ça passe automatiquement à 1 colonne.
-            */
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            
             gap: 30px;
             z-index: 10;
         }
 
-        /* Force 1 seule colonne sur les très petits écrans pour confort max */
         @media (max-width: 600px) {
             .container {
                 grid-template-columns: 1fr;
-                margin-top: 20px; /* Ne remonte plus sur le header sur mobile */
+                margin-top: 20px;
                 gap: 20px;
             }
-            /* Repositionner le bouton retour pour qu'il ne gêne pas le titre sur mobile */
             .back-btn { position: relative; top: 0; left: 0; display: inline-flex; margin-bottom: 20px;}
             header { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 20px; }
         }
@@ -182,6 +175,8 @@
             background: linear-gradient(90deg, var(--tables-c1), var(--tables-c2));
             color: white;
             border-color: transparent;
+            /* Correction du bug des bordures */
+            background-origin: border-box;
         }
 
         /* Jeu du Chaos (Rouge) */
@@ -195,6 +190,21 @@
             background: linear-gradient(90deg, var(--chaos-c1), var(--chaos-c2));
             color: white;
             border-color: transparent;
+            background-origin: border-box;
+        }
+
+        /* Jeu de Nim (Vert) - NOUVEAU */
+        .nim .card-header { background: linear-gradient(90deg, var(--nim-c1), var(--nim-c2)); }
+        .nim .btn { 
+            color: var(--nim-c1); 
+            border-color: var(--nim-c1); 
+            background: transparent;
+        }
+        .nim:hover .btn {
+            background: linear-gradient(90deg, var(--nim-c1), var(--nim-c2));
+            color: white;
+            border-color: transparent;
+            background-origin: border-box;
         }
 
         footer {
@@ -216,7 +226,6 @@
 
     <div class="container">
         
-        <!-- CARTE 1 : TABLES MODULAIRES -->
         <a href="tables_modulaires.html" class="card tables">
             <div class="card-header"></div>
             <div class="card-content">
@@ -227,7 +236,6 @@
             </div>
         </a>
 
-        <!-- CARTE 2 : JEU DU CHAOS -->
         <a href="jeu_du_chaos.html" class="card chaos">
             <div class="card-header"></div>
             <div class="card-content">
@@ -238,10 +246,20 @@
             </div>
         </a>  
 
+        <a href="jeu_de_nim.html" class="card nim">
+            <div class="card-header"></div>
+            <div class="card-content">
+                <div class="card-icon">🥢</div>
+                <h2>Jeu de Nim</h2>
+                <p>Affrontez l'ordinateur dans ce jeu de stratégie ancestral. Comprendrez-vous l'astuce mathématique pour gagner ?</p>
+                <span class="btn">Lancer l'activité</span>
+            </div>
+        </a>
+
     </div>
 
     <footer>
-        
+        © Club Maths - Activités Interactives
     </footer>
 
 </body>
