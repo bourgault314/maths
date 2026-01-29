@@ -14,7 +14,7 @@
             /* Couleurs Activités */
             --tables-c1: #00d2ff; --tables-c2: #3a7bd5;
             --chaos-c1: #ff0055; --chaos-c2: #ff4b2b;
-            /* Ajout des couleurs pour Nim (Vert) */
+            /* Couleurs Nim (Vert) */
             --nim-c1: #11998e; --nim-c2: #38ef7d;
         }
 
@@ -175,7 +175,6 @@
             background: linear-gradient(90deg, var(--tables-c1), var(--tables-c2));
             color: white;
             border-color: transparent;
-            /* Correction du bug des bordures */
             background-origin: border-box;
         }
 
@@ -193,7 +192,7 @@
             background-origin: border-box;
         }
 
-        /* Jeu de Nim (Vert) - NOUVEAU */
+        /* Jeu de Nim (Vert) */
         .nim .card-header { background: linear-gradient(90deg, var(--nim-c1), var(--nim-c2)); }
         .nim .btn { 
             color: var(--nim-c1); 
@@ -205,14 +204,6 @@
             color: white;
             border-color: transparent;
             background-origin: border-box;
-        }
-
-        footer {
-            margin-top: auto;
-            text-align: center;
-            padding: 40px;
-            color: #888;
-            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -257,10 +248,6 @@
         </a>
 
     </div>
-
-    <footer>
-        © Club Maths - Activités Interactives
-    </footer>
 
 </body>
 </html>
