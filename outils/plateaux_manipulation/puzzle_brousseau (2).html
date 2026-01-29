@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Grand Pari - Probabilités</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #ffffff;
+            --accent: #ff0055;
+            --accent-hover: #ff2a70;
+            --secondary: #16213e;
+            --selected: #f1c40f;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header { padding: 30px; text-align: center; }
+        h1 { margin: 0; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+        .subtitle { color: #888; margin-top: 5px; font-style: italic; }
+
+        /* --- ZONE DE PARI --- */
+        .betting-area {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .bet-title { margin-bottom: 15px; font-weight: bold; color: #ccc; }
+        .bet-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        
+        .bet-btn {
+            width: 45px; height: 45px;
+            border-radius: 50%; border: 2px solid #555;
+            background: transparent; color: #fff; font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .bet-btn:hover { border-color: var(--selected); color: var(--selected); transform: scale(1.1); }
+        .bet-btn.active {
+            background: var(--selected); color: #000; border-color: var(--selected);
+            box-shadow: 0 0 15px var(--selected); transform: scale(1.1);
+        }
+
+        /* --- DÉS 3D --- */
+        .dice-container {
+            display: flex; gap: 60px; margin: 30px 0; perspective: 800px;
+        }
+
+        .cube {
+            width: 80px; height: 80px; position: relative;
+            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cube__face {
+            position: absolute; width: 80px; height: 80px;
+            background: white; border: 2px solid #ccc; border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1); font-size: 2rem; color: #333;
+        }
+
+        /* --- FEEDBACK --- */
+        #message-box {
+            height: 50px; margin: 20px 0; font-size: 1.5rem; font-weight: bold; text-align: center;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .win-anim { color: #2ecc71; animation: pulse 0.5s; }
+        .lose-anim { color: #e74c3c; }
+
+        /* --- CONTRÔLES --- */
+        .controls { display: flex; gap: 20px; justify-content: center; margin-bottom: 40px; }
+        
+        .btn-action {
+            padding: 15px 40px; border: none; border-radius: 50px;
+            font-weight: bold; font-size: 1.2rem; cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-roll { background: var(--accent); color: white; box-shadow: 0 0 20px rgba(255, 0, 85, 0.4); }
+        .btn-roll:hover { background: var(--accent-hover); transform: scale(1.05); }
+        .btn-roll:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+
+        .btn-sim { background: transparent; border: 2px solid #555; color: #aaa; padding: 10px 20px; font-size: 0.9rem; }
+        .btn-sim:hover { border-color: white; color: white; }
+
+        /* --- GRAPHIQUE --- */
+        #chart-container {
+            width: 90%; max-width: 800px; height: 250px;
+            border-bottom: 2px solid #555; display: flex; align-items: flex-end; 
+            justify-content: space-around; padding: 0 10px; margin-bottom: 50px;
+        }
+        .bar-group { flex: 1; margin: 0 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+        .bar { width: 100%; background: #0f3460; transition: height 0.5s; border-radius: 4px 4px 0 0; min-height: 2px; }
+        .bar-label { margin-top: 5px; font-size: 0.9rem; color: #aaa; }
+
+        /* --- FICHE MODALE --- */
+        .sheet-btn {
+            position: fixed; bottom: 20px; right: 20px;
+            background: white; color: #1a1a2e; padding: 15px 30px;
+            border-radius: 50px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); border: none; z-index: 100;
+        }
+
+        #worksheet-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px;
+        }
+        .sheet-paper {
+            background: white; color: #000; max-width: 850px; margin: 30px auto;
+            padding: 60px; border-radius: 2px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Styles Tableau Guidé */
+        .guided-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .guided-table td, .guided-table th { border: 1px solid #999; width: 40px; height: 40px; text-align: center; font-size: 16px; color: #333;}
+        
+        /* Couleurs d'en-tête */
+        .head-red { background-color: #ffcccc; color: #990000; font-weight: bold; }
+        .head-blue { background-color: #cce5ff; color: #003366; font-weight: bold; }
+        
+        /* Cellules pré-remplies (exemples) */
+        .pre-filled { background-color: #f0f0f0; font-weight: bold; color: #555; }
+
+        /* Lignes pointillées pour réponse manuscrite */
+        .fill-zone { border-bottom: 2px dotted #000; display: inline-block; min-width: 50px; text-align: center;}
+        
+        /* Boîte de recherche */
+        .research-box {
+            border: 2px dashed #999; height: 200px; width: 100%; margin: 20px 0;
+            background: #f9f9f9; border-radius: 5px;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #worksheet-overlay, #worksheet-overlay * { visibility: visible; }
+            #worksheet-overlay { position: absolute; top:0; left:0; background: white; padding:0; display:block !important;}
+            .sheet-paper { width: 100%; max-width: 100%; box-shadow: none; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+            .guided-table th { -webkit-print-color-adjust: exact; }
+            .head-red { background-color: #ffcccc !important; }
+            .head-blue { background-color: #cce5ff !important; }
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>LE GRAND PARI</h1>
+        <div class="subtitle">Sur quel nombre miser pour gagner ?</div>
+    </header>
+
+    <div class="betting-area">
+        <div class="bet-title">1. JE MISE SUR LE NOMBRE :</div>
+        <div class="bet-buttons" id="bet-buttons">
+            </div>
+    </div>
+
+    <div id="message-box">Choisissez un nombre et lancez !</div>
+
+    <div class="dice-container">
+        <div class="cube" id="die1">
+            <div class="cube__face" style="transform: rotateY(0deg) translateZ(40px);">1</div>
+            <div class="cube__face" style="transform: rotateY(90deg) translateZ(40px);">2</div>
+            <div class="cube__face" style="transform: rotateY(180deg) translateZ(40px);">3</div>
+            <div class="cube__face" style="transform: rotateY(-90deg) translateZ(40px);">4</div>
+            <div class="cube__face" style="transform: rotateX(90deg) translateZ(40px);">5</div>
+            <div class="cube__face" style="transform: rotateX(-90deg) translateZ(40px);">6</div>
+        </div>
+        <div class="cube" id="die2">
+            <div class="cube__face" style="transform: rotateY(0deg) translateZ(40px);">1</div>
+            <div class="cube__face" style="transform: rotateY(90deg) translateZ(40px);">2</div>
+            <div class="cube__face" style="transform: rotateY(180deg) translateZ(40px);">3</div>
+            <div class="cube__face" style="transform: rotateY(-90deg) translateZ(40px);">4</div>
+            <div class="cube__face" style="transform: rotateX(90deg) translateZ(40px);">5</div>
+            <div class="cube__face" style="transform: rotateX(-90deg) translateZ(40px);">6</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-action btn-roll" id="rollBtn" onclick="rollDice()" disabled>LANCER !</button>
+    </div>
+    
+    <div class="controls">
+        <button class="btn-sim" onclick="simulate(100)">Simuler 100 lancers</button>
+        <button class="btn-sim" onclick="simulate(1000)">Simuler 1000 lancers</button>
+        <button class="btn-sim" onclick="resetStats()" style="color:#e74c3c; border-color:#e74c3c;">Reset</button>
+    </div>
+
+    <div id="chart-container"></div>
+
+    <button class="sheet-btn" onclick="openSheet()">📄 Fiche de Recherche</button>
+
+    <div id="worksheet-overlay">
+        <div class="sheet-paper">
+            <div class="no-print" style="text-align:right; margin-bottom:20px;">
+                <button onclick="window.print()" style="cursor:pointer; padding:10px 20px; background:#333; color:white; border:none;">🖨️ Imprimer</button>
+                <button onclick="closeSheet()" style="cursor:pointer; padding:10px 20px; margin-left:10px;">Fermer</button>
+            </div>
+
+            <h1 style="text-align:center; border-bottom:4px solid black; padding-bottom:10px;">MISSION : CASSER LA BANQUE</h1>
+            
+            <p style="font-size:16px;">
+                <strong>Le contexte :</strong> Tu participes à un jeu de dés. On lance <strong>2 dés</strong> et on fait la <strong>somme</strong>.
+                Avant de lancer, tu dois choisir UN SEUL nombre (entre 2 et 12). Si la somme est égale à ton nombre, tu gagnes.
+            </p>
+
+            <div style="background:#eee; padding:15px; border-left:5px solid #000; margin: 30px 0;">
+                <h3 style="margin-top:0;">LA QUESTION :</h3>
+                <p style="font-size:18px; font-weight:bold;">Quel nombre faut-il choisir pour maximiser ses chances de gagner ?</p>
+            </div>
+
+            <h3>1. Phase de Recherche (Brouillon)</h3>
+            <p>Utilisez cet espace pour mener votre investigation. Schémas, listes et essais sont les bienvenus.</p>
+            <div class="research-box"></div>
+
+            <h3>2. Analyse des cas extrêmes</h3>
+            <p>Pour mieux comprendre la situation, intéressons-nous aux sommes minimale et maximale.</p>
+            <ul>
+                <li>De combien de façons différentes peut-on obtenir la somme <strong>2</strong> ? <span class="fill-zone"></span></li>
+                <li>De combien de façons différentes peut-on obtenir la somme <strong>12</strong> ? <span class="fill-zone"></span></li>
+            </ul>
+
+            <h3>3. Dénombrement exhaustif</h3>
+            <p>Afin de déterminer la probabilité de chaque somme, complétez le tableau ci-dessous en additionnant la valeur du <strong>Dé Rouge</strong> et du <strong>Dé Bleu</strong>.</p>
+
+            <table class="guided-table">
+                <tr>
+                    <th style="border:none; background:white;"></th>
+                    <th class="head-blue">1</th> <th class="head-blue">2</th> <th class="head-blue">3</th> <th class="head-blue">4</th> <th class="head-blue">5</th> <th class="head-blue">6</th>
+                </tr>
+                <tr>
+                    <th class="head-red">1</th>
+                    <td class="pre-filled">2</td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="head-red">2</th>
+                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="head-red">3</th>
+                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="head-red">4</th>
+                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="head-red">5</th>
+                    <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="head-red">6</th>
+                    <td></td> <td></td> <td></td> <td></td> <td></td> <td class="pre-filled">12</td>
+                </tr>
+            </table>
+
+            <h3>4. Bilan et Conclusion</h3>
+            <ul>
+                <li>Combien y a-t-il d'issues possibles au total (nombre de cases du tableau) ? <span class="fill-zone"></span></li>
+                <li>Quelle est la somme qui apparaît le plus souvent dans le tableau ? <span class="fill-zone"></span></li>
+                <li>Quelle est la probabilité d'obtenir cette somme ? <span class="fill-zone"></span></li>
+            </ul>
+            <p style="margin-top:20px; font-weight:bold; border: 2px solid #333; padding: 10px;">
+                Conclusion : Le nombre sur lequel il faut parier est le ............
+            </p>
+
+        </div>
+    </div>
+
+<script>
+    let selectedBet = null;
+    const sumsCounts = new Array(13).fill(0);
+    let totalRolls = 0;
+
+    // INIT
+    const betContainer = document.getElementById('bet-buttons');
+    for(let i=2; i<=12; i++) {
+        let btn = document.createElement('button');
+        btn.className = 'bet-btn';
+        btn.innerText = i;
+        btn.onclick = () => selectBet(i, btn);
+        betContainer.appendChild(btn);
+    }
+
+    const chartContainer = document.getElementById('chart-container');
+    for(let i=2; i<=12; i++) {
+        let group = document.createElement('div');
+        group.className = 'bar-group';
+        let bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.id = `bar-${i}`;
+        let label = document.createElement('div');
+        label.className = 'bar-label';
+        label.innerText = i;
+        group.appendChild(bar);
+        group.appendChild(label);
+        chartContainer.appendChild(group);
+    }
+
+    function selectBet(num, btnElement) {
+        selectedBet = num;
+        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+        document.getElementById('rollBtn').disabled = false;
+        document.getElementById('message-box').innerHTML = `Mise sur le <span style="color:#f1c40f; margin:0 10px; font-size:2rem;">${num}</span>... Lance !`;
+        document.getElementById('message-box').className = '';
+    }
+
+    function rollDice() {
+        const btn = document.getElementById('rollBtn');
+        btn.disabled = true;
+
+        const die1 = document.getElementById('die1');
+        const die2 = document.getElementById('die2');
+
+        const rx1 = Math.floor(Math.random() * 720 + 360);
+        const ry1 = Math.floor(Math.random() * 720 + 360);
+        const rx2 = Math.floor(Math.random() * 720 + 360);
+        const ry2 = Math.floor(Math.random() * 720 + 360);
+
+        die1.style.transform = `rotateX(${rx1}deg) rotateY(${ry1}deg)`;
+        die2.style.transform = `rotateX(${rx2}deg) rotateY(${ry2}deg)`;
+
+        setTimeout(() => {
+            const v1 = Math.floor(Math.random() * 6) + 1;
+            const v2 = Math.floor(Math.random() * 6) + 1;
+            const sum = v1 + v2;
+
+            setFace(die1, v1);
+            setFace(die2, v2);
+
+            const msgBox = document.getElementById('message-box');
+            if (sum === selectedBet) {
+                msgBox.innerHTML = `SOMME ${sum} : GAGNÉ ! 🎉`;
+                msgBox.className = "win-anim";
+            } else {
+                msgBox.innerHTML = `SOMME ${sum} : PERDU... (Tu avais misé ${selectedBet})`;
+                msgBox.className = "lose-anim";
+            }
+
+            updateStats(sum);
+            btn.disabled = false;
+        }, 600);
+    }
+
+    function setFace(die, val) {
+        die.style.transition = 'transform 0.2s';
+        let rx=0, ry=0;
+        switch(val){
+            case 1: rx=0; ry=0; break;
+            case 2: rx=0; ry=-90; break;
+            case 3: rx=0; ry=180; break;
+            case 4: rx=0; ry=90; break;
+            case 5: rx=-90; ry=0; break;
+            case 6: rx=90; ry=0; break;
+        }
+        die.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }
+
+    function simulate(count) {
+        for(let k=0; k<count; k++) {
+            let s = Math.floor(Math.random()*6)+1 + Math.floor(Math.random()*6)+1;
+            sumsCounts[s]++;
+            totalRolls++;
+        }
+        updateChart();
+    }
+
+    function updateStats(sum) {
+        sumsCounts[sum]++;
+        totalRolls++;
+        updateChart();
+    }
+
+    function updateChart() {
+        let max = Math.max(...sumsCounts);
+        for(let i=2; i<=12; i++) {
+            let bar = document.getElementById(`bar-${i}`);
+            let h = max > 0 ? (sumsCounts[i]/max*100) : 0;
+            bar.style.height = Math.max(h, 2) + '%';
+        }
+    }
+
+    function resetStats() {
+        for(let i=0; i<13; i++) sumsCounts[i]=0;
+        totalRolls=0;
+        updateChart();
+    }
+
+    function openSheet() { document.getElementById('worksheet-overlay').style.display = 'block'; }
+    function closeSheet() { document.getElementById('worksheet-overlay').style.display = 'none'; }
+</script>
+
+</body>
+</html>
