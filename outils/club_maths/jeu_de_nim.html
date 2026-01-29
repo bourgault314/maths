@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Nim - Stable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1e272e;
+            --primary: #00d2ff;
+            --danger: #ff3b3b;
+            --stick-base: #d2dae2;
+            --stick-dim: #485460;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            text-align: center;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 20px; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- CONFIGURATION --- */
+        #setup-panel {
+            background: #2c3e50;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 320px;
+            border: 1px solid #4bcffa;
+        }
+
+        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #ccc; text-align: center; }
+        
+        /* Correction du centrage du texte dans les inputs */
+        select, input {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            background: #fff;
+            color: #333;
+            box-sizing: border-box;
+            text-align: center;      /* Centre le texte horizontalement */
+            text-align-last: center; /* Force le centrage sur certains navigateurs pour les select */
+            font-weight: bold;
+        }
+
+        button.main-btn {
+            background-color: var(--primary);
+            color: #1e272e;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        button.main-btn:hover { transform: scale(1.02); }
+
+        /* --- ZONE DE JEU --- */
+        #game-area { 
+            display: none; 
+            width: 90%; 
+            max-width: 1000px;
+        }
+
+        #status-bar {
+            font-size: 24px;
+            margin-bottom: 50px;
+            color: #fff;
+            min-height: 30px; /* Évite un petit saut au changement de texte */
+        }
+
+        /* --- BÂTONS --- */
+        #sticks-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px; /* Espace fixe avant le bouton */
+            min-height: 160px;   /* Hauteur garantie pour les bâtons */
+            align-items: flex-start;
+        }
+
+        .stick {
+            width: 30px;
+            height: 150px;
+            background-color: var(--stick-base);
+            border-radius: 6px;
+            position: relative;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            cursor: default; /* Pas de main par défaut */
+        }
+
+        /* Le dernier bâton */
+        .stick.danger-stick {
+            background-color: var(--danger);
+            border: 2px solid #fff;
+        }
+
+        /* Interaction */
+        .human-turn .stick.playable { cursor: pointer; }
+        .human-turn .stick.playable:hover { transform: translateY(-5px); }
+
+        /* Sélectionné */
+        .stick.selected {
+            background-color: var(--primary) !important;
+            transform: translateY(-15px);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* Sélection IA */
+        .stick.ai-selected {
+            background-color: #ff9f43 !important;
+            transform: translateY(-15px);
+            box-shadow: 0 0 15px #ff9f43;
+        }
+
+        /* Retiré */
+        .stick.removed {
+            background-color: var(--stick-dim);
+            opacity: 0.05; /* Quasi invisible */
+            transform: scale(0.9);
+            box-shadow: none;
+            border: none;
+            pointer-events: none;
+        }
+        .stick.removed.danger-stick { opacity: 0.3; background-color: #500; }
+
+        /* --- ZONE BOUTON STABILISÉE --- */
+        #btn-placeholder {
+            height: 80px; /* Espace réservé pour le bouton : rien ne bougera */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #confirmBtn {
+            background: linear-gradient(45deg, var(--primary), #0fbcf9);
+            border: none;
+            padding: 15px 60px;
+            font-size: 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            visibility: hidden; /* Caché mais prend la place (ou opacity) */
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.2s;
+            transform: scale(0.9);
+        }
+
+        #confirmBtn.visible {
+            visibility: visible;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="setup-panel">
+        <h1>Le Jeu des Bâtons</h1>
+        
+        <div class="input-group">
+            <label>Nombre de bâtons</label>
+            <input type="number" id="totalSticks" value="21" min="13" max="29">
+        </div>
+        
+        <div class="input-group">
+            <label>Adversaire</label>
+            <select id="gameMode">
+                <option value="pve_medium">Ordi - Normal</option>
+                <option value="pve_hard">Ordi - Invincible</option>
+                <option value="pvp">2 Joueurs</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Qui commence ?</label>
+            <select id="startPlayer">
+                <option value="player1">Joueur 1 (Humain)</option>
+                <option value="player2">Joueur 2 / Ordi</option>
+            </select>
+        </div>
+
+        <button class="main-btn" onclick="startGame()">LANCER LA PARTIE</button>
+    </div>
+
+    <div id="game-area">
+        <div id="status-bar">Prêt ?</div>
+
+        <div id="sticks-container"></div>
+
+        <div id="btn-placeholder">
+            <button id="confirmBtn" onclick="confirmMove()">VALIDER</button>
+        </div>
+        
+        <button onclick="resetGame()" style="margin-top:20px; background:none; border:none; color:#555; cursor:pointer; text-decoration:underline;">Retour Menu</button>
+    </div>
+
+<script>
+    let totalSticks = 21;
+    let sticksState = []; 
+    let currentPlayer = 1; 
+    let mode = 'pve_medium';
+    let isGameOver = false;
+    let selectedCount = 0;
+
+    function startGame() {
+        totalSticks = parseInt(document.getElementById('totalSticks').value);
+        mode = document.getElementById('gameMode').value;
+        const starter = document.getElementById('startPlayer').value;
+
+        document.getElementById('setup-panel').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+        
+        sticksState = new Array(totalSticks).fill(0);
+        isGameOver = false;
+        currentPlayer = (starter === 'player1') ? 1 : 2;
+
+        renderSticks();
+        updateGameUI();
+
+        if (currentPlayer === 2 && mode.startsWith('pve')) {
+            setTimeout(aiThink, 1000);
+        }
+    }
+
+    function renderSticks() {
+        const container = document.getElementById('sticks-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < totalSticks; i++) {
+            let div = document.createElement('div');
+            div.className = 'stick';
+            // Le dernier en rouge
+            if (i === totalSticks - 1) div.classList.add('danger-stick');
+            
+            // Plus de texte à l'intérieur !
+            
+            div.onclick = () => handleStickClick(i);
+            div.id = `stick-${i}`;
+            container.appendChild(div);
+        }
+    }
+
+    function getFirstAvailable() {
+        return sticksState.indexOf(0);
+    }
+
+    function handleStickClick(index) {
+        if (isGameOver || (mode.startsWith('pve') && currentPlayer === 2)) return;
+        if (sticksState[index] === 1) return; // Déjà pris
+
+        const first = getFirstAvailable();
+        
+        // On ne peut cliquer que sur les 3 premiers
+        if (index >= first && index < first + 3) {
+            
+            // Calculer combien ça ferait de bâtons
+            const potentialCount = (index - first) + 1;
+
+            // Si on clique sur une sélection existante, on annule tout (toggle simple)
+            // OU si on change de nombre, on met à jour.
+            // Pour simplifier : Si on clique sur ce qu'on a déjà sélectionné (ex: le 3ème), on désélectionne.
+            if (potentialCount === selectedCount) {
+                selectedCount = 0;
+            } else {
+                selectedCount = potentialCount;
+            }
+            
+            updateVisualSelection(first);
+        }
+    }
+
+    function updateVisualSelection(first) {
+        // Reset propre
+        for(let i=0; i<totalSticks; i++) {
+            let s = document.getElementById(`stick-${i}`);
+            if (!s.classList.contains('removed')) {
+                s.classList.remove('selected');
+                s.classList.remove('playable');
+            }
+        }
+
+        // Marquer les jouables (curseur main)
+        for(let i=0; i<3; i++) {
+            if(first + i < totalSticks) {
+                document.getElementById(`stick-${first + i}`).classList.add('playable');
+            }
+        }
+
+        // Appliquer le bleu sur la sélection
+        for(let i=0; i < selectedCount; i++) {
+            document.getElementById(`stick-${first + i}`).classList.add('selected');
+        }
+
+        // Gestion du bouton (sans saut !)
+        const btn = document.getElementById('confirmBtn');
+        if (selectedCount > 0) {
+            btn.innerHTML = `VALIDER (${selectedCount})`;
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    }
+
+    function confirmMove() {
+        const first = getFirstAvailable();
+        
+        for(let i=0; i < selectedCount; i++) {
+            sticksState[first + i] = 1;
+            let stick = document.getElementById(`stick-${first + i}`);
+            stick.classList.remove('selected');
+            stick.classList.add('removed');
+        }
+
+        selectedCount = 0;
+        document.getElementById('confirmBtn').classList.remove('visible');
+
+        checkWin();
+    }
+
+    function checkWin() {
+        const remaining = sticksState.filter(x => x === 0).length;
+
+        if (remaining === 0) {
+            gameOver();
+        } else {
+            currentPlayer = (currentPlayer === 1) ? 2 : 1;
+            updateGameUI();
+            
+            if (!isGameOver && mode.startsWith('pve') && currentPlayer === 2) {
+                setTimeout(aiThink, 1000);
+            }
+        }
+    }
+
+    function updateGameUI() {
+        const sb = document.getElementById('status-bar');
+        const container = document.getElementById('sticks-container');
+        
+        if (isGameOver) return;
+
+        if (currentPlayer === 1) {
+            sb.innerHTML = "C'est à <span style='color:var(--primary); font-weight:bold'>TOI</span> de jouer";
+            container.classList.add('human-turn');
+        } else {
+            let name = mode.startsWith('pve') ? "L'Ordinateur réfléchit..." : "Tour du Joueur 2";
+            sb.innerHTML = `<span style='color:#ff9f43'>${name}</span>`;
+            container.classList.remove('human-turn');
+        }
+    }
+
+    function aiThink() {
+        const remaining = sticksState.filter(x => x === 0).length;
+        let take = 1;
+        let target = (remaining - 1) % 4;
+
+        if (mode === 'pve_hard') {
+            take = target;
+            if (take === 0) take = 1; 
+        } else {
+            if (remaining > 8 && Math.random() > 0.4) {
+                 take = Math.floor(Math.random() * 3) + 1;
+            } else {
+                take = target;
+                if (take === 0) take = 1;
+            }
+        }
+
+        take = Math.min(take, 3);
+        take = Math.min(take, remaining); 
+        if(take < 1) take = 1;
+
+        const first = getFirstAvailable();
+        
+        // Visuel IA
+        for(let i=0; i<take; i++) {
+            document.getElementById(`stick-${first + i}`).classList.add('ai-selected');
+        }
+
+        setTimeout(() => {
+            for(let i=0; i<take; i++) {
+                sticksState[first + i] = 1;
+                let s = document.getElementById(`stick-${first + i}`);
+                s.classList.remove('ai-selected');
+                s.classList.add('removed');
+            }
+            checkWin();
+        }, 1000);
+    }
+
+    function gameOver() {
+        isGameOver = true;
+        const sb = document.getElementById('status-bar');
+        let winnerName = (currentPlayer === 1) ? (mode.startsWith('pve') ? "L'ORDINATEUR" : "JOUEUR 2") : "JOUEUR 1";
+        
+        sb.innerHTML = `💥 LE BÂTON ROUGE A SAUTÉ !<br><span style="color:#2ecc71; font-weight:bold">${winnerName} GAGNE !</span>`;
+        document.getElementById('confirmBtn').classList.remove('visible');
+    }
+
+    function resetGame() {
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('setup-panel').style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>
