@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Grand Pari - Ultimate Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0f172a;
+            --panel-color: #1e293b;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --win-color: #10b981;
+            --lose-color: #ef4444;
+            --text-main: #f8fafc;
+            --die-size: 80px;
+            --pip-color: #1e293b;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER & SWITCHER --- */
+        header {
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 0 20px; z-index: 10;
+        }
+        h1 { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; margin: 0; color: var(--accent-color); }
+
+        .mode-switch {
+            display: flex; gap: 5px; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 8px;
+        }
+        .mode-btn {
+            background: transparent; border: none; color: #94a3b8; padding: 6px 12px;
+            cursor: pointer; font-weight: bold; border-radius: 5px; transition: all 0.2s; font-size: 0.8rem;
+        }
+        .mode-btn.active { background: var(--accent-color); color: white; }
+
+        /* --- LAYOUT --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 40% 60%;
+            height: calc(100vh - 60px);
+        }
+
+        /* --- GAUCHE (STATS) --- */
+        .panel-stats {
+            background: var(--panel-color);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 20px; display: flex; flex-direction: column;
+        }
+        .panel-title { text-align: center; font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 20px; }
+
+        #chart-wrapper {
+            flex-grow: 1; display: flex; align-items: flex-end; justify-content: space-around;
+            padding-bottom: 20px; border-bottom: 2px solid #475569;
+        }
+        .bar-container {
+            flex: 1; margin: 0 3px; height: 100%; position: relative;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+        }
+        .bar {
+            width: 100%; background: linear-gradient(to top, #3b82f6, #60a5fa);
+            border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.5s ease;
+        }
+        .bar-label { margin-top: 5px; font-weight: bold; color: #cbd5e1; font-size: 0.8rem; }
+        .bar-value { 
+            position: absolute; bottom: 100%; width: 100%; text-align: center; font-size: 0.7rem; 
+            color: white; margin-bottom: 2px; opacity: 0; transition: opacity 0.2s; 
+        }
+        .bar-container:hover .bar-value { opacity: 1; }
+
+        .sim-controls { margin-top: 20px; display: flex; gap: 10px; justify-content: center; }
+        .btn-sim {
+            background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 8px 15px;
+            border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+        }
+        .btn-sim:hover { border-color: white; color: white; }
+
+        /* --- DROITE (JEU) --- */
+        .panel-game {
+            padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); position: relative;
+        }
+
+        .bet-selector {
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 30px;
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 30px;
+        }
+        .bet-option {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #475569;
+            background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .bet-option:hover { border-color: var(--accent-color); color: white; transform: scale(1.1); }
+        .bet-option.active {
+            background: var(--accent-color); border-color: var(--accent-color); color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); transform: scale(1.15);
+        }
+
+        /* SCENE 3D */
+        .dice-stage {
+            width: 100%; height: 200px; display: flex; justify-content: center; align-items: center; gap: 60px;
+            perspective: 1000px; margin-bottom: 40px;
+        }
+        .die {
+            width: var(--die-size); height: var(--die-size); position: relative;
+            transform-style: preserve-3d; transform: rotateX(-30deg) rotateY(-45deg);
+            transition: transform 1s cubic-bezier(0.15, 0.9, 0.34, 1.2);
+        }
+        .face {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+            border-radius: 12px; border: 1px solid #cbd5e1;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 4px; box-sizing: border-box;
+        }
+        .pip {
+            background-color: var(--pip-color); border-radius: 50%; width: 14px; height: 14px;
+            align-self: center; justify-self: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+        /* Positions faces */
+        .face-1 { transform: translateZ(40px); display:flex; justify-content:center; align-items:center; }
+        .face-6 { transform: rotateY(180deg) translateZ(40px); }
+        .face-2 { transform: rotateY(-90deg) translateZ(40px); }
+        .face-5 { transform: rotateY(90deg) translateZ(40px); }
+        .face-3 { transform: rotateX(-90deg) translateZ(40px); }
+        .face-4 { transform: rotateX(90deg) translateZ(40px); }
+        
+        /* Grilles Points */
+        .face-1 .pip { width: 20px; height: 20px; background-color: #ef4444; } /* As Rouge */
+        .face-2 .pip:nth-child(1) { grid-area:1/1; } .face-2 .pip:nth-child(2) { grid-area:3/3; }
+        .face-3 .pip:nth-child(1) { grid-area:1/1; } .face-3 .pip:nth-child(2) { grid-area:2/2; } .face-3 .pip:nth-child(3) { grid-area:3/3; }
+        .face-4 .pip:nth-child(1) { grid-area:1/1; } .face-4 .pip:nth-child(2) { grid-area:1/3; } .face-4 .pip:nth-child(3) { grid-area:3/1; } .face-4 .pip:nth-child(4) { grid-area:3/3; }
+        .face-5 .pip:nth-child(1) { grid-area:1/1; } .face-5 .pip:nth-child(2) { grid-area:1/3; } .face-5 .pip:nth-child(3) { grid-area:2/2; } .face-5 .pip:nth-child(4) { grid-area:3/1; } .face-5 .pip:nth-child(5) { grid-area:3/3; }
+        .face-6 .pip:nth-child(1) { grid-area:1/1; } .face-6 .pip:nth-child(2) { grid-area:1/3; } .face-6 .pip:nth-child(3) { grid-area:2/1; } .face-6 .pip:nth-child(4) { grid-area:2/3; } .face-6 .pip:nth-child(5) { grid-area:3/1; } .face-6 .pip:nth-child(6) { grid-area:3/3; }
+
+        .status-msg { font-size: 1.5rem; font-weight: 900; height: 30px; margin-bottom: 20px; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .win { color: var(--win-color); animation: bounce 0.5s; }
+        .lose { color: var(--lose-color); }
+
+        .btn-launch {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; color: white;
+            padding: 18px 60px; border-radius: 100px; font-size: 1.2rem; font-weight: 900; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); transition: transform 0.1s;
+        }
+        .btn-launch:hover { transform: translateY(-2px); }
+        .btn-launch:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
+
+        .btn-sheet {
+            position: fixed; bottom: 30px; right: 30px; background: white; color: var(--bg-deep);
+            padding: 15px 30px; border-radius: 50px; font-weight: bold; border: none; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100;
+        }
+
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+
+        /* --- IMPRESSION (FICHE OFFICIELLE) --- */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background: white; display: block; overflow: visible; }
+            header, .dashboard, .btn-sheet { display: none !important; }
+            
+            #sheet-overlay { 
+                display: block !important; background: white; width: 100%; 
+                box-sizing: border-box; padding: 2cm; font-family: 'Times New Roman', serif; color: black;
+            }
+            
+            h1 { text-align: center; border-bottom: 4px solid black; padding-bottom: 10px; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif; }
+            h2 { background: #eee; padding: 10px; border-left: 5px solid black; margin-top: 30px; font-family: 'Segoe UI', sans-serif; -webkit-print-color-adjust: exact; }
+            
+            .research-box { border: 2px solid black; height: 12cm; width: 100%; margin: 20px 0; }
+            .page-break { break-before: page; page-break-before: always; display: block; height: 1px; }
+            
+            /* TABLEAU COLORÉ RESTAURÉ */
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14pt; }
+            th, td { border: 1px solid black; height: 1cm; text-align: center; }
+            
+            .header-red { background-color: #ffcccc !important; color: #990000; font-weight: bold; -webkit-print-color-adjust: exact; }
+            .header-blue { background-color: #cce5ff !important; color: #003366; font-weight: bold; -webkit-print-color-adjust: exact; }
+            .filled { background-color: #f0f0f0 !important; font-weight: bold; color: #555; -webkit-print-color-adjust: exact; }
+            
+            .dotted { border-bottom: 2px dotted black; display: inline-block; min-width: 50px; }
+            
+            /* Mode 3 dés masqué par défaut */
+            .mode-3-content { display: none; }
+            body.mode-3 .mode-2-content { display: none; }
+            body.mode-3 .mode-3-content { display: block; }
+        }
+    </style>
+</head>
+<body class="mode-2">
+
+    <header>
+        <h1>LE GRAND PARI</h1>
+        <div class="mode-switch">
+            <button class="mode-btn active" onclick="setMode(2)">2 DÉS</button>
+            <button class="mode-btn" onclick="setMode(3)">3 DÉS</button>
+        </div>
+    </header>
+
+    <div class="dashboard">
+        <div class="panel-stats">
+            <div class="panel-title">Fréquence des sommes (<span id="total-rolls">0</span> lancers)</div>
+            <div id="chart-wrapper"></div>
+            <div class="sim-controls">
+                <button class="btn-sim" onclick="simulate(100)">+100</button>
+                <button class="btn-sim" onclick="simulate(1000)">+1000</button>
+                <button class="btn-sim" onclick="resetAll()" style="color:#ef4444; border-color:#ef4444;">Reset</button>
+            </div>
+        </div>
+
+        <div class="panel-game">
+            <div style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">Sur quel total paries-tu ?</div>
+            <div class="bet-selector" id="bet-container"></div>
+            
+            <div class="status-msg" id="status">...</div>
+            
+            <div class="dice-stage" id="dice-stage">
+                </div>
+
+            <button class="btn-launch" id="btn-roll" onclick="rollDice()" disabled>LANCER !</button>
+        </div>
+    </div>
+
+    <button class="btn-sheet" onclick="window.print()">📄 Imprimer Fiche</button>
+
+    <div id="sheet-overlay" style="display:none;">
+        
+        <div class="mode-2-content">
+            <h1>MISSION : CASSER LA BANQUE</h1>
+            <p><strong>Contexte :</strong> Tu participes à un jeu de dés. On lance <strong>2 dés</strong> et on fait la <strong>somme</strong>.
+            Avant de lancer, tu dois choisir UN SEUL nombre (entre 2 et 12). Si la somme est égale à ton nombre, tu gagnes.</p>
+
+            <div style="border:2px solid black; padding:15px; margin:20px 0;">
+                <strong>LA QUESTION :</strong> Quel nombre dois-tu choisir pour avoir le plus de chances de gagner ?
+            </div>
+
+            <h2>1. Phase de Recherche (Brouillon)</h2>
+            <p>Utilise cet espace pour réfléchir. Dessine, fais des listes, teste des idées...</p>
+            <div class="research-box"></div>
+
+            <div class="page-break"></div>
+
+            <h2>2. Coup de pouce</h2>
+            <ul>
+                <li>Combien de façons pour faire <strong>2</strong> ? <span class="dotted"></span> (Indice: 1+1)</li>
+                <li>Combien de façons pour faire <strong>12</strong> ? <span class="dotted"></span> (Indice: 6+6)</li>
+            </ul>
+
+            <h2>3. L'Investigation Complète</h2>
+            <p>Pour trouver le meilleur nombre, imaginons un <strong>Dé Rouge</strong> et un <strong>Dé Bleu</strong>. Remplis le tableau avec toutes les sommes possibles.</p>
+
+            <table>
+                <tr>
+                    <th style="border:none; background:white !important;"></th>
+                    <th class="header-blue">1</th> <th class="header-blue">2</th> <th class="header-blue">3</th> <th class="header-blue">4</th> <th class="header-blue">5</th> <th class="header-blue">6</th>
+                </tr>
+                <tr>
+                    <th class="header-red">1</th> <td class="filled">2</td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="header-red">2</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="header-red">3</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="header-red">4</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="header-red">5</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td>
+                </tr>
+                <tr>
+                    <th class="header-red">6</th> <td></td> <td></td> <td></td> <td></td> <td></td> <td class="filled">12</td>
+                </tr>
+            </table>
+
+            <h2>4. Conclusion Détaillée</h2>
+            <ul>
+                <li>Combien y a-t-il d'issues possibles au total (nombre de cases du tableau) ? <span class="dotted"></span></li>
+                <li>Quelle est la somme qui apparaît le plus souvent dans le tableau ? <span class="dotted"></span></li>
+                <li>Quelle est la probabilité d'obtenir cette somme ? <span class="dotted"></span></li>
+            </ul>
+            <p style="margin-top:20px; font-weight:bold; padding:10px; border:2px solid black;">
+                Conclusion : Le nombre sur lequel il faut parier est le ............
+            </p>
+        </div>
+
+        <div class="mode-3-content">
+            <h1>LE GRAND DUC DE TOSCANE (3 DÉS)</h1>
+            <p><strong>Contexte :</strong> Le Grand Duc parie sur la somme de 3 dés. Il pense que le <strong>9</strong> et le <strong>10</strong> ont la même chance de sortir.</p>
+            <div class="research-box" style="height:10cm;"></div>
+            <h2>Conclusion</h2>
+            <p>Le 10 a plus de chances car : ..........................................................................</p>
+        </div>
+
+    </div>
+
+<script>
+    let numDice = 2;
+    let currentBet = null;
+    let stats = [];
+    let total = 0;
+
+    function setMode(n) {
+        numDice = n;
+        document.body.className = `mode-${n}`;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        init();
+    }
+
+    function init() {
+        const betContainer = document.getElementById('bet-container');
+        const chartWrapper = document.getElementById('chart-wrapper');
+        const diceStage = document.getElementById('dice-stage');
+        
+        betContainer.innerHTML = '';
+        chartWrapper.innerHTML = '';
+        diceStage.innerHTML = '';
+        
+        // Reset
+        total = 0;
+        document.getElementById('total-rolls').innerText = "0";
+        document.getElementById('status').innerText = "...";
+        document.getElementById('btn-roll').disabled = true;
+
+        let min = numDice;
+        let max = numDice * 6;
+        stats = new Array(max + 1).fill(0);
+
+        // Bets
+        for(let i=min; i<=max; i++) {
+            let b = document.createElement('div');
+            b.className = 'bet-option';
+            b.innerText = i;
+            b.onclick = () => {
+                currentBet = i;
+                document.querySelectorAll('.bet-option').forEach(e => e.classList.remove('active'));
+                b.classList.add('active');
+                document.getElementById('btn-roll').disabled = false;
+                document.getElementById('status').innerText = `Mise sur ${i}...`;
+                document.getElementById('status').className = 'status-msg';
+            };
+            betContainer.appendChild(b);
+        }
+
+        // Chart
+        for(let i=min; i<=max; i++) {
+            let col = document.createElement('div');
+            col.className = 'bar-container';
+            col.setAttribute('data-val', i);
+            col.innerHTML = `<div class="bar-value" id="val-${i}"></div><div class="bar" id="bar-${i}" style="height:1%"></div><div class="bar-label">${i}</div>`;
+            chartWrapper.appendChild(col);
+        }
+
+        // Dice
+        for(let i=0; i<numDice; i++) {
+            let die = document.createElement('div');
+            die.className = 'die';
+            die.id = `die-${i}`;
+            let html = '';
+            [1,2,3,4,5,6].forEach(n => {
+                let pips = '';
+                for(let k=0; k<n; k++) pips += '<div class="pip"></div>';
+                html += `<div class="face face-${n}">${pips}</div>`;
+            });
+            die.innerHTML = html;
+            diceStage.appendChild(die);
+        }
+    }
+
+    function rollDice() {
+        document.getElementById('btn-roll').disabled = true;
+        document.getElementById('status').innerText = "Ça roule...";
+        
+        let sum = 0;
+        for(let i=0; i<numDice; i++) {
+            let v = Math.floor(Math.random()*6)+1;
+            sum += v;
+            animateDie(i, v);
+        }
+
+        setTimeout(() => {
+            updateStats(sum);
+            const st = document.getElementById('status');
+            if(sum === currentBet) { st.innerText = `SOMME ${sum} ! GAGNÉ ! 🎉`; st.className="status-msg win"; }
+            else { st.innerText = `Somme ${sum}... Perdu.`; st.className="status-msg lose"; }
+            document.getElementById('btn-roll').disabled = false;
+        }, 1200);
+    }
+
+    function animateDie(id, v) {
+        const die = document.getElementById(`die-${id}`);
+        const rx = Math.floor(Math.random()*3+2)*360; 
+        const ry = Math.floor(Math.random()*3+2)*360; 
+        let tx=0, ty=0;
+        if(v===1) { tx=0; ty=0; } else if(v===6) { tx=0; ty=180; } else if(v===2) { tx=0; ty=-90; }
+        else if(v===5) { tx=0; ty=90; } else if(v===3) { tx=-90; ty=0; } else if(v===4) { tx=90; ty=0; }
+        die.style.transform = `rotateX(${rx+tx}deg) rotateY(${ry+ty}deg)`;
+    }
+
+    function updateStats(s) {
+        stats[s]++; total++;
+        document.getElementById('total-rolls').innerText = total;
+        let max = Math.max(...stats);
+        for(let i=numDice; i<=numDice*6; i++) {
+            const bar = document.getElementById(`bar-${i}`);
+            const val = document.getElementById(`val-${i}`);
+            if(bar) {
+                bar.style.height = max > 0 ? Math.max(stats[i]/max*100, 1) + '%' : '1%';
+                val.innerText = stats[i] > 0 ? (stats[i]/total*100).toFixed(0)+'%' : '';
+            }
+        }
+    }
+
+    function simulate(n) {
+        for(let k=0; k<n; k++) {
+            let s=0; for(let d=0; d<numDice; d++) s+=Math.floor(Math.random()*6)+1;
+            stats[s]++; total++;
+        }
+        updateStats(0); // refresh visuals
+        document.getElementById('status').innerText = `Simu +${n} terminée.`;
+    }
+
+    function resetAll() { init(); }
+
+    init(); // Start
+</script>
+</body>
+</html>
