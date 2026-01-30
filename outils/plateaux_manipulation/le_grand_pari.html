@@ -138,8 +138,10 @@
         .face-3 { transform: rotateX(-90deg) translateZ(40px); }
         .face-4 { transform: rotateX(90deg) translateZ(40px); }
         
+        /* Le Fameux Point Rouge pour le 1 */
+        .face-1 .pip { width: 22px; height: 22px; background-color: #ef4444; }
+
         /* Grilles Points */
-        .face-1 .pip { width: 20px; height: 20px; background-color: #ef4444; } /* As Rouge */
         .face-2 .pip:nth-child(1) { grid-area:1/1; } .face-2 .pip:nth-child(2) { grid-area:3/3; }
         .face-3 .pip:nth-child(1) { grid-area:1/1; } .face-3 .pip:nth-child(2) { grid-area:2/2; } .face-3 .pip:nth-child(3) { grid-area:3/3; }
         .face-4 .pip:nth-child(1) { grid-area:1/1; } .face-4 .pip:nth-child(2) { grid-area:1/3; } .face-4 .pip:nth-child(3) { grid-area:3/1; } .face-4 .pip:nth-child(4) { grid-area:3/3; }
@@ -183,7 +185,7 @@
             .research-box { border: 2px solid black; height: 12cm; width: 100%; margin: 20px 0; }
             .page-break { break-before: page; page-break-before: always; display: block; height: 1px; }
             
-            /* TABLEAU COLORÉ RESTAURÉ */
+            /* TABLEAU COLORÉ */
             table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14pt; }
             th, td { border: 1px solid black; height: 1cm; text-align: center; }
             
@@ -193,7 +195,7 @@
             
             .dotted { border-bottom: 2px dotted black; display: inline-block; min-width: 50px; }
             
-            /* Mode 3 dés masqué par défaut */
+            /* Gestion dynamique du contenu de la fiche selon le mode */
             .mode-3-content { display: none; }
             body.mode-3 .mode-2-content { display: none; }
             body.mode-3 .mode-3-content { display: block; }
@@ -287,15 +289,15 @@
                 </tr>
             </table>
 
-            <h2>4. Conclusion Détaillée</h2>
-            <ul>
-                <li>Combien y a-t-il d'issues possibles au total (nombre de cases du tableau) ? <span class="dotted"></span></li>
-                <li>Quelle est la somme qui apparaît le plus souvent dans le tableau ? <span class="dotted"></span></li>
-                <li>Quelle est la probabilité d'obtenir cette somme ? <span class="dotted"></span></li>
-            </ul>
-            <p style="margin-top:20px; font-weight:bold; padding:10px; border:2px solid black;">
-                Conclusion : Le nombre sur lequel il faut parier est le ............
-            </p>
+            <h2>4. Conclusion</h2>
+            <p><strong>1.</strong> Quel est le nombre total de cas possibles (le nombre total de cases) ?</p>
+            <p style="margin-left: 20px; font-style: italic;">.......................................................</p>
+            
+            <p><strong>2.</strong> Quelle est la somme qui a le plus de chances de sortir ?</p>
+            <p style="margin-left: 20px; font-style: italic;">.......................................................</p>
+            
+            <p><strong>3.</strong> Quelle est sa probabilité (combien de chances sur le total) ?</p>
+            <p style="margin-left: 20px; font-style: italic;">.......................................................</p>
         </div>
 
         <div class="mode-3-content">
