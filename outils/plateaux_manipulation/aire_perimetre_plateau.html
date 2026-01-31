@@ -75,8 +75,8 @@
     .topbar{
       display:flex;
       flex-direction:column;
-      gap:8px;
-      padding: 10px 12px 8px;
+      gap:6px;
+      padding: 8px 10px 6px;
       background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.88));
       border-bottom: 1px solid #e9edf7;
       backdrop-filter: blur(8px);
@@ -85,42 +85,47 @@
     }
 
     .topRow{
+      position:relative;
       display:flex;
       align-items:center;
-      gap:10px;
+      justify-content:center;
       min-width:0;
+      min-height: 44px;
     }
 
     .brand{
+      position:absolute;
+      left:10px;
+      top:50%;
+      transform: translateY(-50%);
       display:flex;
       align-items:center;
       gap:10px;
-      padding: 8px 10px;
+      padding: 7px 9px;
       border-radius: 12px;
       background:#fff;
       border:1px solid #e6ebf6;
       box-shadow: 0 2px 0 rgba(10,20,40,.03);
       white-space:nowrap;
-      flex: 0 0 auto;
     }
-    .brand .title{ font-weight:900; letter-spacing:.2px; font-size:14px; }
+    .brand .title{ font-weight:900; letter-spacing:.2px; font-size:13px; }
     .brand .dot{
       width:10px;height:10px;border-radius:50%;
       background: var(--tileInk);
       box-shadow: 0 0 0 3px rgba(11,79,85,.10);
     }
 
-    /* Tout le menu sur 1 ligne : pas de wrap, scroll horizontal si écran trop petit */
     .toolbar{
       display:flex;
       align-items:center;
+      justify-content:center;
       gap:10px;
-      flex:1;
+      flex: 0 1 auto;
       min-width:0;
       flex-wrap:nowrap;
       overflow-x:auto;
       overflow-y:hidden;
-      padding-bottom:2px;
+      padding: 2px 12px;
       scrollbar-width: thin;
     }
     .toolbar::-webkit-scrollbar{ height:8px; }
@@ -130,7 +135,7 @@
       border-radius: 12px;
       border:1px solid #dfe3ee;
       background:#fff;
-      padding: 8px 10px;
+      padding: 7px 9px;
       font-size:14px;
       color: var(--ink);
       box-shadow: 0 2px 0 rgba(10,20,40,.03);
@@ -153,7 +158,7 @@
       display:flex;
       align-items:center;
       gap:8px;
-      padding: 7px 10px;
+      padding: 6px 9px;
       border-radius: 14px;
       border:1px solid #e6ebf6;
       background: var(--panel2);
@@ -165,8 +170,8 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-width: 58px;
-      padding: 8px 10px;
+      min-width: 56px;
+      padding: 7px 9px;
       border-radius: 999px;
       border:1px solid #e3e7f2;
       background:#fff;
@@ -176,11 +181,11 @@
     }
     body.projection .zoomBadge{ font-size:16px; }
 
-    /* 2e ligne : métriques */
+    /* ✅ 2e ligne : métriques CENTRÉES */
     .metricsRow{
       display:flex;
       align-items:center;
-      justify-content:flex-end;
+      justify-content:center;
       gap:10px;
       padding: 0 2px 2px;
       min-height: 44px;
@@ -190,7 +195,7 @@
       display:flex;
       align-items:baseline;
       gap:10px;
-      padding: 10px 14px;
+      padding: 9px 13px;
       border-radius: 999px;
       border:1px solid #e3e7f2;
       background:#fff;
@@ -222,26 +227,22 @@
       transform: translateY(1px);
     }
 
-    .metric.muted{ opacity:.85; }
-    .metric.muted .v{ color:#8b95ad; }
-
     body.projection .metric .v{ font-size:30px; }
     body.projection .metric .k{ font-size:14px; }
     body.projection .unit{ font-size:14px; transform: translateY(2px); }
 
-    /* Compare metrics (2 figures) */
     .compareMetrics{
       display:none;
       align-items:center;
       gap:10px;
       width:100%;
-      justify-content:flex-end;
+      justify-content:center;
     }
     .mini{
       display:flex;
       align-items:center;
       gap:10px;
-      padding: 10px 14px;
+      padding: 9px 13px;
       border-radius: 999px;
       border:1px solid #e3e7f2;
       background:#fff;
@@ -263,7 +264,6 @@
     }
     body.projection .mini .nums{ font-size:24px; }
 
-    /* ========= Question + Status ========= */
     .infoBar{
       margin: 10px 14px 0;
       padding: 12px 14px;
@@ -274,7 +274,7 @@
       font-size: 16px;
       font-weight: 900;
       line-height: 1.25;
-      text-align:center; /* ✅ centré */
+      text-align:center;
     }
     body.projection .infoBar{ font-size:24px; }
 
@@ -304,13 +304,12 @@
 
     .infoBar:empty, .status:empty{ display:none; }
 
-    /* ========= Popover options ========= */
     .popover{
       position:absolute;
-      top: 64px;
-      left: 12px;
+      top: 58px;
+      left: 10px;
       width: 380px;
-      max-width: calc(100vw - 24px);
+      max-width: calc(100vw - 20px);
       background:#fff;
       border:1px solid #e6ebf6;
       border-radius: 16px;
@@ -363,7 +362,6 @@
       background: #fbfcff;
     }
 
-    /* ========= Boards ========= */
     .boardsSingle, .boardsCompare{ flex:1; display:block; }
     .boardsCompare{ display:none; }
 
@@ -395,7 +393,6 @@
       background:#fff;
       user-select:none;
       cursor:pointer;
-
       border:none;
       box-shadow:
         inset calc(-1 * var(--gridInner)) 0 0 var(--grid),
@@ -455,7 +452,6 @@
     body.panReady .cell{ cursor: grab; }
     body.panning .cell{ cursor: grabbing; }
 
-    /* ========= Comparaison layout ========= */
     .compareLayout{
       height:100%;
       display:flex;
@@ -474,16 +470,21 @@
       background:#fbfcff;
       overflow:hidden;
     }
+
     .compareHead{
       padding: 10px 12px;
-      font-weight: 950;
-      color: var(--ink);
       border-bottom:1px solid #eef2fb;
       background:#ffffff;
       display:flex;
-      justify-content:space-between;
+      flex-direction:column;
       align-items:center;
-      gap:10px;
+      justify-content:center;
+      gap:2px;
+      text-align:center;
+    }
+    .compareHead .ttl{
+      font-weight: 950;
+      color: var(--ink);
     }
     .compareHint{
       font-weight:900;
@@ -491,13 +492,13 @@
       font-size: 12px;
       white-space:nowrap;
     }
+
     .compareWrap{
       flex:1;
       overflow:auto;
       padding: 10px;
     }
 
-    /* Exercise group stays in top line without breaking layout */
     .exGroup{ display:flex; gap:10px; align-items:center; }
     .exGroup.hidden{ display:none; }
   </style>
@@ -515,7 +516,7 @@
         <div class="toolbar">
           <div class="seg">
             <label>Mode</label>
-            <select id="modeSel" style="padding:7px 10px;">
+            <select id="modeSel" style="padding:6px 9px;">
               <option value="free">Libre</option>
               <option value="train">Entraînement</option>
               <option value="compare">Comparaison</option>
@@ -534,8 +535,11 @@
 
           <button id="btnZoomOut" class="neutral" title="Zoom -">−</button>
           <button id="btnZoomIn" class="neutral" title="Zoom +">+</button>
-          <button id="btnZoomReset" class="neutral" title="Revenir à 100%">100%</button>
-          <span class="zoomBadge" id="zoomPct">100%</span>
+          <button id="btnZoomReset" class="neutral" title="Revenir au zoom de base">88%</button>
+          <span class="zoomBadge" id="zoomPct">88%</span>
+
+          <!-- ✅ Nouveau : toggle rapide Aire/Périmètre -->
+          <button id="btnToggleMetrics" class="neutral" title="Afficher/masquer Aire & périmètre">A/P : ON</button>
 
           <button id="btnProjection" class="neutral">Projection</button>
           <button id="btnFullscreen" class="neutral">⛶ Plein écran</button>
@@ -544,7 +548,6 @@
       </div>
 
       <div class="metricsRow" id="metricsRow">
-        <!-- normal metrics -->
         <div class="metric area" id="pillA">
           <div class="k">Aire</div>
           <div class="v"><span id="areaTop">0</span> <span class="unit" id="areaUnit"></span></div>
@@ -554,20 +557,19 @@
           <div class="v"><span id="perimTop">0</span> <span class="unit" id="perimUnit"></span></div>
         </div>
 
-        <!-- compare metrics -->
         <div class="compareMetrics" id="compareMetrics">
           <div class="mini">
             <div class="tag">Fig 1</div>
             <div class="nums">
-              <span>A=<span id="A1">0</span></span>
-              <span>P=<span id="P1">0</span></span>
+              <span>A=<span id="A1">0</span><span class="unit" id="A1u"></span></span>
+              <span>P=<span id="P1">0</span><span class="unit" id="P1u"></span></span>
             </div>
           </div>
           <div class="mini">
             <div class="tag">Fig 2</div>
             <div class="nums">
-              <span>A=<span id="A2">0</span></span>
-              <span>P=<span id="P2">0</span></span>
+              <span>A=<span id="A2">0</span><span class="unit" id="A2u"></span></span>
+              <span>P=<span id="P2">0</span><span class="unit" id="P2u"></span></span>
             </div>
           </div>
         </div>
@@ -575,6 +577,18 @@
 
       <div class="popover" id="pop">
         <div class="popGrid">
+
+          <!-- ✅ Nouveau : option afficher/masquer A/P -->
+          <div class="popRow">
+            <div>
+              <span>Valeurs</span>
+              <small>Aire & périmètre</small>
+            </div>
+            <label class="toggle">
+              <input id="showMetricsToggle" type="checkbox" />
+            </label>
+          </div>
+
           <div class="popRow">
             <div>
               <span>Contour</span>
@@ -607,10 +621,10 @@
 
           <div class="popRow">
             <div>
-              <span>Unités (haut)</span>
+              <span>Unités</span>
               <small>Mesures affichées</small>
             </div>
-            <select id="unitsTopSel" style="padding:8px 10px;">
+            <select id="unitsTopSel" style="padding:7px 9px;">
               <option value="off">OFF</option>
               <option value="ua">u.a / u.l</option>
               <option value="cm2">cm² / cm</option>
@@ -640,20 +654,18 @@
     <div class="infoBar" id="prompt"></div>
     <div class="status" id="status"></div>
 
-    <!-- 1 plateau -->
     <div class="boardsSingle" id="boardsSingle">
       <div class="gridWrap" id="gridWrap1">
         <div class="grid" id="grid1" aria-label="Plateau"></div>
       </div>
     </div>
 
-    <!-- 2 plateaux -->
     <div class="boardsCompare" id="boardsCompare">
       <div class="compareLayout">
         <div class="compareCol">
           <div class="compareHead">
-            <span>Figure 1</span>
-            <span class="compareHint">clic ici = plateau actif</span>
+            <div class="ttl">Figure 1</div>
+            <div class="compareHint">clic ici = plateau actif</div>
           </div>
           <div class="compareWrap" id="gridWrapL">
             <div class="grid" id="gridL" aria-label="Plateau gauche"></div>
@@ -661,8 +673,8 @@
         </div>
         <div class="compareCol">
           <div class="compareHead">
-            <span>Figure 2</span>
-            <span class="compareHint">clic ici = plateau actif</span>
+            <div class="ttl">Figure 2</div>
+            <div class="compareHint">clic ici = plateau actif</div>
           </div>
           <div class="compareWrap" id="gridWrapR">
             <div class="grid" id="gridR" aria-label="Plateau droit"></div>
@@ -678,6 +690,7 @@
   const ROWS = 14, COLS = 18;
   const BASE_CELL_NORMAL = 48;
   const BASE_CELL_PROJ   = 62;
+  const DEFAULT_ZOOM_RATIO = 0.88;
 
   const pop = document.getElementById('pop');
   const btnOptions = document.getElementById('btnOptions');
@@ -718,6 +731,10 @@
   const btnZoomReset = document.getElementById('btnZoomReset');
   const zoomPctEl = document.getElementById('zoomPct');
 
+  const btnToggleMetrics = document.getElementById('btnToggleMetrics');
+  const metricsRowEl = document.getElementById('metricsRow');
+  const showMetricsToggle = document.getElementById('showMetricsToggle');
+
   const btnProjection = document.getElementById('btnProjection');
   const btnFullscreen = document.getElementById('btnFullscreen');
 
@@ -737,20 +754,47 @@
   const A2El = document.getElementById('A2');
   const P2El = document.getElementById('P2');
 
-  // ✅ Empêche les boutons de garder le focus
+  const A1u = document.getElementById('A1u');
+  const P1u = document.getElementById('P1u');
+  const A2u = document.getElementById('A2u');
+  const P2u = document.getElementById('P2u');
+
+  // ✅ par mode : Libre ON, Entraînement OFF, Comparaison OFF
+  const showMetricsByMode = { free:true, train:false, compare:false };
+
   document.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('mousedown', (e) => e.preventDefault());
     btn.addEventListener('click', () => btn.blur());
   });
+
   function blurActive(){
     const ae = document.activeElement;
     if(ae && typeof ae.blur === 'function') ae.blur();
   }
 
+  function applyMetricsVisibility(){
+    const m = modeSel.value;
+    const on = !!showMetricsByMode[m];
+    metricsRowEl.style.display = on ? 'flex' : 'none';
+    btnToggleMetrics.classList.toggle('on', on);
+    btnToggleMetrics.textContent = on ? 'A/P : ON' : 'A/P : OFF';
+    btnToggleMetrics.setAttribute('aria-pressed', on ? 'true':'false');
+    showMetricsToggle.checked = on;
+  }
+
+  btnToggleMetrics.addEventListener('click', () => {
+    showMetricsByMode[modeSel.value] = !showMetricsByMode[modeSel.value];
+    applyMetricsVisibility();
+  });
+
+  showMetricsToggle.addEventListener('change', () => {
+    showMetricsByMode[modeSel.value] = !!showMetricsToggle.checked;
+    applyMetricsVisibility();
+  });
+
   function key(r,c){ return r + ',' + c; }
   function parseKey(k){ const [r,c] = k.split(',').map(Number); return {r,c}; }
   function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
-
   function neighbors4(r,c){
     return [
       {r:r-1,c},
@@ -763,6 +807,10 @@
   function baseCell(){
     return document.body.classList.contains('projection') ? BASE_CELL_PROJ : BASE_CELL_NORMAL;
   }
+  function baseZoomPx(){
+    return baseCell() * DEFAULT_ZOOM_RATIO;
+  }
+
   function getCellSize(){
     const v = getComputedStyle(document.body).getPropertyValue('--cell').trim();
     return parseInt(v,10) || BASE_CELL_NORMAL;
@@ -778,35 +826,11 @@
   }
 
   function unitSystem(){ return unitsTopSel.value; }
-  function applyUnits(){
+  function units(){
     const sys = unitSystem();
-    if(sys === 'ua'){
-      areaUnitEl.textContent = 'u.a';
-      perimUnitEl.textContent = 'u.l';
-    }else if(sys === 'cm2'){
-      areaUnitEl.textContent = 'cm²';
-      perimUnitEl.textContent = 'cm';
-    }else{
-      areaUnitEl.textContent = '';
-      perimUnitEl.textContent = '';
-    }
-
-    const allowLabels = (sys !== 'off');
-    labelsOnGrid.disabled = !allowLabels;
-    labelsRow.style.opacity = allowLabels ? '1' : '.55';
-    if(!allowLabels) labelsOnGrid.checked = false;
-
-    let cellTxt = '';
-    if(labelsOnGrid.checked){
-      if(sys === 'ua') cellTxt = '1u.a';
-      if(sys === 'cm2') cellTxt = '1 cm²';
-    }
-    boardSingle.applyLabels(cellTxt);
-    boardLeft.applyLabels(cellTxt);
-    boardRight.applyLabels(cellTxt);
-
-    updatePrompt();
-    refreshMetrics();
+    if(sys === 'ua') return {A:'u.a', P:'u.l'};
+    if(sys === 'cm2') return {A:'cm²', P:'cm'};
+    return {A:'', P:''};
   }
 
   function status(type, html){
@@ -820,9 +844,6 @@
     statusEl.innerHTML = '';
   }
 
-  /* =========================
-     Board factory
-  ========================== */
   function makeBoard(gridEl, wrapEl){
     gridEl.style.setProperty('--rows', ROWS);
     gridEl.style.setProperty('--cols', COLS);
@@ -971,9 +992,59 @@
   let activeBoard = boardSingle;
   function setActive(b){ activeBoard = b; }
 
-  /* =========================
-     Paint / Pan
-  ========================== */
+  // ======= Options popup =======
+  function closePop(){ pop.classList.remove('on'); }
+  btnOptions.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pop.classList.toggle('on');
+  });
+  document.addEventListener('click', (e) => {
+    if(!pop.classList.contains('on')) return;
+    if(pop.contains(e.target) || btnOptions.contains(e.target)) return;
+    closePop();
+  });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closePop(); });
+
+  showPerim.addEventListener('change', () => {
+    boardSingle.render(); boardLeft.render(); boardRight.render();
+  });
+
+  cahierToggle.addEventListener('change', () => {
+    document.body.classList.toggle('cahier', cahierToggle.checked);
+  });
+
+  function applyUnits(){
+    const u = units();
+    areaUnitEl.textContent = u.A;
+    perimUnitEl.textContent = u.P;
+
+    A1u.textContent = u.A ? (' ' + u.A) : '';
+    A2u.textContent = u.A ? (' ' + u.A) : '';
+    P1u.textContent = u.P ? (' ' + u.P) : '';
+    P2u.textContent = u.P ? (' ' + u.P) : '';
+
+    const allowLabels = (unitSystem() !== 'off');
+    labelsOnGrid.disabled = !allowLabels;
+    labelsRow.style.opacity = allowLabels ? '1' : '.55';
+    if(!allowLabels) labelsOnGrid.checked = false;
+
+    let cellTxt = '';
+    if(labelsOnGrid.checked){
+      if(unitSystem() === 'ua') cellTxt = '1u.a';
+      if(unitSystem() === 'cm2') cellTxt = '1 cm²';
+    }
+    boardSingle.applyLabels(cellTxt);
+    boardLeft.applyLabels(cellTxt);
+    boardRight.applyLabels(cellTxt);
+
+    updatePrompt();
+    refreshMetrics();
+  }
+
+  unitsTopSel.addEventListener('change', applyUnits);
+  labelsOnGrid.addEventListener('change', applyUnits);
+
+  // ======= Paint / Pan =======
   let isPointerDown = false;
   let paintMode = null;
 
@@ -987,7 +1058,7 @@
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const cell = el && el.closest && el.closest('.cell');
     if(!cell) return null;
-    return {r:+cell.dataset.r, c:+cell.dataset.c, grid: cell.closest('.grid')};
+    return {r:+cell.dataset.r, c:+cell.dataset.c};
   }
 
   function startPan(board, x, y){
@@ -1072,9 +1143,7 @@
   onPointerDownFactory(boardLeft);
   onPointerDownFactory(boardRight);
 
-  /* =========================
-     Zoom (molette)
-  ========================== */
+  // ======= Zoom =======
   function zoomAt(board, newPx, clientX, clientY){
     const old = getCellSize();
     const rect = board.wrapEl.getBoundingClientRect();
@@ -1109,9 +1178,8 @@
 
   btnZoomIn.addEventListener('click', () => zoomCenter(activeBoard, getCellSize() + 6));
   btnZoomOut.addEventListener('click', () => zoomCenter(activeBoard, getCellSize() - 6));
-  btnZoomReset.addEventListener('click', () => zoomCenter(activeBoard, baseCell()));
+  btnZoomReset.addEventListener('click', () => zoomCenter(activeBoard, baseZoomPx()));
 
-  /* ✅ Space pan + anti-focus */
   window.addEventListener('keydown', (e) => {
     if(e.code !== 'Space') return;
     const ae = document.activeElement;
@@ -1151,35 +1219,7 @@
     blurActive();
   }, {capture:true});
 
-  /* =========================
-     Popover options
-  ========================== */
-  function closePop(){ pop.classList.remove('on'); }
-  btnOptions.addEventListener('click', (e) => {
-    e.stopPropagation();
-    pop.classList.toggle('on');
-  });
-  document.addEventListener('click', (e) => {
-    if(!pop.classList.contains('on')) return;
-    if(pop.contains(e.target) || btnOptions.contains(e.target)) return;
-    closePop();
-  });
-  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closePop(); });
-
-  showPerim.addEventListener('change', () => {
-    boardSingle.render(); boardLeft.render(); boardRight.render();
-  });
-
-  cahierToggle.addEventListener('change', () => {
-    document.body.classList.toggle('cahier', cahierToggle.checked);
-  });
-
-  unitsTopSel.addEventListener('change', applyUnits);
-  labelsOnGrid.addEventListener('change', applyUnits);
-
-  /* =========================
-     Metrics row update
-  ========================== */
+  // ======= Metrics update =======
   function refreshMetrics(){
     const m = modeSel.value;
 
@@ -1192,10 +1232,12 @@
       const p1 = boardLeft.computePerimeterEdges().p;
       const a2 = boardRight.computeArea();
       const p2 = boardRight.computePerimeterEdges().p;
+
       A1El.textContent = a1;
       P1El.textContent = p1;
       A2El.textContent = a2;
       P2El.textContent = p2;
+
       return;
     }
 
@@ -1207,21 +1249,15 @@
     const P = boardSingle.computePerimeterEdges().p;
     areaTop.textContent = A;
     perimTop.textContent = P;
-    pillA.classList.toggle('muted', false);
-    pillP.classList.toggle('muted', false);
   }
 
-  /* =========================
-     Exercices : générateurs
-  ========================== */
+  // ======= Exercices =======
   let trainTarget = {A: 6, P: 14};
   let compareTarget = {type: 'sameP', value: 14};
 
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
   function genTrainTarget(){
     for(let tries=0; tries<250; tries++){
-      const A = 4 + Math.floor(Math.random()*7); // 4..10
+      const A = 4 + Math.floor(Math.random()*7);
       const cells = new Set();
       const start = {r: Math.floor(ROWS/2), c: Math.floor(COLS/2)};
       cells.add(key(start.r,start.c));
@@ -1258,33 +1294,33 @@
 
   function genCompareTarget(){
     if(Math.random() < 0.5){
-      const P = pick([14,16,18,20,22,24,26]);
+      const P = [14,16,18,20,22,24,26][Math.floor(Math.random()*7)];
       return {type:'sameP', value: P};
     }else{
-      const A = pick([12,16,18,20,24,28,30]);
+      const A = [12,16,18,20,24,28,30][Math.floor(Math.random()*7)];
       return {type:'sameA', value: A};
     }
   }
 
   function updatePrompt(){
     const m = modeSel.value;
-    const sys = unitSystem();
-    const Aunit = (sys === 'cm2') ? 'cm²' : (sys === 'off' ? '' : 'u.a');
-    const Punit = (sys === 'cm2') ? 'cm'  : (sys === 'off' ? '' : 'u.l');
+    const u = units();
+    const Aunit = u.A ? (' ' + u.A) : '';
+    const Punit = u.P ? (' ' + u.P) : '';
 
     if(m === 'train'){
       promptEl.innerHTML =
-        `🎯 <b>Entraînement</b> — Construis une figure d’<b>aire ${trainTarget.A}${Aunit?(' '+Aunit):''}</b> ` +
-        `et de <b>périmètre ${trainTarget.P}${Punit?(' '+Punit):''}</b>.<br>` +
+        `🎯 <b>Entraînement</b> — Construis une figure d’<b>aire ${trainTarget.A}${Aunit}</b> ` +
+        `et de <b>périmètre ${trainTarget.P}${Punit}</b>.<br>` +
         `<span style="color:var(--muted);font-weight:900">Figure d’un seul morceau.</span>`;
     }else if(m === 'compare'){
       if(compareTarget.type === 'sameP'){
         promptEl.innerHTML =
-          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) de <b>périmètre ${compareTarget.value}${Punit?(' '+Punit):''}</b> ` +
+          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) de <b>périmètre ${compareTarget.value}${Punit}</b> ` +
           `mais avec des <b>aires différentes</b>.`;
       }else{
         promptEl.innerHTML =
-          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) d’<b>aire ${compareTarget.value}${Aunit?(' '+Aunit):''}</b> ` +
+          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) d’<b>aire ${compareTarget.value}${Aunit}</b> ` +
           `mais avec des <b>périmètres différents</b>.`;
       }
     }else{
@@ -1346,36 +1382,7 @@
     }, 900);
   }
 
-  /* =========================
-     Mode switching + zoom arrivée comparaison
-  ========================== */
-  function centerView(board){
-    const w = board.wrapEl;
-    const g = board.gridEl;
-    // après layout
-    const maxL = Math.max(0, g.scrollWidth - w.clientWidth);
-    const maxT = Math.max(0, g.scrollHeight - w.clientHeight);
-    w.scrollLeft = Math.round(maxL/2);
-    w.scrollTop  = Math.round(maxT/2);
-  }
-
-  function resetZoom100AndCenter(which){
-    // met le zoom à 100% (baseCell), puis centre la vue
-    setCellSize(baseCell());
-    updateZoomBadge();
-    // double RAF pour être sûr (dimensions calculées)
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if(which === 'compare'){
-          centerView(boardLeft);
-          centerView(boardRight);
-        }else{
-          centerView(boardSingle);
-        }
-      });
-    });
-  }
-
+  // ======= Mode switch =======
   modeSel.addEventListener('change', () => {
     clearStatus();
     const m = modeSel.value;
@@ -1388,7 +1395,6 @@
     if(m === 'compare'){
       boardsSingle.style.display = 'none';
       boardsCompare.style.display = 'block';
-
       setActive(boardLeft);
       compareTarget = genCompareTarget();
 
@@ -1398,14 +1404,10 @@
 
       updatePrompt();
       refreshMetrics();
-
-      // ✅ arrivée comparaison : zoom clean + centré
-      resetZoom100AndCenter('compare');
-
+      applyMetricsVisibility(); // ✅ default OFF en comparaison
     }else{
       boardsSingle.style.display = 'block';
       boardsCompare.style.display = 'none';
-
       setActive(boardSingle);
 
       if(m === 'train'){
@@ -1415,19 +1417,16 @@
         boardSingle.render();
         updatePrompt();
         refreshMetrics();
-
-        // optionnel : tu peux aussi forcer centré en entraînement
-        resetZoom100AndCenter('single');
+        applyMetricsVisibility(); // ✅ default OFF en entraînement
       }else{
         updatePrompt();
         refreshMetrics();
+        applyMetricsVisibility(); // ✅ default ON en libre
       }
     }
   });
 
-  /* =========================
-     Buttons
-  ========================== */
+  // ======= Buttons =======
   btnClear.addEventListener('click', () => {
     clearStatus();
     if(modeSel.value === 'compare'){
@@ -1489,7 +1488,6 @@
       boardLeft.render(); boardRight.render();
       updatePrompt();
       refreshMetrics();
-      resetZoom100AndCenter('compare');
     }
   });
 
@@ -1499,9 +1497,7 @@
     if(modeSel.value === 'compare') validateCompare();
   });
 
-  /* =========================
-     Projection / Fullscreen
-  ========================== */
+  // ======= Projection / Fullscreen =======
   btnProjection.addEventListener('click', () => {
     const ratio = getCellSize() / baseCell();
     document.body.classList.toggle('projection');
@@ -1510,9 +1506,18 @@
     btnProjection.classList.toggle('on', onProj);
     btnProjection.textContent = onProj ? 'Projection : ON' : 'Projection';
 
-    // conserve ratio
     const px = baseCell() * ratio;
-    zoomCenter(activeBoard, px);
+    const rect = activeBoard.wrapEl.getBoundingClientRect();
+    // recentre sur le centre de l'écran
+    const old = getCellSize();
+    const localX = rect.width/2;
+    const localY = rect.height/2;
+    const x = localX + activeBoard.wrapEl.scrollLeft;
+    const y = localY + activeBoard.wrapEl.scrollTop;
+    const applied = setCellSize(px);
+    const r = applied / old;
+    activeBoard.wrapEl.scrollLeft = x * r - localX;
+    activeBoard.wrapEl.scrollTop  = y * r - localY;
 
     applyUnits();
     boardSingle.render(); boardLeft.render(); boardRight.render();
@@ -1537,12 +1542,11 @@
     btnFullscreen.textContent = onFs ? '⛶ Plein écran : ON' : '⛶ Plein écran';
   });
 
-  /* =========================
-     Init
-  ========================== */
-  // Par défaut : u.a / u.l
+  // ======= Init =======
   unitsTopSel.value = 'ua';
   labelsOnGrid.checked = false;
+
+  setCellSize(baseZoomPx());
 
   applyUnits();
   updatePrompt();
@@ -1551,6 +1555,9 @@
   boardRight.render();
   refreshMetrics();
   updateZoomBadge();
+
+  // ✅ applique l'état par défaut (Libre => ON)
+  applyMetricsVisibility();
 
 })();
 </script>
