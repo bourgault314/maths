@@ -3,626 +3,531 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Boîte à bonbons — 3D + Cavalière + Patron</title>
+  <title>Boîte à bonbons — 3D / Cavalière / Patron</title>
   <style>
     :root{
       --bg:#0b1020;
-      --panel:#111a33;
+      --panel:#10162c;
+      --line:rgba(255,255,255,.14);
       --text:#e9eefc;
       --muted:#a9b6e6;
-      --line:rgba(255,255,255,.18);
-      --btn:#1a2550;
-      --btn2:#22306a;
+      --btn:#172149;
+      --btn2:#1d2a5e;
       --accent:#7ee787;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
-    .app{display:grid;grid-template-rows:auto 1fr; height:100%;}
-    .topbar{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-      padding:10px 12px; border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    header{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
     }
-    .title{font-weight:700}
-    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .title{font-weight:800}
+    .meta{color:var(--muted);font-size:.95rem}
+    .spacer{flex:1}
     .btn{
-      background:var(--btn); border:1px solid var(--line); color:var(--text);
-      padding:8px 10px; border-radius:10px; cursor:pointer;
+      background:var(--btn);border:1px solid var(--line);color:var(--text);
+      padding:8px 10px;border-radius:10px;cursor:pointer;
     }
     .btn:hover{background:var(--btn2)}
-    .toggle{display:flex; gap:6px; align-items:center; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.03);}
-    input[type="checkbox"]{transform:scale(1.1)}
-    .spacer{flex:1}
-    .grid{
-      display:grid;
-      grid-template-columns: 1.2fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap:12px;
-      padding:12px;
-      height:100%;
-      min-height:0;
+    .tabs{
+      display:flex;gap:8px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
     }
-    .card{
+    .tab{
+      padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+      background:rgba(255,255,255,.02);cursor:pointer;color:var(--muted);
+    }
+    .tab.active{background:rgba(126,231,135,.10);color:var(--text);border-color:rgba(126,231,135,.35)}
+    .wrap{height:calc(100% - 98px);padding:12px;min-height:0;}
+    .panel{
+      height:100%;
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:14px;
       overflow:hidden;
-      display:flex;
-      flex-direction:column;
+      display:none;
       min-height:0;
     }
-    .card header{
-      padding:10px 12px;
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+    .panel.active{display:flex;flex-direction:column}
+    .bar{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
     }
-    .card header .h{font-weight:700}
-    .card header .sub{color:var(--muted); font-size:.92rem}
-    .card .body{position:relative; flex:1; min-height:0;}
-    #view3d{width:100%; height:100%; display:block;}
-    #cav{width:100%; height:100%; display:block; background:#0f1733;}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    label{color:var(--muted); font-size:.92rem}
-    input[type="range"]{width:160px}
-    .legend{
-      position:absolute; left:10px; bottom:10px;
-      background:rgba(0,0,0,.35);
-      border:1px solid var(--line);
-      padding:8px 10px;
-      border-radius:12px;
-      max-width:min(520px, calc(100% - 20px));
-      font-size:.92rem;
-      color:var(--muted);
-      backdrop-filter: blur(6px);
+    .bar .hint{color:var(--muted);font-size:.92rem}
+    .bar label{color:var(--muted);font-size:.92rem}
+    .bar input[type="range"]{width:160px}
+    .toggle{
+      display:flex;align-items:center;gap:6px;
+      padding:6px 10px;border:1px solid var(--line);border-radius:10px;
+      background:rgba(255,255,255,.02);
     }
-    .legend b{color:var(--text)}
-    .svgWrap{width:100%; height:100%; overflow:auto; background:#0f1733;}
-    .note{color:var(--muted); font-size:.92rem}
-    .kpi{color:var(--text)}
-    .kpi span{color:var(--muted)}
-    .warn{
-      margin-left:auto;
-      color:#ffd28a;
-      font-size:.92rem;
+    .content{flex:1;min-height:0;position:relative;}
+    canvas{display:block;width:100%;height:100%}
+    .svgWrap{width:100%;height:100%;overflow:auto;background:#0f1733;}
+    .note{
+      position:absolute;left:10px;bottom:10px;
+      max-width:min(720px, calc(100% - 20px));
+      padding:8px 10px;border-radius:12px;
+      background:rgba(0,0,0,.35);border:1px solid var(--line);
+      color:var(--muted);font-size:.92rem;backdrop-filter:blur(6px);
     }
+    .note b{color:var(--text)}
+    .errorBox{
+      padding:12px;border:1px solid rgba(255,180,120,.35);
+      background:rgba(255,180,120,.08);
+      border-radius:12px;color:#ffd4b0;font-size:.95rem;
+    }
+    .small{font-size:.9rem;color:var(--muted)}
+    code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:8px}
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div class="title">Boîte à bonbons — 3D + Cavalière + Patron</div>
-      <div class="pill" id="dimsPill"></div>
-
-      <div class="spacer"></div>
-
-      <button class="btn" id="resetCam">Réinitialiser la vue 3D</button>
-      <button class="btn" id="focusBox">Centrer sur la boîte</button>
-      <button class="btn" id="printNet">Imprimer le patron</button>
+  <header>
+    <div>
+      <div class="title">Boîte à bonbons</div>
+      <div class="meta" id="dims"></div>
     </div>
+    <div class="spacer"></div>
+    <button class="btn" id="printNet">Imprimer le patron</button>
+    <button class="btn" id="reset3d">Réinitialiser la vue 3D</button>
+  </header>
 
-    <div class="grid">
-      <!-- 3D -->
-      <section class="card">
-        <header>
-          <div class="h">Vue 3D (correction)</div>
-          <div class="sub">Pile de bonbons + boîte filaire</div>
-          <div class="row">
-            <div class="toggle"><input id="showCandies" type="checkbox" checked><label for="showCandies">Bonbons</label></div>
-            <div class="toggle"><input id="showBox" type="checkbox" checked><label for="showBox">Boîte</label></div>
-            <div class="toggle"><input id="showGrid" type="checkbox" checked><label for="showGrid">Grille sol</label></div>
-          </div>
-        </header>
-        <div class="body">
-          <canvas id="view3d"></canvas>
-          <div class="legend" id="legend3d"></div>
-        </div>
-      </section>
+  <nav class="tabs">
+    <button class="tab active" data-tab="t3d">3D</button>
+    <button class="tab" data-tab="tcav">Cavalière</button>
+    <button class="tab" data-tab="tnet">Patron</button>
+  </nav>
 
-      <!-- Cavalière -->
-      <section class="card">
-        <header>
-          <div class="h">Perspective cavalière</div>
-          <div class="sub">pas à pas sur “feuille quadrillée”</div>
-          <div class="row">
-            <label>Coef profondeur</label>
-            <input id="coef" type="range" min="0.3" max="0.8" step="0.05" value="0.5">
-            <span class="note" id="coefVal"></span>
-          </div>
-          <div class="row">
-            <label>Étape</label>
-            <input id="step" type="range" min="1" max="3" step="1" value="3">
-            <span class="note" id="stepVal"></span>
-          </div>
-        </header>
-        <div class="body">
-          <canvas id="cav"></canvas>
-          <div class="legend" id="legendCav"></div>
-        </div>
-      </section>
+  <div class="wrap">
+    <!-- 3D -->
+    <section class="panel active" id="t3d">
+      <div class="bar">
+        <div class="hint">Souris : glisser = tourner • molette = zoom</div>
+        <div class="toggle"><input id="showCandies" type="checkbox" checked><label for="showCandies">Bonbons</label></div>
+        <div class="toggle"><input id="showBox" type="checkbox" checked><label for="showBox">Boîte</label></div>
+        <div class="toggle"><input id="showGrid" type="checkbox" checked><label for="showGrid">Grille</label></div>
+      </div>
+      <div class="content">
+        <canvas id="c3d"></canvas>
+        <div class="note" id="note3d"></div>
+      </div>
+    </section>
 
-      <!-- Patron -->
-      <section class="card" style="grid-column: 1 / -1;">
-        <header>
-          <div class="h">Patron (SVG imprimable)</div>
-          <div class="sub">dimensions en mm + option languettes</div>
+    <!-- Cavalière -->
+    <section class="panel" id="tcav">
+      <div class="bar">
+        <div class="hint">Étapes : base → profondeur → fermeture</div>
+        <label>k</label>
+        <input id="k" type="range" min="0.3" max="0.8" step="0.05" value="0.5">
+        <span class="small" id="kVal"></span>
+        <label>Étape</label>
+        <input id="step" type="range" min="1" max="3" step="1" value="3">
+        <span class="small" id="stepVal"></span>
+      </div>
+      <div class="content">
+        <canvas id="ccav"></canvas>
+        <div class="note" id="noteCav"></div>
+      </div>
+    </section>
 
-          <div class="row">
-            <div class="toggle"><input id="tabs" type="checkbox" checked><label for="tabs">Languettes</label></div>
-            <div class="toggle"><input id="mmGrid" type="checkbox"><label for="mmGrid">Grille 5 mm</label></div>
-
-            <span class="warn" id="printHint">Astuce : imprime à 100% (sans “ajuster”).</span>
-          </div>
-        </header>
-        <div class="body">
-          <div class="svgWrap" id="svgWrap"></div>
-        </div>
-      </section>
-    </div>
+    <!-- Patron -->
+    <section class="panel" id="tnet">
+      <div class="bar">
+        <div class="hint">Échelle 1:1 (mm). Imprimer à 100% (sans ajuster).</div>
+        <div class="toggle"><input id="tabsOn" type="checkbox" checked><label for="tabsOn">Languette</label></div>
+        <div class="toggle"><input id="grid5" type="checkbox"><label for="grid5">Grille 5 mm</label></div>
+      </div>
+      <div class="content">
+        <div class="svgWrap" id="svgWrap"></div>
+      </div>
+    </section>
   </div>
 
-  <!-- THREE (version globale, pas de modules -> plus simple en local) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ========= Données (mm) =========
+   Bonbon: prisme droit base triangle rectangle 3–4–5 cm, épaisseur 6 mm
+   Pile: 10 bonbons -> 60 mm = 6 cm
+*/
+const D = { a:30, b:40, c:50, t:6, n:10, clearXY:1, clearZ:1 };
+const H = () => D.n * D.t;
 
-  <script>
-    // ======= Données (en mm pour éviter les décimales) =======
-    const D = {
-      a: 30,   // côté angle droit 3 cm
-      b: 40,   // côté angle droit 4 cm
-      c: 50,   // hypoténuse 5 cm
-      t: 6,    // épaisseur d'un bonbon
-      n: 10,   // nombre de bonbons
-      clearanceXY: 1, // petit jeu (mm) pour visualiser la "boîte" autour
-      clearanceZ: 1
-    };
+document.getElementById('dims').textContent =
+  `Base : 3–4–5 cm • Épaisseur : ${D.t} mm • Pile : ${D.n} → ${H()} mm (= ${(H()/10).toFixed(1)} cm)`;
 
-    const H = () => D.n * D.t; // hauteur de la pile (mm)
+const $ = (id)=>document.getElementById(id);
 
-    const dimsPill = document.getElementById('dimsPill');
-    function refreshDimsPill(){
-      dimsPill.textContent =
-        `Base: 3–4–5 cm | Épaisseur: ${D.t} mm | Pile: ${D.n} ⇒ ${H()} mm (= ${(H()/10).toFixed(1)} cm)`;
+/* ========= Tabs ========= */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    $(target).classList.add('active');
+    // Resize redraw
+    requestAnimationFrame(()=>{ resizeAll(); drawCavaliere(); });
+  });
+});
+
+/* ========= Cavalière (100% autonome, sans lib) ========= */
+const cav = $('ccav');
+const ctx = cav.getContext('2d');
+
+function drawGrid2D(w,h,step=20){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#0f1733';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = 'rgba(255,255,255,.06)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+}
+
+function projectCav(p, k=0.5, theta=Math.PI/4){
+  // p = {x,y,z} mm -> projection cavalière
+  const dx = k * p.z * Math.cos(theta);
+  const dy = k * p.z * Math.sin(theta);
+  return { x: p.x + dx, y: p.y - dy };
+}
+
+function drawCavaliere(){
+  const w = cav.clientWidth, h = cav.clientHeight;
+  if(w<10 || h<10) return;
+
+  const k = Number($('k').value);
+  const step = Number($('step').value);
+  $('kVal').textContent = `k=${k.toFixed(2)}`;
+  $('stepVal').textContent = step===1?'1/3':step===2?'2/3':'3/3';
+
+  drawGrid2D(w,h,20);
+
+  const theta = Math.PI/4;
+  const A={x:0,y:0,z:0}, B={x:D.a,y:0,z:0}, C={x:0,y:D.b,z:0};
+  const Z=H();
+  const A2={x:0,y:0,z:Z}, B2={x:D.a,y:0,z:Z}, C2={x:0,y:D.b,z:Z};
+
+  const maxX = D.a + k*Z*Math.cos(theta);
+  const maxY = D.b + k*Z*Math.sin(theta);
+
+  const margin = 60;
+  const scale = Math.min((w-2*margin)/maxX, (h-2*margin)/maxY);
+
+  function P(p){
+    const q=projectCav(p,k,theta);
+    return { x: margin + q.x*scale, y: margin + q.y*scale };
+  }
+
+  const pA=P(A), pB=P(B), pC=P(C), pA2=P(A2), pB2=P(B2), pC2=P(C2);
+
+  function seg(p,q, col='rgba(233,238,252,.85)', lw=2, dash=false){
+    ctx.save();
+    ctx.strokeStyle=col; ctx.lineWidth=lw;
+    if(dash) ctx.setLineDash([6,6]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+    ctx.restore();
+  }
+
+  // base
+  seg(pA,pB);
+  seg(pA,pC);
+  seg(pB,pC);
+
+  if(step>=2){
+    seg(pA,pA2,'rgba(126,231,135,.9)',2);
+    seg(pB,pB2,'rgba(126,231,135,.9)',2);
+    seg(pC,pC2,'rgba(126,231,135,.9)',2);
+  }
+  if(step>=3){
+    seg(pA2,pB2,'rgba(233,238,252,.65)',2);
+    seg(pA2,pC2,'rgba(233,238,252,.65)',2);
+    seg(pB2,pC2,'rgba(233,238,252,.65)',2);
+    // arêtes cachées en pointillés (petit + pédagogique)
+    seg(pB,pB2,'rgba(233,238,252,.35)',2,true);
+    seg(pC,pC2,'rgba(233,238,252,.35)',2,true);
+  }
+
+  ctx.fillStyle='rgba(233,238,252,.9)';
+  ctx.font='14px system-ui';
+  ctx.fillText('3 cm', (pA.x+pB.x)/2 - 10, (pA.y+pB.y)/2 - 12);
+  ctx.fillText('4 cm', (pA.x+pC.x)/2 - 10, (pA.y+pC.y)/2 + 18);
+  ctx.fillText('5 cm', (pB.x+pC.x)/2 + 8, (pB.y+pC.y)/2 + 4);
+  ctx.fillStyle='rgba(126,231,135,.95)';
+  ctx.fillText(`6 cm`, (pA2.x+pB2.x)/2 - 8, (pA2.y+pB2.y)/2 - 12);
+
+  $('noteCav').innerHTML =
+    `<b>Perspective cavalière :</b><br>
+     1) Triangle 3–4–5 en vraie grandeur.<br>
+     2) Profondeur à 45° avec coefficient k (souvent 0,5).<br>
+     3) On ferme en reliant les points du “fond”.`;
+}
+
+$('k').addEventListener('input', drawCavaliere);
+$('step').addEventListener('input', drawCavaliere);
+
+/* ========= Patron SVG (autonome) ========= */
+function buildNetSVG(){
+  const tabsOn = $('tabsOn').checked;
+  const gridOn = $('grid5').checked;
+
+  // A4 (mm)
+  const pageW=210, pageH=297, pad=12;
+
+  const Z=H();
+  const w1=D.a, w2=D.c, w3=D.b;
+  const x0=pad, y0=60;
+
+  const R1=[x0,y0,w1,Z];
+  const R2=[x0+w1,y0,w2,Z];
+  const R3=[x0+w1+w2,y0,w3,Z];
+
+  const tab=10;
+
+  const xT = R2[0] + (w2 - D.a)/2;
+  const triTop = [[xT, y0],[xT+D.a, y0],[xT, y0-D.b]];
+  const triBot = [[xT, y0+Z],[xT+D.a, y0+Z],[xT, y0+Z+D.b]];
+
+  const line=(x1,y1,x2,y2,d=false)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(233,238,252,.9)" stroke-width="0.6" ${d?`stroke-dasharray="3 3"`:''}/>`;
+  const rect=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="rgba(233,238,252,.9)" stroke-width="0.8"/>`;
+  const poly=(pts)=>`<polygon points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="rgba(233,238,252,.9)" stroke-width="0.8"/>`;
+  const text=(x,y,s,size=4)=>`<text x="${x}" y="${y}" font-size="${size}" fill="rgba(233,238,252,.85)" font-family="system-ui,Segoe UI,Roboto">${s}</text>`;
+
+  let grid='';
+  if(gridOn){
+    for(let x=0;x<=pageW;x+=5) grid += `<line x1="${x}" y1="0" x2="${x}" y2="${pageH}" stroke="rgba(255,255,255,.05)" stroke-width="0.2"/>`;
+    for(let y=0;y<=pageH;y+=5) grid += `<line x1="0" y1="${y}" x2="${pageW}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="0.2"/>`;
+  }
+
+  let tabs='';
+  if(tabsOn){
+    tabs += `<rect x="${x0-tab}" y="${y0}" width="${tab}" height="${Z}" fill="rgba(126,231,135,.08)" stroke="rgba(233,238,252,.7)" stroke-width="0.6" stroke-dasharray="3 3"/>`;
+    tabs += text(x0-tab+1, y0+6, 'languette', 3.6);
+  }
+
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+    <rect x="0" y="0" width="210" height="297" fill="#0f1733"/>
+    ${grid}
+    ${text(12, 18, 'Patron (1:1) — Rectangles : 6×3, 6×5, 6×4 cm — 2 triangles 3–4–5', 4.2)}
+    ${rect(...R1)}${rect(...R2)}${rect(...R3)}
+    ${line(R1[0]+R1[2],y0,R1[0]+R1[2],y0+Z,true)}
+    ${line(R2[0]+R2[2],y0,R2[0]+R2[2],y0+Z,true)}
+    ${poly(triTop)}${poly(triBot)}
+    ${tabs}
+    ${text(R1[0]+2, y0-2, '6×3 cm', 4)}
+    ${text(R2[0]+2, y0-2, '6×5 cm', 4)}
+    ${text(R3[0]+2, y0-2, '6×4 cm', 4)}
+    ${text(12, 285, 'Imprime à 100% (sans ajuster). Découpe plein, plie pointillés.', 4)}
+  </svg>`;
+  $('svgWrap').innerHTML = svg;
+}
+$('tabsOn').addEventListener('change', buildNetSVG);
+$('grid5').addEventListener('change', buildNetSVG);
+
+/* ========= Impression patron ========= */
+$('printNet').addEventListener('click', ()=>{
+  const svg = $('svgWrap').querySelector('svg');
+  if(!svg) return;
+  const w = window.open('', '_blank');
+  const html = `<!doctype html><html><head><meta charset="utf-8">
+  <title>Patron — impression</title>
+  <style>body{margin:0;background:#fff} svg{width:210mm;height:297mm;display:block}</style>
+  </head><body>${svg.outerHTML}
+  <script>window.onload=()=>setTimeout(()=>window.print(),200);<\/script>
+  </body></html>`;
+  w.document.open(); w.document.write(html); w.document.close();
+});
+
+/* ========= 3D (optionnelle) : on charge Three.js dynamiquement ========= */
+const note3d = $('note3d');
+note3d.innerHTML = `<b>3D :</b> chargement… (si le réseau bloque les CDN, la 3D se désactive mais Cavalière/Patron restent OK).`;
+
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=src; s.async=true;
+    s.onload=resolve;
+    s.onerror=()=>reject(new Error('load failed: '+src));
+    document.head.appendChild(s);
+  });
+}
+
+let threeState = null;
+
+async function init3D(){
+  // 1) Essai CDN
+  try{
+    await loadScript('https://unpkg.com/three@0.160.0/build/three.min.js');
+  }catch(e){
+    // 2) Essai local (au cas où tu mets three.min.js à côté du html)
+    try{
+      await loadScript('./three.min.js');
+    }catch(e2){
+      // 3D indisponible -> message, pas de crash
+      note3d.innerHTML =
+        `<div class="errorBox"><b>3D indisponible.</b><br>
+         Le reste de la page fonctionne.<br><br>
+         Solution simple : télécharge <code>three.min.js</code> et mets-le dans le même dossier que ce fichier HTML,
+         puis recharge la page.</div>`;
+      return;
     }
-    refreshDimsPill();
+  }
 
-    // ======= UI =======
-    const ui = {
-      showCandies: document.getElementById('showCandies'),
-      showBox: document.getElementById('showBox'),
-      showGrid: document.getElementById('showGrid'),
-      coef: document.getElementById('coef'),
-      coefVal: document.getElementById('coefVal'),
-      step: document.getElementById('step'),
-      stepVal: document.getElementById('stepVal'),
-      tabs: document.getElementById('tabs'),
-      mmGrid: document.getElementById('mmGrid'),
-      resetCam: document.getElementById('resetCam'),
-      focusBox: document.getElementById('focusBox'),
-      printNet: document.getElementById('printNet'),
-      legend3d: document.getElementById('legend3d'),
-      legendCav: document.getElementById('legendCav'),
-      svgWrap: document.getElementById('svgWrap'),
-    };
+  // Si on est là, THREE est dispo
+  const canvas = $('c3d');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
 
-    // ======= 3D =======
-    const canvas3d = document.getElementById('view3d');
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias:true });
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1020);
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b1020);
+  const camera = new THREE.PerspectiveCamera(55, 1, 1, 6000);
 
-    const camera = new THREE.PerspectiveCamera(50, 1, 1, 5000);
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const light = new THREE.DirectionalLight(0xffffff, 0.9);
+  light.position.set(200, 260, 160);
+  scene.add(light);
 
-    // Lumières
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-    dir.position.set(200, 260, 180);
-    scene.add(dir);
+  const grid = new THREE.GridHelper(400, 40, 0x6b78b8, 0x2a355f);
+  grid.position.y = -40;
+  scene.add(grid);
 
-    // Grille sol
-    const grid = new THREE.GridHelper(400, 40, 0x6b78b8, 0x2a355f);
-    grid.position.y = -80;
-    scene.add(grid);
+  // Géométrie : prisme triangulaire (extrusion en z puis rotation pour avoir l’empilement vertical en y)
+  function makeTriPrism(a,b,depth){
+    const shape = new THREE.Shape();
+    shape.moveTo(0,0);
+    shape.lineTo(a,0);
+    shape.lineTo(0,b);
+    shape.lineTo(0,0);
 
-    // Groupes
-    const Gcandies = new THREE.Group();
-    const Gbox = new THREE.Group();
-    scene.add(Gcandies, Gbox);
+    const geo = new THREE.ExtrudeGeometry(shape, {depth, bevelEnabled:false});
+    geo.rotateX(-Math.PI/2); // z -> y (vertical)
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    const cx = (bb.min.x+bb.max.x)/2;
+    const cy = (bb.min.y+bb.max.y)/2;
+    const cz = (bb.min.z+bb.max.z)/2;
+    geo.translate(-cx, -cy, -cz);
+    geo.computeVertexNormals();
+    return geo;
+  }
 
-    // Fabrique un prisme triangulaire (base rectangle a,b ; profondeur = depth)
-    function makeTriPrism(a, b, depth){
-      const shape = new THREE.Shape();
-      shape.moveTo(0,0);
-      shape.lineTo(a,0);
-      shape.lineTo(0,b);
-      shape.lineTo(0,0);
+  const Gcandies = new THREE.Group();
+  const Gbox = new THREE.Group();
+  scene.add(Gcandies, Gbox);
 
-      const geo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled:false });
-      geo.computeBoundingBox();
-      const bb = geo.boundingBox;
-      const cx = (bb.min.x + bb.max.x)/2;
-      const cy = (bb.min.y + bb.max.y)/2;
-      const cz = (bb.min.z + bb.max.z)/2;
-      geo.translate(-cx, -cy, -cz); // centre
-      geo.computeVertexNormals();
-      return geo;
-    }
+  function rebuild3D(){
+    while(Gcandies.children.length) Gcandies.remove(Gcandies.children[0]);
+    while(Gbox.children.length) Gbox.remove(Gbox.children[0]);
 
-    let candyMeshProto = null;
-    function rebuild3D(){
-      // Cleanup
-      while(Gcandies.children.length) Gcandies.remove(Gcandies.children[0]);
-      while(Gbox.children.length) Gbox.remove(Gbox.children[0]);
+    const candyGeo = makeTriPrism(D.a, D.b, D.t);
+    const candyMat = new THREE.MeshStandardMaterial({ color: 0x7ee787, roughness:0.5, metalness:0.05 });
 
-      // Bonbons (10 prismes de profondeur t)
-      const candyGeo = makeTriPrism(D.a, D.b, D.t);
-      candyMeshProto = candyGeo;
-
-      const candyMat = new THREE.MeshStandardMaterial({
-        color: 0x7ee787,
-        roughness: 0.45,
-        metalness: 0.05
-      });
-
-      const totalH = H();
-      for(let i=0;i<D.n;i++){
-        const m = new THREE.Mesh(candyGeo, candyMat);
-        // empilement sur Z
-        m.position.z = (i - (D.n-1)/2) * D.t;
-        // un tout petit décalage pour que ça "se lise" en 3D
-        m.position.y = 2*Math.sin(i*0.6);
-        Gcandies.add(m);
-      }
-
-      // Boîte filaire (un prisme un poil plus grand)
-      const bx = D.clearanceXY;
-      const bz = D.clearanceZ;
-      const boxGeo = makeTriPrism(D.a + 2*bx, D.b + 2*bx, totalH + 2*bz);
-
-      const edges = new THREE.EdgesGeometry(boxGeo, 15);
-      const lineMat = new THREE.LineBasicMaterial({ color: 0xa9b6e6, transparent:true, opacity:0.9 });
-      const wire = new THREE.LineSegments(edges, lineMat);
-      Gbox.add(wire);
-
-      // Positionne boîte et bonbons ensemble (centrés)
-      Gcandies.position.set(0, 0, 0);
-      Gbox.position.set(0, 0, 0);
-
-      // Légende pédagogique
-      ui.legend3d.innerHTML = `
-        <b>Objectif correction :</b><br/>
-        • Base = triangle rectangle <span class="kpi">3–4–5 cm</span><br/>
-        • Épaisseur bonbon = <span class="kpi">${D.t} mm</span> ⇒ pile = <span class="kpi">${totalH} mm</span> (= ${(totalH/10).toFixed(1)} cm)<br/>
-        • La boîte est le <b>prisme droit</b> qui “enveloppe” la pile.
-      `;
-
-      // Cam par défaut
-      resetCamera();
-      drawCavaliere();
-      buildNetSVG();
-    }
-
-    function resetCamera(){
-      const size = Math.max(D.a, D.b, H());
-      camera.position.set(size*2.2, size*1.6, size*2.0);
-      camera.lookAt(0,0,0);
-      controls.target.set(0,0,0);
-      controls.update();
-    }
-
-    function focusBox(){
-      controls.target.set(0,0,0);
-      camera.position.set(140, 120, 220);
-      controls.update();
-    }
-
-    ui.resetCam.addEventListener('click', resetCamera);
-    ui.focusBox.addEventListener('click', focusBox);
-
-    ui.showCandies.addEventListener('change', ()=>{ Gcandies.visible = ui.showCandies.checked; });
-    ui.showBox.addEventListener('change', ()=>{ Gbox.visible = ui.showBox.checked; });
-    ui.showGrid.addEventListener('change', ()=>{ grid.visible = ui.showGrid.checked; });
-
-    function resize3D(){
-      const r = canvas3d.getBoundingClientRect();
-      renderer.setSize(r.width, r.height, false);
-      camera.aspect = r.width / r.height;
-      camera.updateProjectionMatrix();
-    }
-
-    // ======= Cavalière (canvas 2D) =======
-    const cav = document.getElementById('cav');
-    const ctx = cav.getContext('2d');
-
-    function resizeCav(){
-      const r = cav.getBoundingClientRect();
-      cav.width = Math.floor(r.width * devicePixelRatio);
-      cav.height = Math.floor(r.height * devicePixelRatio);
-      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-      drawCavaliere();
-    }
-
-    function drawGrid(ctx, w, h, step=20){
-      ctx.save();
-      ctx.clearRect(0,0,w,h);
-      ctx.fillStyle = '#0f1733';
-      ctx.fillRect(0,0,w,h);
-
-      ctx.strokeStyle = 'rgba(255,255,255,.06)';
-      ctx.lineWidth = 1;
-      for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-      for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-      ctx.restore();
-    }
-
-    function projectCav(p, k=0.5, theta=Math.PI/4){
-      // p = {x,y,z} en mm -> on convertit en px plus bas via scale
-      const dx = k * p.z * Math.cos(theta);
-      const dy = k * p.z * Math.sin(theta);
-      return { x: p.x + dx, y: p.y - dy };
-    }
-
-    function drawCavaliere(){
-      ui.coefVal.textContent = `k = ${Number(ui.coef.value).toFixed(2)} (souvent 0,5)`;
-      const step = Number(ui.step.value);
-      ui.stepVal.textContent = step===1 ? '1: base' : step===2 ? '2: profondeur' : '3: boîte complète';
-
-      const w = cav.getBoundingClientRect().width;
-      const h = cav.getBoundingClientRect().height;
-      drawGrid(ctx, w, h, 20);
-
-      const k = Number(ui.coef.value);
-      const theta = Math.PI/4;
-
-      // points du prisme (en mm) - on prend le triangle dans le plan (x,y) et la profondeur sur z
-      const A = {x:0, y:0, z:0};
-      const B = {x:D.a, y:0, z:0};
-      const C = {x:0, y:D.b, z:0};
-
-      const Z = H(); // profondeur / hauteur du prisme
-      const A2 = {x:0, y:0, z:Z};
-      const B2 = {x:D.a, y:0, z:Z};
-      const C2 = {x:0, y:D.b, z:Z};
-
-      // échelle mm -> px
-      const margin = 60;
-      const maxX = D.a + k*Z*Math.cos(theta);
-      const maxY = D.b + k*Z*Math.sin(theta);
-      const scale = Math.min((w-2*margin)/maxX, (h-2*margin)/maxY);
-
-      function P(p){
-        const q = projectCav(p, k, theta);
-        return {
-          x: margin + q.x*scale,
-          y: margin + q.y*scale
-        };
-      }
-
-      const pA = P(A), pB = P(B), pC = P(C);
-      const pA2 = P(A2), pB2 = P(B2), pC2 = P(C2);
-
-      // Style
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(233,238,252,.9)';
-
-      function seg(p,q){
-        ctx.beginPath();
-        ctx.moveTo(p.x,p.y);
-        ctx.lineTo(q.x,q.y);
-        ctx.stroke();
-      }
-
-      // Étape 1 : base triangle (vraie grandeur)
-      seg(pA,pB);
-      seg(pA,pC);
-      seg(pB,pC);
-
-      // Étape 2 : arêtes de profondeur
-      if(step >= 2){
-        ctx.strokeStyle = 'rgba(126,231,135,.9)';
-        seg(pA,pA2);
-        seg(pB,pB2);
-        seg(pC,pC2);
-      }
-
-      // Étape 3 : face arrière + arêtes restantes
-      if(step >= 3){
-        ctx.strokeStyle = 'rgba(233,238,252,.75)';
-        seg(pA2,pB2);
-        seg(pA2,pC2);
-        seg(pB2,pC2);
-        ctx.strokeStyle = 'rgba(233,238,252,.6)';
-        seg(pA,pA2); seg(pB,pB2); seg(pC,pC2);
-      }
-
-      // Labels utiles (sans surcharger)
-      ctx.fillStyle = 'rgba(233,238,252,.9)';
-      ctx.font = '14px system-ui';
-      ctx.fillText('3 cm', (pA.x+pB.x)/2 - 10, (pA.y+pB.y)/2 - 10);
-      ctx.fillText('4 cm', (pA.x+pC.x)/2 - 10, (pA.y+pC.y)/2 + 18);
-      ctx.fillText('5 cm', (pB.x+pC.x)/2 + 8, (pB.y+pC.y)/2 + 4);
-      ctx.fillStyle = 'rgba(126,231,135,.95)';
-      ctx.fillText(`6 cm (10×6 mm)`, (pA2.x+pB2.x)/2 - 30, (pA2.y+pB2.y)/2 - 12);
-
-      ui.legendCav.innerHTML = `
-        <b>Lecture cavalière :</b><br/>
-        1) Dessine le triangle <b>3–4–5</b> en vraie grandeur.<br/>
-        2) Trace la profondeur à <b>45°</b> avec le coefficient <b>k</b> (souvent 1/2).<br/>
-        3) Ferme la boîte en reliant les points “du fond”.
-      `;
+    for(let i=0;i<D.n;i++){
+      const m = new THREE.Mesh(candyGeo, candyMat);
+      m.position.y = (i - (D.n-1)/2) * D.t; // empilement vertical
+      Gcandies.add(m);
     }
 
-    ui.coef.addEventListener('input', drawCavaliere);
-    ui.step.addEventListener('input', drawCavaliere);
+    const boxGeo = makeTriPrism(D.a+2*D.clearXY, D.b+2*D.clearXY, H()+2*D.clearZ);
+    const edges = new THREE.EdgesGeometry(boxGeo, 15);
+    const wire = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xa9b6e6, transparent:true, opacity:0.9 }));
+    Gbox.add(wire);
 
-    // ======= Patron SVG =======
-    function buildNetSVG(){
-      const tabsOn = ui.tabs.checked;
-      const gridOn = ui.mmGrid.checked;
+    note3d.innerHTML =
+      `<b>Ce que les élèves doivent voir :</b><br>
+       • La boîte est un <b>prisme droit</b> de base 3–4–5.<br>
+       • La “longueur” de la boîte = <b>10×6 mm = 6 cm</b>.<br>
+       (Bonbons verts = pile, filaire = boîte).`;
+  }
 
-      // Layout en mm : bande des 3 rectangles (hauteur = Z, largeurs = a, c, b)
-      const Z = H();
-      const w1 = D.a, w2 = D.c, w3 = D.b;
-      const stripW = w1 + w2 + w3;
+  // Contrôle orbit maison (simple + robuste)
+  let theta = 0.9, phi = 0.55, radius = 260;
+  let dragging=false, lastX=0, lastY=0;
 
-      // Page A4 en mm
-      const pageW = 210, pageH = 297;
-      const pad = 12;
+  function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
 
-      // Positionne le patron
-      const x0 = pad;
-      const y0 = 60;
+  function updateCamera(){
+    phi = clamp(phi, 0.12, 1.45);
+    radius = clamp(radius, 120, 900);
+    const x = radius * Math.cos(phi) * Math.cos(theta);
+    const z = radius * Math.cos(phi) * Math.sin(theta);
+    const y = radius * Math.sin(phi);
+    camera.position.set(x,y,z);
+    camera.lookAt(0,0,0);
+  }
 
-      // Triangle attaché au rectangle central (w2)
-      // Triangle rectangle 3-4-5 : on le met “debout” : points (0,0) (a,0) (0,b)
-      // On le place centré sur le rectangle central (au-dessus et en-dessous)
-      const triW = D.a;
-      const triH = D.b;
+  canvas.addEventListener('pointerdown', (e)=>{
+    dragging=true; lastX=e.clientX; lastY=e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX=e.clientX; lastY=e.clientY;
+    theta -= dx * 0.006;
+    phi   -= dy * 0.006;
+    updateCamera();
+  });
+  canvas.addEventListener('pointerup', ()=> dragging=false);
+  canvas.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    radius *= (e.deltaY>0) ? 1.08 : 0.92;
+    updateCamera();
+  }, {passive:false});
 
-      // Languettes (simple bande)
-      const tab = 10;
+  function resize3D(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
 
-      function line(x1,y1,x2,y2, dashed=false){
-        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(233,238,252,.9)" stroke-width="0.6" ${dashed?`stroke-dasharray="3 3"`:''}/>`;
-      }
-      function rect(x,y,w,h, dashed=false){
-        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="rgba(233,238,252,.9)" stroke-width="0.8" ${dashed?`stroke-dasharray="3 3"`:''}/>`;
-      }
-      function poly(points, fill="none", stroke="rgba(233,238,252,.9)", sw=0.8, dashed=false){
-        const pts = points.map(p=>`${p[0]},${p[1]}`).join(' ');
-        return `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${dashed?`stroke-dasharray="3 3"`:''}/>`;
-      }
-      function text(x,y,s, size=4){
-        return `<text x="${x}" y="${y}" font-size="${size}" fill="rgba(233,238,252,.85)" font-family="system-ui,Segoe UI,Roboto">${s}</text>`;
-      }
+  function loop(){
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
 
-      // Grille 5mm optionnelle
-      let grid = '';
-      if(gridOn){
-        for(let x=0; x<=pageW; x+=5){
-          grid += `<line x1="${x}" y1="0" x2="${x}" y2="${pageH}" stroke="rgba(255,255,255,.05)" stroke-width="0.2"/>`;
-        }
-        for(let y=0; y<=pageH; y+=5){
-          grid += `<line x1="0" y1="${y}" x2="${pageW}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="0.2"/>`;
-        }
-      }
+  $('showCandies').addEventListener('change', ()=> Gcandies.visible = $('showCandies').checked);
+  $('showBox').addEventListener('change', ()=> Gbox.visible = $('showBox').checked);
+  $('showGrid').addEventListener('change', ()=> grid.visible = $('showGrid').checked);
 
-      // Rectangles du bandeau
-      const R1 = [x0, y0, w1, Z];
-      const R2 = [x0+w1, y0, w2, Z];
-      const R3 = [x0+w1+w2, y0, w3, Z];
+  $('reset3d').addEventListener('click', ()=>{
+    theta=0.9; phi=0.55; radius=260;
+    updateCamera();
+  });
 
-      // Triangles (haut / bas) attachés au rectangle central
-      // On colle le côté "a" sur le haut du rectangle central : de (xR2, y0) à (xR2 + a, y0)
-      const xT = R2[0] + (w2 - D.a)/2;
-      const yTop = y0;
-      const triTop = [
-        [xT, yTop],
-        [xT + D.a, yTop],
-        [xT, yTop - D.b]
-      ];
-      const triBot = [
-        [xT, y0+Z],
-        [xT + D.a, y0+Z],
-        [xT, y0+Z + D.b]
-      ];
+  rebuild3D();
+  updateCamera();
+  resize3D();
+  loop();
 
-      // Languettes : on en met une sur un bord externe + autour triangles (simple)
-      let tabs = '';
-      if(tabsOn){
-        // languette sur le bord externe gauche du bandeau (collage final)
-        tabs += `<rect x="${x0 - tab}" y="${y0}" width="${tab}" height="${Z}" fill="rgba(126,231,135,.08)" stroke="rgba(233,238,252,.7)" stroke-width="0.6" stroke-dasharray="3 3"/>`;
-        tabs += text(x0 - tab + 1, y0 + 6, 'languette', 3.6);
+  // resize global
+  window.addEventListener('resize', ()=>{ resize3D(); });
+}
 
-        // languettes triangles : petite bande le long du côté libre du triangle (hypothénuse), très simplifiée
-        // (pédagogiquement ça suffit : tu peux leur dire "ajoutez les languettes où vous voulez coller")
-      }
+/* ========= Resize 2D ========= */
+function resizeCav(){
+  const w=cav.clientWidth, h=cav.clientHeight;
+  if(w<10 || h<10) return;
+  cav.width = Math.floor(w * devicePixelRatio);
+  cav.height = Math.floor(h * devicePixelRatio);
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
 
-      // Traits de pliage (entre rectangles)
-      const fold1 = line(R1[0]+R1[2], y0, R1[0]+R1[2], y0+Z, true);
-      const fold2 = line(R2[0]+R2[2], y0, R2[0]+R2[2], y0+Z, true);
+function resizeAll(){
+  resizeCav();
+}
 
-      // SVG final
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
-          <rect x="0" y="0" width="210" height="297" fill="#0f1733"/>
-          ${grid}
-          ${text(12, 18, 'Patron de la boîte (échelle 1:1) — Bonbons prismes 3–4–5 cm, pile 10×6 mm = 6 cm', 4.2)}
-          ${text(12, 28, 'Rectangles: 6×3 cm, 6×5 cm, 6×4 cm — 2 triangles 3–4–5 cm', 4.2)}
-
-          ${rect(...R1)}
-          ${rect(...R2)}
-          ${rect(...R3)}
-
-          ${fold1}
-          ${fold2}
-
-          ${poly(triTop)}
-          ${poly(triBot)}
-
-          ${tabs}
-
-          ${text(R1[0]+2, y0-2, '6×3 cm', 4)}
-          ${text(R2[0]+2, y0-2, '6×5 cm', 4)}
-          ${text(R3[0]+2, y0-2, '6×4 cm', 4)}
-
-          ${text(xT, yTop - D.b - 3, 'triangle 3–4–5', 4)}
-          ${text(xT, y0+Z + D.b + 6, 'triangle 3–4–5', 4)}
-
-          ${text(12, 285, 'Conseil : imprime à 100% (sans ajuster). Découpe le contour plein, plie sur les pointillés.', 4)}
-        </svg>
-      `;
-
-      ui.svgWrap.innerHTML = svg;
-    }
-
-    ui.tabs.addEventListener('change', buildNetSVG);
-    ui.mmGrid.addEventListener('change', buildNetSVG);
-
-    ui.printNet.addEventListener('click', ()=>{
-      const svg = ui.svgWrap.querySelector('svg');
-      if(!svg) return;
-
-      const w = window.open('', '_blank');
-      const html = `
-        <!doctype html><html><head><meta charset="utf-8">
-        <title>Patron — impression</title>
-        <style>
-          body{margin:0; background:#fff;}
-          svg{width:210mm;height:297mm; display:block;}
-        </style></head><body>
-          ${svg.outerHTML}
-          <script>window.onload=()=>{ setTimeout(()=>window.print(), 200); }<\/script>
-        </body></html>
-      `;
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
-    });
-
-    // ======= Anim loop + resize =======
-    function animate(){
-      controls.update();
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-
-    // Resize observer
-    const ro = new ResizeObserver(()=>{
-      resize3D();
-      resizeCav();
-    });
-    ro.observe(document.body);
-
-    // Init
-    rebuild3D();
-    resize3D();
-    resizeCav();
-    animate();
-  </script>
+function initAll(){
+  buildNetSVG();
+  resizeAll();
+  drawCavaliere();
+  init3D(); // optionnel (ne casse pas le reste)
+}
+window.addEventListener('load', initAll);
+</script>
 </body>
 </html>
