@@ -59,6 +59,10 @@
       overflow:hidden;
     }
 
+    body.projection{
+      background: radial-gradient(1400px 900px at 18% 10%, #ffffff, #ffffff);
+    }
+
     body.panning{ user-select:none; }
     body.panReady .gridWrap,
     body.panning  .gridWrap{ touch-action:none; }
@@ -107,6 +111,7 @@
       border:1px solid #e6ebf6;
       box-shadow: 0 2px 0 rgba(10,20,40,.03);
       white-space:nowrap;
+      z-index: 40;
     }
     .brand .title{ font-weight:900; letter-spacing:.2px; font-size:13px; }
     .brand .dot{
@@ -538,7 +543,7 @@
           <button id="btnZoomReset" class="neutral" title="Revenir au zoom de base">88%</button>
           <span class="zoomBadge" id="zoomPct">88%</span>
 
-          <!-- ✅ Nouveau : toggle rapide Aire/Périmètre -->
+          <!-- Bouton A/P (toujours là) -->
           <button id="btnToggleMetrics" class="neutral" title="Afficher/masquer Aire & périmètre">A/P : ON</button>
 
           <button id="btnProjection" class="neutral">Projection</button>
@@ -578,7 +583,6 @@
       <div class="popover" id="pop">
         <div class="popGrid">
 
-          <!-- ✅ Nouveau : option afficher/masquer A/P -->
           <div class="popRow">
             <div>
               <span>Valeurs</span>
@@ -738,6 +742,9 @@
   const btnProjection = document.getElementById('btnProjection');
   const btnFullscreen = document.getElementById('btnFullscreen');
 
+  // ✅ TON PATCH : le "badge titre" à gauche
+  const brandEl = document.querySelector('.brand');
+
   const promptEl = document.getElementById('prompt');
   const statusEl = document.getElementById('status');
 
@@ -780,6 +787,12 @@
     btnToggleMetrics.textContent = on ? 'A/P : ON' : 'A/P : OFF';
     btnToggleMetrics.setAttribute('aria-pressed', on ? 'true':'false');
     showMetricsToggle.checked = on;
+  }
+
+  // ✅ TON PATCH : badge titre visible UNIQUEMENT en mode libre
+  function updateBrandVisibility(){
+    const m = modeSel.value;
+    brandEl.style.display = (m === 'free') ? 'flex' : 'none';
   }
 
   btnToggleMetrics.addEventListener('click', () => {
@@ -1404,7 +1417,7 @@
 
       updatePrompt();
       refreshMetrics();
-      applyMetricsVisibility(); // ✅ default OFF en comparaison
+      applyMetricsVisibility();
     }else{
       boardsSingle.style.display = 'block';
       boardsCompare.style.display = 'none';
@@ -1417,13 +1430,16 @@
         boardSingle.render();
         updatePrompt();
         refreshMetrics();
-        applyMetricsVisibility(); // ✅ default OFF en entraînement
+        applyMetricsVisibility();
       }else{
         updatePrompt();
         refreshMetrics();
-        applyMetricsVisibility(); // ✅ default ON en libre
+        applyMetricsVisibility();
       }
     }
+
+    // ✅ TON PATCH : on masque le badge titre en train/compare
+    updateBrandVisibility();
   });
 
   // ======= Buttons =======
@@ -1508,7 +1524,6 @@
 
     const px = baseCell() * ratio;
     const rect = activeBoard.wrapEl.getBoundingClientRect();
-    // recentre sur le centre de l'écran
     const old = getCellSize();
     const localX = rect.width/2;
     const localY = rect.height/2;
@@ -1556,8 +1571,10 @@
   refreshMetrics();
   updateZoomBadge();
 
-  // ✅ applique l'état par défaut (Libre => ON)
   applyMetricsVisibility();
+
+  // ✅ TON PATCH : état initial du badge titre (mode Libre)
+  updateBrandVisibility();
 
 })();
 </script>
