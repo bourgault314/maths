@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moulin de Pythagore — double puzzle</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --border:#cbd5e1;
+    --shadow:0 2px 10px rgba(0,0,0,.08);
+    --btn:#ffffff;
+    --btnHover:#f1f5f9;
+    --accent:#2563eb;
+    --danger:#dc2626;
+  }
+  html,body{height:100%; margin:0; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+  #app{height:100%; display:flex; flex-direction:column;}
+  #toolbar{
+    display:flex; flex-wrap:wrap; gap:8px;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+    align-items:center;
+    box-shadow:var(--shadow);
+    z-index:2;
+  }
+  .group{display:flex; gap:8px; align-items:center;}
+  .spacer{flex:1;}
+  button, .toggle{
+    border:1px solid var(--border);
+    background:var(--btn);
+    padding:8px 10px;
+    border-radius:10px;
+    font-size:14px;
+    color:var(--ink);
+    cursor:pointer;
+    user-select:none;
+  }
+  button:hover, .toggle:hover{background:var(--btnHover);}
+  button:active{transform:translateY(1px);}
+  button.primary{border-color:rgba(37,99,235,.45);}
+  button.primary.on{background:rgba(37,99,235,.12); border-color:rgba(37,99,235,.7);}
+  button.danger{border-color:rgba(220,38,38,.45);}
+  button.danger:hover{background:rgba(220,38,38,.08);}
+  .toggle{display:flex; gap:10px; align-items:center;}
+  .pill{
+    width:36px; height:22px; border-radius:999px;
+    background:#e2e8f0;
+    position:relative;
+    border:1px solid var(--border);
+    flex:0 0 auto;
+  }
+  .pill::after{
+    content:"";
+    width:18px; height:18px; border-radius:50%;
+    position:absolute; top:1px; left:1px;
+    background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.15);
+    transition:all .15s ease;
+  }
+  .toggle.on .pill{background:rgba(37,99,235,.18); border-color:rgba(37,99,235,.5);}
+  .toggle.on .pill::after{left:17px;}
+  .hint{color:var(--muted); font-size:13px; padding-left:6px; white-space:nowrap;}
+  #stageWrap{flex:1; position:relative; overflow:hidden; background:#fff;}
+  svg{width:100%; height:100%; display:block; touch-action:none;}
+  .boardLine{stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .thinLine{stroke:#111827; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .rightAngle{stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:.35;}
+  .label{font-size:22px; font-weight:700; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:5px;}
+  .subLabel{font-size:18px; font-weight:700; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:4px;}
+  .piecePoly{stroke:#111827; stroke-width:3.2; stroke-linejoin:round; cursor:grab;}
+  .piecePoly:active{cursor:grabbing;}
+  .pieceSelected .piecePoly{stroke:#111827; stroke-width:5.2;}
+  .handle{pointer-events:auto; cursor:crosshair;}
+  .handleLine{stroke:#111827; stroke-width:3; opacity:.8;}
+  .handleDot{fill:#fff; stroke:#111827; stroke-width:3;}
+  .handleIcon{fill:none; stroke:#111827; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; opacity:.9;}
+  .snapDot{fill:rgba(37,99,235,.15); stroke:rgba(37,99,235,.35); stroke-width:2; display:none;}
+  .showSnapDots .snapDot{display:block;}
+  .modeTableau .piecePoly{fill:#ffffff !important; stroke:#64748b !important;}
+  .modeTableau .boardLine,.modeTableau .thinLine{stroke:#334155;}
+  .modeTableau .rightAngle{stroke:#334155;}
+  .modeTableau .label,.modeTableau .subLabel{display:none;}
+  .modeEleves .label,.modeEleves .subLabel{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <div class="group">
+      <button id="modeEleves" class="primary on" title="Vue élèves : sans lettres">Élèves</button>
+      <button id="modeLettres" class="primary" title="Affiche A, B, C et a, b, c">Lettres</button>
+      <button id="modeTableau" class="primary" title="Tout blanc pour écrire au tableau">Tableau</button>
+    </div>
+
+    <div class="group" style="margin-left:10px;">
+      <div id="toggleSnap" class="toggle on" title="Aimantation (snaps) à la fin d'un déplacement / rotation">
+        <span>Aimantation</span><span class="pill"></span>
+      </div>
+      <div id="toggleAngle" class="toggle on" title="Aimante aussi les angles (0/90/… et angle du grand carré)">
+        <span>Angles</span><span class="pill"></span>
+      </div>
+      <div id="toggleDots" class="toggle" title="Affiche les points d'aimantation (pour debug / démonstration)">
+        <span>Points</span><span class="pill"></span>
+      </div>
+    </div>
+
+    <div class="group" style="margin-left:10px;">
+      <button id="reset" class="danger" title="Remet toutes les pièces à leur place de départ">Réinitialiser</button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="group">
+      <span class="hint">Astuce : clique une pièce → poignée pour tourner. Maintiens <b>Shift</b> pour désactiver l'aimantation temporairement.</span>
+      <button id="fullscreen" title="Plein écran">Plein écran</button>
+    </div>
+  </div>
+
+  <div id="stageWrap">
+    <svg id="stage" xmlns="http://www.w3.org/2000/svg">
+      <g id="world"></g>
+    </svg>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ===== Config générale (proportions de ta photo) =====
+  // On garde un ratio a/b ≈ 0.5 (d'après les mesures sur l'image fournie)
+  const BASE = {
+    b: 420,           // côté du carré du haut (moyen)
+    ratio: 0.5,       // a = ratio*b (petit carré vert)
+    gap: 170,         // espace entre les deux moulins
+    margin: 60,       // marge intérieure dans le monde
+  };
+
+  const COLORS = {
+    green: "#009900",
+    magenta: "#cc0066",
+    yellow: "#ffcc66",
+    blue: "#0099ff",
+    gray: "#808080",
+  };
+
+  const SNAP = {
+    pos: 22,           // distance de snap (position) en unités du monde
+    posStrong: 28,     // un peu plus fort sur les points du grand carré
+    rot: 7,            // distance de snap (rotation) en degrés
+  };
+
+  // ===== DOM =====
+  const stage = document.getElementById("stage");
+  const world = document.getElementById("world");
+
+  const btnModeEleves = document.getElementById("modeEleves");
+  const btnModeLettres = document.getElementById("modeLettres");
+  const btnModeTableau = document.getElementById("modeTableau");
+
+  const toggleSnap = document.getElementById("toggleSnap");
+  const toggleAngle = document.getElementById("toggleAngle");
+  const toggleDots = document.getElementById("toggleDots");
+
+  const btnReset = document.getElementById("reset");
+  const btnFullscreen = document.getElementById("fullscreen");
+
+  // ===== État global =====
+  const state = {
+    mode: "eleves",          // eleves | lettres | tableau
+    snapEnabled: true,
+    angleSnapEnabled: true,
+    showSnapDots: false,
+    selectedId: null,
+    dragging: null,          // {type:'move'|'rotate', pieceId, ...}
+    pieces: new Map(),       // id -> Piece
+    snapPoints: [],          // {x,y, kind, moulinId}
+    molds: [],               // grand carré (2) : {id, corners, uvec, vvec, c, a, bbox}
+    worldTransform: {s: 1, tx: 0, ty: 0},
+  };
+
+  // ===== Utilitaires =====
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function deg(rad){ return rad * 180 / Math.PI; }
+  function rad(deg){ return deg * Math.PI / 180; }
+  function normAngleDeg(a){
+    let x = a % 360;
+    if (x < -180) x += 360;
+    if (x > 180) x -= 360;
+    return x;
+  }
+
+  function polygonCentroid(points){
+    // centroid d'un polygone non auto-intersectant
+    let a = 0, cx = 0, cy = 0;
+    for (let i=0;i<points.length;i++){
+      const p = points[i];
+      const q = points[(i+1)%points.length];
+      const cross = p.x*q.y - q.x*p.y;
+      a += cross;
+      cx += (p.x + q.x) * cross;
+      cy += (p.y + q.y) * cross;
+    }
+    a *= 0.5;
+    if (Math.abs(a) < 1e-9) {
+      const n = points.length;
+      return {
+        x: points.reduce((s,p)=>s+p.x,0)/n,
+        y: points.reduce((s,p)=>s+p.y,0)/n
+      };
+    }
+    cx /= (6*a);
+    cy /= (6*a);
+    return {x:cx, y:cy};
+  }
+
+  function bboxOfPoints(points){
+    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+    for (const p of points){
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    }
+    return {minX, minY, maxX, maxY, w: maxX-minX, h: maxY-minY};
+  }
+
+  function clientToWorld(evt){
+    const pt = stage.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    const m = world.getScreenCTM();
+    if (!m) return {x:0,y:0};
+    const inv = m.inverse();
+    const q = pt.matrixTransform(inv);
+    return {x:q.x, y:q.y};
+  }
+
+  function svgEl(name, attrs = {}){
+    const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    return el;
+  }
+
+  function setMode(mode){
+    state.mode = mode;
+    btnModeEleves.classList.toggle("on", mode==="eleves");
+    btnModeLettres.classList.toggle("on", mode==="lettres");
+    btnModeTableau.classList.toggle("on", mode==="tableau");
+    stage.classList.toggle("modeTableau", mode==="tableau");
+    stage.classList.toggle("modeEleves", mode==="eleves");
+    stage.classList.toggle("modeLettres", mode==="lettres");
+  }
+
+  function setToggle(el, on){ el.classList.toggle("on", on); }
+
+  // ===== Géométrie du moulin =====
+  function lineIntersection(p1,p2, p3,p4){
+    const x1=p1.x,y1=p1.y,x2=p2.x,y2=p2.y;
+    const x3=p3.x,y3=p3.y,x4=p4.x,y4=p4.y;
+    const den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+    if (Math.abs(den) < 1e-9) return null;
+    const px = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4 - y3*x4)) / den;
+    const py = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4 - y3*x4)) / den;
+    return {x:px, y:py};
+  }
+
+  function buildMoulin(moulinId, Ax, Ay, b, ratio){
+    const a = b * ratio;
+    const c = Math.hypot(b, a);
+
+    const A = {x:Ax, y:Ay};
+    const B = {x:Ax + b, y:Ay};
+    const C = {x:Ax, y:Ay + a};
+
+    const TL = {x:A.x, y:A.y - b};
+    const TR = {x:B.x, y:B.y - b};
+
+    const L = {x:A.x, y:A.y - (b - a)};
+    const T = {x:A.x + (b - a), y:A.y - b};
+
+    const P = lineIntersection(L, TR, B, T);
+    if (!P) throw new Error("Intersection impossible (paramètres incohérents).");
+
+    const pieces = [
+      { key:"yellow", fill:COLORS.yellow, points:[ TL, T, P, L ] },
+      { key:"blue", fill:COLORS.blue, points:[ T, TR, P ] },
+      { key:"gray", fill:COLORS.gray, points:[ B, TR, P ] },
+      { key:"magenta", fill:COLORS.magenta, points:[ A, B, P, L ] },
+      { key:"green", fill:COLORS.green, points:[ {x:A.x - a, y:A.y}, {x:A.x, y:A.y}, {x:C.x, y:C.y}, {x:C.x - a, y:C.y} ] },
+    ];
+
+    // Grand carré sur BC
+    const w = {x:a, y:b};
+    const Bw = {x:B.x + w.x, y:B.y + w.y};
+    const Cw = {x:C.x + w.x, y:C.y + w.y};
+
+    const mold = {
+      id: moulinId,
+      a, b, c,
+      corners: [B, C, Cw, Bw],
+      uvec: {x:(B.x - C.x)/c, y:(B.y - C.y)/c},
+      vvec: {x:(Cw.x - C.x)/c, y:(Cw.y - C.y)/c},
+    };
+    mold.bbox = bboxOfPoints(mold.corners);
+
+    // points d'aimantation du moule
+    const snapsUV = [
+      {u:0, v:0}, {u:c, v:0}, {u:0, v:c}, {u:c, v:c},
+      {u:a, v:0}, {u:0, v:a}, {u:a, v:a},
+      {u:a, v:c}, {u:c, v:a},
+    ];
+    const snapPoints = snapsUV.map(s => ({
+      x: C.x + s.u*mold.uvec.x + s.v*mold.vvec.x,
+      y: C.y + s.u*mold.uvec.y + s.v*mold.vvec.y,
+      kind: "mold",
+      moulinId
+    }));
+
+    const labels = {
+      A:{x:A.x - 16, y:A.y - 14, text:"A"},
+      B:{x:B.x + 10, y:B.y + 6, text:"B"},
+      C:{x:C.x - 14, y:C.y + 26, text:"C"},
+      a:{x:A.x - a/2 - 10, y:A.y + a/2 + 8, text:"a"},
+      b:{x:A.x + b/2 - 6, y:A.y - b - 10, text:"b"},
+      c:{x:(B.x + C.x + w.x)/2 + 16, y:(B.y + C.y + w.y)/2 + 10, text:"c"},
+    };
+
+    return {moulinId, A,B,C, TL,TR, Bw,Cw, L,T,P, pieces, mold, snapPoints, labels};
+  }
+
+  // ===== Construction de la scène =====
+  function clearWorld(){
+    while (world.firstChild) world.removeChild(world.firstChild);
+    state.pieces.clear();
+    state.snapPoints = [];
+    state.molds = [];
+    state.selectedId = null;
+  }
+
+  function buildScene(){
+    clearWorld();
+
+    const b = BASE.b;
+    const ratio = BASE.ratio;
+    const a = b*ratio;
+    const margin = BASE.margin;
+    const gap = BASE.gap;
+
+    const Aleft = {x: margin + a, y: margin + b};
+    const Aright = {x: Aleft.x + (b + 2*a) + gap, y: Aleft.y};
+
+    const left = buildMoulin("L", Aleft.x, Aleft.y, b, ratio);
+    const right = buildMoulin("R", Aright.x, Aright.y, b, ratio);
+
+    state.molds.push(left.mold, right.mold);
+    state.snapPoints.push(...left.snapPoints, ...right.snapPoints);
+
+    const gBoards = svgEl("g", {id:"boards"});
+    const gPieces = svgEl("g", {id:"pieces"});
+    const gLabels = svgEl("g", {id:"labels"});
+
+    world.appendChild(gBoards);
+    world.appendChild(gPieces);
+    world.appendChild(gLabels);
+
+    drawMoulin(gBoards, gPieces, gLabels, left);
+    drawMoulin(gBoards, gPieces, gLabels, right);
+
+    fitWorldToViewport();
+    setMode("eleves");
+  }
+
+  function drawMoulin(gBoards, gPieces, gLabels, moulin){
+    const {A,B,C,TL,TR,Bw,Cw, pieces, mold, labels, moulinId} = moulin;
+    const a = mold.a;
+    const b = mold.b;
+
+    // Carré du haut
+    gBoards.appendChild(svgEl("rect", {x:A.x, y:A.y - b, width:b, height:b, class:"boardLine"}));
+
+    // Petit carré vert
+    gBoards.appendChild(svgEl("rect", {x:A.x - a, y:A.y, width:a, height:a, class:"boardLine"}));
+
+    // Triangle
+    gBoards.appendChild(svgEl("line", {x1:A.x, y1:A.y, x2:B.x, y2:B.y, class:"thinLine"}));
+    gBoards.appendChild(svgEl("line", {x1:A.x, y1:A.y, x2:C.x, y2:C.y, class:"thinLine"}));
+    gBoards.appendChild(svgEl("line", {x1:B.x, y1:B.y, x2:C.x, y2:C.y, class:"thinLine"}));
+
+    // Grand carré sur BC (moule)
+    const pts = [B,C,Cw,Bw].map(p=>`${p.x},${p.y}`).join(" ");
+    gBoards.appendChild(svgEl("polygon", {points: pts, class:"boardLine"}));
+
+    // Angle droit en A
+    const ra = Math.max(18, Math.min(34, b*0.08));
+    const raPts = [
+      {x:A.x, y:A.y},
+      {x:A.x+ra, y:A.y},
+      {x:A.x+ra, y:A.y+ra},
+      {x:A.x, y:A.y+ra},
+    ];
+    gBoards.appendChild(svgEl("polyline", {points: raPts.map(p=>`${p.x},${p.y}`).join(" "), class:"rightAngle"}));
+
+    // Points d'aimantation (affichables)
+    for (const sp of state.snapPoints.filter(s=>s.moulinId===moulinId)){
+      gBoards.appendChild(svgEl("circle", {cx:sp.x, cy:sp.y, r:7, class:"snapDot"}));
+    }
+
+    // Labels
+    const addLabel = (info, cls) => {
+      const t = svgEl("text", {x:info.x, y:info.y, class:cls});
+      t.textContent = info.text;
+      gLabels.appendChild(t);
+    };
+    addLabel(labels.A, "label");
+    addLabel(labels.B, "label");
+    addLabel(labels.C, "label");
+    addLabel(labels.a, "subLabel");
+    addLabel(labels.b, "subLabel");
+    addLabel(labels.c, "subLabel");
+
+    // Pièces
+    for (const pdef of pieces){
+      const id = `${moulinId}-${pdef.key}`;
+      const centroid = polygonCentroid(pdef.points);
+      const localPts = pdef.points.map(q => ({x:q.x - centroid.x, y:q.y - centroid.y}));
+
+      const g = svgEl("g", {class:"piece", "data-id": id});
+      const poly = svgEl("polygon", {
+        class:"piecePoly",
+        fill:pdef.fill,
+        points: localPts.map(q=>`${q.x},${q.y}`).join(" "),
+      });
+
+      // poignée rotation (plus visible)
+      const handleDist = 64;
+      const gh = svgEl("g", {class:"handle", "data-id":id, style:"display:none;"});
+      gh.appendChild(svgEl("line", {x1:0, y1:0, x2:0, y2:-handleDist, class:"handleLine"}));
+      gh.appendChild(svgEl("circle", {cx:0, cy:-handleDist, r:18, class:"handleDot"}));
+
+      // Icône "rotation" claire : arc + flèche (centrée dans le disque)
+      const iconG = svgEl("g", {transform:`translate(0 ${-handleDist})`});
+      iconG.appendChild(svgEl("path", {d:"M -8 3 A 10 10 0 1 1 7 -7", class:"handleIcon"}));
+      iconG.appendChild(svgEl("path", {d:"M 7 -7 L 13 -9", class:"handleIcon"}));
+      iconG.appendChild(svgEl("path", {d:"M 7 -7 L 13 -3", class:"handleIcon"}));
+      gh.appendChild(iconG);
+
+      g.appendChild(poly);
+      g.appendChild(gh);
+
+      poly.addEventListener("pointerdown", onPiecePointerDown);
+      gh.addEventListener("pointerdown", onHandlePointerDown);
+
+      gPieces.appendChild(g);
+
+      const piece = {
+        id,
+        key: pdef.key,
+        moulinId,
+        fill: pdef.fill,
+        localPts,
+        verticesLocal: localPts.map(q=>({x:q.x, y:q.y})),
+        pos: {x: centroid.x, y: centroid.y},
+        rot: 0,
+        home: {x: centroid.x, y: centroid.y, rot: 0},
+        el: g,
+        polyEl: poly,
+        handleEl: gh,
+      };
+
+      state.pieces.set(id, piece);
+      applyPieceTransform(piece);
+    }
+  }
+
+  function applyPieceTransform(piece){
+    piece.el.setAttribute("transform", `translate(${piece.pos.x},${piece.pos.y}) rotate(${piece.rot})`);
+  }
+
+  function setSelected(pieceId){
+    if (state.selectedId && state.pieces.has(state.selectedId)){
+      const prev = state.pieces.get(state.selectedId);
+      prev.el.classList.remove("pieceSelected");
+      prev.handleEl.style.display = "none";
+    }
+    state.selectedId = pieceId;
+    if (pieceId && state.pieces.has(pieceId)){
+      const p = state.pieces.get(pieceId);
+      p.el.classList.add("pieceSelected");
+      p.handleEl.style.display = "block";
+      p.el.parentNode.appendChild(p.el);
+    }
+  }
+
+  // ===== Mise en page =====
+  function getPieceVerticesGlobal(piece, px=piece.pos.x, py=piece.pos.y, rotDeg=piece.rot){
+    const t = rad(rotDeg);
+    const c = Math.cos(t), s = Math.sin(t);
+    return piece.verticesLocal.map(v => ({
+      x: px + (v.x*c - v.y*s),
+      y: py + (v.x*s + v.y*c),
+    }));
+  }
+
+  function fitWorldToViewport(){
+    const wrap = document.getElementById("stageWrap");
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    stage.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+    const allPts = [];
+    for (const p of state.pieces.values()){
+      allPts.push(...getPieceVerticesGlobal(p, p.home.x, p.home.y, p.home.rot));
+    }
+    for (const sp of state.snapPoints) allPts.push({x:sp.x,y:sp.y});
+    for (const m of state.molds) allPts.push(...m.corners);
+
+    const bb = bboxOfPoints(allPts);
+    const pad = 70;
+    const s = Math.min((w - 2*pad) / bb.w, (h - 2*pad) / bb.h);
+    const sClamped = clamp(s, 0.55, 1.8);
+
+    const cx = bb.minX + bb.w/2;
+    const cy = bb.minY + bb.h/2;
+
+    const tx = w/2 - sClamped*cx;
+    const ty = h/2 - sClamped*cy;
+
+    state.worldTransform = {s:sClamped, tx, ty};
+    world.setAttribute("transform", `translate(${tx},${ty}) scale(${sClamped})`);
+  }
+
+  // ===== Snapping =====
+  function pieceNearAnyMold(piece){
+    for (const mold of state.molds){
+      const bb = mold.bbox;
+      const inflate = 80;
+      const bb2 = {minX:bb.minX-inflate, minY:bb.minY-inflate, maxX:bb.maxX+inflate, maxY:bb.maxY+inflate};
+      if (piece.pos.x>=bb2.minX && piece.pos.x<=bb2.maxX && piece.pos.y>=bb2.minY && piece.pos.y<=bb2.maxY){
+        return mold;
+      }
+    }
+    return null;
+  }
+
+  function snapRotationIfNeeded(piece, evt){
+    if (!state.angleSnapEnabled || !state.snapEnabled) return;
+    if (evt && evt.shiftKey) return;
+
+    const candidates = [];
+    for (const k of [0,90,180,270]) candidates.push(k);
+
+    const mold = pieceNearAnyMold(piece);
+    if (mold){
+      const base = deg(Math.atan2(mold.uvec.y, mold.uvec.x));
+      for (const k of [0,90,180,270]) candidates.push(base + k);
+    }
+
+    let best = null;
+    let bestD = Infinity;
+    for (const a of candidates){
+      const d = Math.abs(normAngleDeg(piece.rot - a));
+      if (d < bestD){ bestD = d; best = a; }
+    }
+    if (best !== null && bestD <= SNAP.rot){
+      piece.rot = best;
+    }
+  }
+
+  function snapPositionIfNeeded(piece, evt){
+    if (!state.snapEnabled) return;
+    if (evt && evt.shiftKey) return;
+
+    const verts = getPieceVerticesGlobal(piece);
+    const targets = [];
+
+    const nearMold = pieceNearAnyMold(piece);
+    if (nearMold){
+      const pts = state.snapPoints.filter(s=>s.moulinId===nearMold.id);
+      targets.push(...pts.map(p=>({x:p.x,y:p.y,w:1.0})));
+    }
+
+    targets.push(...state.snapPoints.map(p=>({x:p.x,y:p.y,w:0.8})));
+
+    for (const other of state.pieces.values()){
+      if (other.id === piece.id) continue;
+      const oVerts = getPieceVerticesGlobal(other);
+      for (const v of oVerts) targets.push({x:v.x,y:v.y,w:0.6});
+    }
+
+    let best = {d:Infinity, delta:null};
+
+    for (const v of verts){
+      for (const t of targets){
+        const d = Math.hypot(v.x - t.x, v.y - t.y);
+        const thresh = (nearMold && t.w>=0.8) ? SNAP.posStrong : SNAP.pos;
+        if (d < best.d && d <= thresh){
+          best = {d, delta:{x:t.x - v.x, y:t.y - v.y}};
+        }
+      }
+    }
+
+    if (best.delta){
+      piece.pos.x += best.delta.x;
+      piece.pos.y += best.delta.y;
+    }
+  }
+
+  function trySnap(piece, evt){
+    snapRotationIfNeeded(piece, evt);
+    snapPositionIfNeeded(piece, evt);
+    applyPieceTransform(piece);
+  }
+
+  // ===== Interaction =====
+  function onPiecePointerDown(evt){
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    const g = evt.currentTarget.closest("g.piece");
+    if (!g) return;
+    const id = g.getAttribute("data-id");
+    if (!id || !state.pieces.has(id)) return;
+
+    const piece = state.pieces.get(id);
+    setSelected(id);
+
+    const p0 = clientToWorld(evt);
+    state.dragging = {
+      type:"move",
+      pieceId:id,
+      startPointer: p0,
+      startPos: {x: piece.pos.x, y: piece.pos.y},
+      startRot: piece.rot
+    };
+
+    piece.el.parentNode.appendChild(piece.el);
+    evt.currentTarget.setPointerCapture(evt.pointerId);
+  }
+
+  function onHandlePointerDown(evt){
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    const id = evt.currentTarget.getAttribute("data-id");
+    if (!id || !state.pieces.has(id)) return;
+    const piece = state.pieces.get(id);
+    setSelected(id);
+
+    const p0 = clientToWorld(evt);
+    const a0 = Math.atan2(p0.y - piece.pos.y, p0.x - piece.pos.x);
+
+    state.dragging = {
+      type:"rotate",
+      pieceId:id,
+      startPointer: p0,
+      startAngleRad: a0,
+      startRot: piece.rot
+    };
+
+    evt.currentTarget.setPointerCapture(evt.pointerId);
+  }
+
+  function onPointerMove(evt){
+    if (!state.dragging) return;
+    const piece = state.pieces.get(state.dragging.pieceId);
+    if (!piece) return;
+
+    const p = clientToWorld(evt);
+
+    if (state.dragging.type === "move"){
+      const dx = p.x - state.dragging.startPointer.x;
+      const dy = p.y - state.dragging.startPointer.y;
+      piece.pos.x = state.dragging.startPos.x + dx;
+      piece.pos.y = state.dragging.startPos.y + dy;
+      applyPieceTransform(piece);
+    } else if (state.dragging.type === "rotate"){
+      const a = Math.atan2(p.y - piece.pos.y, p.x - piece.pos.x);
+      const delta = a - state.dragging.startAngleRad;
+      piece.rot = state.dragging.startRot + deg(delta);
+      snapRotationIfNeeded(piece, evt);
+      applyPieceTransform(piece);
+    }
+  }
+
+  function onPointerUp(evt){
+    if (!state.dragging) return;
+    const piece = state.pieces.get(state.dragging.pieceId);
+    state.dragging = null;
+    if (!piece) return;
+    trySnap(piece, evt);
+  }
+
+  function onBackgroundPointerDown(){
+    setSelected(null);
+  }
+
+  stage.addEventListener("pointermove", onPointerMove);
+  stage.addEventListener("pointerup", onPointerUp);
+  stage.addEventListener("pointercancel", onPointerUp);
+  stage.addEventListener("pointerdown", onBackgroundPointerDown);
+
+  // UI
+  btnModeEleves.addEventListener("click", () => setMode("eleves"));
+  btnModeLettres.addEventListener("click", () => setMode("lettres"));
+  btnModeTableau.addEventListener("click", () => setMode("tableau"));
+
+  toggleSnap.addEventListener("click", () => {
+    state.snapEnabled = !state.snapEnabled;
+    setToggle(toggleSnap, state.snapEnabled);
+  });
+
+  toggleAngle.addEventListener("click", () => {
+    state.angleSnapEnabled = !state.angleSnapEnabled;
+    setToggle(toggleAngle, state.angleSnapEnabled);
+  });
+
+  toggleDots.addEventListener("click", () => {
+    state.showSnapDots = !state.showSnapDots;
+    setToggle(toggleDots, state.showSnapDots);
+    stage.classList.toggle("showSnapDots", state.showSnapDots);
+  });
+
+
+
+  btnReset.addEventListener("click", () => {
+    for (const p of state.pieces.values()){
+      p.pos.x = p.home.x;
+      p.pos.y = p.home.y;
+      p.rot = p.home.rot;
+      applyPieceTransform(p);
+    }
+    setSelected(null);
+  });
+
+  btnFullscreen.addEventListener("click", async () => {
+    const el = document.documentElement;
+    try{
+      if (!document.fullscreenElement){
+        await el.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    }catch(e){}
+  });
+
+
+  window.addEventListener("resize", () => fitWorldToViewport());
+
+  buildScene();
+})();
+</script>
+</body>
+</html>
