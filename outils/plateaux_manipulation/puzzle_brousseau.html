@@ -186,12 +186,27 @@
     font-family: "Segoe UI", system-ui, sans-serif;
   }
   .smallNote{font-family:"Segoe UI", system-ui, sans-serif; color:#475569; font-size:.92rem;}
+
+  /* Mise en page de l'énoncé (écran vs impression) */
+  .enonceLayout{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; margin: 8px 0 6px;}
+  .puzzleBox{flex:0 0 auto;}
+  .textBox{flex:1 1 320px; font-size:1.08rem; line-height:1.55;}
+  #paperSvg{border:1px solid #e5e7eb; background:#fff; display:block; width:350px; height:350px;}
+
+  @page{ size: A4; margin: 10mm; }
+
   @media print{
     body{overflow:visible;}
     .toolbar, .canvas{display:none !important;}
     .overlay{display:block !important; position:static; background:white; padding:0;}
     .paper{box-shadow:none; border:none; padding:0;}
     .paper .topbar{display:none;}
+    .enonceLayout{flex-direction:column; align-items:stretch;}
+    .enonceLayout{gap:14px; margin:6px 0 4px;}
+    .textBox{order:1;}
+    .puzzleBox{order:2;}
+    .puzzleBox{align-self:center;}
+    #paperSvg{width:130mm; height:130mm; border:1px solid #111827;}
     /* éléments utiles à l'écran mais inutiles sur la feuille */
     .noPrint{display:none !important;}
   }
@@ -263,49 +278,35 @@
     </div>
     <h2>AGRANDISSEMENT ET RÉDUCTION</h2>
 
-    <h3 style="margin:18px 0 8px; font-size:1.28rem;">Le puzzle de Rousseau</h3>
+    <h3 style="margin:18px 0 8px; font-size:1.28rem;">Le puzzle de Brouseau</h3>
 
-    <div style="display:flex; gap:25px; align-items:flex-start; flex-wrap:wrap; margin: 12px 0 8px;">
-      <div style="flex:0 0 auto;">
-        <svg width="350" height="350" viewBox="0 0 420 420" style="border:1px solid #e5e7eb; background:#fff; display:block;">
-          <g id="paperPuzzle" transform="translate(0,0)"></g>
+    <div class="enonceLayout">
+      <div class="puzzleBox">
+        <svg id="paperSvg" viewBox="0 0 13 13" xmlns="http://www.w3.org/2000/svg">
+          <g id="paperPuzzle"></g>
         </svg>
       </div>
 
-      <div style="flex:1 1 320px; font-size:1.08rem; line-height:1.55;">
+      <div class="textBox">
         <p style="margin-top:0;">
-          <strong>A) AGRANDISSEMENT :</strong> L’objectif est de <strong>construire</strong> un agrandissement du puzzle, de telle manière que le segment qui mesure 4&nbsp;cm sur le puzzle original mesure 7&nbsp;cm sur le puzzle agrandi.
-        </p>
+          <strong>A) AGRANDISSEMENT :</strong> L’objectif est de <strong>construire</strong> un agrandissement du puzzle de Brouseau ci-contre.</p>
         <div class="rule">
           Règle : Le segment qui mesure 4&nbsp;cm sur le puzzle original mesure 7&nbsp;cm sur le puzzle agrandi.
         
-        <div class="optBox noPrint">
-          <div class="optTitle">Option professeur (comparaison d’angles)</div>
-          <label class="optLine"><input type="checkbox" id="refToggle"> Afficher le puzzle original en silhouette sur la scène</label>
-          <div class="optRow">
-            <label>Position :
-              <select id="refSide">
-                <option value="left">à gauche</option>
-                <option value="right">à droite</option>
-              </select>
-            </label>
-            <label>Opacité :
-              <input type="range" id="refOpacity" min="0.12" max="0.6" step="0.04" value="0.28">
-            </label>
-          </div>
-          <div class="optHint">Astuce : prends une pièce agrandie ou réduite et superpose-la sur la silhouette pour vérifier que les angles sont conservés.</div>
-        </div>
+        
+
 
         </div>
 
-        <p style="margin-top:26px;">
-          <strong>B) RÉDUCTION :</strong> Le puzzle de Rousseau ci-contre doit être réduit.
-        </p>
+        <p style="margin-top:18px;">
+          <strong>B) RÉDUCTION :</strong> L’objectif est de <strong>construire</strong> une réduction du puzzle de Brouseau ci-contre.</p>
         <div class="rule">
           Règle : Les segments qui mesurent 5&nbsp;cm sur le puzzle original mesurent 4&nbsp;cm sur le puzzle réduit.
         </div>
       </div>
     </div>
+
+    <p class="smallNote noPrint" style="margin:10px 0 0;">Impression à l'échelle : dans la fenêtre d'impression, choisis <strong>Taille réelle (100%)</strong> et désactive <strong>Ajuster à la page</strong>.</p>
 
     <h3 style="margin:18px 0 8px; font-size:1.28rem;">Question</h3>
 
@@ -1733,18 +1734,16 @@ function drawPaperPuzzle(){
   const g = document.getElementById("paperPuzzle");
   g.innerHTML = "";
 
-  const VB = 420;
-  const minX = -0.45, maxX = 11.45;
-  const minY = -11.5,  maxY = 0;
-  const scale = 31;
-  const tx = (VB - (maxX - minX) * scale) / 2 - (minX * scale);
-  const ty = (VB - (maxY - minY) * scale) / 2 - (minY * scale);
+  // Repère : puzzle original en cm, (0,0) en bas-gauche du carré 11×11.
+  // On dessine dans un SVG viewBox 0..13 (marges de 1 cm tout autour).
+  // La géométrie du puzzle reste à l'échelle : largeur puzzle = 11 cm.
 
+  // 1) Contours des pièces
   const outline = document.createElementNS("http://www.w3.org/2000/svg","g");
-  outline.setAttribute("transform", `translate(${tx} ${ty}) scale(${scale} ${-scale})`);
+  outline.setAttribute("transform", `translate(1 12) scale(1 -1)`); // marge + inversion Y
   outline.setAttribute("fill","none");
   outline.setAttribute("stroke","#111827");
-  outline.setAttribute("stroke-width","0.08");
+  outline.setAttribute("stroke-width","0.08"); // 0,8 mm
   outline.setAttribute("stroke-linejoin","round");
 
   for(const p of PIECES){
@@ -1758,33 +1757,39 @@ function drawPaperPuzzle(){
   }
   g.appendChild(outline);
 
+  // 2) Longueurs (placées en coordonnées du puzzle, converties en coordonnées SVG)
   const txtG = document.createElementNS("http://www.w3.org/2000/svg","g");
   txtG.setAttribute("font-family","Arial");
-  txtG.setAttribute("font-size","16");
+  txtG.setAttribute("font-size","0.45"); // ~4,5 mm
   txtG.setAttribute("fill","#111827");
   txtG.setAttribute("text-anchor","middle");
 
   const texts = [
-    {x:2, y:-0.28, t:"4 cm"},
-    {x:5, y:-0.28, t:"2 cm"},
-    {x:8.50, y:-0.28, t:"5 cm"},
-    {x:-0.28, y:-2.50, t:"5 cm", r:-90},
-    {x:-0.28, y:-8.00, t:"6 cm", r:-90},
-    {x:3.00, y:-11.28, t:"6 cm"},
-    {x:8.50, y:-11.28, t:"5 cm"},
-    {x:11.28, y:-10.00, t:"2 cm", r:90},
-    {x:11.28, y:-5.50, t:"7 cm", r:90},
-    {x:11.28, y:-1.00, t:"2 cm", r:90},
-    {x:3.72, y:-4.50, t:"9 cm", r:-90, anchor:"end"},
-    {x:6.62, y:-3.50, t:"7 cm", r:-90, anchor:"middle"},
-    {x:7.50, y:-9.28, t:"7 cm"}
+    // Bas
+    {x:2.00, y:-0.60, t:"4 cm"},
+    {x:5.00, y:-0.60, t:"2 cm"},
+    {x:8.50, y:-0.60, t:"5 cm"},
+    // Gauche
+    {x:-0.35, y:2.50, t:"5 cm", r:-90},
+    {x:-0.35, y:8.00, t:"6 cm", r:-90},
+    // Haut
+    {x:3.00, y:11.35, t:"6 cm"},
+    {x:8.50, y:11.35, t:"5 cm"},
+    // Droite
+    {x:11.35, y:10.00, t:"2 cm", r:90},
+    {x:11.35, y:5.50,  t:"7 cm", r:90},
+    {x:11.35, y:1.00,  t:"2 cm", r:90},
+    // Intérieurs utiles
+    {x:3.72, y:4.50, t:"9 cm", r:-90, anchor:"end"},
+    {x:6.62, y:3.50, t:"7 cm", r:-90},
+    {x:7.50, y:8.35, t:"7 cm"}
   ];
 
   for(const item of texts){
     const t = document.createElementNS("http://www.w3.org/2000/svg","text");
     t.textContent = item.t;
-    const px = tx + item.x*scale;
-    const py = ty + item.y*scale;
+    const px = 1 + item.x;
+    const py = 12 - item.y;
     t.setAttribute("x", px);
     t.setAttribute("y", py);
     if(item.anchor) t.setAttribute("text-anchor", item.anchor);
