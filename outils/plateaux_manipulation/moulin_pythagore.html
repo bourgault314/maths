@@ -64,7 +64,7 @@
   .toggle.on .pill{background:rgba(37,99,235,.18); border-color:rgba(37,99,235,.5);}
   .toggle.on .pill::after{left:17px;}
   .hint{color:var(--muted); font-size:13px; padding-left:6px; white-space:nowrap;}
-  #stageWrap{flex:1; position:relative; overflow:hidden; background:#fff;}
+  #stageWrap{flex:1; position:relative; overflow:hidden; background:#fff; touch-action:none;}
   svg{width:100%; height:100%; display:block; touch-action:none;}
   .boardLine{stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;}
   .thinLine{stroke:#111827; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
@@ -87,6 +87,16 @@
   .modeVide #pieces{display:none;}
   .modeVide #boardsR, .modeVide #labelsR{display:none;}
   .modeVide .rightAngle{display:none;}
+
+
+  /* Contrôles uniquement mobile/tablette (sans changer la version ordinateur) */
+  .mobileOnly{display:none;}
+  @media (pointer: coarse), (max-width: 900px){
+    .mobileOnly{display:inline-flex;}
+    #toolbar{gap:6px; padding:8px 10px;}
+    button, .toggle{padding:10px 12px; font-size:15px;}
+    .hint{display:none;}
+  }
 
 </style>
 </head>
@@ -111,6 +121,9 @@
 
     <div class="group">
       <button id="enonce" title="Générer les pages à imprimer">Énoncé</button>
+      <button id="centerView" class="mobileOnly" title="Recentrer la vue">Centrer</button>
+      <button id="zoomOut" class="mobileOnly" title="Dézoomer">−</button>
+      <button id="zoomIn" class="mobileOnly" title="Zoomer">+</button>
       <button id="fullscreen" title="Plein écran">Plein écran</button>
     </div>
   </div>
@@ -160,6 +173,9 @@
 
   const btnReset = document.getElementById("reset");
   const btnFullscreen = document.getElementById("fullscreen");
+  const btnCenterView = document.getElementById("centerView");
+  const btnZoomIn = document.getElementById("zoomIn");
+  const btnZoomOut = document.getElementById("zoomOut");
 const btnEnonce = document.getElementById("enonce");
 
   // ===== État global =====
@@ -175,6 +191,15 @@ const btnEnonce = document.getElementById("enonce");
     molds: [],
     moulins: {L:null, R:null},               // grand carré (2) : {id, corners, uvec, vvec, c, a, bbox}
     worldTransform: {s: 1, tx: 0, ty: 0},
+    camera: {
+      enabled: false,
+      pointers: new Map(),   // pointerId -> {x,y} en coords "stage"
+      gesture: null,         // {type:'pinch', ...}
+      pan: null,             // {start:{x,y}, startTx, startTy, moved}
+      user: false,           // l'utilisateur a déjà bougé la caméra
+      minS: 0.45,
+      maxS: 4.0,
+    },
   };
 
   // ===== Utilitaires =====
@@ -221,6 +246,22 @@ const btnEnonce = document.getElementById("enonce");
       maxY = Math.max(maxY, p.y);
     }
     return {minX, minY, maxX, maxY, w: maxX-minX, h: maxY-minY};
+  }
+
+
+  function clientXYToStage(x, y){
+    const pt = stage.createSVGPoint();
+    pt.x = x; pt.y = y;
+    const m = stage.getScreenCTM();
+    if (!m) return {x:0,y:0};
+    const q = pt.matrixTransform(m.inverse());
+    return {x:q.x, y:q.y};
+  }
+  function clientToStage(evt){ return clientXYToStage(evt.clientX, evt.clientY); }
+
+  function applyWorldTransform(){
+    const {s, tx, ty} = state.worldTransform;
+    world.setAttribute("transform", `translate(${tx},${ty}) scale(${s})`);
   }
 
   function clientToWorld(evt){
@@ -561,7 +602,7 @@ const btnEnonce = document.getElementById("enonce");
     const ty = h/2 - sClamped*cy;
 
     state.worldTransform = {s:sClamped, tx, ty};
-    world.setAttribute("transform", `translate(${tx},${ty}) scale(${sClamped})`);
+    applyWorldTransform();
   }
 
   // ===== Snapping =====
@@ -734,6 +775,157 @@ const btnEnonce = document.getElementById("enonce");
   stage.addEventListener("pointercancel", onPointerUp);
   stage.addEventListener("pointerdown", onBackgroundPointerDown);
 
+  // ===== Caméra mobile/tablette : pan + pinch-to-zoom (sans changer le rendu PC) =====
+  function computeCameraEnabled(){
+    try{
+      const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+      return coarse || window.innerWidth <= 900;
+    }catch(e){
+      return window.innerWidth <= 900;
+    }
+  }
+
+  function updateCameraEnabled(){
+    state.camera.enabled = computeCameraEnabled();
+  }
+
+  function setWorldTransform(s, tx, ty){
+    state.worldTransform.s = s;
+    state.worldTransform.tx = tx;
+    state.worldTransform.ty = ty;
+    applyWorldTransform();
+  }
+
+  function zoomAtStagePoint(cx, cy, factor){
+    const s = state.worldTransform.s;
+    const tx = state.worldTransform.tx;
+    const ty = state.worldTransform.ty;
+    const s2 = clamp(s * factor, state.camera.minS, state.camera.maxS);
+
+    // point monde sous (cx,cy) avant zoom
+    const wx = (cx - tx) / s;
+    const wy = (cy - ty) / s;
+
+    const tx2 = cx - s2 * wx;
+    const ty2 = cy - s2 * wy;
+
+    state.camera.user = true;
+    setWorldTransform(s2, tx2, ty2);
+  }
+
+  function panBy(dx, dy){
+    state.camera.user = true;
+    setWorldTransform(state.worldTransform.s, state.worldTransform.tx + dx, state.worldTransform.ty + dy);
+  }
+
+  function onAnyPointerDownCapture(evt){
+    if (!state.camera.enabled) return;
+    if (evt.pointerType !== "touch") return;
+
+    // On mémorise la position dans le repère du stage (viewBox)
+    const p = clientToStage(evt);
+    state.camera.pointers.set(evt.pointerId, p);
+
+    // Si 2 doigts -> pinch zoom (interrompt un éventuel drag de pièce)
+    if (state.camera.pointers.size === 2){
+      state.dragging = null;
+
+      const pts = Array.from(state.camera.pointers.values());
+      const c = {x:(pts[0].x + pts[1].x)/2, y:(pts[0].y + pts[1].y)/2};
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+
+      state.camera.gesture = {
+        type: "pinch",
+        startDist: d || 1,
+        startS: state.worldTransform.s,
+        startTx: state.worldTransform.tx,
+        startTy: state.worldTransform.ty,
+        startCenter: c,
+      };
+      state.camera.pan = null;
+      return;
+    }
+
+    // 1 doigt sur fond -> pan (si on ne touche pas une pièce)
+    const onPiece = !!(evt.target && evt.target.closest && evt.target.closest("g.piece"));
+    if (!onPiece){
+      state.camera.pan = {
+        start: p,
+        startTx: state.worldTransform.tx,
+        startTy: state.worldTransform.ty,
+        moved: false
+      };
+    } else {
+      state.camera.pan = null;
+    }
+  }
+
+  function onAnyPointerMoveCapture(evt){
+    if (!state.camera.enabled) return;
+    if (evt.pointerType !== "touch") return;
+    if (!state.camera.pointers.has(evt.pointerId)) return;
+
+    const p = clientToStage(evt);
+    state.camera.pointers.set(evt.pointerId, p);
+
+    // Pinch (2 doigts)
+    if (state.camera.pointers.size === 2 && state.camera.gesture && state.camera.gesture.type === "pinch"){
+      const pts = Array.from(state.camera.pointers.values());
+      const c = {x:(pts[0].x + pts[1].x)/2, y:(pts[0].y + pts[1].y)/2};
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+
+      const g = state.camera.gesture;
+      const factor = d / g.startDist;
+      const s2 = clamp(g.startS * factor, state.camera.minS, state.camera.maxS);
+
+      // Point monde sous le centre initial (dans le repère initial)
+      const wx = (g.startCenter.x - g.startTx) / g.startS;
+      const wy = (g.startCenter.y - g.startTy) / g.startS;
+
+      const tx2 = c.x - s2 * wx;
+      const ty2 = c.y - s2 * wy;
+
+      state.camera.user = true;
+      setWorldTransform(s2, tx2, ty2);
+
+      evt.preventDefault();
+      return;
+    }
+
+    // Pan (1 doigt sur le fond)
+    if (state.camera.pan){
+      const pan = state.camera.pan;
+      const dx = p.x - pan.start.x;
+      const dy = p.y - pan.start.y;
+
+      if (!pan.moved && Math.hypot(dx, dy) > 4) pan.moved = true;
+
+      setWorldTransform(state.worldTransform.s, pan.startTx + dx, pan.startTy + dy);
+      evt.preventDefault();
+    }
+  }
+
+  function onAnyPointerUpCapture(evt){
+    if (!state.camera.enabled) return;
+    if (evt.pointerType !== "touch") return;
+
+    state.camera.pointers.delete(evt.pointerId);
+
+    if (state.camera.pointers.size < 2){
+      state.camera.gesture = null;
+    }
+    if (state.camera.pointers.size === 0){
+      state.camera.pan = null;
+    }
+  }
+
+  // Listeners en capture : on récupère les gestes même si l'event est stoppé plus bas
+  stage.addEventListener("pointerdown", onAnyPointerDownCapture, {capture:true});
+  stage.addEventListener("pointermove", onAnyPointerMoveCapture, {capture:true});
+  stage.addEventListener("pointerup", onAnyPointerUpCapture, {capture:true});
+  stage.addEventListener("pointercancel", onAnyPointerUpCapture, {capture:true});
+
+
   
   // ===== ÉNONCÉ / IMPRESSION =====
   function openEnonce(){
@@ -818,6 +1010,16 @@ const btnEnonce = document.getElementById("enonce");
   @media print{
     .noprint{display:none;}
   }
+
+  /* Contrôles uniquement mobile/tablette (sans changer la version ordinateur) */
+  .mobileOnly{display:none;}
+  @media (pointer: coarse), (max-width: 900px){
+    .mobileOnly{display:inline-flex;}
+    #toolbar{gap:6px; padding:8px 10px;}
+    button, .toggle{padding:10px 12px; font-size:15px;}
+    .hint{display:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -1153,7 +1355,40 @@ const btnEnonce = document.getElementById("enonce");
   });
 
 
-  window.addEventListener("resize", () => fitWorldToViewport());
+  // Contrôles caméra (mobile/tablette uniquement via CSS)
+  if (btnCenterView) btnCenterView.addEventListener("click", () => {
+    state.camera.user = false;
+    fitWorldToViewport(state.mode);
+  });
+
+  if (btnZoomIn) btnZoomIn.addEventListener("click", () => {
+    const vb = stage.viewBox.baseVal;
+    zoomAtStagePoint(vb.width/2, vb.height/2, 1.22);
+  });
+
+  if (btnZoomOut) btnZoomOut.addEventListener("click", () => {
+    const vb = stage.viewBox.baseVal;
+    zoomAtStagePoint(vb.width/2, vb.height/2, 1/1.22);
+  });
+
+  window.addEventListener("resize", () => {
+    updateCameraEnabled();
+
+    // On met toujours à jour le viewBox (pour que les coords stage restent cohérentes)
+    const wrap = document.getElementById("stageWrap");
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    stage.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+    // Sur mobile : si l'utilisateur a déjà zoomé/panné, on ne recadre pas automatiquement.
+    if (!state.camera.enabled || !state.camera.user){
+      fitWorldToViewport(state.mode);
+    } else {
+      applyWorldTransform();
+    }
+  });
+
+  updateCameraEnabled();
 
   buildScene();
 })();
