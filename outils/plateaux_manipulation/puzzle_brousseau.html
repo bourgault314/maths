@@ -60,6 +60,13 @@
     border-color:#bae6fd;
   }
   .btn.primary:hover{background:#bae6fd;}
+  .btn.active{
+    background:#3b82f6;
+    color:white;
+    border-color:#3b82f6;
+  }
+  .btn.wrong.active{background:#ef4444; border-color:#ef4444; color:white;}
+  .btn.correct.active{background:#10b981; border-color:#10b981; color:white;}
   .seg{
     display:flex;
     background: rgba(148,163,184,.18);
@@ -188,6 +195,31 @@
     /* éléments utiles à l'écran mais inutiles sur la feuille */
     .noPrint{display:none !important;}
   }
+
+  /* Silhouette (référence) */
+  .refOutline{
+    fill:none;
+    stroke:#000;
+    stroke-width:2.2;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin:round;
+  }
+  #refLayer{ pointer-events:none; }
+
+  /* Options professeur dans l'énoncé */
+  .optBox{
+    margin-top:16px;
+    padding:12px 14px;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    background:#f9fafb;
+  }
+  .optTitle{ font-weight:800; margin-bottom:8px; }
+  .optLine{ display:block; margin-bottom:10px; }
+  .optRow{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+  .optRow select{ padding:6px 8px; border:1px solid #d1d5db; border-radius:10px; background:#fff; }
+  .optRow input[type="range"]{ width:220px; vertical-align:middle; }
+  .optHint{ margin-top:10px; color:#374151; font-size:.98rem; }
 </style>
 </head>
 <body>
@@ -195,14 +227,11 @@
 <div class="toolbar">
   <div class="group">
     <button class="btn" id="btnEnonce">📄 Énoncé</button>
-    <button class="btn" id="btnPrint">🖨️ Imprimer</button>
     <button class="btn" id="btnFS">⛶ Plein écran</button>
     <span class="sep"></span>
 
-    <div class="seg" title="Choisis ce que tu veux montrer au tableau">
-      <button id="mOrig" class="active">Original</button>
-      <button id="mAdd">+3 cm</button>
-    </div>
+    <button class="btn active" id="mOrig" title="Affiche le puzzle original (assemblé)">Original</button>
+    <button class="btn" id="mAdd" title="Mode +3 cm : les pièces s'écartent un peu pour voir les jonctions">+3 cm</button>
 
     <span class="sep"></span>
 
@@ -212,6 +241,7 @@
     <span class="sep"></span>
 
     <button class="btn" id="btnLong">Longueurs : OFF</button>
+    <button class="btn" id="btnRef">Référence : OFF</button>
   </div>
 
   <div class="group">
@@ -228,6 +258,7 @@
 <div id="overlay" class="overlay" aria-hidden="true">
   <div class="paper">
     <div class="topbar">
+      <button class="btn" id="btnPrintInEnonce">🖨️ Imprimer</button>
       <button class="close" id="closeOverlay" aria-label="Fermer">×</button>
     </div>
     <h2>AGRANDISSEMENT ET RÉDUCTION</h2>
@@ -243,10 +274,28 @@
 
       <div style="flex:1 1 320px; font-size:1.08rem; line-height:1.55;">
         <p style="margin-top:0;">
-          <strong>A) AGRANDISSEMENT :</strong> Le puzzle de Rousseau ci-contre doit être agrandi.
+          <strong>A) AGRANDISSEMENT :</strong> L’objectif est de <strong>construire</strong> un agrandissement du puzzle, de telle manière que le segment qui mesure 4&nbsp;cm sur le puzzle original mesure 7&nbsp;cm sur le puzzle agrandi.
         </p>
         <div class="rule">
           Règle : Le segment qui mesure 4&nbsp;cm sur le puzzle original mesure 7&nbsp;cm sur le puzzle agrandi.
+        
+        <div class="optBox noPrint">
+          <div class="optTitle">Option professeur (comparaison d’angles)</div>
+          <label class="optLine"><input type="checkbox" id="refToggle"> Afficher le puzzle original en silhouette sur la scène</label>
+          <div class="optRow">
+            <label>Position :
+              <select id="refSide">
+                <option value="left">à gauche</option>
+                <option value="right">à droite</option>
+              </select>
+            </label>
+            <label>Opacité :
+              <input type="range" id="refOpacity" min="0.12" max="0.6" step="0.04" value="0.28">
+            </label>
+          </div>
+          <div class="optHint">Astuce : prends une pièce agrandie ou réduite et superpose-la sur la silhouette pour vérifier que les angles sont conservés.</div>
+        </div>
+
         </div>
 
         <p style="margin-top:26px;">
@@ -381,6 +430,7 @@ function buildMeasuredEdges(){
       }
 
       if(bestI >= 0){
+        lab._edgeIndex = bestI;
         const key = piece._edgeKeys[bestI];
         if(!MEASURED_EDGE_BY_KEY.has(key)){
           MEASURED_EDGE_BY_KEY.set(key, lab.L);
@@ -404,7 +454,66 @@ function buildMeasuredEdges(){
   }
 }
 
+
+function buildJunctionEdges(){
+  const EPS = 1e-9;
+
+  // Reset + base lengths
+  for(const piece of PIECES){
+    const n = piece.pts.length;
+    piece._junctionEdge = new Array(n).fill(false);
+    piece._edgeLenBase  = new Array(n).fill(null);
+
+    for(let i=0;i<n;i++){
+      const j = (i+1)%n;
+      const p = piece.pts[i];
+      const q = piece.pts[j];
+      const dx = q[0]-p[0];
+      const dy = q[1]-p[1];
+      piece._edgeLenBase[i] = Math.hypot(dx,dy);
+    }
+  }
+
+  const edges = [];
+  for(const piece of PIECES){
+    const pts = piece.pts;
+    const n = pts.length;
+    for(let i=0;i<n;i++){
+      const j = (i+1)%n;
+      const p = pts[i];
+      const q = pts[j];
+      const dx = q[0]-p[0];
+      const dy = q[1]-p[1];
+
+      // On ne garde que les arêtes horizontales / verticales pour les jonctions
+      if(Math.abs(dy) <= EPS){
+        edges.push({piece, i, o:"h", c:p[1], a:Math.min(p[0],q[0]), b:Math.max(p[0],q[0])});
+      }else if(Math.abs(dx) <= EPS){
+        edges.push({piece, i, o:"v", c:p[0], a:Math.min(p[1],q[1]), b:Math.max(p[1],q[1])});
+      }
+    }
+  }
+
+  for(let i=0;i<edges.length;i++){
+    for(let j=i+1;j<edges.length;j++){
+      const e1 = edges[i], e2 = edges[j];
+      if(e1.piece === e2.piece) continue;
+      if(e1.o !== e2.o) continue;
+      if(Math.abs(e1.c - e2.c) > EPS) continue;
+
+      const overlap = Math.min(e1.b, e2.b) - Math.max(e1.a, e2.a);
+      if(overlap > EPS){
+        e1.piece._junctionEdge[e1.i] = true;
+        e2.piece._junctionEdge[e2.i] = true;
+      }
+    }
+  }
+}
+
+
+
 buildMeasuredEdges();
+buildJunctionEdges();
 
 let mode = "original";            // original | additive | multiplicative
 let coeff = 1;
@@ -418,16 +527,31 @@ let addTouched = false;
 
 const stage = document.getElementById("stage");
 
+let refLayer = null;
 let piecesLayer = null;
 let labelsLayer = null;
 
+let showReference = false;       // silhouette du puzzle original
+let referenceSide = "right";      // "left" | "right"
+let referenceOpacity = 0.28;     // 0..1
+let _pendingBaseShift = null;    // {tx,ty} base avant toggle Référence
+const REF_GAP_CM = 1.5;          // écart entre les 2 puzzles (en cm)
+
 function ensureLayers(){
-  if(piecesLayer && labelsLayer) return;
+  if(refLayer && piecesLayer && labelsLayer) return;
+
+  refLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
+  refLayer.setAttribute("id","refLayer");
+  refLayer.style.pointerEvents = "none";
+
   piecesLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
   piecesLayer.setAttribute("id","piecesLayer");
+
   labelsLayer = document.createElementNS("http://www.w3.org/2000/svg","g");
   labelsLayer.setAttribute("id","labelsLayer");
   labelsLayer.style.pointerEvents = "none";
+
+  stage.appendChild(refLayer);
   stage.appendChild(piecesLayer);
   stage.appendChild(labelsLayer);
 }
@@ -462,7 +586,17 @@ function recomputePxPerCm(){
   const margin = 80;
   const kMax = 7/4;
   const puzzleCm = 11;
-  let ppcm = Math.min((w - 2*margin) / (puzzleCm * kMax), (h - 2*margin) / (puzzleCm * kMax));
+
+  // Par défaut : on garantit que l'agrandissement max (×7/4) rentre à l'écran.
+  // Si la "référence" est activée, on prévoit 2 puzzles côte à côte (original + agrandi max).
+  const gapCm = showReference ? REF_GAP_CM : 0;
+  const widthNeed = showReference ? (puzzleCm * (kMax + 1) + gapCm) : (puzzleCm * kMax);
+
+  let ppcm = Math.min(
+    (w - 2*margin) / widthNeed,
+    (h - 2*margin) / (puzzleCm * kMax)
+  );
+
   if(!isFinite(ppcm) || ppcm <= 0) ppcm = 40;
   ppcm = Math.max(22, Math.min(72, ppcm));
   PX_PER_CM = ppcm;
@@ -500,24 +634,201 @@ function placeLabelConsistent(ptsCm, lx, ly, ang){
   return [lx, ly];
 }
 
+
+function buildLengthLabels(piece, ptsCm){
+  const labs = [];
+  const n = ptsCm.length;
+  const declared = piece.labels || [];
+
+  const off = 0.22 * ((mode==="multiplicative") ? coeff : 1);
+
+  // Map declared labels by the matched edge index
+  const declByEdge = new Map();
+  for(const lab of declared){
+    if(lab && typeof lab._edgeIndex === "number"){
+      declByEdge.set(lab._edgeIndex, lab);
+    }
+  }
+
+  const measuredL = piece._measuredL || [];
+  const junction = piece._junctionEdge || [];
+  const edgeLenBase = piece._edgeLenBase || [];
+
+  for(let i=0;i<n;i++){
+    const src = declByEdge.get(i);
+    let L = measuredL[i];
+
+    if(L == null && src && src.L != null) L = src.L;
+    if(L == null && junction[i]) L = edgeLenBase[i];
+    if(L == null) continue;
+
+    const kind = src ? "decl" : "auto";
+
+    const p = ptsCm[i];
+    const q = ptsCm[(i+1)%n];
+    const dx = q[0]-p[0];
+    const dy = q[1]-p[1];
+
+    // Deux normales possibles
+    let nx1 = dy,  ny1 = -dx;
+    let nx2 = -dy, ny2 = dx;
+    const norm1 = Math.hypot(nx1,ny1) || 1;
+    const norm2 = Math.hypot(nx2,ny2) || 1;
+    nx1/=norm1; ny1/=norm1;
+    nx2/=norm2; ny2/=norm2;
+
+    const mx0 = (p[0]+q[0])/2;
+    const my0 = (p[1]+q[1])/2;
+
+    // Choisir le côté voulu :
+    // - si label déclaré : même côté qu'avant (via position "historique")
+    // - sinon : côté extérieur (loin du centroïde)
+    let chooseNx = nx1, chooseNy = ny1;
+    if(src){
+      const rx = (mode==="multiplicative") ? ((src.x||0) * coeff) : (src.x||0);
+      const ry = (mode==="multiplicative") ? ((src.y||0) * coeff) : (src.y||0);
+      const vx = rx - mx0;
+      const vy = ry - my0;
+      const dot1 = vx*nx1 + vy*ny1;
+      const dot2 = vx*nx2 + vy*ny2;
+      chooseNx = (dot1 >= dot2) ? nx1 : nx2;
+      chooseNy = (dot1 >= dot2) ? ny1 : ny2;
+    }else{
+      const [cx,cy] = centroidPolygon(ptsCm);
+      const vx = cx - mx0;
+      const vy = cy - my0;
+      const dot1 = vx*nx1 + vy*ny1;
+      const dot2 = vx*nx2 + vy*ny2;
+      // vx,vy point inward: choose the normal that points outward (smaller dot)
+      chooseNx = (dot1 <= dot2) ? nx1 : nx2;
+      chooseNy = (dot1 <= dot2) ? ny1 : ny2;
+    }
+
+    let a = 0;
+    if(src){
+      a = src.a || 0;
+    }else{
+      a = (Math.abs(dy) > Math.abs(dx)) ? -90 : 0;
+    }
+
+    labs.push({
+      x: mx0 + chooseNx*off,
+      y: my0 + chooseNy*off,
+      rot: normRot(a),
+      L: L,
+      edgeIndex: i,
+      kind: kind
+    });
+  }
+
+  return labs;
+}
+
+function buildAxisMapFromEdges(pts, axis, add){
+  const n = pts.length;
+  const nodes = new Set();
+  const constraints = []; // [a,b,delta] : mapped(b) - mapped(a) = delta
+
+  for(let i=0;i<n;i++){
+    const [x1,y1] = pts[i];
+    const [x2,y2] = pts[(i+1)%n];
+
+    if(axis === "x"){
+      nodes.add(x1); nodes.add(x2);
+      if(Math.abs(y2 - y1) < 1e-9 && Math.abs(x2 - x1) > 1e-9){
+        const baseLen = Math.abs(x2 - x1);
+        const newLen  = baseLen + add;
+        const sign    = (x2 > x1) ? 1 : -1;
+        constraints.push([x1, x2, sign * newLen]);
+      }
+    }else{
+      nodes.add(y1); nodes.add(y2);
+      if(Math.abs(x2 - x1) < 1e-9 && Math.abs(y2 - y1) > 1e-9){
+        const baseLen = Math.abs(y2 - y1);
+        const newLen  = baseLen + add;
+        const sign    = (y2 > y1) ? 1 : -1;
+        constraints.push([y1, y2, sign * newLen]);
+      }
+    }
+  }
+
+  const nodeArr = [...nodes].sort((a,b)=>a-b);
+  const adj = new Map();
+  for(const v of nodeArr) adj.set(v, []);
+  for(const [a,b,delta] of constraints){
+    if(!adj.has(a)) adj.set(a, []);
+    if(!adj.has(b)) adj.set(b, []);
+    adj.get(a).push([b, delta]);
+    adj.get(b).push([a, -delta]);
+  }
+
+  const anchor = nodeArr.length ? nodeArr[0] : 0;
+  const map = new Map();
+  map.set(anchor, anchor);
+
+  const q = [anchor];
+  while(q.length){
+    const u = q.shift();
+    const uVal = map.get(u);
+    const neigh = adj.get(u) || [];
+    for(const [v,delta] of neigh){
+      const val = uVal + delta;
+      if(!map.has(v)){
+        map.set(v, val);
+        q.push(v);
+      }else{
+        // Si conflit (rare ici), on garde la première valeur.
+      }
+    }
+  }
+
+  // Complète les valeurs non contraintes (souvent des points sur des diagonales)
+  const assigned = nodeArr.filter(v=>map.has(v));
+  if(assigned.length === 1){
+    const a = assigned[0];
+    const aVal = map.get(a);
+    for(const v of nodeArr){
+      if(!map.has(v)) map.set(v, aVal + (v - a));
+    }
+  }else if(assigned.length >= 2){
+    for(const v of nodeArr){
+      if(map.has(v)) continue;
+
+      let lo = null, hi = null;
+      for(let i=0;i<assigned.length;i++){
+        const vv = assigned[i];
+        if(vv < v) lo = vv;
+        if(vv > v){ hi = vv; break; }
+      }
+      if(lo === null){ lo = assigned[0]; hi = assigned[1]; }
+      else if(hi === null){ hi = assigned[assigned.length-1]; lo = assigned[assigned.length-2]; }
+
+      const denom = (hi - lo) || 1;
+      const t = (v - lo) / denom;
+      const out = map.get(lo) + t * (map.get(hi) - map.get(lo));
+      map.set(v, out);
+    }
+  }
+
+  return map;
+}
+
+function additivePointsFromBase(basePts, add){
+  const xMap = buildAxisMapFromEdges(basePts, "x", add);
+  const yMap = buildAxisMapFromEdges(basePts, "y", add);
+  return basePts.map(([x,y])=>[
+    xMap.has(x) ? xMap.get(x) : x,
+    yMap.has(y) ? yMap.get(y) : y
+  ]);
+}
+
 function pointsFor(piece){
   const base = piece.pts.map(p => [p[0], p[1]]);
   if(mode === "original") return base;
 
   if(mode === "additive"){
-    const out = base.map(([x,y])=>[x,y]);
     const add = 3;
-    const minX = Math.min(...out.map(p=>p[0]));
-    const maxX = Math.max(...out.map(p=>p[0]));
-    const minY = Math.min(...out.map(p=>p[1]));
-    const maxY = Math.max(...out.map(p=>p[1]));
-    for(const p of out){
-      if(Math.abs(p[0]-minX) < 1e-6) p[0] -= add*0.45;
-      if(Math.abs(p[0]-maxX) < 1e-6) p[0] += add*0.45;
-      if(Math.abs(p[1]-minY) < 1e-6) p[1] -= add*0.45;
-      if(Math.abs(p[1]-maxY) < 1e-6) p[1] += add*0.45;
-    }
-    return out;
+    return additivePointsFromBase(base, add);
   }
 
   if(mode === "multiplicative"){
@@ -530,13 +841,21 @@ function pointsFor(piece){
 
 function clearStage(){
   stage.innerHTML = "";
+  refLayer = null;
   piecesLayer = null;
   labelsLayer = null;
 }
 
 function lengthText(v){
-  if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
-  return v.toFixed(2).replace(".",",");
+  let s;
+  if(Math.abs(v - Math.round(v)) < 1e-9){
+    s = String(Math.round(v));
+  }else{
+    s = v.toFixed(2).replace(".",",");
+    // trim trailing zeros (e.g. 2,50 -> 2,5 ; 2,00 -> 2)
+    s = s.replace(/0+$/,"").replace(/,$/,"");
+  }
+  return s + " cm";
 }
 
 function labelValue(L){
@@ -592,23 +911,25 @@ function addPiece(piece, initial){
   const lg = document.createElementNS("http://www.w3.org/2000/svg","g");
   g._labels = lg;
 
+
   if(showLengths){
-    const labs = piece.labels || [];
+    const labs = buildLengthLabels(piece, ptsCm);
     for(const lab of labs){
       const labelValueCm = labelValue(lab.L);
-      const ang = normRot(lab.a || 0);
-      const posCm = placeLabelConsistent(ptsCm, lab.x, lab.y, ang);
-      const [px,py] = cmToStage(posCm);
+      const [px,py] = cmToStage([lab.x, lab.y]);
 
       const t = document.createElementNS("http://www.w3.org/2000/svg","text");
       t.setAttribute("x", px);
       t.setAttribute("y", py);
       t.setAttribute("text-anchor","middle");
-      t.setAttribute("class","label");
+      t.setAttribute("class","label lenLabel");
+      t.dataset.pieceId = piece.id;
+      t.dataset.edgeIndex = String(lab.edgeIndex);
+      t.dataset.kind = lab.kind;
       t.textContent = lengthText(labelValueCm);
 
-      if(ang){
-        t.setAttribute("transform", `rotate(${ang} ${px} ${py})`);
+      if(lab.rot){
+        t.setAttribute("transform", `rotate(${lab.rot} ${px} ${py})`);
       }
       lg.appendChild(t);
     }
@@ -624,6 +945,105 @@ function addPiece(piece, initial){
   labelsLayer.appendChild(lg);
 }
 
+
+
+let _labelsRAF = 0;
+
+function updateLabelVisibility(){
+  if(!showLengths) return;
+  const labels = Array.from(document.querySelectorAll("text.lenLabel"));
+  if(!labels.length) return;
+
+  // default: show everything
+  for(const t of labels){ t.style.display = ""; }
+
+  // Build segment descriptors in stage coordinates
+  const segs = [];
+  for(const t of labels){
+    const pid = t.dataset.pieceId;
+    const ei = parseInt(t.dataset.edgeIndex, 10);
+    if(!pid || !Number.isFinite(ei)) continue;
+
+    const g = document.querySelector(`.piece[data-id="${pid}"]`);
+    if(!g || !g._verts) continue;
+    const n = g._verts.length;
+    if(ei < 0 || ei >= n) continue;
+
+    const v0 = g._verts[ei];
+    const v1 = g._verts[(ei+1)%n];
+    const p = transformedPoint(g, v0[0], v0[1]);
+    const q = transformedPoint(g, v1[0], v1[1]);
+
+    const dx = q.x - p.x;
+    const dy = q.y - p.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    const o = (absDx >= absDy) ? "h" : "v";
+    const c = (o==="h") ? ((p.y+q.y)/2) : ((p.x+q.x)/2);
+    const a = (o==="h") ? Math.min(p.x,q.x) : Math.min(p.y,q.y);
+    const b = (o==="h") ? Math.max(p.x,q.x) : Math.max(p.y,q.y);
+
+    segs.push({
+      t,
+      pid,
+      kind: t.dataset.kind || "auto",
+      o, c, a, b
+    });
+  }
+
+  const EPS = 1.0; // px tolerance
+
+  // Compare segments that lie on the same line and overlap
+  for(let i=0;i<segs.length;i++){
+    for(let j=i+1;j<segs.length;j++){
+      const s1 = segs[i], s2 = segs[j];
+      if(s1.pid === s2.pid) continue;
+      if(s1.o !== s2.o) continue;
+      if(Math.abs(s1.c - s2.c) > EPS) continue;
+
+      const overlap = Math.min(s1.b, s2.b) - Math.max(s1.a, s2.a);
+      if(overlap <= EPS) continue;
+
+      const sameEnds = (Math.abs(s1.a - s2.a) <= EPS && Math.abs(s1.b - s2.b) <= EPS);
+
+      // 1) Segment identique : garder un seul label (priorité au déclaré)
+      if(sameEnds){
+        if(s1.kind==="decl" && s2.kind!=="decl"){ s2.t.style.display="none"; continue; }
+        if(s2.kind==="decl" && s1.kind!=="decl"){ s1.t.style.display="none"; continue; }
+        if((s1.pid||"").localeCompare(s2.pid||"") <= 0) s2.t.style.display="none";
+        else s1.t.style.display="none";
+        continue;
+      }
+
+      // 2) Recouvrement partiel : ne pas afficher un label auto si ça recouvre un label déclaré
+      if(s1.kind==="decl" && s2.kind==="auto"){ s2.t.style.display="none"; continue; }
+      if(s2.kind==="decl" && s1.kind==="auto"){ s1.t.style.display="none"; continue; }
+
+      // 3) Deux labels auto : si l'un est contenu dans l'autre, masquer le plus petit
+      const s1In2 = (s1.a >= s2.a - EPS && s1.b <= s2.b + EPS);
+      const s2In1 = (s2.a >= s1.a - EPS && s2.b <= s1.b + EPS);
+      if(s1In2 && !s2In1){ s1.t.style.display="none"; continue; }
+      if(s2In1 && !s1In2){ s2.t.style.display="none"; continue; }
+
+      // 4) Cas rare : recouvrement croisé -> masquer le plus court (moins lisible)
+      const len1 = s1.b - s1.a;
+      const len2 = s2.b - s2.a;
+      if(len1 < len2) s1.t.style.display="none";
+      else s2.t.style.display="none";
+    }
+  }
+}
+
+function markLabelsDirty(){
+  if(!showLengths) return;
+  if(_labelsRAF) return;
+  _labelsRAF = requestAnimationFrame(()=>{
+    _labelsRAF = 0;
+    updateLabelVisibility();
+  });
+}
+
 function applyTransform(g){
   const id = g.dataset.id;
   const isSel = (id === selectedId);
@@ -633,6 +1053,7 @@ function applyTransform(g){
   if(g._labels){
     g._labels.setAttribute("transform", tf);
   }
+  markLabelsDirty();
 }
 
 function normRot(r){
@@ -727,46 +1148,126 @@ function updateViewScale(){
   viewScale = 1;
 }
 
-function assembledPositions(){
+function computeDualLayout(){
   const w = stage.clientWidth || stage.getBoundingClientRect().width;
   const h = stage.clientHeight || stage.getBoundingClientRect().height;
 
   updateViewScale();
-  const eff = (mode==="multiplicative") ? (coeff * viewScale) : 1;
+  const effCur = (mode==="multiplicative") ? (coeff * viewScale) : 1;
 
-  const puzzleW = toPx(11 * eff);
-  const puzzleH = toPx(11 * eff);
+  const curW = toPx(11 * effCur);
+  const curH = toPx(11 * effCur);
+  const refW = toPx(11);
+  const refH = toPx(11);
+  const gap = toPx(REF_GAP_CM);
 
+  const bboxW = curW + refW + gap;
   const M = 20;
-  const extraTop = toPx(0.55 * eff);
-  const extraBottom = toPx(0.35 * eff);
 
-  const bboxW = puzzleW;
-  const bboxH = puzzleH + extraTop + extraBottom;
-
+  // Objectif : puzzles proches (écart ~1–2 cm) et "au milieu" pour manipuler facilement.
+  // On centre donc le couple (puzzle courant + référence) horizontalement, avec un écart fixe.
   let left = (w - bboxW) / 2;
-  let top = (h - bboxH) / 2 + extraTop; // top = sommet du carré (pas du bbox)
-
-  // Petit confort visuel : on descend très légèrement l'ensemble au départ.
-  top += 10;
-
+  if(!isFinite(left)) left = M;
   left = Math.max(M, left);
-  top = Math.max(M + extraTop, top);
-
-  const bboxBottom = top + puzzleH + extraBottom;
-  if(bboxBottom > h - M){
-    top -= (bboxBottom - (h - M));
+  if(left + bboxW > w - M){
+    left = Math.max(M, (w - M) - bboxW);
   }
-  top = Math.max(M + extraTop, top);
 
-  const baseTx = left;
-  const baseTy = top + puzzleH;
-
-  const pos = {};
-  for(const piece of PIECES){
-    pos[piece.id] = { tx: baseTx, ty: baseTy, rot: 0 };
+  let curTx, refTx;
+  if(referenceSide === "left"){
+    refTx = left;
+    curTx = left + refW + gap;
+  }else{
+    curTx = left;
+    refTx = left + curW + gap;
   }
-  return pos;
+
+  // Centrage vertical : chaque puzzle est centré dans la hauteur disponible.
+  const curTy = (h/2) + (curH/2);
+  const refTy = (h/2) + (refH/2);
+
+  return {refTx, curTx, refTy, curTy, curW, curH, refW, refH, gap, bboxW};
+}
+
+
+function ptsToPathCm(ptsCm){
+  const [x0,y0] = cmToStage(ptsCm[0]);
+  let d = `M ${x0} ${y0}`;
+  for(let i=1;i<ptsCm.length;i++){
+    const [x,y] = cmToStage(ptsCm[i]);
+    d += ` L ${x} ${y}`;
+  }
+  return d + " Z";
+}
+
+function drawReferenceLayer(){
+  ensureLayers();
+  if(!refLayer) return;
+  refLayer.innerHTML = "";
+
+  if(!showReference) return;
+
+  const lay = computeDualLayout();
+  refLayer.setAttribute("transform", `translate(${lay.refTx} ${lay.refTy})`);
+  refLayer.style.opacity = String(referenceOpacity);
+
+  for(const p of PIECES){
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", ptsToPathCm(p.pts));
+    path.setAttribute("class","refOutline");
+    refLayer.appendChild(path);
+  }
+}
+
+function assembledPositions(){
+  if(showReference){
+    const lay = computeDualLayout();
+    const pos = {};
+    for(const piece of PIECES){
+      pos[piece.id] = { tx: lay.curTx, ty: lay.curTy, rot: 0 };
+    }
+    return pos;
+  }
+
+    const w = stage.clientWidth || stage.getBoundingClientRect().width;
+    const h = stage.clientHeight || stage.getBoundingClientRect().height;
+
+    updateViewScale();
+    const eff = (mode==="multiplicative") ? (coeff * viewScale) : 1;
+
+    const puzzleW = toPx(11 * eff);
+    const puzzleH = toPx(11 * eff);
+
+    const M = 20;
+    const extraTop = toPx(0.55 * eff);
+    const extraBottom = toPx(0.35 * eff);
+
+    const bboxW = puzzleW;
+    const bboxH = puzzleH + extraTop + extraBottom;
+
+    let left = (w - bboxW) / 2;
+    let top = (h - bboxH) / 2 + extraTop; // top = sommet du carré (pas du bbox)
+
+    // Petit confort visuel : on descend très légèrement l'ensemble au départ.
+    top += 10;
+
+    left = Math.max(M, left);
+    top = Math.max(M + extraTop, top);
+
+    const bboxBottom = top + puzzleH + extraBottom;
+    if(bboxBottom > h - M){
+      top -= (bboxBottom - (h - M));
+    }
+    top = Math.max(M + extraTop, top);
+
+    const baseTx = left;
+    const baseTy = top + puzzleH;
+
+    const pos = {};
+    for(const piece of PIECES){
+      pos[piece.id] = { tx: baseTx, ty: baseTy, rot: 0 };
+    }
+    return pos;
 }
 
 let currentPositions = assembledPositions();
@@ -872,7 +1373,7 @@ function applyPositions(pos){
 function applyAdditiveScatter(){
   const base = assembledPositions();
   const center = {x:5.5, y:5.5};
-  const scatterCm = 0.65;
+  const scatterCm = 3.6;
 
   for(const piece of PIECES){
     const [cx, cy] = centroidPolygon(piece.pts);
@@ -941,7 +1442,41 @@ function redrawKeepingPositions(){
     const init = existing[p.id] || currentPositions[p.id] || {tx:80,ty:80,rot:0};
     addPiece(p, init);
   }
+  // Si la référence est activée : on garde le centrage vertical (puzzle au milieu)
+  // entre le puzzle courant et la silhouette, même quand on change d'échelle.
+  // On ne force l'alignement que si les pièces sont encore "assemblées" (toutes au même tx/ty),
+  // pour éviter de déplacer un puzzle que l'enseignant aurait déjà éclaté volontairement.
+  if(showReference){
+    const lay = computeDualLayout();
+    const id0 = PIECES[0].id;
+    const g0 = document.querySelector('.piece[data-id="'+id0+'"]');
+    if(g0){
+      let assembledLike = true;
+      const eps = 1.5;
+      document.querySelectorAll(".piece").forEach(g=>{
+        if(Math.abs((g._tx||0) - (g0._tx||0)) > eps || Math.abs((g._ty||0) - (g0._ty||0)) > eps){
+          assembledLike = false;
+        }
+      });
+      if(assembledLike){
+        const dx = lay.curTx - g0._tx;
+        const dy = lay.curTy - g0._ty;
+        if(isFinite(dx) && isFinite(dy) && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)){
+          document.querySelectorAll(".piece").forEach(g=>{
+            if(typeof g._tx === "number" && typeof g._ty === "number"){
+              g._tx += dx;
+              g._ty += dy;
+              applyTransform(g);
+              currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot || 0};
+            }
+          });
+        }
+      }
+    }
+  }
+  drawReferenceLayer();
   if(selectedId) selectPiece(selectedId);
+  markLabelsDirty();
 }
 
 function nudgeAllPiecesIntoView(){
@@ -1001,6 +1536,69 @@ function nudgeAllPiecesIntoView(){
   });
 }
 
+/* --- PATCHL5 : stabilité plein écran / resize ---
+   Problème observé : après entrée/sortie plein écran (ou resize), le recalcul de PX_PER_CM
+   change l'échelle, mais les translations (tx/ty) restaient en "anciens pixels".
+   Du coup la figure pouvait sortir du viewport jusqu'à recliquer sur Agrandir/Réduire.
+   Solution minimaliste : à chaque changement de viewport, on:
+   1) attend que le layout soit stabilisé (2 frames)
+   2) recalcule PX_PER_CM
+   3) rescaille les positions existantes par le ratio de PX_PER_CM
+   4) redessine et on "nudge" pour garantir que tout reste visible
+*/
+let _viewportRAF = null;
+function scheduleViewportReflow(){
+  if(_viewportRAF) cancelAnimationFrame(_viewportRAF);
+  _viewportRAF = requestAnimationFrame(()=>{
+    _viewportRAF = requestAnimationFrame(()=>{
+      _viewportRAF = null;
+      if(typeof stage === "undefined") return;
+
+      const hasPieces = !!document.querySelector(".piece");
+      const oldPP = PX_PER_CM;
+      recomputePxPerCm();
+      if(!hasPieces) return;
+
+      const ratio = PX_PER_CM / oldPP;
+      if(isFinite(ratio) && Math.abs(ratio - 1) > 1e-6){
+        document.querySelectorAll(".piece").forEach(g=>{
+          if(typeof g._tx === "number" && typeof g._ty === "number"){
+            g._tx *= ratio;
+            g._ty *= ratio;
+            applyTransform(g);
+            currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot || 0};
+          }
+        });
+      }
+      redrawKeepingPositions();
+      // Si on vient de basculer l'affichage Référence, on translate toutes les pièces d'un même delta
+      // pour que le puzzle "courant" se place automatiquement à côté de la silhouette (sans superposition).
+      if(_pendingBaseShift){
+        const after = getAssembledBase();
+        const beforeScaled = { tx: _pendingBaseShift.tx * ratio, ty: _pendingBaseShift.ty * ratio };
+        const dx = after.tx - beforeScaled.tx;
+        const dy = after.ty - beforeScaled.ty;
+
+        if(isFinite(dx) && isFinite(dy) && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)){
+          document.querySelectorAll(".piece").forEach(g=>{
+            if(typeof g._tx === "number" && typeof g._ty === "number"){
+              g._tx += dx;
+              g._ty += dy;
+              applyTransform(g);
+              currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot || 0};
+            }
+          });
+        }
+        _pendingBaseShift = null;
+        drawReferenceLayer();
+      }
+
+      nudgeAllPiecesIntoView();
+    });
+  });
+}
+
+
 function resetAssembled(){
   const pos = assembledPositions();
   document.querySelectorAll(".piece").forEach(g=>{
@@ -1009,6 +1607,8 @@ function resetAssembled(){
     applyTransform(g);
     currentPositions[g.dataset.id] = {tx:g._tx, ty:g._ty, rot:g._rot};
   });
+  drawReferenceLayer();
+  markLabelsDirty();
 }
 
 function setAgrandissement(){ coeff = 7/4; setMode("multiplicative"); nudgeAllPiecesIntoView(); }
@@ -1020,11 +1620,63 @@ function toggleLengths(){
   redrawKeepingPositions();
 }
 
+
+function syncReferenceUI(){
+  const btn = document.getElementById("btnRef");
+  if(btn) btn.textContent = "Référence : " + (showReference ? "ON" : "OFF");
+
+  const cb = document.getElementById("refToggle");
+  if(cb) cb.checked = !!showReference;
+
+  const side = document.getElementById("refSide");
+  if(side) side.value = referenceSide;
+
+  const op = document.getElementById("refOpacity");
+  if(op) op.value = String(referenceOpacity);
+}
+
+function getAssembledBase(){
+  const pos = assembledPositions();
+  const id0 = PIECES[0].id;
+  const any = pos[id0];
+  return {tx:any.tx, ty:any.ty};
+}
+
+function setShowReference(v){
+  const want = !!v;
+  if(want === showReference) return;
+
+  // On mémorise où le puzzle "courant" est censé se placer (en pixels) AVANT le toggle,
+  // pour pouvoir déplacer toutes les pièces en bloc et éviter tout chevauchement.
+  _pendingBaseShift = getAssembledBase();
+
+  showReference = want;
+  syncReferenceUI();
+  scheduleViewportReflow();
+}
+
+function setReferenceSide(v){
+  referenceSide = (v === "right") ? "right" : "left";
+  syncReferenceUI();
+  redrawKeepingPositions();
+  nudgeAllPiecesIntoView();
+}
+
+function setReferenceOpacity(v){
+  const n = Number(v);
+  if(!isFinite(n)) return;
+  referenceOpacity = Math.max(0.05, Math.min(0.95, n));
+  if(refLayer) refLayer.style.opacity = String(referenceOpacity);
+  syncReferenceUI();
+}
+
+
 // Modal
 const overlay = document.getElementById("overlay");
 function openOverlay(){
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden","false");
+  syncReferenceUI();
 }
 function closeOverlay(){
   overlay.classList.remove("active");
@@ -1042,9 +1694,25 @@ document.getElementById("btnAgrandir").addEventListener("click", setAgrandisseme
 document.getElementById("btnReduire").addEventListener("click", setReduction);
 document.getElementById("btnReset").addEventListener("click", resetAssembled);
 document.getElementById("btnLong").addEventListener("click", toggleLengths);
+const btnRef = document.getElementById("btnRef");
+if(btnRef) btnRef.addEventListener("click", ()=> setShowReference(!showReference));
 document.getElementById("btnEnonce").addEventListener("click", openOverlay);
-document.getElementById("btnPrint").addEventListener("click", printEnonce);
+const btnPrint = document.getElementById("btnPrint");
+if(btnPrint) btnPrint.addEventListener("click", printEnonce);
+const btnPrintInEnonce = document.getElementById("btnPrintInEnonce");
+if(btnPrintInEnonce) btnPrintInEnonce.addEventListener("click", printEnonce);
 document.getElementById("closeOverlay").addEventListener("click", closeOverlay);
+
+
+const refToggle = document.getElementById("refToggle");
+if(refToggle) refToggle.addEventListener("change", ()=> setShowReference(refToggle.checked));
+
+const refSide = document.getElementById("refSide");
+if(refSide) refSide.addEventListener("change", ()=> setReferenceSide(refSide.value));
+
+const refOpacity = document.getElementById("refOpacity");
+if(refOpacity) refOpacity.addEventListener("input", ()=> setReferenceOpacity(refOpacity.value));
+
 
 document.getElementById("btnFS").addEventListener("click", ()=>{
   try{
@@ -1055,8 +1723,9 @@ document.getElementById("btnFS").addEventListener("click", ()=>{
     }
   }catch(e){}
 });
-document.addEventListener("fullscreenchange", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
-document.addEventListener("webkitfullscreenchange", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
+document.addEventListener("fullscreenchange", scheduleViewportReflow);
+window.addEventListener("orientationchange", scheduleViewportReflow);
+document.addEventListener("webkitfullscreenchange", scheduleViewportReflow);
 overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeOverlay(); });
 
 /* Puzzle dans l’énoncé */
@@ -1133,11 +1802,13 @@ function init(){
   recomputePxPerCm();
   currentPositions = assembledPositions();
   for(const p of PIECES) addPiece(p, currentPositions[p.id]);
+  drawReferenceLayer();
   selectPiece("p1");
+  syncReferenceUI();
 }
 requestAnimationFrame(init);
 
-window.addEventListener("resize", ()=>{ recomputePxPerCm(); updateViewScale(); redrawKeepingPositions(); });
+window.addEventListener("resize", scheduleViewportReflow);
 </script>
 
 </body>
