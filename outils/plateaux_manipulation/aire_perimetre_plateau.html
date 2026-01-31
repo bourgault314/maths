@@ -1,0 +1,1558 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aire & Périmètre — Plateau</title>
+  <style>
+    :root{
+      --bg:#eef3ff;
+      --ink:#142033;
+      --muted:#5b6b83;
+
+      --panel:#ffffff;
+      --panel2:#f7f9ff;
+
+      --grid:#a7b2cb;
+      --gridOuter: 1px;
+      --gridInner: 1px;
+
+      --subgrid: rgba(20,32,51,.18);
+
+      --tile:#8fd3d8;
+      --tile2:#7fc6cc;
+      --tileInk:#0b4f55;
+
+      --perim:#e02d2d;
+      --perimW:3px;
+
+      --cell: 48px;
+    }
+
+    body.projection{
+      --bg:#ffffff;
+      --ink:#0b1322;
+      --muted:#2c3a52;
+
+      --grid:#8796bc;
+      --gridOuter: 2px;
+      --gridInner: 1px;
+
+      --subgrid: rgba(11,19,34,.22);
+
+      --tile:#6bd0d7;
+      --tile2:#53c5cd;
+      --tileInk:#063f44;
+
+      --perim:#d50000;
+      --perimW:5px;
+
+      --cell: 62px;
+    }
+
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1400px 900px at 18% 10%, #ffffff, var(--bg));
+      color: var(--ink);
+      overflow:hidden;
+    }
+
+    body.panning{ user-select:none; }
+    body.panReady .gridWrap,
+    body.panning  .gridWrap{ touch-action:none; }
+
+    .app{
+      height:100vh;
+      width:100vw;
+      display:flex;
+      flex-direction:column;
+      background:var(--panel);
+    }
+
+    /* ========= TOPBAR (2 lignes) ========= */
+    .topbar{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding: 10px 12px 8px;
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.88));
+      border-bottom: 1px solid #e9edf7;
+      backdrop-filter: blur(8px);
+      position: relative;
+      z-index: 30;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background:#fff;
+      border:1px solid #e6ebf6;
+      box-shadow: 0 2px 0 rgba(10,20,40,.03);
+      white-space:nowrap;
+      flex: 0 0 auto;
+    }
+    .brand .title{ font-weight:900; letter-spacing:.2px; font-size:14px; }
+    .brand .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--tileInk);
+      box-shadow: 0 0 0 3px rgba(11,79,85,.10);
+    }
+
+    /* Tout le menu sur 1 ligne : pas de wrap, scroll horizontal si écran trop petit */
+    .toolbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:1;
+      min-width:0;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding-bottom:2px;
+      scrollbar-width: thin;
+    }
+    .toolbar::-webkit-scrollbar{ height:8px; }
+    .toolbar::-webkit-scrollbar-thumb{ background:#d8def0; border-radius:999px; }
+
+    button, select{
+      border-radius: 12px;
+      border:1px solid #dfe3ee;
+      background:#fff;
+      padding: 8px 10px;
+      font-size:14px;
+      color: var(--ink);
+      box-shadow: 0 2px 0 rgba(10,20,40,.03);
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+      flex: 0 0 auto;
+    }
+    button:active{ transform: translateY(1px); }
+    button.good{ background:#137a4a; color:#fff; border-color:#137a4a; }
+    button.neutral{ background:#f1f3f8; color:#1f2a44; border-color:#dfe3ee; }
+    button.neutral.on{
+      background:#e7efff;
+      border-color:#c7d7ff;
+      color:#1f2a44;
+    }
+    button:focus{ outline:none; box-shadow: 0 2px 0 rgba(10,20,40,.03); }
+
+    .seg{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 14px;
+      border:1px solid #e6ebf6;
+      background: var(--panel2);
+      flex: 0 0 auto;
+    }
+    .seg label{ font-size:13px; color: var(--muted); font-weight:800; }
+
+    .zoomBadge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 58px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid #e3e7f2;
+      background:#fff;
+      box-shadow: 0 2px 0 rgba(10,20,40,.03);
+      font-weight: 950;
+      color: var(--muted);
+    }
+    body.projection .zoomBadge{ font-size:16px; }
+
+    /* 2e ligne : métriques */
+    .metricsRow{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      padding: 0 2px 2px;
+      min-height: 44px;
+    }
+
+    .metric{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border:1px solid #e3e7f2;
+      background:#fff;
+      box-shadow: 0 2px 0 rgba(10,20,40,.03);
+      font-weight: 950;
+      white-space:nowrap;
+    }
+    .metric .k{
+      font-size:12px;
+      color: var(--muted);
+      font-weight:850;
+      letter-spacing:.2px;
+    }
+    .metric .v{
+      font-size:22px;
+      line-height:1;
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+    }
+    .metric.area .v{ color: var(--tileInk); }
+    .metric.perim .v{ color: var(--perim); }
+
+    .unit{
+      font-size:12px;
+      font-weight:850;
+      color: var(--muted);
+      line-height:1;
+      transform: translateY(1px);
+    }
+
+    .metric.muted{ opacity:.85; }
+    .metric.muted .v{ color:#8b95ad; }
+
+    body.projection .metric .v{ font-size:30px; }
+    body.projection .metric .k{ font-size:14px; }
+    body.projection .unit{ font-size:14px; transform: translateY(2px); }
+
+    /* Compare metrics (2 figures) */
+    .compareMetrics{
+      display:none;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      justify-content:flex-end;
+    }
+    .mini{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border:1px solid #e3e7f2;
+      background:#fff;
+      box-shadow: 0 2px 0 rgba(10,20,40,.03);
+      white-space:nowrap;
+      font-weight:950;
+    }
+    .mini .tag{
+      font-size:12px;
+      color: var(--muted);
+      font-weight:950;
+      letter-spacing:.2px;
+    }
+    .mini .nums{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      font-size:18px;
+    }
+    body.projection .mini .nums{ font-size:24px; }
+
+    /* ========= Question + Status ========= */
+    .infoBar{
+      margin: 10px 14px 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border:1px solid #e6ebf6;
+      background:#fbfcff;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.25;
+      text-align:center; /* ✅ centré */
+    }
+    body.projection .infoBar{ font-size:24px; }
+
+    .status{
+      margin: 10px 14px 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border:1px solid #e6ebf6;
+      background:#fff;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.25;
+      text-align:center;
+    }
+    .status.ok{
+      background:#e9fff3;
+      border-color:#bfead0;
+      color:#0b4f2d;
+    }
+    .status.bad{
+      background:#fff0f0;
+      border-color:#ffd0d0;
+      color:#7a0f0f;
+    }
+    body.projection .status{ font-size:22px; }
+
+    .infoBar:empty, .status:empty{ display:none; }
+
+    /* ========= Popover options ========= */
+    .popover{
+      position:absolute;
+      top: 64px;
+      left: 12px;
+      width: 380px;
+      max-width: calc(100vw - 24px);
+      background:#fff;
+      border:1px solid #e6ebf6;
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgba(10,20,40,.18);
+      padding: 12px;
+      display:none;
+      z-index: 50;
+    }
+    .popover.on{ display:block; }
+
+    .popGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .popRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid #eef2fb;
+      background: #fbfcff;
+    }
+    .popRow span{ font-weight:900; color: var(--ink); font-size: 13px; }
+    .popRow small{
+      display:block;
+      font-weight:800;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top:2px;
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color: var(--muted);
+      font-weight:800;
+      font-size:13px;
+      user-select:none;
+    }
+    .toggle input{ transform: scale(1.1); }
+
+    .popFull{
+      margin-top:10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid #eef2fb;
+      background: #fbfcff;
+    }
+
+    /* ========= Boards ========= */
+    .boardsSingle, .boardsCompare{ flex:1; display:block; }
+    .boardsCompare{ display:none; }
+
+    .gridWrap{
+      height:100%;
+      overflow:auto;
+      padding: 6px 14px 12px;
+      background:#fff;
+      box-sizing:border-box;
+    }
+
+    .grid{
+      width: fit-content;
+      margin: 0 auto;
+      display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-template-rows: repeat(var(--rows), var(--cell));
+      border-radius: 16px;
+      overflow:hidden;
+      border: var(--gridOuter) solid var(--grid);
+      background:#fff;
+      touch-action:none;
+    }
+
+    .cell{
+      width: var(--cell);
+      height: var(--cell);
+      position: relative;
+      background:#fff;
+      user-select:none;
+      cursor:pointer;
+
+      border:none;
+      box-shadow:
+        inset calc(-1 * var(--gridInner)) 0 0 var(--grid),
+        inset 0 calc(-1 * var(--gridInner)) 0 var(--grid);
+    }
+
+    .cell.on{ background: linear-gradient(180deg, var(--tile), var(--tile2)); }
+    .cell.on::after{
+      content:"";
+      position:absolute;
+      inset:2px;
+      border-radius:6px;
+      border: 1px solid rgba(20,32,51,.16);
+      pointer-events:none;
+      z-index: 2;
+    }
+
+    .lbl{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 950;
+      font-size: 11px;
+      color: rgba(20,32,51,.22);
+      pointer-events:none;
+      user-select:none;
+      z-index: 1;
+      letter-spacing:.2px;
+    }
+    body.projection .lbl{ font-size:14px; }
+
+    .subgrid{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      z-index: 1;
+    }
+    body.cahier .subgrid{ opacity:1; }
+    .subgrid::before, .subgrid::after{
+      content:"";
+      position:absolute;
+      background: var(--subgrid);
+    }
+    .subgrid::before{ top:0; bottom:0; left:50%; width:1px; transform:translateX(-.5px); }
+    .subgrid::after{ left:0; right:0; top:50%; height:1px; transform:translateY(-.5px); }
+
+    .edge{ position:absolute; background:transparent; pointer-events:none; opacity:0; z-index:3; }
+    .edge.on{ opacity:1; background: var(--perim); }
+    .edge.t{left:0; top:0; width:100%; height:var(--perimW)}
+    .edge.b{left:0; bottom:0; width:100%; height:var(--perimW)}
+    .edge.l{left:0; top:0; width:var(--perimW); height:100%}
+    .edge.r{right:0; top:0; width:var(--perimW); height:100%}
+
+    body.panReady .cell{ cursor: grab; }
+    body.panning .cell{ cursor: grabbing; }
+
+    /* ========= Comparaison layout ========= */
+    .compareLayout{
+      height:100%;
+      display:flex;
+      gap:12px;
+      padding: 6px 14px 12px;
+      background:#fff;
+      box-sizing:border-box;
+    }
+    .compareCol{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      min-width: 240px;
+      border:1px solid #eef2fb;
+      border-radius: 16px;
+      background:#fbfcff;
+      overflow:hidden;
+    }
+    .compareHead{
+      padding: 10px 12px;
+      font-weight: 950;
+      color: var(--ink);
+      border-bottom:1px solid #eef2fb;
+      background:#ffffff;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .compareHint{
+      font-weight:900;
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .compareWrap{
+      flex:1;
+      overflow:auto;
+      padding: 10px;
+    }
+
+    /* Exercise group stays in top line without breaking layout */
+    .exGroup{ display:flex; gap:10px; align-items:center; }
+    .exGroup.hidden{ display:none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <div class="topbar">
+      <div class="topRow">
+        <div class="brand">
+          <div class="dot"></div>
+          <div class="title">Aire & périmètre</div>
+        </div>
+
+        <div class="toolbar">
+          <div class="seg">
+            <label>Mode</label>
+            <select id="modeSel" style="padding:7px 10px;">
+              <option value="free">Libre</option>
+              <option value="train">Entraînement</option>
+              <option value="compare">Comparaison</option>
+            </select>
+          </div>
+
+          <button id="btnPrev" class="neutral" title="Précédent">⟲</button>
+          <button id="btnNext" class="neutral" title="Suivant">⟳</button>
+          <button id="btnClear" class="neutral" title="Effacer">🧽</button>
+
+          <div class="exGroup hidden" id="exGroup">
+            <button id="btnNew" class="neutral">Nouvel exercice</button>
+            <button id="btnValidate" class="good">Valider</button>
+            <button id="btnRestart" class="neutral">Recommencer</button>
+          </div>
+
+          <button id="btnZoomOut" class="neutral" title="Zoom -">−</button>
+          <button id="btnZoomIn" class="neutral" title="Zoom +">+</button>
+          <button id="btnZoomReset" class="neutral" title="Revenir à 100%">100%</button>
+          <span class="zoomBadge" id="zoomPct">100%</span>
+
+          <button id="btnProjection" class="neutral">Projection</button>
+          <button id="btnFullscreen" class="neutral">⛶ Plein écran</button>
+          <button id="btnOptions" class="neutral">⚙️ Options</button>
+        </div>
+      </div>
+
+      <div class="metricsRow" id="metricsRow">
+        <!-- normal metrics -->
+        <div class="metric area" id="pillA">
+          <div class="k">Aire</div>
+          <div class="v"><span id="areaTop">0</span> <span class="unit" id="areaUnit"></span></div>
+        </div>
+        <div class="metric perim" id="pillP">
+          <div class="k">Périmètre</div>
+          <div class="v"><span id="perimTop">0</span> <span class="unit" id="perimUnit"></span></div>
+        </div>
+
+        <!-- compare metrics -->
+        <div class="compareMetrics" id="compareMetrics">
+          <div class="mini">
+            <div class="tag">Fig 1</div>
+            <div class="nums">
+              <span>A=<span id="A1">0</span></span>
+              <span>P=<span id="P1">0</span></span>
+            </div>
+          </div>
+          <div class="mini">
+            <div class="tag">Fig 2</div>
+            <div class="nums">
+              <span>A=<span id="A2">0</span></span>
+              <span>P=<span id="P2">0</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="popover" id="pop">
+        <div class="popGrid">
+          <div class="popRow">
+            <div>
+              <span>Contour</span>
+              <small>Périmètre en rouge</small>
+            </div>
+            <label class="toggle">
+              <input id="showPerim" type="checkbox" checked />
+            </label>
+          </div>
+
+          <div class="popRow">
+            <div>
+              <span>Cahier</span>
+              <small>Case coupée en 4</small>
+            </div>
+            <label class="toggle">
+              <input id="cahierToggle" type="checkbox" />
+            </label>
+          </div>
+
+          <div class="popRow" id="connectedRow">
+            <div>
+              <span>1 seul morceau</span>
+              <small>Figure d’un seul tenant</small>
+            </div>
+            <label class="toggle">
+              <input id="needConnected" type="checkbox" />
+            </label>
+          </div>
+
+          <div class="popRow">
+            <div>
+              <span>Unités (haut)</span>
+              <small>Mesures affichées</small>
+            </div>
+            <select id="unitsTopSel" style="padding:8px 10px;">
+              <option value="off">OFF</option>
+              <option value="ua">u.a / u.l</option>
+              <option value="cm2">cm² / cm</option>
+            </select>
+          </div>
+
+          <div class="popRow" id="labelsRow">
+            <div>
+              <span>Étiquettes cases</span>
+              <small>Dans les carrés</small>
+            </div>
+            <label class="toggle">
+              <input id="labelsOnGrid" type="checkbox" />
+            </label>
+          </div>
+        </div>
+
+        <div class="popFull">
+          <div style="font-weight:900; color:var(--ink); font-size:13px;">Déplacement</div>
+          <div style="color:var(--muted); font-weight:800; font-size:12px; margin-top:4px;">
+            Maintenir <b>Espace</b> et glisser pour déplacer la vue.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="infoBar" id="prompt"></div>
+    <div class="status" id="status"></div>
+
+    <!-- 1 plateau -->
+    <div class="boardsSingle" id="boardsSingle">
+      <div class="gridWrap" id="gridWrap1">
+        <div class="grid" id="grid1" aria-label="Plateau"></div>
+      </div>
+    </div>
+
+    <!-- 2 plateaux -->
+    <div class="boardsCompare" id="boardsCompare">
+      <div class="compareLayout">
+        <div class="compareCol">
+          <div class="compareHead">
+            <span>Figure 1</span>
+            <span class="compareHint">clic ici = plateau actif</span>
+          </div>
+          <div class="compareWrap" id="gridWrapL">
+            <div class="grid" id="gridL" aria-label="Plateau gauche"></div>
+          </div>
+        </div>
+        <div class="compareCol">
+          <div class="compareHead">
+            <span>Figure 2</span>
+            <span class="compareHint">clic ici = plateau actif</span>
+          </div>
+          <div class="compareWrap" id="gridWrapR">
+            <div class="grid" id="gridR" aria-label="Plateau droit"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+(() => {
+  const ROWS = 14, COLS = 18;
+  const BASE_CELL_NORMAL = 48;
+  const BASE_CELL_PROJ   = 62;
+
+  const pop = document.getElementById('pop');
+  const btnOptions = document.getElementById('btnOptions');
+
+  const boardsSingle = document.getElementById('boardsSingle');
+  const boardsCompare = document.getElementById('boardsCompare');
+
+  const gridWrap1 = document.getElementById('gridWrap1');
+  const grid1 = document.getElementById('grid1');
+
+  const gridWrapL = document.getElementById('gridWrapL');
+  const gridL = document.getElementById('gridL');
+
+  const gridWrapR = document.getElementById('gridWrapR');
+  const gridR = document.getElementById('gridR');
+
+  const modeSel = document.getElementById('modeSel');
+  const showPerim = document.getElementById('showPerim');
+  const needConnected = document.getElementById('needConnected');
+  const connectedRow = document.getElementById('connectedRow');
+  const cahierToggle = document.getElementById('cahierToggle');
+
+  const unitsTopSel = document.getElementById('unitsTopSel');
+  const labelsOnGrid = document.getElementById('labelsOnGrid');
+  const labelsRow = document.getElementById('labelsRow');
+
+  const btnClear = document.getElementById('btnClear');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+
+  const exGroup = document.getElementById('exGroup');
+  const btnNew = document.getElementById('btnNew');
+  const btnValidate = document.getElementById('btnValidate');
+  const btnRestart = document.getElementById('btnRestart');
+
+  const btnZoomOut = document.getElementById('btnZoomOut');
+  const btnZoomIn = document.getElementById('btnZoomIn');
+  const btnZoomReset = document.getElementById('btnZoomReset');
+  const zoomPctEl = document.getElementById('zoomPct');
+
+  const btnProjection = document.getElementById('btnProjection');
+  const btnFullscreen = document.getElementById('btnFullscreen');
+
+  const promptEl = document.getElementById('prompt');
+  const statusEl = document.getElementById('status');
+
+  const pillA = document.getElementById('pillA');
+  const pillP = document.getElementById('pillP');
+  const areaTop = document.getElementById('areaTop');
+  const perimTop = document.getElementById('perimTop');
+  const areaUnitEl = document.getElementById('areaUnit');
+  const perimUnitEl = document.getElementById('perimUnit');
+
+  const compareMetrics = document.getElementById('compareMetrics');
+  const A1El = document.getElementById('A1');
+  const P1El = document.getElementById('P1');
+  const A2El = document.getElementById('A2');
+  const P2El = document.getElementById('P2');
+
+  // ✅ Empêche les boutons de garder le focus
+  document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('mousedown', (e) => e.preventDefault());
+    btn.addEventListener('click', () => btn.blur());
+  });
+  function blurActive(){
+    const ae = document.activeElement;
+    if(ae && typeof ae.blur === 'function') ae.blur();
+  }
+
+  function key(r,c){ return r + ',' + c; }
+  function parseKey(k){ const [r,c] = k.split(',').map(Number); return {r,c}; }
+  function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
+
+  function neighbors4(r,c){
+    return [
+      {r:r-1,c},
+      {r, c:c+1},
+      {r:r+1,c},
+      {r, c:c-1}
+    ].filter(p => inBounds(p.r,p.c));
+  }
+
+  function baseCell(){
+    return document.body.classList.contains('projection') ? BASE_CELL_PROJ : BASE_CELL_NORMAL;
+  }
+  function getCellSize(){
+    const v = getComputedStyle(document.body).getPropertyValue('--cell').trim();
+    return parseInt(v,10) || BASE_CELL_NORMAL;
+  }
+  function setCellSize(px){
+    const clamped = Math.max(24, Math.min(140, px));
+    document.body.style.setProperty('--cell', clamped + 'px');
+    return clamped;
+  }
+  function updateZoomBadge(){
+    const pct = Math.round((getCellSize() / baseCell()) * 100);
+    zoomPctEl.textContent = pct + '%';
+  }
+
+  function unitSystem(){ return unitsTopSel.value; }
+  function applyUnits(){
+    const sys = unitSystem();
+    if(sys === 'ua'){
+      areaUnitEl.textContent = 'u.a';
+      perimUnitEl.textContent = 'u.l';
+    }else if(sys === 'cm2'){
+      areaUnitEl.textContent = 'cm²';
+      perimUnitEl.textContent = 'cm';
+    }else{
+      areaUnitEl.textContent = '';
+      perimUnitEl.textContent = '';
+    }
+
+    const allowLabels = (sys !== 'off');
+    labelsOnGrid.disabled = !allowLabels;
+    labelsRow.style.opacity = allowLabels ? '1' : '.55';
+    if(!allowLabels) labelsOnGrid.checked = false;
+
+    let cellTxt = '';
+    if(labelsOnGrid.checked){
+      if(sys === 'ua') cellTxt = '1u.a';
+      if(sys === 'cm2') cellTxt = '1 cm²';
+    }
+    boardSingle.applyLabels(cellTxt);
+    boardLeft.applyLabels(cellTxt);
+    boardRight.applyLabels(cellTxt);
+
+    updatePrompt();
+    refreshMetrics();
+  }
+
+  function status(type, html){
+    statusEl.classList.remove('ok','bad');
+    if(type === 'ok') statusEl.classList.add('ok');
+    if(type === 'bad') statusEl.classList.add('bad');
+    statusEl.innerHTML = html || '';
+  }
+  function clearStatus(){
+    statusEl.classList.remove('ok','bad');
+    statusEl.innerHTML = '';
+  }
+
+  /* =========================
+     Board factory
+  ========================== */
+  function makeBoard(gridEl, wrapEl){
+    gridEl.style.setProperty('--rows', ROWS);
+    gridEl.style.setProperty('--cols', COLS);
+
+    const board = {
+      gridEl, wrapEl,
+      on: new Set(),
+      undoStack: [],
+      redoStack: [],
+      cells: [],
+      labels: []
+    };
+
+    gridEl.innerHTML = '';
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+
+        const lbl = document.createElement('div');
+        lbl.className = 'lbl';
+        cell.appendChild(lbl);
+        board.labels.push(lbl);
+
+        const sub = document.createElement('div');
+        sub.className = 'subgrid';
+        cell.appendChild(sub);
+
+        const eT = document.createElement('div'); eT.className = 'edge t';
+        const eR = document.createElement('div'); eR.className = 'edge r';
+        const eB = document.createElement('div'); eB.className = 'edge b';
+        const eL = document.createElement('div'); eL.className = 'edge l';
+        cell.appendChild(eT); cell.appendChild(eR); cell.appendChild(eB); cell.appendChild(eL);
+
+        gridEl.appendChild(cell);
+        board.cells.push(cell);
+      }
+    }
+
+    board.idx = (r,c)=> r*COLS + c;
+    board.snapshot = ()=> Array.from(board.on).sort();
+    board.pushUndo = ()=>{
+      board.undoStack.push(board.snapshot());
+      if(board.undoStack.length > 250) board.undoStack.shift();
+      board.redoStack.length = 0;
+    };
+    board.applyState = (arr)=>{
+      board.on = new Set(arr || []);
+      board.render();
+    };
+    board.setCell = (r,c,val)=>{
+      const k = key(r,c);
+      const had = board.on.has(k);
+      if(val && !had){ board.on.add(k); return true; }
+      if(!val && had){ board.on.delete(k); return true; }
+      return false;
+    };
+    board.clear = (withUndo=true)=>{
+      if(withUndo) board.pushUndo();
+      board.on.clear();
+      board.render();
+    };
+    board.resetHistory = ()=>{
+      board.undoStack.length = 0;
+      board.redoStack.length = 0;
+    };
+    board.undo = ()=>{
+      if(board.undoStack.length === 0) return;
+      board.redoStack.push(board.snapshot());
+      const prev = board.undoStack.pop();
+      board.applyState(prev);
+    };
+    board.redo = ()=>{
+      if(board.redoStack.length === 0) return;
+      board.undoStack.push(board.snapshot());
+      const next = board.redoStack.pop();
+      board.applyState(next);
+    };
+    board.computeArea = ()=> board.on.size;
+    board.computePerimeterEdges = ()=>{
+      const edgesMap = new Map();
+      let p = 0;
+      for(const k of board.on){
+        const {r,c} = parseKey(k);
+        const t = !board.on.has(key(r-1,c));
+        const rgt = !board.on.has(key(r,c+1));
+        const b = !board.on.has(key(r+1,c));
+        const l = !board.on.has(key(r,c-1));
+        edgesMap.set(k, {t,r:rgt,b,l});
+        p += (t?1:0) + (rgt?1:0) + (b?1:0) + (l?1:0);
+      }
+      return {p, edgesMap};
+    };
+    board.isConnected = ()=>{
+      const S = board.on;
+      if(S.size === 0) return true;
+      const start = S.values().next().value;
+      const q = [parseKey(start)];
+      const seen = new Set([start]);
+      while(q.length){
+        const {r,c} = q.shift();
+        for(const nb of neighbors4(r,c)){
+          const kk = key(nb.r, nb.c);
+          if(S.has(kk) && !seen.has(kk)){
+            seen.add(kk);
+            q.push(nb);
+          }
+        }
+      }
+      return seen.size === S.size;
+    };
+    board.applyLabels = (txt)=>{
+      for(const lbl of board.labels) lbl.textContent = txt || '';
+    };
+    board.render = ()=>{
+      for(const cell of board.cells){
+        const r = +cell.dataset.r;
+        const c = +cell.dataset.c;
+        const k = key(r,c);
+        cell.classList.toggle('on', board.on.has(k));
+        const edges = cell.querySelectorAll('.edge');
+        for(const e of edges) e.classList.remove('on');
+      }
+      const {edgesMap} = board.computePerimeterEdges();
+      if(showPerim.checked){
+        for(const [k, ed] of edgesMap.entries()){
+          const {r,c} = parseKey(k);
+          const cell = board.cells[board.idx(r,c)];
+          const [eT,eR,eB,eL] = cell.querySelectorAll('.edge');
+          if(ed.t) eT.classList.add('on');
+          if(ed.r) eR.classList.add('on');
+          if(ed.b) eB.classList.add('on');
+          if(ed.l) eL.classList.add('on');
+        }
+      }
+    };
+    return board;
+  }
+
+  const boardSingle = makeBoard(grid1, gridWrap1);
+  const boardLeft   = makeBoard(gridL, gridWrapL);
+  const boardRight  = makeBoard(gridR, gridWrapR);
+
+  let activeBoard = boardSingle;
+  function setActive(b){ activeBoard = b; }
+
+  /* =========================
+     Paint / Pan
+  ========================== */
+  let isPointerDown = false;
+  let paintMode = null;
+
+  let spaceDown = false;
+  let isPanning = false;
+  let panStart = null;
+
+  let lastPointer = {x: 0, y: 0};
+
+  function cellFromPointer(e){
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el && el.closest && el.closest('.cell');
+    if(!cell) return null;
+    return {r:+cell.dataset.r, c:+cell.dataset.c, grid: cell.closest('.grid')};
+  }
+
+  function startPan(board, x, y){
+    isPanning = true;
+    document.body.classList.add('panning');
+    panStart = { x, y, left: board.wrapEl.scrollLeft, top: board.wrapEl.scrollTop, board };
+  }
+  function movePan(x, y){
+    if(!isPanning || !panStart) return;
+    const dx = x - panStart.x;
+    const dy = y - panStart.y;
+    const w = panStart.board.wrapEl;
+    w.scrollLeft = Math.round(panStart.left - dx);
+    w.scrollTop  = Math.round(panStart.top  - dy);
+  }
+  function endPan(){
+    isPanning = false;
+    panStart = null;
+    document.body.classList.remove('panning');
+  }
+
+  function onPointerDownFactory(board){
+    board.gridEl.addEventListener('pointerdown', (e) => {
+      lastPointer.x = e.clientX; lastPointer.y = e.clientY;
+      blurActive();
+      setActive(board);
+
+      if(spaceDown){
+        e.preventDefault();
+        board.gridEl.setPointerCapture(e.pointerId);
+        isPointerDown = false;
+        paintMode = null;
+        startPan(board, e.clientX, e.clientY);
+        return;
+      }
+
+      const pos = cellFromPointer(e);
+      if(!pos) return;
+
+      e.preventDefault();
+      board.gridEl.setPointerCapture(e.pointerId);
+      isPointerDown = true;
+
+      const k = key(pos.r,pos.c);
+      paintMode = board.on.has(k) ? 'remove' : 'add';
+
+      board.pushUndo();
+      board.setCell(pos.r,pos.c, paintMode === 'add');
+      board.render();
+      refreshMetrics();
+    });
+
+    board.gridEl.addEventListener('pointermove', (e) => {
+      lastPointer.x = e.clientX; lastPointer.y = e.clientY;
+
+      if(isPanning){
+        e.preventDefault();
+        movePan(e.clientX, e.clientY);
+        return;
+      }
+
+      if(!isPointerDown) return;
+      const pos = cellFromPointer(e);
+      if(!pos) return;
+
+      const changed = board.setCell(pos.r,pos.c, paintMode === 'add');
+      if(changed){
+        board.render();
+        refreshMetrics();
+      }
+    });
+
+    function endPointer(){
+      isPointerDown = false;
+      paintMode = null;
+      endPan();
+    }
+    board.gridEl.addEventListener('pointerup', endPointer);
+    board.gridEl.addEventListener('pointercancel', endPointer);
+  }
+  onPointerDownFactory(boardSingle);
+  onPointerDownFactory(boardLeft);
+  onPointerDownFactory(boardRight);
+
+  /* =========================
+     Zoom (molette)
+  ========================== */
+  function zoomAt(board, newPx, clientX, clientY){
+    const old = getCellSize();
+    const rect = board.wrapEl.getBoundingClientRect();
+    const localX = (clientX - rect.left);
+    const localY = (clientY - rect.top);
+    const x = localX + board.wrapEl.scrollLeft;
+    const y = localY + board.wrapEl.scrollTop;
+
+    const applied = setCellSize(newPx);
+    const ratio = applied / old;
+
+    board.wrapEl.scrollLeft = x * ratio - localX;
+    board.wrapEl.scrollTop  = y * ratio - localY;
+
+    updateZoomBadge();
+  }
+  function zoomCenter(board, px){
+    const rect = board.wrapEl.getBoundingClientRect();
+    zoomAt(board, px, rect.left + rect.width/2, rect.top + rect.height/2);
+  }
+
+  [gridWrap1, gridWrapL, gridWrapR].forEach((wrap) => {
+    wrap.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const b = (wrap === gridWrap1) ? boardSingle : (wrap === gridWrapL ? boardLeft : boardRight);
+      setActive(b);
+      const dir = (e.deltaY < 0) ? +1 : -1;
+      const step = document.body.classList.contains('projection') ? 7 : 5;
+      zoomAt(b, getCellSize() + dir*step, e.clientX, e.clientY);
+    }, {passive:false});
+  });
+
+  btnZoomIn.addEventListener('click', () => zoomCenter(activeBoard, getCellSize() + 6));
+  btnZoomOut.addEventListener('click', () => zoomCenter(activeBoard, getCellSize() - 6));
+  btnZoomReset.addEventListener('click', () => zoomCenter(activeBoard, baseCell()));
+
+  /* ✅ Space pan + anti-focus */
+  window.addEventListener('keydown', (e) => {
+    if(e.code !== 'Space') return;
+    const ae = document.activeElement;
+    const tag = ae && ae.tagName ? ae.tagName.toLowerCase() : '';
+    const isEditable = ae && (ae.isContentEditable || tag === 'input' || tag === 'textarea');
+    if(isEditable) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if(!spaceDown){
+      spaceDown = true;
+      document.body.classList.add('panReady');
+      blurActive();
+
+      if(isPointerDown && !isPanning){
+        isPointerDown = false;
+        paintMode = null;
+        startPan(activeBoard, lastPointer.x, lastPointer.y);
+      }
+    }
+  }, {capture:true});
+
+  window.addEventListener('keyup', (e) => {
+    if(e.code !== 'Space') return;
+    const ae = document.activeElement;
+    const tag = ae && ae.tagName ? ae.tagName.toLowerCase() : '';
+    const isEditable = ae && (ae.isContentEditable || tag === 'input' || tag === 'textarea');
+    if(isEditable) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    spaceDown = false;
+    document.body.classList.remove('panReady');
+    endPan();
+    blurActive();
+  }, {capture:true});
+
+  /* =========================
+     Popover options
+  ========================== */
+  function closePop(){ pop.classList.remove('on'); }
+  btnOptions.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pop.classList.toggle('on');
+  });
+  document.addEventListener('click', (e) => {
+    if(!pop.classList.contains('on')) return;
+    if(pop.contains(e.target) || btnOptions.contains(e.target)) return;
+    closePop();
+  });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closePop(); });
+
+  showPerim.addEventListener('change', () => {
+    boardSingle.render(); boardLeft.render(); boardRight.render();
+  });
+
+  cahierToggle.addEventListener('change', () => {
+    document.body.classList.toggle('cahier', cahierToggle.checked);
+  });
+
+  unitsTopSel.addEventListener('change', applyUnits);
+  labelsOnGrid.addEventListener('change', applyUnits);
+
+  /* =========================
+     Metrics row update
+  ========================== */
+  function refreshMetrics(){
+    const m = modeSel.value;
+
+    if(m === 'compare'){
+      pillA.style.display = 'none';
+      pillP.style.display = 'none';
+      compareMetrics.style.display = 'flex';
+
+      const a1 = boardLeft.computeArea();
+      const p1 = boardLeft.computePerimeterEdges().p;
+      const a2 = boardRight.computeArea();
+      const p2 = boardRight.computePerimeterEdges().p;
+      A1El.textContent = a1;
+      P1El.textContent = p1;
+      A2El.textContent = a2;
+      P2El.textContent = p2;
+      return;
+    }
+
+    compareMetrics.style.display = 'none';
+    pillA.style.display = 'flex';
+    pillP.style.display = 'flex';
+
+    const A = boardSingle.computeArea();
+    const P = boardSingle.computePerimeterEdges().p;
+    areaTop.textContent = A;
+    perimTop.textContent = P;
+    pillA.classList.toggle('muted', false);
+    pillP.classList.toggle('muted', false);
+  }
+
+  /* =========================
+     Exercices : générateurs
+  ========================== */
+  let trainTarget = {A: 6, P: 14};
+  let compareTarget = {type: 'sameP', value: 14};
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function genTrainTarget(){
+    for(let tries=0; tries<250; tries++){
+      const A = 4 + Math.floor(Math.random()*7); // 4..10
+      const cells = new Set();
+      const start = {r: Math.floor(ROWS/2), c: Math.floor(COLS/2)};
+      cells.add(key(start.r,start.c));
+
+      let frontier = new Set();
+      for(const nb of neighbors4(start.r,start.c)) frontier.add(key(nb.r,nb.c));
+
+      while(cells.size < A && frontier.size){
+        const list = Array.from(frontier);
+        const chosen = list[Math.floor(Math.random()*list.length)];
+        frontier.delete(chosen);
+        cells.add(chosen);
+        const {r,c} = parseKey(chosen);
+        for(const nb of neighbors4(r,c)){
+          const kk = key(nb.r,nb.c);
+          if(!cells.has(kk)) frontier.add(kk);
+        }
+      }
+      if(cells.size !== A) continue;
+
+      let P = 0;
+      for(const k of cells){
+        const {r,c} = parseKey(k);
+        if(!cells.has(key(r-1,c))) P++;
+        if(!cells.has(key(r+1,c))) P++;
+        if(!cells.has(key(r,c-1))) P++;
+        if(!cells.has(key(r,c+1))) P++;
+      }
+      if(P < 10 || P > 26) continue;
+      return {A, P};
+    }
+    return {A: 6, P: 14};
+  }
+
+  function genCompareTarget(){
+    if(Math.random() < 0.5){
+      const P = pick([14,16,18,20,22,24,26]);
+      return {type:'sameP', value: P};
+    }else{
+      const A = pick([12,16,18,20,24,28,30]);
+      return {type:'sameA', value: A};
+    }
+  }
+
+  function updatePrompt(){
+    const m = modeSel.value;
+    const sys = unitSystem();
+    const Aunit = (sys === 'cm2') ? 'cm²' : (sys === 'off' ? '' : 'u.a');
+    const Punit = (sys === 'cm2') ? 'cm'  : (sys === 'off' ? '' : 'u.l');
+
+    if(m === 'train'){
+      promptEl.innerHTML =
+        `🎯 <b>Entraînement</b> — Construis une figure d’<b>aire ${trainTarget.A}${Aunit?(' '+Aunit):''}</b> ` +
+        `et de <b>périmètre ${trainTarget.P}${Punit?(' '+Punit):''}</b>.<br>` +
+        `<span style="color:var(--muted);font-weight:900">Figure d’un seul morceau.</span>`;
+    }else if(m === 'compare'){
+      if(compareTarget.type === 'sameP'){
+        promptEl.innerHTML =
+          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) de <b>périmètre ${compareTarget.value}${Punit?(' '+Punit):''}</b> ` +
+          `mais avec des <b>aires différentes</b>.`;
+      }else{
+        promptEl.innerHTML =
+          `⚖️ <b>Comparaison</b> — Fais <b>2 figures</b> (1 seul morceau) d’<b>aire ${compareTarget.value}${Aunit?(' '+Aunit):''}</b> ` +
+          `mais avec des <b>périmètres différents</b>.`;
+      }
+    }else{
+      promptEl.textContent = '';
+    }
+  }
+
+  function validateTrain(){
+    const A = boardSingle.computeArea();
+    const P = boardSingle.computePerimeterEdges().p;
+
+    if(A === 0) return status('bad', `⚠️ Le plateau est vide.`);
+    if(!boardSingle.isConnected()) return status('bad', `⚠️ Figure <b>d’un seul morceau</b> obligatoire.`);
+    if(A !== trainTarget.A || P !== trainTarget.P){
+      return status('bad', `❌ Pas encore. (A=${A}, P=${P})`);
+    }
+
+    status('ok', `✅ <b>BRAVO !</b>`);
+    setTimeout(() => {
+      trainTarget = genTrainTarget();
+      boardSingle.on.clear();
+      boardSingle.resetHistory();
+      boardSingle.render();
+      refreshMetrics();
+      updatePrompt();
+      clearStatus();
+    }, 700);
+  }
+
+  function validateCompare(){
+    const A1 = boardLeft.computeArea();
+    const P1 = boardLeft.computePerimeterEdges().p;
+    const A2 = boardRight.computeArea();
+    const P2 = boardRight.computePerimeterEdges().p;
+
+    if(A1 === 0 || A2 === 0) return status('bad', `⚠️ Il faut <b>2 figures</b>.`);
+    if(!boardLeft.isConnected() || !boardRight.isConnected()) return status('bad', `⚠️ Chaque figure doit être <b>d’un seul morceau</b>.`);
+
+    if(compareTarget.type === 'sameP'){
+      const T = compareTarget.value;
+      if(P1 !== T || P2 !== T) return status('bad', `❌ Pas encore. (P1=${P1}, P2=${P2})`);
+      if(A1 === A2) return status('bad', `❌ Les aires doivent être <b>différentes</b>.`);
+      status('ok', `✅ <b>BRAVO !</b> Même périmètre, aires différentes.`);
+    }else{
+      const T = compareTarget.value;
+      if(A1 !== T || A2 !== T) return status('bad', `❌ Pas encore. (A1=${A1}, A2=${A2})`);
+      if(P1 === P2) return status('bad', `❌ Les périmètres doivent être <b>différents</b>.`);
+      status('ok', `✅ <b>BRAVO !</b> Même aire, périmètres différents.`);
+    }
+
+    setTimeout(() => {
+      compareTarget = genCompareTarget();
+      boardLeft.on.clear(); boardRight.on.clear();
+      boardLeft.resetHistory(); boardRight.resetHistory();
+      boardLeft.render(); boardRight.render();
+      refreshMetrics();
+      updatePrompt();
+      clearStatus();
+    }, 900);
+  }
+
+  /* =========================
+     Mode switching + zoom arrivée comparaison
+  ========================== */
+  function centerView(board){
+    const w = board.wrapEl;
+    const g = board.gridEl;
+    // après layout
+    const maxL = Math.max(0, g.scrollWidth - w.clientWidth);
+    const maxT = Math.max(0, g.scrollHeight - w.clientHeight);
+    w.scrollLeft = Math.round(maxL/2);
+    w.scrollTop  = Math.round(maxT/2);
+  }
+
+  function resetZoom100AndCenter(which){
+    // met le zoom à 100% (baseCell), puis centre la vue
+    setCellSize(baseCell());
+    updateZoomBadge();
+    // double RAF pour être sûr (dimensions calculées)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if(which === 'compare'){
+          centerView(boardLeft);
+          centerView(boardRight);
+        }else{
+          centerView(boardSingle);
+        }
+      });
+    });
+  }
+
+  modeSel.addEventListener('change', () => {
+    clearStatus();
+    const m = modeSel.value;
+
+    connectedRow.style.display = (m === 'free') ? 'flex' : 'none';
+    if(m !== 'free') needConnected.checked = true;
+
+    exGroup.classList.toggle('hidden', (m === 'free'));
+
+    if(m === 'compare'){
+      boardsSingle.style.display = 'none';
+      boardsCompare.style.display = 'block';
+
+      setActive(boardLeft);
+      compareTarget = genCompareTarget();
+
+      boardLeft.on.clear(); boardRight.on.clear();
+      boardLeft.resetHistory(); boardRight.resetHistory();
+      boardLeft.render(); boardRight.render();
+
+      updatePrompt();
+      refreshMetrics();
+
+      // ✅ arrivée comparaison : zoom clean + centré
+      resetZoom100AndCenter('compare');
+
+    }else{
+      boardsSingle.style.display = 'block';
+      boardsCompare.style.display = 'none';
+
+      setActive(boardSingle);
+
+      if(m === 'train'){
+        trainTarget = genTrainTarget();
+        boardSingle.on.clear();
+        boardSingle.resetHistory();
+        boardSingle.render();
+        updatePrompt();
+        refreshMetrics();
+
+        // optionnel : tu peux aussi forcer centré en entraînement
+        resetZoom100AndCenter('single');
+      }else{
+        updatePrompt();
+        refreshMetrics();
+      }
+    }
+  });
+
+  /* =========================
+     Buttons
+  ========================== */
+  btnClear.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'compare'){
+      boardLeft.clear(true); boardRight.clear(true);
+    }else{
+      boardSingle.clear(true);
+    }
+    refreshMetrics();
+  });
+
+  btnPrev.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'compare'){
+      activeBoard.undo();
+    }else{
+      boardSingle.undo();
+    }
+    refreshMetrics();
+  });
+
+  btnNext.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'compare'){
+      activeBoard.redo();
+    }else{
+      boardSingle.redo();
+    }
+    refreshMetrics();
+  });
+
+  btnRestart.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'train'){
+      boardSingle.on.clear();
+      boardSingle.resetHistory();
+      boardSingle.render();
+      refreshMetrics();
+    }else if(modeSel.value === 'compare'){
+      boardLeft.on.clear(); boardRight.on.clear();
+      boardLeft.resetHistory(); boardRight.resetHistory();
+      boardLeft.render(); boardRight.render();
+      refreshMetrics();
+    }
+  });
+
+  btnNew.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'train'){
+      trainTarget = genTrainTarget();
+      boardSingle.on.clear();
+      boardSingle.resetHistory();
+      boardSingle.render();
+      updatePrompt();
+      refreshMetrics();
+    }else if(modeSel.value === 'compare'){
+      compareTarget = genCompareTarget();
+      boardLeft.on.clear(); boardRight.on.clear();
+      boardLeft.resetHistory(); boardRight.resetHistory();
+      boardLeft.render(); boardRight.render();
+      updatePrompt();
+      refreshMetrics();
+      resetZoom100AndCenter('compare');
+    }
+  });
+
+  btnValidate.addEventListener('click', () => {
+    clearStatus();
+    if(modeSel.value === 'train') validateTrain();
+    if(modeSel.value === 'compare') validateCompare();
+  });
+
+  /* =========================
+     Projection / Fullscreen
+  ========================== */
+  btnProjection.addEventListener('click', () => {
+    const ratio = getCellSize() / baseCell();
+    document.body.classList.toggle('projection');
+
+    const onProj = document.body.classList.contains('projection');
+    btnProjection.classList.toggle('on', onProj);
+    btnProjection.textContent = onProj ? 'Projection : ON' : 'Projection';
+
+    // conserve ratio
+    const px = baseCell() * ratio;
+    zoomCenter(activeBoard, px);
+
+    applyUnits();
+    boardSingle.render(); boardLeft.render(); boardRight.render();
+    refreshMetrics();
+    updateZoomBadge();
+  });
+
+  function isFullscreen(){ return !!document.fullscreenElement; }
+  async function toggleFullscreen(){
+    try{
+      if(!isFullscreen()){
+        await document.documentElement.requestFullscreen();
+      }else{
+        await document.exitFullscreen();
+      }
+    }catch(_){}
+  }
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', () => {
+    const onFs = isFullscreen();
+    btnFullscreen.classList.toggle('on', onFs);
+    btnFullscreen.textContent = onFs ? '⛶ Plein écran : ON' : '⛶ Plein écran';
+  });
+
+  /* =========================
+     Init
+  ========================== */
+  // Par défaut : u.a / u.l
+  unitsTopSel.value = 'ua';
+  labelsOnGrid.checked = false;
+
+  applyUnits();
+  updatePrompt();
+  boardSingle.render();
+  boardLeft.render();
+  boardRight.render();
+  refreshMetrics();
+  updateZoomBadge();
+
+})();
+</script>
+</body>
+</html>
