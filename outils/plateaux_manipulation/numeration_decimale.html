@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Numération décimale — Plateau (PATCH 3d)</title>
+  <title>Numération décimale — Plateau (PATCH 3g)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
@@ -396,7 +396,6 @@
     .eq-item{ display:inline-flex; align-items:center; }
     .eq-equals{ padding: 0 12px; } /* override a bit for flex */
 
-
   </style>
 </head>
 
@@ -428,6 +427,27 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </button>
+      </div>
+
+
+
+      <div class="flex-1 flex items-center justify-center min-w-0">
+        <div id="display-controls" class="flex items-center gap-1 flex-wrap justify-center">
+                <button class="mode-toggle" data-mode="decimal" onclick="app.toggleDisplayMode('decimal')" title="Écriture décimale">Décimales</button>
+                <button class="mode-toggle" data-mode="fraction" onclick="app.toggleDisplayMode('fraction')" title="Écriture fractionnaire">Fractions</button>
+                <button class="mode-toggle" data-mode="decomp" onclick="app.toggleDisplayMode('decomp')" title="Décomposer">Décomposer</button>
+                <button class="mode-toggle" data-mode="u100" onclick="app.toggleDisplayMode('u100')" title="Unités + centièmes">Unités + centièmes</button>
+        
+                <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition" title="Afficher/Masquer">
+                  <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.5-4.132M6.223 6.223A9.957 9.957 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.962 9.962 0 01-4.123 5.089M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-6.09-6.09" />
+                  </svg>
+                </button>
+              </div>
       </div>
 
       <!-- TOOLS (conservés) -->
@@ -486,24 +506,7 @@
     </div>
 
     <!-- Ligne 2 : affichage + modes (centré, stable, toujours visible) -->
-    <div id="display-bar" class="mt-0 flex flex-col items-center gap-1 select-none">
-      <div id="display-controls" class="flex items-center gap-1 flex-wrap justify-center">
-        <button class="mode-toggle" data-mode="decimal" onclick="app.toggleDisplayMode('decimal')" title="Écriture décimale">Décimales</button>
-        <button class="mode-toggle" data-mode="fraction" onclick="app.toggleDisplayMode('fraction')" title="Écriture fractionnaire">Fractions</button>
-        <button class="mode-toggle" data-mode="decomp" onclick="app.toggleDisplayMode('decomp')" title="Décomposer">Décomposer</button>
-        <button class="mode-toggle" data-mode="u100" onclick="app.toggleDisplayMode('u100')" title="Unités + centièmes">Unités + centièmes</button>
-
-        <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition" title="Afficher/Masquer">
-          <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.5-4.132M6.223 6.223A9.957 9.957 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.962 9.962 0 01-4.123 5.089M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-6.09-6.09" />
-          </svg>
-        </button>
-      </div>
-
+    <div id="display-bar" class="mt-1 flex flex-col items-center gap-1 select-none">
       <div id="display-bubble" class="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner min-h-[62px] w-[920px] max-w-[96vw] flex items-center justify-center">
         <div id="equation-display" class="eq-text text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-700 text-center"></div>
       </div>
@@ -690,21 +693,9 @@
           if (m) this.labelMode = (m === 'fraction' || m === 'decimal') ? m : 'words';
         } catch (e) {}
         document.body.dataset.labelmode = this.labelMode;
-        // Modes d'affichage du nombre (en haut) : sélection multiple (avec "=")
-        // Par défaut : décimales. On migre automatiquement depuis l'ancien nd_displayMode si présent.
+        // Modes d'affichage du nombre (en haut)
+        // Par défaut : Décimales uniquement (non mémorisé entre versions pour éviter les surprises)
         this.displayModes = new Set(['decimal']);
-        try {
-          const raw = localStorage.getItem('nd_displayModes');
-          if (raw) {
-            const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
-            this.displayModes = new Set(arr.filter(m => (m === 'decimal' || m === 'fraction' || m === 'decomp' || m === 'u100')));
-          } else {
-            const dm = localStorage.getItem('nd_displayMode');
-            if (dm === 'decimal' || dm === 'fraction' || dm === 'decomp') this.displayModes = new Set([dm]);
-          }
-        } catch (e) {}
-
-        if (!this.displayModes.size) this.displayModes = new Set(['decimal']);
 
 
         // DOM
@@ -817,8 +808,6 @@
         } else {
           this.displayModes.add(mode);
         }
-
-        try { localStorage.setItem('nd_displayModes', Array.from(this.displayModes).join(',')); } catch (e) {}
         this.updateDisplayModeButtons();
         this.updateDisplay();
       }
