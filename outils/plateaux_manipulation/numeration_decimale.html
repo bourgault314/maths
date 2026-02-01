@@ -495,6 +495,27 @@ body.projection .token.selected .flip-inner::after{
     .eq-item{ display:inline-flex; align-items:center; }
     .eq-equals{ padding: 0 12px; } /* override a bit for flex */
 
+  
+    /* PATCH v9 : bouton Fusionner plus lisible (actif vs inactif) */
+    #btn-fuse:disabled{
+      background-color:#d1fae5 !important; /* plus pâle */
+      color:#34d399 !important;
+      border-color:#a7f3d0 !important;
+      opacity:0.28 !important;
+      box-shadow:none !important;
+    }
+    #btn-fuse:not(:disabled){
+      background-color:#059669 !important; /* plus foncé */
+      color:#ffffff !important;
+      border-color:#047857 !important;
+      box-shadow:0 2px 0 rgba(0,0,0,0.10), 0 0 0 3px rgba(16,185,129,0.25) !important;
+      font-weight:800 !important;
+      letter-spacing:0.2px;
+    }
+    #btn-fuse:not(:disabled):hover{
+      background-color:#047857 !important;
+    }
+
   </style>
 </head>
 
@@ -527,7 +548,7 @@ body.projection .token.selected .flip-inner::after{
             <span class="hidden text-xs font-extrabold">Couper</span>
           </button>
 
-          <button onclick="app.fuseSelected()" id="btn-fuse" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Fusionner (10 centièmes → 1 dixième, 10 dixièmes → 1 unité). Sélection : clic ou Ctrl/Shift+clic.">
+          <button onclick="app.fuseSelected()" id="btn-fuse" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Fusionner (10 centièmes → 1 dixième, 10 dixièmes → 1 unité). Plusieurs groupes possibles. Sélection : clic ou Ctrl/Shift+clic.">
             <span class="text-base leading-none" aria-hidden="true">🧩</span>
             <span class="hidden text-xs font-extrabold">Fusion</span>
           </button>
@@ -727,7 +748,7 @@ body.projection .token.selected .flip-inner::after{
   <div id="help-modal" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
     <div class="absolute inset-0 bg-black/40" data-backdrop="1"></div>
 
-    <div class="relative mx-auto my-6 w-[min(92vw,720px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+    <div class="relative mx-auto my-6 w-[min(92vw,720px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
          style="max-height: calc(100vh - 3rem); touch-action:auto;">
       <div class="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-b border-slate-200">
         <div class="min-w-0">
@@ -739,7 +760,7 @@ body.projection .token.selected .flip-inner::after{
           title="Fermer (Échap)">✕</button>
       </div>
 
-      <div class="px-4 py-4 text-sm text-slate-700 overflow-auto" style="max-height: calc(100vh - 9rem);">
+      <div class="px-4 py-4 text-sm text-slate-700 overflow-auto flex-1 min-h-0" style="-webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain;">
         <div class="space-y-4">
           <div>
             <div class="font-extrabold text-slate-800 mb-1">Créer des pièces</div>
@@ -773,8 +794,8 @@ body.projection .token.selected .flip-inner::after{
           <div>
             <div class="font-extrabold text-slate-800 mb-1">Couper / Fusionner</div>
             <ul class="list-disc pl-5 space-y-1">
-              <li><b>Couper</b> : <b>1 unité → 10 dixièmes</b> ; <b>1 dixième → 10 centièmes</b> (sur la sélection).</li>
-              <li><b>Fusion</b> : <b>10 centièmes → 1 dixième</b> ; <b>10 dixièmes → 1 unité</b> (quand la sélection le permet).</li>
+              <li><b>Couper</b> : <b>1 unité → 10 dixièmes</b> ; <b>1 dixième → 10 centièmes</b>. Si tu sélectionnes plusieurs pièces <b>du même type</b>, la coupe s’applique à <b>toutes</b>.</li>
+              <li><b>Fusion</b> : <b>10 centièmes → 1 dixième</b> ; <b>10 dixièmes → 1 unité</b> (quand la sélection le permet). Tu peux fusionner <b>plusieurs groupes</b> d’un coup si tout est aligné.</li>
               <li>Les boutons s’activent uniquement quand la sélection est “fusionnable / coupable”.</li>
             </ul>
           </div>
@@ -801,11 +822,18 @@ body.projection .token.selected .flip-inner::after{
               <li><b>Tout effacer</b> : remet le plateau à zéro (pièces + vue + stylo).</li>
             </ul>
           </div>
-        </div>
-      </div>
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Astuce</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Si <b>Fusion</b> reste grisée : vérifie que les pièces sont <b>bien alignées sur la grille</b> (aimantation) et que tu as des <b>groupes complets de 10</b>.</li>
+              <li>Tu peux fusionner <b>plusieurs groupes d’un coup</b> : par exemple <b>20 centièmes</b> bien alignés → <b>2 dixièmes</b>, ou <b>20 dixièmes</b> empilés → <b>2 unités</b>.</li>
+            </ul>
+          </div>
 
-      <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-        <div class="text-[11px] text-slate-500">Astuce : si tu es sur tablette, le lasso et la multi‑sélection marchent mieux avec un clavier (Ctrl/Shift).</div>
+        </div>
+      </div
+
+      <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
         <button type="button" id="help-close-2"
           class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-extrabold shadow-sm active:scale-95 transition">OK</button>
       </div>
@@ -1436,7 +1464,7 @@ for (const t of this.tokens) {
         const delBtn  = document.getElementById('btn-delete');
 
         const sels = this.getSelectedTokens();
-        const canCut = (sels.length === 1 && (sels[0].type === 'unit' || sels[0].type === 'tenth'));
+        const canCut = (sels.length >= 1 && sels.every(t => t.type === sels[0].type) && (sels[0].type === 'unit' || sels[0].type === 'tenth'));
         const canFuse = this.canFuseSelection(sels);
         const canDelete = (sels.length > 0);
 
@@ -1472,36 +1500,43 @@ deleteToken(token) {
       // --- DÉCOUPE ---
       cutSelected() {
         const sels = this.getSelectedTokens();
-        if (sels.length !== 1) return;
-        const tok = sels[0];
-        if (!(tok.type === 'unit' || tok.type === 'tenth')) return;
+        if (!sels.length) return;
+
+        const baseType = sels[0].type;
+        if (!(baseType === 'unit' || baseType === 'tenth')) return;
+        // Pour éviter les surprises : on coupe uniquement une sélection homogène (toutes unités ou tous dixièmes)
+        if (!sels.every(t => t.type === baseType)) return;
 
         this.saveState();
 
-        const wasFlipped = tok.element && tok.element.classList.contains('flipped');
-        const baseX = tok.x;
-        const baseY = tok.y;
-
-        // Supprime la pièce source
-        this.deleteToken(tok);
-
         const created = [];
-        const groupZ = (++this.zCounter);
-        if (tok.type === 'unit') {
-          // 1 unité -> 10 dixièmes (barres horizontales empilées)
-          for (let i = 0; i < 10; i++) {
-            const t = this.createPieceToken('tenth', 1, baseX, baseY + i * CELL, null, null, groupZ);
-            if (t && wasFlipped) t.element.classList.add('flipped');
-            if (t) created.push(t);
+        const toCut = [...sels]; // copie (deleteToken modifie this.tokens)
+        toCut.forEach(tok => {
+          const wasFlipped = tok.element && tok.element.classList.contains('flipped');
+          const baseX = tok.x;
+          const baseY = tok.y;
+          const sgn = (tok.sign ?? 1);
+
+          // Supprime la pièce source
+          this.deleteToken(tok);
+
+          const groupZ = (++this.zCounter);
+          if (baseType === 'unit') {
+            // 1 unité -> 10 dixièmes (barres horizontales empilées)
+            for (let i = 0; i < 10; i++) {
+              const t = this.createPieceToken('tenth', sgn, baseX, baseY + i * CELL, null, null, groupZ);
+              if (t && wasFlipped) t.element.classList.add('flipped');
+              if (t) created.push(t);
+            }
+          } else if (baseType === 'tenth') {
+            // 1 dixième -> 10 centièmes (carrés alignés)
+            for (let i = 0; i < 10; i++) {
+              const h = this.createPieceToken('hundredth', sgn, baseX + i * CELL, baseY, null, null, groupZ);
+              if (h && wasFlipped) h.element.classList.add('flipped');
+              if (h) created.push(h);
+            }
           }
-        } else if (tok.type === 'tenth') {
-          // 1 dixième -> 10 centièmes (carrés alignés)
-          for (let i = 0; i < 10; i++) {
-            const h = this.createPieceToken('hundredth', 1, baseX + i * CELL, baseY, null, null, groupZ);
-            if (h && wasFlipped) h.element.classList.add('flipped');
-            if (h) created.push(h);
-          }
-        }
+        });
 
         // Sélectionne les pièces créées (pratique pour fusionner juste après)
         this.clearSelection();
@@ -1522,37 +1557,28 @@ deleteToken(token) {
       getFusionPlan(sels) {
         if (!sels || !sels.length) return null;
 
-        // 10 centièmes -> 1 dixième
-        if (sels.length === 10 && sels.every(t => t.type === 'hundredth')) {
-          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
-          const ys = pts.map(p => p.y);
-          const y0 = ys[0];
-          if (!ys.every(y => y === y0)) return null;
+        // Tous les éléments doivent être du même type et du même signe
+        const type0 = sels[0].type;
+        if (!sels.every(t => t.type === type0)) return null;
 
-          const xs = pts.map(p => p.x).sort((a,b)=>a-b);
-          const minX = xs[0];
-          for (let i = 0; i < 10; i++) if (xs[i] !== minX + i * CELL) return null;
+        const sgn0 = (sels[0].sign ?? 1);
+        if (!sels.every(t => (t.sign ?? 1) === sgn0)) return null;
 
-          return { resultType: 'tenth', x: minX, y: y0, remove: sels };
-        }
+        const pts = sels.map(t => ({
+          t,
+          x: this.normalizeGrid(t.x),
+          y: this.normalizeGrid(t.y),
+          flipped: !!(t.element && t.element.classList.contains('flipped'))
+        }));
 
-        // 10 dixièmes -> 1 unité
-        if (sels.length === 10 && sels.every(t => t.type === 'tenth')) {
-          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
-          const xs = pts.map(p => p.x);
-          const x0 = xs[0];
-          if (!xs.every(x => x === x0)) return null;
+        // Helper: construire un plan multi-sorties
+        const planMulti = (outputs) => ({
+          outputs,
+          remove: sels
+        });
 
-          const ys = pts.map(p => p.y).sort((a,b)=>a-b);
-          const minY = ys[0];
-          for (let i = 0; i < 10; i++) if (ys[i] !== minY + i * CELL) return null;
-
-          return { resultType: 'unit', x: x0, y: minY, remove: sels };
-        }
-
-        // 100 centièmes (10x10) -> 1 unité
-        if (sels.length === 100 && sels.every(t => t.type === 'hundredth')) {
-          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
+        // 100 centièmes (10x10) -> 1 unité (prioritaire)
+        if (type0 === 'hundredth' && sels.length === 100) {
           const xs = pts.map(p => p.x);
           const ys = pts.map(p => p.y);
           const minX = Math.min(...xs);
@@ -1561,10 +1587,93 @@ deleteToken(token) {
           const set = new Set(pts.map(p => `${p.x},${p.y}`));
           for (let j = 0; j < 10; j++) {
             for (let i = 0; i < 10; i++) {
-              if (!set.has(`${minX + i*CELL},${minY + j*CELL}`)) return null;
+              if (!set.has(`${minX + i * CELL},${minY + j * CELL}`)) return null;
             }
           }
-          return { resultType: 'unit', x: minX, y: minY, remove: sels };
+
+          const flippedAll = pts.every(p => p.flipped);
+          return planMulti([{
+            resultType: 'unit',
+            x: minX,
+            y: minY,
+            sign: sgn0,
+            flipped: flippedAll
+          }]);
+        }
+
+        // Multi-fusion : centièmes -> dixièmes (par groupes de 10 alignés sur une ligne)
+        if (type0 === 'hundredth' && (sels.length % 10 === 0)) {
+          const rows = new Map(); // y -> [{x,t,flipped}]
+          pts.forEach(p => {
+            if (!rows.has(p.y)) rows.set(p.y, []);
+            rows.get(p.y).push(p);
+          });
+
+          const outputs = [];
+          for (const [y, arr] of rows.entries()) {
+            // tri par x
+            arr.sort((a, b) => a.x - b.x);
+
+            if (arr.length % 10 !== 0) return null;
+
+            for (let i = 0; i < arr.length; i += 10) {
+              const chunk = arr.slice(i, i + 10);
+              const x0 = chunk[0].x;
+              for (let k = 0; k < 10; k++) {
+                if (chunk[k].x !== x0 + k * CELL) return null;
+              }
+              const flippedAll = chunk.every(p => p.flipped);
+              outputs.push({
+                resultType: 'tenth',
+                x: x0,
+                y: y,
+                sign: sgn0,
+                flipped: flippedAll
+              });
+            }
+          }
+
+          // Toutes les pièces doivent être prises en compte
+          if (outputs.length * 10 !== sels.length) return null;
+
+          return planMulti(outputs);
+        }
+
+        // Multi-fusion : dixièmes -> unités (par groupes de 10 empilés dans une colonne)
+        if (type0 === 'tenth' && (sels.length % 10 === 0)) {
+          const cols = new Map(); // x -> [{y,t,flipped}]
+          pts.forEach(p => {
+            if (!cols.has(p.x)) cols.set(p.x, []);
+            cols.get(p.x).push(p);
+          });
+
+          const outputs = [];
+          for (const [x, arr] of cols.entries()) {
+            // tri par y
+            arr.sort((a, b) => a.y - b.y);
+
+            if (arr.length % 10 !== 0) return null;
+
+            for (let i = 0; i < arr.length; i += 10) {
+              const chunk = arr.slice(i, i + 10);
+              const y0 = chunk[0].y;
+              for (let k = 0; k < 10; k++) {
+                if (chunk[k].y !== y0 + k * CELL) return null;
+              }
+              const flippedAll = chunk.every(p => p.flipped);
+              outputs.push({
+                resultType: 'unit',
+                x: x,
+                y: y0,
+                sign: sgn0,
+                flipped: flippedAll
+              });
+            }
+          }
+
+          if (outputs.length * 10 !== sels.length) return null;
+
+          return planMulti(outputs);
         }
 
         return null;
@@ -1577,17 +1686,19 @@ deleteToken(token) {
 
         this.saveState();
 
-        const flippedAll = plan.remove.every(t => t.element && t.element.classList.contains('flipped'));
-
         // Supprimer les sources
-        plan.remove.forEach(t => this.deleteToken(t));
+        (plan.remove || []).forEach(t => this.deleteToken(t));
 
-        // Créer la pièce fusionnée
-        const newTok = this.createPieceToken(plan.resultType, 1, plan.x, plan.y);
-        if (newTok && flippedAll) newTok.element.classList.add('flipped');
+        // Créer les pièces fusionnées (une ou plusieurs)
+        const created = [];
+        (plan.outputs || []).forEach(o => {
+          const tok = this.createPieceToken(o.resultType, (o.sign ?? 1), o.x, o.y);
+          if (tok && o.flipped) tok.element.classList.add('flipped');
+          if (tok) created.push(tok);
+        });
 
         this.clearSelection();
-        if (newTok) this.setTokenSelected(newTok, true);
+        created.forEach(t => this.setTokenSelected(t, true));
         this.updateActionButtons();
 
         playSound('snap');
