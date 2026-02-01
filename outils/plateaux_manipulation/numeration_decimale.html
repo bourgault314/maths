@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Numération décimale — Plateau (PATCH 3k)</title>
+  <title>Numération décimale — Plateau (PATCH 4e)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
@@ -41,10 +41,8 @@
         - meilleure lisibilité quand on superpose les pièces
         - reste discret quand elles sont simplement côte à côte
       */
-      box-shadow:
-        0 6px 12px rgba(0,0,0,0.22),
-        0 1px 2px rgba(0,0,0,0.12),
-        0 0 0 1px rgba(0,0,0,0.14);
+      box-shadow: none;
+      
       cursor: grab;
       transition: transform 240ms ease, background-color 0.5s;
       z-index: 10;
@@ -54,18 +52,7 @@
       transform-origin: center center;
       perspective: 900px;
     }
-
-    /* Bordure fine visible même quand on superpose les pièces */
-    .token::after{
-      content: '';
-      position: absolute;
-      inset: 0;
-      border: 1px solid rgba(0,0,0,0.18);
-      pointer-events: none;
-      box-sizing: border-box;
-    }
-
-    /* --- RETOURNER UNE PIÈCE (double-clic) --- */
+/* --- RETOURNER UNE PIÈCE (double-clic) --- */
     .token .flip-inner{
       position: relative;
       width: 100%;
@@ -83,8 +70,21 @@
       overflow: hidden;
       box-sizing: border-box;
     }
+
+    /* Bordure fine (tourne avec la pièce) */
+    .token .face::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      border:1px solid rgba(0,0,0,0.18);
+      pointer-events:none;
+      box-sizing:border-box;
+    }
+
     .token .face.back{
       transform: rotateY(180deg);
+      border-radius: 0px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -127,6 +127,7 @@
       background-color: #ef4444;
       border: none;
       border-radius: 0px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
       /* Grille 10×10 (centièmes) + séparation en 5 (pour compter vite) */
       background-image:
         linear-gradient(rgba(0,0,0,0.14) 1px, transparent 1px),
@@ -775,6 +776,9 @@ body.projection .token.selected .flip-inner::after{
 
         this.nextId = 1;
         this.autoCounter = 0; // placement automatique (clic)
+
+        // Placement automatique "organisé" lors d'un clic dans le menu
+        this.spawnCounters = { unit: 0, tenth: 0, hundredth: 0 };
 
         // Vue
         this.scale = 1;
@@ -1484,11 +1488,43 @@ for (const t of this.tokens) {
 
         if (x === null || y === null) {
           const c = this.getViewportCenterWorld();
-          const k = (this.autoCounter++ % 10);
-          const dx = k * (CELL * 0.6);
-          const dy = k * (CELL * 0.6);
-          x = c.x - size.w / 2 + dx;
-          y = c.y - size.h / 2 + dy;
+
+          // Par clic (sans drag) : placement "organisé" pour dixièmes et centièmes
+          if (type === 'tenth') {
+            const i = (this.spawnCounters.tenth++);
+            const perCol = 12; // 12 barres max avant de repartir en colonne
+            const col = Math.floor(i / perCol);
+            const row = i % perCol;
+
+            const rawX = c.x - size.w / 2 - col * (size.w + CELL * 2);
+            const rawY = c.y - size.h / 2 + row * CELL;
+
+            const p = this.computeSnappedPosition(type, rawX, rawY, null);
+            x = p.x; y = p.y;
+          } else if (type === 'hundredth') {
+            const i = (this.spawnCounters.hundredth++);
+            const perRow = 20; // 20 centièmes max avant de passer à la ligne suivante
+            const row = Math.floor(i / perRow);
+            const col = i % perRow;
+
+            const tenthSize = SIZES['tenth'] || { w: CELL * 10, h: CELL };
+            const baseX = c.x + (tenthSize.w / 2) + CELL * 2;
+            const rawX = baseX + col * CELL;
+            const rawY = c.y - size.h / 2 + row * CELL;
+
+            const p = this.computeSnappedPosition(type, rawX, rawY, null);
+            x = p.x; y = p.y;
+          } else {
+            // Unités : placement "en éventail" (évite le recouvrement total)
+            const k = (this.autoCounter++ % 10);
+            const dx = k * (CELL * 0.6);
+            const dy = k * (CELL * 0.6);
+            const rawX = c.x - size.w / 2 + dx;
+            const rawY = c.y - size.h / 2 + dy;
+
+            const p = this.computeSnappedPosition(type, rawX, rawY, null);
+            x = p.x; y = p.y;
+          }
         }
 
         const token = this.createPieceToken(type, sign, x, y);
@@ -1619,9 +1655,22 @@ for (const t of this.tokens) {
 
         const multiKey = this.isMultiSelectKey(e);
 
-        // La dernière pièce manipulée passe au-dessus
-        token.z = (++this.zCounter);
-        token.element.style.zIndex = token.z;
+        // Si on clique sur une pièce déjà sélectionnée et qu'on a une multi-sélection :
+        // glisser sans Ctrl/Shift déplace tout le groupe.
+        const groupDrag = (!multiKey && this.selectedIds.size > 1 && this.selectedIds.has(token.id));
+
+        // La dernière pièce manipulée (ou le groupe) passe au-dessus
+        if (groupDrag) {
+          for (const sid of this.selectedIds) {
+            const t = this.tokens.find(tt => tt && tt.id === sid);
+            if (!t || !t.element) continue;
+            t.z = (++this.zCounter);
+            t.element.style.zIndex = t.z;
+          }
+        } else {
+          token.z = (++this.zCounter);
+          token.element.style.zIndex = token.z;
+        }
 
         const cx0 = e.touches ? e.touches[0].clientX : e.clientX;
         const cy0 = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1630,6 +1679,10 @@ for (const t of this.tokens) {
         const offset = { x: cx0 - r0.left, y: cy0 - r0.top };
 
         let started = false;
+
+        // Données de déplacement de groupe
+        let groupStart = null; // Map(id -> {x,y})
+        let anchorStart = null;
 
         const move = (ev) => {
           ev.preventDefault();
@@ -1642,24 +1695,52 @@ for (const t of this.tokens) {
             if (d < 3) return;
             started = true;
 
-            // Quand on commence à déplacer : on sélectionne (seule) cette pièce
+            // Sélection au démarrage du déplacement
             if (multiKey) {
-              // si on était en multi, on garde la sélection existante
               if (!this.selectedIds.has(token.id)) this.setTokenSelected(token, true);
             } else {
-              this.selectOnly(token, false);
+              // Si on ne déplace pas un groupe, on sélectionne seulement cette pièce.
+              // Si on déplace un groupe, on garde la sélection telle quelle.
+              if (!groupDrag) this.selectOnly(token, false);
+              else if (!this.selectedIds.has(token.id)) this.setTokenSelected(token, true);
             }
 
             this.saveState();
             this.draggedToken = token;
             token.element.classList.add('dragging');
+
+            if (groupDrag) {
+              groupStart = new Map();
+              for (const sid of this.selectedIds) {
+                const t = this.tokens.find(tt => tt && tt.id === sid);
+                if (!t) continue;
+                groupStart.set(sid, { x: t.x, y: t.y });
+              }
+              anchorStart = { x: token.x, y: token.y };
+            }
           }
 
           const br = this.boardContainer.getBoundingClientRect();
           const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
           const wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
-          const p = this.computeSnappedPosition(token.type, wx, wy, token.id);
-          this.moveToken(token, p.x, p.y);
+
+          if (groupDrag && groupStart && anchorStart) {
+            // Snap "rigide" sur la grille centième pour éviter les surprises (pas de voisinage ici)
+            const gx = Math.round(wx / CELL) * CELL;
+            const gy = Math.round(wy / CELL) * CELL;
+
+            const dx = gx - anchorStart.x;
+            const dy = gy - anchorStart.y;
+
+            for (const [sid, pos] of groupStart.entries()) {
+              const t = this.tokens.find(tt => tt && tt.id === sid);
+              if (!t) continue;
+              this.moveToken(t, pos.x + dx, pos.y + dy);
+            }
+          } else {
+            const p = this.computeSnappedPosition(token.type, wx, wy, token.id);
+            this.moveToken(token, p.x, p.y);
+          }
         };
 
         const end = () => {
@@ -1676,8 +1757,14 @@ for (const t of this.tokens) {
           }
 
           token.element.classList.remove('dragging');
-          // Déjà snapé pendant le déplacement (preview), on rejoue juste une snap finale + son
-          this.snapToken(token, true);
+
+          if (groupDrag && groupStart && anchorStart) {
+            // Déjà snapé sur la grille pendant le déplacement : son final
+            playSound('snap');
+          } else {
+            // Déjà snapé pendant le déplacement (preview), on rejoue juste une snap finale + son
+            this.snapToken(token, true);
+          }
           this.draggedToken = null;
           this.updateDisplay();
         };
@@ -1689,7 +1776,7 @@ for (const t of this.tokens) {
       }
 
 
-      // --- DRAG depuis le menu (fantôme + seuil) ---
+      // --- DRAG depuis le menu (fantôme + seuil) --- (fantôme + seuil) ---
       handleSidebarTouchStart(e, type, sign) {
         e.preventDefault();
         const cx = e.touches ? e.touches[0].clientX : e.clientX;
@@ -2260,6 +2347,7 @@ for (const t of this.tokens) {
         this.tokens = [];
         this.nextId = 1;
         this.autoCounter = 0;
+        this.spawnCounters = { unit: 0, tenth: 0, hundredth: 0 };
         this.history = [];
 
         // Vue
