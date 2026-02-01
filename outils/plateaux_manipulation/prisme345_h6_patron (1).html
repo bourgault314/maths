@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prisme droit 3-4-5 (h=6) — Patron qui s’ouvre</title>
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #ffffff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    #ui {
+      position: fixed;
+      top: 12px; left: 12px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      user-select: none;
+    }
+    #row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    #open { width: 220px; }
+    button {
+      border: 1px solid rgba(0,0,0,0.18);
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    #hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(0,0,0,0.65);
+      line-height: 1.25;
+      max-width: 360px;
+    }
+    #fallback {
+      position: fixed; inset: 0;
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 24px;
+      color: #111;
+    }
+    #fallback > div {
+      max-width: 720px;
+      border: 1px solid rgba(0,0,0,0.18);
+      border-radius: 14px;
+      padding: 16px 18px;
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+    code { background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div id="row">
+      <label for="open"><strong>Ouverture</strong></label>
+      <input id="open" type="range" min="0" max="1" step="0.001" value="0.0" />
+      <span id="val">0.000</span>
+      <button id="play" title="Lecture / pause">▶︎</button>
+      <button id="reset" title="Revenir au solide">Reset</button>
+    </div>
+    <div id="hint">
+      Souris : <strong>clic gauche</strong> = tourner • <strong>molette</strong> = zoom • <strong>clic droit</strong> = déplacer.<br/>
+      Si écran blanc : appuie sur <strong>F12</strong> → Console (souvent une erreur de chargement CDN).
+    </div>
+  </div>
+
+  <div id="fallback">
+    <div>
+      <h2 style="margin:0 0 8px 0;">Rien ne s’affiche ?</h2>
+      <p style="margin:0 0 10px 0;">
+        Ce fichier charge <strong>Three.js</strong> depuis un CDN (internet requis). Si tu es hors-ligne ou si ton réseau bloque le CDN,
+        tu verras un écran blanc.
+      </p>
+      <p style="margin:0;">
+        Astuce : ouvre la console (<code>F12</code>) pour voir l’erreur de chargement.<br/>
+        Sur GitHub Pages, ça fonctionne aussi (même fichier).
+      </p>
+    </div>
+  </div>
+
+  <!-- Version "classique" (non-module) : fonctionne même si tu ouvres le fichier en local (file://) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+  (function () {
+    if (!window.THREE) {
+      document.getElementById('fallback').style.display = 'flex';
+      return;
+    }
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 5000);
+    camera.position.set(18, -20, 14);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+
+    // Lumières
+    scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(30, -10, 40);
+    scene.add(dir);
+
+    // Petite aide visuelle
+    const grid = new THREE.GridHelper(60, 60);
+    grid.material.opacity = 0.15;
+    grid.material.transparent = true;
+    scene.add(grid);
+
+    // --- Définition du prisme ---
+    // Triangle rectangle 3-4-5 : A(0,0) angle droit, B(4,0), C(0,3)
+    const A = new THREE.Vector3(0, 0, 0);
+    const B = new THREE.Vector3(4, 0, 0);
+    const C = new THREE.Vector3(0, 3, 0);
+
+    const H = 6; // hauteur du prisme (cm)
+
+    // Centre pour viser la caméra
+    const center = new THREE.Vector3( (A.x + B.x + C.x)/3, (A.y + B.y + C.y)/3, H/2 );
+    controls.target.copy(center);
+
+    // Matériaux (triangles bleutés, rectangles verdâtres)
+    const matTri = new THREE.MeshPhongMaterial({ color: 0x6aa9ff, side: THREE.DoubleSide, shininess: 60 });
+    const matRec = new THREE.MeshPhongMaterial({ color: 0x7fd18a, side: THREE.DoubleSide, shininess: 40 });
+
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55 });
+
+    function addEdges(mesh, parent) {
+      const e = new THREE.EdgesGeometry(mesh.geometry, 1e-6);
+      const w = new THREE.LineSegments(e, lineMat);
+      // IMPORTANT : edges suivent les morphos/rotations (car enfant du mesh)
+      mesh.add(w);
+      parent.add(mesh);
+    }
+
+    function makeTriangleGeometry(p0, p1, p2) {
+      const g = new THREE.BufferGeometry();
+      const pos = new Float32Array([
+        p0.x, p0.y, p0.z,
+        p1.x, p1.y, p1.z,
+        p2.x, p2.y, p2.z
+      ]);
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex([0, 1, 2]);
+      g.computeVertexNormals();
+      return g;
+    }
+
+    function makeQuadGeometry(v0, v1, v2, v3) {
+      const g = new THREE.BufferGeometry();
+      const pos = new Float32Array([
+        v0.x, v0.y, v0.z,
+        v1.x, v1.y, v1.z,
+        v2.x, v2.y, v2.z,
+        v3.x, v3.y, v3.z
+      ]);
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex([0, 1, 2, 0, 2, 3]);
+      g.computeVertexNormals();
+      return g;
+    }
+
+    // Base triangle (fixe)
+    const base = new THREE.Mesh(makeTriangleGeometry(A, B, C), matTri);
+    addEdges(base, scene);
+
+    // Pour orienter correctement "extérieur" lors de l’ouverture
+    // Triangle est CCW -> normal +Z
+    const triNormal = new THREE.Vector3().subVectors(B, A).cross(new THREE.Vector3().subVectors(C, A)).normalize(); // ~ (0,0,1)
+
+    // Crée une face latérale (rectangle) articulée sur une arête du triangle
+    function addSideFace(p1, p2, pOther, name) {
+      // Axe x = direction de l’arête
+      const xAxis = new THREE.Vector3().subVectors(p2, p1).normalize();
+      // zAxis = vertical (normal du triangle)
+      const zAxis = triNormal.clone(); // (0,0,1)
+      // yAxis = intérieur (à gauche de l’arête dans l’ordre CCW)
+      let yAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+
+      // Vérifier que yAxis pointe vers l’intérieur (vers pOther)
+      // Intérieur doit avoir un produit scalaire positif avec (pOther - p1)
+      const toOther = new THREE.Vector3().subVectors(pOther, p1);
+      if (yAxis.dot(toOther) < 0) yAxis.negate(); // sinon on inverse
+
+      // Pivot au point p1, orientation (x,y,z)
+      const pivot = new THREE.Group();
+      pivot.name = name;
+      pivot.position.copy(p1);
+
+      const basis = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis);
+      pivot.setRotationFromMatrix(basis);
+
+      // Géométrie locale : rectangle dans le plan (x,z) avec y=0
+      const w = p1.distanceTo(p2);
+      const v0 = new THREE.Vector3(0, 0, 0);
+      const v1 = new THREE.Vector3(w, 0, 0);
+      const v2 = new THREE.Vector3(w, 0, H);
+      const v3 = new THREE.Vector3(0, 0, H);
+
+      const rect = new THREE.Mesh(makeQuadGeometry(v0, v1, v2, v3), matRec);
+      addEdges(rect, pivot);
+
+      scene.add(pivot);
+      return { pivot, xAxis, yAxis, zAxis, width: w };
+    }
+
+    // Faces latérales, chacune articulée sur une arête du triangle
+    // Arêtes : AB, BC, CA
+    const sideAB = addSideFace(A, B, C, "sideAB");
+    const sideBC = addSideFace(B, C, A, "sideBC");
+    const sideCA = addSideFace(C, A, B, "sideCA");
+
+    // Top triangle (attaché à la face AB, sur son "bord extérieur" en haut)
+    // Pivot local placé au point A + z*H dans le repère de sideAB
+    const topPivot = new THREE.Group();
+    topPivot.position.set(0, 0, H); // local (x=0, y=0, z=H) dans le repère de sideAB
+    sideAB.pivot.add(topPivot);
+
+    // Géométrie du triangle supérieur dans le repère local de sideAB
+    // Dans ce repère : A=(0,0,0), B=(4,0,0) et C=(0,3,0) puisque AB est l’axe x et AC est vers +y.
+    // IMPORTANT : Ce triangle sera contre-rotaté pour rester plat quand le patron est ouvert.
+    const topTri = new THREE.Mesh(
+      makeTriangleGeometry(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(4, 0, 0),
+        new THREE.Vector3(0, 3, 0)
+      ),
+      matTri
+    );
+    addEdges(topTri, topPivot);
+
+    // UI
+    const elOpen = document.getElementById('open');
+    const elVal = document.getElementById('val');
+    const btnPlay = document.getElementById('play');
+    const btnReset = document.getElementById('reset');
+
+    let playing = false;
+    let open = parseFloat(elOpen.value) || 0;
+
+    function setOpen(v) {
+      open = Math.max(0, Math.min(1, v));
+      elOpen.value = open.toFixed(3);
+      elVal.textContent = open.toFixed(3);
+
+      // Ouverture : 0 = prisme fermé, 1 = patron à plat
+      const a = -Math.PI / 2 * open;
+
+      sideAB.pivot.rotation.x = a;
+      sideBC.pivot.rotation.x = a;
+      sideCA.pivot.rotation.x = a;
+
+      // Contre-rotation du triangle du haut : il "s’ouvre" avec la face AB
+      topPivot.rotation.x = +Math.PI / 2 * open;
+    }
+
+    btnPlay.addEventListener('click', () => {
+      playing = !playing;
+      btnPlay.textContent = playing ? "❚❚" : "▶︎";
+    });
+
+    btnReset.addEventListener('click', () => {
+      playing = false;
+      btnPlay.textContent = "▶︎";
+      setOpen(0);
+    });
+
+    elOpen.addEventListener('input', () => setOpen(parseFloat(elOpen.value)));
+
+    // Valeur initiale
+    setOpen(open);
+
+    // Animation
+    let t0 = performance.now();
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.05, (now - t0) / 1000);
+      t0 = now;
+
+      if (playing) {
+        // Va-et-vient doux entre 0 et 1
+        const speed = 0.45; // cycles/s
+        const s = 0.5 + 0.5 * Math.sin(now * 0.001 * Math.PI * 2 * speed);
+        setOpen(s);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // Resize
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    });
+  })();
+  </script>
+</body>
+</html>

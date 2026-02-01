@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Boîte à bonbons — 3D / Cavalière / Patron</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#10162c;
+      --line:rgba(255,255,255,.14);
+      --text:#e9eefc;
+      --muted:#a9b6e6;
+      --btn:#172149;
+      --btn2:#1d2a5e;
+      --accent:#7ee787;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+
+    header{
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .title{font-weight:800}
+    .meta{color:var(--muted);font-size:.95rem}
+    .spacer{flex:1}
+
+    .btn{
+      background:var(--btn);border:1px solid var(--line);color:var(--text);
+      padding:8px 10px;border-radius:10px;cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{background:var(--btn2)}
+    .btn:disabled{opacity:.45;cursor:default}
+
+    .tabs{
+      display:flex;gap:8px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
+    }
+    .tab{
+      padding:8px 10px;border-radius:10px;border:1px solid var(--line);
+      background:rgba(255,255,255,.02);cursor:pointer;color:var(--muted);
+      user-select:none;
+    }
+    .tab.active{background:rgba(126,231,135,.10);color:var(--text);border-color:rgba(126,231,135,.35)}
+
+    .wrap{height:calc(100% - 98px);padding:12px;min-height:0;}
+    .panel{
+      height:100%;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      display:none;
+      min-height:0;
+    }
+    .panel.active{display:flex;flex-direction:column}
+    .bar{
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      padding:10px 12px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+    .bar .hint{color:var(--muted);font-size:.92rem}
+    .bar label{color:var(--muted);font-size:.92rem}
+    .bar input[type="range"]{width:160px}
+    .toggle{
+      display:flex;align-items:center;gap:6px;
+      padding:6px 10px;border:1px solid var(--line);border-radius:10px;
+      background:rgba(255,255,255,.02);
+      user-select:none;
+    }
+
+    /* Menus lisibles */
+    select{
+      background:#0f1733;
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:7px 10px;
+      outline:none;
+      color-scheme: dark;
+    }
+    option{
+      background:#0f1733;
+      color:var(--text);
+    }
+
+    .content{flex:1;min-height:0;position:relative;}
+    canvas{display:block;width:100%;height:100%}
+    .errorBox{
+      margin:12px;
+      padding:12px;border:1px solid rgba(255,180,120,.35);
+      background:rgba(255,180,120,.08);
+      border-radius:12px;color:#ffd4b0;font-size:.95rem;
+    }
+    .small{font-size:.9rem;color:var(--muted)}
+    .msg{font-size:.9rem;color:var(--muted);padding:2px 6px;border-radius:10px}
+    .msg.ok{color:#cfead2}
+    .msg.bad{color:#ffd4b0}
+
+    /* ===== Patron layout ===== */
+    .netLayout{
+      height:100%;
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap:0;
+      background:#0f1733;
+    }
+    @media (max-width: 980px){
+      .netLayout{grid-template-columns:1fr; grid-template-rows: 1fr 320px;}
+    }
+    .pane{
+      position:relative;
+      min-height:0;
+      border-right:1px solid rgba(255,255,255,.08);
+    }
+    @media (max-width: 980px){
+      .pane{border-right:none;border-bottom:1px solid rgba(255,255,255,.08);}
+    }
+    .pane:last-child{border-right:none}
+    .paneHeader{
+      position:absolute; top:10px; left:10px; z-index:5;
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.10);
+      padding:6px 10px;
+      border-radius:12px;
+      backdrop-filter: blur(6px);
+      color:var(--muted);
+      font-size:.92rem;
+      user-select:none;
+    }
+    .netSvg{
+      width:100%; height:100%;
+      touch-action:none;
+      display:block;
+      background:#0f1733;
+    }
+    .netFace rect, .netFace polygon{
+      stroke: rgba(233,238,252,.92);
+      stroke-width: 0.9;
+      fill: rgba(255,255,255,.02);
+    }
+    .netFace .fillCandy{ fill: rgba(126,231,135,.10); }
+    .netFace.active rect, .netFace.active polygon{
+      stroke: rgba(126,231,135,.92);
+      stroke-width: 1.3;
+      fill: rgba(126,231,135,.07);
+    }
+    .dimText{
+      font-family: system-ui, Segoe UI, Roboto;
+      font-size: 4px;
+      fill: rgba(233,238,252,.85);
+    }
+    .dimLine{
+      stroke: rgba(233,238,252,.55);
+      stroke-width: 0.35;
+      stroke-dasharray: 2 2;
+    }
+    .gridLine{
+      stroke: rgba(255,255,255,.05);
+      stroke-width: 0.25;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title">Boîte à bonbons</div>
+      <div class="meta" id="dims"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="reset3d">Réinitialiser la vue 3D</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="t3d">3D</button>
+    <button class="tab" data-tab="tcav">Cavalière</button>
+  </nav>
+
+  <div class="wrap">
+    <!-- 3D -->
+    <section class="panel active" id="t3d">
+      <div class="bar">
+        <div class="hint">Souris : glisser = tourner • molette = zoom</div>
+
+        
+        <label>Boîte</label>
+        <select id="boxMode"></select>
+
+<label>Bonbons</label>
+        <select id="candyMode">
+          <option value="stack" selected>Pile (10)</option>
+          <option value="one">1 bonbon</option>
+          <option value="none">Aucun</option>
+        </select>
+
+        <label id="oneLabel" style="display:none;">N°</label>
+        <select id="oneIndex" style="display:none;"></select>
+
+        <div class="toggle"><input id="showBox" type="checkbox" checked><label for="showBox">Boîte</label></div>
+        <div class="toggle"><input id="showGrid" type="checkbox" checked><label for="showGrid">Grille</label></div>
+      </div>
+      <div class="content">
+        <canvas id="c3d"></canvas>
+        <div id="err3d" class="errorBox" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- Cavalière -->
+    <section class="panel" id="tcav">
+      <div class="bar">
+        <div class="hint">Molette = zoom • glisser = déplacer</div>
+        
+        <label>Boîte</label>
+        <select id="boxMode"></select>
+
+<button class="btn" id="fitCav">Ajuster</button>
+
+        <label>k</label>
+        <input id="k" type="range" min="0.3" max="0.8" step="0.05" value="0.5">
+        <span class="small" id="kVal"></span>
+
+        <label>Étape</label>
+        <input id="step" type="range" min="1" max="3" step="1" value="3">
+        <span class="small" id="stepVal"></span>
+      </div>
+      <div class="content">
+        <canvas id="ccav"></canvas>
+      </div>
+    </section>
+</div>
+
+<script>
+/* ===== Données (mm) ===== */
+const D = { a:30, b:40, c:50, t:6, n:10, clearXY:1, clearZ:1 };
+const H = () => D.n * D.t;
+
+/* ✅ Aucun espace entre les bonbons */
+const VIS = { gap: 0, t: D.t };
+
+const $ = (id)=>document.getElementById(id);
+
+$('dims').textContent =
+  `Base : 3–4–5 cm • Épaisseur : ${D.t} mm • Pile : ${D.n} → ${H()} mm (= ${(H()/10).toFixed(1)} cm)`;
+
+/* ===== Tabs ===== */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    $(target).classList.add('active');
+
+    requestAnimationFrame(()=>{
+      resizeAll();
+      if(target==='t3d' && window.threeTab && threeTab.resize3D) threeTab.resize3D();
+      if(target==='tcav') drawCavaliere();
+    });
+});
+});
+
+/* ===== Select 1..10 ===== */
+for(let i=1;i<=D.n;i++){
+  const opt=document.createElement('option');
+  opt.value=String(i);
+  opt.textContent=String(i);
+  $('oneIndex').appendChild(opt);
+}
+$('oneIndex').value="1";
+
+
+/* ===== Boîtes (toutes les empilements 10 = 10 ou 5+5 collés) ===== */
+const BOX_MODES = [
+  { key:'stack10', label:'Boîte 1 — pile de 10 (référence)', type:'stack10' },
+
+  { key:'p5_e3_same', label:'Boîte 2 — 2 piles de 5, collées sur 3 cm (angle droit même côté)', type:'glue', edge:'e3', reverse:false },
+  { key:'p5_e3_opp',  label:'Boîte 3 — 2 piles de 5, collées sur 3 cm (angle droit opposé)',   type:'glue', edge:'e3', reverse:true  },
+
+  { key:'p5_e4_same', label:'Boîte 4 — 2 piles de 5, collées sur 4 cm (angle droit même côté)', type:'glue', edge:'e4', reverse:false },
+  { key:'p5_e4_opp',  label:'Boîte 5 — 2 piles de 5, collées sur 4 cm (angle droit opposé)',   type:'glue', edge:'e4', reverse:true  },
+
+  { key:'p5_e5_same', label:'Boîte 6 — 2 piles de 5, collées sur 5 cm (hypoténuse) (angle droit même côté)', type:'glue', edge:'e5', reverse:false },
+  { key:'p5_e5_opp',  label:'Boîte 7 — 2 piles de 5, collées sur 5 cm (hypoténuse) (angle droit opposé)',   type:'glue', edge:'e5', reverse:true  },
+];
+
+(function initBoxModes(){
+  const sel = $('boxMode');
+  if(!sel) return;
+  sel.innerHTML='';
+  for(const m of BOX_MODES){
+    const opt=document.createElement('option');
+    opt.value=m.key;
+    opt.textContent=m.label;
+    sel.appendChild(opt);
+  }
+  sel.value='stack10';
+})();
+
+
+/* ===== Loader Three.js ===== */
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src=src; s.async=true;
+    s.onload=resolve;
+    s.onerror=()=>reject(new Error('load failed: '+src));
+    document.head.appendChild(s);
+  });
+}
+let threeReady=null;
+function ensureThree(){
+  if(threeReady) return threeReady;
+  threeReady=(async ()=>{
+    if(window.THREE) return window.THREE;
+    try{
+      await loadScript('https://unpkg.com/three@0.160.0/build/three.min.js');
+      return window.THREE;
+    }catch(e){
+      try{ await loadScript('./three.min.js'); return window.THREE; }
+      catch(e2){ return null; }
+    }
+  })();
+  return threeReady;
+}
+
+/* ===== 3D tab ===== */
+let threeTab=null;
+
+function yCenterCandy(i0){
+  const total = H();
+  const yBottom = -total/2;
+  return yBottom + (VIS.t/2) + i0*(VIS.t + VIS.gap);
+}
+
+async function init3DTab(){
+  const errBox = $('err3d');
+  const THREE = await ensureThree();
+  if(!THREE){
+    errBox.style.display='block';
+    errBox.innerHTML =
+      `<b>3D indisponible.</b><br>Pour l’avoir hors ligne : mets <code>three.min.js</code> à côté du fichier HTML.`;
+    return;
+  }
+
+  const canvas = $('c3d');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setPixelRatio(Math.min(3, window.devicePixelRatio || 1));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1020);
+
+  const camera = new THREE.PerspectiveCamera(55, 1, 1, 6000);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.78));
+  const light = new THREE.DirectionalLight(0xffffff, 0.92);
+  light.position.set(220, 280, 190);
+  scene.add(light);
+
+  const grid = new THREE.GridHelper(420, 42, 0x6b78b8, 0x2a355f);
+  grid.position.y = -50;
+  scene.add(grid);
+
+  function makeTriPrism(a,b,depthY){
+    const shape = new THREE.Shape();
+    // triangle orienté : angle droit au point (a,0)
+    shape.moveTo(0,0);
+    shape.lineTo(a,0);
+    shape.lineTo(a,b);
+    shape.lineTo(0,0);
+
+    const geo = new THREE.ExtrudeGeometry(shape, {depth: depthY, bevelEnabled:false});
+    geo.rotateX(-Math.PI/2);
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    const cx = (bb.min.x+bb.max.x)/2;
+    const cy = (bb.min.y+bb.max.y)/2;
+    const cz = (bb.min.z+bb.max.z)/2;
+    geo.translate(-cx,-cy,-cz);
+    geo.computeVertexNormals();
+    return geo;
+  }
+
+  const Gcandies = new THREE.Group();
+  const Gbox = new THREE.Group();
+  scene.add(Gcandies, Gbox);
+
+  // ✅ 2 couleurs alternées
+  const matA = new THREE.MeshStandardMaterial({ color: 0x7ee787, roughness: 0.55, metalness: 0.05 });
+  const matB = new THREE.MeshStandardMaterial({ color: 0x6aa7ff, roughness: 0.55, metalness: 0.05 });
+
+  
+  const candyMats = [matA, matB];
+
+  // --- Géométrie & placements pour "toutes les boîtes" ---
+  const TRI_XZ = [
+    { x:-D.a/2, z: D.b/2 },  // A
+    { x: D.a/2, z: D.b/2 },  // B
+    { x: D.a/2, z:-D.b/2 }   // C (angle droit)
+  ];
+  const EDGES = { e3:[0,1], e4:[1,2], e5:[0,2] };
+
+  function vsub(a,b){ return {x:a.x-b.x, z:a.z-b.z}; }
+  function vadd(a,b){ return {x:a.x+b.x, z:a.z+b.z}; }
+  function vlen(a){ return Math.hypot(a.x,a.z); }
+  function vnorm(a){ const L=vlen(a)||1; return {x:a.x/L, z:a.z/L}; }
+  function vperp(a){ return {x:-a.z, z:a.x}; } // rotation +90°
+  function cross2(a,b){ return a.x*b.z - a.z*b.x; }
+
+  function applyIsom(p, M, t){
+    return { x: M[0]*p.x + M[1]*p.z + t.x, z: M[2]*p.x + M[3]*p.z + t.z };
+  }
+  function mat4XZ(M, t){
+    return new THREE.Matrix4().set(
+      M[0],0,M[1],t.x,
+      0,1,0,0,
+      M[2],0,M[3],t.z,
+      0,0,0,1
+    );
+  }
+
+  // Trouve l'isométrie (rotation ou miroir) qui colle un triangle sur un côté donné
+  // en imposant que le 3e sommet soit de l'autre côté de la droite du collage.
+  function glueTransform(edgeKey, reverseEndpoints){
+    const [i,j] = EDGES[edgeKey];
+    const k = [0,1,2].find(x=>x!==i && x!==j);
+
+    const p = TRI_XZ[i], q = TRI_XZ[j];
+    let P = TRI_XZ[i], Q = TRI_XZ[j];
+    if(reverseEndpoints){ P = TRI_XZ[j]; Q = TRI_XZ[i]; }
+
+    const d = vsub(Q, P);
+    const u  = vnorm(vsub(q, p));
+    const v  = vperp(u);
+    const u2 = vnorm(vsub(Q, P));
+    const v2 = vperp(u2);
+
+    const sign1 = Math.sign(cross2(d, vsub(TRI_XZ[k], P))) || 1;
+
+    for(const sgn of [-1, +1]){
+      const M = [
+        u2.x*u.x + sgn*v2.x*v.x,   u2.x*u.z + sgn*v2.x*v.z,
+        u2.z*u.x + sgn*v2.z*v.x,   u2.z*u.z + sgn*v2.z*v.z
+      ];
+      const t = { x: P.x - (M[0]*p.x + M[1]*p.z), z: P.z - (M[2]*p.x + M[3]*p.z) };
+      const third = applyIsom(TRI_XZ[k], M, t);
+      const sign2 = Math.sign(cross2(d, vsub(third, P))) || 0;
+      if(sign2 === -sign1) return {M, t};
+    }
+    return { M:[-1,0,0,1], t:{x:0,z:0} };
+  }
+
+  function yCenterInStack(i, count){
+    const total = count*VIS.t + (count-1)*VIS.gap;
+    const yBottom = -total/2;
+    return yBottom + VIS.t/2 + i*(VIS.t + VIS.gap);
+  }
+
+  function polyArea(poly){
+    let a=0;
+    for(let i=0;i<poly.length;i++){
+      const p=poly[i], q=poly[(i+1)%poly.length];
+      a += p.x*q.z - p.z*q.x;
+    }
+    return a/2;
+  }
+
+  function convexHull(points){
+    const pts = points.map(p=>({x:p.x, z:p.z}))
+      .sort((a,b)=> (a.x!==b.x)?(a.x-b.x):(a.z-b.z));
+    const crossO = (o,a,b)=> (a.x-o.x)*(b.z-o.z) - (a.z-o.z)*(b.x-o.x);
+
+    const lower=[];
+    for(const p of pts){
+      while(lower.length>=2 && crossO(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper=[];
+    for(let i=pts.length-1;i>=0;i--){
+      const p=pts[i];
+      while(upper.length>=2 && crossO(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    upper.pop(); lower.pop();
+    const hull = lower.concat(upper);
+    if(hull.length>=3 && polyArea(hull) < 0) hull.reverse();
+    return hull;
+  }
+
+  function offsetConvex(poly, d){
+    const n = poly.length;
+    if(n<3) return poly;
+
+    const lines = [];
+    for(let i=0;i<n;i++){
+      const p0=poly[i], p1=poly[(i+1)%n];
+      const e=vsub(p1,p0);
+      const L=vlen(e)||1;
+      const nrm = {x: e.z/L, z: -e.x/L};
+      const p0s = {x: p0.x + nrm.x*d, z: p0.z + nrm.z*d};
+      lines.push({p:p0s, d:e});
+    }
+
+    function intersect(l1,l2){
+      const x1=l1.p.x, z1=l1.p.z, dx1=l1.d.x, dz1=l1.d.z;
+      const x2=l2.p.x, z2=l2.p.z, dx2=l2.d.x, dz2=l2.d.z;
+      const denom = dx1*dz2 - dz1*dx2;
+      if(Math.abs(denom) < 1e-9) return {x:x2, z:z2};
+      const t = ((x2-x1)*dz2 - (z2-z1)*dx2) / denom;
+      return {x: x1 + t*dx1, z: z1 + t*dz1};
+    }
+
+    const out=[];
+    for(let i=0;i<n;i++){
+      const prev = lines[(i-1+n)%n];
+      const cur  = lines[i];
+      out.push(intersect(prev, cur));
+    }
+    return out;
+  }
+
+  function makePolyPrism(polyXZ, depthY){
+    const shape = new THREE.Shape();
+    shape.moveTo(polyXZ[0].x, polyXZ[0].z);
+    for(let i=1;i<polyXZ.length;i++) shape.lineTo(polyXZ[i].x, polyXZ[i].z);
+    shape.closePath();
+
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: depthY, bevelEnabled:false });
+    geo.rotateX(-Math.PI/2);
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    const cx = (bb.min.x + bb.max.x)/2;
+    const cy = (bb.min.y + bb.max.y)/2;
+    const cz = (bb.min.z + bb.max.z)/2;
+    geo.translate(-cx, -cy, -cz);
+    return geo;
+  }
+
+  function rebuild3D(){
+    while(Gcandies.children.length) Gcandies.remove(Gcandies.children[0]);
+    while(Gbox.children.length)    Gbox.remove(Gbox.children[0]);
+
+    const key = $('boxMode')?.value || 'stack10';
+    const mode = (typeof BOX_MODES !== 'undefined')
+      ? (BOX_MODES.find(m=>m.key===key) || BOX_MODES[0])
+      : ({key:'stack10', label:'Boîte 1 — pile de 10', type:'stack10'});
+
+    let stacks = [];
+    let heightCandies = 0;
+
+    if(mode.type === 'stack10'){
+      stacks = [{ count:D.n, M:[1,0,0,1], t:{x:0,z:0} }];
+      heightCandies = D.n*VIS.t + (D.n-1)*VIS.gap;
+    }else{
+      const tIso = glueTransform(mode.edge, !!mode.reverse);
+      const c = 5;
+      heightCandies = c*VIS.t + (c-1)*VIS.gap;
+
+      // Recentrage XZ
+      const pts = [];
+      for(const p of TRI_XZ) pts.push({x:p.x, z:p.z});
+      for(const p of TRI_XZ) pts.push(applyIsom(p, tIso.M, tIso.t));
+
+      let minX=Infinity, maxX=-Infinity, minZ=Infinity, maxZ=-Infinity;
+      for(const p of pts){ minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); minZ=Math.min(minZ,p.z); maxZ=Math.max(maxZ,p.z); }
+      const shift = { x: -(minX+maxX)/2, z: -(minZ+maxZ)/2 };
+
+      stacks = [
+        { count:c, M:[1,0,0,1], t:shift },
+        { count:c, M:tIso.M,   t:vadd(tIso.t, shift) }
+      ];
+    }
+
+    // Bonbons
+    let idx=1;
+    for(const st of stacks){
+      const M4 = mat4XZ(st.M, st.t);
+      for(let i=0;i<st.count;i++){
+        const mesh = new THREE.Mesh(candyGeo, candyMats[(idx-1)%2]);
+        mesh.position.set(0, yCenterInStack(i, st.count), 0);
+        mesh.userData.index = idx;
+        mesh.applyMatrix4(M4);
+        Gcandies.add(mesh);
+        idx++;
+      }
+    }
+
+    // Boîte
+    const clearXY = 8;
+    const clearZ  = 6;
+    let boxGeo;
+
+    if(mode.type === 'stack10'){
+      boxGeo = makeTriPrism(D.a + 2*clearXY, D.b + 2*clearXY, heightCandies + 2*clearZ);
+    }else{
+      const pts = [];
+      for(const st of stacks){
+        for(const p of TRI_XZ) pts.push(applyIsom(p, st.M, st.t));
+      }
+      const hull = convexHull(pts);
+      const hullOut = offsetConvex(hull, clearXY);
+      boxGeo = makePolyPrism(hullOut, heightCandies + 2*clearZ);
+    }
+
+    const box = new THREE.Mesh(boxGeo, boxMat);
+    box.position.y = 0;
+    Gbox.add(box);
+
+    // Texte
+    const hcm = (heightCandies/10).toFixed(1).replace('.', ',');
+    $('dims').textContent = `${mode.label} • hauteur : ${hcm} cm`;
+
+    apply3DMode();
+  }
+
+
+  // Orbit maison
+  let theta = 0.95, phi = 0.55, radius = 270;
+  let dragging=false, lastX=0, lastY=0;
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+  function updateCamera(){
+    phi = clamp(phi, 0.12, 1.45);
+    radius = clamp(radius, 120, 1100);
+    const x = radius * Math.cos(phi) * Math.cos(theta);
+    const z = radius * Math.cos(phi) * Math.sin(theta);
+    const y = radius * Math.sin(phi);
+    camera.position.set(x,y,z);
+    camera.lookAt(0,0,0);
+  }
+
+  canvas.addEventListener('pointerdown', (e)=>{
+    dragging=true; lastX=e.clientX; lastY=e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  });
+  canvas.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX=e.clientX; lastY=e.clientY;
+    theta -= dx * 0.006;
+    phi   -= dy * 0.006;
+    updateCamera();
+  });
+  canvas.addEventListener('pointerup', ()=> dragging=false);
+  canvas.addEventListener('wheel', (e)=>{
+    e.preventDefault();
+    radius *= (e.deltaY>0) ? 1.08 : 0.92;
+    updateCamera();
+  }, {passive:false});
+
+  function resize3D(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if(w<10 || h<10) return;
+    renderer.setSize(w,h,false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+
+  function loop(){
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+
+  function apply3DMode(){
+    if(!threeTab) return;
+    Gbox.visible = $('showBox').checked;
+    grid.visible = $('showGrid').checked;
+
+    const mode = $('candyMode').value;
+    const idx = Number($('oneIndex').value) - 1;
+
+    if(mode === 'none'){
+      Gcandies.visible = false;
+    }else if(mode === 'stack'){
+      Gcandies.visible = true;
+      for(const child of Gcandies.children) child.visible = true;
+    }else{
+      Gcandies.visible = true;
+      for(const child of Gcandies.children){
+        child.visible = (child.userData.index === idx);
+      }
+    }
+
+    const showOne = (mode === 'one');
+    $('oneLabel').style.display = showOne ? 'inline' : 'none';
+    $('oneIndex').style.display = showOne ? 'inline' : 'none';
+  }
+
+  $('showBox').addEventListener('change', apply3DMode);
+  $('showGrid').addEventListener('change', apply3DMode);
+  $('boxMode').addEventListener('change', rebuild3D);
+$('candyMode').addEventListener('change', apply3DMode);
+  $('oneIndex').addEventListener('change', apply3DMode);
+
+  $('reset3d').addEventListener('click', ()=>{
+    theta=0.95; phi=0.55; radius=270;
+    updateCamera();
+  });
+
+  rebuild3D();
+  updateCamera();
+  resize3D();
+  loop();
+
+  window.addEventListener('resize', ()=> resize3D());
+
+  threeTab = { resize3D, apply3DMode };
+}
+
+/* ===== Cavalière ===== */
+const cav = $('ccav');
+const ctx = cav.getContext('2d');
+const cavView = { zoom:1, panX:0, panY:0, dragging:false, lx:0, ly:0 };
+
+function resizeCav(){
+  const w=cav.clientWidth, h=cav.clientHeight;
+  if(w<10 || h<10) return;
+  cav.width = Math.floor(w * devicePixelRatio);
+  cav.height = Math.floor(h * devicePixelRatio);
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+function drawGrid2D(w,h,step=20){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = '#0f1733';
+  ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = 'rgba(255,255,255,.06)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<=w;x+=step){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for(let y=0;y<=h;y+=step){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+}
+function projectCav(p, k=0.5, theta=Math.PI/4){
+  const dx = k * p.z * Math.cos(theta);
+  const dy = k * p.z * Math.sin(theta);
+  return { x: p.x + dx, y: p.y - dy };
+}
+function fitCavaliere(){
+  cavView.zoom = 1;
+  cavView.panX = 0;
+  cavView.panY = 0;
+  drawCavaliere();
+}
+function drawCavaliere(){
+  const w = cav.clientWidth, h = cav.clientHeight;
+  if(w<10 || h<10) return;
+
+  const k = Number($('k').value);
+  const step = Number($('step').value);
+  $('kVal').textContent = `k=${k.toFixed(2)}`;
+  $('stepVal').textContent = step===1?'1/3':step===2?'2/3':'3/3';
+
+  drawGrid2D(w,h,20);
+
+  const theta = Math.PI/4;
+  const A={x:0,y:0,z:0}, B={x:D.a,y:0,z:0}, C={x:0,y:D.b,z:0};
+  const Z=H();
+  const A2={x:0,y:0,z:Z}, B2={x:D.a,y:0,z:Z}, C2={x:0,y:D.b,z:Z};
+
+  const maxX = D.a + k*Z*Math.cos(theta);
+  const maxY = D.b + k*Z*Math.sin(theta);
+
+  const margin = 24;
+  const baseScale = Math.min((w-2*margin)/maxX, (h-2*margin)/maxY);
+  const scale = baseScale * cavView.zoom;
+
+  function P(p){
+    const q=projectCav(p,k,theta);
+    return { x: margin + cavView.panX + q.x*scale, y: margin + cavView.panY + q.y*scale };
+  }
+
+  const pA=P(A), pB=P(B), pC=P(C), pA2=P(A2), pB2=P(B2), pC2=P(C2);
+
+  function seg(p,q, col='rgba(233,238,252,.88)', lw=2, dash=false){
+    ctx.save();
+    ctx.strokeStyle=col; ctx.lineWidth=lw;
+    ctx.setLineDash(dash?[7,6]:[]);
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+    ctx.restore();
+  }
+
+  seg(pA,pB);
+  seg(pA,pC);
+  seg(pB,pC);
+
+  if(step>=2){
+    seg(pA,pA2,'rgba(126,231,135,.92)',2);
+    seg(pB,pB2,'rgba(126,231,135,.92)',2);
+    seg(pC,pC2,'rgba(126,231,135,.92)',2);
+  }
+
+  if(step>=3){
+    seg(pA2,pB2,'rgba(233,238,252,.55)',2,true);
+    seg(pA2,pC2,'rgba(233,238,252,.55)',2,true);
+    seg(pB2,pC2,'rgba(233,238,252,.55)',2,true);
+    seg(pB,pB2,'rgba(233,238,252,.35)',2,true);
+    seg(pC,pC2,'rgba(233,238,252,.35)',2,true);
+  }
+
+  ctx.fillStyle='rgba(233,238,252,.9)';
+  ctx.font='14px system-ui';
+  ctx.fillText('3 cm', (pA.x+pB.x)/2 - 10, (pA.y+pB.y)/2 - 10);
+  ctx.fillText('4 cm', (pA.x+pC.x)/2 - 10, (pA.y+pC.y)/2 + 18);
+  ctx.fillText('5 cm', (pB.x+pC.x)/2 + 8, (pB.y+pC.y)/2 + 4);
+  ctx.fillStyle='rgba(126,231,135,.95)';
+  ctx.fillText('6 cm', (pA2.x+pB2.x)/2 - 8, (pA2.y+pB2.y)/2 - 12);
+}
+$('k').addEventListener('input', drawCavaliere);
+$('step').addEventListener('input', drawCavaliere);
+$('fitCav').addEventListener('click', fitCavaliere);
+
+cav.addEventListener('pointerdown', (e)=>{
+  cavView.dragging = true;
+  cavView.lx = e.clientX; cavView.ly = e.clientY;
+  cav.setPointerCapture(e.pointerId);
+});
+cav.addEventListener('pointermove', (e)=>{
+  if(!cavView.dragging) return;
+  const dx = e.clientX - cavView.lx;
+  const dy = e.clientY - cavView.ly;
+  cavView.lx = e.clientX; cavView.ly = e.clientY;
+  cavView.panX += dx; cavView.panY += dy;
+  drawCavaliere();
+});
+cav.addEventListener('pointerup', ()=> cavView.dragging=false);
+cav.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const factor = (e.deltaY>0) ? 0.92 : 1.08;
+  cavView.zoom = Math.max(0.3, Math.min(6, cavView.zoom*factor));
+  drawCavaliere();
+}, {passive:false});
+
+
+
+/* ===== Init ===== */
+function init(){
+  init3DTab();
+
+  // Cavalière
+  resizeCavaliere();
+  drawCavaliere();
+
+  // Affichage du sélecteur "Un seul" (3D)
+  $('candyMode').addEventListener('change', ()=>{
+    const showOne = ($('candyMode').value === 'one');
+    $('oneLabel').style.display = showOne ? 'inline' : 'none';
+    $('oneIndex').style.display = showOne ? 'inline' : 'none';
+    if(window.threeTab?.apply3DMode) threeTab.apply3DMode();
+  });
+  $('candyMode').dispatchEvent(new Event('change'));
+
+  // S'assure que le canvas 3D est bien calé au démarrage
+  if(window.threeTab?.resize3D) threeTab.resize3D();
+}
+
+window.addEventListener('load', init);
+window.addEventListener('resize', ()=>{
+  resizeAll();
+  const active = document.querySelector('.panel.active')?.id;
+  if(active==='t3d' && window.threeTab?.resize3D) threeTab.resize3D();
+  if(active==='tcav') drawCavaliere();
+});
+</script>
+</body>
+</html>
