@@ -80,7 +80,8 @@
         .choice-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            column-gap: 2rem;
+            row-gap: 6.2rem;
             width: 100%;
             max-width: 1000px;
         }
@@ -116,8 +117,8 @@
         }
 
         .choice-card:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 16px 20px -6px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
         }
 
         /* ICONES */
@@ -130,6 +131,7 @@
             justify-content: center;
             font-size: 4rem; 
             line-height: 1;
+            white-space: nowrap;
         }
         
         .choice-card:hover .icon-wrapper {
@@ -179,6 +181,22 @@
         }
         .theme-disques .card-title { color: #c2410c; }
         .theme-disques .card-desc { color: #fb923c; }
+
+
+        /* Numération décimale (Vert/Émeraude) */
+        .theme-decimale { border-color: #d1fae5; }
+        .theme-decimale:hover {
+            border-color: #10b981;
+            background: linear-gradient(to bottom right, #ffffff, #ecfdf5);
+        }
+        .theme-decimale .card-title { color: #059669; }
+        .theme-decimale .card-desc { color: #34d399; }
+
+        /* Couleurs décimales : unités / dixièmes / centièmes */
+        .dec-unit{ color:#ef4444; }   /* rouge */
+        .dec-tenth{ color:#22c55e; }  /* vert */
+        .dec-hund{ color:#facc15; }   /* jaune */
+        .dec-sep{ color:#334155; }    /* virgule / neutre */
 
 
         footer {
@@ -231,13 +249,24 @@
                 <span class="card-desc">Générateur de bandes de fractions à découper</span>
             </a>
 
+
+
+            <!-- NUMERATION DECIMALE -->
+            <a href="numeration_decimale_maker.html" class="choice-card theme-decimale">
+                <div class="icon-wrapper">
+                    <span class="dec-unit">1</span><span class="dec-sep">,</span><span class="dec-tenth">2</span><span class="dec-hund">3</span>
+                </div>
+                <h2 class="card-title">Numération décimale</h2>
+                <span class="card-desc">Génération de bandes d’unités, dixièmes, centièmes à découper</span>
+            </a>
+
             <!-- DISQUE MAKER -->
             <a href="disque_maker.html" class="choice-card theme-disques">
                 <div class="icon-wrapper">
                     ⭕️
                 </div>
-                <h2 class="card-title">Disques Maker</h2>
-                <span class="card-desc">Générateur de disques de fractions</span>
+                <h2 class="card-title">Disques de fractions</h2>
+                <span class="card-desc">Générateur de disques de fractions à découper</span>
             </a>
 
         </div>
