@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Numération décimale — Plateau (PATCH 4e)</title>
+  <title>Numération décimale — Plateau (PATCH 5)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
@@ -512,22 +512,7 @@ body.projection .token.selected .flip-inner::after{
   <header class="bg-white p-2 shadow-md z-30 shrink-0">
     <div id="topgrid" class="topgrid select-none">
       <div id="grid-actions">
-        <div class="flex items-center gap-2 w-full justify-center">
-          <!-- UNDO BUTTON -->
-          <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-          </button>
-
-          <!-- TRASH BUTTON -->
-          <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-
-          <!-- PROJECTION BUTTON (écritures plus visibles) -->
+        <div class="flex items-center gap-2 w-full justify-center"><!-- PROJECTION BUTTON (écritures plus visibles) -->
           <button onclick="app.toggleProjection()" id="btn-projection" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 rounded-lg font-bold border border-indigo-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Mode projection (écritures plus visibles)">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16v10H4V6z"/>
@@ -539,14 +524,44 @@ body.projection .token.selected .flip-inner::after{
 
           <button onclick="app.cutSelected()" id="btn-cut" class="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 rounded-lg font-bold border border-amber-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Couper (1 unité → 10 dixièmes, 1 dixième → 10 centièmes). Sélection : clic ou Ctrl/Shift+clic.">
             <span class="text-base leading-none" aria-hidden="true">✂</span>
-            <span class="hidden sm:inline text-xs font-extrabold">Couper</span>
+            <span class="hidden text-xs font-extrabold">Couper</span>
           </button>
 
           <button onclick="app.fuseSelected()" id="btn-fuse" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Fusionner (10 centièmes → 1 dixième, 10 dixièmes → 1 unité). Sélection : clic ou Ctrl/Shift+clic.">
             <span class="text-base leading-none" aria-hidden="true">🧩</span>
-            <span class="hidden sm:inline text-xs font-extrabold">Fusion</span>
+            <span class="hidden text-xs font-extrabold">Fusion</span>
           </button>
 
+          <button onclick="app.deleteSelected()" id="btn-delete" class="bg-rose-100 text-rose-700 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Supprimer la sélection (sans tout effacer).">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+
+
+          <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : on/off">
+            <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
+            </svg>
+            <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/>
+            </svg>
+          </button>
+
+          
+
+<button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
+            <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/>
+            </svg>
+            <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/>
+            </svg>
+          </button>
+        
         </div>
       </div>
 
@@ -563,7 +578,22 @@ body.projection .token.selected .flip-inner::after{
         </div>
 
       <div id="grid-tools">
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+        <div class="flex flex-col gap-1">
+<div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <button onclick="app.undo()" class="p-2 rounded text-blue-600 hover:bg-blue-50" title="Précédent (Annuler)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+          </button>
+
+          <button onclick="app.resetBoard()" class="p-2 rounded text-rose-600 hover:bg-rose-50" title="Tout effacer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+
+          <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
           <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer le plateau / futures pièces)">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
@@ -593,27 +623,9 @@ body.projection .token.selected .flip-inner::after{
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/>
             </svg>
           </button>
+</div>
 
-          <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : on/off">
-            <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
-            </svg>
-            <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/>
-            </svg>
-          </button>
-
-          <button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
-            <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/>
-            </svg>
-            <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/>
-            </svg>
-          </button>
+        
         </div>
       </div>
 
@@ -656,7 +668,13 @@ body.projection .token.selected .flip-inner::after{
 
       <div class="w-16 h-px bg-slate-200 my-1"></div>
       <div class="text-[10px] text-slate-400 px-2 text-center leading-snug">
-        Glisse-dépose (fantôme) ou clic.
+        <div class="mt-1 flex justify-center">
+          <button id="btn-help" type="button"
+            class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-slate-200/70 hover:bg-slate-200 text-slate-700 text-[10px] font-bold border border-slate-200 shadow-sm active:scale-95 transition"
+            title="Aide (raccourcis et manipulations)">
+            <span class="text-[11px] leading-none">?</span><span>Aide</span>
+          </button>
+        </div>
       </div>
 
       <div class="w-16 h-px bg-slate-200 my-2"></div>
@@ -702,6 +720,96 @@ body.projection .token.selected .flip-inner::after{
         <p class="text-xs text-slate-400">Molette: Zoom | Clic-gauche/glisser: Pan</p>
       </div>
     </main>
+  </div>
+
+
+  <!-- MODALE AIDE (PATCH 5) -->
+  <div id="help-modal" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/40" data-backdrop="1"></div>
+
+    <div class="relative mx-auto my-6 w-[min(92vw,720px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+         style="max-height: calc(100vh - 3rem); touch-action:auto;">
+      <div class="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <div class="min-w-0">
+          <div id="help-title" class="text-base font-extrabold text-slate-700 leading-tight">Aide — Numération décimale</div>
+          <div class="text-[11px] text-slate-500 leading-snug">Raccourcis, gestes, zoom, sélection, couper/fusion…</div>
+        </div>
+        <button id="help-close" type="button"
+          class="shrink-0 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-extrabold border border-slate-200 shadow-sm active:scale-95 transition"
+          title="Fermer (Échap)">✕</button>
+      </div>
+
+      <div class="px-4 py-4 text-sm text-slate-700 overflow-auto" style="max-height: calc(100vh - 9rem);">
+        <div class="space-y-4">
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Créer des pièces</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Glisse-dépose</b> depuis la colonne « Pièces » : une <b>pièce fantôme</b> te suit, tu lâches pour déposer.</li>
+              <li><b>Clic</b> sur une pièce (dans la colonne) : dépose directement au centre (selon le mode).</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Se déplacer et zoomer</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Molette</b> : zoom <b>autour du pointeur</b>.</li>
+              <li><b>Clic-gauche + glisser</b> sur le fond : déplacer la vue (pan).</li>
+              <li><b>Recentrer</b> : bouton « recentrer la vue » remet le plateau au centre.</li>
+              <li><b>Plein écran</b> : agrandir l’activité (idéal en projection).</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Sélection (une ou plusieurs pièces)</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Clic</b> sur une pièce : sélection simple.</li>
+              <li><b>Ctrl</b> (ou <b>Cmd</b> sur Mac) + clic : ajouter/retirer une pièce à la sélection.</li>
+              <li><b>Ctrl</b>/<b>Shift</b> + glisser sur le vide : <b>lasso</b> pour sélectionner plusieurs pièces d’un coup.</li>
+              <li>Quand plusieurs pièces sont sélectionnées : <b>glisser</b> une pièce déplace <b>tout le groupe</b>.</li>
+              <li><b>Supprimer</b> (en haut) enlève <b>la sélection</b> (Undo possible).</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Couper / Fusionner</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Couper</b> : <b>1 unité → 10 dixièmes</b> ; <b>1 dixième → 10 centièmes</b> (sur la sélection).</li>
+              <li><b>Fusion</b> : <b>10 centièmes → 1 dixième</b> ; <b>10 dixièmes → 1 unité</b> (quand la sélection le permet).</li>
+              <li>Les boutons s’activent uniquement quand la sélection est “fusionnable / coupable”.</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Retourner une pièce</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Double-clic</b> sur une pièce : elle se <b>retourne</b> (dos : lettres / fraction / décimale).</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Stylo</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Bouton <b>stylo</b> : dessiner sur le plateau.</li>
+              <li><b>Effacer le stylo</b> : supprime uniquement les traits (ne touche pas aux pièces).</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="font-extrabold text-slate-800 mb-1">Précédent / Tout effacer</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li><b>Précédent</b> : annule la dernière action (déplacement, création, coupe, fusion, suppression…).</li>
+              <li><b>Tout effacer</b> : remet le plateau à zéro (pièces + vue + stylo).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div class="text-[11px] text-slate-500">Astuce : si tu es sur tablette, le lasso et la multi‑sélection marchent mieux avec un clavier (Ctrl/Shift).</div>
+        <button type="button" id="help-close-2"
+          class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-extrabold shadow-sm active:scale-95 transition">OK</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1325,21 +1433,40 @@ for (const t of this.tokens) {
       updateActionButtons() {
         const cutBtn = document.getElementById('btn-cut');
         const fuseBtn = document.getElementById('btn-fuse');
-        if (!cutBtn || !fuseBtn) return;
+        const delBtn  = document.getElementById('btn-delete');
 
         const sels = this.getSelectedTokens();
         const canCut = (sels.length === 1 && (sels[0].type === 'unit' || sels[0].type === 'tenth'));
         const canFuse = this.canFuseSelection(sels);
+        const canDelete = (sels.length > 0);
 
-        cutBtn.disabled = !canCut;
-        fuseBtn.disabled = !canFuse;
+        if (cutBtn) cutBtn.disabled = !canCut;
+        if (fuseBtn) fuseBtn.disabled = !canFuse;
+        if (delBtn) delBtn.disabled = !canDelete;
       }
 
-      deleteToken(token) {
+deleteToken(token) {
         if (!token) return;
         if (token.element) token.element.remove();
         this.tokens = this.tokens.filter(t => t !== token);
         this.selectedIds.delete(token.id);
+      }
+
+      deleteSelected() {
+        const sels = this.getSelectedTokens();
+        if (!sels.length) return;
+
+        this.saveState();
+
+        // Copie pour éviter les effets de bord pendant la suppression
+        const toDelete = [...sels];
+        toDelete.forEach(t => this.deleteToken(t));
+
+        this.clearSelection();
+        this.updateActionButtons();
+
+        playSound('pop');
+        this.updateDisplay();
       }
 
       // --- DÉCOUPE ---
@@ -2365,6 +2492,39 @@ for (const t of this.tokens) {
     }
 
     const app = new DecimalBoardApp();
+
+    // --- AIDE (PATCH 5) : modale explicative ---
+    (function setupHelpModal(){
+      const btn = document.getElementById('btn-help');
+      const modal = document.getElementById('help-modal');
+      const close1 = document.getElementById('help-close');
+      const close2 = document.getElementById('help-close-2');
+      if (!btn || !modal || !close1 || !close2) return;
+
+      function openHelp(){
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden','false');
+      }
+      function closeHelp(){
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden','true');
+      }
+
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); openHelp(); });
+      close1.addEventListener('click', (e)=>{ e.stopPropagation(); closeHelp(); });
+      close2.addEventListener('click', (e)=>{ e.stopPropagation(); closeHelp(); });
+
+      // Click hors de la boîte = fermer
+      modal.addEventListener('click', (e)=>{
+        const backdrop = e.target && e.target.dataset && e.target.dataset.backdrop === '1';
+        if (e.target === modal || backdrop) closeHelp();
+      });
+
+      // Échap = fermer
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeHelp();
+      });
+    })();
   </script>
 </body>
 </html>
