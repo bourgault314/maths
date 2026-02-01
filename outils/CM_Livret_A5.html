@@ -690,10 +690,10 @@
     }
     .corr-a5 .corr-wide[data-n="9"] .corr-wide-lines{
       height: 100%;
-      justify-content: space-between; /* ABC en haut, DEF en bas */
+      justify-content: space-evenly; /* demi-chemin: mieux centre */
       gap: 0;
-      padding-top: 1px;
-      padding-bottom: 1px;
+      padding-top: 0;
+      padding-bottom: 0;
     }
 
     .corr-a5 .corr-wide-item{
@@ -961,9 +961,7 @@
           placeholder='{"meta":{"title":"Calcul mental","subtitle":"Fiches personnalisées","includeCorrections":true,"mode":6},"exercises":[{"id":"C1","A":{"q":["…","…","…","…","…"],"a":["…"]},"B":{...}}]}'></textarea>
 
         <div style="display:flex; gap:10px; margin-top:10px;">
-          <button class="btn-act btn-gen" style="flex:1;" onclick="applySpec()">✅ Appliquer</button>
-          <button class="btn-act btn-gen" style="flex:1;" onclick="loadExample()">📋 Exemple</button>
-          <button class="btn-act btn-print" style="flex:1;" onclick="window.print()">🖨️ Imprimer</button>
+          <button class="btn-act btn-gen" style="flex:1;" onclick="applySpec()">✅ Appliquer</button>          <button class="btn-act btn-print" style="flex:1;" onclick="window.print()">🖨️ Imprimer</button>
         </div>
       </div>
 
@@ -1468,31 +1466,6 @@ function resetAll(){
   generate();
 }
 
-function loadExample(){
-  const example = {
-    meta: {
-      title: "Calcul mental",
-      subtitle: "Multiplications",
-mode: 6,
-      sheets: 2
-    },
-    exercises: [
-      {
-        id: "C1",
-        A: { q: ["7 × 6 =", "8 × 9 =", "12 × 7 =", "6 × 8 =", "9 × 4 ="], a: ["42; 72; 84; 48; 36"] },
-        B: { q: ["56 ÷ 7 =", "72 ÷ 8 =", "63 ÷ 9 =", "48 ÷ 6 =", "45 ÷ 5 ="], a: ["8; 9; 7; 8; 9"] },
-        C: { q: ["15 × 3 =", "24 × 4 =", "35 × 2 =", "18 × 5 =", "14 × 6 ="], a: ["45; 96; 70; 90; 84"] },
-        D: { q: ["Complète : 7 × __ = 63", "8 × __ = 56", "9 × __ = 81", "6 × __ = 54", "5 × __ = 45"], a: ["9; 7; 9; 9; 9"] },
-        E: { q: ["Compare : 7×8 __ 8×7", "Compare : 9×4 __ 8×5", "Compare : 6×6 __ 5×7", "Compare : 12×3 __ 9×4", "Compare : 7×9 __ 8×8"], a: ["= ; > ; > ; = ; >"] },
-        F: { q: ["Écris 3 multiplications pour 24", "Écris 2 multiplications pour 42", "Décomposition : 8×7 = 8×5 + 8×__", "Décomposition : 9×6 = 9×4 + 9×__", "Table de 7 : …, …, …"], a: ["(6×4, 3×8, 2×12); (6×7, 3×14); 2; 2; 7,14,21"] }
-      }
-    ]
-  };
-
-  const ta = document.getElementById('contentInput');
-  if(ta) ta.value = JSON.stringify(example, null, 2);
-  applySpec();
-}
 
 function applySpec(){
   const ta = document.getElementById('contentInput');
@@ -1857,7 +1830,7 @@ function buildPromptString(){
   consignes.push("");
   consignes.push("Rappels de forme :");
   consignes.push("- Utilise la virgule décimale française si besoin (ex: 3,7)");
-  consignes.push("- Mets des espaces autour des opérateurs (ex: 7 × 3 =)");
+  consignes.push("- N'ajoute PAS d'espaces autour des opérateurs (ex: 7x3=, 83-39=, 12,5x100=)");
   consignes.push("- Dans les réponses, respecte exactement le séparateur \" ; \"");
   return consignes.join("\n");
 }
