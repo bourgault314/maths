@@ -21,6 +21,7 @@
   --c-purple: #9333ea; /* Diagrammes */
   --c-green: #16a34a;  /* Relatifs */
   --c-indigo: #6366f1; /* Club Maths */
+  --c-magenta: #db2777; /* Cahier de calculs */
 }
 
 *{box-sizing:border-box}
@@ -122,6 +123,7 @@ a.card[data-color="bouliers"]:hover    { border-top-color: var(--c-yellow); }
 a.card[data-color="diagrammes"]:hover  { border-top-color: var(--c-purple); }
 a.card[data-color="relatifs"]:hover    { border-top-color: var(--c-green); }
 a.card[data-color="club"]:hover        { border-top-color: var(--c-indigo); }
+a.card[data-color="cahier"]:hover      { border-top-color: var(--c-magenta); }
 
 .card-title {
   display: flex;
@@ -164,34 +166,40 @@ footer {
 
   <section class="grid">
 
-    <!-- 1. Fabrication -->
-    <a class="card" href="fabrication_materiel/" data-color="fabrication">
-      <div class="card-title">✂️ Fabrication de matériel</div>
-      <p class="card-desc">Générateurs de matériel à imprimer, découper et plastifier.</p>
-    </a>
-
-    <!-- 2. Plateaux -->
-    <a class="card" href="plateaux_manipulation/" data-color="plateaux">
-      <div class="card-title">🔲 Plateaux de manipulation</div>
-      <p class="card-desc">Espaces de travail pour projeter les manipulations des élèves.</p>
-    </a>
-
-    <!-- 3. Bouliers -->
+    <!-- 1. Bouliers -->
     <a class="card" href="bouliers/" data-color="bouliers">
       <div class="card-title">🧮 Bouliers</div>
       <p class="card-desc">Manipulations virtuelles et activités sur le boulier.</p>
     </a>
 
-    <!-- 4. Diagrammes -->
+    <!-- 2. Cahier de calculs -->
+    <a class="card" href="CM_Livret_A5.html" data-color="cahier">
+      <div class="card-title">📒 Cahier de calculs</div>
+      <p class="card-desc">Générateur de cahiers à imprimer, couper et agrafer.</p>
+    </a>
+
+    <!-- 3. Club Maths -->
+    <a class="card" href="club_maths/index.html" data-color="club">
+      <div class="card-title">✨ Club Maths</div>
+      <p class="card-desc">Exploration & Jeux</p>
+    </a>
+
+    <!-- 4. Diagrammes partie-tout -->
     <a class="card" href="sheet_generator_diagramme_partie_tout.html" data-color="diagrammes">
       <div class="card-title">🧩 Diagrammes partie-tout</div>
       <p class="card-desc">Générateur de schémas et de problèmes mathématiques.</p>
     </a>
 
-    <!-- 5. Club Maths (NOUVEAU) -->
-    <a class="card" href="club_maths/index.html" data-color="club">
-      <div class="card-title">✨ Club Maths</div>
-      <p class="card-desc">Exploration & Jeux</p>
+    <!-- 5. Fabrication de matériel -->
+    <a class="card" href="fabrication_materiel/" data-color="fabrication">
+      <div class="card-title">✂️ Fabrication de matériel</div>
+      <p class="card-desc">Générateurs de matériel à imprimer, découper et plastifier.</p>
+    </a>
+
+    <!-- 6. Plateaux de manipulation -->
+    <a class="card" href="plateaux_manipulation/" data-color="plateaux">
+      <div class="card-title">🔲 Plateaux de manipulation</div>
+      <p class="card-desc">Espaces de travail pour projeter les manipulations des élèves.</p>
     </a>
 
 
