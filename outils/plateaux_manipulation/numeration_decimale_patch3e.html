@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Numération décimale — Plateau (PATCH 3d)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    :root{
+      --cell: 28px; /* PATCH 2 : taille d'un centième (modifiable plus tard) */
+    }
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #f0f9ff;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: default;
+    }
+
+    /* --- TEXTE AU DOS (modes) --- */
+    body{ --back-font-hundredth: 5px; }
+    body[data-labelmode="fraction"], body[data-labelmode="decimal"]{ --back-font-hundredth: 10px; }
+
+
+    /* --- TOKENS (gardés pour PATCH 2) --- */
+    
+    .token {
+      position: absolute;
+      display: block;
+      font-weight: 600;
+      color: white;
+      /*
+        Ombre + liseré très fin :
+        - meilleure lisibilité quand on superpose les pièces
+        - reste discret quand elles sont simplement côte à côte
+      */
+      box-shadow:
+        0 6px 12px rgba(0,0,0,0.22),
+        0 1px 2px rgba(0,0,0,0.12),
+        0 0 0 1px rgba(0,0,0,0.14);
+      cursor: grab;
+      transition: transform 240ms ease, background-color 0.5s;
+      z-index: 10;
+      touch-action: none;
+      box-sizing: border-box;
+      overflow: hidden;
+      transform-origin: center center;
+      perspective: 900px;
+    }
+
+    /* Bordure fine visible même quand on superpose les pièces */
+    .token::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(0,0,0,0.18);
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+
+    /* --- RETOURNER UNE PIÈCE (double-clic) --- */
+    .token .flip-inner{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 380ms cubic-bezier(0.2,0.8,0.2,1);
+    }
+    .token.flipped .flip-inner{
+      transform: rotateY(180deg);
+    }
+    .token .face{
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .token .face.back{
+      transform: rotateY(180deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.5px;
+      text-transform: lowercase;
+    }
+    .token .face.back span{
+      pointer-events: none;
+      user-select: none;
+      display: block;
+      max-width: 100%;
+      text-align: center;
+      white-space: normal;
+    }
+    .token.type-unit .face.back{
+      background-color: #ef4444;
+      color: rgba(17,24,39,0.95);
+      font-size: 34px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .token.type-tenth .face.back{
+      background-color: #22c55e;
+      color: rgba(17,24,39,0.95);
+      font-size: 22px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .token.type-hundredth .face.back{
+      background-color: #facc15;
+      color: rgba(17,24,39,0.92);
+      font-size: var(--back-font-hundredth);
+      line-height: 1.05;
+      text-align: center;
+      padding: 0 1px;
+      font-weight: 700;
+      text-shadow: none;
+    }
+
+    /* --- PIÈCES NUMÉRATION DÉCIMALE (PATCH 2) --- */
+    .token.type-unit .face.front{
+      background-color: #ef4444;
+      border: none;
+      border-radius: 0px;
+      /* Grille 10×10 (centièmes) + séparation en 5 (pour compter vite) */
+      background-image:
+        linear-gradient(rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(to right,
+          transparent calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) + 1px),
+          transparent calc(5*var(--cell) + 1px)
+        ),
+        linear-gradient(to bottom,
+          transparent calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) + 1px),
+          transparent calc(5*var(--cell) + 1px)
+        );
+      background-size:
+        var(--cell) var(--cell),
+        var(--cell) var(--cell),
+        100% 100%,
+        100% 100%;
+      background-position: 0 0, 0 0, 0 0, 0 0;
+    }
+
+
+    
+    .token.type-tenth .face.front{
+      background-color: #22c55e;
+      border: none;
+      border-radius: 0px;
+      /* Barre HORIZONTALE : 10 centièmes côte à côte + séparation en 5 */
+      background-image:
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(to right,
+          transparent calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) - 1px),
+          rgba(0,0,0,0.28) calc(5*var(--cell) + 1px),
+          transparent calc(5*var(--cell) + 1px)
+        );
+      background-size:
+        var(--cell) 100%,
+        100% 100%;
+      background-position: 0 0, 0 0;
+    }
+
+
+    .token.type-hundredth .face.front{
+      background-color: #facc15;
+      border: none;
+      border-radius: 0px;
+      background-image: none;
+    }
+
+
+    /* Option : masquer les séparations "en 5" pour un rendu plus neutre */
+    body.hide-fives .token.type-unit .face.front{
+      background-image:
+        linear-gradient(rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px);
+      background-size:
+        var(--cell) var(--cell),
+        var(--cell) var(--cell);
+      background-position: 0 0, 0 0;
+    }
+    body.hide-fives .token.type-tenth .face.front{
+      background-image:
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px);
+      background-size:
+        var(--cell) 100%;
+      background-position: 0 0;
+    }
+    body.hide-fives .preview-unit{
+      background-image:
+        linear-gradient(rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px);
+      background-size:
+        4.4px 4.4px,
+        4.4px 4.4px;
+      background-position: 0 0, 0 0;
+    }
+    body.hide-fives .preview-tenth{
+      background-image:
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px);
+      background-size:
+        6px 100%;
+      background-position: 0 0;
+    }
+
+
+    /* Boutons de la barre de pièces */
+    .piece-btn{
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      display: grid;
+      place-items: center;
+      transition: transform 0.08s ease, box-shadow 0.2s ease;
+      touch-action: none;
+    }
+    .piece-btn:hover{ box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    .piece-btn:active{ transform: scale(0.96); }
+    .preview-piece{ pointer-events: none; border-radius: 0px; }
+    .preview-unit{
+      width: 44px; height: 44px;
+      background-color: #ef4444;
+      border: none;
+      outline: 1px solid rgba(0,0,0,0.20);
+      outline-offset: -1px;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px),
+        linear-gradient(to right, transparent 21px, rgba(0,0,0,0.28) 21px, rgba(0,0,0,0.28) 23px, transparent 23px),
+        linear-gradient(to bottom, transparent 21px, rgba(0,0,0,0.28) 21px, rgba(0,0,0,0.28) 23px, transparent 23px);
+      background-size:
+        4.4px 4.4px,
+        4.4px 4.4px,
+        100% 100%,
+        100% 100%;
+      background-position: 0 0, 0 0, 0 0, 0 0;
+    }
+
+.preview-tenth{
+  /* Icône du menu : une rangée de 10 "carrés" (fin, mais lisible) */
+  width: 60px; height: 6px;
+  background-color: #22c55e;
+  border: none;
+  outline: 1px solid rgba(0,0,0,0.20);
+  outline-offset: -1px;
+  background-image:
+    linear-gradient(90deg, rgba(0,0,0,0.14) 1px, transparent 1px),
+    /* séparation en 5 au milieu, indépendante de la largeur */
+    linear-gradient(to right,
+      transparent calc(50% - 1px),
+      rgba(0,0,0,0.28) calc(50% - 1px),
+      rgba(0,0,0,0.28) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  background-size:
+    6px 100%,
+    100% 100%;
+  background-position: 0 0, 0 0;
+}
+
+    .preview-hundredth{
+      width: 18px; height: 18px;
+      background-color: #facc15;
+      border: none;
+      outline: 1px solid rgba(0,0,0,0.22);
+      outline-offset: -1px;
+    }
+
+    .token.dragging {
+      transition: none !important;
+      z-index: 1000 !important;
+      cursor: grabbing;
+      box-shadow:
+        0 14px 28px rgba(0,0,0,0.38),
+        0 0 0 1px rgba(0,0,0,0.18);
+    }
+
+    /* Fantôme (drag menu) — conservé pour PATCH 2 */
+    .drag-ghost {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.8;
+      filter: blur(1px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+      cursor: grabbing;
+    
+      transform-origin: 0 0;
+    }
+
+    #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: none; }
+    .hide-cursor, .hide-cursor * { cursor: none !important; }
+
+    #board-container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+    }
+    #board-container.panning { cursor: grabbing; }
+    #board-world {
+      position: absolute;
+      top: 0; left: 0;
+      transform-origin: 0 0;
+      width: 0; height: 0;
+    }
+
+    /* Grille d'alignement (dessinée dans le "monde" -> suit pan/zoom) */
+    #grid-layer{
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+      /* Les tailles sont définies en JS (resizeCanvas) */
+      background-image:
+        linear-gradient(to right, rgba(100,116,139,0.10) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(100,116,139,0.10) 1px, transparent 1px);
+      background-size:
+        var(--cell) var(--cell),
+        var(--cell) var(--cell);
+      background-position: 0 0;
+}
+    body.hide-grid #grid-layer{ display:none; }
+
+    #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+    /* --- MODES D'AFFICHAGE DU NOMBRE (PATCH 3) --- */
+    .mode-toggle{
+      font-size: 12px;
+      line-height: 1;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      color: #334155;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+    .mode-toggle:active{ transform: scale(0.97); }
+    .mode-toggle.active{
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+
+    .eq-text{ line-height: 1.05; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap: 10px 12px; }
+
+    .c-unit{ color: #ef4444; }
+    .c-tenth{ color: #22c55e; }
+    .c-hund{ color: #eab308; }
+    .eq-equals{ color: #111827; padding: 0 10px; font-weight: 700; }
+
+    /* Fractions "vraies" (fallback sans KaTeX) */
+    .frac{
+      display:inline-flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      vertical-align:middle;
+      font-weight: 800;
+      transform: translateY(-1px);
+    }
+    .frac .num, .frac .den{ font-size: 0.62em; }
+    .frac .bar{
+      width: 100%;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      margin: 2px 0 1px 0;
+      opacity: 0.9;
+    }
+    .eq-item{ display:inline-flex; align-items:center; }
+    .eq-equals{ padding: 0 12px; } /* override a bit for flex */
+
+
+  </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col">
+
+  <div id="custom-cursor">
+    <!-- Curseur : petite croix (pour le plateau, en mode stylo) -->
+    <svg class="drop-shadow-lg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M7 1v12" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+      <path d="M1 7h12" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  
+  <header class="bg-white p-2 shadow-md z-30 shrink-0">
+    <!-- Ligne 1 : actions (gauche) + outils (droite) -->
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <!-- UNDO BUTTON -->
+        <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+        </button>
+
+        <!-- TRASH BUTTON -->
+        <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- TOOLS (conservés) -->
+      <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+        <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer le plateau / futures pièces)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+          </svg>
+        </button>
+
+        <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2 2 0 012.828 2.828L7 19l-4 1 1-4 12.862-12.513z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5l4 4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21c2-1 4-1 6 0"/>
+          </svg>
+        </button>
+
+        <button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer le stylo">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+
+        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+        <button onclick="app.resetView()" id="btn-reset-view" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Recentrer la vue (zoom 100%)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0 8 8 0 01-16 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/>
+          </svg>
+        </button>
+
+        <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : on/off">
+          <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
+          </svg>
+          <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/>
+          </svg>
+        </button>
+
+        <button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
+          <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/>
+          </svg>
+          <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Ligne 2 : affichage + modes (centré, stable, toujours visible) -->
+    <div id="display-bar" class="mt-0 flex flex-col items-center gap-1 select-none">
+      <div id="display-controls" class="flex items-center gap-1 flex-wrap justify-center">
+        <button class="mode-toggle" data-mode="decimal" onclick="app.toggleDisplayMode('decimal')" title="Écriture décimale">Décimales</button>
+        <button class="mode-toggle" data-mode="fraction" onclick="app.toggleDisplayMode('fraction')" title="Écriture fractionnaire">Fractions</button>
+        <button class="mode-toggle" data-mode="decomp" onclick="app.toggleDisplayMode('decomp')" title="Décomposer">Décomposer</button>
+        <button class="mode-toggle" data-mode="u100" onclick="app.toggleDisplayMode('u100')" title="Unités + centièmes">Unités + centièmes</button>
+
+        <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition" title="Afficher/Masquer">
+          <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.5-4.132M6.223 6.223A9.957 9.957 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.962 9.962 0 01-4.123 5.089M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-6.09-6.09" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="display-bubble" class="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner min-h-[62px] w-[920px] max-w-[96vw] flex items-center justify-center">
+        <div id="equation-display" class="eq-text text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-700 text-center"></div>
+      </div>
+    </div>
+  </header>
+
+
+  <div class="flex flex-1 overflow-hidden relative">
+    <!-- SIDEBAR (placeholder PATCH 1) -->
+    <aside class="w-28 bg-slate-50 border-r border-slate-300 flex flex-col items-center py-4 gap-3 z-20 shadow-lg shrink-0 overflow-y-auto select-none">
+      <span class="text-[9px] font-bold text-slate-400 uppercase leading-tight">Pièces</span>
+
+      <button class="piece-btn" title="Unité (1)" onmousedown="app.handleSidebarTouchStart(event,'unit',1)" ontouchstart="app.handleSidebarTouchStart(event,'unit',1)">
+        <div class="preview-piece preview-unit"></div>
+      </button>
+      <div class="text-[10px] text-slate-500">Unité</div>
+
+      <button class="piece-btn" title="Dixième (0,1)" onmousedown="app.handleSidebarTouchStart(event,'tenth',1)" ontouchstart="app.handleSidebarTouchStart(event,'tenth',1)">
+        <div class="preview-piece preview-tenth"></div>
+      </button>
+      <div class="text-[10px] text-slate-500">Dixième</div>
+
+      <button class="piece-btn" title="Centième (0,01)" onmousedown="app.handleSidebarTouchStart(event,'hundredth',1)" ontouchstart="app.handleSidebarTouchStart(event,'hundredth',1)">
+        <div class="preview-piece preview-hundredth"></div>
+      </button>
+      <div class="text-[10px] text-slate-500">Centième</div>
+
+      <div class="w-16 h-px bg-slate-200 my-1"></div>
+      <div class="text-[10px] text-slate-400 px-2 text-center leading-snug">
+        Glisse-dépose (fantôme) ou clic.
+      </div>
+
+      <div class="w-16 h-px bg-slate-200 my-2"></div>
+      <label class="flex items-center gap-2 text-[10px] text-slate-500 px-2 select-none">
+        <input id="toggle-fives" type="checkbox" class="accent-slate-600">
+        <span>Séparation en 5</span>
+      </label>
+
+      <label class="flex items-center gap-2 text-[10px] text-slate-500 px-2 select-none mt-1">
+        <input id="toggle-grid" type="checkbox" class="accent-slate-600">
+        <span>Grille (alignement)</span>
+      </label>
+
+
+      <div class="w-16 h-px bg-slate-200 my-2"></div>
+      <div class="text-[9px] font-bold text-slate-400 uppercase leading-tight">Dos</div>
+      <div class="flex flex-col gap-1 px-2 text-[10px] text-slate-500 select-none">
+        <label class="flex items-center gap-2">
+          <input type="radio" name="labelmode" value="words" class="accent-slate-600" checked>
+          <span>Lettres</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="radio" name="labelmode" value="fraction" class="accent-slate-600">
+          <span>Fraction</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="radio" name="labelmode" value="decimal" class="accent-slate-600">
+          <span>Décimale</span>
+        </label>
+      </div>
+
+
+    </aside>
+
+    <main id="board" class="flex-1 relative bg-white overflow-hidden">
+      <div id="board-container">
+        <div id="board-world">
+          <div id="grid-layer"></div>
+          <canvas id="drawing-canvas"></canvas>
+        </div>
+      </div>
+      <div class="absolute top-2 left-2 pointer-events-none opacity-40">
+        <p class="text-xs text-slate-400">Molette: Zoom | Clic-gauche/glisser: Pan</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // --- SON (avec bouton on/off + AudioContext créé à la demande) ---
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function ensureAudioCtx() {
+      if (!soundEnabled) return null;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        return audioCtx;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      const ctx = ensureAudioCtx();
+      if (!ctx) return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+
+      if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'snap') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+    }
+
+    // --- NUMÉRATION (PATCH 2) ---
+    const CELL = 28; // taille d'un centième en "monde" (px)
+    const SIZES = {
+      unit:      { w: CELL * 10, h: CELL * 10 },
+      tenth:     { w: CELL * 10, h: CELL * 1 },
+      hundredth: { w: CELL * 1,  h: CELL * 1 }
+    };
+
+    // CSS var pour les grilles
+    document.documentElement.style.setProperty('--cell', CELL + 'px');
+
+    class DecimalBoardApp {
+      constructor() {
+        this.history = [];
+        this.tokens = []; // conservé pour PATCH 2
+        this.nextId = 1;
+        this.autoCounter = 0; // placement automatique (clic)
+
+        // Vue
+        this.scale = 1;
+        this.pan = { x: 0, y: 0 };
+        this.isPanning = false;
+        this.panStart = { x: 0, y: 0 };
+
+        // Outil
+        this.currentTool = 'hand';
+
+        // Stylo
+        this.isDrawing = false;
+        this.lastDrawPos = { x: 0, y: 0 };
+        this.penStrokes = [];
+        this.currentStroke = null;
+        this.activePointerId = null;
+        this.ignoreMouse = false;
+
+        // Affichage haut
+        this.isEquationVisible = true;
+
+        // Séparations "en 5" (pour compter) : activé par défaut, option désactivable
+        this.showFives = true;
+        try {
+          const s = localStorage.getItem('nd_showFives');
+          if (s !== null) this.showFives = (s === '1');
+        } catch (e) {}
+        document.body.classList.toggle('hide-fives', !this.showFives);
+
+// Grille d'alignement : activée par défaut, option désactivable
+        this.showGrid = true;
+        try {
+          const g = localStorage.getItem('nd_showGrid');
+          if (g !== null) this.showGrid = (g === '1');
+        } catch (e) {}
+        document.body.classList.toggle('hide-grid', !this.showGrid);
+
+        // Z-order : la dernière pièce manipulée est au-dessus
+        this.zCounter = 20;
+
+        // Texte au dos des pièces : lettres / fraction / décimale (par défaut : lettres)
+        this.labelMode = 'words';
+        try {
+          const m = localStorage.getItem('nd_labelMode');
+          if (m) this.labelMode = (m === 'fraction' || m === 'decimal') ? m : 'words';
+        } catch (e) {}
+        document.body.dataset.labelmode = this.labelMode;
+        // Modes d'affichage du nombre (en haut) : sélection multiple (avec "=")
+        // Par défaut : décimales. On migre automatiquement depuis l'ancien nd_displayMode si présent.
+        this.displayModes = new Set(['decimal']);
+        try {
+          const raw = localStorage.getItem('nd_displayModes');
+          if (raw) {
+            const arr = raw.split(',').map(s => s.trim()).filter(Boolean);
+            this.displayModes = new Set(arr.filter(m => (m === 'decimal' || m === 'fraction' || m === 'decomp' || m === 'u100')));
+          } else {
+            const dm = localStorage.getItem('nd_displayMode');
+            if (dm === 'decimal' || dm === 'fraction' || dm === 'decomp') this.displayModes = new Set([dm]);
+          }
+        } catch (e) {}
+
+        if (!this.displayModes.size) this.displayModes = new Set(['decimal']);
+
+
+        // DOM
+        this.boardContainer = document.getElementById('board-container');
+        this.boardWorld = document.getElementById('board-world');
+        this.gridLayer = document.getElementById('grid-layer');
+        this.canvas = document.getElementById('drawing-canvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        // Canvas stylo : on centre la zone de dessin autour de l'origine (0,0)
+        // pour éviter les zones "non dessinables" quand on pan/zoom.
+        this.canvasSize = 4000;
+        this.canvasOffset = this.canvasSize / 2;
+
+        // UI : toggle "séparation en 5"
+        const cbF = document.getElementById('toggle-fives');
+        if (cbF) {
+          cbF.checked = this.showFives;
+          cbF.addEventListener('change', () => this.setShowFives(cbF.checked));
+        }
+
+        // UI : toggle "grille" (fond quadrillé)
+        const cbG = document.getElementById('toggle-grid');
+        if (cbG) {
+          cbG.checked = this.showGrid;
+          cbG.addEventListener('change', () => this.setShowGrid(cbG.checked));
+        }
+
+        // UI : mode d'écriture au dos des pièces
+        const radiosLM = Array.from(document.querySelectorAll('input[name="labelmode"]'));
+        if (radiosLM.length) {
+          radiosLM.forEach(r => {
+            r.checked = (r.value === this.labelMode);
+            r.addEventListener('change', () => {
+              if (r.checked) this.setLabelMode(r.value);
+            });
+          });
+        }
+
+        this.initListeners();
+        this.resizeCanvas();
+        this.updateDisplay();
+        this.updateDisplayModeButtons();
+        this.updateToolButtons();
+        this.updateSoundButton();
+        this.updateFullscreenButton();
+
+        document.addEventListener('fullscreenchange', () => this.updateFullscreenButton());
+      }
+
+      // --- DISPLAY (PATCH 3) ---
+      countPieces() {
+        let u = 0, t = 0, h = 0;
+        for (const tok of this.tokens) {
+          if (!tok || !tok.element || !tok.element.isConnected) continue;
+          if (tok.type === 'unit') u++;
+          else if (tok.type === 'tenth') t++;
+          else if (tok.type === 'hundredth') h++;
+        }
+        return { u, t, h };
+      }
+
+      formatDecimalFromHundredths(n) {
+        const sign = n < 0 ? '-' : '';
+        n = Math.abs(n);
+        const intPart = Math.floor(n / 100);
+        const rem = n % 100;
+        if (rem === 0) return sign + String(intPart);
+        if (rem % 10 === 0) {
+          return sign + String(intPart) + ',' + String(Math.floor(rem / 10));
+        }
+        return sign + String(intPart) + ',' + String(rem).padStart(2, '0');
+      }
+
+      formatFractionFromHundredths(n) {
+        if (n === 0) return '0';
+        const sign = n < 0 ? '-' : '';
+        n = Math.abs(n);
+        // On reste volontairement en /10 ou /100 (objectif pédagogique : dixièmes/centièmes)
+        if (n % 10 === 0) return sign + String(n / 10) + '/10';
+        return sign + String(n) + '/100';
+      }
+
+      formatDecompFromCounts(c) {
+        const parts = [];
+        if (c.u) parts.push(String(c.u));
+        if (c.t) parts.push(String(c.t) + '/10');
+        if (c.h) parts.push(String(c.h) + '/100');
+        return parts.length ? parts.join(' + ') : '0';
+      }
+
+      updateDisplayModeButtons() {
+        const btns = Array.from(document.querySelectorAll('.mode-toggle'));
+        btns.forEach(b => {
+          const m = b.getAttribute('data-mode');
+          b.classList.toggle('active', !!(this.displayModes && this.displayModes.has(m)));
+        });
+      }
+
+      toggleDisplayMode(mode) {
+        const allowed = ['decimal', 'fraction', 'decomp', 'u100'];
+        if (!allowed.includes(mode)) return;
+
+        if (!this.displayModes) this.displayModes = new Set(['decimal']);
+
+        if (this.displayModes.has(mode)) {
+          // garder au moins un mode actif
+          if (this.displayModes.size === 1) return;
+          this.displayModes.delete(mode);
+        } else {
+          this.displayModes.add(mode);
+        }
+
+        try { localStorage.setItem('nd_displayModes', Array.from(this.displayModes).join(',')); } catch (e) {}
+        this.updateDisplayModeButtons();
+        this.updateDisplay();
+      }
+
+      splitHundredths(nHund) {
+        const sign = nHund < 0 ? -1 : 1;
+        const n = Math.abs(nHund);
+        const u = Math.floor(n / 100);
+        const rem = n % 100;
+        const t = Math.floor(rem / 10);
+        const h = rem % 10;
+        return { sign, u, t, h, rem, n };
+      }
+
+      
+      renderFracTerm(num, den, colorClass = '', signPrefix = '') {
+        const sign = signPrefix || '';
+        // KaTeX si disponible
+        if (window.katex && typeof window.katex.renderToString === 'function') {
+          const latex = `${sign}\\dfrac{${num}}{${den}}`;
+          try {
+            const html = window.katex.renderToString(latex, { throwOnError: false });
+            return colorClass ? `<span class="${colorClass}">${html}</span>` : html;
+          } catch (e) {
+            // on retombe sur le fallback HTML
+          }
+        }
+        // Fallback "vraie fraction" en HTML/CSS (utile si pas de CDN / pas d'internet)
+        return `<span class="frac ${colorClass}"><span class="num">${sign}${num}</span><span class="bar"></span><span class="den">${den}</span></span>`;
+      }
+
+      renderDecimalHTML(nHund) {
+        const s = this.splitHundredths(nHund);
+        const sign = s.sign < 0 ? '-' : '';
+        if (s.rem === 0) {
+          return `<span class="c-unit">${sign}${s.u}</span>`;
+        }
+        return `<span class="c-unit">${sign}${s.u}</span><span>,</span><span class="c-tenth">${s.t}</span><span class="c-hund">${s.h}</span>`;
+      }
+
+      renderDecompHTML(nHund) {
+        if (nHund === 0) return '0';
+        const s = this.splitHundredths(nHund);
+        const sign = s.sign < 0 ? '-' : '';
+        const parts = [];
+
+        // unités (toujours affichées si on a une partie décimale)
+        if (s.u !== 0 || s.t !== 0 || s.h !== 0) {
+          parts.push(`<span class="c-unit">${sign}${s.u}</span>`);
+        }
+
+        if (s.t !== 0) parts.push(this.renderFracTerm(s.t, 10, 'c-tenth'));
+        if (s.h !== 0) parts.push(this.renderFracTerm(s.h, 100, 'c-hund'));
+
+        if (!parts.length) return '0';
+        return parts.join('<span class="mx-2">+</span>');
+      }
+
+      
+      renderUnitsAndHundredths(nHund) {
+        // Écriture "unités + centièmes" : 3 + 12/100 (et pas 3 + 1/10 + 2/100)
+        const s = this.splitHundredths(nHund);
+        const sign = s.sign < 0 ? '-' : '';
+        const parts = [];
+
+        if (s.u !== 0 || s.rem === 0) {
+          parts.push(`<span class="c-unit">${sign}${s.u}</span>`);
+        } else if (sign) {
+          // cas négatif sans unité
+          parts.push(`<span class="c-unit">${sign}0</span>`);
+        }
+
+        if (s.rem !== 0) {
+          const signForFrac = (sign && s.u === 0) ? '-' : '';
+          parts.push(this.renderFracTerm(s.rem, 100, 'c-hund', signForFrac));
+        }
+
+        if (!parts.length) return '0';
+        return parts.join('<span class="mx-2">+</span>');
+      }
+
+      renderFractionHTML(nHund) {
+        if (nHund === 0) return '0';
+        const sign = nHund < 0 ? '-' : '';
+        const n = Math.abs(nHund);
+
+        let num, den;
+        // On reste volontairement en /10 ou /100 (objectif pédagogique : dixièmes/centièmes)
+        if (n % 10 === 0) { num = n / 10; den = 10; }
+        else { num = n; den = 100; }
+
+        return this.renderFracTerm(num, den, '', sign);
+      }
+
+      updateDisplay() {
+        const el = document.getElementById('equation-display');
+        if (!el) return;
+
+        const c = this.countPieces();
+        const nHund = c.u * 100 + c.t * 10 + c.h;
+
+        const order = ['decimal', 'fraction', 'decomp', 'u100'];
+        const chosen = (this.displayModes && this.displayModes.size) ? this.displayModes : new Set(['decimal']);
+        const outs = [];
+
+        for (const m of order) {
+          if (!chosen.has(m)) continue;
+          if (m === 'decimal') outs.push(this.renderDecimalHTML(nHund));
+          else if (m === 'fraction') outs.push(this.renderFractionHTML(nHund));
+          else if (m === 'decomp') outs.push(this.renderDecompHTML(nHund));
+          else outs.push(this.renderUnitsAndHundredths(nHund));
+        }
+
+        el.innerHTML = outs.map(o => `<span class="eq-item">${o}</span>`).join('<span class="eq-equals">=</span>');
+      }
+
+      toggleVisibility() {
+        this.isEquationVisible = !this.isEquationVisible;
+        const eq = document.getElementById('equation-display');
+        const eyeOpen = document.getElementById('icon-eye-open');
+        const eyeClosed = document.getElementById('icon-eye-closed');
+
+        if (!eq || !eyeOpen || !eyeClosed) return;
+
+        if (this.isEquationVisible) {
+          eq.classList.remove('opacity-0');
+          eyeOpen.classList.remove('hidden');
+          eyeClosed.classList.add('hidden');
+        } else {
+          eq.classList.add('opacity-0');
+          eyeOpen.classList.add('hidden');
+          eyeClosed.classList.remove('hidden');
+        }
+      }
+
+setShowFives(on) {
+        this.showFives = !!on;
+        document.body.classList.toggle('hide-fives', !this.showFives);
+        try { localStorage.setItem('nd_showFives', this.showFives ? '1' : '0'); } catch (e) {}
+
+        const cb = document.getElementById('toggle-fives');
+        if (cb && cb.checked !== this.showFives) cb.checked = this.showFives;
+      }
+
+      setShowGrid(on) {
+        this.showGrid = !!on;
+        document.body.classList.toggle('hide-grid', !this.showGrid);
+        try { localStorage.setItem('nd_showGrid', this.showGrid ? '1' : '0'); } catch (e) {}
+      }
+
+
+      setLabelMode(mode) {
+        const m = (mode === 'fraction' || mode === 'decimal') ? mode : 'words';
+        this.labelMode = m;
+        document.body.dataset.labelmode = m;
+        try { localStorage.setItem('nd_labelMode', m); } catch (e) {}
+        // sync radios
+        const radios = document.querySelectorAll('input[name="labelmode"]');
+        radios.forEach(r => { r.checked = (r.value === m); });
+        this.refreshBackLabels();
+      }
+
+      getBackLabel(type) {
+        const mode = this.labelMode || 'words';
+        if (mode === 'fraction') {
+          if (type === 'unit') return { html: false, text: '1/1' };
+          if (type === 'tenth') return { html: false, text: '1/10' };
+          return { html: false, text: '1/100' };
+        }
+        if (mode === 'decimal') {
+          if (type === 'unit') return { html: false, text: '1' };
+          // Virgule française
+          if (type === 'tenth') return { html: false, text: '0,1' };
+          return { html: false, text: '0,01' };
+        }
+        // lettres
+        if (type === 'unit') return { html: false, text: 'une unité' };
+        if (type === 'tenth') return { html: false, text: 'un dixième' };
+        return { html: true, text: 'un<br>centième' };
+      }
+
+      refreshBackLabels() {
+        for (const t of this.tokens) {
+          const el = t && t.element;
+          if (!el) continue;
+          const span = el.querySelector('.face.back span');
+          if (!span) continue;
+          const lab = this.getBackLabel(t.type);
+          if (lab.html) span.innerHTML = lab.text;
+          else span.textContent = lab.text;
+        }
+      }
+
+
+      // --- RETOURNER UNE PIÈCE (double-clic) ---
+      decorateTokenFaces(el, type) {
+        // Structure "carte" : face avant (grille) + face arrière (texte)
+        // On reconstruit toujours pour que l'UNDO restaure proprement.
+        while (el.firstChild) el.removeChild(el.firstChild);
+
+        const inner = document.createElement('div');
+        inner.className = 'flip-inner';
+
+        const front = document.createElement('div');
+        front.className = 'face front';
+
+        const back = document.createElement('div');
+        back.className = 'face back';
+
+        const span = document.createElement('span');
+        const lab = this.getBackLabel(type);
+        if (lab.html) span.innerHTML = lab.text;
+        else span.textContent = lab.text;
+        back.appendChild(span);
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        el.appendChild(inner);
+      }
+
+      toggleTokenFlipByElement(el) {
+        if (!el) return;
+        this.saveState();
+
+        // Mettre au-dessus (dernière manipulée)
+        const id = parseInt((el.id || '').split('-')[1], 10);
+        const tok = this.tokens.find(t => t.id === id);
+        const z = (++this.zCounter);
+        if (tok) tok.z = z;
+        el.style.zIndex = z;
+
+        el.classList.toggle('flipped');
+        playSound('snap');
+      }
+
+      // --- PIÈCES (PATCH 2) ---
+      getViewportCenterWorld() {
+        const r = this.boardContainer.getBoundingClientRect();
+        const localX = r.width / 2;
+        const localY = r.height / 2;
+        return {
+          x: (localX - this.pan.x) / this.scale,
+          y: (localY - this.pan.y) / this.scale
+        };
+      }
+
+      addPiece(type, sign = 1, x = null, y = null, withSound = true) {
+        this.saveState();
+        if (withSound) playSound('pop');
+
+        const size = SIZES[type];
+        if (!size) return;
+
+        if (x === null || y === null) {
+          const c = this.getViewportCenterWorld();
+          const k = (this.autoCounter++ % 10);
+          const dx = k * (CELL * 0.6);
+          const dy = k * (CELL * 0.6);
+          x = c.x - size.w / 2 + dx;
+          y = c.y - size.h / 2 + dy;
+        }
+
+        const token = this.createPieceToken(type, sign, x, y);
+        if (token) this.snapToken(token);
+        this.updateDisplay();
+      }
+
+      createPieceToken(type, sign, x, y, idOverride = null, classesOverride = null, zOverride = null) {
+        const size = SIZES[type];
+        if (!size) return null;
+
+        const id = idOverride !== null ? idOverride : this.nextId++;
+
+        const el = document.createElement('div');
+        el.classList.add('token', `type-${type}`);
+        if (classesOverride && Array.isArray(classesOverride)) {
+          // En undo, on restaure exactement les classes
+          el.className = '';
+          classesOverride.forEach(c => el.classList.add(c));
+        }
+        el.id = `t-${id}`;
+        el.style.width = size.w + 'px';
+        el.style.height = size.h + 'px';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+
+        const z = (zOverride !== null ? zOverride : (++this.zCounter));
+        el.style.zIndex = z;
+
+        // Faces (avant/arrière)
+        this.decorateTokenFaces(el, type);
+
+        // Double-clic : retourner la pièce
+        el.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.toggleTokenFlipByElement(el);
+        });
+
+        // Drag (outil main)
+        el.addEventListener('mousedown', (e) => this.handleDragStart(e));
+        el.addEventListener('touchstart', (e) => this.handleDragStart(e), { passive: false });
+
+        this.boardWorld.appendChild(el);
+
+        const obj = { id, type, sign, x, y, z, element: el };
+        this.tokens.push(obj);
+        return obj;
+      }
+
+      moveToken(token, x, y) {
+        token.x = x;
+        token.y = y;
+        token.element.style.left = x + 'px';
+        token.element.style.top = y + 'px';
+      }
+
+            computeSnappedPosition(type, rawX, rawY, ignoreId = null) {
+        const size = SIZES[type];
+        if (!size) return { x: rawX, y: rawY };
+
+        const grid = CELL; // grille universelle : 1 centième
+        const gx = Math.round(rawX / grid) * grid;
+        const gy = Math.round(rawY / grid) * grid;
+
+        let best = { x: gx, y: gy };
+        let bestD2 = (rawX - gx) * (rawX - gx) + (rawY - gy) * (rawY - gy);
+
+        const threshold = CELL * 1.05; // snap "près" -> pas d'aspiration à distance
+        const consider = (x, y) => {
+          const dx = rawX - x;
+          const dy = rawY - y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < bestD2) {
+            bestD2 = d2;
+            best = { x, y };
+          }
+        };
+
+        // Snap voisinage (bord à bord) : surtout utile pour coller des unités ou des dixièmes
+        const w = size.w, h = size.h;
+        for (const other of this.tokens) {
+          if (!other) continue;
+          if (ignoreId !== null && other.id === ignoreId) continue;
+          if (other.type !== type) continue;
+
+          const ow = SIZES[other.type].w;
+          const oh = SIZES[other.type].h;
+
+          // aligner sur la même "ligne" (y)
+          if (Math.abs(rawY - other.y) <= threshold) {
+            if (Math.abs(rawX - (other.x + ow)) <= threshold) consider(other.x + ow, other.y);
+            if (Math.abs(rawX - (other.x - w))  <= threshold) consider(other.x - w,  other.y);
+            if (Math.abs(rawX - other.x)        <= threshold) consider(other.x,      other.y);
+          }
+          // aligner sur la même "colonne" (x)
+          if (Math.abs(rawX - other.x) <= threshold) {
+            if (Math.abs(rawY - (other.y + oh)) <= threshold) consider(other.x, other.y + oh);
+            if (Math.abs(rawY - (other.y - h))  <= threshold) consider(other.x, other.y - h);
+            if (Math.abs(rawY - other.y)        <= threshold) consider(other.x, other.y);
+          }
+        }
+
+        // Si on a trouvé un meilleur candidat "voisinage", on l'utilise.
+        // Sinon : la grille (déjà dans best).
+        return best;
+      }
+
+      snapToken(token, withSound = false) {
+        const p = this.computeSnappedPosition(token.type, token.x, token.y, token.id);
+        if (p && (p.x !== token.x || p.y !== token.y)) {
+          this.moveToken(token, p.x, p.y);
+        }
+        if (withSound) playSound('snap');
+      }
+
+      handleDragStart(e) {
+        if (this.currentTool !== 'hand') return;
+        e.stopPropagation();
+
+        const el = e.target.closest('.token');
+        if (!el) return;
+
+        const id = parseInt(el.id.split('-')[1], 10);
+        const token = this.tokens.find(t => t.id === id);
+        if (!token) return;
+
+        // La dernière pièce manipulée passe au-dessus
+        token.z = (++this.zCounter);
+        token.element.style.zIndex = token.z;
+
+        const cx0 = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy0 = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const r0 = token.element.getBoundingClientRect();
+        const offset = { x: cx0 - r0.left, y: cy0 - r0.top };
+
+        let started = false;
+
+        const move = (ev) => {
+          ev.preventDefault();
+          const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+          const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+
+          // Seuil : évite que le double-clic "décale" légèrement une pièce
+          if (!started) {
+            const d = Math.hypot(cx - cx0, cy - cy0);
+            if (d < 3) return;
+            started = true;
+
+            this.saveState();
+            this.draggedToken = token;
+            token.element.classList.add('dragging');
+          }
+
+          const br = this.boardContainer.getBoundingClientRect();
+          const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
+          const wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
+          const p = this.computeSnappedPosition(token.type, wx, wy, token.id);
+          this.moveToken(token, p.x, p.y);
+        };
+
+        const end = () => {
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('touchmove', move);
+          document.removeEventListener('mouseup', end);
+          document.removeEventListener('touchend', end);
+
+          if (!started) return;
+
+          token.element.classList.remove('dragging');
+          // Déjà snapé pendant le déplacement (preview), on rejoue juste une snap finale + son
+          this.snapToken(token, true);
+          this.draggedToken = null;
+          this.updateDisplay();
+        };
+
+        document.addEventListener('mousemove', move);
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchend', end);
+      }
+
+      // --- DRAG depuis le menu (fantôme + seuil) ---
+      handleSidebarTouchStart(e, type, sign) {
+        e.preventDefault();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+
+        this.menuDrag = {
+          isDragging: false,
+          type,
+          sign,
+          startPos: { x: cx, y: cy },
+          el: null,
+          offset: null
+        };
+
+        const move = (ev) => this.handleMenuDragMove(ev);
+        const end = (ev) => {
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('touchmove', move);
+          document.removeEventListener('mouseup', end);
+          document.removeEventListener('touchend', end);
+          this.handleMenuDragEnd(ev);
+        };
+
+        document.addEventListener('mousemove', move);
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchend', end);
+      }
+
+      handleMenuDragMove(ev) {
+        if (!this.menuDrag) return;
+        ev.preventDefault();
+
+        const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+
+        if (!this.menuDrag.isDragging) {
+          const dist = Math.hypot(cx - this.menuDrag.startPos.x, cy - this.menuDrag.startPos.y);
+          if (dist > 5) {
+            this.menuDrag.isDragging = true;
+            this.createMenuGhost(cx, cy);
+          }
+        }
+
+        if (!(this.menuDrag.isDragging && this.menuDrag.el)) return;
+
+        const sidebarWidth = 112;
+        const inSidebar = (cx < sidebarWidth);
+        const size = SIZES[this.menuDrag.type];
+        if (!size) return;
+
+        const scaleFactor = inSidebar ? this.getPreviewScale(this.menuDrag.type) : this.scale;
+
+        // Scale du fantôme (transform-origin = top-left)
+        this.menuDrag.el.style.transform = `scale(${scaleFactor})`;
+
+        if (inSidebar) {
+          // Dans le menu : fantôme centré sous le curseur
+          const offset = {
+            x: (size.w * scaleFactor) / 2,
+            y: (size.h * scaleFactor) / 2
+          };
+          this.menuDrag.offset = offset;
+          this.menuDrag.el.style.left = (cx - offset.x) + 'px';
+          this.menuDrag.el.style.top  = (cy - offset.y) + 'px';
+        } else {
+          // Sur le plateau : preview snap EXACT = endroit final (top-left de la pièce)
+          const wp = this.getWorldPos(cx, cy);
+          const rawX = wp.x - size.w / 2;
+          const rawY = wp.y - size.h / 2;
+          const p = this.computeSnappedPosition(this.menuDrag.type, rawX, rawY, null);
+
+          const br = this.boardContainer.getBoundingClientRect();
+          const sx = br.left + this.pan.x + p.x * this.scale;
+          const sy = br.top  + this.pan.y + p.y * this.scale;
+
+          this.menuDrag.el.style.left = sx + 'px';
+          this.menuDrag.el.style.top  = sy + 'px';
+        }
+      }
+
+      createMenuGhost(cx, cy) {
+        const type = this.menuDrag.type;
+        const sign = this.menuDrag.sign;
+        const size = SIZES[type];
+        if (!size) return;
+
+        const el = document.createElement('div');
+        el.classList.add('token', `type-${type}`, 'drag-ghost');
+        this.decorateTokenFaces(el, type);
+        el.style.width = size.w + 'px';
+        el.style.height = size.h + 'px';
+        el.style.transformOrigin = 'top left';
+        document.body.appendChild(el);
+
+        const sidebarWidth = 112;
+        const inSidebar = (cx < sidebarWidth);
+        const scaleFactor = inSidebar ? this.getPreviewScale(type) : this.scale;
+
+        const offset = {
+          x: (size.w * scaleFactor) / 2,
+          y: (size.h * scaleFactor) / 2
+        };
+        this.menuDrag.offset = offset;
+        this.menuDrag.el = el;
+
+        el.style.left = (cx - offset.x) + 'px';
+        el.style.top = (cy - offset.y) + 'px';
+
+        el.style.transform = `scale(${scaleFactor})`;
+      }
+
+      handleMenuDragEnd(ev) {
+        if (!this.menuDrag) return;
+
+        if (this.menuDrag.isDragging && this.menuDrag.el) {
+          const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX;
+          const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY;
+          this.menuDrag.el.remove();
+
+          const sidebarWidth = 112;
+          if (endX > sidebarWidth) {
+            const worldPos = this.getWorldPos(endX, endY);
+            const size = SIZES[this.menuDrag.type];
+            const rawX = worldPos.x - size.w / 2;
+            const rawY = worldPos.y - size.h / 2;
+            const p = this.computeSnappedPosition(this.menuDrag.type, rawX, rawY, null);
+            this.addPiece(this.menuDrag.type, this.menuDrag.sign, p.x, p.y);
+          }
+        } else {
+          // clic (sans drag)
+          this.addPiece(this.menuDrag.type, this.menuDrag.sign);
+        }
+
+        this.menuDrag = null;
+      }
+
+      getPreviewScale(type) {
+        // Scale fantôme dans la sidebar : on fait "rentrer" la pièce dans un gabarit preview.
+        const size = SIZES[type];
+        if (!size) return 1;
+        let target = { w: 18, h: 18 };
+        if (type === 'unit') target = { w: 44, h: 44 };
+        else if (type === 'tenth') target = { w: 58, h: 18 }; // barre horizontale
+        const sW = target.w / (size.w * this.scale);
+        const sH = target.h / (size.h * this.scale);
+        return Math.min(sW, sH);
+      }
+
+      // --- HISTORY / UNDO ---
+      clonePenStrokes() {
+        try {
+          if (typeof structuredClone === 'function') return structuredClone(this.penStrokes);
+          return JSON.parse(JSON.stringify(this.penStrokes));
+        } catch (e) {
+          return [];
+        }
+      }
+
+      saveState() {
+        if (this.history.length > 30) this.history.shift();
+        this.history.push({
+          tokens: this.tokens.map(t => ({...t, element: null, classes: t.element ? [...t.element.classList] : []})),
+          nextId: this.nextId,
+          autoCounter: this.autoCounter,
+          penStrokes: this.clonePenStrokes(),
+          scale: this.scale,
+          pan: { ...this.pan },
+        });
+      }
+
+      undo() {
+        if (this.history.length === 0) return;
+        const state = this.history.pop();
+
+        // Tokens
+        this.tokens.forEach(t => t.element && t.element.remove());
+        this.tokens = [];
+
+        this.nextId = state.nextId;
+        this.autoCounter = state.autoCounter || 0;
+        this.scale = state.scale;
+        this.pan = state.pan;
+        this.updateTransform();
+
+        // Reconstruction tokens
+        if (Array.isArray(state.tokens)) {
+          state.tokens.forEach(d => {
+            if (!d || !d.type) return;
+            // On restaure les classes si disponibles (sinon: token + type-*)
+            const classes = Array.isArray(d.classes) && d.classes.length ? d.classes : ['token', `type-${d.type}`];
+            this.createPieceToken(d.type, d.sign ?? 1, d.x ?? 0, d.y ?? 0, d.id ?? null, classes, d.z ?? null);
+          });
+          // Recalage du compteur z pour les prochaines pièces
+          this.zCounter = Math.max(20, ...this.tokens.map(t => (t.z || 0)));
+        }
+
+        // Stylo
+        this.penStrokes = state.penStrokes || [];
+        this.currentStroke = null;
+        this.redrawPen();
+
+        this.updateDisplay();
+      }
+
+      // --- LISTENERS ---
+      initListeners() {
+        // Zoom molette vers le curseur
+        this.boardContainer.addEventListener('wheel', (e) => {
+          e.preventDefault();
+
+          const r = this.boardContainer.getBoundingClientRect();
+          const localX = e.clientX - r.left;
+          const localY = e.clientY - r.top;
+
+          const worldX = (localX - this.pan.x) / this.scale;
+          const worldY = (localY - this.pan.y) / this.scale;
+
+          const delta = -e.deltaY * 0.001;
+          const newScale = Math.min(Math.max(0.5, this.scale + delta), 3);
+
+          this.pan.x = localX - worldX * newScale;
+          this.pan.y = localY - worldY * newScale;
+          this.scale = newScale;
+
+          this.updateTransform();
+        }, { passive: false });
+
+        // Pan (main)
+        this.boardContainer.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          if (this.currentTool === 'pen') return;
+          // ne pas pan si on clique sur un token (PATCH 2)
+          if (e.target.closest('.token')) return;
+          this.isPanning = true;
+          this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+          this.boardContainer.classList.add('panning');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          this.moveCursor(e);
+          if (this.isPanning) {
+            this.pan.x = e.clientX - this.panStart.x;
+            this.pan.y = e.clientY - this.panStart.y;
+            this.updateTransform();
+          } else if (this.isDrawing && this.currentTool === 'pen' && this.activePointerId === null) {
+            this.draw(e);
+          }
+        });
+
+        window.addEventListener('mouseup', () => {
+          this.isPanning = false;
+          if (this.isDrawing && this.activePointerId === null) {
+            this.isDrawing = false;
+            this.currentStroke = null;
+          }
+          this.boardContainer.classList.remove('panning');
+        });
+
+        // Stylo (souris)
+        this.boardContainer.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          if (this.ignoreMouse) return;
+          if (this.currentTool === 'pen') this.startDraw(e);
+        });
+
+        // --- Support stylet (Pointer Events) : essentiel sur Windows/tablettes ---
+        this.boardContainer.addEventListener('pointerdown', (e) => {
+          if (this.currentTool !== 'pen') return;
+          e.preventDefault();
+          this.ignoreMouse = true;
+          setTimeout(() => { this.ignoreMouse = false; }, 60);
+
+          this.activePointerId = e.pointerId;
+          try { this.boardContainer.setPointerCapture(e.pointerId); } catch (err) {}
+
+          this.startDraw(e);
+        }, { passive: false });
+
+        window.addEventListener('pointermove', (e) => {
+          if (this.currentTool === 'pen') this.moveCursor(e);
+          if (!this.isDrawing || this.currentTool !== 'pen') return;
+          if (this.activePointerId !== null && e.pointerId !== this.activePointerId) return;
+          e.preventDefault();
+          this.draw(e);
+        }, { passive: false });
+
+        const stopPointerDraw = (e) => {
+          if (this.activePointerId === null) return;
+          if (e.pointerId !== this.activePointerId) return;
+          this.activePointerId = null;
+          this.isDrawing = false;
+          this.currentStroke = null;
+          try { this.boardContainer.releasePointerCapture(e.pointerId); } catch (err) {}
+        };
+        window.addEventListener('pointerup', stopPointerDraw);
+        window.addEventListener('pointercancel', stopPointerDraw);
+
+        window.addEventListener('resize', () => this.resizeCanvas());
+      }
+
+      // --- TRANSFORMS ---
+      updateTransform() {
+        this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
+      }
+
+      getWorldPos(cx, cy) {
+        const r = this.boardContainer.getBoundingClientRect();
+        return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale };
+      }
+
+      // --- VIEW / TOOLS ---
+      resetView() {
+        this.scale = 1;
+        this.pan = { x: 0, y: 0 };
+        this.updateTransform();
+      }
+
+      toggleSound() {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) ensureAudioCtx();
+        this.updateSoundButton();
+      }
+
+      updateSoundButton() {
+        const onIcon = document.getElementById('icon-sound-on');
+        const offIcon = document.getElementById('icon-sound-off');
+        const btn = document.getElementById('btn-sound');
+        if (!onIcon || !offIcon || !btn) return;
+        const isOn = !!soundEnabled;
+        onIcon.classList.toggle('hidden', !isOn);
+        offIcon.classList.toggle('hidden', isOn);
+        btn.title = isOn ? 'Son : activé' : 'Son : coupé';
+      }
+
+      toggleFullscreen() {
+        const doc = document;
+        if (!doc.fullscreenElement) {
+          let p = null;
+          if (document.documentElement.requestFullscreen) {
+            try { p = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); }
+            catch (e) { p = document.documentElement.requestFullscreen(); }
+          } else if (document.body.requestFullscreen) {
+            p = document.body.requestFullscreen();
+          }
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } else {
+          const p = doc.exitFullscreen ? doc.exitFullscreen() : null;
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
+      }
+
+      updateFullscreenButton() {
+        const enterIcon = document.getElementById('icon-fs-enter');
+        const exitIcon = document.getElementById('icon-fs-exit');
+        const btn = document.getElementById('btn-fullscreen');
+        if (!enterIcon || !exitIcon || !btn) return;
+        const isFs = !!document.fullscreenElement;
+        enterIcon.classList.toggle('hidden', isFs);
+        exitIcon.classList.toggle('hidden', !isFs);
+        btn.title = isFs ? 'Quitter le plein écran' : 'Plein écran';
+      }
+
+      updateToolButtons() {
+        const handBtn = document.getElementById('tool-hand');
+        const penBtn = document.getElementById('tool-pen');
+        if (!handBtn || !penBtn) return;
+
+        const setActive = (btn) => {
+          btn.classList.add('bg-white', 'shadow', 'text-gray-700');
+          btn.classList.remove('text-gray-500');
+        };
+        const setInactive = (btn) => {
+          btn.classList.remove('bg-white', 'shadow', 'text-gray-700');
+          btn.classList.add('text-gray-500');
+        };
+
+        if (this.currentTool === 'pen') {
+          setInactive(handBtn);
+          setActive(penBtn);
+        } else {
+          setActive(handBtn);
+          setInactive(penBtn);
+        }
+      }
+
+      setTool(t) {
+        this.currentTool = t;
+        const p = t === 'pen';
+        this.boardContainer.classList.toggle('hide-cursor', p);
+        document.getElementById('custom-cursor').style.display = p ? 'block' : 'none';
+        this.updateToolButtons();
+      }
+
+      // --- PEN ---
+      redrawPen() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (!this.penStrokes || this.penStrokes.length === 0) return;
+
+        const prevWidth = this.ctx.lineWidth;
+        const prevColor = this.ctx.strokeStyle;
+        const prevCap = this.ctx.lineCap;
+
+        this.ctx.lineCap = 'round';
+
+        for (const stroke of this.penStrokes) {
+          const pts = stroke.points || [];
+          if (pts.length < 2) continue;
+          this.ctx.strokeStyle = stroke.color || '#2563eb';
+          this.ctx.lineWidth = stroke.width || 3;
+          this.ctx.beginPath();
+          this.ctx.moveTo(pts[0].x + this.canvasOffset, pts[0].y + this.canvasOffset);
+          for (let i = 1; i < pts.length; i++) {
+            this.ctx.lineTo(pts[i].x + this.canvasOffset, pts[i].y + this.canvasOffset);
+          }
+          this.ctx.stroke();
+        }
+
+        this.ctx.lineWidth = prevWidth;
+        this.ctx.strokeStyle = prevColor;
+        this.ctx.lineCap = prevCap;
+      }
+
+      startDraw(e) {
+        // Undo doit aussi annuler le stylo : snapshot au début du trait
+        this.saveState();
+        this.isDrawing = true;
+
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const p = this.getWorldPos(cx, cy);
+
+        this.currentStroke = { color: this.ctx.strokeStyle, width: this.ctx.lineWidth, points: [p] };
+        this.penStrokes.push(this.currentStroke);
+
+        this.lastDrawPos = p;
+        this.ctx.beginPath();
+        this.ctx.moveTo(p.x + this.canvasOffset, p.y + this.canvasOffset);
+      }
+
+      draw(e) {
+        e.preventDefault();
+        if (!this.isDrawing) return;
+
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const p = this.getWorldPos(cx, cy);
+
+        if (this.currentStroke) this.currentStroke.points.push(p);
+
+        this.ctx.lineTo(p.x + this.canvasOffset, p.y + this.canvasOffset);
+        this.ctx.stroke();
+        this.lastDrawPos = p;
+      }
+
+      clearDrawing(saveToHistory = true) {
+        if (saveToHistory) this.saveState();
+        this.penStrokes = [];
+        this.currentStroke = null;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      resizeCanvas() {
+        // Canvas “monde” : centré sur (0,0) pour pouvoir dessiner aussi
+        // dans les coordonnées négatives après pan.
+        this.canvas.width = this.canvasSize;
+        this.canvas.height = this.canvasSize;
+        this.canvas.style.width = this.canvasSize + 'px';
+        this.canvas.style.height = this.canvasSize + 'px';
+        this.canvas.style.left = (-this.canvasOffset) + 'px';
+        this.canvas.style.top = (-this.canvasOffset) + 'px';
+
+        // Grille : même zone que le canvas, alignée sur l'origine (0,0)
+        try { document.documentElement.style.setProperty('--cell', CELL + 'px'); } catch(e) {}
+        if (this.gridLayer) {
+          this.gridLayer.style.width = this.canvasSize + 'px';
+          this.gridLayer.style.height = this.canvasSize + 'px';
+          this.gridLayer.style.left = (-this.canvasOffset) + 'px';
+          this.gridLayer.style.top = (-this.canvasOffset) + 'px';
+          // Aligner la grille pour que les lignes tombent sur les multiples de CELL en coordonnées "monde"
+          this.gridLayer.style.backgroundPosition = `${this.canvasOffset}px ${this.canvasOffset}px`;
+        }
+
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.strokeStyle = '#2563eb';
+
+        // resize efface le canvas -> on redessine
+        this.redrawPen();
+      }
+
+      moveCursor(e) {
+        if (this.currentTool !== 'pen') return;
+        const c = document.getElementById('custom-cursor');
+        if (!c) return;
+        c.style.left = e.clientX + 'px';
+        c.style.top = e.clientY + 'px';
+        c.style.transform = 'translate(-7px,-7px)';
+      }
+
+      // --- RESET BOARD ---
+      resetBoard() {
+        playSound('pop');
+        // Tokens (PATCH 2) — nettoie déjà
+        this.tokens.forEach(t => t.element && t.element.remove());
+        this.tokens = [];
+        this.nextId = 1;
+        this.autoCounter = 0;
+        this.history = [];
+
+        // Vue
+        this.scale = 1;
+        this.pan = { x: 0, y: 0 };
+        this.updateTransform();
+
+        // Stylo
+        this.clearDrawing(false);
+
+        // Affichage
+        this.updateDisplay();
+      }
+    }
+
+    const app = new DecimalBoardApp();
+  </script>
+</body>
+</html>
