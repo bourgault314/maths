@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calcul Mental • Livret A5 (A4 portrait • 4 fiches A6 par page)</title>
+  <style>
+    :root{
+      --sidebar-w: 340px;
+      --primary: #4b5563;
+      --dark: #111827;
+      --bg: #f3f4f6;
+      --border: #d1d5db;
+      --paper-bg: #9ca3af;
+      --ink: #111827;
+      --soft: #e5e7eb;
+      --soft2:#f3f4f6;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0; padding:0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      display:flex;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    /* Sidebar minimal */
+    .sidebar{
+      width: var(--sidebar-w);
+      background: white;
+      border-right: 1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      flex-shrink:0;
+      z-index:10;
+    }
+    .header{
+      padding: 14px 14px;
+      background: var(--dark);
+      color: white;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom: 1px solid #374151;
+    }
+    .app-title{
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    .reset-btn{
+      background: #4b5563;
+      border:none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color:white;
+      font-size: 10px;
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .controls{
+      padding: 14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .section-header{
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--primary);
+      border-bottom: 2px solid var(--soft);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .tables-wrap{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .grid-container{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .tbtn{
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 10px;
+      padding: 9px 0;
+      font-weight: 900;
+      font-size: 12px;
+      color: #1f2937;
+      cursor:pointer;
+      transition: 0.12s ease;
+      user-select:none;
+      text-align:center;
+    }
+    .tbtn:hover{ background:#f3f4f6; }
+    .tbtn.on{
+      background:#e5e7eb;
+      border-color: var(--primary);
+      color: #374151;
+    }
+
+    .row{ display:flex; flex-direction:column; gap:6px; }
+    .row label{ font-size:12px; color:#374151; font-weight:800; }
+    .row select{
+      width:100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--dark);
+      outline: none;
+    }
+    .hint{ font-size:11px; color:#6b7280; line-height:1.2; }
+
+    .footer{
+      margin-top:auto;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background:white;
+      display:flex;
+      gap: 10px;
+    }
+    .btn-act{
+      flex: 1;
+      border:none;
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: 900;
+      cursor:pointer;
+      color:white;
+      transition: 0.15s ease;
+    }
+    .btn-gen{ background: var(--primary); }
+    .btn-gen:hover{ background: #374151; }
+    .btn-print{ background: var(--dark); }
+    .btn-print:hover{ background:#000; }
+
+    /* Preview */
+    .main{
+      flex:1;
+      overflow:auto;
+      padding: 34px;
+      background: var(--paper-bg);
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    /* Pages A4 : séparation visuelle + repères recto/verso (à l'écran uniquement) */
+    #pages{
+      display:flex;
+      flex-direction:column;
+      gap: 34px;
+      align-items:center;
+    }
+    .page-wrap{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      align-items:flex-start;
+    }
+    .page-meta{
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: .2px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 6px 10px;
+      user-select:none;
+    }
+
+    /* 1 page A4 portrait = 4 fiches A6 (2 en haut, 2 en bas),
+       pour découpe verticale => 2 pages A5 portrait (avec 2 fiches empilées). */
+    .page{
+      width: 210mm;
+      height: 297mm;
+      background:white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.30);
+      padding: 0;
+      display:grid;
+      grid-template-columns: 105mm 105mm;
+      grid-template-rows: 148.5mm 148.5mm;
+      position:relative;
+      page-break-after: always;
+    }
+
+    /* traits guides (gris très léger) */
+    .page::before{
+      content:"";
+      position:absolute;
+      left: 105mm;
+      top: 0;
+      width: 0;
+      height: 100%;
+      border-left: 1px dashed #cbd5e1;
+      pointer-events:none;
+    }
+    .page::after{
+      content:"";
+      position:absolute;
+      left: 0;
+      top: 148.5mm;
+      width: 100%;
+      height: 0;
+      border-top: 1px dashed #e5e7eb;
+      pointer-events:none;
+    }
+
+    .slot{
+      display:flex;
+      padding: 2.2mm; /* marge de sécurité d'impression */
+    }
+
+    /* Fiche (palette douce, nuances de gris) */
+    .fiche{
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      display:flex;
+      flex-direction:column;
+      padding: 12px;
+      background:white;
+      overflow:hidden;
+      position:relative;
+      width: 100%;
+      height: 100%;
+      min-width:0;
+      min-height:0;
+    }
+
+    .f-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+      flex-shrink:0;
+      gap: 10px;
+    }
+    .f-title-block h1{
+      margin:0;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height:1;
+      color:#1f2937;
+      font-size: 14px;
+    }
+    .f-title-block p{
+      margin: 3px 0 0 0;
+      font-size: 10px;
+      font-weight: 700;
+      color: #6b7280;
+      letter-spacing: 0.2px;
+    }
+    .f-student-info{
+      text-align:right;
+      font-size: 10px;
+      color:#374151;
+      white-space:nowrap;
+    }
+    .name-box{
+      display:inline-block;
+      width: 160px;
+      border-bottom: none;
+      vertical-align:baseline;
+    }
+    .score-box{
+      display:inline-block;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      padding: 2px 8px;
+      font-weight: 900;
+      margin-left: 8px;
+      background: #f9fafb;
+      min-width: 36px;
+      text-align:center;
+    }
+    .c-label{
+      display:inline-block;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      padding: 2px 8px;
+      font-weight: 900;
+      background: #f9fafb;
+      min-width: 44px;
+      text-align:center;
+      letter-spacing: .2px;
+    }
+
+    .c-inline{
+      display:inline-block;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      padding: 2px 7px;
+      font-weight: 900;
+      background: #f9fafb;
+      letter-spacing: .2px;
+      font-size: 10px;
+      transform: translateY(-1px);
+      margin-left: 6px;
+    }
+    .f-header.compact{
+      align-items:center;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+    }
+    .f-title-block.compact h1{
+      font-size: 13px;
+    }
+
+    /* Corps: 6 blocs (A–C puis D–F) */
+    .blocks{
+  flex:1;
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  overflow:hidden;
+  background:transparent;
+  min-height: 0;
+}
+    .span-3{ grid-column: span 3; }
+    .span-4{ grid-column: span 4; }
+    .span-6{ grid-column: span 6; }
+    .b-block{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      border: 1px solid var(--soft);
+      border-radius: 6px;
+      overflow:hidden;
+      background:white;
+    }
+    .b-label{
+      text-align:center;
+      background: var(--soft2);
+      font-weight: 900;
+      font-size: 10px;
+      color: var(--primary);
+      padding: 3px 0;
+      border-bottom: 1px solid var(--soft);
+      flex-shrink:0;
+    }
+    .b-rows{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .b-row{
+      flex:1;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding: 2px 6px 0 6px;
+      font-size: 10px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-weight: 600;
+      color: var(--ink);
+      border-bottom: 1px solid #f3f4f6;
+      min-height:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .b-row:last-child{ border-bottom:none; }
+
+    .b-row > span{
+      display:block;
+      width:100%;
+      text-align:center;
+    }
+
+    /* Correction (alignée A/B/C/D) */
+    .correction{
+      margin-top: 7px;
+      padding-top: 6px;
+      border-top: 1px dotted #d1d5db;
+      font-size: 8px;
+      color: #6b7280;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      line-height: 1.35;
+      flex-shrink:0;
+    }
+    .corr-grid-a6-7{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 6px;
+    }
+    .corr-cell{ min-width:0; }
+    .corr-line{ display:block; margin-bottom: 2px; }
+    .corr-line:last-child{ margin-bottom:0; }
+    .corr-lbl{
+      color: var(--primary);
+      font-weight: 900;
+      margin-right: 5px;
+      display: inline-block;
+      width: 18px;
+    }
+
+    .sep-dot{ color:#9ca3af; padding:0 4px; }
+
+    /* --- Couverture (A5 = 2 slots A6 empilés) --- */
+    .cover-top{
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-bottom: none;
+      padding-bottom: 10px;
+    }
+    .cover-bottom{
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-top: none;
+      padding-top: 10px;
+    }
+    .cover-sub{
+      font-size: 11px;
+      color:#374151;
+      font-weight: 800;
+      margin: 10px 0 0 0;
+    }
+    .notes-title{
+      font-weight: 900;
+      font-size: 11px;
+      color:#1f2937;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+      text-align:center;
+    }
+    .notes-grid{
+      display:grid;
+      gap: 6px;
+      align-content:start;
+    }
+    .note-item{
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 5px 6px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#ffffff;
+      min-width:0;
+    }
+    .note-id{
+      font-weight: 900;
+      font-size: 9px;
+      color:#374151;
+    }
+    .note-box{
+      display:inline-block;
+      width: 10mm;
+      height: 10mm;
+      border: 1px solid #9ca3af;
+      border-radius: 0;
+      background:#fff;
+    }
+    .cover-hint{
+      margin-top: 8px;
+      font-size: 10px;
+      color:#6b7280;
+      line-height:1.25;
+    }
+
+    
+    /* --- Corrigés regroupés sur une seule page (p2) --- */
+    .all-corr{
+      margin-top: 6px;
+      font-size: 8.5px;
+      line-height: 1.15;
+    }
+    .all-corr-item{
+      display: grid;
+      /* Plus compact : évite un "grand blanc" après C1/C2… */
+      grid-template-columns: 18px 1fr;
+      column-gap: 6px;
+      padding: 2px 0;
+      border-bottom: 1px dotted #d1d5db;
+    }
+    .all-corr-item:last-child{ border-bottom: none; }
+    .all-corr-id{
+      font-weight: 900;
+      color:#111827;
+    }
+
+    /* Dans la page corrigés, on veut compact (pas de "padding" fixe après A:) */
+    .all-corr .corr-lbl{
+      width: auto;
+      display: inline;
+      margin-right: 2px;
+    }
+    .all-corr-lines{ min-width:0; }
+    .all-corr-line{
+      color:#111827;
+      word-break: break-word;
+    }
+
+    /* 6 blocs : grille 3 colonnes (ABC / DEF) pour aligner A avec D, B avec E, C avec F */
+    .all-corr-grid6{
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px 10px;
+    }
+    
+    /* 4 blocs : grille 2 colonnes (AB / CD) pour aligner A avec C, B avec D */
+    .all-corr-grid4{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2px 10px;
+    }
+
+.all-corr-cell{
+      min-width: 0;
+      color:#111827;
+      word-break: break-word;
+    }
+    .corr-page-header h1{ font-size: 13px; }
+    .corr-page-header p{ font-size: 10px; }
+    .corr-page-header .c-label{ font-size: 10px; }
+
+
+    /* --- A5 plein (sur 2 quarts) : pour Couverture et Corrigés --- */
+    .slot.span2{
+      grid-column: 1 / 3;
+    }
+
+    .cover-a5{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .cover-a5 .cover-topline{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      align-items:start;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .cover-a5 .title-left{
+      text-align:left;
+    }
+    .cover-a5 h1{
+      margin:0;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height:1;
+      color:#111827;
+      font-size: 18px;
+    }
+    .cover-a5 .subtitle{
+      margin:4px 0 0 0;
+      font-size: 12px;
+      font-weight: 800;
+      color:#374151;
+    }
+    .cover-a5 .name-area{
+      justify-self:end;
+      text-align:right;
+      font-size: 11px;
+      font-weight: 900;
+      color:#111827;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .cover-a5 .name-space{
+      margin-top: 4px;
+      width: 70mm;
+      height: 14mm;
+      border: 1.2px solid #111827;
+      border-radius: 4px;
+      background: white;
+      position: relative;
+    }
+    .cover-a5 .name-label{
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #111827;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .cover-notes{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap: 8px;
+      min-height:0;
+    }
+    .cover-a5 .notes-title{
+      font-size: 12px;
+      font-weight: 900;
+      color:#111827;
+      margin: 2px 0 0 0;
+      width:100%;
+      text-align:center;
+    }
+    .notes-squares{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 4mm;
+      justify-content:center;
+      align-content:center;
+      width: 140mm;
+      margin: 0 auto; /* largeur fixe pour centrer les lignes incomplètes */
+    }
+    .note-square{
+      width: 20mm;
+      height: 20mm;
+      border: 1.6px solid #111827;
+      border-radius: 3px;
+      box-sizing:border-box;
+      background:white;
+    }
+
+    /* --- Corrigés (A5 paysage) : ultra compact pour tout faire tenir --- */
+    .fiche.corr-a5{
+      padding: 8px; /* gagne de la place utile */
+    }
+    .corr-a5 .f-header{
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e5e7eb;
+      gap: 8px;
+    }
+    .corr-page-header h1{ font-size: 12px; }
+    .corr-page-header p{ font-size: 9px; margin-top: 2px; }
+    .corr-page-header .c-label{ font-size: 9px; padding: 1px 6px; min-width: 0; }
+
+    .corr-a5 .all-corr{
+      font-size: 8.8px;
+      line-height: 1.02;
+      margin-top: 4px;
+    }
+    .corr-a5 .all-corr-item{
+      grid-template-columns: 14px 1fr;
+      column-gap: 2px;
+      padding: 0;            /* pas d'espace vertical entre fiches */
+      border-bottom: none;   /* supprime la ligne => hauteur gagnée */
+    }
+    .corr-a5 .all-corr-id{ font-weight: 900; }
+
+    /* Corrigés "larges" (2 lignes par fiche) */
+    .corr-a5 .corr-wide{
+      margin-top: 4px;
+      font-size: 9.2px;
+      line-height: 1.15;
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-auto-rows: 1fr;   /* chaque fiche prend la même hauteur */
+      row-gap: 0;
+    }
+    /* Ajustements spécifiques quand une page de corrigés contient peu de fiches (ex : 9) :
+       on utilise mieux la hauteur disponible en "étirant" les 2 lignes (ABC en haut, DEF en bas). */
+    .corr-a5 .corr-wide[data-n="9"]{
+      grid-auto-rows: minmax(0, 1fr);
+    }
+    .corr-a5 .corr-wide[data-n="9"] .corr-wide-item{
+      align-items: stretch;   /* les colonnes remplissent la hauteur -> meilleure répartition verticale */
+    }
+    .corr-a5 .corr-wide[data-n="9"] .corr-wide-lines{
+      height: 100%;
+      justify-content: space-between; /* ABC en haut, DEF en bas */
+      gap: 0;
+      padding-top: 1px;
+      padding-bottom: 1px;
+    }
+
+    .corr-a5 .corr-wide-item{
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      column-gap: 6px;
+      padding: 0;
+      border-bottom: 1px dotted #d1d5db;
+      align-items: center;
+      min-height: 0;
+    }
+    .corr-a5 .corr-wide-item:last-child{ border-bottom: none; }
+    .corr-a5 .corr-wide-item:last-child{ border-bottom:none; }
+    .corr-a5 .corr-wide-id{
+      font-weight: 900;
+      color:#111827;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    
+    .corr-a5 .corr-wide-id{ font-size: 11px; }
+.corr-a5 .corr-wide-lines{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap: 4px;
+      padding-left: 0;
+    }
+    .corr-a5 .corr-wide-line{
+      min-width:0;
+      color:#111827;
+    }
+    .corr-a5 .corr-wide-linegrid{
+      display:grid;
+      min-width:0;
+      align-items:center;
+      column-gap: 0; /* le spacing est géré par les colonnes 1fr */
+    }
+    .corr-a5 .corr-wide-linegrid.cols-3{
+      grid-template-columns: auto 1fr auto 1fr auto 1fr;
+    }
+    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(1){ grid-column: 1; }
+    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(2){ grid-column: 3; }
+    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(3){ grid-column: 5; }
+    .corr-a5 .corr-wide-linegrid.cols-2{
+      grid-template-columns: auto 1fr auto 1fr;
+    }
+    .corr-a5 .corr-wide-linegrid.cols-2 .corr-wide-cell:nth-child(1){ grid-column: 1; }
+    .corr-a5 .corr-wide-linegrid.cols-2 .corr-wide-cell:nth-child(2){ grid-column: 3; }
+    .corr-a5 .corr-wide-cell{
+      min-width:0;
+      overflow-wrap:anywhere;
+      word-break: break-word;
+      padding: 0;
+      text-align:left;
+    }
+    .corr-a5 .corr-wide-cell .lbl{ font-weight: 900; }
+    .corr-a5 .corr-wide-cell .lbl{ font-weight: 900; }
+
+    /* Pas de "colonne" fixe après A: */
+    .corr-a5 .corr-lbl{
+      width: auto;
+      display: inline;
+      margin-right: 2px;
+    }
+
+    /* Grilles : aucune séparation verticale entre ABC et DEF */
+    
+    .all-corr-empty{ visibility:hidden; }
+.corr-a5 .all-corr-grid6{ gap: 0 3px; grid-template-columns: 0.88fr 0.88fr 1.24fr; }
+    .corr-a5 .all-corr-grid4{ gap: 0 6px; }
+
+    /* Autorise le retour à la ligne : évite le chevauchement */
+    .corr-a5 .all-corr-cell{
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .corr-a5-body{
+      display:flex;
+      flex-direction:column;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .corr-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 6px;
+      align-items:start;
+      margin-bottom: 8px;
+    }
+    .corr-row:last-child{ margin-bottom: 0; }
+
+/* --- En-tête fiche (C + score) : plus compact --- */
+    .meta-row{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 4px;
+    }
+    .meta-row .score-line{
+      font-size: 11px;
+      font-weight: 800;
+      color:#111827;
+    }
+
+
+    @media print{
+      @page{ size: A4 portrait; margin: 0; }
+      body{ background:white; display:block; height:auto; overflow:visible; }
+      .sidebar{ display:none !important; }
+      .main{ padding:0 !important; background:white !important; display:block !important; }
+      #pages{ display:block !important; }
+      .page-wrap{ margin:0 !important; padding:0 !important; }
+      .page-meta{ display:none !important; }
+      .page{
+        width: 210mm !important;
+        height: 297mm !important;
+        margin:0 !important;
+        box-shadow:none !important;
+        page-break-after: always;
+      }
+      *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  
+    .correction-hidden{ display:none !important; }
+
+
+    /* --- Prompt GPT/Gemini (modal) --- */
+    .pm-backdrop{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(17,24,39,.45);
+      z-index: 9999;
+      padding: 12px;
+    }
+    .pm{
+      width: min(760px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .pm-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: #f9fafb;
+    }
+    .pm-title{
+      font-weight: 900;
+      font-size: 14px;
+      color: #111827;
+      letter-spacing: .2px;
+    }
+    .pm-sub{
+      margin-top:4px;
+      font-size: 12px;
+      color: #4b5563;
+      font-weight: 700;
+    }
+    .pm-close{
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 10px;
+      cursor:pointer;
+      font-weight: 900;
+      color:#111827;
+    }
+    .pm-body{
+      padding: 14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .pm-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+        .pm-grid .row.full{ grid-column: 1 / -1; }
+.pm-grid .row textarea{ min-height: 56px; }
+    .pm-out{
+      width:100%;
+      min-height: 180px;
+      resize: vertical;
+      padding:10px 10px;
+      border:1px solid var(--border);
+      border-radius: 10px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+      background:#fff;
+      box-sizing: border-box;
+      line-height: 1.25;
+    }
+    .pm-foot{
+      display:flex;
+      gap:10px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      background: #f9fafb;
+    }
+    .pm-foot .btn-act{ flex: 1; }
+
+    @media (max-width: 760px){
+      .pm-grid{ grid-template-columns: 1fr; }
+    }
+    @media print{
+      .pm-backdrop{ display:none !important; }
+    }
+</style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">
+      <div class="app-title">Calcul Mental • Livret A5</div>
+      <button class="reset-btn" onclick="resetAll()">VIDER</button>
+    </div>
+
+    <div class="controls">
+      
+      <div class="pages-wrap">
+        <div class="section-header">Livret</div>
+        <div class="row">
+          <label for="sheetCount">Nombre de feuilles (recto-verso)</label>
+          <select id="sheetCount" aria-label="Nombre de feuilles recto-verso"></select>
+          <div id="sheetHint" class="hint" style="margin-top:6px;"></div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <label for="exerciseMode">Format des blocs</label>
+          <select id="exerciseMode" aria-label="Format des blocs"></select>
+        </div>
+        </div>
+        <button class="btn-act btn-gen" style="width:100%; margin-top:8px;" onclick="openPromptModal()">🧠 Prompt GPT/Gemini</button>
+      </div>
+
+      <div class="content-wrap" style="margin-top:8px;">
+        <div class="section-header">Contenu (JSON)</div>
+        <div class="hint">
+          Colle ici le JSON généré par ChatGPT, puis clique <b>Appliquer</b>.
+          Si tu laisses vide, le livret sera généré avec des cases vides (gabarit).
+        </div>
+        <textarea id="contentInput" spellcheck="false"
+          style="width:100%; min-height: 170px; resize: vertical; padding:10px 10px; border:1px solid var(--border); border-radius: 10px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;"
+          placeholder='{"meta":{"title":"Calcul mental","subtitle":"Fiches personnalisées","includeCorrections":true,"mode":6},"exercises":[{"id":"C1","A":{"q":["…","…","…","…","…"],"a":["…"]},"B":{...}}]}'></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="btn-act btn-gen" style="flex:1;" onclick="applySpec()">✅ Appliquer</button>
+          <button class="btn-act btn-gen" style="flex:1;" onclick="loadExample()">📋 Exemple</button>
+          <button class="btn-act btn-print" style="flex:1;" onclick="window.print()">🖨️ Imprimer</button>
+        </div>
+      </div>
+
+    </div>
+    </div>
+
+  <div class="main">
+    <div id="pages"></div>
+  </div>
+
+
+
+  <!-- Prompt GPT/Gemini (modal) -->
+  <div id="promptModalBackdrop" class="pm-backdrop" onclick="onPromptBackdropClick(event)">
+    <div class="pm" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+      <div class="pm-head">
+        <div>
+          <div class="pm-title" id="pmTitle">Générer un prompt GPT/Gemini</div>
+          <div class="pm-sub" id="pmMetaLine"></div>
+        </div>
+        <button class="pm-close" onclick="closePromptModal()" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="pm-body">
+        <div class="hint" style="margin:0;">
+          Remplis rapidement A→F, puis clique <b>Générer</b>. Le prompt obtenu est prêt à copier-coller dans ChatGPT ou Gemini
+          pour obtenir un <b>JSON compatible</b> avec ce livret.
+        </div>
+
+        <div class="pm-grid">
+          <div class="row">
+            <label for="pmTitleInput">Titre (affiché sur le livret)</label>
+            <input id="pmTitleInput" type="text" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:10px; font-weight:800;" placeholder="Calcul mental — Série..." />
+          </div>
+          <div class="row">
+            <label for="pmSubtitleInput">Sous-titre (niveau / chapitre)</label>
+            <input id="pmSubtitleInput" type="text" style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:10px; font-weight:800;" placeholder="6e • ... • auto-correction" />
+          </div>
+          <div class="row full">
+            <label for="pmGlobal">Consigne globale (optionnel)</label>
+            <textarea id="pmGlobal" placeholder="Ex : niveau visé (5e…), difficulté graduée, interdits/contraintes de forme, etc."></textarea>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:6px;">Consignes par bloc (sois précis)</div>
+
+        <div class="pm-grid">
+          <div class="row">
+            <label for="pmA">Bloc A</label>
+            <textarea id="pmA" placeholder="Ex : tables de multiplication (3→9), calcul rapide" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+          <div class="row">
+            <label for="pmB">Bloc B</label>
+            <textarea id="pmB" placeholder="Ex : ×10 / ×100 / ×1000 (décimaux)" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+          <div class="row">
+            <label for="pmC">Bloc C</label>
+            <textarea id="pmC" placeholder="Ex : ÷10 / ÷100 / ÷1000 (décimaux)" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+          <div class="row">
+            <label for="pmD">Bloc D</label>
+            <textarea id="pmD" placeholder="Ex : additions/soustractions astucieuses (…+9, …−19, etc.)" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+          <div class="row" id="pmRowE">
+            <label for="pmE">Bloc E</label>
+            <textarea id="pmE" placeholder="Ex : pourcentages simples (10%, 25%, 50%)" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+          <div class="row" id="pmRowF">
+            <label for="pmF">Bloc F</label>
+            <textarea id="pmF" placeholder="Ex : conversions (m↔cm, h↔min, kg↔g, etc.)" spellcheck="false" style="width:100%; resize:vertical; padding:8px 10px; border:1px solid var(--border); border-radius:10px;"></textarea>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:6px;">Prompt à copier</div>
+        <textarea id="pmOutput" class="pm-out" spellcheck="false" readonly placeholder="Clique “Générer” pour créer le prompt..."></textarea>
+      </div>
+
+      <div class="pm-foot">
+        <button class="btn-act btn-gen" onclick="generatePromptIntoBox(false)">🧠 Générer</button>
+        <button class="btn-act btn-gen" onclick="generatePromptIntoBox(true)">📋 Générer & Copier</button>
+      </div>
+    </div>
+  </div>
+<script>
+/*
+  Livret A5 (A4 portrait • 4 fiches A6 par page) — Gabarit personnalisable
+  - Mise en page conservée (imposition livret pliage haut/bas)
+  - Contenu injecté via JSON (copié-collé depuis ChatGPT)
+  - Version élève (sans corrigés) / version prof (avec corrigés)
+*/
+
+let defaultSheets = 2;      // valeur par défaut dans le sélecteur
+let defaultMode   = 6;      // 4 = ABCD ; 6 = ABCDEF
+let contentSpec   = null;   // JSON appliqué (ou null)
+
+function safeNumber(x, fallback){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function currentSheetCount(){
+  const sel = document.getElementById('sheetCount');
+  const v = safeNumber(sel?.value, defaultSheets);
+  // On démarre à 2 feuilles minimum (pas de livret à 1 feuille)
+  return (v >= 2) ? v : 2;
+}
+
+function currentMode(){
+  const sel = document.getElementById('exerciseMode');
+  const v = safeNumber(sel?.value, defaultMode);
+  return (v === 4) ? 4 : 6;
+}
+
+
+function modeConfig(mode){
+  const m = (Number(mode) === 4) ? 4 : 6;
+  const blocks = (m === 4) ? ['A','B','C','D'] : ['A','B','C','D','E','F'];
+  const span = (m === 4) ? 6 : 4;
+  const scoreMax = (m === 4) ? 20 : 30;
+  return {mode:m, blocks, span, scoreMax};
+}
+
+/* ---------- Corrigés : nombre de pages selon le livret ---------- */
+function correctionsPagesCountForSheets(sheets){
+  const s = safeNumber(sheets, 2);
+  // 2 feuilles : 1 page de corrigés (plus de place, moins de chevauchement)
+  // 3 feuilles et + : 2 pages de corrigés
+  return (s <= 2) ? 1 : 2;
+}
+
+function fixedPagesForSheets(sheets, includeCorrections){
+  if(!includeCorrections) return 1; // couverture seule
+  return 1 + correctionsPagesCountForSheets(sheets); // couverture + corrigés
+}
+
+function capacityForSheets(sheets, includeCorrections){
+  const totalA5Pages = sheets * 4;
+  const fixedPages = fixedPagesForSheets(sheets, includeCorrections);
+  return Math.max(0, (totalA5Pages - fixedPages) * 2);
+}
+
+
+/* ---------- JSON -> données ---------- */
+function normalizeBlock(block, rowsCount){
+  const q = Array.isArray(block?.q) ? block.q.slice(0, rowsCount) : [];
+  const a = Array.isArray(block?.a) ? block.a : (typeof block?.a === 'string' ? [block.a] : []);
+  while(q.length < rowsCount) q.push('');
+  return { q, a };
+}
+
+function buildExerciseDataFromSpec(ex, mode){
+  const cfg = modeConfig(mode);
+  const rowsCount = 5; // conservé pour la mise en page
+  const data = {_meta: cfg, _id: (ex?.id ? String(ex.id) : null)};
+
+  cfg.blocks.forEach(k => {
+    const nb = normalizeBlock(ex?.[k], rowsCount);
+    data[k] = { q: nb.q, a: nb.a, span: cfg.span };
+  });
+
+  // scoreMax override éventuel
+  const sm = safeNumber(ex?.scoreMax, null);
+  if(sm && sm > 0) data._meta.scoreMax = sm;
+
+  return data;
+}
+
+function buildEmptyExerciseData(mode, idLabel){
+  const cfg = modeConfig(mode);
+  const rowsCount = 5;
+  const data = {_meta: cfg, _id: idLabel ?? null};
+  cfg.blocks.forEach(k => data[k] = { q: Array(rowsCount).fill(''), a: [], span: cfg.span });
+  return data;
+}
+
+/* ---------- Rendu des blocs ---------- */
+function renderBlocks(data){
+  const blocks = (data?._meta?.blocks) ?? ['A','B','C','D','E','F'];
+  let bodyHtml = '';
+  blocks.forEach(lbl => {
+    const span = (data?.[lbl]?.span) ?? 4;
+    const rowsArr = (data?.[lbl]?.q ?? []);
+    const rows = rowsArr.map(q => {
+      const txt = (q && String(q).trim().length) ? escapeHtml(String(q)) : '&nbsp;';
+      return `<div class="b-row"><span>${txt}</span></div>`;
+    }).join('');
+    bodyHtml += `
+      <div class="b-block span-${span}">
+        <div class="b-label">${lbl}</div>
+        <div class="b-rows">${rows}</div>
+      </div>`;
+  });
+  return bodyHtml;
+}
+
+function renderAllCorrectionsList(exData, showBlocksLabels){
+  // Liste compacte : 1 ligne par fiche, avec alignement des colonnes
+  const out = [];
+  out.push('<div class=\"all-corr\">');
+
+  const compactAns = (s) => String(s ?? '')
+    .replace(/\s*;\s*/g, '; ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  for(let i=1; i<exData.length; i++){
+    const d = exData[i];
+    if(!d) continue;
+    const id = d._id ?? `C${i}`;
+    out.push(renderAllCorrectionsItem(d, showBlocksLabels, id));
+  }
+
+  out.push('</div>');
+  return out.join('');
+}
+
+function renderAllCorrectionsItem(d, showBlocksLabels, forcedId){
+  if(!d) return '<div class=\"all-corr-item all-corr-empty\"></div>';
+
+  const compactAns = (s) => String(s ?? '')
+    .replace(/\s*;\s*/g, '; ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const id = forcedId ?? d._id ?? d.id ?? '';
+  const mode = currentMode();
+  const blocks = (mode === 4) ? ['A','B','C','D'] : ['A','B','C','D','E','F'];
+
+  const out = [];
+  out.push(`<div class=\"all-corr-item\">
+    <div class=\"all-corr-id\">${escapeHtml(id)}.</div>
+    <div class=\"all-corr-lines\">`);
+
+  if(blocks.length === 6){
+    const cells = blocks.map(k => {
+      const ans = compactAns((d?.[k]?.a ?? []).join('; '));
+      const ansTxt = ans.length ? escapeHtml(ans) : '';
+      return `<div class=\"all-corr-cell\">${showBlocksLabels ? `<span class=\\"corr-lbl\\">${k}:</span>` : ''}${ansTxt}</div>`;
+    }).join('');
+    out.push(`<div class=\"all-corr-grid6\">${cells}</div>`);
+  }else{
+    const cells = blocks.map(k => {
+      const ans = compactAns((d?.[k]?.a ?? []).join('; '));
+      const ansTxt = ans.length ? escapeHtml(ans) : '';
+      return `<div class=\"all-corr-cell\">${showBlocksLabels ? `<span class=\\"corr-lbl\\">${k}:</span>` : ''}${ansTxt}</div>`;
+    }).join('');
+    out.push(`<div class=\"all-corr-grid4\">${cells}</div>`);
+  }
+
+  out.push(`</div></div>`);
+  return out.join('');
+}
+
+
+function renderCorrWideItem(d, forcedId){
+  if(!d){
+    return `<div class="corr-wide-item"><div class="corr-wide-id"></div><div class="corr-wide-lines"></div></div>`;
+  }
+
+  const compactAns = (s) => String(s ?? '')
+    .replace(/\s*;\s*/g, '; ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const id = forcedId ?? d._id ?? d.id ?? '';
+  const mode = currentMode();
+  const blocks = (mode === 4) ? ['A','B','C','D'] : ['A','B','C','D','E','F'];
+
+  const cell = (k) => {
+    const ans = compactAns((d?.[k]?.a ?? []).join('; '));
+    const ansTxt = ans.length ? escapeHtml(ans) : '';
+    return `<div class="corr-wide-cell"><span class="lbl">${k}:</span> ${ansTxt}</div>`;
+  };
+
+  const line1Keys = (blocks.length === 6) ? ['A','B','C'] : ['A','B'];
+  const line2Keys = (blocks.length === 6) ? ['D','E','F'] : ['C','D'];
+
+  const lineHtml = (keys) => {
+    const colsClass = `cols-${keys.length}`;
+    return `<div class="corr-wide-line"><div class="corr-wide-linegrid ${colsClass}">${keys.map(cell).join('')}</div></div>`;
+  };
+
+  return `<div class="corr-wide-item">
+    <div class="corr-wide-id">${escapeHtml(id)}.</div>
+    <div class="corr-wide-lines">
+      ${lineHtml(line1Keys)}
+      ${lineHtml(line2Keys)}
+    </div>
+  </div>`;
+}
+
+function buildExerciseFiche(num, data){
+  const fiche = document.createElement('div');
+  fiche.className = 'fiche';
+
+  const label = data?._id ?? `C${num}`;
+  const scoreMax = (data?._meta?.scoreMax) ?? 30;
+
+  fiche.innerHTML = `
+    <div class="f-header compact">
+      <div class="f-title-block compact">
+        <h1><span class="c-inline">${escapeHtml(label)}</span></h1>
+      </div>
+      <div class="f-student-info">
+        <div class="score-line"><span class="score-box">&nbsp;</span> / ${scoreMax}</div>
+      </div>
+    </div>
+    <div class="blocks">${renderBlocks(data)}</div>
+    <div class="correction correction-hidden"></div>
+  `;
+  return fiche;
+}
+
+/* ---------- Couverture & Corrigés (A5 plein) ---------- */
+function buildCoverA5(totalExercises, meta){
+  const title = (meta?.title ? String(meta.title) : 'Calcul Mental');
+  const subtitle = (meta?.subtitle ? String(meta.subtitle) : 'Fiches');
+  const el = document.createElement('div');
+  el.className = 'fiche cover-a5';
+
+  const top = document.createElement('div');
+  top.className = 'cover-topline';
+  top.innerHTML = `
+    <div class="title-left">
+      <h1>${escapeHtml(title)}</h1>
+      <div class="subtitle">${escapeHtml(subtitle)}</div>
+    </div>
+    <div class="name-area">
+      <div class="name-space"><span class="name-label">Nom</span></div>
+    </div>
+  `;
+
+  const notesTitle = document.createElement('div');
+  notesTitle.className = 'notes-title';
+  notesTitle.textContent = 'Notes';
+
+  const grid = document.createElement('div');
+  grid.className = 'notes-squares';
+
+  for(let i=1; i<=totalExercises; i++){
+    const sq = document.createElement('div');
+    sq.className = 'note-square';
+    grid.appendChild(sq);
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cover-notes';
+  wrap.appendChild(notesTitle);
+  wrap.appendChild(grid);
+
+  el.appendChild(top);
+  el.appendChild(wrap);
+  return el;
+}
+
+function buildCorrectionsA5(totalExercises, exData, meta, rangeStart = 1, rangeEnd = null){
+  const title = (meta?.title || 'Calcul mental');
+  const subtitle = (meta?.subtitle || '');
+
+  const from = Number.isFinite(rangeStart) ? rangeStart : 1;
+  const toRaw = (rangeEnd == null) ? totalExercises : rangeEnd;
+  const to = Math.min(Number.isFinite(toRaw) ? toRaw : totalExercises, totalExercises);
+
+  const rangeLabel = (from <= to) ? `C${from} → C${to}` : 'Suite';
+
+  const el = document.createElement('div');
+  el.className = 'fiche corr-a5';
+
+  const header = document.createElement('div');
+  header.className = 'f-header corr-page-header';
+  header.innerHTML = `
+    <div class="f-title-block">
+      <h1>${escapeHtml(title)}</h1>
+      <p>${escapeHtml(subtitle)}</p>
+    </div>
+    <div class="f-student-info">
+      <span class="c-label">${escapeHtml(rangeLabel)}</span>
+    </div>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'corr-a5-body';
+
+  const rows = [];
+  rows.push(`<div class="corr-wide" data-n="${(from<=to)?(to-from+1):0}">`);
+  if(from <= to){
+    for(let i = from; i <= to; i++){
+      rows.push(renderCorrWideItem(exData[i] ?? null, `C${i}`));
+    }
+  }else{
+    rows.push('<div style="font-size:10px; color:#6b7280; margin-top:10px;">(aucun corrigé sur cette page)</div>');
+  }
+  rows.push('</div>');
+
+  body.innerHTML = rows.join('');
+
+  el.appendChild(header);
+  el.appendChild(body);
+  return el;
+}
+
+function buildEmptyA5(title){
+  const el = document.createElement('div');
+  el.className = 'fiche';
+  el.innerHTML = `
+    <div class="f-header">
+      <div class="f-title-block"><h1>${escapeHtml(title || '')}</h1><p>&nbsp;</p></div>
+      <div class="f-student-info">&nbsp;</div>
+    </div>
+    <div style="flex:1;"></div>
+  `;
+  return el;
+}
+
+function buildEmptySlot(){
+  const empty = document.createElement('div');
+  empty.style.width = '100%';
+  empty.style.height = '100%';
+  return empty;
+}
+
+/* ---------- Imposition livret (pliage haut/bas) ---------- */
+function sheetPagesForSide(sheetIndex, isRecto, totalA5Pages){
+  const P = totalA5Pages;
+  if(isRecto){
+    const top = 2*sheetIndex + 1;
+    const bottom = P - (2*sheetIndex + 1);
+    return [top, bottom];
+  }else{
+    const top = 2*sheetIndex + 2;
+    const bottom = P - (2*sheetIndex);
+    return [top, bottom];
+  }
+}
+
+function pageTypeLabel(p, includeCorrections, corrPagesCount){
+  if(p === 1) return "Couverture";
+  if(includeCorrections && p >= 2 && p <= (1 + (corrPagesCount || 0))) return "Corrigés";
+  return "Énoncés";
+}
+
+/* ---------- UI ---------- */
+function updateHint(totalExercises, sheets, includeCorrections){
+  const hint = document.getElementById('sheetHint');
+  if(!hint) return;
+
+  const totalA5Pages = sheets * 4;
+  const fixedPages = fixedPagesForSheets(sheets, includeCorrections);
+  const capacity = Math.max(0, (totalA5Pages - fixedPages) * 2);
+
+  hint.innerHTML =
+    `→ <b>${sheets}</b> feuille(s) A4 recto-verso = <b>${totalA5Pages}</b> pages A5 (livret plié haut/bas). ` +
+    `Capacité : <b>${capacity}</b> fiches. ` +
+    (includeCorrections ? `Corrigés : <b>${correctionsPagesCountForSheets(sheets)}</b> page(s). ` : '') +
+    (totalExercises ? `Actuel : <b>${totalExercises}</b> fiche(s).` : '');
+}
+
+function initMode(){
+  const sel = document.getElementById('exerciseMode');
+  if(!sel) return;
+  sel.innerHTML = '';
+
+  const opts = [
+    {v:4, label:'ABCD — /20'},
+    {v:6, label:'ABCDEF — /30'},
+  ];
+  for(const o of opts){
+    const opt = document.createElement('option');
+    opt.value = String(o.v);
+    opt.textContent = o.label;
+    if(o.v === defaultMode) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => { generate(); if(isPromptModalOpen()) syncPromptModal(); });
+}
+
+function initSheets(){
+  const sel = document.getElementById('sheetCount');
+  if(!sel) return;
+  sel.innerHTML = '';
+  for(let s=2; s<=4; s++){
+    const opt = document.createElement('option');
+    opt.value = String(s);
+    opt.textContent = `${s}`;
+    if(s===defaultSheets) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => { generate(); if(isPromptModalOpen()) syncPromptModal(); });
+}
+
+
+/* ---------- Actions boutons ---------- */
+function resetAll(){
+  contentSpec = null;
+  const ta = document.getElementById('contentInput');
+  if(ta) ta.value = '';
+  // remettre defaults UI
+  const sm = document.getElementById('sheetCount');
+  if(sm) sm.value = String(defaultSheets);
+  const mm = document.getElementById('exerciseMode');
+  if(mm) mm.value = String(defaultMode);
+  generate();
+}
+
+function loadExample(){
+  const example = {
+    meta: {
+      title: "Calcul mental",
+      subtitle: "Multiplications",
+mode: 6,
+      sheets: 2
+    },
+    exercises: [
+      {
+        id: "C1",
+        A: { q: ["7 × 6 =", "8 × 9 =", "12 × 7 =", "6 × 8 =", "9 × 4 ="], a: ["42; 72; 84; 48; 36"] },
+        B: { q: ["56 ÷ 7 =", "72 ÷ 8 =", "63 ÷ 9 =", "48 ÷ 6 =", "45 ÷ 5 ="], a: ["8; 9; 7; 8; 9"] },
+        C: { q: ["15 × 3 =", "24 × 4 =", "35 × 2 =", "18 × 5 =", "14 × 6 ="], a: ["45; 96; 70; 90; 84"] },
+        D: { q: ["Complète : 7 × __ = 63", "8 × __ = 56", "9 × __ = 81", "6 × __ = 54", "5 × __ = 45"], a: ["9; 7; 9; 9; 9"] },
+        E: { q: ["Compare : 7×8 __ 8×7", "Compare : 9×4 __ 8×5", "Compare : 6×6 __ 5×7", "Compare : 12×3 __ 9×4", "Compare : 7×9 __ 8×8"], a: ["= ; > ; > ; = ; >"] },
+        F: { q: ["Écris 3 multiplications pour 24", "Écris 2 multiplications pour 42", "Décomposition : 8×7 = 8×5 + 8×__", "Décomposition : 9×6 = 9×4 + 9×__", "Table de 7 : …, …, …"], a: ["(6×4, 3×8, 2×12); (6×7, 3×14); 2; 2; 7,14,21"] }
+      }
+    ]
+  };
+
+  const ta = document.getElementById('contentInput');
+  if(ta) ta.value = JSON.stringify(example, null, 2);
+  applySpec();
+}
+
+function applySpec(){
+  const ta = document.getElementById('contentInput');
+  const raw = (ta?.value ?? '').trim();
+  if(!raw){
+    contentSpec = null;
+    generate();
+    return;
+  }
+
+  try{
+    const obj = JSON.parse(raw);
+    // format attendu : { meta: {...}, exercises: [...] }
+    if(!obj || typeof obj !== 'object') throw new Error("JSON invalide");
+    if(obj.exercises && !Array.isArray(obj.exercises)) throw new Error("exercises doit être un tableau");
+
+    contentSpec = obj;
+
+    // appliquer méta sur UI si présent
+    const m = obj.meta || {};
+    const mm = document.getElementById('exerciseMode');
+    if(mm && (Number(m.mode) === 4 || Number(m.mode) === 6)) mm.value = String(Number(m.mode));
+
+    // le nombre de feuilles pourra être augmenté automatiquement si insuffisant
+    const sm = document.getElementById('sheetCount');
+    if(sm && m.sheets) sm.value = String(Math.max(2, safeNumber(m.sheets, currentSheetCount())));
+
+    generate();
+
+  }catch(e){
+    alert("Impossible de lire le JSON : " + (e?.message ?? e));
+  }
+}
+
+/* ---------- Génération principale ---------- */
+function generate(){
+  const pages = document.getElementById('pages');
+  pages.innerHTML = '';
+
+  const uiSheets = currentSheetCount();
+  const mode = currentMode();
+
+  // meta
+  const meta = contentSpec?.meta ?? {};
+  const includeCorrections = true;
+
+  // nombre de fiches demandé
+  const requestedN = Array.isArray(contentSpec?.exercises) ? contentSpec.exercises.length : null;
+
+  // calcul du nombre de feuilles nécessaires
+  const n = (requestedN && requestedN > 0) ? requestedN : null;
+
+  // Capacité dépend du nombre de pages de corrigés (2 feuilles = 1 page de corrigés, sinon 2 pages)
+  let sheets = uiSheets;
+  let capacity = capacityForSheets(sheets, includeCorrections);
+
+  let totalExercises = (n !== null) ? n : capacity;
+
+  // Si l'utilisateur a demandé plus que la capacité, on augmente les feuilles jusqu'à ce que ça rentre
+  if(n !== null){
+    while(totalExercises > capacity){
+      sheets += 1;
+      capacity = capacityForSheets(sheets, includeCorrections);
+    }
+  }
+
+  // clamp (sécurité)
+  totalExercises = Math.min(totalExercises, capacity);
+
+  let totalA5Pages = sheets * 4;
+
+  // mettre à jour le select si on a augmenté automatiquement
+  const sm = document.getElementById('sheetCount');
+  if(sm) sm.value = String(sheets);
+
+  // 1) Données C1..Cn
+  const exData = [null]; // index 1..n
+  for(let i=1; i<=totalExercises; i++){
+    if(Array.isArray(contentSpec?.exercises) && contentSpec.exercises[i-1]){
+      exData[i] = buildExerciseDataFromSpec(contentSpec.exercises[i-1], mode);
+      if(!exData[i]._id) exData[i]._id = `C${i}`;
+    }else{
+      exData[i] = buildEmptyExerciseData(mode, `C${i}`);
+    }
+  }
+
+  // 2) Pages A5 (chaque page A5 = 2 slots A6 gauche/droite) + pages pleines pour Couverture/Corrigés
+  const a5 = new Array(totalA5Pages+1).fill(null).map(()=>({left:null,right:null, span:false, full:null}));
+
+  // p1 : couverture (A5 plein)
+  a5[1].span = true;
+  a5[1].full = buildCoverA5(totalExercises, {
+    title: meta.title,
+    subtitle: meta.subtitle
+  });
+
+  // p2 : corrigés (si prof)
+  const corrPagesCount = includeCorrections ? correctionsPagesCountForSheets(sheets) : 0;
+  const firstExercisePage = 2 + corrPagesCount;
+
+  if(includeCorrections){
+    if(corrPagesCount === 1){
+      a5[2].span = true;
+      a5[2].full = buildCorrectionsA5(totalExercises, exData, {
+        title: meta.title || "Corrigés",
+        subtitle: meta.subtitle
+      }, 1, totalExercises);
+    }else{
+      const cut = Math.ceil(totalExercises / 2);
+
+      a5[2].span = true;
+      a5[2].full = buildCorrectionsA5(totalExercises, exData, {
+        title: meta.title || "Corrigés",
+        subtitle: meta.subtitle
+      }, 1, cut);
+
+      a5[3].span = true;
+      a5[3].full = buildCorrectionsA5(totalExercises, exData, {
+        title: meta.title || "Corrigés",
+        subtitle: meta.subtitle
+      }, cut + 1, totalExercises);
+    }
+  }
+
+  // Énoncés
+  let eIdx = 1;
+  for(let p=firstExercisePage; p<=totalA5Pages; p++){
+    a5[p].left  = (eIdx<=totalExercises) ? buildExerciseFiche(eIdx, exData[eIdx]) : buildEmptySlot(); eIdx++;
+    a5[p].right = (eIdx<=totalExercises) ? buildExerciseFiche(eIdx, exData[eIdx]) : buildEmptySlot(); eIdx++;
+  }
+
+  // sécurité
+  for(let p=1; p<=totalA5Pages; p++){
+    if(a5[p].span){
+      if(!a5[p].full) a5[p].full = buildEmptySlot();
+    }else{
+      if(!a5[p].left) a5[p].left = buildEmptySlot();
+      if(!a5[p].right) a5[p].right = buildEmptySlot();
+    }
+  }
+
+  // 3) Rendu A4 (recto/verso) avec imposition livret
+  for(let sheet=0; sheet<sheets; sheet++){
+    for(let side=0; side<2; side++){
+      const isRecto = (side===0);
+      const [topPage, bottomPage] = sheetPagesForSide(sheet, isRecto, totalA5Pages);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'page-wrap';
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'page-meta';
+      const sideLabel  = isRecto ? 'Recto' : 'Verso';
+      const topLabel   = pageTypeLabel(topPage, includeCorrections, corrPagesCount);
+      const bottomLabel= pageTypeLabel(bottomPage, includeCorrections, corrPagesCount);
+      metaEl.textContent = `Feuille ${sheet+1} — ${sideLabel} | Haut: p${topPage} (${topLabel}) | Bas: p${bottomPage} (${bottomLabel})`;
+      wrap.appendChild(metaEl);
+
+      const page = document.createElement('div');
+      page.className = 'page';
+
+      function placeRow(rowIndex, pageNum){
+        const row = String(rowIndex);
+        if(a5[pageNum].span){
+          const s = document.createElement('div');
+          s.className = 'slot span2';
+          s.style.gridColumn = '1 / 3';
+          s.style.gridRow = row;
+          s.appendChild(a5[pageNum].full);
+          page.appendChild(s);
+        }else{
+          const sL = document.createElement('div');
+          sL.className = 'slot';
+          sL.style.gridColumn = '1';
+          sL.style.gridRow = row;
+          sL.appendChild(a5[pageNum].left);
+
+          const sR = document.createElement('div');
+          sR.className = 'slot';
+          sR.style.gridColumn = '2';
+          sR.style.gridRow = row;
+          sR.appendChild(a5[pageNum].right);
+
+          page.appendChild(sL);
+          page.appendChild(sR);
+        }
+      }
+
+      placeRow(1, topPage);
+      placeRow(2, bottomPage);
+
+      wrap.appendChild(page);
+      pages.appendChild(wrap);
+    }
+  }
+
+  updateHint(totalExercises, sheets, includeCorrections);
+}
+
+/* ---------- util ---------- */
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
+}
+
+
+/* ---------- Prompt GPT/Gemini (modal) ---------- */
+function isPromptModalOpen(){
+  const b = document.getElementById('promptModalBackdrop');
+  return b && b.style.display !== 'none' && b.style.display !== '';
+}
+
+function onPromptBackdropClick(evt){
+  // close only if click on backdrop, not inside modal
+  if(evt && evt.target && evt.target.id === 'promptModalBackdrop') closePromptModal();
+}
+
+function openPromptModal(){
+  const b = document.getElementById('promptModalBackdrop');
+  if(!b) return;
+  b.style.display = 'flex';
+  syncPromptModal();
+  // Sensible defaults (only if empty)
+  const t = document.getElementById('pmTitleInput');
+  const st = document.getElementById('pmSubtitleInput');
+  if(t && !t.value.trim()){
+    const cur = document.getElementById('title').textContent?.trim();
+    if(cur) t.value = cur;
+  }
+  if(st && !st.value.trim()){
+    const cur = document.getElementById('subtitle').textContent?.trim();
+    if(cur) st.value = cur;
+  }
+}
+
+function closePromptModal(){
+  const b = document.getElementById('promptModalBackdrop');
+  if(!b) return;
+  b.style.display = 'none';
+}
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && isPromptModalOpen()) closePromptModal();
+});
+
+function syncPromptModal(){
+  const mode = currentMode();
+  const sheets = currentSheetCount();
+  const a5Pages = sheets * 4;
+  const fixedPages = fixedPagesForSheets(sheets, true);
+  const capacity = Math.max(0, (a5Pages - fixedPages) * 2); // 2 fiches par page A5 d'exos
+  const scoreMax = (mode === 4) ? 20 : 30;
+
+  const metaLine = document.getElementById('pmMetaLine');
+  if(metaLine){
+    metaLine.textContent = `Feuilles A4: ${sheets} • Corrigés: ${correctionsPagesCountForSheets(sheets)} page(s) • Mode: ${mode} (sur ${scoreMax}) • Capacité: ${capacity} fiches (C1 → C${capacity})`;
+  }
+
+  // show/hide E/F depending on mode
+  const rowE = document.getElementById('pmRowE');
+  const rowF = document.getElementById('pmRowF');
+  if(rowE) rowE.style.display = (mode === 6) ? '' : 'none';
+  if(rowF) rowF.style.display = (mode === 6) ? '' : 'none';
+}
+
+async function copyTextToClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(err){
+    // fallback
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+}
+
+function buildPromptString(){
+  const mode = currentMode();
+  const sheets = currentSheetCount();
+  const a5Pages = sheets * 4;
+  const fixedPages = fixedPagesForSheets(sheets, true);
+  const capacity = Math.max(0, (a5Pages - fixedPages) * 2);
+  const scoreMax = (mode === 4) ? 20 : 30;
+
+  const title = (document.getElementById('pmTitleInput')?.value || '').trim() || `Calcul mental — Série`;
+  const subtitle = (document.getElementById('pmSubtitleInput')?.value || '').trim() || `6e • auto-correction`;
+  const globalNote = (document.getElementById('pmGlobal')?.value || '').trim();
+
+  const A = (document.getElementById('pmA')?.value || '').trim();
+  const B = (document.getElementById('pmB')?.value || '').trim();
+  const C = (document.getElementById('pmC')?.value || '').trim();
+  const D = (document.getElementById('pmD')?.value || '').trim();
+  const E = (document.getElementById('pmE')?.value || '').trim();
+  const F = (document.getElementById('pmF')?.value || '').trim();
+
+  const blocks = (mode === 4)
+    ? [
+        ['A', A || 'À définir'],
+        ['B', B || 'À définir'],
+        ['C', C || 'À définir'],
+        ['D', D || 'À définir'],
+      ]
+    : [
+        ['A', A || 'À définir'],
+        ['B', B || 'À définir'],
+        ['C', C || 'À définir'],
+        ['D', D || 'À définir'],
+        ['E', E || 'À définir'],
+        ['F', F || 'À définir'],
+      ];
+
+  const structureLines = [];
+  structureLines.push('{');
+  structureLines.push('  "meta": { "title":"...", "subtitle":"...", "mode":' + mode + ' },');
+  structureLines.push('  "exercises": [');
+  structureLines.push('    {');
+  structureLines.push('      "id":"C1",');
+  blocks.forEach((b, i) => {
+    const key = b[0];
+    const comma = (i === blocks.length - 1) ? '' : ',';
+    structureLines.push(`      "${key}": { "q":["...","...","...","...","..."], "a":["... ; ... ; ... ; ... ; ..."] }${comma}`);
+  });
+  structureLines.push('    }');
+  structureLines.push('  ]');
+  structureLines.push('}');
+
+  const consignes = [];
+  consignes.push("Réponds UNIQUEMENT avec du JSON valide (pas de texte, pas de markdown).");
+  consignes.push("");
+  consignes.push("Le JSON doit respecter EXACTEMENT cette structure :");
+  consignes.push(structureLines.join("\n"));
+  consignes.push("");
+  consignes.push("Contraintes obligatoires :");
+  consignes.push(`- meta.mode = ${mode}`);
+  consignes.push(`- Le livret est sur ${scoreMax} points (mode ${mode})`);
+  consignes.push(`- Tu dois générer exactement ${capacity} exercices dans \"exercises\" (id de C1 à C${capacity})`);
+  consignes.push(`- Chaque bloc ${blocks.map(b=>b[0]).join("..")} contient EXACTEMENT 5 questions dans \"q\"`);
+  consignes.push(`- Dans \"a\", mets une SEULE chaîne, avec les 5 réponses séparées par \" ; \" (avec un espace après le point-virgule)`);
+  consignes.push(`- Pas de saut de ligne dans \"a\" (une seule ligne)`);
+  consignes.push(`- Pas d'explications, pas de texte en dehors du JSON`);
+  consignes.push("");
+  consignes.push("Contenu attendu :");
+  if(globalNote) consignes.push(`- Consigne globale: ${globalNote}`);
+  consignes.push(`- Titre: ${title}`);
+  consignes.push(`- Sous-titre: ${subtitle}`);
+  blocks.forEach(([k, v]) => consignes.push(`- Bloc ${k}: ${v}`));
+  consignes.push("");
+  consignes.push("Rappels de forme :");
+  consignes.push("- Utilise la virgule décimale française si besoin (ex: 3,7)");
+  consignes.push("- Mets des espaces autour des opérateurs (ex: 7 × 3 =)");
+  consignes.push("- Dans les réponses, respecte exactement le séparateur \" ; \"");
+  return consignes.join("\n");
+}
+
+async function generatePromptIntoBox(copyAlso){
+  const out = document.getElementById('pmOutput');
+  if(!out) return;
+  const prompt = buildPromptString();
+  out.value = prompt;
+  if(copyAlso){
+    await copyTextToClipboard(prompt);
+  }
+}
+
+/* Init */
+initSheets();
+initMode();
+generate();
+</script>
+
+</body>
+</html>
