@@ -290,6 +290,35 @@
         0 0 0 1px rgba(0,0,0,0.18);
     }
 
+
+.token.selected{ outline: none; }
+
+/* Cadre de sélection : collé à la pièce et "tourne" avec le retournement */
+.token.selected .flip-inner::after{
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 2px solid rgba(37, 99, 235, 0.92);
+  box-sizing: border-box;
+  pointer-events: none;
+  border-radius: 0px;
+}
+body.projection .token.selected .flip-inner::after{
+  border-width: 3px;
+  inset: 1px;
+}
+
+
+#lasso-box{
+  position: fixed;
+  z-index: 9998;
+  border: 2px dashed rgba(37, 99, 235, 0.85);
+  background: rgba(37, 99, 235, 0.08);
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+
     /* Fantôme (drag menu) — conservé pour PATCH 2 */
     .drag-ghost {
       position: fixed;
@@ -505,6 +534,18 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 16l-2 4m6-4l2 4"/>
             </svg>
           </button>
+
+
+          <button onclick="app.cutSelected()" id="btn-cut" class="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 rounded-lg font-bold border border-amber-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Couper (1 unité → 10 dixièmes, 1 dixième → 10 centièmes). Sélection : clic ou Ctrl/Shift+clic.">
+            <span class="text-base leading-none" aria-hidden="true">✂</span>
+            <span class="hidden sm:inline text-xs font-extrabold">Couper</span>
+          </button>
+
+          <button onclick="app.fuseSelected()" id="btn-fuse" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 p-2 rounded-lg font-bold border border-emerald-200 shadow-sm flex items-center gap-1 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed" title="Fusionner (10 centièmes → 1 dixième, 10 dixièmes → 1 unité). Sélection : clic ou Ctrl/Shift+clic.">
+            <span class="text-base leading-none" aria-hidden="true">🧩</span>
+            <span class="hidden sm:inline text-xs font-extrabold">Fusion</span>
+          </button>
+
         </div>
       </div>
 
@@ -722,6 +763,16 @@
       constructor() {
         this.history = [];
         this.tokens = []; // conservé pour PATCH 2
+
+        // Sélection (PATCH 4) : multi-sélection pour fusion / découpe
+        this.selectedIds = new Set();
+
+        // Lasso (Ctrl/Shift + glisser sur le vide)
+        this.isLasso = false;
+        this.lassoEl = null;
+        this.lassoStart = null;
+        this.lassoBaseSelected = null;
+
         this.nextId = 1;
         this.autoCounter = 0; // placement automatique (clic)
 
@@ -834,6 +885,7 @@
         this.updateSoundButton();
         this.updateFullscreenButton();
         this.updateProjectionButton();
+        this.updateActionButtons();
 
         document.addEventListener('fullscreenchange', () => this.updateFullscreenButton());
       }
@@ -1140,6 +1192,278 @@ setShowFives(on) {
         playSound('snap');
       }
 
+
+      // --- SÉLECTION & TRANSFORMATIONS (PATCH 4) ---
+      isMultiSelectKey(e) {
+        return !!(e && (e.ctrlKey || e.shiftKey || e.metaKey));
+      }
+
+      getTokenByNumericId(id) {
+        return this.tokens.find(t => t && t.id === id) || null;
+      }
+
+      getSelectedTokens() {
+        const out = [];
+        for (const id of this.selectedIds) {
+          const t = this.getTokenByNumericId(id);
+          if (t && t.element && t.element.isConnected) out.push(t);
+        }
+        return out;
+      }
+
+      setTokenSelected(token, on) {
+        if (!token) return;
+        if (on) this.selectedIds.add(token.id);
+        else this.selectedIds.delete(token.id);
+        if (token.element) token.element.classList.toggle('selected', on);
+      }
+
+      clearSelection() {
+        for (const id of this.selectedIds) {
+          const t = this.getTokenByNumericId(id);
+          if (t && t.element) t.element.classList.remove('selected');
+        }
+        this.selectedIds.clear();
+        this.updateActionButtons();
+      }
+
+      selectOnly(token, allowToggleOff = true) {
+        if (!token) return;
+        const alreadyOnly = (this.selectedIds.size === 1 && this.selectedIds.has(token.id));
+        if (alreadyOnly && allowToggleOff) {
+          this.clearSelection();
+          return;
+        }
+        this.clearSelection();
+        this.setTokenSelected(token, true);
+        this.updateActionButtons();
+      }
+
+      toggleSelect(token) {
+        if (!token) return;
+        const on = !this.selectedIds.has(token.id);
+        this.setTokenSelected(token, on);
+        this.updateActionButtons();
+      }
+
+
+      // --- LASSO (Ctrl/Shift + glisser sur le vide) ---
+      startLasso(e) {
+        this.isLasso = true;
+        this.lassoStart = { x: e.clientX, y: e.clientY };
+        this.lassoBaseSelected = new Set(this.selectedIds);
+
+        const box = document.createElement('div');
+        box.id = 'lasso-box';
+        box.style.left = this.lassoStart.x + 'px';
+        box.style.top  = this.lassoStart.y + 'px';
+        box.style.width = '0px';
+        box.style.height = '0px';
+        document.body.appendChild(box);
+        this.lassoEl = box;
+      }
+
+      updateLasso(e) {
+        if (!this.isLasso || !this.lassoEl || !this.lassoStart) return;
+
+        const x0 = this.lassoStart.x, y0 = this.lassoStart.y;
+        const x1 = e.clientX, y1 = e.clientY;
+        const left = Math.min(x0, x1), top = Math.min(y0, y1);
+        const right = Math.max(x0, x1), bottom = Math.max(y0, y1);
+
+        this.lassoEl.style.left = left + 'px';
+        this.lassoEl.style.top = top + 'px';
+        this.lassoEl.style.width = (right - left) + 'px';
+        this.lassoEl.style.height = (bottom - top) + 'px';
+
+        const next = new Set(this.lassoBaseSelected || []);
+
+/*
+  Lasso en coordonnées écran (getBoundingClientRect) :
+  - robuste avec zoom/pan/transform CSS
+  - évite les erreurs de conversion monde<->écran
+*/
+for (const t of this.tokens) {
+  if (!t || !t.element || !t.element.isConnected) continue;
+  const rTok = t.element.getBoundingClientRect();
+  const intersects = !(rTok.right < left || rTok.left > right || rTok.bottom < top || rTok.top > bottom);
+  if (intersects) next.add(t.id);
+}
+
+// Appliquer la sélection (diff minimal)
+        for (const id of Array.from(this.selectedIds)) {
+          if (!next.has(id)) {
+            const tok = this.getTokenByNumericId(id);
+            if (tok) this.setTokenSelected(tok, false);
+          }
+        }
+        for (const id of next) {
+          if (!this.selectedIds.has(id)) {
+            const tok = this.getTokenByNumericId(id);
+            if (tok) this.setTokenSelected(tok, true);
+          }
+        }
+
+        this.updateActionButtons();
+      }
+
+      endLasso() {
+        if (!this.isLasso) return;
+        this.isLasso = false;
+        if (this.lassoEl) this.lassoEl.remove();
+        this.lassoEl = null;
+        this.lassoStart = null;
+        this.lassoBaseSelected = null;
+        this.updateActionButtons();
+      }
+
+
+      updateActionButtons() {
+        const cutBtn = document.getElementById('btn-cut');
+        const fuseBtn = document.getElementById('btn-fuse');
+        if (!cutBtn || !fuseBtn) return;
+
+        const sels = this.getSelectedTokens();
+        const canCut = (sels.length === 1 && (sels[0].type === 'unit' || sels[0].type === 'tenth'));
+        const canFuse = this.canFuseSelection(sels);
+
+        cutBtn.disabled = !canCut;
+        fuseBtn.disabled = !canFuse;
+      }
+
+      deleteToken(token) {
+        if (!token) return;
+        if (token.element) token.element.remove();
+        this.tokens = this.tokens.filter(t => t !== token);
+        this.selectedIds.delete(token.id);
+      }
+
+      // --- DÉCOUPE ---
+      cutSelected() {
+        const sels = this.getSelectedTokens();
+        if (sels.length !== 1) return;
+        const tok = sels[0];
+        if (!(tok.type === 'unit' || tok.type === 'tenth')) return;
+
+        this.saveState();
+
+        const wasFlipped = tok.element && tok.element.classList.contains('flipped');
+        const baseX = tok.x;
+        const baseY = tok.y;
+
+        // Supprime la pièce source
+        this.deleteToken(tok);
+
+        const created = [];
+        const groupZ = (++this.zCounter);
+        if (tok.type === 'unit') {
+          // 1 unité -> 10 dixièmes (barres horizontales empilées)
+          for (let i = 0; i < 10; i++) {
+            const t = this.createPieceToken('tenth', 1, baseX, baseY + i * CELL, null, null, groupZ);
+            if (t && wasFlipped) t.element.classList.add('flipped');
+            if (t) created.push(t);
+          }
+        } else if (tok.type === 'tenth') {
+          // 1 dixième -> 10 centièmes (carrés alignés)
+          for (let i = 0; i < 10; i++) {
+            const h = this.createPieceToken('hundredth', 1, baseX + i * CELL, baseY, null, null, groupZ);
+            if (h && wasFlipped) h.element.classList.add('flipped');
+            if (h) created.push(h);
+          }
+        }
+
+        // Sélectionne les pièces créées (pratique pour fusionner juste après)
+        this.clearSelection();
+        created.forEach(t => this.setTokenSelected(t, true));
+        this.updateActionButtons();
+
+        playSound('snap');
+        this.updateDisplay();
+      }
+
+      // --- FUSION ---
+      normalizeGrid(v) { return Math.round(v / CELL) * CELL; }
+
+      canFuseSelection(sels) {
+        return !!this.getFusionPlan(sels);
+      }
+
+      getFusionPlan(sels) {
+        if (!sels || !sels.length) return null;
+
+        // 10 centièmes -> 1 dixième
+        if (sels.length === 10 && sels.every(t => t.type === 'hundredth')) {
+          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
+          const ys = pts.map(p => p.y);
+          const y0 = ys[0];
+          if (!ys.every(y => y === y0)) return null;
+
+          const xs = pts.map(p => p.x).sort((a,b)=>a-b);
+          const minX = xs[0];
+          for (let i = 0; i < 10; i++) if (xs[i] !== minX + i * CELL) return null;
+
+          return { resultType: 'tenth', x: minX, y: y0, remove: sels };
+        }
+
+        // 10 dixièmes -> 1 unité
+        if (sels.length === 10 && sels.every(t => t.type === 'tenth')) {
+          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
+          const xs = pts.map(p => p.x);
+          const x0 = xs[0];
+          if (!xs.every(x => x === x0)) return null;
+
+          const ys = pts.map(p => p.y).sort((a,b)=>a-b);
+          const minY = ys[0];
+          for (let i = 0; i < 10; i++) if (ys[i] !== minY + i * CELL) return null;
+
+          return { resultType: 'unit', x: x0, y: minY, remove: sels };
+        }
+
+        // 100 centièmes (10x10) -> 1 unité
+        if (sels.length === 100 && sels.every(t => t.type === 'hundredth')) {
+          const pts = sels.map(t => ({ x: this.normalizeGrid(t.x), y: this.normalizeGrid(t.y) }));
+          const xs = pts.map(p => p.x);
+          const ys = pts.map(p => p.y);
+          const minX = Math.min(...xs);
+          const minY = Math.min(...ys);
+
+          const set = new Set(pts.map(p => `${p.x},${p.y}`));
+          for (let j = 0; j < 10; j++) {
+            for (let i = 0; i < 10; i++) {
+              if (!set.has(`${minX + i*CELL},${minY + j*CELL}`)) return null;
+            }
+          }
+          return { resultType: 'unit', x: minX, y: minY, remove: sels };
+        }
+
+        return null;
+      }
+
+      fuseSelected() {
+        const sels = this.getSelectedTokens();
+        const plan = this.getFusionPlan(sels);
+        if (!plan) return;
+
+        this.saveState();
+
+        const flippedAll = plan.remove.every(t => t.element && t.element.classList.contains('flipped'));
+
+        // Supprimer les sources
+        plan.remove.forEach(t => this.deleteToken(t));
+
+        // Créer la pièce fusionnée
+        const newTok = this.createPieceToken(plan.resultType, 1, plan.x, plan.y);
+        if (newTok && flippedAll) newTok.element.classList.add('flipped');
+
+        this.clearSelection();
+        if (newTok) this.setTokenSelected(newTok, true);
+        this.updateActionButtons();
+
+        playSound('snap');
+        this.updateDisplay();
+      }
+
+
       // --- PIÈCES (PATCH 2) ---
       getViewportCenterWorld() {
         const r = this.boardContainer.getBoundingClientRect();
@@ -1281,6 +1605,7 @@ setShowFives(on) {
         if (withSound) playSound('snap');
       }
 
+
       handleDragStart(e) {
         if (this.currentTool !== 'hand') return;
         e.stopPropagation();
@@ -1291,6 +1616,8 @@ setShowFives(on) {
         const id = parseInt(el.id.split('-')[1], 10);
         const token = this.tokens.find(t => t.id === id);
         if (!token) return;
+
+        const multiKey = this.isMultiSelectKey(e);
 
         // La dernière pièce manipulée passe au-dessus
         token.z = (++this.zCounter);
@@ -1315,6 +1642,14 @@ setShowFives(on) {
             if (d < 3) return;
             started = true;
 
+            // Quand on commence à déplacer : on sélectionne (seule) cette pièce
+            if (multiKey) {
+              // si on était en multi, on garde la sélection existante
+              if (!this.selectedIds.has(token.id)) this.setTokenSelected(token, true);
+            } else {
+              this.selectOnly(token, false);
+            }
+
             this.saveState();
             this.draggedToken = token;
             token.element.classList.add('dragging');
@@ -1333,7 +1668,12 @@ setShowFives(on) {
           document.removeEventListener('mouseup', end);
           document.removeEventListener('touchend', end);
 
-          if (!started) return;
+          // Clic (sans déplacement) -> sélection
+          if (!started) {
+            if (multiKey) this.toggleSelect(token);
+            else this.selectOnly(token, true);
+            return;
+          }
 
           token.element.classList.remove('dragging');
           // Déjà snapé pendant le déplacement (preview), on rejoue juste une snap finale + son
@@ -1347,6 +1687,7 @@ setShowFives(on) {
         document.addEventListener('mouseup', end);
         document.addEventListener('touchend', end);
       }
+
 
       // --- DRAG depuis le menu (fantôme + seuil) ---
       handleSidebarTouchStart(e, type, sign) {
@@ -1552,6 +1893,7 @@ setShowFives(on) {
         this.redrawPen();
 
         this.updateDisplay();
+        this.clearSelection();
       }
 
       // --- LISTENERS ---
@@ -1577,19 +1919,36 @@ setShowFives(on) {
           this.updateTransform();
         }, { passive: false });
 
-        // Pan (main)
+        // Pan (main) + lasso (Ctrl/Shift)
         this.boardContainer.addEventListener('mousedown', (e) => {
           if (e.button !== 0) return;
           if (this.currentTool === 'pen') return;
-          // ne pas pan si on clique sur un token (PATCH 2)
+          // ne pas pan / lasso si on clique sur un token
           if (e.target.closest('.token')) return;
+
+          if (this.currentTool !== 'hand') return;
+
+          // Ctrl/Shift/Meta + glisser sur le vide => lasso de sélection
+          if (this.isMultiSelectKey(e)) {
+            e.preventDefault();
+            this.startLasso(e);
+            return;
+          }
+
+          // Pan classique
+          this.clearSelection();
           this.isPanning = true;
           this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
           this.boardContainer.classList.add('panning');
         });
 
+
         window.addEventListener('mousemove', (e) => {
           this.moveCursor(e);
+          if (this.isLasso) {
+            this.updateLasso(e);
+            return;
+          }
           if (this.isPanning) {
             this.pan.x = e.clientX - this.panStart.x;
             this.pan.y = e.clientY - this.panStart.y;
@@ -1600,6 +1959,7 @@ setShowFives(on) {
         });
 
         window.addEventListener('mouseup', () => {
+          if (this.isLasso) this.endLasso();
           this.isPanning = false;
           if (this.isDrawing && this.activePointerId === null) {
             this.isDrawing = false;
@@ -1912,6 +2272,7 @@ setShowFives(on) {
 
         // Affichage
         this.updateDisplay();
+        this.clearSelection();
       }
     }
 
