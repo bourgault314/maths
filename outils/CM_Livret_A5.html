@@ -738,16 +738,18 @@
       column-gap: 0; /* le spacing est géré par les colonnes 1fr */
     }
     .corr-a5 .corr-wide-linegrid.cols-3{
-      grid-template-columns: auto 1fr auto 1fr auto 1fr;
-    }
-    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(1){ grid-column: 1; }
-    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(2){ grid-column: 3; }
-    .corr-a5 .corr-wide-linegrid.cols-3 .corr-wide-cell:nth-child(3){ grid-column: 5; }
-    .corr-a5 .corr-wide-linegrid.cols-2{
-      grid-template-columns: auto 1fr auto 1fr;
-    }
-    .corr-a5 .corr-wide-linegrid.cols-2 .corr-wide-cell:nth-child(1){ grid-column: 1; }
-    .corr-a5 .corr-wide-linegrid.cols-2 .corr-wide-cell:nth-child(2){ grid-column: 3; }
+  /* 3 colonnes fixes : B/E et C/F démarrent toujours au même endroit,
+     même si la réponse A/D est très longue (fractions, etc.) */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: start;
+}
+.corr-a5 .corr-wide-linegrid.cols-2{
+  /* Mode ABCD : 2 colonnes fixes */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: start;
+}
     .corr-a5 .corr-wide-cell{
       min-width:0;
       overflow-wrap:anywhere;
