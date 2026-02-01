@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Fabriqueur — numération décimale</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { 
+      --page-w: 297mm; 
+      --page-h: 210mm; 
+      --primary-color: #2563eb;
+      --bg-color: #f8fafc;
+      --panel-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+  }
+  *{ box-sizing:border-box; }
+  body{ 
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; 
+      margin:0; 
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+  }
+  
+  /* --- EN-TÊTE --- */
+  header{ 
+      padding: 0 1rem; 
+      height: 50px;
+      background: #1e293b; 
+      color: #fff; 
+      font-size: 14px; 
+      display: flex;
+      justify-content: space-between; 
+      align-items: center;
+      flex-shrink: 0; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
+  }
+  header a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+  }
+  header a:hover { color: #fff; }
+  header span { font-weight: 600; letter-spacing: 0.5px; }
+  
+  /* --- LAYOUT PRINCIPAL --- */
+  main{ 
+      display: flex; 
+      flex: 1;
+      overflow: hidden; /* Empêche le scroll global */
+  }
+  
+  /* --- COLONNE DE GAUCHE (CONTRÔLES) --- */
+  .sidebar { 
+      width: 380px; 
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex; 
+      flex-direction: column; 
+      flex-shrink: 0;
+      z-index: 5;
+  }
+
+  /* Navigation par Onglets */
+  .tabs-nav {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: #f1f5f9;
+  }
+  .tab-btn {
+      flex: 1;
+      padding: 12px 5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+  }
+  .tab-btn:hover { background: #e2e8f0; color: var(--text-main); }
+  .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      background: #fff;
+  }
+
+  /* Zone de contenu des réglages (Scrollable) */
+  .settings-container {
+      flex: 1;
+      overflow-y: auto; 
+      padding: 20px;
+      -webkit-overflow-scrolling: touch; 
+  }
+
+  /* Masquer les onglets non actifs */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Styles des formulaires */
+  fieldset { 
+      border: 1px solid var(--border-color); 
+      border-radius: 8px; 
+      margin: 0 0 20px 0; 
+      padding: 15px;
+      background: #fff;
+  }
+  legend { 
+      padding: 0 8px; 
+      font-weight: 600; 
+      color: var(--primary-color); 
+      font-size: 0.9rem;
+  }
+  
+  label { 
+      display: block; 
+      font-size: 13px; 
+      font-weight: 500;
+      margin-bottom: 4px; 
+      margin-top: 12px;
+      color: var(--text-main);
+  }
+  fieldset > div:first-child > label:first-child { margin-top: 0; }
+
+  input[type="number"], input[type="text"], select { 
+      width: 100%; 
+      padding: 8px 10px; 
+      font-size: 14px; 
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      transition: border-color 0.2s;
+  }
+  input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .help-text { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-style: italic; }
+
+  /* Choix (sans menu déroulant) */
+  .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .choice { display:flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; cursor:pointer; font-size:13px; color: var(--text-main); }
+  .choice input { margin:0; }
+  .choice:hover { border-color: var(--primary-color); background:#f8fafc; }
+
+  /* Zone d'action fixe en bas */
+  .action-bar {
+      padding: 15px 20px;
+      border-top: 1px solid var(--border-color);
+      background: #fff;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  }
+  .btn-primary { 
+      width: 100%;
+      padding: 12px; 
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600; 
+      font-size: 15px; 
+      cursor: pointer; 
+      transition: background 0.2s;
+      display: flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  /* --- ZONE D'APERÇU (DROITE) --- */
+  .preview-area { 
+      flex: 1; 
+      background: #e2e5e9; 
+      padding: 20px; 
+      overflow: auto; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+  
+  .page { 
+      width: var(--page-w); 
+      height: var(--page-h); 
+      background: white; 
+      margin-bottom: 20px; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      /* Zoom responsive pour l'aperçu */
+      transform-origin: top center;
+  }
+  
+  /* --- PRINT --- */
+  @media print{
+    header, .sidebar { display:none !important; }
+    main { display:block; height:auto; overflow:visible; } 
+    .preview-area { background:none; padding:0; height:auto; display:block; }
+    .page { 
+        box-shadow: none; margin: 0; 
+        break-after: page; page-break-after: always; 
+        transform: none !important; /* Pas de zoom à l'impression */
+        zoom: 1 !important; /* aperçu => taille réelle */
+    }
+    @page { size: A4 landscape; margin: 0; }
+  }
+
+
+  /* --- APERÇU : barre d'outils + résumé --- */
+  .preview-toolbar{
+      width: min(980px, 100%);
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .preview-toolbar-left{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-width: 220px;
+  }
+  .preview-label{
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-main);
+      margin: 0;
+  }
+  #previewFilter{
+      width: 180px;
+      max-width: 100%;
+  }
+  .preview-hint{
+      font-size: 12px;
+      color: #b45309;
+      font-weight: 600;
+  }
+  .preview-summary{
+      font-size: 12px;
+      color: var(--text-main);
+      line-height: 1.35;
+      text-align: right;
+  }
+  .preview-summary strong{ color: var(--text-muted); font-weight: 700; }
+  .preview-pages{ width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  /* --- Messages d'info dans les onglets --- */
+  .notice{
+      border: 1px solid #fdba74;
+      background: #fff7ed;
+      color: #9a3412;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      font-weight: 600;
+  }
+
+  /* --- Filtre d'aperçu (visuel seulement) --- */
+  .preview-hidden{ display: none !important; }
+
+  @media print{
+    .preview-toolbar{ display:none !important; }
+    .preview-hidden{ display:block !important; }
+  }
+
+</style>
+</head>
+
+<body>
+<header>
+    <div style="width:60px;"></div>
+    <span class="header-title">FABRIQUEUR — NUMÉRATION DÉCIMALE</span>
+    <div style="width:60px;"></div> 
+</header>
+
+<main>
+  <!-- BARRE LATÉRALE DE CONTRÔLES -->
+  <section class="sidebar">
+
+    <!-- Navigation des onglets -->
+    <nav class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab('tab-kit')">📄 Planches</button>
+        <button class="tab-btn" onclick="openTab('tab-style')">🎨 Style</button>
+        <button class="tab-btn" onclick="openTab('tab-verso')">🔁 Verso</button>
+        <button class="tab-btn" onclick="openTab('tab-calages')">⚙️ Calages</button>
+    </nav>
+
+    <!-- Formulaire -->
+    <form id="form" class="settings-container">
+
+        <!-- ONGLET 1 : PLANCHES -->
+        <div id="tab-kit" class="tab-content active">
+            <fieldset>
+                <legend>Format &amp; planches</legend>
+
+                <label>Format (unités par page)</label>
+                <select id="sizeMode" name="sizeMode">
+                    <option value="standard" selected>Standard (4 unités / page)</option>
+                    <option value="large">Grand (2 unités / page)</option>
+                </select>
+                <div class="help-text">
+                    Standard = meilleur compromis découpe / lisibilité. Grand = centièmes plus confortables.
+                </div>
+
+                <label style="margin-top:12px;">Planches à générer</label>
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+                    <input type="checkbox" id="makeUnit" name="makeUnit" checked>
+                    Unités (page remplie)
+                </label>
+                <label style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+                    <input type="checkbox" id="makeTenth" name="makeTenth" checked>
+                    Dixièmes (page remplie)
+                </label>
+                <label style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+                    <input type="checkbox" id="makeHundredth" name="makeHundredth" checked>
+                    Centièmes (page remplie)
+                </label>
+
+                <div class="help-text" style="margin-top:8px;">
+                    Ici, l’outil <b>remplit automatiquement</b> chaque page. Pour une classe : imprime ensuite plusieurs copies depuis la boîte d’impression.
+                </div>
+
+                <label style="margin-top:12px;">Mode d’impression</label>
+                <select id="mode" name="mode">
+                    <option value="recto_verso_alternating" selected>Recto-verso alterné (duplex)</option>
+                    <option value="recto_only">Recto seulement</option>
+                    <option value="verso_only">Verso seulement</option>
+                </select>
+            </fieldset>
+        </div>
+
+        <!-- ONGLET 2 : STYLE -->
+        <div id="tab-style" class="tab-content">
+            <fieldset>
+                <legend>Rendu & découpe</legend>
+
+                <label>Couleurs</label>
+                <select id="colorMode" name="colorMode">
+                    <option value="colored" selected>Couleurs (rouge / vert / jaune)</option>
+                    <option value="white">Sans couleur (blanc + contours)</option>
+                    <option value="bw_patterns">N&amp;B motifs (photocopie friendly)</option>
+                </select>
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <input type="checkbox" id="showFives" name="showFives" checked>
+                    Afficher la séparation en 5 (pour compter vite)
+                </label>
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <input type="checkbox" id="cutLines" name="cutLines" checked>
+                    Traits de découpe
+                </label>
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <input type="checkbox" id="showGrid" name="showGrid" checked>
+                    Quadrillage (unités et dixièmes)
+                </label>
+
+                <details style="margin-top:12px;">
+                    <summary style="cursor:pointer; font-weight:700;">Options avancées</summary>
+                    <div style="margin-top:10px;">
+                        <label>Marge (mm)</label>
+                        <input type="number" id="marginMm" name="marginMm" min="0" step="0.5" value="10">
+                        <label>Espacement entre pièces (mm)</label>
+                        <input type="number" id="gapMm" name="gapMm" min="0" step="0.5" value="4">
+                        <div class="help-text">
+                            Laisse ces valeurs par défaut si tu veux un rendu “propre” directement.
+                        </div>
+                    </div>
+                </details>
+            </fieldset>
+        </div>
+
+        
+        <!-- ONGLET 3 : VERSO -->
+        <div id="tab-verso" class="tab-content">
+            <fieldset>
+                <legend>Étiquettes au verso</legend>
+
+                <label style="margin-top:0;">Style global (unités + dixièmes)</label>
+                <div class="choice-grid" role="group" aria-label="Style global">
+                    <label class="choice"><input type="radio" name="versoMode" value="words" checked> Texte</label>
+                    <label class="choice"><input type="radio" name="versoMode" value="decimal"> Décimal</label>
+                    <label class="choice"><input type="radio" name="versoMode" value="fraction"> Fraction</label>
+                    <label class="choice"><input type="radio" name="versoMode" value="double_dec_frac"> Double (0,1 + 1/10)</label>
+                </div>
+
+                <label style="margin-top:14px;">Centièmes</label>
+                <div class="choice-grid" role="group" aria-label="Centièmes">
+                    <label class="choice"><input type="radio" name="hundredthVerso" value="words" checked> Texte (un / centième)</label>
+                    <label class="choice"><input type="radio" name="hundredthVerso" value="decimal"> 0,01</label>
+                    <label class="choice"><input type="radio" name="hundredthVerso" value="fraction"> Fraction (1/100)</label>
+                    <label class="choice"><input type="radio" name="hundredthVerso" value="double_dec_frac"> Double (0,01 + 1/100)</label>
+                    <label class="choice"><input type="radio" name="hundredthVerso" value="blank"> Vide</label>
+                </div>
+
+                <label style="margin-top:14px;">Taille du texte au verso</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; align-items:end;">
+                    <div>
+                        <div class="help-text" style="margin-bottom:6px;">Unités</div>
+                        <input type="range" id="labelScaleUnit" name="labelScaleUnit" min="0.50" max="1.40" step="0.05" value="1.00">
+                        <div class="help-text"><span id="labelScaleUnitVal">100%</span></div>
+                    </div>
+                    <div>
+                        <div class="help-text" style="margin-bottom:6px;">Dixièmes</div>
+                        <input type="range" id="labelScaleTenth" name="labelScaleTenth" min="0.50" max="1.40" step="0.05" value="0.85">
+                        <div class="help-text"><span id="labelScaleTenthVal">85%</span></div>
+                    </div>
+                    <div>
+                        <div class="help-text" style="margin-bottom:6px;">Centièmes</div>
+                        <input type="range" id="labelScaleHundredth" name="labelScaleHundredth" min="0.40" max="1.40" step="0.05" value="0.70">
+                        <div class="help-text"><span id="labelScaleHundredthVal">70%</span></div>
+                    </div>
+                </div>
+
+                <div class="help-text" style="margin-top:10px;">
+                    Astuce : sur les dixièmes et surtout sur les centièmes, préfère “Décimal” ou “Fraction” si tu veux un rendu super lisible.
+                </div>
+            </fieldset>
+        </div>
+
+        <!-- ONGLET 4 : CALAGES -->
+
+        <div id="tab-calages" class="tab-content">
+            <fieldset>
+                <legend>Décalages recto/verso (mm)</legend>
+
+                <label>Recto — décalage X (mm)</label>
+                <input type="number" id="rectoOffX" name="rectoOffX" step="0.2" value="0">
+                <label>Recto — décalage Y (mm)</label>
+                <input type="number" id="rectoOffY" name="rectoOffY" step="0.2" value="0">
+
+                <label style="margin-top:10px;">Verso — décalage X (mm)</label>
+                <input type="number" id="versoOffX" name="versoOffX" step="0.2" value="0">
+                <label>Verso — décalage Y (mm)</label>
+                <input type="number" id="versoOffY" name="versoOffY" step="0.2" value="0">
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <input type="checkbox" id="versoRotate180" name="versoRotate180">
+                    Retourner le verso (rotation 180°)
+                </label>
+
+                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <input type="checkbox" id="addTestPage" name="addTestPage">
+                    Ajouter une page de test de calage (croix aux coins)
+                </label>
+
+                <div class="help-text">
+                    La plupart du temps : laisse tout à 0. Si ton imprimante “glisse”, ajuste le verso en premier.
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="action-bar">
+            <button type="button" id="print" class="btn-primary">🖨️ Imprimer / PDF</button>
+        </div>
+    </form>
+  </section>
+
+  <!-- APERÇU -->
+  <section class="preview-area" id="previewShell">
+      <div class="preview-toolbar">
+          <div class="preview-toolbar-left">
+              <label for="previewFilter" class="preview-label">Aperçu :</label>
+              <select id="previewFilter">
+                  <option value="all" selected>Tout</option>
+                  <option value="recto">Recto</option>
+                  <option value="verso">Verso</option>
+              </select>
+              <span id="previewFilterHint" class="preview-hint" aria-live="polite"></span>
+          </div>
+          <div class="preview-summary" id="previewSummary" aria-live="polite"></div>
+      </div>
+      <div id="preview" class="preview-pages">
+          <!-- Les pages SVG seront générées ici -->
+      </div>
+  </section>
+</main>
+
+<script>
+/* ========= UI : onglets ========= */
+function openTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+/* ========= Aperçu : filtre recto/verso ========= */
+function revealAllPagesForPrint(){
+    var pages = document.querySelectorAll('#preview .page');
+    pages.forEach(function(p){ p.classList.remove('preview-hidden'); });
+    var hint = document.getElementById('previewFilterHint');
+    if(hint) hint.textContent = '';
+}
+function applyPreviewFilter(){
+    var sel = document.getElementById('previewFilter');
+    if(!sel) return;
+    var filter = sel.value || 'all';
+    var pages = document.querySelectorAll('#preview .page');
+    pages.forEach(function(p){
+        var side = (p.dataset && p.dataset.side) ? p.dataset.side : 'recto';
+        var shouldHide = (filter !== 'all' && side !== filter);
+        p.classList.toggle('preview-hidden', shouldHide);
+    });
+    updatePreviewFilterHint();
+}
+function updatePreviewFilterHint(){
+    var hint = document.getElementById('previewFilterHint');
+    if(!hint) return;
+    var form = document.getElementById('form');
+    if(!form) return;
+    var mode = form.mode.value;
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+
+    var noRecto = (mode === 'verso_only');
+    var noVerso = (mode === 'recto_only');
+    var msg = '';
+
+    if(filter === 'recto' && noRecto) msg = "ℹ️ Le mode actuel ne génère que le verso.";
+    else if(filter === 'verso' && noVerso) msg = "ℹ️ Le mode actuel ne génère que le recto.";
+    else if(mode === 'recto_verso_alternating' && filter === 'all') msg = "ℹ️ En recto-verso, chaque feuille apparaît 2 fois dans l’aperçu : recto puis verso.";
+
+    hint.textContent = msg;
+}
+
+function safePrint(){
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+    if(filter !== 'all') revealAllPagesForPrint();
+    window.print();
+    applyPreviewFilter();
+}
+
+window.addEventListener('beforeprint', function(){
+    var sel = document.getElementById('previewFilter');
+    var filter = sel ? sel.value : 'all';
+    if(filter !== 'all') revealAllPagesForPrint();
+
+    // Impression : zoom réel
+    var pages = document.querySelectorAll('#preview .page');
+    pages.forEach(function(p){ p.style.zoom = 1; });
+});
+window.addEventListener('afterprint', function(){
+    applyPreviewFilter();
+    schedulePreviewZoom();
+});
+
+/* ========= Constantes page ========= */
+var W = 297; // mm (A4 paysage)
+var H = 210; // mm
+function mm(v){ return v + "mm"; }
+var SVG_NS = "http://www.w3.org/2000/svg";
+
+/* ========= Couleurs (comme ton plateau) ========= */
+var COLORS = {
+    unit: "#ef4444",
+    tenth: "#22c55e",
+    hundredth: "#facc15"
+};
+
+/* ========= Helpers SVG ========= */
+function svgEl(name, attrs){
+    var el = document.createElementNS(SVG_NS, name);
+    if(attrs){
+        for(var k in attrs){
+            if(attrs[k] !== null && attrs[k] !== undefined) el.setAttribute(k, attrs[k]);
+        }
+    }
+    return el;
+}
+
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+/* ========= Planches sélectionnées ========= */
+function getSelection(){
+    var f = document.getElementById('form');
+    return {
+        unit: !!(f.makeUnit && f.makeUnit.checked),
+        tenth: !!(f.makeTenth && f.makeTenth.checked),
+        hundredth: !!(f.makeHundredth && f.makeHundredth.checked)
+    };
+}
+
+function anySelection(sel){
+    return !!(sel.unit || sel.tenth || sel.hundredth);
+}
+
+/* ========= Géométrie : tailles & grilles ========= */
+function computeUnitSize(sizeMode, margin, gap){
+    // Standard : 4 unités (2x2). Grand : 2 unités (2x1).
+    if(sizeMode === 'large'){
+        var cols = 2, rows = 1;
+        var sW = (W - 2*margin - (cols-1)*gap) / cols;
+        var sH = (H - 2*margin - (rows-1)*gap) / rows;
+        return Math.floor(Math.min(sW, sH) * 10) / 10; // arrondi 0.1 mm
+    } else {
+        var cols2 = 2, rows2 = 2;
+        var sW2 = (W - 2*margin - (cols2-1)*gap) / cols2;
+        var sH2 = (H - 2*margin - (rows2-1)*gap) / rows2;
+        return Math.floor(Math.min(sW2, sH2) * 10) / 10;
+    }
+}
+
+function gridPositions(pieceW, pieceH, margin, gap){
+    var cols = Math.max(1, Math.floor((W - 2*margin + gap) / (pieceW + gap)));
+    var rows = Math.max(1, Math.floor((H - 2*margin + gap) / (pieceH + gap)));
+    // centrage
+    var totalW = cols*pieceW + (cols-1)*gap;
+    var totalH = rows*pieceH + (rows-1)*gap;
+    var x0 = (W - totalW)/2;
+    var y0 = (H - totalH)/2;
+    var pos = [];
+    for(var r=0;r<rows;r++){
+        for(var c=0;c<cols;c++){
+            pos.push({x: x0 + c*(pieceW+gap), y: y0 + r*(pieceH+gap)});
+        }
+    }
+    return {cols: cols, rows: rows, positions: pos};
+}
+
+function gridPositionsFixed(pieceW, pieceH, margin, gap, cols, rows){
+    cols = Math.max(1, Math.floor(cols));
+    rows = Math.max(1, Math.floor(rows));
+    var totalW = cols*pieceW + (cols-1)*gap;
+    var totalH = rows*pieceH + (rows-1)*gap;
+    var x0 = (W - totalW)/2;
+    var y0 = (H - totalH)/2;
+    var pos = [];
+    for(var r=0;r<rows;r++){
+        for(var c=0;c<cols;c++){
+            pos.push({x: x0 + c*(pieceW+gap), y: y0 + r*(pieceH+gap)});
+        }
+    }
+    return {cols: cols, rows: rows, positions: pos};
+}
+
+
+function unitPagePositions(unitSize, sizeMode, margin, gap){
+    var cols = 2;
+    var rows = (sizeMode === 'large') ? 1 : 2;
+    var totalW = cols*unitSize + (cols-1)*gap;
+    var totalH = rows*unitSize + (rows-1)*gap;
+    var x0 = (W - totalW)/2;
+    var y0 = (H - totalH)/2;
+    var pos = [];
+    for(var r=0;r<rows;r++){
+        for(var c=0;c<cols;c++){
+            pos.push({x: x0 + c*(unitSize+gap), y: y0 + r*(unitSize+gap)});
+        }
+    }
+    return {cols: cols, rows: rows, positions: pos};
+}
+
+/* ========= Verso : textes ========= */
+function formatDecimal(n){
+    // 0.1 -> "0,1"
+    var s = String(n);
+    return s.replace('.', ',');
+}
+
+
+function labelLinesForPiece(pieceType, settings){
+    // Conservé uniquement pour compatibilité interne (unités / texte simple).
+    // Les fractions “avec barre” et les doubles sont gérées par drawVersoLabel().
+    var mode = settings.versoMode;
+    if(pieceType === 'hundredth') mode = settings.hundredthVerso;
+    if(mode === 'blank') return [];
+    if(pieceType === 'unit'){
+        if(mode === 'words') return [{t:"Une unité", w:1}];
+        return [{t:"1", w:1}];
+    }
+    if(pieceType === 'tenth'){
+        if(mode === 'words') return [{t:"Un dixième", w:1}];
+        if(mode === 'decimal') return [{t:"0,1", w:1}];
+        return []; // fraction/double gérés ailleurs
+    }
+    if(pieceType === 'hundredth'){
+        if(mode === 'words') return [{t:"un", w:1},{t:"centième", w:1}];
+        if(mode === 'decimal') return [{t:"0,01", w:1}];
+        return []; // fraction/double gérés ailleurs
+    }
+    return [];
+}
+
+function addFractionInBox(svgGroup, x, y, w, h, numStr, denStr, opts){
+    opts = opts || {};
+    var pieceType = opts.pieceType || '';
+    var scale = (opts.scale !== undefined && opts.scale !== null) ? parseFloat(opts.scale) : 1;
+    if(!isFinite(scale) || scale <= 0) scale = 1;
+    scale = clamp(scale, 0.25, 2.0);
+
+    var vShiftMm = (opts.vShiftMm!==undefined && opts.vShiftMm!==null) ? parseFloat(opts.vShiftMm) : 0;
+    if(!isFinite(vShiftMm)) vShiftMm = 0;
+
+    var cx = x + w/2;
+    var cy = y + h/2 + vShiftMm;
+
+    // Taille de police (mm) : on privilégie la lisibilité et l'absence de débordement.
+    // On garde volontairement plus petit que les textes simples.
+    var cap = (pieceType === 'tenth') ? 2.15 : (pieceType === 'hundredth' ? 1.05 : 5.0);
+    cap = cap * scale;
+
+    var fs = h * 0.22 * scale;
+    fs = Math.min(fs, w * 0.20 * scale);
+    fs = Math.min(fs, cap);
+
+    var minFs = (pieceType === 'hundredth') ? 0.55*scale : 0.85*scale;
+    fs = Math.max(minFs, fs);
+
+    var numFs = fs * 0.95;
+    var denFs = fs * (denStr.length >= 3 ? 0.85 : 0.92);
+
+    // Positionnement : numérateur / barre / dénominateur
+    var dy = fs * 0.78;
+    var numY = cy - dy;
+    var denY = cy + dy;
+    var lineY = cy;
+
+    // Longueur de barre (approx) : proportionnelle au texte le plus long
+    var maxEff = Math.max(numStr.length, denStr.length);
+    var lineW = Math.min(w * 0.78, (maxEff * fs * 0.62) + fs * 0.9);
+    if(pieceType === 'hundredth') lineW = Math.min(lineW, w * 0.80);
+
+    var x1 = cx - lineW/2, x2 = cx + lineW/2;
+
+    svgGroup.appendChild(svgEl('line', {
+        x1:x1, y1:lineY, x2:x2, y2:lineY,
+        stroke:'#111827',
+        'stroke-width': Math.max(0.20, fs*0.08)
+    }));
+
+    function addFracText(txt, xx, yy, sizeMm){
+        var t = svgEl('text', {
+            x: xx, y: yy,
+            'text-anchor':'middle',
+            'font-family': "system-ui, -apple-system, Segoe UI, Roboto, Arial",
+            'fill':'#111827',
+            'dominant-baseline':'middle',
+            'alignment-baseline':'middle',
+            'font-weight': 700,
+            'font-size': sizeMm.toFixed(2)+'mm'
+        });
+        t.textContent = txt;
+        svgGroup.appendChild(t);
+    }
+
+    addFracText(numStr, cx, numY, numFs);
+    addFracText(denStr, cx, denY, denFs);
+}
+
+function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
+    var mode = settings.versoMode;
+    if(pieceType === 'hundredth') mode = settings.hundredthVerso;
+    if(mode === 'blank') return;
+
+    // Petit “tweak” vertical pour les barres et petits carrés (meilleur centrage visuel)
+    // Ajusté : les dixièmes étaient trop bas, on réduit fortement le décalage.
+    var vShift = 0;
+    if(pieceType === 'tenth') vShift = (settings.sizeMode === 'standard') ? -0.45 : -0.25; // léger ajustement vers le haut
+    if(pieceType === 'hundredth') vShift = Math.min(0.6, h * 0.05);
+
+    if(pieceType === 'unit'){
+        if(mode === 'words') addCenteredText(svgGroup, x, y, w, h, [{t:"Une unité", w:1}], {bold:true, color:'#111827', pieceType:'unit', scale: scale});
+        else addCenteredText(svgGroup, x, y, w, h, [{t:"1", w:1}], {bold:true, color:'#111827', pieceType:'unit', scale: scale});
+        return;
+    }
+
+    if(pieceType === 'tenth'){
+        if(mode === 'words'){
+            addCenteredText(svgGroup, x, y, w, h, [{t:"Un dixième", w:1}], {bold:true, color:'#111827', pieceType:'tenth', scale: scale, vShiftMm: vShift});
+            return;
+        }
+        if(mode === 'decimal'){
+            addCenteredText(svgGroup, x, y, w, h, [{t:"0,1", w:1}], {bold:true, color:'#111827', pieceType:'tenth', scale: scale, vShiftMm: vShift});
+            return;
+        }
+        if(mode === 'fraction'){
+            addFractionInBox(svgGroup, x, y, w, h, "1", "10", {pieceType:'tenth', scale: scale, vShiftMm: vShift});
+            return;
+        }
+        if(mode === 'double_dec_frac'){
+            // Sur une barre large : on met côte à côte
+            var pad = Math.max(1.2, w * 0.04);
+            var gap = Math.max(2.0, w * 0.06);
+            var boxW = (w - 2*pad - gap);
+            var leftW = boxW * 0.52;
+            var rightW = boxW - leftW;
+
+            // Décimal à gauche
+            addCenteredText(svgGroup, x + pad, y, leftW, h, [{t:"0,1", w:1}], {bold:true, color:'#111827', pieceType:'tenth', scale: scale*0.95, vShiftMm: vShift});
+            // Fraction à droite
+            addFractionInBox(svgGroup, x + pad + leftW + gap, y, rightW, h, "1", "10", {pieceType:'tenth', scale: scale*0.95, vShiftMm: vShift});
+            return;
+        }
+    }
+
+    if(pieceType === 'hundredth'){
+        if(mode === 'words'){
+            // 2 lignes : un / centième
+            // -> on augmente légèrement l'interligne pour éviter que "un" touche "centième".
+            addCenteredText(svgGroup, x, y, w, h, [{t:"un", w:1},{t:"centième", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale, vShiftMm: vShift, lineRatio: 1.55, lineOffsetsMm: [-0.85, 0]});
+            return;
+        }
+        if(mode === 'decimal'){
+            addCenteredText(svgGroup, x, y, w, h, [{t:"0,01", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale, vShiftMm: vShift});
+            return;
+        }
+        if(mode === 'fraction'){
+            addFractionInBox(svgGroup, x, y, w, h, "1", "100", {pieceType:'hundredth', scale: scale, vShiftMm: vShift});
+            return;
+        }
+        if(mode === 'double_dec_frac'){
+            // Sur un centième, côte à côte est trop petit : on fait haut/bas (bien séparé).
+            var padY = Math.max(0.6, h*0.08);
+            var mid = y + h/2;
+            // 0,01 en haut
+            addCenteredText(svgGroup, x, y, w, (h/2 - padY), [{t:"0,01", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale*0.95, vShiftMm: vShift*0.35});
+            // fraction en bas
+            addFractionInBox(svgGroup, x, mid + padY/2, w, (h/2 - padY), "1", "100", {pieceType:'hundredth', scale: scale*0.95, vShiftMm: vShift*0.25});
+            return;
+        }
+    }
+}
+
+
+function approxMaxFontSizeForWidthMm(str, maxWmm){
+    // Approximation: largeur ≈ 0.56 * taillePolice * (nbCaractères "effectifs")
+    // On compte moins les espaces et la ponctuation.
+    var eff = 0;
+    for(var i=0;i<str.length;i++){
+        var ch = str[i];
+        if(ch === ' ') { eff += 0.35; continue; }
+        if(ch === '.' || ch === ',' || ch === '/' || ch === '-') { eff += 0.55; continue; }
+        eff += 1.0;
+    }
+    eff = Math.max(1, eff);
+    return maxWmm / (0.56 * eff);
+}
+
+function addCenteredText(svgGroup, x, y, w, h, lines, opts){
+    if(!lines || !lines.length) return;
+    opts = opts || {};
+    var color = opts.color || "#111827";
+    var font = opts.font || "system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    var bold = !!opts.bold;
+    var pieceType = opts.pieceType || '';
+
+    var n = lines.length;
+    var maxW = w * 0.92;
+
+    // Cap de taille de police (mm) : on évite les textes énormes.
+    var cap;
+    if(opts.capMm){
+        cap = opts.capMm;
+    } else {
+        if(pieceType === 'unit') cap = 5.2;
+        else if(pieceType === 'tenth') cap = 2.8;
+        else if(pieceType === 'hundredth') cap = 0.80;
+        else cap = 6.0;
+    }
+
+    // Échelle (permet d'ajuster la taille du texte par type de pièce)
+    var scale = (opts.scale !== undefined && opts.scale !== null) ? parseFloat(opts.scale) : 1;
+    if(!isFinite(scale) || scale <= 0) scale = 1;
+    scale = clamp(scale, 0.25, 2.0);
+
+    // Contrainte hauteur : la somme des lignes doit tenir.
+    // Peut être surchargé (utile pour "un / centième" afin d'éviter que les deux lignes se touchent).
+    var lineRatio = 1.22; // interligne relatif
+    if(opts && opts.lineRatio !== undefined && opts.lineRatio !== null){
+        var lr = parseFloat(opts.lineRatio);
+        if(isFinite(lr) && lr > 0.6 && lr < 2.5) lineRatio = lr;
+    }
+    var baseByHeight = (h * 0.82) / (n * lineRatio);
+    var capScaled = cap * scale;
+    var baseByHeightScaled = (scale <= 1) ? (baseByHeight * scale) : baseByHeight;
+    var base = Math.min(capScaled, baseByHeightScaled);
+
+    // Plancher (pour éviter 0)
+    var minFont = (Math.min(w,h) < 12) ? 0.65 : 0.85;
+    if(scale < 1) minFont = minFont * scale;
+    base = Math.max(minFont, base);
+
+    var lineGap = base * lineRatio;
+    var centerX = x + w/2;
+    var vShiftMm = (opts.vShiftMm!==undefined && opts.vShiftMm!==null) ? parseFloat(opts.vShiftMm) : 0;
+    if(!isFinite(vShiftMm)) vShiftMm = 0;
+    var centerY = y + h/2 + vShiftMm;
+    var startOffset = - (lineGap * (n-1)) / 2;
+
+    var lineOffsets = null;
+    if(opts && opts.lineOffsetsMm && Array.isArray(opts.lineOffsetsMm)){
+        lineOffsets = opts.lineOffsetsMm.map(function(v){ v = parseFloat(v); return (isFinite(v) ? v : 0); });
+    }
+
+    var text = svgEl('text', {
+        x: centerX,
+        y: centerY,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'alignment-baseline': 'middle',
+        'font-family': font,
+        'fill': color
+    });
+
+    for(var i=0;i<n;i++){
+        var li = lines[i];
+        var wanted = base * (li.w || 1);
+        var fitW = approxMaxFontSizeForWidthMm(li.t, maxW);
+        var size = Math.min(wanted, fitW, capScaled);
+        size = Math.max(minFont, size);
+
+        var tspan = svgEl('tspan', {
+            x: centerX,
+            y: (centerY + startOffset + i*lineGap + (lineOffsets ? (lineOffsets[i] || 0) : 0)),
+            'font-size': size.toFixed(2) + 'mm',
+            'font-weight': bold ? 700 : 600
+        });
+        tspan.textContent = li.t;
+        text.appendChild(tspan);
+    }
+
+    svgGroup.appendChild(text);
+}
+
+/* ========= Dessin des pièces ========= */
+function ensureDefs(svg){
+    var defs = svg.querySelector('defs');
+    if(defs) return defs;
+    defs = svgEl('defs');
+    svg.insertBefore(defs, svg.firstChild);
+
+    // Motifs N&B
+    var patUnit = svgEl('pattern', {id:'patUnit', patternUnits:'userSpaceOnUse', width:4, height:4});
+    patUnit.appendChild(svgEl('path', {d:'M0 4 L4 0', stroke:'#111827', 'stroke-width':0.4, 'opacity':0.25}));
+    defs.appendChild(patUnit);
+
+    var patTenth = svgEl('pattern', {id:'patTenth', patternUnits:'userSpaceOnUse', width:5, height:5});
+    patTenth.appendChild(svgEl('path', {d:'M0 0 L5 5 M5 0 L0 5', stroke:'#111827', 'stroke-width':0.35, 'opacity':0.18}));
+    defs.appendChild(patTenth);
+
+    var patHund = svgEl('pattern', {id:'patHund', patternUnits:'userSpaceOnUse', width:4, height:4});
+    patHund.appendChild(svgEl('circle', {cx:1.2, cy:1.2, r:0.4, fill:'#111827', opacity:0.22}));
+    patHund.appendChild(svgEl('circle', {cx:3.2, cy:3.0, r:0.4, fill:'#111827', opacity:0.22}));
+    defs.appendChild(patHund);
+
+    return defs;
+}
+
+function pieceFill(pieceType, colorMode){
+    if(colorMode === 'colored'){
+        return COLORS[pieceType];
+    }
+    if(colorMode === 'white'){
+        return '#ffffff';
+    }
+    if(colorMode === 'bw_patterns'){
+        if(pieceType === 'unit') return 'url(#patUnit)';
+        if(pieceType === 'tenth') return 'url(#patTenth)';
+        if(pieceType === 'hundredth') return 'url(#patHund)';
+        return '#ffffff';
+    }
+    return '#ffffff';
+}
+
+function drawUnitRecto(g, x, y, s, settings){
+    var fill = pieceFill('unit', settings.colorMode);
+    var stroke = 'rgba(0,0,0,0.22)';
+    g.appendChild(svgEl('rect', {x:x, y:y, width:s, height:s, fill:fill, stroke: stroke, 'stroke-width':0.4}));
+    if(!settings.showGrid) return;
+    var cell = s/10;
+    // fines lignes
+    for(var i=1;i<10;i++){
+        var alpha = 0.14;
+        var w = 0.2;
+        if(settings.showFives && (i===5)){ alpha = 0.28; w = 0.35; }
+        // vertical
+        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+s, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':w}));
+        // horizontal
+        g.appendChild(svgEl('line',{x1:x, y1:y+i*cell, x2:x+s, y2:y+i*cell, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':w}));
+    }
+}
+
+function drawTenthRecto(g, x, y, w, h, settings){
+    var fill = pieceFill('tenth', settings.colorMode);
+    var stroke = 'rgba(0,0,0,0.22)';
+    g.appendChild(svgEl('rect',{x:x, y:y, width:w, height:h, fill:fill, stroke:stroke, 'stroke-width':0.35}));
+    if(!settings.showGrid) return;
+    var cell = w/10;
+    for(var i=1;i<10;i++){
+        var alpha = 0.14;
+        var sw = 0.2;
+        if(settings.showFives && i===5){ alpha = 0.28; sw = 0.35; }
+        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+h, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':sw}));
+    }
+}
+
+function drawHundredthRecto(g, x, y, s, settings){
+    var fill = pieceFill('hundredth', settings.colorMode);
+    var stroke = 'rgba(0,0,0,0.22)';
+    g.appendChild(svgEl('rect',{x:x, y:y, width:s, height:s, fill:fill, stroke:stroke, 'stroke-width':0.30}));
+}
+
+function drawCutLine(g, x, y, w, h, settings){
+    if(!settings.cutLines) return;
+    g.appendChild(svgEl('rect',{
+        x:x, y:y, width:w, height:h,
+        fill:'none',
+        stroke:'rgba(0,0,0,0.22)',
+        'stroke-width':0.25
+    }));
+}
+
+/* ========= Pages ========= */
+function makeSVGPage(){
+    var svg = svgEl('svg', {xmlns:SVG_NS, width:mm(W), height:mm(H), viewBox:`0 0 ${W} ${H}`});
+    return svg;
+}
+
+function drawTestPage(svg){
+    // Crois aux coins + centre
+    var g = svgEl('g', {});
+    var marks = [
+        {x:8, y:8},{x:W-8, y:8},{x:8, y:H-8},{x:W-8, y:H-8},
+        {x:W/2, y:H/2}
+    ];
+    marks.forEach(function(p){
+        g.appendChild(svgEl('line',{x1:p.x-6,y1:p.y,x2:p.x+6,y2:p.y,stroke:'#111827','stroke-width':0.4}));
+        g.appendChild(svgEl('line',{x1:p.x,y1:p.y-6,x2:p.x,y2:p.y+6,stroke:'#111827','stroke-width':0.4}));
+    });
+    svg.appendChild(g);
+}
+
+function drawSheet(pieceType, isVerso, sheetIndex, sheetCount, layout, settings, calage){
+    var page = document.createElement('div');
+    page.className = 'page';
+    page.dataset.side = isVerso ? 'verso' : 'recto';
+    page.dataset.piece = pieceType;
+
+    var svg = makeSVGPage();
+    ensureDefs(svg);
+
+    var offX = isVerso ? calage.versoOffX : calage.rectoOffX;
+    var offY = isVerso ? calage.versoOffY : calage.rectoOffY;
+
+    var g = svgEl('g', {});
+    // transform : option rotation verso 180 + décalages
+    var tr = '';
+    if(isVerso && settings.versoRotate180){
+        tr += `translate(${offX} ${offY}) rotate(180 ${W/2} ${H/2})`;
+    } else {
+        tr += `translate(${offX} ${offY})`;
+    }
+    g.setAttribute('transform', tr);
+
+    // Fond (verso en blanc)
+    if(isVerso){
+        g.appendChild(svgEl('rect',{x:0,y:0,width:W,height:H,fill:'#ffffff'}));
+    }
+
+    // Dessin
+    var positions = layout.positions;
+    var n = Math.min(layout.fillCount || 0, positions.length);
+    for(var i=0;i<n;i++){
+        var p = positions[i];
+
+        if(!isVerso){
+            if(pieceType === 'unit'){
+                drawUnitRecto(g, p.x, p.y, layout.pw, settings);
+                drawCutLine(g, p.x, p.y, layout.pw, layout.ph, settings);
+            } else if(pieceType === 'tenth'){
+                drawTenthRecto(g, p.x, p.y, layout.pw, layout.ph, settings);
+                drawCutLine(g, p.x, p.y, layout.pw, layout.ph, settings);
+            } else if(pieceType === 'hundredth'){
+                drawHundredthRecto(g, p.x, p.y, layout.pw, settings);
+                drawCutLine(g, p.x, p.y, layout.pw, layout.ph, settings);
+            }
+        } else {
+            // Verso : même pièce (couleur/motif) + texte centré
+            var fillV = pieceFill(pieceType, settings.colorMode);
+            var strokeV = 'rgba(0,0,0,0.12)';
+            var swV = (pieceType === 'hundredth') ? 0.30 : ((pieceType === 'tenth') ? 0.35 : 0.40);
+
+            g.appendChild(svgEl('rect',{
+                x:p.x, y:p.y, width:layout.pw, height:layout.ph,
+                fill: fillV,
+                stroke: strokeV,
+                'stroke-width': swV
+            }));
+
+            // Trait de découpe (si activé)
+            drawCutLine(g, p.x, p.y, layout.pw, layout.ph, settings);
+
+            // Texte (centré, fractions avec barre, doubles, etc.)
+            var sc = (pieceType === 'unit') ? settings.labelScaleUnit : (pieceType === 'tenth' ? settings.labelScaleTenth : settings.labelScaleHundredth);
+            drawVersoLabel(g, pieceType, p.x, p.y, layout.pw, layout.ph, settings, sc);
+        }    }
+
+    svg.appendChild(g);
+
+    page.appendChild(svg);
+    return page;
+}
+
+/* ========= Génération : pages ========= */
+function buildSheetsFromSelection(selection, settings, geom){
+    var sheets = [];
+
+    if(selection.unit){
+        sheets.push({
+            piece:'unit',
+            layout:Object.assign({}, geom.unitLayout, {pw:geom.unitSize, ph:geom.unitSize, fillCount: geom.unitLayout.positions.length}),
+            totalPages: 1,
+            index: 0
+        });
+    }
+
+    if(selection.tenth){
+        sheets.push({
+            piece:'tenth',
+            layout:Object.assign({}, geom.tenthLayout, {pw:geom.tenthW, ph:geom.tenthH, fillCount: geom.tenthLayout.positions.length}),
+            totalPages: 1,
+            index: 0
+        });
+    }
+
+    if(selection.hundredth){
+        sheets.push({
+            piece:'hundredth',
+            layout:Object.assign({}, geom.hundLayout, {pw:geom.hundS, ph:geom.hundS, fillCount: geom.hundLayout.positions.length}),
+            totalPages: 1,
+            index: 0
+        });
+    }
+
+    return sheets;
+}
+
+function generate(){
+    var form = document.getElementById('form');
+
+    var settings = {
+        mode: form.mode.value,
+        sizeMode: form.sizeMode.value,
+        colorMode: form.colorMode.value,
+        showFives: !!form.showFives.checked,
+        cutLines: !!form.cutLines.checked,
+        showGrid: !!form.showGrid.checked,
+        versoMode: form.versoMode.value,
+        hundredthVerso: form.hundredthVerso.value,
+        versoRotate180: !!form.versoRotate180.checked,
+        margin: parseFloat(form.marginMm.value),
+        gap: parseFloat(form.gapMm.value),
+        addTestPage: !!form.addTestPage.checked,
+        labelScaleUnit: parseFloat(form.labelScaleUnit && form.labelScaleUnit.value) || 1,
+        labelScaleTenth: parseFloat(form.labelScaleTenth && form.labelScaleTenth.value) || 0.85,
+        labelScaleHundredth: parseFloat(form.labelScaleHundredth && form.labelScaleHundredth.value) || 0.70
+    };
+
+    // Affichage des % (sliders)
+    function setPct(id, val){
+        var el = document.getElementById(id);
+        if(el) el.textContent = Math.round(val*100) + '%';
+    }
+    setPct('labelScaleUnitVal', settings.labelScaleUnit);
+    setPct('labelScaleTenthVal', settings.labelScaleTenth);
+    setPct('labelScaleHundredthVal', settings.labelScaleHundredth);
+
+
+    var selection = getSelection();
+
+    // Géométrie
+    var margin = clamp(settings.margin || 10, 0, 30);
+    var gap = clamp(settings.gap || 4, 0, 20);
+
+    var unitSize = computeUnitSize(settings.sizeMode, margin, gap);
+    var unitLayout = unitPagePositions(unitSize, settings.sizeMode, margin, gap);
+
+    var tenthW = unitSize;
+    var tenthH = unitSize / 10;
+    // On laisse un peu plus d'air pour découper + "une ligne en moins"
+    var tenthGap = Math.max(6.0, gap * 1.5);
+    var tenthCols = Math.max(1, Math.floor((W - 2*margin + tenthGap) / (tenthW + tenthGap)));
+    var tenthRows = Math.max(1, Math.floor((H - 2*margin + tenthGap) / (tenthH + tenthGap)));
+    if(settings.sizeMode === 'standard'){
+        tenthRows = Math.max(1, tenthRows - 1); // une ligne en moins (plus d'air)
+    } else {
+        tenthRows = Math.max(1, tenthRows); // grand format : on garde une ligne de plus
+    }
+    var tenthLayout = gridPositionsFixed(tenthW, tenthH, margin, tenthGap, tenthCols, tenthRows);
+
+    var hundS = unitSize / 10;
+    // Centièmes : un peu moins dense pour faciliter la découpe
+    var hundGap = Math.max(5.2, gap * 1.3);
+    var hundCols = Math.max(1, Math.floor((W - 2*margin + hundGap) / (hundS + hundGap)));
+    var hundRows = Math.max(1, Math.floor((H - 2*margin + hundGap) / (hundS + hundGap)));
+    hundRows = Math.max(1, hundRows - 1); // un peu moins de centièmes
+    var hundLayout = gridPositionsFixed(hundS, hundS, margin, hundGap, hundCols, hundRows);
+
+    var geom = {
+        unitSize: unitSize,
+        unitLayout: unitLayout,
+        tenthW: tenthW,
+        tenthH: tenthH,
+        tenthLayout: tenthLayout,
+        hundS: hundS,
+        hundLayout: hundLayout
+    };
+
+    var sheets = buildSheetsFromSelection(selection, settings, geom);
+
+    // Option : page de test
+    if(settings.addTestPage){
+        sheets.push({piece:'test', layout:{positions:[], fillCount:0}, totalPages:1, index:0, isTest:true});
+    }
+
+    // Rendu
+    var preview = document.getElementById('preview');
+    preview.innerHTML = '';
+
+    var calage = {
+        rectoOffX: parseFloat(form.rectoOffX.value) || 0,
+        rectoOffY: parseFloat(form.rectoOffY.value) || 0,
+        versoOffX: parseFloat(form.versoOffX.value) || 0,
+        versoOffY: parseFloat(form.versoOffY.value) || 0
+    };
+
+    if(!anySelection(selection) && !settings.addTestPage){
+        var msg = document.createElement('div');
+        msg.style.padding = '14px';
+        msg.style.background = '#fff';
+        msg.style.border = '1px solid #e2e8f0';
+        msg.style.borderRadius = '10px';
+        msg.style.color = '#0f172a';
+        msg.style.maxWidth = '860px';
+        msg.innerHTML = '<b>Aucune planche sélectionnée.</b> Coche au moins “Unités”, “Dixièmes” ou “Centièmes”.';
+        preview.appendChild(msg);
+        updatePreviewSummary(selection, settings, geom, sheets, 0);
+        schedulePreviewZoom();
+        return;
+    }
+
+    var pagesRendered = 0;
+    for(var s=0;s<sheets.length;s++){
+        var sh = sheets[s];
+
+        if(sh.isTest){
+            var page = document.createElement('div');
+            page.className = 'page';
+            page.dataset.side = 'recto';
+            var svg = makeSVGPage();
+            drawTestPage(svg);
+            page.appendChild(svg);
+            preview.appendChild(page);
+            pagesRendered += 1;
+            continue;
+        }
+
+        var makeRecto = (settings.mode !== 'verso_only');
+        var makeVerso = (settings.mode !== 'recto_only');
+
+        if(makeRecto){
+            preview.appendChild(drawSheet(sh.piece, false, sh.index, sh.totalPages, sh.layout, settings, calage));
+            pagesRendered += 1;
+        }
+        if(makeVerso){
+            preview.appendChild(drawSheet(sh.piece, true, sh.index, sh.totalPages, sh.layout, settings, calage));
+            pagesRendered += 1;
+        }
+    }
+
+    updatePreviewSummary(selection, settings, geom, sheets, pagesRendered);
+    schedulePreviewZoom();
+}
+
+function updatePreviewSummary(selection, settings, geom, sheets, pagesRendered){
+    var box = document.getElementById('previewSummary');
+    if(!box) return;
+
+    var sheetCount = sheets.filter(function(s){ return !s.isTest; }).length;
+
+    var parts = [];
+    parts.push('Format : <b>' + (settings.sizeMode === 'large' ? 'Grand (2 unités/page)' : 'Standard (4 unités/page)') + '</b>');
+
+    var list = [];
+    if(selection.unit) list.push('Unités : <b>' + geom.unitLayout.positions.length + '</b> / page');
+    if(selection.tenth) list.push('Dixièmes : <b>' + geom.tenthLayout.positions.length + '</b> / page');
+    if(selection.hundredth) list.push('Centièmes : <b>' + geom.hundLayout.positions.length + '</b> / page');
+    if(list.length) parts.push('Planches : ' + list.join(' · '));
+
+    parts.push('Feuilles : <b>' + sheetCount + '</b> (pages affichées : <b>' + pagesRendered + '</b>)');
+    parts.push('Taille unité ≈ <b>' + geom.unitSize.toFixed(1) + ' mm</b> (centième ≈ ' + (geom.unitSize/10).toFixed(1) + ' mm)');
+
+    box.innerHTML = parts.join(' &nbsp;•&nbsp; ');
+}
+function updatePreviewZoom(){
+    var preview = document.getElementById('preview');
+    if(!preview) return;
+    var pages = preview.querySelectorAll('.page');
+    if(!pages.length) return;
+
+    // Mesure à zoom=1 (sinon getBoundingClientRect est faussé)
+    pages.forEach(function(p){ p.style.zoom = 1; });
+
+    var avail = preview.clientWidth;
+    if(!avail || avail <= 0) return;
+    avail = avail - 18; // petite marge
+
+    var rect = pages[0].getBoundingClientRect();
+    var pageW = rect.width;
+    if(!pageW || pageW <= 0) return;
+
+    var scale = clamp(avail / pageW, 0.22, 1);
+    pages.forEach(function(p){ p.style.zoom = scale; });
+}
+
+var __zoomRaf = null;
+function schedulePreviewZoom(){
+    if(__zoomRaf) cancelAnimationFrame(__zoomRaf);
+    __zoomRaf = requestAnimationFrame(function(){
+        __zoomRaf = null;
+        updatePreviewZoom();
+    });
+}
+window.addEventListener('resize', schedulePreviewZoom);
+
+
+/* ========= UI : dynamique ========= */
+function updateUI(){
+    generate();
+    applyPreviewFilter();
+}
+
+document.getElementById('print').addEventListener('click', safePrint);
+
+document.getElementById('form').addEventListener('change', updateUI);
+document.getElementById('form').addEventListener('input', updateUI);
+
+window.addEventListener('load', function(){
+    updateUI();
+    var pf = document.getElementById('previewFilter');
+    if(pf){ pf.addEventListener('change', applyPreviewFilter); }
+});
+</script>
+</body>
+</html>
