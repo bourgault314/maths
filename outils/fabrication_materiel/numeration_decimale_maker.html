@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<title>Fabriqueur — numération décimale</title>
+<title>Maker — numération décimale</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   :root { 
@@ -284,7 +284,7 @@
 <body>
 <header>
     <div style="width:60px;"></div>
-    <span class="header-title">FABRIQUEUR — NUMÉRATION DÉCIMALE</span>
+    <span class="header-title">MAKER — NUMÉRATION DÉCIMALE</span>
     <div style="width:60px;"></div> 
 </header>
 
@@ -361,12 +361,6 @@
                     <input type="checkbox" id="showFives" name="showFives" checked>
                     Afficher la séparation en 5 (pour compter vite)
                 </label>
-
-                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-                    <input type="checkbox" id="cutLines" name="cutLines" checked>
-                    Traits de découpe
-                </label>
-
                 <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
                     <input type="checkbox" id="showGrid" name="showGrid" checked>
                     Quadrillage (unités et dixièmes)
@@ -398,16 +392,14 @@
                     <label class="choice"><input type="radio" name="versoMode" value="words" checked> Texte</label>
                     <label class="choice"><input type="radio" name="versoMode" value="decimal"> Décimal</label>
                     <label class="choice"><input type="radio" name="versoMode" value="fraction"> Fraction</label>
-                    <label class="choice"><input type="radio" name="versoMode" value="double_dec_frac"> Double (0,1 + 1/10)</label>
-                </div>
+</div>
 
                 <label style="margin-top:14px;">Centièmes</label>
                 <div class="choice-grid" role="group" aria-label="Centièmes">
                     <label class="choice"><input type="radio" name="hundredthVerso" value="words" checked> Texte (un / centième)</label>
                     <label class="choice"><input type="radio" name="hundredthVerso" value="decimal"> 0,01</label>
                     <label class="choice"><input type="radio" name="hundredthVerso" value="fraction"> Fraction (1/100)</label>
-                    <label class="choice"><input type="radio" name="hundredthVerso" value="double_dec_frac"> Double (0,01 + 1/100)</label>
-                    <label class="choice"><input type="radio" name="hundredthVerso" value="blank"> Vide</label>
+<label class="choice"><input type="radio" name="hundredthVerso" value="blank"> Vide</label>
                 </div>
 
                 <label style="margin-top:14px;">Taille du texte au verso</label>
@@ -705,8 +697,14 @@ function labelLinesForPiece(pieceType, settings){
 }
 
 function addFractionInBox(svgGroup, x, y, w, h, numStr, denStr, opts){
+    // Rendu fraction propre (méthode proche de bandes_maker) :
+    // numérateur au-dessus (baseline), barre au centre, dénominateur en dessous (hanging).
     opts = opts || {};
     var pieceType = opts.pieceType || '';
+
+    var sizeMode = opts.sizeMode || '';
+    var isGrand = (sizeMode === 'grand');
+
     var scale = (opts.scale !== undefined && opts.scale !== null) ? parseFloat(opts.scale) : 1;
     if(!isFinite(scale) || scale <= 0) scale = 1;
     scale = clamp(scale, 0.25, 2.0);
@@ -717,57 +715,120 @@ function addFractionInBox(svgGroup, x, y, w, h, numStr, denStr, opts){
     var cx = x + w/2;
     var cy = y + h/2 + vShiftMm;
 
-    // Taille de police (mm) : on privilégie la lisibilité et l'absence de débordement.
-    // On garde volontairement plus petit que les textes simples.
-    var cap = (pieceType === 'tenth') ? 2.15 : (pieceType === 'hundredth' ? 1.05 : 5.0);
+    // --- Taille de police (mm) ---
+    // Dixièmes : lisible ; Centièmes : compact.
+    var cap;
+    if(pieceType === 'tenth') cap = 1.80;
+    else if(pieceType === 'hundredth') cap = isGrand ? 2.20 : 1.20;
+    else cap = 5.0;
     cap = cap * scale;
 
-    var fs = h * 0.22 * scale;
-    fs = Math.min(fs, w * 0.20 * scale);
-    fs = Math.min(fs, cap);
+    var hFactor = 0.42;
+    var wFactor = 0.26;
+    if(pieceType === 'tenth'){ hFactor = 0.40; wFactor = 0.22; }
+    // hundredth: on garde des limites compactes
 
-    var minFs = (pieceType === 'hundredth') ? 0.55*scale : 0.85*scale;
-    fs = Math.max(minFs, fs);
+    var fs = Math.min(cap, h * hFactor * scale, w * wFactor * scale);
+    var minFs;
+    if(pieceType === 'hundredth') minFs = (isGrand ? 0.70 : 0.58) * scale;
+    else minFs = 0.80 * scale;
+    fs = clamp(fs, minFs, cap);
 
-    var numFs = fs * 0.95;
-    var denFs = fs * (denStr.length >= 3 ? 0.85 : 0.92);
+    // Ajustement pour dénominateur long (100)
+    var denScale = 0.95;
+    if(denStr.length >= 3){
+        if(pieceType === 'hundredth') denScale = isGrand ? 0.92 : 0.88;
+        else denScale = 0.88;
+    }
+    var numScale = (pieceType === 'hundredth') ? (isGrand ? 1.00 : 0.98) : 0.95;
 
-    // Positionnement : numérateur / barre / dénominateur
-    var dy = fs * 0.78;
-    var numY = cy - dy;
-    var denY = cy + dy;
-    var lineY = cy;
+    var numFs = fs * numScale;
+    var denFs = fs * denScale;
 
-    // Longueur de barre (approx) : proportionnelle au texte le plus long
-    var maxEff = Math.max(numStr.length, denStr.length);
-    var lineW = Math.min(w * 0.78, (maxEff * fs * 0.62) + fs * 0.9);
-    if(pieceType === 'hundredth') lineW = Math.min(lineW, w * 0.80);
+    // --- Barre ---
+    function approxTextW(str, f){
+        // approx largeur (mm) : ~0.56*fs par caractère
+        var eff = 0;
+        for(var i=0;i<str.length;i++){
+            var ch = str[i];
+            if(ch === ' ') { eff += 0.35; continue; }
+            if(ch === '.' || ch === ',' || ch === '/' || ch === '-') { eff += 0.55; continue; }
+            eff += 1.0;
+        }
+        eff = Math.max(1, eff);
+        return eff * 0.56 * f;
+    }
 
-    var x1 = cx - lineW/2, x2 = cx + lineW/2;
+    var maxTextW = Math.max(approxTextW(numStr, numFs), approxTextW(denStr, denFs));
+
+    // Largeur de barre : juste un peu plus large que les chiffres.
+    // Sur les dixièmes (barre longue), on évite les barres gigantesques : on met une marge fixe liée à la police.
+    var lineW;
+    if(pieceType === 'tenth'){
+        var margin = fs * (isGrand ? 1.20 : 0.90); // mm
+        lineW = maxTextW + 2*margin;
+        lineW = Math.max(lineW, maxTextW + fs * 0.80);
+        lineW = Math.min(lineW, w * (isGrand ? 0.56 : 0.45));
+    } else {
+        if(pieceType === 'hundredth'){
+        var lineMult = isGrand ? 1.42 : 1.38;
+        var lineWMin = w * (isGrand ? 0.48 : 0.46);
+        var lineWMax = w * 0.86;
+        lineW = clamp(maxTextW * lineMult, lineWMin, lineWMax);
+    } else {
+        var lineMult = 1.25;
+        var lineWMin = w * 0.38;
+        var lineWMax = w * 0.78;
+        lineW = clamp(maxTextW * lineMult, lineWMin, lineWMax);
+    }
+    }
+
+    var halfBar = lineW/2;
+    var swFactor = (pieceType === 'tenth') ? 0.10 : 0.08;
+    var swMin = (pieceType === 'tenth') ? 0.22 : 0.20;
+    var sw = Math.max(swMin, fs * swFactor);
 
     svgGroup.appendChild(svgEl('line', {
-        x1:x1, y1:lineY, x2:x2, y2:lineY,
-        stroke:'#111827',
-        'stroke-width': Math.max(0.20, fs*0.08)
+        x1: cx - halfBar, y1: cy,
+        x2: cx + halfBar, y2: cy,
+        stroke: '#111827',
+        'stroke-width': sw
     }));
 
-    function addFracText(txt, xx, yy, sizeMm){
+    // --- Numérateur / dénominateur ---
+    // Baselines stables (comme dans bandes_maker)
+    var gapAbove = fs * 0.22;
+    var gapBelow = fs * 0.02;
+
+    // Ajustements fins : plus d'air autour de la barre
+    if(pieceType === 'tenth'){
+        gapAbove = fs * 0.23;
+        gapBelow = fs * 0.04;
+    }
+    if(pieceType === 'hundredth'){
+        gapAbove = fs * 0.28;
+        gapBelow = fs * 0.08;
+    }
+
+    function addText(txt, yy, sizeMm, baseline){
         var t = svgEl('text', {
-            x: xx, y: yy,
-            'text-anchor':'middle',
+            x: cx,
+            y: yy,
+            'text-anchor': 'middle',
             'font-family': "system-ui, -apple-system, Segoe UI, Roboto, Arial",
-            'fill':'#111827',
-            'dominant-baseline':'middle',
-            'alignment-baseline':'middle',
+            'fill': '#111827',
             'font-weight': 700,
-            'font-size': sizeMm.toFixed(2)+'mm'
+            'font-size': sizeMm.toFixed(2) + 'mm',
+            'dominant-baseline': baseline
         });
         t.textContent = txt;
         svgGroup.appendChild(t);
     }
 
-    addFracText(numStr, cx, numY, numFs);
-    addFracText(denStr, cx, denY, denFs);
+    // Numérateur : baseline (posé juste au-dessus de la barre)
+    addText(numStr, cy - gapAbove, numFs, 'baseline');
+    // Dénominateur : hanging (accroché juste sous la barre)
+    addText(denStr, cy + gapBelow, denFs, 'hanging');
 }
 
 function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
@@ -797,7 +858,7 @@ function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
             return;
         }
         if(mode === 'fraction'){
-            addFractionInBox(svgGroup, x, y, w, h, "1", "10", {pieceType:'tenth', scale: scale, vShiftMm: vShift});
+            addFractionInBox(svgGroup, x, y, w, h, "1", "10", {pieceType:'tenth', scale: scale, vShiftMm: vShift, sizeMode: settings.sizeMode});
             return;
         }
         if(mode === 'double_dec_frac'){
@@ -811,7 +872,7 @@ function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
             // Décimal à gauche
             addCenteredText(svgGroup, x + pad, y, leftW, h, [{t:"0,1", w:1}], {bold:true, color:'#111827', pieceType:'tenth', scale: scale*0.95, vShiftMm: vShift});
             // Fraction à droite
-            addFractionInBox(svgGroup, x + pad + leftW + gap, y, rightW, h, "1", "10", {pieceType:'tenth', scale: scale*0.95, vShiftMm: vShift});
+            addFractionInBox(svgGroup, x + pad + leftW + gap, y, rightW, h, "1", "10", {pieceType:'tenth', scale: scale*0.95, vShiftMm: vShift, sizeMode: settings.sizeMode});
             return;
         }
     }
@@ -820,7 +881,8 @@ function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
         if(mode === 'words'){
             // 2 lignes : un / centième
             // -> on augmente légèrement l'interligne pour éviter que "un" touche "centième".
-            addCenteredText(svgGroup, x, y, w, h, [{t:"un", w:1},{t:"centième", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale, vShiftMm: vShift, lineRatio: 1.55, lineOffsetsMm: [-0.85, 0]});
+            var unOffset = (settings.sizeMode === 'grand') ? -1.15 : -0.85;
+            addCenteredText(svgGroup, x, y, w, h, [{t:"un", w:1},{t:"centième", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale, vShiftMm: vShift, lineRatio: 1.55, lineOffsetsMm: [unOffset, 0]});
             return;
         }
         if(mode === 'decimal'){
@@ -828,7 +890,7 @@ function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
             return;
         }
         if(mode === 'fraction'){
-            addFractionInBox(svgGroup, x, y, w, h, "1", "100", {pieceType:'hundredth', scale: scale, vShiftMm: vShift});
+            addFractionInBox(svgGroup, x, y, w, h, "1", "100", {pieceType:'hundredth', scale: scale, vShiftMm: vShift, sizeMode: settings.sizeMode});
             return;
         }
         if(mode === 'double_dec_frac'){
@@ -838,7 +900,7 @@ function drawVersoLabel(svgGroup, pieceType, x, y, w, h, settings, scale){
             // 0,01 en haut
             addCenteredText(svgGroup, x, y, w, (h/2 - padY), [{t:"0,01", w:1}], {bold:true, color:'#111827', pieceType:'hundredth', scale: scale*0.95, vShiftMm: vShift*0.35});
             // fraction en bas
-            addFractionInBox(svgGroup, x, mid + padY/2, w, (h/2 - padY), "1", "100", {pieceType:'hundredth', scale: scale*0.95, vShiftMm: vShift*0.25});
+            addFractionInBox(svgGroup, x, mid + padY/2, w, (h/2 - padY), "1", "100", {pieceType:'hundredth', scale: scale*0.95, vShiftMm: vShift*0.25, sizeMode: settings.sizeMode});
             return;
         }
     }
@@ -1024,15 +1086,9 @@ function drawHundredthRecto(g, x, y, s, settings){
 }
 
 function drawCutLine(g, x, y, w, h, settings){
-    if(!settings.cutLines) return;
-    g.appendChild(svgEl('rect',{
-        x:x, y:y, width:w, height:h,
-        fill:'none',
-        stroke:'rgba(0,0,0,0.22)',
-        'stroke-width':0.25
-    }));
+    // (v12) Option "Traits de découpe" supprimée : on ne dessine rien ici.
+    return;
 }
-
 /* ========= Pages ========= */
 function makeSVGPage(){
     var svg = svgEl('svg', {xmlns:SVG_NS, width:mm(W), height:mm(H), viewBox:`0 0 ${W} ${H}`});
@@ -1166,8 +1222,7 @@ function generate(){
         sizeMode: form.sizeMode.value,
         colorMode: form.colorMode.value,
         showFives: !!form.showFives.checked,
-        cutLines: !!form.cutLines.checked,
-        showGrid: !!form.showGrid.checked,
+showGrid: !!form.showGrid.checked,
         versoMode: form.versoMode.value,
         hundredthVerso: form.hundredthVerso.value,
         versoRotate180: !!form.versoRotate180.checked,
