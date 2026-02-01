@@ -367,11 +367,13 @@
       background: #fbfcff;
     }
 
-    .boardsSingle, .boardsCompare{ flex:1; display:block; }
+    .boardsSingle, .boardsCompare{ flex:1; display:block; min-height:0; min-width:0; }
     .boardsCompare{ display:none; }
 
     .gridWrap{
       height:100%;
+      min-height:0;
+      min-width:0;
       overflow:auto;
       padding: 6px 14px 12px;
       background:#fff;
@@ -406,13 +408,7 @@
 
     .cell.on{ background: linear-gradient(180deg, var(--tile), var(--tile2)); }
     .cell.on::after{
-      content:"";
-      position:absolute;
-      inset:2px;
-      border-radius:6px;
-      border: 1px solid rgba(20,32,51,.16);
-      pointer-events:none;
-      z-index: 2;
+      content:none;
     }
 
     .lbl{
@@ -454,11 +450,21 @@
     .edge.l{left:0; top:0; width:var(--perimW); height:100%}
     .edge.r{right:0; top:0; width:var(--perimW); height:100%}
 
+    .corner{ position:absolute; width:var(--perimW); height:var(--perimW); background: var(--perim); pointer-events:none; opacity:0; z-index:4; }
+    .corner.on{ opacity:1; }
+    .corner.tl{left:0; top:0;}
+    .corner.tr{right:0; top:0;}
+    .corner.br{right:0; bottom:0;}
+    .corner.bl{left:0; bottom:0;}
+
+
     body.panReady .cell{ cursor: grab; }
     body.panning .cell{ cursor: grabbing; }
 
     .compareLayout{
       height:100%;
+      min-height:0;
+      min-width:0;
       display:flex;
       gap:12px;
       padding: 6px 14px 12px;
@@ -470,6 +476,7 @@
       display:flex;
       flex-direction:column;
       min-width: 240px;
+      min-height:0;
       border:1px solid #eef2fb;
       border-radius: 16px;
       background:#fbfcff;
@@ -500,6 +507,8 @@
 
     .compareWrap{
       flex:1;
+      min-height:0;
+      min-width:0;
       overflow:auto;
       padding: 10px;
     }
@@ -893,6 +902,13 @@
         const eL = document.createElement('div'); eL.className = 'edge l';
         cell.appendChild(eT); cell.appendChild(eR); cell.appendChild(eB); cell.appendChild(eL);
 
+        const cTL = document.createElement('div'); cTL.className = 'corner tl';
+        const cTR = document.createElement('div'); cTR.className = 'corner tr';
+        const cBR = document.createElement('div'); cBR.className = 'corner br';
+        const cBL = document.createElement('div'); cBL.className = 'corner bl';
+        cell.appendChild(cTL); cell.appendChild(cTR); cell.appendChild(cBR); cell.appendChild(cBL);
+
+
         gridEl.appendChild(cell);
         board.cells.push(cell);
       }
@@ -981,6 +997,9 @@
         cell.classList.toggle('on', board.on.has(k));
         const edges = cell.querySelectorAll('.edge');
         for(const e of edges) e.classList.remove('on');
+        const corners = cell.querySelectorAll('.corner');
+        for(const c0 of corners) c0.classList.remove('on');
+
       }
       const {edgesMap} = board.computePerimeterEdges();
       if(showPerim.checked){
@@ -992,6 +1011,47 @@
           if(ed.r) eR.classList.add('on');
           if(ed.b) eB.classList.add('on');
           if(ed.l) eL.classList.add('on');
+        }
+                // --- Correctif coins (jonctions) : comble les "trous" au coin (côté CASES ON) ---
+        const isOnCell = (rr,cc)=> (rr>=0 && rr<ROWS && cc>=0 && cc<COLS && board.on.has(key(rr,cc)));
+        const addCorner = (rr,cc,which)=>{
+          if(rr<0 || rr>=ROWS || cc<0 || cc>=COLS) return;
+          const cell = board.cells[board.idx(rr,cc)];
+          const corners = cell.querySelectorAll('.corner');
+          if(!corners || corners.length < 4) return;
+          if(which === 'tl') corners[0].classList.add('on');
+          else if(which === 'tr') corners[1].classList.add('on');
+          else if(which === 'br') corners[2].classList.add('on');
+          else if(which === 'bl') corners[3].classList.add('on');
+        };
+
+        // On repère les "encoches" : un bloc 2x2 avec 3 cases ON (le 4e est vide).
+        // Le trou visuel se situe au coin du carré DIAGONAL (qui est ON mais n'a pas de bord rouge à cet endroit).
+        // On remplit donc ce coin-là (dans la zone bleue), pas dans la case vide.
+        for(let rr=0; rr<ROWS; rr++){
+          for(let cc=0; cc<COLS; cc++){
+            if(isOnCell(rr,cc)) continue; // uniquement sur les cases vides
+
+            // Case vide = en HAUT-DROITE du bloc 2x2  => coin à remplir : top-right de la case (rr+1,cc-1)
+            if(isOnCell(rr,cc-1) && isOnCell(rr+1,cc) && isOnCell(rr+1,cc-1)){
+              addCorner(rr+1, cc-1, 'tr');
+            }
+
+            // Case vide = en HAUT-GAUCHE           => coin : top-left de la case (rr+1,cc+1)
+            if(isOnCell(rr,cc+1) && isOnCell(rr+1,cc) && isOnCell(rr+1,cc+1)){
+              addCorner(rr+1, cc+1, 'tl');
+            }
+
+            // Case vide = en BAS-DROITE            => coin : bottom-right de la case (rr-1,cc-1)
+            if(isOnCell(rr,cc-1) && isOnCell(rr-1,cc) && isOnCell(rr-1,cc-1)){
+              addCorner(rr-1, cc-1, 'br');
+            }
+
+            // Case vide = en BAS-GAUCHE            => coin : bottom-left de la case (rr-1,cc+1)
+            if(isOnCell(rr,cc+1) && isOnCell(rr-1,cc) && isOnCell(rr-1,cc+1)){
+              addCorner(rr-1, cc+1, 'bl');
+            }
+          }
         }
       }
     };
