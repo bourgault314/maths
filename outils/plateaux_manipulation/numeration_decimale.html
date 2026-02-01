@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Numération décimale — Plateau (PATCH 3g)</title>
+  <title>Numération décimale — Plateau (PATCH 3k)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
 
@@ -366,7 +366,76 @@
       color: white;
     }
 
-    .eq-text{ line-height: 1.05; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap: 10px 12px; }
+    /* --- BARRE HAUTE : disposition compacte (2 lignes) --- */
+    .topgrid{
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 10px;
+      row-gap: 6px;
+      align-items: center;
+    }
+    /* Ligne 1 (gauche) : on étire pour pouvoir CENTRER les 3 boutons par rapport à la rangée d'outils dessous */
+    #grid-actions{ grid-column: 1; grid-row: 1; justify-self: stretch; }
+    #grid-tools{ grid-column: 1; grid-row: 2; }
+    #grid-display{
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 180px;
+    }
+    #display-controls-row1{ grid-column: 3; grid-row: 1; justify-self: end; }
+    /* Ligne 2 (droite) : on étire + centre pour que "Unités + centièmes" + œil soient centrés sous la rangée du dessus */
+    #display-controls-row2{ grid-column: 3; grid-row: 2; justify-self: stretch; }
+
+    @media (max-width: 860px){
+      .topgrid{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+        row-gap: 6px;
+      }
+      #grid-actions{ grid-column: 1; grid-row: 1; justify-self: start; }
+      #grid-tools{ grid-column: 1; grid-row: 2; justify-self: start; }
+      #grid-display{ grid-column: 1; grid-row: 3; }
+      #display-controls-row1{ grid-column: 1; grid-row: 4; justify-self: center; }
+      #display-controls-row2{ grid-column: 1; grid-row: 5; justify-self: center; }
+    }
+
+    
+    /* --- MODE PROJECTION (bouton "Proj") ---
+       Objectif : rendre LES ÉCRITURES (affichage + plateau) plus visibles,
+       pas forcément les boutons.
+    */
+    body.projection #display-bubble{
+      border-width: 2px;
+      background: #ffffff;
+    }
+    body.projection #equation-display{
+      /* Gros, gras, très lisible sur tableau blanc */
+      font-size: clamp(44px, 4.8vw, 72px);
+      font-weight: 950;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.65);
+    }
+    body.projection #equation-display .katex{
+      /* KaTeX suit la taille du texte, mais on donne un petit boost */
+      font-size: 1.15em;
+    }
+    body.projection .eq-equals{ font-weight: 950; }
+    body.projection .frac .bar{ height: 3px; }
+
+    /* Dos des pièces : plus lisible en projection */
+    body.projection .token.type-unit .face.back{ font-size: 44px; font-weight: 900; }
+    body.projection .token.type-tenth .face.back{ font-size: 30px; font-weight: 900; }
+    /* Le centième reste volontairement très petit (contrainte de place) */
+
+    body.projection #btn-projection{
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+.eq-text{ line-height: 1.05; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap: 10px 12px; }
 
     .c-unit{ color: #ef4444; }
     .c-tenth{ color: #22c55e; }
@@ -411,105 +480,114 @@
 
   
   <header class="bg-white p-2 shadow-md z-30 shrink-0">
-    <!-- Ligne 1 : actions (gauche) + outils (droite) -->
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <!-- UNDO BUTTON -->
-        <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-          </svg>
-        </button>
+    <div id="topgrid" class="topgrid select-none">
+      <div id="grid-actions">
+        <div class="flex items-center gap-2 w-full justify-center">
+          <!-- UNDO BUTTON -->
+          <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+          </button>
 
-        <!-- TRASH BUTTON -->
-        <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
+          <!-- TRASH BUTTON -->
+          <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+
+          <!-- PROJECTION BUTTON (écritures plus visibles) -->
+          <button onclick="app.toggleProjection()" id="btn-projection" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 rounded-lg font-bold border border-indigo-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Mode projection (écritures plus visibles)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16v10H4V6z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20h6"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 16l-2 4m6-4l2 4"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
-
-
-      <div class="flex-1 flex items-center justify-center min-w-0">
-        <div id="display-controls" class="flex items-center gap-1 flex-wrap justify-center">
-                <button class="mode-toggle" data-mode="decimal" onclick="app.toggleDisplayMode('decimal')" title="Écriture décimale">Décimales</button>
-                <button class="mode-toggle" data-mode="fraction" onclick="app.toggleDisplayMode('fraction')" title="Écriture fractionnaire">Fractions</button>
-                <button class="mode-toggle" data-mode="decomp" onclick="app.toggleDisplayMode('decomp')" title="Décomposer">Décomposer</button>
-                <button class="mode-toggle" data-mode="u100" onclick="app.toggleDisplayMode('u100')" title="Unités + centièmes">Unités + centièmes</button>
-        
-                <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition" title="Afficher/Masquer">
-                  <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.5-4.132M6.223 6.223A9.957 9.957 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.962 9.962 0 01-4.123 5.089M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-6.09-6.09" />
-                  </svg>
-                </button>
-              </div>
-      </div>
-
-      <!-- TOOLS (conservés) -->
-      <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-        <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer le plateau / futures pièces)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
-          </svg>
-        </button>
-
-        <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2 2 0 012.828 2.828L7 19l-4 1 1-4 12.862-12.513z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5l4 4"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21c2-1 4-1 6 0"/>
-          </svg>
-        </button>
-
-        <button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer le stylo">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-
-        <div class="h-6 w-px bg-slate-200 mx-1"></div>
-
-        <button onclick="app.resetView()" id="btn-reset-view" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Recentrer la vue (zoom 100%)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0 8 8 0 01-16 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/>
-          </svg>
-        </button>
-
-        <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : on/off">
-          <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
-          </svg>
-          <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/>
-          </svg>
-        </button>
-
-        <button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
-          <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/>
-          </svg>
-          <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Ligne 2 : affichage + modes (centré, stable, toujours visible) -->
-    <div id="display-bar" class="mt-1 flex flex-col items-center gap-1 select-none">
-      <div id="display-bubble" class="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner min-h-[62px] w-[920px] max-w-[96vw] flex items-center justify-center">
+      <div id="grid-display">
+        <div id="display-bubble" class="bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shadow-inner min-h-[62px] w-[920px] max-w-[96vw] flex items-center justify-center">
         <div id="equation-display" class="eq-text text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-700 text-center"></div>
       </div>
+      </div>
+
+      <div id="display-controls-row1" class="flex items-center gap-1">
+          <button class="mode-toggle" data-mode="decimal" onclick="app.toggleDisplayMode('decimal')" title="Écriture décimale">Décimales</button>
+          <button class="mode-toggle" data-mode="fraction" onclick="app.toggleDisplayMode('fraction')" title="Écriture fractionnaire">Fractions</button>
+          <button class="mode-toggle" data-mode="decomp" onclick="app.toggleDisplayMode('decomp')" title="Décomposer">Décomposer</button>
+        </div>
+
+      <div id="grid-tools">
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer le plateau / futures pièces)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+            </svg>
+          </button>
+
+          <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2 2 0 012.828 2.828L7 19l-4 1 1-4 12.862-12.513z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5l4 4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21c2-1 4-1 6 0"/>
+            </svg>
+          </button>
+
+          <button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer le stylo">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+
+          <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+          <button onclick="app.resetView()" id="btn-reset-view" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Recentrer la vue (zoom 100%)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0 8 8 0 01-16 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/>
+            </svg>
+          </button>
+
+          <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : on/off">
+            <svg id="icon-sound-on" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/>
+            </svg>
+            <svg id="icon-sound-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/>
+            </svg>
+          </button>
+
+          <button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
+            <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/>
+            </svg>
+            <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="display-controls-row2" class="flex items-center gap-1 w-full justify-center">
+          <button class="mode-toggle" data-mode="u100" onclick="app.toggleDisplayMode('u100')" title="Unités + centièmes">Unités + centièmes</button>
+
+          <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition" title="Afficher/Masquer">
+            <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <svg id="icon-eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.5-4.132M6.223 6.223A9.957 9.957 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.962 9.962 0 01-4.123 5.089M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 3m18 18l-6.09-6.09" />
+            </svg>
+          </button>
+        </div>
     </div>
   </header>
 
@@ -683,6 +761,19 @@
         } catch (e) {}
         document.body.classList.toggle('hide-grid', !this.showGrid);
 
+        // Mode projection : interface plus lisible (option)
+        this.projectionMode = false;
+        try {
+          const p = localStorage.getItem('nd_projection');
+          if (p !== null) this.projectionMode = (p === '1');
+        } catch (e) {}
+        document.body.classList.toggle('projection', this.projectionMode);
+
+        // Stylo : épaisseur de base (augmentée en mode projection)
+        this.penBaseWidth = 3;
+        this.penProjectionMul = 1.7; // lisible au tableau sans devenir "gros pâté"
+
+
         // Z-order : la dernière pièce manipulée est au-dessus
         this.zCounter = 20;
 
@@ -742,6 +833,7 @@
         this.updateToolButtons();
         this.updateSoundButton();
         this.updateFullscreenButton();
+        this.updateProjectionButton();
 
         document.addEventListener('fullscreenchange', () => this.updateFullscreenButton());
       }
@@ -845,6 +937,10 @@
         if (s.rem === 0) {
           return `<span class="c-unit">${sign}${s.u}</span>`;
         }
+        // Si pas de centièmes, on n'affiche pas le "0" final : 3,10 -> 3,1
+        if (s.h === 0) {
+          return `<span class="c-unit">${sign}${s.u}</span><span>,</span><span class="c-tenth">${s.t}</span>`;
+        }
         return `<span class="c-unit">${sign}${s.u}</span><span>,</span><span class="c-tenth">${s.t}</span><span class="c-hund">${s.h}</span>`;
       }
 
@@ -899,7 +995,8 @@
         if (n % 10 === 0) { num = n / 10; den = 10; }
         else { num = n; den = 100; }
 
-        return this.renderFracTerm(num, den, '', sign);
+        const colorClass = (den === 100) ? 'c-hund' : '';
+        return this.renderFracTerm(num, den, colorClass, sign);
       }
 
       updateDisplay() {
@@ -1615,6 +1712,43 @@ setShowFives(on) {
         btn.title = isFs ? 'Quitter le plein écran' : 'Plein écran';
       }
 
+
+      // --- PROJECTION MODE (UI bigger/bolder) ---
+      toggleProjection() {
+        this.projectionMode = !this.projectionMode;
+        document.body.classList.toggle('projection', this.projectionMode);
+        try { localStorage.setItem('nd_projection', this.projectionMode ? '1' : '0'); } catch (e) {}
+        this.updateProjectionButton();
+        // Projection = textes plus lisibles : on épaissit aussi le stylo
+        this.applyPenWidth();
+        this.redrawPen();
+      }
+
+      applyPenWidth() {
+        if (!this.ctx) return;
+        const mul = this.projectionMode ? (this.penProjectionMul || 1) : 1;
+        const base = this.penBaseWidth || 3;
+        this.ctx.lineWidth = base * mul;
+      }
+
+      updateProjectionButton() {
+        const btn = document.getElementById('btn-projection');
+        if (!btn) return;
+        const on = !!this.projectionMode;
+        // style "actif"
+        btn.classList.toggle('bg-indigo-100', !on);
+        btn.classList.toggle('text-indigo-700', !on);
+        btn.classList.toggle('hover:bg-indigo-200', !on);
+        btn.classList.toggle('border-indigo-200', !on);
+
+        btn.classList.toggle('bg-indigo-600', on);
+        btn.classList.toggle('text-white', on);
+        btn.classList.toggle('hover:bg-indigo-700', on);
+        btn.classList.toggle('border-indigo-600', on);
+
+        btn.title = on ? 'Mode projection : activé' : 'Mode projection : désactivé';
+      }
+
       updateToolButtons() {
         const handBtn = document.getElementById('tool-hand');
         const penBtn = document.getElementById('tool-pen');
@@ -1661,7 +1795,9 @@ setShowFives(on) {
           const pts = stroke.points || [];
           if (pts.length < 2) continue;
           this.ctx.strokeStyle = stroke.color || '#2563eb';
-          this.ctx.lineWidth = stroke.width || 3;
+          const baseW = stroke.width || (this.penBaseWidth || 3);
+          const mul = this.projectionMode ? (this.penProjectionMul || 1) : 1;
+          this.ctx.lineWidth = baseW * mul;
           this.ctx.beginPath();
           this.ctx.moveTo(pts[0].x + this.canvasOffset, pts[0].y + this.canvasOffset);
           for (let i = 1; i < pts.length; i++) {
@@ -1680,11 +1816,14 @@ setShowFives(on) {
         this.saveState();
         this.isDrawing = true;
 
+        // Assure la bonne épaisseur (projection ou non)
+        this.applyPenWidth();
+
         const cx = e.touches ? e.touches[0].clientX : e.clientX;
         const cy = e.touches ? e.touches[0].clientY : e.clientY;
         const p = this.getWorldPos(cx, cy);
 
-        this.currentStroke = { color: this.ctx.strokeStyle, width: this.ctx.lineWidth, points: [p] };
+        this.currentStroke = { color: this.ctx.strokeStyle, width: (this.penBaseWidth || 3), points: [p] };
         this.penStrokes.push(this.currentStroke);
 
         this.lastDrawPos = p;
@@ -1735,7 +1874,7 @@ setShowFives(on) {
           this.gridLayer.style.backgroundPosition = `${this.canvasOffset}px ${this.canvasOffset}px`;
         }
 
-        this.ctx.lineWidth = 3;
+        this.applyPenWidth();
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
         this.ctx.strokeStyle = '#2563eb';
