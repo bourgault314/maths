@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <title>Maker — numération décimale</title>
+<!-- PATCH 2026-02-02 : traits/graduations en noir (écran + impression). Modification minimale : uniquement les couleurs de traits (strokes). -->
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   :root { 
@@ -357,10 +359,13 @@
                     <option value="bw_patterns">N&amp;B motifs (photocopie friendly)</option>
                 </select>
 
-                <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-                    <input type="checkbox" id="showFives" name="showFives" checked>
-                    Afficher la séparation en 5 (pour compter vite)
-                </label>
+                <label style="margin-top:10px;">Marque des 5 (séparation)</label>
+<select id="fivesMode" name="fivesMode">
+    <option value="none" selected>Sans rien</option>
+    <option value="light">5 légers</option>
+    <option value="strong">5 forts</option>
+</select>
+<div class="help-text">Choisis “5 forts” si tu veux que la séparation ressorte très bien en photocopie.</div>
                 <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
                     <input type="checkbox" id="showGrid" name="showGrid" checked>
                     Quadrillage (unités et dixièmes)
@@ -1049,39 +1054,47 @@ function pieceFill(pieceType, colorMode){
 
 function drawUnitRecto(g, x, y, s, settings){
     var fill = pieceFill('unit', settings.colorMode);
-    var stroke = 'rgba(0,0,0,0.22)';
+    var stroke = '#000';
     g.appendChild(svgEl('rect', {x:x, y:y, width:s, height:s, fill:fill, stroke: stroke, 'stroke-width':0.4}));
     if(!settings.showGrid) return;
     var cell = s/10;
     // fines lignes
     for(var i=1;i<10;i++){
         var alpha = 0.14;
-        var w = 0.2;
-        if(settings.showFives && (i===5)){ alpha = 0.28; w = 0.35; }
+        var w = 0.25;
+        if(i===5){
+        var m = settings.fivesMode || 'none';
+        if(m === 'light'){ w = 0.45; }
+        else if(m === 'strong'){ w = 0.80; }
+        }
         // vertical
-        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+s, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':w}));
+        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+s, stroke:'#000', 'stroke-width':w}));
         // horizontal
-        g.appendChild(svgEl('line',{x1:x, y1:y+i*cell, x2:x+s, y2:y+i*cell, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':w}));
+        g.appendChild(svgEl('line',{x1:x, y1:y+i*cell, x2:x+s, y2:y+i*cell, stroke:'#000', 'stroke-width':w}));
     }
 }
 
 function drawTenthRecto(g, x, y, w, h, settings){
     var fill = pieceFill('tenth', settings.colorMode);
-    var stroke = 'rgba(0,0,0,0.22)';
+    var stroke = '#000';
     g.appendChild(svgEl('rect',{x:x, y:y, width:w, height:h, fill:fill, stroke:stroke, 'stroke-width':0.35}));
     if(!settings.showGrid) return;
     var cell = w/10;
     for(var i=1;i<10;i++){
         var alpha = 0.14;
-        var sw = 0.2;
-        if(settings.showFives && i===5){ alpha = 0.28; sw = 0.35; }
-        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+h, stroke:`rgba(0,0,0,${alpha})`, 'stroke-width':sw}));
+        var sw = 0.25;
+        if(i===5){
+        var m2 = settings.fivesMode || 'none';
+        if(m2 === 'light'){ sw = 0.45; }
+        else if(m2 === 'strong'){ sw = 0.80; }
+        }
+        g.appendChild(svgEl('line',{x1:x+i*cell, y1:y, x2:x+i*cell, y2:y+h, stroke:'#000', 'stroke-width':sw}));
     }
 }
 
 function drawHundredthRecto(g, x, y, s, settings){
     var fill = pieceFill('hundredth', settings.colorMode);
-    var stroke = 'rgba(0,0,0,0.22)';
+    var stroke = '#000';
     g.appendChild(svgEl('rect',{x:x, y:y, width:s, height:s, fill:fill, stroke:stroke, 'stroke-width':0.30}));
 }
 
@@ -1156,7 +1169,7 @@ function drawSheet(pieceType, isVerso, sheetIndex, sheetCount, layout, settings,
         } else {
             // Verso : même pièce (couleur/motif) + texte centré
             var fillV = pieceFill(pieceType, settings.colorMode);
-            var strokeV = 'rgba(0,0,0,0.12)';
+            var strokeV = '#000';
             var swV = (pieceType === 'hundredth') ? 0.30 : ((pieceType === 'tenth') ? 0.35 : 0.40);
 
             g.appendChild(svgEl('rect',{
@@ -1221,8 +1234,8 @@ function generate(){
         mode: form.mode.value,
         sizeMode: form.sizeMode.value,
         colorMode: form.colorMode.value,
-        showFives: !!form.showFives.checked,
-showGrid: !!form.showGrid.checked,
+        fivesMode: (form.fivesMode && form.fivesMode.value) ? form.fivesMode.value : 'none',
+        showGrid: !!form.showGrid.checked,
         versoMode: form.versoMode.value,
         hundredthVerso: form.hundredthVerso.value,
         versoRotate180: !!form.versoRotate180.checked,
