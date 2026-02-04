@@ -258,16 +258,20 @@
 
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Billes cachées (max par tâche)</label>
+          <label>Billes cachées (max par tâche) — même quantité sous chaque tâche</label>
           <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
         </div>
         <div style="flex:1">
-          <label>Total max (sécurité)</label>
-          <input id="unitTotalMax" type="number" min="10" max="80" value="50" />
+          <label>Total (min)</label>
+          <input id="unitTotalMin" type="number" min="1" max="80" value="1" />
         </div>
       </div>
 
       <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="unitTotalMax" type="number" min="1" max="80" value="50" />
+        </div>
         <div style="flex:1">
           <label>Graine (optionnel)</label>
           <input id="seedU" type="number" placeholder="ex: 2026" />
@@ -330,6 +334,7 @@
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
 function makeRng(seed){if(seed===null||seed===undefined||seed==="")return Math.random;const s=Number(seed)|0;return mulberry32(s||1);}
 function rInt(rng,a,b){return a+Math.floor(rng()*(b-a+1));}
+function rFloat(rng,a,b){return a + rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
 
 function beadColorForValue(v){
@@ -356,6 +361,7 @@ const unitSettingsEl = document.getElementById("unitSettings");
 const unitTasksEl = document.getElementById("unitTasks");
 const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
 const unitHiddenMaxEl = document.getElementById("unitHiddenMax");
+const unitTotalMinEl = document.getElementById("unitTotalMin");
 const unitTotalMaxEl = document.getElementById("unitTotalMax");
 
 /* Helpers */
@@ -397,7 +403,7 @@ activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenera
 // Tous les réglages qui doivent déclencher une régénération
 [
   countEl, diffEl, seedEl,
-  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMaxEl, seedUEl
+  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl
 ].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
@@ -448,12 +454,12 @@ function getUnitSplats(taskCount){
     2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
     3:[{cx:820, cy:470},{cx:610, cy:690},{cx:1030, cy:690}],
     4:[{cx:610, cy:480},{cx:1030, cy:480},{cx:610, cy:740},{cx:1030, cy:740}],
-    5:[{cx:820, cy:360},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:810},{cx:1080, cy:810}],
+    5:[{cx:820, cy:367},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:803},{cx:1080, cy:803}],
   };
   const base = anchors[taskCount] || anchors[2];
 
   // ✅ Taille des tâches : plus il y en a, plus on réduit.
-  const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 100)));
+  const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 102)));
 
   return base.map(p => ({...p, r}));
 }
@@ -606,14 +612,20 @@ function assignPositionsUnits(card, rng){
     // centre + 4 points cardinaux, pour garantir que la bille est entièrement sous le splat
     if(!pointInSplat(o, x, y)) return false;
     if(canPath2D && o.path){
-      return (
-        ctx.isPointInPath(o.path, x+beadR, y) &&
-        ctx.isPointInPath(o.path, x-beadR, y) &&
-        ctx.isPointInPath(o.path, x, y+beadR) &&
-        ctx.isPointInPath(o.path, x, y-beadR)
-      );
+      return (function(){
+        const r = beadR;
+        const d = r * 0.7071067811865476; // r / sqrt(2)
+        const pts = [
+          [ r, 0], [-r, 0], [0,  r], [0, -r],
+          [ d, d], [ d,-d], [-d, d], [-d,-d]
+        ];
+        for(const [dx,dy] of pts){
+          if(!ctx.isPointInPath(o.path, x+dx, y+dy)) return false;
+        }
+        return true;
+      })();
     }
-    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - beadR - 12);
+    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - beadR - 14);
   }
 
   function tryPlaceWithRadius(R){
@@ -768,38 +780,67 @@ function genUnits(rng){
   const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
   const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
   const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
-  const totalMax = clamp(numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50), 10, 80);
+
+  // Intervalle du total (utile pour piloter la difficulté)
+  const userMin = numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1);
+  const userMax = numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50);
+
+  // Bornes possibles selon les réglages actuels
+  const minHiddenPerTask = (hiddenMax === 0) ? 0 : 1;
+  const minPossible = 1 + tasks * minHiddenPerTask;          // 1 visible min + caché min
+  const maxPossible = visibleMax + tasks * hiddenMax;
+
+  // On contraint l'intervalle demandé à ce qui est réellement possible
+  let totalMin = clamp(userMin, 1, 80);
+  let totalMax = clamp(userMax, 1, 80);
+  totalMin = Math.min(totalMin, maxPossible);
+  totalMax = Math.min(totalMax, maxPossible);
+  totalMax = Math.max(totalMax, minPossible);
+  if(totalMin < minPossible) totalMin = minPossible;
+  if(totalMax < totalMin) totalMax = totalMin;
 
   let visibleCount = 1;
-  let hiddenByTask = [];
-  let hiddenTotal = 0;
+  let hiddenPerTask = 0;
   let total = 0;
 
-  // ✅ Sécurité : on resample pour rester dans un total raisonnable (lisible / comptable).
-  for(let tries=0; tries<400; tries++){
+  // ✅ Règle : sous chaque tâche noire, même quantité de billes (ou même nombre)
+  // On resample pour tomber dans l'intervalle [totalMin; totalMax]
+  for(let tries=0; tries<500; tries++){
     visibleCount = rInt(rng, 1, visibleMax);
-
-    hiddenByTask = [];
-    for(let t=0; t<tasks; t++){
-      hiddenByTask.push(hiddenMax === 0 ? 0 : rInt(rng, 1, hiddenMax));
-    }
-    hiddenTotal = hiddenByTask.reduce((a,b)=>a+b,0);
-    total = visibleCount + hiddenTotal;
-
-    if(total <= totalMax) break;
+    hiddenPerTask = (hiddenMax === 0) ? 0 : rInt(rng, 1, hiddenMax);
+    total = visibleCount + tasks * hiddenPerTask;
+    if(total >= totalMin && total <= totalMax) break;
   }
 
-  // Si on dépasse encore (cas très rare), on rabote en priorité le caché
+  // Ajustements de secours si on n'est pas dans l'intervalle (cas extrêmes)
   if(total > totalMax){
-    let extra = total - totalMax;
-    for(let t=0; t<hiddenByTask.length && extra>0; t++){
-      const take = Math.min(hiddenByTask[t], extra);
-      hiddenByTask[t] -= take;
-      extra -= take;
+    // on réduit d'abord le caché
+    hiddenPerTask = clamp(Math.floor((totalMax - visibleCount) / tasks), 0, hiddenMax);
+    if(hiddenMax > 0 && hiddenPerTask === 0 && totalMax >= (1 + tasks)) hiddenPerTask = 1;
+    total = visibleCount + tasks * hiddenPerTask;
+
+    // puis on réduit le visible
+    if(total > totalMax){
+      visibleCount = clamp(totalMax - tasks * hiddenPerTask, 1, visibleMax);
+      total = visibleCount + tasks * hiddenPerTask;
     }
-    hiddenTotal = hiddenByTask.reduce((a,b)=>a+b,0);
-    total = visibleCount + hiddenTotal;
   }
+  if(total < totalMin){
+    // on augmente d'abord le caché
+    const need = totalMin - total;
+    const add = Math.ceil(need / tasks);
+    hiddenPerTask = clamp(hiddenPerTask + add, (hiddenMax===0?0:1), hiddenMax);
+    total = visibleCount + tasks * hiddenPerTask;
+
+    // puis on augmente le visible
+    if(total < totalMin){
+      visibleCount = clamp(totalMin - tasks * hiddenPerTask, 1, visibleMax);
+      total = visibleCount + tasks * hiddenPerTask;
+    }
+  }
+
+  const hiddenByTask = Array.from({length: tasks}, ()=> hiddenPerTask);
+  const hiddenTotal = tasks * hiddenPerTask;
 
   // visible/hidden arrays : structure commune (en mode U on n'affiche pas de numéros)
   const visible = Array.from({length: visibleCount}, ()=> 1);
@@ -810,7 +851,7 @@ function genUnits(rng){
     total,
     visible,
     hidden,
-    _unit: { tasks, visibleCount, visibleMax, hiddenMax, hiddenByTask, totalMax }
+    _unit: { tasks, visibleCount, visibleMax, hiddenMax, hiddenPerTask, hiddenByTask, totalMin, totalMax }
   };
 }
 
