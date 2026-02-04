@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Splat!</title>
+<style>
+  :root{
+    /* THEME (dark default) */
+    --bg:#0b0f14;
+    --panel:rgba(18,24,36,.92);
+    --card:rgba(18,24,36,.60);
+    --ink:#e9eef7;
+    --muted:#a9b3c4;
+
+    --field-bg:#0d131d;
+    --field-border:rgba(255,255,255,.12);
+
+    --btn:#1f2a3b;
+    --btn2:#2a3a55;
+    --btn-border:rgba(255,255,255,.12);
+
+    --tray-fill:rgba(0,0,0,0.10);
+    --tray-stroke:rgba(255,255,255,0.10);
+
+    --totalbox-fill:rgba(0,0,0,0.16);
+    --totalbox-stroke:rgba(255,255,255,0.20);
+
+    --beadH-fill:rgba(255,255,255,0.10);
+    --beadH-stroke:rgba(255,255,255,0.35);
+
+    --total-label: rgba(233,238,247,0.86);
+
+    /* SPLAT */
+    --splat-cover: rgb(0,0,0);              /* 100% opaque */
+    --splat-reveal: rgba(210,210,210,0.35); /* gris clair semi-transparent */
+    --splat-stroke: rgba(255,255,255,0.18);
+
+    /* UNIT BEADS (sans numéros) */
+    --unit-fill: rgba(106,167,255,0.20);
+    --unit-stroke: rgba(106,167,255,0.55);
+
+    --danger:#ff6a6a;
+    --accent:#6aa7ff;
+  }
+
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  body{margin:0;background:var(--bg);color:var(--ink);}
+
+  header{
+    padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap
+  }
+  header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.2px}
+
+  .wrap{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px;align-items:start}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;padding:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25)
+  }
+
+  label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
+  select,input{
+    width:100%;padding:10px 10px;border-radius:10px;
+    border:1px solid var(--field-border);
+    background:var(--field-bg);
+    color:var(--ink);
+    outline:none
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type="number"]{appearance:textfield}
+
+  .btn{
+    padding:10px 12px;border-radius:10px;
+    border:1px solid var(--btn-border);
+    background:var(--btn);
+    color:var(--ink);cursor:pointer;font-weight:650;
+    transition: transform .08s ease, background .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{background:var(--btn2)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:rgba(106,167,255,0.18);border-color:rgba(106,167,255,0.35)}
+  .btn.danger{background:rgba(255,106,106,0.14);border-color:rgba(255,106,106,0.35)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .iconbtn{
+    display:inline-grid;place-items:center;
+    width:42px;height:42px;padding:0;border-radius:12px;
+    border:1px solid var(--btn-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  }
+  .iconbtn:hover{transform:translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,0.22);}
+  .iconbtn:active{transform:translateY(0px); box-shadow: 0 6px 18px rgba(0,0,0,0.18);}
+  .iconbtn svg{width:20px;height:20px;opacity:.95}
+
+  .hint{
+    font-size:12px;color:var(--muted);line-height:1.35;margin-top:10px
+  }
+  .hr{
+    height:1px;background:rgba(255,255,255,0.08);margin:10px 0;
+  }
+  .smallnote{
+    font-size:12px;color:var(--muted);line-height:1.35;
+    border:1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.03);
+    border-radius:12px;
+    padding:10px;
+    margin-top:10px;
+  }
+  .pill{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.04);
+    font-size:12px;
+    color: var(--muted);
+  }
+
+  .stage{display:flex;flex-direction:column;gap:12px}
+  .cardbox{
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;padding:10px
+  }
+  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .counter{font-size:12px;color:var(--muted)}
+
+  #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
+  #mainSvg{width:100%;height:100%}
+
+  .printArea{display:none}
+
+  .checkInline{
+    display:flex;gap:8px;align-items:center;
+    padding:8px 10px;border-radius:10px;
+    border:1px solid var(--btn-border);
+    background: rgba(255,255,255,0.04);
+    user-select:none;
+  }
+  .checkInline input{width:auto;margin:0}
+  .checkInline span{font-size:12px;color:var(--muted);white-space:nowrap}
+
+  /* MODE CLAIR */
+  body.light{
+    --bg:#f5f7fb;
+    --panel:rgba(255,255,255,0.94);
+    --card:rgba(255,255,255,0.94);
+    --ink:#0b1220;
+    --muted:#4b5567;
+
+    --field-bg:#ffffff;
+    --field-border:rgba(0,0,0,0.14);
+
+    --btn:#eef2f8;
+    --btn2:#e3e9f4;
+    --btn-border:rgba(0,0,0,0.14);
+
+    --tray-fill:rgba(0,0,0,0.03);
+    --tray-stroke:rgba(0,0,0,0.12);
+
+    --totalbox-fill:rgba(0,0,0,0.04);
+    --totalbox-stroke:rgba(0,0,0,0.22);
+
+    --beadH-fill:rgba(0,0,0,0.04);
+    --beadH-stroke:rgba(0,0,0,0.22);
+
+    --total-label: rgba(0,0,0,0.92);
+
+    --splat-cover: rgb(0,0,0);
+    --splat-reveal: rgba(220,220,220,0.40);
+    --splat-stroke: rgba(0,0,0,0.18);
+
+    --unit-fill: rgba(27,102,255,0.14);
+    --unit-stroke: rgba(27,102,255,0.50);
+
+    --danger:#e11d48;
+    --accent:#1b66ff;
+  }
+
+  body.light header{border-bottom:1px solid rgba(0,0,0,0.08)}
+  body.light .panel{box-shadow:0 10px 30px rgba(0,0,0,0.06)}
+  body.light .cardbox{border-color:rgba(0,0,0,0.10)}
+  body.light .iconbtn{
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  }
+  body.light .iconbtn:hover{box-shadow: 0 10px 22px rgba(0,0,0,0.14);}
+  body.light .checkInline{background: rgba(0,0,0,0.03);}
+  body.light .smallnote{border-color:rgba(0,0,0,0.12);background: rgba(0,0,0,0.02);}
+  body.light .pill{border-color:rgba(0,0,0,0.14);background: rgba(0,0,0,0.03);}
+
+  /* Impression */
+  @media print{
+    body{background:#fff;color:#000}
+    header,.wrap{display:none !important}
+    .printArea{display:block}
+    .sheet{page-break-after:always;padding:8mm 8mm 8mm 8mm}
+    /* 2 colonnes (4 cartes / page : 2 x 2) */
+    .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:6mm}
+    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm}
+    .pCard svg{width:100%;height:auto}
+  }
+
+  /* Plein écran */
+  .fsHost:fullscreen{background:var(--bg)}
+  .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
+  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
+</style>
+</head>
+
+<!-- ✅ Mode clair par défaut -->
+<body class="light">
+<header>
+  <h1>Splat!</h1>
+</header>
+
+<div class="wrap">
+  <section class="panel">
+    <label>Type d’activité</label>
+    <select id="activity">
+      <option value="U">A — Petites billes (sans numéros)</option>
+      <option value="A">B — Add + Sub (2 visibles + 1 cachée)</option>
+      <option value="C10">C — Compléments à 10</option>
+      <option value="C100">D — Compléments à 100</option>
+      <option value="MIX1939">E — Soustraire 19 / 29 / 39 (mix)</option>
+    </select>
+
+    <div id="classicSettings">
+      <div class="row">
+        <div style="flex:1">
+          <label>Niveau (pré-réglage 1→3)</label>
+          <input id="difficulty" type="number" min="1" max="3" value="2" />
+        </div>
+        <div style="flex:1">
+          <label>Graine (optionnel)</label>
+          <input id="seed" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+    </div>
+
+        <div id="unitSettings" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <label>Nombre de tâches</label>
+          <input id="unitTasks" type="number" min="1" max="5" value="1" />
+        </div>
+        <div style="flex:1">
+          <label>Billes visibles (max 20)</label>
+          <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Billes cachées (max par tâche)</label>
+          <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
+        </div>
+        <div style="flex:1">
+          <label>Total max (sécurité)</label>
+          <input id="unitTotalMax" type="number" min="10" max="80" value="50" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Graine (optionnel)</label>
+          <input id="seedU" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+    </div>
+
+    <label>Nombre de cartes</label>
+    <input id="count" type="number" min="1" max="300" value="10" />
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="btnGen">Générer</button>
+      <button class="btn" id="btnShuffle">Mélanger</button>
+      <button class="btn danger" id="btnClear">Vider</button>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="btnReveal">Révéler</button>
+      <button class="btn" id="btnPrev">◀</button>
+      <button class="btn" id="btnNext">▶</button>
+      <button class="iconbtn" id="btnFullscreen" title="Plein écran">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="btnPrint">Imprimer planche</button>
+      <label class="checkInline" title="Imprime avec la/les taches en mode révélé (réponses visibles)">
+        <input id="printAnswers" type="checkbox" />
+        <span>Avec réponses</span>
+      </label>
+    </div>
+<div class="hint">
+      Raccourcis :<br>
+      • Espace = révéler / cacher<br>
+      • ← / → = carte précédente / suivante<br>
+      • F = plein écran<br><br>
+      Graine : vide = série nouvelle à chaque clic ; remplie = série reproductible.
+    </div>
+  </section>
+
+  <section class="stage fsHost" id="fsHost">
+    <div class="cardbox">
+      <div class="nav">
+        <div class="counter" id="counter">0 carte</div>
+      </div>
+      <div id="svgWrap">
+        <svg id="mainSvg" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="printArea" id="printArea"></div>
+
+<script>
+/* RNG */
+function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function makeRng(seed){if(seed===null||seed===undefined||seed==="")return Math.random;const s=Number(seed)|0;return mulberry32(s||1);}
+function rInt(rng,a,b){return a+Math.floor(rng()*(b-a+1));}
+function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
+
+function beadColorForValue(v){
+  const hue = (v * 37) % 360;
+  const isLight = document.body.classList.contains("light");
+  const fillA = isLight ? 0.18 : 0.24;
+  const strokeA = isLight ? 0.55 : 0.65;
+  return {
+    fill: `hsla(${hue}, 78%, 54%, ${fillA})`,
+    stroke: `hsla(${hue}, 78%, 48%, ${strokeA})`
+  };
+}
+
+/* UI refs */
+const activityEl = document.getElementById("activity");
+const countEl = document.getElementById("count");
+const diffEl = document.getElementById("difficulty");
+const seedEl = document.getElementById("seed");
+const seedUEl = document.getElementById("seedU");
+
+const classicSettingsEl = document.getElementById("classicSettings");
+const unitSettingsEl = document.getElementById("unitSettings");
+
+const unitTasksEl = document.getElementById("unitTasks");
+const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
+const unitHiddenMaxEl = document.getElementById("unitHiddenMax");
+const unitTotalMaxEl = document.getElementById("unitTotalMax");
+
+/* Helpers */
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
+
+function getSeedForCurrentMode(){
+  const act = activityEl.value;
+  if(act === "U"){
+    const s = (seedUEl.value===null || seedUEl.value===undefined || String(seedUEl.value).trim()==="")
+      ? String(Date.now())
+      : String(seedUEl.value);
+    return s;
+  }
+  const s = (seedEl.value===null || seedEl.value===undefined || String(seedEl.value).trim()==="")
+    ? String(Date.now())
+    : String(seedEl.value);
+  return s;
+}
+
+
+function syncSettingsUI(){
+  const act = activityEl.value;
+  const isUnit = (act === "U");
+  classicSettingsEl.style.display = isUnit ? "none" : "block";
+  unitSettingsEl.style.display = isUnit ? "block" : "none";
+}
+
+// ✅ Auto-regénération : dès qu'on change une option, on régénère automatiquement.
+let autoGenTimer = null;
+function scheduleAutoGenerate(){
+  if(autoGenTimer) clearTimeout(autoGenTimer);
+  // Petite temporisation pour éviter de régénérer 10 fois pendant une saisie au clavier
+  autoGenTimer = setTimeout(()=>{ generate(); }, 150);
+}
+
+activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+
+// Tous les réglages qui doivent déclencher une régénération
+[
+  countEl, diffEl, seedEl,
+  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMaxEl, seedUEl
+].forEach(el=>{
+  if(!el) return;
+  el.addEventListener("input", scheduleAutoGenerate);
+  el.addEventListener("change", scheduleAutoGenerate);
+});
+
+
+/* Positions + splat */
+function blobPath(cx, cy, r){
+  // Splat "tortue" : 5 lobes arrondis (proche des splats de Steve Wyborney)
+  const n = 40;
+  const lobes = 5;
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const a = (Math.PI * 2 * i) / n;
+    const k = 0.90 + 0.16 * Math.sin(lobes*a) + 0.04 * Math.sin(2*lobes*a);
+    const rr = r * k;
+    pts.push([cx + Math.cos(a)*rr, cy + Math.sin(a)*rr]);
+  }
+  function cr2bz(p0,p1,p2,p3){
+    const t = 1/6;
+    const c1x = p1[0] + (p2[0]-p0[0]) * t;
+    const c1y = p1[1] + (p2[1]-p0[1]) * t;
+    const c2x = p2[0] - (p3[0]-p1[0]) * t;
+    const c2y = p2[1] - (p3[1]-p1[1]) * t;
+    return [c1x,c1y,c2x,c2y,p2[0],p2[1]];
+  }
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=0;i<n;i++){
+    const p0 = pts[(i-1+n)%n];
+    const p1 = pts[i];
+    const p2 = pts[(i+1)%n];
+    const p3 = pts[(i+2)%n];
+    const [c1x,c1y,c2x,c2y,x,y] = cr2bz(p0,p1,p2,p3);
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
+  }
+  d += " Z";
+  return d;
+}
+
+function getUnitSplats(taskCount){
+  const tray = { x:120, y:260, w:1360, h:650 };
+  const cyMid = tray.y + tray.h/2; // 585
+
+  // ✅ Emplacements fixes, pensés pour ne pas se toucher, même à 5 tâches.
+  const anchors = {
+    1:[{cx:820, cy:cyMid+25}],
+    2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
+    3:[{cx:820, cy:470},{cx:610, cy:690},{cx:1030, cy:690}],
+    4:[{cx:610, cy:480},{cx:1030, cy:480},{cx:610, cy:740},{cx:1030, cy:740}],
+    5:[{cx:820, cy:360},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:810},{cx:1080, cy:810}],
+  };
+  const base = anchors[taskCount] || anchors[2];
+
+  // ✅ Taille des tâches : plus il y en a, plus on réduit.
+  const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 100)));
+
+  return base.map(p => ({...p, r}));
+}
+
+function assignPositionsClassic(card, rng){
+  const tray = { x:120, y:260, w:1360, h:650 };
+  const beadR = 95;
+  const margin = 18;
+
+  const splat = { cx: 820, cy: 610, r: 260 };
+  card._splat = splat;
+
+  const placed = [];
+
+  function okSpotVisible(cx, cy){
+    if(cx < tray.x + beadR + margin) return false;
+    if(cx > tray.x + tray.w - beadR - margin) return false;
+    if(cy < tray.y + beadR + margin) return false;
+    if(cy > tray.y + tray.h - beadR - margin) return false;
+
+    const d = Math.hypot(cx - splat.cx, cy - splat.cy);
+    if(d < splat.r + beadR + 18) return false;
+
+    for(const p of placed){
+      const dd = Math.hypot(cx - p.cx, cy - p.cy);
+      if(dd < beadR*2 + 18) return false;
+    }
+    return true;
+  }
+
+  function pickVisible(area){
+    for(let tries=0; tries<800; tries++){
+      const cx = area.x + beadR + margin + rng() * (area.w - 2*(beadR+margin));
+      const cy = area.y + beadR + margin + rng() * (area.h - 2*(beadR+margin));
+      if(okSpotVisible(cx, cy)){
+        placed.push({cx,cy});
+        return {cx,cy};
+      }
+    }
+    const cx = area.x + area.w/2, cy = area.y + area.h/2;
+    placed.push({cx,cy});
+    return {cx,cy};
+  }
+
+  function pickHiddenInSplat(){
+    const maxR = (splat.r - beadR - 60);
+    for(let tries=0; tries<1000; tries++){
+      const a = rng() * Math.PI * 2;
+      const rr = Math.sqrt(rng()) * Math.max(10, maxR);
+      const cx = splat.cx + Math.cos(a) * rr;
+      const cy = splat.cy + Math.sin(a) * rr;
+
+      if(cx < tray.x + beadR + margin) continue;
+      if(cx > tray.x + tray.w - beadR - margin) continue;
+      if(cy < tray.y + beadR + margin) continue;
+      if(cy > tray.y + tray.h - beadR - margin) continue;
+
+      let ok = true;
+      for(const p of placed){
+        const dd = Math.hypot(cx - p.cx, cy - p.cy);
+        if(dd < beadR*2 + 18){ ok = false; break; }
+      }
+      if(ok){
+        placed.push({cx,cy});
+        return {cx,cy};
+      }
+    }
+    const cx = splat.cx, cy = splat.cy;
+    placed.push({cx,cy});
+    return {cx,cy};
+  }
+
+  const topArea = { x: tray.x, y: tray.y, w: tray.w, h: 300 };
+  card._posV = card.visible.map(()=> pickVisible(topArea));
+  card._posH = card.hidden.map(()=> pickHiddenInSplat());
+}
+
+function assignPositionsUnits(card, rng){
+  const tray = { x:120, y:260, w:1360, h:650 };
+  const margin = 8;
+
+  const tasks = card._unit?.tasks ?? 1;
+  const hiddenByTask = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
+
+  const splats = getUnitSplats(tasks);
+  card._splats = splats;
+
+  // --- Hit-test des splats : on veut que les billes cachées soient VRAIMENT sous le splat ---
+  const ctx = (function(){
+    if(assignPositionsUnits._hitCtx) return assignPositionsUnits._hitCtx;
+    const c = document.createElement("canvas");
+    c.width = 1; c.height = 1;
+    const ct = c.getContext("2d");
+    assignPositionsUnits._hitCtx = ct;
+    return ct;
+  })();
+  const canPath2D = (typeof Path2D !== "undefined") && ctx && typeof ctx.isPointInPath === "function";
+
+  const splatObjs = splats.map(s=>{
+    const d = blobPath(s.cx, s.cy, s.r);
+    return { ...s, d, path: (canPath2D ? new Path2D(d) : null) };
+  });
+
+  // --- Taille des billes (adaptative) ---
+  const maxHidden = Math.max(0, ...hiddenByTask);
+  const minR = Math.min(...splatObjs.map(o=>o.r));
+  const rPad = Math.max(28, minR - 26);
+
+  let beadR = 24;
+  if(maxHidden > 0){
+    const calc = Math.floor(rPad * Math.sqrt(0.82 / Math.max(1, maxHidden)));
+    beadR = clamp(calc, 12, 26);
+  } else {
+    beadR = 26;
+  }
+
+  const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
+  if(totalBeads >= 55) beadR = Math.min(beadR, 15);
+  else if(totalBeads >= 45) beadR = Math.min(beadR, 17);
+  else if(totalBeads >= 35) beadR = Math.min(beadR, 19);
+  else if(totalBeads >= 25) beadR = Math.min(beadR, 21);
+
+  function insideTray(cx, cy){
+    if(cx < tray.x + beadR + margin) return false;
+    if(cx > tray.x + tray.w - beadR - margin) return false;
+    if(cy < tray.y + beadR + margin) return false;
+    if(cy > tray.y + tray.h - beadR - margin) return false;
+    return true;
+  }
+  function noOverlap(cx, cy, placed){
+    for(const p of placed){
+      if(Math.hypot(cx-p.cx, cy-p.cy) < (beadR*2 + 2)) return false; // toucher OK, superposer NON
+    }
+    return true;
+  }
+  function farFromSplats(cx, cy){
+    for(const o of splatObjs){
+      if(Math.hypot(cx-o.cx, cy-o.cy) < (o.r + beadR + 18)) return false;
+    }
+    return true;
+  }
+
+  function pointInSplat(o, x, y){
+    if(canPath2D && o.path){
+      return ctx.isPointInPath(o.path, x, y);
+    }
+    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - 10);
+  }
+  function beadFullyInSplat(o, x, y){
+    // centre + 4 points cardinaux, pour garantir que la bille est entièrement sous le splat
+    if(!pointInSplat(o, x, y)) return false;
+    if(canPath2D && o.path){
+      return (
+        ctx.isPointInPath(o.path, x+beadR, y) &&
+        ctx.isPointInPath(o.path, x-beadR, y) &&
+        ctx.isPointInPath(o.path, x, y+beadR) &&
+        ctx.isPointInPath(o.path, x, y-beadR)
+      );
+    }
+    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - beadR - 12);
+  }
+
+  function tryPlaceWithRadius(R){
+    beadR = R;
+
+    const placed = [];
+
+    function pickVisible(){
+      for(let tries=0; tries<12000; tries++){
+        const cx = tray.x + beadR + margin + rFloat(rng, 0, tray.w - (beadR*2 + margin*2));
+        const cy = tray.y + beadR + margin + rFloat(rng, 0, tray.h - (beadR*2 + margin*2));
+        if(!insideTray(cx,cy)) continue;
+        if(!farFromSplats(cx,cy)) continue;
+        // sécurité : le centre ne doit pas tomber DANS un splat
+        let bad=false;
+        for(const o of splatObjs){ if(pointInSplat(o, cx, cy)) { bad=true; break; } }
+        if(bad) continue;
+        if(!noOverlap(cx,cy, placed)) continue;
+        placed.push({cx,cy});
+        return {cx,cy};
+      }
+      return null;
+    }
+
+    function pickHiddenInSplat(o){
+      for(let tries=0; tries<16000; tries++){
+        const a = rFloat(rng, 0, Math.PI*2);
+        // radius légèrement biaisé vers l'intérieur pour éviter le bord du splat
+        const rr = Math.sqrt(rFloat(rng, 0, 1)) * Math.max(10, o.r - beadR - 18);
+        const cx = o.cx + Math.cos(a)*rr;
+        const cy = o.cy + Math.sin(a)*rr;
+
+        if(!insideTray(cx,cy)) continue;
+        if(!beadFullyInSplat(o, cx, cy)) continue;
+        if(!noOverlap(cx,cy, placed)) continue;
+
+        placed.push({cx,cy});
+        return {cx,cy};
+      }
+      return null;
+    }
+
+    // visible
+    const vCount = card._unit?.visibleCount ?? card.visible.length;
+    const posV = [];
+    for(let i=0;i<vCount;i++){
+      const p = pickVisible();
+      if(!p) return null;
+      posV.push(p);
+    }
+
+    // hidden
+    const posH = [];
+    for(let t=0; t<tasks; t++){
+      const o = splatObjs[t];
+      const k = hiddenByTask[t] ?? 0;
+      for(let j=0; j<k; j++){
+        const p = pickHiddenInSplat(o);
+        if(!p) return null;
+        posH.push(p);
+      }
+    }
+
+    return { posV, posH };
+  }
+
+  // On tente avec la taille calculée, puis on réduit si besoin (cas dense)
+  let placedRes = null;
+  for(let attempt=0; attempt<8 && !placedRes; attempt++){
+    const R = Math.max(12, beadR - attempt);
+    placedRes = tryPlaceWithRadius(R);
+  }
+
+  if(!placedRes){
+    // Fallback : on place au mieux avec une taille mini (rare)
+    placedRes = tryPlaceWithRadius(12) || { posV:[], posH:[] };
+  }
+
+  card._beadR = beadR;
+  card._posV = placedRes.posV;
+  card._posH = placedRes.posH;
+}
+
+
+function assignPositions(card, rng){
+  if(card.family === "U"){
+    assignPositionsUnits(card, rng);
+  }else{
+    assignPositionsClassic(card, rng);
+  }
+}
+
+/* Families (classiques) */
+function genFamilyA(rng, diff){
+  const ranges = [
+    {vmin:1, vmax:20, hmin:1, hmax:20},
+    {vmin:5, vmax:39, hmin:5, hmax:39},
+    {vmin:10, vmax:69, hmin:10, hmax:69},
+  ][diff-1] || {vmin:5, vmax:39, hmin:5, hmax:39};
+
+  let a=rInt(rng,ranges.vmin,ranges.vmax);
+  let b=rInt(rng,ranges.vmin,ranges.vmax);
+  let h=rInt(rng,ranges.hmin,ranges.hmax);
+
+  let total=a+b+h;
+  if(total<20){h+=10;total=a+b+h;}
+  if(total>150){h=Math.max(5,h-20);total=a+b+h;}
+
+  return {family:"A", total, visible:[a,b], hidden:[h]};
+}
+function genComp10(rng,diff){
+  const total=10;
+  if(diff===1){const a=rInt(rng,1,9);return {family:"C10", total, visible:[a], hidden:[total-a]};}
+  if(diff===2){
+    const a=rInt(rng,1,8);
+    const b=rInt(rng,1,9-a);
+    return {family:"C10", total, visible:[a,b], hidden:[total-(a+b)]};
+  }
+  let a=rInt(rng,1,7), b=rInt(rng,1,8-a), c=rInt(rng,1,9-a-b);
+  return {family:"C10", total, visible:[a,b,c], hidden:[total-(a+b+c)]};
+}
+function genComp100(rng,diff){
+  const total=100;
+  if(diff===1){const a=rInt(rng,10,90);return {family:"C100", total, visible:[a], hidden:[total-a]};}
+  if(diff===2){
+    const a=rInt(rng,10,90);
+    const b=rInt(rng,1,70);
+    const hidden=total-(a+b);
+    if(hidden<=0||hidden>=90) return genComp100(rng,diff);
+    return {family:"C100", total, visible:[a,b], hidden:[hidden]};
+  }
+  const a=rInt(rng,10,90), b=rInt(rng,5,40), c=rInt(rng,5,40);
+  const hidden=total-(a+b+c);
+  if(hidden<=0||hidden>=90) return genComp100(rng,diff);
+  return {family:"C100", total, visible:[a,b,c], hidden:[hidden]};
+}
+function genMinusMix(rng,diff){
+  const ks=[19,29,39];
+  const k=ks[rInt(rng,0,ks.length-1)];
+  let tmin,tmax;
+  if(diff===1){tmin=40;tmax=120;}
+  else if(diff===2){tmin=60;tmax=180;}
+  else {tmin=80;tmax=250;}
+  let total=rInt(rng,tmin,tmax);
+  total=Math.floor(total/10)*10 + rInt(rng,0,9);
+  if(total<=k+5) total=k+25;
+  return {family:"MIX1939", total, visible:[k], hidden:[total-k], _k:k};
+}
+
+/* Family U (unités sans numéros) */
+function genUnits(rng){
+  const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
+  const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
+  const totalMax = clamp(numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50), 10, 80);
+
+  let visibleCount = 1;
+  let hiddenByTask = [];
+  let hiddenTotal = 0;
+  let total = 0;
+
+  // ✅ Sécurité : on resample pour rester dans un total raisonnable (lisible / comptable).
+  for(let tries=0; tries<400; tries++){
+    visibleCount = rInt(rng, 1, visibleMax);
+
+    hiddenByTask = [];
+    for(let t=0; t<tasks; t++){
+      hiddenByTask.push(hiddenMax === 0 ? 0 : rInt(rng, 1, hiddenMax));
+    }
+    hiddenTotal = hiddenByTask.reduce((a,b)=>a+b,0);
+    total = visibleCount + hiddenTotal;
+
+    if(total <= totalMax) break;
+  }
+
+  // Si on dépasse encore (cas très rare), on rabote en priorité le caché
+  if(total > totalMax){
+    let extra = total - totalMax;
+    for(let t=0; t<hiddenByTask.length && extra>0; t++){
+      const take = Math.min(hiddenByTask[t], extra);
+      hiddenByTask[t] -= take;
+      extra -= take;
+    }
+    hiddenTotal = hiddenByTask.reduce((a,b)=>a+b,0);
+    total = visibleCount + hiddenTotal;
+  }
+
+  // visible/hidden arrays : structure commune (en mode U on n'affiche pas de numéros)
+  const visible = Array.from({length: visibleCount}, ()=> 1);
+  const hidden = Array.from({length: hiddenTotal}, ()=> 1);
+
+  return {
+    family:"U",
+    total,
+    visible,
+    hidden,
+    _unit: { tasks, visibleCount, visibleMax, hiddenMax, hiddenByTask, totalMax }
+  };
+}
+
+
+/* SVG helpers */
+const svg = document.getElementById("mainSvg");
+function clearSvg(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
+function el(name, attrs={}){
+  const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+  for(const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+function text(x,y,txt,attrs={}){
+  const t = el("text", {x, y, ...attrs});
+  t.textContent = txt;
+  return t;
+}
+
+/* Render écran */
+function renderCard(card, revealed){
+  clearSvg();
+  svg.appendChild(el("rect",{x:0,y:0,width:1600,height:1000,rx:26,fill:"rgba(255,255,255,0.03)"}));
+
+  // TOTAL
+  const g = el("g", {id:"totalGroup"});
+  const tLabel = text(800, 92, "TOTAL", {
+    "text-anchor":"middle","font-size":"42",
+    "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
+  });
+  const tNum = text(800, 175, String(card.total), {
+    "text-anchor":"middle","font-size":"96",
+    "fill":"var(--ink)","font-weight":"900"
+  });
+  g.appendChild(tLabel);
+  g.appendChild(tNum);
+  svg.appendChild(g);
+
+  const bb = g.getBBox();
+  const padX = 40, padY = 26;
+  svg.insertBefore(el("rect",{
+    x: bb.x - padX,
+    y: bb.y - padY,
+    width: bb.width + padX*2,
+    height: bb.height + padY*2,
+    rx: 22,
+    fill:"var(--totalbox-fill)",
+    stroke:"var(--totalbox-stroke)",
+    "stroke-width":"4"
+  }), g);
+
+  // plateau
+  svg.appendChild(el("rect",{x:120,y:260,width:1360,height:650,rx:28,fill:"var(--tray-fill)",stroke:"var(--tray-stroke)"}));
+
+  if(card.family === "U"){
+    const beadR = card._beadR ?? 26;
+
+    // hidden beads (sous splats)
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = card._posH?.[i]?.cy ?? 610;
+      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
+    }
+
+    // splats (multi)
+    const splats = card._splats || [{cx:820, cy:610, r:220}];
+    for(const s of splats){
+      svg.appendChild(el("path",{
+        d: blobPath(s.cx, s.cy, s.r),
+        fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
+        stroke: "var(--splat-stroke)",
+        "stroke-width":"5"
+      }));
+    }
+
+    // visible beads
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*40);
+      const cy = card._posV?.[i]?.cy ?? 360;
+      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--unit-fill)", stroke:"var(--unit-stroke)", "stroke-width":"3"}));
+    }
+    return;
+  }
+
+  // classic mode
+  const beadR = 95;
+
+  // hidden (sous tache)
+  for(let i=0;i<card.hidden.length;i++){
+    const cx = card._posH?.[i]?.cx ?? 820;
+    const cy = card._posH?.[i]?.cy ?? 610;
+    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
+    svg.appendChild(text(cx, cy+18, String(card.hidden[i]), {
+      "text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"
+    }));
+  }
+
+  // splat
+  const s = card._splat || {cx:820, cy:610, r:220};
+  svg.appendChild(el("path",{
+    d: blobPath(s.cx, s.cy, s.r),
+    fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
+    stroke: "var(--splat-stroke)",
+    "stroke-width":"5"
+  }));
+
+  // visible beads
+  for(let i=0;i<card.visible.length;i++){
+    const cx = card._posV?.[i]?.cx ?? (450 + i*250);
+    const cy = card._posV?.[i]?.cy ?? 380;
+
+    const col = beadColorForValue(card.visible[i]);
+    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+    svg.appendChild(text(cx, cy+18, String(card.visible[i]), {
+      "text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"
+    }));
+  }
+}
+
+/* Render impression : carte 2x plus haute (espace réponse en bas) */
+function renderCardIntoSvg(targetSvg, card, revealAnswers){
+  while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
+
+  const W = 1600;
+  const H = 1600;
+
+  function tEl(name, attrs={}){
+    const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function tText(x,y,txt,attrs={}){
+    const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
+  }
+
+  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"rgba(0,0,0,0.02)"}));
+
+  // TOTAL
+  const g = tEl("g",{id:"totalGroupPrint"});
+  const lbl = tText(800, 92, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
+  const num = tText(800, 175, String(card.total), {"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"});
+  g.appendChild(lbl); g.appendChild(num);
+  targetSvg.appendChild(g);
+
+  const bb = g.getBBox();
+  const padX=40,padY=26;
+  targetSvg.insertBefore(tEl("rect",{
+    x:bb.x-padX,y:bb.y-padY,width:bb.width+padX*2,height:bb.height+padY*2,rx:22,
+    fill:"rgba(0,0,0,0.04)",stroke:"rgba(0,0,0,0.22)","stroke-width":"4"
+  }), g);
+
+  // plateau
+  targetSvg.appendChild(tEl("rect",{x:120,y:260,width:1360,height:650,rx:28,fill:"rgba(0,0,0,0.03)",stroke:"rgba(0,0,0,0.12)"}));
+
+  if(card.family === "U"){
+    const beadR = card._beadR ?? 26;
+
+    // hidden beads
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = card._posH?.[i]?.cy ?? 610;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
+    }
+
+    // splats
+    const splats = card._splats || [{cx:820, cy:610, r:220}];
+    const cover = "rgb(0,0,0)";
+    const reveal = "rgba(210,210,210,0.35)";
+    for(const s of splats){
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    }
+
+    // visible beads
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*40);
+      const cy = card._posV?.[i]?.cy ?? 360;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
+    }
+
+  }else{
+    const beadR=95;
+
+    // hidden
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = card._posH?.[i]?.cy ?? 610;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
+    }
+
+    // splat
+    const s = card._splat || {cx:820, cy:610, r:220};
+    const cover = "rgb(0,0,0)";
+    const reveal = "rgba(210,210,210,0.35)";
+    targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+
+    // visible beads (neutre)
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
+      const cy = card._posV?.[i]?.cy ?? 380;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
+    }
+  }
+
+  // Zone réponse blanche en bas (grand espace) — sans ligne (comme demandé)
+  targetSvg.appendChild(tEl("rect",{
+    x:120, y:980, width:1360, height:520, rx:26,
+    fill:"#ffffff", stroke:"rgba(0,0,0,0.18)", "stroke-width":"4"
+  }));
+}
+
+function printSheet(){
+  if(cards.length===0) return;
+  const showAnswers = !!document.getElementById("printAnswers").checked;
+  const printArea = document.getElementById("printArea");
+  printArea.innerHTML = "";
+
+  const perSheet = 4; // ✅ 4 cartes par page (2 x 2)
+  const sheets = Math.ceil(cards.length / perSheet);
+
+  for(let s=0;s<sheets;s++){
+    const sheet = document.createElement("div");
+    sheet.className = "sheet";
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    for(let i=0;i<perSheet;i++){
+      const k = s*perSheet + i;
+      if(k >= cards.length) break;
+      const holder = document.createElement("div");
+      holder.className = "pCard";
+
+      const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      sv.setAttribute("viewBox","0 0 1600 1600");
+      sv.style.width = "100%";
+
+      renderCardIntoSvg(sv, cards[k], showAnswers);
+      holder.appendChild(sv);
+      grid.appendChild(holder);
+    }
+
+    sheet.appendChild(grid);
+    printArea.appendChild(sheet);
+  }
+  window.print();
+}
+
+/* State */
+let cards = [];
+let idx = 0;
+let revealed = false;
+
+const counterEl = document.getElementById("counter");
+const fsHost = document.getElementById("fsHost");
+
+function updateUI(){
+  counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
+  document.getElementById("btnPrev").disabled = (cards.length===0 || idx===0);
+  document.getElementById("btnNext").disabled = (cards.length===0 || idx===cards.length-1);
+  document.getElementById("btnReveal").textContent = revealed ? "Cacher" : "Révéler";
+  if(cards.length===0){ renderEmpty(); }
+  else { renderCard(cards[idx], revealed); }
+}
+function renderEmpty(){
+  clearSvg();
+  svg.appendChild(el("rect",{x:0,y:0,width:1600,height:1000,rx:26,fill:"rgba(255,255,255,0.03)"}));
+  svg.appendChild(text(800, 520, "Génère une série pour commencer", {"text-anchor":"middle","font-size":"54","fill":"rgba(0,0,0,0.35)"}));
+}
+
+function generate(){
+  const act = activityEl.value;
+  const n = clamp(numberOr(countEl.value, 30), 1, 300);
+
+  const seedValue = getSeedForCurrentMode();
+  const rng = makeRng(seedValue);
+
+  const out = [];
+  for(let i=0;i<n;i++){
+    let c;
+    if(act==="U"){
+      c = genUnits(rng);
+    }else{
+      const diff = clamp(numberOr(diffEl.value, 2), 1, 3);
+      if(act==="A") c = genFamilyA(rng, diff);
+      else if(act==="C10") c = genComp10(rng, diff);
+      else if(act==="C100") c = genComp100(rng, diff);
+      else c = genMinusMix(rng, diff);
+    }
+    assignPositions(c, rng);
+    out.push(c);
+  }
+
+  cards = out;
+  idx = 0;
+  revealed = false;
+  updateUI();
+}
+
+function shuffleCards(){
+  if(cards.length<=1) return;
+
+  const seedValue = getSeedForCurrentMode();
+  const rng = makeRng(seedValue);
+
+  shuffleInPlace(cards, rng);
+  idx = 0;
+  revealed = false;
+  updateUI();
+}
+
+/* Fullscreen */
+async function toggleFullscreen(){
+  try{
+    if(!document.fullscreenElement) await fsHost.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch(e){ console.warn("Fullscreen non dispo:", e); }
+}
+
+/* Events */
+document.getElementById("btnGen").addEventListener("click", generate);
+document.getElementById("btnShuffle").addEventListener("click", shuffleCards);
+document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
+document.getElementById("btnPrev").addEventListener("click", ()=>{ if(idx>0){ idx--; revealed=false; updateUI(); }});
+document.getElementById("btnNext").addEventListener("click", ()=>{ if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }});
+document.getElementById("btnReveal").addEventListener("click", ()=>{ if(cards.length){ revealed=!revealed; updateUI(); }});
+document.getElementById("btnPrint").addEventListener("click", printSheet);
+document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
+
+window.addEventListener("keydown",(e)=>{
+  if(e.key==="ArrowLeft"){ if(idx>0){ idx--; revealed=false; updateUI(); } }
+  if(e.key==="ArrowRight"){ if(idx<cards.length-1){ idx++; revealed=false; updateUI(); } }
+  if(e.key===" "){ e.preventDefault(); if(cards.length){ revealed=!revealed; updateUI(); } }
+  if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
+});
+
+/* Init */
+syncSettingsUI();
+// ✅ Génération automatique au chargement (plus besoin de cliquer sur « Générer »)
+generate();
+</script>
+</body>
+</html>
