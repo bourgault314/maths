@@ -6,35 +6,35 @@
 <title>Splat!</title>
 <style>
   :root{
-    /* THEME (dark default) */
-    --bg:#0b0f14;
-    --panel:rgba(18,24,36,.92);
-    --card:rgba(18,24,36,.60);
-    --ink:#e9eef7;
-    --muted:#a9b3c4;
+    /* THEME (light default) */
+    --bg:#f3f4f6;
+    --panel:rgba(255,255,255,.96);
+    --card:rgba(255,255,255,.80);
+    --ink:#111827;
+    --muted:#6b7280;
 
-    --field-bg:#0d131d;
-    --field-border:rgba(255,255,255,.12);
+    --field-bg:#ffffff;
+    --field-border:rgba(17,24,39,.15);
 
-    --btn:#1f2a3b;
-    --btn2:#2a3a55;
-    --btn-border:rgba(255,255,255,.12);
+    --btn:#ffffff;
+    --btn2:#f3f4f6;
+    --btn-border:rgba(17,24,39,.15);
 
-    --tray-fill:rgba(0,0,0,0.10);
-    --tray-stroke:rgba(255,255,255,0.10);
+    --tray-fill:rgba(0,0,0,0.03);
+    --tray-stroke:rgba(0,0,0,0.10);
 
-    --totalbox-fill:rgba(0,0,0,0.16);
-    --totalbox-stroke:rgba(255,255,255,0.20);
+    --totalbox-fill:rgba(0,0,0,0.04);
+    --totalbox-stroke:rgba(0,0,0,0.16);
 
-    --beadH-fill:rgba(255,255,255,0.10);
-    --beadH-stroke:rgba(255,255,255,0.35);
+    --beadH-fill:rgba(0,0,0,0.05);
+    --beadH-stroke:rgba(0,0,0,0.25);
 
-    --total-label: rgba(233,238,247,0.86);
+    --total-label: rgba(17,24,39,0.70);
 
     /* SPLAT */
     --splat-cover: rgb(0,0,0);              /* 100% opaque */
     --splat-reveal: rgba(210,210,210,0.35); /* gris clair semi-transparent */
-    --splat-stroke: rgba(255,255,255,0.18);
+    --splat-stroke: rgba(0,0,0,0.18);
 
     /* UNIT BEADS (sans numéros) */
     --unit-fill: rgba(106,167,255,0.20);
@@ -228,7 +228,7 @@
       
       <option value="U">A — Petites billes (sans numéros)</option>
       <option value="N">B — Billes numérotées (taches multiples)</option>
-      <option value="C9">C — Opérations en 9 (19…99)</option>
+      <option value="C9">C — Opérations en 9 (19 → 99)</option>
     </select>
 
     <div id="classicSettings">
@@ -258,7 +258,7 @@
 
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Bi-caché max / tache</label>
+          <label>Billes cachées (max par tache) — même quantité sous chaque tache</label>
           <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
         </div>
         <div style="flex:1">
@@ -315,20 +315,22 @@
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
         <div style="flex:1">
-          <label>Graine (mode B)</label>
+          <label>Seed (mode B)</label>
           <input id="seedN" type="number" placeholder="ex: 2026" />
         </div>
       </div>
     </div>
 
+    <label>Nombre de cartes</label>
+    <input id="count" type="number" min="1" max="300" value="10" />
 
     <div id="nineSettings" style="display:none">
       <div class="row">
         <div style="flex:1">
-          <label>Opération</label>
+          <label>Opération (…9)</label>
           <select id="nineOp">
-            <option value="SUB" selected>Différence</option>
-            <option value="ADD">Somme</option>
+            <option value="SUB" selected>Différence (TOTAL − …)</option>
+            <option value="ADD">Somme (…9 visible + autres)</option>
             <option value="MIX">Mélange</option>
           </select>
         </div>
@@ -340,23 +342,12 @@
 
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Billes visibles numérotées (min)</label>
-          <input id="nineVisibleMin" type="number" min="1" max="5" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles numérotées (max)</label>
-          <input id="nineVisibleMax" type="number" min="1" max="5" value="1" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
           <label>Total (min)</label>
           <input id="nineTotalMin" type="number" min="1" max="1000" value="30" />
         </div>
         <div style="flex:1">
           <label>Total (max)</label>
-          <input id="nineTotalMax" type="number" min="1" max="1000" value="80" />
+          <input id="nineTotalMax" type="number" min="1" max="1000" value="120" />
         </div>
         <div style="flex:1">
           <label>Graine (mode C)</label>
@@ -365,10 +356,7 @@
       </div>
     </div>
 
-    <label>Nombre de cartes</label>
-    <input id="count" type="number" min="1" max="300" value="10" />
-
-    <div class="row" style="margin-top:10px">
+<div class="row" style="margin-top:10px">
       <button class="btn primary" id="btnGen">Générer</button>
       <button class="btn" id="btnShuffle">Mélanger</button>
       <button class="btn danger" id="btnClear">Vider</button>
@@ -393,10 +381,10 @@
     </div>
 <div class="hint">
       Raccourcis :<br>
-      • → / Espace = révéler puis suivant<br>
-      • ← = cacher puis précédent<br>
+      • Espace = révéler / cacher<br>
+      • ← / → = carte précédente / suivante<br>
       • F = plein écran<br><br>
-      Graine : vide = aléatoire ; remplie = série reproductible.
+      Graine : vide = série nouvelle à chaque clic ; remplie = série reproductible.
     </div>
   </section>
 
@@ -417,7 +405,12 @@
 <script>
 /* RNG */
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
-function makeRng(seed){if(seed===null||seed===undefined||seed==="")return Math.random;const s=Number(seed)|0;return mulberry32(s||1);}
+function makeRng(seed){
+  if(seed===null||seed===undefined||seed==="") return Math.random;
+  const s = Number(seed);
+  if(!Number.isFinite(s)) return Math.random;
+  return mulberry32(s|0);
+}
 function rInt(rng,a,b){return a+Math.floor(rng()*(b-a+1));}
 function rFloat(rng,a,b){return a + rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
@@ -444,6 +437,12 @@ const classicSettingsEl = document.getElementById("classicSettings");
 const unitSettingsEl = document.getElementById("unitSettings");
 
 const numberedSettingsEl = document.getElementById("numberedSettings");
+const nineSettingsEl = document.getElementById("nineSettings");
+const nineOpEl = document.getElementById("nineOp");
+const nineTasksEl = document.getElementById("nineTasks");
+const nineTotalMinEl = document.getElementById("nineTotalMin");
+const nineTotalMaxEl = document.getElementById("nineTotalMax");
+const seedCEl = document.getElementById("seedC");
 
 const unitTasksEl = document.getElementById("unitTasks");
 const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
@@ -459,84 +458,55 @@ const numHiddenCountEl = document.getElementById("numHiddenCount");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
-
-const nineSettingsEl = document.getElementById("nineSettings");
-const nineOpEl = document.getElementById("nineOp");
-const nineTasksEl = document.getElementById("nineTasks");
-const nineVisibleMinEl = document.getElementById("nineVisibleMin");
-const nineVisibleMaxEl = document.getElementById("nineVisibleMax");
-const nineTotalMinEl = document.getElementById("nineTotalMin");
-const nineTotalMaxEl = document.getElementById("nineTotalMax");
-const seedCEl = document.getElementById("seedC");
-
 /* Helpers */
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
 
-
 function getSeedForCurrentMode(){
   const act = activityEl.value;
 
-  function clean(v){
-    if(v===null || v===undefined) return "";
-    return String(v).trim();
+  // A — Petites billes
+  if(act === "U"){
+    const s = (seedUEl.value||"").trim();
+    return s ? Number(s) : "";
   }
 
-  if(act === "U") return clean(seedUEl.value);
-  if(act === "N") return clean(seedNEl.value);
-  if(act === "C9") return clean(seedCEl.value);
+  // B — Billes numérotées (taches multiples)
+  if(act === "N"){
+    const s = (seedNEl.value||"").trim();
+    return s ? Number(s) : "";
+  }
 
-  return clean(seedEl.value);
+  // C — Opérations en 9
+  if(act === "C9"){
+    const s = (seedCEl.value||"").trim();
+    return s ? Number(s) : "";
+  }
+
+  // Autres
+  const s = (seedEl.value||"").trim();
+  return s ? Number(s) : "";
 }
-
 
 
 function syncSettingsUI(){
   const act = activityEl.value;
-  const isUnit = (act === "U");
-  const isNumbered = (act === "N");
-  const isNine = (act === "C9");
 
-  classicSettingsEl.style.display = (isUnit || isNumbered || isNine) ? "none" : "block";
+  const isUnit = act === "U";
+  const isNumbered = act === "N";
+  const isNine = act === "C9";
+  const isClassic = !(isUnit || isNumbered || isNine);
+
+  classicSettingsEl.style.display = isClassic ? "block" : "none";
   unitSettingsEl.style.display = isUnit ? "block" : "none";
   numberedSettingsEl.style.display = isNumbered ? "block" : "none";
   nineSettingsEl.style.display = isNine ? "block" : "none";
 
-  if(isNine) syncNineControls();
+  if(isUnit) syncUnitTotalBounds();
 }
 
 
-function syncNineControls(){
-  const op = nineOpEl.value;
-
-  if(op === "ADD"){
-    nineVisibleMinEl.min = "2";
-    nineVisibleMaxEl.min = "2";
-    let vmin = clamp(numberOr(nineVisibleMinEl.value, 2), 2, 5);
-    let vmax = clamp(numberOr(nineVisibleMaxEl.value, 3), 2, 5);
-    if(vmax < vmin) vmax = vmin;
-    nineVisibleMinEl.value = String(vmin);
-    nineVisibleMaxEl.value = String(vmax);
-  }else{
-    nineVisibleMinEl.min = "1";
-    nineVisibleMaxEl.min = "1";
-    let vmin = clamp(numberOr(nineVisibleMinEl.value, 1), 1, 5);
-    let vmax = clamp(numberOr(nineVisibleMaxEl.value, 1), 1, 5);
-    if(vmax < vmin) vmax = vmin;
-    nineVisibleMinEl.value = String(vmin);
-    nineVisibleMaxEl.value = String(vmax);
-  }
-
-  let tmin = clamp(numberOr(nineTotalMinEl.value, 30), 1, 1000);
-  let tmax = clamp(numberOr(nineTotalMaxEl.value, 80), 1, 1000);
-  if(tmax < tmin) tmax = tmin;
-  nineTotalMinEl.value = String(tmin);
-  nineTotalMaxEl.value = String(tmax);
-}
-
-
-function syncUnitTotalBounds
-(){
+function syncUnitTotalBounds(){
   // Mode A : on borne Total(min/max) en fonction des paramètres.
   // Règle : total = visibles + (taches * caché_par_tache). On garde un plafond de lisibilité.
   const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
@@ -574,22 +544,19 @@ function scheduleAutoGenerate(){
   // Petite temporisation pour éviter de régénérer 10 fois pendant une saisie au clavier
   autoGenTimer = setTimeout(()=>{
     if(activityEl.value === "U") syncUnitTotalBounds();
-    if(activityEl.value === "C9") syncNineControls();
     generate();
   }, 150);
 }
 
 activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
 
-nineOpEl.addEventListener("change", ()=>{ syncNineControls(); scheduleAutoGenerate(); });
-
 // Tous les réglages qui doivent déclencher une régénération
 [
-    countEl, diffEl, seedEl,
-    unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-    numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
-    nineOpEl, nineTasksEl, nineVisibleMinEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl
-  ].forEach(el=>{
+  countEl, diffEl, seedEl,
+  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
+  numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
+  nineOpEl, nineTasksEl, nineTotalMinEl, nineTotalMaxEl, seedCEl
+].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
   el.addEventListener("change", scheduleAutoGenerate);
@@ -855,6 +822,88 @@ function genNumbered(rng){
 }
 
 
+function genOp9(rng){
+  const opSetting = (nineOpEl.value || "SUB");
+  const familySetting = "19_99";
+  const tasks = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
+
+  let userMin = numberOr(nineTotalMinEl.value, 30);
+  let userMax = numberOr(nineTotalMaxEl.value, 120);
+  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
+  const totalMin = clamp(userMin, 1, 1000);
+  const totalMax = clamp(userMax, 1, 1000);
+
+  // famille …9
+  const start = 19;
+  const family = [];
+  for(let v=start; v<=99; v+=10) family.push(v);
+
+  // Helper : tire un op réel si MIX
+  function pickOp(){
+    if(opSetting === "MIX"){
+      return (rng() < 0.5) ? "SUB" : "ADD";
+    }
+    return opSetting;
+  }
+
+  for(let tries=0; tries<3000; tries++){
+    const op = pickOp();
+
+    const k = family[rInt(rng, 0, family.length-1)];
+    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, 5);
+
+    // visibles : au moins un ...9
+    const visible = [k];
+    // On borne les autres visibles pour éviter des sommes trop énormes
+    for(let i=1; i<visibleCount; i++){
+      // essais pour rester compatible avec totalMax
+      let v;
+      for(let j=0; j<30; j++){
+        v = rInt(rng, 1, 99);
+        // évite trop de doublons de ...9 (pas obligatoire, juste plus lisible)
+        if(i===1 || v!==k) break;
+      }
+      visible.push(v);
+    }
+
+    const visibleSum = visible.reduce((a,b)=>a+b,0);
+
+    // choisit une quantité cachée identique sous chaque tache
+    const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
+    const hHigh = Math.floor((totalMax - visibleSum) / tasks);
+    if(hHigh < hLow) continue;
+
+    const H = rInt(rng, hLow, hHigh);
+    const total = visibleSum + tasks * H;
+
+    // Sous chaque tache noire : 1 bille (même valeur)
+    const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
+    const hidden = hiddenByTask.flat();
+
+    return {
+      family: "C9",
+      total,
+      visible,
+      hidden,
+      _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
+      _c9: { op, opSetting, familySetting, k }
+    };
+  }
+
+  // fallback sûr
+  const k = (familySetting === "9_99") ? 9 : 19;
+  const tasksF = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
+  const H = 1;
+  const visible = [k];
+  const total = visible.reduce((a,b)=>a+b,0) + tasksF*H;
+  const hiddenByTask = Array.from({length: tasksF}, ()=>[H]);
+  const hidden = hiddenByTask.flat();
+  return { family:"C9", total, visible, hidden, _num:{ tasks:tasksF, visibleCount:1, vMin:1, vMax:1, totalMin:total, totalMax:total, hiddenBeadsPerTask:1, H, hiddenByTask }, _c9:{ op:"SUB", opSetting, familySetting, k } };
+}
+
+
+
+
 function assignPositionsClassic(card, rng){
   const tray = { x:120, y:260, w:1360, h:650 };
   const beadR = 95;
@@ -1101,7 +1150,6 @@ function assignPositionsUnits(card, rng){
 }
 
 
-
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
@@ -1166,72 +1214,7 @@ function genMinusMix(rng,diff){
   let total=rInt(rng,tmin,tmax);
   total=Math.floor(total/10)*10 + rInt(rng,0,9);
   if(total<=k+5) total=k+25;
-  return {family:"MIX1939", total, visible:[k], hidden:[total-k], _k:k};
-}
-
-/* C — opérations en ...9 (19…99) */
-function pick9FamilyValue(rng){
-  const n = rInt(rng, 1, 9); // 1..9
-  return 10*n + 9;          // 19..99
-}
-
-function genOp9(rng){
-  const opSetting = nineOpEl.value; // SUB / ADD / MIX
-  const tasks = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
-
-  const totalMin = clamp(numberOr(nineTotalMinEl.value, 30), 1, 1000);
-  const totalMax = clamp(numberOr(nineTotalMaxEl.value, 80), 1, 1000);
-  const tMin = Math.min(totalMin, totalMax);
-  const tMax = Math.max(totalMin, totalMax);
-
-  let vMin = clamp(numberOr(nineVisibleMinEl.value, 1), 1, 5);
-  let vMax = clamp(numberOr(nineVisibleMaxEl.value, 1), 1, 5);
-  if(vMax < vMin) vMax = vMin;
-  if(opSetting === "ADD"){
-    vMin = Math.max(2, vMin);
-    vMax = Math.max(2, vMax);
-  }
-
-  const chooseOp = ()=>{
-    if(opSetting === "MIX") return rng() < 0.5 ? "SUB" : "ADD";
-    return opSetting;
-  };
-
-  for(let tries=0; tries<800; tries++){
-    const op = chooseOp();
-    const k = pick9FamilyValue(rng);
-
-    let visibleCount = rInt(rng, vMin, vMax);
-    if(op === "ADD") visibleCount = Math.max(2, visibleCount);
-    visibleCount = Math.max(1, visibleCount);
-
-    const visible = [k];
-    while(visible.length < visibleCount){
-      visible.push(rInt(rng, 1, 99));
-    }
-    if(visible.length > 1){
-      const j = rInt(rng, 0, visible.length-1);
-      [visible[0], visible[j]] = [visible[j], visible[0]];
-    }
-
-    const visibleSum = visible.reduce((a,b)=>a+b,0);
-    const total = rInt(rng, tMin, tMax);
-    const remaining = total - visibleSum;
-    if(remaining <= 0) continue;
-    if(remaining % tasks !== 0) continue;
-
-    const H = remaining / tasks;
-    if(H < 1 || H > 999) continue;
-
-    const hiddenByTask = Array.from({length:tasks}, ()=>[H]);
-    const hidden = Array.from({length:tasks}, ()=>H);
-
-    return { family:"C9", total, visible, hidden, _num:{ tasks, hiddenByTask } };
-  }
-
-  // fallback rare
-  const k = 19, total = 50, H = 31;
-  return { family:"C9", total, visible:[k], hidden:[H], _num:{tasks:1, hiddenByTask:[[H]]} };
+  return {family:"C", total, visible:[k], hidden:[total-k], _k:k};
 }
 
 /* Family U (unités sans numéros) */
@@ -1625,48 +1608,12 @@ let revealed = false;
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
-
 function updateUI(){
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
-
-  const canPrev = cards.length>0 && (revealed || idx>0);
-  const canNext = cards.length>0 && (!revealed || idx<cards.length-1);
-
-  btnPrev.disabled = !canPrev;
-  btnNext.disabled = !canNext;
-
-  if(cards.length===0){ renderEmpty(); }
+  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && !revealed));
+  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));if(cards.length===0){ renderEmpty(); }
   else { renderCard(cards[idx], revealed); }
 }
-
-function stepNext(){
-  if(!cards.length) return;
-  if(!revealed){
-    revealed = true;
-    updateUI();
-    return;
-  }
-  if(idx < cards.length-1){
-    idx++;
-    revealed = false;
-    updateUI();
-  }
-}
-
-function stepPrev(){
-  if(!cards.length) return;
-  if(revealed){
-    revealed = false;
-    updateUI();
-    return;
-  }
-  if(idx > 0){
-    idx--;
-    revealed = false;
-    updateUI();
-  }
-}
-
 function renderEmpty(){
   clearSvg();
   svg.appendChild(el("rect",{x:0,y:0,width:1600,height:1000,rx:26,fill:"rgba(255,255,255,0.03)"}));
@@ -1678,7 +1625,6 @@ function generate(){
   const n = clamp(numberOr(countEl.value, 30), 1, 300);
 
   if(act==="U") syncUnitTotalBounds();
-  if(act==="C9") syncNineControls();
 
   const seedValue = getSeedForCurrentMode();
   const rng = makeRng(seedValue);
@@ -1730,20 +1676,38 @@ async function toggleFullscreen(){
 document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnShuffle").addEventListener("click", shuffleCards);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
-document.getElementById("btnPrev").addEventListener("click", stepPrev);
-document.getElementById("btnNext").addEventListener("click", stepNext);
+document.getElementById("btnPrev").addEventListener("click", ()=>{
+  if(cards.length===0) return;
+  if(revealed){ revealed = false; updateUI(); return; }
+  if(idx>0){ idx--; revealed=false; updateUI(); }
+});
+
+document.getElementById("btnNext").addEventListener("click", ()=>{
+  if(cards.length===0) return;
+  if(!revealed){ revealed = true; updateUI(); return; }
+  if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+});
+
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
 
-
 window.addEventListener("keydown",(e)=>{
-  if(e.key==="ArrowLeft"){ stepPrev(); }
-  if(e.key==="ArrowRight"){ stepNext(); }
-  if(e.key===" "){ e.preventDefault(); stepNext(); }
+  if(e.key==="ArrowLeft"){
+    if(cards.length===0) return;
+    if(revealed){ revealed=false; updateUI(); return; }
+    if(idx>0){ idx--; revealed=false; updateUI(); }
+  }
+  if(e.key==="ArrowRight"){
+    if(cards.length===0) return;
+    if(!revealed){ revealed=true; updateUI(); return; }
+    if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+  }
+  if(e.key===" "){
+    e.preventDefault();
+    if(cards.length){ revealed=!revealed; updateUI(); }
+  }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
-});
-
-/* Init */
+});/* Init */
 syncSettingsUI();
 // ✅ Génération automatique au chargement (plus besoin de cliquer sur « Générer »)
 generate();
