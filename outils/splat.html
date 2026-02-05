@@ -227,8 +227,9 @@
     <select id="activity">
       
       <option value="U">A — Petites billes (sans numéros)</option>
-      <option value="N">B — Billes numérotées (taches multiples)</option>
-      <option value="C9">C — Opérations en 9 (19 → 99)</option>
+      <option value="N">B — Billes numérotées</option>
+      <option value="C9">C — Opérations en 9 (9 → 99)</option>
+      <option value="C8">D — Opérations en 8 (8 → 98)</option>
     </select>
 
     <div id="classicSettings">
@@ -238,7 +239,7 @@
           <input id="difficulty" type="number" min="1" max="3" value="2" />
         </div>
         <div style="flex:1">
-          <label>Graine (optionnel)</label>
+          <label>Graine (optionnelle)</label>
           <input id="seed" type="number" placeholder="ex: 2026" />
         </div>
       </div>
@@ -251,29 +252,29 @@
           <input id="unitTasks" type="number" min="1" max="5" value="1" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles (max 20)</label>
+          <label>Billes visibles max</label>
           <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
         </div>
       </div>
 
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Billes cachées (max par tache) — même quantité sous chaque tache</label>
-          <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
+          <label>Total (min)</label>
+          <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
         </div>
         <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="unitTotalMin" type="number" min="1" max="80" value="1" />
+          <label>Total (max)</label>
+          <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
         </div>
       </div>
 
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="unitTotalMax" type="number" min="1" max="80" value="50" />
+          <label>Billes cachées max</label>
+          <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
         </div>
         <div style="flex:1">
-          <label>Graine (optionnel)</label>
+          <label>Graine (optionnelle)</label>
           <input id="seedU" type="number" placeholder="ex: 2026" />
         </div>
       </div>
@@ -315,7 +316,7 @@
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
         <div style="flex:1">
-          <label>Seed (mode B)</label>
+          <label>Graine (mode B)</label>
           <input id="seedN" type="number" placeholder="ex: 2026" />
         </div>
       </div>
@@ -338,6 +339,10 @@
           <label>Nombre de taches</label>
           <input id="nineTasks" type="number" min="1" max="6" value="1" />
         </div>
+        <div style="flex:1">
+          <label>Billes visibles max</label>
+          <input id="nineVisibleMax" type="number" min="1" max="5" value="3" />
+        </div>
       </div>
 
       <div class="row" style="margin-top:10px">
@@ -352,6 +357,42 @@
         <div style="flex:1">
           <label>Graine (mode C)</label>
           <input id="seedC" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+    </div>
+
+    <div id="eightSettings" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <label>Opération (…8)</label>
+          <select id="eightOp">
+            <option value="SUB" selected>Différence (TOTAL − …)</option>
+            <option value="ADD">Somme (…8 visible + autres)</option>
+            <option value="MIX">Mélange</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Nombre de taches</label>
+          <input id="eightTasks" type="number" min="1" max="6" value="1" />
+        </div>
+        <div style="flex:1">
+          <label>Billes visibles max</label>
+          <input id="eightVisibleMax" type="number" min="1" max="5" value="3" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Total (min)</label>
+          <input id="eightTotalMin" type="number" min="1" max="1000" value="30" />
+        </div>
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="eightTotalMax" type="number" min="1" max="1000" value="120" />
+        </div>
+        <div style="flex:1">
+          <label>Graine (mode D)</label>
+          <input id="seedD" type="number" placeholder="ex: 2026" />
         </div>
       </div>
     </div>
@@ -442,7 +483,16 @@ const nineOpEl = document.getElementById("nineOp");
 const nineTasksEl = document.getElementById("nineTasks");
 const nineTotalMinEl = document.getElementById("nineTotalMin");
 const nineTotalMaxEl = document.getElementById("nineTotalMax");
+const nineVisibleMaxEl = document.getElementById("nineVisibleMax");
 const seedCEl = document.getElementById("seedC");
+
+const eightSettingsEl = document.getElementById("eightSettings");
+const eightOpEl = document.getElementById("eightOp");
+const eightTasksEl = document.getElementById("eightTasks");
+const eightVisibleMaxEl = document.getElementById("eightVisibleMax");
+const eightTotalMinEl = document.getElementById("eightTotalMin");
+const eightTotalMaxEl = document.getElementById("eightTotalMax");
+const seedDEl = document.getElementById("seedD");
 
 const unitTasksEl = document.getElementById("unitTasks");
 const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
@@ -471,7 +521,7 @@ function getSeedForCurrentMode(){
     return s ? Number(s) : "";
   }
 
-  // B — Billes numérotées (taches multiples)
+  // B — Billes numérotées
   if(act === "N"){
     const s = (seedNEl.value||"").trim();
     return s ? Number(s) : "";
@@ -480,6 +530,12 @@ function getSeedForCurrentMode(){
   // C — Opérations en 9
   if(act === "C9"){
     const s = (seedCEl.value||"").trim();
+    return s ? Number(s) : "";
+  }
+
+  // D — Opérations en 8
+  if(act === "C8"){
+    const s = (seedDEl.value||"").trim();
     return s ? Number(s) : "";
   }
 
@@ -495,12 +551,14 @@ function syncSettingsUI(){
   const isUnit = act === "U";
   const isNumbered = act === "N";
   const isNine = act === "C9";
-  const isClassic = !(isUnit || isNumbered || isNine);
+  const isEight = act === "C8";
+  const isClassic = !(isUnit || isNumbered || isNine || isEight);
 
   classicSettingsEl.style.display = isClassic ? "block" : "none";
   unitSettingsEl.style.display = isUnit ? "block" : "none";
   numberedSettingsEl.style.display = isNumbered ? "block" : "none";
   nineSettingsEl.style.display = isNine ? "block" : "none";
+  eightSettingsEl.style.display = isEight ? "block" : "none";
 
   if(isUnit) syncUnitTotalBounds();
 }
@@ -555,7 +613,8 @@ activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenera
   countEl, diffEl, seedEl,
   unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
   numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
-  nineOpEl, nineTasksEl, nineTotalMinEl, nineTotalMaxEl, seedCEl
+  nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
+  eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl
 ].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
@@ -824,8 +883,9 @@ function genNumbered(rng){
 
 function genOp9(rng){
   const opSetting = (nineOpEl.value || "SUB");
-  const familySetting = "19_99";
+  const familySetting = "9_99";
   const tasks = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
+  const vMaxUser = clamp(numberOr(nineVisibleMaxEl.value, 3), 1, 5);
 
   let userMin = numberOr(nineTotalMinEl.value, 30);
   let userMax = numberOr(nineTotalMaxEl.value, 120);
@@ -833,12 +893,10 @@ function genOp9(rng){
   const totalMin = clamp(userMin, 1, 1000);
   const totalMax = clamp(userMax, 1, 1000);
 
-  // famille …9
-  const start = 19;
+  // famille …9 : 9, 19, …, 99
   const family = [];
-  for(let v=start; v<=99; v+=10) family.push(v);
-
-  // Helper : tire un op réel si MIX
+  for(let v=9; v<=99; v+=10) family.push(v);
+// Helper : tire un op réel si MIX
   function pickOp(){
     if(opSetting === "MIX"){
       return (rng() < 0.5) ? "SUB" : "ADD";
@@ -850,7 +908,7 @@ function genOp9(rng){
     const op = pickOp();
 
     const k = family[rInt(rng, 0, family.length-1)];
-    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, 5);
+    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, Math.max(2, vMaxUser));
 
     // visibles : au moins un ...9
     const visible = [k];
@@ -900,6 +958,81 @@ function genOp9(rng){
   const hidden = hiddenByTask.flat();
   return { family:"C9", total, visible, hidden, _num:{ tasks:tasksF, visibleCount:1, vMin:1, vMax:1, totalMin:total, totalMax:total, hiddenBeadsPerTask:1, H, hiddenByTask }, _c9:{ op:"SUB", opSetting, familySetting, k } };
 }
+
+
+function genOp8(rng){
+  const opSetting = (eightOpEl.value || "SUB");
+  const tasks = clamp(numberOr(eightTasksEl.value, 1), 1, 6);
+
+  let userMin = numberOr(eightTotalMinEl.value, 30);
+  let userMax = numberOr(eightTotalMaxEl.value, 120);
+  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
+  const totalMin = clamp(userMin, 1, 1000);
+  const totalMax = clamp(userMax, 1, 1000);
+
+  const vMaxUser = clamp(numberOr(eightVisibleMaxEl.value, 3), 1, 5);
+
+  // famille …8 : 8, 18, …, 98
+  const family = [];
+  for(let v=8; v<=98; v+=10) family.push(v);
+function pickOp(){
+    if(opSetting === "MIX"){
+      return (rng() < 0.5) ? "SUB" : "ADD";
+    }
+    return opSetting;
+  }
+
+  for(let tries=0; tries<3000; tries++){
+    const op = pickOp();
+
+    const k = family[rInt(rng, 0, family.length-1)];
+    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, Math.max(2, vMaxUser));
+
+    // visibles : au moins un ...8
+    const visible = [k];
+    for(let i=1; i<visibleCount; i++){
+      let v;
+      for(let j=0; j<30; j++){
+        v = rInt(rng, 1, 99);
+        if(i===1 || v!==k) break;
+      }
+      visible.push(v);
+    }
+
+    const visibleSum = visible.reduce((a,b)=>a+b,0);
+
+    // caché identique sous chaque tache
+    const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
+    const hHigh = Math.floor((totalMax - visibleSum) / tasks);
+    if(hHigh < hLow) continue;
+
+    const H = rInt(rng, hLow, hHigh);
+    const total = visibleSum + tasks * H;
+
+    const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
+    const hidden = hiddenByTask.flat();
+
+    return {
+      family: "C8",
+      total,
+      visible,
+      hidden,
+      _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
+      _c8: { op, opSetting, k }
+    };
+  }
+
+  // fallback sûr
+  const tasksF = clamp(numberOr(eightTasksEl.value, 1), 1, 6);
+  const H = 1;
+  const k = 8;
+  const visible = [k];
+  const total = visible.reduce((a,b)=>a+b,0) + tasksF*H;
+  const hiddenByTask = Array.from({length: tasksF}, ()=>[H]);
+  const hidden = hiddenByTask.flat();
+  return { family:"C8", total, visible, hidden, _num:{ tasks:tasksF, visibleCount:1, vMin:1, vMax:1, totalMin:total, totalMax:total, hiddenBeadsPerTask:1, H, hiddenByTask }, _c8:{ op:"SUB", opSetting, k } };
+}
+
 
 
 
@@ -1153,7 +1286,7 @@ function assignPositionsUnits(card, rng){
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
-  }else if(card.family === "N" || card.family === "C9"){
+  }else if(card.family === "N" || card.family === "C9" || card.family === "C8"){
     assignPositionsNumbered(card, rng);
   }else{
     assignPositionsClassic(card, rng);
@@ -1378,7 +1511,7 @@ svg.insertBefore(el("rect",{
   }
 
   // numbered multi-splats (B)
-  if(card.family === "N" || card.family === "C9"){
+  if(card.family === "N" || card.family === "C9" || card.family === "C8"){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
@@ -1512,7 +1645,7 @@ targetSvg.insertBefore(tEl("rect",{
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
     }
 
-  }else if(card.family === "N" || card.family === "C9"){
+  }else if(card.family === "N" || card.family === "C9" || card.family === "C8"){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
@@ -1638,6 +1771,8 @@ function generate(){
       c = genNumbered(rng);
     }else if(act==="C9"){
       c = genOp9(rng);
+    }else if(act==="C8"){
+      c = genOp8(rng);
     }else{
       const diff = clamp(numberOr(diffEl.value, 2), 1, 3);
       c = genMinusMix(rng, diff);
