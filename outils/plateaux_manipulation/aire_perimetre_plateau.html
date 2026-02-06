@@ -13,11 +13,11 @@
       --panel:#ffffff;
       --panel2:#f7f9ff;
 
-      --grid:#a7b2cb;
+      --grid:#000000;
       --gridOuter: 1px;
       --gridInner: 1px;
 
-      --subgrid: rgba(20,32,51,.18);
+      --subgrid: rgba(0,0,0,.55);
 
       --tile:#8fd3d8;
       --tile2:#7fc6cc;
@@ -34,11 +34,11 @@
       --ink:#0b1322;
       --muted:#2c3a52;
 
-      --grid:#8796bc;
+      --grid:#000000;
       --gridOuter: 2px;
       --gridInner: 1px;
 
-      --subgrid: rgba(11,19,34,.22);
+      --subgrid: rgba(0,0,0,.65);
 
       --tile:#6bd0d7;
       --tile2:#53c5cd;
@@ -208,6 +208,12 @@
       font-weight: 950;
       white-space:nowrap;
     }
+    
+    body.projection .metric{
+      padding: 18px 26px;
+      gap:14px;
+    }
+
     .metric .k{
       font-size:12px;
       color: var(--muted);
@@ -232,9 +238,9 @@
       transform: translateY(1px);
     }
 
-    body.projection .metric .v{ font-size:30px; }
-    body.projection .metric .k{ font-size:14px; }
-    body.projection .unit{ font-size:14px; transform: translateY(2px); }
+    body.projection .metric .v{ font-size:48px; }
+    body.projection .metric .k{ font-size:24px; }
+    body.projection .unit{ font-size:24px; transform: translateY(3px); }
 
     .compareMetrics{
       display:none;
@@ -539,7 +545,7 @@
 
           <button id="btnPrev" class="neutral" title="Précédent">⟲</button>
           <button id="btnNext" class="neutral" title="Suivant">⟳</button>
-          <button id="btnClear" class="neutral" title="Effacer">🧽</button>
+          <button id="btnClear" class="neutral" title="Effacer">Effacer</button>
 
           <div class="exGroup hidden" id="exGroup">
             <button id="btnNew" class="neutral">Nouvel exercice</button>
@@ -1345,7 +1351,7 @@
         cells.add(chosen);
         const {r,c} = parseKey(chosen);
         for(const nb of neighbors4(r,c)){
-          const kk = key(nb.r,nb.c);
+          const kk = key(nb.r, nb.c);
           if(!cells.has(kk)) frontier.add(kk);
         }
       }
