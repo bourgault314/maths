@@ -2009,6 +2009,108 @@ function text(x,y,txt,attrs={}){
   return t;
 }
 
+// Somme sûre (utile pour visible/caché)
+function sumArray(arr){
+  let s = 0;
+  if(!arr) return 0;
+  for(const v of arr){
+    const n = Number(v);
+    if(Number.isFinite(n)) s += n;
+  }
+  return s;
+}
+
+/**
+ * Dessine un "schéma en barre" (tableau 2 lignes) :
+ *  - ligne 1 : TOTAL
+ *  - ligne 2 : visible / caché (largeurs proportionnelles), la partie cachée est grisée.
+ *
+ * API attendue :
+ *  - rect(attrs) -> <rect>
+ *  - line(attrs) -> <line>
+ *  - text(x,y,txt,attrs) -> <text>
+ */
+function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
+  const w = (api && api.w) ? api.w : 300;
+  const hTop = (api && api.hTop) ? api.hTop : 56;
+  const hBottom = (api && api.hBottom) ? api.hBottom : 72;
+
+  const stroke = (api && api.stroke) ? api.stroke : "rgba(0,0,0,0.25)";
+  const strokeWidth = (api && api.strokeWidth) ? api.strokeWidth : 3;
+  const greyFill = (api && api.greyFill) ? api.greyFill : "rgba(0,0,0,0.10)";
+  const ink = (api && api.ink) ? api.ink : "#000";
+  const fontTop = (api && api.fontTop) ? api.fontTop : 72;
+  const fontBottom = (api && api.fontBottom) ? api.fontBottom : 72;
+
+  const dyVal = (api && api.textDy) ? api.textDy : "0";
+  const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
+
+  const mkRect = api.rect;
+  const mkLine = api.line;
+  const mkText = api.text;
+
+  const vis = Math.max(0, Number(visibleVal) || 0);
+  const hid = Math.max(0, Number(hiddenVal) || 0);
+  const denom = (vis + hid) > 0 ? (vis + hid) : (Number(total) || 1);
+
+  const x0 = cx - w/2;
+  const y0 = topY;
+  const ySplit = y0 + hTop;
+
+  const visW = (denom > 0) ? (w * (vis / denom)) : (w * 0.5);
+  const hidW = w - visW;
+  const xSplit = x0 + visW;
+
+  // Fills
+  g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
+  g.appendChild(mkRect({x:x0, y:ySplit, width:visW, height:hBottom, fill:"rgba(255,255,255,0)"}));
+  if(hidW > 0.5){
+    g.appendChild(mkRect({x:xSplit, y:ySplit, width:hidW, height:hBottom, fill:greyFill}));
+  }
+
+  // Border + grid
+  g.appendChild(mkRect({x:x0, y:y0, width:w, height:(hTop+hBottom), rx:0, fill:"none", stroke, "stroke-width":strokeWidth}));
+  g.appendChild(mkLine({x1:x0, y1:ySplit, x2:x0+w, y2:ySplit, stroke, "stroke-width":strokeWidth}));
+  if(hidW > 0.5 && visW > 0.5){
+    g.appendChild(mkLine({x1:xSplit, y1:ySplit, x2:xSplit, y2:ySplit+hBottom, stroke, "stroke-width":strokeWidth}));
+  }
+
+  // Texts (juste les nombres)
+  g.appendChild(mkText(cx, y0 + hTop/2, String(total), {
+    "text-anchor":"middle",
+    "dominant-baseline":"middle",
+    "alignment-baseline":"middle",
+    "dy":dyVal,
+    "font-size":String(fontTop),
+    "fill":ink,
+    "font-weight":"900"
+  }));
+
+  // Visible
+  g.appendChild(mkText(x0 + visW/2, ySplit + hBottom/2, String(vis), {
+    "text-anchor":"middle",
+    "dominant-baseline":"middle",
+    "alignment-baseline":"middle",
+    "dy":dyVal,
+    "font-size":String(fontBottom),
+    "fill":visibleTextColor,
+    "font-weight":"900"
+  }));
+
+  // Caché (si largeur nulle, on l'omet)
+  if(hidW > 0.5){
+    g.appendChild(mkText(xSplit + hidW/2, ySplit + hBottom/2, String(hid), {
+      "text-anchor":"middle",
+      "dominant-baseline":"middle",
+      "alignment-baseline":"middle",
+    "dy":dyVal,
+      "font-size":String(fontBottom),
+      "fill":ink,
+      "font-weight":"900"
+    }));
+  }
+}
+
 /* Render écran */
 function renderCard(card, revealed){
   clearSvg();
@@ -2032,35 +2134,63 @@ function renderCard(card, revealed){
   if(isModeC_or_D){ tx = 240; ty = 90; } // Remonte pour aligner le cadre TOTAL avec le cadre extérieur
 
   const gTotal = el("g", {id:"totalGroup"});
-  const tLabel = text(tx, ty, "TOTAL", {
-    "text-anchor":"middle","font-size":"42",
-    "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
-  });
-  const tNum = text(tx, ty+83, String(card.total), {
-    "text-anchor":"middle","font-size":"96",
-    "fill":"var(--ink)","font-weight":"900"
-  });
-  gTotal.appendChild(tLabel);
-  gTotal.appendChild(tNum);
+
+  const isBarModelTotal = (card.family === "U" && revealed);
+
+  // Mode A (U) : à la révélation (bouton Suivant), on affiche un schéma en barre
+  // à la place du nombre du total (projection), uniquement à l'écran (pas l'impression).
+  if(isBarModelTotal){
+    const vis = sumArray(card.visible);
+    const hid = sumArray(card.hidden);
+    drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
+      rect:(a)=>el("rect", a),
+      line:(a)=>el("line", a),
+      text:(x,y,t,a)=>text(x,y,t,a),
+      w: 380,
+      hTop: 86,
+      hBottom: 86,
+      stroke:"var(--totalbox-stroke)",
+      strokeWidth:4,
+      greyFill:"rgba(0,0,0,0.10)",
+      ink:"var(--ink)",
+        visibleTextColor:"var(--accent)",
+        textDy:"0.10em",
+      fontTop:70,
+      fontBottom:70
+    });
+  }else{
+    const tLabel = text(tx, ty, "TOTAL", {
+      "text-anchor":"middle","font-size":"42",
+      "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
+    });
+    const tNum = text(tx, ty+83, String(card.total), {
+      "text-anchor":"middle","font-size":"96",
+      "fill":"var(--ink)","font-weight":"900"
+    });
+    gTotal.appendChild(tLabel);
+    gTotal.appendChild(tNum);
+  }
   svg.appendChild(gTotal);
 
   const bbTotal = gTotal.getBBox();
   const padX = 40, padY = 26;
   
+  if(!isBarModelTotal){
   // Rect du Total
-  let boxX = bbTotal.x - padX;
-  if(isModeC_or_D) boxX = 120; 
+    let boxX = bbTotal.x - padX;
+    if(isModeC_or_D) boxX = 120; 
 
-  svg.insertBefore(el("rect",{
-    x: boxX,
-    y: bbTotal.y - padY,
-    width: bbTotal.width + padX*2,
-    height: bbTotal.height + padY*2,
-    rx: 22,
-    fill:"var(--totalbox-fill)",
-    stroke:"var(--totalbox-stroke)",
-    "stroke-width":"4"
-  }), gTotal);
+    svg.insertBefore(el("rect",{
+      x: boxX,
+      y: bbTotal.y - padY,
+      width: bbTotal.width + padX*2,
+      height: bbTotal.height + padY*2,
+      rx: 22,
+      fill:"var(--totalbox-fill)",
+      stroke:"var(--totalbox-stroke)",
+      "stroke-width":"4"
+    }), gTotal);
+  }
 
   /* Afficahge des indices si Mode C ou D : EN BAS */
   if(isModeC_or_D && card._inv && card._inv.indices){
@@ -2406,7 +2536,30 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(106,167,255,0.20)", stroke:"rgba(106,167,255,0.55)","stroke-width":"3"}));
+    }
+
+    // Schéma en barre en correction (impression) : uniquement si on imprime la correction (révélé)
+    if(revealAnswers){
+      const vis = sumArray(card.visible);
+      const hid = sumArray(card.hidden);
+      const gBM = tEl("g",{id:"barModelPrint"});
+      drawBarModelInGroup(gBM, 800, 980, card.total, vis, hid, {
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        w: 1200,
+        hTop: 140,
+        hBottom: 140,
+        stroke:"rgba(0,0,0,0.35)",
+        strokeWidth:5,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"#000",
+        visibleTextColor:"rgb(106,167,255)",
+        fontTop:118,
+        fontBottom:118
+      });
+      targetSvg.appendChild(gBM);
     }
 
   }else if(["N","C","D","C9","C8"].includes(card.family)){
