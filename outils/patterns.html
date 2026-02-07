@@ -590,8 +590,7 @@
       </select>
       <button class="btn btnIcon" id="btnTheme" title="Thème clair/sombre">🌓</button>
       <button class="btn" id="btnProjection" title="Projection (plein écran)">📽️ Projection</button>
-      <button class="btn btnIcon" id="btnBug" title="Voir les erreurs (si ça plante)">🐞</button>
-    </div>
+      </div>
 </div>
 
     <!-- Générer -->
@@ -1039,20 +1038,6 @@ function getAllowNegK(){
   if(currentPackId === "custom") return !!customAllowNegK;
   return packAllowNegKFromPack();
 }
-
-
-document.getElementById("btnBug").addEventListener("click", ()=>{
-  if(errorLog.length === 0){
-    showOverlay("Aucune erreur enregistrée", "Si la page frise, essaie aussi F12 → Console.", 0);
-    overlayCancel.style.display = "none";
-    overlayClose.style.display = "";
-    return;
-  }
-  overlayCancel.style.display = "none";
-  overlayClose.style.display = "";
-  showErrorPanel(errorLog);
-});
-
 /* RNG */
 function xmur3(str) {
   let h = 1779033703 ^ str.length;
@@ -3260,20 +3245,52 @@ function setTab(name){
 }
 document.querySelectorAll(".tab").forEach(btn=> btn.addEventListener("click", ()=> setTab(btn.dataset.tab)));
 
+let _tabBeforeProjection = null;
+
+function getActiveTab(){
+  const active = document.querySelector('.tab[aria-selected="true"]');
+  return active ? active.dataset.tab : "gen";
+}
+
 function enterProjection(){
+  // Keep where the user was, then go to Générer for projection
+  _tabBeforeProjection = getActiveTab();
+  setTab("gen");
+
   document.body.classList.add("projectionUI");
+
   const root = document.documentElement;
   if(root.requestFullscreen){
-    root.requestFullscreen().catch(()=>{});
+    root.requestFullscreen().catch(()=>{ /* ignore */ });
   }
 }
-function exitProjection(){
+
+function exitProjection(opts = {}){
+  const { skipFullscreenExit = false } = opts;
+
   document.body.classList.remove("projectionUI");
-  if(document.fullscreenElement && document.exitFullscreen){
-    document.exitFullscreen().catch(()=>{});
+
+  // Restore previous tab (if any)
+  if(_tabBeforeProjection && _tabBeforeProjection !== "gen"){
+    setTab(_tabBeforeProjection);
+  }
+  _tabBeforeProjection = null;
+
+  if(!skipFullscreenExit && document.fullscreenElement && document.exitFullscreen){
+    document.exitFullscreen().catch(()=>{ /* ignore */ });
   }
 }
-document.getElementById("btnProjection").addEventListener("click", enterProjection);
+
+// If the user exits fullscreen with ESC, we must also exit projection UI.
+document.addEventListener("fullscreenchange", ()=>{
+  if(!document.fullscreenElement && document.body.classList.contains("projectionUI")){
+    exitProjection({ skipFullscreenExit: true });
+  }
+});
+document.getElementById("btnProjection").addEventListener("click", ()=>{
+  if(document.body.classList.contains("projectionUI")) exitProjection();
+  else enterProjection();
+});
 document.getElementById("pExit").addEventListener("click", exitProjection);
 
 document.getElementById("pPrev").addEventListener("click", prevStep);
