@@ -12,7 +12,7 @@
   --border: #ddd;
   --text-muted: #666;
 
-  /* Couleurs pour les accents (bordures au survol) */
+  /* Couleurs pour les accents */
   --c-red: #e11d48;    /* Fabrication */
   --c-cyan: #06b6d4;   /* Plateaux */
   --c-blue: #3b82f6;   /* Glisse-nombres */
@@ -22,6 +22,7 @@
   --c-green: #16a34a;  /* Relatifs */
   --c-indigo: #6366f1; /* Club Maths */
   --c-magenta: #db2777; /* Cahier de calculs */
+  --c-slate: #475569;  /* Patterns / Suites */
 }
 
 *{box-sizing:border-box}
@@ -42,7 +43,6 @@ body{
 
 .wrap{ width: min(1000px, 100%); }
 
-/* --- HEADER & BOUTON RETOUR --- */
 .topbar {
   display: flex; 
   align-items: center; 
@@ -50,7 +50,6 @@ body{
 }
 
 .back {
-  /* Style "pilule" discret */
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -58,7 +57,7 @@ body{
   background-color: rgba(255, 255, 255, 0.7);
   color: #555;
   border: 1px solid #ccc;
-  border-radius: 9999px; /* Très arrondi */
+  border-radius: 9999px;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
@@ -81,7 +80,6 @@ header h1 {
   letter-spacing: -0.5px;
 }
 
-/* --- GRILLE & CARTES --- */
 .grid {
   display: grid;
   gap: 16px;
@@ -95,11 +93,8 @@ a.card {
   text-decoration: none;
   color: inherit;
   background: var(--card-bg);
-  
-  /* Bordure de base */
   border: 1px solid var(--border);
-  border-top: 6px solid var(--border); /* Bordure supérieure grise par défaut */
-  
+  border-top: 6px solid var(--border);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
@@ -109,12 +104,11 @@ a.card {
 a.card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-  border-right-color: transparent; /* Astuce visuelle pour focus sur le top */
+  border-right-color: transparent;
   border-bottom-color: transparent;
   border-left-color: transparent;
 }
 
-/* Application des couleurs au survol (via l'attribut data-color) */
 a.card[data-color="fabrication"]:hover { border-top-color: var(--c-red); }
 a.card[data-color="plateaux"]:hover    { border-top-color: var(--c-cyan); }
 a.card[data-color="glisse"]:hover      { border-top-color: var(--c-blue); }
@@ -124,6 +118,7 @@ a.card[data-color="diagrammes"]:hover  { border-top-color: var(--c-purple); }
 a.card[data-color="relatifs"]:hover    { border-top-color: var(--c-green); }
 a.card[data-color="club"]:hover        { border-top-color: var(--c-indigo); }
 a.card[data-color="cahier"]:hover      { border-top-color: var(--c-magenta); }
+a.card[data-color="patterns"]:hover    { border-top-color: var(--c-slate); }
 
 .card-title {
   display: flex;
@@ -166,40 +161,39 @@ footer {
 
   <section class="grid">
 
-    <!-- 1. Bouliers -->
     <a class="card" href="bouliers/" data-color="bouliers">
       <div class="card-title">🧮 Bouliers</div>
       <p class="card-desc">Manipulations virtuelles et activités sur le boulier.</p>
     </a>
 
-    <!-- 2. Cahier de calculs -->
     <a class="card" href="CM_Livret_A5.html" data-color="cahier">
       <div class="card-title">📒 Cahier de calculs</div>
       <p class="card-desc">Générateur de cahiers à imprimer, couper et agrafer.</p>
     </a>
 
-    <!-- 3. Club Maths -->
     <a class="card" href="club_maths/index.html" data-color="club">
       <div class="card-title">✨ Club Maths</div>
       <p class="card-desc">Exploration & Jeux</p>
     </a>
 
-    <!-- 4. Schéma partie-tout -->
     <a class="card" href="sheet_generator_schema_partie_tout.html" data-color="diagrammes">
       <div class="card-title">🧩 Schéma partie-tout</div>
       <p class="card-desc">Générateur de schémas et de problèmes mathématiques.</p>
     </a>
 
-    <!-- 5. Fabrication de matériel -->
     <a class="card" href="fabrication_materiel/" data-color="fabrication">
       <div class="card-title">✂️ Fabrication de matériel</div>
       <p class="card-desc">Générateurs de matériel à imprimer, découper et plastifier.</p>
     </a>
 
-    <!-- 6. Plateaux de manipulation -->
     <a class="card" href="plateaux_manipulation/" data-color="plateaux">
       <div class="card-title">🔲 Plateaux de manipulation</div>
       <p class="card-desc">Espaces de travail pour projeter les manipulations des élèves.</p>
+    </a>
+
+    <a class="card" href="patterns.html" data-color="patterns">
+      <div class="card-title">🔢 Suites de nombres</div>
+      <p class="card-desc">Générateur de suites à compléter et de questions sur les patterns.</p>
     </a>
 
 
