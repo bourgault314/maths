@@ -875,7 +875,7 @@ function assignPositionsNumbered(card, rng){
     // PROTECTION ZONE TOTAL (MODE C & D) STRICTE
     if(card.family === "C" || card.family === "D"){
         // Box total approx 300x240 - On interdit toute bille ici
-        if(cx < 420 && cy < 260) return false;
+        if((cx - beadR) < 420 && (cy - beadR) < 260) return false;
     }
 
     for(const s of splats){
@@ -897,7 +897,10 @@ function assignPositionsNumbered(card, rng){
         return {cx,cy};
       }
     }
-    const baseY = tray.y + beadR + 16;
+    let baseY = tray.y + beadR + 16;
+    if(card.family === "C" || card.family === "D"){
+      baseY = Math.max(baseY, 260 + beadR + 10);
+    }
     const step = Math.min(260, Math.floor(tray.w / Math.max(1, card.visible.length+1)));
     const i = placed.length;
     const cx = tray.x + step*(i+1);
@@ -1599,7 +1602,7 @@ function renderCard(card, revealed){
 
   // TOTAL Position
   let tx = 800, ty = 92; 
-  if(isModeC_or_D){ tx = 240; ty = 84; } // Remonte pour aligner le cadre TOTAL avec le cadre extérieur
+  if(isModeC_or_D){ tx = 240; ty = 90; } // Remonte pour aligner le cadre TOTAL avec le cadre extérieur
 
   const gTotal = el("g", {id:"totalGroup"});
   const tLabel = text(tx, ty, "TOTAL", {
