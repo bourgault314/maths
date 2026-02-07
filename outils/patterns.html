@@ -570,10 +570,23 @@
 .qaPrint.corr .qaAns{margin:2px 0 8px 0;font-weight:700;}
 
     /* ======= Exercise instructions: bigger for classroom readability ======= */
-    #exTitle{ font-size: 20px; font-weight: 900; }
+    #exTitle{ font-size: 30px; font-weight: 900; }
     #exSubtitle{ font-size: 22px; color: var(--text); font-weight: 800; line-height: 1.25; }
-    body.projectionUI #exTitle{ font-size: 26px; }
-    body.projectionUI #exSubtitle{ font-size: 32px; }
+    body.projectionUI #exTitle{ font-size: 48px; }
+    body.projectionUI #exSubtitle{ font-size: 34px; }
+
+
+/* UI simplifiée : on garde seulement les flèches dans la vue normale */
+#mainControls #btnNew,
+#mainControls #btnHint,
+#mainControls #btnCheck,
+#mainControls #btnSolution{ display:none !important; }
+
+body.projectionUI #mainControls{ display:none !important; }
+
+
+body.projectionUI #exTitle{ font-size:44px; }
+body.projectionUI #exSubtitle{ font-size:30px; }
 
 </style>
 </head>
@@ -679,8 +692,8 @@
 </div>
 <div class="divider"></div>
 
-            <div class="row">
-              <button class="btn btnPrimary" id="btnNew">Nouveau</button>
+            <div class="row mainControls" id="mainControls">
+          <button class="btn btnPrimary" id="btnNew">Nouveau</button>
               <button class="btn" id="btnPrev" disabled>◀︎</button>
               <button class="btn" id="btnNext" disabled>▶︎</button>
               <button class="btn" id="btnHint">Indice</button>
@@ -1086,6 +1099,16 @@ function shuffle(arr){
   return arr;
 }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+
+function makeLabel(prefix, idx){
+  const i = idx + 1;
+  const p = (prefix || "").trim();
+  if(!p) return String(i);
+  if(p.endsWith(".") || p.endsWith("-") || p.endsWith("_")) return p + String(i);
+  if(/^\d+$/.test(p)) return p + "." + String(i);   // ex: 1 -> 1.1, 1.2...
+  return p + String(i);                               // ex: A -> A1, B -> B2...
+}
 
 function valToNumber(v){
   if(typeof v === "number") return v;
@@ -2658,7 +2681,7 @@ const seriesPrefix = String(document.getElementById("seriesPrefix")?.value || ""
       if(abortFlag) throw new Error("Annulé par l'utilisateur");
       const fam = chosen[i];
       const exObj = generateExerciseByMode(opts, fam);
-      const label = (seriesPrefix ? (seriesPrefix + String(i+1)) : String(i+1));
+      const label = makeLabel(seriesPrefix, i);
       exObj.label = label;
       newSlides.push(exObj);
       const p = Math.round(((i+1)/chosen.length)*100);
@@ -2768,24 +2791,26 @@ function renderExercise(){
 
   const mode = currentExercise.mode || "holes";
 
+  const label = currentExercise.label || String(slideIndex+1);
   const exHeader = document.getElementById("exHeader");
-  if(exHeader) exHeader.textContent = `Exercice ${slideIndex+1}`;
-
-  document.getElementById("exTitle").textContent = currentExercise.label || currentExercise.ex.familyLabel || "Pattern";
+  if(exHeader) exHeader.textContent = `Exercice ${label}`;
 
   if(mode === "qa"){
+    document.getElementById("exTitle").textContent = "Réponds aux questions.";
     exSubtitle.textContent = "Observe la suite puis réponds aux questions ci-dessous.";
-  } else if(mode === "rule"){
+  }
+  else if(mode === "rule"){
+    document.getElementById("exTitle").textContent = "Complète la suite.";
     const r = (currentExercise.givenRule || currentExercise.ex.ruleStudent || "").trim();
     exSubtitle.textContent = r ? ("Règle donnée : " + r) : "Règle donnée : (voir consigne)";
-  } else {
-    exSubtitle.textContent = "Complète les cases vides.";
+  }
+  else {
+    document.getElementById("exTitle").textContent = "Complète les cases vides.";
+    exSubtitle.textContent = "";
   }
 
-  if(typePill) typePill.textContent = currentExercise.ex.familyLabel;
-  if(holesPill){
-    holesPill.textContent = (mode === "qa") ? "Questions" : ("Trous : " + currentExercise.holes.length);
-  }
+  if(typePill) typePill.textContent = "";
+  if(holesPill) holesPill.textContent = "";
 
   // boutons / nav
   btnCheck.disabled = (mode === "qa") ? false : (!inputMode.checked);
