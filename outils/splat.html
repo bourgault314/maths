@@ -1,9 +1,13 @@
+{
+type: uploaded file
+fileName: Splat_v13_Print_Final_Polish.html
+fullContent:
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Splat!</title>
+<title>Splat! v13</title>
 <style>
   :root{
     /* THEME (light default) */
@@ -31,12 +35,22 @@
 
     --total-label: rgba(17,24,39,0.70);
 
-    /* SPLAT */
-    --splat-cover: rgb(0,0,0);              /* 100% opaque */
-    --splat-reveal: rgba(210,210,210,0.35); /* gris clair semi-transparent */
+    /* SPLAT COLORS */
+    --splat-cover: rgb(0,0,0);              
+    --splat-reveal: rgba(210,210,210,0.35); 
     --splat-stroke: rgba(0,0,0,0.18);
 
-    /* UNIT BEADS (sans numéros) */
+    /* MODE C/D COLORS (Opaque) */
+    --splat-black: rgb(20,20,20);
+    --splat-purple: #9d4edd;
+    --splat-orange: #f97316;
+
+    /* MODE C/D COLORS (Reveal - Semi-transparent) */
+    --splat-black-rev: rgba(40,40,40, 0.15);
+    --splat-purple-rev: rgba(157, 78, 221, 0.20);
+    --splat-orange-rev: rgba(249, 115, 22, 0.20);
+
+    /* UNIT BEADS */
     --unit-fill: rgba(106,167,255,0.20);
     --unit-stroke: rgba(106,167,255,0.55);
 
@@ -54,7 +68,9 @@
   }
   header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.2px}
 
-  .wrap{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px;align-items:start}
+  .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
+.wrap > .panel{flex:0 0 340px;max-width:340px}
+.wrap > .stage{flex:1 1 auto;min-width:0}
 
   .panel{
     background:var(--panel);
@@ -142,6 +158,7 @@
     border:1px solid var(--btn-border);
     background: rgba(255,255,255,0.04);
     user-select:none;
+    cursor:pointer;
   }
   .checkInline input{width:auto;margin:0}
   .checkInline span{font-size:12px;color:var(--muted);white-space:nowrap}
@@ -215,7 +232,6 @@
 </style>
 </head>
 
-<!-- ✅ Mode clair par défaut -->
 <body class="light">
 <header>
   <h1>Splat!</h1>
@@ -225,11 +241,12 @@
   <section class="panel">
     <label>Type d’activité</label>
     <select id="activity">
-      
       <option value="U">A — Petites billes (sans numéros)</option>
-      <option value="N">B — Billes numérotées</option>
-      <option value="C9">C — Opérations en 9 (9 → 99)</option>
-      <option value="C8">D — Opérations en 8 (8 → 98)</option>
+      <option value="N">B — Billes numérotées (une couleur)</option>
+      <option value="C" selected>C — Enquête (relations, 3 couleurs)</option>
+      <option value="D">D — Système (sommes, 3 couleurs)</option>
+      <option value="C9">E — Opérations en 9 (9 → 99)</option>
+      <option value="C8">F — Opérations en 8 (8 → 98)</option>
     </select>
 
     <div id="classicSettings">
@@ -245,7 +262,7 @@
       </div>
     </div>
 
-        <div id="unitSettings" style="display:none">
+    <div id="unitSettings" style="display:none">
       <div class="row">
         <div style="flex:1">
           <label>Nombre de taches</label>
@@ -280,18 +297,18 @@
       </div>
     </div>
 
-        <div id="numberedSettings" style="display:none">
+    <div id="numberedSettings" style="display:none">
       <div class="row">
         <div style="flex:1">
           <label>Nombre de taches</label>
           <input id="numTasks" type="number" min="1" max="6" value="1" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles numérotées (min)</label>
+          <label>Billes visibles num (min)</label>
           <input id="numVisibleMin" type="number" min="1" max="5" value="2" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles numérotées (max)</label>
+          <label>Billes visibles num (max)</label>
           <input id="numVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
@@ -304,8 +321,6 @@
           </select>
         </div>
       </div>
-
-
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Total (min)</label>
@@ -321,9 +336,6 @@
         </div>
       </div>
     </div>
-
-    <label>Nombre de cartes</label>
-    <input id="count" type="number" min="1" max="300" value="10" />
 
     <div id="nineSettings" style="display:none">
       <div class="row">
@@ -344,7 +356,6 @@
           <input id="nineVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Total (min)</label>
@@ -380,7 +391,6 @@
           <input id="eightVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Total (min)</label>
@@ -397,7 +407,112 @@
       </div>
     </div>
 
-<div class="row" style="margin-top:10px">
+    <div id="investigateSettings" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <label>Nombre de taches</label>
+          <select id="invTaskCount">
+            <option value="2" selected>2 Taches</option>
+            <option value="3">3 Taches</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Format Indices</label>
+          <select id="invClueType">
+            <option value="SENTENCE" selected>Phrases</option>
+            <option value="SYMBOL">Symboles (=)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="invStructureRow" style="margin-top:10px;">
+        <div style="flex:1">
+          <label>Structure (3 taches)</label>
+          <select id="invStructure3">
+            <option value="CHAIN">Chaîne (A→B→C)</option>
+            <option value="PIVOT">Pivot (B←A→C)</option>
+            <option value="MIX" selected>Aléatoire</option>
+          </select>
+        </div>
+      </div>
+      <label>Opérations autorisées</label>
+      <div class="row" style="gap:5px; align-items:flex-start">
+        <label class="checkInline" title="Multiplication (Ex: 3 fois plus)"><input type="checkbox" id="invOpMul" checked> <span>×k</span></label>
+        <label class="checkInline" title="Division (Ex: 3 fois moins)"><input type="checkbox" id="invOpDiv" checked> <span>÷k</span></label>
+        <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
+        <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Valeur ajout/retrait max</label>
+          <input id="invMaxAdd" type="number" min="1" max="100" value="20" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Billes visibles (min)</label>
+          <input id="invVisibleMin" type="number" min="1" max="10" value="1" />
+        </div>
+        <div style="flex:1">
+          <label>Billes visibles (max)</label>
+          <input id="invVisibleMax" type="number" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Total (min)</label>
+          <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
+        </div>
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
+        </div>
+        <div style="flex:1">
+          <label>Graine (mode C)</label>
+          <input id="seedE" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+    </div>
+
+    <div id="systemSettings" style="display:none">
+      <div class="row">
+        <div style="flex:1">
+          <label>Format Indices</label>
+          <select id="sysClueType">
+            <option value="SENTENCE" selected>Phrases</option>
+            <option value="SYMBOL">Symboles (+)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Billes visibles (min)</label>
+          <input id="sysVisibleMin" type="number" min="1" max="10" value="1" />
+        </div>
+        <div style="flex:1">
+          <label>Billes visibles (max)</label>
+          <input id="sysVisibleMax" type="number" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <label>Total (min)</label>
+          <input id="sysTotalMin" type="number" min="1" max="1000" value="30" />
+        </div>
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="sysTotalMax" type="number" min="1" max="1000" value="150" />
+        </div>
+        <div style="flex:1">
+          <label>Graine (mode D)</label>
+          <input id="seedSys" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+    </div>
+
+    <label>Nombre de cartes</label>
+    <input id="count" type="number" min="1" max="300" value="10" />
+
+    <div class="row" style="margin-top:10px">
       <button class="btn primary" id="btnGen">Générer</button>
       <button class="btn" id="btnShuffle">Mélanger</button>
       <button class="btn danger" id="btnClear">Vider</button>
@@ -420,7 +535,7 @@
         <span>Avec réponses</span>
       </label>
     </div>
-<div class="hint">
+    <div class="hint">
       Raccourcis :<br>
       • Espace = révéler / cacher<br>
       • ← / → = carte précédente / suivante<br>
@@ -457,7 +572,14 @@ function rFloat(rng,a,b){return a + rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
 
 function beadColorForValue(v){
-  const hue = (v * 37) % 360;
+  let hue = (v * 37) % 360;
+  
+  // CORRECTION COULEURS (Mode C/D)
+  // Eviter Violet (250-290) et Orange (15-45)
+  if((hue > 250 && hue < 290) || (hue > 15 && hue < 45)){
+    hue = (hue + 60) % 360; 
+  }
+
   const isLight = document.body.classList.contains("light");
   const fillA = isLight ? 0.18 : 0.24;
   const strokeA = isLight ? 0.55 : 0.65;
@@ -494,12 +616,37 @@ const eightTotalMinEl = document.getElementById("eightTotalMin");
 const eightTotalMaxEl = document.getElementById("eightTotalMax");
 const seedDEl = document.getElementById("seedD");
 
+/* UI refs - Mode C (Enquête) */
+const investigateSettingsEl = document.getElementById("investigateSettings");
+const invTaskCountEl = document.getElementById("invTaskCount");
+const invClueTypeEl = document.getElementById("invClueType");
+const invStructureRow = document.getElementById("invStructureRow");
+const invStructure3El = document.getElementById("invStructure3");
+const invOpMulEl = document.getElementById("invOpMul");
+const invOpDivEl = document.getElementById("invOpDiv");
+const invOpAddEl = document.getElementById("invOpAdd");
+const invOpSubEl = document.getElementById("invOpSub");
+const invMaxAddEl = document.getElementById("invMaxAdd");
+const invVisibleMinEl = document.getElementById("invVisibleMin");
+const invVisibleMaxEl = document.getElementById("invVisibleMax");
+const invTotalMinEl = document.getElementById("invTotalMin");
+const invTotalMaxEl = document.getElementById("invTotalMax");
+const seedEEl = document.getElementById("seedE");
+
+/* UI refs - Mode D (Système) */
+const systemSettingsEl = document.getElementById("systemSettings");
+const sysClueTypeEl = document.getElementById("sysClueType");
+const sysVisibleMinEl = document.getElementById("sysVisibleMin");
+const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
+const sysTotalMinEl = document.getElementById("sysTotalMin");
+const sysTotalMaxEl = document.getElementById("sysTotalMax");
+const seedSysEl = document.getElementById("seedSys");
+
 const unitTasksEl = document.getElementById("unitTasks");
 const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
 const unitHiddenMaxEl = document.getElementById("unitHiddenMax");
 const unitTotalMinEl = document.getElementById("unitTotalMin");
 const unitTotalMaxEl = document.getElementById("unitTotalMax");
-
 
 const numTasksEl = document.getElementById("numTasks");
 const numVisibleMinEl = document.getElementById("numVisibleMin");
@@ -508,42 +655,21 @@ const numHiddenCountEl = document.getElementById("numHiddenCount");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
+
 /* Helpers */
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
 
 function getSeedForCurrentMode(){
   const act = activityEl.value;
-
-  // A — Petites billes
-  if(act === "U"){
-    const s = (seedUEl.value||"").trim();
-    return s ? Number(s) : "";
-  }
-
-  // B — Billes numérotées
-  if(act === "N"){
-    const s = (seedNEl.value||"").trim();
-    return s ? Number(s) : "";
-  }
-
-  // C — Opérations en 9
-  if(act === "C9"){
-    const s = (seedCEl.value||"").trim();
-    return s ? Number(s) : "";
-  }
-
-  // D — Opérations en 8
-  if(act === "C8"){
-    const s = (seedDEl.value||"").trim();
-    return s ? Number(s) : "";
-  }
-
-  // Autres
-  const s = (seedEl.value||"").trim();
-  return s ? Number(s) : "";
+  if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
+  if(act === "N") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
+  if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
+  if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
+  if(act === "C9") return (seedCEl.value||"").trim() ? Number(seedCEl.value) : "";
+  if(act === "C8") return (seedDEl.value||"").trim() ? Number(seedDEl.value) : "";
+  return (seedEl.value||"").trim() ? Number(seedEl.value) : "";
 }
-
 
 function syncSettingsUI(){
   const act = activityEl.value;
@@ -552,33 +678,35 @@ function syncSettingsUI(){
   const isNumbered = act === "N";
   const isNine = act === "C9";
   const isEight = act === "C8";
-  const isClassic = !(isUnit || isNumbered || isNine || isEight);
+  const isInvestigate = act === "C";
+  const isSystem = act === "D";
+  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
 
   classicSettingsEl.style.display = isClassic ? "block" : "none";
   unitSettingsEl.style.display = isUnit ? "block" : "none";
   numberedSettingsEl.style.display = isNumbered ? "block" : "none";
   nineSettingsEl.style.display = isNine ? "block" : "none";
   eightSettingsEl.style.display = isEight ? "block" : "none";
+  investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
+  systemSettingsEl.style.display = isSystem ? "block" : "none";
+
+  if(isInvestigate){
+    if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
+  }
 
   if(isUnit) syncUnitTotalBounds();
 }
 
-
 function syncUnitTotalBounds(){
-  // Mode A : on borne Total(min/max) en fonction des paramètres.
-  // Règle : total = visibles + (taches * caché_par_tache). On garde un plafond de lisibilité.
   const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
   const vMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
   const hMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
 
-  const HARD_CAP = 50; // lisibilité en "petites billes"
+  const HARD_CAP = 50; 
   const maxPossible = vMax + tasks * hMax;
   const maxAllowed = clamp(Math.min(maxPossible, HARD_CAP), 1, HARD_CAP);
-
-  // Minimum possible (visibles >= 1 ; caché >= 1 si hMax>0, sinon 0)
   const minPossible = 1 + tasks * (hMax > 0 ? 1 : 0);
 
-  // Ajuste les bornes HTML
   unitTotalMinEl.min = 1;
   unitTotalMinEl.max = String(maxAllowed);
   unitTotalMaxEl.min = 1;
@@ -595,11 +723,9 @@ function syncUnitTotalBounds(){
   unitTotalMaxEl.value = String(tMax);
 }
 
-// ✅ Auto-regénération : dès qu'on change une option, on régénère automatiquement.
 let autoGenTimer = null;
 function scheduleAutoGenerate(){
   if(autoGenTimer) clearTimeout(autoGenTimer);
-  // Petite temporisation pour éviter de régénérer 10 fois pendant une saisie au clavier
   autoGenTimer = setTimeout(()=>{
     if(activityEl.value === "U") syncUnitTotalBounds();
     generate();
@@ -607,24 +733,24 @@ function scheduleAutoGenerate(){
 }
 
 activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
 
-// Tous les réglages qui doivent déclencher une régénération
 [
   countEl, diffEl, seedEl,
   unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
   numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
-  eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl
+  eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
+  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
+  sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl
 ].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
   el.addEventListener("change", scheduleAutoGenerate);
 });
 
-
 /* Positions + splat */
 function blobPath(cx, cy, r){
-  // Splat "tortue" : 5 lobes arrondis (proche des splats de Steve Wyborney)
   const n = 40;
   const lobes = 5;
   const pts = [];
@@ -657,9 +783,7 @@ function blobPath(cx, cy, r){
 
 function getUnitSplats(taskCount){
   const tray = { x:120, y:260, w:1360, h:650 };
-  const cyMid = tray.y + tray.h/2; // 585
-
-  // ✅ Emplacements fixes, pensés pour ne pas se toucher, même à 5 taches.
+  const cyMid = tray.y + tray.h/2; 
   const anchors = {
     1:[{cx:820, cy:cyMid+25}],
     2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
@@ -668,54 +792,44 @@ function getUnitSplats(taskCount){
     5:[{cx:820, cy:367},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:803},{cx:1080, cy:803}],
   };
   const base = anchors[taskCount] || anchors[2];
-
-  // ✅ Taille des taches : plus il y en a, plus on réduit.
   const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 102)));
-
   return base.map(p => ({...p, r}));
 }
 
+/* TRAY CONFIGURATION */
+function getTrayConfig(mode){
+  if(mode === "C" || mode === "D") return { x:120, y:20, w:1360, h:650, isHigh: true }; 
+  return { x:120, y:260, w:1360, h:650, isHigh: false };
+}
 
-// ✅ Emplacements pour le mode B (numéroté, jusqu'à 6 taches)
-function getNumberedSplats(taskCount){
-  const tray = { x:120, y:260, w:1360, h:650 };
-  const cyMid = tray.y + tray.h/2; // 585
+function getNumberedSplats(taskCount, mode){
+  const tray = getTrayConfig(mode);
+  const cyMid = tray.y + tray.h/2; 
 
   const anchors = {
     1:[{cx:820, cy:cyMid+25}],
     2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
-    3:[{cx:820, cy:470},{cx:610, cy:700},{cx:1030, cy:700}],
-    // ✅ 4 taches : on remonte légèrement la rangée du bas (évite le débordement)
+    
+    3:[{cx:820, cy:cyMid-110},{cx:580, cy:cyMid+130},{cx:1060, cy:cyMid+130}],
+
     4:[{cx:610, cy:465},{cx:1030, cy:465},{cx:610, cy:745},{cx:1030, cy:745}],
-    // ✅ 5 taches : disposition 3 en haut + 2 en bas (évite contact + débordement)
     5:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:680, cy:750},{cx:960, cy:750}],
-    // ✅ 6 taches : grille 3x2
     6:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:540, cy:750},{cx:820, cy:750},{cx:1100, cy:750}],
   };
   const base = anchors[taskCount] || anchors[2];
-
-  // Taille des taches : plus il y en a, plus on réduit (mais assez grand pour cacher 2 billes)
-  const r = (taskCount<=1) ? 260
-          : (taskCount===2 ? 210
-          : (taskCount===3 ? 175
-          : (taskCount===4 ? 150
-          : (taskCount===5 ? 130
-          : 118))));
-
+  
+  const r = (taskCount<=1) ? 260 : (taskCount===2 ? 210 : (taskCount===3 ? 165 : (taskCount===4 ? 150 : (taskCount===5 ? 130 : 118))));
   return base.map(p => ({...p, r}));
 }
 
-// ✅ Composition aléatoire : somme "sum" en "parts" entiers positifs
 function randomComposition(rng, sum, parts){
   if(parts <= 1) return [sum];
-  const minSum = parts; // 1 partout
+  const minSum = parts; 
   if(sum < minSum) return Array.from({length:parts}, ()=>1);
   const remain = sum - parts;
-
   const cuts = [];
   for(let i=0;i<parts-1;i++) cuts.push(rInt(rng, 0, remain));
   cuts.sort((a,b)=>a-b);
-
   const out = [];
   let prev = 0;
   for(const c of cuts){
@@ -728,32 +842,28 @@ function randomComposition(rng, sum, parts){
 }
 
 function assignPositionsNumbered(card, rng){
-  const tray = { x:120, y:260, w:1360, h:650 };
+  const tray = getTrayConfig(card.family);
   const margin = 14;
 
   const meta = card._num;
-  const splats = getNumberedSplats(meta.tasks);
+  const splats = getNumberedSplats(meta.tasks, card.family);
   card._splats = splats;
 
-  // Taille des billes : calculée pour garantir 2 billes sous la plus petite tache, sans superposition
   const minSplatR = Math.min(...splats.map(s=>s.r));
-  let beadR = Math.floor((minSplatR - 28) / 2); // assure 2*beadR + 28 <= splat.r
+  let beadR = Math.floor((minSplatR - 28) / 2); 
   beadR = clamp(beadR, 34, 60);
   card._beadR = beadR;
 
-  // Hidden positions : 1 ou 2 billes sous chaque tache, toujours entièrement cachées
   const posH = [];
   for(let t=0; t<meta.tasks; t++){
     const s = splats[t];
     const arr = meta.hiddenByTask[t];
     if(arr.length === 1){
-      // petit jitter
       const maxD = Math.max(0, s.r - beadR - 30);
       const a = rFloat(rng, 0, Math.PI*2);
       const d = rFloat(rng, 0, Math.min(10, maxD));
       posH.push({cx: s.cx + Math.cos(a)*d, cy: s.cy + Math.sin(a)*d});
     }else{
-      // deux billes opposées (ne se superposent pas)
       const maxD = Math.max(0, s.r - beadR - 22);
       const d = Math.min(beadR, maxD);
       const a = rFloat(rng, 0, Math.PI*2);
@@ -765,13 +875,18 @@ function assignPositionsNumbered(card, rng){
   }
   card._posH = posH;
 
-  // Visible positions : aléatoires, dans le plateau, sans toucher les taches
   const placed = [];
   function okSpot(cx, cy){
     if(cx < tray.x + beadR + margin) return false;
     if(cx > tray.x + tray.w - beadR - margin) return false;
     if(cy < tray.y + beadR + margin) return false;
     if(cy > tray.y + tray.h - beadR - margin) return false;
+
+    // PROTECTION ZONE TOTAL (MODE C & D) STRICTE
+    if(card.family === "C" || card.family === "D"){
+        // Augmentation de la zone interdite pour éviter les billes
+        if(cx < 460 && cy < 320) return false;
+    }
 
     for(const s of splats){
       const d = Math.hypot(cx - s.cx, cy - s.cy);
@@ -792,7 +907,6 @@ function assignPositionsNumbered(card, rng){
         return {cx,cy};
       }
     }
-    // fallback : aligne en haut
     const baseY = tray.y + beadR + 16;
     const step = Math.min(260, Math.floor(tray.w / Math.max(1, card.visible.length+1)));
     const i = placed.length;
@@ -805,43 +919,247 @@ function assignPositionsNumbered(card, rng){
   card._posV = card.visible.map(()=> pickVisible());
 }
 
+function assignPositions(card, rng){
+  if(card.family === "U"){
+    assignPositionsUnits(card, rng);
+  }else if(card.family === "N" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
+    assignPositionsNumbered(card, rng);
+  }else{
+    assignPositionsClassic(card, rng);
+  }
+}
+
+/* --- GÉNÉRATION ENQUÊTE (Mode C) --- */
+function genInvestigate(rng){
+  const taskCount = parseInt(invTaskCountEl.value); 
+  const clueType = invClueTypeEl.value; 
+  const structureMode = invStructure3El.value; 
+
+  const userMin = numberOr(invTotalMinEl.value, 20);
+  const userMax = numberOr(invTotalMaxEl.value, 100);
+  const maxAddVal = numberOr(invMaxAddEl.value, 20); 
+
+  let visMin = clamp(numberOr(invVisibleMinEl.value, 1), 0, 10);
+  let visMax = clamp(numberOr(invVisibleMaxEl.value, 3), 0, 10);
+  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
+
+  const minTotal = Math.max(1, Math.min(userMin, userMax));
+  const maxTotal = Math.max(1, Math.max(userMin, userMax));
+
+  const ops = [];
+  if(invOpAddEl.checked) ops.push('ADD');
+  if(invOpSubEl.checked) ops.push('SUB');
+  if(invOpMulEl.checked) ops.push('MUL');
+  if(invOpDivEl.checked) ops.push('DIV');
+  if(ops.length === 0) ops.push('ADD');
+
+  const icons = ["⚫", "🟣", "🟠"];
+  const names = ["la noire", "la violette", "l'orange"];
+
+  function pickRelation(){
+    const op = ops[rInt(rng, 0, ops.length-1)];
+    if(op === 'MUL'){
+      const k = rInt(rng, 2, 4);
+      return {
+        apply: (x) => x * k,
+        check: (x) => true,
+        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${k} × ${icons[sIdx]}` : `Sous ${names[tIdx]}, il y a ${k} fois plus de billes que sous ${names[sIdx]}.`
+      };
+    }
+    if(op === 'DIV'){
+      const k = rInt(rng, 2, 4);
+      return {
+        apply: (x) => x / k,
+        check: (x) => (x % k === 0),
+        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} ÷ ${k}` : `Sous ${names[tIdx]}, il y a ${k} fois moins de billes que sous ${names[sIdx]}.`
+      };
+    }
+    if(op === 'ADD'){
+      const k = rInt(rng, 1, maxAddVal);
+      return {
+        apply: (x) => x + k,
+        check: (x) => true,
+        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} + ${k}` : `Sous ${names[tIdx]}, il y a ${k} billes de plus que sous ${names[sIdx]}.`
+      };
+    }
+    if(op === 'SUB'){
+      const k = rInt(rng, 1, maxAddVal);
+      return {
+        apply: (x) => x - k,
+        check: (x) => (x - k > 0), 
+        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} − ${k}` : `Sous ${names[tIdx]}, il y a ${k} billes de moins que sous ${names[sIdx]}.`
+      };
+    }
+    return null;
+  }
+
+  for(let tries=0; tries<5000; tries++){
+    const hiddenVals = new Array(taskCount).fill(0);
+    const indices = [];
+
+    if(taskCount === 2){
+      const dir = rInt(rng, 0, 1);
+      const source = dir; 
+      const target = 1 - dir;
+      const rel = pickRelation();
+      const maxSource = Math.floor(maxTotal * 0.8); 
+      const valSource = rInt(rng, 1, maxSource);
+      if(!rel.check(valSource)) continue;
+      const valTarget = rel.apply(valSource);
+      if(valTarget <= 0) continue;
+      hiddenVals[source] = valSource;
+      hiddenVals[target] = valTarget;
+      indices.push(rel.desc(target, source));
+    } else {
+      let mode = structureMode;
+      if(mode === "MIX") mode = (rng() > 0.5) ? "CHAIN" : "PIVOT";
+      const p = [0,1,2];
+      shuffleInPlace(p, rng);
+      const rel1 = pickRelation();
+      const rel2 = pickRelation();
+      let source2;
+      if(mode === "CHAIN"){ source2 = p[1]; } else { source2 = p[0]; }
+      const maxRoot = Math.floor(maxTotal * 0.6);
+      const valRoot = rInt(rng, 1, maxRoot);
+      if(!rel1.check(valRoot)) continue;
+      const val1 = rel1.apply(valRoot);
+      if(val1 <= 0) continue;
+      const valSource2 = (source2 === p[0]) ? valRoot : val1;
+      if(!rel2.check(valSource2)) continue;
+      const val2 = rel2.apply(valSource2);
+      if(val2 <= 0) continue;
+      hiddenVals[p[0]] = valRoot;
+      hiddenVals[p[1]] = val1;
+      hiddenVals[p[2]] = val2;
+      indices.push(rel1.desc(p[1], p[0]));
+      indices.push(rel2.desc(p[2], source2));
+    }
+
+    const hiddenSum = hiddenVals.reduce((a,b)=>a+b, 0);
+    const visCount = rInt(rng, visMin, visMax);
+    const visBeads = [];
+    let visSum = 0;
+    for(let k=0; k<visCount; k++){
+        const val = rInt(rng, 1, 9);
+        visBeads.push(val);
+        visSum += val;
+    }
+    const total = hiddenSum + visSum;
+
+    if(total >= minTotal && total <= maxTotal){
+      return {
+        family: "C",
+        total,
+        visible: visBeads, 
+        hidden: hiddenVals, 
+        _num: { tasks: taskCount, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
+        _inv: { indices } 
+      };
+    }
+  }
+  return { family: "C", total: 10, visible: [], hidden: [3,3], _num: { tasks: taskCount, hiddenByTask: [[3],[3]], hiddenBeadsPerTask:1 }, _inv: { indices: ["Erreur"] } };
+}
+
+/* --- GÉNÉRATION SYSTÈME (Mode D) --- */
+function genSystem(rng){
+  const taskCount = 3; 
+  const clueType = sysClueTypeEl.value; // SENTENCE ou SYMBOL
+
+  const userMin = numberOr(sysTotalMinEl.value, 30);
+  const userMax = numberOr(sysTotalMaxEl.value, 150);
+
+  let visMin = clamp(numberOr(sysVisibleMinEl.value, 1), 0, 10);
+  let visMax = clamp(numberOr(sysVisibleMaxEl.value, 3), 0, 10);
+  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
+
+  const minTotal = Math.max(1, Math.min(userMin, userMax));
+  const maxTotal = Math.max(1, Math.max(userMin, userMax));
+
+  const icons = ["⚫", "🟣", "🟠"];
+  const colorNames = ["Noir", "Violet", "Orange"];
+
+  for(let tries=0; tries<5000; tries++){
+    const vals = [
+        rInt(rng, 5, Math.floor(maxTotal/3)),
+        rInt(rng, 5, Math.floor(maxTotal/3)),
+        rInt(rng, 5, Math.floor(maxTotal/3))
+    ];
+    
+    const visCount = rInt(rng, visMin, visMax);
+    const visBeads = [];
+    let visSum = 0;
+    for(let k=0; k<visCount; k++){
+        const val = rInt(rng, 1, 9);
+        visBeads.push(val);
+        visSum += val;
+    }
+
+    const total = vals[0] + vals[1] + vals[2] + visSum;
+
+    if(total < minTotal || total > maxTotal) continue;
+
+    // 2 indices (Sommes de paires)
+    const pairs = [[0,1], [1,2], [0,2]];
+    shuffleInPlace(pairs, rng);
+    
+    const p1 = pairs[0];
+    const p2 = pairs[1];
+
+    const sum1 = vals[p1[0]] + vals[p1[1]];
+    const sum2 = vals[p2[0]] + vals[p2[1]];
+
+    const indices = [];
+
+    function formatClue(idxA, idxB, s){
+        if(clueType === "SYMBOL"){
+            return `${icons[idxA]} + ${icons[idxB]} = ${s}`;
+        } else {
+            return `${colorNames[idxA]} + ${colorNames[idxB]} = ${s}`;
+        }
+    }
+
+    indices.push(formatClue(p1[0], p1[1], sum1));
+    indices.push(formatClue(p2[0], p2[1], sum2));
+
+    return {
+        family: "D",
+        total,
+        visible: visBeads,
+        hidden: vals,
+        _num: { tasks: 3, hiddenByTask: vals.map(v=>[v]), hiddenBeadsPerTask:1 },
+        _inv: { indices } 
+    };
+  }
+
+  return { family: "D", total: 20, visible: [], hidden: [5,5,5], _num: { tasks:3, hiddenByTask:[[5],[5],[5]] }, _inv: { indices: ["Erreur"] } };
+}
+
+
+/* Existing Gens */
 function genNumbered(rng){
   const tasks = clamp(numberOr(numTasksEl.value, 1), 1, 6);
-
   let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 1, 5);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
-
   let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 10, 10);
   let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
-
   let totalMin = clamp(userMin, 1, 1000);
   let totalMax = clamp(userMax, 1, 1000);
-
   const hiddenBeadsPerTask = clamp(numberOr(numHiddenCountEl ? numHiddenCountEl.value : 1, 1), 1, 2);
-
-  // total minimal : visibles >= vMin, et sous chaque tache une somme H >= hiddenBeadsPerTask
   const minPossible = vMin + tasks*hiddenBeadsPerTask;
   if(totalMax < minPossible) totalMax = minPossible;
   if(totalMin < minPossible) totalMin = minPossible;
   if(totalMax < totalMin) totalMax = totalMin;
-
   for(let tries=0; tries<2000; tries++){
     const total = rInt(rng, totalMin, totalMax);
     const visibleCount = rInt(rng, vMin, vMax);
-
-    // Choix d'un caché "H" identique sous chaque tache
     const maxH = Math.floor((total - visibleCount) / tasks);
     if(maxH < hiddenBeadsPerTask) continue;
-
     const H = rInt(rng, hiddenBeadsPerTask, maxH);
     const visibleSum = total - tasks*H;
     if(visibleSum < visibleCount) continue;
-
     const visible = randomComposition(rng, visibleSum, visibleCount);
-
-    // Sous chaque tache : 1 ou 2 billes (option), somme identique = H
     const hiddenByTask = [];
     for(let t=0; t<tasks; t++){
       if(hiddenBeadsPerTask === 1){
@@ -851,9 +1169,7 @@ function genNumbered(rng){
         hiddenByTask.push([a, H-a]);
       }
     }
-
     const hidden = hiddenByTask.flat();
-
     return {
       family: "N",
       total,
@@ -862,15 +1178,12 @@ function genNumbered(rng){
       _num: { tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
     };
   }
-
-  // fallback sûr
   const total = totalMin;
   const visibleCount = vMin;
-  const H = hiddenBeadsPerTask; // 1 ou 2
+  const H = hiddenBeadsPerTask;
   const visible = Array.from({length: visibleCount}, ()=>1);
   const hiddenByTask = Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H] : [1, H-1]) );
   const hidden = hiddenByTask.flat();
-
   return {
     family:"N",
     total,
@@ -880,189 +1193,138 @@ function genNumbered(rng){
   };
 }
 
-
 function genOp9(rng){
   const opSetting = (nineOpEl.value || "SUB");
-  const familySetting = "9_99";
   const tasks = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
   const vMaxUser = clamp(numberOr(nineVisibleMaxEl.value, 3), 1, 5);
-
   let userMin = numberOr(nineTotalMinEl.value, 30);
   let userMax = numberOr(nineTotalMaxEl.value, 120);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
   const totalMin = clamp(userMin, 1, 1000);
   const totalMax = clamp(userMax, 1, 1000);
-
-  // famille …9 : 9, 19, …, 99
   const family = [];
   for(let v=9; v<=99; v+=10) family.push(v);
-// Helper : tire un op réel si MIX
-  function pickOp(){
-    if(opSetting === "MIX"){
-      return (rng() < 0.5) ? "SUB" : "ADD";
-    }
-    return opSetting;
-  }
-
-  for(let tries=0; tries<3000; tries++){
+  function pickOp(){ if(opSetting === "MIX") return (rng() < 0.5) ? "SUB" : "ADD"; return opSetting; }
+  const visBudgetMax = totalMax - tasks * 1;
+  for(let tries=0; tries<4000; tries++){
     const op = pickOp();
-
-    const k = family[rInt(rng, 0, family.length-1)];
-    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, Math.max(2, vMaxUser));
-
-    // visibles : au moins un ...9
-    const visible = [k];
-    // On borne les autres visibles pour éviter des sommes trop énormes
-    for(let i=1; i<visibleCount; i++){
-      // essais pour rester compatible avec totalMax
-      let v;
-      for(let j=0; j<30; j++){
-        v = rInt(rng, 1, 99);
-        // évite trop de doublons de ...9 (pas obligatoire, juste plus lisible)
-        if(i===1 || v!==k) break;
-      }
-      visible.push(v);
+    let k = family[rInt(rng, 0, family.length-1)];
+    if(k > visBudgetMax){ k = 9; if(k > visBudgetMax) continue; }
+    let visibleCount;
+    if(op === "SUB"){ visibleCount = 1; }else{
+      const maxVis = Math.max(2, vMaxUser);
+      visibleCount = rInt(rng, 2, maxVis);
+      while(visibleCount > 2 && (k + (visibleCount-1)*1) > visBudgetMax) visibleCount--;
+      if((k + (visibleCount-1)*1) > visBudgetMax) continue;
     }
-
+    const visible = [k];
+    if(visibleCount > 1){
+      let budget = visBudgetMax - k;
+      let remaining = visibleCount - 1;
+      for(let i=0; i<remaining; i++){
+        const minRest = (remaining - 1 - i) * 1;
+        let maxV = Math.min(99, budget - minRest);
+        if(maxV < 1){ budget = -1; break; }
+        const v = rInt(rng, 1, maxV);
+        visible.push(v);
+        budget -= v;
+      }
+      if(budget < 0) continue;
+    }
     const visibleSum = visible.reduce((a,b)=>a+b,0);
-
-    // choisit une quantité cachée identique sous chaque tache
     const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
     const hHigh = Math.floor((totalMax - visibleSum) / tasks);
     if(hHigh < hLow) continue;
-
     const H = rInt(rng, hLow, hHigh);
     const total = visibleSum + tasks * H;
-
-    // Sous chaque tache noire : 1 bille (même valeur)
     const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
     const hidden = hiddenByTask.flat();
-
     return {
       family: "C9",
-      total,
-      visible,
-      hidden,
+      total, visible, hidden,
       _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
-      _c9: { op, opSetting, familySetting, k }
+      _c9: { op, opSetting, k }
     };
   }
-
-  // fallback sûr
-  const k = (familySetting === "9_99") ? 9 : 19;
-  const tasksF = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
-  const H = 1;
-  const visible = [k];
-  const total = visible.reduce((a,b)=>a+b,0) + tasksF*H;
-  const hiddenByTask = Array.from({length: tasksF}, ()=>[H]);
-  const hidden = hiddenByTask.flat();
-  return { family:"C9", total, visible, hidden, _num:{ tasks:tasksF, visibleCount:1, vMin:1, vMax:1, totalMin:total, totalMax:total, hiddenBeadsPerTask:1, H, hiddenByTask }, _c9:{ op:"SUB", opSetting, familySetting, k } };
+  return genNumbered(rng); 
 }
-
 
 function genOp8(rng){
   const opSetting = (eightOpEl.value || "SUB");
   const tasks = clamp(numberOr(eightTasksEl.value, 1), 1, 6);
-
+  const vMaxUser = clamp(numberOr(eightVisibleMaxEl.value, 3), 1, 5);
   let userMin = numberOr(eightTotalMinEl.value, 30);
   let userMax = numberOr(eightTotalMaxEl.value, 120);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
   const totalMin = clamp(userMin, 1, 1000);
   const totalMax = clamp(userMax, 1, 1000);
-
-  const vMaxUser = clamp(numberOr(eightVisibleMaxEl.value, 3), 1, 5);
-
-  // famille …8 : 8, 18, …, 98
   const family = [];
   for(let v=8; v<=98; v+=10) family.push(v);
-function pickOp(){
-    if(opSetting === "MIX"){
-      return (rng() < 0.5) ? "SUB" : "ADD";
-    }
-    return opSetting;
-  }
-
-  for(let tries=0; tries<3000; tries++){
+  function pickOp(){ if(opSetting === "MIX") return (rng() < 0.5) ? "SUB" : "ADD"; return opSetting; }
+  const visBudgetMax = totalMax - tasks * 1;
+  for(let tries=0; tries<4000; tries++){
     const op = pickOp();
-
-    const k = family[rInt(rng, 0, family.length-1)];
-    const visibleCount = (op === "SUB") ? 1 : rInt(rng, 2, Math.max(2, vMaxUser));
-
-    // visibles : au moins un ...8
-    const visible = [k];
-    for(let i=1; i<visibleCount; i++){
-      let v;
-      for(let j=0; j<30; j++){
-        v = rInt(rng, 1, 99);
-        if(i===1 || v!==k) break;
-      }
-      visible.push(v);
+    let k = family[rInt(rng, 0, family.length-1)];
+    if(k > visBudgetMax){ k = 8; if(k > visBudgetMax) continue; }
+    let visibleCount;
+    if(op === "SUB"){ visibleCount = 1; }else{
+      const maxVis = Math.max(2, vMaxUser);
+      visibleCount = rInt(rng, 2, maxVis);
+      while(visibleCount > 2 && (k + (visibleCount-1)*1) > visBudgetMax) visibleCount--;
+      if((k + (visibleCount-1)*1) > visBudgetMax) continue;
     }
-
+    const visible = [k];
+    if(visibleCount > 1){
+      let budget = visBudgetMax - k;
+      let remaining = visibleCount - 1;
+      for(let i=0; i<remaining; i++){
+        const minRest = (remaining - 1 - i) * 1;
+        let maxV = Math.min(99, budget - minRest);
+        if(maxV < 1){ budget = -1; break; }
+        const v = rInt(rng, 1, maxV);
+        visible.push(v);
+        budget -= v;
+      }
+      if(budget < 0) continue;
+    }
     const visibleSum = visible.reduce((a,b)=>a+b,0);
-
-    // caché identique sous chaque tache
     const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
     const hHigh = Math.floor((totalMax - visibleSum) / tasks);
     if(hHigh < hLow) continue;
-
     const H = rInt(rng, hLow, hHigh);
     const total = visibleSum + tasks * H;
-
     const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
     const hidden = hiddenByTask.flat();
-
     return {
       family: "C8",
-      total,
-      visible,
-      hidden,
+      total, visible, hidden,
       _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
       _c8: { op, opSetting, k }
     };
   }
-
-  // fallback sûr
-  const tasksF = clamp(numberOr(eightTasksEl.value, 1), 1, 6);
-  const H = 1;
-  const k = 8;
-  const visible = [k];
-  const total = visible.reduce((a,b)=>a+b,0) + tasksF*H;
-  const hiddenByTask = Array.from({length: tasksF}, ()=>[H]);
-  const hidden = hiddenByTask.flat();
-  return { family:"C8", total, visible, hidden, _num:{ tasks:tasksF, visibleCount:1, vMin:1, vMax:1, totalMin:total, totalMax:total, hiddenBeadsPerTask:1, H, hiddenByTask }, _c8:{ op:"SUB", opSetting, k } };
+  return genNumbered(rng);
 }
-
-
-
-
 
 function assignPositionsClassic(card, rng){
   const tray = { x:120, y:260, w:1360, h:650 };
   const beadR = 95;
   const margin = 18;
-
   const splat = { cx: 820, cy: 610, r: 260 };
   card._splat = splat;
-
   const placed = [];
-
   function okSpotVisible(cx, cy){
     if(cx < tray.x + beadR + margin) return false;
     if(cx > tray.x + tray.w - beadR - margin) return false;
     if(cy < tray.y + beadR + margin) return false;
     if(cy > tray.y + tray.h - beadR - margin) return false;
-
     const d = Math.hypot(cx - splat.cx, cy - splat.cy);
     if(d < splat.r + beadR + 18) return false;
-
     for(const p of placed){
       const dd = Math.hypot(cx - p.cx, cy - p.cy);
       if(dd < beadR*2 + 18) return false;
     }
     return true;
   }
-
   function pickVisible(area){
     for(let tries=0; tries<800; tries++){
       const cx = area.x + beadR + margin + rng() * (area.w - 2*(beadR+margin));
@@ -1076,7 +1338,6 @@ function assignPositionsClassic(card, rng){
     placed.push({cx,cy});
     return {cx,cy};
   }
-
   function pickHiddenInSplat(){
     const maxR = (splat.r - beadR - 60);
     for(let tries=0; tries<1000; tries++){
@@ -1084,12 +1345,10 @@ function assignPositionsClassic(card, rng){
       const rr = Math.sqrt(rng()) * Math.max(10, maxR);
       const cx = splat.cx + Math.cos(a) * rr;
       const cy = splat.cy + Math.sin(a) * rr;
-
       if(cx < tray.x + beadR + margin) continue;
       if(cx > tray.x + tray.w - beadR - margin) continue;
       if(cy < tray.y + beadR + margin) continue;
       if(cy > tray.y + tray.h - beadR - margin) continue;
-
       let ok = true;
       for(const p of placed){
         const dd = Math.hypot(cx - p.cx, cy - p.cy);
@@ -1104,7 +1363,6 @@ function assignPositionsClassic(card, rng){
     placed.push({cx,cy});
     return {cx,cy};
   }
-
   const topArea = { x: tray.x, y: tray.y, w: tray.w, h: 300 };
   card._posV = card.visible.map(()=> pickVisible(topArea));
   card._posH = card.hidden.map(()=> pickHiddenInSplat());
@@ -1113,14 +1371,10 @@ function assignPositionsClassic(card, rng){
 function assignPositionsUnits(card, rng){
   const tray = { x:120, y:260, w:1360, h:650 };
   const margin = 8;
-
   const tasks = card._unit?.tasks ?? 1;
   const hiddenByTask = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
-
   const splats = getUnitSplats(tasks);
   card._splats = splats;
-
-  // --- Hit-test des splats : on veut que les billes cachées soient VRAIMENT sous le splat ---
   const ctx = (function(){
     if(assignPositionsUnits._hitCtx) return assignPositionsUnits._hitCtx;
     const c = document.createElement("canvas");
@@ -1130,17 +1384,13 @@ function assignPositionsUnits(card, rng){
     return ct;
   })();
   const canPath2D = (typeof Path2D !== "undefined") && ctx && typeof ctx.isPointInPath === "function";
-
   const splatObjs = splats.map(s=>{
     const d = blobPath(s.cx, s.cy, s.r);
     return { ...s, d, path: (canPath2D ? new Path2D(d) : null) };
   });
-
-  // --- Taille des billes (adaptative) ---
   const maxHidden = Math.max(0, ...hiddenByTask);
   const minR = Math.min(...splatObjs.map(o=>o.r));
   const rPad = Math.max(28, minR - 26);
-
   let beadR = 24;
   if(maxHidden > 0){
     const calc = Math.floor(rPad * Math.sqrt(0.82 / Math.max(1, maxHidden)));
@@ -1148,13 +1398,11 @@ function assignPositionsUnits(card, rng){
   } else {
     beadR = 26;
   }
-
   const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
   if(totalBeads >= 55) beadR = Math.min(beadR, 15);
   else if(totalBeads >= 45) beadR = Math.min(beadR, 17);
   else if(totalBeads >= 35) beadR = Math.min(beadR, 19);
   else if(totalBeads >= 25) beadR = Math.min(beadR, 21);
-
   function insideTray(cx, cy){
     if(cx < tray.x + beadR + margin) return false;
     if(cx > tray.x + tray.w - beadR - margin) return false;
@@ -1164,7 +1412,7 @@ function assignPositionsUnits(card, rng){
   }
   function noOverlap(cx, cy, placed){
     for(const p of placed){
-      if(Math.hypot(cx-p.cx, cy-p.cy) < (beadR*2 + 2)) return false; // toucher OK, superposer NON
+      if(Math.hypot(cx-p.cx, cy-p.cy) < (beadR*2 + 2)) return false; 
     }
     return true;
   }
@@ -1174,7 +1422,6 @@ function assignPositionsUnits(card, rng){
     }
     return true;
   }
-
   function pointInSplat(o, x, y){
     if(canPath2D && o.path){
       return ctx.isPointInPath(o.path, x, y);
@@ -1182,12 +1429,11 @@ function assignPositionsUnits(card, rng){
     return Math.hypot(x-o.cx, y-o.cy) <= (o.r - 10);
   }
   function beadFullyInSplat(o, x, y){
-    // centre + 4 points cardinaux, pour garantir que la bille est entièrement sous le splat
     if(!pointInSplat(o, x, y)) return false;
     if(canPath2D && o.path){
       return (function(){
         const r = beadR;
-        const d = r * 0.7071067811865476; // r / sqrt(2)
+        const d = r * 0.7071067811865476; 
         const pts = [
           [ r, 0], [-r, 0], [0,  r], [0, -r],
           [ d, d], [ d,-d], [-d, d], [-d,-d]
@@ -1200,19 +1446,15 @@ function assignPositionsUnits(card, rng){
     }
     return Math.hypot(x-o.cx, y-o.cy) <= (o.r - beadR - 14);
   }
-
   function tryPlaceWithRadius(R){
     beadR = R;
-
     const placed = [];
-
     function pickVisible(){
       for(let tries=0; tries<12000; tries++){
         const cx = tray.x + beadR + margin + rFloat(rng, 0, tray.w - (beadR*2 + margin*2));
         const cy = tray.y + beadR + margin + rFloat(rng, 0, tray.h - (beadR*2 + margin*2));
         if(!insideTray(cx,cy)) continue;
         if(!farFromSplats(cx,cy)) continue;
-        // sécurité : le centre ne doit pas tomber DANS un splat
         let bad=false;
         for(const o of splatObjs){ if(pointInSplat(o, cx, cy)) { bad=true; break; } }
         if(bad) continue;
@@ -1222,26 +1464,20 @@ function assignPositionsUnits(card, rng){
       }
       return null;
     }
-
     function pickHiddenInSplat(o){
       for(let tries=0; tries<16000; tries++){
         const a = rFloat(rng, 0, Math.PI*2);
-        // radius légèrement biaisé vers l'intérieur pour éviter le bord du splat
         const rr = Math.sqrt(rFloat(rng, 0, 1)) * Math.max(10, o.r - beadR - 18);
         const cx = o.cx + Math.cos(a)*rr;
         const cy = o.cy + Math.sin(a)*rr;
-
         if(!insideTray(cx,cy)) continue;
         if(!beadFullyInSplat(o, cx, cy)) continue;
         if(!noOverlap(cx,cy, placed)) continue;
-
         placed.push({cx,cy});
         return {cx,cy};
       }
       return null;
     }
-
-    // visible
     const vCount = card._unit?.visibleCount ?? card.visible.length;
     const posV = [];
     for(let i=0;i<vCount;i++){
@@ -1249,8 +1485,6 @@ function assignPositionsUnits(card, rng){
       if(!p) return null;
       posV.push(p);
     }
-
-    // hidden
     const posH = [];
     for(let t=0; t<tasks; t++){
       const o = splatObjs[t];
@@ -1261,82 +1495,21 @@ function assignPositionsUnits(card, rng){
         posH.push(p);
       }
     }
-
     return { posV, posH };
   }
-
-  // On tente avec la taille calculée, puis on réduit si besoin (cas dense)
   let placedRes = null;
   for(let attempt=0; attempt<8 && !placedRes; attempt++){
     const R = Math.max(12, beadR - attempt);
     placedRes = tryPlaceWithRadius(R);
   }
-
   if(!placedRes){
-    // Fallback : on place au mieux avec une taille mini (rare)
     placedRes = tryPlaceWithRadius(12) || { posV:[], posH:[] };
   }
-
   card._beadR = beadR;
   card._posV = placedRes.posV;
   card._posH = placedRes.posH;
 }
 
-
-function assignPositions(card, rng){
-  if(card.family === "U"){
-    assignPositionsUnits(card, rng);
-  }else if(card.family === "N" || card.family === "C9" || card.family === "C8"){
-    assignPositionsNumbered(card, rng);
-  }else{
-    assignPositionsClassic(card, rng);
-  }
-}
-
-/* Families (classiques) */
-function genFamilyA(rng, diff){
-  const ranges = [
-    {vmin:1, vmax:20, hmin:1, hmax:20},
-    {vmin:5, vmax:39, hmin:5, hmax:39},
-    {vmin:10, vmax:69, hmin:10, hmax:69},
-  ][diff-1] || {vmin:5, vmax:39, hmin:5, hmax:39};
-
-  let a=rInt(rng,ranges.vmin,ranges.vmax);
-  let b=rInt(rng,ranges.vmin,ranges.vmax);
-  let h=rInt(rng,ranges.hmin,ranges.hmax);
-
-  let total=a+b+h;
-  if(total<20){h+=10;total=a+b+h;}
-  if(total>150){h=Math.max(5,h-20);total=a+b+h;}
-
-  return {family:"A", total, visible:[a,b], hidden:[h]};
-}
-function genComp10(rng,diff){
-  const total=10;
-  if(diff===1){const a=rInt(rng,1,9);return {family:"C10", total, visible:[a], hidden:[total-a]};}
-  if(diff===2){
-    const a=rInt(rng,1,8);
-    const b=rInt(rng,1,9-a);
-    return {family:"C10", total, visible:[a,b], hidden:[total-(a+b)]};
-  }
-  let a=rInt(rng,1,7), b=rInt(rng,1,8-a), c=rInt(rng,1,9-a-b);
-  return {family:"C10", total, visible:[a,b,c], hidden:[total-(a+b+c)]};
-}
-function genComp100(rng,diff){
-  const total=100;
-  if(diff===1){const a=rInt(rng,10,90);return {family:"C100", total, visible:[a], hidden:[total-a]};}
-  if(diff===2){
-    const a=rInt(rng,10,90);
-    const b=rInt(rng,1,70);
-    const hidden=total-(a+b);
-    if(hidden<=0||hidden>=90) return genComp100(rng,diff);
-    return {family:"C100", total, visible:[a,b], hidden:[hidden]};
-  }
-  const a=rInt(rng,10,90), b=rInt(rng,5,40), c=rInt(rng,5,40);
-  const hidden=total-(a+b+c);
-  if(hidden<=0||hidden>=90) return genComp100(rng,diff);
-  return {family:"C100", total, visible:[a,b,c], hidden:[hidden]};
-}
 function genMinusMix(rng,diff){
   const ks=[19,29,39];
   const k=ks[rInt(rng,0,ks.length-1)];
@@ -1349,87 +1522,6 @@ function genMinusMix(rng,diff){
   if(total<=k+5) total=k+25;
   return {family:"C", total, visible:[k], hidden:[total-k], _k:k};
 }
-
-/* Family U (unités sans numéros) */
-function genUnits(rng){
-  const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
-  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
-  const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
-
-  // Intervalle du total (utile pour piloter la difficulté)
-  const userMin = numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1);
-  const userMax = numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50);
-
-  // Bornes possibles selon les réglages actuels
-  const minHiddenPerTask = (hiddenMax === 0) ? 0 : 1;
-  const minPossible = 1 + tasks * minHiddenPerTask;          // 1 visible min + caché min
-  const maxPossible = visibleMax + tasks * hiddenMax;
-
-  // On contraint l'intervalle demandé à ce qui est réellement possible
-  let totalMin = clamp(userMin, 1, 80);
-  let totalMax = clamp(userMax, 1, 80);
-  totalMin = Math.min(totalMin, maxPossible);
-  totalMax = Math.min(totalMax, maxPossible);
-  totalMax = Math.max(totalMax, minPossible);
-  if(totalMin < minPossible) totalMin = minPossible;
-  if(totalMax < totalMin) totalMax = totalMin;
-
-  let visibleCount = 1;
-  let hiddenPerTask = 0;
-  let total = 0;
-
-  // ✅ Règle : sous chaque tache noire, même quantité de billes (ou même nombre)
-  // On resample pour tomber dans l'intervalle [totalMin; totalMax]
-  for(let tries=0; tries<500; tries++){
-    visibleCount = rInt(rng, 1, visibleMax);
-    hiddenPerTask = (hiddenMax === 0) ? 0 : rInt(rng, 1, hiddenMax);
-    total = visibleCount + tasks * hiddenPerTask;
-    if(total >= totalMin && total <= totalMax) break;
-  }
-
-  // Ajustements de secours si on n'est pas dans l'intervalle (cas extrêmes)
-  if(total > totalMax){
-    // on réduit d'abord le caché
-    hiddenPerTask = clamp(Math.floor((totalMax - visibleCount) / tasks), 0, hiddenMax);
-    if(hiddenMax > 0 && hiddenPerTask === 0 && totalMax >= (1 + tasks)) hiddenPerTask = 1;
-    total = visibleCount + tasks * hiddenPerTask;
-
-    // puis on réduit le visible
-    if(total > totalMax){
-      visibleCount = clamp(totalMax - tasks * hiddenPerTask, 1, visibleMax);
-      total = visibleCount + tasks * hiddenPerTask;
-    }
-  }
-  if(total < totalMin){
-    // on augmente d'abord le caché
-    const need = totalMin - total;
-    const add = Math.ceil(need / tasks);
-    hiddenPerTask = clamp(hiddenPerTask + add, (hiddenMax===0?0:1), hiddenMax);
-    total = visibleCount + tasks * hiddenPerTask;
-
-    // puis on augmente le visible
-    if(total < totalMin){
-      visibleCount = clamp(totalMin - tasks * hiddenPerTask, 1, visibleMax);
-      total = visibleCount + tasks * hiddenPerTask;
-    }
-  }
-
-  const hiddenByTask = Array.from({length: tasks}, ()=> hiddenPerTask);
-  const hiddenTotal = tasks * hiddenPerTask;
-
-  // visible/hidden arrays : structure commune (en mode U on n'affiche pas de numéros)
-  const visible = Array.from({length: visibleCount}, ()=> 1);
-  const hidden = Array.from({length: hiddenTotal}, ()=> 1);
-
-  return {
-    family:"U",
-    total,
-    visible,
-    hidden,
-    _unit: { tasks, visibleCount, visibleMax, hiddenMax, hiddenPerTask, hiddenByTask, totalMin, totalMax }
-  };
-}
-
 
 /* SVG helpers */
 const svg = document.getElementById("mainSvg");
@@ -1449,48 +1541,74 @@ function text(x,y,txt,attrs={}){
 function renderCard(card, revealed){
   clearSvg();
 
-  // background tray
-  svg.appendChild(el("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"rgba(0,0,0,0.03)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+  // Config plateau : remonte si mode C ou D
+  const trayCfg = getTrayConfig(card.family);
+  const isModeC_or_D = (card.family === "C" || card.family === "D");
 
-// TOTAL (cadre gris)
-const gTotal = el("g", {id:"totalGroup"});
-const tLabel = text(800, 92, "TOTAL", {
-  "text-anchor":"middle","font-size":"42",
-  "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
-});
-const tNum = text(800, 175, String(card.total), {
-  "text-anchor":"middle","font-size":"96",
-  "fill":"var(--ink)","font-weight":"900"
-});
-gTotal.appendChild(tLabel);
-gTotal.appendChild(tNum);
-svg.appendChild(gTotal);
+  svg.appendChild(el("rect",{
+    x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
+    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
+  }));
 
-const bbTotal = gTotal.getBBox();
-const padX = 40, padY = 26;
-svg.insertBefore(el("rect",{
-  x: bbTotal.x - padX,
-  y: bbTotal.y - padY,
-  width: bbTotal.width + padX*2,
-  height: bbTotal.height + padY*2,
-  rx: 22,
-  fill:"var(--totalbox-fill)",
-  stroke:"var(--totalbox-stroke)",
-  "stroke-width":"4"
-}), gTotal);
+  // TOTAL Position
+  let tx = 800, ty = 92; 
+  if(isModeC_or_D){ tx = 240; ty = 96; } // Ajustement à 96px
+
+  const gTotal = el("g", {id:"totalGroup"});
+  const tLabel = text(tx, ty, "TOTAL", {
+    "text-anchor":"middle","font-size":"42",
+    "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
+  });
+  const tNum = text(tx, ty+83, String(card.total), {
+    "text-anchor":"middle","font-size":"96",
+    "fill":"var(--ink)","font-weight":"900"
+  });
+  gTotal.appendChild(tLabel);
+  gTotal.appendChild(tNum);
+  svg.appendChild(gTotal);
+
+  const bbTotal = gTotal.getBBox();
+  const padX = 40, padY = 26;
+  
+  // Rect du Total
+  let boxX = bbTotal.x - padX;
+  if(isModeC_or_D) boxX = 120; 
+
+  svg.insertBefore(el("rect",{
+    x: boxX,
+    y: bbTotal.y - padY,
+    width: bbTotal.width + padX*2,
+    height: bbTotal.height + padY*2,
+    rx: 22,
+    fill:"var(--totalbox-fill)",
+    stroke:"var(--totalbox-stroke)",
+    "stroke-width":"4"
+  }), gTotal);
+
+  /* Afficahge des indices si Mode C ou D : EN BAS */
+  if(isModeC_or_D && card._inv && card._inv.indices){
+    const indices = card._inv.indices;
+    const gInd = el("g", {id: "clueGroup"});
+    let startY = 750;
+    
+    indices.forEach((txt, i) => {
+       gInd.appendChild(text(800, startY, txt, {
+          "text-anchor":"middle","font-size":"45", // Gros texte
+          "fill":"var(--ink)","font-weight":"700"
+       }));
+       startY += 65; 
+    });
+    svg.appendChild(gInd);
+  }
 
   // unit mode (A)
   if(card.family === "U"){
     const beadR = card._beadR ?? 26;
-
-    // hidden beads
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
     }
-
-    // splats (multi)
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
       svg.appendChild(el("path",{
@@ -1500,8 +1618,6 @@ svg.insertBefore(el("rect",{
         "stroke-width":"5"
       }));
     }
-
-    // visible beads
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
@@ -1510,12 +1626,12 @@ svg.insertBefore(el("rect",{
     return;
   }
 
-  // numbered multi-splats (B)
-  if(card.family === "N" || card.family === "C9" || card.family === "C8"){
+  // numbered multi-splats (B, C, D, E, F)
+  if(["N","C","D","C9","C8"].includes(card.family)){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
-    // hidden beads
+    // hidden beads (under splat)
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
@@ -1527,16 +1643,27 @@ svg.insertBefore(el("rect",{
 
     // splats (multi)
     const splats = card._splats || [{cx:820, cy:610, r:220}];
-    for(const s of splats){
+    
+    // Couleurs opaques et transparentes pour le mode C/D
+    const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
+    const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
+
+    splats.forEach((s, idx) => {
+      let fillCol;
+      if(card.family === "C" || card.family === "D"){
+        fillCol = revealed ? revCols[idx%3] : opqCols[idx%3];
+      } else {
+        fillCol = revealed ? "var(--splat-reveal)" : "var(--splat-cover)";
+      }
       svg.appendChild(el("path",{
         d: blobPath(s.cx, s.cy, s.r),
-        fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
+        fill: fillCol,
         stroke: "var(--splat-stroke)",
         "stroke-width":"5"
       }));
-    }
+    });
 
-    // visible beads
+    // visible beads (pour modes N, C, D, E, F)
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
@@ -1549,18 +1676,14 @@ svg.insertBefore(el("rect",{
     return;
   }
 
-  // classic mode (C — soustractions mix)
+  // classic mode
   const beadR=95;
-
-  // hidden
   for(let i=0;i<card.hidden.length;i++){
     const cx = card._posH?.[i]?.cx ?? 820;
     const cy = card._posH?.[i]?.cy ?? 610;
     svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
     svg.appendChild(text(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
-
-  // splat
   const s0 = card._splat || {cx:820, cy:610, r:220};
   svg.appendChild(el("path",{
     d: blobPath(s0.cx, s0.cy, s0.r),
@@ -1568,19 +1691,16 @@ svg.insertBefore(el("rect",{
     stroke: "var(--splat-stroke)",
     "stroke-width":"5"
   }));
-
-  // visible
   for(let i=0;i<card.visible.length;i++){
     const cx = card._posV?.[i]?.cx ?? (450 + i*250);
     const cy = card._posV?.[i]?.cy ?? 380;
-
     const col = beadColorForValue(card.visible[i]);
     svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
     svg.appendChild(text(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
 }
 
-/* Render impression : carte 2x plus haute (espace réponse en bas) */
+/* Render impression */
 function renderCardIntoSvg(targetSvg, card, revealAnswers){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
 
@@ -1596,97 +1716,119 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
   }
 
-  // carte
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"rgba(0,0,0,0.02)"}));
-
-  // plateau
   targetSvg.appendChild(tEl("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
 
-// TOTAL (cadre)
-const g = tEl("g",{id:"totalGroupPrint"});
-const lbl = tText(800, 92, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
-const num = tText(800, 175, String(card.total), {"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"});
-g.appendChild(lbl); g.appendChild(num);
-targetSvg.appendChild(g);
+  // Adapt for print: if C/D, put total in box, else center
+  const isModeC_or_D = (card.family === "C" || card.family === "D");
+  let tx = 800, ty = 92;
+  let printOffsetY = 0; 
 
-const bb = g.getBBox();
-const padX=40,padY=26;
-targetSvg.insertBefore(tEl("rect",{
-  x:bb.x-padX,y:bb.y-padY,width:bb.width+padX*2,height:bb.height+padY*2,rx:22,
-  fill:"rgba(0,0,0,0.04)",stroke:"rgba(0,0,0,0.22)","stroke-width":"4"
-}), g);
+  if(isModeC_or_D){ 
+    tx = 240; 
+    ty = 260 + 96; // Ajustement relatif
+    printOffsetY = 240; 
+  } 
 
-  // grande zone d'écriture (4 cartes/page)
+  const g = tEl("g",{id:"totalGroupPrint"});
+  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
+  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"});
+  g.appendChild(lbl); g.appendChild(num);
+  targetSvg.appendChild(g);
+
+  const bb = g.getBBox();
+  const padX=40,padY=26;
+  
+  let boxX = bb.x - padX;
+  if(isModeC_or_D) boxX = 120; 
+
+  targetSvg.insertBefore(tEl("rect",{
+    x:boxX,y:bb.y-padY,width:bb.width+padX*2,height:bb.height+padY*2,rx:22,
+    fill:"rgba(0,0,0,0.04)",stroke:"rgba(0,0,0,0.22)","stroke-width":"4"
+  }), g);
+
+  /* Indices impression Mode C/D : AU DESSUS DU PLATEAU */
+  if(isModeC_or_D && card._inv && card._inv.indices){
+    const indices = card._inv.indices;
+    // On place les indices au-dessus du plateau
+    let startY = 150; 
+    let startX = 800;
+    indices.forEach((txt, i) => {
+      targetSvg.appendChild(tText(startX, startY + i*60, txt, {
+        "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"600"
+      }));
+    });
+  }
+
   targetSvg.appendChild(tEl("rect",{x:120,y:1000,width:1360,height:1050,rx:18,fill:"#fff",stroke:"rgba(0,0,0,0.10)","stroke-width":"4"}));
 
   const cover = "rgb(0,0,0)";
   const reveal = "rgba(210,210,210,0.35)";
+  const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
+  const colorsERev = ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"];
 
   if(card.family === "U"){
     const beadR = card._beadR ?? 26;
-
-    // hidden
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.05)", stroke:"rgba(0,0,0,0.18)","stroke-width":"3"}));
     }
-
-    // splats (multi)
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     }
-
-    // visible
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
     }
 
-  }else if(card.family === "N" || card.family === "C9" || card.family === "C8"){
+  }else if(["N","C","D","C9","C8"].includes(card.family)){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
-    // hidden
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
+      // APPLIQUER OFFSET POUR C/D
+      const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
+      
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.hidden[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
-    // splats (multi)
     const splats = card._splats || [{cx:820, cy:610, r:220}];
-    for(const s of splats){
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-    }
+    splats.forEach((s,idx)=>{
+      let f;
+      if(card.family === "C" || card.family === "D"){
+        f = revealAnswers ? colorsERev[idx%3] : colorsE[idx%3];
+      } else {
+        f = revealAnswers ? reveal : cover;
+      }
+      // APPLIQUER OFFSET POUR C/D
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    });
 
-    // visible
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      const cy = card._posV?.[i]?.cy ?? 380;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
+      // APPLIQUER OFFSET POUR C/D
+      const cy = (card._posV?.[i]?.cy ?? 380) + printOffsetY;
+
+      const col = beadColorForValue(card.visible[i]); // Recalcul couleur impression
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.visible[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
   }else{
     const beadR=95;
-
-    // hidden
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
     }
-
-    // splat
     const s0 = card._splat || {cx:820, cy:610, r:220};
     targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-
-    // visible
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
@@ -1701,50 +1843,42 @@ function printSheet(){
   const showAnswers = !!document.getElementById("printAnswers").checked;
   const printArea = document.getElementById("printArea");
   printArea.innerHTML = "";
-
-  const perSheet = 4; // ✅ 4 cartes par page (2 x 2)
+  const perSheet = 4; 
   const sheets = Math.ceil(cards.length / perSheet);
-
   for(let s=0;s<sheets;s++){
     const sheet = document.createElement("div");
     sheet.className = "sheet";
-
     const grid = document.createElement("div");
     grid.className = "grid";
-
     for(let i=0;i<perSheet;i++){
       const k = s*perSheet + i;
       if(k >= cards.length) break;
       const holder = document.createElement("div");
       holder.className = "pCard";
-
       const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
       sv.setAttribute("viewBox","0 0 1600 2200");
       sv.style.width = "100%";
-
       renderCardIntoSvg(sv, cards[k], showAnswers);
       holder.appendChild(sv);
       grid.appendChild(holder);
     }
-
     sheet.appendChild(grid);
     printArea.appendChild(sheet);
   }
   window.print();
 }
 
-/* State */
 let cards = [];
 let idx = 0;
 let revealed = false;
-
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function updateUI(){
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
   document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && !revealed));
-  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));if(cards.length===0){ renderEmpty(); }
+  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));
+  if(cards.length===0){ renderEmpty(); }
   else { renderCard(cards[idx], revealed); }
 }
 function renderEmpty(){
@@ -1769,6 +1903,10 @@ function generate(){
       c = genUnits(rng);
     }else if(act==="N"){
       c = genNumbered(rng);
+    }else if(act==="C"){
+      c = genInvestigate(rng);
+    }else if(act==="D"){
+      c = genSystem(rng);
     }else if(act==="C9"){
       c = genOp9(rng);
     }else if(act==="C8"){
@@ -1789,17 +1927,14 @@ function generate(){
 
 function shuffleCards(){
   if(cards.length<=1) return;
-
   const seedValue = getSeedForCurrentMode();
   const rng = makeRng(seedValue);
-
   shuffleInPlace(cards, rng);
   idx = 0;
   revealed = false;
   updateUI();
 }
 
-/* Fullscreen */
 async function toggleFullscreen(){
   try{
     if(!document.fullscreenElement) await fsHost.requestFullscreen();
@@ -1807,7 +1942,6 @@ async function toggleFullscreen(){
   }catch(e){ console.warn("Fullscreen non dispo:", e); }
 }
 
-/* Events */
 document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnShuffle").addEventListener("click", shuffleCards);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
@@ -1816,16 +1950,13 @@ document.getElementById("btnPrev").addEventListener("click", ()=>{
   if(revealed){ revealed = false; updateUI(); return; }
   if(idx>0){ idx--; revealed=false; updateUI(); }
 });
-
 document.getElementById("btnNext").addEventListener("click", ()=>{
   if(cards.length===0) return;
   if(!revealed){ revealed = true; updateUI(); return; }
   if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
 });
-
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
-
 window.addEventListener("keydown",(e)=>{
   if(e.key==="ArrowLeft"){
     if(cards.length===0) return;
@@ -1842,9 +1973,8 @@ window.addEventListener("keydown",(e)=>{
     if(cards.length){ revealed=!revealed; updateUI(); }
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
-});/* Init */
+});
 syncSettingsUI();
-// ✅ Génération automatique au chargement (plus besoin de cliquer sur « Générer »)
 generate();
 </script>
 </body>
