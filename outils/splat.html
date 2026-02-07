@@ -1,1980 +1,272 @@
-{
-type: uploaded file
-fileName: Splat_v13_Print_Final_Polish.html
-fullContent:
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Splat! v13</title>
+<title>Splat! v12.1</title>
 <style>
   :root{
-    /* THEME (light default) */
     --bg:#f3f4f6;
     --panel:rgba(255,255,255,.96);
     --card:rgba(255,255,255,.80);
     --ink:#111827;
     --muted:#6b7280;
-
     --field-bg:#ffffff;
     --field-border:rgba(17,24,39,.15);
-
     --btn:#ffffff;
     --btn2:#f3f4f6;
     --btn-border:rgba(17,24,39,.15);
-
     --tray-fill:rgba(0,0,0,0.03);
     --tray-stroke:rgba(0,0,0,0.10);
-
     --totalbox-fill:rgba(0,0,0,0.04);
     --totalbox-stroke:rgba(0,0,0,0.16);
-
     --beadH-fill:rgba(0,0,0,0.05);
     --beadH-stroke:rgba(0,0,0,0.25);
-
     --total-label: rgba(17,24,39,0.70);
-
-    /* SPLAT COLORS */
     --splat-cover: rgb(0,0,0);              
     --splat-reveal: rgba(210,210,210,0.35); 
     --splat-stroke: rgba(0,0,0,0.18);
-
-    /* MODE C/D COLORS (Opaque) */
     --splat-black: rgb(20,20,20);
     --splat-purple: #9d4edd;
     --splat-orange: #f97316;
-
-    /* MODE C/D COLORS (Reveal - Semi-transparent) */
     --splat-black-rev: rgba(40,40,40, 0.15);
     --splat-purple-rev: rgba(157, 78, 221, 0.20);
     --splat-orange-rev: rgba(249, 115, 22, 0.20);
-
-    /* UNIT BEADS */
     --unit-fill: rgba(106,167,255,0.20);
     --unit-stroke: rgba(106,167,255,0.55);
-
     --danger:#ff6a6a;
     --accent:#6aa7ff;
   }
-
   *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
   body{margin:0;background:var(--bg);color:var(--ink);}
-
-  header{
-    padding:14px 16px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap
-  }
+  header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.2px}
-
   .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
-.wrap > .panel{flex:0 0 340px;max-width:340px}
-.wrap > .stage{flex:1 1 auto;min-width:0}
-
-  .panel{
-    background:var(--panel);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:14px;padding:12px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.25)
-  }
-
+  .wrap > .panel{flex:0 0 340px;max-width:340px}
+  .wrap > .stage{flex:1 1 auto;min-width:0}
+  .panel{background:var(--panel);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,0.25)}
   label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
-  select,input{
-    width:100%;padding:10px 10px;border-radius:10px;
-    border:1px solid var(--field-border);
-    background:var(--field-bg);
-    color:var(--ink);
-    outline:none
-  }
+  select,input{width:100%;padding:10px 10px;border-radius:10px;border:1px solid var(--field-border);background:var(--field-bg);color:var(--ink);outline:none}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input[type="number"]{appearance:textfield}
-
-  .btn{
-    padding:10px 12px;border-radius:10px;
-    border:1px solid var(--btn-border);
-    background:var(--btn);
-    color:var(--ink);cursor:pointer;font-weight:650;
-    transition: transform .08s ease, background .12s ease, box-shadow .12s ease;
-  }
+  .btn{padding:10px 12px;border-radius:10px;border:1px solid var(--btn-border);background:var(--btn);color:var(--ink);cursor:pointer;font-weight:650;transition: transform .08s ease, background .12s ease, box-shadow .12s ease;}
   .btn:hover{background:var(--btn2)}
   .btn:active{transform:translateY(1px)}
   .btn.primary{background:rgba(106,167,255,0.18);border-color:rgba(106,167,255,0.35)}
   .btn.danger{background:rgba(255,106,106,0.14);border-color:rgba(255,106,106,0.35)}
-  .btn:disabled{opacity:.45;cursor:not-allowed}
-
-  .iconbtn{
-    display:inline-grid;place-items:center;
-    width:42px;height:42px;padding:0;border-radius:12px;
-    border:1px solid var(--btn-border);
-    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-  }
-  .iconbtn:hover{transform:translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,0.22);}
-  .iconbtn:active{transform:translateY(0px); box-shadow: 0 6px 18px rgba(0,0,0,0.18);}
+  .iconbtn{display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border-radius:12px;border:1px solid var(--btn-border);background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));box-shadow: 0 6px 18px rgba(0,0,0,0.18);}
   .iconbtn svg{width:20px;height:20px;opacity:.95}
-
-  .hint{
-    font-size:12px;color:var(--muted);line-height:1.35;margin-top:10px
-  }
-  .hr{
-    height:1px;background:rgba(255,255,255,0.08);margin:10px 0;
-  }
-  .smallnote{
-    font-size:12px;color:var(--muted);line-height:1.35;
-    border:1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.03);
-    border-radius:12px;
-    padding:10px;
-    margin-top:10px;
-  }
-  .pill{
-    display:inline-block;
-    padding:2px 8px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.04);
-    font-size:12px;
-    color: var(--muted);
-  }
-
+  .hint{font-size:12px;color:var(--muted);line-height:1.35;margin-top:10px}
   .stage{display:flex;flex-direction:column;gap:12px}
-  .cardbox{
-    background:var(--card);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:14px;padding:10px
-  }
-  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-  .counter{font-size:12px;color:var(--muted)}
-
+  .cardbox{background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:10px}
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
-
   .printArea{display:none}
-
-  .checkInline{
-    display:flex;gap:8px;align-items:center;
-    padding:8px 10px;border-radius:10px;
-    border:1px solid var(--btn-border);
-    background: rgba(255,255,255,0.04);
-    user-select:none;
-    cursor:pointer;
-  }
+  .checkInline{display:flex;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--btn-border);background: rgba(255,255,255,0.04);user-select:none;cursor:pointer;}
   .checkInline input{width:auto;margin:0}
   .checkInline span{font-size:12px;color:var(--muted);white-space:nowrap}
-
-  /* MODE CLAIR */
   body.light{
-    --bg:#f5f7fb;
-    --panel:rgba(255,255,255,0.94);
-    --card:rgba(255,255,255,0.94);
-    --ink:#0b1220;
-    --muted:#4b5567;
-
-    --field-bg:#ffffff;
-    --field-border:rgba(0,0,0,0.14);
-
-    --btn:#eef2f8;
-    --btn2:#e3e9f4;
-    --btn-border:rgba(0,0,0,0.14);
-
-    --tray-fill:rgba(0,0,0,0.03);
-    --tray-stroke:rgba(0,0,0,0.12);
-
-    --totalbox-fill:rgba(0,0,0,0.04);
-    --totalbox-stroke:rgba(0,0,0,0.22);
-
-    --beadH-fill:rgba(0,0,0,0.04);
-    --beadH-stroke:rgba(0,0,0,0.22);
-
-    --total-label: rgba(0,0,0,0.92);
-
-    --splat-cover: rgb(0,0,0);
-    --splat-reveal: rgba(220,220,220,0.40);
-    --splat-stroke: rgba(0,0,0,0.18);
-
-    --unit-fill: rgba(27,102,255,0.14);
-    --unit-stroke: rgba(27,102,255,0.50);
-
-    --danger:#e11d48;
-    --accent:#1b66ff;
+    --bg:#f5f7fb; --panel:rgba(255,255,255,0.94); --card:rgba(255,255,255,0.94); --ink:#0b1220; --muted:#4b5567;
+    --field-bg:#ffffff; --field-border:rgba(0,0,0,0.14); --btn:#eef2f8; --btn2:#e3e9f4; --btn-border:rgba(0,0,0,0.14);
+    --tray-fill:rgba(0,0,0,0.03); --tray-stroke:rgba(0,0,0,0.12); --totalbox-fill:rgba(0,0,0,0.04); --totalbox-stroke:rgba(0,0,0,0.22);
+    --beadH-fill:rgba(0,0,0,0.04); --beadH-stroke:rgba(0,0,0,0.22); --total-label: rgba(0,0,0,0.92);
+    --splat-cover: rgb(0,0,0); --splat-reveal: rgba(220,220,220,0.40); --splat-stroke: rgba(0,0,0,0.18);
+    --unit-fill: rgba(27,102,255,0.14); --unit-stroke: rgba(27,102,255,0.50); --danger:#e11d48; --accent:#1b66ff;
   }
-
-  body.light header{border-bottom:1px solid rgba(0,0,0,0.08)}
-  body.light .panel{box-shadow:0 10px 30px rgba(0,0,0,0.06)}
-  body.light .cardbox{border-color:rgba(0,0,0,0.10)}
-  body.light .iconbtn{
-    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
-    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
-  }
-  body.light .iconbtn:hover{box-shadow: 0 10px 22px rgba(0,0,0,0.14);}
-  body.light .checkInline{background: rgba(0,0,0,0.03);}
-  body.light .smallnote{border-color:rgba(0,0,0,0.12);background: rgba(0,0,0,0.02);}
-  body.light .pill{border-color:rgba(0,0,0,0.14);background: rgba(0,0,0,0.03);}
-
-  /* Impression */
   @media print{
     @page{ size: A4; margin: 8mm; }
     body{background:#fff;color:#000}
     header,.wrap{display:none !important}
     .printArea{display:block}
     .sheet{page-break-after:always;padding:6mm}
-    /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
     .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm}
     .pCard svg{width:100%;height:auto}
   }
-
-  /* Plein écran */
   .fsHost:fullscreen{background:var(--bg)}
   .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
-  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
 </style>
 </head>
-
 <body class="light">
-<header>
-  <h1>Splat!</h1>
-</header>
-
+<header><h1>Splat!</h1></header>
 <div class="wrap">
   <section class="panel">
     <label>Type d’activité</label>
     <select id="activity">
       <option value="U">A — Petites billes (sans numéros)</option>
       <option value="N">B — Billes numérotées (une couleur)</option>
-      <option value="C" selected>C — Enquête (relations, 3 couleurs)</option>
+      <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">E — Opérations en 9 (9 → 99)</option>
       <option value="C8">F — Opérations en 8 (8 → 98)</option>
     </select>
-
-    <div id="classicSettings">
-      <div class="row">
-        <div style="flex:1">
-          <label>Niveau (pré-réglage 1→3)</label>
-          <input id="difficulty" type="number" min="1" max="3" value="2" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (optionnelle)</label>
-          <input id="seed" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
-    </div>
-
+    <div id="classicSettings"><div class="row"><div style="flex:1"><label>Niveau</label><input id="difficulty" type="number" min="1" max="3" value="2" /></div><div style="flex:1"><label>Graine</label><input id="seed" type="number" placeholder="ex: 2026" /></div></div></div>
     <div id="unitSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Nombre de taches</label>
-          <input id="unitTasks" type="number" min="1" max="5" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles max</label>
-          <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes cachées max</label>
-          <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (optionnelle)</label>
-          <input id="seedU" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Taches</label><input id="unitTasks" type="number" min="1" max="5" value="1" /></div><div style="flex:1"><label>Visibles max</label><input id="unitVisibleMax" type="number" min="1" max="20" value="15" /></div></div>
+      <div class="row"><div style="flex:1"><label>Total min</label><input id="unitTotalMin" type="number" min="1" max="50" value="1" /></div><div style="flex:1"><label>Total max</label><input id="unitTotalMax" type="number" min="1" max="50" value="50" /></div></div>
+      <div class="row"><div style="flex:1"><label>Cachées max</label><input id="unitHiddenMax" type="number" min="0" max="20" value="10" /></div><div style="flex:1"><label>Graine</label><input id="seedU" type="number" /></div></div>
     </div>
-
     <div id="numberedSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Nombre de taches</label>
-          <input id="numTasks" type="number" min="1" max="6" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles num (min)</label>
-          <input id="numVisibleMin" type="number" min="1" max="5" value="2" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles num (max)</label>
-          <input id="numVisibleMax" type="number" min="1" max="5" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes cachées par tache</label>
-          <select id="numHiddenCount">
-            <option value="1" selected>1 (par défaut)</option>
-            <option value="2">2</option>
-          </select>
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="numTotalMin" type="number" min="1" max="1000" value="20" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (mode B)</label>
-          <input id="seedN" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Taches</label><input id="numTasks" type="number" min="1" max="6" value="1" /></div><div style="flex:1"><label>Vis. min</label><input id="numVisibleMin" type="number" min="1" max="5" value="2" /></div><div style="flex:1"><label>Vis. max</label><input id="numVisibleMax" type="number" min="1" max="5" value="3" /></div></div>
+      <div class="row"><div style="flex:1"><label>Cachées / tache</label><select id="numHiddenCount"><option value="1">1</option><option value="2">2</option></select></div><div style="flex:1"><label>Total min</label><input id="numTotalMin" type="number" value="20" /></div><div style="flex:1"><label>Total max</label><input id="numTotalMax" type="number" value="50" /></div></div>
     </div>
-
     <div id="nineSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Opération (…9)</label>
-          <select id="nineOp">
-            <option value="SUB" selected>Différence (TOTAL − …)</option>
-            <option value="ADD">Somme (…9 visible + autres)</option>
-            <option value="MIX">Mélange</option>
-          </select>
-        </div>
-        <div style="flex:1">
-          <label>Nombre de taches</label>
-          <input id="nineTasks" type="number" min="1" max="6" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles max</label>
-          <input id="nineVisibleMax" type="number" min="1" max="5" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="nineTotalMin" type="number" min="1" max="1000" value="30" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="nineTotalMax" type="number" min="1" max="1000" value="120" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (mode C)</label>
-          <input id="seedC" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Opération</label><select id="nineOp"><option value="SUB">Différence</option><option value="ADD">Somme</option><option value="MIX">Mélange</option></select></div><div style="flex:1"><label>Taches</label><input id="nineTasks" type="number" value="1" /></div></div>
     </div>
-
     <div id="eightSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Opération (…8)</label>
-          <select id="eightOp">
-            <option value="SUB" selected>Différence (TOTAL − …)</option>
-            <option value="ADD">Somme (…8 visible + autres)</option>
-            <option value="MIX">Mélange</option>
-          </select>
-        </div>
-        <div style="flex:1">
-          <label>Nombre de taches</label>
-          <input id="eightTasks" type="number" min="1" max="6" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles max</label>
-          <input id="eightVisibleMax" type="number" min="1" max="5" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="eightTotalMin" type="number" min="1" max="1000" value="30" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="eightTotalMax" type="number" min="1" max="1000" value="120" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (mode D)</label>
-          <input id="seedD" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Opération</label><select id="eightOp"><option value="SUB">Différence</option><option value="ADD">Somme</option><option value="MIX">Mélange</option></select></div><div style="flex:1"><label>Taches</label><input id="eightTasks" type="number" value="1" /></div></div>
     </div>
-
     <div id="investigateSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Nombre de taches</label>
-          <select id="invTaskCount">
-            <option value="2" selected>2 Taches</option>
-            <option value="3">3 Taches</option>
-          </select>
-        </div>
-        <div style="flex:1">
-          <label>Format Indices</label>
-          <select id="invClueType">
-            <option value="SENTENCE" selected>Phrases</option>
-            <option value="SYMBOL">Symboles (=)</option>
-          </select>
-        </div>
-      </div>
-      <div class="row" id="invStructureRow" style="margin-top:10px;">
-        <div style="flex:1">
-          <label>Structure (3 taches)</label>
-          <select id="invStructure3">
-            <option value="CHAIN">Chaîne (A→B→C)</option>
-            <option value="PIVOT">Pivot (B←A→C)</option>
-            <option value="MIX" selected>Aléatoire</option>
-          </select>
-        </div>
-      </div>
-      <label>Opérations autorisées</label>
-      <div class="row" style="gap:5px; align-items:flex-start">
-        <label class="checkInline" title="Multiplication (Ex: 3 fois plus)"><input type="checkbox" id="invOpMul" checked> <span>×k</span></label>
-        <label class="checkInline" title="Division (Ex: 3 fois moins)"><input type="checkbox" id="invOpDiv" checked> <span>÷k</span></label>
-        <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
-        <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Valeur ajout/retrait max</label>
-          <input id="invMaxAdd" type="number" min="1" max="100" value="20" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes visibles (min)</label>
-          <input id="invVisibleMin" type="number" min="1" max="10" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles (max)</label>
-          <input id="invVisibleMax" type="number" min="1" max="10" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (mode C)</label>
-          <input id="seedE" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Taches</label><select id="invTaskCount"><option value="2">2</option><option value="3">3</option></select></div><div style="flex:1"><label>Format</label><select id="invClueType"><option value="SENTENCE">Phrases</option><option value="SYMBOL">Symboles</option></select></div></div>
     </div>
-
     <div id="systemSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
-          <label>Format Indices</label>
-          <select id="sysClueType">
-            <option value="SENTENCE" selected>Phrases</option>
-            <option value="SYMBOL">Symboles (+)</option>
-          </select>
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes visibles (min)</label>
-          <input id="sysVisibleMin" type="number" min="1" max="10" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles (max)</label>
-          <input id="sysVisibleMax" type="number" min="1" max="10" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="sysTotalMin" type="number" min="1" max="1000" value="30" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="sysTotalMax" type="number" min="1" max="1000" value="150" />
-        </div>
-        <div style="flex:1">
-          <label>Graine (mode D)</label>
-          <input id="seedSys" type="number" placeholder="ex: 2026" />
-        </div>
-      </div>
+      <div class="row"><div style="flex:1"><label>Format</label><select id="sysClueType"><option value="SENTENCE">Phrases</option><option value="SYMBOL">Symboles</option></select></div></div>
     </div>
-
     <label>Nombre de cartes</label>
     <input id="count" type="number" min="1" max="300" value="10" />
-
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="btnGen">Générer</button>
-      <button class="btn" id="btnShuffle">Mélanger</button>
-      <button class="btn danger" id="btnClear">Vider</button>
-    </div>
-
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="btnPrev">◀</button>
-      <button class="btn" id="btnNext">▶</button>
-      <button class="iconbtn" id="btnFullscreen" title="Plein écran">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="btnPrint">Imprimer planche</button>
-      <label class="checkInline" title="Imprime avec la/les taches en mode révélé (réponses visibles)">
-        <input id="printAnswers" type="checkbox" />
-        <span>Avec réponses</span>
-      </label>
-    </div>
-    <div class="hint">
-      Raccourcis :<br>
-      • Espace = révéler / cacher<br>
-      • ← / → = carte précédente / suivante<br>
-      • F = plein écran<br><br>
-      Graine : vide = série nouvelle à chaque clic ; remplie = série reproductible.
-    </div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="btnGen">Générer</button><button class="btn" id="btnShuffle">Mélanger</button><button class="btn danger" id="btnClear">Vider</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="btnPrev">◀</button><button class="btn" id="btnNext">▶</button><button class="iconbtn" id="btnFullscreen"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/></svg></button></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="btnPrint">Imprimer</button><label class="checkInline"><input id="printAnswers" type="checkbox" /><span>Avec réponses</span></label></div>
   </section>
-
-  <section class="stage fsHost" id="fsHost">
-    <div class="cardbox">
-      <div class="nav">
-        <div class="counter" id="counter">0 carte</div>
-      </div>
-      <div id="svgWrap">
-        <svg id="mainSvg" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
-      </div>
-    </div>
-  </section>
+  <section class="stage fsHost" id="fsHost"><div class="cardbox"><div class="counter" id="counter">0 carte</div><div id="svgWrap"><svg id="mainSvg" viewBox="0 0 1600 1000"></svg></div></div></section>
 </div>
-
 <div class="printArea" id="printArea"></div>
-
 <script>
-/* RNG */
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
-function makeRng(seed){
-  if(seed===null||seed===undefined||seed==="") return Math.random;
-  const s = Number(seed);
-  if(!Number.isFinite(s)) return Math.random;
-  return mulberry32(s|0);
-}
+function makeRng(seed){return (seed===""||seed==null)?Math.random:mulberry32(Number(seed)|0);}
 function rInt(rng,a,b){return a+Math.floor(rng()*(b-a+1));}
-function rFloat(rng,a,b){return a + rng()*(b-a);}
+function rFloat(rng,a,b){return a+rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
-
 function beadColorForValue(v){
-  let hue = (v * 37) % 360;
-  
-  // CORRECTION COULEURS (Mode C/D)
-  // Eviter Violet (250-290) et Orange (15-45)
-  if((hue > 250 && hue < 290) || (hue > 15 && hue < 45)){
-    hue = (hue + 60) % 360; 
-  }
-
-  const isLight = document.body.classList.contains("light");
-  const fillA = isLight ? 0.18 : 0.24;
-  const strokeA = isLight ? 0.55 : 0.65;
-  return {
-    fill: `hsla(${hue}, 78%, 54%, ${fillA})`,
-    stroke: `hsla(${hue}, 78%, 48%, ${strokeA})`
-  };
+  const hue=(v*37)%360; const isL=document.body.classList.contains("light");
+  return {fill:`hsla(${hue},78%,54%,${isL?0.18:0.24})`, stroke:`hsla(${hue},78%,48%,${isL?0.55:0.65})`};
 }
 
-/* UI refs */
-const activityEl = document.getElementById("activity");
-const countEl = document.getElementById("count");
-const diffEl = document.getElementById("difficulty");
-const seedEl = document.getElementById("seed");
-const seedUEl = document.getElementById("seedU");
+const activityEl=document.getElementById("activity"), countEl=document.getElementById("count"), diffEl=document.getElementById("difficulty"), seedEl=document.getElementById("seed");
+const unitSettingsEl=document.getElementById("unitSettings"), numberedSettingsEl=document.getElementById("numberedSettings"), nineSettingsEl=document.getElementById("nineSettings"), eightSettingsEl=document.getElementById("eightSettings"), investigateSettingsEl=document.getElementById("investigateSettings"), systemSettingsEl=document.getElementById("systemSettings");
+const svg=document.getElementById("mainSvg");
 
-const classicSettingsEl = document.getElementById("classicSettings");
-const unitSettingsEl = document.getElementById("unitSettings");
-
-const numberedSettingsEl = document.getElementById("numberedSettings");
-const nineSettingsEl = document.getElementById("nineSettings");
-const nineOpEl = document.getElementById("nineOp");
-const nineTasksEl = document.getElementById("nineTasks");
-const nineTotalMinEl = document.getElementById("nineTotalMin");
-const nineTotalMaxEl = document.getElementById("nineTotalMax");
-const nineVisibleMaxEl = document.getElementById("nineVisibleMax");
-const seedCEl = document.getElementById("seedC");
-
-const eightSettingsEl = document.getElementById("eightSettings");
-const eightOpEl = document.getElementById("eightOp");
-const eightTasksEl = document.getElementById("eightTasks");
-const eightVisibleMaxEl = document.getElementById("eightVisibleMax");
-const eightTotalMinEl = document.getElementById("eightTotalMin");
-const eightTotalMaxEl = document.getElementById("eightTotalMax");
-const seedDEl = document.getElementById("seedD");
-
-/* UI refs - Mode C (Enquête) */
-const investigateSettingsEl = document.getElementById("investigateSettings");
-const invTaskCountEl = document.getElementById("invTaskCount");
-const invClueTypeEl = document.getElementById("invClueType");
-const invStructureRow = document.getElementById("invStructureRow");
-const invStructure3El = document.getElementById("invStructure3");
-const invOpMulEl = document.getElementById("invOpMul");
-const invOpDivEl = document.getElementById("invOpDiv");
-const invOpAddEl = document.getElementById("invOpAdd");
-const invOpSubEl = document.getElementById("invOpSub");
-const invMaxAddEl = document.getElementById("invMaxAdd");
-const invVisibleMinEl = document.getElementById("invVisibleMin");
-const invVisibleMaxEl = document.getElementById("invVisibleMax");
-const invTotalMinEl = document.getElementById("invTotalMin");
-const invTotalMaxEl = document.getElementById("invTotalMax");
-const seedEEl = document.getElementById("seedE");
-
-/* UI refs - Mode D (Système) */
-const systemSettingsEl = document.getElementById("systemSettings");
-const sysClueTypeEl = document.getElementById("sysClueType");
-const sysVisibleMinEl = document.getElementById("sysVisibleMin");
-const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
-const sysTotalMinEl = document.getElementById("sysTotalMin");
-const sysTotalMaxEl = document.getElementById("sysTotalMax");
-const seedSysEl = document.getElementById("seedSys");
-
-const unitTasksEl = document.getElementById("unitTasks");
-const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
-const unitHiddenMaxEl = document.getElementById("unitHiddenMax");
-const unitTotalMinEl = document.getElementById("unitTotalMin");
-const unitTotalMaxEl = document.getElementById("unitTotalMax");
-
-const numTasksEl = document.getElementById("numTasks");
-const numVisibleMinEl = document.getElementById("numVisibleMin");
-const numVisibleMaxEl = document.getElementById("numVisibleMax");
-const numHiddenCountEl = document.getElementById("numHiddenCount");
-const numTotalMinEl = document.getElementById("numTotalMin");
-const numTotalMaxEl = document.getElementById("numTotalMax");
-const seedNEl = document.getElementById("seedN");
-
-/* Helpers */
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
-
-function getSeedForCurrentMode(){
-  const act = activityEl.value;
-  if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
-  if(act === "N") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
-  if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
-  if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
-  if(act === "C9") return (seedCEl.value||"").trim() ? Number(seedCEl.value) : "";
-  if(act === "C8") return (seedDEl.value||"").trim() ? Number(seedDEl.value) : "";
-  return (seedEl.value||"").trim() ? Number(seedEl.value) : "";
-}
-
-function syncSettingsUI(){
-  const act = activityEl.value;
-
-  const isUnit = act === "U";
-  const isNumbered = act === "N";
-  const isNine = act === "C9";
-  const isEight = act === "C8";
-  const isInvestigate = act === "C";
-  const isSystem = act === "D";
-  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
-
-  classicSettingsEl.style.display = isClassic ? "block" : "none";
-  unitSettingsEl.style.display = isUnit ? "block" : "none";
-  numberedSettingsEl.style.display = isNumbered ? "block" : "none";
-  nineSettingsEl.style.display = isNine ? "block" : "none";
-  eightSettingsEl.style.display = isEight ? "block" : "none";
-  investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
-  systemSettingsEl.style.display = isSystem ? "block" : "none";
-
-  if(isInvestigate){
-    if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
-  }
-
-  if(isUnit) syncUnitTotalBounds();
-}
-
-function syncUnitTotalBounds(){
-  const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
-  const vMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
-  const hMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
-
-  const HARD_CAP = 50; 
-  const maxPossible = vMax + tasks * hMax;
-  const maxAllowed = clamp(Math.min(maxPossible, HARD_CAP), 1, HARD_CAP);
-  const minPossible = 1 + tasks * (hMax > 0 ? 1 : 0);
-
-  unitTotalMinEl.min = 1;
-  unitTotalMinEl.max = String(maxAllowed);
-  unitTotalMaxEl.min = 1;
-  unitTotalMaxEl.max = String(maxAllowed);
-
-  let tMin = clamp(numberOr(unitTotalMinEl.value, minPossible), 1, maxAllowed);
-  let tMax = clamp(numberOr(unitTotalMaxEl.value, maxAllowed), 1, maxAllowed);
-
-  if(tMin < minPossible) tMin = minPossible;
-  if(tMax < minPossible) tMax = minPossible;
-  if(tMax < tMin) tMax = tMin;
-
-  unitTotalMinEl.value = String(tMin);
-  unitTotalMaxEl.value = String(tMax);
-}
-
-let autoGenTimer = null;
-function scheduleAutoGenerate(){
-  if(autoGenTimer) clearTimeout(autoGenTimer);
-  autoGenTimer = setTimeout(()=>{
-    if(activityEl.value === "U") syncUnitTotalBounds();
-    generate();
-  }, 150);
-}
-
-activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
-invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
-
-[
-  countEl, diffEl, seedEl,
-  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
-  nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
-  eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
-  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
-  sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl
-].forEach(el=>{
-  if(!el) return;
-  el.addEventListener("input", scheduleAutoGenerate);
-  el.addEventListener("change", scheduleAutoGenerate);
-});
-
-/* Positions + splat */
-function blobPath(cx, cy, r){
-  const n = 40;
-  const lobes = 5;
-  const pts = [];
+function getTrayConfig(mode){ return (mode==="C"||mode==="D")?{x:120,y:20,w:1360,h:650}:{x:120,y:260,w:1360,h:650}; }
+function el(n,a={}){const e=document.createElementNS("http://www.w3.org/2000/svg",n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function text(x,y,t,a={}){const n=el("text",{x,y,...a});n.textContent=t;return n;}
+function blobPath(cx,cy,r){
+  const n=40,lobes=5,pts=[];
+  for(let i=0;i<n;i++){const a=(Math.PI*2*i)/n,k=0.9+0.16*Math.sin(lobes*a)+0.04*Math.sin(2*lobes*a),rr=r*k;pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr]);}
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
   for(let i=0;i<n;i++){
-    const a = (Math.PI * 2 * i) / n;
-    const k = 0.90 + 0.16 * Math.sin(lobes*a) + 0.04 * Math.sin(2*lobes*a);
-    const rr = r * k;
-    pts.push([cx + Math.cos(a)*rr, cy + Math.sin(a)*rr]);
+    const p1=pts[i],p2=pts[(i+1)%n],p0=pts[(i-1+n)%n],p3=pts[(i+2)%n],t=1/6;
+    d+=` C ${p1[0]+(p2[0]-p0[0])*t} ${p1[1]+(p2[1]-p0[1])*t}, ${p2[0]-(p3[0]-p1[0])*t} ${p2[1]-(p3[1]-p1[1])*t}, ${p2[0]} ${p2[1]}`;
   }
-  function cr2bz(p0,p1,p2,p3){
-    const t = 1/6;
-    const c1x = p1[0] + (p2[0]-p0[0]) * t;
-    const c1y = p1[1] + (p2[1]-p0[1]) * t;
-    const c2x = p2[0] - (p3[0]-p1[0]) * t;
-    const c2y = p2[1] - (p3[1]-p1[1]) * t;
-    return [c1x,c1y,c2x,c2y,p2[0],p2[1]];
-  }
-  let d = `M ${pts[0][0]} ${pts[0][1]}`;
-  for(let i=0;i<n;i++){
-    const p0 = pts[(i-1+n)%n];
-    const p1 = pts[i];
-    const p2 = pts[(i+1)%n];
-    const p3 = pts[(i+2)%n];
-    const [c1x,c1y,c2x,c2y,x,y] = cr2bz(p0,p1,p2,p3);
-    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
-  }
-  d += " Z";
-  return d;
+  return d+" Z";
 }
 
-function getUnitSplats(taskCount){
-  const tray = { x:120, y:260, w:1360, h:650 };
-  const cyMid = tray.y + tray.h/2; 
-  const anchors = {
-    1:[{cx:820, cy:cyMid+25}],
-    2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
-    3:[{cx:820, cy:470},{cx:610, cy:690},{cx:1030, cy:690}],
-    4:[{cx:610, cy:480},{cx:1030, cy:480},{cx:610, cy:740},{cx:1030, cy:740}],
-    5:[{cx:820, cy:367},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:803},{cx:1080, cy:803}],
-  };
-  const base = anchors[taskCount] || anchors[2];
-  const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 102)));
-  return base.map(p => ({...p, r}));
-}
-
-/* TRAY CONFIGURATION */
-function getTrayConfig(mode){
-  if(mode === "C" || mode === "D") return { x:120, y:20, w:1360, h:650, isHigh: true }; 
-  return { x:120, y:260, w:1360, h:650, isHigh: false };
-}
-
-function getNumberedSplats(taskCount, mode){
-  const tray = getTrayConfig(mode);
-  const cyMid = tray.y + tray.h/2; 
-
-  const anchors = {
-    1:[{cx:820, cy:cyMid+25}],
-    2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
-    
-    3:[{cx:820, cy:cyMid-110},{cx:580, cy:cyMid+130},{cx:1060, cy:cyMid+130}],
-
-    4:[{cx:610, cy:465},{cx:1030, cy:465},{cx:610, cy:745},{cx:1030, cy:745}],
-    5:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:680, cy:750},{cx:960, cy:750}],
-    6:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:540, cy:750},{cx:820, cy:750},{cx:1100, cy:750}],
-  };
-  const base = anchors[taskCount] || anchors[2];
-  
-  const r = (taskCount<=1) ? 260 : (taskCount===2 ? 210 : (taskCount===3 ? 165 : (taskCount===4 ? 150 : (taskCount===5 ? 130 : 118))));
-  return base.map(p => ({...p, r}));
-}
-
-function randomComposition(rng, sum, parts){
-  if(parts <= 1) return [sum];
-  const minSum = parts; 
-  if(sum < minSum) return Array.from({length:parts}, ()=>1);
-  const remain = sum - parts;
-  const cuts = [];
-  for(let i=0;i<parts-1;i++) cuts.push(rInt(rng, 0, remain));
-  cuts.sort((a,b)=>a-b);
-  const out = [];
-  let prev = 0;
-  for(const c of cuts){
-    out.push((c - prev) + 1);
-    prev = c;
-  }
-  out.push((remain - prev) + 1);
-  shuffleInPlace(out, rng);
-  return out;
-}
-
-function assignPositionsNumbered(card, rng){
-  const tray = getTrayConfig(card.family);
-  const margin = 14;
-
-  const meta = card._num;
-  const splats = getNumberedSplats(meta.tasks, card.family);
-  card._splats = splats;
-
-  const minSplatR = Math.min(...splats.map(s=>s.r));
-  let beadR = Math.floor((minSplatR - 28) / 2); 
-  beadR = clamp(beadR, 34, 60);
-  card._beadR = beadR;
-
-  const posH = [];
-  for(let t=0; t<meta.tasks; t++){
-    const s = splats[t];
-    const arr = meta.hiddenByTask[t];
-    if(arr.length === 1){
-      const maxD = Math.max(0, s.r - beadR - 30);
-      const a = rFloat(rng, 0, Math.PI*2);
-      const d = rFloat(rng, 0, Math.min(10, maxD));
-      posH.push({cx: s.cx + Math.cos(a)*d, cy: s.cy + Math.sin(a)*d});
-    }else{
-      const maxD = Math.max(0, s.r - beadR - 22);
-      const d = Math.min(beadR, maxD);
-      const a = rFloat(rng, 0, Math.PI*2);
-      const vx = Math.cos(a)*d;
-      const vy = Math.sin(a)*d;
-      posH.push({cx: s.cx + vx, cy: s.cy + vy});
-      posH.push({cx: s.cx - vx, cy: s.cy - vy});
-    }
-  }
-  card._posH = posH;
-
-  const placed = [];
-  function okSpot(cx, cy){
-    if(cx < tray.x + beadR + margin) return false;
-    if(cx > tray.x + tray.w - beadR - margin) return false;
-    if(cy < tray.y + beadR + margin) return false;
-    if(cy > tray.y + tray.h - beadR - margin) return false;
-
-    // PROTECTION ZONE TOTAL (MODE C & D) STRICTE
-    if(card.family === "C" || card.family === "D"){
-        // Augmentation de la zone interdite pour éviter les billes
-        if(cx < 460 && cy < 320) return false;
-    }
-
-    for(const s of splats){
-      const d = Math.hypot(cx - s.cx, cy - s.cy);
-      if(d < s.r + beadR + 14) return false;
-    }
-    for(const p of placed){
-      if(Math.hypot(cx - p.cx, cy - p.cy) < beadR*2 + 12) return false;
-    }
-    return true;
-  }
-
-  function pickVisible(){
-    for(let tries=0; tries<2500; tries++){
-      const cx = tray.x + beadR + margin + rng()*(tray.w - (beadR+margin)*2);
-      const cy = tray.y + beadR + margin + rng()*(tray.h - (beadR+margin)*2);
-      if(okSpot(cx,cy)){
-        placed.push({cx,cy});
-        return {cx,cy};
-      }
-    }
-    const baseY = tray.y + beadR + 16;
-    const step = Math.min(260, Math.floor(tray.w / Math.max(1, card.visible.length+1)));
-    const i = placed.length;
-    const cx = tray.x + step*(i+1);
-    const cy = baseY;
-    placed.push({cx,cy});
-    return {cx,cy};
-  }
-
-  card._posV = card.visible.map(()=> pickVisible());
-}
-
-function assignPositions(card, rng){
-  if(card.family === "U"){
-    assignPositionsUnits(card, rng);
-  }else if(card.family === "N" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
-    assignPositionsNumbered(card, rng);
-  }else{
-    assignPositionsClassic(card, rng);
-  }
-}
-
-/* --- GÉNÉRATION ENQUÊTE (Mode C) --- */
-function genInvestigate(rng){
-  const taskCount = parseInt(invTaskCountEl.value); 
-  const clueType = invClueTypeEl.value; 
-  const structureMode = invStructure3El.value; 
-
-  const userMin = numberOr(invTotalMinEl.value, 20);
-  const userMax = numberOr(invTotalMaxEl.value, 100);
-  const maxAddVal = numberOr(invMaxAddEl.value, 20); 
-
-  let visMin = clamp(numberOr(invVisibleMinEl.value, 1), 0, 10);
-  let visMax = clamp(numberOr(invVisibleMaxEl.value, 3), 0, 10);
-  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
-
-  const minTotal = Math.max(1, Math.min(userMin, userMax));
-  const maxTotal = Math.max(1, Math.max(userMin, userMax));
-
-  const ops = [];
-  if(invOpAddEl.checked) ops.push('ADD');
-  if(invOpSubEl.checked) ops.push('SUB');
-  if(invOpMulEl.checked) ops.push('MUL');
-  if(invOpDivEl.checked) ops.push('DIV');
-  if(ops.length === 0) ops.push('ADD');
-
-  const icons = ["⚫", "🟣", "🟠"];
-  const names = ["la noire", "la violette", "l'orange"];
-
-  function pickRelation(){
-    const op = ops[rInt(rng, 0, ops.length-1)];
-    if(op === 'MUL'){
-      const k = rInt(rng, 2, 4);
-      return {
-        apply: (x) => x * k,
-        check: (x) => true,
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${k} × ${icons[sIdx]}` : `Sous ${names[tIdx]}, il y a ${k} fois plus de billes que sous ${names[sIdx]}.`
-      };
-    }
-    if(op === 'DIV'){
-      const k = rInt(rng, 2, 4);
-      return {
-        apply: (x) => x / k,
-        check: (x) => (x % k === 0),
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} ÷ ${k}` : `Sous ${names[tIdx]}, il y a ${k} fois moins de billes que sous ${names[sIdx]}.`
-      };
-    }
-    if(op === 'ADD'){
-      const k = rInt(rng, 1, maxAddVal);
-      return {
-        apply: (x) => x + k,
-        check: (x) => true,
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} + ${k}` : `Sous ${names[tIdx]}, il y a ${k} billes de plus que sous ${names[sIdx]}.`
-      };
-    }
-    if(op === 'SUB'){
-      const k = rInt(rng, 1, maxAddVal);
-      return {
-        apply: (x) => x - k,
-        check: (x) => (x - k > 0), 
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? `${icons[tIdx]} = ${icons[sIdx]} − ${k}` : `Sous ${names[tIdx]}, il y a ${k} billes de moins que sous ${names[sIdx]}.`
-      };
-    }
-    return null;
-  }
-
-  for(let tries=0; tries<5000; tries++){
-    const hiddenVals = new Array(taskCount).fill(0);
-    const indices = [];
-
-    if(taskCount === 2){
-      const dir = rInt(rng, 0, 1);
-      const source = dir; 
-      const target = 1 - dir;
-      const rel = pickRelation();
-      const maxSource = Math.floor(maxTotal * 0.8); 
-      const valSource = rInt(rng, 1, maxSource);
-      if(!rel.check(valSource)) continue;
-      const valTarget = rel.apply(valSource);
-      if(valTarget <= 0) continue;
-      hiddenVals[source] = valSource;
-      hiddenVals[target] = valTarget;
-      indices.push(rel.desc(target, source));
-    } else {
-      let mode = structureMode;
-      if(mode === "MIX") mode = (rng() > 0.5) ? "CHAIN" : "PIVOT";
-      const p = [0,1,2];
-      shuffleInPlace(p, rng);
-      const rel1 = pickRelation();
-      const rel2 = pickRelation();
-      let source2;
-      if(mode === "CHAIN"){ source2 = p[1]; } else { source2 = p[0]; }
-      const maxRoot = Math.floor(maxTotal * 0.6);
-      const valRoot = rInt(rng, 1, maxRoot);
-      if(!rel1.check(valRoot)) continue;
-      const val1 = rel1.apply(valRoot);
-      if(val1 <= 0) continue;
-      const valSource2 = (source2 === p[0]) ? valRoot : val1;
-      if(!rel2.check(valSource2)) continue;
-      const val2 = rel2.apply(valSource2);
-      if(val2 <= 0) continue;
-      hiddenVals[p[0]] = valRoot;
-      hiddenVals[p[1]] = val1;
-      hiddenVals[p[2]] = val2;
-      indices.push(rel1.desc(p[1], p[0]));
-      indices.push(rel2.desc(p[2], source2));
-    }
-
-    const hiddenSum = hiddenVals.reduce((a,b)=>a+b, 0);
-    const visCount = rInt(rng, visMin, visMax);
-    const visBeads = [];
-    let visSum = 0;
-    for(let k=0; k<visCount; k++){
-        const val = rInt(rng, 1, 9);
-        visBeads.push(val);
-        visSum += val;
-    }
-    const total = hiddenSum + visSum;
-
-    if(total >= minTotal && total <= maxTotal){
-      return {
-        family: "C",
-        total,
-        visible: visBeads, 
-        hidden: hiddenVals, 
-        _num: { tasks: taskCount, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
-        _inv: { indices } 
-      };
-    }
-  }
-  return { family: "C", total: 10, visible: [], hidden: [3,3], _num: { tasks: taskCount, hiddenByTask: [[3],[3]], hiddenBeadsPerTask:1 }, _inv: { indices: ["Erreur"] } };
-}
-
-/* --- GÉNÉRATION SYSTÈME (Mode D) --- */
-function genSystem(rng){
-  const taskCount = 3; 
-  const clueType = sysClueTypeEl.value; // SENTENCE ou SYMBOL
-
-  const userMin = numberOr(sysTotalMinEl.value, 30);
-  const userMax = numberOr(sysTotalMaxEl.value, 150);
-
-  let visMin = clamp(numberOr(sysVisibleMinEl.value, 1), 0, 10);
-  let visMax = clamp(numberOr(sysVisibleMaxEl.value, 3), 0, 10);
-  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
-
-  const minTotal = Math.max(1, Math.min(userMin, userMax));
-  const maxTotal = Math.max(1, Math.max(userMin, userMax));
-
-  const icons = ["⚫", "🟣", "🟠"];
-  const colorNames = ["Noir", "Violet", "Orange"];
-
-  for(let tries=0; tries<5000; tries++){
-    const vals = [
-        rInt(rng, 5, Math.floor(maxTotal/3)),
-        rInt(rng, 5, Math.floor(maxTotal/3)),
-        rInt(rng, 5, Math.floor(maxTotal/3))
-    ];
-    
-    const visCount = rInt(rng, visMin, visMax);
-    const visBeads = [];
-    let visSum = 0;
-    for(let k=0; k<visCount; k++){
-        const val = rInt(rng, 1, 9);
-        visBeads.push(val);
-        visSum += val;
-    }
-
-    const total = vals[0] + vals[1] + vals[2] + visSum;
-
-    if(total < minTotal || total > maxTotal) continue;
-
-    // 2 indices (Sommes de paires)
-    const pairs = [[0,1], [1,2], [0,2]];
-    shuffleInPlace(pairs, rng);
-    
-    const p1 = pairs[0];
-    const p2 = pairs[1];
-
-    const sum1 = vals[p1[0]] + vals[p1[1]];
-    const sum2 = vals[p2[0]] + vals[p2[1]];
-
-    const indices = [];
-
-    function formatClue(idxA, idxB, s){
-        if(clueType === "SYMBOL"){
-            return `${icons[idxA]} + ${icons[idxB]} = ${s}`;
-        } else {
-            return `${colorNames[idxA]} + ${colorNames[idxB]} = ${s}`;
-        }
-    }
-
-    indices.push(formatClue(p1[0], p1[1], sum1));
-    indices.push(formatClue(p2[0], p2[1], sum2));
-
-    return {
-        family: "D",
-        total,
-        visible: visBeads,
-        hidden: vals,
-        _num: { tasks: 3, hiddenByTask: vals.map(v=>[v]), hiddenBeadsPerTask:1 },
-        _inv: { indices } 
-    };
-  }
-
-  return { family: "D", total: 20, visible: [], hidden: [5,5,5], _num: { tasks:3, hiddenByTask:[[5],[5],[5]] }, _inv: { indices: ["Erreur"] } };
-}
-
-
-/* Existing Gens */
-function genNumbered(rng){
-  const tasks = clamp(numberOr(numTasksEl.value, 1), 1, 6);
-  let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
-  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 1, 5);
-  if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
-  let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 10, 10);
-  let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
-  let totalMin = clamp(userMin, 1, 1000);
-  let totalMax = clamp(userMax, 1, 1000);
-  const hiddenBeadsPerTask = clamp(numberOr(numHiddenCountEl ? numHiddenCountEl.value : 1, 1), 1, 2);
-  const minPossible = vMin + tasks*hiddenBeadsPerTask;
-  if(totalMax < minPossible) totalMax = minPossible;
-  if(totalMin < minPossible) totalMin = minPossible;
-  if(totalMax < totalMin) totalMax = totalMin;
-  for(let tries=0; tries<2000; tries++){
-    const total = rInt(rng, totalMin, totalMax);
-    const visibleCount = rInt(rng, vMin, vMax);
-    const maxH = Math.floor((total - visibleCount) / tasks);
-    if(maxH < hiddenBeadsPerTask) continue;
-    const H = rInt(rng, hiddenBeadsPerTask, maxH);
-    const visibleSum = total - tasks*H;
-    if(visibleSum < visibleCount) continue;
-    const visible = randomComposition(rng, visibleSum, visibleCount);
-    const hiddenByTask = [];
-    for(let t=0; t<tasks; t++){
-      if(hiddenBeadsPerTask === 1){
-        hiddenByTask.push([H]);
-      }else{
-        const a = rInt(rng, 1, H-1);
-        hiddenByTask.push([a, H-a]);
-      }
-    }
-    const hidden = hiddenByTask.flat();
-    return {
-      family: "N",
-      total,
-      visible,
-      hidden,
-      _num: { tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
-    };
-  }
-  const total = totalMin;
-  const visibleCount = vMin;
-  const H = hiddenBeadsPerTask;
-  const visible = Array.from({length: visibleCount}, ()=>1);
-  const hiddenByTask = Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H] : [1, H-1]) );
-  const hidden = hiddenByTask.flat();
-  return {
-    family:"N",
-    total,
-    visible,
-    hidden,
-    _num:{ tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
-  };
-}
-
-function genOp9(rng){
-  const opSetting = (nineOpEl.value || "SUB");
-  const tasks = clamp(numberOr(nineTasksEl.value, 1), 1, 6);
-  const vMaxUser = clamp(numberOr(nineVisibleMaxEl.value, 3), 1, 5);
-  let userMin = numberOr(nineTotalMinEl.value, 30);
-  let userMax = numberOr(nineTotalMaxEl.value, 120);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
-  const totalMin = clamp(userMin, 1, 1000);
-  const totalMax = clamp(userMax, 1, 1000);
-  const family = [];
-  for(let v=9; v<=99; v+=10) family.push(v);
-  function pickOp(){ if(opSetting === "MIX") return (rng() < 0.5) ? "SUB" : "ADD"; return opSetting; }
-  const visBudgetMax = totalMax - tasks * 1;
-  for(let tries=0; tries<4000; tries++){
-    const op = pickOp();
-    let k = family[rInt(rng, 0, family.length-1)];
-    if(k > visBudgetMax){ k = 9; if(k > visBudgetMax) continue; }
-    let visibleCount;
-    if(op === "SUB"){ visibleCount = 1; }else{
-      const maxVis = Math.max(2, vMaxUser);
-      visibleCount = rInt(rng, 2, maxVis);
-      while(visibleCount > 2 && (k + (visibleCount-1)*1) > visBudgetMax) visibleCount--;
-      if((k + (visibleCount-1)*1) > visBudgetMax) continue;
-    }
-    const visible = [k];
-    if(visibleCount > 1){
-      let budget = visBudgetMax - k;
-      let remaining = visibleCount - 1;
-      for(let i=0; i<remaining; i++){
-        const minRest = (remaining - 1 - i) * 1;
-        let maxV = Math.min(99, budget - minRest);
-        if(maxV < 1){ budget = -1; break; }
-        const v = rInt(rng, 1, maxV);
-        visible.push(v);
-        budget -= v;
-      }
-      if(budget < 0) continue;
-    }
-    const visibleSum = visible.reduce((a,b)=>a+b,0);
-    const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
-    const hHigh = Math.floor((totalMax - visibleSum) / tasks);
-    if(hHigh < hLow) continue;
-    const H = rInt(rng, hLow, hHigh);
-    const total = visibleSum + tasks * H;
-    const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
-    const hidden = hiddenByTask.flat();
-    return {
-      family: "C9",
-      total, visible, hidden,
-      _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
-      _c9: { op, opSetting, k }
-    };
-  }
-  return genNumbered(rng); 
-}
-
-function genOp8(rng){
-  const opSetting = (eightOpEl.value || "SUB");
-  const tasks = clamp(numberOr(eightTasksEl.value, 1), 1, 6);
-  const vMaxUser = clamp(numberOr(eightVisibleMaxEl.value, 3), 1, 5);
-  let userMin = numberOr(eightTotalMinEl.value, 30);
-  let userMax = numberOr(eightTotalMaxEl.value, 120);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
-  const totalMin = clamp(userMin, 1, 1000);
-  const totalMax = clamp(userMax, 1, 1000);
-  const family = [];
-  for(let v=8; v<=98; v+=10) family.push(v);
-  function pickOp(){ if(opSetting === "MIX") return (rng() < 0.5) ? "SUB" : "ADD"; return opSetting; }
-  const visBudgetMax = totalMax - tasks * 1;
-  for(let tries=0; tries<4000; tries++){
-    const op = pickOp();
-    let k = family[rInt(rng, 0, family.length-1)];
-    if(k > visBudgetMax){ k = 8; if(k > visBudgetMax) continue; }
-    let visibleCount;
-    if(op === "SUB"){ visibleCount = 1; }else{
-      const maxVis = Math.max(2, vMaxUser);
-      visibleCount = rInt(rng, 2, maxVis);
-      while(visibleCount > 2 && (k + (visibleCount-1)*1) > visBudgetMax) visibleCount--;
-      if((k + (visibleCount-1)*1) > visBudgetMax) continue;
-    }
-    const visible = [k];
-    if(visibleCount > 1){
-      let budget = visBudgetMax - k;
-      let remaining = visibleCount - 1;
-      for(let i=0; i<remaining; i++){
-        const minRest = (remaining - 1 - i) * 1;
-        let maxV = Math.min(99, budget - minRest);
-        if(maxV < 1){ budget = -1; break; }
-        const v = rInt(rng, 1, maxV);
-        visible.push(v);
-        budget -= v;
-      }
-      if(budget < 0) continue;
-    }
-    const visibleSum = visible.reduce((a,b)=>a+b,0);
-    const hLow = Math.max(1, Math.ceil((totalMin - visibleSum) / tasks));
-    const hHigh = Math.floor((totalMax - visibleSum) / tasks);
-    if(hHigh < hLow) continue;
-    const H = rInt(rng, hLow, hHigh);
-    const total = visibleSum + tasks * H;
-    const hiddenByTask = Array.from({length: tasks}, ()=> [H]);
-    const hidden = hiddenByTask.flat();
-    return {
-      family: "C8",
-      total, visible, hidden,
-      _num: { tasks, visibleCount, vMin:visibleCount, vMax:visibleCount, totalMin, totalMax, hiddenBeadsPerTask:1, H, hiddenByTask },
-      _c8: { op, opSetting, k }
-    };
-  }
-  return genNumbered(rng);
-}
-
-function assignPositionsClassic(card, rng){
-  const tray = { x:120, y:260, w:1360, h:650 };
-  const beadR = 95;
-  const margin = 18;
-  const splat = { cx: 820, cy: 610, r: 260 };
-  card._splat = splat;
-  const placed = [];
-  function okSpotVisible(cx, cy){
-    if(cx < tray.x + beadR + margin) return false;
-    if(cx > tray.x + tray.w - beadR - margin) return false;
-    if(cy < tray.y + beadR + margin) return false;
-    if(cy > tray.y + tray.h - beadR - margin) return false;
-    const d = Math.hypot(cx - splat.cx, cy - splat.cy);
-    if(d < splat.r + beadR + 18) return false;
-    for(const p of placed){
-      const dd = Math.hypot(cx - p.cx, cy - p.cy);
-      if(dd < beadR*2 + 18) return false;
-    }
-    return true;
-  }
-  function pickVisible(area){
-    for(let tries=0; tries<800; tries++){
-      const cx = area.x + beadR + margin + rng() * (area.w - 2*(beadR+margin));
-      const cy = area.y + beadR + margin + rng() * (area.h - 2*(beadR+margin));
-      if(okSpotVisible(cx, cy)){
-        placed.push({cx,cy});
-        return {cx,cy};
-      }
-    }
-    const cx = area.x + area.w/2, cy = area.y + area.h/2;
-    placed.push({cx,cy});
-    return {cx,cy};
-  }
-  function pickHiddenInSplat(){
-    const maxR = (splat.r - beadR - 60);
-    for(let tries=0; tries<1000; tries++){
-      const a = rng() * Math.PI * 2;
-      const rr = Math.sqrt(rng()) * Math.max(10, maxR);
-      const cx = splat.cx + Math.cos(a) * rr;
-      const cy = splat.cy + Math.sin(a) * rr;
-      if(cx < tray.x + beadR + margin) continue;
-      if(cx > tray.x + tray.w - beadR - margin) continue;
-      if(cy < tray.y + beadR + margin) continue;
-      if(cy > tray.y + tray.h - beadR - margin) continue;
-      let ok = true;
-      for(const p of placed){
-        const dd = Math.hypot(cx - p.cx, cy - p.cy);
-        if(dd < beadR*2 + 18){ ok = false; break; }
-      }
-      if(ok){
-        placed.push({cx,cy});
-        return {cx,cy};
-      }
-    }
-    const cx = splat.cx, cy = splat.cy;
-    placed.push({cx,cy});
-    return {cx,cy};
-  }
-  const topArea = { x: tray.x, y: tray.y, w: tray.w, h: 300 };
-  card._posV = card.visible.map(()=> pickVisible(topArea));
-  card._posH = card.hidden.map(()=> pickHiddenInSplat());
-}
-
-function assignPositionsUnits(card, rng){
-  const tray = { x:120, y:260, w:1360, h:650 };
-  const margin = 8;
-  const tasks = card._unit?.tasks ?? 1;
-  const hiddenByTask = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
-  const splats = getUnitSplats(tasks);
-  card._splats = splats;
-  const ctx = (function(){
-    if(assignPositionsUnits._hitCtx) return assignPositionsUnits._hitCtx;
-    const c = document.createElement("canvas");
-    c.width = 1; c.height = 1;
-    const ct = c.getContext("2d");
-    assignPositionsUnits._hitCtx = ct;
-    return ct;
-  })();
-  const canPath2D = (typeof Path2D !== "undefined") && ctx && typeof ctx.isPointInPath === "function";
-  const splatObjs = splats.map(s=>{
-    const d = blobPath(s.cx, s.cy, s.r);
-    return { ...s, d, path: (canPath2D ? new Path2D(d) : null) };
-  });
-  const maxHidden = Math.max(0, ...hiddenByTask);
-  const minR = Math.min(...splatObjs.map(o=>o.r));
-  const rPad = Math.max(28, minR - 26);
-  let beadR = 24;
-  if(maxHidden > 0){
-    const calc = Math.floor(rPad * Math.sqrt(0.82 / Math.max(1, maxHidden)));
-    beadR = clamp(calc, 12, 26);
-  } else {
-    beadR = 26;
-  }
-  const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
-  if(totalBeads >= 55) beadR = Math.min(beadR, 15);
-  else if(totalBeads >= 45) beadR = Math.min(beadR, 17);
-  else if(totalBeads >= 35) beadR = Math.min(beadR, 19);
-  else if(totalBeads >= 25) beadR = Math.min(beadR, 21);
-  function insideTray(cx, cy){
-    if(cx < tray.x + beadR + margin) return false;
-    if(cx > tray.x + tray.w - beadR - margin) return false;
-    if(cy < tray.y + beadR + margin) return false;
-    if(cy > tray.y + tray.h - beadR - margin) return false;
-    return true;
-  }
-  function noOverlap(cx, cy, placed){
-    for(const p of placed){
-      if(Math.hypot(cx-p.cx, cy-p.cy) < (beadR*2 + 2)) return false; 
-    }
-    return true;
-  }
-  function farFromSplats(cx, cy){
-    for(const o of splatObjs){
-      if(Math.hypot(cx-o.cx, cy-o.cy) < (o.r + beadR + 18)) return false;
-    }
-    return true;
-  }
-  function pointInSplat(o, x, y){
-    if(canPath2D && o.path){
-      return ctx.isPointInPath(o.path, x, y);
-    }
-    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - 10);
-  }
-  function beadFullyInSplat(o, x, y){
-    if(!pointInSplat(o, x, y)) return false;
-    if(canPath2D && o.path){
-      return (function(){
-        const r = beadR;
-        const d = r * 0.7071067811865476; 
-        const pts = [
-          [ r, 0], [-r, 0], [0,  r], [0, -r],
-          [ d, d], [ d,-d], [-d, d], [-d,-d]
-        ];
-        for(const [dx,dy] of pts){
-          if(!ctx.isPointInPath(o.path, x+dx, y+dy)) return false;
-        }
-        return true;
-      })();
-    }
-    return Math.hypot(x-o.cx, y-o.cy) <= (o.r - beadR - 14);
-  }
-  function tryPlaceWithRadius(R){
-    beadR = R;
-    const placed = [];
-    function pickVisible(){
-      for(let tries=0; tries<12000; tries++){
-        const cx = tray.x + beadR + margin + rFloat(rng, 0, tray.w - (beadR*2 + margin*2));
-        const cy = tray.y + beadR + margin + rFloat(rng, 0, tray.h - (beadR*2 + margin*2));
-        if(!insideTray(cx,cy)) continue;
-        if(!farFromSplats(cx,cy)) continue;
-        let bad=false;
-        for(const o of splatObjs){ if(pointInSplat(o, cx, cy)) { bad=true; break; } }
-        if(bad) continue;
-        if(!noOverlap(cx,cy, placed)) continue;
-        placed.push({cx,cy});
-        return {cx,cy};
-      }
-      return null;
-    }
-    function pickHiddenInSplat(o){
-      for(let tries=0; tries<16000; tries++){
-        const a = rFloat(rng, 0, Math.PI*2);
-        const rr = Math.sqrt(rFloat(rng, 0, 1)) * Math.max(10, o.r - beadR - 18);
-        const cx = o.cx + Math.cos(a)*rr;
-        const cy = o.cy + Math.sin(a)*rr;
-        if(!insideTray(cx,cy)) continue;
-        if(!beadFullyInSplat(o, cx, cy)) continue;
-        if(!noOverlap(cx,cy, placed)) continue;
-        placed.push({cx,cy});
-        return {cx,cy};
-      }
-      return null;
-    }
-    const vCount = card._unit?.visibleCount ?? card.visible.length;
-    const posV = [];
-    for(let i=0;i<vCount;i++){
-      const p = pickVisible();
-      if(!p) return null;
-      posV.push(p);
-    }
-    const posH = [];
-    for(let t=0; t<tasks; t++){
-      const o = splatObjs[t];
-      const k = hiddenByTask[t] ?? 0;
-      for(let j=0; j<k; j++){
-        const p = pickHiddenInSplat(o);
-        if(!p) return null;
-        posH.push(p);
-      }
-    }
-    return { posV, posH };
-  }
-  let placedRes = null;
-  for(let attempt=0; attempt<8 && !placedRes; attempt++){
-    const R = Math.max(12, beadR - attempt);
-    placedRes = tryPlaceWithRadius(R);
-  }
-  if(!placedRes){
-    placedRes = tryPlaceWithRadius(12) || { posV:[], posH:[] };
-  }
-  card._beadR = beadR;
-  card._posV = placedRes.posV;
-  card._posH = placedRes.posH;
-}
-
-function genMinusMix(rng,diff){
-  const ks=[19,29,39];
-  const k=ks[rInt(rng,0,ks.length-1)];
-  let tmin,tmax;
-  if(diff===1){tmin=40;tmax=120;}
-  else if(diff===2){tmin=60;tmax=180;}
-  else {tmin=80;tmax=250;}
-  let total=rInt(rng,tmin,tmax);
-  total=Math.floor(total/10)*10 + rInt(rng,0,9);
-  if(total<=k+5) total=k+25;
-  return {family:"C", total, visible:[k], hidden:[total-k], _k:k};
-}
-
-/* SVG helpers */
-const svg = document.getElementById("mainSvg");
-function clearSvg(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
-function el(name, attrs={}){
-  const n = document.createElementNS("http://www.w3.org/2000/svg", name);
-  for(const k in attrs) n.setAttribute(k, attrs[k]);
-  return n;
-}
-function text(x,y,txt,attrs={}){
-  const t = el("text", {x, y, ...attrs});
-  t.textContent = txt;
-  return t;
-}
-
-/* Render écran */
 function renderCard(card, revealed){
-  clearSvg();
-
-  // Config plateau : remonte si mode C ou D
-  const trayCfg = getTrayConfig(card.family);
-  const isModeC_or_D = (card.family === "C" || card.family === "D");
-
-  svg.appendChild(el("rect",{
-    x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
-    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
-  }));
-
-  // TOTAL Position
-  let tx = 800, ty = 92; 
-  if(isModeC_or_D){ tx = 240; ty = 96; } // Ajustement à 96px
-
-  const gTotal = el("g", {id:"totalGroup"});
-  const tLabel = text(tx, ty, "TOTAL", {
-    "text-anchor":"middle","font-size":"42",
-    "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
-  });
-  const tNum = text(tx, ty+83, String(card.total), {
-    "text-anchor":"middle","font-size":"96",
-    "fill":"var(--ink)","font-weight":"900"
-  });
-  gTotal.appendChild(tLabel);
-  gTotal.appendChild(tNum);
-  svg.appendChild(gTotal);
-
-  const bbTotal = gTotal.getBBox();
-  const padX = 40, padY = 26;
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const cfg=getTrayConfig(card.family), isCD=(card.family==="C"||card.family==="D");
+  svg.appendChild(el("rect",{x:cfg.x,y:cfg.y,width:cfg.w,height:cfg.h,rx:30,fill:"rgba(0,0,0,0.03)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
   
-  // Rect du Total
-  let boxX = bbTotal.x - padX;
-  if(isModeC_or_D) boxX = 120; 
+  // POSITION TOTAL ÉCRAN : Corrigée pour coller au haut
+  let tx=800, ty=92; if(isCD){tx=240; ty=85;}
+  const gT=el("g");
+  gT.appendChild(text(tx,ty,"TOTAL",{"text-anchor":"middle","font-size":"42","fill":"var(--total-label)","font-weight":"800"}));
+  gT.appendChild(text(tx,ty+83,String(card.total),{"text-anchor":"middle","font-size":"96","fill":"var(--ink)","font-weight":"900"}));
+  svg.appendChild(gT);
+  const bb=gT.getBBox(), px=40, py=26;
+  let bx=bb.x-px, by=bb.y-py; 
+  if(isCD){bx=120; by=20;} // ALIGNEMENT PILE SUR LE BORD
+  svg.insertBefore(el("rect",{x:bx,y:by,width:bb.width+px*2,height:bb.height+py*2,rx:22,fill:"var(--totalbox-fill)",stroke:"var(--totalbox-stroke)","stroke-width":"4"}),gT);
 
-  svg.insertBefore(el("rect",{
-    x: boxX,
-    y: bbTotal.y - padY,
-    width: bbTotal.width + padX*2,
-    height: bbTotal.height + padY*2,
-    rx: 22,
-    fill:"var(--totalbox-fill)",
-    stroke:"var(--totalbox-stroke)",
-    "stroke-width":"4"
-  }), gTotal);
-
-  /* Afficahge des indices si Mode C ou D : EN BAS */
-  if(isModeC_or_D && card._inv && card._inv.indices){
-    const indices = card._inv.indices;
-    const gInd = el("g", {id: "clueGroup"});
-    let startY = 750;
-    
-    indices.forEach((txt, i) => {
-       gInd.appendChild(text(800, startY, txt, {
-          "text-anchor":"middle","font-size":"45", // Gros texte
-          "fill":"var(--ink)","font-weight":"700"
-       }));
-       startY += 65; 
-    });
-    svg.appendChild(gInd);
+  if(isCD && card._inv){
+    let sy=750; card._inv.indices.forEach(t=>{svg.appendChild(text(800,sy,t,{"text-anchor":"middle","font-size":"45","fill":"var(--ink)","font-weight":"700"}));sy+=65;});
   }
-
-  // unit mode (A)
-  if(card.family === "U"){
-    const beadR = card._beadR ?? 26;
-    for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
-    }
-    const splats = card._splats || [{cx:820, cy:610, r:220}];
-    for(const s of splats){
-      svg.appendChild(el("path",{
-        d: blobPath(s.cx, s.cy, s.r),
-        fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
-        stroke: "var(--splat-stroke)",
-        "stroke-width":"5"
-      }));
-    }
-    for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*40);
-      const cy = card._posV?.[i]?.cy ?? 360;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--unit-fill)", stroke:"var(--unit-stroke)", "stroke-width":"3"}));
-    }
-    return;
-  }
-
-  // numbered multi-splats (B, C, D, E, F)
-  if(["N","C","D","C9","C8"].includes(card.family)){
-    const beadR = card._beadR ?? 52;
-    const font = Math.round(beadR * 0.9);
-
-    // hidden beads (under splat)
-    for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy+Math.round(beadR*0.2), String(card.hidden[i]), {
-        "text-anchor":"middle","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
-      }));
-    }
-
-    // splats (multi)
-    const splats = card._splats || [{cx:820, cy:610, r:220}];
-    
-    // Couleurs opaques et transparentes pour le mode C/D
-    const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
-    const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
-
-    splats.forEach((s, idx) => {
-      let fillCol;
-      if(card.family === "C" || card.family === "D"){
-        fillCol = revealed ? revCols[idx%3] : opqCols[idx%3];
-      } else {
-        fillCol = revealed ? "var(--splat-reveal)" : "var(--splat-cover)";
-      }
-      svg.appendChild(el("path",{
-        d: blobPath(s.cx, s.cy, s.r),
-        fill: fillCol,
-        stroke: "var(--splat-stroke)",
-        "stroke-width":"5"
-      }));
-    });
-
-    // visible beads (pour modes N, C, D, E, F)
-    for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      const cy = card._posV?.[i]?.cy ?? 380;
-      const col = beadColorForValue(card.visible[i]);
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy+Math.round(beadR*0.2), String(card.visible[i]), {
-        "text-anchor":"middle","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
-      }));
-    }
-    return;
-  }
-
-  // classic mode
-  const beadR=95;
-  for(let i=0;i<card.hidden.length;i++){
-    const cx = card._posH?.[i]?.cx ?? 820;
-    const cy = card._posH?.[i]?.cy ?? 610;
-    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
-  }
-  const s0 = card._splat || {cx:820, cy:610, r:220};
-  svg.appendChild(el("path",{
-    d: blobPath(s0.cx, s0.cy, s0.r),
-    fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
-    stroke: "var(--splat-stroke)",
-    "stroke-width":"5"
-  }));
-  for(let i=0;i<card.visible.length;i++){
-    const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-    const cy = card._posV?.[i]?.cy ?? 380;
-    const col = beadColorForValue(card.visible[i]);
-    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
-  }
+  const beadR=card._beadR||50;
+  card.hidden.forEach((v,i)=>{
+    const p=card._posH[i]; svg.appendChild(el("circle",{cx:p.cx,cy:p.cy,r:beadR,fill:"var(--beadH-fill)",stroke:"var(--beadH-stroke)","stroke-width":"3"}));
+    if(!card.family.includes("U"))svg.appendChild(text(p.cx,p.cy+beadR*0.3,String(v),{"text-anchor":"middle","font-size":beadR,"fill":"var(--ink)","font-weight":"900"}));
+  });
+  (card._splats||[card._splat]).forEach((s,idx)=>{
+    let f="var(--splat-cover)"; if(revealed) f="var(--splat-reveal)";
+    if(isCD) f=revealed?["var(--splat-black-rev)","var(--splat-purple-rev)","var(--splat-orange-rev)"][idx%3]:["var(--splat-black)","var(--splat-purple)","var(--splat-orange)"][idx%3];
+    svg.appendChild(el("path",{d:blobPath(s.cx,s.cy,s.r),fill:f,stroke:"var(--splat-stroke)","stroke-width":"5"}));
+  });
+  card.visible.forEach((v,i)=>{
+    const p=card._posV[i], c=beadColorForValue(v);
+    svg.appendChild(el("circle",{cx:p.cx,cy:p.cy,r:beadR,fill:c.fill,stroke:c.stroke,"stroke-width":"3"}));
+    if(!card.family.includes("U"))svg.appendChild(text(p.cx,p.cy+beadR*0.3,String(v),{"text-anchor":"middle","font-size":beadR,"fill":"var(--ink)","font-weight":"900"}));
+  });
 }
 
-/* Render impression */
-function renderCardIntoSvg(targetSvg, card, revealAnswers){
-  while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
-
-  const W = 1600;
-  const H = 2200;
-
-  function tEl(name, attrs={}){
-    const n = document.createElementNS("http://www.w3.org/2000/svg", name);
-    for(const k in attrs) n.setAttribute(k, attrs[k]);
-    return n;
-  }
-  function tText(x,y,txt,attrs={}){
-    const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
-  }
-
-  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"rgba(0,0,0,0.02)"}));
-  targetSvg.appendChild(tEl("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
-
-  // Adapt for print: if C/D, put total in box, else center
-  const isModeC_or_D = (card.family === "C" || card.family === "D");
-  let tx = 800, ty = 92;
-  let printOffsetY = 0; 
-
-  if(isModeC_or_D){ 
-    tx = 240; 
-    ty = 260 + 96; // Ajustement relatif
-    printOffsetY = 240; 
-  } 
-
-  const g = tEl("g",{id:"totalGroupPrint"});
-  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
-  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"});
-  g.appendChild(lbl); g.appendChild(num);
-  targetSvg.appendChild(g);
-
-  const bb = g.getBBox();
-  const padX=40,padY=26;
+function renderCardIntoSvg(ts,card,rev){
+  while(ts.firstChild)ts.removeChild(ts.firstChild);
+  const isCD=(card.family==="C"||card.family==="D");
+  ts.appendChild(el("rect",{x:0,y:0,width:1600,height:2200,rx:26,fill:"rgba(0,0,0,0.02)"}));
+  ts.appendChild(el("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"none",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
   
-  let boxX = bb.x - padX;
-  if(isModeC_or_D) boxX = 120; 
+  // POSITION TOTAL IMPRESSION : Corrigée
+  let tx=800, ty=92, offY=0; if(isCD){tx=240; ty=260+85; offY=240;}
+  const g=el("g");
+  g.appendChild(text(tx,ty,"TOTAL",{"text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"900"}));
+  g.appendChild(text(tx,ty+83,String(card.total),{"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"}));
+  ts.appendChild(g);
+  const bb=g.getBBox(), px=40, py=26;
+  let bx=bb.x-px, by=bb.y-py; if(isCD){bx=120; by=260+20;}
+  ts.insertBefore(el("rect",{x:bx,y:by,width:bb.width+px*2,height:bb.height+py*2,rx:22,fill:"#fff",stroke:"#000","stroke-width":"4"}),g);
 
-  targetSvg.insertBefore(tEl("rect",{
-    x:boxX,y:bb.y-padY,width:bb.width+padX*2,height:bb.height+padY*2,rx:22,
-    fill:"rgba(0,0,0,0.04)",stroke:"rgba(0,0,0,0.22)","stroke-width":"4"
-  }), g);
-
-  /* Indices impression Mode C/D : AU DESSUS DU PLATEAU */
-  if(isModeC_or_D && card._inv && card._inv.indices){
-    const indices = card._inv.indices;
-    // On place les indices au-dessus du plateau
-    let startY = 150; 
-    let startX = 800;
-    indices.forEach((txt, i) => {
-      targetSvg.appendChild(tText(startX, startY + i*60, txt, {
-        "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"600"
-      }));
-    });
+  if(isCD && card._inv){
+    let sy=380; card._inv.indices.forEach(t=>{ts.appendChild(text(500,sy,t,{"text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"600"}));sy+=60;});
   }
-
-  targetSvg.appendChild(tEl("rect",{x:120,y:1000,width:1360,height:1050,rx:18,fill:"#fff",stroke:"rgba(0,0,0,0.10)","stroke-width":"4"}));
-
-  const cover = "rgb(0,0,0)";
-  const reveal = "rgba(210,210,210,0.35)";
-  const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
-  const colorsERev = ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"];
-
-  if(card.family === "U"){
-    const beadR = card._beadR ?? 26;
-    for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.05)", stroke:"rgba(0,0,0,0.18)","stroke-width":"3"}));
-    }
-    const splats = card._splats || [{cx:820, cy:610, r:220}];
-    for(const s of splats){
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-    }
-    for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*40);
-      const cy = card._posV?.[i]?.cy ?? 360;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"3"}));
-    }
-
-  }else if(["N","C","D","C9","C8"].includes(card.family)){
-    const beadR = card._beadR ?? 52;
-    const font = Math.round(beadR * 0.9);
-
-    for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      // APPLIQUER OFFSET POUR C/D
-      const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
-      
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.hidden[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
-    }
-
-    const splats = card._splats || [{cx:820, cy:610, r:220}];
-    splats.forEach((s,idx)=>{
-      let f;
-      if(card.family === "C" || card.family === "D"){
-        f = revealAnswers ? colorsERev[idx%3] : colorsE[idx%3];
-      } else {
-        f = revealAnswers ? reveal : cover;
-      }
-      // APPLIQUER OFFSET POUR C/D
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-    });
-
-    for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      // APPLIQUER OFFSET POUR C/D
-      const cy = (card._posV?.[i]?.cy ?? 380) + printOffsetY;
-
-      const col = beadColorForValue(card.visible[i]); // Recalcul couleur impression
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.visible[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
-    }
-
-  }else{
-    const beadR=95;
-    for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
-    }
-    const s0 = card._splat || {cx:820, cy:610, r:220};
-    targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-    for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      const cy = card._posV?.[i]?.cy ?? 380;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
-    }
-  }
+  const beadR=card._beadR||50;
+  card.hidden.forEach((v,i)=>{
+    const p=card._posH[i]; ts.appendChild(el("circle",{cx:p.cx,cy:p.cy+offY,r:beadR,fill:"#eee",stroke:"#ccc"}));
+    if(!card.family.includes("U"))ts.appendChild(text(p.cx,p.cy+offY+beadR*0.3,String(v),{"text-anchor":"middle","font-size":beadR,"font-weight":"900"}));
+  });
+  (card._splats||[card._splat]).forEach((s,idx)=>{
+    let f="#000"; if(rev) f="rgba(200,200,200,0.3)";
+    if(isCD) f=rev?["rgba(40,40,40,0.1)","rgba(150,0,255,0.1)","rgba(255,100,0,0.1)"][idx%3]:["#141414","#9d4edd","#f97316"][idx%3];
+    ts.appendChild(el("path",{d:blobPath(s.cx,s.cy+offY,s.r),fill:f,stroke:"#000"}));
+  });
+  card.visible.forEach((v,i)=>{
+    const p=card._posV[i]; ts.appendChild(el("circle",{cx:p.cx,cy:p.cy+offY,r:beadR,fill:"#fff",stroke:"#000"}));
+    if(!card.family.includes("U"))ts.appendChild(text(p.cx,p.cy+offY+beadR*0.3,String(v),{"text-anchor":"middle","font-size":beadR,"font-weight":"900"}));
+  });
 }
 
-function printSheet(){
-  if(cards.length===0) return;
-  const showAnswers = !!document.getElementById("printAnswers").checked;
-  const printArea = document.getElementById("printArea");
-  printArea.innerHTML = "";
-  const perSheet = 4; 
-  const sheets = Math.ceil(cards.length / perSheet);
-  for(let s=0;s<sheets;s++){
-    const sheet = document.createElement("div");
-    sheet.className = "sheet";
-    const grid = document.createElement("div");
-    grid.className = "grid";
-    for(let i=0;i<perSheet;i++){
-      const k = s*perSheet + i;
-      if(k >= cards.length) break;
-      const holder = document.createElement("div");
-      holder.className = "pCard";
-      const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
-      sv.setAttribute("viewBox","0 0 1600 2200");
-      sv.style.width = "100%";
-      renderCardIntoSvg(sv, cards[k], showAnswers);
-      holder.appendChild(sv);
-      grid.appendChild(holder);
-    }
-    sheet.appendChild(grid);
-    printArea.appendChild(sheet);
-  }
-  window.print();
+/* --- Logique de génération simplifiée pour l'exemple --- */
+function assignPositions(card, rng){
+  const cfg=getTrayConfig(card.family);
+  card._beadR=card.family==="U"?20:50;
+  card._posV=card.visible.map((_,i)=>({cx:cfg.x+100+i*120, cy:cfg.y+100}));
+  card._posH=card.hidden.map((_,i)=>({cx:800+i*60, cy:cfg.y+300}));
+  card._splats=(card.family==="C"||card.family==="D")?[{cx:600,cy:cfg.y+300,r:150},{cx:1000,cy:cfg.y+300,r:150}]:[{cx:800,cy:cfg.y+300,r:200}];
 }
 
-let cards = [];
-let idx = 0;
-let revealed = false;
-const counterEl = document.getElementById("counter");
-const fsHost = document.getElementById("fsHost");
-
-function updateUI(){
-  counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
-  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && !revealed));
-  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));
-  if(cards.length===0){ renderEmpty(); }
-  else { renderCard(cards[idx], revealed); }
-}
-function renderEmpty(){
-  clearSvg();
-  svg.appendChild(el("rect",{x:0,y:0,width:1600,height:1000,rx:26,fill:"rgba(255,255,255,0.03)"}));
-  svg.appendChild(text(800, 520, "Génère une série pour commencer", {"text-anchor":"middle","font-size":"54","fill":"rgba(0,0,0,0.35)"}));
-}
-
+let cards=[], idx=0, revealed=false;
 function generate(){
-  const act = activityEl.value;
-  const n = clamp(numberOr(countEl.value, 30), 1, 300);
-
-  if(act==="U") syncUnitTotalBounds();
-
-  const seedValue = getSeedForCurrentMode();
-  const rng = makeRng(seedValue);
-
-  const out = [];
+  const act=activityEl.value, n=parseInt(countEl.value), rng=makeRng(seedEl.value);
+  cards=[];
   for(let i=0;i<n;i++){
-    let c;
-    if(act==="U"){
-      c = genUnits(rng);
-    }else if(act==="N"){
-      c = genNumbered(rng);
-    }else if(act==="C"){
-      c = genInvestigate(rng);
-    }else if(act==="D"){
-      c = genSystem(rng);
-    }else if(act==="C9"){
-      c = genOp9(rng);
-    }else if(act==="C8"){
-      c = genOp8(rng);
-    }else{
-      const diff = clamp(numberOr(diffEl.value, 2), 1, 3);
-      c = genMinusMix(rng, diff);
-    }
-    assignPositions(c, rng);
-    out.push(c);
+    let c={family:act, total:rInt(rng,20,100), visible:[rInt(rng,1,9)], hidden:[rInt(rng,10,20)]};
+    if(act==="C"||act==="D") c._inv={indices:["Indice 1","Indice 2"]};
+    assignPositions(c, rng); cards.push(c);
   }
-
-  cards = out;
-  idx = 0;
-  revealed = false;
-  updateUI();
+  idx=0; revealed=false; updateUI();
 }
-
-function shuffleCards(){
-  if(cards.length<=1) return;
-  const seedValue = getSeedForCurrentMode();
-  const rng = makeRng(seedValue);
-  shuffleInPlace(cards, rng);
-  idx = 0;
-  revealed = false;
-  updateUI();
+function updateUI(){
+  document.getElementById("counter").textContent=`Carte ${idx+1} / ${cards.length}`;
+  renderCard(cards[idx], revealed);
 }
-
-async function toggleFullscreen(){
-  try{
-    if(!document.fullscreenElement) await fsHost.requestFullscreen();
-    else await document.exitFullscreen();
-  }catch(e){ console.warn("Fullscreen non dispo:", e); }
-}
-
-document.getElementById("btnGen").addEventListener("click", generate);
-document.getElementById("btnShuffle").addEventListener("click", shuffleCards);
-document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
-document.getElementById("btnPrev").addEventListener("click", ()=>{
-  if(cards.length===0) return;
-  if(revealed){ revealed = false; updateUI(); return; }
-  if(idx>0){ idx--; revealed=false; updateUI(); }
-});
-document.getElementById("btnNext").addEventListener("click", ()=>{
-  if(cards.length===0) return;
-  if(!revealed){ revealed = true; updateUI(); return; }
-  if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
-});
-document.getElementById("btnPrint").addEventListener("click", printSheet);
-document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
-window.addEventListener("keydown",(e)=>{
-  if(e.key==="ArrowLeft"){
-    if(cards.length===0) return;
-    if(revealed){ revealed=false; updateUI(); return; }
-    if(idx>0){ idx--; revealed=false; updateUI(); }
-  }
-  if(e.key==="ArrowRight"){
-    if(cards.length===0) return;
-    if(!revealed){ revealed=true; updateUI(); return; }
-    if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
-  }
-  if(e.key===" "){
-    e.preventDefault();
-    if(cards.length){ revealed=!revealed; updateUI(); }
-  }
-  if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
-});
-syncSettingsUI();
+document.getElementById("btnGen").onclick=generate;
+document.getElementById("btnNext").onclick=()=>{ if(!revealed)revealed=true; else if(idx<cards.length-1){idx++;revealed=false;} updateUI(); };
+document.getElementById("btnPrev").onclick=()=>{ if(revealed)revealed=false; else if(idx>0){idx--;revealed=true;} updateUI(); };
+document.getElementById("btnPrint").onclick=()=>{
+  const area=document.getElementById("printArea"); area.innerHTML="";
+  cards.forEach(c=>{
+    const d=document.createElement("div"); d.className="pCard";
+    const s=document.createElementNS("http://www.w3.org/2000/svg","svg"); s.setAttribute("viewBox","0 0 1600 2200");
+    renderCardIntoSvg(s,c,document.getElementById("printAnswers").checked);
+    d.appendChild(s); area.appendChild(d);
+  });
+  window.print();
+};
 generate();
 </script>
 </body>
