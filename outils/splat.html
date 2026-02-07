@@ -146,6 +146,7 @@
 
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
+  #mainSvg:focus{outline:none}
 
   .printArea{display:none}
 
@@ -242,8 +243,9 @@
       <option value="N">B — Billes numérotées (une couleur)</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
-      <option value="C9">E — Opérations en 9 (9 → 99)</option>
-      <option value="C8">F — Opérations en 8 (8 → 98)</option>
+      <option value="EQ">E — Équation (2 plateaux)</option>
+          <option value="C9">F — Opérations en 9 (9 → 99)</option>
+          <option value="C8">G — Opérations en 8 (8 → 98)</option>
     </select>
 
     <div id="classicSettings">
@@ -297,8 +299,20 @@
     <div id="numberedSettings" style="display:none">
       <div class="row">
         <div style="flex:1">
-          <label>Nombre de taches</label>
-          <input id="numTasks" type="number" min="1" max="6" value="1" />
+          <label><span id="labelNumTasks">Nombre de taches</span></label>
+          <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
+            <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
+              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted)">tache min</div>
+              <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="tache min" />
+            </div>
+
+            <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px">
+              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none">tache max</div>
+              <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="tache max" />
+            </div>
+
+            <span id="numTasksArrow" style="display:none"></span>
+          </div>
         </div>
         <div style="flex:1">
           <label>Billes visibles num (min)</label>
@@ -547,7 +561,7 @@
         <div class="counter" id="counter">0 carte</div>
       </div>
       <div id="svgWrap">
-        <svg id="mainSvg" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
+        <svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
       </div>
     </div>
   </section>
@@ -639,6 +653,81 @@ const unitTotalMinEl = document.getElementById("unitTotalMin");
 const unitTotalMaxEl = document.getElementById("unitTotalMax");
 
 const numTasksEl = document.getElementById("numTasks");
+const labelNumTasksEl = document.getElementById("labelNumTasks");
+const numTasksMinEl = document.getElementById("numTasksMin");
+const numTasksArrowEl = document.getElementById("numTasksArrow");
+const numTasksMinWrapEl = document.getElementById("numTasksMinWrap");
+const numTasksMaxWrapEl = document.getElementById("numTasksMaxWrap");
+const numTasksMinLabelEl = document.getElementById("numTasksMinLabel");
+const numTasksMaxLabelEl = document.getElementById("numTasksMaxLabel");
+let _tasksUIKeyPrev = null;
+let _numTasksSavedNumberedMax = null;
+let _numTasksSavedNumberedMin = null;
+let _numTasksSavedEquationMax = "6";
+
+function setNumTasksRangeVisible(show){
+  // In mode B ("N"): show 2 inputs (tache min / tache max). Otherwise: only the single input (numTasks).
+  if(numTasksMinWrapEl) numTasksMinWrapEl.style.display = show ? "flex" : "none";
+  if(numTasksMaxLabelEl) numTasksMaxLabelEl.style.display = show ? "" : "none";
+  if(numTasksArrowEl) numTasksArrowEl.style.display = "none";
+}
+function syncNumTasksUI(act){
+  if(!numTasksEl || !labelNumTasksEl) return;
+  const key = (act === "EQ") ? "EQ" : (act === "N" ? "N" : "OTHER");
+  if(_tasksUIKeyPrev === key) return;
+
+  if(key === "EQ"){
+    // Save numbered values (B)
+    _numTasksSavedNumberedMax = numTasksEl.value;
+    if(numTasksMinEl) _numTasksSavedNumberedMin = numTasksMinEl.value;
+
+    // Restore equation max
+    if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
+
+    labelNumTasksEl.textContent = "Tâches max (par plateau)";
+    setNumTasksRangeVisible(false);
+
+    numTasksEl.min = "2";
+    numTasksEl.max = "6";
+    const v = clamp(numberOr(numTasksEl.value, 6), 2, 6);
+    numTasksEl.value = String(v);
+  } else if(key === "N"){
+    // Save equation max (E/EQ)
+    if(_tasksUIKeyPrev === "EQ") _numTasksSavedEquationMax = numTasksEl.value;
+
+    // Restore numbered values if available
+    if(_numTasksSavedNumberedMax != null) numTasksEl.value = _numTasksSavedNumberedMax;
+    if(numTasksMinEl && _numTasksSavedNumberedMin != null) numTasksMinEl.value = _numTasksSavedNumberedMin;
+
+    labelNumTasksEl.textContent = "tache";
+    setNumTasksRangeVisible(true);
+
+    numTasksEl.min = "1";
+    numTasksEl.max = "6";
+    if(numTasksMinEl){
+      numTasksMinEl.min = "1";
+      numTasksMinEl.max = "6";
+      let a = clamp(numberOr(numTasksMinEl.value, 1), 1, 6);
+      let b = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+      if(b < a){ const tmp = a; a = b; b = tmp; }
+      numTasksMinEl.value = String(a);
+      numTasksEl.value = String(b);
+    } else {
+      const v = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+      numTasksEl.value = String(v);
+    }
+  } else {
+    labelNumTasksEl.textContent = "Nombre de taches";
+    setNumTasksRangeVisible(false);
+    numTasksEl.min = "1";
+    numTasksEl.max = "6";
+    const v = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+    numTasksEl.value = String(v);
+  }
+
+  _tasksUIKeyPrev = key;
+}
+
 const numVisibleMinEl = document.getElementById("numVisibleMin");
 const numVisibleMaxEl = document.getElementById("numVisibleMax");
 const numHiddenCountEl = document.getElementById("numHiddenCount");
@@ -654,6 +743,7 @@ function getSeedForCurrentMode(){
   const act = activityEl.value;
   if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
+  if(act === "EQ") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
   if(act === "C9") return (seedCEl.value||"").trim() ? Number(seedCEl.value) : "";
@@ -665,12 +755,27 @@ function syncSettingsUI(){
   const act = activityEl.value;
 
   const isUnit = act === "U";
-  const isNumbered = act === "N";
+  const isEquation = act === "EQ";
+  syncNumTasksUI(act);
+  const isNumbered = (act === "N" || isEquation);
   const isNine = act === "C9";
   const isEight = act === "C8";
   const isInvestigate = act === "C";
   const isSystem = act === "D";
   const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
+
+  // En EQ, on autorise jusqu’à 6 billes visibles (par plateau).
+  // Dans les autres modes, on garde le plafond historique à 5 pour ne rien casser.
+  if(isEquation){
+    numVisibleMinEl.max = "6";
+    numVisibleMaxEl.max = "6";
+  } else {
+    numVisibleMinEl.max = "5";
+    numVisibleMaxEl.max = "5";
+    if(Number(numVisibleMinEl.value) > 5) numVisibleMinEl.value = "5";
+    if(Number(numVisibleMaxEl.value) > 5) numVisibleMaxEl.value = "5";
+  }
+
 
   classicSettingsEl.style.display = isClassic ? "block" : "none";
   unitSettingsEl.style.display = isUnit ? "block" : "none";
@@ -722,13 +827,21 @@ function scheduleAutoGenerate(){
   }, 150);
 }
 
-activityEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+activityEl.addEventListener("change", ()=>{
+  syncSettingsUI();
+  scheduleAutoGenerate();
+  // IMPORTANT: after selecting a mode, remove focus from the <select> so ArrowLeft/ArrowRight
+  // always navigate cards (and don't change C→D, etc.).
+  try{ activityEl.blur(); }catch(_e){}
+  const _ms = document.getElementById("mainSvg");
+  if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
+});
 invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
 
 [
   countEl, diffEl, seedEl,
   unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
+  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -915,12 +1028,106 @@ function assignPositionsNumbered(card, rng){
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
+  }else if(card.family === "EQ"){
+    assignPositionsEquation(card, rng);
   }else if(card.family === "N" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
   }else{
     assignPositionsClassic(card, rng);
   }
 }
+
+
+function assignPositionsEquation(card, rng){
+  // Mode EQ : positions propres (2 demi-plateaux) avec des taches TOUJOURS de même taille.
+  const eq = card._eq;
+  if(!eq) return;
+
+  // On remonte légèrement les plateaux (consigne + proche).
+  const leftTray  = { x:120, y:190, w:680, h:650 };
+  const rightTray = { x:800, y:190, w:680, h:650 };
+  const midX = 800;
+
+  // Tailles fixes (uniquement pour EQ)
+  const beadR = 34;         // billes numérotées
+  const splatR = 74;        // taches : même taille quelle que soit la quantité
+
+  function layoutSplats(tray, n){
+    // Zone haute dédiée aux taches (évite toute ambiguïté visuelle)
+    const area = { x: tray.x + 70, y: tray.y + 75, w: tray.w - 140, h: 330 };
+
+    // Définition des rangées (1 à 6)
+    // - cas 3 : en TRIANGLE (2 + 1) au lieu d'une ligne de 3
+    let rows = [];
+    if(n === 1) rows = [1];
+    else if(n === 2) rows = [2];
+    else if(n === 3) rows = [2,1];
+    else if(n === 4) rows = [2,2];
+    else rows = [3, n-3]; // 5 -> [3,2], 6 -> [3,3]
+
+    const out = [];
+    const rowCount = rows.length;
+
+    for(let r=0; r<rowCount; r++){
+      const cols = rows[r];
+      const cellW = area.w / cols;
+      const cy = area.y + area.h * ((r + 0.5) / rowCount);
+
+      for(let c=0; c<cols; c++){
+        const cx = area.x + cellW * (c + 0.5);
+        out.push({ cx, cy, r: splatR });
+      }
+    }
+
+    // Petit shuffle pour varier l'apparence sans casser la lisibilité
+    for(let i=out.length-1;i>0;i--){
+      const j = rInt(rng, 0, i);
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+
+    return out;
+  }
+
+  function layoutVisible(tray, n){
+    // Zone basse dédiée aux billes visibles
+    const area = { x: tray.x + 70, y: tray.y + 450, w: tray.w - 140, h: 160 };
+    if(n <= 0) return [];
+
+    const cellW = area.w / n;
+    const baseY = area.y + area.h / 2;
+    const jitterX = Math.max(2, Math.floor(cellW * 0.18));
+    const jitterY = Math.max(2, Math.floor(area.h * 0.18));
+
+    const out = [];
+    for(let i=0;i<n;i++){
+      let cx = area.x + cellW * (i + 0.5) + rInt(rng, -jitterX, jitterX);
+      let cy = baseY + rInt(rng, -jitterY, jitterY);
+      out.push({ cx, cy });
+    }
+    return out;
+  }
+
+  const splatsL = layoutSplats(leftTray, eq.left.tasks);
+  const splatsR = layoutSplats(rightTray, eq.right.tasks);
+
+  card._eqTrays = { left:leftTray, right:rightTray, midX };
+  card._eqPos = {
+    left: {
+      beadR,
+      // billes visibles et cachées (1 par tache) : positions explicites
+      posV: layoutVisible(leftTray, eq.left.visible.length),
+      posH: splatsL.map(s=>({cx:s.cx, cy:s.cy})),
+      splats: splatsL
+    },
+    right: {
+      beadR,
+      posV: layoutVisible(rightTray, eq.right.visible.length),
+      posH: splatsR.map(s=>({cx:s.cx, cy:s.cy})),
+      splats: splatsR
+    }
+  };
+}
+
 
 /* --- GÉNÉRATION ENQUÊTE (Mode C) --- */
 function genInvestigate(rng){
@@ -1130,7 +1337,10 @@ function genSystem(rng){
 
 /* Existing Gens */
 function genNumbered(rng){
-  const tasks = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+  let tMin = clamp(numberOr(numTasksMinEl ? numTasksMinEl.value : 1, 1), 1, 6);
+  let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+  if(tMax < tMin) [tMin, tMax] = [tMax, tMin];
+  const tasks = rInt(rng, tMin, tMax);
   let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 1, 5);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
@@ -1185,6 +1395,218 @@ function genNumbered(rng){
     _num:{ tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
   };
 }
+
+
+function randomCompositionBounded(rng, sum, parts, maxPart=99){
+  if(parts === 0) return (sum === 0) ? [] : null;
+  if(parts === 1) return (sum <= maxPart) ? [sum] : null;
+  if(sum < parts) return null;
+  if(sum > parts*maxPart) return null;
+
+  // On part de 1 partout, puis on distribue le reste en respectant maxPart.
+  const arr = new Array(parts).fill(1);
+  let rem = sum - parts;
+
+  // Première passe : ajout aléatoire
+  for(let i=0;i<parts;i++){
+    const cap = Math.min(maxPart - arr[i], rem);
+    if(cap <= 0) continue;
+    const add = rInt(rng, 0, cap);
+    arr[i] += add;
+    rem -= add;
+  }
+
+  // Deuxième passe : on distribue le reliquat
+  let safety = 2000;
+  while(rem > 0 && safety-- > 0){
+    const i = rInt(rng, 0, parts-1);
+    const cap = maxPart - arr[i];
+    if(cap <= 0) continue;
+    const add = Math.min(rem, rInt(rng, 1, cap));
+    arr[i] += add;
+    rem -= add;
+  }
+  if(rem !== 0) return null;
+
+  // Petit shuffle
+  for(let i=arr.length-1;i>0;i--){
+    const j = rInt(rng, 0, i);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function genEquation(rng){
+  // Mode EQ : deux plateaux (gauche/droite) avec la même quantité totale.
+  // Chaque tache cache le même nombre X (1 bille cachée par tache), identique partout.
+  // Pour que l'équation soit résoluble, on impose tasksGauche !== tasksDroite.
+
+  const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
+  const maxTasksEq = Math.max(2, maxTasksUser);
+
+  // IMPORTANT : en EQ, Billes visibles (min/max) s'appliquent PAR PLATEAU (gauche ET droite),
+  // et non sur la somme des deux plateaux.
+  let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
+  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
+  if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
+
+  // Total min/max = total à gauche (et donc le même à droite), pas la somme des 2 plateaux.
+  let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20);
+  let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
+  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
+  userMin = clamp(userMin, 1, 999);
+  userMax = clamp(userMax, 1, 999);
+
+  // Génération robuste :
+  // On choisit (a,b,x, nbVisL, nbVisR) puis on choisit un total T dans l'intersection
+  // des contraintes de décomposition sur les billes visibles.
+  const MAX_TRIES = 8000;
+
+  for(let tries=0; tries<MAX_TRIES; tries++){
+    // 1) Nombre de taches par plateau (1..max), mais DIFFERENTS.
+    const a = rInt(rng, 1, maxTasksEq);
+    let b = rInt(rng, 1, maxTasksEq);
+    if(b === a){
+      // petit "shift" pour éviter de retomber tout le temps sur l'égalité
+      b = (b % maxTasksEq) + 1;
+    }
+    if(a === b) continue;
+
+    // 2) Nombre de billes visibles par plateau (dans [vMin..vMax]) : INDEPENDANT gauche/droite.
+    const vCountL = rInt(rng, vMin, vMax);
+    const vCountR = rInt(rng, vMin, vMax);
+    if(vCountL === 0 && vCountR === 0) continue; // exercice vide
+
+    // 3) Choisir X (valeur cachée sous une tache)
+    // On borne X pour rester compatible avec userMax (au pire, il reste au moins 1 par bille visible).
+    const minVisAny = Math.min(
+      vCountL > 0 ? vCountL : 1,
+      vCountR > 0 ? vCountR : 1
+    );
+    const denom = Math.max(1, Math.min(a, b));
+    let xMax = Math.floor((userMax - minVisAny) / denom);
+    xMax = Math.max(1, Math.min(99, xMax));
+    if(xMax < 1) continue;
+    const x = rInt(rng, 1, xMax);
+
+    // 4) Trouver un total T dans l'intersection des contraintes :
+    //    VL = T - a*x doit être décomposable en vCountL nombres entre 1 et 99
+    //    VR = T - b*x doit être décomposable en vCountR nombres entre 1 et 99
+    // => T ∈ [a*x + vCountL*1, a*x + vCountL*99] ∩ [b*x + vCountR*1, b*x + vCountR*99] ∩ [userMin,userMax]
+    let tLow = userMin;
+    let tHigh = userMax;
+
+    const lMinT = a*x + (vCountL * 1);
+    const lMaxT = a*x + (vCountL * 99);
+    const rMinT = b*x + (vCountR * 1);
+    const rMaxT = b*x + (vCountR * 99);
+
+    tLow = Math.max(tLow, lMinT, rMinT);
+    tHigh = Math.min(tHigh, lMaxT, rMaxT);
+
+    if(tHigh < tLow) continue;
+
+    const total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
+    const VL = total - a*x;
+    const VR = total - b*x;
+
+    const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
+    const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
+    if(leftVisible === null || rightVisible === null) continue;
+
+    const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
+    const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
+
+    return {
+      family: "EQ",
+      total: total, // stocké mais non affiché dans ce mode
+      visible: leftVisible.concat(rightVisible),
+      hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+      _eq: {
+        total,
+        x,
+        left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
+        right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+      }
+    };
+  }
+
+  // Phase 2 : recherche déterministe si les paramètres sont très contraignants.
+  for(let a=1; a<=maxTasksEq; a++){
+    for(let b=1; b<=maxTasksEq; b++){
+      if(a === b) continue;
+      for(let x=1; x<=99; x++){
+        for(let vCountL=vMin; vCountL<=vMax; vCountL++){
+          for(let vCountR=vMin; vCountR<=vMax; vCountR++){
+            if(vCountL === 0 && vCountR === 0) continue;
+
+            let tLow = userMin;
+            let tHigh = userMax;
+
+            const lMinT = a*x + (vCountL * 1);
+            const lMaxT = a*x + (vCountL * 99);
+            const rMinT = b*x + (vCountR * 1);
+            const rMaxT = b*x + (vCountR * 99);
+
+            tLow = Math.max(tLow, lMinT, rMinT);
+            tHigh = Math.min(tHigh, lMaxT, rMaxT);
+            if(tHigh < tLow) continue;
+
+            const total = tLow; // on prend le plus petit faisable
+            const VL = total - a*x;
+            const VR = total - b*x;
+
+            const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
+            const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
+            if(leftVisible === null || rightVisible === null) continue;
+
+            const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
+            const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
+
+            return {
+              family: "EQ",
+              total: total,
+              visible: leftVisible.concat(rightVisible),
+              hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+              _eq: {
+                total,
+                x,
+                left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
+                right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+              }
+            };
+          }
+        }
+      }
+    }
+  }
+
+  // Ultime fallback (ne devrait jamais arriver) : on fabrique quelque chose de cohérent,
+  // même si les réglages utilisateur sont impossibles.
+  const a = 2, b = 1, x = 2;
+  const vCountL = Math.max(1, vMin), vCountR = Math.max(1, vMin);
+  const total = Math.max(userMin, a*x + vCountL);
+  const VL = total - a*x;
+  const VR = total - b*x;
+  const leftVisible  = randomCompositionBounded(rng, VL, vCountL, 99) || Array.from({length:vCountL}, ()=>1);
+  const rightVisible = randomCompositionBounded(rng, VR, vCountR, 99) || Array.from({length:vCountR}, ()=>1);
+  const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
+  const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
+
+  return {
+    family: "EQ",
+    total: total,
+    visible: leftVisible.concat(rightVisible),
+    hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+    _eq: {
+      total,
+      x,
+      left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
+      right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+    }
+  };
+}
+
 
 function genOp9(rng){
   const opSetting = (nineOpEl.value || "SUB");
@@ -1591,6 +2013,11 @@ function text(x,y,txt,attrs={}){
 function renderCard(card, revealed){
   clearSvg();
 
+  if(card.family === "EQ"){
+    renderCardEquation(card, revealed);
+    return;
+  }
+
   // Config plateau : remonte si mode C ou D
   const trayCfg = getTrayConfig(card.family);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
@@ -1750,6 +2177,133 @@ function renderCard(card, revealed){
   }
 }
 
+
+function renderCardEquation(card, revealed){
+  const eq = card._eq;
+  const trays = card._eqTrays;
+  const pos = card._eqPos;
+  if(!eq || !trays || !pos) return;
+
+  const cover = "rgba(0,0,0,0.95)";
+  const reveal = "rgba(220,220,220,0.35)";
+
+  // Deux plateaux
+  svg.appendChild(el("rect",{
+    x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
+    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
+  }));
+  svg.appendChild(el("rect",{
+    x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h,
+    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
+  }));
+
+  // Trait vertical de séparation
+  svg.appendChild(el("line",{
+    x1:trays.midX, y1:trays.left.y-10,
+    x2:trays.midX, y2:trays.left.y+trays.left.h+10,
+    stroke:"rgba(0,0,0,0.35)", "stroke-width":"10", "stroke-linecap":"round"
+  }));
+
+  // Consigne (uniquement en haut)
+  svg.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
+    "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
+  }));
+    function drawSide(side, metaSide){
+    const beadR = side.beadR ?? 26;
+    const font = Math.max(18, Math.round(beadR * 0.95));
+
+    // billes cachées (sous taches)
+    let hIndex = 0;
+    for(const taskArr of metaSide.hiddenByTask){
+      for(const val of taskArr){
+        const p = side.posH?.[hIndex] || {cx:820, cy:610};
+        const col = beadColorForValue(val);
+        svg.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+        svg.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+          "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
+        }));
+        hIndex++;
+      }
+    }
+
+    // taches
+    for(const s of (side.splats || [])){
+      svg.appendChild(el("path",{
+        d: blobPath(s.cx, s.cy, s.r),
+        fill: revealed ? reveal : cover,
+        stroke:"rgba(0,0,0,0.18)",
+        "stroke-width":"5"
+      }));
+    }
+
+    // billes visibles
+    for(let i=0;i<metaSide.visible.length;i++){
+      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
+      const val = metaSide.visible[i];
+      const col = beadColorForValue(val);
+      svg.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      svg.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+        "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
+      }));
+    }
+  }
+
+  drawSide(pos.left, eq.left);
+  drawSide(pos.right, eq.right);
+}
+
+function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText){
+  // Version impression : identique au rendu écran, mais sur targetSvg
+  const eq = card._eq;
+  const trays = card._eqTrays;
+  const pos = card._eqPos;
+  if(!eq || !trays || !pos) return;
+
+  const cover = "rgba(0,0,0,0.95)";
+  const reveal = "rgba(220,220,220,0.35)";
+
+  // Plateaux
+  targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+  targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+
+  // Séparateur
+  targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"rgba(0,0,0,0.35)","stroke-width":"10","stroke-linecap":"round"}));
+
+  // Consigne en haut
+  targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
+function drawSide(side, metaSide){
+    const beadR = side.beadR ?? 26;
+    const font = Math.max(18, Math.round(beadR * 0.95));
+
+    let hIndex = 0;
+    for(const taskArr of metaSide.hiddenByTask){
+      for(const val of taskArr){
+        const p = side.posH?.[hIndex] || {cx:820, cy:610};
+        const col = beadColorForValue(val);
+        targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+        targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+        hIndex++;
+      }
+    }
+
+    for(const s of (side.splats || [])){
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? reveal : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    }
+
+    for(let i=0;i<metaSide.visible.length;i++){
+      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
+      const val = metaSide.visible[i];
+      const col = beadColorForValue(val);
+      targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+    }
+  }
+
+  drawSide(pos.left, eq.left);
+  drawSide(pos.right, eq.right);
+}
+
+
 /* Render impression */
 function renderCardIntoSvg(targetSvg, card, revealAnswers){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
@@ -1767,6 +2321,12 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   }
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
+
+  if(card.family === "EQ"){
+    renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText);
+    return;
+  }
+
   targetSvg.appendChild(tEl("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
 
   // Adapt for print: if C/D, put total in box, else center
@@ -1969,6 +2529,8 @@ function generate(){
       c = genUnits(rng);
     }else if(act==="N"){
       c = genNumbered(rng);
+    }else if(act==="EQ"){
+      c = genEquation(rng);
     }else if(act==="C"){
       c = genInvestigate(rng);
     }else if(act==="D"){
@@ -2024,6 +2586,15 @@ document.getElementById("btnNext").addEventListener("click", ()=>{
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
 window.addEventListener("keydown",(e)=>{
+  // If the activity <select> has focus, ArrowLeft/ArrowRight would normally change the selected mode.
+  // We want ArrowLeft/ArrowRight to always navigate cards; so we blur the select and prevent default.
+  const _ae = document.activeElement;
+  if((_ae && _ae.id==="activity") && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
+    e.preventDefault();
+    try{ _ae.blur(); }catch(_e){}
+    const _ms = document.getElementById("mainSvg");
+    if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
+  }
   if(e.key==="ArrowLeft"){
     if(cards.length===0) return;
     if(revealed){ revealed=false; updateUI(); return; }
