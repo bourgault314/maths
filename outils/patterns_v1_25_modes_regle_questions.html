@@ -1,0 +1,3386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Patterns — générateur</title>
+  <style>
+    :root{
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.18);
+      --cell: 62px;
+      --cellFont: 20px;
+      --gap: 10px;
+
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel2:#fbfcff;
+      --text:#121524;
+      --muted:#5c6378;
+      --line: rgba(10,16,30,.14);
+      --accent:#0a84ff;
+      --good:#1aa15a;
+      --bad:#d64545;
+      --warn:#b87900;
+    }
+
+    body.theme-dark{
+      --bg:#0b0c10;
+      --panel:#12141b;
+      --panel2:#151824;
+      --text:#e8e8ee;
+      --muted:#a8adbd;
+      --line: rgba(255,255,255,.12);
+      --accent:#66e3ff;
+      --good:#7CFF8B;
+      --bad:#ff6b6b;
+      --warn:#ffd166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: scroll;
+    }
+
+    body.theme-light{
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(10,132,255,.10), transparent 60%),
+                  radial-gradient(900px 500px at 80% 30%, rgba(184,121,0,.07), transparent 60%),
+                  var(--bg);
+    }
+    body.theme-dark{
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(102,227,255,.12), transparent 60%),
+                  radial-gradient(900px 500px at 80% 30%, rgba(255,209,102,.09), transparent 60%),
+                  var(--bg);
+    }
+
+    .app{ max-width: 1180px; margin: 0 auto; padding: 14px 14px 28px; }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      min-height: 44px;
+    }
+
+    .title{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width: 0; }
+    .title h1{ font-size: 20px; margin:0; letter-spacing:.2px; }
+    .title .pill{ margin-left: 2px; }
+
+    /* hide debug seed */
+    #seedLabel{ display:none !important; }
+
+    .topRight{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      white-space: nowrap;
+    }
+
+    button, input, select{ font: inherit; color: inherit; }
+
+    .btn{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      white-space: nowrap;
+    }
+    body.theme-dark .btn{ background: rgba(255,255,255,.04); }
+    .btn:hover{ background: rgba(255,255,255,.75); }
+    body.theme-dark .btn:hover{ background: rgba(255,255,255,.07); }
+    .btn:active{ transform: translateY(1px); }
+    .btn:disabled{ opacity: .55; cursor: not-allowed; }
+
+    .btnPrimary{
+      border-color: rgba(10,132,255,.35);
+      background: rgba(10,132,255,.14);
+    }
+    body.theme-dark .btnPrimary{
+      border-color: rgba(102,227,255,.35);
+      background: rgba(102,227,255,.12);
+    }
+    .btnPrimary:hover{ background: rgba(10,132,255,.20); }
+    body.theme-dark .btnPrimary:hover{ background: rgba(102,227,255,.18); }
+
+    .btnIcon{
+      width: 44px;
+      padding: 9px 0;
+      text-align:center;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding: 6px;
+      background: rgba(255,255,255,.45);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      width: fit-content;
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      min-height: 44px;
+      box-sizing: border-box;
+    }
+    body.theme-dark .tabs{ background: rgba(255,255,255,.03); }
+    .tab{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      color: var(--muted);
+      background: transparent;
+      white-space: nowrap;
+    }
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(10,132,255,.35);
+      background: rgba(10,132,255,.14);
+    }
+    body.theme-dark .tab.active{
+      border-color: rgba(102,227,255,.35);
+      background: rgba(102,227,255,.12);
+    }
+
+    .grid{ display:grid; grid-template-columns: 430px 1fr; gap: 14px; align-items: start; }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    body.theme-dark .card{ background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); }
+    .cardHeader{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.03);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      min-height: 46px;
+      box-sizing: border-box;
+    }
+    body.theme-dark .cardHeader{ background: rgba(0,0,0,.18); }
+    .cardHeader .h{ font-weight: 800; letter-spacing:.2px; }
+    .cardBody{ padding: 12px 14px 14px; }
+
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+
+    .field{ display:flex; flex-direction:column; gap:6px; min-width: 150px; }
+    .field label{ font-size: 12px; color: var(--muted); }
+    .field select, .field input[type="number"], .field input[type="text"]{
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      outline: none;
+    }
+    body.theme-dark .field select, body.theme-dark .field input[type="number"], body.theme-dark .field input[type="text"]{ background: rgba(255,255,255,.03); }
+
+    .switch{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+    }
+    body.theme-dark .switch{ background: rgba(255,255,255,.03); }
+    .switch input{ transform: scale(1.15); }
+
+    .hint{
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .muted{ color: var(--muted); }
+    .divider{ height: 1px; background: var(--line); margin: 12px 0; }
+
+    .exerciseArea{ min-height: 280px; display:flex; flex-direction:column; gap: 12px; }
+
+    .exerciseTitle{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .exerciseTitle .left{ display:flex; flex-direction:column; gap:4px; }
+    .exerciseTitle .left .big{ font-size: 16px; font-weight: 900; }
+    .exerciseTitle .left .small{ font-size: 12px; color: var(--muted); }
+
+    .cells{ display:flex; flex-wrap:wrap; gap: var(--gap); align-items:center; padding: 10px 2px 2px; }
+
+    .cell{
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: var(--cellFont);
+      font-weight: 900;
+      letter-spacing:.2px;
+      position: relative;
+      overflow:hidden;
+    }
+    body.theme-dark .cell{ background: rgba(255,255,255,.03); }
+
+    .cell.blank{
+      background: rgba(255,255,255,.40);
+      border-style: dashed;
+      color: rgba(0,0,0,.45);
+    }
+    body.theme-dark .cell.blank{
+      background: rgba(255,255,255,.02);
+      color: rgba(255,255,255,.55);
+    }
+
+    .cell.revealed{
+      border: 2px solid var(--text);
+      box-shadow: 0 0 0 3px rgba(10,132,255,.14);
+    }
+    body.theme-dark .cell.revealed{
+      border: 2px solid var(--text);
+      box-shadow: 0 0 0 3px rgba(102,227,255,.14);
+    }
+
+    .cell input{
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline:none;
+      background: transparent;
+      text-align:center;
+      font-size: var(--cellFont);
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .cell.small{ font-size: 16px; }
+    .cell.tiny{ font-size: 13px; }
+    .cell.small input{ font-size: 16px; }
+    .cell.tiny input{ font-size: 13px; }
+
+
+    .cell.good{ border-color: rgba(26,161,90,.55); box-shadow: 0 0 0 3px rgba(26,161,90,.14); }
+    .cell.bad{ border-color: rgba(214,69,69,.55); box-shadow: 0 0 0 3px rgba(214,69,69,.14); }
+
+    .explain{
+      border-top: 1px solid var(--line);
+      margin-top: 10px;
+      padding-top: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.45);
+      padding: 6px 10px;
+      border-radius: 999px;
+      width: fit-content;
+      white-space: nowrap;
+    }
+    body.theme-dark .pill{ background: rgba(255,255,255,.03); }
+    .expText{ font-size: 14px; line-height: 1.4; color: rgba(18,21,36,.95); }
+    body.theme-dark .expText{ color: rgba(232,232,238,.95); }
+
+    /* Families UI */
+    .famGroups{ display:flex; flex-direction:column; gap: 12px; }
+    .groupTitle{
+      font-size: 13px;
+      font-weight: 900;
+      color: rgba(18,21,36,.88);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    body.theme-dark .groupTitle{ color: rgba(232,232,238,.88); }
+
+    .famList{ display:flex; flex-direction:column; gap: 8px; }
+
+    .famItem{
+      display:grid;
+      grid-template-columns: 1fr 210px;
+      gap: 10px;
+      align-items:center;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.35);
+    }
+    body.theme-dark .famItem{ background: rgba(255,255,255,.02); }
+    .famItem.disabled{ opacity:.48; filter: grayscale(.2); }
+
+    .famLeft{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      min-width: 0;
+    }
+    .famLeft input{ margin-top: 2px; transform: scale(1.1); }
+    .famMeta{ min-width:0; }
+    .famMeta b{ font-size: 13px; display:block; }
+    .famMeta span{ font-size: 12px; color: var(--muted); display:block; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+
+    .stepper{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      white-space: nowrap;
+    }
+    .stepper .btn{ padding: 7px 10px; border-radius: 10px; }
+    .ratioBox{
+      min-width: 42px;
+      text-align:center;
+      font-weight: 900;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 8px;
+      background: rgba(255,255,255,.55);
+    }
+    body.theme-dark .ratioBox{ background: rgba(255,255,255,.03); }
+
+    .qtyInput{
+      width: 60px;
+      text-align:center;
+      font-weight: 900;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 8px;
+      background: rgba(255,255,255,.55);
+      color: var(--text);
+    }
+    body.theme-dark .qtyInput{ background: rgba(255,255,255,.03); }
+    .qtyInput:focus{ outline:none; box-shadow: 0 0 0 3px rgba(10,132,255,.14); }
+
+    /* Impression */
+    .printPreview{ display:flex; flex-direction:column; gap: 12px; }
+    .sheet{
+      background: #fff;
+      color: #111;
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid rgba(0,0,0,.1);
+    }
+    .sheet h2{ margin:0 0 10px 0; font-size: 16px; }
+    .sheet .metaLine{ font-size: 12px; color: rgba(0,0,0,.65); margin-bottom: 10px; display:flex; gap: 14px; flex-wrap:wrap; }
+    .pEx{ margin: 10px 0 14px; padding-bottom: 10px; border-bottom: 1px dashed rgba(0,0,0,.2); }
+    .pEx:last-child{ border-bottom: none; padding-bottom: 0; }
+    .pEx .pTitle{ font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+    .pCells{ display:flex; flex-wrap:wrap; gap: 8px; margin-bottom: 8px; }
+    .pCell{
+      width: 46px; height: 46px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .pCell.small{ font-size: 13px; }
+    .pCell.tiny{ font-size: 11px; }
+
+    .pCell.blank{ border-style: dashed; color: rgba(0,0,0,.35); }
+    .pCell.filled{ border: 2px solid rgba(0,0,0,.85); }
+    .ruleLine{ font-size: 12px; color: rgba(0,0,0,.7); }
+    .tagLine{ font-size: 12px; color: rgba(0,0,0,.55); margin-top: 4px; }
+
+    /* Projection */
+    body.projectionUI{
+      --cell: 92px;
+      --cellFont: 30px;
+      --gap: 16px;
+    }
+    body.projectionUI .app{
+      max-width: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 18px 18px 84px;
+      box-sizing: border-box;
+    }
+    body.projectionUI header,
+    body.projectionUI .tabs,
+    body.projectionUI .grid > .card:first-child{ display:none !important; }
+    body.projectionUI .grid{ grid-template-columns: 1fr; height: calc(100vh - 84px); }
+    body.projectionUI .exerciseArea{ min-height: auto; }
+    body.projectionUI .card{ height: 100%; }
+
+    .projBar{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: 72px;
+      padding: 10px 14px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      background: rgba(255,255,255,.82);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+      z-index: 9999;
+      flex-wrap: wrap;
+    }
+    body.theme-dark .projBar{ background: rgba(18,20,27,.92); }
+    body.projectionUI .projBar{ display:flex; }
+
+    .projBar .btn{ padding: 10px 14px; border-radius: 12px; }
+    .projCounter{
+      font-weight: 900;
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.45);
+      color: var(--muted);
+    }
+    body.theme-dark .projCounter{ background: rgba(255,255,255,.03); }
+
+    /* Overlay (anti-freeze + debug) */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 10000;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .overlayPanel{
+      width: min(560px, 96vw);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      background: rgba(255,255,255,.92);
+      color: #111;
+      padding: 14px;
+    }
+    body.theme-dark .overlayPanel{
+      background: rgba(18,20,27,.92);
+      color: var(--text);
+    }
+    .overlayTitle{ font-weight: 900; margin-bottom: 8px; }
+    .overlayText{ font-size: 13px; color: var(--muted); line-height: 1.35; }
+    .progressBar{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.08);
+      overflow:hidden;
+      margin: 10px 0 12px;
+    }
+    body.theme-dark .progressBar{ background: rgba(255,255,255,.07); }
+    .progressFill{
+      height: 100%;
+      width: 0%;
+      background: rgba(10,132,255,.60);
+      border-radius: 999px;
+      transition: width .12s linear;
+    }
+    body.theme-dark .progressFill{ background: rgba(102,227,255,.60); }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,.55);
+      max-height: 240px;
+      overflow:auto;
+      margin-top: 10px;
+      display:none;
+    }
+    body.theme-dark .mono{ background: rgba(255,255,255,.03); }
+
+    .packSelectTop{
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.65);
+      padding: 0 10px;
+      font-weight: 700;
+      color: var(--text);
+      min-width: 240px;
+      max-width: 320px;
+      outline: none;
+    }
+    body.theme-dark .packSelectTop{ background: rgba(255,255,255,.06); }
+
+    @media (max-width: 1020px){
+      .grid{ grid-template-columns: 1fr; }
+      .tabs{ width: 100%; justify-content:space-between; }
+      .topbar{ flex-wrap: wrap; }
+      .topRight{ width: 100%; justify-content:flex-start; }
+    }
+
+    @media print{
+      body{ background:#fff !important; color:#000 !important; }
+      .app, .topbar, .tabs, .card:not(.printOnly), .projBar, .overlay{ display:none !important; }
+      .printOnly{ display:block !important; border:none !important; box-shadow:none !important; background:#fff !important; }
+      .sheet{ border:none !important; page-break-after: always; }
+      .sheet:last-child{ page-break-after: auto; }
+    }
+  
+/* ======= QA mode ======= */
+.qaBox{margin-top:12px;padding:10px;border:1px dashed rgba(255,255,255,.22);border-radius:12px;background:rgba(255,255,255,.03);}
+.qaTitle{font-weight:800;font-size:13px;opacity:.95;margin-bottom:8px;}
+.qaItem{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid rgba(255,255,255,.08);}
+.qaItem:first-child{border-top:none;}
+.qaPrompt{flex:1;line-height:1.35;}
+.qaInput{width:160px;max-width:42vw;}
+.qaFeedback{font-size:12px;opacity:.9;margin-left:6px;}
+.ok{color:#8be28b;}
+.ko{color:#ff9b9b;}
+
+.qaPrint{margin-top:8px;font-size:12px;line-height:1.25;}
+.qaPrint .qaLine{font-weight:700;margin-top:6px;}
+.qaPrint .qaBlank{margin:2px 0 6px 0;}
+.qaPrint.corr .qaAns{margin:2px 0 8px 0;font-weight:700;}
+</style>
+</head>
+<body class="theme-light">
+  <div class="app">
+<div class="topbar">
+<div class="tabs" role="tablist" aria-label="Onglets">
+      <button class="tab active" data-tab="gen" role="tab" aria-selected="true">Générer</button>
+      <button class="tab" data-tab="print" role="tab" aria-selected="false">Impression</button>
+      <button class="tab" data-tab="settings" role="tab" aria-selected="false">Paramètres</button>
+    </div>
+<div class="topRight">
+      <select id="packSelect" class="packSelectTop" title="Choisir un pack">
+        <option value="custom" selected>Personnalisé</option>
+        <option value="pack6e">6e (sans relatifs)</option>
+        <option value="pack5e">5e (avec relatifs)</option>
+        <option value="pack4">4e</option>
+        <option value="pack3">3e</option>
+        <option value="packConcours">Concours (classe)</option>
+        <option value="packDefis">Défis (spécial)</option>
+      </select>
+      <button class="btn btnIcon" id="btnTheme" title="Thème clair/sombre">🌓</button>
+      <button class="btn" id="btnProjection" title="Projection (plein écran)">📽️ Projection</button>
+      <button class="btn btnIcon" id="btnBug" title="Voir les erreurs (si ça plante)">🐞</button>
+    </div>
+</div>
+
+    <!-- Générer -->
+    <section id="tab-gen">
+      <div class="grid">
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Génération</div>
+</div>
+          <div class="cardBody">
+            <div class="row">
+<div class="field">
+                <label for="cellsCount">Nb de cases</label>
+                <select id="cellsCount">
+                  <option value="6">6</option>
+                  <option value="8" selected>8</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="holesCount">Nb de trous</label>
+                <select id="holesCount">
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="holeDifficulty">Placement des trous</label>
+                <select id="holeDifficulty">
+                  <option value="easy">faciles</option>
+                  <option value="medium" selected>moyens</option>
+                  <option value="hard">difficiles</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="hint">
+              <b>Faciles</b> : plutôt à la fin (beaucoup d’indices). •
+              <b>Moyens</b> : répartis. •
+              <b>Difficiles</b> : plus tôt (moins d’indices au début).
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <div class="switch">
+                <input id="inputMode" type="checkbox" />
+                <label for="inputMode">Mode saisie élève</label>
+              </div>
+              <div class="switch">
+                <input id="animMode" type="checkbox" checked />
+                <label for="animMode">Animations</label>
+              </div>
+            </div>
+            <div class="divider"></div>
+
+            <div class="row">
+<div class="field" style="min-width:170px;">
+  <label for="genCount">Nb d’exercices (série)</label>
+  <input id="genCount" type="number" min="1" max="50" step="1" value="10" />
+</div>
+  <div class="field" style="min-width:230px;">
+  <label for="activityMode">Activité</label>
+  <select id="activityMode">
+    <option value="holes">Compléter (trous)</option>
+    <option value="rule">Règle donnée → compléter</option>
+    <option value="qa">Questions (appartenance / rang)</option>
+  </select>
+</div>
+
+<div class="field" style="min-width:160px;">
+  <label for="seriesPrefix">Préfixe (optionnel)</label>
+  <input id="seriesPrefix" type="text" maxlength="6" placeholder="A" value="" />
+</div>
+<button class="btn btnPrimary" id="btnPrepare">Générer la série</button>
+</div>
+<div class="divider"></div>
+
+            <div class="row">
+              <button class="btn btnPrimary" id="btnNew">Nouveau</button>
+              <button class="btn" id="btnPrev" disabled>◀︎</button>
+              <button class="btn" id="btnNext" disabled>▶︎</button>
+              <button class="btn" id="btnHint">Indice</button>
+              <button class="btn" id="btnCheck" disabled>Vérifier</button>
+              <button class="btn btnPrimary" id="btnSolution">Correction</button>
+            </div>
+
+            <div class="hint" id="hintText">
+              Les <b>familles</b> et leurs <b>poids</b> se règlent dans <b>Paramètres</b> (cocher + quantité).
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Exercice</div>
+</div>
+          <div class="cardBody exerciseArea">
+            <div class="exerciseTitle">
+              <div class="left">
+                <div class="big" id="exTitle">Complète les cases vides.</div>
+                <div class="small" id="exSubtitle">Clique “Nouveau” pour générer un pattern.</div>
+              </div>
+</div>
+
+            <div class="cells" id="cells"></div>
+<div class="qaBox" id="qaBox" style="display:none;">
+  <div class="qaTitle">Questions</div>
+  <div id="qaItems"></div>
+</div>
+
+
+            <div class="explain" id="explainBox" style="display:none;">
+              <div class="pill">Explication</div>
+              <div class="expText" id="explainText"></div>
+              <div class="expText muted" id="explainProf"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Impression -->
+    <section id="tab-print" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Impression</div>
+            <div class="pill">A4 • exercices + corrections</div>
+          </div>
+          <div class="cardBody">
+<div class="hint">
+  L’impression utilise la <b>série</b> générée dans <b>Générer</b>.
+  <span id="printStatus" class="pill" style="margin-left:8px;">Aucune série</span>
+</div>
+
+<div class="divider"></div>
+
+<div class="row">
+  <div class="switch">
+    <input id="printIncludeCorrections" type="checkbox" checked />
+    <label for="printIncludeCorrections">Inclure le corrigé</label>
+  </div>
+</div>
+
+<div class="row" style="margin-top:10px;">
+  <button class="btn btnPrimary" id="btnMakeSheet">Mettre à jour l’aperçu</button>
+  <button class="btn" id="btnPrint">Imprimer</button>
+</div>
+
+<div class="hint">
+  Astuce : génère une série d’abord, puis viens ici pour imprimer.
+</div>
+</div>
+        </div>
+
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Aperçu</div>
+            <div class="pill" id="sheetPill">—</div>
+          </div>
+          <div class="cardBody printPreview" id="printPreview">
+            <div class="muted">Clique “Générer la feuille”.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Paramètres -->
+    <section id="tab-settings" style="display:none;">
+      <div class="grid">
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Sélection des patterns</div>
+            <div class="pill">cocher + quantité</div>
+          </div>
+          <div class="cardBody">
+            <div class="row">
+              <button class="btn" id="btnPack6e">Pack 6e</button>
+              <button class="btn" id="btnPack5e">Pack 5e</button>
+              <button class="btn" id="btnPack4">Pack 4e</button>
+              <button class="btn" id="btnPack3">Pack 3e</button>
+              <button class="btn" id="btnPackConcours">Concours</button>
+              <button class="btn" id="btnPackDefis">Défis</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="famGroups" id="famGroups"></div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <div class="switch">
+                <input id="toggleExplainAuto" type="checkbox" checked />
+                <label for="toggleExplainAuto">Afficher explication après correction</label>
+              </div>
+              <div class="switch">
+                <input id="toggleReduceMotion" type="checkbox" />
+                <label for="toggleReduceMotion">Réduire animations</label>
+              </div>
+              <div class="switch" title="Disponible uniquement en mode Personnalisé">
+                <input id="toggleAllowNeg" type="checkbox" />
+                <label for="toggleAllowNeg">Autoriser nombres négatifs (Personnalisé)</label>
+              </div>
+              <div class="switch" title="Avancé : utile surtout pour des défis (multiplicateurs/diviseurs négatifs)">
+                <input id="toggleAllowNegK" type="checkbox" />
+                <label for="toggleAllowNegK">Autoriser multiplicateurs/diviseurs négatifs (avancé)</label>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <div class="field" style="min-width: 260px;">
+                <label for="seedInput">Seed (optionnel)</label>
+                <input id="seedInput" type="text" placeholder="laisser vide = auto" />
+              </div>
+              <button class="btn" id="btnApplySeed">Appliquer seed</button>
+              <button class="btn" id="btnNewSeed" title="Nouveau seed">🎲</button>
+              <span class="pill" id="seedLabel">seed: —</span>
+            </div>
+
+            <div class="hint">
+              La <b>quantité</b> sert pour les feuilles et la <b>série</b> (0 = jamais).<br>
+              En mode “Nouveau”, la quantité joue aussi le rôle de “poids” : quantité 3 = sort plus souvent qu’une quantité 1.
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <button class="btn" id="btnResetAll">Réinitialiser l’outil</button>
+              <span class="muted">(efface les réglages v1.12)</span>
+            </div>
+            <div class="hint">
+              Si la page se met à faire n’importe quoi : clique ici, puis recharge.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHeader">
+            <div class="h">Raccourcis (projection)</div>
+            <div class="pill">clavier</div>
+          </div>
+          <div class="cardBody">
+            <div class="hint" style="margin-top:0;">
+              <b>← / →</b> : précédent / suivant (série) • <b>N</b> : nouvel ex • <b>H</b> : indice • <b>Espace</b> : correction • <b>Esc</b> : quitter plein écran.
+            </div>
+            <div class="divider"></div>
+            <div class="hint" style="margin-top:0;">
+              Pack 6e : <b>aucun nombre négatif</b>. Pack 5e+ : <b>relatifs possibles</b>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="projBar" id="projBar" aria-hidden="true">
+    <button class="btn" id="pPrev" title="Précédent">◀︎</button>
+    <button class="btn" id="pNext" title="Suivant">▶︎</button>
+    <span class="projCounter" id="pCounter">—</span>
+    <button class="btn" id="pHint" title="Indice">Indice</button>
+    <button class="btn btnPrimary" id="pSolution" title="Correction">Correction</button>
+    <button class="btn" id="pTheme" title="Thème clair/sombre">🌓</button>
+    <span style="width:10px;"></span>
+    <button class="btn" id="pExit">Quitter</button>
+  </div>
+
+  <div class="card printOnly" style="display:none;">
+    <div class="cardBody" id="printOnlyRoot"></div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="overlayPanel">
+      <div class="overlayTitle" id="overlayTitle">Génération…</div>
+      <div class="overlayText" id="overlayText">Préparation en cours…</div>
+      <div class="progressBar"><div class="progressFill" id="overlayFill"></div></div>
+      <div class="row">
+        <button class="btn" id="overlayCancel">Annuler</button>
+        <button class="btn btnPrimary" id="overlayClose" style="display:none;">Fermer</button>
+      </div>
+      <div class="mono" id="errorBox"></div>
+    </div>
+  </div>
+
+<script>
+const LS_THEME = "patterns_theme_v1_12";
+const LS_REDUCE = "patterns_reduceMotion_v1_12";
+const LS_EXPLAIN = "patterns_explainAuto_v1_12";
+const LS_CFG = "patterns_cfg_v1_12";
+const LS_PACK = "patterns_pack_v1_12";
+const LS_SEED = "patterns_seed_v1_12";
+const LS_ALLOWNEG = "patterns_allowneg_v1_12";
+
+const overlay = document.getElementById("overlay");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlayText = document.getElementById("overlayText");
+const overlayFill = document.getElementById("overlayFill");
+const overlayCancel = document.getElementById("overlayCancel");
+const overlayClose = document.getElementById("overlayClose");
+const errorBox = document.getElementById("errorBox");
+
+let busy = false;
+let abortFlag = false;
+let errorLog = [];
+
+function showOverlay(title, text, progress=0){
+  overlayTitle.textContent = title || "…";
+  overlayText.textContent = text || "";
+  overlayFill.style.width = (Math.max(0, Math.min(100, progress))*1) + "%";
+  overlay.style.display = "flex";
+}
+function hideOverlay(){
+  overlay.style.display = "none";
+  overlayClose.style.display = "none";
+  errorBox.style.display = "none";
+  errorBox.textContent = "";
+  overlayCancel.style.display = "";
+}
+function showErrorPanel(lines){
+  errorBox.style.display = "block";
+  errorBox.textContent = lines.join("\n");
+  overlayClose.style.display = "";
+  showOverlay("Erreur détectée", "Copie le texte ci-dessous et envoie-le moi.", 100);
+}
+overlayCancel.addEventListener("click", ()=>{
+  abortFlag = true;
+  overlayText.textContent = "Annulation…";
+});
+overlayClose.addEventListener("click", hideOverlay);
+
+function logError(err, context=""){
+  const msg = (err && err.stack) ? err.stack : String(err);
+  const line = `[${new Date().toLocaleTimeString()}] ${context ? context + " — " : ""}${msg}`;
+  errorLog.push(line);
+  if(errorLog.length > 25) errorLog = errorLog.slice(-25);
+}
+
+window.addEventListener("error", (e)=>{
+  logError(e.error || e.message, "window.error");
+});
+window.addEventListener("unhandledrejection", (e)=>{
+  logError(e.reason, "promise");
+});
+
+function applyTheme(theme){
+  document.body.classList.toggle("theme-dark", theme==="dark");
+  document.body.classList.toggle("theme-light", theme!=="dark");
+  localStorage.setItem(LS_THEME, theme);
+}
+function toggleTheme(){
+  const current = document.body.classList.contains("theme-dark") ? "dark" : "light";
+  applyTheme(current==="dark" ? "light" : "dark");
+}
+(function initPrefs(){
+  const t = localStorage.getItem(LS_THEME) || "light";
+  applyTheme(t);
+  const reduce = localStorage.getItem(LS_REDUCE) === "1";
+  const explain = localStorage.getItem(LS_EXPLAIN);
+  document.getElementById("toggleReduceMotion").checked = reduce;
+  if(explain !== null) document.getElementById("toggleExplainAuto").checked = (explain === "1");
+})();
+document.getElementById("btnTheme").addEventListener("click", toggleTheme);
+document.getElementById("pTheme").addEventListener("click", toggleTheme);
+
+document.getElementById("toggleReduceMotion").addEventListener("change", (e)=>{
+  localStorage.setItem(LS_REDUCE, e.target.checked ? "1" : "0");
+  if(e.target.checked) document.getElementById("animMode").checked = false;
+});
+document.getElementById("toggleExplainAuto").addEventListener("change", (e)=>{
+  localStorage.setItem(LS_EXPLAIN, e.target.checked ? "1" : "0");
+});
+
+document.getElementById("toggleAllowNeg").addEventListener("change", (e)=>{
+  customAllowNeg = !!e.target.checked;
+  if(!customAllowNeg){
+    // Si on coupe les relatifs, on coupe aussi le réglage avancé.
+    customAllowNegK = false;
+    const tk = document.getElementById("toggleAllowNegK");
+    if(tk) tk.checked = false;
+  }
+  setAllowNegUI();
+});
+
+document.getElementById("toggleAllowNegK").addEventListener("change", (e)=>{
+  customAllowNegK = !!e.target.checked;
+  // Si l'utilisateur coche “multiplicateurs négatifs”, il faut forcément autoriser les négatifs.
+  if(customAllowNegK && !customAllowNeg){
+    customAllowNeg = true;
+    const t = document.getElementById("toggleAllowNeg");
+    if(t) t.checked = true;
+  }
+  setAllowNegUI();
+});
+
+document.getElementById("btnResetAll").addEventListener("click", ()=>{
+  const ok = confirm("Réinitialiser l’outil ?\n\nCela efface les réglages enregistrés (packs, poids, seed, thème…).");
+  if(!ok) return;
+  [LS_THEME, LS_REDUCE, LS_EXPLAIN, LS_CFG, LS_PACK, LS_SEED, LS_ALLOWNEG].forEach(k=>{ try{ localStorage.removeItem(k);}catch(_){ } });
+  location.reload();
+});
+
+let customAllowNeg = false;
+let customAllowNegK = false;
+function setAllowNegUI(){
+  const t = document.getElementById("toggleAllowNeg");
+  const tk = document.getElementById("toggleAllowNegK");
+  const isCustom = (currentPackId === "custom");
+
+  if(t){
+    t.disabled = !isCustom;
+    t.checked = isCustom ? customAllowNeg : packAllowNegFromPack();
+  }
+
+  // Le toggle “multiplicateurs/diviseurs négatifs” est un réglage avancé.
+  // Il n'a de sens que si les nombres négatifs sont autorisés.
+  const allowNeg = getAllowNeg();
+  const allowNegK = getAllowNegK();
+  if(tk){
+    tk.disabled = (!isCustom && !packAllowNegKFromPack()) || !allowNeg;
+    tk.checked = allowNeg && (isCustom ? customAllowNegK : packAllowNegKFromPack());
+  }
+}
+function packAllowNegFromPack(){
+  const p = PACKS[currentPackId];
+  return p ? !!p.allowNeg : false;
+}
+function packAllowNegKFromPack(){
+  // Activé par défaut uniquement pour le pack Défis.
+  return (currentPackId === "packDefis");
+}
+function getAllowNeg(){
+  return (currentPackId === "custom") ? customAllowNeg : packAllowNegFromPack();
+}
+
+function getAllowNegK(){
+  const allowNeg = getAllowNeg();
+  if(!allowNeg) return false;
+
+  if(currentPackId === "custom") return !!customAllowNegK;
+  return packAllowNegKFromPack();
+}
+
+
+document.getElementById("btnBug").addEventListener("click", ()=>{
+  if(errorLog.length === 0){
+    showOverlay("Aucune erreur enregistrée", "Si la page frise, essaie aussi F12 → Console.", 0);
+    overlayCancel.style.display = "none";
+    overlayClose.style.display = "";
+    return;
+  }
+  overlayCancel.style.display = "none";
+  overlayClose.style.display = "";
+  showErrorPanel(errorLog);
+});
+
+/* RNG */
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return h >>> 0;
+  };
+}
+function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+let seedStr = String(Date.now());
+let rand = mulberry32(xmur3(seedStr)());
+
+function setSeed(str){
+  seedStr = str && str.trim() ? str.trim() : String(Date.now());
+  rand = mulberry32(xmur3(seedStr)());
+  document.getElementById("seedLabel").textContent = "seed: " + seedStr;
+}
+function rInt(min, max){ return Math.floor(rand() * (max - min + 1)) + min; }
+function rPick(arr){ return arr[rInt(0, arr.length - 1)]; }
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(rand()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+function valToNumber(v){
+  if(typeof v === "number") return v;
+  if(v === null || v === undefined) return NaN;
+  const s = String(v).trim();
+  if(!s) return NaN;
+  // Fractions "a/b"
+  const slash = s.indexOf("/");
+  if(slash > -1){
+    const a = parseFloat(s.slice(0, slash).replace(",", "."));
+    const b = parseFloat(s.slice(slash+1).replace(",", "."));
+    if(Number.isFinite(a) && Number.isFinite(b) && b !== 0) return a / b;
+  }
+  // Nombre (avec virgule possible)
+  const n = parseFloat(s.replace(",", "."));
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function withinDomain(seq, allowNeg){
+  for(const v of seq){
+    const nv = valToNumber(v);
+    if(!Number.isFinite(nv)) return false;
+    if(!allowNeg && nv < 0) return false;
+    if(nv < -9999 || nv > 9999) return false;
+  }
+  return true;
+}
+
+/* ======= Families ======= */
+const FAMILIES = [
+  { id:"motif", category:"classe", label:"Motifs (répétitions)", desc:"motifs variés (AB, AAB, ABCA…) ",
+    gen:(n, ctx)=>{
+      // Motifs répétitifs : on génère un "motif" (suite de lettres) puis on le répète.
+      // Objectif : énorme variété sans multiplier les familles.
+      const bank = [
+        // 2 lettres
+        "AB","ABA","AAB","ABB","ABAB","AABB","ABBA","ABB","BAAB","ABABA","AABAB","ABBAB",
+        // 3 lettres
+        "ABC","ABCA","ABCAB","ABCC","AABC","ABBC","ABBAC","ABCCB","ABCBA","ABAC","CAB",
+        // 4 lettres (plus rare)
+        "ABCD","ABCDA","ABCDAB","AABBC","AABBCD"
+      ];
+
+      function randomMotif(){
+        const alphSets = [["A","B"],["A","B","C"],["A","B","C","D"]];
+        const alph = rPick(alphSets);
+        const L = rPick([2,3,4,5,6]);
+        for(let t=0;t<80;t++){
+          let s="";
+          for(let i=0;i<L;i++) s += rPick(alph);
+          const uniq = new Set(s.split(""));
+          if(uniq.size>=2) return s;
+        }
+        return rPick(["AB","ABA","ABC"]);
+      }
+
+      // 60% motifs "classiques" + 40% motifs aléatoires (très variés)
+      const motif = (Math.random()<0.6) ? rPick(bank) : randomMotif();
+
+      const letters = Array.from(new Set(motif.split("")));
+      const values = {};
+      const used = new Set();
+      for(const L of letters){
+        let v;
+        for(let tries=0; tries<60; tries++){
+          const lo = ctx.allowNeg ? -12 : 0;
+          const hi = 20;
+          v = rInt(lo, hi);
+          // évite trop de doublons pour que le motif soit lisible
+          if(!used.has(v)) break;
+        }
+        used.add(v);
+        values[L]=v;
+      }
+
+      const seq = Array.from({length:n}, (_,i)=> values[motif[i % motif.length]]);
+      const pretty = motif.split("").join(" ");
+      return {
+        familyId:"motif",
+        familyLabel:"Répétitifs",
+        type: motif,
+        seq,
+        ruleStudent:`On répète le motif (${pretty}) en boucle.`,
+        ruleProf:`Motif répété (période ${motif.length}) : correspondance ${letters.map(L=>`${L}=${values[L]}`).join(", ")}.`,
+        tags:["motif","cycle"]
+      };
+    }
+  },
+
+  { id:"arith_plus", category:"classe", label:"Écart constant +k", desc:"suite arithmétique (positifs)",
+    gen:(n, ctx)=>{
+      const k = rPick([1,2,3,4,5,6,7,8,9,10,12,15]);
+      const a0 = ctx.allowNeg ? rInt(-20, 40) : rInt(0, 40);
+      const seq = Array.from({length:n}, (_,i)=>a0 + i*k);
+      return { familyId:"arith_plus", familyLabel:"+k", type:`+${k}`,
+        seq, ruleStudent:`On ajoute toujours ${k}.`, ruleProf:`Suite arithmétique : écart constant +${k}.`, tags:["arith","+"] };
+    }
+  },
+
+  { id:"arith_minus", category:"classe", label:"Écart constant −k", desc:"suite décroissante (sans négatifs)",
+    gen:(n, ctx)=>{
+      const k = rPick([1,2,3,4,5,6,7,8,9,10,12,15]);
+      const minStart = (n-1)*k + 1;
+      const a0 = rInt(minStart, Math.min(99, minStart + 40));
+      const seq = Array.from({length:n}, (_,i)=>a0 - i*k);
+      return { familyId:"arith_minus", familyLabel:"-k", type:`-${k}`,
+        seq, ruleStudent:`On enlève toujours ${k}.`, ruleProf:`Suite arithmétique décroissante : écart constant -${k}.`, tags:["arith","-"] };
+    }
+  },
+
+  { id:"arith_rel", category:"classe", label:"Relatifs ±k", desc:"passage par 0",
+    gen:(n, ctx)=>{
+      const k = rPick([2,3,4,5,6,7,8,9,10,11,12]);
+      let seq = [];
+      for(let tries=0; tries<60; tries++){
+        const mode = rPick(["asc_cross","desc_cross","asc_neg","desc_neg"]);
+        let a0;
+        if(mode==="asc_cross"){
+          a0 = rInt(-30,-3);
+          seq = Array.from({length:n}, (_,i)=>a0 + i*k);
+          if(seq.some(v=>v<0) && seq.some(v=>v>0)) break;
+        }else if(mode==="desc_cross"){
+          a0 = rInt(8,45);
+          seq = Array.from({length:n}, (_,i)=>a0 - i*k);
+          if(seq.some(v=>v<0) && seq.some(v=>v>0)) break;
+        }else if(mode==="asc_neg"){
+          a0 = rInt(-45,-12);
+          seq = Array.from({length:n}, (_,i)=>a0 + i*k);
+          if(seq.filter(v=>v<0).length>=3) break;
+        }else{
+          a0 = rInt(20,55);
+          seq = Array.from({length:n}, (_,i)=>a0 - i*k);
+          if(seq.filter(v=>v<0).length>=3) break;
+        }
+      }
+      const d = (seq[1]-seq[0] >= 0) ? `+${k}` : `-${k}`;
+      return { familyId:"arith_rel", familyLabel:"Relatifs", type:`écart ${d}`,
+        seq, ruleStudent:`On ajoute toujours ${d} (même si on passe par 0).`, ruleProf:`Suite arithmétique dans les relatifs : écart constant ${d}.`, tags:["arith","relatifs"] };
+    }
+  },
+
+  { id:"geom_mul", category:"classe", label:"×k constant", desc:"suite géométrique simple (entiers)",
+    gen:(n, ctx)=>{
+      let k = ctx.allowNeg ? rPick([2,3,4,5]) : rPick([2,3,4]);
+      if(ctx.allowNegK && Math.random() < 0.30) k = -k;
+      const absK = Math.abs(k);
+      const maxA0 = Math.max(1, Math.floor(99 / Math.pow(absK, n-1)));
+      let a0 = rInt(1, Math.min(12, maxA0));
+      let seq = [a0];
+      for(let i=1;i<n;i++) seq.push(seq[i-1]*k);
+      return {
+        familyId:"geom_mul",
+        familyLabel:"Multiplicatifs",
+        type:`×${k}`,
+        seq,
+        ruleStudent:`On multiplie toujours par ${k}.`,
+        ruleProf:`Suite géométrique : u(n)=u(1)·${k}^(n−1) (ratio ×${k}).`,
+        tags:["geo","mul"]
+      };
+    }
+  },
+
+  { id:"alt_add", category:"classe", label:"Alternés (+p puis ±q)", desc:"2 règles qui alternent",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const p = rPick([1,2,3,4,5,6,7,8,9,10]);
+      const q = rPick([2,3,4,5,6,7,8,9,10,12,15]);
+      const sign = rPick(["+","-"]);
+      let a0 = allowNeg ? rInt(-15, 35) : rInt(0, 40);
+      if(!allowNeg && sign === "-"){
+        const minNeeded = Math.ceil((n-1)/2) * q;
+        a0 = rInt(minNeeded, Math.min(90, minNeeded + 20));
+      }
+      const ops = [{op:"+", v:p},{op:sign, v:q}];
+      const seq=[a0];
+      for(let i=1;i<n;i++){
+        const o = ops[(i-1)%2];
+        const prev = seq[i-1];
+        seq.push(o.op==="+" ? prev+o.v : prev-o.v);
+      }
+      const sTxt = sign==="+" ? `+${q}` : `-${q}`;
+      return { familyId:"alt_add", familyLabel:"Alternés", type:`+${p} puis ${sTxt}`,
+        seq, ruleStudent:`On alterne : +${p}, puis ${sTxt}, puis on recommence.`,
+        ruleProf:`Écarts alternés : +${p}, ${sTxt}, +${p}, ${sTxt}…`, tags:["alterné"] };
+    }
+  },
+
+  { id:"interleave", category:"classe", label:"Impairs / pairs (2 suites)", desc:"2 suites entremêlées",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const a = allowNeg ? rInt(-8, 14) : rInt(0, 14);
+      const b = rInt(10, 35);
+      const d = rPick([1,2,3,4,5]);
+      const e = rPick([5,10,15]);
+      const seq=[];
+      let ai=a, bi=b;
+      for(let i=0;i<n;i++){
+        if(i%2===0){ seq.push(ai); ai += d; }
+        else { seq.push(bi); bi += e; }
+      }
+      return { familyId:"interleave", familyLabel:"Impairs/pairs", type:`impairs +${d} / pairs +${e}`,
+        seq, ruleStudent:`Les termes impairs suivent une règle (+${d}) et les termes pairs une autre (+${e}).`,
+        ruleProf:`Suite impaire : +${d} ; suite paire : +${e}.`, tags:["alterné","2-suites"] };
+    }
+  },
+
+  { id:"squares", category:"classe", label:"Carrés parfaits", desc:"0, 1, 4, 9, 16…",
+    gen:(n, ctx)=>{
+      const maxRoot = 9;
+      const maxStart = maxRoot - (n-1);
+      const start = rInt(0, Math.max(0, maxStart));
+      const seq = Array.from({length:n}, (_,i)=>(start+i)*(start+i));
+      return { familyId:"squares", familyLabel:"Carrés", type:"(n)²",
+        seq, ruleStudent:"Ce sont des carrés parfaits : 0², 1², 2², 3²…", ruleProf:"Suite des carrés (différences impaires).", tags:["formes","carrés"] };
+    }
+  },
+
+  { id:"triangular", category:"classe", label:"Nombres triangulaires", desc:"0, 1, 3, 6, 10…",
+    gen:(n, ctx)=>{
+      const maxK = 13;
+      const maxStart = maxK - (n-1);
+      const k0 = rInt(0, Math.max(0, maxStart));
+      const seq = Array.from({length:n}, (_,i)=>{
+        const k = k0+i;
+        return (k*(k+1))/2;
+      });
+      return { familyId:"triangular", familyLabel:"Triangulaires", type:"Tₙ",
+        seq, ruleStudent:"On ajoute 1, puis 2, puis 3, puis 4… (les écarts augmentent de 1).",
+        ruleProf:"Nombres triangulaires : 0, 1, 3, 6, 10… (sommes successives).", tags:["formes","différences"] };
+    }
+  },
+
+      {
+        id:"cubes",
+        category:"classe",
+        label:"Cubes parfaits",
+        desc:"1, 8, 27, 64…",
+        gen:(n,ctx)=>{
+          // Racines petites pour rester lisible
+          const start = rInt(1, Math.max(1, 8-(n-1)));
+          const roots = Array.from({length:n}, (_,i)=> start+i);
+          const seq = roots.map(r=> r*r*r);
+          return {
+            familyId:"cubes",
+            familyLabel:"Cubes parfaits",
+            type:"n³",
+            seq,
+            ruleStudent:"On prend des cubes parfaits : 1³, 2³, 3³…",
+            ruleProf:"u(n)=n³ (ou u(n)=(n+c)³ selon le départ)",
+            tags:["puissances","cubes"]
+          };
+        }
+      },
+
+      {
+        id:"frac_nn1",
+        category:"classe",
+        label:"Fractions n/(n+1)",
+        desc:"1/2, 2/3, 3/4…",
+        gen:(n,ctx)=>{
+          const variant = rPick(["n/(n+1)","(n+1)/n"]);
+          const start = rInt(1,4);
+          const seq = Array.from({length:n}, (_,i)=>{
+            const a = start+i;
+            return (variant==="n/(n+1)") ? `${a}/${a+1}` : `${a+1}/${a}`;
+          });
+          return {
+            familyId:"frac_nn1",
+            familyLabel:"Fractions n/(n+1)",
+            type:variant,
+            seq,
+            ruleStudent: (variant==="n/(n+1)")
+              ? "Numérateur +1, et le dénominateur vaut numérateur+1."
+              : "Fractions de la forme (n+1)/n : numérateur et dénominateur augmentent.",
+            ruleProf: (variant==="n/(n+1)")
+              ? "u(n)=(n+c)/(n+c+1)"
+              : "u(n)=(n+c+1)/(n+c)",
+            tags:["fractions","rationnels"]
+          };
+        }
+      },
+
+
+  { id:"mul_add", category:"classe", label:"× puis + (alterné)", desc:"ex : ×2 puis +3",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const m = rPick([2,3]);
+      const b = rPick([1,2,3,4,5,6,7,8,9,10]);
+      const order = rPick(["mul_then_add","add_then_mul"]);
+
+      for(let tries=0; tries<60; tries++){
+        let a0 = allowNeg ? rInt(-8, 18) : rInt(0, 18);
+        let seq=[a0];
+        let ok=true;
+        for(let i=1;i<n;i++){
+          const prev = seq[i-1];
+          const isStep1 = (i%2===1);
+          let val;
+          if(order==="mul_then_add"){
+            val = isStep1 ? (prev*m) : (prev + b);
+          }else{
+            val = isStep1 ? (prev + b) : (prev*m);
+          }
+          if(!allowNeg && val < 0){ ok=false; break; }
+          if(val < -99 || val > 99){ ok=false; break; }
+          seq.push(val);
+        }
+        if(ok){
+          const label = (order==="mul_then_add") ? `×${m} puis +${b}` : `+${b} puis ×${m}`;
+          return { familyId:"mul_add", familyLabel:"×/+ alternés", type: label,
+            seq, ruleStudent:`On alterne deux étapes : ${label}, puis on recommence.`,
+            ruleProf:`Récurrence alternée : ${label}.`, tags:["multiplicatif","alterné"] };
+        }
+      }
+      const seq = Array.from({length:n}, (_,i)=>i);
+      return { familyId:"motif", familyLabel:"Fallback", type:"0,1,2…",
+        seq, ruleStudent:"Fallback (erreur interne).", ruleProf:"Fallback.", tags:["fallback"] };
+    }
+  },
+
+  { id:"quadratic", category:"classe", label:"Écarts qui augmentent", desc:"différences : +2, +4, +6…",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const s = rPick([1,2,2,3]);
+      let d0 = rPick([1,2,3,4,5,6]);
+      let a0 = allowNeg ? rInt(-10, 20) : rInt(0, 20);
+      const diffs = Array.from({length:n-1}, (_,i)=> d0 + i*s);
+      const seq=[a0];
+      for(let i=0;i<n-1;i++) seq.push(seq[i] + diffs[i]);
+      return { familyId:"quadratic", familyLabel:"Écarts ↑", type:`écarts +${d0}, +${d0+s}, +${d0+2*s}…`,
+        seq, ruleStudent:`Les écarts augmentent régulièrement : +${d0}, puis +${d0+s}, puis +${d0+2*s}…`,
+        ruleProf:"Différences arithmétiques (différences secondes possibles).", tags:["différences"] };
+    }
+  },
+
+
+  { id:"rec_mul_add", category:"classe", label:"Programme (×m ± b)", desc:"u(n+1)=m×u(n)±b",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const m = rPick([2,3]);
+      let b;
+      if(allowNeg){
+        b = rPick([-8,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,8]);
+      }else{
+        b = rPick([1,2,3,4,5,6,7,8,9,10]);
+      }
+
+      const maxAbs = 99;
+      const start = performance.now();
+      for(let tries=0; tries<140; tries++){
+        let a0 = allowNeg ? rInt(-12, 25) : rInt(0, 25);
+        const seq=[a0];
+        let ok=true;
+        for(let i=1;i<n;i++){
+          const val = seq[i-1]*m + b;
+          if(!allowNeg && val < 0){ ok=false; break; }
+          if(Math.abs(val) > maxAbs){ ok=false; break; }
+          seq.push(val);
+        }
+        if(ok){
+          const bTxt = b>=0 ? `+${b}` : `${b}`;
+          return { familyId:"rec_mul_add", familyLabel:"Programme", type:`×${m} ${bTxt}`,
+            seq,
+            ruleStudent:`À chaque étape : on multiplie par ${m} puis on ${b>=0 ? "ajoute" : "enlève"} ${Math.abs(b)}.`,
+            ruleProf:`Récurrence : u(n+1) = ${m}u(n) ${bTxt}.`,
+            tags:["récurrence","programme"]
+          };
+        }
+        if(performance.now() - start > 35) break;
+      }
+      const seq = Array.from({length:n}, (_,i)=> i);
+      return { familyId:"motif", familyLabel:"Fallback", type:"0,1,2…",
+        seq, ruleStudent:"Fallback (erreur interne).", ruleProf:"Fallback.", tags:["fallback"] };
+    }
+  },
+
+  { id:"fibonacci", category:"defis", label:"Fibonacci (récursive)", desc:"u(n+2)=u(n+1)+u(n)",
+    gen:(n, ctx)=>{
+      const allowNeg = ctx.allowNeg;
+      const maxAbs = 99;
+      const start = performance.now();
+      for(let tries=0; tries<160; tries++){
+        let a0, a1;
+        if(allowNeg && rand() < 0.25){
+          a0 = rInt(-5, 8);
+          a1 = rInt(-5, 8);
+        }else{
+          a0 = rPick([0,1,1,2,3,4]);
+          a1 = rPick([1,1,2,3,4,5]);
+        }
+        const seq=[a0];
+        if(n>1) seq.push(a1);
+        let ok=true;
+        for(let i=2;i<n;i++){
+          const val = seq[i-1] + seq[i-2];
+          if(!allowNeg && val < 0){ ok=false; break; }
+          if(Math.abs(val) > maxAbs){ ok=false; break; }
+          seq.push(val);
+        }
+        if(ok && withinDomain(seq, allowNeg)){
+          return { familyId:"fibonacci", familyLabel:"Fibonacci", type:"u(n+2)=u(n+1)+u(n)",
+            seq,
+            ruleStudent:"Chaque terme est la somme des deux précédents.",
+            ruleProf:"Récurrence de type Fibonacci : u(n+2)=u(n+1)+u(n).",
+            tags:["récurrence","fibonacci"]
+          };
+        }
+        if(performance.now() - start > 35) break;
+      }
+      const seq = Array.from({length:n}, (_,i)=> i);
+      return { familyId:"motif", familyLabel:"Fallback", type:"0,1,2…",
+        seq, ruleStudent:"Fallback (erreur interne).", ruleProf:"Fallback.", tags:["fallback"] };
+    }
+  },
+
+      {
+        id:"hors_maths",
+        category:"defis",
+        label:"Hors maths",
+        desc:"calendrier, lettres…",
+        gen:(n,ctx)=>{
+          const sub = rPick(["jours_mois","lettres_mois"]);
+          if(sub === "jours_mois"){
+            const jours = [31,28,31,30,31,30,31,31,30,31,30,31];
+            const start = rInt(0,11);
+            const seq = Array.from({length:n}, (_,i)=> jours[(start+i)%12]);
+            return {
+              familyId:"hors_maths",
+              familyLabel:"Hors maths",
+              type:"Jours dans les mois",
+              seq,
+              ruleStudent:"On suit le calendrier (année non bissextile).",
+              ruleProf:"Cycle de 12 mois : 31,28,31,30,31,30,31,31,30,31,30,31…",
+              tags:["cycle","calendrier"]
+            };
+          }
+          // Nombre de lettres des mois (français, sans accents)
+          const mois = ["janvier","fevrier","mars","avril","mai","juin","juillet","aout","septembre","octobre","novembre","decembre"];
+          const lens = mois.map(m=>m.length);
+          const start = rInt(0,11);
+          const seq = Array.from({length:n}, (_,i)=> lens[(start+i)%12]);
+          return {
+            familyId:"hors_maths",
+            familyLabel:"Hors maths",
+            type:"Lettres des mois",
+            seq,
+            ruleStudent:"On regarde une info extérieure : la longueur du nom du mois.",
+            ruleProf:"Suite = nombre de lettres des mois (français, sans accents).",
+            tags:["cycle","langue"]
+          };
+        }
+      },
+
+
+  /* Défis */
+
+  { id:"motif_block4", category:"classe", label:"Bloc répété (3 à 6)", desc:"répéter un bloc de longueur variable",
+    gen:(n, ctx)=>{
+      const pool = ctx.allowNeg
+        ? [-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,12,15,18,20]
+        : [0,1,2,3,4,5,6,7,8,9,10,12,15,18,20];
+
+      const L = rPick([3,4,5,6]);
+      let block = [];
+      const templates = {
+        3:["AAB","ABA","ABB","ABC"],
+        4:["AABB","ABAB","ABBA","ABCA","AABC","ABCC","ABCD"],
+        5:["AABBA","ABCBA","ABACA","AABBC","ABCDE","ABCAA"],
+        6:["AABBCC","ABCABC","ABCCBA","ABACAB","AABCDE","ABCDAB"]
+      };
+
+      if(Math.random() < 0.65){
+        const mot = rPick(templates[L] || ["ABC"]);
+        const letters = Array.from(new Set(mot.split("")));
+        const vals = shuffle(pool.slice()).slice(0, letters.length);
+        const map = {};
+        letters.forEach((ch,i)=> map[ch]=vals[i]);
+        block = mot.split("").map(ch=>map[ch]);
+      }else{
+        for(let tries=0; tries<80; tries++){
+          block = Array.from({length:L}, ()=> rPick(pool));
+          if(new Set(block).size >= 2) break;
+        }
+      }
+
+      const seq = Array.from({length:n}, (_,i)=> block[i%L]);
+      return { familyId:"motif_block4", familyLabel:"Répétitifs", type:`bloc (${L})`,
+        seq,
+        ruleStudent:`On répète toujours le même bloc de ${L} nombres : (${block.join(", ")}) puis on recommence.`,
+        ruleProf:`Pattern répétitif : période ${L} (bloc répété).`,
+        tags:["cycle","motif",`p${L}`] };
+    }
+  },
+
+  { id:"cycle_mod4", category:"classe", label:"Cycle mod 4 (1,2,3,0)", desc:"période 4 avec retour à 0",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> ((i+1)%4));
+      return { familyId:"cycle_mod4", familyLabel:"Cycles", type:"période 4",
+        seq, ruleStudent:"On ajoute 1 puis après 3 on revient à 0 : 1,2,3,0,1,2,3,0…",
+        ruleProf:"u(n)=n mod 4 (avec 0 pour les multiples de 4).", tags:["cycle","modulo"] };
+    }
+  },
+
+  { id:"cycle_week7", category:"classe", label:"Cycle 1→7 (semaine)", desc:"période 7 avec retour à 1",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> ((i)%7)+1);
+      return { familyId:"cycle_week7", familyLabel:"Cycles", type:"période 7",
+        seq, ruleStudent:"On ajoute 1 puis après 7 on revient à 1 : 1,2,3,4,5,6,7,1,2…",
+        ruleProf:"u(n)=1+((n−1) mod 7).", tags:["cycle","modulo"] };
+    }
+  },
+
+  { id:"cycle_modm", category:"classe", label:"Cycle modulo (m variable)", desc:"compter et revenir (mod m)",
+    gen:(n, ctx)=>{
+      const mods = [3,4,5,6,7,8,9,10,11,12,13,14,15];
+      const m = rPick(mods);
+      const maxStep = Math.min(5, m-1);
+      let step = rInt(1, maxStep);
+      if(Math.random() < 0.12 && m>3) step = (m-1); // marche arrière
+      // évite “toujours +1/+2/+3” : on élargit un peu les pas
+      if(Math.random() < 0.18) step = rPick([1,2,3,4,5].filter(s=>s<m));
+      // 50% : valeurs 0..m-1 ; 50% : valeurs 1..m (plus “naturel”)
+      const from1 = Math.random()<0.5;
+      const start = from1 ? rInt(1, m) : rInt(0, m-1);
+      const seq = Array.from({length:n}, (_,i)=>{
+        const raw = from1 ? ((start-1 + i*step) % m) + 1 : ((start + i*step) % m);
+        return raw;
+      });
+      const txtBack = from1 ? `après ${m} on revient à 1` : `après ${m-1} on revient à 0`;
+      return {
+        familyId:"cycle_modm", familyLabel:"Cycles", type:`mod ${m} (pas ${step})`,
+        seq,
+        ruleStudent:`On ajoute ${step} puis ${txtBack}.`,
+        ruleProf:`u(n)=(${from1? "(start−1)+":"start+"}${step}(n−1)) mod ${m}${from1? " puis +1": ""}.`,
+        tags:["cycle","modulo"]
+      };
+    }
+  },
+  { id:"arith_constant", category:"classe", label:"Constante", desc:"toujours le même nombre",
+    gen:(n, ctx)=>{
+      const c = rInt(ctx.allowNeg ? -20 : 0, 20);
+      const seq = Array.from({length:n}, ()=> c);
+      return { familyId:"arith_constant", familyLabel:"Additifs", type:"constante",
+        seq, ruleStudent:"Tous les termes sont égaux.", ruleProf:`u(n)=${c}.`, tags:["constant"] };
+    }
+  },
+
+  { id:"arith_decimal", category:"classe", label:"Décimaux à pas constant", desc:"+0,1 à +0,9 (en dixièmes)",
+    gen:(n, ctx)=>{
+      const step10 = rInt(1,9); // dixièmes
+      const start10 = rInt(0,30); // 0,0 → 3,0
+      const seq = Array.from({length:n}, (_,i)=> (start10 + i*step10)/10);
+      return { familyId:"arith_decimal", familyLabel:"Additifs", type:`+${step10/10}`,
+        seq, ruleStudent:`On ajoute toujours ${step10/10}.`, ruleProf:`Suite arithmétique : u(n)=${start10/10}+${step10/10}(n−1).`, tags:["decimal","arith"] };
+    }
+  },
+
+  { id:"arith_halves", category:"classe", label:"Demi-entiers (pas +1)", desc:"0,5 ; 1,5 ; 2,5 ; …",
+    gen:(n, ctx)=>{
+      const startHalf = rPick([1,3,5,7,9]); // numérateur sur 2 : 0,5 ; 1,5 ; 2,5…
+      const seq = Array.from({length:n}, (_,i)=> (startHalf + 2*i)/2);
+      return { familyId:"arith_halves", familyLabel:"Additifs", type:"+1 (demi-entiers)",
+        seq, ruleStudent:"On ajoute 1 à chaque fois, en gardant un .5.", ruleProf:"Suite arithmétique : u(n)=a+(n−1).", tags:["half","arith"] };
+    }
+  },
+
+  { id:"geom_div", category:"classe", label:"Division constante", desc:"÷2 ou ÷3 (entiers)",
+    gen:(n, ctx)=>{
+      let k = ctx.allowNeg ? rPick([2,3,4,5]) : rPick([2,3,4]);
+      if(ctx.allowNegK && Math.random() < 0.25) k = -k;
+      const absK = Math.abs(k);
+      const maxBase = Math.max(1, Math.floor(99 / Math.pow(absK, n-1)));
+      const base = rInt(1, maxBase);
+      const start = base * Math.pow(k, n-1);
+      const seq = Array.from({length:n}, (_,i)=> start / Math.pow(k, i));
+      return {
+        familyId:"geom_div",
+        familyLabel:"Multiplicatifs",
+        type:`÷${k}`,
+        seq,
+        ruleStudent:`On divise par ${k} à chaque fois.`,
+        ruleProf:`Suite géométrique : u(n)=${start}·(1/${k})^(n−1) (ratio ÷${k}).`,
+        tags:["geo","div"]
+      };
+    }
+  },
+
+  { id:"geom_percent", category:"classe", label:"×1,1 (10% en plus)", desc:"croissance multiplicative décimale",
+    gen:(n, ctx)=>{
+      // Pourcentages : multiplications décimales (arrondi au dixième).
+      // On propose plusieurs multiplicateurs "collège" (hausse & baisse).
+      const opts = [
+        {m:1.1,  label:"×1,1",  txt:"on augmente de 10%"},
+        {m:1.2,  label:"×1,2",  txt:"on augmente de 20%"},
+        {m:1.25, label:"×1,25", txt:"on augmente de 25%"},
+        {m:1.5,  label:"×1,5",  txt:"on augmente de 50%"},
+        {m:0.9,  label:"×0,9",  txt:"on baisse de 10%"},
+        {m:0.8,  label:"×0,8",  txt:"on baisse de 20%"},
+        {m:0.75, label:"×0,75", txt:"on baisse de 25%"}
+      ];
+      const opt = rPick(opts);
+      let v = rPick([20,30,40,50,60,80,100,120,150,200]); // valeurs "propres"
+      const seq = [];
+      for(let i=0;i<n;i++){
+        seq.push(Math.round(v*10)/10);
+        v = v * opt.m;
+      }
+      return {
+        familyId:"geom_percent",
+        familyLabel:"Multiplicatifs",
+        type: opt.label,
+        seq,
+        ruleStudent:`On multiplie par ${opt.label.replace("×","")} (${opt.txt}) à chaque fois.`,
+        ruleProf:`Suite géométrique décimale : u(n)=u(1)·(${opt.label.replace("×","")})^(n−1) (arrondi au dixième si besoin).`,
+        tags:["percent","geo"]
+      };
+    }
+  },
+
+  { id:"sign_alt", category:"classe", label:"Alternance de signes", desc:"+a ; −a ; +a ; −a …",
+    gen:(n, ctx)=>{
+      const a = rInt(2,9);
+      const seq = Array.from({length:n}, (_,i)=>{
+        if(ctx.allowNeg) return (i%2===0 ? a : -a);
+        return (i%2===0 ? a : 0);
+      });
+      const ruleStudent = ctx.allowNeg
+        ? "On garde la valeur et on change juste le signe (+/−) : +a, −a, +a, −a…"
+        : "Un terme sur deux vaut 0 : a, 0, a, 0… (pas de nombres négatifs).";
+      const ruleProf = ctx.allowNeg
+        ? `u(n)=${a}·(−1)^(n−1).`
+        : `u(n)=${a} si n impair, 0 sinon.`;
+      return { familyId:"sign_alt", familyLabel:"Alternés", type:"un sur deux (signe)",
+        seq, ruleStudent, ruleProf, tags:["alternance","signe"] };
+    }
+  },
+
+  { id:"odd_square_even4", category:"classe", label:"Impairs carrés / pairs multiples de 4", desc:"parité : deux règles",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=>{
+        const t = i+1;
+        if(t%2===1){ const k=(t+1)/2; const odd=2*k-1; return odd*odd; }
+        const k=t/2; return 4*k;
+      });
+      return { familyId:"odd_square_even4", familyLabel:"Alternés", type:"parité (impairs/pairs)",
+        seq,
+        ruleStudent:"Rang impair : on prend le carré (1²,3²,5²…). Rang pair : multiples de 4 (4,8,12…).",
+        ruleProf:"Par cas : u(2k−1)=(2k−1)² et u(2k)=4k.", tags:["parite","cas"] };
+    }
+  },
+
+  { id:"odd_even_mix2k5pow", category:"classe", label:"Deux suites mêlées (2k / 5·2^(k−1))", desc:"impairs linéaires, pairs géométriques",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=>{
+        const t=i+1;
+        if(t%2===1){ const k=(t+1)/2; return 2*k; }
+        const k=t/2; return 5*Math.pow(2, k-1);
+      });
+      return { familyId:"odd_even_mix2k5pow", familyLabel:"Alternés", type:"deux suites",
+        seq,
+        ruleStudent:"Rangs impairs : 2,4,6,8… Rangs pairs : 5,10,20,40… (×2).",
+        ruleProf:"u(2k−1)=2k ; u(2k)=5·2^(k−1).", tags:["parite","mélange"] };
+    }
+  },
+
+  { id:"staircase", category:"classe", label:"Escalier (n apparaît n fois)", desc:"1,2,2,3,3,3,4,4,4,4…",
+    gen:(n, ctx)=>{
+      const seq=[];
+      let k=1;
+      while(seq.length<n){ for(let i=0;i<k && seq.length<n;i++) seq.push(k); k++; }
+      return { familyId:"staircase", familyLabel:"Alternés", type:"répétitions",
+        seq,
+        ruleStudent:"Le nombre 1 apparaît 1 fois, le 2 apparaît 2 fois, le 3 apparaît 3 fois…",
+        ruleProf:"Suite en paliers ; utile pour chercher la position des “paliers”.", tags:["escalier","paliers"] };
+    }
+  },
+
+  { id:"add_rank", category:"classe", label:"Ajouter le rang", desc:"+1, +2, +3, …",
+    gen:(n, ctx)=>{
+      const start = rInt(ctx.allowNeg ? -10 : 0, 10);
+      const seq=[];
+      let v=start;
+      for(let i=0;i<n;i++){
+        seq.push(v);
+        v += (i+1); // +1 puis +2...
+      }
+      return { familyId:"add_rank", familyLabel:"Programmes", type:"+1,+2,+3…",
+        seq,
+        ruleStudent:"On ajoute 1, puis 2, puis 3, puis 4…",
+        ruleProf:"u(1)=a ; u(n)=a + (n−1)n/2.", tags:["triangulaire","récurrence"] };
+    }
+  },
+
+  { id:"rectangles", category:"classe", label:"Rectangles n(n+1)", desc:"2,6,12,20,30…",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=>{
+        const k=i+1;
+        return k*(k+1);
+      });
+      return { familyId:"rectangles", familyLabel:"Figurés", type:"n(n+1)",
+        seq,
+        ruleStudent:"Chaque terme vaut n×(n+1) : 1×2, 2×3, 3×4…",
+        ruleProf:"u(n)=n(n+1).", tags:["figurés","produit"] };
+    }
+  },
+
+  { id:"n2_plus1", category:"classe", label:"n² + 1", desc:"2,5,10,17,26…",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> {
+        const k=i+1;
+        return k*k + 1;
+      });
+      return { familyId:"n2_plus1", familyLabel:"Quadratiques", type:"n²+1",
+        seq,
+        ruleStudent:"On prend le carré et on ajoute 1 : 1²+1, 2²+1, 3²+1…",
+        ruleProf:"u(n)=n²+1.", tags:["quadratique","carré"] };
+    }
+  },
+
+  
+  { id:"n2_plus2", category:"classe", label:"n² + 2", desc:"quadratique simple",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> (i+1)*(i+1) + 2);
+      return { familyId:"n2_plus2", familyLabel:"Quadratique", type:"n²+2",
+        seq, ruleStudent:"Les écarts augmentent de 2 à chaque fois (différences secondes constantes).", ruleProf:"u(n)=n²+2.", tags:["quadratique","diff2"] };
+    }
+  },
+
+{ id:"n2_minus1", category:"classe", label:"n² − 1", desc:"0,3,8,15,24…",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> {
+        const k=i+1;
+        return k*k - 1;
+      });
+      return { familyId:"n2_minus1", familyLabel:"Quadratiques", type:"n²−1",
+        seq,
+        ruleStudent:"On prend le carré et on enlève 1 : 1²−1, 2²−1, 3²−1…",
+        ruleProf:"u(n)=n²−1.", tags:["quadratique","carré"] };
+    }
+  },
+  { id:"units_mult", category:"defis", label:"Cycle des unités (a×n)", desc:"unités périodiques (mod 10)",
+    gen:(n, ctx)=>{
+      const a = rPick([3,7,9,12,14,16,18]);
+      const seq = Array.from({length:n}, (_,i)=> (a*(i+1)) % 10);
+      return { familyId:"units_mult", familyLabel:"Défis", type:`unités de ${a}n`,
+        seq, ruleStudent:`On regarde le chiffre des unités de ${a}×n (n=1,2,3…).`,
+        ruleProf:"Périodicité modulo 10 (cycle des unités).", tags:["modulo","cycle"] };
+    }
+  },
+  { id:"pow_mod10", category:"defis", label:"Puissances mod 10", desc:"cycle des unités de a^n",
+    gen:(n, ctx)=>{
+      const a = rPick([2,3,4,7,8,9]);
+      const seq = Array.from({length:n}, (_,i)=> {
+        let val = 1;
+        for(let k=0;k<i+1;k++) val = (val*a) % 10;
+        return val;
+      });
+      return { familyId:"pow_mod10", familyLabel:"Défis", type:`unités de ${a}^n`,
+        seq, ruleStudent:`On regarde le chiffre des unités de ${a}^n (n=1,2,3…).`,
+        ruleProf:"Cycle des unités des puissances (mod 10).", tags:["modulo","indices"] };
+    }
+  },
+  { id:"gcd_n12", category:"defis", label:"PGCD(n,12)", desc:"suite périodique (arithmétique)",
+    gen:(n, ctx)=>{
+      function gcd(x,y){ while(y){ [x,y]=[y,x%y]; } return Math.abs(x); }
+      const seq = Array.from({length:n}, (_,i)=> gcd(i+1, 12));
+      return { familyId:"gcd_n12", familyLabel:"Défis", type:"PGCD(n,12)",
+        seq, ruleStudent:"Chaque terme est le PGCD de n et 12 (n=1,2,3…).",
+        ruleProf:"Structure + périodicité (diviseurs de 12).", tags:["divisibilité","cycle"] };
+    }
+  },
+  
+  { id:"rec_2u_minus_n", category:"defis", label:"Récurrence : 2u − n", desc:"u(n+1)=2u(n)−n",
+    gen:(n, ctx)=>{
+      const u1 = rInt(8, 25);
+      const seq = [u1];
+      for(let k=1;k<n;k++){
+        const prev = seq[seq.length-1];
+        const next = 2*prev - k; // u(k+1)=2u(k)-k  (avec k=1 donne u2=2u1-1)
+        seq.push(next);
+        if(Math.abs(next) > 9999) break;
+      }
+      // Si explosion trop rapide, on raccourcit
+      while(seq.length < n) seq.push(seq[seq.length-1]);
+      return { familyId:"rec_2u_minus_n", familyLabel:"Récursive", type:"2u−n",
+        seq: seq.slice(0,n),
+        ruleStudent:"À chaque étape : on double puis on enlève le rang (−1, −2, −3…).",
+        ruleProf:"u1 donné ; u(n+1)=2u(n)−n.", tags:["récurrence","algorithme"] };
+    }
+  },
+
+  { id:"look_and_say", category:"defis", label:"Look-and-say", desc:"décrire le terme précédent",
+    gen:(n, ctx)=>{
+      const start = rPick(["1","2","3"]);
+      const seq = [start];
+      const describe = (s)=>{
+        let out = "";
+        for(let i=0;i<s.length;){
+          let j=i;
+          while(j<s.length && s[j]===s[i]) j++;
+          out += String(j-i) + s[i];
+          i=j;
+        }
+        return out;
+      };
+      for(let i=1;i<n;i++){
+        const next = describe(seq[i-1]);
+        seq.push(next);
+        if(next.length > 16) break;
+      }
+      while(seq.length < n) seq.push(seq[seq.length-1]);
+      return { familyId:"look_and_say", familyLabel:"Écriture", type:"décrire",
+        seq: seq.slice(0,n),
+        ruleStudent:"Chaque terme décrit le précédent (ex : « 21 » = « deux 1 »).",
+        ruleProf:'Suite itérative dite "look-and-say" (sans formule explicite au collège).', tags:["écriture","itération"] };
+    }
+  },
+
+  { id:"pentagonal", category:"defis", label:"Pentagonaux", desc:"n(3n−1)/2",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=>{
+        const k = i+1;
+        return (k*(3*k-1))/2;
+      });
+      return { familyId:"pentagonal", familyLabel:"Figurés", type:"pentagonaux",
+        seq, ruleStudent:"Les écarts augmentent de 3 en 3 (… +4, +7, +10, +13…).", ruleProf:"P(n)=n(3n−1)/2.", tags:["figuré","quadratique"] };
+    }
+  },
+
+  { id:"centered_squares", category:"defis", label:"Carrés centrés", desc:"1,5,13,25,…",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=>{
+        const k = i+1;
+        return k*k + (k-1)*(k-1);
+      });
+      return { familyId:"centered_squares", familyLabel:"Figurés", type:"carrés centrés",
+        seq, ruleStudent:"On ajoute 4, puis 8, puis 12, puis 16…", ruleProf:"C(n)=n²+(n−1)².", tags:["figuré","diff2"] };
+    }
+  },
+
+{ id:"divisors_count", category:"defis", label:"Nb de diviseurs", desc:"d(n) pour n=…",
+    gen:(n, ctx)=>{
+      function dcount(x){
+        let c=0;
+        for(let k=1;k<=x;k++) if(x%k===0) c++;
+        return c;
+      }
+      const start = rInt(1, 12);
+      const seq = Array.from({length:n}, (_,i)=> dcount(start+i));
+      return { familyId:"divisors_count", familyLabel:"Défis", type:"nombre de diviseurs",
+        seq, ruleStudent:`Chaque terme = nombre de diviseurs de n (ici n=${start}, ${start+1}, …).`,
+        ruleProf:"Arithmétique : factorisations, diviseurs, conjectures.", tags:["diviseurs"] };
+    }
+  },
+  { id:"digit_sum_iter", category:"defis", label:"Somme des chiffres (itération)", desc:"on recommence",
+    gen:(n, ctx)=>{
+      function sumDigits(x){
+        x = Math.abs(x);
+        let s=0;
+        while(x>0){ s += x%10; x = Math.floor(x/10); }
+        return s;
+      }
+      let a0 = rInt(10, 99);
+      const seq=[a0];
+      for(let i=1;i<n;i++){
+        const prev = seq[i-1];
+        seq.push(sumDigits(prev));
+      }
+      return { familyId:"digit_sum_iter", familyLabel:"Défis", type:"somme des chiffres",
+        seq, ruleStudent:"On remplace par la somme des chiffres, puis on recommence.",
+        ruleProf:"Itération → stabilisation (ou cycle).", tags:["itération"] };
+    }
+  },
+
+  { id:"pal_doubles", category:"defis", label:"Palindromes 11,22,33…", desc:"doubles de 11",
+    gen:(n, ctx)=>{
+      const start = rInt(1,9);
+      const seq = Array.from({length:n}, (_,i)=> 11*(start+i));
+      return { familyId:"pal_doubles", familyLabel:"Défis", type:"palindromes (×11)",
+        seq, ruleStudent:"On ajoute 11 à chaque fois (11,22,33…).",
+        ruleProf:"Défi : repérer une régularité d’écriture (u(n)=11n à décalage près).", tags:["base10","palindrome"] };
+    }
+  },
+
+  { id:"same_unit", category:"defis", label:"Même unité (…7)", desc:"7,17,27,37…",
+    gen:(n, ctx)=>{
+      const unit = rPick([1,2,3,4,5,6,7,8,9]);
+      const startTens = rInt(0,4); // 0→40
+      const start = startTens*10 + unit;
+      const seq = Array.from({length:n}, (_,i)=> start + 10*i);
+      return { familyId:"same_unit", familyLabel:"Défis", type:"même unité",
+        seq, ruleStudent:"On ajoute 10 (l’unité reste la même).",
+        ruleProf:"Défi : structure en base 10 : u(n)=a+10(n−1).", tags:["base10","unité"] };
+    }
+  },
+
+  { id:"concat_ones", category:"defis", label:"Concaténation de 1", desc:"1,11,111,1111…",
+    gen:(n, ctx)=>{
+      const seq = Array.from({length:n}, (_,i)=> "1".repeat(i+1));
+      return { familyId:"concat_ones", familyLabel:"Défis", type:"ajouter un 1",
+        seq, ruleStudent:"On ajoute un chiffre 1 à droite à chaque fois.",
+        ruleProf:"Défi : suite en écriture (u(n)=(10^n−1)/9).", tags:["base10","écriture"] };
+    }
+  },
+
+  { id:"last_digit_square", category:"defis", label:"Dernier chiffre de n²", desc:"cycle mod 10",
+    gen:(n, ctx)=>{
+      const startN = rInt(1,20);
+      const seq = Array.from({length:n}, (_,i)=> {
+        const k = startN + i;
+        return (k*k) % 10;
+      });
+      return { familyId:"last_digit_square", familyLabel:"Défis", type:"(n²) mod 10",
+        seq, ruleStudent:"On calcule n² et on garde seulement le chiffre des unités.",
+        ruleProf:"Défi : observer un cycle (modulo 10).", tags:["mod10","carré"] };
+    }
+  },
+
+  { id:"digit_sum_n", category:"defis", label:"Somme des chiffres de n", desc:"1..9 puis 1.. etc",
+    gen:(n, ctx)=>{
+      const start = rInt(1,30);
+      function sdig(x){ x=Math.abs(x); let s=0; while(x>0){ s+=x%10; x=Math.floor(x/10); } return s; }
+      const seq = Array.from({length:n}, (_,i)=> sdig(start+i));
+      return { familyId:"digit_sum_n", familyLabel:"Défis", type:"somme des chiffres",
+        seq, ruleStudent:"Pour chaque n, on additionne ses chiffres (10→1, 11→2…).",
+        ruleProf:"Défi : lien écriture / divisibilité / cycles.", tags:["base10","chiffres"] };
+    }
+  },
+  { id:"primes", category:"defis", label:"Nombres premiers", desc:"prochain premier",
+    gen:(n, ctx)=>{
+      function isPrime(x){
+        if(x<2) return false;
+        for(let k=2;k*k<=x;k++) if(x%k===0) return false;
+        return true;
+      }
+      let start = rInt(2, 30);
+      while(!isPrime(start)) start++;
+      const seq=[start];
+      let cur = start;
+      while(seq.length<n){
+        cur++;
+        while(!isPrime(cur)) cur++;
+        seq.push(cur);
+        if(cur>97) break;
+      }
+      if(seq.length < n){
+        const seq2=[];
+        let cur2 = 2;
+        while(seq2.length<n){
+          while(!isPrime(cur2)) cur2++;
+          seq2.push(cur2);
+          cur2++;
+        }
+        return { familyId:"primes", familyLabel:"Défis", type:"nombres premiers",
+          seq: seq2, ruleStudent:"On écrit les nombres premiers dans l’ordre.",
+          ruleProf:"Défi : reconnaître une propriété (primalité).", tags:["premiers"] };
+      }
+      return { familyId:"primes", familyLabel:"Défis", type:"nombres premiers",
+        seq, ruleStudent:"On écrit les nombres premiers dans l’ordre.",
+        ruleProf:"Défi : reconnaître une propriété (primalité).", tags:["premiers"] };
+    }
+  },
+];
+
+function famIdsByCategory(cat){ return FAMILIES.filter(f=>f.category===cat).map(f=>f.id); }
+
+const PACKS = {
+  pack6e: { label:"6e (sans relatifs)", allowNeg:false,
+    enabled:["motif","arith_plus","arith_minus","geom_mul","alt_add","squares","triangular"],
+    qty:{ motif:1, arith_plus:1, arith_minus:1, geom_mul:1, alt_add:1, squares:1, triangular:1 } },
+
+  pack5e: { label:"5e (avec relatifs)", allowNeg:true,
+    enabled:["motif","arith_plus","arith_minus","arith_rel","geom_mul","alt_add","interleave","mul_add","rec_mul_add","squares","triangular"],
+    qty:{ motif:1, arith_plus:1, arith_minus:1, arith_rel:1, geom_mul:1, alt_add:1, interleave:1, mul_add:1, rec_mul_add:1, squares:1, triangular:1 } },
+
+  pack4: { label:"4e", allowNeg:true,
+    enabled:["motif","arith_plus","arith_minus","arith_rel","geom_mul","alt_add","interleave","mul_add","rec_mul_add","quadratic","squares","triangular","cubes","frac_nn1"],
+    qty:{ motif:1, arith_plus:1, arith_minus:1, arith_rel:1, geom_mul:1, alt_add:1, interleave:1, mul_add:1, rec_mul_add:1, quadratic:1, squares:1, triangular:1,
+      cubes:1,
+      frac_nn1:1,} },
+
+  pack3: { label:"3e", allowNeg:true,
+    enabled:["arith_rel","alt_add","interleave","mul_add","rec_mul_add","quadratic","squares","triangular","geom_mul","cubes","frac_nn1"],
+    qty:{ arith_rel:1, alt_add:1, interleave:1, mul_add:1, rec_mul_add:1, quadratic:1, squares:1, triangular:1, geom_mul:1,
+      cubes:1,
+      frac_nn1:1,} },
+
+  // Tous les motifs "classe" (quantité par défaut = 1 pour chacun)
+  packConcours: { label:"Concours (classe)", allowNeg:true,
+    enabled:famIdsByCategory("classe"),
+    qty:{} },
+
+  // Les défis (spécial)
+  packDefis: { label:"Défis (spécial)", allowNeg:true,
+    enabled:famIdsByCategory("defis"),
+    qty:{ units_mult:1, pow_mod10:1, gcd_n12:1, divisors_count:1, digit_sum_iter:1, primes:1 } }
+};
+
+let enabled = {};
+let qty = {};
+let currentPackId = "custom";
+
+function resetAll(){
+  enabled = {};
+  qty = {};
+  for(const f of FAMILIES){
+    enabled[f.id] = false;
+    qty[f.id] = 0;
+  }
+}
+
+function saveConfig(){
+  // Pas de mémorisation : à chaque rechargement, tout repart de zéro.
+}
+function loadConfig(){
+  resetAll();
+}
+
+function setTopPackPill(packId){
+  const label = PACKS[packId]?.label || "Personnalisé";
+  const el = document.getElementById("topPackPill");
+  if(el) el.textContent = "Pack : " + label;
+}
+function setPackUI(packId, persist=false){
+  const sel = document.getElementById("packSelect");
+  sel.value = packId;
+  setTopPackPill(packId==="custom" ? "custom" : packId);
+  // (pas de mémorisation)
+}
+function applyPack(packId){
+  const p = PACKS[packId];
+  if(!p) return;
+  currentPackId = packId;
+  resetAll();
+  p.enabled.forEach(id => { enabled[id] = true; qty[id] = clamp(p.qty[id] ?? 1, 0, 30); });
+  p.enabled.forEach(id => { if(qty[id] === 0) qty[id] = 1; });
+  saveConfig();
+  renderFamilies();
+  setPackUI(packId, true);
+  clearSlides();
+}
+
+function inferPackFromConfig(){
+  function sameEnabled(a,b){
+    const all = FAMILIES.map(f=>f.id);
+    for(const id of all){
+      const ea = !!a[id], eb = !!b[id];
+      if(ea !== eb) return false;
+    }
+    return true;
+  }
+  for(const [pid, p] of Object.entries(PACKS)){
+    const targetEnabled = {};
+    for(const f of FAMILIES) targetEnabled[f.id] = false;
+    p.enabled.forEach(id => { targetEnabled[id]=true; });
+    if(sameEnabled(enabled, targetEnabled)) return pid;
+  }
+  return "custom";
+}
+
+function famItemHTML(f){
+  const qv = clamp(Number(qty[f.id] ?? 0), 0, 30);
+  const isOn = qv > 0;
+  const disabledClass = isOn ? "" : "disabled";
+  return `
+    <div class="famItem ${disabledClass}" data-id="${f.id}">
+      <div class="famLeft">
+        <input type="checkbox" ${isOn ? "checked":""} aria-label="Activer famille" />
+        <div class="famMeta">
+          <b>${f.label}</b>
+          <span>${f.desc}</span>
+        </div>
+      </div>
+      <div class="stepper" aria-label="Quantité">
+        <button class="btn" data-act="minus" title="−1">−</button>
+        <input class="qtyInput" type="number" min="0" max="30" value="${qv}" aria-label="Quantité (0 à 30)" />
+        <button class="btn" data-act="plus" title="+1">+</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFamilies(){
+  const root = document.getElementById("famGroups");
+  const classe = FAMILIES.filter(f=>f.category==="classe");
+  const defis = FAMILIES.filter(f=>f.category==="defis");
+
+  root.innerHTML = `
+    <div class="groupTitle">Classe <span class="muted">(collège)</span></div>
+    <div class="famList" id="listClasse">${classe.map(famItemHTML).join("")}</div>
+    <div class="divider"></div>
+    <div class="groupTitle">Défis <span class="muted">(spécial)</span></div>
+    <div class="famList" id="listDefis">${defis.map(famItemHTML).join("")}</div>
+  `;
+
+  root.querySelectorAll(".famItem").forEach(item=>{
+    const id = item.dataset.id;
+    const chk = item.querySelector('input[type="checkbox"]');
+    const minus = item.querySelector('button[data-act="minus"]');
+    const plus = item.querySelector('button[data-act="plus"]');
+    const input = item.querySelector(".qtyInput");
+
+    function setQty(newQty){
+      const q = clamp(Number(newQty||0), 0, 30);
+      qty[id] = q;
+      enabled[id] = q > 0;
+      saveConfig();
+      renderFamilies();
+      setPackUI(inferPackFromConfig(), true);
+      clearSlides();
+    }
+
+    chk.addEventListener("change", ()=>{
+      if(chk.checked){
+        const cur = clamp(Number(qty[id] ?? 0), 0, 30);
+        setQty(cur > 0 ? cur : 1);
+      } else {
+        setQty(0);
+      }
+    });
+
+    minus.addEventListener("click", ()=>{
+      const cur = clamp(Number(qty[id] ?? 0), 0, 30);
+      if(cur <= 0) return;
+      setQty(cur - 1);
+    });
+
+    plus.addEventListener("click", ()=>{
+      const cur = clamp(Number(qty[id] ?? 0), 0, 30);
+      if(cur <= 0){
+        // Demande : + coche et met 3 si c'était 0
+        setQty(3);
+      } else {
+        setQty(cur + 1);
+      }
+    });
+
+    input.addEventListener("change", ()=>{
+      const v = Number(String(input.value).replace(",", "."));
+      if(!Number.isFinite(v)){
+        setQty(0);
+        return;
+      }
+      setQty(Math.round(v));
+    });
+
+    input.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") input.blur();
+    });
+  });
+}
+
+/* ======= Holes ======= */
+function chooseHoleIndexes(n, holesCount, difficulty){
+  const idx = Array.from({length:n}, (_,i)=>i);
+  function weight(i){
+    const t = i/(n-1);
+    if(difficulty==="easy") return 0.4 + 1.8*Math.pow(t, 2.2);
+    if(difficulty==="hard") return 0.9 + 0.6*(1 - t) + 0.3*Math.sin(Math.PI*t);
+    return 0.6 + 1.1*(0.35 + 0.65*t) + 0.6*Math.sin(Math.PI*t);
+  }
+  const pool = idx.slice();
+  const chosen = new Set();
+  while(chosen.size < holesCount && pool.length){
+    const weights = pool.map(i=>weight(i));
+    const sum = weights.reduce((a,b)=>a+b,0);
+    let r = rand()*sum;
+    let pick = pool[0];
+    for(let k=0;k<pool.length;k++){
+      r -= weights[k];
+      if(r<=0){ pick = pool[k]; break; }
+    }
+    chosen.add(pick);
+    pool.splice(pool.indexOf(pick), 1);
+  }
+  return Array.from(chosen).sort((a,b)=>a-b);
+}
+
+function validateHoles(ex, holes){
+  const n = ex.seq.length;
+  const visibleIdx = Array.from({length:n}, (_,i)=>i).filter(i=>!holes.includes(i));
+  if(visibleIdx.length < 3) return false;
+
+  if(ex.seq.some(v=>v<0)){
+    const visibleVals = visibleIdx.map(i=>ex.seq[i]);
+    if(!visibleVals.some(v=>v<0)) return false;
+  }
+
+  let consec = 0;
+  for(let i=0;i<n-1;i++){
+    if(!holes.includes(i) && !holes.includes(i+1)) consec++;
+  }
+  if(consec < 1) return false;
+  if(ex.tags && ex.tags.includes("alterné") && consec < 2) return false;
+  return true;
+}
+
+/* ======= Generation guards ======= */
+let recentFamilies = [];
+
+function getActiveFamilyCandidates(categoryFilter=null){
+  const cand = [];
+  for(const f of FAMILIES){
+    if(categoryFilter && f.category !== categoryFilter) continue;
+    if(!enabled[f.id]) continue;
+    const w = clamp(Number(qty[f.id] ?? 0), 0, 30);
+    if(w <= 0) continue;
+    cand.push({f, w});
+  }
+  return cand;
+}
+function weightedPick(candidates){
+  if(!candidates || candidates.length===0){
+    const motif = FAMILIES.find(x=>x.id==="motif");
+    return motif || FAMILIES[0];
+  }
+  const sum = candidates.reduce((a,x)=>a+x.w,0) || 1;
+  let t = rand()*sum;
+  for(const c of candidates){
+    t -= c.w;
+    if(t<=0) return c.f;
+  }
+  return candidates[candidates.length-1].f;
+}
+function chooseFamily(){
+  let cand = getActiveFamilyCandidates();
+  if(cand.length===0){
+    enabled["motif"]=true;
+    qty["motif"]=Math.max(1, qty["motif"]||1);
+    saveConfig();
+    cand = getActiveFamilyCandidates();
+  }
+  if(cand.length===1) return weightedPick(cand);
+
+  const avoid = new Set(recentFamilies.slice(-3));
+  const filtered = cand.filter(c => !avoid.has(c.f.id));
+  const pool = filtered.length ? filtered : cand;
+
+  for(let tries=0; tries<10; tries++){
+    const f = weightedPick(pool);
+    if(!avoid.has(f.id) || filtered.length===0) return f;
+  }
+  return weightedPick(pool);
+}
+
+function packAllowNeg(){
+  return getAllowNeg();
+}
+function packAllowNegK(){
+  return getAllowNegK();
+}
+
+function safeGenerateFromFamily(fam, n, ctx){
+  ctx = ctx || {};
+  const allowNeg = !!ctx.allowNeg;
+  ctx.allowNegK = !!ctx.allowNegK && allowNeg;
+  const start = performance.now();
+  for(let tries=0; tries<70; tries++){
+    const ex = fam.gen(n, ctx);
+    if(withinDomain(ex.seq, allowNeg)) return ex;
+    if(performance.now() - start > 30) break;
+  }
+  const seq = Array.from({length:n}, (_,i)=> i);
+  return { familyId:"motif", familyLabel:"Fallback", type:"0,1,2…",
+    seq, ruleStudent:"(Fallback) suite 0,1,2…", ruleProf:"Fallback sécurité.", tags:["fallback"] };
+}
+
+function generateExercise(options, forcedFamily=null){
+  const n = options.cellsCount;
+  const allowNeg = packAllowNeg();
+  const allowNegK = packAllowNegK();
+  const fam = forcedFamily || chooseFamily();
+
+  const ex = safeGenerateFromFamily(fam, n, { allowNeg, allowNegK });
+
+  let holes = [];
+  for(let tries=0; tries<80; tries++){
+    holes = chooseHoleIndexes(n, options.holesCount, options.holeDifficulty);
+    if(validateHoles(ex, holes)) break;
+  }
+  if(!validateHoles(ex, holes)){
+    holes = chooseHoleIndexes(n, options.holesCount, "easy");
+  }
+
+  const masked = ex.seq.map((v,i)=>holes.includes(i) ? null : v);
+
+  recentFamilies.push(ex.familyId);
+  if(recentFamilies.length > 3) recentFamilies = recentFamilies.slice(-3);
+
+  return { ex, holes, masked, userInputs:{} };
+}
+
+
+/* ======= Modes d'activités ======= */
+function generateExerciseByMode(options, forcedFam=null){
+  const mode = options.activityMode || "holes";
+  if(mode === "qa") return generateQAExercise(options, forcedFam);
+  const exObj = generateExercise(options, forcedFam);
+  exObj.mode = (mode === "rule") ? "rule" : "holes";
+  exObj.givenRule = (mode === "rule") ? (exObj.ex.ruleStudent || "") : "";
+  exObj.qa = null;
+  exObj.qaSolved = false;
+  return exObj;
+}
+
+function generateQAExercise(options, forcedFam=null){
+  const nDisplay = options.cellsCount;
+  const nLong = Math.max(40, nDisplay * 6);
+  const fam = forcedFam || pickFamilyByWeight();
+  const allowNegK = !!(document.getElementById("packAllowNegK")?.checked);
+  const ctx = { allowNegK };
+
+  const exLong = safeGenerateFromFamily(fam, nLong, ctx);
+  const seqLong = exLong.seq.slice();
+  const seqDisplay = seqLong.slice(0, nDisplay);
+
+  const qa = makeQAQuestions(seqLong, nDisplay);
+
+  return {
+    ex: { ...exLong, seq: seqDisplay, seqLong },
+    holes: [],
+    masked: seqDisplay.slice(),
+    userInputs: {},
+    mode: "qa",
+    qa,
+    qaSolved: false,
+    givenRule: "",
+  };
+}
+
+function normYN(s){
+  const t = String(s||"").trim().toLowerCase();
+  if(["o","oui","y","yes","vrai","true"].includes(t)) return "oui";
+  if(["n","non","no","faux","false"].includes(t)) return "non";
+  return t;
+}
+
+function makeQAQuestions(seqLong, nDisplay){
+  const qs = [];
+  const set = new Set(seqLong.map(v => String(v)));
+  const allNumeric = seqLong.every(v => typeof v === "number" && Number.isFinite(v));
+
+  const maxIdx = Math.min(seqLong.length - 1, nDisplay + 18);
+  const minIdx = Math.min(nDisplay, maxIdx);
+
+  const pickIdx = () => rInt(minIdx, maxIdx);
+
+  // Rang d'un terme (si possible au-delà de l'affichage)
+  const idxRank = pickIdx();
+  const valRank = seqLong[idxRank];
+  qs.push({
+    id: "rank",
+    prompt: `Quel est le rang du terme ${String(valRank)} ?`,
+    expected: String(idxRank + 1),
+    type: "number",
+    user: "",
+    revealed: false,
+  });
+
+  // Terme d'un rang
+  const idxTerm = pickIdx();
+  qs.push({
+    id: "term",
+    prompt: `Quel est le terme de rang ${String(idxTerm + 1)} ?`,
+    expected: String(seqLong[idxTerm]),
+    type: "value",
+    user: "",
+    revealed: false,
+  });
+
+  // Appartenance (uniquement si les valeurs sont numériques simples)
+  if(allNumeric){
+    const present = Math.random() < 0.55;
+    let x;
+    let expected;
+    if(present){
+      const idx = pickIdx();
+      x = seqLong[idx];
+      expected = "oui";
+    } else {
+      const base = seqLong[pickIdx()];
+      x = base;
+      expected = "non";
+      for(let t=0;t<30;t++){
+        const delta = rInt(-12, 12);
+        if(delta === 0) continue;
+        const cand = base + delta;
+        if(!set.has(String(cand))){
+          x = cand;
+          break;
+        }
+      }
+    }
+    qs.unshift({
+      id: "belongs",
+      prompt: `Le nombre ${String(x)} appartient-il à la suite ? (oui/non)`,
+      expected,
+      type: "yn",
+      user: "",
+      revealed: false,
+    });
+  }
+
+  return qs;
+}
+
+function renderQA(){
+  const box = document.getElementById("qaBox");
+  const items = document.getElementById("qaItems");
+  if(!currentExercise || currentExercise.mode !== "qa"){
+    box.style.display = "none";
+    items.innerHTML = "";
+    return;
+  }
+  box.style.display = "";
+  items.innerHTML = "";
+  currentExercise.qa.forEach((q, i) => {
+    const row = document.createElement("div");
+    row.className = "qaItem";
+
+    const p = document.createElement("div");
+    p.className = "qaPrompt";
+    p.textContent = `${i+1}. ${q.prompt}`;
+
+    const inp = document.createElement("input");
+    inp.className = "qaInput";
+    inp.type = "text";
+    inp.placeholder = (q.type==="yn") ? "oui / non" : "réponse";
+    inp.value = q.user || "";
+    inp.addEventListener("input", () => {
+      q.user = inp.value;
+      q.revealed = false; // si l'élève retape, on retire l'état “révélé”
+    });
+
+    const fb = document.createElement("span");
+    fb.className = "qaFeedback";
+    fb.id = `qaFb_${q.id}`;
+
+    const right = document.createElement("div");
+    right.style.display = "flex";
+    right.style.alignItems = "center";
+    right.style.gap = "8px";
+    right.appendChild(inp);
+    right.appendChild(fb);
+
+    row.appendChild(p);
+    row.appendChild(right);
+    items.appendChild(row);
+  });
+}
+
+function checkQA(){
+  if(!currentExercise || currentExercise.mode !== "qa") return false;
+  let allOk = true;
+  currentExercise.qa.forEach((q) => {
+    const fb = document.getElementById(`qaFb_${q.id}`);
+    if(!fb) return;
+
+    const u = (q.type==="yn") ? normYN(q.user) : String(q.user||"").trim().replace(",", ".");
+    const e = (q.type==="yn") ? normYN(q.expected) : String(q.expected||"").trim().replace(",", ".");
+    const ok = (u !== "" && u === e);
+
+    fb.textContent = ok ? "✓" : "✗";
+    fb.classList.toggle("ok", ok);
+    fb.classList.toggle("ko", !ok);
+
+    if(!ok) allOk = false;
+  });
+
+  if(allOk){
+    toast("✅ Tout est correct !");
+    currentExercise.qaSolved = true;
+  } else {
+    toast("⚠️ Il reste des erreurs.");
+    currentExercise.qaSolved = false;
+  }
+  renderExercise();
+  return allOk;
+}
+
+function revealQA(oneOnly=false){
+  if(!currentExercise || currentExercise.mode !== "qa") return;
+  for(const q of currentExercise.qa){
+    if(oneOnly && q.user && String(q.user).trim() !== "") continue; // déjà répondu
+    q.user = q.type==="yn" ? q.expected : String(q.expected);
+    q.revealed = true;
+    if(oneOnly) break;
+  }
+  // rendu + feedback
+  renderExercise();
+  checkQA();
+}
+
+/* ======= Série ======= */
+let slides = [];
+let seriesMeta = null;
+let slideIndex = -1;
+
+function clearSlides(){
+  slides = [];
+  slideIndex = -1;
+  document.getElementById("btnPrev").disabled = true;
+  document.getElementById("btnNext").disabled = true;
+  updateProjCounter();
+  updateSlidePill();
+}
+function sumQuantities(){
+  const cand = getActiveFamilyCandidates();
+  return cand.reduce((a,c)=>a + (c.w||0), 0);
+}
+
+function expandFamiliesByQty(){
+  const list = [];
+  const cand = getActiveFamilyCandidates();
+  for(const c of cand){
+    for(let i=0;i<c.w;i++) list.push(c.f);
+  }
+
+  return list;
+}
+function getOptionsFromUI(){
+  return {
+    cellsCount: Number(document.getElementById("cellsCount").value),
+    holesCount: Number(document.getElementById("holesCount").value),
+    holeDifficulty: document.getElementById("holeDifficulty").value,
+    activityMode: document.getElementById("activityMode").value,
+  };
+}
+
+async function prepareSlides(count){
+  if(busy) return;
+  busy = true;
+  abortFlag = false;
+  try{
+    showOverlay("Génération de la série…", "Préparation des exercices (sans bloquer la page).", 0);
+    overlayCancel.style.display = "";
+    overlayClose.style.display = "none";
+    errorBox.style.display = "none";
+    errorBox.textContent = "";
+
+    
+const cand = getActiveFamilyCandidates();
+if(cand.length === 0){
+  hideOverlay();
+  showOverlay("Aucune famille sélectionnée", "Va dans Paramètres → choisis au moins une famille (quantité > 0), puis relance.", 0);
+  overlayCancel.style.display = "none";
+  overlayClose.style.display = "";
+  return;
+}
+const cand2 = getActiveFamilyCandidates();
+const chosen = [];
+let lastId = null;
+for(let i=0;i<count;i++){
+  let fam = weightedPick(cand2);
+  if(cand2.length > 1){
+    let tries = 0;
+    while(fam && fam.id === lastId && tries < 10){
+      fam = weightedPick(cand2);
+      tries++;
+    }
+  }
+  chosen.push(fam);
+  lastId = fam ? fam.id : null;
+}
+const seriesPrefix = String(document.getElementById("seriesPrefix")?.value || "").trim();
+    const opts = {...getOptionsFromUI()};
+    seriesMeta = {...opts, seriesPrefix};
+    const newSlides = [];
+    for(let i=0;i<chosen.length;i++){
+      if(abortFlag) throw new Error("Annulé par l'utilisateur");
+      const fam = chosen[i];
+      const exObj = generateExerciseByMode(opts, fam);
+      const label = (seriesPrefix ? (seriesPrefix + String(i+1)) : String(i+1));
+      exObj.label = label;
+      newSlides.push(exObj);
+      const p = Math.round(((i+1)/chosen.length)*100);
+      overlayText.textContent = `Exercice ${i+1} / ${chosen.length}`;
+      overlayFill.style.width = p + "%";
+      await new Promise(requestAnimationFrame);
+    }
+
+    slides = newSlides;
+    slideIndex = 0;
+    currentExercise = slides[0];
+    renderExercise();
+    document.getElementById("btnPrev").disabled = true;
+    document.getElementById("btnNext").disabled = false;
+    updateProjCounter();
+    updateSlidePill();
+    hideOverlay();
+  }catch(err){
+    logError(err, "prepareSlides");
+    showErrorPanel(errorLog);
+  }finally{
+    busy = false;
+    abortFlag = false;
+  }
+}
+
+function goSlide(delta){
+  if(!slides.length) return;
+  slideIndex = clamp(slideIndex + delta, 0, slides.length - 1);
+  currentExercise = slides[slideIndex];
+  renderExercise();
+  updateProjCounter();
+  updateSlidePill();
+  document.getElementById("btnPrev").disabled = (slideIndex<=0);
+  document.getElementById("btnNext").disabled = (slideIndex>=slides.length-1 && isSolved());
+}
+
+function updateProjCounter(){
+  const el = document.getElementById("pCounter");
+  if(!slides.length){
+    el.textContent = "—";
+    return;
+  }
+  el.textContent = `Ex ${slideIndex+1} / ${slides.length}`;
+}
+function updateSlidePill(){
+  const el = document.getElementById("slidePill");
+  if(!el) return;
+if(!slides.length){ el.textContent = "Série : —"; return; }
+  el.textContent = `Série : ${slideIndex+1}/${slides.length}`;
+}
+
+/* ======= UI rendering ======= */
+const elCells = document.getElementById("cells");
+const exSubtitle = document.getElementById("exSubtitle");
+const typePill = document.getElementById("typePill");
+const holesPill = document.getElementById("holesPill");
+const explainBox = document.getElementById("explainBox");
+const explainText = document.getElementById("explainText");
+const explainProf = document.getElementById("explainProf");
+const btnCheck = document.getElementById("btnCheck");
+
+let currentExercise = null;
+let lastHintIndex = null;
+
+
+function applySizeClass(cellEl, valueStr){
+  if(!cellEl) return;
+  const s = (valueStr ?? "").toString();
+  cellEl.classList.remove("small","tiny");
+  if(s.length >= 8) cellEl.classList.add("tiny");
+  else if(s.length >= 6) cellEl.classList.add("small");
+}
+
+function applyPrintSize(cellEl, valueStr){
+  if(!cellEl) return;
+  const s = (valueStr ?? "").toString();
+  cellEl.classList.remove("small","tiny");
+  if(s.length >= 8) cellEl.classList.add("tiny");
+  else if(s.length >= 6) cellEl.classList.add("small");
+}
+
+function renderExercise(){
+  elCells.innerHTML = "";
+  explainBox.style.display = "none";
+  lastHintIndex = null;
+  // QA box reset
+  const qaBox = document.getElementById("qaBox");
+  const qaItems = document.getElementById("qaItems");
+  if(qaBox){ qaBox.style.display = "none"; }
+  if(qaItems){ qaItems.innerHTML = ""; }
+
+  if(!currentExercise){
+    document.getElementById("exTitle").textContent = "Pattern";
+    exSubtitle.textContent = "Clique “Nouveau” pour générer un pattern.";
+    if(typePill) typePill.textContent = "—";
+    if(holesPill) holesPill.textContent = "Trous : —";
+    btnCheck.disabled = true;
+    btnPrev.disabled = true;
+    btnNext.disabled = true;
+    updateProjCounter();
+    updateSlidePill();
+    return;
+  }
+
+  const mode = currentExercise.mode || "holes";
+
+  document.getElementById("exTitle").textContent = currentExercise.label || currentExercise.ex.familyLabel || "Pattern";
+
+  if(mode === "qa"){
+    exSubtitle.textContent = "Observe la suite puis réponds aux questions ci-dessous.";
+  } else if(mode === "rule"){
+    const r = (currentExercise.givenRule || currentExercise.ex.ruleStudent || "").trim();
+    exSubtitle.textContent = r ? ("Règle donnée : " + r) : "Règle donnée : (voir consigne)";
+  } else {
+    exSubtitle.textContent = "Complète les cases vides.";
+  }
+
+  if(typePill) typePill.textContent = currentExercise.ex.familyLabel;
+  if(holesPill){
+    holesPill.textContent = (mode === "qa") ? "Questions" : ("Trous : " + currentExercise.holes.length);
+  }
+
+  // boutons / nav
+  btnCheck.disabled = (mode === "qa") ? false : (!inputMode.checked);
+  btnPrev.disabled = (slideIndex <= 0);
+  btnNext.disabled = (slideIndex >= slides.length - 1 && isSolved());
+
+  // cellules
+  const n = currentExercise.masked.length;
+  const widthClass = (n <= 8) ? "cells8" : (n<=10) ? "cells10" : (n<=12) ? "cells12" : "cells14";
+  elCells.className = "cells " + widthClass;
+
+  currentExercise.masked.forEach((v, idx)=>{
+    const d = document.createElement("div");
+    d.className = "cell";
+    d.dataset.idx = idx;
+
+    if(v === null){
+      d.classList.add("blank");
+      if(inputMode.checked){
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.inputMode = "decimal";
+        inp.autocomplete = "off";
+        inp.placeholder = "…";
+        inp.dataset.idx = idx;
+        inp.value = currentExercise.userInputs[idx] ?? "";
+        inp.addEventListener("input", () => {
+          currentExercise.userInputs[idx] = inp.value;
+        });
+        d.appendChild(inp);
+      } else {
+        d.textContent = " ";
+      }
+    } else {
+      d.textContent = String(v);
+      applySizeClass(d, d.textContent);
+    }
+
+    elCells.appendChild(d);
+  });
+
+  if(mode === "qa"){
+    renderQA();
+  }
+
+  updateProjCounter();
+  updateSlidePill();
+}
+
+function showExplanation(){
+  const auto = document.getElementById("toggleExplainAuto").checked;
+  if(!auto || !currentExercise) return;
+  explainBox.style.display = "flex";
+  explainText.textContent = currentExercise.ex.ruleStudent;
+  explainProf.textContent = currentExercise.ex.ruleProf;
+}
+
+async function doHint(){
+  if(!currentExercise) return;
+  if((currentExercise.mode || "holes") === "qa"){
+    revealQA(true);
+    return;
+  }
+  const holes = currentExercise.holes;
+  const candidates = holes.filter(h => currentExercise.masked[h] === null);
+  if(candidates.length===0) return;
+
+  let idx = rPick(candidates);
+  if(lastHintIndex !== null && candidates.length>1){
+    for(let k=0;k<10;k++){
+      const t = rPick(candidates);
+      if(t !== lastHintIndex){ idx = t; break; }
+    }
+  }
+  lastHintIndex = idx;
+
+  currentExercise.masked[idx] = currentExercise.ex.seq[idx];
+
+  const cell = elCells.querySelector(`.cell[data-idx="${idx}"]`);
+  if(cell){
+    cell.classList.remove("blank","good","bad");
+    cell.classList.add("revealed");
+    cell.innerHTML = "";
+    cell.textContent = String(currentExercise.ex.seq[idx]);
+    applySizeClass(cell, cell.textContent);
+  }
+}
+
+async function animateReveal(){
+  const reduce = document.getElementById("toggleReduceMotion").checked;
+  const animEnabled = document.getElementById("animMode").checked && !reduce;
+  const toReveal = currentExercise.holes.filter(i => currentExercise.masked[i] === null).sort((a,b)=>a-b);
+  if(toReveal.length===0) return;
+  for(let i=0;i<toReveal.length;i++){
+    const idx = toReveal[i];
+    currentExercise.masked[idx] = currentExercise.ex.seq[idx];
+    const cell = elCells.querySelector(`.cell[data-idx="${idx}"]`);
+    if(cell){
+      cell.classList.remove("blank","good","bad");
+      cell.classList.add("revealed");
+      cell.innerHTML = "";
+      cell.textContent = String(currentExercise.ex.seq[idx]);
+    applySizeClass(cell, cell.textContent);
+    }
+    if(animEnabled){
+      await new Promise(res => setTimeout(res, 120));
+    } else {
+      await new Promise(requestAnimationFrame);
+    }
+  }
+}
+
+async function showSolution(){
+  if(!currentExercise) return;
+  const mode = currentExercise.mode || "holes";
+  if(mode === "qa"){
+    revealQA(false);
+    currentExercise.qaSolved = true;
+    showExplanation();
+    return;
+  }
+  await animateReveal();
+  showExplanation();
+}
+
+function isAnswerCorrect(raw, expected){
+  const r = String(raw ?? "").trim();
+  if(!r) return false;
+  const e = String(expected ?? "").trim();
+  const nr = valToNumber(r);
+  const ne = valToNumber(e);
+  if(Number.isFinite(nr) && Number.isFinite(ne)){
+    return Math.abs(nr - ne) <= 1e-9;
+  }
+  return r === e;
+}
+
+function checkAnswers(){
+  if(!currentExercise) return;
+
+  if((currentExercise.mode || "holes") === "qa"){
+    checkQA();
+    return;
+  }
+
+  if(!inputMode.checked){
+    toast("Active le mode saisie pour vérifier.");
+    return;
+  }
+
+  let okAll = true;
+  const inputs = [...elCells.querySelectorAll("input")];
+  inputs.forEach((inp)=>{
+    const idx = +inp.dataset.idx;
+    const v = inp.value.trim().replace(",", ".");
+    const sol = currentExercise.ex.seq[idx];
+    const ok = (v === String(sol));
+    inp.classList.toggle("good", ok);
+    inp.classList.toggle("bad", !ok);
+    if(!ok) okAll=false;
+  });
+
+  toast(okAll ? "✅ Tout est correct !" : "⚠️ Il reste des erreurs.");
+  if(okAll){
+    (currentExercise.holes || []).forEach(i => { currentExercise.masked[i] = currentExercise.ex.seq[i]; });
+    currentSolved = true;
+  } else {
+    currentSolved = false;
+  }
+  renderExercise();
+}
+
+/* ======= Print ======= */
+let lastSheetExercises = null;
+let lastSheetMeta = null;
+
+function generateBatch(count, cellsCount, holesCount, ensureVariety){
+  const opts = { cellsCount, holesCount, holeDifficulty:"medium" };
+  const list = [];
+
+  if(ensureVariety){
+    const pool = shuffle(expandFamiliesByQty());
+    for(const fam of pool){
+      if(list.length >= count) break;
+      list.push(generateExerciseByMode(opts, fam));
+    }
+  }
+  while(list.length < count){
+    list.push(generateExerciseByMode(opts));
+  }
+  return list;
+}
+
+function makeSheet(){
+  const status = document.getElementById("printStatus");
+  if(!slides.length){
+    if(status) status.textContent = "Aucune série";
+    showOverlay("Aucune série", "Va dans Générer → Générer la série, puis reviens ici pour imprimer.", 0);
+    overlayCancel.style.display = "none";
+    overlayClose.style.display = "";
+    return;
+  }
+  const includeCorrections = document.getElementById("printIncludeCorrections").checked;
+  const ruleLine = false;
+
+  // On imprime la série telle qu’elle a été générée.
+  const meta = {
+    includeCorrections,
+    ruleLine,
+    cellsCount: (seriesMeta && seriesMeta.cellsCount) ? seriesMeta.cellsCount : getOptionsFromUI().cellsCount,
+    holesCount: (seriesMeta && seriesMeta.holesCount) ? seriesMeta.holesCount : getOptionsFromUI().holesCount
+  };
+
+  lastSheetExercises = slides;
+  lastSheetMeta = meta;
+  renderSheetPreview(slides, meta);
+  buildPrintOnly(slides, meta);
+
+  if(status) status.textContent = `${slides.length} ex prêts`;
+}
+
+function renderSheetPreview(exercises, meta){
+  const root = document.getElementById("printPreview");
+  root.innerHTML = "";
+  const sheet = document.createElement("div");
+  sheet.className = "sheet";
+  const h2 = document.createElement("h2");
+  h2.textContent = "Feuille d’exercices — Patterns";
+  sheet.appendChild(h2);
+exercises.forEach((exObj, i)=>{
+    const p = document.createElement("div");
+    p.className = "pEx";
+    const t = document.createElement("div");
+    t.className = "pTitle";
+    const lbl = exObj.label ? String(exObj.label) : String(i+1);
+      t.textContent = `Pattern ${lbl}`;
+    p.appendChild(t);
+
+    const cells = document.createElement("div");
+    cells.className = "pCells";
+    exObj.masked.forEach(v=>{
+      const c = document.createElement("div");
+      c.className = "pCell" + (v===null ? " blank" : "");
+      c.textContent = (v===null ? "□" : String(v));
+      if(v!==null) applyPrintSize(c, c.textContent);
+      cells.appendChild(c);
+    });
+    p.appendChild(cells);
+    const mode = exObj.mode || "holes";
+    if(mode === "qa"){
+      const qwrap = document.createElement("div");
+      qwrap.className = "qaPrint";
+      (exObj.qa || []).forEach((q, qi)=>{
+        const line = document.createElement("div");
+        line.className = "qaLine";
+        line.textContent = (qi+1) + ". " + q.prompt;
+        qwrap.appendChild(line);
+
+        const blank = document.createElement("div");
+        blank.className = "qaBlank";
+        blank.textContent = "Réponse : __________________________";
+        qwrap.appendChild(blank);
+      });
+      p.appendChild(qwrap);
+    } else {
+      const rl = document.createElement("div");
+      rl.className = "ruleLine";
+      if(mode === "rule"){
+        const r = (exObj.givenRule || exObj.ex.ruleStudent || "").trim();
+        rl.textContent = r ? ("Règle : " + r) : "Règle :";
+      } else {
+        rl.textContent = "Règle :";
+      }
+      p.appendChild(rl);
+    }
+
+    sheet.appendChild(p);
+  });
+
+  root.appendChild(sheet);
+  document.getElementById("sheetPill").textContent = `${exercises.length} ex`;
+
+  if(meta.includeCorrections){
+    const corr = document.createElement("div");
+    corr.className = "sheet";
+    const h = document.createElement("h2");
+    h.textContent = "Corrections — Patterns";
+    corr.appendChild(h);
+
+    exercises.forEach((exObj, i)=>{
+      const p = document.createElement("div");
+      p.className = "pEx";
+      const t = document.createElement("div");
+      t.className = "pTitle";
+      const lbl = exObj.label ? String(exObj.label) : String(i+1);
+      t.textContent = `Pattern ${lbl}`;
+      p.appendChild(t);
+
+      const cells = document.createElement("div");
+      cells.className = "pCells";
+      const holeSet = new Set(exObj.holes);
+      exObj.ex.seq.forEach((v,idx)=>{
+        const c = document.createElement("div");
+        c.className = "pCell" + (holeSet.has(idx) ? " filled" : "");
+        c.textContent = String(v);
+        cells.appendChild(c);
+      });
+      p.appendChild(cells);
+
+      if((exObj.mode || "holes") === "qa"){
+        const qwrap = document.createElement("div");
+        qwrap.className = "qaPrint corr";
+        (exObj.qa || []).forEach((q, qi)=>{
+          const line = document.createElement("div");
+          line.className = "qaLine";
+          line.textContent = (qi+1) + ". " + q.prompt;
+          qwrap.appendChild(line);
+
+          const ans = document.createElement("div");
+          ans.className = "qaAns";
+          ans.textContent = "Réponse : " + q.expected;
+          qwrap.appendChild(ans);
+        });
+        p.appendChild(qwrap);
+      }
+
+      const exp = document.createElement("div");
+      exp.className = "ruleLine";
+      exp.textContent = exObj.ex.ruleStudent;
+      p.appendChild(exp);
+
+      corr.appendChild(p);
+    });
+
+    root.appendChild(corr);
+  }
+}
+
+function buildPrintOnly(exercises, meta){
+  const root = document.getElementById("printOnlyRoot");
+  root.innerHTML = "";
+
+  const sheet1 = document.createElement("div");
+  sheet1.className = "sheet";
+  const h2 = document.createElement("h2");
+  h2.textContent = "Feuille d’exercices — Patterns";
+  sheet1.appendChild(h2);
+exercises.forEach((exObj, i)=>{
+    const p = document.createElement("div");
+    p.className = "pEx";
+    const t = document.createElement("div");
+    t.className = "pTitle";
+    const lbl = exObj.label ? String(exObj.label) : String(i+1);
+      t.textContent = `Pattern ${lbl}`;
+    p.appendChild(t);
+
+    const cells = document.createElement("div");
+    cells.className = "pCells";
+    exObj.masked.forEach(v=>{
+      const c = document.createElement("div");
+      c.className = "pCell" + (v===null ? " blank" : "");
+      c.textContent = (v===null ? "□" : String(v));
+      if(v!==null) applyPrintSize(c, c.textContent);
+      cells.appendChild(c);
+    });
+    p.appendChild(cells);
+    const mode = exObj.mode || "holes";
+    if(mode === "qa"){
+      const qwrap = document.createElement("div");
+      qwrap.className = "qaPrint";
+      (exObj.qa || []).forEach((q, qi)=>{
+        const line = document.createElement("div");
+        line.className = "qaLine";
+        line.textContent = (qi+1) + ". " + q.prompt;
+        qwrap.appendChild(line);
+
+        const blank = document.createElement("div");
+        blank.className = "qaBlank";
+        blank.textContent = "Réponse : __________________________";
+        qwrap.appendChild(blank);
+      });
+      p.appendChild(qwrap);
+    } else {
+      const rl = document.createElement("div");
+      rl.className = "ruleLine";
+      if(mode === "rule"){
+        const r = (exObj.givenRule || exObj.ex.ruleStudent || "").trim();
+        rl.textContent = r ? ("Règle : " + r) : "Règle :";
+      } else {
+        rl.textContent = "Règle :";
+      }
+      p.appendChild(rl);
+    }
+
+    sheet1.appendChild(p);
+  });
+  root.appendChild(sheet1);
+
+  if(meta.includeCorrections){
+    const sheet2 = document.createElement("div");
+    sheet2.className = "sheet";
+    const h = document.createElement("h2");
+    h.textContent = "Corrections — Patterns";
+    sheet2.appendChild(h);
+
+    exercises.forEach((exObj, i)=>{
+      const p = document.createElement("div");
+      p.className = "pEx";
+      const t = document.createElement("div");
+      t.className = "pTitle";
+      const lbl = exObj.label ? String(exObj.label) : String(i+1);
+      t.textContent = `Pattern ${lbl}`;
+      p.appendChild(t);
+
+      const cells = document.createElement("div");
+      cells.className = "pCells";
+      const holeSet = new Set(exObj.holes);
+      exObj.ex.seq.forEach((v,idx)=>{
+        const c = document.createElement("div");
+        c.className = "pCell" + (holeSet.has(idx) ? " filled" : "");
+        c.textContent = String(v);
+        cells.appendChild(c);
+      });
+      p.appendChild(cells);
+
+      if((exObj.mode || "holes") === "qa"){
+        const qwrap = document.createElement("div");
+        qwrap.className = "qaPrint corr";
+        (exObj.qa || []).forEach((q, qi)=>{
+          const line = document.createElement("div");
+          line.className = "qaLine";
+          line.textContent = (qi+1) + ". " + q.prompt;
+          qwrap.appendChild(line);
+
+          const ans = document.createElement("div");
+          ans.className = "qaAns";
+          ans.textContent = "Réponse : " + q.expected;
+          qwrap.appendChild(ans);
+        });
+        p.appendChild(qwrap);
+      }
+
+      const exp = document.createElement("div");
+      exp.className = "ruleLine";
+      exp.textContent = exObj.ex.ruleStudent;
+      p.appendChild(exp);
+
+      sheet2.appendChild(p);
+    });
+
+    root.appendChild(sheet2);
+  }
+}
+
+/* ======= Tabs & Projection ======= */
+function setTab(name){
+  document.querySelectorAll(".tab").forEach(t=>{
+    const active = (t.dataset.tab === name);
+    t.classList.toggle("active", active);
+    t.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.getElementById("tab-gen").style.display = (name==="gen") ? "" : "none";
+  document.getElementById("tab-print").style.display = (name==="print") ? "" : "none";
+  document.getElementById("tab-settings").style.display = (name==="settings") ? "" : "none";
+  const ps = document.getElementById("printStatus");
+  if(ps){ ps.textContent = slides.length ? (slides.length + " ex prêts") : "Aucune série"; }
+  if(name==="print" && slides.length){ makeSheet(); }
+
+}
+document.querySelectorAll(".tab").forEach(btn=> btn.addEventListener("click", ()=> setTab(btn.dataset.tab)));
+
+function enterProjection(){
+  document.body.classList.add("projectionUI");
+  const root = document.documentElement;
+  if(root.requestFullscreen){
+    root.requestFullscreen().catch(()=>{});
+  }
+}
+function exitProjection(){
+  document.body.classList.remove("projectionUI");
+  if(document.fullscreenElement && document.exitFullscreen){
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+document.getElementById("btnProjection").addEventListener("click", enterProjection);
+document.getElementById("pExit").addEventListener("click", exitProjection);
+
+document.getElementById("pPrev").addEventListener("click", prevStep);
+document.getElementById("pNext").addEventListener("click", nextStep);
+document.getElementById("pHint").addEventListener("click", doHint);
+document.getElementById("pSolution").addEventListener("click", showSolution);
+
+/* ======= Buttons ======= */
+async function newExercise(){
+  if(busy) return;
+  clearSlides();
+  currentExercise = generateExerciseByMode(getOptionsFromUI());
+  renderExercise();
+}
+
+function isSolved(){
+  if(!currentExercise) return false;
+  if((currentExercise.mode || "holes") === "qa") return !!currentExercise.qaSolved;
+  return (currentExercise.holes || []).every(i => currentExercise.masked[i] !== null);
+}
+
+async function nextStep(){
+  if(slides.length){
+    if(!isSolved()){
+      await showSolution();
+      return;
+    }
+    goSlide(+1);
+    return;
+  }
+  await newExercise();
+}
+
+function prevStep(){
+  if(slides.length) goSlide(-1);
+}
+
+document.getElementById("btnNew").addEventListener("click", newExercise);
+document.getElementById("btnPrev").addEventListener("click", prevStep);
+document.getElementById("btnNext").addEventListener("click", nextStep);
+
+document.getElementById("btnPrepare").addEventListener("click", async ()=>{
+  const activeW = sumQuantities();
+  if(activeW <= 0){
+    showOverlay("Aucune famille sélectionnée", "Va dans Paramètres → coche au moins une famille et mets un poids (>0).", 0);
+    overlayCancel.style.display = "none";
+    overlayClose.style.display = "";
+    return;
+  }
+  const total = clamp(Number(document.getElementById("genCount").value)||10, 1, 50);
+  await prepareSlides(total);
+});
+document.getElementById("btnHint").addEventListener("click", doHint);
+document.getElementById("btnSolution").addEventListener("click", showSolution);
+document.getElementById("btnCheck").addEventListener("click", checkAnswers);
+document.getElementById("inputMode").addEventListener("change", ()=>{ if(currentExercise) renderExercise(); });
+
+document.getElementById("btnMakeSheet").addEventListener("click", makeSheet);
+document.getElementById("btnPrint").addEventListener("click", ()=>{
+  makeSheet();
+  if(lastSheetExercises && lastSheetMeta) window.print();
+});
+
+document.getElementById("btnNewSeed").addEventListener("click", ()=> setSeed(String(Date.now())));
+document.getElementById("btnApplySeed").addEventListener("click", ()=> setSeed(document.getElementById("seedInput").value));
+
+document.getElementById("btnPack6e").addEventListener("click", ()=> applyPack("pack6e"));
+document.getElementById("btnPack5e").addEventListener("click", ()=> applyPack("pack5e"));
+document.getElementById("btnPack4").addEventListener("click", ()=> applyPack("pack4"));
+document.getElementById("btnPack3").addEventListener("click", ()=> applyPack("pack3"));
+document.getElementById("btnPackConcours").addEventListener("click", ()=> applyPack("packConcours"));
+document.getElementById("btnPackDefis").addEventListener("click", ()=> applyPack("packDefis"));
+
+document.getElementById("packSelect").addEventListener("change", (e)=>{
+  const v = e.target.value;
+  if(v === "custom"){
+    currentPackId = "custom";
+    setPackUI("custom", true);
+    saveConfig();
+    clearSlides();
+    return;
+  }
+  applyPack(v);
+});
+
+
+/* ======= Keyboard shortcuts ======= */
+window.addEventListener("keydown", (e)=>{
+  if(e.key === "ArrowLeft"){ if(slides.length){ e.preventDefault(); prevStep();} }
+  if(e.key === "ArrowRight"){ if(slides.length){ e.preventDefault(); nextStep();} }
+  if(e.key.toLowerCase() === "h"){ doHint(); }
+  if(e.key.toLowerCase() === "n"){ newExercise(); }
+  if(e.key === " "){ e.preventDefault(); showSolution(); }
+});
+
+/* ======= Init ======= */
+setSeed(seedStr);
+
+// Toujours démarrer “propre” : aucune famille sélectionnée au chargement.
+loadConfig();            // resetAll()
+currentPackId = "custom";
+customAllowNeg = false;
+setPackUI("custom", false);
+setAllowNegUI();
+renderFamilies();
+renderExercise();
+updateProjCounter();
+</script>
+</body>
+</html>
