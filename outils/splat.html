@@ -2020,6 +2020,19 @@ function sumArray(arr){
   return s;
 }
 
+// Approximation de largeur de texte (pour garantir qu'un nombre "rentre" dans une case)
+function approxTextWidthForNumber(num, fontSize){
+  const s = String(num);
+  const n = Math.max(1, s.length);
+  // largeur moyenne d'un caractère ~ 0,56em (approx) ; marge de sécurité via padding
+  return n * (Number(fontSize) || 0) * 0.56;
+}
+function minCellWidthForNumber(num, fontSize, pad){
+  const p = (pad == null) ? 22 : Number(pad) || 22;
+  return approxTextWidthForNumber(num, fontSize) + p;
+}
+
+
 /**
  * Dessine un "schéma en barre" (tableau 2 lignes) :
  *  - ligne 1 : TOTAL
@@ -2031,7 +2044,7 @@ function sumArray(arr){
  *  - text(x,y,txt,attrs) -> <text>
  */
 function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
-  const w = (api && api.w) ? api.w : 300;
+  const baseW = (api && api.w) ? api.w : 300;
   const hTop = (api && api.hTop) ? api.hTop : 56;
   const hBottom = (api && api.hBottom) ? api.hBottom : 72;
 
@@ -2045,6 +2058,8 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
   const dyVal = (api && api.textDy) ? api.textDy : "0";
   const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
 
+  const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
+
   const mkRect = api.rect;
   const mkLine = api.line;
   const mkText = api.text;
@@ -2053,25 +2068,36 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
   const hid = Math.max(0, Number(hiddenVal) || 0);
   const denom = (vis + hid) > 0 ? (vis + hid) : (Number(total) || 1);
 
+  // Largeurs proportionnelles + minimum pour que le texte "rentre"
+  const visWProp = (denom > 0) ? (baseW * (vis / denom)) : (baseW * 0.5);
+  const hidWProp = baseW - visWProp;
+
+  const minVisW = minCellWidthForNumber(vis, fontBottom, minPad);
+  const minHidW = minCellWidthForNumber(hid, fontBottom, minPad);
+
+  const visW = Math.max(visWProp, minVisW);
+  const hidW = Math.max(hidWProp, minHidW);
+
+  const w = Math.max(baseW, visW + hidW);
+
   const x0 = cx - w/2;
   const y0 = topY;
   const ySplit = y0 + hTop;
 
-  const visW = (denom > 0) ? (w * (vis / denom)) : (w * 0.5);
-  const hidW = w - visW;
   const xSplit = x0 + visW;
+  const hidWDraw = w - visW;
 
   // Fills
   g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
   g.appendChild(mkRect({x:x0, y:ySplit, width:visW, height:hBottom, fill:"rgba(255,255,255,0)"}));
-  if(hidW > 0.5){
-    g.appendChild(mkRect({x:xSplit, y:ySplit, width:hidW, height:hBottom, fill:greyFill}));
+  if(hidWDraw > 0.5){
+    g.appendChild(mkRect({x:xSplit, y:ySplit, width:hidWDraw, height:hBottom, fill:greyFill}));
   }
 
   // Border + grid
   g.appendChild(mkRect({x:x0, y:y0, width:w, height:(hTop+hBottom), rx:0, fill:"none", stroke, "stroke-width":strokeWidth}));
   g.appendChild(mkLine({x1:x0, y1:ySplit, x2:x0+w, y2:ySplit, stroke, "stroke-width":strokeWidth}));
-  if(hidW > 0.5 && visW > 0.5){
+  if(hidWDraw > 0.5 && visW > 0.5){
     g.appendChild(mkLine({x1:xSplit, y1:ySplit, x2:xSplit, y2:ySplit+hBottom, stroke, "stroke-width":strokeWidth}));
   }
 
@@ -2098,18 +2124,127 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
   }));
 
   // Caché (si largeur nulle, on l'omet)
-  if(hidW > 0.5){
-    g.appendChild(mkText(xSplit + hidW/2, ySplit + hBottom/2, String(hid), {
+  if(hidWDraw > 0.5){
+    g.appendChild(mkText(xSplit + hidWDraw/2, ySplit + hBottom/2, String(hid), {
       "text-anchor":"middle",
       "dominant-baseline":"middle",
       "alignment-baseline":"middle",
-    "dy":dyVal,
+      "dy":dyVal,
       "font-size":String(fontBottom),
       "fill":ink,
       "font-weight":"900"
     }));
   }
 }
+
+
+/**
+ * Variante "multi-parties" du schéma en barre :
+ *  - ligne 1 : TOTAL (une seule case sur toute la largeur)
+ *  - ligne 2 : plusieurs cases (1 visible + n cachées), largeurs proportionnelles
+ *    Les cases "cachées" sont grisées.
+ *
+ * parts = [{value:number, hidden:boolean}, ...]
+ */
+function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
+  const baseW = (api && api.w) ? api.w : 300;
+  const hTop = (api && api.hTop) ? api.hTop : 56;
+  const hBottom = (api && api.hBottom) ? api.hBottom : 72;
+
+  const stroke = (api && api.stroke) ? api.stroke : "rgba(0,0,0,0.25)";
+  const strokeWidth = (api && api.strokeWidth) ? api.strokeWidth : 3;
+  const greyFill = (api && api.greyFill) ? api.greyFill : "rgba(0,0,0,0.10)";
+  const ink = (api && api.ink) ? api.ink : "#000";
+  const fontTop = (api && api.fontTop) ? api.fontTop : 72;
+  const fontBottom = (api && api.fontBottom) ? api.fontBottom : 72;
+
+  const dyVal = (api && api.textDy) ? api.textDy : "0";
+  const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
+  const hiddenTextColor = (api && api.hiddenTextColor) ? api.hiddenTextColor : ink;
+
+  const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
+
+  const mkRect = api.rect;
+  const mkLine = api.line;
+  const mkText = api.text;
+
+  const safeParts = Array.isArray(parts) ? parts : [];
+  const values = safeParts.map(p => Math.max(0, Number(p && p.value) || 0));
+  const flagsHidden = safeParts.map(p => !!(p && p.hidden));
+
+  let denom = values.reduce((a,b)=>a+b, 0);
+  if(!(denom > 0)) denom = (Number(total) || 1);
+
+  // Largeurs proportionnelles + minimum pour que les nombres rentrent
+  const widths = values.map(v => {
+    const prop = baseW * (v / denom);
+    const minW = minCellWidthForNumber(v, fontBottom, minPad);
+    return Math.max(prop, minW);
+  });
+
+  const w = Math.max(baseW, widths.reduce((a,b)=>a+b, 0));
+
+  const x0 = cx - w/2;
+  const y0 = topY;
+  const ySplit = y0 + hTop;
+
+  // Contour global + séparation horizontale
+  g.appendChild(mkRect({x:x0, y:y0, width:w, height:(hTop+hBottom), rx:0, fill:"none", stroke, "stroke-width":strokeWidth}));
+  g.appendChild(mkLine({x1:x0, y1:ySplit, x2:x0+w, y2:ySplit, stroke, "stroke-width":strokeWidth}));
+
+  // Ligne du haut : fond transparent + texte total
+  g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
+  g.appendChild(mkText(cx, y0 + hTop/2, String(total), {
+    "text-anchor":"middle",
+    "dominant-baseline":"middle",
+    "alignment-baseline":"middle",
+    "dy":dyVal,
+    "font-size":String(fontTop),
+    "fill":ink,
+    "font-weight":"900"
+  }));
+
+  // Ligne du bas : cases
+  let x = x0;
+  for(let i=0;i<values.length;i++){
+    const v = values[i];
+
+    // Dernière case : on comble exactement le reste (évite micro-trous)
+    let segW = (i === values.length - 1) ? ((x0 + w) - x) : widths[i];
+    if(segW < 0) segW = 0;
+
+    // fond
+    if(flagsHidden[i] && segW > 0.5){
+      g.appendChild(mkRect({x:x, y:ySplit, width:segW, height:hBottom, fill:greyFill}));
+    }else{
+      g.appendChild(mkRect({x:x, y:ySplit, width:segW, height:hBottom, fill:"rgba(255,255,255,0)"}));
+    }
+
+    // texte
+    if(segW > 1){
+      const fill = (i === 0) ? visibleTextColor : hiddenTextColor;
+      g.appendChild(mkText(x + segW/2, ySplit + hBottom/2, String(v), {
+        "text-anchor":"middle",
+        "dominant-baseline":"middle",
+        "alignment-baseline":"middle",
+        "dy":dyVal,
+        "font-size":String(fontBottom),
+        "fill":fill,
+        "font-weight":"900"
+      }));
+    }
+
+    // séparateur vertical (entre cases, uniquement sur la ligne du bas)
+    if(i < values.length - 1){
+      const xNext = x + segW;
+      if(segW > 0.5){
+        g.appendChild(mkLine({x1:xNext, y1:ySplit, x2:xNext, y2:ySplit+hBottom, stroke, "stroke-width":strokeWidth}));
+      }
+      x = xNext;
+    }
+  }
+}
+
 
 /* Render écran */
 function renderCard(card, revealed){
@@ -2135,29 +2270,89 @@ function renderCard(card, revealed){
 
   const gTotal = el("g", {id:"totalGroup"});
 
-  const isBarModelTotal = (card.family === "U" && revealed);
+  const isBarModelTotalU = (card.family === "U" && revealed);
+  const isBarModelTotalN = (card.family === "N" && revealed);
+  const isBarModelTotal = isBarModelTotalU || isBarModelTotalN;
 
   // Mode A (U) : à la révélation (bouton Suivant), on affiche un schéma en barre
   // à la place du nombre du total (projection), uniquement à l'écran (pas l'impression).
+  // Mode B (N) : idem, mais les "visibles" sont la SOMME des billes visibles (numérotées),
+  // et si plusieurs tâches : on sépare en plusieurs cases cachées (une par tâche).
   if(isBarModelTotal){
-    const vis = sumArray(card.visible);
-    const hid = sumArray(card.hidden);
-    drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
-      rect:(a)=>el("rect", a),
-      line:(a)=>el("line", a),
-      text:(x,y,t,a)=>text(x,y,t,a),
-      w: 380,
-      hTop: 86,
-      hBottom: 86,
-      stroke:"var(--totalbox-stroke)",
-      strokeWidth:4,
-      greyFill:"rgba(0,0,0,0.10)",
-      ink:"var(--ink)",
+    if(isBarModelTotalU){
+      const vis = sumArray(card.visible);
+      const hid = sumArray(card.hidden);
+      drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
+        rect:(a)=>el("rect", a),
+        line:(a)=>el("line", a),
+        text:(x,y,t,a)=>text(x,y,t,a),
+        w: 380,
+        hTop: 86,
+        hBottom: 86,
+        stroke:"var(--totalbox-stroke)",
+        strokeWidth:4,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"var(--ink)",
         visibleTextColor:"var(--accent)",
         textDy:"0.10em",
-      fontTop:70,
-      fontBottom:70
-    });
+        fontTop:70,
+        fontBottom:70
+      });
+    }else{
+      const visSum = sumArray(card.visible);
+
+      const num = card._num || {};
+      const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+
+      let hiddenSums = [];
+      if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
+        hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
+      }else{
+        const totalHid = sumArray(card.hidden);
+        const each = Math.round(totalHid / tasks);
+        hiddenSums = Array.from({length: tasks}, ()=> each);
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+
+      if(hiddenSums.length <= 1){
+        const hidSum = (hiddenSums[0] ?? sumArray(card.hidden));
+        drawBarModelInGroup(gTotal, tx, ty-56, card.total, visSum, hidSum, {
+          rect:(a)=>el("rect", a),
+          line:(a)=>el("line", a),
+          text:(x,y,t,a)=>text(x,y,t,a),
+          w: 380,
+          hTop: 86,
+          hBottom: 86,
+          stroke:"var(--totalbox-stroke)",
+          strokeWidth:4,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)",
+          visibleTextColor:"var(--ink)",
+          textDy:"0.10em",
+          fontTop:70,
+          fontBottom:70
+        });
+      }else{
+        const parts = [{value: visSum, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
+        drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+          rect:(a)=>el("rect", a),
+          line:(a)=>el("line", a),
+          text:(x,y,t,a)=>text(x,y,t,a),
+          w: 380,
+          hTop: 86,
+          hBottom: 86,
+          stroke:"var(--totalbox-stroke)",
+          strokeWidth:4,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)",
+          visibleTextColor:"var(--ink)",
+          hiddenTextColor:"var(--ink)",
+          textDy:"0.10em",
+          fontTop:70,
+          fontBottom:70
+        });
+      }
+    }
   }else{
     const tLabel = text(tx, ty, "TOTAL", {
       "text-anchor":"middle","font-size":"42",
@@ -2571,8 +2766,8 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       // APPLIQUER OFFSET POUR C/D
       const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
       
-      const colH = beadColorForValue(card.hidden[i]);
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colH.fill, stroke:colH.stroke,"stroke-width":"5"}));
+      // Billes cachées : toujours grises (même en correction)
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
@@ -2597,6 +2792,65 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colV.fill, stroke:colV.stroke,"stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
+    // Schéma en barre en correction (impression) pour le mode B (N) : uniquement si on imprime la correction (révélé)
+    if(card.family === "N" && revealAnswers){
+      const visSum = sumArray(card.visible);
+
+      const num = card._num || {};
+      const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+
+      let hiddenSums = [];
+      if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
+        hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
+      }else{
+        const totalHid = sumArray(card.hidden);
+        const each = Math.round(totalHid / tasks);
+        hiddenSums = Array.from({length: tasks}, ()=> each);
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+
+      const gBM = tEl("g",{id:"barModelPrint"});
+      if(hiddenSums.length <= 1){
+        const hidSum = (hiddenSums[0] ?? sumArray(card.hidden));
+        drawBarModelInGroup(gBM, 800, 980, card.total, visSum, hidSum, {
+          rect:(a)=>tEl("rect", a),
+          line:(a)=>tEl("line", a),
+          text:(x,y,t,a)=>tText(x,y,t,a),
+          w: 1200,
+          hTop: 140,
+          hBottom: 140,
+          stroke:"rgba(0,0,0,0.35)",
+          strokeWidth:5,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"#000",
+          visibleTextColor:"#000",
+          textDy:"0.06em",
+          fontTop:118,
+          fontBottom:118
+        });
+      }else{
+        const parts = [{value: visSum, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
+        drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+          rect:(a)=>tEl("rect", a),
+          line:(a)=>tEl("line", a),
+          text:(x,y,t,a)=>tText(x,y,t,a),
+          w: 1200,
+          hTop: 140,
+          hBottom: 140,
+          stroke:"rgba(0,0,0,0.35)",
+          strokeWidth:5,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"#000",
+          visibleTextColor:"#000",
+          hiddenTextColor:"#000",
+          textDy:"0.06em",
+          fontTop:118,
+          fontBottom:118
+        });
+      }
+      targetSvg.appendChild(gBM);
+    }
+
 
   }else{
     const beadR=95;
