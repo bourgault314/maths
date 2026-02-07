@@ -2113,8 +2113,8 @@ function renderCard(card, revealed){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy+Math.round(beadR*0.2), String(card.hidden[i]), {
-        "text-anchor":"middle","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
+      svg.appendChild(text(cx, cy, String(card.hidden[i]), {
+        "text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
       }));
     }
 
@@ -2146,8 +2146,8 @@ function renderCard(card, revealed){
       const cy = card._posV?.[i]?.cy ?? 380;
       const col = beadColorForValue(card.visible[i]);
       svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy+Math.round(beadR*0.2), String(card.visible[i]), {
-        "text-anchor":"middle","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
+      svg.appendChild(text(cx, cy, String(card.visible[i]), {
+        "text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
       }));
     }
     return;
@@ -2159,7 +2159,7 @@ function renderCard(card, revealed){
     const cx = card._posH?.[i]?.cx ?? 820;
     const cy = card._posH?.[i]?.cy ?? 610;
     svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
+    svg.appendChild(text(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
   const s0 = card._splat || {cx:820, cy:610, r:220};
   svg.appendChild(el("path",{
@@ -2173,7 +2173,7 @@ function renderCard(card, revealed){
     const cy = card._posV?.[i]?.cy ?? 380;
     const col = beadColorForValue(card.visible[i]);
     svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
+    svg.appendChild(text(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
 }
 
@@ -2420,7 +2420,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       
       const colH = beadColorForValue(card.hidden[i]);
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colH.fill, stroke:colH.stroke,"stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.hidden[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
@@ -2442,7 +2442,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
 
       const colV = beadColorForValue(card.visible[i]);
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colV.fill, stroke:colV.stroke,"stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+Math.round(beadR*0.2), String(card.visible[i]), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
   }else{
@@ -2451,7 +2451,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+18, String(card.hidden[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
     const s0 = card._splat || {cx:820, cy:610, r:220};
     targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
@@ -2459,7 +2459,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy+18, String(card.visible[i]), {"text-anchor":"middle","font-size":"64","fill":"#000","font-weight":"900"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
   }
 }
