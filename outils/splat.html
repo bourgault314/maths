@@ -2048,7 +2048,7 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
   const hTop = (api && api.hTop) ? api.hTop : 56;
   const hBottom = (api && api.hBottom) ? api.hBottom : 72;
 
-  const stroke = (api && api.stroke) ? api.stroke : "rgba(0,0,0,0.25)";
+  const stroke = (api && api.stroke) ? api.stroke : "#000";
   const strokeWidth = (api && api.strokeWidth) ? api.strokeWidth : 3;
   const greyFill = (api && api.greyFill) ? api.greyFill : "rgba(0,0,0,0.10)";
   const ink = (api && api.ink) ? api.ink : "#000";
@@ -2151,7 +2151,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const hTop = (api && api.hTop) ? api.hTop : 56;
   const hBottom = (api && api.hBottom) ? api.hBottom : 72;
 
-  const stroke = (api && api.stroke) ? api.stroke : "rgba(0,0,0,0.25)";
+  const stroke = (api && api.stroke) ? api.stroke : "#000";
   const strokeWidth = (api && api.strokeWidth) ? api.strokeWidth : 3;
   const greyFill = (api && api.greyFill) ? api.greyFill : "rgba(0,0,0,0.10)";
   const ink = (api && api.ink) ? api.ink : "#000";
@@ -2289,7 +2289,7 @@ function renderCard(card, revealed){
         w: 380,
         hTop: 86,
         hBottom: 86,
-        stroke:"var(--totalbox-stroke)",
+        stroke:"#000",
         strokeWidth:4,
         greyFill:"rgba(0,0,0,0.10)",
         ink:"var(--ink)",
@@ -2323,7 +2323,7 @@ function renderCard(card, revealed){
           w: 380,
           hTop: 86,
           hBottom: 86,
-          stroke:"var(--totalbox-stroke)",
+          stroke:"#000",
           strokeWidth:4,
           greyFill:"rgba(0,0,0,0.10)",
           ink:"var(--ink)",
@@ -2341,7 +2341,7 @@ function renderCard(card, revealed){
           w: 380,
           hTop: 86,
           hBottom: 86,
-          stroke:"var(--totalbox-stroke)",
+          stroke:"#000",
           strokeWidth:4,
           greyFill:"rgba(0,0,0,0.10)",
           ink:"var(--ink)",
@@ -2382,7 +2382,7 @@ function renderCard(card, revealed){
       height: bbTotal.height + padY*2,
       rx: 22,
       fill:"var(--totalbox-fill)",
-      stroke:"var(--totalbox-stroke)",
+      stroke:"#000",
       "stroke-width":"4"
     }), gTotal);
   }
@@ -2526,7 +2526,7 @@ function renderCardEquation(card, revealed){
   svg.appendChild(el("line",{
     x1:trays.midX, y1:trays.left.y-10,
     x2:trays.midX, y2:trays.left.y+trays.left.h+10,
-    stroke:"rgba(0,0,0,0.35)", "stroke-width":"10", "stroke-linecap":"round"
+    stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
   }));
 
   // Consigne (uniquement en haut)
@@ -2592,7 +2592,7 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText){
   targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
 
   // Séparateur
-  targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"rgba(0,0,0,0.35)","stroke-width":"10","stroke-linecap":"round"}));
+  targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"#000","stroke-width":"10","stroke-linecap":"round"}));
 
   // Consigne en haut
   targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
@@ -2746,7 +2746,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
         w: 1200,
         hTop: 140,
         hBottom: 140,
-        stroke:"rgba(0,0,0,0.35)",
+        stroke:"#000",
         strokeWidth:5,
         greyFill:"rgba(0,0,0,0.10)",
         ink:"#000",
@@ -2819,7 +2819,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
           w: 1200,
           hTop: 140,
           hBottom: 140,
-          stroke:"rgba(0,0,0,0.35)",
+          stroke:"#000",
           strokeWidth:5,
           greyFill:"rgba(0,0,0,0.10)",
           ink:"#000",
@@ -2837,7 +2837,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
           w: 1200,
           hTop: 140,
           hBottom: 140,
-          stroke:"rgba(0,0,0,0.35)",
+          stroke:"#000",
           strokeWidth:5,
           greyFill:"rgba(0,0,0,0.10)",
           ink:"#000",
