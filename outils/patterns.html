@@ -568,6 +568,13 @@
 .qaPrint .qaLine{font-weight:700;margin-top:6px;}
 .qaPrint .qaBlank{margin:2px 0 6px 0;}
 .qaPrint.corr .qaAns{margin:2px 0 8px 0;font-weight:700;}
+
+    /* ======= Exercise instructions: bigger for classroom readability ======= */
+    #exTitle{ font-size: 20px; font-weight: 900; }
+    #exSubtitle{ font-size: 22px; color: var(--text); font-weight: 800; line-height: 1.25; }
+    body.projectionUI #exTitle{ font-size: 26px; }
+    body.projectionUI #exSubtitle{ font-size: 32px; }
+
 </style>
 </head>
 <body class="theme-light">
@@ -689,7 +696,7 @@
 
         <div class="card">
           <div class="cardHeader">
-            <div class="h">Exercice</div>
+            <div class="h" id="exHeader">Exercice</div>
 </div>
           <div class="cardBody exerciseArea">
             <div class="exerciseTitle">
@@ -2746,6 +2753,8 @@ function renderExercise(){
 
   if(!currentExercise){
     document.getElementById("exTitle").textContent = "Pattern";
+    const exHeader = document.getElementById("exHeader");
+    if(exHeader) exHeader.textContent = "Exercice";
     exSubtitle.textContent = "Clique “Nouveau” pour générer un pattern.";
     if(typePill) typePill.textContent = "—";
     if(holesPill) holesPill.textContent = "Trous : —";
@@ -2758,6 +2767,9 @@ function renderExercise(){
   }
 
   const mode = currentExercise.mode || "holes";
+
+  const exHeader = document.getElementById("exHeader");
+  if(exHeader) exHeader.textContent = `Exercice ${slideIndex+1}`;
 
   document.getElementById("exTitle").textContent = currentExercise.label || currentExercise.ex.familyLabel || "Pattern";
 
