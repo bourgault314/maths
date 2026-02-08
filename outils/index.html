@@ -109,6 +109,21 @@ a.card:hover {
   border-left-color: transparent;
 }
 
+/* Style spécifique pour la carte en travaux */
+a.card.working {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.badge-work {
+  font-size: 0.7rem;
+  background: #eee;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #666;
+  text-transform: uppercase;
+}
+
 a.card[data-color="fabrication"]:hover { border-top-color: var(--c-red); }
 a.card[data-color="plateaux"]:hover    { border-top-color: var(--c-cyan); }
 a.card[data-color="glisse"]:hover      { border-top-color: var(--c-blue); }
@@ -123,6 +138,7 @@ a.card[data-color="patterns"]:hover    { border-top-color: var(--c-slate); }
 .card-title {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin: 0 0 8px;
   font-weight: 700;
@@ -162,47 +178,48 @@ footer {
   <section class="grid">
 
     <a class="card" href="bouliers/" data-color="bouliers">
-      <div class="card-title">🧮 Bouliers</div>
+      <div class="card-title"><span>🧮 Bouliers</span></div>
       <p class="card-desc">Manipulations virtuelles et activités sur le boulier.</p>
     </a>
 
     <a class="card" href="CM_Livret_A5.html" data-color="cahier">
-      <div class="card-title">📒 Cahier de calculs</div>
+      <div class="card-title"><span>📒 Cahier de calculs</span></div>
       <p class="card-desc">Générateur de cahiers à imprimer, couper et agrafer.</p>
     </a>
 
     <a class="card" href="club_maths/index.html" data-color="club">
-      <div class="card-title">✨ Club Maths</div>
+      <div class="card-title"><span>✨ Club Maths</span></div>
       <p class="card-desc">Exploration & Jeux</p>
     </a>
 
     <a class="card" href="sheet_generator_schema_partie_tout.html" data-color="diagrammes">
-      <div class="card-title">🧩 Schémas partie-tout</div>
+      <div class="card-title"><span>🧩 Schémas partie-tout</span></div>
       <p class="card-desc">Un parcours vers l'algèbre avec SPLAT! </p>
     </a>
 
     <a class="card" href="fabrication_materiel/" data-color="fabrication">
-      <div class="card-title">✂️ Fabrication de matériel</div>
+      <div class="card-title"><span>✂️ Fabrication de matériel</span></div>
       <p class="card-desc">Générateurs de matériel à imprimer, découper et plastifier.</p>
     </a>
 
     <a class="card" href="plateaux_manipulation/" data-color="plateaux">
-      <div class="card-title">🔲 Plateaux de manipulation</div>
+      <div class="card-title"><span>🔲 Plateaux de manipulation</span></div>
       <p class="card-desc">Espaces de travail pour projeter les manipulations des élèves.</p>
     </a>
 
-    <a class="card" href="patterns.html" data-color="patterns">
-      <div class="card-title">🔢 Suites de nombres</div>
-      <p class="card-desc">Générateur de suites à compléter et de questions sur les patterns.</p>
+    <a class="card working" href="#" onclick="return false;" data-color="patterns">
+      <div class="card-title">
+        <span>🔢 Suites de nombres</span>
+        <span class="badge-work">🚧 En travaux</span>
+      </div>
+      <p class="card-desc">Générateur de suites à compléter (Bientôt disponible).</p>
     </a>
-
 
   </section>
   
  <footer>
  </footer>
   
-
 </main>
 
 </body>
