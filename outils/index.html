@@ -104,24 +104,20 @@ a.card {
 a.card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
 }
 
-/* Style spécifique pour la carte en travaux */
+/* Style léger pour indiquer l'état de développement sans bloquer le clic */
 a.card.working {
-  opacity: 0.8;
-  cursor: wait;
+  border-style: dashed; /* Bordure en pointillés pour l'effet "non fini" */
 }
 
 .badge-work {
-  font-size: 0.7rem;
-  background: #eee;
+  font-size: 0.75rem;
+  background: #fef3c7;
   padding: 2px 8px;
   border-radius: 4px;
-  color: #666;
-  text-transform: uppercase;
+  color: #92400e;
+  border: 1px solid #f59e0b;
 }
 
 a.card[data-color="fabrication"]:hover { border-top-color: var(--c-red); }
@@ -154,9 +150,6 @@ a.card[data-color="patterns"]:hover    { border-top-color: var(--c-slate); }
 
 footer {
   margin-top: 40px;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #888;
   padding-bottom: 20px;
 }
 </style>
@@ -207,18 +200,18 @@ footer {
       <p class="card-desc">Espaces de travail pour projeter les manipulations des élèves.</p>
     </a>
 
-    <a class="card working" href="#" onclick="return false;" data-color="patterns">
+    <a class="card working" href="suites_de_nombres/" data-color="patterns">
       <div class="card-title">
         <span>🔢 Suites de nombres</span>
-        <span class="badge-work">🚧 En travaux</span>
+        <span class="badge-work">🚧 En cours</span>
       </div>
-      <p class="card-desc">Générateur de suites à compléter (Bientôt disponible).</p>
+      <p class="card-desc">Générateur de suites à compléter.</p>
     </a>
 
   </section>
   
- <footer>
- </footer>
+  <footer>
+  </footer>
   
 </main>
 
