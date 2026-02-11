@@ -1,280 +1,307 @@
 <!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Ateliers Mathématiques</title>
-    <style>
-        :root {
-            --bg-page: #f8fafc;
-            --text-main: #1e293b;
-        }
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Abaque de Gerbert - Index</title>
 
-        body {
-            background-color: var(--bg-page);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: var(--text-main);
-        }
+  <!-- Si tu as un style global sur ton site, tu peux garder ce lien (sinon tu peux le supprimer). -->
+  <link rel="stylesheet" href="../../../assets/style.css"/>
 
-        /* En-tête simplifié et flottant */
-        .top-nav {
-            padding: 1rem 2rem;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            box-sizing: border-box;
-            z-index: 10;
-        }
+  <style>
+    :root{
+      /* Palette "parchemin" (proche de ton outil abaque_gerbert) */
+      --primary: #b45309;        /* amber 700 */
+      --bg-page: #f7f1e6;        /* paper 1 */
+      --bg-page-2:#efe5d4;       /* paper 2 */
+      --bg-card: #ffffff;
+      --text-main: #1f2937;      /* slate 800 */
+      --text-muted:#6b7280;      /* gray 500 */
+      --border: #e5e7eb;         /* gray 200 */
+      --shadow: 0 10px 30px rgba(0,0,0,0.10);
+    }
 
-        .back-link {
-            text-decoration: none;
-            color: #64748b;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .back-link:hover {
-            transform: translateX(-3px);
-            color: #1e293b;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+    body{
+      margin:0;
+      padding-bottom: 4rem;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(1200px 800px at 50% -220px, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 70%),
+        radial-gradient(900px 700px at 10% 20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.0) 60%),
+        radial-gradient(900px 700px at 90% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.0) 60%),
+        linear-gradient(180deg, var(--bg-page) 0%, var(--bg-page-2) 100%);
+    }
 
-        /* Conteneur Principal Centré */
-        .main-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 4rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
+    /* HEADER */
+    .header-nav{
+      background: linear-gradient(135deg, #78350f 0%, #451a03 100%); /* ambre brun */
+      color:#fff;
+      padding: 2.3rem 1rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+      text-align:center;
+    }
+    .header-content{ max-width: 1200px; margin:0 auto; position:relative; }
 
-        .page-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 3rem;
-            text-align: center;
-            color: #334155;
-            letter-spacing: -1px;
-            /* On s'assure que le titre ne prend pas toute la place sur mobile */
-            line-height: 1.2;
-        }
+    .header-title h1{
+      margin:0;
+      font-size: 2.35rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .header-title p{
+      margin: .8rem 0 0;
+      color: #fde68a; /* amber 200 */
+      font-size: 1.05rem;
+      font-weight: 650;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
 
-        /* La Grille de Choix */
-        .choice-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Un peu plus compact */
-            gap: 2rem;
-            width: 100%;
-            max-width: 1000px;
-        }
+    .back-link{
+      position:absolute;
+      left:0;
+      top:50%;
+      transform: translateY(-50%);
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      color:#fde68a;
+      text-decoration:none;
+      font-weight:700;
+      transition: color .2s;
+    }
+    .back-link:hover{ color:#fff; }
 
-        /* Les Cartes "Boutons" */
-        .choice-card {
-            text-decoration: none;
-            position: relative;
-            background: white;
-            border-radius: 24px;
-            padding: 1.5rem; /* Padding réduit un peu pour gagner de la place */
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            min-height: 220px; /* Hauteur minimale légèrement réduite */
-            overflow: hidden;
-        }
+    @media (max-width: 768px){
+      .back-link{
+        position:relative;
+        top:auto;
+        transform:none;
+        display:block;
+        margin-bottom: 1rem;
+      }
+    }
 
-        /* Effet de brillance au survol */
-        .choice-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+    /* CONTAINER */
+    .wrapper{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
 
-        .choice-card:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+    /* SECTIONS */
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #7c2d12; /* amber/brown */
+      margin: 3.2rem 0 1.3rem 0;
+      padding-bottom: .55rem;
+      border-bottom: 3px solid rgba(180,83,9,0.25);
+    }
+    .badge{
+      font-size: .78rem;
+      background: rgba(245,158,11,0.18);
+      color: #7c2d12;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 750;
+    }
+    .badge.soon{
+      background: rgba(107,114,128,0.14);
+      color: rgba(31,41,55,0.85);
+    }
 
-        /* ICONES ET BILLES */
-        .icon-wrapper {
-            height: 3.5rem; /* Un peu plus compact */
-            margin-bottom: 1.2rem;
-            transition: transform 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem; 
-        }
-        
-        /* Design des billes CSS */
-        .beads-container {
-            display: flex;
-            align-items: center;
-            gap: 4px; /* Espacement réduit entre les billes */
-        }
-        .bead {
-            width: 28px; /* Billes légèrement plus petites */
-            height: 28px;
-            border-radius: 50%;
-            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 2px 2px 5px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        .bead::after {
-            content: '';
-            position: absolute;
-            top: 5px; left: 5px;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-        }
+    /* GRID */
+    .grid{
+      display:grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
 
-        /* Couleurs des billes */
-        .b-red { background: #dc2626; }    
-        .b-white { background: #f1f5f9; border: 1px solid #cbd5e1; } 
-        .b-green { background: #16a34a; }  
-        .b-blue { background: #2563eb; }   
+    /* CARDS */
+    a.card-link{
+      text-decoration:none;
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      display:flex;
+      flex-direction:column;
+      gap: .15rem;
+      transition: all .2s ease;
+      position:relative;
+      overflow:hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
 
-        
-        .choice-card:hover .icon-wrapper {
-            transform: scale(1.1);
-        }
+    /* barre latérale */
+    a.card-link::before{
+      content:"";
+      position:absolute;
+      left:0; top:0; bottom:0;
+      width: 6px;
+      background: #cbd5e1;
+      transition: width .2s;
+    }
 
-        .card-title {
-            font-size: 1.25rem; /* Taille réduite (avant 1.5rem) */
-            font-weight: 700;
-            margin: 0;
-            color: #1e293b;
-            line-height: 1.3;
-        }
+    /* catégories */
+    .cat-start a.card-link::before{ background: #b45309; }  /* amber */
+    .cat-op a.card-link::before{ background: #f59e0b; }     /* orange */
+    .cat-adv a.card-link::before{ background: #64748b; }    /* slate */
 
-        .card-desc {
-            margin-top: 0.4rem;
-            font-size: 0.9rem; /* Légèrement réduit aussi */
-            opacity: 0.7;
-            font-weight: 500;
-        }
+    a.card-link:hover{
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px -10px rgba(0,0,0,0.18);
+      border-color: rgba(0,0,0,0.12);
+    }
+    a.card-link:hover::before{ width: 10px; }
 
-        /* Thèmes Spécifiques */
-        .theme-rekenrek { border-color: #e2e8f0; }
-        .theme-rekenrek:hover {
-            border-color: #3b82f6;
-            background: linear-gradient(to bottom right, #ffffff, #eff6ff);
-        }
-        .theme-rekenrek .card-title { color: #1d4ed8; }
-        .theme-rekenrek .card-desc { color: #60a5fa; }
+    .icon-box{
+      font-size: 2.5rem;
+      margin-bottom: .75rem;
+      line-height: 1;
+    }
 
-        .theme-montessori { border-color: #e2e8f0; }
-        .theme-montessori:hover {
-            border-color: #10b981;
-            background: linear-gradient(to bottom right, #ffffff, #f0fdf4);
-        }
-        .theme-montessori .card-title { color: #047857; }
-        .theme-montessori .card-desc { color: #34d399; }
+    .card-head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
-        .theme-soroban { border-color: #e2e8f0; }
-        .theme-soroban:hover {
-            border-color: #f59e0b;
-            background: linear-gradient(to bottom right, #ffffff, #fffbeb);
-        }
-        .theme-soroban .card-title { color: #b45309; }
-        .theme-soroban .card-desc { color: #fbbf24; }
+    .card-link h3{
+      margin:0;
+      font-size: 1.25rem;
+      font-weight: 850;
+      color: var(--text-main);
+    }
 
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #cbd5e1; /* Très discret */
-            font-size: 0.8rem;
-        }
+    .pill{
+      font-size: .72rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.85);
+      color: rgba(0,0,0,0.70);
+      font-weight: 800;
+    }
+    .pill.soon{
+      border-color: rgba(0,0,0,0.08);
+      background: rgba(243,244,246,0.90);
+      color: rgba(31,41,55,0.70);
+    }
 
-        @media (max-width: 600px) {
-            .page-title { font-size: 2rem; margin-top: 3rem; }
-            .choice-card { min-height: 160px; padding: 1.25rem; }
-            .icon-wrapper { font-size: 3rem; height: 3rem; margin-bottom: 0.8rem; }
-        }
-    </style>
+    .card-link p{
+      margin: .55rem 0 0;
+      color: var(--text-muted);
+      font-size: .95rem;
+      line-height: 1.5;
+    }
+
+    footer{
+      text-align:center;
+      margin-top: 5rem;
+      color: #6b7280;
+      font-size: .9rem;
+      padding-bottom: 2rem;
+    }
+  </style>
 </head>
+
 <body>
-
-    <nav class="top-nav">
-        <a href="../" class="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Retour
+  <header class="header-nav">
+    <div class="header-content">
+      <nav>
+        <!-- Ajuste ce lien “Retour” selon ton arborescence -->
+        <a href="../../" class="back-link" aria-label="Retour">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Retour
         </a>
-    </nav>
-
-    <div class="main-container">
-        
-        <h1 class="page-title">
-            Ateliers Mathématiques
-        </h1>
-
-        <div class="choice-grid">
-            
-            <!-- REKENREK -->
-            <a href="rekenrek/index.html" class="choice-card theme-rekenrek">
-                <div class="icon-wrapper">
-                    <div class="beads-container">
-                        <div class="bead b-red"></div>
-                        <div class="bead b-white"></div>
-                    </div>
-                </div>
-                <h2 class="card-title">Rekenrek</h2>
-                <span class="card-desc">Cycle 2 · Cycle 3</span>
-            </a>
-
-            <!-- BOULIER MONTESSORI -->
-            <a href="boulier_montessori/index.html" class="choice-card theme-montessori">
-                <div class="icon-wrapper">
-                    <div class="beads-container">
-                        <div class="bead b-green"></div>
-                        <div class="bead b-blue"></div>
-                        <div class="bead b-red"></div>
-                    </div>
-                </div>
-                <h2 class="card-title">Boulier Montessori</h2>
-                <span class="card-desc">Cycle 3 · Cycle 4</span>
-            </a>
-
-            <!-- SOROBAN -->
-            <a href="soroban/index.html" class="choice-card theme-soroban">
-                <div class="icon-wrapper">🧮</div>
-                <h2 class="card-title">Soroban</h2>
-                <span class="card-desc">Cycle 3 · Cycle 4</span>
-            </a>
-
-        </div>
-
+      </nav>
+      <div class="header-title">
+        <h1>Abaque de Gerbert</h1>
+        <p>Numération • Échanges • Opérations</p>
+      </div>
     </div>
+  </header>
 
-    <footer>
-        <!-- Texte supprimé comme demandé -->
-    </footer>
+  <main class="wrapper">
 
+    <h2 class="section-title">🧭 Prise en main <span class="badge">Découverte</span></h2>
+    <section class="grid cat-start">
+      <a href="abaque_gerbert.html" class="card-link">
+        <div class="icon-box">🧮</div>
+        <div class="card-head">
+          <h3>Outil libre</h3>
+          </div>
+        <p>Manipuler les jetons, explorer la numération et les échanges sur la BAC.</p>
+      </a>
+    </section>
+
+    <h2 class="section-title">🧮 Opérations <span class="badge">Calcul</span></h2>
+    <section class="grid cat-op">
+      <a href="abaque_gerbert_addition.html" class="card-link">
+        <div class="icon-box">➕</div>
+        <div class="card-head">
+          <h3>Addition</h3>
+          <span class="pill soon">à venir</span>
+        </div>
+        <p>Mode guidé pour poser et effectuer des additions avec échanges.</p>
+      </a>
+
+      <a href="abaque_gerbert_soustraction.html" class="card-link">
+        <div class="icon-box">➖</div>
+        <div class="card-head">
+          <h3>Soustraction</h3>
+          <span class="pill soon">à venir</span>
+        </div>
+        <p>Mode guidé pour poser et effectuer des soustractions (emprunts / échanges).</p>
+      </a>
+
+
+      <a href="abaque_gerbert_multiplication.html" class="card-link">
+        <div class="icon-box">✖️</div>
+        <div class="card-head">
+          <h3>Multiplication</h3>
+          <span class="pill soon">à venir</span>
+        </div>
+        <p>Mode guidé pour construire une multiplication (décomposition, échanges, regroupements).</p>
+      </a>
+
+      <a href="abaque_gerbert_division.html" class="card-link">
+        <div class="icon-box">➗</div>
+        <div class="card-head">
+          <h3>Division</h3>
+          <span class="pill soon">à venir</span>
+        </div>
+        <p>Mode guidé pour une division (partages, échanges, reste).</p>
+      </a>
+    </section>
+
+    <h2 class="section-title">🧩 Bonus <span class="badge soon">Optionnel</span></h2>
+    <section class="grid cat-adv">
+      <a href="abaque_gerbert_aide.html" class="card-link">
+        <div class="icon-box">📘</div>
+        <div class="card-head">
+          <h3>Fiche d’utilisation</h3>
+          <span class="pill soon">à venir</span>
+        </div>
+        <p>Une page simple “mode d’emploi” (règles, gestes, vocabulaire, conseils prof).</p>
+      </a>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Outils pédagogiques — Abaque de Gerbert</p>
+  </footer>
 </body>
 </html>
