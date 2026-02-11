@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Abaque de Gerbert (V39)</title>
+  <title>Abaque de Gerbert (V40)</title>
   <style>
     :root{
       --paper1:#f7f1e6;
@@ -607,7 +607,7 @@
 <header>
   <div class="title">
     Abaque de Gerbert
-    <span class="titleBadge">V39</span>
+    <span class="titleBadge">V40</span>
   </div>
   <div class="tools">
     <button class="btn" id="btnUndo">Retour</button>
@@ -1257,9 +1257,15 @@
     const before = twoColValue(snapshotCols, leftCol, focusCol);
     const after  = twoColValue(state.cols,     leftCol, focusCol);
 
-    const okFocus = sumCol(focusCol) < 10;
+    // ✅ V40 : on accepte aussi les échanges “en plusieurs étapes”
+    // (la colonne peut encore être en retenue), MAIS on n’accepte pas les erreurs :
+    // - la valeur sur les 2 colonnes doit être conservée
+    // - il faut qu’il y ait eu un vrai changement (sinon on clique “Annuler”)
+    const changed =
+      JSON.stringify(state.cols[leftCol])  !== JSON.stringify(snapshotCols[leftCol]) ||
+      JSON.stringify(state.cols[focusCol]) !== JSON.stringify(snapshotCols[focusCol]);
 
-    if(after === before && okFocus){
+    if(after === before && changed){
       pushUndo();
       state.bin = [];
       state.exchange = null;
