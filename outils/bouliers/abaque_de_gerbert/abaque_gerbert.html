@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Abaque de Gerbert (V19)</title>
+  <title>Abaque de Gerbert (V39)</title>
   <style>
     :root{
       --paper1:#f7f1e6;
@@ -128,7 +128,7 @@
       min-height:56vh;
       border-radius:18px;
       box-shadow:var(--shadow);
-      overflow:hidden;
+      overflow:visible;
       background:
         linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.10) 100%),
         repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, rgba(0,0,0,0.0) 7px),
@@ -217,7 +217,7 @@
       position:absolute;
       inset: var(--archH) 0 0;
       display:flex;
-      padding:10px 10px 10px;
+      padding:10px;
       gap:8px;
       align-items:stretch;
       z-index:5;
@@ -243,7 +243,7 @@
       border-radius:14px;
       display:flex;
       flex-direction:column;
-      overflow:hidden;
+      overflow:visible;
       position:relative;
       touch-action:none;
     }
@@ -417,75 +417,197 @@
       border-color: rgba(243,156,18,0.85);
       box-shadow: 0 0 0 4px rgba(243,156,18,0.22), var(--shadow2);
     }
-    .token.toResolve::after{
-      content:"✕";
-      position:absolute;
-      top:-10px;
-      right:-10px;
-      width:22px;
-      height:22px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      font-size:14px;
-      color: rgba(0,0,0,0.72);
-      background: rgba(255,255,255,0.92);
-      border:1px solid rgba(0,0,0,0.16);
-      box-shadow:0 6px 14px rgba(0,0,0,0.10);
-      pointer-events:none;
-    }
-
     /* ✅ Zone poubelle (repère visuel) */
     .trashZone{
       position:absolute;
-      right:10px;
-      top: calc(var(--archH) + 18px);
-      width: 92px;
-      height: 84px;
-      border-radius:16px;
-      background: rgba(255,255,255,0.72);
-      border: 1px dashed rgba(0,0,0,0.28);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      border-radius:18px;
+      background: rgba(132, 98, 64, 0.12); /* bande brune discrète */
+      border: 1px dashed rgba(132, 98, 64, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      padding:10px 10px 12px;
       display:flex;
       flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
+      gap:10px;
       user-select:none;
-      pointer-events:none;
-      opacity:0.85;
+      pointer-events:none; /* la détection se fait via la zone, mais on garde la compat */
+      opacity:0.95;
       z-index:19;
     }
-    .trashIcon{ font-size:22px; line-height:1; }
-    .trashTxt{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.2px;
-      color: rgba(0,0,0,0.70);
-    }
     .trashZone.active{
-      opacity:1;
       border-style: solid;
       border-color: rgba(214,69,61,0.55);
-      background: rgba(214,69,61,0.08);
+      background: rgba(214,69,61,0.06);
     }
+    .trashZone{ align-items:center; }
+    .zoneTitle{ width:100%; text-align:center; }
 
+    .trashTxt{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.3px;
+      text-align:center;
+      opacity:.85;
+      pointer-events:none;
+    }
+    .binTokens{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-start;
+      align-content:flex-start;
+      pointer-events:auto;
+      min-height:44px;
+    }
+    .binTokens .token{
+      width:52px;
+      height:52px;
+      font-size:20px;
+      pointer-events:auto;
+    }
+    /* ✅ Bouton ÉCHANGER par colonne */
+    .exBtn{
+      position:absolute;
+      top:34px;
+      left:50%;
+      transform:translateX(-50%);
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:11px;
+      letter-spacing:.2px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.18);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+      cursor:pointer;
+      user-select:none;
+      display:none;
+      z-index:6;
+    }
+    .col.has2 .exBtn{ display:inline-flex; gap:6px; align-items:center; }
+    .col.has2 .exBtn::before{ content:"↺"; font-weight:900; }
+    .col.locked .exBtn{ display:none !important; }
 
     @media (max-width: 520px){
+
       .btn{ padding:7px 9px; font-size:12px; }
       :root{ --archH: 98px; }
       .groupName{ top: 44px; }
     }
-  </style>
+  /* ✅ Mode échange : on retire le gros texte d'aide (pour ne rien décaler / pas de scroll horizontal) */
+    #resolveTxt{ display:none !important; }
+    /* Barre compacte au-dessus de la zone d'échange */
+    #resolveBar{
+      padding:10px 12px;
+      gap:10px;
+      justify-content:center;
+    }
+/* ✅ Zone d’échange : jetons centrés + léger chevauchement si beaucoup */
+#exchangeBinTokens{
+  justify-content:center !important;
+  align-content:flex-start;
+}
+#exchangeBinTokens .token{
+  margin: 0; /* reset */
+}
+#exchangeBinTokens.overlap .token{
+  margin-left: -10px; /* chevauchement léger */
+}
+#exchangeBinTokens.overlap .token:first-child{
+  margin-left: 0;
+}
+
+/* ✅ Barre d'échange compacte, largeur calée sur la zone d'échange */
+#resolveBar{
+  position:absolute;
+  right:auto !important;
+  width:auto;            /* JS fixe la largeur */
+  max-width: calc(100vw - 20px);
+  padding: 8px 10px !important;
+  border-radius: 16px !important;
+  gap: 8px !important;
+}
+#resolveBar button{
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+}
+@media (max-width: 520px){
+  #resolveBar button{
+    font-size: 12px !important;
+    padding: 9px 12px !important;
+  }
+  #resolveBar{
+    padding: 7px 8px !important;
+    gap: 6px !important;
+  }
+}
+
+
+/* ✅ Mode échange : plus de gros rectangle. On affiche uniquement les 2 boutons. */
+#resolveBar{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  width: auto !important; /* JS fixe via left/top mais pas de carte */
+  max-width: none !important;
+  z-index: 80;
+}
+#resolveBar button{
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12) !important;
+}
+
+
+
+/* ✅ Barres Valider/Annuler : compactes, au-dessus de la zone d’échange */
+#resolveBar{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+#resolveBar button{
+  min-width: 150px;
+  text-align:center;
+}
+@media (max-width: 520px){
+  #resolveBar button{ min-width: 130px; }
+}
+
+
+/* ✅ Fix placement : les boutons sont ancrés au-dessus de la Zone d’échange (position: fixed) */
+#resolveBar{ position: fixed !important; }
+
+
+/* ✅ V39 : pas de “zone floue” derrière les boutons */
+#resolveBar{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  gap: 10px !important;
+}
+#resolveBar button{
+  width: 100% !important;          /* même largeur que la zone d’échange */
+  min-width: 0 !important;
+  font-size: 16px !important;      /* plus petit */
+  padding: 10px 12px !important;   /* plus compact */
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12) !important; /* ombre légère, pas de blur */
+}
+@media (max-width: 520px){
+  #resolveBar button{ font-size: 15px !important; padding: 9px 10px !important; }
+}
+</style>
 </head>
 
 <body>
 <header>
   <div class="title">
     Abaque de Gerbert
-    <span class="titleBadge">V19</span>
+    <span class="titleBadge">V39</span>
   </div>
   <div class="tools">
     <button class="btn" id="btnUndo">Retour</button>
@@ -508,9 +630,9 @@
   <div class="bigValueOutside" id="bigValueOutside">0</div>
 
   <div class="boardWrap" id="boardWrap">
-    <div class="trashZone" id="trashZone" aria-hidden="true" title="Glisse ici pour supprimer">
-      <div class="trashIcon">🗑️</div>
-      <div class="trashTxt">Supprimer</div>
+    <div class="trashZone" id="trashZone" aria-hidden="true" title="Dépose ici les jetons à échanger">
+      <div class="trashTxt zoneTitle">Zone d’échange</div>
+      <div class="binTokens" id="exchangeBinTokens"></div>
     </div>
     <div class="boardTop">
       <div class="bigArches">
@@ -559,7 +681,7 @@
       <div class="txt" id="resolveTxt">Mode échange</div>
       <div class="actions">
         <button class="btn" id="btnValidate">Valider l’échange</button>
-        <button class="btn danger" id="btnCancel">Annuler</button>
+        <button class="btn danger" id="btnCancel">↩ Annuler</button>
       </div>
     </div>
 
@@ -588,10 +710,10 @@
 
   const state = {
     cols: Array.from({length: COL_COUNT}, () => []),
+    bin: [],
     dragging: null,
-    resolve: null,
+    exchange: null, // {focusCol,leftCol,snapshotCols,snapshotBin,nextIdSnapshot}
     nextId: 1,
-    nextResolveId: 1,
     undoStack: [],
     showBigValue: false,
     showColValues: false
@@ -602,8 +724,8 @@
   const bigValueOutside = document.getElementById("bigValueOutside");
 
   const boardWrap = document.getElementById("boardWrap");
-  const retLayer = document.getElementById("retLayer");
   const trashZone = document.getElementById("trashZone");
+  const binTokens = document.getElementById("exchangeBinTokens");
 
   const btnUndo = document.getElementById("btnUndo");
   const btnClear = document.getElementById("btnClear");
@@ -619,14 +741,25 @@
   const btnCancel = document.getElementById("btnCancel");
 
   function deepCopyCols(cols){
-    return cols.map(col => col.map(t => ({id:t.id, v:t.v, addedByResolve: t.addedByResolve || null})));
+    return cols.map(col => col.map(t => ({id:t.id, v:t.v})));
+  }
+  function deepCopyBin(bin){
+    return bin.map(t => ({id:t.id, v:t.v}));
   }
   function pushUndo(){
     state.undoStack.push({
       cols: deepCopyCols(state.cols),
-      resolve: state.resolve ? {...state.resolve} : null,
+      bin: deepCopyBin(state.bin),
+      exchange: state.exchange ? {
+        focusCol: state.exchange.focusCol,
+        leftCol: state.exchange.leftCol,
+        snapshotCols: deepCopyCols(state.exchange.snapshotCols),
+        snapshotBin: deepCopyBin(state.exchange.snapshotBin),
+        focusIds: Array.from(state.exchange.focusIds || []),
+        leftBaseIds: Array.from(state.exchange.leftBaseIds || []),
+        nextIdSnapshot: state.exchange.nextIdSnapshot
+      } : null,
       nextId: state.nextId,
-      nextResolveId: state.nextResolveId,
       showBigValue: state.showBigValue,
       showColValues: state.showColValues
     });
@@ -636,9 +769,17 @@
     const snap = state.undoStack.pop();
     if(!snap) return;
     state.cols = deepCopyCols(snap.cols);
-    state.resolve = snap.resolve ? {...snap.resolve} : null;
+    state.bin  = deepCopyBin(snap.bin);
+    state.exchange = snap.exchange ? {
+      focusCol: snap.exchange.focusCol,
+      leftCol: snap.exchange.leftCol,
+      snapshotCols: deepCopyCols(snap.exchange.snapshotCols),
+      snapshotBin: deepCopyBin(snap.exchange.snapshotBin),
+      focusIds: new Set(snap.exchange.focusIds || []),
+      leftBaseIds: new Set(snap.exchange.leftBaseIds || []),
+      nextIdSnapshot: snap.exchange.nextIdSnapshot
+    } : null;
     state.nextId = snap.nextId;
-    state.nextResolveId = snap.nextResolveId;
     state.showBigValue = snap.showBigValue;
     state.showColValues = snap.showColValues;
     renderTray();
@@ -679,9 +820,7 @@
     btnColValues.textContent = "Valeurs : " + (state.showColValues ? "ON" : "OFF");
 
     bigValueOutside.style.display = state.showBigValue ? "flex" : "none";
-    if(state.showBigValue){
-      bigValueOutside.textContent = formatGrouped(totalValue());
-    }
+    if(state.showBigValue) bigValueOutside.textContent = formatGrouped(totalValue());
 
     document.querySelectorAll(".colValueTop").forEach(el => {
       el.style.display = state.showColValues ? "block" : "none";
@@ -700,6 +839,15 @@
       const col = document.createElement("div");
       col.className = "col";
       col.dataset.colIndex = String(i);
+
+      const exBtn = document.createElement("div");
+      exBtn.className = "exBtn";
+      exBtn.textContent = "Échanger";
+      exBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        enterExchange(i);
+      });
+      col.appendChild(exBtn);
 
       const head = document.createElement("div");
       head.className = "colHeader";
@@ -721,61 +869,96 @@
       col.appendChild(head);
       col.appendChild(body);
 
-      col.addEventListener("click", () => {
-        if(state.resolve) return;
-        if(col.classList.contains("bad")) enterResolveMode(i);
-      });
-
       board.appendChild(col);
     }
   }
 
-  function ensureRetBadges(){
-    if(retLayer.childElementCount === COL_COUNT) return;
-    retLayer.innerHTML = "";
-    for(let i=0;i<COL_COUNT;i++){
-      const b = document.createElement("div");
-      b.className = "retBadge";
-      b.textContent = "RETENUE";
-      b.dataset.colIndex = String(i);
-      b.addEventListener("click", (e) => {
-        e.stopPropagation();
-        enterResolveMode(i);
-      });
-      retLayer.appendChild(b);
-    }
+  function positionResolveBar(){
+    if(!trashZone || !resolveBar) return;
+    const tz = trashZone.getBoundingClientRect();
+
+    // #resolveBar est en position: fixed -> coordonnées viewport
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // On force la même largeur que la Zone d’échange
+    const targetW = Math.max(120, Math.min(tz.width, vw - 16));
+    resolveBar.style.width = targetW + "px";
+
+    // Mesure après width
+    const barH = resolveBar.offsetHeight || 60;
+
+    let left = tz.left;
+    // si la zone est trop à droite (petits écrans), on clamp
+    left = Math.max(8, Math.min(left, vw - targetW - 8));
+
+    let top = tz.top - barH - 10;
+    top = Math.max(8, Math.min(top, vh - barH - 8));
+
+    resolveBar.style.left = left + "px";
+    resolveBar.style.top  = top + "px";
+    resolveBar.style.right = "auto";
   }
 
-  function positionRetBadges(){
+  function positionTrashZone(){
+    if(!trashZone) return;
     const wrapRect = boardWrap.getBoundingClientRect();
     const cols = [...document.querySelectorAll(".col")];
-    const badges = [...retLayer.querySelectorAll(".retBadge")];
+    if(cols.length === 0) return;
+    const last = cols[cols.length - 1].getBoundingClientRect();
 
-    for(const badge of badges){
-      const i = Number(badge.dataset.colIndex);
-      const colEl = cols.find(c => Number(c.dataset.colIndex) === i);
-      if(!colEl) continue;
-      const r = colEl.getBoundingClientRect();
-      const cx = (r.left + r.right) / 2 - wrapRect.left;
-      badge.style.left = cx + "px";
+    const left = (last.right - wrapRect.left) + 10;
+    const top  = (last.top - wrapRect.top) + 6;
+
+    const width = Math.max(120, (wrapRect.width - left) - 10);
+    const height = Math.max(120, (wrapRect.height - top) - 10);
+
+    trashZone.style.left = left + "px";
+    trashZone.style.top  = top + "px";
+    trashZone.style.width = width + "px";
+    trashZone.style.height = height + "px";
+  }
+  window.addEventListener("resize", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } });
+  window.addEventListener("scroll", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } }, {passive:true});
+
+  function renderBin(){
+    if(!binTokens) return;
+    binTokens.innerHTML = "";
+    binTokens.classList.toggle('overlap', state.bin.length >= 4);
+    for(const tok of state.bin){
+      const el = makeTokenEl(tok.v);
+      el.dataset.source = "bin";
+      el.dataset.id = String(tok.id);
+      binTokens.appendChild(el);
+      enableDrag(el, {type:"bin", id:tok.id});
     }
   }
 
   function tokenById(colIndex, id){
     return state.cols[colIndex].find(t => t.id === id) || null;
   }
+  function binTokenById(id){
+    return state.bin.find(t => t.id === id) || null;
+  }
 
-  function isTokenDraggable(colIndex, tok){
-    if(!state.resolve) return true;
+  function isColAllowed(colIndex){
+    if(!state.exchange) return true;
+    return colIndex === state.exchange.focusCol || colIndex === state.exchange.leftCol;
+  }
 
-    const {id: rid, colIndex: focusCol, leftIndex} = state.resolve;
+  function isTokenDraggable(fromType, colIndex, tok){
+    if(!state.exchange) return true;
+    if(fromType === "bin") return true;
 
-    if(colIndex === leftIndex){
-      return tok.addedByResolve === rid;
+    const {focusCol, leftCol, leftBaseIds} = state.exchange;
+
+    if(colIndex === focusCol) return true;
+
+    // colonne de gauche : on bloque uniquement les jetons qui étaient déjà là au départ
+    if(colIndex === leftCol){
+      return !(leftBaseIds && leftBaseIds.has(tok.id));
     }
-    if(colIndex === focusCol){
-      return true;
-    }
+
     return false;
   }
 
@@ -793,11 +976,11 @@
         el.dataset.source = "col";
         el.dataset.colIndex = String(i);
 
-        if(state.resolve){
-          const draggable = isTokenDraggable(i, tok);
+        if(state.exchange){
+          const draggable = isTokenDraggable("col", i, tok);
           el.classList.toggle("locked", !draggable);
-
-          if(i === state.resolve.colIndex && tok.addedByResolve !== state.resolve.id){
+          // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
+          if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
             el.classList.add("toResolve");
           }
         }
@@ -806,24 +989,34 @@
         enableDrag(el, {type:"col", colIndex:i, id:tok.id});
       }
 
-      const s = sumCol(i);
-      colEl.classList.toggle("bad", s >= 10);
+      colEl.classList.toggle("has2", state.cols[i].length >= 2);
+
+      if(state.exchange){
+        const locked = !isColAllowed(i);
+        colEl.classList.toggle("locked", locked);
+        colEl.classList.toggle("focus", !locked);
+      }else{
+        colEl.classList.remove("locked","focus");
+      }
     }
 
-    ensureRetBadges();
-    for(const b of retLayer.querySelectorAll(".retBadge")){
-      const i = Number(b.dataset.colIndex);
-      b.style.display = (sumCol(i) >= 10) ? "inline-flex" : "none";
-    }
-    positionRetBadges();
-
+    renderBin();
+    positionTrashZone();
+    positionResolveBar();
     applyTopUI();
-    applyResolveUI();
+    applyExchangeUI();
     updateUndoBtn();
   }
 
-  window.addEventListener("resize", () => positionRetBadges());
-  window.addEventListener("scroll", () => positionRetBadges(), {passive:true});
+  function isOverTrash(x,y){
+    if(!trashZone) return false;
+    const r = trashZone.getBoundingClientRect();
+    return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  }
+  function setTrashActive(on){
+    if(!trashZone) return;
+    trashZone.classList.toggle("active", !!on);
+  }
 
   function enableDrag(el, from){
     el.onpointerdown = (e) => {
@@ -845,15 +1038,26 @@
         dragEl.style.zIndex = 1000;
         dragEl.style.pointerEvents = "none";
         document.body.appendChild(dragEl);
-      } else {
+      } else if(from.type === "col"){
         tokenId = Number(el.dataset.id);
-        const colIndex = from.colIndex;
-        const tok = tokenById(colIndex, tokenId);
+        const tok = tokenById(from.colIndex, tokenId);
         if(!tok) return;
+        if(state.exchange && !isTokenDraggable("col", from.colIndex, tok)) return;
 
-        if(state.resolve && !isTokenDraggable(colIndex, tok)){
-          return;
-        }
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+
+        originalEl = el;
+        originalEl.style.visibility = "hidden";
+      } else { // bin
+        tokenId = Number(el.dataset.id);
+        const tok = binTokenById(tokenId);
+        if(!tok) return;
 
         dragEl = makeTokenEl(v);
         dragEl.style.position = "fixed";
@@ -898,40 +1102,30 @@
       const rect = col.getBoundingClientRect();
       if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom){
         const idx = Number(col.dataset.colIndex);
-        if(state.resolve){
-          if(idx !== state.resolve.colIndex && idx !== state.resolve.leftIndex) return null;
-        }
+        if(state.exchange && !isColAllowed(idx)) return null;
         return idx;
       }
     }
     return null;
   }
 
-
-  function isOverTrash(x,y){
-    if(!trashZone) return false;
-    const r = trashZone.getBoundingClientRect();
-    return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
-  }
-  function setTrashActive(on){
-    if(!trashZone) return;
-    trashZone.classList.toggle("active", !!on);
-  }
-
-  function addTokenToCol(colIndex, v, addedByResolve=null){
-    state.cols[colIndex].push({id: state.nextId++, v, addedByResolve});
-  }
-  function moveToken(fromCol, toCol, id){
-    const arr = state.cols[fromCol];
-    const k = arr.findIndex(t => t.id === id);
-    if(k < 0) return;
-    const tok = arr.splice(k,1)[0];
-    state.cols[toCol].push(tok);
+  function addTokenToCol(colIndex, v){
+    state.cols[colIndex].push({id: state.nextId++, v});
   }
   function removeToken(fromCol, id){
     const arr = state.cols[fromCol];
     const k = arr.findIndex(t => t.id === id);
-    if(k >= 0) arr.splice(k,1);
+    if(k >= 0) return arr.splice(k,1)[0];
+    return null;
+  }
+  function moveToken(fromCol, toCol, id){
+    const tok = removeToken(fromCol, id);
+    if(tok) state.cols[toCol].push(tok);
+  }
+  function removeTokenFromBin(id){
+    const k = state.bin.findIndex(t => t.id === id);
+    if(k >= 0) return state.bin.splice(k,1)[0];
+    return null;
   }
 
   function onUp(e){
@@ -939,34 +1133,53 @@
     e.preventDefault();
 
     const d = state.dragging;
-    const overTrash = isOverTrash(e.clientX, e.clientY);
-    const dropTarget = overTrash ? null : findDropColumn(e.clientX, e.clientY);
+    const overBin = isOverTrash(e.clientX, e.clientY);
+    const dropCol = overBin ? null : findDropColumn(e.clientX, e.clientY);
 
     let didChange = false;
 
-    if(dropTarget !== null){
+    if(dropCol !== null){
       if(d.from.type === "tray"){
         pushUndo();
-        const rid = state.resolve ? state.resolve.id : null;
-        addTokenToCol(dropTarget, d.v, rid);
+        addTokenToCol(dropCol, d.v);
         didChange = true;
       } else if(d.from.type === "col"){
-        if(d.from.colIndex !== dropTarget){
+        if(d.from.colIndex !== dropCol){
           pushUndo();
-          moveToken(d.from.colIndex, dropTarget, d.id);
+          moveToken(d.from.colIndex, dropCol, d.id);
           didChange = true;
+        }
+      } else { // bin -> col
+        pushUndo();
+        const tok = removeTokenFromBin(d.id);
+        if(tok){
+          state.cols[dropCol].push(tok);
+          didChange = true;
+        }
+      }
+    } else if(overBin){
+      if(state.exchange && d.from.type === "col"){
+        // On ne dépose à droite QUE les jetons de la colonne cliquée
+        if(d.from.colIndex === state.exchange.focusCol){
+          pushUndo();
+          const tok = removeToken(d.from.colIndex, d.id);
+          if(tok){
+            state.bin.push(tok);
+            didChange = true;
+          }
         }
       }
     } else {
       if(d.from.type === "col"){
-        pushUndo();
-        removeToken(d.from.colIndex, d.id);
-        didChange = true;
+        if(!state.exchange){
+          pushUndo();
+          removeToken(d.from.colIndex, d.id);
+          didChange = true;
+        }
       }
     }
 
     d.el.remove();
-
     setTrashActive(false);
 
     if(!didChange && d.originalEl){
@@ -980,96 +1193,99 @@
     render();
   }
 
-  function twoColValue(leftIndex, colIndex){
-    return sumCol(leftIndex)*placeValue(leftIndex) + sumCol(colIndex)*placeValue(colIndex);
-  }
-
-  function enterResolveMode(colIndex){
-    if(state.resolve) return;
-    const leftIndex = colIndex - 1;
-    if(leftIndex < 0) return;
-
-    const baseline = twoColValue(leftIndex, colIndex);
-
-    pushUndo();
-    const rid = state.nextResolveId++;
-    state.resolve = {
-      id: rid,
-      colIndex,
-      leftIndex,
-      baselineValue: baseline
-    };
-
-    resolveTxt.textContent =
-      "Retenue : les jetons ORANGE sont ceux à traiter dans la colonne en conflit. " +
-      "Fais tes échanges. Dans la colonne de gauche, seuls les jetons ajoutés pendant cette retenue sont manipulables. " +
-      "Clique “Valider l’échange” quand c’est bon.";
-
-    applyResolveUI();
-    render();
-  }
-
-  function applyResolveUI(){
-    const cols = [...document.querySelectorAll(".col")];
-
-    if(!state.resolve){
+  function applyExchangeUI(){
+    if(!state.exchange){
       overlay.style.display = "none";
       resolveBar.style.display = "none";
       btnExitResolve.style.display = "none";
-      for(const c of cols) c.classList.remove("locked","focus");
       return;
     }
-
     overlay.style.display = "block";
     resolveBar.style.display = "flex";
     btnExitResolve.style.display = "inline-flex";
 
-    const {colIndex, leftIndex} = state.resolve;
-    for(const c of cols){
-      const idx = Number(c.dataset.colIndex);
-      const locked = !(idx === colIndex || idx === leftIndex);
-      c.classList.toggle("locked", locked);
-      c.classList.toggle("focus", (idx === colIndex || idx === leftIndex));
-    }
+    // Position once measurable (prevents weird placement)
+    resolveBar.style.visibility = "hidden";
+    requestAnimationFrame(() => {
+      positionTrashZone();
+      positionResolveBar();
+      resolveBar.style.visibility = "visible";
+    });
   }
 
-  function exitResolveMode(){
-    if(!state.resolve) return;
-    pushUndo();
-    state.resolve = null;
-    applyResolveUI();
+  function enterExchange(focusCol){
+    const leftCol = focusCol - 1;
+    if(leftCol < 0) return;
+    if(state.exchange) return;
+
+    state.exchange = {
+      focusCol,
+      leftCol,
+      focusIds: new Set(state.cols[focusCol].map(t=>t.id)),
+      leftBaseIds: new Set(state.cols[leftCol].map(t=>t.id)),
+      snapshotCols: deepCopyCols(state.cols),
+      snapshotBin: deepCopyBin(state.bin),
+      nextIdSnapshot: state.nextId
+    };
+
+    resolveTxt.textContent =
+      "Échange : dépose dans la zone d’échange (à droite) les jetons que tu remplaces, puis place les nouveaux jetons dans les 2 colonnes. " +
+      "Clique « Valider l'échange » quand tu as fini.";
+
     render();
   }
 
-  function validateResolve(){
-    if(!state.resolve) return;
+  function rollbackExchange(){
+    const snap = state.exchange;
+    state.cols = deepCopyCols(snap.snapshotCols);
+    state.bin  = deepCopyBin(snap.snapshotBin);
+    state.nextId = snap.nextIdSnapshot;
+    state.exchange = null;
+    render();
+  }
 
-    const {colIndex, leftIndex, baselineValue} = state.resolve;
-    const current = twoColValue(leftIndex, colIndex);
+  function twoColValue(cols, leftCol, focusCol){
+    const a = cols[leftCol].reduce((s,t)=>s+t.v,0) * placeValue(leftCol);
+    const b = cols[focusCol].reduce((s,t)=>s+t.v,0) * placeValue(focusCol);
+    return a+b;
+  }
 
-    const okValue = (current === baselineValue);
-    const okDigits = (sumCol(colIndex) < 10 && sumCol(leftIndex) < 10);
+  function validateExchange(){
+    if(!state.exchange) return;
 
-    if(okValue && okDigits){
+    const {focusCol, leftCol, snapshotCols} = state.exchange;
+    const before = twoColValue(snapshotCols, leftCol, focusCol);
+    const after  = twoColValue(state.cols,     leftCol, focusCol);
+
+    const okFocus = sumCol(focusCol) < 10;
+
+    if(after === before && okFocus){
       pushUndo();
-      state.resolve = null;
-      applyResolveUI();
+      state.bin = [];
+      state.exchange = null;
       render();
       return;
     }
 
     resolveBar.classList.add("shake");
     setTimeout(() => resolveBar.classList.remove("shake"), 280);
+    rollbackExchange();
   }
 
+  function exitExchange(){
+    if(!state.exchange) return;
+    rollbackExchange();
+  }
+
+  // Buttons
   btnUndo.addEventListener("click", () => undo());
 
   btnClear.addEventListener("click", () => {
     pushUndo();
     state.cols = Array.from({length: COL_COUNT}, () => []);
-    state.resolve = null;
+    state.bin = [];
+    state.exchange = null;
     state.nextId = 1;
-    state.nextResolveId = 1;
     render();
     clearUndo();
   });
@@ -1086,9 +1302,9 @@
     render();
   });
 
-  btnValidate.addEventListener("click", validateResolve);
-  btnCancel.addEventListener("click", exitResolveMode);
-  btnExitResolve.addEventListener("click", exitResolveMode);
+  btnValidate.addEventListener("click", validateExchange);
+  btnCancel.addEventListener("click", exitExchange);
+  btnExitResolve.addEventListener("click", exitExchange);
 
   btnFullscreen.addEventListener("click", async () => {
     try{
@@ -1106,6 +1322,7 @@
   render();
 })();
 </script>
+
 
 </body>
 </html>
