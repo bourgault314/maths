@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Abaque de Gerbert (V19)</title>
+  <style>
+    :root{
+      --paper1:#f7f1e6;
+      --paper2:#efe5d4;
+      --ink:#1a1a1a;
+      --warn:#f39c12;
+      --shadow: 0 10px 30px rgba(0,0,0,0.10);
+      --shadow2: 0 3px 12px rgba(0,0,0,0.12);
+      --token:#ffffff;
+
+      /* ✅ arche plus basse (prend moins de place) */
+      --archH: 104px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      background:
+        radial-gradient(1200px 800px at 50% -220px, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 70%),
+        radial-gradient(900px 700px at 10% 20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.0) 60%),
+        radial-gradient(900px 700px at 90% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.0) 60%),
+        linear-gradient(180deg, var(--paper1) 0%, var(--paper2) 100%);
+    }
+
+    header{
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(0,0,0,0.06);
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(6px);
+      position:sticky;
+      top:0;
+      z-index:60;
+    }
+
+    .title{
+      font-weight:850;
+      letter-spacing:0.2px;
+      font-size: clamp(14px, 2.2vw, 18px);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .titleBadge{
+      font-size:12px;
+      font-weight:900;
+      padding:5px 9px;
+      border-radius:999px;
+      background: rgba(0,0,0,0.05);
+      border:1px solid rgba(0,0,0,0.10);
+      color: rgba(0,0,0,0.75);
+      user-select:none;
+    }
+
+    .tools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid rgba(0,0,0,0.12);
+      background:#fff;
+      color:var(--ink);
+      border-radius:12px;
+      padding:8px 10px;
+      font-weight:750;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(0,0,0,0.04);
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ border-color: rgba(44,123,229,0.35); color:#0d3b82; }
+    .btn.danger{ border-color: rgba(214,69,61,0.35); color:#7a1410; }
+    .btn.disabled{ opacity:.55; pointer-events:none; }
+
+    .icon{ width:16px;height:16px;display:inline-block; }
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:10px 10px 0;
+      gap:10px;
+      max-width:1200px;
+      width:100%;
+      margin:0 auto;
+    }
+
+    .bigValueOutside{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:10px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.78);
+      border:1px solid rgba(0,0,0,0.10);
+      box-shadow:0 8px 24px rgba(0,0,0,0.08);
+      font-weight:950;
+      letter-spacing:.6px;
+      font-size: clamp(18px, 3.8vw, 34px);
+      color: rgba(0,0,0,0.82);
+      user-select:none;
+    }
+
+    .boardWrap{
+      position:relative;
+      flex:1;
+      min-height:56vh;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.10) 100%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, rgba(0,0,0,0.0) 7px),
+        radial-gradient(900px 700px at 50% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.0) 70%);
+      border:1px solid rgba(0,0,0,0.10);
+    }
+
+    .boardTop{
+      position:absolute;
+      left:0; right:0; top:0;
+      height: var(--archH);
+      padding: 8px 12px 0;
+      z-index:10;
+      pointer-events:none;
+    }
+
+    .bigArches{
+      height: 100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 0 4px 0;
+      margin: 0;
+      align-items:stretch;
+    }
+
+    .bigArchBlock{
+      position:relative;
+      height:100%;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+    }
+
+    .bigArchSvg{
+      position:absolute;
+      left:0; right:0;
+      bottom:0;
+      width:100%;
+      height: var(--archH);
+      display:block;
+      overflow:visible;
+      opacity:.98;
+    }
+
+    /* ✅ Texte abaissé (plus centré) */
+    .groupName{
+      position:absolute;
+      left:0; right:0;
+      top: 48px;
+      text-align:center;
+      font-weight:950;
+      letter-spacing:.6px;
+      font-size: 13px;
+      color: rgba(0,0,0,0.70);
+      text-transform: uppercase;
+      user-select:none;
+    }
+
+    .retLayer{
+      position:absolute;
+      left:0; right:0;
+      top: calc(var(--archH) - 30px);
+      height:28px;
+      z-index:22;
+      pointer-events:none;
+    }
+    .retBadge{
+      position:absolute;
+      transform: translateX(-50%);
+      font-size:11px;
+      font-weight:950;
+      color:#fff;
+      padding:4px 8px;
+      border-radius:999px;
+      background: var(--warn);
+      box-shadow:0 6px 18px rgba(0,0,0,0.10);
+      white-space:nowrap;
+      pointer-events:auto;
+      user-select:none;
+      cursor:pointer;
+      display:none;
+    }
+
+    .board{
+      position:absolute;
+      inset: var(--archH) 0 0;
+      display:flex;
+      padding:10px 10px 10px;
+      gap:8px;
+      align-items:stretch;
+      z-index:5;
+    }
+
+    .groupSep{
+      width:12px;
+      flex:0 0 12px;
+      position:relative;
+    }
+    .groupSep:before{
+      content:"";
+      position:absolute;
+      inset:8px 5px 10px;
+      border-left:2px dashed rgba(0,0,0,0.18);
+    }
+
+    .col{
+      flex:1 1 0;
+      min-width:56px;
+      background: rgba(255,255,255,0.55);
+      border:1px solid rgba(0,0,0,0.14);
+      border-radius:14px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      position:relative;
+      touch-action:none;
+    }
+
+    .colHeader{
+      height:52px;
+      position:relative;
+      border-bottom:1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.70);
+    }
+    .colLabel{
+      position:absolute;
+      left:0; right:0;
+      top:15px;
+      text-align:center;
+      font-weight:950;
+      letter-spacing:.9px;
+      font-size:12px;
+      color: rgba(0,0,0,0.72);
+      pointer-events:none;
+    }
+    .colValueTop{
+      position:absolute;
+      left:0; right:0;
+      top:30px;
+      text-align:center;
+      font-weight:900;
+      font-size:11px;
+      color: rgba(0,0,0,0.55);
+      letter-spacing:.2px;
+      display:none;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .colBody{
+      flex:1;
+      padding:10px 6px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-start;
+    }
+
+    .token{
+      width: clamp(40px, 6.2vw, 64px);
+      height: clamp(40px, 6.2vw, 64px);
+      border-radius:999px;
+      background: var(--token);
+      border:2px solid rgba(0,0,0,0.24);
+      box-shadow: var(--shadow2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:950;
+      font-size: clamp(16px, 2.9vw, 22px);
+      user-select:none;
+      touch-action:none;
+      cursor:grab;
+      position:relative;
+    }
+    .token:active{ cursor:grabbing; }
+    .token.locked{
+      opacity:0.35;
+      filter: grayscale(0.85);
+      pointer-events:none;
+    }
+    .token.selected{
+      border-color: rgba(243,156,18,0.95);
+      box-shadow: 0 0 0 4px rgba(243,156,18,0.25), var(--shadow2);
+      background: rgba(243,156,18,0.12);
+    }
+
+    .token:before{
+      content:"";
+      position:absolute;
+      inset:8px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,0.08);
+      pointer-events:none;
+    }
+
+    .palette{
+      position:sticky;
+      bottom:0;
+      z-index:30;
+      padding:10px;
+      background: rgba(255,255,255,0.78);
+      border-top:1px solid rgba(0,0,0,0.08);
+      backdrop-filter: blur(8px);
+    }
+    .paletteInner{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .tray{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      padding:2px 0;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.12);
+      display:none;
+      z-index:18;
+      pointer-events:none;
+    }
+    .resolveBar{
+      position:absolute;
+      left:10px; right:10px; top:10px;
+      z-index:25;
+      display:none;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 10px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.10);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      pointer-events:auto;
+    }
+    .resolveBar .txt{
+      font-weight:900;
+      font-size:13px;
+      color: rgba(0,0,0,0.78);
+      line-height:1.15;
+    }
+    .resolveBar .actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .col.focus{
+      outline:3px solid rgba(44,123,229,0.55);
+      outline-offset:-3px;
+      background: rgba(44,123,229,0.06);
+    }
+    .col.locked{
+      filter: grayscale(0.7);
+      opacity:0.55;
+      pointer-events:none;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+    .shake{ animation: shake 260ms ease-in-out; }
+
+    
+    /* ✅ Jetons "à traiter" : pas remplis orange, mais un halo/contour clair + petit X */
+    .token.toResolve{
+      background: var(--token);
+      border-color: rgba(243,156,18,0.85);
+      box-shadow: 0 0 0 4px rgba(243,156,18,0.22), var(--shadow2);
+    }
+    .token.toResolve::after{
+      content:"✕";
+      position:absolute;
+      top:-10px;
+      right:-10px;
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:14px;
+      color: rgba(0,0,0,0.72);
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.16);
+      box-shadow:0 6px 14px rgba(0,0,0,0.10);
+      pointer-events:none;
+    }
+
+    /* ✅ Zone poubelle (repère visuel) */
+    .trashZone{
+      position:absolute;
+      right:10px;
+      top: calc(var(--archH) + 18px);
+      width: 92px;
+      height: 84px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.72);
+      border: 1px dashed rgba(0,0,0,0.28);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      user-select:none;
+      pointer-events:none;
+      opacity:0.85;
+      z-index:19;
+    }
+    .trashIcon{ font-size:22px; line-height:1; }
+    .trashTxt{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.2px;
+      color: rgba(0,0,0,0.70);
+    }
+    .trashZone.active{
+      opacity:1;
+      border-style: solid;
+      border-color: rgba(214,69,61,0.55);
+      background: rgba(214,69,61,0.08);
+    }
+
+
+    @media (max-width: 520px){
+      .btn{ padding:7px 9px; font-size:12px; }
+      :root{ --archH: 98px; }
+      .groupName{ top: 44px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="title">
+    Abaque de Gerbert
+    <span class="titleBadge">V19</span>
+  </div>
+  <div class="tools">
+    <button class="btn" id="btnUndo">Retour</button>
+    <button class="btn primary" id="btnClear">Réinitialiser</button>
+    <button class="btn" id="btnBigValue">Affichage : OFF</button>
+    <button class="btn" id="btnColValues">Valeurs : OFF</button>
+
+    <button class="btn" id="btnFullscreen" title="Plein écran">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M9 3H5c-1.1 0-2 .9-2 2v4h2V5h4V3zm10 0h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-4 18h4c1.1 0 2-.9 2-2v-4h-2v4h-4v2zM3 15v4c0 1.1.9 2 2 2h4v-2H5v-4H3z"/>
+      </svg>
+      Plein écran
+    </button>
+
+    <button class="btn danger" id="btnExitResolve" style="display:none;">Quitter échange</button>
+  </div>
+</header>
+
+<main>
+  <div class="bigValueOutside" id="bigValueOutside">0</div>
+
+  <div class="boardWrap" id="boardWrap">
+    <div class="trashZone" id="trashZone" aria-hidden="true" title="Glisse ici pour supprimer">
+      <div class="trashIcon">🗑️</div>
+      <div class="trashTxt">Supprimer</div>
+    </div>
+    <div class="boardTop">
+      <div class="bigArches">
+
+        <div class="bigArchBlock">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Millions</div>
+        </div>
+
+        <div class="bigArchBlock">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Milliers</div>
+        </div>
+
+        <div class="bigArchBlock">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Unités</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="retLayer" id="retLayer"></div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="resolveBar" id="resolveBar">
+      <div class="txt" id="resolveTxt">Mode échange</div>
+      <div class="actions">
+        <button class="btn" id="btnValidate">Valider l’échange</button>
+        <button class="btn danger" id="btnCancel">Annuler</button>
+      </div>
+    </div>
+
+    <div class="board" id="board"></div>
+  </div>
+</main>
+
+<div class="palette">
+  <div class="paletteInner">
+    <div class="tray" id="tray"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const COL_COUNT = 9;
+  const LABELS = ["C","D","U"];
+
+  function placeValue(colIndex){
+    const pow = (COL_COUNT - 1) - colIndex;
+    return Math.pow(10, pow);
+  }
+  function placeValueShort(colIndex){
+    return placeValue(colIndex).toLocaleString("fr-FR");
+  }
+
+  const state = {
+    cols: Array.from({length: COL_COUNT}, () => []),
+    dragging: null,
+    resolve: null,
+    nextId: 1,
+    nextResolveId: 1,
+    undoStack: [],
+    showBigValue: false,
+    showColValues: false
+  };
+
+  const board = document.getElementById("board");
+  const tray = document.getElementById("tray");
+  const bigValueOutside = document.getElementById("bigValueOutside");
+
+  const boardWrap = document.getElementById("boardWrap");
+  const retLayer = document.getElementById("retLayer");
+  const trashZone = document.getElementById("trashZone");
+
+  const btnUndo = document.getElementById("btnUndo");
+  const btnClear = document.getElementById("btnClear");
+  const btnBigValue = document.getElementById("btnBigValue");
+  const btnColValues = document.getElementById("btnColValues");
+  const btnExitResolve = document.getElementById("btnExitResolve");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+
+  const overlay = document.getElementById("overlay");
+  const resolveBar = document.getElementById("resolveBar");
+  const resolveTxt = document.getElementById("resolveTxt");
+  const btnValidate = document.getElementById("btnValidate");
+  const btnCancel = document.getElementById("btnCancel");
+
+  function deepCopyCols(cols){
+    return cols.map(col => col.map(t => ({id:t.id, v:t.v, addedByResolve: t.addedByResolve || null})));
+  }
+  function pushUndo(){
+    state.undoStack.push({
+      cols: deepCopyCols(state.cols),
+      resolve: state.resolve ? {...state.resolve} : null,
+      nextId: state.nextId,
+      nextResolveId: state.nextResolveId,
+      showBigValue: state.showBigValue,
+      showColValues: state.showColValues
+    });
+    updateUndoBtn();
+  }
+  function undo(){
+    const snap = state.undoStack.pop();
+    if(!snap) return;
+    state.cols = deepCopyCols(snap.cols);
+    state.resolve = snap.resolve ? {...snap.resolve} : null;
+    state.nextId = snap.nextId;
+    state.nextResolveId = snap.nextResolveId;
+    state.showBigValue = snap.showBigValue;
+    state.showColValues = snap.showColValues;
+    renderTray();
+    render();
+  }
+  function clearUndo(){ state.undoStack = []; updateUndoBtn(); }
+  function updateUndoBtn(){ btnUndo.classList.toggle("disabled", state.undoStack.length === 0); }
+
+  function makeTokenEl(v){
+    const el = document.createElement("div");
+    el.className = "token";
+    el.textContent = String(v);
+    el.dataset.value = String(v);
+    return el;
+  }
+
+  function renderTray(){
+    tray.innerHTML = "";
+    const values = [0,1,2,3,4,5,6,7,8,9];
+    for(const v of values){
+      const t = makeTokenEl(v);
+      t.dataset.source = "tray";
+      tray.appendChild(t);
+      enableDrag(t, {type:"tray"});
+    }
+  }
+
+  function sumCol(i){ return state.cols[i].reduce((a,t)=>a+t.v,0); }
+  function totalValue(){
+    let total = 0;
+    for(let i=0;i<COL_COUNT;i++) total += sumCol(i) * placeValue(i);
+    return total;
+  }
+  function formatGrouped(n){ return n.toLocaleString("fr-FR"); }
+
+  function applyTopUI(){
+    btnBigValue.textContent = "Affichage : " + (state.showBigValue ? "ON" : "OFF");
+    btnColValues.textContent = "Valeurs : " + (state.showColValues ? "ON" : "OFF");
+
+    bigValueOutside.style.display = state.showBigValue ? "flex" : "none";
+    if(state.showBigValue){
+      bigValueOutside.textContent = formatGrouped(totalValue());
+    }
+
+    document.querySelectorAll(".colValueTop").forEach(el => {
+      el.style.display = state.showColValues ? "block" : "none";
+    });
+  }
+
+  function buildBoard(){
+    board.innerHTML = "";
+    for(let i=0;i<COL_COUNT;i++){
+      if(i>0 && (i % 3 === 0)){
+        const sep = document.createElement("div");
+        sep.className = "groupSep";
+        board.appendChild(sep);
+      }
+
+      const col = document.createElement("div");
+      col.className = "col";
+      col.dataset.colIndex = String(i);
+
+      const head = document.createElement("div");
+      head.className = "colHeader";
+
+      const lab = document.createElement("div");
+      lab.className = "colLabel";
+      lab.textContent = LABELS[i % 3];
+
+      const valTop = document.createElement("div");
+      valTop.className = "colValueTop";
+      valTop.textContent = placeValueShort(i);
+
+      head.appendChild(lab);
+      head.appendChild(valTop);
+
+      const body = document.createElement("div");
+      body.className = "colBody";
+
+      col.appendChild(head);
+      col.appendChild(body);
+
+      col.addEventListener("click", () => {
+        if(state.resolve) return;
+        if(col.classList.contains("bad")) enterResolveMode(i);
+      });
+
+      board.appendChild(col);
+    }
+  }
+
+  function ensureRetBadges(){
+    if(retLayer.childElementCount === COL_COUNT) return;
+    retLayer.innerHTML = "";
+    for(let i=0;i<COL_COUNT;i++){
+      const b = document.createElement("div");
+      b.className = "retBadge";
+      b.textContent = "RETENUE";
+      b.dataset.colIndex = String(i);
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        enterResolveMode(i);
+      });
+      retLayer.appendChild(b);
+    }
+  }
+
+  function positionRetBadges(){
+    const wrapRect = boardWrap.getBoundingClientRect();
+    const cols = [...document.querySelectorAll(".col")];
+    const badges = [...retLayer.querySelectorAll(".retBadge")];
+
+    for(const badge of badges){
+      const i = Number(badge.dataset.colIndex);
+      const colEl = cols.find(c => Number(c.dataset.colIndex) === i);
+      if(!colEl) continue;
+      const r = colEl.getBoundingClientRect();
+      const cx = (r.left + r.right) / 2 - wrapRect.left;
+      badge.style.left = cx + "px";
+    }
+  }
+
+  function tokenById(colIndex, id){
+    return state.cols[colIndex].find(t => t.id === id) || null;
+  }
+
+  function isTokenDraggable(colIndex, tok){
+    if(!state.resolve) return true;
+
+    const {id: rid, colIndex: focusCol, leftIndex} = state.resolve;
+
+    if(colIndex === leftIndex){
+      return tok.addedByResolve === rid;
+    }
+    if(colIndex === focusCol){
+      return true;
+    }
+    return false;
+  }
+
+  function render(){
+    const colEls = [...document.querySelectorAll(".col")];
+
+    for(const colEl of colEls){
+      const i = Number(colEl.dataset.colIndex);
+      const body = colEl.querySelector(".colBody");
+      body.innerHTML = "";
+
+      for(const tok of state.cols[i]){
+        const el = makeTokenEl(tok.v);
+        el.dataset.id = String(tok.id);
+        el.dataset.source = "col";
+        el.dataset.colIndex = String(i);
+
+        if(state.resolve){
+          const draggable = isTokenDraggable(i, tok);
+          el.classList.toggle("locked", !draggable);
+
+          if(i === state.resolve.colIndex && tok.addedByResolve !== state.resolve.id){
+            el.classList.add("toResolve");
+          }
+        }
+
+        body.appendChild(el);
+        enableDrag(el, {type:"col", colIndex:i, id:tok.id});
+      }
+
+      const s = sumCol(i);
+      colEl.classList.toggle("bad", s >= 10);
+    }
+
+    ensureRetBadges();
+    for(const b of retLayer.querySelectorAll(".retBadge")){
+      const i = Number(b.dataset.colIndex);
+      b.style.display = (sumCol(i) >= 10) ? "inline-flex" : "none";
+    }
+    positionRetBadges();
+
+    applyTopUI();
+    applyResolveUI();
+    updateUndoBtn();
+  }
+
+  window.addEventListener("resize", () => positionRetBadges());
+  window.addEventListener("scroll", () => positionRetBadges(), {passive:true});
+
+  function enableDrag(el, from){
+    el.onpointerdown = (e) => {
+      if(e.button !== 0 && e.pointerType !== "touch") return;
+      e.preventDefault();
+
+      const rect = el.getBoundingClientRect();
+      const v = Number(el.dataset.value);
+
+      let dragEl;
+      let tokenId = null;
+      let originalEl = null;
+
+      if(from.type === "tray"){
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+      } else {
+        tokenId = Number(el.dataset.id);
+        const colIndex = from.colIndex;
+        const tok = tokenById(colIndex, tokenId);
+        if(!tok) return;
+
+        if(state.resolve && !isTokenDraggable(colIndex, tok)){
+          return;
+        }
+
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+
+        originalEl = el;
+        originalEl.style.visibility = "hidden";
+      }
+
+      state.dragging = {
+        el: dragEl,
+        v,
+        id: tokenId,
+        from,
+        originalEl,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+
+      el.setPointerCapture?.(e.pointerId);
+      window.addEventListener("pointermove", onMove, {passive:false});
+      window.addEventListener("pointerup", onUp, {passive:false});
+    };
+  }
+
+  function onMove(e){
+    if(!state.dragging) return;
+    e.preventDefault();
+    const d = state.dragging;
+    d.el.style.left = (e.clientX - d.offsetX) + "px";
+    d.el.style.top  = (e.clientY - d.offsetY) + "px";
+    setTrashActive(isOverTrash(e.clientX, e.clientY));
+  }
+
+  function findDropColumn(x,y){
+    const cols = [...document.querySelectorAll(".col")];
+    for(const col of cols){
+      const rect = col.getBoundingClientRect();
+      if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom){
+        const idx = Number(col.dataset.colIndex);
+        if(state.resolve){
+          if(idx !== state.resolve.colIndex && idx !== state.resolve.leftIndex) return null;
+        }
+        return idx;
+      }
+    }
+    return null;
+  }
+
+
+  function isOverTrash(x,y){
+    if(!trashZone) return false;
+    const r = trashZone.getBoundingClientRect();
+    return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  }
+  function setTrashActive(on){
+    if(!trashZone) return;
+    trashZone.classList.toggle("active", !!on);
+  }
+
+  function addTokenToCol(colIndex, v, addedByResolve=null){
+    state.cols[colIndex].push({id: state.nextId++, v, addedByResolve});
+  }
+  function moveToken(fromCol, toCol, id){
+    const arr = state.cols[fromCol];
+    const k = arr.findIndex(t => t.id === id);
+    if(k < 0) return;
+    const tok = arr.splice(k,1)[0];
+    state.cols[toCol].push(tok);
+  }
+  function removeToken(fromCol, id){
+    const arr = state.cols[fromCol];
+    const k = arr.findIndex(t => t.id === id);
+    if(k >= 0) arr.splice(k,1);
+  }
+
+  function onUp(e){
+    if(!state.dragging) return;
+    e.preventDefault();
+
+    const d = state.dragging;
+    const overTrash = isOverTrash(e.clientX, e.clientY);
+    const dropTarget = overTrash ? null : findDropColumn(e.clientX, e.clientY);
+
+    let didChange = false;
+
+    if(dropTarget !== null){
+      if(d.from.type === "tray"){
+        pushUndo();
+        const rid = state.resolve ? state.resolve.id : null;
+        addTokenToCol(dropTarget, d.v, rid);
+        didChange = true;
+      } else if(d.from.type === "col"){
+        if(d.from.colIndex !== dropTarget){
+          pushUndo();
+          moveToken(d.from.colIndex, dropTarget, d.id);
+          didChange = true;
+        }
+      }
+    } else {
+      if(d.from.type === "col"){
+        pushUndo();
+        removeToken(d.from.colIndex, d.id);
+        didChange = true;
+      }
+    }
+
+    d.el.remove();
+
+    setTrashActive(false);
+
+    if(!didChange && d.originalEl){
+      d.originalEl.style.visibility = "";
+    }
+
+    state.dragging = null;
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+
+    render();
+  }
+
+  function twoColValue(leftIndex, colIndex){
+    return sumCol(leftIndex)*placeValue(leftIndex) + sumCol(colIndex)*placeValue(colIndex);
+  }
+
+  function enterResolveMode(colIndex){
+    if(state.resolve) return;
+    const leftIndex = colIndex - 1;
+    if(leftIndex < 0) return;
+
+    const baseline = twoColValue(leftIndex, colIndex);
+
+    pushUndo();
+    const rid = state.nextResolveId++;
+    state.resolve = {
+      id: rid,
+      colIndex,
+      leftIndex,
+      baselineValue: baseline
+    };
+
+    resolveTxt.textContent =
+      "Retenue : les jetons ORANGE sont ceux à traiter dans la colonne en conflit. " +
+      "Fais tes échanges. Dans la colonne de gauche, seuls les jetons ajoutés pendant cette retenue sont manipulables. " +
+      "Clique “Valider l’échange” quand c’est bon.";
+
+    applyResolveUI();
+    render();
+  }
+
+  function applyResolveUI(){
+    const cols = [...document.querySelectorAll(".col")];
+
+    if(!state.resolve){
+      overlay.style.display = "none";
+      resolveBar.style.display = "none";
+      btnExitResolve.style.display = "none";
+      for(const c of cols) c.classList.remove("locked","focus");
+      return;
+    }
+
+    overlay.style.display = "block";
+    resolveBar.style.display = "flex";
+    btnExitResolve.style.display = "inline-flex";
+
+    const {colIndex, leftIndex} = state.resolve;
+    for(const c of cols){
+      const idx = Number(c.dataset.colIndex);
+      const locked = !(idx === colIndex || idx === leftIndex);
+      c.classList.toggle("locked", locked);
+      c.classList.toggle("focus", (idx === colIndex || idx === leftIndex));
+    }
+  }
+
+  function exitResolveMode(){
+    if(!state.resolve) return;
+    pushUndo();
+    state.resolve = null;
+    applyResolveUI();
+    render();
+  }
+
+  function validateResolve(){
+    if(!state.resolve) return;
+
+    const {colIndex, leftIndex, baselineValue} = state.resolve;
+    const current = twoColValue(leftIndex, colIndex);
+
+    const okValue = (current === baselineValue);
+    const okDigits = (sumCol(colIndex) < 10 && sumCol(leftIndex) < 10);
+
+    if(okValue && okDigits){
+      pushUndo();
+      state.resolve = null;
+      applyResolveUI();
+      render();
+      return;
+    }
+
+    resolveBar.classList.add("shake");
+    setTimeout(() => resolveBar.classList.remove("shake"), 280);
+  }
+
+  btnUndo.addEventListener("click", () => undo());
+
+  btnClear.addEventListener("click", () => {
+    pushUndo();
+    state.cols = Array.from({length: COL_COUNT}, () => []);
+    state.resolve = null;
+    state.nextId = 1;
+    state.nextResolveId = 1;
+    render();
+    clearUndo();
+  });
+
+  btnBigValue.addEventListener("click", () => {
+    pushUndo();
+    state.showBigValue = !state.showBigValue;
+    render();
+  });
+
+  btnColValues.addEventListener("click", () => {
+    pushUndo();
+    state.showColValues = !state.showColValues;
+    render();
+  });
+
+  btnValidate.addEventListener("click", validateResolve);
+  btnCancel.addEventListener("click", exitResolveMode);
+  btnExitResolve.addEventListener("click", exitResolveMode);
+
+  btnFullscreen.addEventListener("click", async () => {
+    try{
+      if(!document.fullscreenElement){
+        await document.documentElement.requestFullscreen();
+      }else{
+        await document.exitFullscreen();
+      }
+    }catch(e){}
+  });
+
+  buildBoard();
+  renderTray();
+  clearUndo();
+  render();
+})();
+</script>
+
+</body>
+</html>
