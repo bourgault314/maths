@@ -2281,23 +2281,63 @@ function renderCard(card, revealed){
   if(isBarModelTotal){
     if(isBarModelTotalU){
       const vis = sumArray(card.visible);
-      const hid = sumArray(card.hidden);
-      drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
-        rect:(a)=>el("rect", a),
-        line:(a)=>el("line", a),
-        text:(x,y,t,a)=>text(x,y,t,a),
-        w: 380,
-        hTop: 86,
-        hBottom: 86,
-        stroke:"#000",
-        strokeWidth:4,
-        greyFill:"rgba(0,0,0,0.10)",
-        ink:"var(--ink)",
-        visibleTextColor:"var(--accent)",
-        textDy:"0.10em",
-        fontTop:70,
-        fontBottom:70
-      });
+
+      // Mode A (U) : si plusieurs tâches, on découpe la partie cachée en plusieurs cases (une par tâche),
+      // exactement comme en mode B, au lieu d'une seule case "caché total".
+      const unit = card._unit || {};
+      const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
+      const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
+
+      const totalHid = sumArray(card.hidden);
+
+      let hiddenSums = [];
+      if(totalHid === 0){
+        hiddenSums = [0];
+      }else if(Array.isArray(unit.hiddenByTask) && unit.hiddenByTask.length === tasks){
+        hiddenSums = unit.hiddenByTask.map(v => Array.isArray(v) ? sumArray(v) : Number(v));
+      }else{
+        const base = Math.floor(totalHid / tasks);
+        let rem = totalHid - base * tasks;
+        hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+if(hiddenSums.length <= 1){
+        const hid = (hiddenSums[0] ?? sumArray(card.hidden));
+        drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
+          rect:(a)=>el("rect", a),
+          line:(a)=>el("line", a),
+          text:(x,y,t,a)=>text(x,y,t,a),
+          w: 380,
+          hTop: 86,
+          hBottom: 86,
+          stroke:"#000",
+          strokeWidth:4,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)",
+          visibleTextColor:"var(--accent)",
+          textDy:"0.10em",
+          fontTop:70,
+          fontBottom:70
+        });
+      }else{
+        const parts = [{value: vis, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
+        drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+          rect:(a)=>el("rect", a),
+          line:(a)=>el("line", a),
+          text:(x,y,t,a)=>text(x,y,t,a),
+          w: 380,
+          hTop: 86,
+          hBottom: 86,
+          stroke:"#000",
+          strokeWidth:4,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)",
+          visibleTextColor:"var(--accent)",
+          textDy:"0.10em",
+          fontTop:70,
+          fontBottom:70
+        });
+      }
     }else{
       const visSum = sumArray(card.visible);
 
@@ -2737,23 +2777,61 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     // Schéma en barre en correction (impression) : uniquement si on imprime la correction (révélé)
     if(revealAnswers){
       const vis = sumArray(card.visible);
-      const hid = sumArray(card.hidden);
-      const gBM = tEl("g",{id:"barModelPrint"});
-      drawBarModelInGroup(gBM, 800, 980, card.total, vis, hid, {
-        rect:(a)=>tEl("rect", a),
-        line:(a)=>tEl("line", a),
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        w: 1200,
-        hTop: 140,
-        hBottom: 140,
-        stroke:"#000",
-        strokeWidth:5,
-        greyFill:"rgba(0,0,0,0.10)",
-        ink:"#000",
-        visibleTextColor:"rgb(106,167,255)",
-        fontTop:118,
-        fontBottom:118
-      });
+
+      // Mode A (U) : en correction imprimée aussi, on découpe le caché par tâche si plusieurs tâches.
+      const unit = card._unit || {};
+      const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
+      const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
+
+      const totalHid = sumArray(card.hidden);
+
+      let hiddenSums = [];
+      if(totalHid === 0){
+        hiddenSums = [0];
+      }else if(Array.isArray(unit.hiddenByTask) && unit.hiddenByTask.length === tasks){
+        hiddenSums = unit.hiddenByTask.map(v => Array.isArray(v) ? sumArray(v) : Number(v));
+      }else{
+        const base = Math.floor(totalHid / tasks);
+        let rem = totalHid - base * tasks;
+        hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+const gBM = tEl("g",{id:"barModelPrint"});
+      if(hiddenSums.length <= 1){
+        const hid = (hiddenSums[0] ?? sumArray(card.hidden));
+        drawBarModelInGroup(gBM, 800, 980, card.total, vis, hid, {
+          rect:(a)=>tEl("rect", a),
+          line:(a)=>tEl("line", a),
+          text:(x,y,t,a)=>tText(x,y,t,a),
+          w: 1200,
+          hTop: 140,
+          hBottom: 140,
+          stroke:"#000",
+          strokeWidth:5,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"#000",
+          visibleTextColor:"rgb(106,167,255)",
+          fontTop:118,
+          fontBottom:118
+        });
+      }else{
+        const parts = [{value: vis, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
+        drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+          rect:(a)=>tEl("rect", a),
+          line:(a)=>tEl("line", a),
+          text:(x,y,t,a)=>tText(x,y,t,a),
+          w: 1200,
+          hTop: 140,
+          hBottom: 140,
+          stroke:"#000",
+          strokeWidth:5,
+          greyFill:"rgba(0,0,0,0.10)",
+          ink:"#000",
+          visibleTextColor:"rgb(106,167,255)",
+          fontTop:118,
+          fontBottom:118
+        });
+      }
       targetSvg.appendChild(gBM);
     }
 
