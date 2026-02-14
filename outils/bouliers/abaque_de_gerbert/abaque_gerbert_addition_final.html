@@ -1,0 +1,2115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Abaque de Gerbert – Additions</title>
+  <style>
+    :root{
+      --paper1:#f7f1e6;
+      --paper2:#efe5d4;
+      --ink:#1a1a1a;
+      --warn:#f39c12;
+      --shadow: 0 10px 30px rgba(0,0,0,0.10);
+      --shadow2: 0 3px 12px rgba(0,0,0,0.12);
+      --token:#ffffff;
+
+      /* ✅ arche plus basse (prend moins de place) */
+      --archH: 104px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      background:
+        radial-gradient(1200px 800px at 50% -220px, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 70%),
+        radial-gradient(900px 700px at 10% 20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.0) 60%),
+        radial-gradient(900px 700px at 90% 20%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.0) 60%),
+        linear-gradient(180deg, var(--paper1) 0%, var(--paper2) 100%);
+    }
+
+    header{
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(0,0,0,0.06);
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(6px);
+      position:sticky;
+      top:0;
+      z-index:60;
+    }
+
+    .title{
+      font-weight:850;
+      letter-spacing:0.2px;
+      font-size: clamp(14px, 2.2vw, 18px);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .titleBadge{
+      font-size:12px;
+      font-weight:900;
+      padding:5px 9px;
+      border-radius:999px;
+      background: rgba(0,0,0,0.05);
+      border:1px solid rgba(0,0,0,0.10);
+      color: rgba(0,0,0,0.75);
+      user-select:none;
+    }
+
+    .tools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid rgba(0,0,0,0.12);
+      background:#fff;
+      color:var(--ink);
+      border-radius:12px;
+      padding:8px 10px;
+      font-weight:750;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(0,0,0,0.04);
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ border-color: rgba(44,123,229,0.35); color:#0d3b82; }
+    .btn.danger{ border-color: rgba(214,69,61,0.35); color:#7a1410; }
+    .btn.disabled{ opacity:.55; pointer-events:none; }
+
+    .icon{ width:16px;height:16px;display:inline-block; }
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:10px 10px 0;
+      gap:10px;
+      max-width:1200px;
+      width:100%;
+      margin:0 auto;
+    }
+
+    .bigValueOutside{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:10px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.78);
+      border:1px solid rgba(0,0,0,0.10);
+      box-shadow:0 8px 24px rgba(0,0,0,0.08);
+      font-weight:950;
+      letter-spacing:.6px;
+      font-size: clamp(18px, 3.8vw, 34px);
+      color: rgba(0,0,0,0.82);
+      user-select:none;
+    }
+
+    .boardWrap{
+      position:relative;
+      flex:1;
+      min-height:56vh;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:visible;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.10) 100%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, rgba(0,0,0,0.0) 7px),
+        radial-gradient(900px 700px at 50% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.0) 70%);
+      border:1px solid rgba(0,0,0,0.10);
+    }
+
+    .boardTop{
+      position:absolute;
+      left:0; right:0; top:0;
+      height: var(--archH);
+      padding: 8px 12px 0;
+      z-index:10;
+      pointer-events:none;
+    }
+
+    .bigArches{
+      height: 100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 0 4px 0;
+      margin: 0;
+      align-items:stretch;
+    }
+
+    .bigArchBlock{
+      position:relative;
+      height:100%;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+    }
+
+    .bigArchSvg{
+      position:absolute;
+      left:0; right:0;
+      bottom:0;
+      width:100%;
+      height: var(--archH);
+      display:block;
+      overflow:visible;
+      opacity:.98;
+    }
+
+    /* ✅ Texte abaissé (plus centré) */
+    .groupName{
+      position:absolute;
+      left:0; right:0;
+      top: 48px;
+      text-align:center;
+      font-weight:950;
+      letter-spacing:.6px;
+      font-size: 13px;
+      color: rgba(0,0,0,0.70);
+      text-transform: uppercase;
+      user-select:none;
+    }
+
+    .retLayer{
+      position:absolute;
+      left:0; right:0;
+      top: calc(var(--archH) - 30px);
+      height:28px;
+      z-index:22;
+      pointer-events:none;
+    }
+    .retBadge{
+      position:absolute;
+      transform: translateX(-50%);
+      font-size:11px;
+      font-weight:950;
+      color:#fff;
+      padding:4px 8px;
+      border-radius:999px;
+      background: var(--warn);
+      box-shadow:0 6px 18px rgba(0,0,0,0.10);
+      white-space:nowrap;
+      pointer-events:auto;
+      user-select:none;
+      cursor:pointer;
+      display:none;
+    }
+
+    .board{
+      position:absolute;
+      inset: var(--archH) 0 0;
+      display:flex;
+      padding:10px;
+      gap:8px;
+      align-items:stretch;
+      z-index:5;
+    }
+
+    .groupSep{
+      width:12px;
+      flex:0 0 12px;
+      position:relative;
+    }
+    .groupSep:before{
+      content:"";
+      position:absolute;
+      inset:8px 5px 10px;
+      border-left:2px dashed rgba(0,0,0,0.18);
+    }
+
+    .col{
+      flex:1 1 0;
+      min-width:56px;
+      background: rgba(255,255,255,0.55);
+      border:1px solid rgba(0,0,0,0.14);
+      border-radius:14px;
+      display:flex;
+      flex-direction:column;
+      overflow:visible;
+      position:relative;
+      touch-action:none;
+    }
+
+    .colHeader{
+      height:52px;
+      position:relative;
+      border-bottom:1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.70);
+    }
+    .colLabel{
+      position:absolute;
+      left:0; right:0;
+      top:15px;
+      text-align:center;
+      font-weight:950;
+      letter-spacing:.9px;
+      font-size:12px;
+      color: rgba(0,0,0,0.72);
+      pointer-events:none;
+    }
+    .colValueTop{
+      position:absolute;
+      left:0; right:0;
+      top:30px;
+      text-align:center;
+      font-weight:900;
+      font-size:11px;
+      color: rgba(0,0,0,0.55);
+      letter-spacing:.2px;
+      display:none;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .colBody{
+      flex:1;
+      padding:10px 6px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-start;
+    }
+
+    .token{
+      width: clamp(40px, 6.2vw, 64px);
+      height: clamp(40px, 6.2vw, 64px);
+      border-radius:999px;
+      background: var(--token);
+      border:2px solid rgba(0,0,0,0.24);
+      box-shadow: var(--shadow2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:950;
+      font-size: clamp(16px, 2.9vw, 22px);
+      user-select:none;
+      touch-action:none;
+      cursor:grab;
+      position:relative;
+    }
+    .token:active{ cursor:grabbing; }
+    .token.locked{
+      opacity:0.35;
+      filter: grayscale(0.85);
+      pointer-events:none;
+    }
+    .token.selected{
+      border-color: rgba(243,156,18,0.95);
+      box-shadow: 0 0 0 4px rgba(243,156,18,0.25), var(--shadow2);
+      background: rgba(243,156,18,0.12);
+    }
+
+    .token:before{
+      content:"";
+      position:absolute;
+      inset:8px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,0.08);
+      pointer-events:none;
+    }
+
+    .palette{
+      position:sticky;
+      bottom:0;
+      z-index:30;
+      padding:10px;
+      background: rgba(255,255,255,0.78);
+      border-top:1px solid rgba(0,0,0,0.08);
+      backdrop-filter: blur(8px);
+    }
+    .paletteInner{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .tray{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      padding:2px 0;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.12);
+      display:none;
+      z-index:18;
+      pointer-events:none;
+    }
+    .resolveBar{
+      position:absolute;
+      left:10px; right:10px; top:10px;
+      z-index:25;
+      display:none;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 10px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.10);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      pointer-events:auto;
+    }
+    .resolveBar .txt{
+      font-weight:900;
+      font-size:13px;
+      color: rgba(0,0,0,0.78);
+      line-height:1.15;
+    }
+    .resolveBar .actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .col.focus{
+      outline:3px solid rgba(44,123,229,0.55);
+      outline-offset:-3px;
+      background: rgba(44,123,229,0.06);
+    }
+    .col.locked{
+      filter: grayscale(0.7);
+      opacity:0.55;
+      pointer-events:none;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+    .shake{ animation: shake 260ms ease-in-out; }
+
+    
+    /* ✅ Jetons "à traiter" : pas remplis orange, mais un halo/contour clair + petit X */
+    .token.toResolve{
+      background: var(--token);
+      border-color: rgba(243,156,18,0.85);
+      box-shadow: 0 0 0 4px rgba(243,156,18,0.22), var(--shadow2);
+    }
+    /* ✅ Zone poubelle (repère visuel) */
+    .trashZone{
+      position:absolute;
+      border-radius:18px;
+      background: rgba(132, 98, 64, 0.12); /* bande brune discrète */
+      border: 1px dashed rgba(132, 98, 64, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      padding:10px 10px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      user-select:none;
+      pointer-events:none; /* la détection se fait via la zone, mais on garde la compat */
+      opacity:0.95;
+      z-index:19;
+    }
+    .trashZone.active{
+      border-style: solid;
+      border-color: rgba(214,69,61,0.55);
+      background: rgba(214,69,61,0.06);
+    }
+    .trashZone{ align-items:center; }
+    .zoneTitle{ width:100%; text-align:center; }
+
+    .trashTxt{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.3px;
+      text-align:center;
+      opacity:.85;
+      pointer-events:none;
+    }
+    .binTokens{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-start;
+      align-content:flex-start;
+      pointer-events:auto;
+      min-height:44px;
+    }
+    .binTokens .token{
+      width:52px;
+      height:52px;
+      font-size:20px;
+      pointer-events:auto;
+    }
+    /* ✅ Bouton ÉCHANGER par colonne */
+    .exBtn{
+      position:absolute;
+      top:34px;
+      left:50%;
+      transform:translateX(-50%);
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:11px;
+      letter-spacing:.2px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.18);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+      cursor:pointer;
+      user-select:none;
+      display:none;
+      z-index:6;
+    }
+    .col.has2 .exBtn{ display:inline-flex; gap:6px; align-items:center; }
+    .col.has2 .exBtn::before{ content:"↺"; font-weight:900; }
+    .col.locked .exBtn{ display:none !important; }
+
+    @media (max-width: 520px){
+
+      .btn{ padding:7px 9px; font-size:12px; }
+      :root{ --archH: 98px; }
+      .groupName{ top: 44px; }
+    }
+  /* ✅ Mode échange : on retire le gros texte d'aide (pour ne rien décaler / pas de scroll horizontal) */
+    #resolveTxt{ display:none !important; }
+    /* Barre compacte au-dessus de la zone d'échange */
+    #resolveBar{
+      padding:10px 12px;
+      gap:10px;
+      justify-content:center;
+    }
+/* ✅ Zone d’échange : jetons centrés + léger chevauchement si beaucoup */
+#exchangeBinTokens{
+  justify-content:center !important;
+  align-content:flex-start;
+}
+#exchangeBinTokens .token{
+  margin: 0; /* reset */
+}
+#exchangeBinTokens.overlap .token{
+  margin-left: -10px; /* chevauchement léger */
+}
+#exchangeBinTokens.overlap .token:first-child{
+  margin-left: 0;
+}
+
+/* ✅ Barre d'échange compacte, largeur calée sur la zone d'échange */
+#resolveBar{
+  position:absolute;
+  right:auto !important;
+  width:auto;            /* JS fixe la largeur */
+  max-width: calc(100vw - 20px);
+  padding: 8px 10px !important;
+  border-radius: 16px !important;
+  gap: 8px !important;
+}
+#resolveBar button{
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  border-radius: 999px !important;
+}
+@media (max-width: 520px){
+  #resolveBar button{
+    font-size: 12px !important;
+    padding: 9px 12px !important;
+  }
+  #resolveBar{
+    padding: 7px 8px !important;
+    gap: 6px !important;
+  }
+}
+
+
+/* ✅ Mode échange : plus de gros rectangle. On affiche uniquement les 2 boutons. */
+#resolveBar{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  width: auto !important; /* JS fixe via left/top mais pas de carte */
+  max-width: none !important;
+  z-index: 80;
+}
+#resolveBar button{
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12) !important;
+}
+
+
+
+/* ✅ Barres Valider/Annuler : compactes, au-dessus de la zone d’échange */
+#resolveBar{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+#resolveBar button{
+  min-width: 150px;
+  text-align:center;
+}
+@media (max-width: 520px){
+  #resolveBar button{ min-width: 130px; }
+}
+
+
+/* ✅ Fix placement : les boutons sont ancrés au-dessus de la Zone d’échange (position: fixed) */
+#resolveBar{ position: fixed !important; }
+
+
+/* ✅ V39 : pas de “zone floue” derrière les boutons */
+#resolveBar{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  gap: 10px !important;
+}
+#resolveBar button{
+  width: 100% !important;          /* même largeur que la zone d’échange */
+  min-width: 0 !important;
+  font-size: 16px !important;      /* plus petit */
+  padding: 10px 12px !important;   /* plus compact */
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12) !important; /* ombre légère, pas de blur */
+}
+@media (max-width: 520px){
+  #resolveBar button{ font-size: 15px !important; padding: 9px 10px !important; }
+}
+
+
+/* ✅ Option : masquer/afficher le groupe "Millions" (par défaut masqué) */
+body.noMillions .bigArchBlock[data-group="0"]{ display:none; }
+body.noMillions .bigArches{ grid-template-columns: 1fr 1fr; }
+body.noMillions .col[data-group="0"]{ display:none; }
+body.noMillions .groupSep[data-boundary="1"]{ display:none; }
+
+
+body.noMillions .pill[data-digits="7"],
+body.noMillions .pill[data-digits="8"],
+body.noMillions .pill[data-digits="9"]{ display:none; }
+
+
+body.withMillions .board{ padding:8px; gap:6px; }
+body.withMillions .col{ min-width:50px; }
+body.withMillions .groupSep{ width:10px; flex:0 0 10px; }
+
+
+/* ✅ En mode "sans millions", on évite l’échange entre milliers et millions (col 3 -> col 2) */
+body.noMillions .col[data-col-index="3"] .exBtn{ display:none !important; }
+    .col.noEx .exBtn{ display:none !important; }
+
+/* ✅ Option : afficher/masquer les arceaux (par défaut affichés) */
+body.noArches{ --archH: 46px; }
+body.noArches .bigArchSvg{ display:none; }
+body.noArches .bigArchBlock{
+  background: rgba(255,255,255,0.62);
+  border:1px solid rgba(0,0,0,0.14);
+  border-radius:14px;
+}
+body.noArches .groupName{
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  letter-spacing: .8px;
+  color: rgba(0,0,0,0.78);
+}
+body.noArches .boardTop{ padding-top: 6px; }
+
+
+/* ✅ Mode Exercices (Additions) : carte au-dessus de la zone d’échange, adaptée tablette */
+.exerciseCard{
+  position: fixed;
+  z-index: 75;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px 12px 10px;
+  border-radius:18px;
+  background: rgba(255,255,255,0.94);
+  border:1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+  backdrop-filter: blur(8px);
+  user-select:none;
+  max-width: calc(100vw - 16px);
+}
+.exHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.exTitle{
+  font-weight:950;
+  letter-spacing:.3px;
+  font-size: 15px;
+}
+.exSub{
+  font-size: 12px;
+  font-weight:800;
+  opacity:.68;
+  margin-top:2px;
+}
+.exHeadRight{ display:flex; align-items:center; gap:8px; }
+.exProblem{
+  margin:0;
+  padding:12px 12px;
+  border-radius:14px;
+  background: rgba(0,0,0,0.035);
+  border:1px solid rgba(0,0,0,0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:900;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: .5px;
+  white-space: pre;
+  overflow:hidden;
+}
+
+.exCarryWrap{ text-align:center; margin-top: -4px; }
+.exCarry{
+  margin:0;
+  padding: 0 12px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:900;
+  font-size: 16px;
+  line-height: 1.05;
+  letter-spacing: .5px;
+  white-space: pre;
+  opacity: .70;
+}
+.exCarry:empty{ display:none; }
+
+.exResultWrap{ text-align:center; margin-top: -6px; }
+.exResult{
+  margin:0;
+  padding: 0 12px 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:950;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: .5px;
+  white-space: pre;
+  display:inline-block;
+}
+.exResult:empty{ display:none; }
+
+.exResult.ok{ color: #1a7f37; }
+.exResult.no{ color: #b42318; }
+
+
+.exInlineResult{ display:inline-block; }
+.exInlineResult.ok{ color: #1a7f37; }
+.exInlineResult.no{ color: #b42318; }
+.exProblemWrap{ text-align:center; }
+.exProblem{ display:inline-block; max-width:100%; }
+
+.exActions{
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  align-items:center;
+}
+.exActions .btn{
+  flex:1;
+  justify-content:center;
+  padding: 12px 12px;
+  font-size: 15px;
+  border-radius: 14px;
+}
+.exFeedback{
+  min-height: 20px;
+  text-align:center;
+  font-weight:950;
+  letter-spacing:.2px;
+  font-size: 15px;
+}
+.exFeedback.ok{ color: #1a7f37; }
+.exFeedback.no{ color: #b42318; }
+
+.exSettings{
+  margin-top:2px;
+  padding-top:10px;
+  border-top:1px dashed rgba(0,0,0,0.14);
+  display:flex;
+  flex-direction:column;
+  gap:10px;  max-height: min(360px, calc(100vh - 190px));
+  overflow:auto;
+}
+
+.exRowSet{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.exLbl{
+  font-size: 12px;
+  font-weight:950;
+  opacity:.75;
+  width:64px;
+}
+.exPills{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.pill{
+  border:1px solid rgba(0,0,0,0.14);
+  background:#fff;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:950;
+  font-size: 13px;
+  cursor:pointer;
+}
+.pill.active{
+  border-color: rgba(44,123,229,0.45);
+  box-shadow: 0 0 0 4px rgba(44,123,229,0.16);
+  color:#0d3b82;
+}
+
+/* Chiffres : plus compact, comme "Termes" (et wrap sur 2 lignes) */
+.exDigitsPills{ gap:6px; justify-content:flex-start; }
+.exDigitsPills .pill{
+  min-width:32px;
+  width:32px;
+  padding:7px 0;
+  text-align:center;
+}
+
+@media (max-width: 520px){
+  .exerciseCard{ padding: 10px 10px 10px; border-radius:16px; }
+  .exProblem{ font-size: 20px; padding:10px 10px; }
+  .exActions .btn{ font-size: 14px; padding: 11px 10px; }
+  .pill{ padding: 8px 10px; font-size: 13px; }
+}
+
+</style>
+</head>
+
+<body>
+<header>
+  <div class="title">
+    Abaque de Gerbert – Additions</div>
+  <div class="tools">
+    <button class="btn" id="btnUndo">Retour</button>
+    <button class="btn primary" id="btnClear">Réinitialiser</button>
+    <button class="btn" id="btnBigValue">Affichage : OFF</button>
+    <button class="btn" id="btnColValues">Valeurs : OFF</button>
+
+    <button class="btn" id="btnMillions">Millions : OFF</button>
+
+    <button class="btn" id="btnArches">Arceaux : ON</button>
+
+    <button class="btn" id="btnFullscreen" title="Plein écran">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M9 3H5c-1.1 0-2 .9-2 2v4h2V5h4V3zm10 0h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm-4 18h4c1.1 0 2-.9 2-2v-4h-2v4h-4v2zM3 15v4c0 1.1.9 2 2 2h4v-2H5v-4H3z"/>
+      </svg>
+      Plein écran
+    </button>
+
+    <button class="btn danger" id="btnExitResolve" style="display:none;">Quitter échange</button>
+  </div>
+</header>
+
+<main>
+  <div class="bigValueOutside" id="bigValueOutside">0</div>
+
+  <div class="boardWrap" id="boardWrap">
+    <div class="trashZone" id="trashZone" aria-hidden="true" title="Dépose ici les jetons à échanger">
+      <div class="trashTxt zoneTitle">Zone d’échange</div>
+      
+    <div class="binTokens" id="exchangeBinTokens"></div>
+    </div>
+
+    <div class="exerciseCard" id="exerciseCard" aria-live="polite">
+          <div class="exHead">
+            <div class="exHeadLeft">
+              <div class="exTitle">Addition</div>
+              <div class="exSub" id="exSub">Exercice</div>
+            </div>
+            <div class="exHeadRight">
+              <button class="btn" id="btnExNew">Nouveau</button>
+              <button class="btn" id="btnExSettings" title="Réglages">⚙️</button>
+            </div>
+          </div>
+
+          <div class="exCarryWrap"><pre class="exCarry" id="exCarry"></pre></div>
+
+          <div class="exProblemWrap"><pre class="exProblem" id="exProblem"></pre></div>
+
+          <div class="exResultWrap"><pre class="exResult" id="exResult"></pre></div>
+
+          <div class="exActions">
+            <button class="btn primary" id="btnExCheck">Valider</button>
+            <button class="btn" id="btnExReset">Recommencer</button>
+          </div>
+
+          <div class="exFeedback" id="exFeedback"></div>
+
+          <div class="exSettings" id="exSettings" style="display:none;">
+            <div class="exRowSet">
+              <span class="exLbl">Termes</span>
+              <div class="exPills" role="group" aria-label="Nombre de termes">
+                <button class="pill" data-terms="2">2</button>
+                <button class="pill" data-terms="3">3</button>
+                <button class="pill" data-terms="4">4</button>
+              </div>
+            </div>
+
+            <div class="exRowSet">
+              <span class="exLbl">Chiffres</span>
+              <div class="exPills exDigitsPills" role="group" aria-label="Nombre de chiffres">
+                <button class="pill" data-digits="1">1</button>
+                <button class="pill" data-digits="2">2</button>
+                <button class="pill" data-digits="3">3</button>
+                <button class="pill" data-digits="4">4</button>
+                <button class="pill" data-digits="5">5</button>
+                <button class="pill" data-digits="6">6</button>
+                <button class="pill" data-digits="7">7</button>
+                <button class="pill" data-digits="8">8</button>
+                <button class="pill" data-digits="9">9</button>
+              </div>
+            </div>
+
+            <div class="exRowSet">
+              <span class="exLbl">Départ</span>
+              <div class="exPills" role="group" aria-label="Mode de départ">
+                <button class="pill" data-start="aplace">A placé</button>
+                <button class="pill" data-start="empty">Abaque vide</button>
+              </div>
+            </div>
+
+            <div class="exRowSet">
+              <span class="exLbl">Retenues</span>
+              <div class="exPills" role="group" aria-label="Retenues">
+                <button class="pill" data-carry="allow">Autoriser</button>
+                <button class="pill" data-carry="none">Sans retenue</button>
+              </div>
+            </div>
+
+            <div class="exRowSet">
+              <span class="exLbl">Zéros</span>
+              <div class="exPills" role="group" aria-label="Afficher les zéros">
+                <button class="pill" data-zeros="off">OFF</button>
+                <button class="pill" data-zeros="on">ON</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    <div class="boardTop">
+      <div class="bigArches">
+
+        <div class="bigArchBlock" data-group="0">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Millions</div>
+        </div>
+
+        <div class="bigArchBlock" data-group="1">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Milliers</div>
+        </div>
+
+        <div class="bigArchBlock" data-group="2">
+          <svg class="bigArchSvg" viewBox="0 0 300 120" aria-hidden="true">
+            <path d="M10 116 C 78 12, 222 12, 290 116"
+                  fill="none"
+                  stroke="rgba(0,0,0,0.22)"
+                  stroke-width="6"
+                  stroke-linecap="round"/>
+          </svg>
+          <div class="groupName">Unités</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="retLayer" id="retLayer"></div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="resolveBar" id="resolveBar">
+      <div class="txt" id="resolveTxt">Mode échange</div>
+      <div class="actions">
+        <button class="btn" id="btnValidate">Valider l’échange</button>
+        <button class="btn danger" id="btnCancel">↩ Annuler</button>
+      </div>
+    </div>
+
+    <div class="board" id="board"></div>
+  </div>
+</main>
+
+<div class="palette">
+  <div class="paletteInner">
+    <div class="tray" id="tray"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const COL_COUNT = 9;
+  const LABELS = ["C","D","U"];
+
+  function placeValue(colIndex){
+    const pow = (COL_COUNT - 1) - colIndex;
+    return Math.pow(10, pow);
+  }
+  function placeValueShort(colIndex){
+    return placeValue(colIndex).toLocaleString("fr-FR");
+  }
+
+  const state = {
+    cols: Array.from({length: COL_COUNT}, () => []),
+    bin: [],
+    dragging: null,
+    exchange: null, // {focusCol,leftCol,snapshotCols,snapshotBin,nextIdSnapshot}
+    nextId: 1,
+    undoStack: [],
+    showBigValue: false,
+    showColValues: false,
+    showMillions: false,
+    showArches: true,
+
+    // ✅ Exercices (Additions)
+    exCfg: {
+      terms: 2,          // 2..4
+      digits: 3,         // 1..6 (ou 9 si Millions ON)
+      start: "aplace",   // "aplace" | "empty"
+      carry: "allow",    // "allow" | "none"
+      zeros: true       // afficher les zéros
+    },
+    ex: null
+  };
+
+  const board = document.getElementById("board");
+  const tray = document.getElementById("tray");
+  const bigValueOutside = document.getElementById("bigValueOutside");
+
+  const boardWrap = document.getElementById("boardWrap");
+  const boardTopEl = document.querySelector(".boardTop");
+  const retLayerEl = document.getElementById("retLayer");
+  const trashZone = document.getElementById("trashZone");
+  const binTokens = document.getElementById("exchangeBinTokens");
+
+  const btnUndo = document.getElementById("btnUndo");
+  const btnClear = document.getElementById("btnClear");
+  const btnBigValue = document.getElementById("btnBigValue");
+  const btnColValues = document.getElementById("btnColValues");
+  const btnMillions = document.getElementById("btnMillions");
+  const btnArches = document.getElementById("btnArches");
+  const btnExitResolve = document.getElementById("btnExitResolve");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+
+  const overlay = document.getElementById("overlay");
+  const resolveBar = document.getElementById("resolveBar");
+  const resolveTxt = document.getElementById("resolveTxt");
+  const btnValidate = document.getElementById("btnValidate");
+  const btnCancel = document.getElementById("btnCancel");
+
+
+  // ✅ Exercices (Additions)
+  const exerciseCard = document.getElementById("exerciseCard");
+  const exProblem = document.getElementById("exProblem");
+  const exCarry = document.getElementById("exCarry");
+  const exResult = document.getElementById("exResult");
+  const exSub = document.getElementById("exSub");
+  const exFeedback = document.getElementById("exFeedback");
+  const exSettings = document.getElementById("exSettings");
+
+  const btnExNew = document.getElementById("btnExNew");
+  const btnExCheck = document.getElementById("btnExCheck");
+  const btnExReset = document.getElementById("btnExReset");
+  const btnExSettings = document.getElementById("btnExSettings");
+  function deepCopyCols(cols){
+    return cols.map(col => col.map(t => ({id:t.id, v:t.v})));
+  }
+  function deepCopyBin(bin){
+    return bin.map(t => ({id:t.id, v:t.v}));
+  }
+  function pushUndo(){
+    state.undoStack.push({
+      cols: deepCopyCols(state.cols),
+      bin: deepCopyBin(state.bin),
+      exchange: state.exchange ? {
+        focusCol: state.exchange.focusCol,
+        leftCol: state.exchange.leftCol,
+        snapshotCols: deepCopyCols(state.exchange.snapshotCols),
+        snapshotBin: deepCopyBin(state.exchange.snapshotBin),
+        focusIds: Array.from(state.exchange.focusIds || []),
+        leftBaseIds: Array.from(state.exchange.leftBaseIds || []),
+        nextIdSnapshot: state.exchange.nextIdSnapshot
+      } : null,
+      nextId: state.nextId,
+      showBigValue: state.showBigValue,
+      showColValues: state.showColValues,
+      showMillions: state.showMillions,
+      showArches: state.showArches
+    });
+    updateUndoBtn();
+  }
+  function undo(){
+    const snap = state.undoStack.pop();
+    if(!snap) return;
+    state.cols = deepCopyCols(snap.cols);
+    state.bin  = deepCopyBin(snap.bin);
+    state.exchange = snap.exchange ? {
+      focusCol: snap.exchange.focusCol,
+      leftCol: snap.exchange.leftCol,
+      snapshotCols: deepCopyCols(snap.exchange.snapshotCols),
+      snapshotBin: deepCopyBin(snap.exchange.snapshotBin),
+      focusIds: new Set(snap.exchange.focusIds || []),
+      leftBaseIds: new Set(snap.exchange.leftBaseIds || []),
+      nextIdSnapshot: snap.exchange.nextIdSnapshot
+    } : null;
+    state.nextId = snap.nextId;
+    state.showBigValue = snap.showBigValue;
+    state.showColValues = snap.showColValues;
+    state.showMillions = !!snap.showMillions;
+    state.showArches = (snap.showArches !== undefined ? !!snap.showArches : true);
+    renderTray();
+    render();
+  }
+  function clearUndo(){ state.undoStack = []; updateUndoBtn(); }
+  function updateUndoBtn(){ btnUndo.classList.toggle("disabled", state.undoStack.length === 0); }
+
+  function makeTokenEl(v){
+    const el = document.createElement("div");
+    el.className = "token";
+    el.textContent = String(v);
+    el.dataset.value = String(v);
+    return el;
+  }
+
+  function renderTray(){
+    tray.innerHTML = "";
+    const values = [0,1,2,3,4,5,6,7,8,9];
+    for(const v of values){
+      const t = makeTokenEl(v);
+      t.dataset.source = "tray";
+      tray.appendChild(t);
+      enableDrag(t, {type:"tray"});
+    }
+  }
+
+  function sumCol(i){ return state.cols[i].reduce((a,t)=>a+t.v,0); }
+  function totalValue(){
+    let total = 0;
+    for(let i=0;i<COL_COUNT;i++) total += sumCol(i) * placeValue(i);
+    return total;
+  }
+  function formatGrouped(n){ return n.toLocaleString("fr-FR"); }
+
+  // ====== Exercices : Additions ======
+  function visibleDigitsCount(){
+    // Millions OFF -> 6 colonnes visibles (milliers + unités)
+    return state.showMillions ? 9 : 6;
+  }
+  function maxRepresentable(){
+    return Math.pow(10, visibleDigitsCount()) - 1;
+  }
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function clearBoardHard(){
+    state.cols = Array.from({length: COL_COUNT}, () => []);
+    state.bin = [];
+    state.exchange = null;
+    state.nextId = 1;
+  }
+
+    function setBoardToNumber(n, includeZeros, digitsCount){
+    clearBoardHard();
+    const vis = visibleDigitsCount(); // 6 (sans millions) ou 9 (avec millions)
+    const useD = Math.max(1, Math.min(Number(digitsCount || vis), vis));
+
+    // on place uniquement sur les "useD" dernières colonnes (de l'unité vers la gauche)
+    const firstCol = COL_COUNT - useD;
+
+    // ✅ Zéros "nécessaires" seulement :
+    // - on affiche les zéros internes (ex: 1 0 3)
+    // - on évite les zéros "en tête" (ex: 0 8 3 -> on ne met pas le 0 de gauche)
+    let leftMostNonZero = null;
+    for(let i=firstCol;i<COL_COUNT;i++){
+      const pv = placeValue(i);
+      const digit = Math.floor(n / pv) % 10;
+      if(digit !== 0){
+        leftMostNonZero = i;
+        break;
+      }
+    }
+    if(leftMostNonZero === null){
+      // n est 0 (ou tous les chiffres sont 0 dans la plage) -> on montre 0 uniquement en unité si demandé
+      leftMostNonZero = COL_COUNT - 1;
+    }
+
+    for(let i=COL_COUNT-1;i>=firstCol;i--){
+      const pv = placeValue(i);
+      const digit = Math.floor(n / pv) % 10;
+
+      if(digit === 0){
+        if(!includeZeros) continue;
+        // zéro en tête -> on ne le place pas
+        if(i < leftMostNonZero) continue;
+      }
+      addTokenToCol(i, digit);
+    }
+  }
+
+  function generateTerms(){
+    const cfg = state.exCfg;
+    const count = Math.max(2, Math.min(4, cfg.terms|0));
+    const maxD = Math.max(1, Math.min(cfg.digits|0 || 1, visibleDigitsCount()));
+    const maxV = Math.pow(10, maxD) - 1;
+    const maxRep = maxRepresentable();
+
+    const wantNoCarry = (cfg.carry === "none");
+
+    for(let attempt=0; attempt<140; attempt++){
+      let terms = [];
+
+      if(!wantNoCarry){
+        for(let k=0;k<count;k++) terms.push(randInt(0, maxV));
+      }else{
+        const digitsByTerm = Array.from({length: count}, () => Array(maxD).fill(0));
+        for(let p=0;p<maxD;p++){
+          let remaining = randInt(0, 9);
+          for(let k=0;k<count;k++){
+            const d = randInt(0, remaining);
+            digitsByTerm[k][p] = d;
+            remaining -= d;
+          }
+          for(let k=digitsByTerm.length-1;k>0;k--){
+            const j = randInt(0,k);
+            [digitsByTerm[k][p], digitsByTerm[j][p]] = [digitsByTerm[j][p], digitsByTerm[k][p]];
+          }
+        }
+        terms = digitsByTerm.map(arr => {
+          let n = 0;
+          for(let p=maxD-1;p>=0;p--) n = n*10 + arr[p];
+          return n;
+        });
+      }
+
+      const expected = terms.reduce((a,b)=>a+b,0);
+
+      if(expected <= 0) continue;
+      if(expected > maxRep) continue;
+      if(terms.every(t=>t===0)) continue;
+
+      return {terms, expected};
+    }
+
+    return {terms:[randInt(1,9), randInt(1,9)], expected:null};
+  }
+
+  function formatVerticalAddition(terms, maxLenOverride){
+    const s = terms.map(n => String(n));
+    const maxLen = Math.max((maxLenOverride || 0), ...s.map(x=>x.length));
+    const lines = [];
+    for(let i=0;i<s.length;i++){
+      const pad = " ".repeat(maxLen - s[i].length) + s[i];
+      const prefix = (i === 0) ? "  " : "+ ";
+      lines.push(prefix + pad);
+    }
+    lines.push("—".repeat(maxLen + 2));
+    return lines.join("\n");
+  }
+
+  function escapeHTML(str){
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function makeStruckDigit(d){
+    // d + "combining long stroke overlay" (effet "barré")
+    return String(d) + "\u0336";
+  }
+
+  function computeCarryLine(terms, maxLen){
+    // Retenues "en haut", barrées, comme sur une addition posée.
+    // On calcule les retenues (carry-in) de droite à gauche.
+    const tStr = terms.map(n => String(n).padStart(maxLen, "0"));
+    let carry = 0;
+    const carryIn = Array(maxLen).fill(0);
+
+    for(let j=maxLen-1;j>=0;j--){
+      let sum = carry;
+      for(let k=0;k<tStr.length;k++){
+        sum += Number(tStr[k][j] || "0");
+      }
+      carry = Math.floor(sum / 10);
+      if(j-1 >= 0) carryIn[j-1] = carry;
+    }
+
+    const chars = Array(maxLen).fill(" ");
+    let has = false;
+    for(let j=0;j<maxLen;j++){
+      const c = carryIn[j];
+      if(c > 0){
+        has = true;
+        chars[j] = makeStruckDigit(c);
+      }
+    }
+    return has ? ("  " + chars.join("")) : "";
+  }
+
+  function clearExerciseSolution(){
+    exCarry.textContent = "";
+    exResult.textContent = "";
+    exResult.className = "exResult";
+  }
+
+  function setPillsActive(){
+    const cfg = state.exCfg;
+
+    document.querySelectorAll(".pill[data-terms]").forEach(b=>{
+      b.classList.toggle("active", Number(b.dataset.terms) === cfg.terms);
+    });
+    document.querySelectorAll(".pill[data-digits]").forEach(b=>{
+      b.classList.toggle("active", Number(b.dataset.digits) === cfg.digits);
+    });
+    document.querySelectorAll(".pill[data-start]").forEach(b=>{
+      b.classList.toggle("active", b.dataset.start === cfg.start);
+    });
+    document.querySelectorAll(".pill[data-carry]").forEach(b=>{
+      b.classList.toggle("active", b.dataset.carry === cfg.carry);
+    });
+    document.querySelectorAll(".pill[data-zeros]").forEach(b=>{
+      b.classList.toggle("active", (b.dataset.zeros === "on") === cfg.zeros);
+    });
+  }
+
+  function updateExerciseUI(){
+    if(!state.ex) return;
+    exProblem.textContent = formatVerticalAddition(state.ex.terms, state.ex.maxLen);
+
+    const cfg = state.exCfg;
+    const sStart = (cfg.start === "aplace") ? "A placé" : "Abaque vide";
+    const sCarry = (cfg.carry === "none") ? "sans retenue" : "retenues OK";
+    exSub.textContent = "Exercice";
+
+    setPillsActive();
+    positionExerciseCard();
+  }
+
+  function newExercise(){
+    if(state.exchange) exitExchange();
+
+    state.exCfg.digits = Math.min(state.exCfg.digits, visibleDigitsCount());
+
+    const {terms, expected} = generateTerms();
+    const exp = (expected === null) ? terms.reduce((a,b)=>a+b,0) : expected;
+
+    const maxLen = Math.max(...terms.map(t => String(t).length), String(exp).length);
+
+    if(state.exCfg.start === "aplace"){
+      setBoardToNumber(terms[0], state.exCfg.zeros, state.exCfg.digits);
+    }else{
+      clearBoardHard();
+    }
+
+    state.ex = {
+      terms,
+      expected: exp,
+      maxLen,
+      snapshotCols: deepCopyCols(state.cols),
+      snapshotBin: deepCopyBin(state.bin),
+      nextIdSnapshot: state.nextId
+    };
+
+    exFeedback.textContent = "";
+    exFeedback.className = "exFeedback";
+    clearExerciseSolution();
+
+    render();
+    updateExerciseUI();
+    clearUndo();
+  }
+
+  function resetExercise(){
+    if(!state.ex) return;
+    if(state.exchange) exitExchange();
+    state.cols = deepCopyCols(state.ex.snapshotCols);
+    state.bin  = deepCopyBin(state.ex.snapshotBin);
+    state.nextId = state.ex.nextIdSnapshot;
+    state.exchange = null;
+    exFeedback.textContent = "";
+    exFeedback.className = "exFeedback";
+    clearExerciseSolution();
+    render();
+    updateExerciseUI();
+    clearUndo();
+  }
+
+  function checkExercise(){
+    if(!state.ex) return;
+    if(state.exchange){
+      exFeedback.textContent = "Termine d’abord l’échange (Valider/Annuler).";
+      exFeedback.className = "exFeedback no";
+      exerciseCard.classList.add("shake");
+      setTimeout(() => exerciseCard.classList.remove("shake"), 280);
+      return;
+    }
+
+    const got = totalValue();
+    const w = Math.max((state.ex.maxLen || 1), String(got).length);
+
+    const base = formatVerticalAddition(state.ex.terms, w);
+    const gotLine = "  " + String(got).padStart(w, " ");
+
+    // ✅ Afficher la réponse DANS le cadre, sous le trait, et colorée
+    const isOk = (got === state.ex.expected);
+    const cls = isOk ? "ok" : "no";
+    exProblem.innerHTML = escapeHTML(base) + "\n" + '<span class="exInlineResult ' + cls + '">' + escapeHTML(gotLine) + "</span>";
+
+    // ✅ Pas d'affichage de retenues (plus joli)
+    exCarry.textContent = "";
+
+    // ✅ On laisse l'ancien bloc exResult vide (compat)
+    exResult.textContent = "";
+    exResult.className = "exResult";
+
+    if(isOk){
+      exFeedback.textContent = "✅ Bonne réponse !";
+      exFeedback.className = "exFeedback ok";
+    }else{
+      exFeedback.textContent = "❌ Mauvaise réponse… On recommence.";
+      exFeedback.className = "exFeedback no";
+
+      exerciseCard.classList.add("shake");
+      setTimeout(() => exerciseCard.classList.remove("shake"), 280);
+
+      // ✅ Laisser le temps de voir le résultat avant de remettre le départ
+      setTimeout(() => resetExercise(), 900);
+    }
+  }
+
+  function applyTopUI(){
+    btnBigValue.textContent = "Affichage : " + (state.showBigValue ? "ON" : "OFF");
+    btnColValues.textContent = "Valeurs : " + (state.showColValues ? "ON" : "OFF");
+    btnMillions.textContent = "Millions : " + (state.showMillions ? "ON" : "OFF");
+    btnArches.textContent = "Arceaux : " + (state.showArches ? "ON" : "OFF");
+    document.body.classList.toggle("noMillions", !state.showMillions);
+    document.body.classList.toggle("withMillions", state.showMillions);
+    document.body.classList.toggle("noArches", !state.showArches);
+
+    bigValueOutside.style.display = state.showBigValue ? "flex" : "none";
+    if(state.showBigValue) bigValueOutside.textContent = formatGrouped(totalValue());
+
+    document.querySelectorAll(".colValueTop").forEach(el => {
+      el.style.display = state.showColValues ? "block" : "none";
+    });
+  }
+
+  function buildBoard(){
+    board.innerHTML = "";
+    for(let i=0;i<COL_COUNT;i++){
+      if(i>0 && (i % 3 === 0)){
+        const sep = document.createElement("div");
+        sep.className = "groupSep";
+        sep.dataset.boundary = String(i/3);
+        board.appendChild(sep);
+      }
+
+      const col = document.createElement("div");
+      col.className = "col";
+      col.dataset.colIndex = String(i);
+      col.dataset.group = String(Math.floor(i/3));
+
+      const exBtn = document.createElement("div");
+      exBtn.className = "exBtn";
+      exBtn.textContent = "Échanger";
+      exBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        enterExchange(i);
+      });
+      col.appendChild(exBtn);
+
+      const head = document.createElement("div");
+      head.className = "colHeader";
+
+      const lab = document.createElement("div");
+      lab.className = "colLabel";
+      lab.textContent = LABELS[i % 3];
+
+      const valTop = document.createElement("div");
+      valTop.className = "colValueTop";
+      valTop.textContent = placeValueShort(i);
+
+      head.appendChild(lab);
+      head.appendChild(valTop);
+
+      const body = document.createElement("div");
+      body.className = "colBody";
+
+      col.appendChild(head);
+      col.appendChild(body);
+
+      board.appendChild(col);
+    }
+  }
+
+  function positionResolveBar(){
+    if(!trashZone || !resolveBar) return;
+    const tz = trashZone.getBoundingClientRect();
+
+    // #resolveBar est en position: fixed -> coordonnées viewport
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+
+    // On force la même largeur que la Zone d’échange
+    const targetW = Math.max(120, Math.min(tz.width, vw - 16));
+    resolveBar.style.width = targetW + "px";
+
+    // Mesure après width
+    const barH = resolveBar.offsetHeight || 60;
+
+    let left = tz.left;
+    // si la zone est trop à droite (petits écrans), on clamp
+    left = Math.max(8, Math.min(left, vw - targetW - 8));
+
+    let top = tz.top - barH - 10;
+    top = Math.max(8, Math.min(top, vh - barH - 8));
+
+    resolveBar.style.left = left + "px";
+    resolveBar.style.top  = top + "px";
+    resolveBar.style.right = "auto";
+  }
+
+
+  function positionExerciseCard(){
+  if(!exerciseCard || !trashZone) return;
+
+  const tz = trashZone.getBoundingClientRect();
+  const vw = window.innerWidth || document.documentElement.clientWidth;
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  const headerH = document.querySelector("header")?.getBoundingClientRect().height || 0;
+
+  // même largeur que la zone d’échange
+  const targetW = Math.max(220, Math.min(tz.width, vw - 16));
+  exerciseCard.style.width = targetW + "px";
+
+  // mesure après width
+  const cardH = exerciseCard.offsetHeight || 140;
+
+  let left = tz.left;
+  left = Math.max(8, Math.min(left, vw - targetW - 8));
+
+  // ✅ Sur tablette : on fixe la carte sous l’en-tête, et la Zone d’échange se place en dessous.
+  let top = headerH + 10;
+  top = Math.max(headerH + 10, Math.min(top, vh - cardH - 8));
+
+  exerciseCard.style.left = left + "px";
+  exerciseCard.style.top  = top + "px";
+  exerciseCard.style.right = "auto";
+}
+
+
+  
+function setReserveRight(px){
+  const v = (px || 0) + "px";
+  board.style.right = v;
+  if(boardTopEl) boardTopEl.style.right = v;
+  if(retLayerEl) retLayerEl.style.right = v;
+}
+
+function positionTrashZone(){
+  if(!trashZone) return;
+  const wrapRect = boardWrap.getBoundingClientRect();
+
+  // Choix largeur de zone (un peu plus étroite quand Millions ON)
+  const zoneW = state.showMillions
+    ? Math.max(160, Math.min(260, Math.round(wrapRect.width * 0.19)))
+    : Math.max(180, Math.min(300, Math.round(wrapRect.width * 0.22)));
+
+  // ✅ On réserve à droite AVANT de mesurer la position des colonnes
+  setReserveRight(zoneW + 10);
+  // force un reflow pour que les mesures soient cohérentes
+  void board.offsetWidth;
+
+  // uniquement les colonnes visibles (utile quand on masque "Millions")
+  const cols = [...document.querySelectorAll(".col")].filter(c => c.offsetParent !== null);
+  if(cols.length === 0) return;
+  const last = cols[cols.length - 1].getBoundingClientRect();
+
+  // top aligné sur les colonnes
+  let top  = (last.top - wrapRect.top) + 6;
+
+  // ✅ La carte Exercice est en haut à droite : on met la Zone d’échange EN DESSOUS (sinon ça se superpose)
+  if(exerciseCard && exerciseCard.style.display !== "none"){
+    const cr = exerciseCard.getBoundingClientRect();
+    const minTop = (cr.bottom - wrapRect.top) + 12;
+    top = Math.max(top, minTop);
+  }
+
+  // clamp pour garantir une zone utilisable
+  const maxTop = Math.max(6, wrapRect.height - 120 - 10);
+  top = Math.min(top, maxTop);
+
+  // Zone d'échange à droite, largeur fixe
+  const left  = wrapRect.width - zoneW - 10;
+  const height = Math.max(120, (wrapRect.height - top) - 10);
+
+  trashZone.style.left = left + "px";
+  trashZone.style.top  = top + "px";
+  trashZone.style.width = zoneW + "px";
+  trashZone.style.height = height + "px";
+}
+  window.addEventListener("resize", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } positionExerciseCard(); });
+  window.addEventListener("scroll", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } positionExerciseCard(); }, {passive:true});
+
+  function renderBin(){
+    if(!binTokens) return;
+    binTokens.innerHTML = "";
+    binTokens.classList.toggle('overlap', state.bin.length >= 4);
+    for(const tok of state.bin){
+      const el = makeTokenEl(tok.v);
+      el.dataset.source = "bin";
+      el.dataset.id = String(tok.id);
+      binTokens.appendChild(el);
+      enableDrag(el, {type:"bin", id:tok.id});
+    }
+  }
+
+  function tokenById(colIndex, id){
+    return state.cols[colIndex].find(t => t.id === id) || null;
+  }
+  function binTokenById(id){
+    return state.bin.find(t => t.id === id) || null;
+  }
+
+  function isColAllowed(colIndex){
+    if(!state.exchange) return true;
+    return colIndex === state.exchange.focusCol || colIndex === state.exchange.leftCol;
+  }
+
+  function isTokenDraggable(fromType, colIndex, tok){
+    if(!state.exchange) return true;
+    if(fromType === "bin") return true;
+
+    const {focusCol, leftCol, leftBaseIds} = state.exchange;
+
+    if(colIndex === focusCol) return true;
+
+    // colonne de gauche : on bloque uniquement les jetons qui étaient déjà là au départ
+    if(colIndex === leftCol){
+      return !(leftBaseIds && leftBaseIds.has(tok.id));
+    }
+
+    return false;
+  }
+
+  function render(){
+    // ✅ Important : on applique d'abord l'état d'affichage (classe noMillions)
+    // afin que les calculs de position (getBoundingClientRect) se fassent
+    // sur la mise en page réellement visible.
+    applyTopUI();
+    const colEls = [...document.querySelectorAll(".col")];
+
+    for(const colEl of colEls){
+      const i = Number(colEl.dataset.colIndex);
+      const body = colEl.querySelector(".colBody");
+      body.innerHTML = "";
+
+      for(const tok of state.cols[i]){
+        const el = makeTokenEl(tok.v);
+        el.dataset.id = String(tok.id);
+        el.dataset.source = "col";
+        el.dataset.colIndex = String(i);
+
+        if(state.exchange){
+          const draggable = isTokenDraggable("col", i, tok);
+          el.classList.toggle("locked", !draggable);
+          // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
+          if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
+            el.classList.add("toResolve");
+          }
+        }
+
+        body.appendChild(el);
+        enableDrag(el, {type:"col", colIndex:i, id:tok.id});
+      }
+
+      colEl.classList.toggle("has2", state.cols[i].length >= 2);
+
+      colEl.classList.toggle("noEx", (!state.showMillions && i === 3));
+
+      if(state.exchange){
+        const locked = !isColAllowed(i);
+        colEl.classList.toggle("locked", locked);
+        colEl.classList.toggle("focus", !locked);
+      }else{
+        colEl.classList.remove("locked","focus");
+      }
+    }
+
+    renderBin();
+
+    // ✅ Mise en page en 2 passes :
+    // 1) on positionne la Zone d’échange (pour connaître largeur/left)
+    // 2) on positionne la carte Exercice
+    // 3) on repositionne la Zone d’échange sous la carte (sinon superposition)
+    positionTrashZone();
+    positionExerciseCard();
+    positionTrashZone();
+    positionResolveBar();
+    positionExerciseCard();
+
+    applyExchangeUI();
+    updateUndoBtn();
+  }
+
+  function isOverTrash(x,y){
+    if(!trashZone) return false;
+    const r = trashZone.getBoundingClientRect();
+    return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  }
+  function setTrashActive(on){
+    if(!trashZone) return;
+    trashZone.classList.toggle("active", !!on);
+  }
+
+  function enableDrag(el, from){
+    el.onpointerdown = (e) => {
+      if(e.button !== 0 && e.pointerType !== "touch") return;
+      e.preventDefault();
+
+      const rect = el.getBoundingClientRect();
+      const v = Number(el.dataset.value);
+
+      let dragEl;
+      let tokenId = null;
+      let originalEl = null;
+
+      if(from.type === "tray"){
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+      } else if(from.type === "col"){
+        tokenId = Number(el.dataset.id);
+        const tok = tokenById(from.colIndex, tokenId);
+        if(!tok) return;
+        if(state.exchange && !isTokenDraggable("col", from.colIndex, tok)) return;
+
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+
+        originalEl = el;
+        originalEl.style.visibility = "hidden";
+      } else { // bin
+        tokenId = Number(el.dataset.id);
+        const tok = binTokenById(tokenId);
+        if(!tok) return;
+
+        dragEl = makeTokenEl(v);
+        dragEl.style.position = "fixed";
+        dragEl.style.left = rect.left + "px";
+        dragEl.style.top = rect.top + "px";
+        dragEl.style.zIndex = 1000;
+        dragEl.style.pointerEvents = "none";
+        document.body.appendChild(dragEl);
+
+        originalEl = el;
+        originalEl.style.visibility = "hidden";
+      }
+
+      state.dragging = {
+        el: dragEl,
+        v,
+        id: tokenId,
+        from,
+        originalEl,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+
+      el.setPointerCapture?.(e.pointerId);
+      window.addEventListener("pointermove", onMove, {passive:false});
+      window.addEventListener("pointerup", onUp, {passive:false});
+    };
+  }
+
+  function onMove(e){
+    if(!state.dragging) return;
+    e.preventDefault();
+    const d = state.dragging;
+    d.el.style.left = (e.clientX - d.offsetX) + "px";
+    d.el.style.top  = (e.clientY - d.offsetY) + "px";
+    setTrashActive(isOverTrash(e.clientX, e.clientY));
+  }
+
+  function findDropColumn(x,y){
+    const cols = [...document.querySelectorAll(".col")];
+    for(const col of cols){
+      const rect = col.getBoundingClientRect();
+      if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom){
+        const idx = Number(col.dataset.colIndex);
+        if(state.exchange && !isColAllowed(idx)) return null;
+        return idx;
+      }
+    }
+    return null;
+  }
+
+  function addTokenToCol(colIndex, v){
+    state.cols[colIndex].push({id: state.nextId++, v});
+  }
+  function removeToken(fromCol, id){
+    const arr = state.cols[fromCol];
+    const k = arr.findIndex(t => t.id === id);
+    if(k >= 0) return arr.splice(k,1)[0];
+    return null;
+  }
+  function moveToken(fromCol, toCol, id){
+    const tok = removeToken(fromCol, id);
+    if(tok) state.cols[toCol].push(tok);
+  }
+  function removeTokenFromBin(id){
+    const k = state.bin.findIndex(t => t.id === id);
+    if(k >= 0) return state.bin.splice(k,1)[0];
+    return null;
+  }
+
+  function onUp(e){
+    if(!state.dragging) return;
+    e.preventDefault();
+
+    const d = state.dragging;
+    const overBin = isOverTrash(e.clientX, e.clientY);
+    const dropCol = overBin ? null : findDropColumn(e.clientX, e.clientY);
+
+    let didChange = false;
+
+    if(dropCol !== null){
+      if(d.from.type === "tray"){
+        pushUndo();
+        addTokenToCol(dropCol, d.v);
+        didChange = true;
+      } else if(d.from.type === "col"){
+        if(d.from.colIndex !== dropCol){
+          pushUndo();
+          moveToken(d.from.colIndex, dropCol, d.id);
+          didChange = true;
+        }
+      } else { // bin -> col
+        pushUndo();
+        const tok = removeTokenFromBin(d.id);
+        if(tok){
+          state.cols[dropCol].push(tok);
+          didChange = true;
+        }
+      }
+    } else if(overBin){
+      if(state.exchange && d.from.type === "col"){
+        // On ne dépose à droite QUE les jetons de la colonne cliquée
+        if(d.from.colIndex === state.exchange.focusCol){
+          pushUndo();
+          const tok = removeToken(d.from.colIndex, d.id);
+          if(tok){
+            state.bin.push(tok);
+            didChange = true;
+          }
+        }
+      }
+    } else {
+      if(d.from.type === "col"){
+        if(!state.exchange){
+          pushUndo();
+          removeToken(d.from.colIndex, d.id);
+          didChange = true;
+        }
+      }
+    }
+
+    d.el.remove();
+    setTrashActive(false);
+
+    if(!didChange && d.originalEl){
+      d.originalEl.style.visibility = "";
+    }
+
+    state.dragging = null;
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+
+    render();
+  }
+
+  function applyExchangeUI(){
+    if(!state.exchange){
+      overlay.style.display = "none";
+      resolveBar.style.display = "none";
+      btnExitResolve.style.display = "none";
+      return;
+    }
+    overlay.style.display = "block";
+    resolveBar.style.display = "flex";
+    btnExitResolve.style.display = "inline-flex";
+
+    // Position once measurable (prevents weird placement)
+    resolveBar.style.visibility = "hidden";
+    requestAnimationFrame(() => {
+      positionTrashZone();
+      positionResolveBar();
+      positionExerciseCard();
+      resolveBar.style.visibility = "visible";
+    });
+  }
+
+  function enterExchange(focusCol){
+    const leftCol = focusCol - 1;
+    if(leftCol < 0) return;
+    if(state.exchange) return;
+
+    // ✅ Si "Millions" est masqué, on empêche l’échange qui aurait besoin d’une colonne invisible (col 3 -> col 2)
+    if(!state.showMillions && leftCol < 3) return;
+
+    state.exchange = {
+      focusCol,
+      leftCol,
+      focusIds: new Set(state.cols[focusCol].map(t=>t.id)),
+      leftBaseIds: new Set(state.cols[leftCol].map(t=>t.id)),
+      snapshotCols: deepCopyCols(state.cols),
+      snapshotBin: deepCopyBin(state.bin),
+      nextIdSnapshot: state.nextId
+    };
+
+    resolveTxt.textContent =
+      "Échange : dépose dans la zone d’échange (à droite) les jetons que tu remplaces, puis place les nouveaux jetons dans les 2 colonnes. " +
+      "Clique « Valider l'échange » quand tu as fini.";
+
+    render();
+  }
+
+  function rollbackExchange(){
+    const snap = state.exchange;
+    state.cols = deepCopyCols(snap.snapshotCols);
+    state.bin  = deepCopyBin(snap.snapshotBin);
+    state.nextId = snap.nextIdSnapshot;
+    state.exchange = null;
+    render();
+  }
+
+  function twoColValue(cols, leftCol, focusCol){
+    const a = cols[leftCol].reduce((s,t)=>s+t.v,0) * placeValue(leftCol);
+    const b = cols[focusCol].reduce((s,t)=>s+t.v,0) * placeValue(focusCol);
+    return a+b;
+  }
+
+  function validateExchange(){
+    if(!state.exchange) return;
+
+    const {focusCol, leftCol, snapshotCols} = state.exchange;
+    const before = twoColValue(snapshotCols, leftCol, focusCol);
+    const after  = twoColValue(state.cols,     leftCol, focusCol);
+
+    // ✅ V40 : on accepte aussi les échanges “en plusieurs étapes”
+    // (la colonne peut encore être en retenue), MAIS on n’accepte pas les erreurs :
+    // - la valeur sur les 2 colonnes doit être conservée
+    // - il faut qu’il y ait eu un vrai changement (sinon on clique “Annuler”)
+    const changed =
+      JSON.stringify(state.cols[leftCol])  !== JSON.stringify(snapshotCols[leftCol]) ||
+      JSON.stringify(state.cols[focusCol]) !== JSON.stringify(snapshotCols[focusCol]);
+
+    if(after === before && changed){
+      pushUndo();
+      state.bin = [];
+      state.exchange = null;
+      render();
+      return;
+    }
+
+    resolveBar.classList.add("shake");
+    setTimeout(() => resolveBar.classList.remove("shake"), 280);
+    rollbackExchange();
+  }
+
+  function exitExchange(){
+    if(!state.exchange) return;
+    rollbackExchange();
+  }
+
+  // ✅ Exercices : boutons + réglages
+  btnExNew.addEventListener("click", () => newExercise());
+  btnExReset.addEventListener("click", () => resetExercise());
+  btnExCheck.addEventListener("click", () => checkExercise());
+  btnExSettings.addEventListener("click", () => {
+    const on = (exSettings.style.display !== "none");
+    exSettings.style.display = on ? "none" : "flex";
+
+    // ✅ IMPORTANT : ouvrir/fermer les réglages change la hauteur de la carte Exercice.
+    // La Zone d’échange est positionnée *en dessous* de cette carte (minTop = cr.bottom).
+    // Donc il faut recalculer immédiatement la Zone d’échange (sinon elle reste petite
+    // jusqu’au prochain déplacement d’un jeton qui déclenche render()).
+    const relayout = () => {
+      positionExerciseCard();
+      positionTrashZone();
+      if(state.exchange) positionResolveBar();
+    };
+
+    // On le fait sur 2 frames pour être sûr que le navigateur a appliqué le nouveau layout.
+    requestAnimationFrame(() => {
+      relayout();
+      requestAnimationFrame(relayout);
+    });
+  });
+
+  document.querySelectorAll(".pill").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if(btn.dataset.terms)  state.exCfg.terms  = Number(btn.dataset.terms);
+      if(btn.dataset.digits) state.exCfg.digits = Number(btn.dataset.digits);
+      if(btn.dataset.start)  state.exCfg.start  = btn.dataset.start;
+      if(btn.dataset.carry)  state.exCfg.carry  = btn.dataset.carry;
+      if(btn.dataset.zeros)  state.exCfg.zeros  = (btn.dataset.zeros === "on");
+      setPillsActive();
+      newExercise();
+    });
+  });
+
+  // Buttons
+  btnUndo.addEventListener("click", () => undo());
+
+  btnClear.addEventListener("click", () => {
+    pushUndo();
+    state.cols = Array.from({length: COL_COUNT}, () => []);
+    state.bin = [];
+    state.exchange = null;
+    state.nextId = 1;
+    render();
+    clearUndo();
+  });
+
+  btnBigValue.addEventListener("click", () => {
+    pushUndo();
+    state.showBigValue = !state.showBigValue;
+    render();
+  });
+
+  btnColValues.addEventListener("click", () => {
+    pushUndo();
+    state.showColValues = !state.showColValues;
+    render();
+  });
+
+
+btnMillions.addEventListener("click", () => {
+  // si on est en mode échange, on sort proprement avant de changer la vue
+  if(state.exchange) exitExchange();
+  pushUndo();
+  state.showMillions = !state.showMillions;
+  render();
+
+  // ✅ Important : la mise en page (colonnes affichées/masquées + réserves à droite)
+  // peut être appliquée "après" ce render() côté navigateur.
+  // On recalcule donc les positions au prochain frame pour éviter que la Zone d’échange
+  // reste à l’ancienne place jusqu’au prochain déplacement d’un jeton.
+  requestAnimationFrame(() => {
+    positionTrashZone();
+    positionResolveBar();
+    positionExerciseCard();
+  });
+});
+
+btnArches.addEventListener("click", () => {
+  // si on est en mode échange, on sort proprement avant de changer la vue
+  if(state.exchange) exitExchange();
+  pushUndo();
+  state.showArches = !state.showArches;
+  render();
+
+  // ✅ Comme pour les Millions : le changement de hauteur (var(--archH)) peut être appliqué
+  // après le render() côté navigateur. On recalcule les positions au prochain frame.
+  requestAnimationFrame(() => {
+    positionTrashZone();
+    positionResolveBar();
+    positionExerciseCard();
+  });
+});
+
+  btnValidate.addEventListener("click", validateExchange);
+  btnCancel.addEventListener("click", exitExchange);
+  btnExitResolve.addEventListener("click", exitExchange);
+
+  btnFullscreen.addEventListener("click", async () => {
+    try{
+      if(!document.fullscreenElement){
+        await document.documentElement.requestFullscreen();
+      }else{
+        await document.exitFullscreen();
+      }
+    }catch(e){}
+  });
+
+  buildBoard();
+  renderTray();
+  clearUndo();
+
+  // ✅ Exercice affiché dès l’ouverture
+  setPillsActive();
+  newExercise();
+
+  // ✅ Stabilisation des positions (tablette / resize)
+  requestAnimationFrame(() => {
+    positionExerciseCard();
+    positionTrashZone();
+    positionResolveBar();
+    requestAnimationFrame(() => {
+      positionExerciseCard();
+      positionTrashZone();
+      positionResolveBar();
+    });
+  });
+
+})();
+</script>
+
+
+</body>
+</html>
