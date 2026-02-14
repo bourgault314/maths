@@ -400,6 +400,31 @@
       pointer-events:none;
     }
 
+    /* Feedback visuel : petite croix rouge en cas d'échange invalide */
+    .resolveBar .exchangeError{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%) scale(1);
+      font-size:44px;
+      font-weight:900;
+      color:#c62828;
+      opacity:0;
+      pointer-events:none;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.70);
+    }
+    .resolveBar .exchangeError.show{
+      opacity:1;
+      animation: popFade 950ms ease-out forwards;
+    }
+    @keyframes popFade{
+      0%{opacity:0; transform:translate(-50%,-50%) scale(0.55);}
+      20%{opacity:1; transform:translate(-50%,-50%) scale(1.15);}
+      60%{opacity:1; transform:translate(-50%,-50%) scale(1.00);}
+      100%{opacity:0; transform:translate(-50%,-50%) scale(0.90);}
+    }
+
+
     @keyframes shake {
       0% { transform: translateX(0); }
       20% { transform: translateX(-6px); }
@@ -438,6 +463,37 @@
       border-color: rgba(214,69,61,0.55);
       background: rgba(214,69,61,0.06);
     }
+
+    /* ✅ Zone supprimée (supprime un jeton du total) */
+    .deleteZone{
+      position:absolute;
+      border-radius:16px;
+      background: rgba(214,69,61,0.10);
+      border: 1px dashed rgba(214,69,61,0.55);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      padding:8px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      user-select:none;
+      pointer-events:none;
+      opacity:0.95;
+      z-index:20;
+      align-items:center;
+    }
+    .deleteZone.active{
+      border-style: solid;
+      background: rgba(214,69,61,0.16);
+    }
+    .deleteTxt{
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.3px;
+      text-align:center;
+      opacity:.9;
+      pointer-events:none;
+    }
+
     .trashZone{ align-items:center; }
     .zoneTitle{ width:100%; text-align:center; }
 
@@ -661,6 +717,9 @@ body.noArches .boardTop{ padding-top: 6px; }
   <div class="bigValueOutside" id="bigValueOutside">0</div>
 
   <div class="boardWrap" id="boardWrap">
+    <div class="deleteZone" id="deleteZone" aria-hidden="true" title="Dépose ici un jeton pour le supprimer du total">
+      <div class="deleteTxt zoneTitle">Poubelle <span aria-hidden="true">🗑️</span></div>
+    </div>
     <div class="trashZone" id="trashZone" aria-hidden="true" title="Dépose ici les jetons à échanger">
       <div class="trashTxt zoneTitle">Zone d’échange</div>
       <div class="binTokens" id="exchangeBinTokens"></div>
@@ -709,6 +768,7 @@ body.noArches .boardTop{ padding-top: 6px; }
     <div class="overlay" id="overlay"></div>
 
     <div class="resolveBar" id="resolveBar">
+      <div class="exchangeError" id="exchangeError" aria-hidden="true">✖</div>
       <div class="txt" id="resolveTxt">Mode échange</div>
       <div class="actions">
         <button class="btn" id="btnValidate">Valider l’échange</button>
@@ -743,7 +803,7 @@ body.noArches .boardTop{ padding-top: 6px; }
     cols: Array.from({length: COL_COUNT}, () => []),
     bin: [],
     dragging: null,
-    exchange: null, // {focusCol,leftCol,snapshotCols,snapshotBin,nextIdSnapshot}
+    exchange: null, // {snapshotCols,snapshotBin,nextIdSnapshot,snapshotTotal,undoLen}
     nextId: 1,
     undoStack: [],
     showBigValue: false,
@@ -759,6 +819,7 @@ body.noArches .boardTop{ padding-top: 6px; }
   const boardWrap = document.getElementById("boardWrap");
   const boardTopEl = document.querySelector(".boardTop");
   const retLayerEl = document.getElementById("retLayer");
+  const deleteZone = document.getElementById("deleteZone");
   const trashZone = document.getElementById("trashZone");
   const binTokens = document.getElementById("exchangeBinTokens");
 
@@ -773,6 +834,7 @@ body.noArches .boardTop{ padding-top: 6px; }
 
   const overlay = document.getElementById("overlay");
   const resolveBar = document.getElementById("resolveBar");
+  const exchangeError = document.getElementById("exchangeError");
   const resolveTxt = document.getElementById("resolveTxt");
   const btnValidate = document.getElementById("btnValidate");
   const btnCancel = document.getElementById("btnCancel");
@@ -788,13 +850,11 @@ body.noArches .boardTop{ padding-top: 6px; }
       cols: deepCopyCols(state.cols),
       bin: deepCopyBin(state.bin),
       exchange: state.exchange ? {
-        focusCol: state.exchange.focusCol,
-        leftCol: state.exchange.leftCol,
         snapshotCols: deepCopyCols(state.exchange.snapshotCols),
         snapshotBin: deepCopyBin(state.exchange.snapshotBin),
-        focusIds: Array.from(state.exchange.focusIds || []),
-        leftBaseIds: Array.from(state.exchange.leftBaseIds || []),
-        nextIdSnapshot: state.exchange.nextIdSnapshot
+        nextIdSnapshot: state.exchange.nextIdSnapshot,
+        snapshotTotal: state.exchange.snapshotTotal,
+        undoLen: state.exchange.undoLen
       } : null,
       nextId: state.nextId,
       showBigValue: state.showBigValue,
@@ -810,13 +870,11 @@ body.noArches .boardTop{ padding-top: 6px; }
     state.cols = deepCopyCols(snap.cols);
     state.bin  = deepCopyBin(snap.bin);
     state.exchange = snap.exchange ? {
-      focusCol: snap.exchange.focusCol,
-      leftCol: snap.exchange.leftCol,
       snapshotCols: deepCopyCols(snap.exchange.snapshotCols),
       snapshotBin: deepCopyBin(snap.exchange.snapshotBin),
-      focusIds: new Set(snap.exchange.focusIds || []),
-      leftBaseIds: new Set(snap.exchange.leftBaseIds || []),
-      nextIdSnapshot: snap.exchange.nextIdSnapshot
+      nextIdSnapshot: snap.exchange.nextIdSnapshot,
+      snapshotTotal: snap.exchange.snapshotTotal,
+      undoLen: snap.exchange.undoLen
     } : null;
     state.nextId = snap.nextId;
     state.showBigValue = snap.showBigValue;
@@ -887,15 +945,6 @@ body.noArches .boardTop{ padding-top: 6px; }
       col.dataset.colIndex = String(i);
       col.dataset.group = String(Math.floor(i/3));
 
-      const exBtn = document.createElement("div");
-      exBtn.className = "exBtn";
-      exBtn.textContent = "Échanger";
-      exBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        enterExchange(i);
-      });
-      col.appendChild(exBtn);
-
       const head = document.createElement("div");
       head.className = "colHeader";
 
@@ -964,34 +1013,61 @@ function positionTrashZone(){
   if(cols.length === 0) return;
   const last = cols[cols.length - 1].getBoundingClientRect();
 
-  const top  = (last.top - wrapRect.top) + 6;
+  const baseTop  = (last.top - wrapRect.top) + 6;
 
-  // ✅ Sans millions : on réserve un vrai espace à droite (zone d’échange plus grande)
+  // Paramètres zone supprimée / zone d'échange
+  const gap = 8; // espace entre les deux zones
+  const totalH = Math.max(120, (wrapRect.height - baseTop) - 10);
+  // petite zone supprimée : fixe mais adaptable
+  let delH = Math.max(52, Math.min(80, Math.round(totalH * 0.18)));
+  // 🔧 Zone supprimée un peu plus grande (≈ x2)
+  delH = Math.min(160, Math.round(delH * 2));
+  // la zone d'échange garde une hauteur confortable
+  let exH = Math.max(120, totalH - delH - gap);
+  // si on est trop court, on réduit la zone supprimée
+  if(totalH - exH - gap < 44){
+    delH = Math.max(44, totalH - 120 - gap);
+    exH  = Math.max(120, totalH - delH - gap);
+  }
+
+  // ✅ Sans millions : on réserve un vrai espace à droite (zone plus large)
   if(!state.showMillions){
     const zoneW = Math.max(180, Math.min(300, Math.round(wrapRect.width * 0.22)));
     const left  = wrapRect.width - zoneW - 10;
-    const height = Math.max(120, (wrapRect.height - top) - 10);
+
+    if(deleteZone){
+      deleteZone.style.left = left + "px";
+      deleteZone.style.top  = (baseTop + exH + gap) + "px";
+      deleteZone.style.width = zoneW + "px";
+      deleteZone.style.height = delH + "px";
+    }
 
     trashZone.style.left = left + "px";
-    trashZone.style.top  = top + "px";
+    trashZone.style.top  = baseTop + "px";
     trashZone.style.width = zoneW + "px";
-    trashZone.style.height = height + "px";
+    trashZone.style.height = exH + "px";
 
     setReserveRight(zoneW + 10);
     return;
   }
 
-  // ✅ Avec millions : on garde exactement le comportement actuel
+  // ✅ Avec millions : on garde exactement le comportement actuel (réserve à droite = 0)
   setReserveRight(0);
 
   const left = (last.right - wrapRect.left) + 10;
   const width = Math.max(120, (wrapRect.width - left) - 10);
-  const height = Math.max(120, (wrapRect.height - top) - 10);
+
+  if(deleteZone){
+    deleteZone.style.left = left + "px";
+    deleteZone.style.top  = (baseTop + exH + gap) + "px";
+    deleteZone.style.width = width + "px";
+    deleteZone.style.height = delH + "px";
+  }
 
   trashZone.style.left = left + "px";
-  trashZone.style.top  = top + "px";
+  trashZone.style.top  = baseTop + "px";
   trashZone.style.width = width + "px";
-  trashZone.style.height = height + "px";
+  trashZone.style.height = exH + "px";
 }
   window.addEventListener("resize", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } });
   window.addEventListener("scroll", () => { positionTrashZone(); if(state.exchange){ positionResolveBar(); } }, {passive:true});
@@ -1017,24 +1093,11 @@ function positionTrashZone(){
   }
 
   function isColAllowed(colIndex){
-    if(!state.exchange) return true;
-    return colIndex === state.exchange.focusCol || colIndex === state.exchange.leftCol;
+    return true;
   }
 
   function isTokenDraggable(fromType, colIndex, tok){
-    if(!state.exchange) return true;
-    if(fromType === "bin") return true;
-
-    const {focusCol, leftCol, leftBaseIds} = state.exchange;
-
-    if(colIndex === focusCol) return true;
-
-    // colonne de gauche : on bloque uniquement les jetons qui étaient déjà là au départ
-    if(colIndex === leftCol){
-      return !(leftBaseIds && leftBaseIds.has(tok.id));
-    }
-
-    return false;
+    return true;
   }
 
   function render(){
@@ -1055,15 +1118,6 @@ function positionTrashZone(){
         el.dataset.source = "col";
         el.dataset.colIndex = String(i);
 
-        if(state.exchange){
-          const draggable = isTokenDraggable("col", i, tok);
-          el.classList.toggle("locked", !draggable);
-          // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
-          if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
-            el.classList.add("toResolve");
-          }
-        }
-
         body.appendChild(el);
         enableDrag(el, {type:"col", colIndex:i, id:tok.id});
       }
@@ -1071,14 +1125,7 @@ function positionTrashZone(){
       colEl.classList.toggle("has2", state.cols[i].length >= 2);
 
       colEl.classList.toggle("noEx", (!state.showMillions && i === 3));
-
-      if(state.exchange){
-        const locked = !isColAllowed(i);
-        colEl.classList.toggle("locked", locked);
-        colEl.classList.toggle("focus", !locked);
-      }else{
-        colEl.classList.remove("locked","focus");
-      }
+      colEl.classList.remove("locked","focus");
     }
 
     renderBin();
@@ -1092,6 +1139,16 @@ function positionTrashZone(){
     if(!trashZone) return false;
     const r = trashZone.getBoundingClientRect();
     return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  }
+
+  function isOverDelete(x,y){
+    if(!deleteZone) return false;
+    const r = deleteZone.getBoundingClientRect();
+    return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+  }
+  function setDeleteActive(on){
+    if(!deleteZone) return;
+    deleteZone.classList.toggle("active", !!on);
   }
   function setTrashActive(on){
     if(!trashZone) return;
@@ -1174,6 +1231,7 @@ function positionTrashZone(){
     d.el.style.left = (e.clientX - d.offsetX) + "px";
     d.el.style.top  = (e.clientY - d.offsetY) + "px";
     setTrashActive(isOverTrash(e.clientX, e.clientY));
+    setDeleteActive(isOverDelete(e.clientX, e.clientY));
   }
 
   function findDropColumn(x,y){
@@ -1182,7 +1240,6 @@ function positionTrashZone(){
       const rect = col.getBoundingClientRect();
       if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom){
         const idx = Number(col.dataset.colIndex);
-        if(state.exchange && !isColAllowed(idx)) return null;
         return idx;
       }
     }
@@ -1213,12 +1270,26 @@ function positionTrashZone(){
     e.preventDefault();
 
     const d = state.dragging;
-    const overBin = isOverTrash(e.clientX, e.clientY);
-    const dropCol = overBin ? null : findDropColumn(e.clientX, e.clientY);
+    const overDelete = isOverDelete(e.clientX, e.clientY);
+    const overBin = overDelete ? false : isOverTrash(e.clientX, e.clientY);
+    const dropCol = (overDelete || overBin) ? null : findDropColumn(e.clientX, e.clientY);
 
     let didChange = false;
 
-    if(dropCol !== null){
+    if(overDelete){
+      // ✅ Suppression : supprime le jeton du total (il disparaît)
+      if(d.from.type === "col"){
+        pushUndo();
+        removeToken(d.from.colIndex, d.id);
+        didChange = true;
+      } else if(d.from.type === "bin"){
+        pushUndo();
+        removeTokenFromBin(d.id);
+        didChange = true;
+      }
+
+    }
+else if(dropCol !== null){
       if(d.from.type === "tray"){
         pushUndo();
         addTokenToCol(dropCol, d.v);
@@ -1238,15 +1309,13 @@ function positionTrashZone(){
         }
       }
     } else if(overBin){
-      if(state.exchange && d.from.type === "col"){
-        // On ne dépose à droite QUE les jetons de la colonne cliquée
-        if(d.from.colIndex === state.exchange.focusCol){
-          pushUndo();
-          const tok = removeToken(d.from.colIndex, d.id);
-          if(tok){
-            state.bin.push(tok);
-            didChange = true;
-          }
+      if(d.from.type === "col"){
+        if(!state.exchange) startFreeExchange();
+        pushUndo();
+        const tok = removeToken(d.from.colIndex, d.id);
+        if(tok){
+          state.bin.push(tok);
+          didChange = true;
         }
       }
     } else {
@@ -1261,6 +1330,7 @@ function positionTrashZone(){
 
     d.el.remove();
     setTrashActive(false);
+    setDeleteActive(false);
 
     if(!didChange && d.originalEl){
       d.originalEl.style.visibility = "";
@@ -1274,15 +1344,14 @@ function positionTrashZone(){
   }
 
   function applyExchangeUI(){
+    // ✅ Mode échange libre : aucune zone grisée / aucun verrouillage.
+    overlay.style.display = "none";
+    btnExitResolve.style.display = "none";
     if(!state.exchange){
-      overlay.style.display = "none";
       resolveBar.style.display = "none";
-      btnExitResolve.style.display = "none";
       return;
     }
-    overlay.style.display = "block";
     resolveBar.style.display = "flex";
-    btnExitResolve.style.display = "inline-flex";
 
     // Position once measurable (prevents weird placement)
     resolveBar.style.visibility = "hidden";
@@ -1293,80 +1362,82 @@ function positionTrashZone(){
     });
   }
 
-  function enterExchange(focusCol){
-    const leftCol = focusCol - 1;
-    if(leftCol < 0) return;
+  function startFreeExchange(){
     if(state.exchange) return;
-
-    // ✅ Si "Millions" est masqué, on empêche l’échange qui aurait besoin d’une colonne invisible (col 3 -> col 2)
-    if(!state.showMillions && leftCol < 3) return;
-
     state.exchange = {
-      focusCol,
-      leftCol,
-      focusIds: new Set(state.cols[focusCol].map(t=>t.id)),
-      leftBaseIds: new Set(state.cols[leftCol].map(t=>t.id)),
       snapshotCols: deepCopyCols(state.cols),
       snapshotBin: deepCopyBin(state.bin),
-      nextIdSnapshot: state.nextId
+      nextIdSnapshot: state.nextId,
+      snapshotTotal: totalValue(),
+      undoLen: state.undoStack.length
     };
-
-    resolveTxt.textContent =
-      "Échange : dépose dans la zone d’échange (à droite) les jetons que tu remplaces, puis place les nouveaux jetons dans les 2 colonnes. " +
-      "Clique « Valider l'échange » quand tu as fini.";
-
-    render();
   }
 
   function rollbackExchange(){
     const snap = state.exchange;
+    if(!snap) return;
+
+    // ✅ On revient exactement à l’état d’avant le début de l’échange
     state.cols = deepCopyCols(snap.snapshotCols);
     state.bin  = deepCopyBin(snap.snapshotBin);
     state.nextId = snap.nextIdSnapshot;
+
+    // ✅ Pour éviter des états “fantômes” dans l’Undo, on tronque l’historique
+    if(typeof snap.undoLen === "number"){
+      state.undoStack = state.undoStack.slice(0, snap.undoLen);
+    }
+
     state.exchange = null;
     render();
   }
 
-  function twoColValue(cols, leftCol, focusCol){
-    const a = cols[leftCol].reduce((s,t)=>s+t.v,0) * placeValue(leftCol);
-    const b = cols[focusCol].reduce((s,t)=>s+t.v,0) * placeValue(focusCol);
-    return a+b;
+  
+  let exchangeErrorTimer = null;
+  function flashExchangeError(){
+    if(!exchangeError) return;
+    // restart animation
+    exchangeError.classList.remove("show");
+    // force reflow
+    void exchangeError.offsetWidth;
+    exchangeError.classList.add("show");
+    clearTimeout(exchangeErrorTimer);
+    exchangeErrorTimer = setTimeout(() => exchangeError.classList.remove("show"), 1200);
   }
 
-  function validateExchange(){
+function validateExchange(){
     if(!state.exchange) return;
 
-    const {focusCol, leftCol, snapshotCols} = state.exchange;
-    const before = twoColValue(snapshotCols, leftCol, focusCol);
-    const after  = twoColValue(state.cols,     leftCol, focusCol);
+    const snap = state.exchange;
+    const before = snap.snapshotTotal;
+    const after  = totalValue();
 
-    // ✅ V40 : on accepte aussi les échanges “en plusieurs étapes”
-    // (la colonne peut encore être en retenue), MAIS on n’accepte pas les erreurs :
-    // - la valeur sur les 2 colonnes doit être conservée
-    // - il faut qu’il y ait eu un vrai changement (sinon on clique “Annuler”)
     const changed =
-      JSON.stringify(state.cols[leftCol])  !== JSON.stringify(snapshotCols[leftCol]) ||
-      JSON.stringify(state.cols[focusCol]) !== JSON.stringify(snapshotCols[focusCol]);
+      JSON.stringify(state.cols) !== JSON.stringify(snap.snapshotCols) ||
+      JSON.stringify(state.bin)  !== JSON.stringify(snap.snapshotBin);
 
+    // ✅ Échange correct : la valeur totale du plateau est conservée
     if(after === before && changed){
       pushUndo();
-      state.bin = [];
-      state.exchange = null;
+      state.bin = [];         // on vide la zone d’échange
+      state.exchange = null;  // on sort du mode échange
       render();
       return;
     }
 
+    // ❌ Erreur : on annule et on revient comme avant
+    flashExchangeError();
     resolveBar.classList.add("shake");
     setTimeout(() => resolveBar.classList.remove("shake"), 280);
-    rollbackExchange();
-  }
+    // ⏳ Laisse le feedback visible un court instant avant le rollback
+    setTimeout(() => rollbackExchange(), 520);
+}
 
   function exitExchange(){
     if(!state.exchange) return;
     rollbackExchange();
   }
 
-  // Buttons
+// Buttons
   btnUndo.addEventListener("click", () => undo());
 
   btnClear.addEventListener("click", () => {
