@@ -764,6 +764,97 @@ const numOpposeModeEl = document.getElementById("numOpposeMode");
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
 
+function sanitizeIntegerInput(el){
+  if(!el) return false;
+  const raw = (el.value ?? "").toString().trim();
+  if(raw === "") return false;
+  let v = Number(raw);
+  if(!Number.isFinite(v)) return false;
+
+  // Enforce integer (these UIs are all integer-based)
+  v = Math.round(v);
+  if(Object.is(v, -0)) v = 0;
+
+  const minAttr = (el.min ?? "").toString().trim();
+  const maxAttr = (el.max ?? "").toString().trim();
+  const hasMin = minAttr !== "" && Number.isFinite(Number(minAttr));
+  const hasMax = maxAttr !== "" && Number.isFinite(Number(maxAttr));
+  if(hasMin) v = Math.max(v, Number(minAttr));
+  if(hasMax) v = Math.min(v, Number(maxAttr));
+
+  const newVal = String(v);
+  if(el.value !== newVal){
+    el.value = newVal;
+    return true;
+  }
+  return false;
+}
+
+function hookNumberInputClamps(){
+  const all = Array.from(document.querySelectorAll('input[type="number"]'));
+  all.forEach(el=>{
+    // Seeds are intentionally free-form; leave them alone.
+    if(el.id === "seed" || (el.id && el.id.startsWith("seed"))) return;
+
+    // Only clamp fields that declare min/max (static or dynamic). Others stay as-is.
+    const minAttr = (el.min ?? "").toString().trim();
+    const maxAttr = (el.max ?? "").toString().trim();
+    if(minAttr === "" && maxAttr === "") return;
+
+    const handler = ()=>{
+      const changed = sanitizeIntegerInput(el);
+      // If we changed the value (clamped), regenerate to match what the UI now shows.
+      if(changed) scheduleAutoGenerate();
+    };
+    el.addEventListener("blur", handler);
+    el.addEventListener("change", handler);
+  });
+}
+function hookMinMaxPairs(){
+  // Enforce basic coherence on common (min/max) input pairs:
+  // if min > max, we set max = min (keeps the user's min as the "master", per UI expectation).
+  const pairs = [
+    [unitTotalMinEl, unitTotalMaxEl],
+    [numTasksMinEl, numTasksEl], // numbered tasks range (only when range UI is visible)
+    [numVisibleMinEl, numVisibleMaxEl],
+    [numTotalMinEl, numTotalMaxEl],
+    [nineTotalMinEl, nineTotalMaxEl],
+    [eightTotalMinEl, eightTotalMaxEl],
+    [invVisibleMinEl, invVisibleMaxEl],
+    [invTotalMinEl, invTotalMaxEl],
+    [sysVisibleMinEl, sysVisibleMaxEl],
+    [sysTotalMinEl, sysTotalMaxEl],
+  ];
+
+  pairs.forEach(([minEl, maxEl])=>{
+    if(!minEl || !maxEl) return;
+
+    const handler = ()=>{
+      // Only enforce when both inputs are currently visible (avoid touching "saved" hidden values).
+      if(minEl.offsetParent === null || maxEl.offsetParent === null) return;
+
+      let changed = false;
+      changed = sanitizeIntegerInput(minEl) || changed;
+      changed = sanitizeIntegerInput(maxEl) || changed;
+
+      const minV = Number(minEl.value);
+      const maxV = Number(maxEl.value);
+      if(Number.isFinite(minV) && Number.isFinite(maxV) && minV > maxV){
+        maxEl.value = String(minV);
+        sanitizeIntegerInput(maxEl);
+        changed = true;
+      }
+      if(changed) scheduleAutoGenerate();
+    };
+
+    minEl.addEventListener("blur", handler);
+    minEl.addEventListener("change", handler);
+    maxEl.addEventListener("blur", handler);
+    maxEl.addEventListener("change", handler);
+  });
+}
+
+
 
 // Remember per-mode Total bounds for numbered modes (B and B±)
 let lastActivityForBounds = activityEl.value;
@@ -957,6 +1048,11 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
   el.addEventListener("change", scheduleAutoGenerate);
 });
 
+// Clamp numeric inputs (min/max) so users cannot leave out-of-range values (e.g., 10000) in the UI.
+hookNumberInputClamps();
+
+
+hookMinMaxPairs();
 /* Positions + splat */
 function blobPath(cx, cy, r){
   const n = 40;
@@ -1006,7 +1102,11 @@ function getUnitSplats(taskCount){
 
 /* TRAY CONFIGURATION */
 function getTrayConfig(mode){
-  if(mode === "C" || mode === "D") return { x:120, y:20, w:1360, h:650, isHigh: true }; 
+  // Plateau (coordonnées de génération + affichage écran)
+  // - Mode C : on réserve une zone d'en-tête (TOTAL au-dessus) et une zone d'indices en bas
+  // - Mode D : comme C (TOTAL au-dessus + indices sous le plateau)
+  if(mode === "C") return { x:120, y:270, w:1360, h:550, isHigh: false };
+  if(mode === "D") return { x:120, y:270, w:1360, h:550, isHigh: false };
   return { x:120, y:260, w:1360, h:650, isHigh: false };
 }
 
@@ -1024,9 +1124,13 @@ function getNumberedSplats(taskCount, mode){
     5:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:680, cy:750},{cx:960, cy:750}],
     6:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:540, cy:750},{cx:820, cy:750},{cx:1100, cy:750}],
   };
-  const base = anchors[taskCount] || anchors[2];
-  
-  const r = (taskCount<=1) ? 260 : (taskCount===2 ? 210 : (taskCount===3 ? 165 : (taskCount===4 ? 150 : (taskCount===5 ? 130 : 118))));
+  let base = anchors[taskCount] || anchors[2];
+  let r = (taskCount<=1) ? 260 : (taskCount===2 ? 210 : (taskCount===3 ? 165 : (taskCount===4 ? 150 : (taskCount===5 ? 130 : 118))));
+  // Mode C : 3 taches => ancrages un peu plus centraux + rayon reduit, pour que les blobs restent dans le plateau.
+  if((mode === "C" || mode === "D") && taskCount === 3){
+    base = [{cx:820, cy:cyMid-90},{cx:580, cy:cyMid+110},{cx:1060, cy:cyMid+110}];
+    r = 145;
+  }
   return base.map(p => ({...p, r}));
 }
 
@@ -1155,14 +1259,7 @@ function assignPositionsNumbered(card, rng){
     if(cx > tray.x + tray.w - beadR - margin) return false;
     if(cy < tray.y + beadR + margin) return false;
     if(cy > tray.y + tray.h - beadR - margin) return false;
-
-    // PROTECTION ZONE TOTAL (MODE C & D) STRICTE
-    if(card.family === "C" || card.family === "D"){
-        // Box total approx 300x240 - On interdit toute bille ici
-        if((cx - beadR) < 420 && (cy - beadR) < 260) return false;
-    }
-
-    for(const s of splats){
+for(const s of splats){
       const d = Math.hypot(cx - s.cx, cy - s.cy);
       if(d < s.r + beadR + 14) return false;
     }
@@ -2566,15 +2663,17 @@ function renderCard(card, revealed){
   // Config plateau : remonte si mode C ou D
   const trayCfg = getTrayConfig(card.family);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
+  const isModeC = (card.family === "C");
 
-  svg.appendChild(el("rect",{
+  // Plateau : les coordonnées sont entièrement gérées par getTrayConfig (pas de décalage supplémentaire)
+  const trayLayer = svg;
+  trayLayer.appendChild(el("rect",{
     x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
     rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
   }));
 
   // TOTAL Position
   let tx = 800, ty = 92; 
-  if(isModeC_or_D){ tx = 240; ty = 90; } // Remonte pour aligner le cadre TOTAL avec le cadre extérieur
 
   const gTotal = el("g", {id:"totalGroup"});
 
@@ -2721,8 +2820,6 @@ if(hiddenSums.length <= 1){
   if(!isBarModelTotal){
   // Rect du Total
     let boxX = bbTotal.x - padX;
-    if(isModeC_or_D) boxX = 120; 
-
     svg.insertBefore(el("rect",{
       x: boxX,
       y: bbTotal.y - padY,
@@ -2735,21 +2832,61 @@ if(hiddenSums.length <= 1){
     }), gTotal);
   }
 
-  /* Afficahge des indices si Mode C ou D : EN BAS */
+  /* Affichage des indices si Mode C ou D */
   if(isModeC_or_D && card._inv && card._inv.indices){
     const indices = card._inv.indices;
     const gInd = el("g", {id: "clueGroup"});
-    let startY = 750;
-    
-    indices.forEach((txt, i) => {
-       gInd.appendChild(text(800, startY, txt, {
-          "text-anchor":"middle","font-size":"45", // Gros texte
-          "fill":"var(--ink)","font-weight":"700"
-       }));
-       startY += 65; 
-    });
-    svg.appendChild(gInd);
+
+    if(card.family === "C"){
+      // Mode C : indices sous le plateau, sans gros vide en dessous
+      const trayBottom = trayCfg.y + trayCfg.h;
+      // Mode C : les phrases doivent etre proches du plateau (sans gros vide dessous)
+      const yMax = 965; // viewBox H=1000
+      let lineH = 65;
+      let startY = trayBottom + 70;
+
+      // Si ça ne rentre pas, on compacte l'interligne
+      if(indices.length > 1){
+        const needed = startY + (indices.length - 1) * lineH;
+        if(needed > yMax){
+          lineH = Math.max(48, (yMax - startY) / (indices.length - 1));
+        }
+      }
+indices.forEach((txt, i) => {
+        gInd.appendChild(text(800, startY + i*lineH, txt, {
+          "text-anchor":"middle",
+          "font-size":"45",
+          "fill":"var(--ink)",
+          "font-weight":"700"
+        }));
+      });
+    } else {
+      // Mode D : indices sous le plateau (comme C), sans gros vide en dessous
+      const trayBottom = trayCfg.y + trayCfg.h;
+      const yMax = 965; // viewBox H=1000
+      let lineH = 65;
+      let startY = trayBottom + 70;
+
+      // Si ça ne rentre pas, on compacte l'interligne
+      if(indices.length > 1){
+        const needed = startY + (indices.length - 1) * lineH;
+        if(needed > yMax){
+          lineH = Math.max(48, (yMax - startY) / (indices.length - 1));
+        }
+      }
+
+      indices.forEach((txt, i) => {
+        gInd.appendChild(text(800, startY + i*lineH, txt, {
+          "text-anchor":"middle",
+          "font-size":"45",
+          "fill":"var(--ink)",
+          "font-weight":"700"
+        }));
+      });
+    }svg.appendChild(gInd);
   }
+
+  const layer = trayLayer;
 
   // unit mode (A)
   if(card.family === "U"){
@@ -2757,11 +2894,11 @@ if(hiddenSums.length <= 1){
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
+      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
     }
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
-      svg.appendChild(el("path",{
+      layer.appendChild(el("path",{
         d: blobPath(s.cx, s.cy, s.r),
         fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
         stroke: "var(--splat-stroke)",
@@ -2771,7 +2908,7 @@ if(hiddenSums.length <= 1){
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--unit-fill)", stroke:"var(--unit-stroke)", "stroke-width":"3"}));
+      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--unit-fill)", stroke:"var(--unit-stroke)", "stroke-width":"3"}));
     }
     return;
   }
@@ -2785,8 +2922,8 @@ if(hiddenSums.length <= 1){
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy, String(card.hidden[i]), {
+      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
+      layer.appendChild(text(cx, cy, String(card.hidden[i]), {
         "text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
       }));
     }
@@ -2806,7 +2943,7 @@ if(hiddenSums.length <= 1){
       } else {
         fillCol = revealed ? "var(--splat-reveal)" : "var(--splat-cover)";
       }
-      svg.appendChild(el("path",{
+      layer.appendChild(el("path",{
         d: blobPath(s.cx, s.cy, s.r),
         fill: fillCol,
         stroke: "var(--splat-stroke)",
@@ -2815,7 +2952,7 @@ if(hiddenSums.length <= 1){
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
         const y = revealed ? (s.cy - s.r*0.55) : (s.cy);
-        svg.appendChild(text(s.cx, y, "opposé", {
+        layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "font-size": fs,
@@ -2830,7 +2967,7 @@ if(hiddenSums.length <= 1){
       if(opp && opp.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
         const y = revealed ? (s.cy - s.r*0.55) : (s.cy);
-        svg.appendChild(text(s.cx, y, "opposé", {
+        layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "font-size": fs,
@@ -2849,8 +2986,8 @@ if(hiddenSums.length <= 1){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
       const col = beadColorForValue(card.visible[i]);
-      svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      svg.appendChild(text(cx, cy, String(card.visible[i]), {
+      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      layer.appendChild(text(cx, cy, String(card.visible[i]), {
         "text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
       }));
     }
@@ -2862,11 +2999,11 @@ if(hiddenSums.length <= 1){
   for(let i=0;i<card.hidden.length;i++){
     const cx = card._posH?.[i]?.cx ?? 820;
     const cy = card._posH?.[i]?.cy ?? 610;
-    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
+    layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
+    layer.appendChild(text(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
   const s0 = card._splat || {cx:820, cy:610, r:220};
-  svg.appendChild(el("path",{
+  layer.appendChild(el("path",{
     d: blobPath(s0.cx, s0.cy, s0.r),
     fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
     stroke: "var(--splat-stroke)",
@@ -2876,8 +3013,8 @@ if(hiddenSums.length <= 1){
     const cx = card._posV?.[i]?.cx ?? (450 + i*250);
     const cy = card._posV?.[i]?.cy ?? 380;
     const col = beadColorForValue(card.visible[i]);
-    svg.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-    svg.appendChild(text(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
+    layer.appendChild(el("circle",{cx, cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+    layer.appendChild(text(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
 }
 
@@ -2887,29 +3024,30 @@ function renderCardEquation(card, revealed){
   const trays = card._eqTrays;
   const pos = card._eqPos;
   if(!eq || !trays || !pos) return;
+  const layer = svg; // FIX: en EQ on dessine directement dans le svg principal
 
   const cover = "rgba(0,0,0,0.95)";
   const reveal = "rgba(220,220,220,0.35)";
 
   // Deux plateaux
-  svg.appendChild(el("rect",{
+  layer.appendChild(el("rect",{
     x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
     rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
   }));
-  svg.appendChild(el("rect",{
+  layer.appendChild(el("rect",{
     x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h,
     rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
   }));
 
   // Trait vertical de séparation
-  svg.appendChild(el("line",{
+  layer.appendChild(el("line",{
     x1:trays.midX, y1:trays.left.y-10,
     x2:trays.midX, y2:trays.left.y+trays.left.h+10,
     stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
   }));
 
   // Consigne (uniquement en haut)
-  svg.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
+  layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
     "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
   }));
     function drawSide(side, metaSide){
@@ -2922,8 +3060,8 @@ function renderCardEquation(card, revealed){
       for(const val of taskArr){
         const p = side.posH?.[hIndex] || {cx:820, cy:610};
         const col = beadColorForValue(val);
-        svg.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-        svg.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+        layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+        layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
           "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
         }));
         hIndex++;
@@ -2932,7 +3070,7 @@ function renderCardEquation(card, revealed){
 
     // taches
     for(const s of (side.splats || [])){
-      svg.appendChild(el("path",{
+      layer.appendChild(el("path",{
         d: blobPath(s.cx, s.cy, s.r),
         fill: revealed ? reveal : cover,
         stroke:"rgba(0,0,0,0.18)",
@@ -2945,8 +3083,8 @@ function renderCardEquation(card, revealed){
       const p = side.posV?.[i] || {cx:450+i*40, cy:360};
       const val = metaSide.visible[i];
       const col = beadColorForValue(val);
-      svg.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      svg.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+      layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
         "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
       }));
     }
@@ -3031,18 +3169,25 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     return;
   }
 
-  targetSvg.appendChild(tEl("rect",{x:120,y:260,width:1360,height:650,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
-
-  // Adapt for print: if C/D, put total in box, else center
+  // Modes
   const isModeC_or_D = (card.family === "C" || card.family === "D");
-  let tx = 800, ty = 92;
-  let printOffsetY = 0; 
+  const isModeC = (card.family === "C");
+  const isModeD = (card.family === "D");
 
-  if(isModeC_or_D){
-    tx = 260;
-    ty = 260 + 70; // Aligné avec le haut du plateau (impression)
-    printOffsetY = 240; // Offset to match tray shift (20->260)
-  } 
+  // Plateau (impression) : calé sur le plateau "logique" de génération
+  const trayY = (isModeC || isModeD) ? 270 : 260;
+  const trayH = (isModeC || isModeD) ? 550 : 650;
+
+  targetSvg.appendChild(tEl("rect",{x:120,y:trayY,width:1360,height:trayH,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+
+  // Adapt for print: position du total et éventuel décalage des coordonnées générées
+  let tx = 800, ty = 92;
+  let printOffsetY = 0;
+  // Position du TOTAL : au-dessus du plateau (comme A/B), centré
+  if(isModeC || isModeD){
+    tx = 800;
+    ty = 92;
+  }
 
   const g = tEl("g",{id:"totalGroupPrint"});
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
@@ -3058,33 +3203,28 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   let boxW = 360;
   let boxX = tx - boxW/2;
 
-  // En C/D, on garde le bord gauche aligné avec le plateau (x=120)
-  if(isModeC_or_D){
+  // En C/D, on garde la taille du cadre ; pour D on centre sur le texte (TOTAL centré),
+  // et on conserve l'alignement historique de C si besoin.
+  if(isModeD){
+    boxW = 280;
+    boxX = tx - boxW/2;
+  } else if(isModeC){
     boxW = 280;
     boxX = 120;
   }
-
-  targetSvg.insertBefore(tEl("rect",{
+targetSvg.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
     fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4"
   }), g);
 
-    /* Indices impression Mode C/D : AU-DESSUS DU PLATEAU (zone y<260) */
+    /* Indices impression Mode C/D : SOUS LE PLATEAU */
   if(isModeC_or_D && card._inv && card._inv.indices){
     const indices = card._inv.indices;
-    const lineH = 78;
-
-    // Zone "haut de carte" : on force le dernier indice à rester au-dessus du plateau (plateau démarre à y=260)
-    const topZoneY1 = 70;
-    const topZoneY2 = 180;
-
-    let startY = topZoneY2 - (indices.length-1)*lineH;
-    startY = Math.max(topZoneY1, startY);
-
-    const startX = 800; // centré (impression)
+    const lineH = 84;
+    const startY = trayY + trayH + 220;
 
     indices.forEach((txt, i) => {
-      targetSvg.appendChild(tText(startX, startY + i*lineH, txt, {
+      targetSvg.appendChild(tText(800, startY + i*lineH, txt, {
         "text-anchor":"middle","font-size":"56","fill":"#000","font-weight":"700"
       }));
     });
