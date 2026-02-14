@@ -1134,6 +1134,48 @@ body.noArches .boardTop{ padding-top: 6px; }
   }
   function formatGrouped(n){ return n.toLocaleString("fr-FR"); }
 
+  // ✅ Exercice : on n'autorise la validation que si tous les échanges nécessaires ont été faits
+  function firstVisibleColIndex(){
+    // Millions OFF -> on masque les 3 colonnes de gauche (millions)
+    return state.showMillions ? 0 : 3;
+  }
+  function pendingExchangeCols(){
+    const cols = [];
+    const first = firstVisibleColIndex();
+    for(let i=first;i<COL_COUNT;i++){
+      const arr = state.cols[i];
+      // Tant qu'il y a plus d'un jeton dans une colonne, la "réduction" n'est pas faite.
+      // Ex : 5 et 2 doivent être échangés contre 7.
+      if(arr.length > 1){ cols.push(i); continue; }
+      // Sécurité : si un jeton porte une valeur >= 10, ce n'est pas normalisé non plus.
+      if(arr.length === 1 && arr[0].v >= 10) cols.push(i);
+    }
+    return cols;
+  }
+  function updateExCheckBtnState(){
+    if(!btnExCheck) return;
+    let disabled = false;
+    let title = "";
+
+    if(!state.ex){
+      disabled = true;
+    }else if(state.exchange){
+      disabled = true;
+      title = "Termine l'échange avant de valider.";
+    }else{
+      const pending = pendingExchangeCols();
+      if(pending.length){
+        disabled = true;
+        title = "Fais les échanges avant de valider.";
+      }
+    }
+
+    btnExCheck.classList.toggle("disabled", disabled);
+    btnExCheck.disabled = disabled;
+    btnExCheck.title = title;
+  }
+
+
   // ====== Exercices : Additions ======
   function visibleDigitsCount(){
     // Millions OFF -> 6 colonnes visibles (milliers + unités)
@@ -1389,6 +1431,27 @@ body.noArches .boardTop{ padding-top: 6px; }
       return;
     }
 
+    // ✅ On n'accepte pas une réponse si des retenues/échanges restent à faire :
+    // ex : 8 + 5 = 13 (mettre 8 et 5 en unité sans échange) -> refusé
+    const pending = pendingExchangeCols();
+    if(pending.length){
+      exFeedback.textContent = "❗ Fais les échanges avant de valider.";
+      exFeedback.className = "exFeedback no";
+
+      // Petit repère visuel : secouer les colonnes concernées
+      pending.forEach(i => {
+        const colEl = document.querySelector('.col[data-col-index="' + i + '"]');
+        if(colEl){
+          colEl.classList.add("shake");
+          setTimeout(() => colEl.classList.remove("shake"), 280);
+        }
+      });
+
+      exerciseCard.classList.add("shake");
+      setTimeout(() => exerciseCard.classList.remove("shake"), 280);
+      return;
+    }
+
     const got = totalValue();
     const w = Math.max((state.ex.maxLen || 1), String(got).length);
 
@@ -1454,14 +1517,6 @@ body.noArches .boardTop{ padding-top: 6px; }
       col.dataset.colIndex = String(i);
       col.dataset.group = String(Math.floor(i/3));
 
-      const exBtn = document.createElement("div");
-      exBtn.className = "exBtn";
-      exBtn.textContent = "Échanger";
-      exBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        enterExchange(i);
-      });
-      col.appendChild(exBtn);
 
       const head = document.createElement("div");
       head.className = "colHeader";
@@ -1617,14 +1672,23 @@ function positionTrashZone(){
   }
 
   function isColAllowed(colIndex){
-    if(!state.exchange) return true;
-    return colIndex === state.exchange.focusCol || colIndex === state.exchange.leftCol;
+    // ✅ Échange libre : toutes les colonnes sont autorisées
+    return true;
   }
 
   function isTokenDraggable(fromType, colIndex, tok){
     if(!state.exchange) return true;
     if(fromType === "bin") return true;
 
+    // ✅ ÉCHANGE LIBRE (transaction globale) :
+    // si l'échange a été déclenché par dépôt dans la zone (startFreeExchange),
+    // on ne bride RIEN : on peut déplacer autant de jetons que l'on veut, de n'importe où,
+    // puis valider/rollback en une fois.
+    if(typeof state.exchange.focusCol !== "number" || typeof state.exchange.leftCol !== "number"){
+      return true;
+    }
+
+    // Mode ancien (échange guidé colonne N <-> N-1) : on conserve la logique de verrouillage.
     const {focusCol, leftCol, leftBaseIds} = state.exchange;
 
     if(colIndex === focusCol) return true;
@@ -1673,9 +1737,8 @@ function positionTrashZone(){
       colEl.classList.toggle("noEx", (!state.showMillions && i === 3));
 
       if(state.exchange){
-        const locked = !isColAllowed(i);
-        colEl.classList.toggle("locked", locked);
-        colEl.classList.toggle("focus", !locked);
+        // ✅ Échange libre : on ne grise pas / on ne verrouille rien
+        colEl.classList.remove("locked","focus");
       }else{
         colEl.classList.remove("locked","focus");
       }
@@ -1695,6 +1758,7 @@ function positionTrashZone(){
 
     applyExchangeUI();
     updateUndoBtn();
+    updateExCheckBtnState();
   }
 
   function isOverTrash(x,y){
@@ -1847,15 +1911,15 @@ function positionTrashZone(){
         }
       }
     } else if(overBin){
-      if(state.exchange && d.from.type === "col"){
-        // On ne dépose à droite QUE les jetons de la colonne cliquée
-        if(d.from.colIndex === state.exchange.focusCol){
-          pushUndo();
-          const tok = removeToken(d.from.colIndex, d.id);
-          if(tok){
-            state.bin.push(tok);
-            didChange = true;
-          }
+      if(d.from.type === "col"){
+        // ✅ Démarre l'échange libre au premier dépôt dans la zone
+        if(!state.exchange) startFreeExchange();
+
+        pushUndo();
+        const tok = removeToken(d.from.colIndex, d.id);
+        if(tok){
+          state.bin.push(tok);
+          didChange = true;
         }
       }
     } else {
@@ -1883,13 +1947,15 @@ function positionTrashZone(){
   }
 
   function applyExchangeUI(){
+    // ✅ Échange libre : pas d'écran gris / pas de verrouillage du plateau
+    overlay.style.display = "none";
+
     if(!state.exchange){
-      overlay.style.display = "none";
       resolveBar.style.display = "none";
       btnExitResolve.style.display = "none";
       return;
     }
-    overlay.style.display = "block";
+
     resolveBar.style.display = "flex";
     btnExitResolve.style.display = "inline-flex";
 
@@ -1903,7 +1969,22 @@ function positionTrashZone(){
     });
   }
 
-  function enterExchange(focusCol){
+  
+  function startFreeExchange(){
+    if(state.exchange) return;
+
+    state.exchange = {
+      snapshotCols: deepCopyCols(state.cols),
+      snapshotBin: deepCopyBin(state.bin),
+      nextIdSnapshot: state.nextId
+    };
+
+    resolveTxt.textContent =
+      "Échange libre : dépose n'importe quels jetons dans la Zone d’échange (à droite), " +
+      "fais tes échanges (dans une ou plusieurs colonnes), puis clique « Valider l’échange ».";
+  }
+
+function enterExchange(focusCol){
     const leftCol = focusCol - 1;
     if(leftCol < 0) return;
     if(state.exchange) return;
@@ -1946,18 +2027,24 @@ function positionTrashZone(){
   function validateExchange(){
     if(!state.exchange) return;
 
-    const {focusCol, leftCol, snapshotCols} = state.exchange;
-    const before = twoColValue(snapshotCols, leftCol, focusCol);
-    const after  = twoColValue(state.cols,     leftCol, focusCol);
+    const {snapshotCols} = state.exchange;
 
-    // ✅ V40 : on accepte aussi les échanges “en plusieurs étapes”
-    // (la colonne peut encore être en retenue), MAIS on n’accepte pas les erreurs :
-    // - la valeur sur les 2 colonnes doit être conservée
-    // - il faut qu’il y ait eu un vrai changement (sinon on clique “Annuler”)
-    const changed =
-      JSON.stringify(state.cols[leftCol])  !== JSON.stringify(snapshotCols[leftCol]) ||
-      JSON.stringify(state.cols[focusCol]) !== JSON.stringify(snapshotCols[focusCol]);
+    const totalOf = (cols) => {
+      let total = 0;
+      for(let i=0;i<COL_COUNT;i++){
+        const s = cols[i].reduce((a,t)=>a+t.v,0);
+        total += s * placeValue(i);
+      }
+      return total;
+    };
 
+    const before = totalOf(snapshotCols);
+    const after  = totalOf(state.cols);
+
+    const changed = JSON.stringify(state.cols) !== JSON.stringify(snapshotCols);
+
+    // ✅ Échange libre : on valide si la valeur totale du plateau est conservée
+    // (on autorise les échanges en plusieurs étapes ; la normalisation est vérifiée au moment de "Valider" l'exercice)
     if(after === before && changed){
       pushUndo();
       state.bin = [];
