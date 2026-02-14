@@ -979,6 +979,10 @@ function hookMinMaxPairs(){
 let lastActivityForBounds = activityEl.value;
 const lastNumberedTotalBounds = { N: null, NPM: null };
 
+// Remember per-mode signed settings shared by B± and E± (same UI inputs)
+let lastActivityForSigned = activityEl.value;
+const lastSignedModeSettings = { NPM: null, EQPM: null };
+
 function getSeedForCurrentMode(){
   const act = activityEl.value;
   if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
@@ -1042,6 +1046,30 @@ function syncSettingsUI(){
     if(Number(numTotalMaxEl.value) < 1) numTotalMaxEl.value = "50";
   }
 
+  // --- B± vs E± : signed settings (abs max, taches opposees) share the same UI inputs ---
+  if(lastActivityForSigned && lastActivityForSigned !== act){
+    // Save current signed settings for the mode we leave (only B± / E± share these inputs)
+    if(lastActivityForSigned === "NPM" || lastActivityForSigned === "EQPM"){
+      lastSignedModeSettings[lastActivityForSigned] = {
+        absMax: String(numBeadAbsMaxEl.value),
+        oppose: String(numOpposeModeEl.value)
+      };
+    }
+    // Restore signed settings for the mode we enter
+    if(act === "NPM" || act === "EQPM"){
+      const saved = lastSignedModeSettings[act];
+      if(saved){
+        numBeadAbsMaxEl.value = saved.absMax;
+        numOpposeModeEl.value = saved.oppose;
+      } else {
+        // Defaults per mode (keep the UI initial values)
+        numBeadAbsMaxEl.value = "30";
+        numOpposeModeEl.value = "off";
+      }
+    }
+  }
+
+
   const isUnit = act === "U";
   const isEquation = (act === "EQ" || act === "EQPM");
   syncNumTasksUI(act);
@@ -1084,6 +1112,7 @@ function syncSettingsUI(){
 
   if(isUnit) syncUnitTotalBounds();
   lastActivityForBounds = act;
+  lastActivityForSigned = act;
 }
 
 function syncUnitTotalBounds(){
