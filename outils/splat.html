@@ -997,7 +997,7 @@ function getSeedForCurrentMode(){
 
 function syncSettingsUI(){
   const act = activityEl.value;
-
+  const prevAct = lastActivityForSigned;
 
   // --- B vs B± : Total bounds and allowed ranges (UI only, generator unchanged for now) ---
   if(lastActivityForBounds && lastActivityForBounds !== act){
@@ -1036,12 +1036,37 @@ function syncSettingsUI(){
         numTotalMaxEl.value = "30";
       }
     }
-  } else if(act === "N" || act === "EQ" || act === "EQPM"){
+  } else if(act === "EQPM"){
+    // E± accepts negative totals, constrained to [-99, +99]
+    numTotalMinEl.min = "-99"; numTotalMinEl.max = "99";
+    numTotalMaxEl.min = "-99"; numTotalMaxEl.max = "99";
+
+    // Default for E± when entering the mode (keep user values if already adjusted)
+    if(prevAct !== "EQPM"){
+      const curMin = String(numTotalMinEl.value).trim();
+      const curMax = String(numTotalMaxEl.value).trim();
+
+      if((curMin === "20" && curMax === "50") || (curMin === "-30" && curMax === "30")){
+        // Default for E± : [-20, +20]
+        numTotalMinEl.value = "-20";
+        numTotalMaxEl.value = "20";
+      } else {
+        // Clamp any carried-over values into [-99, +99]
+        numTotalMinEl.value = String(clamp(numberOr(curMin, -20), -99, 99));
+        numTotalMaxEl.value = String(clamp(numberOr(curMax, 20), -99, 99));
+      }
+
+      // Keep min <= max
+      if(Number(numTotalMaxEl.value) < Number(numTotalMinEl.value)){
+        numTotalMaxEl.value = String(numTotalMinEl.value);
+      }
+    }
+  } else if(act === "N" || act === "EQ"){
     // B and EQ stay on positive totals (historical behavior)
     numTotalMinEl.min = "1"; numTotalMinEl.max = "1000";
     numTotalMaxEl.min = "1"; numTotalMaxEl.max = "1000";
 
-    // If coming back from B± with negatives, bring back to a safe range.
+    // If coming back from B± / E± with negatives, bring back to a safe range.
     if(Number(numTotalMinEl.value) < 1) numTotalMinEl.value = "20";
     if(Number(numTotalMaxEl.value) < 1) numTotalMaxEl.value = "50";
   }
@@ -1073,6 +1098,10 @@ function syncSettingsUI(){
   const isUnit = act === "U";
   const isEquation = (act === "EQ" || act === "EQPM");
   syncNumTasksUI(act);
+
+  if(act === "EQPM" && prevAct !== "EQPM"){
+    if(numTasksEl) numTasksEl.value = "3";
+  }
   const isNumbered = (act === "N" || act === "NPM" || isEquation);
   const isNine = act === "C9";
   const isEight = act === "C8";
@@ -1897,8 +1926,9 @@ function genNumberedSigned(rng){
     for(let attempt=0; attempt<900; attempt++){
       const total = rInt(rng, totalMin, totalMax);
 
-      const A = rInt(rng, 1, maxTaskAbs);
-      if(hiddenCount === 1 && A > maxAbs) continue;
+      let H = rInt(rng, -maxTaskAbs, maxTaskAbs);
+      if(H === 0) continue;
+      if(hiddenCount === 1 && Math.abs(H) > maxAbs) continue;
 
       let opposedTasks = new Array(tasks).fill(false);
 
@@ -1924,8 +1954,8 @@ function genNumberedSigned(rng){
         return null;
       }
 
-      const targetSums = new Array(tasks).fill(A); // chaque tache cache une somme +A
-      const hiddenSum = opposedTasks.reduce((acc,o)=>acc + (o ? -A : A), 0);
+      const targetSums = opposedTasks.map(o => (o ? -H : H)); // chaque tache cache +H ou -H
+      const hiddenSum = targetSums.reduce((a,b)=>a+b, 0);
       if(hiddenSum === 0) continue;
 
       const hiddenByTask = buildHiddenByTask(targetSums);
@@ -1939,7 +1969,7 @@ function genNumberedSigned(rng){
 
       return {
         family:"NPM", total, visible, hidden,
-        _num:{ tasks, hiddenCount, A, opposedTasks, hiddenByTask }
+        _num:{ tasks, hiddenCount, H, opposedTasks, hiddenByTask }
       };
     }
     return null;
@@ -2186,8 +2216,8 @@ function genEquationSigned(rng){
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
 
   // Total min/max = total à gauche (et donc le même à droite), pas la somme des 2 plateaux.
-  let userMin = clamp(numberOr(numTotalMinEl.value, 20), 1, 1000);
-  let userMax = clamp(numberOr(numTotalMaxEl.value, 50), 1, 1000);
+  let userMin = clamp(numberOr(numTotalMinEl.value, -20), -99, 99);
+  let userMax = clamp(numberOr(numTotalMaxEl.value, 20), -99, 99);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
 
   const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
@@ -2198,7 +2228,7 @@ function genEquationSigned(rng){
 // - auto : parfois aucun oppose, parfois melange
 // - mix  : melange possible dans un cote
 const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
-const autoPick = (opposeSetting === "auto") ? ((rng() < 0.5) ? "off" : "mix") : null;
+const autoPick = (opposeSetting === "auto") ? ((rng() < 0.5) ? "off" : "auto") : null;
 
 function sumArr(a){ let s=0; for(const x of a) s+=x; return s; }
 function hasBothSigns(arr){
@@ -2227,36 +2257,47 @@ function chooseMixedSignsNonZero(n){
 }
 function chooseSignsPair(nL, nR, mode){
   if(mode === "off"){
+    // aucune tache opposee : tout +x
     return { L:new Array(nL).fill(1), R:new Array(nR).fill(1) };
   }
   if(mode === "all"){
+    // tout oppose : tout -x a gauche ET a droite
+    return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
+  }
+  if(mode === "auto"){
+    // parfois (branche "signes uniformes") : chaque cote est soit tout +x, soit tout -x
     return { L:chooseUniformSigns(nL), R:chooseUniformSigns(nR) };
   }
-  // mode "mix" : on veut du vrai melange (au moins un cote avec + et -)
+
+  // mode "mix" : tous les cas (uniforme ou melange par cote)
   const canMixL = (nL >= 3);
   const canMixR = (nR >= 3);
-  if(!canMixL && !canMixR) return null;
 
-  // 1/3 : mix/mix, 1/3 : uniforme/mix, 1/3 : mix/uniforme (quand possible)
-  let pattern = 0; // 0=mix/mix, 1=uni/mix, 2=mix/uni
-  if(canMixL && canMixR){
-    pattern = rInt(rng, 0, 2);
-  }else if(canMixR){
-    pattern = 1;
-  }else{
-    pattern = 2;
-  }
+  const patterns = [];
+  // 0: uni/uni, 1: uni/mix, 2: mix/uni, 3: mix/mix
+  patterns.push(0);
+  if(canMixR) patterns.push(1);
+  if(canMixL) patterns.push(2);
+  if(canMixL && canMixR) patterns.push(3);
+
+  const pattern = patterns[rInt(rng, 0, patterns.length-1)];
+
+  const makeUni = (n)=> chooseUniformSigns(n);
+  const makeMix = (n)=> chooseMixedSignsNonZero(n);
 
   let L, R;
   if(pattern === 0){
-    L = chooseMixedSignsNonZero(nL);
-    R = chooseMixedSignsNonZero(nR);
+    L = makeUni(nL);
+    R = makeUni(nR);
   }else if(pattern === 1){
-    L = chooseUniformSigns(nL);
-    R = chooseMixedSignsNonZero(nR);
+    L = makeUni(nL);
+    R = makeMix(nR);
+  }else if(pattern === 2){
+    L = makeMix(nL);
+    R = makeUni(nR);
   }else{
-    L = chooseMixedSignsNonZero(nL);
-    R = chooseUniformSigns(nR);
+    L = makeMix(nL);
+    R = makeMix(nR);
   }
   return { L, R };
 }
@@ -2288,10 +2329,12 @@ if(mode === "mix"){
     const vCountR = rInt(rng, vMin, vMax);
 
     const maxCoeff = Math.max(Math.abs(a), Math.abs(b), 1);
-    // borne grossière pour x, puis on clamp à maxAbs (logique "valeur absolue")
-    let xMax = Math.floor((userMax + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
-    xMax = clamp(xMax, 1, maxAbs);
-    const x = rInt(rng, 1, xMax);
+    // borne grossière pour |x|, puis on tire x signé (non nul)
+    const maxTotalAbs = Math.max(Math.abs(userMin), Math.abs(userMax));
+    let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
+    xAbsMax = clamp(xAbsMax, 1, maxAbs);
+    const absX = rInt(rng, 1, xAbsMax);
+    const x = ((rng() < 0.5) ? -1 : 1) * absX;
 
     // Chercher un total T faisable pour les deux plateaux :
     // VL = T - a*x doit être décomposable en vCountL nombres non nuls avec |val|<=maxAbs
