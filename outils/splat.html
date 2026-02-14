@@ -264,9 +264,18 @@
 
     <div id="unitSettings" style="display:none">
       <div class="row">
-        <div style="flex:1">
+        <div style="flex:0 0 auto">
           <label>Nombre de taches</label>
-          <input id="unitTasks" type="number" min="1" max="5" value="1" />
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+            <div style="display:flex; flex-direction:column; gap:2px">
+              <div style="font-size:12px;color:var(--muted)">Min</div>
+              <input id="unitTasksMin" type="number" min="1" max="5" value="1" style="width:72px" />
+            </div>
+            <div style="display:flex; flex-direction:column; gap:2px">
+              <div style="font-size:12px;color:var(--muted)">Max</div>
+              <input id="unitTasks" type="number" min="1" max="5" value="1" style="width:72px" />
+            </div>
+          </div>
         </div>
         <div style="flex:1">
           <label>Billes visibles max</label>
@@ -274,14 +283,17 @@
         </div>
       </div>
 
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
+      <div style="margin-top:10px">
+        <label>Total</label>
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+          <div style="display:flex; flex-direction:column; gap:2px">
+            <div style="font-size:12px;color:var(--muted)">Min</div>
+            <input id="unitTotalMin" type="number" min="1" max="50" value="1" style="width:72px" />
+          </div>
+          <div style="display:flex; flex-direction:column; gap:2px">
+            <div style="font-size:12px;color:var(--muted)">Max</div>
+            <input id="unitTotalMax" type="number" min="1" max="50" value="50" style="width:72px" />
+          </div>
         </div>
       </div>
 
@@ -536,13 +548,13 @@
       </div>
     </div>
 
-    <label>Nombre de cartes</label>
-    <input id="count" type="number" min="1" max="300" value="10" />
-
-    <div class="row" style="margin-top:10px">
+    <div class="row" style="margin-top:10px; align-items:flex-end">
+      <div style="flex:0 0 auto">
+        <label>Nombre de cartes</label>
+        <input id="count" type="number" min="1" max="300" value="10" style="width:96px" />
+      </div>
       <button class="btn primary" id="btnGen">Générer</button>
-      <button class="btn" id="btnShuffle">Mélanger</button>
-      <button class="btn danger" id="btnClear">Vider</button>
+<button class="btn danger" id="btnClear">Vider</button>
     </div>
 
     <div class="row" style="margin-top:10px">
@@ -667,6 +679,7 @@ const sysTotalMaxEl = document.getElementById("sysTotalMax");
 const seedSysEl = document.getElementById("seedSys");
 
 const unitTasksEl = document.getElementById("unitTasks");
+const unitTasksMinEl = document.getElementById("unitTasksMin");
 const unitVisibleMaxEl = document.getElementById("unitVisibleMax");
 const unitHiddenMaxEl = document.getElementById("unitHiddenMax");
 const unitTotalMinEl = document.getElementById("unitTotalMin");
@@ -815,6 +828,7 @@ function hookMinMaxPairs(){
   // if min > max, we set max = min (keeps the user's min as the "master", per UI expectation).
   const pairs = [
     [unitTotalMinEl, unitTotalMaxEl],
+    [unitTasksMinEl, unitTasksEl],
     [numTasksMinEl, numTasksEl], // numbered tasks range (only when range UI is visible)
     [numVisibleMinEl, numVisibleMaxEl],
     [numTotalMinEl, numTotalMaxEl],
@@ -968,7 +982,16 @@ function syncSettingsUI(){
 }
 
 function syncUnitTotalBounds(){
-  const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  const tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  const tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : tasksMax, 1), 1, 5);
+  const tasks = Math.max(tasksMin, tasksMax); // use max tasks for safe bounds
+  if(unitTasksMinEl){
+    const a = Math.min(tasksMin, tasksMax);
+    const b = Math.max(tasksMin, tasksMax);
+    unitTasksMinEl.value = String(a);
+    unitTasksEl.value = String(b);
+  }
+
   const vMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
   const hMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
 
@@ -1036,7 +1059,7 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 
 [
   countEl, diffEl, seedEl,
-  unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
+  unitTasksMinEl, unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
   numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
@@ -2331,7 +2354,11 @@ function assignPositionsUnits(card, rng){
 }
 
 function genUnits(rng){
-  const tasks = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  let tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : unitTasksEl.value, 1), 1, 5);
+  let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
+  // PATCH UI-A — tâches en plage (comme mode B)
+  const tasks = rInt(rng, tasksMin, tasksMax);
   const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
   const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
   const userMin = numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1);
@@ -3568,7 +3595,6 @@ async function toggleFullscreen(){
 }
 
 document.getElementById("btnGen").addEventListener("click", generate);
-document.getElementById("btnShuffle").addEventListener("click", shuffleCards);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", ()=>{
   if(cards.length===0) return;
