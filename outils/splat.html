@@ -85,7 +85,99 @@
     outline:none
   }
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input[type="number"]{appearance:textfield}
+
+  /* PATCH UI — Menu A (U) : mise en page en lignes cohérentes (sans impact JS) */
+  #unitSettings .u-section-title{
+    font-size:10px;
+    color:var(--muted);
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:8px 0 4px;
+  }
+  #unitSettings .u-grid{
+    display:grid;
+    grid-template-columns: 84px 1fr;
+    gap:8px 10px;
+    align-items: center;
+  }
+  #unitSettings .u-grid .u-label{
+    margin:0;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:700;
+    line-height:1.2;
+  }
+  #unitSettings .u-controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    min-width:0;
+  }
+  #unitSettings .u-mini{display:flex;flex-direction:column;gap:4px;min-width:0}
+  #unitSettings .u-mini-label{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.05;
+    margin:0;
+    text-align:center;
+  }
+  #unitSettings input{padding:8px 10px;}
+  #unitSettings .u-mini input{ width:78px; }
+  #unitSettings .u-seed{min-width:200px;}
+  #unitSettings .u-seed input{width:200px; max-width:100%;}
+  #unitSettings .u-wide input{ width:100%; }
+
+  /* PATCH UI — Menu C (Enquête) : compaction sans changement fonctionnel */
+  #investigateSettings{margin-top:6px}
+  #investigateSettings label{margin:6px 0 4px}
+  #investigateSettings select,#investigateSettings input{padding:8px 10px}
+  #investigateSettings .c-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 10px;
+    align-items:end;
+  }
+  #investigateSettings .c-field{min-width:0}
+  #investigateSettings #invStructureRow{grid-column:1 / 2}
+  #investigateSettings .c-ops{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-top:2px;
+  }
+  #investigateSettings .c-ops .checkInline{
+    justify-content:center;
+    padding:6px 6px;
+    border-radius:10px;
+    gap:6px;
+    min-width:0;
+    white-space:nowrap;
+  }
+  #investigateSettings .c-ops .checkInline span{font-size:12px}
+  #investigateSettings .c-small input{max-width:160px}
+  #investigateSettings .c-pairs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 10px;
+    margin-top:8px;
+  }
+  #investigateSettings .c-pair{
+    display:flex;
+    gap:8px;
+    align-items:flex-end;
+  }
+  #investigateSettings .c-mini{flex:1;min-width:0}
+  #investigateSettings .c-mini-label{
+    font-size:11px;
+    color:var(--muted);
+    line-height:1.05;
+    margin:0 0 4px;
+    text-align:center;
+  }
+  #investigateSettings .c-mini input{width:100%}
+input[type="number"]{appearance:textfield}
 
   .btn{
     padding:10px 12px;border-radius:10px;
@@ -263,51 +355,55 @@
     </div>
 
     <div id="unitSettings" style="display:none">
-      <div class="row">
-        <div style="flex:0 0 auto">
-          <label>Nombre de taches</label>
-          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-            <div style="display:flex; flex-direction:column; gap:2px">
-              <div style="font-size:12px;color:var(--muted)">Min</div>
-              <input id="unitTasksMin" type="number" min="1" max="5" value="1" style="width:72px" />
-            </div>
-            <div style="display:flex; flex-direction:column; gap:2px">
-              <div style="font-size:12px;color:var(--muted)">Max</div>
-              <input id="unitTasks" type="number" min="1" max="5" value="1" style="width:72px" />
-            </div>
-          </div>
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles max</label>
-          <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
-        </div>
-      </div>
+      <div class="u-section-title">Contraintes</div>
 
-      <div style="margin-top:10px">
-        <label>Total</label>
-        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-          <div style="display:flex; flex-direction:column; gap:2px">
-            <div style="font-size:12px;color:var(--muted)">Min</div>
-            <input id="unitTotalMin" type="number" min="1" max="50" value="1" style="width:72px" />
+      <div class="u-grid">
+        <label class="u-label">Taches</label>
+        <div class="u-controls">
+          <div class="u-mini">
+            <div class="u-mini-label">min</div>
+            <input id="unitTasksMin" type="number" min="1" max="5" value="1" />
           </div>
-          <div style="display:flex; flex-direction:column; gap:2px">
-            <div style="font-size:12px;color:var(--muted)">Max</div>
-            <input id="unitTotalMax" type="number" min="1" max="50" value="50" style="width:72px" />
+          <div class="u-mini">
+            <div class="u-mini-label">max</div>
+            <input id="unitTasks" type="number" min="1" max="5" value="1" />
           </div>
         </div>
-      </div>
 
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes cachées max</label>
-          <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
+        <label class="u-label">Total</label>
+        <div class="u-controls">
+          <div class="u-mini">
+            <div class="u-mini-label">min</div>
+            <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
+          </div>
+          <div class="u-mini">
+            <div class="u-mini-label">max</div>
+            <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
+          </div>
         </div>
-        <div style="flex:1">
-          <label>Graine (optionnelle)</label>
-          <input id="seedU" type="number" placeholder="ex: 2026" />
+
+        <label class="u-label">Billes</label>
+        <div class="u-controls">
+          <div class="u-mini">
+            <div class="u-mini-label">visibles ≤</div>
+            <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
+          </div>
+          <div class="u-mini">
+            <div class="u-mini-label">cachees ≤</div>
+            <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
+          </div>
+        </div>
+
+        <label class="u-label">Graine</label>
+        <div class="u-controls">
+          <div class="u-mini u-seed">
+            <div class="u-mini-label">optionnelle</div>
+            <input id="seedU" type="number" placeholder="ex: 2026" />
+          </div>
         </div>
       </div>
     </div>
+
 
     <div id="numberedSettings" style="display:none">
       <div class="row">
@@ -447,24 +543,23 @@
     </div>
 
     <div id="investigateSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
+      <div class="c-grid">
+        <div class="c-field">
           <label>Nombre de taches</label>
           <select id="invTaskCount">
             <option value="2" selected>2 Taches</option>
             <option value="3">3 Taches</option>
           </select>
         </div>
-        <div style="flex:1">
+        <div class="c-field">
           <label>Format Indices</label>
           <select id="invClueType">
             <option value="SENTENCE" selected>Phrases</option>
             <option value="SYMBOL">Symboles (=)</option>
           </select>
         </div>
-      </div>
-      <div class="row" id="invStructureRow" style="margin-top:10px;">
-        <div style="flex:1">
+
+        <div class="c-field" id="invStructureRow" style="margin-top:6px;">
           <label>Structure (3 taches)</label>
           <select id="invStructure3">
             <option value="CHAIN">Chaîne (A→B→C)</option>
@@ -473,41 +568,50 @@
           </select>
         </div>
       </div>
+
       <label>Opérations autorisées</label>
-      <div class="row" style="gap:5px; align-items:flex-start">
+      <div class="c-ops">
+
         <label class="checkInline" title="Multiplication (Ex: 3 fois plus)"><input type="checkbox" id="invOpMul" checked> <span>×k</span></label>
+
         <label class="checkInline" title="Division (Ex: 3 fois moins)"><input type="checkbox" id="invOpDiv" checked> <span>÷k</span></label>
+
         <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
+
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
+
+      <div class="c-grid" style="margin-top:8px">
+        <div class="c-field c-small">
           <label>Valeur ajout/retrait max</label>
           <input id="invMaxAdd" type="number" min="1" max="100" value="20" />
         </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes visibles (min)</label>
-          <input id="invVisibleMin" type="number" min="1" max="10" value="1" />
-        </div>
-        <div style="flex:1">
-          <label>Billes visibles (max)</label>
-          <input id="invVisibleMax" type="number" min="1" max="10" value="3" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Total (min)</label>
-          <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
-        </div>
-        <div style="flex:1">
-          <label>Total (max)</label>
-          <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
-        </div>
-        <div style="flex:1">
+        <div class="c-field c-small">
           <label>Graine (mode C)</label>
           <input id="seedE" type="number" placeholder="ex: 2026" />
+        </div>
+      </div>
+
+      <div class="c-pairs">
+        <div class="c-pair">
+          <div class="c-mini">
+            <div class="c-mini-label">Billes visibles (min)</div>
+            <input id="invVisibleMin" type="number" min="1" max="10" value="1" />
+          </div>
+          <div class="c-mini">
+            <div class="c-mini-label">Billes visibles (max)</div>
+            <input id="invVisibleMax" type="number" min="1" max="10" value="3" />
+          </div>
+        </div>
+        <div class="c-pair">
+          <div class="c-mini">
+            <div class="c-mini-label">Total (min)</div>
+            <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
+          </div>
+          <div class="c-mini">
+            <div class="c-mini-label">Total (max)</div>
+            <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
+          </div>
         </div>
       </div>
     </div>
