@@ -643,7 +643,7 @@ body.noArches .boardTop{ padding-top: 6px; }
 
 /* ✅ Mode Exercices (Additions) : carte au-dessus de la zone d’échange, adaptée tablette */
 .exerciseCard{
-  position: fixed;
+  position: absolute;
   z-index: 75;
   display:flex;
   flex-direction:column;
@@ -665,9 +665,10 @@ body.noArches .boardTop{ padding-top: 6px; }
 }
 .exHead{
   display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
+  align-items:center;
+  justify-content:flex-end;
   gap:10px;
+  flex-wrap:wrap;
 }
 .exTitle{
   font-weight:950;
@@ -680,7 +681,7 @@ body.noArches .boardTop{ padding-top: 6px; }
   opacity:.68;
   margin-top:2px;
 }
-.exHeadRight{ display:flex; align-items:center; gap:8px; }
+.exHeadRight{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 .exProblem{
   margin:0;
   padding:12px 12px;
@@ -706,7 +707,8 @@ body.noArches .boardTop{ padding-top: 6px; }
   line-height: 1.05;
   letter-spacing: .5px;
   white-space: pre;
-  opacity: .70;
+    overflow:hidden;
+opacity: .70;
 }
 .exCarry:empty{ display:none; }
 
@@ -927,10 +929,7 @@ body.noArches .boardTop{ padding-top: 6px; }
 
     <div class="exerciseCard" id="exerciseCard" aria-live="polite">
           <div class="exHead">
-            <div class="exHeadLeft">
-              <div class="exTitle">Soustraction</div>
-              <div class="exSub" id="exSub">Exercice</div>
-            </div>
+            <div class="exSub" id="exSub" style="display:none">Exercice</div>
             <div class="exHeadRight">
               <button class="btn" id="btnExNew">Nouveau</button>
               <button class="btn" id="btnExSettings" title="Réglages">⚙️</button>
@@ -1608,31 +1607,39 @@ body.noArches .boardTop{ padding-top: 6px; }
   if(!exerciseCard || !trashZone) return;
 
   const tz = trashZone.getBoundingClientRect();
+  const wrapRect = boardWrap.getBoundingClientRect();
   const vw = window.innerWidth || document.documentElement.clientWidth;
   const vh = window.innerHeight || document.documentElement.clientHeight;
-  const headerH = document.querySelector("header")?.getBoundingClientRect().height || 0;
 
-  // ✅ Même largeur que la zone d’échange (ne déborde jamais sur le plateau)
-  const baseW = tz.width;
-  const targetW = Math.max(220, Math.min(baseW, vw - 16));
+  const headerEl = document.querySelector("header");
+  const headerRect = headerEl ? headerEl.getBoundingClientRect() : { bottom: 0 };
+
+  // ✅ Même largeur que la zone d’échange (sans forcer plus large)
+  const baseW = tz.width || 260;
+  const targetW = Math.max(0, Math.min(baseW, vw - 16));
   exerciseCard.style.width = targetW + "px";
   exerciseCard.classList.toggle("compact", targetW < 320);
-
 
   // mesure après width
   const cardH = exerciseCard.offsetHeight || 140;
 
-  // ✅ On aligne la carte sur le bord droit de la zone d’échange
-  let left = tz.right - targetW;
-  left = Math.max(8, Math.min(left, vw - targetW - 8));
+  // ✅ On aligne la carte sur le bord GAUCHE de la zone d’échange (coordonnées viewport)
+  let leftV = tz.left;
+  leftV = Math.max(8, Math.min(leftV, vw - targetW - 8));
 
-  // ✅ Sur tablette : on fixe la carte sous l’en-tête, et la Zone d’échange se place en dessous.
-  let top = headerH + 10;
-  top = Math.max(headerH + 10, Math.min(top, vh - cardH - 8));
+  // ✅ Sous l’en-tête (header sticky), et dans la zone du plateau
+  const safeTopV = (headerRect.bottom || 0) + 10;
+  let topV = Math.max(safeTopV, wrapRect.top + 10);
+  topV = Math.max(8, Math.min(topV, vh - cardH - 8));
+
+  // ⚠️ exerciseCard est DANS boardWrap -> coordonnées locales
+  const left = leftV - wrapRect.left;
+  const top  = topV  - wrapRect.top;
 
   exerciseCard.style.left = left + "px";
   exerciseCard.style.top  = top + "px";
-  const maxH = Math.max(180, vh - top - 8);
+
+  const maxH = Math.max(180, vh - topV - 8);
   exerciseCard.style.maxHeight = maxH + "px";
 
   // ✅ Scroll vertical seulement
