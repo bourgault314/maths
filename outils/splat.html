@@ -241,6 +241,7 @@
     <select id="activity">
       <option value="U">A — Petites billes (sans numéros)</option>
       <option value="N">B — Billes numérotées (une couleur)</option>
+      <option value="NPM">B± — Billes numérotées (entiers relatifs)</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="EQ">E — Équation (2 plateaux)</option>
@@ -302,13 +303,13 @@
           <label><span id="labelNumTasks">Nombre de taches</span></label>
           <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
             <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
-              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted)">tache min</div>
-              <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="tache min" />
+              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted)">Min</div>
+              <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="Min" />
             </div>
 
             <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px">
-              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none">tache max</div>
-              <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="tache max" />
+              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none">Max</div>
+              <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="Max" />
             </div>
 
             <span id="numTasksArrow" style="display:none"></span>
@@ -323,14 +324,29 @@
           <input id="numVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Billes cachées par tache</label>
-          <select id="numHiddenCount">
-            <option value="1" selected>1 (par défaut)</option>
+      <div class="row" style="margin-top:10px; flex-wrap:nowrap">
+        <div style="flex:0 0 auto">
+          <label>Billes cachées<br>par tache</label>
+          <select id="numHiddenCount" style="width:72px">
+            <option value="1" selected>1</option>
             <option value="2">2</option>
           </select>
         </div>
+
+        <div id="numBeadAbsMaxWrap" style="flex:0 0 auto; display:none">
+          <label>Valeur max<br>des billes (|v|)</label>
+          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:72px" />
+        </div>
+        <div id="numOpposeModeWrap" style="flex:0 0 auto; display:none">
+          <label>Taches opposées<br>(±X)</label>
+          <select id="numOpposeMode" style="width:130px">
+          <option value="off" selected>Aucune</option>
+          <option value="all">Toutes opposées</option>
+          <option value="auto">Parfois</option>
+          <option value="mix">Mélange</option>
+        </select>
+        </div>
+
       </div>
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
@@ -583,7 +599,11 @@ function rFloat(rng,a,b){return a + rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
 
 function beadColorForValue(v){
-  const hue = (v * 37) % 360;
+  // Couleur = valeur (avec une distinction claire entre + et −, mais sans changer les couleurs des positifs)
+  const mag = Math.abs(v);
+  let hue = (((mag * 37) % 360) + 360) % 360;
+  if(v < 0) hue = (hue + 180) % 360;
+
   const isLight = document.body.classList.contains("light");
   const fillA = isLight ? 0.18 : 0.24;
   const strokeA = isLight ? 0.55 : 0.65;
@@ -673,7 +693,7 @@ function setNumTasksRangeVisible(show){
 }
 function syncNumTasksUI(act){
   if(!numTasksEl || !labelNumTasksEl) return;
-  const key = (act === "EQ") ? "EQ" : (act === "N" ? "N" : "OTHER");
+  const key = (act === "EQ") ? "EQ" : ((act === "N" || act === "NPM") ? "N" : "OTHER");
   if(_tasksUIKeyPrev === key) return;
 
   if(key === "EQ"){
@@ -684,7 +704,7 @@ function syncNumTasksUI(act){
     // Restore equation max
     if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
 
-    labelNumTasksEl.textContent = "Tâches max (par plateau)";
+    labelNumTasksEl.textContent = "Max (par plateau)";
     setNumTasksRangeVisible(false);
 
     numTasksEl.min = "2";
@@ -699,7 +719,7 @@ function syncNumTasksUI(act){
     if(_numTasksSavedNumberedMax != null) numTasksEl.value = _numTasksSavedNumberedMax;
     if(numTasksMinEl && _numTasksSavedNumberedMin != null) numTasksMinEl.value = _numTasksSavedNumberedMin;
 
-    labelNumTasksEl.textContent = "tache";
+    labelNumTasksEl.textContent = "Nombre de taches";
     setNumTasksRangeVisible(true);
 
     numTasksEl.min = "1";
@@ -734,15 +754,25 @@ const numHiddenCountEl = document.getElementById("numHiddenCount");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
+const numBeadAbsMaxWrapEl = document.getElementById("numBeadAbsMaxWrap");
+const numBeadAbsMaxEl = document.getElementById("numBeadAbsMax");
+const numOpposeModeWrapEl = document.getElementById("numOpposeModeWrap");
+const numOpposeModeEl = document.getElementById("numOpposeMode");
+
 
 /* Helpers */
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 function numberOr(x, fallback){ const n = Number(x); return Number.isFinite(n) ? n : fallback; }
 
+
+// Remember per-mode Total bounds for numbered modes (B and B±)
+let lastActivityForBounds = activityEl.value;
+const lastNumberedTotalBounds = { N: null, NPM: null };
+
 function getSeedForCurrentMode(){
   const act = activityEl.value;
   if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
-  if(act === "N") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
+  if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "EQ") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
@@ -754,10 +784,58 @@ function getSeedForCurrentMode(){
 function syncSettingsUI(){
   const act = activityEl.value;
 
+
+  // --- B vs B± : Total bounds and allowed ranges (UI only, generator unchanged for now) ---
+  if(lastActivityForBounds && lastActivityForBounds !== act){
+    // Save current bounds for the mode we leave (only B / B± share these inputs)
+    if(lastActivityForBounds === "N" || lastActivityForBounds === "NPM"){
+      lastNumberedTotalBounds[lastActivityForBounds] = {
+        min: String(numTotalMinEl.value),
+        max: String(numTotalMaxEl.value)
+      };
+    }
+    // Restore bounds for the mode we enter
+    if(act === "N" || act === "NPM"){
+      const saved = lastNumberedTotalBounds[act];
+      if(saved && saved.min != null && saved.max != null){
+        numTotalMinEl.value = saved.min;
+        numTotalMaxEl.value = saved.max;
+      } else if(act === "NPM"){
+        // Default for B±
+        numTotalMinEl.value = "-30";
+        numTotalMaxEl.value = "30";
+      }
+    }
+  }
+
+  if(act === "NPM"){
+    // B± accepts negative totals, constrained to [-99, +99]
+    numTotalMinEl.min = "-99"; numTotalMinEl.max = "99";
+    numTotalMaxEl.min = "-99"; numTotalMaxEl.max = "99";
+
+    // If the page loads directly on B± (no prior switch), enforce the defaults once.
+    if(!lastNumberedTotalBounds.NPM){
+      const curMin = String(numTotalMinEl.value).trim();
+      const curMax = String(numTotalMaxEl.value).trim();
+      if(curMin === "20" && curMax === "50"){ // initial B defaults in HTML
+        numTotalMinEl.value = "-30";
+        numTotalMaxEl.value = "30";
+      }
+    }
+  } else if(act === "N" || act === "EQ"){
+    // B and EQ stay on positive totals (historical behavior)
+    numTotalMinEl.min = "1"; numTotalMinEl.max = "1000";
+    numTotalMaxEl.min = "1"; numTotalMaxEl.max = "1000";
+
+    // If coming back from B± with negatives, bring back to a safe range.
+    if(Number(numTotalMinEl.value) < 1) numTotalMinEl.value = "20";
+    if(Number(numTotalMaxEl.value) < 1) numTotalMaxEl.value = "50";
+  }
+
   const isUnit = act === "U";
   const isEquation = act === "EQ";
   syncNumTasksUI(act);
-  const isNumbered = (act === "N" || isEquation);
+  const isNumbered = (act === "N" || act === "NPM" || isEquation);
   const isNine = act === "C9";
   const isEight = act === "C8";
   const isInvestigate = act === "C";
@@ -785,11 +863,17 @@ function syncSettingsUI(){
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
 
+  // B± uniquement : borne sur la valeur absolue des billes
+  if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = (act === "NPM") ? "block" : "none";
+  if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = (act === "NPM") ? "block" : "none";
+  if(act === "NPM") sanitizeBeadAbsMaxForBPM();
+
   if(isInvestigate){
     if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
   }
 
   if(isUnit) syncUnitTotalBounds();
+  lastActivityForBounds = act;
 }
 
 function syncUnitTotalBounds(){
@@ -819,10 +903,31 @@ function syncUnitTotalBounds(){
 }
 
 let autoGenTimer = null;
+function sanitizeNumberedTotalBoundsForMode(){
+  const act = activityEl.value;
+  if(act !== "NPM") return;
+
+  // En B±, on force les bornes à rester dans [-99, +99] (et min <= max).
+  const mn = clamp(Math.round(numberOr(numTotalMinEl.value, -30)), -99, 99);
+  let mx = clamp(Math.round(numberOr(numTotalMaxEl.value, 30)), -99, 99);
+  if(mn > mx) mx = mn;
+
+  numTotalMinEl.value = String(mn);
+  numTotalMaxEl.value = String(mx);
+}
+
+function sanitizeBeadAbsMaxForBPM(){
+  if(!numBeadAbsMaxEl) return;
+  let v = clamp(Math.round(numberOr(numBeadAbsMaxEl.value, 30)), 1, 99);
+  numBeadAbsMaxEl.value = String(v);
+}
+
 function scheduleAutoGenerate(){
   if(autoGenTimer) clearTimeout(autoGenTimer);
   autoGenTimer = setTimeout(()=>{
     if(activityEl.value === "U") syncUnitTotalBounds();
+    sanitizeNumberedTotalBoundsForMode();
+    if(activityEl.value === "NPM") sanitizeBeadAbsMaxForBPM();
     generate();
   }, 150);
 }
@@ -841,7 +946,7 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 [
   countEl, diffEl, seedEl,
   unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, seedNEl,
+  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -944,6 +1049,72 @@ function randomComposition(rng, sum, parts){
   return out;
 }
 
+/* Signed (relatifs) helpers — zéro interdit sur les parts */
+function randomSignedCompositionNonZero(rng, sum, parts, maxAbs){
+  if(parts <= 0) return [];
+  if(parts === 1){
+    if(sum === 0) return null;
+    if(Math.abs(sum) > maxAbs) return null;
+    return [sum];
+  }
+  // On construit progressivement en garantissant la faisabilité du reste.
+  for(let tries=0; tries<4000; tries++){
+    const out = [];
+    let rem = sum;
+    let ok = true;
+    for(let i=0; i<parts-1; i++){
+      const remainParts = parts - i;
+      const minRem = -(remainParts-1) * maxAbs;
+      const maxRem =  (remainParts-1) * maxAbs;
+
+      // v doit être dans [-maxAbs, maxAbs] et laisser un reste faisable
+      let vMin = Math.max(-maxAbs, rem - maxRem);
+      let vMax = Math.min( maxAbs, rem - minRem);
+      if(vMax < vMin){ ok = false; break; }
+
+      let v = null;
+      for(let k=0; k<60; k++){
+        const candidate = rInt(rng, vMin, vMax);
+        if(candidate === 0) continue;
+        // si le dernier terme devra être unique, il ne doit pas devenir 0
+        if(remainParts-1 === 1){
+          const last = rem - candidate;
+          if(last === 0) continue;
+          if(Math.abs(last) > maxAbs) continue;
+        }
+        v = candidate;
+        break;
+      }
+      if(v === null){ ok = false; break; }
+      out.push(v);
+      rem -= v;
+    }
+    if(!ok) continue;
+    const last = rem;
+    if(last === 0) continue;
+    if(Math.abs(last) > maxAbs) continue;
+    out.push(last);
+    // sécurité : aucun 0
+    if(out.some(x => x === 0)) continue;
+    return out;
+  }
+  return null;
+}
+
+function splitTwoNonZeroSum(rng, sum, maxAbs){
+  // Trouve (a,b) non nuls, |a|,|b|<=maxAbs, a+b=sum
+  for(let tries=0; tries<2000; tries++){
+    const a = rInt(rng, -maxAbs, maxAbs);
+    if(a === 0) continue;
+    const b = sum - a;
+    if(b === 0) continue;
+    if(Math.abs(b) > maxAbs) continue;
+    return [a, b];
+  }
+  return null;
+}
+
+
 function assignPositionsNumbered(card, rng){
   const tray = getTrayConfig(card.family);
   const margin = 14;
@@ -1024,13 +1195,12 @@ function assignPositionsNumbered(card, rng){
 
   card._posV = card.visible.map(()=> pickVisible());
 }
-
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
   }else if(card.family === "EQ"){
     assignPositionsEquation(card, rng);
-  }else if(card.family === "N" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
+  }else if(card.family === "N" || card.family === "NPM" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
   }else{
     assignPositionsClassic(card, rng);
@@ -1395,6 +1565,144 @@ function genNumbered(rng){
     _num:{ tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
   };
 }
+
+// Mode B± : billes numérotées en entiers relatifs (zéro interdit sur les billes, total pouvant être 0)
+function genNumberedSigned(rng){
+  let tMin = clamp(numberOr(numTasksMinEl?.value, 1), 1, 6);
+  let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+  if(tMin > tMax) [tMin, tMax] = [tMax, tMin];
+  const tasks = rInt(rng, tMin, tMax);
+
+  const vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
+  const vMax = clamp(numberOr(numVisibleMaxEl.value, 3), vMin, 5);
+  const visibleCount = rInt(rng, vMin, vMax);
+
+  const hiddenCount = clamp(numberOr(numHiddenCountEl.value, 1), 1, 2);
+
+  let totalMin = clamp(numberOr(numTotalMinEl.value, -50), -99, 99);
+  let totalMax = clamp(numberOr(numTotalMaxEl.value, 50), -99, 99);
+  if(totalMin > totalMax) [totalMin, totalMax] = [totalMax, totalMin];
+
+  const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
+  const maxTaskAbs = (hiddenCount === 1) ? maxAbs : 2*maxAbs; // somme max par tâche
+
+  // Mode "taches opposées" :
+  // - "Aucune" : B± classique (toutes les tâches ont la même somme H, H peut être + ou -)
+  // - "Toutes opposées" : toutes les tâches ont la somme -A (A>0)
+  // - "Mélange" : certaines tâches ont +A, d'autres -A, sans annulation globale
+  // - "Parfois" : une fois sur deux, aucune / toutes opposées
+  const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? numOpposeModeEl.value : "off";
+  let opposeMode = opposeSetting;
+  if(opposeSetting === "auto"){
+    opposeMode = (rng() < 0.5) ? "off" : "all";
+  }
+
+  function buildHiddenByTask(targetSums){
+    const hiddenByTask = [];
+    for(let t=0; t<targetSums.length; t++){
+      const S = targetSums[t];
+      if(hiddenCount === 1){
+        if(S === 0 || Math.abs(S) > maxAbs) return null;
+        hiddenByTask.push([S]);
+      }else{
+        const pair = splitTwoNonZeroSum(rng, S, maxAbs);
+        if(!pair) return null;
+        hiddenByTask.push(pair);
+      }
+    }
+    return hiddenByTask;
+  }
+
+  // --- B± classique ---
+  function tryClassic(){
+    for(let attempt=0; attempt<700; attempt++){
+      const total = rInt(rng, totalMin, totalMax);
+
+      let H = rInt(rng, -maxTaskAbs, maxTaskAbs);
+      if(H === 0) continue;
+      if(hiddenCount === 1 && Math.abs(H) > maxAbs) continue;
+
+      const targetSums = new Array(tasks).fill(H);
+      const hiddenByTask = buildHiddenByTask(targetSums);
+      if(!hiddenByTask) continue;
+
+      const hidden = hiddenByTask.flat();
+      const hiddenSum = targetSums.reduce((a,b)=>a+b,0);
+      const visibleSum = total - hiddenSum;
+
+      const visible = randomSignedCompositionNonZero(rng, visibleSum, visibleCount, maxAbs);
+      if(!visible) continue;
+
+      return { family:"NPM", total, visible, hidden, _num:{ tasks, hiddenCount, H, hiddenByTask } };
+    }
+    return null;
+  }
+
+  // --- Opposé / Mélange ---
+  function tryOppose(mode){
+    for(let attempt=0; attempt<900; attempt++){
+      const total = rInt(rng, totalMin, totalMax);
+
+      const A = rInt(rng, 1, maxTaskAbs);
+      if(hiddenCount === 1 && A > maxAbs) continue;
+
+      let opposedTasks = new Array(tasks).fill(false);
+
+      if(mode === "all"){
+        opposedTasks.fill(true);
+      }else if(mode === "mix"){
+        if(tasks <= 2){
+          // mélange impossible (risque annulation) → on bascule en "all"
+          opposedTasks.fill(true);
+        }else{
+          // k tâches opposées, éviter annulation : k != tasks/2 si tasks pair
+          let k = 1;
+          for(let kTry=0; kTry<50; kTry++){
+            k = rInt(rng, 1, tasks-1);
+            if(tasks % 2 === 0 && k === tasks/2) continue;
+            break;
+          }
+          const idxs = [...Array(tasks).keys()];
+          shuffleInPlace(idxs, rng);
+          for(let i=0; i<k; i++) opposedTasks[idxs[i]] = true;
+        }
+      }else{
+        return null;
+      }
+
+      const targetSums = new Array(tasks).fill(A); // chaque tache cache une somme +A
+      const hiddenSum = opposedTasks.reduce((acc,o)=>acc + (o ? -A : A), 0);
+      if(hiddenSum === 0) continue;
+
+      const hiddenByTask = buildHiddenByTask(targetSums);
+      if(!hiddenByTask) continue;
+
+      const hidden = hiddenByTask.flat();
+      const visibleSum = total - hiddenSum;
+
+      const visible = randomSignedCompositionNonZero(rng, visibleSum, visibleCount, maxAbs);
+      if(!visible) continue;
+
+      return {
+        family:"NPM", total, visible, hidden,
+        _num:{ tasks, hiddenCount, A, opposedTasks, hiddenByTask }
+      };
+    }
+    return null;
+  }
+
+  let card = null;
+  if(opposeMode === "off") card = tryClassic();
+  else if(opposeMode === "all") card = tryOppose("all") || tryClassic();
+  else if(opposeMode === "mix") card = tryOppose("mix") || tryClassic();
+  else card = tryClassic();
+
+  if(card) return card;
+
+  return { family:"NPM", total:1, visible:[1], hidden:[-1], _num:{ tasks:1, hiddenCount:1, H:-1, hiddenByTask:[[-1]] } };
+}
+
+
 
 
 function randomCompositionBounded(rng, sum, parts, maxPart=99){
@@ -2277,12 +2585,12 @@ function renderCard(card, revealed){
   // Mode A (U) : à la révélation (bouton Suivant), on affiche un schéma en barre
   // à la place du nombre du total (projection), uniquement à l'écran (pas l'impression).
   // Mode B (N) : idem, mais les "visibles" sont la SOMME des billes visibles (numérotées),
-  // et si plusieurs tâches : on sépare en plusieurs cases cachées (une par tâche).
+  // et si plusieurs taches : on sépare en plusieurs cases cachées (une par tache).
   if(isBarModelTotal){
     if(isBarModelTotalU){
       const vis = sumArray(card.visible);
 
-      // Mode A (U) : si plusieurs tâches, on découpe la partie cachée en plusieurs cases (une par tâche),
+      // Mode A (U) : si plusieurs taches, on découpe la partie cachée en plusieurs cases (une par tache),
       // exactement comme en mode B, au lieu d'une seule case "caché total".
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
@@ -2469,7 +2777,7 @@ if(hiddenSums.length <= 1){
   }
 
   // numbered multi-splats (B, C, D, E, F)
-  if(["N","C","D","C9","C8"].includes(card.family)){
+  if(["N","NPM","C","D","C9","C8"].includes(card.family)){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
@@ -2490,6 +2798,7 @@ if(hiddenSums.length <= 1){
     const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
     const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
 
+    const opp = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
     splats.forEach((s, idx) => {
       let fillCol;
       if(card.family === "C" || card.family === "D"){
@@ -2503,6 +2812,36 @@ if(hiddenSums.length <= 1){
         stroke: "var(--splat-stroke)",
         "stroke-width":"5"
       }));
+      if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealed ? (s.cy - s.r*0.55) : (s.cy);
+        svg.appendChild(text(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealed ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+      // PATCH 6 — libellé "opposé" sur certaines taches (B±)
+      if(opp && opp.flags[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealed ? (s.cy - s.r*0.55) : (s.cy);
+        svg.appendChild(text(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealed ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+
     });
 
     // visible beads (pour modes N, C, D, E, F)
@@ -2778,7 +3117,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     if(revealAnswers){
       const vis = sumArray(card.visible);
 
-      // Mode A (U) : en correction imprimée aussi, on découpe le caché par tâche si plusieurs tâches.
+      // Mode A (U) : en correction imprimée aussi, on découpe le caché par tache si plusieurs taches.
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
@@ -2835,7 +3174,7 @@ const gBM = tEl("g",{id:"barModelPrint"});
       targetSvg.appendChild(gBM);
     }
 
-  }else if(["N","C","D","C9","C8"].includes(card.family)){
+  }else if(["N","NPM","C","D","C9","C8"].includes(card.family)){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
@@ -2844,12 +3183,13 @@ const gBM = tEl("g",{id:"barModelPrint"});
       // APPLIQUER OFFSET POUR C/D
       const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
       
-      // Billes cachées : toujours grises (même en correction)
+      // Billes cachées : grisées (comme le mode B) pour les distinguer des billes visibles
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
+    const oppP = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
     splats.forEach((s,idx)=>{
       let f;
       if(card.family === "C" || card.family === "D"){
@@ -2859,6 +3199,36 @@ const gBM = tEl("g",{id:"barModelPrint"});
       }
       // APPLIQUER OFFSET POUR C/D
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.55) : (s.cy + printOffsetY);
+        targetSvg.appendChild(tText(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealAnswers ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+      // PATCH 6 — libellé "opposé" (impression)
+      if(oppP && oppP.flags[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.55) : (s.cy + printOffsetY);
+        targetSvg.appendChild(tText(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealAnswers ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+
     });
 
     for(let i=0;i<card.visible.length;i++){
@@ -3014,6 +3384,8 @@ function generate(){
       c = genUnits(rng);
     }else if(act==="N"){
       c = genNumbered(rng);
+    }else if(act==="NPM"){
+      c = genNumberedSigned(rng);
     }else if(act==="EQ"){
       c = genEquation(rng);
     }else if(act==="C"){
