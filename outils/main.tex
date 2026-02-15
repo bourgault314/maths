@@ -1,0 +1,407 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.5cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing, arrows.meta, patterns, calc}
+\usepackage{tcolorbox}
+\usepackage{amssymb}
+
+% Couleurs
+\definecolor{mypink}{RGB}{235, 150, 150}
+\definecolor{myorange}{RGB}{240, 180, 120}
+
+\pagestyle{empty}
+
+% ==================================================
+% GABARIT MULTIPLICATIF (2 inconnues) : Grande = k × Petite
+% ==================================================
+\newcommand{\GabaritMultDeux}[1]{%
+\def\k{#1}%
+\pgfmathtruncatemacro{\u}{\k+1}%
+\def\W{9.0}%
+\pgfmathsetmacro{\unit}{\W/\u}%
+\pgfmathsetmacro{\Wbig}{\k*\unit}%
+
+\begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : ENQUÊTE MULTIPLICATIVE À DEUX INCONNUES (cas \texttimes\ \k)}]
+    \centering
+    \begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
+
+        % Cadre agrandi à -22.0
+        \path[use as bounding box] (0, 7.2) rectangle (\W, -22.0);
+        \def\Xstep{-3.5}
+
+        % ÉTAPE 1
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 7.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
+        \node[overlay, anchor=east] at (-0.2, 5.5) {Petite part : ....................};
+        \node[overlay, anchor=east] at (-0.2, 4.0) {Grande part : ....................};
+        \draw[thick, fill=mypink!30] (0, 5.0) rectangle (\unit, 6.0);
+        \node at ({0.5*\unit}, 5.5) {\Large ?};
+
+        \draw[thick, fill=mypink!30] (0, 3.5) rectangle (\Wbig, 4.5);
+        \foreach \i in {1,...,\numexpr\k-1\relax} {
+            \draw[dashed, gray!60, thick] ({\i*\unit}, 3.5) -- ({\i*\unit}, 4.5);
+        }
+        \foreach \i in {0,...,\numexpr\k-1\relax} {
+            \node at ({(\i+0.5)*\unit}, 4.0) {\Large ?};
+        }
+
+        \draw [decorate, decoration={brace, amplitude=12pt, mirror}, thick]
+            ({\Wbig+0.2}, 3.2) -- ({\Wbig+0.2}, 6.2) node [midway, right=15pt] {\textbf{TOTAL = ..........}};
+            
+        % ÉTAPE 2
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 1.7) {\large ÉTAPE 2 : VISUALISER (J'aligne tout)};
+        \begin{scope}[yshift=1.0cm]
+            \draw[thick, fill=myorange!50] (0, -1.1) rectangle (\W, -0.1);
+            \node at ({0.5*\W}, -0.6) {\large ....................};
+
+            \foreach \i in {0,...,\numexpr\u-1\relax} {
+                \draw[thick, fill=mypink!30] ({\i*\unit}, -2.1) rectangle ({(\i+1)*\unit}, -1.1);
+                \node at ({(\i+0.5)*\unit}, -1.6) {\Large ?};
+            }
+
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+                (0, -2.3) -- (\unit, -2.3) node [midway, below=6pt] {Petite part};
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+                (\unit, -2.3) -- (\W, -2.3) node [midway, below=6pt] {Grande part};
+        \end{scope}
+
+        % ÉTAPE 3
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -3.5) {\large ÉTAPE 3 : CALCULER (Je divise le total en \u)};
+        \foreach \i in {0,...,\numexpr\u-1\relax} {
+            \draw[thick, fill=myorange!50] ({\i*\unit}, -5.5) rectangle ({(\i+1)*\unit}, -4.5);
+            \node at ({(\i+0.5)*\unit}, -5.0) {\large .....};
+        }
+
+        \foreach \i in {0,...,\numexpr\u-1\relax} {
+            \draw[thick, fill=mypink!30] ({\i*\unit}, -6.5) rectangle ({(\i+1)*\unit}, -5.5);
+            \node at ({(\i+0.5)*\unit}, -6.0) {\Large ?};
+        }
+
+        \foreach \i in {1,...,\numexpr\u-1\relax} {
+            \draw[dashed, ultra thick, blue] ({\i*\unit}, -4.3) -- ({\i*\unit}, -6.7);
+        }
+
+        % ÉTAPE 4
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -7.8) {\large ÉTAPE 4 : CALCULER (Je trouve les deux parts)};
+        \draw[thick, fill=myorange!50] (0, -9.8) rectangle (\unit, -8.8);
+        \node at ({0.5*\unit}, -9.3) {\large .....};
+
+        \draw[thick, fill=myorange!50] (\unit, -9.8) rectangle (\W, -8.8);
+        \node at ({\unit + 0.5*(\W-\unit)}, -9.3) {\large ..........};
+
+        \foreach \i in {0,...,\numexpr\u-1\relax} {
+            \draw[thick, fill=mypink!30] ({\i*\unit}, -10.8) rectangle ({(\i+1)*\unit}, -9.8);
+            \node at ({(\i+0.5)*\unit}, -10.3) {\Large ?};
+        }
+
+        \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+            (0, -11.05) -- (\unit, -11.05) node [midway, below=6pt] {Petite part};
+        \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+            (\unit, -11.05) -- (\W, -11.05) node [midway, below=6pt] {Grande part};
+            
+        \node[fill=yellow!20, thick, draw, inner sep=10pt, align=left] at ({0.5*\W}, -14.8) {
+            \large \textbf{RÉPONSES :} \\[0.3cm]
+            \large Petite part : ..................... \quad \quad Grande part : .....................
+        };
+        \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=10pt, align=left] at ({0.5*\W}, -19.5) {
+            \large \textbf{JE VÉRIFIE (OBLIGATOIRE) :} \\[0.3cm]
+            \normalsize 1. Somme : ........ + ........ = \textbf{.......... (Total ?)} \quad $\square$ OK \\[0.3cm]
+            \normalsize 2. Rapport : ........ $\div$ ........ = \textbf{\k\ (Facteur ?)} \quad $\square$ OK
+        };
+    \end{tikzpicture}
+\end{tcolorbox}
+}
+
+% ==================================================
+%  CAS GENERAL : Grande = n × Petite (n à compléter)
+% ==================================================
+\newcommand{\GabaritMultDeuxN}{%
+\def\W{9.0}%
+\def\U{1.6}%
+\def\Wbig{7.4}%
+
+\begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : ENQUÊTE MULTIPLICATIVE À DEUX INCONNUES (cas \texttimes\ n)}]
+\centering
+\begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
+    % Cadre agrandi à -22.0
+    \path[use as bounding box] (0, 7.2) rectangle (\W, -22.0);
+    \def\Xstep{-3.5}
+
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, 7.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
+    \node[overlay, anchor=east] at (-0.2, 5.5) {Petite part : ....................};
+    \node[overlay, anchor=east] at (-0.2, 4.0) {Grande part : ....................};
+    \draw[thick, fill=mypink!30] (0, 5.0) rectangle (\U, 6.0);
+    \node at ({0.5*\U}, 5.5) {\Large ?};
+
+    \draw[thick, fill=mypink!30] (0, 3.5) rectangle (\Wbig, 4.5);
+    \draw[dashed, gray!60, thick] (\U, 3.5) -- (\U, 4.5);
+    \draw[dashed, gray!60, thick] ({2*\U}, 3.5) -- ({2*\U}, 4.5);
+    \draw[dashed, gray!60, thick] ({\Wbig-\U}, 3.5) -- ({\Wbig-\U}, 4.5);
+
+    \node at ({0.5*\U}, 4.0) {\Large ?};
+    \node at ({1.5*\U}, 4.0) {\Large ?};
+    \node at ({0.5*(2*\U+\Wbig-\U)}, 4.0) {\Large $\cdots$};
+    \node at ({\Wbig-0.5*\U}, 4.0) {\Large ?};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+        (0, 3.35) -- (\Wbig, 3.35) node [midway, below=6pt] {\Large ? $\times$ ..............};
+
+    \draw [decorate, decoration={brace, amplitude=12pt, mirror}, thick]
+        ({\Wbig+0.2}, 3.2) -- ({\Wbig+0.2}, 6.2) node [midway, right=15pt] {\textbf{TOTAL = ..........}};
+        
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, 1.3) {\large ÉTAPE 2 : VISUALISER (J'aligne tout)};
+    \begin{scope}[yshift=0.6cm]
+        \draw[thick, fill=myorange!50] (0, -1.1) rectangle (\W, -0.1);
+        \node at ({0.5*\W}, -0.6) {\large ....................};
+
+        \draw[thick, fill=mypink!30] (0, -2.1) rectangle (\W, -1.1);
+        \draw[dashed, gray!60, thick] (\U, -2.1) -- (\U, -1.1);
+        \draw[dashed, gray!60, thick] ({2*\U}, -2.1) -- ({2*\U}, -1.1);
+        \draw[dashed, gray!60, thick] ({3*\U}, -2.1) -- ({3*\U}, -1.1);
+        \draw[dashed, gray!60, thick] ({\W-\U}, -2.1) -- ({\W-\U}, -1.1);
+        \node at ({0.5*\U}, -1.6) {\Large ?};
+        \node at ({1.5*\U}, -1.6) {\Large ?};
+        \node at ({2.5*\U}, -1.6) {\Large ?};
+        \node at ({0.5*(3*\U+\W-\U)}, -1.6) {\Large $\cdots$};
+        \node at ({\W-0.5*\U}, -1.6) {\Large ?};
+        \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+            (0, -2.3) -- (\U, -2.3) node [midway, below=6pt] {Petite part};
+        \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+            (\U, -2.3) -- (\W, -2.3) node [midway, below=6pt] {Grande part};
+    \end{scope}
+
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, -3.5) {\large ÉTAPE 3 : CALCULER (Je divise le total en ....)};
+    \draw[thick, fill=myorange!50] (0, -5.5) rectangle (\W, -4.5);
+    \node at ({0.5*\U}, -5.0) {\large .....};
+    \node at ({1.5*\U}, -5.0) {\large .....};
+    \node at ({2.5*\U}, -5.0) {\large .....};
+    \node at ({0.5*(3*\U+\W-\U)}, -5.0) {\Large $\cdots$};
+    \node at ({\W-0.5*\U}, -5.0) {\large .....};
+    \draw[thick, fill=mypink!30] (0, -6.5) rectangle (\W, -5.5);
+    \draw[dashed, gray!60, thick] (\U, -6.5) -- (\U, -5.5);
+    \draw[dashed, gray!60, thick] ({2*\U}, -6.5) -- ({2*\U}, -5.5);
+    \draw[dashed, gray!60, thick] ({3*\U}, -6.5) -- ({3*\U}, -5.5);
+    \draw[dashed, gray!60, thick] ({\W-\U}, -6.5) -- ({\W-\U}, -5.5);
+
+    \draw[dashed, ultra thick, blue] (\U, -4.3) -- (\U, -6.7);
+    \draw[dashed, ultra thick, blue] ({2*\U}, -4.3) -- ({2*\U}, -6.7);
+    \draw[dashed, ultra thick, blue] ({3*\U}, -4.3) -- ({3*\U}, -6.7);
+    \draw[dashed, ultra thick, blue] ({\W-\U}, -4.3) -- ({\W-\U}, -6.7);
+
+    \node at ({0.5*\U}, -6.0) {\Large ?};
+    \node at ({1.5*\U}, -6.0) {\Large ?};
+    \node at ({2.5*\U}, -6.0) {\Large ?};
+    \node at ({0.5*(3*\U+\W-\U)}, -6.0) {\Large $\cdots$};
+    \node at ({\W-0.5*\U}, -6.0) {\Large ?};
+
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, -7.8) {\large ÉTAPE 4 : CALCULER (Je trouve les deux parts)};
+    \draw[thick, fill=myorange!50] (0, -9.8) rectangle (\U, -8.8);
+    \node at ({0.5*\U}, -9.3) {\large .....};
+
+    \draw[thick, fill=myorange!50] (\U, -9.8) rectangle (\W, -8.8);
+    \node at ({\U + 0.5*(\W-\U)}, -9.3) {\large ..........};
+
+    \draw[thick, fill=mypink!30] (0, -10.8) rectangle (\W, -9.8);
+    \draw[dashed, gray!60, thick] (\U, -10.8) -- (\U, -9.8);
+    \draw[dashed, gray!60, thick] ({2*\U}, -10.8) -- ({2*\U}, -9.8);
+    \draw[dashed, gray!60, thick] ({3*\U}, -10.8) -- ({3*\U}, -9.8);
+    \draw[dashed, gray!60, thick] ({\W-\U}, -10.8) -- ({\W-\U}, -9.8);
+    \node at ({0.5*\U}, -10.3) {\Large ?};
+    \node at ({1.5*\U}, -10.3) {\Large ?};
+    \node at ({2.5*\U}, -10.3) {\Large ?};
+    \node at ({0.5*(3*\U+\W-\U)}, -10.3) {\Large $\cdots$};
+    \node at ({\W-0.5*\U}, -10.3) {\Large ?};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+        (0, -11.05) -- (\U, -11.05) node [midway, below=6pt] {Petite part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+        (\U, -11.05) -- (\W, -11.05) node [midway, below=6pt] {Grande part};
+        
+    \node[fill=yellow!20, thick, draw, inner sep=10pt, align=left] at ({0.5*\W}, -14.8) {
+        \large \textbf{RÉPONSES :} \\[0.3cm]
+        \large Petite part : ..................... \quad \quad Grande part : .....................
+    };
+    \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=10pt, align=left] at ({0.5*\W}, -19.5) {
+        \large \textbf{JE VÉRIFIE (OBLIGATOIRE) :} \\[0.3cm]
+        \large 1. Somme : ........ + ........ = \textbf{.......... (Total ?)} \quad $\square$ OK \\[0.2cm]
+        \large 2. Rapport : ........ $\div$ ........ = \textbf{.......... (Facteur ?)} \quad $\square$ OK
+    };
+\end{tikzpicture}
+\end{tcolorbox}
+}
+
+% ==================================================
+% 3 inconnues (cas ×n et ×m) — VERSION 3e PART PLUS LONGUE
+% ==================================================
+\newcommand{\GabaritMultTroisNM}{%
+\def\W{9.6}% Largeur totale
+\def\U{1.2}% Largeur stricte et unique d'une "case point d'interrogation"
+\def\dotsWB{1.2}% Largeur de la zone pointillée de la 2e part
+\def\dotsWC{2.4}% Largeur de la zone pointillée de la 3e part (plus longue !)
+\pgfmathsetmacro{\WbigB}{2*\U+\dotsWB}% Largeur totale 2e part = 3.6
+\pgfmathsetmacro{\WbigC}{2*\U+\dotsWC}% Largeur totale 3e part = 4.8
+
+\begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : ENQUÊTE MULTIPLICATIVE À TROIS INCONNUES (cas \texttimes\ n et \texttimes\ m)}]
+\centering
+\begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
+    % Cadre agrandi
+    \path[use as bounding box] (0, 8.5) rectangle (\W, -22.0);
+    \def\Xstep{-3.5}
+
+    % =========================
+    % ÉTAPE 1 : REPRÉSENTER
+    % =========================
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, 8.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
+    \node[overlay, anchor=east] at (-0.2, 7.0) {1\iere\ part : ....................};
+    \node[overlay, anchor=east] at (-0.2, 4.5) {2e\ part : ....................};
+    \node[overlay, anchor=east] at (-0.2, 1.5) {3e\ part : ....................};
+
+    % 1ère part
+    \draw[thick, fill=mypink!30] (0, 6.5) rectangle (\U, 7.5);
+    \node at ({\U/2}, 7.0) {\Large ?};
+
+    % 2e part (plus courte)
+    \draw[thick, fill=mypink!30] (0, 4.0) rectangle (\WbigB, 5.0);
+    \draw[dashed, gray!60, thick] (\U, 4.0) -- (\U, 5.0);
+    \draw[dashed, gray!60, thick] ({\U+\dotsWB}, 4.0) -- ({\U+\dotsWB}, 5.0);
+    \node at ({\U/2}, 4.5) {\Large ?};
+    \node at ({\U+\dotsWB/2}, 4.5) {\Large $\cdots$};
+    \node at ({\U+\dotsWB+\U/2}, 4.5) {\Large ?};
+    \draw [decorate, decoration={brace, amplitude=6pt, mirror}, thick]
+        (0, 3.8) -- (\WbigB, 3.8) node [midway, below=8pt] {\Large ? $\times$ ....................};
+
+    % 3e part (plus longue)
+    \draw[thick, fill=mypink!30] (0, 1.0) rectangle (\WbigC, 2.0);
+    \draw[dashed, gray!60, thick] (\U, 1.0) -- (\U, 2.0);
+    \draw[dashed, gray!60, thick] ({\U+\dotsWC}, 1.0) -- ({\U+\dotsWC}, 2.0);
+    \node at ({\U/2}, 1.5) {\Large ?};
+    \node at ({\U+\dotsWC/2}, 1.5) {\Large $\cdots$}; 
+    \node at ({\U+\dotsWC+\U/2}, 1.5) {\Large ?};
+    \draw [decorate, decoration={brace, amplitude=6pt, mirror}, thick]
+        (0, 0.8) -- (\WbigC, 0.8) node [midway, below=8pt] {\Large ? $\times$ ....................};
+
+    % Accolade TOTAL
+    \draw [decorate, decoration={brace, amplitude=12pt, mirror}, thick]
+        ({\WbigC+0.3}, 0.8) -- ({\WbigC+0.3}, 7.5) node [midway, right=15pt] {\textbf{TOTAL = ..........}};
+
+    % =========================
+    % ÉTAPE 2 : VISUALISER
+    % =========================
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, -1.0) {\large ÉTAPE 2 : VISUALISER (J'aligne tout)};
+    
+    % Total orange
+    \draw[thick, fill=myorange!50] (0, -2.5) rectangle (\W, -1.5);
+    \node at ({\W/2}, -2.0) {\large ....................};
+
+    % Alignement rose
+    \draw[thick, fill=mypink!30] (0, -3.5) rectangle (\W, -2.5);
+    % Séparations (1.2, 2.4, 3.6, 4.8, 6.0, 8.4)
+    \foreach \x in {1.2, 2.4, 3.6, 4.8, 6.0, 8.4} {
+        \draw[dashed, gray!60, thick] (\x, -3.5) -- (\x, -2.5);
+    }
+    
+    \node at (0.6, -3.0) {\Large ?};
+    \node at (1.8, -3.0) {\Large ?};
+    \node at (3.0, -3.0) {\Large $\cdots$};
+    \node at (4.2, -3.0) {\Large ?};
+    \node at (5.4, -3.0) {\Large ?};
+    \node at (7.2, -3.0) {\Large $\cdots$};
+    \node at (9.0, -3.0) {\Large ?};
+
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -3.7) -- (1.2, -3.7) node [midway, below=4pt] {1\iere\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (1.2, -3.7) -- (4.8, -3.7) node [midway, below=4pt] {2e\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (4.8, -3.7) -- (9.6, -3.7) node [midway, below=4pt] {3e\ part};
+
+    % =========================
+    % ÉTAPE 3 : CALCULER
+    % =========================
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, -4.8) {\large ÉTAPE 3 : CALCULER (Je divise le total en ....)};
+    \draw[thick, fill=myorange!50] (0, -6.5) rectangle (\W, -5.5);
+    \draw[thick, fill=mypink!30] (0, -7.5) rectangle (\W, -6.5);
+    
+    \foreach \x in {1.2, 2.4, 3.6, 4.8, 6.0, 8.4} {
+        \draw[dashed, gray!60, thick] (\x, -7.5) -- (\x, -5.5);
+        \draw[dashed, ultra thick, blue] (\x, -5.3) -- (\x, -7.7); 
+    }
+    % Textes orange
+    \node at (0.6, -6.0) {.....};
+    \node at (1.8, -6.0) {.....};
+    \node at (3.0, -6.0) {\Large $\cdots$};
+    \node at (4.2, -6.0) {.....};
+    \node at (5.4, -6.0) {.....};
+    \node at (7.2, -6.0) {\Large $\cdots$};
+    \node at (9.0, -6.0) {.....};
+    % Textes rose
+    \node at (0.6, -7.0) {\Large ?};
+    \node at (1.8, -7.0) {\Large ?};
+    \node at (3.0, -7.0) {\Large $\cdots$};
+    \node at (4.2, -7.0) {\Large ?};
+    \node at (5.4, -7.0) {\Large ?};
+    \node at (7.2, -7.0) {\Large $\cdots$};
+    \node at (9.0, -7.0) {\Large ?};
+
+    % =========================
+    % ÉTAPE 4 : CALCULER
+    % =========================
+    \node[overlay, anchor=west, blue!80!black] at (\Xstep, -9.0) {\large ÉTAPE 4 : CALCULER (Je trouve les trois parts)};
+    
+    % Bloc regroupé orange
+    \draw[thick, fill=myorange!50] (0, -11.0) rectangle (\W, -10.0);
+    \draw[thick] (1.2, -11.0) -- (1.2, -10.0);
+    \draw[thick] (4.8, -11.0) -- (4.8, -10.0);
+    \node at (0.6, -10.5) {.....};
+    \node at (3.0, -10.5) {..........};
+    \node at (7.2, -10.5) {...............};
+
+    % Bloc rose découpé
+    \draw[thick, fill=mypink!30] (0, -12.0) rectangle (\W, -11.0);
+    \foreach \x in {1.2, 2.4, 3.6, 4.8, 6.0, 8.4} {
+        \draw[dashed, gray!60, thick] (\x, -12.0) -- (\x, -11.0);
+    }
+    \node at (0.6, -11.5) {\Large ?};
+    \node at (1.8, -11.5) {\Large ?};
+    \node at (3.0, -11.5) {\Large $\cdots$};
+    \node at (4.2, -11.5) {\Large ?};
+    \node at (5.4, -11.5) {\Large ?};
+    \node at (7.2, -11.5) {\Large $\cdots$};
+    \node at (9.0, -11.5) {\Large ?};
+
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -12.2) -- (1.2, -12.2) node [midway, below=4pt] {1\iere\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (1.2, -12.2) -- (4.8, -12.2) node [midway, below=4pt] {2e\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (4.8, -12.2) -- (9.6, -12.2) node [midway, below=4pt] {3e\ part};
+
+    % =========================
+    % RÉPONSES ET VÉRIFICATION
+    % =========================
+    \node[draw=black, thick, rounded corners, fill=yellow!20, inner sep=10pt, align=left] at ({\W/2}, -14.5) {
+        \large \textbf{RÉPONSES :} \\[0.2cm]
+        1\iere\ part : ..................... \quad 2e\ part : ..................... \quad 3e\ part : .....................
+    };
+
+    \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=10pt, align=left] at ({\W/2}, -18.5) {
+        \large \textbf{JE VÉRIFIE (OBLIGATOIRE) :} \\[0.3cm]
+        \large 1. Somme : ........ + ........ + ........ = \textbf{.......... (Total ?)} \quad $\square$ OK \\[0.2cm]
+        \large 2. Rapport : ........ $\div$ ........ = \textbf{.......... (Facteur ?)} \quad $\square$ OK \\[0.2cm]
+        \large 3. Rapport : ........ $\div$ ........ = \textbf{.......... (Facteur ?)} \quad $\square$ OK
+    };
+\end{tikzpicture}
+\end{tcolorbox}
+}
+
+\begin{document}
+
+\GabaritMultDeux{2}
+\newpage
+\GabaritMultDeux{3}
+\newpage
+\GabaritMultDeux{4}
+\newpage
+\GabaritMultDeux{5}
+\newpage
+\GabaritMultDeux{6}
+\newpage
+\GabaritMultDeuxN
+\newpage
+\GabaritMultTroisNM
+
+\end{document}
