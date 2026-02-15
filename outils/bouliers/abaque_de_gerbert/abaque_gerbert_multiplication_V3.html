@@ -211,9 +211,26 @@
     body.directMul .opRow{ height:30px; }
     body.directMul .opCell{ height:30px; font-size:30px; }
 
+    /* ✅ Mode direct : tableau abaissé (plus proche du bas, moins d'espace perdu) */
+    body.directMul .board{ align-items:flex-end; padding-bottom:12px; }
+
+    /* ✅ Mode direct : mise en page plus équilibrée (moins de vide inutile en haut)
+       On garde le plateau bas (accès facile), mais on évite qu'il occupe toute la hauteur.
+    */
+    body.directMul main{ justify-content:flex-end; padding-bottom:22px; }
+    body.directMul .boardWrap{
+      flex:0 0 auto;
+      min-height:0;
+      height: clamp(320px, calc(100vh - 220px), 520px);
+    }
+    /* ✅ Mode direct : on remonte le plateau (CDU/CDU) pour libérer plus d'espace en bas */
+    body.directMul .board{ inset: var(--archH) 0 90px; }
+
+
+    body.directMul .groupSep{ align-self:stretch; }
+
     /* ✅ Mode direct : les colonnes ne s'étirent pas (on libère de la place en bas pour la zone d'échange) */
-    body.directMul .col{ align-self:flex-start; }
-    body.directMul .colBody{ flex:0 0 auto; }
+        body.directMul .colBody{ flex:0 0 auto; }
 
     /* On n’affiche plus la multiplication posée dans la carte (elle est dans le tableau) */
     .exerciseCard .exProblemWrap{ display:none; }
@@ -354,6 +371,13 @@
       padding-bottom:0;
       margin-bottom:0;
     }
+
+    /* ✅ Mode direct : doubler l'air au-dessus de la ligne (séparation sous le multiplicateur) */
+    body.directMul .calcRow.hdr.ruleAfter{
+      height:68px;         /* plus haut pour laisser respirer */
+      padding-bottom:18px; /* ↑ distance au-dessus de la ligne */
+    }
+
     .calcDigit{
       display:inline-flex;
       align-items:center;
@@ -553,6 +577,23 @@
       pointer-events:none;
     }
 
+    /* ✅ Badge "bloc" (prise en pile) */
+    .bundleBadge{
+      position:absolute;
+      right:-4px;
+      bottom:-4px;
+      background: rgba(15,23,42,0.85);
+      color:#fff;
+      font-weight:950;
+      font-size:11px;
+      line-height:1;
+      padding:4px 6px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,0.75);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+      pointer-events:none;
+    }
+
     .palette{
       position:sticky;
       bottom:0;
@@ -562,6 +603,8 @@
       border-top:1px solid rgba(0,0,0,0.08);
       backdrop-filter: blur(8px);
     }
+    /* ✅ Mode direct : remonter légèrement la rangée de jetons (laisser du vide en bas) */
+    body.directMul .palette{ transform: translateY(-22px); }
     .paletteInner{
       display:flex;
       align-items:center;
@@ -901,6 +944,8 @@ body.noArches .boardTop{ padding-top: 6px; }
   margin-top:2px;
 }
 .exHeadRight{ display:flex; align-items:center; gap:8px; }
+.exHeadRight .btn{ height:36px; padding-top:0; padding-bottom:0; }
+#btnExSettings{ width:40px; padding:0; justify-content:center; font-size:16px; }
 .exProblem{
   margin:0;
   padding:12px 12px;
@@ -1038,7 +1083,7 @@ body.noArches .boardTop{ padding-top: 6px; }
 </style>
 </head>
 
-<body>
+<body class="directMul">
 <header>
   <div class="title">
     Abaque de Gerbert – Multiplications</div>
@@ -1292,6 +1337,14 @@ renderTray();
     el.textContent = String(v);
     el.dataset.value = String(v);
     return el;
+  }
+
+  function addBundleBadge(el, count){
+    if(!el) return;
+    const b = document.createElement("div");
+    b.className = "bundleBadge";
+    b.textContent = String(count);
+    el.appendChild(b);
   }
 
   function renderTray(){
@@ -2161,9 +2214,12 @@ bigValueOutside.style.display = state.showBigValue ? "flex" : "none";
 
   let left = tz.left;
   left = Math.max(8, Math.min(left, vw - targetW - 8));
+  // ✅ Positionner la carte au niveau du plateau (plus joli quand le plateau est abaissé),
+  // et conserver le placement "sous l'en-tête" sur petits écrans.
+  const wrap = boardWrap.getBoundingClientRect();
+  const isNarrow = vw <= 760;
 
-  // ✅ Sur tablette : on fixe la carte sous l’en-tête, et la Zone d’échange se place en dessous.
-  let top = headerH + 10;
+  let top = isNarrow ? (headerH + 10) : Math.max(headerH + 10, wrap.top + 12);
   top = Math.max(headerH + 10, Math.min(top, vh - cardH - 8));
 
   exerciseCard.style.left = left + "px";
@@ -2188,10 +2244,15 @@ function positionTrashZone(){
   // ce qui réutilise tout l’espace "vide" sous les colonnes et améliore l’usage tablette.
   const isDirect = document.body.classList.contains("directMul");
 
+  // ✅ Sur tablette / écran étroit : on dock la Zone d’échange en bas.
+  // Sur écran large (PC), on garde la Zone d’échange à droite (comportement habituel).
+  const vw = window.innerWidth || document.documentElement.clientWidth;
+  const dockBottom = isDirect && vw <= 980;
+
   // uniquement les colonnes visibles (utile quand on masque "Millions")
   const cols = [...document.querySelectorAll(".col")].filter(c => c.offsetParent !== null);
 
-  if(isDirect){
+  if(dockBottom){
     // On libère la droite : les colonnes peuvent prendre toute la largeur
     setReserveRight(0);
     void board.offsetWidth;
@@ -2505,6 +2566,18 @@ function positionTrashZone(){
         if(!tok) return;
         if(state.exchange && !isTokenDraggable("col", from.colIndex, tok)) return;
 
+        // ✅ Mode direct : si la colonne contient une pile, on prend TOUT le bloc d'un coup
+        let groupIds = null;
+        const directMode = document.body.classList.contains("directMul");
+        if(directMode){
+          const arr = state.cols[from.colIndex] || [];
+          if(arr.length >= 2){
+            // Sécurité : si un jour un échange "guidé" revient, on ne groupe que si tout est déplaçable
+            const ok = !state.exchange || arr.every(t => isTokenDraggable("col", from.colIndex, t));
+            if(ok) groupIds = arr.map(t => t.id);
+          }
+        }
+
         dragEl = makeTokenEl(v);
         dragEl.style.position = "fixed";
         dragEl.style.left = rect.left + "px";
@@ -2513,8 +2586,38 @@ function positionTrashZone(){
         dragEl.style.pointerEvents = "none";
         document.body.appendChild(dragEl);
 
+        // Badge visuel "×N" si on emporte un bloc
+        if(groupIds && groupIds.length > 1){
+          addBundleBadge(dragEl, groupIds.length);
+        }
+
         originalEl = el;
-        originalEl.style.visibility = "hidden";
+        // On cache tout le bloc pendant le drag (sinon doublon visuel)
+        let originalEls = null;
+        if(groupIds && groupIds.length > 1){
+          originalEls = [...document.querySelectorAll(`.token[data-source="col"][data-col-index="${from.colIndex}"]`)];
+          for(const oe of originalEls) oe.style.visibility = "hidden";
+        }else{
+          originalEl.style.visibility = "hidden";
+        }
+
+        // on stocke les infos de groupe directement dans l'état de drag
+        state.dragging = {
+          el: dragEl,
+          v,
+          id: tokenId,
+          from,
+          originalEl,
+          originalEls,
+          group: groupIds ? { ids: groupIds.slice(), colIndex: from.colIndex } : null,
+          offsetX: e.clientX - rect.left,
+          offsetY: e.clientY - rect.top
+        };
+
+        el.setPointerCapture?.(e.pointerId);
+        window.addEventListener("pointermove", onMove, {passive:false});
+        window.addEventListener("pointerup", onUp, {passive:false});
+        return;
       } else { // bin
         tokenId = Number(el.dataset.id);
         const tok = binTokenById(tokenId);
@@ -2605,10 +2708,20 @@ function positionTrashZone(){
         addTokenToCol(dropCol, d.v);
         didChange = true;
       } else if(d.from.type === "col"){
-        if(d.from.colIndex !== dropCol){
-          pushUndo();
-          moveToken(d.from.colIndex, dropCol, d.id);
-          didChange = true;
+        if(d.group && d.group.ids && d.group.ids.length > 1){
+          if(d.group.colIndex !== dropCol){
+            pushUndo();
+            for(const gid of d.group.ids){
+              moveToken(d.group.colIndex, dropCol, gid);
+            }
+            didChange = true;
+          }
+        }else{
+          if(d.from.colIndex !== dropCol){
+            pushUndo();
+            moveToken(d.from.colIndex, dropCol, d.id);
+            didChange = true;
+          }
         }
       } else { // bin -> col
         pushUndo();
@@ -2624,18 +2737,31 @@ function positionTrashZone(){
         if(!state.exchange) startFreeExchange();
 
         pushUndo();
-        const tok = removeToken(d.from.colIndex, d.id);
-        if(tok){
-          state.bin.push(tok);
+        if(d.group && d.group.ids && d.group.ids.length > 1){
+          for(const gid of d.group.ids){
+            const tok = removeToken(d.from.colIndex, gid);
+            if(tok) state.bin.push(tok);
+          }
           didChange = true;
+        }else{
+          const tok = removeToken(d.from.colIndex, d.id);
+          if(tok){
+            state.bin.push(tok);
+            didChange = true;
+          }
         }
       }
     } else {
       if(d.from.type === "col"){
-        if(!state.exchange){
-          pushUndo();
-          removeToken(d.from.colIndex, d.id);
-          didChange = true;
+        // ✅ Si on a pris un bloc, on annule simplement le déplacement (pas de suppression accidentelle)
+        if(d.group && d.group.ids && d.group.ids.length > 1){
+          didChange = false;
+        }else{
+          if(!state.exchange){
+            pushUndo();
+            removeToken(d.from.colIndex, d.id);
+            didChange = true;
+          }
         }
       }
     }
@@ -2643,8 +2769,12 @@ function positionTrashZone(){
     d.el.remove();
     setTrashActive(false);
 
-    if(!didChange && d.originalEl){
-      d.originalEl.style.visibility = "";
+    if(!didChange){
+      if(d.originalEls && d.originalEls.length){
+        for(const oe of d.originalEls) oe.style.visibility = "";
+      }else if(d.originalEl){
+        d.originalEl.style.visibility = "";
+      }
     }
 
     state.dragging = null;
