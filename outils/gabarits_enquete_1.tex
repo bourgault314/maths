@@ -1,0 +1,277 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+% Marges réduites au minimum pour optimiser l'espace A3
+\usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.5cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing, arrows.meta, patterns}
+\usepackage{tcolorbox}
+\usepackage{amssymb}
+
+% Couleurs
+\definecolor{mypink}{RGB}{235, 150, 150}
+\definecolor{myorange}{RGB}{240, 180, 120}
+
+\title{\vspace{-2cm}Gabarits A3 Final V22 (Tables alignées + cadres centrés)}
+\date{}
+
+\begin{document}
+\shorthandoff{:;!?}
+
+% ==================================================================================
+% PAGE 1 : DEUX INCONNUES
+% Objectif :
+%  - Le tableau de l'étape 2 est centré sur la page.
+%  - Tous les tableaux commencent au même x (même "début de tableau" que l'étape 2).
+%  - Les titres d'étapes restent alignés (colonne à gauche), sans influencer le centrage.
+% ==================================================================================
+
+\begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : PROBLÈME À DEUX INCONNUES}]
+    \centering
+    \begin{tikzpicture}[scale=0.85, every node/.style={font=\bfseries\small}]
+
+        % --- Référence de mise en page ---
+        % Largeur de l'étape 2 (référence) : 9.0
+        % On force la "boîte" TikZ à être exactement le bloc tableau (0..9),
+        % pour que le centrage LaTeX centre réellement le tableau.
+        \path[use as bounding box] (0, 7.2) rectangle (9.0, -24.2);
+
+        % Colonne des titres (décalée pour garder l'équilibre visuel)
+        \def\Xstep{-3.5}
+
+        % --- ÉTAPE 1 ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 7.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
+        \node[overlay, anchor=east] at (-0.2, 5.5) {Petite part : ....................};
+        \node[overlay, anchor=east] at (-0.2, 4.0) {Grande part : ....................};
+
+        \draw[thick, fill=mypink!30] (0, 5.0) rectangle (3.0, 6.0); \node at (1.5, 5.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (0, 3.5) rectangle (3.0, 4.5); \node at (1.5, 4.0) {\Large ?};
+        \draw[thick, fill=white, dashed] (3.0, 3.5) rectangle (6.0, 4.5); \node[red] at (4.5, 4.0) {\large ..........};
+        \draw [decorate, decoration={brace, amplitude=12pt, mirror}, thick] (6.2, 3.3) -- (6.2, 6.2) node [midway, right=15pt] {\textbf{TOTAL = ..........}};
+
+
+        % --- ÉTAPE 2 (INVERSÉE + TABLE CENTRÉE PAR BBOX) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 2.0) {\large ÉTAPE 2 : VISUALISER (J'aligne tout)};
+
+        % Bloc étape 2 remonté pour compenser l'ajout des accolades en dessous
+        \begin{scope}[yshift=1.0cm]
+            % TOTAL (orange) AU-DESSUS
+            \draw[thick, fill=myorange!50] (0, -1.1) rectangle (9.0, -0.1);
+            \node at (4.5, -0.6) {\large ....................};
+
+            % Ligne (rose) EN DESSOUS
+            \draw[thick, fill=mypink!30] (0, -2.1) rectangle (3.0, -1.1); \node at (1.5, -1.6) {\Large ?};
+            \draw[thick, fill=mypink!30] (3.0, -2.1) rectangle (6.0, -1.1); \node at (4.5, -1.6) {\Large ?};
+            \draw[thick, fill=white, dashed] (6.0, -2.1) rectangle (9.0, -1.1); \node[red] at (7.5, -1.6) {\large ......};
+
+            % Accolades EN DESSOUS
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -2.3) -- (3.0, -2.3) node [midway, below=6pt] {Petite part};
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (3.0, -2.3) -- (9.0, -2.3) node [midway, below=6pt] {Grande part};
+        \end{scope}
+
+
+        % --- ÉTAPE 3 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -3.5) {\large ÉTAPE 3 : ÉGALISER (J'enlève le surplus)};
+
+        % (Ancienne ligne du bas) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -5.5) rectangle (6.0, -4.5); \node at (3.0, -5.0) {\large ..........};
+        \draw[thick, draw=gray, pattern=north east lines, pattern color=gray] (6.0, -5.5) rectangle (9.0, -4.5);
+        \node[gray, fill=white, inner sep=1pt] at (7.5, -5.0) {..........};
+
+        % (Ancienne ligne du haut) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -6.5) rectangle (3.0, -5.5); \node at (1.5, -6.0) {\Large ?};
+        \draw[thick, fill=mypink!30] (3.0, -6.5) rectangle (6.0, -5.5); \node at (4.5, -6.0) {\Large ?};
+        \draw[thick, draw=gray, pattern=north east lines, pattern color=gray] (6.0, -6.5) rectangle (9.0, -5.5);
+        \node[gray, fill=white, inner sep=1pt] at (7.5, -6.0) {..........};
+
+        \draw[red, densely dotted, line width=2.5pt] (6.0, -6.7) -- (6.0, -4.3);
+
+
+        % --- ÉTAPE 4 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -7.8) {\large ÉTAPE 4 : CALCULER (Je divise)};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -9.8) rectangle (6.0, -8.8);
+        \node at (1.5, -9.3) {\large ......}; \node at (4.5, -9.3) {\large ......};
+
+        % (Ancienne ligne du haut - rose) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -10.8) rectangle (3.0, -9.8); \node at (1.5, -10.3) {\Large ?};
+        \draw[thick, fill=mypink!30] (3.0, -10.8) rectangle (6.0, -9.8); \node at (4.5, -10.3) {\Large ?};
+
+        \draw[dashed, ultra thick, blue] (3.0, -8.6) -- (3.0, -11.0);
+
+        % FLÈCHE DONC
+        \draw[-{Latex[length=8mm, width=6mm]}, line width=4pt, gray!50] (1.5, -11.3) -- (1.5, -12.8);
+
+
+        % --- ÉTAPE 5 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -13.5) {\large ÉTAPE 5 : J'OBTIENS LA RÉPONSE};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -15.5) rectangle (3.0, -14.5); \node at (1.5, -15.0) {\large \textbf{......}};
+
+        % (Ancienne ligne du haut - rose) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -16.5) rectangle (3.0, -15.5); \node at (1.5, -16.0) {\Large ?};
+
+
+        % --- BAS DE PAGE (déjà centré car x=4.5 = centre du tableau 0..9) ---
+        \node[fill=yellow!20, thick, draw, inner sep=10pt, align=left] at (4.5, -18.2) {
+            \large \textbf{RÉPONSES :} \\[0.3cm]
+            \large Petite part : ..................... \quad \quad Grande part : .....................
+        };
+
+        \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=10pt, align=left] at (4.5, -21.9) {
+            \large \textbf{JE VÉRIFIE (OBLIGATOIRE) :} \\[0.3cm]
+            \normalsize 1. Somme : ........ + ........ = \textbf{.......... (Total ?)} \quad $\square$ OK \\[0.3cm]
+            \normalsize 2. Différence : ........ $-$ ........ = \textbf{.......... (Surplus ?)} \quad $\square$ OK
+        };
+
+    \end{tikzpicture}
+\end{tcolorbox}
+
+\newpage
+
+% ==================================================================================
+% PAGE 2 : TROIS INCONNUES
+% Objectif identique :
+%  - Étape 2 centrée (largeur 13.5), et tous les tableaux démarrent au même x.
+%  - Titres d'étapes alignés à gauche sans influencer le centrage.
+%  - Cadres "RÉPONSES" et "JE VÉRIFIE" centrés (au vrai centre 6.75).
+% ==================================================================================
+
+\begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : PROBLÈME À TROIS INCONNUES}]
+    \centering
+    \begin{tikzpicture}[scale=0.72, every node/.style={font=\bfseries\small}]
+
+        % Largeur de l'étape 2 (référence) : 13.5
+        \path[use as bounding box] (0, 7.2) rectangle (13.5, -31.0);
+
+        % Colonne des titres (même décalage visuel)
+        \def\Xstep{-3.5}
+
+        % --- ÉTAPE 1 ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 7.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
+        \node[overlay, anchor=east] at (-0.2, 5.5) {Petite : ................};
+        \node[overlay, anchor=east] at (-0.2, 4.0) {Moyenne : ................};
+        \node[overlay, anchor=east] at (-0.2, 2.5) {Grande : ................};
+
+        \draw[thick, fill=mypink!30] (0, 5.0) rectangle (2.5, 6.0); \node at (1.25, 5.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (0, 3.5) rectangle (2.5, 4.5); \node at (1.25, 4.0) {\Large ?};
+        \draw[thick, fill=white, dashed] (2.5, 3.5) rectangle (4.5, 4.5); \node[red] at (3.5, 4.0) {.....};
+        \draw[thick, fill=mypink!30] (0, 2.0) rectangle (2.5, 3.0); \node at (1.25, 2.5) {\Large ?};
+        \draw[thick, fill=white, dashed] (2.5, 2.0) rectangle (6.5, 3.0); \node[red] at (4.5, 2.5) {......};
+        \draw [decorate, decoration={brace, amplitude=10pt, mirror}, thick] (6.8, 1.8) -- (6.8, 6.2) node [midway, right=12pt] {\textbf{TOTAL = ..........}};
+
+
+        % --- ÉTAPE 2 (INVERSÉE + CENTRÉE PAR BBOX) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, 1.0) {\large ÉTAPE 2 : ALIGNER (Je mets tout bout à bout)};
+
+        % Bloc étape 2 remonté (évite le chevauchement)
+        \begin{scope}[yshift=1.1cm]
+            % TOTAL (orange) AU-DESSUS
+            \draw[thick, fill=myorange!50] (0, -2.2) rectangle (13.5, -1.2);
+            \node at (6.75, -1.7) {....................};
+
+            % Ligne (rose) EN DESSOUS
+            \draw[thick, fill=mypink!30] (0, -3.2) rectangle (2.5, -2.2); \node at (1.25, -2.7) {\Large ?};
+            \draw[thick, fill=mypink!30] (2.5, -3.2) rectangle (5.0, -2.2); \node at (3.75, -2.7) {\Large ?};
+            \draw[thick, fill=white, dashed] (5.0, -3.2) rectangle (7.0, -2.2); \node[red] at (6.0, -2.7) {.....};
+            \draw[thick, fill=mypink!30] (7.0, -3.2) rectangle (9.5, -2.2); \node at (8.25, -2.7) {\Large ?};
+            \draw[thick, fill=white, dashed] (9.5, -3.2) rectangle (13.5, -2.2); \node[red] at (11.5, -2.7) {......};
+
+            % Accolades EN DESSOUS
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -3.4) -- (2.5, -3.4) node [midway, below=4pt] {Petite};
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (2.5, -3.4) -- (7.0, -3.4) node [midway, below=4pt] {Moyenne};
+            \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (7.0, -3.4) -- (13.5, -3.4) node [midway, below=4pt] {Grande};
+        \end{scope}
+
+
+        % --- ÉTAPE 3 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -4.2) {\large ÉTAPE 3 : REGROUPER (Je trie)};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -6.2) rectangle (13.5, -5.2); \node at (6.75, -5.7) {....................};
+
+        % (Ancienne ligne du haut - rose) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -7.2) rectangle (2.5, -6.2); \node at (1.25, -6.7) {\Large ?};
+        \draw[thick, fill=mypink!30] (2.5, -7.2) rectangle (5.0, -6.2); \node at (3.75, -6.7) {\Large ?};
+        \draw[thick, fill=mypink!30] (5.0, -7.2) rectangle (7.5, -6.2); \node at (6.25, -6.7) {\Large ?};
+        \draw[thick, fill=white, dashed] (7.5, -7.2) rectangle (9.5, -6.2); \node[red] at (8.5, -6.7) {.....};
+        \draw[thick, fill=white, dashed] (9.5, -7.2) rectangle (13.5, -6.2); \node[red] at (11.5, -6.7) {......};
+
+
+        % --- ÉTAPE 4 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -8.2) {\large ÉTAPE 4 : ADDITIONNER (Total des surplus)};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -10.2) rectangle (13.5, -9.2); \node at (6.75, -9.7) {....................};
+
+        % (Ancienne ligne du haut - rose/dash) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -11.2) rectangle (2.5, -10.2); \node at (1.25, -10.7) {\Large ?};
+        \draw[thick, fill=mypink!30] (2.5, -11.2) rectangle (5.0, -10.2); \node at (3.75, -10.7) {\Large ?};
+        \draw[thick, fill=mypink!30] (5.0, -11.2) rectangle (7.5, -10.2); \node at (6.25, -10.7) {\Large ?};
+        \draw[thick, fill=white, dashed] (7.5, -11.2) rectangle (13.5, -10.2); \node[red] at (10.5, -10.7) {\textbf{............}};
+
+
+        % --- ÉTAPE 5 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -12.2) {\large ÉTAPE 5 : ÉGALISER (J'enlève le surplus)};
+
+        % (Ancienne ligne du bas - orange/hatched) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -14.0) rectangle (7.5, -13.0); \node at (3.75, -13.5) {\large ..........};
+        \draw[thick, draw=gray, pattern=north east lines, pattern color=gray] (7.5, -14.0) rectangle (13.5, -13.0);
+        \node[gray, fill=white, inner sep=1pt] at (10.5, -13.5) {..........};
+
+        % (Ancienne ligne du haut - rose/hatched) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -15.0) rectangle (2.5, -14.0); \node at (1.25, -14.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (2.5, -15.0) rectangle (5.0, -14.0); \node at (3.75, -14.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (5.0, -15.0) rectangle (7.5, -14.0); \node at (6.25, -14.5) {\Large ?};
+        \draw[thick, draw=gray, pattern=north east lines, pattern color=gray] (7.5, -15.0) rectangle (13.5, -14.0);
+        \node[gray, fill=white, inner sep=1pt] at (10.5, -14.5) {..........};
+
+        \draw[red, densely dotted, line width=2.5pt] (7.5, -15.2) -- (7.5, -12.8);
+
+
+        % --- ÉTAPE 6 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -16.2) {\large ÉTAPE 6 : CALCULER (Je divise)};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -18.0) rectangle (7.5, -17.0);
+        \node at (1.25, -17.5) {......}; \node at (3.75, -17.5) {......}; \node at (6.25, -17.5) {......};
+
+        % (Ancienne ligne du haut - rose) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -19.0) rectangle (2.5, -18.0); \node at (1.25, -18.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (2.5, -19.0) rectangle (5.0, -18.0); \node at (3.75, -18.5) {\Large ?};
+        \draw[thick, fill=mypink!30] (5.0, -19.0) rectangle (7.5, -18.0); \node at (6.25, -18.5) {\Large ?};
+
+        \draw[dashed, ultra thick, blue] (2.5, -16.8) -- (2.5, -19.3);
+        \draw[dashed, ultra thick, blue] (5.0, -16.8) -- (5.0, -19.3);
+        \draw[-{Latex[length=3mm]}, line width=2.5pt, gray!50] (1.25, -19.5) -- (1.25, -20.3);
+
+
+        % --- ÉTAPE 7 (INVERSÉE) ---
+        \node[overlay, anchor=west, blue!80!black] at (\Xstep, -20.8) {\large ÉTAPE 7 : J'OBTIENS LA RÉPONSE};
+
+        % (Ancienne ligne du bas - orange) devient en HAUT
+        \draw[thick, fill=myorange!50] (0, -22.8) rectangle (2.5, -21.8); \node at (1.25, -22.3) {\large \textbf{......}};
+
+        % (Ancienne ligne du haut - rose) devient en BAS
+        \draw[thick, fill=mypink!30] (0, -23.8) rectangle (2.5, -22.8); \node at (1.25, -23.3) {\Large ?};
+
+
+        % --- BAS DE PAGE (CADRES CENTRÉS AU VRAI CENTRE : 6.75) ---
+        \node[fill=yellow!20, thick, draw, inner sep=6pt, align=left] at (6.75, -24.7) {
+            \textbf{RÉPONSES :} \quad Petite : ........... \quad Moyenne : ........... \quad Grande : ...........
+        };
+
+        \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=6pt, align=left] at (6.75, -28.4) {
+            \textbf{JE VÉRIFIE (OBLIGATOIRE) :} \\[0.2cm]
+            \small 1. Somme : ........ + ........ + ........ = \textbf{.......... (Total ?)} \quad $\square$ OK \\[0.2cm]
+            \small 2. Écart 1 : ........ $-$ ........ = \textbf{.......... (Surplus 1 ?)} \quad $\square$ OK \\[0.2cm]
+            \small 3. Écart 2 : ........ $-$ ........ = \textbf{.......... (Surplus 2 ?)} \quad $\square$ OK
+        };
+
+    \end{tikzpicture}
+\end{tcolorbox}
+
+\end{document}
