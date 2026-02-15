@@ -155,12 +155,12 @@
       gap:8px;
       align-items:center;
       padding:0 12px;
-      height:24px;
+      height:26px;
     }
     .opCell{
       flex:1 1 0;
       min-width:56px;
-      height:24px;
+      height:26px;
       border-radius:10px;
       background: rgba(255,255,255,0.60);
       border:1px solid rgba(0,0,0,0.10);
@@ -169,7 +169,7 @@
       justify-content:center;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-weight:950;
-      font-size: 20px;
+      font-size: 22px;
       letter-spacing: .4px;
       color: rgba(0,0,0,0.86);
       line-height:1;
@@ -178,7 +178,7 @@
     .opSep{
       width:12px;
       flex:0 0 12px;
-      height:24px;
+      height:26px;
       position:relative;
     }
     .opSep:before{
@@ -209,7 +209,7 @@
 
     /* En mode direct : on compact un peu */
     body.directMul .opRow{ height:22px; }
-    body.directMul .opCell{ height:22px; font-size:19px; }
+    body.directMul .opCell{ height:22px; font-size:21px; }
 
     /* On n’affiche plus la multiplication posée dans la carte (elle est dans le tableau) */
     .exerciseCard .exProblemWrap{ display:none; }
@@ -322,51 +322,53 @@
       border-bottom:1px solid rgba(0,0,0,0.10);
       background: rgba(255,255,255,0.70);
     }
-    
     .colCalc{
       display:flex;
       flex-direction:column;
       gap:4px;
-      padding:8px 0 10px;
+      padding:8px 0 2px;
       align-items:center;
       justify-content:flex-start;
-      border-bottom:1px solid rgba(15,23,42,0.10);
+      border-bottom:none;
       background:rgba(255,255,255,0.55);
     }
     .calcRow{
-      height:18px;
-      line-height:18px;
+      height:26px;
+      line-height:26px;
       width:100%;
       display:flex;
       align-items:center;
       justify-content:center;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-      font-size:14px;
+      font-size:20px;
       color:#0f172a;
       user-select:none;
     }
     .calcRow.ruleAfter{
       border-bottom:2px solid rgba(15,23,42,0.18);
-      padding-bottom:6px;
-      margin-bottom:6px;
+      
+      padding-bottom:0;
+      margin-bottom:0;
     }
     .calcDigit{
-      display:inline-block;
-      min-width:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:22px;
+      height:26px;
+      padding:0 8px;
+      border-radius:999px;
       text-align:center;
     }
-    .calcDigit.zero{
-      opacity:0.45;
-    }
-    .calcDigit.processed{
+    .calcDigit.zero{ opacity:0.45; }
+    .calcDigit.done{
       opacity:0.45;
       text-decoration:line-through;
       text-decoration-thickness:2px;
     }
-    .calcDigit.current{
-      text-decoration:underline;
-      text-decoration-thickness:3px;
-      text-underline-offset:3px;
+    .calcDigit.focus{
+      outline:2px solid rgba(29,78,216,0.85);
+      background: rgba(29,78,216,0.12);
     }
     .calcSign{
       font-weight:900;
@@ -376,24 +378,29 @@
 
     /* ===== Multiplication : lignes posées + lignes en jetons (dans l’abaque) ===== */
     .calcRow.hdr{
-      height:22px;
-      line-height:22px;
-      font-size:16px;
+      height:38px;
+      line-height:38px;
+      font-size:32px;
+      font-weight:900;
+    }
+    .calcRow.line{
+      height:30px;
+      line-height:30px;
     }
 
     .miniToken{
       display:inline-flex;
-      width:22px;
-      height:22px;
+      width:26px;
+      height:26px;
       border-radius:999px;
       align-items:center;
       justify-content:center;
       font-weight:950;
-      font-size:13px;
+      font-size:15px;
       line-height:1;
       background: rgba(255,255,255,0.92);
       border:2px solid rgba(0,0,0,0.22);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
       user-select:none;
     }
     .miniToken.zero{ opacity:0.55; }
@@ -401,15 +408,16 @@
     .miniPile{
       position:relative;
       display:inline-block;
-      width:34px;
-      height:24px;
+      width:42px;
+      height:28px;
     }
     .miniPile .miniToken{
       position:absolute;
       top:0;
       left:0;
-      transform: translateX(calc(var(--i) * 7px));
+      transform: translateX(calc(var(--i) * 9px));
     }
+
     .miniCount{
       display:inline-flex;
       padding:2px 8px;
@@ -446,16 +454,43 @@
       pointer-events:none;
       user-select:none;
     }
-
     .colBody{
       flex:1;
-      padding:10px 6px;
+      padding:2px 6px 10px;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:10px;
       align-items:center;
       justify-content:flex-start;
     }
+
+    /* ===== Multiplication par lignes : garder l'alignement vertical ===== */
+    .colBody.lineMode{
+      /* même padding, mais on utilise des "cases" de lignes fixes */
+      gap:10px;
+      align-items:center;
+      justify-content:flex-start;
+    }
+    .lineSlot{
+      width:100%;
+      height: calc(clamp(36px, 5.6vw, 58px) + 10px);
+      position:relative;
+      border-radius:10px;
+    }
+    .lineSlot.lockedRow{
+      pointer-events:none; /* même les cases vides sont "verrouillées" */
+    }
+    .lineSlot.activeRow{
+      /* léger repère (très discret) */
+      outline:1px dashed rgba(37,99,235,0.25);
+      outline-offset: -1px;
+    }
+    .lineSlot .token{
+      position:absolute;
+      left:50%;
+      top:50%;
+    }
+
 
     .token{
       width: clamp(36px, 5.6vw, 58px);
@@ -478,6 +513,12 @@
     .token.locked{
       opacity:0.35;
       filter: grayscale(0.85);
+      pointer-events:none;
+    }
+
+    .token.frozen{
+      opacity:0.45;
+      filter: grayscale(0.75);
       pointer-events:none;
     }
     .token.selected{
@@ -987,8 +1028,7 @@ body.noArches .boardTop{ padding-top: 6px; }
   <div class="tools">
     <button class="btn" id="btnUndo">Retour</button>
     <button class="btn primary" id="btnClear">Réinitialiser</button>
-    <button class="btn" id="btnBigValue">Affichage : OFF</button>
-    <button class="btn" id="btnColValues">Valeurs : OFF</button>
+        <button class="btn" id="btnColValues">Valeurs : OFF</button>
 
     <button class="btn" id="btnMillions">Millions : OFF</button>
 
@@ -1039,15 +1079,7 @@ body.noArches .boardTop{ padding-top: 6px; }
           <div class="exFeedback" id="exFeedback"></div>
 
           <div class="exSettings" id="exSettings" style="display:none;">
-            <div class="exRowSet">
-              <span class="exLbl">Mode</span>
-              <div class="exPills" role="group" aria-label="Mode">
-                <button class="pill" data-mode="steps">Étapes</button>
-                <button class="pill" data-mode="direct">Direct</button>
-              </div>
-            </div>
-
-            <div class="exRowSet">
+<div class="exRowSet">
               <span class="exLbl">A</span>
               <div class="exPills exDigitsPills" role="group" aria-label="Chiffres du multiplicande">
                 <button class="pill" data-adigits="1">1</button>
@@ -1189,10 +1221,10 @@ const btnExitResolve = document.getElementById("btnExitResolve");
   const btnExReset = document.getElementById("btnExReset");
   const btnExSettings = document.getElementById("btnExSettings");
   function deepCopyCols(cols){
-    return cols.map(col => col.map(t => ({id:t.id, v:t.v})));
+    return cols.map(col => col.map(t => ({id:t.id, v:t.v, line:(t.line ?? null), frozen: !!t.frozen})));
   }
   function deepCopyBin(bin){
-    return bin.map(t => ({id:t.id, v:t.v}));
+    return bin.map(t => ({id:t.id, v:t.v, line:(t.line ?? null), frozen: !!t.frozen}));
   }
   function pushUndo(){
     state.undoStack.push({
@@ -1256,12 +1288,34 @@ renderTray();
     }
   }
 
-  function sumCol(i){ return state.cols[i].reduce((a,t)=>a+t.v,0); }
-  function totalValue(){
+  function sumCol(i, filterFn){
+    const arr = state.cols[i];
+    if(!filterFn) return arr.reduce((a,t)=>a+t.v,0);
+    return arr.reduce((a,t)=>a + (filterFn(t)?t.v:0),0);
+  }
+  function totalValue(filterFn){
     let total = 0;
-    for(let i=0;i<COL_COUNT;i++) total += sumCol(i) * placeValue(i);
+    for(let i=0;i<COL_COUNT;i++) total += sumCol(i, filterFn) * placeValue(i);
     return total;
   }
+
+  // Fige / défige des jetons (multiplication par lignes)
+  function freezeCurrentLineTokens(lineIndex){
+    for(let i=0;i<COL_COUNT;i++){
+      for(const tok of state.cols[i]){
+        if(tok.line == null){
+          tok.line = lineIndex;
+          tok.frozen = true;
+        }
+      }
+    }
+  }
+  function setFrozenAll(on){
+    for(let i=0;i<COL_COUNT;i++){
+      for(const tok of state.cols[i]) tok.frozen = !!on;
+    }
+  }
+
   function formatGrouped(n){ return n.toLocaleString("fr-FR"); }
 
   // ===== Multiplication : capture / restauration des lignes en jetons =====
@@ -1282,8 +1336,11 @@ renderTray();
 
   // Charge plusieurs lignes (snapshots) dans l'abaque pour réaliser la somme finale.
   // On empile simplement les jetons : l'élève fait ensuite les échanges pour normaliser.
+  
   function loadDigitsLinesIntoBoard(lines){
-    clearBoardHard();
+    // (Conservé pour compatibilité) : charge des snapshots "un chiffre par colonne".
+    // IMPORTANT : on ne réinitialise pas nextId ici, sinon IDs dupliqués en fin d'exercice.
+    clearBoardColsOnly();
     for(const line of (lines || [])){
       if(!line) continue;
       for(let i=0;i<COL_COUNT;i++){
@@ -1304,13 +1361,14 @@ renderTray();
   function pendingExchangeCols(){
     const cols = [];
     const first = firstVisibleColIndex();
+    const ex = state.ex;
+    const isLines = !!(ex && state.exCfg && state.exCfg.mode !== "direct" && ex.stage === "lines");
+
     for(let i=first;i<COL_COUNT;i++){
-      const arr = state.cols[i];
-      // Tant qu'il y a plus d'un jeton dans une colonne, la "réduction" n'est pas faite.
-      // Ex : 5 et 2 doivent être échangés contre 7.
-      if(arr.length > 1){ cols.push(i); continue; }
-      // Sécurité : si un jeton porte une valeur >= 10, ce n'est pas normalisé non plus.
-      if(arr.length === 1 && arr[0].v >= 10) cols.push(i);
+      const arrAll = state.cols[i];
+      const arr = isLines ? arrAll.filter(t => t.line == null) : arrAll;
+      if(arr.length > 1) cols.push(i);
+      else if(arr.length === 1 && arr[0].v >= 10) cols.push(i);
     }
     return cols;
   }
@@ -1360,6 +1418,37 @@ renderTray();
     state.exchange = null;
     state.nextId = 1;
   }
+
+
+  function clearBoardColsOnly(){
+    // On garde le bac (bin) et le compteur d'IDs : indispensable pour éviter des IDs dupliqués
+    // quand on enchaîne plusieurs lignes de multiplication.
+    state.cols = Array.from({length: COL_COUNT}, () => []);
+    state.exchange = null;
+  }
+
+  function loadColsLinesIntoBoard(linesCols){
+    // Charge plusieurs lignes (colonnes de jetons) dans l'abaque (somme finale).
+    // On empile simplement : l'élève fait ensuite les échanges pour normaliser.
+    state.cols = Array.from({length: COL_COUNT}, () => []);
+    for(const cols of (linesCols || [])){
+      if(!cols) continue;
+      for(let i=0;i<COL_COUNT;i++){
+        const arr = cols[i] || [];
+        for(const tok of arr){
+          state.cols[i].push({id: tok.id, v: tok.v});
+        }
+      }
+    }
+    // s'assure que nextId reste strictement au-dessus des IDs existants
+    let maxId = 0;
+    for(let i=0;i<COL_COUNT;i++){
+      for(const tok of state.cols[i]) maxId = Math.max(maxId, tok.id || 0);
+    }
+    state.nextId = Math.max(state.nextId, maxId + 1);
+    state.exchange = null;
+  }
+
 
   // (Conservé) pose un nombre sur le plateau (utile pour des variantes futures)
   function setBoardToNumber(n, includeZeros, digitsLimit){
@@ -1602,84 +1691,56 @@ renderTray();
   // Affiche la multiplication posée directement dans le grand tableau,
   // puis les lignes en "jetons" : celles déjà validées sont figées,
   // la ligne en cours reflète l’état actuel de l’abaque.
+  
   function renderOpTable(){
     const colEls = [...document.querySelectorAll(".col")];
-    if(!colEls.length) return;
+    if(colEls.length === 0) return;
 
-    // assure la zone .colCalc sur chaque colonne
-    colEls.forEach(col => {
-      let calc = col.querySelector(".colCalc");
-      if(!calc){
-        calc = document.createElement("div");
-        calc.className = "colCalc";
-        col.appendChild(calc);
-      }else{
-        calc.innerHTML = "";
+    // Si pas d'exercice : on vide l'affichage de l'opération.
+    if(!state.ex){
+      for(let colIndex=0; colIndex<COL_COUNT; colIndex++){
+        const calc = colEls[colIndex].querySelector(".colCalc");
+        if(calc) calc.innerHTML = "";
       }
-    });
-
-    const ex = state.ex;
-    if(!ex){
-      colEls.forEach(col => col.querySelector(".colCalc").innerHTML = "");
       return;
     }
 
+    const ex = state.ex;
     const cfg = state.exCfg;
 
     const sa = String(ex.a);
     const sb = String(ex.b);
-    const digitsBRev = sb.split("").map(ch => Number(ch)).reverse();
+    const digitsBRev = sb.split("").map(ch => Number(ch)).reverse(); // unités -> ...
 
-    function miniTokenHTML(v){
-      const z = (v === 0) ? " zero" : "";
-      return `<span class="miniToken${z}">${escapeHTML(String(v))}</span>`;
-    }
-    function miniPileHTML(values){
-      if(!values || !values.length) return "";
-      if(values.length === 1) return miniTokenHTML(values[0]);
-      if(values.length <= 3){
-        let inner = "";
-        for(let i=0;i<values.length;i++){
-          const v = values[i];
-          const z = (v === 0) ? " zero" : "";
-          inner += `<span class="miniToken${z}" style="--i:${i}">${escapeHTML(String(v))}</span>`;
-        }
-        return `<span class="miniPile">${inner}</span>`;
-      }
-      return `<span class="miniCount">+${values.length}</span>`;
-    }
+    // On pad à COL_COUNT pour aligner visuellement aux colonnes de l'abaque
+    const aDigitsStr = sa.padStart(COL_COUNT, " ").slice(-COL_COUNT);
+    const bDigitsStr = sb.padStart(COL_COUNT, " ").slice(-COL_COUNT);
 
-    function cellsForNumberStr(s, perDigitClass){
-      const cells = Array(COL_COUNT).fill("");
-      const L = s.length;
-      const endCol = COL_COUNT - 1;
-      const start = Math.max(0, endCol - (L - 1));
-      for(let i=0;i<L;i++){
-        const col = start + i;
-        if(col < 0 || col >= COL_COUNT) continue;
+    // Position du chiffre actif du multiplicateur (ligne du bas)
+    // ex.stepIndex = 0 => unités (col la plus à droite)
+    const focusIndexFromRight = (cfg.mode !== "direct" && ex.stage === "lines") ? ex.stepIndex : null;
+    const focusPos = (typeof focusIndexFromRight === "number") ? (COL_COUNT - 1 - focusIndexFromRight) : null;
+
+    function cellsForNumberStr(s, sign){
+      return Array.from({length: COL_COUNT}, (_,i) => {
         const ch = s[i];
-        const cls = perDigitClass ? perDigitClass(i, ch) : "calcDigit";
-        cells[col] = (ch === "0")
-          ? `<span class="${cls} zero">0</span>`
-          : `<span class="${cls}">${escapeHTML(ch)}</span>`;
-      }
-      return {cells, start, L};
+        const prefix = (sign && i === 0) ? `<span class="calcSign">${escapeHTML(sign)}</span>` : "";
+        if(ch === " ") return prefix;
+        // Mise en évidence seulement sur la ligne du bas (multiplicateur)
+        let extra = "";
+        if(sign === "×" && focusPos !== null){
+          if(i === focusPos) extra = " focus";
+          else if(i > focusPos) extra = " done";
+        }
+        return prefix + `<span class="calcDigit${extra}">${escapeHTML(ch)}</span>`;
+      });
     }
 
-    function cellsForSavedDigitsLine(lineDigits){
+    function cellsForSavedTokensLine(cols){
       const cells = Array(COL_COUNT).fill("");
-      if(!lineDigits) return cells;
+      if(!cols) return cells;
       for(let i=0;i<COL_COUNT;i++){
-        const v = lineDigits[i];
-        if(typeof v === "number") cells[i] = miniTokenHTML(v);
-      }
-      return cells;
-    }
-
-    function cellsForLiveBoard(){
-      const cells = Array(COL_COUNT).fill("");
-      for(let i=0;i<COL_COUNT;i++){
-        const arr = state.cols[i] || [];
+        const arr = cols[i] || [];
         if(!arr.length) continue;
         cells[i] = miniPileHTML(arr.map(t => t.v));
       }
@@ -1687,71 +1748,8 @@ renderTray();
     }
 
     const rows = [];
-
-    // Ligne A (posée)
-    rows.push({cells: cellsForNumberStr(sa).cells, ruleAfter:false, cls:"hdr"});
-
-    // Ligne B (posée) avec × + mise en évidence du chiffre en cours
-    const stage = ex.stage;
-    const stepIndex = ex.stepIndex || 0;
-
-    let currentPos = -1;
-    if(cfg.mode !== "direct"){
-      const posFromRight = stepIndex;            // unités->0, dizaines->1...
-      const idxFromLeft = sb.length - 1 - posFromRight;
-      if(idxFromLeft >= 0 && idxFromLeft < sb.length) currentPos = idxFromLeft;
-    }
-
-    const bPack = cellsForNumberStr(sb, (i) => {
-      let cls = "calcDigit";
-      if(cfg.mode !== "direct"){
-        if(stage === "lines"){
-          if(i === currentPos) cls += " focus";
-          if(i > currentPos) cls += " done";
-        }else if(stage === "final"){
-          cls += " done";
-        }
-      }
-      return cls;
-    });
-
-    const signCol = bPack.start - 1;
-    if(signCol >= 0){
-      bPack.cells[signCol] = `<span class="calcSign">×</span>`;
-    }
-    rows.push({cells: bPack.cells, ruleAfter:true, cls:"hdr"});
-
-    // Mode direct : une ligne "jetons" live
-    if(cfg.mode === "direct" || stage === "direct"){
-      rows.push({cells: cellsForLiveBoard(), ruleAfter:false, cls:""});
-    }else{
-      // Lignes partielles : figées + live
-      for(let i=0;i<digitsBRev.length;i++){
-        if(stage === "lines"){
-          if(i < ex.stepIndex){
-            rows.push({cells: cellsForSavedDigitsLine(ex.partialDigits ? ex.partialDigits[i] : null), ruleAfter:false, cls:""});
-          }else if(i === ex.stepIndex){
-            rows.push({cells: cellsForLiveBoard(), ruleAfter:false, cls:""});
-          }else{
-            rows.push({cells: Array(COL_COUNT).fill(""), ruleAfter:false, cls:""});
-          }
-        }else{
-          rows.push({cells: cellsForSavedDigitsLine(ex.partialDigits ? ex.partialDigits[i] : null), ruleAfter:false, cls:""});
-        }
-      }
-
-      // Règle avant la somme finale
-      if(digitsBRev.length > 0 && stage === "final"){
-        rows[rows.length-1].ruleAfter = true;
-      }
-
-      // Somme finale : jetons live
-      if(stage === "final"){
-        rows.push({cells: cellsForLiveBoard(), ruleAfter:false, cls:""});
-      }
-    }
-
-    // Render par colonne
+    rows.push({cls:"hdr", cells: cellsForNumberStr(aDigitsStr, "")});
+    rows.push({cls:"hdr", ruleAfter:true, cells: cellsForNumberStr(bDigitsStr, "×")});
     for(let colIndex=0; colIndex<COL_COUNT; colIndex++){
       const calc = colEls[colIndex].querySelector(".colCalc");
       calc.innerHTML = "";
@@ -1765,8 +1763,6 @@ renderTray();
       }
     }
   }
-
-
 
   function buildSolutionText(ex){
     const sa = String(ex.a);
@@ -1882,6 +1878,7 @@ renderTray();
       stage,
       stepIndex: 0,
       partials: [],
+      partialCols: [],
       partialDigits: [],
       solved: false,
       snapshotCols: deepCopyCols(state.cols),
@@ -1916,6 +1913,7 @@ renderTray();
       state.ex.stage = "lines";
       state.ex.stepIndex = 0;
       state.ex.partials = [];
+      state.ex.partialCols = [];
       state.ex.partialDigits = [];
       state.ex.solved = false;
     }
@@ -1953,7 +1951,7 @@ renderTray();
 
     const ex = state.ex;
     const cfg = state.exCfg;
-    const val = totalValue();
+    const val = (cfg.mode !== "direct" && ex.stage === "lines") ? totalValue(t => t.line == null) : totalValue();
 
     // Nettoie l'affichage "solution" par défaut
     exResult.textContent = "";
@@ -1984,27 +1982,28 @@ renderTray();
     // Étapes (lignes)
     const sb = String(ex.b);
     const digitsB = sb.split("").map(ch => Number(ch)).reverse(); // unités -> ...
+    
     if(ex.stage === "lines"){
       const d = digitsB[ex.stepIndex];
       const expectedLine = ex.a * d * Math.pow(10, ex.stepIndex);
 
       if(val === expectedLine){
         ex.partials[ex.stepIndex] = expectedLine;
-        ex.partialDigits[ex.stepIndex] = snapshotDigitsFromBoard();
+
+        // ✅ On fige les jetons de la ligne courante (sans les effacer)
+        freezeCurrentLineTokens(ex.stepIndex);
+
         ex.stepIndex += 1;
 
         if(ex.stepIndex >= digitsB.length){
           ex.stage = "final";
-          // ✅ Recharge toutes les lignes dans l’abaque : l’élève fait la somme
-          // en effectuant les échanges (normalisation) sur le tas de jetons.
-          loadDigitsLinesIntoBoard(ex.partialDigits);
+          // ✅ On déverrouille tout pour faire la somme finale
+          setFrozenAll(false);
           ex.solved = false;
           exFeedback.textContent = "✅ Lignes terminées. Fais maintenant la somme finale (échanges).";
           exFeedback.className = "exFeedback ok";
         }else{
-          // prépare la ligne suivante
-          clearBoardHard();
-          exFeedback.textContent = "✅ Ligne figée dans le tableau. Passe à la suivante.";
+          exFeedback.textContent = "✅ Ligne verrouillée. Passe à la suivante.";
           exFeedback.className = "exFeedback ok";
         }
 
@@ -2044,7 +2043,7 @@ renderTray();
   }
 
   function applyTopUI(){
-    btnBigValue.textContent = "Affichage : " + (state.showBigValue ? "ON" : "OFF");
+    if(btnBigValue) btnBigValue.textContent = "Affichage : " + (state.showBigValue ? "ON" : "OFF");
     btnColValues.textContent = "Valeurs : " + (state.showColValues ? "ON" : "OFF");
     btnMillions.textContent = "Millions : " + (state.showMillions ? "ON" : "OFF");
 document.body.classList.toggle("noMillions", !state.showMillions);
@@ -2273,23 +2272,103 @@ function positionTrashZone(){
       const body = colEl.querySelector(".colBody");
       body.innerHTML = "";
 
-      for(const tok of state.cols[i]){
-        const el = makeTokenEl(tok.v);
-        el.dataset.id = String(tok.id);
-        el.dataset.source = "col";
-        el.dataset.colIndex = String(i);
+      const lineMode = !!(state.ex && state.exCfg && state.exCfg.mode !== "direct" && state.ex.stage === "lines");
 
-        if(state.exchange){
-          const draggable = isTokenDraggable("col", i, tok);
-          el.classList.toggle("locked", !draggable);
-          // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
-          if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
-            el.classList.add("toResolve");
-          }
+      if(lineMode){
+        body.classList.add("lineMode");
+
+        const ex = state.ex;
+        const digitsB = String(ex.b).split("");
+        const lineCount = digitsB.length;
+        const activeLine = ex.stepIndex;
+
+        // 1) Création des "cases" fixes (une par ligne de produit partiel)
+        const slots = [];
+        for(let li=0; li<lineCount; li++){
+          const slot = document.createElement("div");
+          slot.className = "lineSlot";
+          slot.dataset.line = String(li);
+          if(li < activeLine) slot.classList.add("lockedRow");
+          if(li === activeLine) slot.classList.add("activeRow");
+          body.appendChild(slot);
+          slots.push(slot);
         }
 
-        body.appendChild(el);
-        enableDrag(el, {type:"col", colIndex:i, id:tok.id});
+        // 2) Répartition des jetons par ligne : évite que les chiffres de la 2e ligne
+        //    "remontent" quand la 1re ligne est vide dans une colonne.
+        const groups = Array.from({length: lineCount}, () => []);
+        for(const tok of state.cols[i]){
+          let li = (tok.line == null) ? activeLine : tok.line;
+          if(typeof li !== "number" || li < 0 || li >= lineCount) li = activeLine;
+          groups[li].push(tok);
+        }
+
+        // 3) Rendu : jetons superposés dans la case, mais la case garde une hauteur fixe
+        for(let li=0; li<lineCount; li++){
+          const arr = groups[li];
+          const slot = slots[li];
+          const n = arr.length;
+
+          for(let k=0; k<n; k++){
+            const tok = arr[k];
+            const el = makeTokenEl(tok.v);
+            el.dataset.id = String(tok.id);
+            el.dataset.source = "col";
+            el.dataset.colIndex = String(i);
+
+            if(state.exchange){
+              const draggable = isTokenDraggable("col", i, tok);
+              el.classList.toggle("locked", !draggable);
+              // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
+              if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
+                el.classList.add("focusSeed");
+              }
+              if(i === state.exchange.leftCol && state.exchange.leftBaseIds && state.exchange.leftBaseIds.has(tok.id)){
+                el.classList.add("leftSeed");
+              }
+            } else {
+              el.classList.remove("locked","focusSeed","leftSeed");
+            }
+
+            if(tok.frozen){ el.classList.add("frozen"); }
+
+            // Superposition légère si plusieurs jetons dans la même case (avant échanges)
+            const offset = (n <= 1) ? 0 : (k - (n - 1) / 2) * 8;
+            el.style.transform = `translate(-50%, -50%) translateY(${offset}px)`;
+
+            slot.appendChild(el);
+            enableDrag(el, {type:"col", colIndex:i, id:tok.id});
+          }
+        }
+      }else{
+        body.classList.remove("lineMode");
+
+        // Rendu standard (empilement vertical)
+        for(const tok of state.cols[i]){
+          const el = makeTokenEl(tok.v);
+          el.dataset.id = String(tok.id);
+          el.dataset.source = "col";
+          el.dataset.colIndex = String(i);
+
+          if(state.exchange){
+            const draggable = isTokenDraggable("col", i, tok);
+            el.classList.toggle("locked", !draggable);
+            // Repère visuel : uniquement les jetons présents AU DÉPART dans la colonne cliquée
+            if(i === state.exchange.focusCol && state.exchange.focusIds && state.exchange.focusIds.has(tok.id)){
+              el.classList.add("focusSeed");
+            }
+            if(i === state.exchange.leftCol && state.exchange.leftBaseIds && state.exchange.leftBaseIds.has(tok.id)){
+              el.classList.add("leftSeed");
+            }
+          } else {
+            el.classList.remove("locked","focusSeed","leftSeed");
+          }
+
+          if(tok.frozen){ el.classList.add("frozen"); }
+
+          body.appendChild(el);
+          enableDrag(el, {type:"col", colIndex:i, id:tok.id});
+        }
       }
 
       colEl.classList.toggle("has2", state.cols[i].length >= 2);
@@ -2424,7 +2503,7 @@ function positionTrashZone(){
   }
 
   function addTokenToCol(colIndex, v){
-    state.cols[colIndex].push({id: state.nextId++, v});
+    state.cols[colIndex].push({id: state.nextId++, v, line: null, frozen:false});
   }
   function removeToken(fromCol, id){
     const arr = state.cols[fromCol];
@@ -2675,12 +2754,13 @@ function enterExchange(focusCol){
     clearUndo();
   });
 
-  btnBigValue.addEventListener("click", () => {
-    pushUndo();
-    state.showBigValue = !state.showBigValue;
-    render();
-  });
-
+  if(btnBigValue){
+    btnBigValue.addEventListener("click", () => {
+      pushUndo();
+      state.showBigValue = !state.showBigValue;
+      render();
+    });
+  }
   btnColValues.addEventListener("click", () => {
     pushUndo();
     state.showColValues = !state.showColValues;
