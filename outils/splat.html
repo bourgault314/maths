@@ -2265,21 +2265,20 @@ function chooseSignsPair(nL, nR, mode){
     return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
   }
   if(mode === "auto"){
-    // parfois (branche "signes uniformes") : tirage majoritairement "contraste"
-    // - le plus souvent : un cote tout +x et l'autre cote tout -x
-    // - plus rarement  : comme "off" (tout +x) ou comme "all" (tout -x)
+    // parfois : majoritairement "contraste" (un cote tout +x, l'autre tout -x)
+    // repartition : 60% contraste, 20% tout +x, 20% tout -x
     const r = rng();
-    if(r < 0.80){
-      const leftPos = (rng() < 0.5);
-      return {
-        L:new Array(nL).fill(leftPos ? 1 : -1),
-        R:new Array(nR).fill(leftPos ? -1 : 1)
-      };
+    if(r < 0.60){
+      if(rng() < 0.5){
+        return { L:new Array(nL).fill(1),  R:new Array(nR).fill(-1) };
+      }else{
+        return { L:new Array(nL).fill(-1), R:new Array(nR).fill(1) };
+      }
+    }else if(r < 0.80){
+      return { L:new Array(nL).fill(1),  R:new Array(nR).fill(1) };
+    }else{
+      return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
     }
-    if(r < 0.90){
-      return { L:new Array(nL).fill(1), R:new Array(nR).fill(1) };
-    }
-    return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
   }
 
   // mode "mix" : tous les cas (uniforme ou melange par cote)
