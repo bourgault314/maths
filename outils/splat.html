@@ -2228,7 +2228,7 @@ function genEquationSigned(rng){
 // - auto : parfois aucun oppose, parfois melange
 // - mix  : melange possible dans un cote
 const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
-const autoPick = (opposeSetting === "auto") ? ((rng() < 0.5) ? "off" : "auto") : null;
+const autoPick = (opposeSetting === "auto") ? "auto" : null;
 
 function sumArr(a){ let s=0; for(const x of a) s+=x; return s; }
 function hasBothSigns(arr){
@@ -2265,8 +2265,21 @@ function chooseSignsPair(nL, nR, mode){
     return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
   }
   if(mode === "auto"){
-    // parfois (branche "signes uniformes") : chaque cote est soit tout +x, soit tout -x
-    return { L:chooseUniformSigns(nL), R:chooseUniformSigns(nR) };
+    // parfois (branche "signes uniformes") : tirage majoritairement "contraste"
+    // - le plus souvent : un cote tout +x et l'autre cote tout -x
+    // - plus rarement  : comme "off" (tout +x) ou comme "all" (tout -x)
+    const r = rng();
+    if(r < 0.80){
+      const leftPos = (rng() < 0.5);
+      return {
+        L:new Array(nL).fill(leftPos ? 1 : -1),
+        R:new Array(nR).fill(leftPos ? -1 : 1)
+      };
+    }
+    if(r < 0.90){
+      return { L:new Array(nL).fill(1), R:new Array(nR).fill(1) };
+    }
+    return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
   }
 
   // mode "mix" : tous les cas (uniforme ou melange par cote)
