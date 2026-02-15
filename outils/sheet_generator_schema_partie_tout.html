@@ -115,17 +115,32 @@
       position:relative;
       overflow:hidden;
     }
-    .card::before{
-      content:"";
-      position:absolute; left:0; top:0; bottom:0;
-      width:6px;
-      background:linear-gradient(180deg, var(--blue), rgba(47,107,255,.35));
-      opacity:.9;
-    }
+    .card::before{ display:none; }
     .card:hover{transform:translateY(-2px); border-color:rgba(47,107,255,.28);}
     .card:active{transform:translateY(0px);}
 
-    .icon{
+    
+    /* Choix format A4/A3 (pastilles) */
+    .card-picker{ cursor:pointer; }
+    .pills{
+      margin-left:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .pill{
+      text-decoration:none;
+      font-weight:700;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.14);
+      background:rgba(255,255,255,.65);
+      color:var(--ink);
+      box-shadow:0 8px 18px rgba(17,24,39,.08);
+    }
+    .pill:hover{ border-color:rgba(47,107,255,.35); }
+.icon{
       width:46px; height:46px; border-radius:14px;
       display:grid; place-items:center;
       background:linear-gradient(135deg, var(--blueSoft), rgba(255,255,255,.0));
@@ -245,15 +260,19 @@
         </div>
       </a>
 
-      <a class="card" href="./gabarits_enquêtes__1__A3.pdf" target="_blank" rel="noopener">
+      <div class="card card-picker" role="link" tabindex="0" data-default="./gabarits_enquêtes__1__A4.pdf">
         <div class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 1v3h3M8 11h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg>
         </div>
         <div class="txt">
           <h2>Enquêtes — gabarits</h2>
-          <p>A3 ou A4 — à plastifier</p>
+          <p>Choisir le format — à plastifier</p>
         </div>
-      </a>
+        <div class="pills" aria-label="Choisir le format">
+          <a class="pill" href="./gabarits_enquêtes__1__A4.pdf" target="_blank" rel="noopener">A4</a>
+          <a class="pill" href="./gabarits_enquêtes__1__A3.pdf" target="_blank" rel="noopener">A3</a>
+        </div>
+      </div>
 
       <a class="card" href="./detective_des_grandeurs__1.pdf" target="_blank" rel="noopener">
         <div class="icon" aria-hidden="true">
@@ -266,5 +285,21 @@
       </a>
     </main>
   </div>
+
+  <script>
+    document.querySelectorAll('.card-picker').forEach(card=>{
+      const openDefault = () => window.open(card.dataset.default, '_blank', 'noopener');
+
+      card.addEventListener('click', (e)=>{
+        if(e.target.closest('.pill')) return; // clic sur A4/A3
+        openDefault();
+      });
+
+      card.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDefault(); }
+      });
+    });
+  </script>
+
 </body>
 </html>
