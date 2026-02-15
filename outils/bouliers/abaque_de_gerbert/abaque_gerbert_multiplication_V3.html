@@ -1058,6 +1058,12 @@ body.noArches .boardTop{ padding-top: 6px; }
   font-size: 13px;
   cursor:pointer;
 }
+.pill:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+  box-shadow:none;
+  border-color: rgba(0,0,0,0.10);
+}
 .pill.active{
   border-color: rgba(44,123,229,0.45);
   box-shadow: 0 0 0 4px rgba(44,123,229,0.16);
@@ -1478,6 +1484,54 @@ renderTray();
   function maxRepresentable(){
     return Math.pow(10, visibleDigitsCount()) - 1;
   }
+
+  // ✅ Limitation "dans le tableau" :
+  // on force chiffres(A) + chiffres(B) ≤ colonnes visibles (6 ou 9).
+  function clampExerciseDigits(changed){
+    const maxD = visibleDigitsCount();
+    const cfg = state.exCfg;
+
+    // bornes de base
+    cfg.aDigits = Math.max(1, Math.min(maxD, cfg.aDigits));
+    cfg.bDigits = Math.max(1, Math.min(3, Math.min(maxD, cfg.bDigits)));
+
+    // contrainte somme
+    if(cfg.aDigits + cfg.bDigits > maxD){
+      if(changed === "a"){
+        cfg.bDigits = Math.max(1, Math.min(3, maxD - cfg.aDigits));
+      }else{
+        // par défaut, on préserve B (plus parlant) et on baisse A
+        cfg.aDigits = Math.max(1, maxD - cfg.bDigits);
+      }
+    }
+
+    // re-sécurise
+    cfg.aDigits = Math.max(1, Math.min(maxD, cfg.aDigits));
+    cfg.bDigits = Math.max(1, Math.min(3, cfg.bDigits));
+    if(cfg.aDigits + cfg.bDigits > maxD){
+      cfg.aDigits = Math.max(1, maxD - cfg.bDigits);
+    }
+  }
+
+  function updateDigitsPillsAvailability(){
+    const maxD = visibleDigitsCount();
+    const cfg = state.exCfg;
+
+    document.querySelectorAll(".pill[data-adigits]").forEach(btn=>{
+      const a = Number(btn.dataset.adigits);
+      const dis = (a > maxD) || (a + cfg.bDigits > maxD);
+      btn.disabled = dis;
+      btn.title = dis ? `Limite : chiffres(A)+chiffres(B) ≤ ${maxD}` : "";
+    });
+
+    document.querySelectorAll(".pill[data-bdigits]").forEach(btn=>{
+      const b = Number(btn.dataset.bdigits);
+      const dis = (b + cfg.aDigits > maxD);
+      btn.disabled = dis;
+      btn.title = dis ? `Limite : chiffres(A)+chiffres(B) ≤ ${maxD}` : "";
+    });
+  }
+
   function randInt(min, max){
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -1856,7 +1910,10 @@ renderTray();
     return lines.join("\n");
   }
 
-  function setPillsActive(){
+    function setPillsActive(changed){
+    clampExerciseDigits(changed);
+    updateDigitsPillsAvailability();
+
     const cfg = state.exCfg;
 
     document.querySelectorAll(".pill[data-mode]").forEach(b=>{
@@ -1931,10 +1988,8 @@ renderTray();
   function newExercise(){
     if(state.exchange) exitExchange();
 
-    // clamp selon colonnes visibles
-    const maxD = visibleDigitsCount();
-    state.exCfg.aDigits = Math.min(state.exCfg.aDigits, maxD);
-    state.exCfg.bDigits = Math.min(state.exCfg.bDigits, maxD);
+    // ✅ clamp + désactivation des options impossibles
+    setPillsActive();
 
     const {a, b, expected} = generateMultiplication();
 
@@ -2926,17 +2981,21 @@ function enterExchange(focusCol){
     });
   });
 
-  document.querySelectorAll(".pill").forEach(btn => {
+    document.querySelectorAll(".pill").forEach(btn => {
     btn.addEventListener("click", () => {
+      let changed = null;
+
       if(btn.dataset.mode)    state.exCfg.mode    = btn.dataset.mode;
-      if(btn.dataset.adigits) state.exCfg.aDigits = Number(btn.dataset.adigits);
-      if(btn.dataset.bdigits) state.exCfg.bDigits = Number(btn.dataset.bdigits);
+      if(btn.dataset.adigits){ state.exCfg.aDigits = Number(btn.dataset.adigits); changed = "a"; }
+      if(btn.dataset.bdigits){ state.exCfg.bDigits = Number(btn.dataset.bdigits); changed = "b"; }
       if(btn.dataset.carry)   state.exCfg.carry   = btn.dataset.carry;
       if(btn.dataset.zeros)   state.exCfg.zeros   = (btn.dataset.zeros === "on");
-      setPillsActive();
+
+      setPillsActive(changed);
       newExercise();
     });
   });
+
 
 
   // Buttons
@@ -2971,6 +3030,7 @@ btnMillions.addEventListener("click", () => {
   if(state.exchange) exitExchange();
   pushUndo();
   state.showMillions = !state.showMillions;
+  setPillsActive("b");
   render();
 
   // ✅ Important : la mise en page (colonnes affichées/masquées + réserves à droite)
