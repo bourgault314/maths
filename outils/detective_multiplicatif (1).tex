@@ -1,0 +1,259 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[left=1cm, right=1cm, top=1cm, bottom=1cm]{geometry}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{eurosym}
+
+% Configuration des boites compactes
+\newtcolorbox{seriebox}[2][]{
+    colback=#2!5!white,
+    colframe=#2!75!black,
+    title=\textbf{#1},
+    fonttitle=\bfseries,
+    left=1.5mm, right=1.5mm, top=0.7mm, bottom=0.7mm
+}
+
+% Titre très compact
+\title{\vspace{-2cm}\textbf{LE D\'ETECTIVE DES PROBL\`EMES MULTIPLICATIFS}}
+\date{}
+
+\begin{document}
+
+\maketitle
+\vspace{-2cm}
+
+% --- S\'ERIE A ---
+\begin{seriebox}[S\'ERIE A : Enqu\^etes \`a deux inconnues]{blue}
+\small
+    \textbf{A1. Le Tournoi de Basket} : \\
+    Sami et In\`es ont marqu\'e ensemble \textbf{90 points}.\\
+    In\`es a marqu\'e \textbf{2 fois plus} de points que Sami.\\
+    \textit{Combien de points a marqu\'e chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A2. Les Cartes \`a collectionner} : \\
+    Lila et No\'e poss\`edent ensemble \textbf{96 cartes}.\\
+    No\'e a \textbf{3 fois plus} de cartes que Lila.\\
+    \textit{Combien de cartes a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A3. Les Autocollants} : \\
+    Hugo et Aya ont ensemble \textbf{50 autocollants}.\\
+    Aya a \textbf{4 fois moins} d'autocollants que Hugo.\\
+    \textit{Combien d'autocollants a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A4. L'Argent de poche} : \\
+    L\'eo et Maya ont ensemble \textbf{72~\euro}.\\
+    Maya a \textbf{5 fois plus} d'argent que L\'eo.\\
+    \textit{Combien d'argent a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A5. Les Billes} : \\
+    Clara et Ethan ont ensemble \textbf{54 billes}.\\
+    Ethan a \textbf{2 fois moins} de billes que Clara.\\
+    \textit{Combien de billes a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A6. Le D\'efi lecture} : \\
+    Zo\'e et Kylian ont lu ensemble \textbf{84 pages}.\\
+    Kylian a lu \textbf{6 fois moins} de pages que Zo\'e.\\
+    \textit{Combien de pages a lu chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A7. Les Points bonus} : \\
+    Tom et Nora ont gagn\'e ensemble \textbf{160 points bonus}.\\
+    Nora a gagn\'e \textbf{7 fois plus} de points que Tom.\\
+    \textit{Combien de points a gagn\'e chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A8. Les Bonbons} : \\
+    Bruno et Alice ont ensemble \textbf{180 bonbons}.\\
+    Alice a \textbf{8 fois moins} de bonbons que Bruno.\\
+    \textit{Combien de bonbons a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A9. Les Badges} : \\
+    Nina et Paul ont ensemble \textbf{125 badges}.\\
+    Paul a \textbf{4 fois plus} de badges que Nina.\\
+    \textit{Combien de badges a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{A10. Les Jetons} : \\
+    Samir et Jade ont ensemble \textbf{150 jetons}.\\
+    Jade a \textbf{4 fois moins} de jetons que Samir.\\
+    \textit{Combien de jetons a chacun ?}
+\normalsize
+\end{seriebox}
+
+\newpage
+
+% --- PAGE 2 : S\'ERIES B et C ---
+\noindent
+\begin{minipage}[t]{0.49\textwidth}
+\vspace{0pt}
+\small
+\begin{seriebox}[S\'ERIE B : Enqu\^etes \`a trois inconnues]{green}
+    \textbf{B1. Les Bracelets} : \\
+    On a fabriqu\'e \textbf{168 bracelets} (rouges, verts, bleus).
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Il y a \textbf{2 fois plus} de bracelets verts que de rouges.
+        \item Il y a \textbf{3 fois plus} de bracelets bleus que de rouges.
+    \end{itemize}
+    \textit{Combien y a-t-il de bracelets de chaque couleur ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{B2. Les Tickets de tombola} : \\
+    On a vendu \textbf{240 tickets} (jaunes, violets, blancs).
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Il y a \textbf{3 fois plus} de tickets violets que de jaunes.
+        \item Il y a \textbf{4 fois plus} de tickets blancs que de jaunes.
+    \end{itemize}
+    \textit{Combien y a-t-il de tickets de chaque couleur ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{B3. La Collecte} : \\
+    Basile, Amel et Chlo\'e ont r\'ecolt\'e ensemble \textbf{220~\euro}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Amel a r\'ecolt\'e \textbf{2 fois moins} que Basile.
+        \item Chlo\'e a r\'ecolt\'e \textbf{3 fois moins} que Basile.
+    \end{itemize}
+    \textit{Combien d'argent a r\'ecolt\'e chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{B4. Les Jetons} : \\
+    Sofia, Omar et Jade ont ensemble \textbf{195 jetons}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Omar a \textbf{5 fois plus} de jetons que Sofia.
+        \item Jade a \textbf{2 fois moins} de jetons que Sofia.
+    \end{itemize}
+    \textit{Combien de jetons a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{B5. Les Bonbons} : \\
+    No\'e, Emma et Yassine ont ensemble \textbf{198 bonbons}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Emma a \textbf{6 fois plus} de bonbons que No\'e.
+        \item Yassine a \textbf{3 fois moins} de bonbons que No\'e.
+    \end{itemize}
+    \textit{Combien de bonbons a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{B6. Les Cartes} : \\
+    L\'ea, Karim et Inaya ont ensemble \textbf{310 cartes}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Karim a \textbf{4 fois plus} de cartes que L\'ea.
+        \item Inaya a \textbf{6 fois moins} de cartes que L\'ea.
+    \end{itemize}
+    \textit{Combien de cartes a chacun ?}
+\end{seriebox}
+\normalsize
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\textwidth}
+\vspace{0pt}
+\small
+\begin{seriebox}[S\'ERIE C : Enqu\^etes Experts]{red}
+    \textbf{C1. Les Jetons d'arcade} : \\
+    Alex, Bilal et Chlo\'e ont ensemble \textbf{140 jetons}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Bilal a \textbf{4 fois plus} de jetons qu'Alex.
+        \item Chlo\'e a \textbf{2 fois moins} de jetons que Bilal.
+    \end{itemize}
+    \textit{Combien de jetons a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{C2. La M\'ediath\`eque} : \\
+    Dans une m\'ediath\`eque, il y a \textbf{220 livres} (Romans, BD, Mangas).
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Il y a \textbf{3 fois plus} de BD que de Romans.
+        \item Il y a \textbf{2 fois moins} de Mangas que de BD.
+    \end{itemize}
+    \textit{Combien y a-t-il de livres de chaque type ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{C3. La Piste d'athl\'etisme} : \\
+    Karim, Elsa et Lina ont couru ensemble \textbf{189 tours}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Elsa a couru \textbf{2 fois moins} de tours que Karim.
+        \item Lina a couru \textbf{6 fois plus} de tours qu'Elsa.
+    \end{itemize}
+    \textit{Combien de tours a couru chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{C4. La Bo\^ite de jeu} : \\
+    Une bo\^ite contient \textbf{140 pi\`eces} (d\'es, cartes, jetons).
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Il y a \textbf{2 fois plus} de cartes que de d\'es.
+        \item Il y a \textbf{4 fois moins} de jetons que de cartes.
+    \end{itemize}
+    \textit{Combien y a-t-il de d\'es, de cartes et de jetons ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{C5. Les Billets} : \\
+    Sophie, Malik et Nour ont ensemble \textbf{190 billets}. 
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Malik a \textbf{3 fois plus} de billets que Sophie.
+        \item Nour a \textbf{4 fois moins} de billets que Malik.
+    \end{itemize}
+    \textit{Combien de billets a chacun ?}
+    \vspace{0.04cm}\hrule\vspace{0.04cm}
+
+    \textbf{C6. Les Pages lues} : \\
+    Camille, Yanis et Rania ont lu ensemble \textbf{180 pages}.
+    \begin{itemize}[noitemsep, topsep=0pt, leftmargin=*]
+        \item Yanis a lu \textbf{6 fois moins} de pages que Camille.
+        \item Rania a lu \textbf{5 fois plus} de pages que Yanis.
+    \end{itemize}
+    \textit{Combien de pages a lu chacun ?}
+\end{seriebox}
+\normalsize
+\end{minipage}
+
+\newpage
+
+% --- CORRECTION ---
+\begin{seriebox}[CORRECTION (r\'eponses finales)]{gray}
+\small
+\textbf{S\'ERIE A}
+\begin{itemize}[noitemsep, topsep=2pt, leftmargin=*]
+    \item A1 : Sami = 30 ; In\`es = 60.
+    \item A2 : Lila = 24 ; No\'e = 72.
+    \item A3 : Aya = 10 ; Hugo = 40.
+    \item A4 : L\'eo = 12~\euro{} ; Maya = 60~\euro{}.
+    \item A5 : Ethan = 18 ; Clara = 36.
+    \item A6 : Kylian = 12 ; Zo\'e = 72.
+    \item A7 : Tom = 20 ; Nora = 140.
+    \item A8 : Alice = 20 ; Bruno = 160.
+    \item A9 : Nina = 25 ; Paul = 100.
+    \item A10 : Jade = 30 ; Samir = 120.
+\end{itemize}
+\vspace{0.10cm}\hrule\vspace{0.10cm}
+
+\textbf{S\'ERIE B}
+\begin{itemize}[noitemsep, topsep=2pt, leftmargin=*]
+    \item B1 : rouges = 28 ; verts = 56 ; bleus = 84.
+    \item B2 : jaunes = 30 ; violets = 90 ; blancs = 120.
+    \item B3 : Basile = 120~\euro{} ; Amel = 60~\euro{} ; Chlo\'e = 40~\euro{}.
+    \item B4 : Sofia = 30 ; Omar = 150 ; Jade = 15.
+    \item B5 : No\'e = 27 ; Emma = 162 ; Yassine = 9.
+    \item B6 : L\'ea = 60 ; Karim = 240 ; Inaya = 10.
+\end{itemize}
+\vspace{0.10cm}\hrule\vspace{0.10cm}
+
+\textbf{S\'ERIE C}
+\begin{itemize}[noitemsep, topsep=2pt, leftmargin=*]
+    \item C1 : Alex = 20 ; Bilal = 80 ; Chlo\'e = 40.
+    \item C2 : Romans = 40 ; BD = 120 ; Mangas = 60.
+    \item C3 : Karim = 42 ; Elsa = 21 ; Lina = 126.
+    \item C4 : d\'es = 40 ; cartes = 80 ; jetons = 20.
+    \item C5 : Sophie = 40 ; Malik = 120 ; Nour = 30.
+    \item C6 : Camille = 90 ; Yanis = 15 ; Rania = 75.
+\end{itemize}
+\normalsize
+\end{seriebox}
+
+\end{document}
