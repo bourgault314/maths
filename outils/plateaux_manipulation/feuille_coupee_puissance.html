@@ -236,14 +236,196 @@
         .exo-title { text-align: center; border-bottom: 3px solid #334155; padding-bottom: 15px; margin-bottom: 25px; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; }
         .main-question { background-color: #fef2f2; border: 2px solid #fecaca; color: #b91c1c; padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 1.3rem; margin: 30px 0; }
         .bonus-q { margin-top: 20px; padding: 20px; background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 8px; font-size: 1.1rem; color: #1e3a8a; }
-        .print-btn { display: block; margin: 40px auto 0; background: #334155; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-
-        @media print {
-            .toolbar, .visual-area, .limit-msg { display: none !important; }
-            #modal-exo { display: block !important; position: static !important; width: 100% !important; background: white !important;}
-            .close-modal, .print-btn { display: none !important; }
-            body { background: white; height: auto; overflow: visible; }
+        
+        .remark { margin-top: 10px; text-align: center; font-family: 'Segoe UI', sans-serif; font-size: 1rem; color:#475569; }
+        .remark em { font-style: italic; }
+.print-btn { display: block; margin: 40px auto 0; background: #334155; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        /* --- Boutons d'impression (modale) : 3 boutons --- */
+        .print-actions{
+            display:grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items:center;
+            gap:12px;
+            margin: 32px auto 0;
         }
+        .print-actions .print-btn-small:first-child{ justify-self: start; }
+        .print-actions .print-btn{ justify-self: center; }
+        .print-actions .print-btn-small:last-child{ justify-self: end; }
+        .print-actions .print-btn{ 
+            margin: 0; 
+        }
+        .print-btn-small{
+            background:#64748b;
+            color:white;
+            border:none;
+            padding:10px 14px;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:0.92rem;
+            opacity:0.95;
+        }
+        .print-btn-small:hover{ opacity:1; }
+
+        /* Espaces de réponse sur les fiches différenciées */
+        .answer-line{
+            border-bottom: 1px solid #94a3b8;
+            height: 20px;
+            margin: 6px 0 14px 0;
+        }
+        .answer-block{
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            height: 80px;
+            margin: 8px 0 16px 0;
+        }
+
+
+        
+/* --- IMPRESSION : 2 ÉNONCÉS IDENTIQUES SUR 1 PAGE --- */
+#print-sheet, #print-sheet-guide, #print-sheet-defi { display: none; }
+
+@media print {
+    @page { size: A4 portrait; margin: 10mm; }
+
+    /* On ne change rien à l'écran : tout ceci est uniquement pour l'impression */
+    .toolbar, .visual-area, .limit-msg { display: none !important; }
+    #modal-exo { display: none !important; }
+    .close-modal, .print-btn { display: none !important; }
+
+    body {
+        background: white !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Choix de la fiche à imprimer selon le bouton */
+    #print-sheet, #print-sheet-guide, #print-sheet-defi { display: none !important; }
+
+    html:not([data-print-mode]) #print-sheet,
+    html[data-print-mode="main"] #print-sheet { display: flex !important; }
+
+    html[data-print-mode="guide"] #print-sheet-guide { display: block !important; }
+    html[data-print-mode="defi"] #print-sheet-defi { display: block !important; }
+
+    /* Fiches différenciées : une fiche par page */
+    #print-sheet-guide, #print-sheet-defi {
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .print-full { width: 100%; }
+    #print-sheet-guide .exo-title, #print-sheet-defi .exo-title {
+        margin: 0 0 14px 0;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #1e293b;
+        font-size: 2.0rem;
+    }
+    #print-sheet-guide p.print-intro, #print-sheet-defi p.print-intro {
+        margin: 0 0 14px 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-style: italic;
+        color: #475569;
+        font-size: 1.05rem;
+    }
+    #print-sheet-guide ol, #print-sheet-defi ol {
+        margin: 8px 0 14px 22px;
+        font-size: 1.1rem;
+        line-height: 1.35;
+    }
+    #print-sheet-guide .section-title, #print-sheet-defi .section-title {
+        font-weight: 700;
+        margin: 16px 0 8px 0;
+        font-size: 1.15rem;
+    }
+
+
+    /* Conteneur d'impression (2 fiches) */
+    #print-sheet {
+        display: none !important;
+        flex-direction: column;
+        width: 100%;
+        height: 277mm; /* 297mm - 2*10mm de marges page */
+        box-sizing: border-box;
+        position: relative;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Ligne de coupe + ciseaux au milieu */
+    #print-sheet::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        border-top: 2px dashed #ef4444;
+    }
+    #print-sheet::after {
+        content: "✂️";
+        position: absolute;
+        top: 50%;
+        right: 0;
+        left: auto;
+        transform: translate(0, -50%) rotate(90deg);
+        transform-origin: center;
+        background: white;
+        padding: 0 6px;
+        font-size: 14pt;
+        line-height: 1;
+        color: #ef4444;
+    }
+
+    .print-half {
+        flex: 1;
+        padding: 8mm 10mm;
+        box-sizing: border-box;
+        overflow: hidden;
+        font-family: 'Georgia', serif;
+        color: #0f172a;
+        background: white;
+    }
+
+    /* Ajustements discrets pour que ça tienne proprement sur une demi-page */
+    #print-sheet .exo-title {
+        margin: 0 0 12px 0;
+        padding-bottom: 12px;
+        font-size: 1.75rem;
+    }
+    #print-sheet p.print-intro {
+        margin: 0 0 14px 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-style: italic;
+        color: #475569;
+        font-size: 1.05rem;
+        text-align: center;
+    }
+    #print-sheet ol {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin: 0 0 16px 22px;
+        padding: 0;
+    }
+    #print-sheet .main-question {
+        margin: 18px 0 14px 0;
+        padding: 18px;
+        font-size: 1.3rem;
+    }
+    #print-sheet .bonus-q {
+        margin-top: 14px;
+        padding: 16px;
+        font-size: 1.02rem;
+    }
+
+    #print-sheet .remark {
+        margin: 10px 0 0 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 1rem;
+        text-align: center;
+        color: #475569;
+    }
+    #print-sheet .remark em { font-style: italic; }
+}
     </style>
 </head>
 <body>
@@ -262,11 +444,111 @@
                 <li>Imaginer que la feuille soit assez grande...</li>
             </ol>
             <div class="main-question">Quelle épaisseur totale de papier obtient-on quand on coupe vingt fois ?</div>
-            <div class="bonus-q"><strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune.. qu'en penses-tu?</div>
-            <button class="print-btn" onclick="window.print()">🖨️ Imprimer la fiche</button>
+            <div class="bonus-q"><strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune..&nbsp;qu'en penses-tu?</div>
+            <p class="remark">Remarque : La distance Terre-Lune est d’environ 384 000 km.</p>
+            <div class="print-actions">
+                <button class="print-btn-small" onclick="printWithMode('guide')">🖨️ Fiche guidée</button>
+                <button class="print-btn" onclick="printWithMode('main')">🖨️ Imprimer la fiche</button>
+                <button class="print-btn-small" onclick="printWithMode('defi')">🖨️ Fiche défi</button>
+            </div>
         </div>
     </div>
 
+<!-- CONTENEUR D'IMPRESSION (2 énoncés identiques sur 1 page) -->
+<div id="print-sheet" aria-hidden="true">
+    <div class="print-half">
+        <h1 class="exo-title">Exercice de la feuille coupée</h1>
+        <p class="print-intro">Vous allez réaliser cet exercice sous forme de narration de recherche.</p>
+        <ol>
+            <li>Prendre une feuille de papier (son épaisseur est de l'ordre de 0,1 mm en général).</li>
+            <li>Couper cette feuille en deux et superposer les deux parties obtenues.</li>
+            <li>Couper de nouveau en deux puis superposer, couper, superposer...</li>
+            <li>Imaginer que la feuille soit assez grande...</li>
+        </ol>
+        <div class="main-question">Quelle épaisseur totale de papier obtient-on quand on coupe vingt fois ?</div>
+        <div class="bonus-q"><strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune..&nbsp;qu'en penses-tu?</div>
+            <p class="remark">Remarque : La distance Terre-Lune est d’environ 384 000 km.</p>
+    </div>
+
+    <div class="print-half">
+        <h1 class="exo-title">Exercice de la feuille coupée</h1>
+        <p class="print-intro">Vous allez réaliser cet exercice sous forme de narration de recherche.</p>
+        <ol>
+            <li>Prendre une feuille de papier (son épaisseur est de l'ordre de 0,1 mm en général).</li>
+            <li>Couper cette feuille en deux et superposer les deux parties obtenues.</li>
+            <li>Couper de nouveau en deux puis superposer, couper, superposer...</li>
+            <li>Imaginer que la feuille soit assez grande...</li>
+        </ol>
+        <div class="main-question">Quelle épaisseur totale de papier obtient-on quand on coupe vingt fois ?</div>
+        <div class="bonus-q"><strong>Bonus :</strong> Il paraît qu'en coupant 50 fois on atteindrait la lune..&nbsp;qu'en penses-tu?</div>
+            <p class="remark">Remarque : La distance Terre-Lune est d’environ 384 000 km.</p>
+    </div>
+</div>
+
+
+<!-- CONTENEUR D'IMPRESSION : FICHE GUIDÉE (1 énoncé par page) -->
+<div id="print-sheet-guide" aria-hidden="true">
+    <div class="print-full">
+        <h1 class="exo-title">Exercice de la feuille coupée — Fiche guidée</h1>
+        <p class="print-intro">On coupe une feuille en deux, on superpose les deux morceaux, puis on recommence : couper → superposer.</p>
+        <p><strong>Donnée :</strong> épaisseur d’une feuille = <span class="math">0,1 mm</span>.</p>
+
+        <ol>
+            <li><strong>Après 1 coupe</strong> : combien de feuilles superposées as-tu ? Quelle est l’épaisseur totale ?<div class="answer-line"></div></li>
+            <li><strong>Après 2 coupes</strong> : combien de feuilles superposées as-tu ? Quelle est l’épaisseur totale ?<div class="answer-line"></div></li>
+            <li><strong>Après 4 coupes</strong> : combien de feuilles superposées as-tu ? Quelle est l’épaisseur totale ?<div class="answer-line"></div></li>
+            <li><strong>Après 8 coupes</strong> : combien de feuilles superposées as-tu ? Quelle est l’épaisseur totale ?<div class="answer-line"></div></li>
+            <li><strong>À chaque étape</strong> : par combien est multipliée l’épaisseur ?<div class="answer-line"></div></li>
+        </ol>
+
+        <div class="main-question"><strong>Question principale :</strong> après <strong>20 coupes</strong>, quelle est l’épaisseur totale ? Explique ta méthode.</div>
+    </div>
+</div>
+
+<!-- CONTENEUR D'IMPRESSION : FICHE DÉFI (1 énoncé par page) -->
+<div id="print-sheet-defi" aria-hidden="true">
+    <div class="print-full">
+        <h1 class="exo-title">Exercice de la feuille coupée — Fiche défi</h1>
+        <p class="print-intro">Pour aller plus loin : on cherche, on justifie, et on généralise.</p>
+
+        <div class="section-title">Défi A — Généraliser et franchir des seuils</div>
+        <p><strong>Donnée :</strong> épaisseur d’une feuille = <span class="math">0,1 mm</span>.</p>
+        <p>On coupe la feuille en deux et on <strong>superpose</strong> les deux morceaux. On recommence : <strong>couper → superposer</strong>.</p>
+
+        <ol>
+            <li><strong>Question 1 :</strong> Exprime en fonction de <span class="math">n</span> le <strong>nombre de feuilles superposées</strong> obtenues après <strong><span class="math">n</span> coupes</strong>.
+                <br><em>Tu peux commencer par <span class="math">n=0</span>, <span class="math">n=1</span>, <span class="math">n=2</span>, <span class="math">n=3</span> puis généraliser.</em>
+</li>
+            <li><strong>Question 2 :</strong> En déduire une expression de l’<strong>épaisseur</strong> après <span class="math">n</span> coupes.
+</li>
+            <li><strong>Question 3 :</strong> À partir de combien de coupes l’épaisseur <strong>dépasse</strong> :
+                <ul>
+                    <li><strong>1 m</strong></li>
+                    <li><strong>1 km</strong></li>
+                    <li><strong>100 km</strong></li>
+                    <li><strong>384 000 km</strong> (distance Terre–Lune)</li>
+                </ul>
+</li>
+        </ol>
+
+        <div class="section-title">Défi B — Comparer des longueurs (unités variées)</div>
+        <p>On considère les longueurs suivantes :</p>
+        <ol type="A">
+            <li><span class="math">650 000 nm</span></li>
+            <li><span class="math">0,00000073 km</span></li>
+            <li><span class="math">71 × 10¹ µm</span></li>
+            <li><span class="math">0,49 m</span></li>
+            <li><span class="math">51 × 10¹ mm</span></li>
+            <li><span class="math">6,12 × 10⁻¹ m</span></li>
+        </ol>
+
+        <ol>
+            <li>Classe ces longueurs de la plus petite à la plus grande.</li>
+            <li>Quel est le rapport entre la plus grande et la plus petite ?</li>
+            <li>Sans calculatrice, donne un ordre de grandeur de ce rapport.</li>
+        </ol>
+    </div>
+</div>
     <div class="toolbar">
         <div class="stats-group">
             <div class="stat-box">
@@ -338,6 +620,16 @@
 
     function openExo() { modal.classList.add('active'); }
     function closeExo() { modal.classList.remove('active'); }
+
+    function printWithMode(mode){
+        const root = document.documentElement;
+        // mode: 'main' | 'guide' | 'defi'
+        root.setAttribute('data-print-mode', mode);
+        window.print();
+        // Retour au comportement par défaut (fiche principale)
+        root.removeAttribute('data-print-mode');
+    }
+
 
     // --- UTILS ---
     function updateLimitState() {
