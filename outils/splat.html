@@ -1954,11 +1954,12 @@ function genNumberedSigned(rng){
         return null;
       }
 
-      const targetSums = opposedTasks.map(o => (o ? -H : H)); // chaque tache cache +H ou -H
-      const hiddenSum = targetSums.reduce((a,b)=>a+b, 0);
+      const effectiveTaskSums = opposedTasks.map(o => (o ? -H : H)); // contribution réelle au total
+      const hiddenSum = effectiveTaskSums.reduce((a,b)=>a+b, 0);
       if(hiddenSum === 0) continue;
 
-      const hiddenByTask = buildHiddenByTask(targetSums);
+      const rawHiddenSums = new Array(tasks).fill(H); // valeur brute cachée sous chaque tache
+      const hiddenByTask = buildHiddenByTask(rawHiddenSums);
       if(!hiddenByTask) continue;
 
       const hidden = hiddenByTask.flat();
@@ -2389,8 +2390,8 @@ if(mode === "mix"){
     const rightVisible = (vCountR === 0) ? [] : randomSignedCompositionNonZero(rng, VR, vCountR, maxAbs);
     if(leftVisible === null || rightVisible === null) continue;
 
-    const leftHiddenByTask  = Array.from({length:tasksL}, (_,i)=>[signsL[i] * x]);
-    const rightHiddenByTask = Array.from({length:tasksR}, (_,i)=>[signsR[i] * x]);
+    const leftHiddenByTask  = Array.from({length:tasksL}, ()=>[x]);
+    const rightHiddenByTask = Array.from({length:tasksR}, ()=>[x]);
 
     return {
       family: "EQPM",
