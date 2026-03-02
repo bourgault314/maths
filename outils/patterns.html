@@ -373,9 +373,17 @@
       font-weight: 900;
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 7px 8px;
+      padding: 7px 6px;
+      box-sizing: border-box;
       background: rgba(255,255,255,.55);
       color: var(--text);
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    .qtyInput::-webkit-outer-spin-button,
+    .qtyInput::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+      margin: 0;
     }
     body.theme-dark .qtyInput{ background: rgba(255,255,255,.03); }
     .qtyInput:focus{ outline:none; box-shadow: 0 0 0 3px rgba(10,132,255,.14); }
@@ -2239,8 +2247,8 @@ function renderFamilies(){
     plus.addEventListener("click", ()=>{
       const cur = clamp(Number(qty[id] ?? 0), 0, 30);
       if(cur <= 0){
-        // Demande : + coche et met 3 si c'était 0
-        setQty(3);
+        // Si la quantité était à 0, le + remet à 1
+        setQty(1);
       } else {
         setQty(cur + 1);
       }
