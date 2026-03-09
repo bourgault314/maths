@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Engrenages — V4.6</title>
+  <title>Engrenages</title>
   <style>
     :root{
       --bg:#eef4ff;
@@ -12,15 +12,9 @@
       --text:#1f2a44;
       --muted:#5a6784;
       --accent:#3f7cff;
-      --gearA:#79a6ff;
-      --gearB:#f5b35f;
-      --marker:#ff4d6d;
       --shadow:0 10px 28px rgba(31,42,68,0.10);
       --stage-h:740px;
       --control-w:400px;
-      --strokeA:#4968b8;
-      --strokeB:#7c5a22;
-      --stroke:#5d6887;
     }
 
     *{box-sizing:border-box}
@@ -33,15 +27,14 @@
       overflow-x:hidden;
     }
 
-    header{ padding:16px 18px 8px; }
-    h1{ margin:0; font-size:1.45rem; }
-    .subtitle{ margin-top:4px; color:var(--muted); font-size:0.95rem; }
+    header{ padding:16px 18px 12px; }
+    h1{ margin:0; font-size:1.55rem; color: #1f2a44; }
 
     .app{
       display:grid;
       grid-template-columns: var(--control-w) 1fr;
       gap:16px;
-      padding:12px 16px 18px;
+      padding:0 16px 18px;
     }
     .panel{
       background:var(--panel);
@@ -117,8 +110,10 @@
     button:hover{ opacity:0.96; }
     button:active{ transform:translateY(1px); }
     .primary{ background:var(--accent); color:white; font-weight:bold; }
-    .secondary{ background:#edf3ff; color:var(--text); border:1px solid #d9e5ff; }
-    .ghost{ background:#fff7ec; color:#7a4b00; border:1px solid #ffe0b0; }
+    .secondary{ background:#edf3ff; color:var(--text); border:1px solid #d9e5ff; font-weight:bold; }
+    .ghost{ background:#fff7ec; color:#7a4b00; border:1px solid #ffe0b0; font-weight:bold; }
+    .action-btn { background:#fff0f3; color:#a61d37; border:1px solid #ffd1d9; font-weight:bold; }
+    .action-btn:hover { background:#ffe0e6; }
 
     .play-btn {
       width: 44px; height: 44px; padding: 0; font-size: 1.2rem;
@@ -179,8 +174,8 @@
       background:radial-gradient(circle at 50% 35%, #ffffff 0%, #f6f9ff 48%, #edf3ff 100%);
       touch-action:none; 
     }
-    #gearAGroup, #gearBGroup { cursor: grab; }
-    #gearAGroup:active, #gearBGroup:active { cursor: grabbing; }
+    #gearAGroup, #gearBGroup, #gearCGroup { cursor: grab; }
+    #gearAGroup:active, #gearBGroup:active, #gearCGroup:active { cursor: grabbing; }
 
     .infos{
       padding:14px 16px 16px; border-top:1px solid var(--panel-border); background:#fcfdff;
@@ -195,6 +190,8 @@
     .big{ font-size:1.04rem; font-weight:700; line-height:1.35; }
     .formula{ font-size:0.98rem; line-height:1.45; }
     
+    .hidden { display: none !important; }
+
     @media (max-width: 1050px){
       .app{ grid-template-columns: 1fr; }
       svg{ min-height:440px; }
@@ -203,28 +200,43 @@
 </head>
 <body>
   <header>
-    <h1>⚙️ Engrenages — V4.6</h1>
-    <div class="subtitle">Unités de vitesse rigoureuses (°/s), compteur de tours plus grand, et labels activés par défaut.</div>
+    <h1>⚙️ Engrenages</h1>
   </header>
 
   <main class="app">
     <section class="panel controls">
       
       <div class="block">
-        <h2>Dents des engrenages</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h2 style="margin:0;">Mécanisme</h2>
+          <label class="checkbox-row" style="font-size:0.9rem; font-weight:bold; color:var(--accent);">
+            <input type="checkbox" id="panelHasGearC"> + Roue centrale
+          </label>
+        </div>
+        
         <div class="control-row">
-          <label>Roue bleue (A)</label>
+          <label>Moteur bleu (A)</label>
           <div class="input-group">
             <button class="btn-pm" onclick="changeTeeth('A', -1)">−</button>
-            <input type="number" id="teethA" class="val-input" value="12" min="8" max="60">
+            <input type="number" id="teethA" class="val-input" value="12" min="8" max="60" step="1">
             <button class="btn-pm" onclick="changeTeeth('A', 1)">+</button>
           </div>
         </div>
+
+        <div class="control-row hidden" id="rowGearC">
+          <label>Roue verte (C)</label>
+          <div class="input-group">
+            <button class="btn-pm" onclick="changeTeeth('C', -1)">−</button>
+            <input type="number" id="teethC" class="val-input" value="16" min="8" max="60" step="1">
+            <button class="btn-pm" onclick="changeTeeth('C', 1)">+</button>
+          </div>
+        </div>
+
         <div class="control-row">
-          <label>Roue orange (B)</label>
+          <label>Sortie orange (B)</label>
           <div class="input-group">
             <button class="btn-pm" onclick="changeTeeth('B', -1)">−</button>
-            <input type="number" id="teethB" class="val-input" value="24" min="8" max="60">
+            <input type="number" id="teethB" class="val-input" value="24" min="8" max="60" step="1">
             <button class="btn-pm" onclick="changeTeeth('B', 1)">+</button>
           </div>
         </div>
@@ -235,22 +247,22 @@
         <div class="control-row" style="margin-bottom: 6px;">
           <label>Vitesse (°/s)</label>
           <div class="input-group">
-            <button class="btn-pm" onclick="changeSpeed(-1)">−</button>
-            <input type="number" id="speedNumber" class="val-input" value="18" min="-120" max="120">
-            <button class="btn-pm" onclick="changeSpeed(1)">+</button>
+            <button class="btn-pm" onclick="changeSpeed(-10)">−</button>
+            <input type="number" id="speedNumber" class="val-input" value="60" min="-360" max="360" step="10">
+            <button class="btn-pm" onclick="changeSpeed(10)">+</button>
           </div>
         </div>
         <div class="speed-buttons">
           <button class="mini-btn" id="reverseBtn">⇄ Inverser</button>
-          <button class="mini-btn" data-speed-step="-5">−5</button>
-          <button class="mini-btn" data-speed-step="5">+5</button>
+          <button class="mini-btn" data-speed-step="-10">−10</button>
+          <button class="mini-btn" data-speed-step="10">+10</button>
           <button class="mini-btn" id="speedZeroBtn">Stop</button>
         </div>
       </div>
 
       <div class="block">
         <h2>Affichage sur le plateau</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <label class="checkbox-row"><input type="checkbox" id="panelShowArrows"> 🔄 Flèches</label>
           <label class="checkbox-row"><input type="checkbox" id="panelShowMarker"> 🔴 Repère</label>
           <label class="checkbox-row"><input type="checkbox" id="panelShowLabels" checked> 🏷️ Dents</label>
@@ -268,8 +280,8 @@
           <button id="fullscreenBtn" class="ghost" style="flex-grow:1;">⛶ Plein écran</button>
         </div>
         <div class="buttons" style="margin-top: 10px;">
-          <button id="panelOneTurnABtn" class="secondary" style="flex-grow:1;">1 tour A</button>
-          <button id="panelOneTurnBBtn" class="secondary" style="flex-grow:1;">1 tour B</button>
+          <button id="panelOneTurnABtn" class="action-btn" style="flex-grow:1;">1 tour A</button>
+          <button id="panelOneTurnBBtn" class="action-btn" style="flex-grow:1;">1 tour B</button>
         </div>
       </div>
     </section>
@@ -278,7 +290,6 @@
       <div class="stage-wrap" id="stageWrap">
         
         <div class="fullscreen-ui">
-          
           <div class="fs-main-bar">
             <button id="fsMenuBtn" class="secondary" style="font-weight:bold; padding: 0 16px;">⚙️ Menu</button>
             <button id="fsPlayPauseBtn" class="primary play-btn">⏸</button>
@@ -288,20 +299,33 @@
 
           <div id="fsSettingsPanel" class="fs-settings-panel">
             
+            <label class="checkbox-row" style="padding-bottom:10px; border-bottom:1px solid #dbe4f3; color:var(--accent); font-weight:bold;">
+              <input type="checkbox" id="fsHasGearC"> + Insérer une roue centrale
+            </label>
+
             <div class="fs-row">
-              <span class="fs-label">Dents A</span>
+              <span class="fs-label">Dents A (Bleu)</span>
               <div class="input-group">
                 <button class="btn-pm" onclick="changeTeeth('A', -1)">−</button>
-                <input type="number" id="fsTeethA" class="val-input" min="8" max="60">
+                <input type="number" id="fsTeethA" class="val-input" min="8" max="60" step="1">
                 <button class="btn-pm" onclick="changeTeeth('A', 1)">+</button>
+              </div>
+            </div>
+
+            <div class="fs-row hidden" id="fsRowGearC">
+              <span class="fs-label">Dents C (Vert)</span>
+              <div class="input-group">
+                <button class="btn-pm" onclick="changeTeeth('C', -1)">−</button>
+                <input type="number" id="fsTeethC" class="val-input" min="8" max="60" step="1">
+                <button class="btn-pm" onclick="changeTeeth('C', 1)">+</button>
               </div>
             </div>
             
             <div class="fs-row">
-              <span class="fs-label">Dents B</span>
+              <span class="fs-label">Dents B (Orange)</span>
               <div class="input-group">
                 <button class="btn-pm" onclick="changeTeeth('B', -1)">−</button>
-                <input type="number" id="fsTeethB" class="val-input" min="8" max="60">
+                <input type="number" id="fsTeethB" class="val-input" min="8" max="60" step="1">
                 <button class="btn-pm" onclick="changeTeeth('B', 1)">+</button>
               </div>
             </div>
@@ -309,18 +333,18 @@
             <div class="fs-row" style="border-top: 1px solid #dbe4f3; padding-top: 10px;">
               <span class="fs-label">Vitesse (°/s)</span>
               <div class="input-group">
-                <button class="btn-pm" onclick="changeSpeed(-1)">−</button>
-                <input type="number" id="fsSpeed" class="val-input" min="-120" max="120">
-                <button class="btn-pm" onclick="changeSpeed(1)">+</button>
+                <button class="btn-pm" onclick="changeSpeed(-10)">−</button>
+                <input type="number" id="fsSpeed" class="val-input" min="-360" max="360" step="10">
+                <button class="btn-pm" onclick="changeSpeed(10)">+</button>
               </div>
             </div>
 
             <div class="fs-row">
-              <button id="fsOneTurnABtn" class="secondary" style="flex-grow:1; padding:8px;">1 tour A</button>
-              <button id="fsOneTurnBBtn" class="secondary" style="flex-grow:1; padding:8px; margin-left:8px;">1 tour B</button>
+              <button id="fsOneTurnABtn" class="action-btn" style="flex-grow:1; padding:8px;">1 tour A</button>
+              <button id="fsOneTurnBBtn" class="action-btn" style="flex-grow:1; padding:8px; margin-left:8px;">1 tour B</button>
             </div>
 
-            <div class="checkbox-grid" style="border-top: 1px solid #dbe4f3; padding-top: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid #dbe4f3; padding-top: 10px;">
               <label class="checkbox-row"><input type="checkbox" id="fsShowArrows"> 🔄 Flèches</label>
               <label class="checkbox-row"><input type="checkbox" id="fsShowMarker"> 🔴 Repère</label>
               <label class="checkbox-row"><input type="checkbox" id="fsShowLabels" checked> 🏷️ Dents</label>
@@ -338,6 +362,7 @@
             </filter>
           </defs>
           <g id="gearAGroup" data-id="A"></g>
+          <g id="gearCGroup" data-id="C"></g>
           <g id="gearBGroup" data-id="B"></g>
           <g id="overlayGroup"></g>
         </svg>
@@ -346,20 +371,16 @@
       <div class="infos">
         <div class="info-grid">
           <div class="card">
-            <div class="small">Rapport</div>
+            <div class="small">Rapport de transmission</div>
             <div id="ratioText" class="big"></div>
           </div>
           <div class="card">
             <div class="small">Sens de rotation</div>
             <div id="directionText" class="big"></div>
           </div>
-          <div class="card">
-            <div class="small">Relation mathématique</div>
+          <div class="card" style="grid-column: 1 / -1;">
+            <div class="small">Principe mécanique</div>
             <div id="formulaText" class="formula"></div>
-          </div>
-          <div class="card">
-            <div class="small">Exemple</div>
-            <div id="exampleText" class="formula"></div>
           </div>
         </div>
       </div>
@@ -371,32 +392,44 @@
     const svgStage = document.getElementById("svgStage");
     const stageWrap = document.getElementById("stageWrap");
 
-    // Dents activées par défaut, Tours et Vitesse désactivés par défaut
+    // Couleurs fixes injectées dans le JS pour éviter l'écran transparent au lancement
+    const COLOR_A = "#79a6ff", STROKE_A = "#4968b8";
+    const COLOR_B = "#f5b35f", STROKE_B = "#7c5a22";
+    const COLOR_C = "#8ce071", STROKE_C = "#4b9c32";
+
     const state = {
       teethA: 12,
       teethB: 24,
+      teethC: 16,
+      hasGearC: false,
       angleA: 0,
-      angleB: 0,
-      omegaA: 18,
+      omegaA: 60, 
       playing: true,
       oneTurnMode: false,
       oneTurnTarget: 0,
-      layout: { cxA: 0, cyA: 0, cxB: 0, cyB: 0 },
+      layout: { cxA: 0, cyA: 0, cxB: 0, cyB: 0, cxC: 0, cyC: 0 },
       showArrows: false,
       showMarker: false,
-      showLabels: true, 
+      showLabels: true,
       showPitch: false,
-      showTurns: false, 
-      showSpeed: false, 
+      showTurns: false,
+      showSpeed: false,
       fsMenuOpen: false
     };
 
     const ui = {
       teethA: document.getElementById("teethA"),
       teethB: document.getElementById("teethB"),
+      teethC: document.getElementById("teethC"),
       fsTeethA: document.getElementById("fsTeethA"),
       fsTeethB: document.getElementById("fsTeethB"),
+      fsTeethC: document.getElementById("fsTeethC"),
+      rowGearC: document.getElementById("rowGearC"),
+      fsRowGearC: document.getElementById("fsRowGearC"),
       
+      panelHasGearC: document.getElementById("panelHasGearC"),
+      fsHasGearC: document.getElementById("fsHasGearC"),
+
       speedNumber: document.getElementById("speedNumber"),
       fsSpeed: document.getElementById("fsSpeed"),
       
@@ -432,15 +465,17 @@
 
       gearAGroup: document.getElementById("gearAGroup"),
       gearBGroup: document.getElementById("gearBGroup"),
+      gearCGroup: document.getElementById("gearCGroup"),
       overlayGroup: document.getElementById("overlayGroup"),
+      
       ratioText: document.getElementById("ratioText"),
       directionText: document.getElementById("directionText"),
-      formulaText: document.getElementById("formulaText"),
-      exampleText: document.getElementById("exampleText")
+      formulaText: document.getElementById("formulaText")
     };
 
     ui.fsTeethA.value = state.teethA;
     ui.fsTeethB.value = state.teethB;
+    ui.fsTeethC.value = state.teethC;
     ui.fsSpeed.value = state.omegaA;
 
     ui.fsMenuBtn.addEventListener("click", () => {
@@ -470,17 +505,22 @@
     function updateInfo(){
       const ratio = state.teethA / state.teethB;
       const frac = simplifiedFraction(state.teethA, state.teethB);
-      ui.ratioText.innerHTML = `ω<sub>B</sub> = - ω<sub>A</sub> × ${state.teethA}/${state.teethB}<br>B tourne à <strong>${formatNumber(Math.abs(ratio))}</strong> fois la vitesse de A`;
-      ui.directionText.innerHTML = `Les deux engrenages tournent en <strong>sens inverses</strong>.`;
-      ui.formulaText.innerHTML = `${state.teethA} × (tours de A) = ${state.teethB} × (tours de B)<br>donc<br>tours de B = tours de A × ${state.teethA}/${state.teethB}`;
-      ui.exampleText.innerHTML = `Si A fait <strong>1 tour</strong>, alors B fait <strong>${formatNumber(state.teethA / state.teethB)}</strong> tour(s).<br>Fraction simplifiée : <strong>${frac.n}/${frac.d}</strong>`;
+      
+      ui.ratioText.innerHTML = `B tourne à <strong>${formatNumber(Math.abs(ratio))}</strong> fois la vitesse de A.<br><span style="font-size:0.9rem; color:var(--muted)">Pour 1 tour de A, B fait ${formatNumber(ratio)} tour(s).</span>`;
+      
+      if (state.hasGearC) {
+        ui.directionText.innerHTML = `La roue C inverse le mouvement.<br>A et B tournent dans le <strong>MÊME SENS</strong>.`;
+        ui.formulaText.innerHTML = `<strong>Le rapport final ne dépend que de A et B !</strong><br>Vitesse B = Vitesse A × (Dents A / Dents C) × (Dents C / Dents B) = Vitesse A × (${state.teethA}/${state.teethB})`;
+      } else {
+        ui.directionText.innerHTML = `Les deux roues tournent en <strong>SENS INVERSES</strong>.`;
+        ui.formulaText.innerHTML = `Vitesse Sortie (B) = - Vitesse Moteur (A) × (Dents A / Dents B)<br>Vitesse B = Vitesse A × (${state.teethA}/${state.teethB})`;
+      }
     }
 
-    function computeDynamicModule(teethA, teethB) {
+    function computeDynamicModule(tA, tB, tC, hasC) {
       const targetTotalWidth = 1100;
-      const totalWidthInTeeth = (2 * teethA) + (2 * teethB) + 6; 
-      let dynamicModule = targetTotalWidth / totalWidthInTeeth;
-      return clamp(dynamicModule, 6, 22); 
+      const teethWidth = hasC ? (2*tA + 2*tC + 2*tB + 6) : (2*tA + 2*tB + 6);
+      return clamp(targetTotalWidth / teethWidth, 4, 22);
     }
 
     function buildGearGeometry(teeth, modulePx){
@@ -528,19 +568,12 @@
     function singleToothPath(geom, toothIndex){
       const { toothAngle, rootRadius, outerRadius, pitchRadius } = geom;
       const c = toothIndex * toothAngle;
-      const a_root1 = c - toothAngle * 0.32;
-      const a_pitch1= c - toothAngle * 0.245;
-      const a_top1  = c - toothAngle * 0.15;
-      const a_top2  = c + toothAngle * 0.15;
-      const a_pitch2= c + toothAngle * 0.245;
-      const a_root2 = c + toothAngle * 0.32;
-
-      const p_root1 = polar(rootRadius, a_root1);
-      const p_pitch1= polar(pitchRadius, a_pitch1);
-      const p_top1  = polar(outerRadius, a_top1);
-      const p_top2  = polar(outerRadius, a_top2);
-      const p_pitch2= polar(pitchRadius, a_pitch2);
-      const p_root2 = polar(rootRadius, a_root2);
+      const p_root1 = polar(rootRadius, c - toothAngle * 0.32);
+      const p_pitch1= polar(pitchRadius, c - toothAngle * 0.245);
+      const p_top1  = polar(outerRadius, c - toothAngle * 0.15);
+      const p_top2  = polar(outerRadius, c + toothAngle * 0.15);
+      const p_pitch2= polar(pitchRadius, c + toothAngle * 0.245);
+      const p_root2 = polar(rootRadius, c + toothAngle * 0.32);
 
       return `M 0 0 L ${p_root1.x} ${p_root1.y} L ${p_pitch1.x} ${p_pitch1.y} L ${p_top1.x} ${p_top1.y} L ${p_top2.x} ${p_top2.y} L ${p_pitch2.x} ${p_pitch2.y} L ${p_root2.x} ${p_root2.y} Z`;
     }
@@ -564,12 +597,10 @@
         const flare = 145; 
         const a1 = (headDir + flare) * Math.PI / 180;
         const a2 = (headDir - flare) * Math.PI / 180;
-        
         const p1x = endPt.x + headLen * Math.cos(a1);
         const p1y = endPt.y + headLen * Math.sin(a1);
         const p2x = endPt.x + headLen * Math.cos(a2);
         const p2y = endPt.y + headLen * Math.sin(a2);
-        
         const headPath = `M ${endPt.x} ${endPt.y} L ${p1x} ${p1y} L ${p2x} ${p2y} Z`;
         
         const g = createSVG("g");
@@ -578,10 +609,17 @@
         return g;
     }
 
-    function computePhaseOffset(geomA, geomB){
-      const direction = state.omegaA >= 0 ? 1 : -1;
-      const backlashOffset = direction * (360 / geomB.teeth) * 0.01;
-      return { phaseA: 0, phaseB: 180 + (180 / geomB.teeth) + backlashOffset };
+    function computePhaseOffsets(tA, tB, tC, hasC) {
+      let phaseA = 0;
+      let phaseB = 0;
+      let phaseC = 0;
+      if (!hasC) {
+        phaseB = 180 + 180/tB; 
+      } else {
+        phaseC = 180 + 180/tC; 
+        phaseB = -phaseC * (tC/tB) + 180 + 180/tB; 
+      }
+      return { phaseA, phaseB, phaseC };
     }
 
     function buildGearGroup(target, cx, cy, geom, visualAngleDeg, rawAngleDeg, currentSpeed, fillColorCSS, label, strokeColorCSS){
@@ -614,22 +652,20 @@
         textY += (document.fullscreenElement ? 34 : 26);
       }
 
-      // AUGMENTATION DE LA TAILLE DE LA POLICE POUR "TOURS"
       if (state.showTurns) {
         const turns = Math.abs(rawAngleDeg / 360).toFixed(2);
         const turnsText = createSVG("text", {
-          x: cx, y: textY, "text-anchor": "middle", "font-size": document.fullscreenElement ? "28" : "22",
+          x: cx, y: textY, "text-anchor": "middle", "font-size": document.fullscreenElement ? "28" : "24",
           "font-weight": "800", fill: "#3f7cff", "pointer-events": "none"
         });
         turnsText.textContent = `Tours : ${turns}`;
         target.appendChild(turnsText);
-        textY += (document.fullscreenElement ? 34 : 28);
+        textY += (document.fullscreenElement ? 34 : 30);
       }
 
-      // AJOUT DE L'UNITÉ (°/s) POUR LA VITESSE
       if (state.showSpeed) {
         const speedText = createSVG("text", {
-          x: cx, y: textY, "text-anchor": "middle", "font-size": document.fullscreenElement ? "22" : "16",
+          x: cx, y: textY, "text-anchor": "middle", "font-size": document.fullscreenElement ? "22" : "18",
           "font-weight": "600", fill: "#5a6784", "pointer-events": "none"
         });
         speedText.textContent = `Vitesse : ${Math.round(currentSpeed)} °/s`;
@@ -637,80 +673,128 @@
       }
     }
 
-    function drawOverlay(cxA, cyA, geomA, cxB, cyB, geomB){
+    function drawOverlay(layout, geomA, omegaA, geomB, omegaB, geomC, omegaC){
       ui.overlayGroup.innerHTML = "";
-      if (state.showArrows) {
-        const omegaB = -state.omegaA * (state.teethA / state.teethB);
-        const arrowRadA = (geomA.holeRadius + geomA.innerRadius) / 2;
-        const arrowRadB = (geomB.holeRadius + geomB.innerRadius) / 2;
+      if (!state.showArrows) return;
+
+      const drawArrowsFor = (cx, cy, geom, omega) => {
+        const rad = (geom.holeRadius + geom.innerRadius) / 2;
         for(let i=0; i<3; i++) {
-          ui.overlayGroup.appendChild(drawArrowGroup(cxA, cyA, arrowRadA, i * 120 + (state.omegaA >= 0 ? 0 : 90), 90, state.omegaA >= 0, "#4a5a80"));
-          ui.overlayGroup.appendChild(drawArrowGroup(cxB, cyB, arrowRadB, i * 120 + (omegaB >= 0 ? 0 : 90), 90, omegaB >= 0, "#4a5a80"));
+          ui.overlayGroup.appendChild(drawArrowGroup(cx, cy, rad, i*120 + (omega>=0?0:90), 90, omega>=0, "#4a5a80"));
         }
+      };
+
+      drawArrowsFor(layout.cxA, layout.cyA, geomA, omegaA);
+      if(state.hasGearC) drawArrowsFor(layout.cxC, layout.cyC, geomC, omegaC);
+      drawArrowsFor(layout.cxB, layout.cyB, geomB, omegaB);
+    }
+
+    function computeLayout(geomA, geomB, geomC){
+      const totalWidth = state.hasGearC 
+        ? (geomA.pitchRadius*2 + geomC.pitchRadius*2 + geomB.pitchRadius*2)
+        : (geomA.pitchRadius*2 + geomB.pitchRadius*2);
+      
+      const cy = document.fullscreenElement ? 360 : 390; 
+      const cxA = (1400 - totalWidth) / 2 + geomA.pitchRadius;
+      
+      if(state.hasGearC) {
+        const cxC = cxA + geomA.pitchRadius + geomC.pitchRadius;
+        const cxB = cxC + geomC.pitchRadius + geomB.pitchRadius;
+        return { cxA, cyA: cy, cxB, cyB: cy, cxC, cyC: cy };
+      } else {
+        const cxB = cxA + geomA.pitchRadius + geomB.pitchRadius;
+        return { cxA, cyA: cy, cxB, cyB: cy };
       }
     }
 
-    function computeLayout(geomA, geomB){
-      const totalWidth = geomA.outerRadius + geomA.pitchRadius + geomB.pitchRadius + geomB.outerRadius;
-      const cxA = (1400 - totalWidth) / 2 + geomA.outerRadius;
-      const cyA = document.fullscreenElement ? 360 : 390; 
-      const cxB = cxA + geomA.pitchRadius + geomB.pitchRadius;
-      return { cxA, cyA, cxB, cyB: cyA };
-    }
-
     function render(){
-      const dynamicModule = computeDynamicModule(state.teethA, state.teethB);
+      const dynamicModule = computeDynamicModule(state.teethA, state.teethB, state.teethC, state.hasGearC);
       const geomA = buildGearGeometry(state.teethA, dynamicModule);
       const geomB = buildGearGeometry(state.teethB, dynamicModule);
+      const geomC = state.hasGearC ? buildGearGeometry(state.teethC, dynamicModule) : null;
       
-      const phases = computePhaseOffset(geomA, geomB);
-      state.layout = computeLayout(geomA, geomB);
-      const omegaB = -state.omegaA * (state.teethA / state.teethB);
+      const phases = computePhaseOffsets(state.teethA, state.teethB, state.teethC, state.hasGearC);
+      state.layout = computeLayout(geomA, geomB, geomC);
+      
+      const angleA = state.angleA;
+      const omegaA = state.omegaA;
+      
+      let angleB, omegaB, angleC, omegaC;
+      if (state.hasGearC) {
+        angleC = angleA * (-state.teethA / state.teethC);
+        omegaC = omegaA * (-state.teethA / state.teethC);
+        angleB = angleC * (-state.teethC / state.teethB); 
+        omegaB = omegaC * (-state.teethC / state.teethB);
+      } else {
+        angleB = angleA * (-state.teethA / state.teethB);
+        omegaB = omegaA * (-state.teethA / state.teethB);
+        angleC = 0; omegaC = 0;
+      }
 
-      buildGearGroup(ui.gearAGroup, state.layout.cxA, state.layout.cyA, geomA, state.angleA + phases.phaseA, state.angleA, state.omegaA,
-        "var(--gearA)", "A", "var(--strokeA)");
+      buildGearGroup(ui.gearAGroup, state.layout.cxA, state.layout.cyA, geomA, angleA + phases.phaseA, angleA, omegaA, COLOR_A, "A", STROKE_A);
+      buildGearGroup(ui.gearBGroup, state.layout.cxB, state.layout.cyB, geomB, angleB + phases.phaseB, angleB, omegaB, COLOR_B, "B", STROKE_B);
+      
+      if(state.hasGearC) {
+        ui.gearCGroup.style.display = "block";
+        buildGearGroup(ui.gearCGroup, state.layout.cxC, state.layout.cyC, geomC, angleC + phases.phaseC, angleC, omegaC, COLOR_C, "C", STROKE_C);
+      } else {
+        ui.gearCGroup.style.display = "none";
+      }
 
-      buildGearGroup(ui.gearBGroup, state.layout.cxB, state.layout.cyB, geomB, state.angleB + phases.phaseB, state.angleB, omegaB,
-        "var(--gearB)", "B", "var(--strokeB)");
-
-      drawOverlay(state.layout.cxA, state.layout.cyA, geomA, state.layout.cxB, state.layout.cyB, geomB);
+      drawOverlay(state.layout, geomA, omegaA, geomB, omegaB, geomC, omegaC);
       updateInfo();
     }
 
     function resetAngles(){
       state.angleA = 0;
-      state.angleB = 0;
       state.oneTurnMode = false;
       render();
     }
 
     window.changeTeeth = function(gear, delta) {
-      if(gear === 'A') updateTeeth(state.teethA + delta, state.teethB);
-      else updateTeeth(state.teethA, state.teethB + delta);
+      if(gear === 'A') updateTeeth(state.teethA + delta, state.teethB, state.teethC);
+      else if(gear === 'B') updateTeeth(state.teethA, state.teethB + delta, state.teethC);
+      else if(gear === 'C') updateTeeth(state.teethA, state.teethB, state.teethC + delta);
     };
 
-    function updateTeeth(valA, valB){
+    function updateTeeth(valA, valB, valC){
       state.teethA = clamp(valA || 12, 8, 60);
       state.teethB = clamp(valB || 24, 8, 60);
-      ui.teethA.value = state.teethA;
-      ui.teethB.value = state.teethB;
-      ui.fsTeethA.value = state.teethA;
-      ui.fsTeethB.value = state.teethB;
+      state.teethC = clamp(valC || 16, 8, 60);
+      ui.teethA.value = state.teethA; ui.fsTeethA.value = state.teethA;
+      ui.teethB.value = state.teethB; ui.fsTeethB.value = state.teethB;
+      ui.teethC.value = state.teethC; ui.fsTeethC.value = state.teethC;
       resetAngles(); 
     }
 
-    ui.teethA.addEventListener("input", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB));
-    ui.teethB.addEventListener("input", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10)));
-    ui.fsTeethA.addEventListener("input", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB));
-    ui.fsTeethB.addEventListener("input", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10)));
+    ui.teethA.addEventListener("input", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB, state.teethC));
+    ui.teethB.addEventListener("input", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10), state.teethC));
+    ui.teethC.addEventListener("input", (e) => updateTeeth(state.teethA, state.teethB, parseInt(e.target.value, 10)));
+    ui.fsTeethA.addEventListener("input", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB, state.teethC));
+    ui.fsTeethB.addEventListener("input", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10), state.teethC));
+    ui.fsTeethC.addEventListener("input", (e) => updateTeeth(state.teethA, state.teethB, parseInt(e.target.value, 10)));
+
+    function toggleGearC(checked) {
+      state.hasGearC = checked;
+      ui.panelHasGearC.checked = checked;
+      ui.fsHasGearC.checked = checked;
+      if(checked) {
+        ui.rowGearC.classList.remove("hidden");
+        ui.fsRowGearC.classList.remove("hidden");
+      } else {
+        ui.rowGearC.classList.add("hidden");
+        ui.fsRowGearC.classList.add("hidden");
+      }
+      resetAngles();
+    }
+    ui.panelHasGearC.addEventListener("change", (e) => toggleGearC(e.target.checked));
+    ui.fsHasGearC.addEventListener("change", (e) => toggleGearC(e.target.checked));
 
     window.changeSpeed = function(delta) { setSpeed(state.omegaA + delta); };
-
     function setSpeed(v){
-      state.omegaA = Math.round(clamp(v, -120, 120));
+      state.omegaA = Math.round(clamp(v, -360, 360));
       ui.speedNumber.value = state.omegaA;
       ui.fsSpeed.value = state.omegaA; 
-      // Le render() est géré par la boucle d'animation
     }
 
     ui.speedNumber.addEventListener("input", (e) => { let val = parseInt(e.target.value, 10); if(!isNaN(val)) setSpeed(val); });
@@ -740,7 +824,6 @@
       ui.playPauseBtn.textContent = icon;
       ui.fsPlayPauseBtn.textContent = icon;
     }
-
     ui.playPauseBtn.addEventListener("click", togglePlay);
     ui.fsPlayPauseBtn.addEventListener("click", togglePlay);
 
@@ -753,23 +836,17 @@
       state.oneTurnMode = true;
       state.oneTurnTarget = state.angleA + direction * 360 * turnsOfA;
       state.playing = true;
-      ui.playPauseBtn.textContent = "⏸";
-      ui.fsPlayPauseBtn.textContent = "⏸";
+      ui.playPauseBtn.textContent = "⏸"; ui.fsPlayPauseBtn.textContent = "⏸";
     }
-
     ui.panelOneTurnABtn.addEventListener("click", () => doOneTurn('A'));
     ui.fsOneTurnABtn.addEventListener("click", () => doOneTurn('A'));
     ui.panelOneTurnBBtn.addEventListener("click", () => doOneTurn('B'));
     ui.fsOneTurnBBtn.addEventListener("click", () => doOneTurn('B'));
 
     function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        stageWrap.requestFullscreen().catch(err => console.error(err));
-      } else {
-        document.exitFullscreen();
-      }
+      if (!document.fullscreenElement) { stageWrap.requestFullscreen().catch(err => console.error(err)); } 
+      else { document.exitFullscreen(); }
     }
-
     ui.fullscreenBtn.addEventListener("click", toggleFullscreen);
     ui.fsFullscreenBtn.addEventListener("click", toggleFullscreen);
 
@@ -797,8 +874,10 @@
       isDragging = true; draggedGear = gearId; wasPlayingBeforeDrag = state.playing; state.playing = false; 
       ui.playPauseBtn.textContent = "▶"; ui.fsPlayPauseBtn.textContent = "▶";
       const coords = getMouseCoords(e);
-      const cx = gearId === "A" ? state.layout.cxA : state.layout.cxB;
-      const cy = gearId === "A" ? state.layout.cyA : state.layout.cyB;
+      let cx, cy;
+      if(gearId === 'A') { cx = state.layout.cxA; cy = state.layout.cyA; }
+      else if(gearId === 'B') { cx = state.layout.cxB; cy = state.layout.cyB; }
+      else { cx = state.layout.cxC; cy = state.layout.cyC; }
       lastMouseAngle = calculateAngle(coords.x, coords.y, cx, cy);
     }
 
@@ -806,21 +885,31 @@
       if (!isDragging) return;
       e.preventDefault();
       const coords = getMouseCoords(e);
-      const cx = draggedGear === "A" ? state.layout.cxA : state.layout.cxB;
-      const cy = draggedGear === "A" ? state.layout.cyA : state.layout.cyB;
+      let cx, cy;
+      if(draggedGear === 'A') { cx = state.layout.cxA; cy = state.layout.cyA; }
+      else if(draggedGear === 'B') { cx = state.layout.cxB; cy = state.layout.cyB; }
+      else { cx = state.layout.cxC; cy = state.layout.cyC; }
+      
       const currentMouseAngle = calculateAngle(coords.x, coords.y, cx, cy);
       let deltaAngle = currentMouseAngle - lastMouseAngle;
 
       if (deltaAngle > 180) deltaAngle -= 360;
       if (deltaAngle < -180) deltaAngle += 360;
 
-      let newOmega = Math.round((draggedGear === "A" ? deltaAngle : -deltaAngle * (state.teethB / state.teethA)) * 10);
-      state.omegaA = clamp(newOmega, -120, 120);
+      if (draggedGear === "A") {
+        state.angleA += deltaAngle;
+        state.omegaA = clamp(Math.round(deltaAngle * 10), -360, 360);
+      } else if (draggedGear === "B") {
+        let deltaA = state.hasGearC ? deltaAngle * (state.teethB / state.teethA) : -deltaAngle * (state.teethB / state.teethA);
+        state.angleA += deltaA;
+        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);
+      } else if (draggedGear === "C") {
+        let deltaA = -deltaAngle * (state.teethC / state.teethA);
+        state.angleA += deltaA;
+        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);
+      }
+      
       ui.speedNumber.value = state.omegaA; ui.fsSpeed.value = state.omegaA;
-
-      if (draggedGear === "A") { state.angleA += deltaAngle; state.angleB -= deltaAngle * (state.teethA / state.teethB); } 
-      else { state.angleB += deltaAngle; state.angleA -= deltaAngle * (state.teethB / state.teethA); }
-
       lastMouseAngle = currentMouseAngle; render(); 
     }
 
@@ -832,8 +921,10 @@
 
     ui.gearAGroup.addEventListener("mousedown", (e) => onPointerDown(e, "A"));
     ui.gearBGroup.addEventListener("mousedown", (e) => onPointerDown(e, "B"));
+    ui.gearCGroup.addEventListener("mousedown", (e) => onPointerDown(e, "C"));
     ui.gearAGroup.addEventListener("touchstart", (e) => onPointerDown(e, "A"), {passive: false});
     ui.gearBGroup.addEventListener("touchstart", (e) => onPointerDown(e, "B"), {passive: false});
+    ui.gearCGroup.addEventListener("touchstart", (e) => onPointerDown(e, "C"), {passive: false});
 
     window.addEventListener("mousemove", onPointerMove); window.addEventListener("mouseup", onPointerUp);
     window.addEventListener("touchmove", onPointerMove, {passive: false}); window.addEventListener("touchend", onPointerUp);
@@ -846,15 +937,11 @@
       previousTime = timestamp;
 
       if(state.playing && !isDragging){
-        const deltaA = state.omegaA * dt;
-        const deltaB = -deltaA * (state.teethA / state.teethB);
-        state.angleA += deltaA;
-        state.angleB += deltaB;
+        state.angleA += state.omegaA * dt;
 
         if(state.oneTurnMode){
           if((state.omegaA >= 0 && state.angleA >= state.oneTurnTarget) || (state.omegaA < 0 && state.angleA <= state.oneTurnTarget)){
             state.angleA = state.oneTurnTarget;
-            state.angleB = -state.angleA * (state.teethA / state.teethB);
             state.oneTurnMode = false; state.playing = false;
             ui.playPauseBtn.textContent = "▶"; ui.fsPlayPauseBtn.textContent = "▶";
           }
@@ -864,7 +951,9 @@
       requestAnimationFrame(animate);
     }
 
-    init();
+    render(); 
+    requestAnimationFrame(animate);
+
   </script>
 </body>
 </html>
