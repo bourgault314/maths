@@ -164,7 +164,6 @@
       font-weight: 500; margin-bottom: 0;
     }
     .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); margin:0; }
-    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     .float-btn{
       width:44px; height:44px; border-radius:12px; border:none;
@@ -249,10 +248,10 @@
       <div class="block">
         <h2>Animation</h2>
         <div class="control-row" style="margin-bottom: 6px;">
-          <label>Vitesse (°/s)</label>
+          <label>Vitesse <span id="panelDirText" style="color:var(--accent); font-weight:normal; font-size:0.85em;"></span></label>
           <div class="input-group">
             <button class="btn-pm" onclick="changeSpeed(-10)">−</button>
-            <input type="number" id="speedNumber" class="val-input" value="20" min="-360" max="360" step="10">
+            <input type="number" id="speedNumber" class="val-input" value="20" min="0" max="360" step="10">
             <button class="btn-pm" onclick="changeSpeed(10)">+</button>
           </div>
         </div>
@@ -338,10 +337,10 @@
             </div>
 
             <div class="fs-row" style="border-top: 1px solid #dbe4f3; padding-top: 10px;">
-              <span class="fs-label">Vitesse (°/s)</span>
+              <span class="fs-label">Vitesse <span id="fsDirText" style="color:var(--accent); font-weight:normal; font-size:0.85em;"></span></span>
               <div class="input-group">
                 <button class="btn-pm" onclick="changeSpeed(-10)">−</button>
-                <input type="number" id="fsSpeed" class="val-input" value="20" min="-360" max="360" step="10">
+                <input type="number" id="fsSpeed" class="val-input" value="20" min="0" max="360" step="10">
                 <button class="btn-pm" onclick="changeSpeed(10)">+</button>
               </div>
             </div>
@@ -409,7 +408,12 @@
       teethC: 16,
       hasGearC: false,
       angleA: 0,
-      omegaA: 20, // Vitesse par défaut à 20 °/s
+      
+      // Séparation de la valeur absolue (magnitude) et de la direction (1 ou -1)
+      speedMagnitude: 20, 
+      speedDirection: 1,  
+      omegaA: 20, 
+      
       playing: true,
       oneTurnMode: false,
       oneTurnTarget: 0,
@@ -438,6 +442,8 @@
 
       speedNumber: document.getElementById("speedNumber"),
       fsSpeed: document.getElementById("fsSpeed"),
+      panelDirText: document.getElementById("panelDirText"),
+      fsDirText: document.getElementById("fsDirText"),
       
       playPauseBtn: document.getElementById("playPauseBtn"),
       fsPlayPauseBtn: document.getElementById("fsPlayPauseBtn"),
@@ -484,7 +490,7 @@
     ui.fsTeethA.value = state.teethA;
     ui.fsTeethB.value = state.teethB;
     ui.fsTeethC.value = state.teethC;
-    ui.fsSpeed.value = state.omegaA;
+    ui.fsSpeed.value = state.speedMagnitude;
 
     ui.panelShowInfos.addEventListener("change", (e) => {
       ui.infosPanel.style.display = e.target.checked ? "block" : "none";
@@ -514,6 +520,11 @@
     function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }
     function simplifiedFraction(n, d){ const g = gcd(n, d); return { n: n / g, d: d / g }; }
 
+    function getDirectionText(dir) {
+      if (state.speedMagnitude === 0) return "";
+      return dir > 0 ? "(Horaire ↻)" : "(Anti-horaire ↺)";
+    }
+
     function updateInfo(){
       const ratio = state.teethA / state.teethB;
       const frac = simplifiedFraction(state.teethA, state.teethB);
@@ -522,13 +533,19 @@
       
       let formulaHTML = "";
       if (state.hasGearC) {
-        ui.directionText.innerHTML = `La roue C inverse le mouvement.<br>A et B tournent dans le <strong>MÊME SENS</strong>.`;
+        ui.directionText.innerHTML = `La roue C (verte) inverse le mouvement.<br>A et B tournent dans le <strong>MÊME SENS</strong>.`;
         formulaHTML = `<strong>Le rapport final ne dépend que de A et B !</strong><br>Vitesse B = Vitesse A × (Dents A / Dents C) × (Dents C / Dents B) = Vitesse A × (${state.teethA}/${state.teethB})<br><br><strong>Exemple :</strong> Si A fait <strong>1 tour</strong>, B fait <strong>${formatNumber(Math.abs(ratio))}</strong> tour(s). (Fraction simplifiée A/B : <strong>${frac.n}/${frac.d}</strong>)`;
       } else {
         ui.directionText.innerHTML = `Les deux roues tournent en <strong>SENS INVERSES</strong>.`;
-        formulaHTML = `Vitesse Sortie (B) = - Vitesse Moteur (A) × (Dents A / Dents B)<br><br><strong>Exemple :</strong> Si A fait <strong>1 tour</strong>, B fait <strong>${formatNumber(Math.abs(ratio))}</strong> tour(s). (Fraction simplifiée : <strong>${frac.n}/${frac.d}</strong>)`;
+        // Formule purement absolue (sans le moins) pour éviter la confusion
+        formulaHTML = `Vitesse Sortie (B) = Vitesse Moteur (A) × (Dents A / Dents B)<br><br><strong>Exemple :</strong> Si A fait <strong>1 tour</strong>, B fait <strong>${formatNumber(Math.abs(ratio))}</strong> tour(s). (Fraction simplifiée : <strong>${frac.n}/${frac.d}</strong>)`;
       }
       ui.formulaText.innerHTML = formulaHTML;
+
+      // Mise à jour des textes Horaire / Anti-horaire dans les menus
+      const dirTxt = getDirectionText(state.speedDirection);
+      ui.panelDirText.textContent = dirTxt;
+      ui.fsDirText.textContent = dirTxt;
     }
 
     function computeDynamicModule(tA, tB, tC, hasC) {
@@ -601,7 +618,7 @@
     }
 
     function drawArrowGroup(cx, cy, r, startDeg, sweepDeg, isCW, color) {
-        if(state.omegaA === 0) return createSVG("g");
+        if(state.speedMagnitude === 0) return createSVG("g");
         const endDeg = isCW ? startDeg + sweepDeg : startDeg - sweepDeg;
         const arcEndOffset = isCW ? -6 : 6; 
         const pathData = describeArcArrow(cx, cy, r, startDeg, endDeg + arcEndOffset, isCW);
@@ -684,7 +701,13 @@
           x: cx, y: textY, "text-anchor": "middle", "font-size": document.fullscreenElement ? "22" : "18",
           "font-weight": "600", fill: "#5a6784", "pointer-events": "none"
         });
-        speedText.textContent = `Vitesse : ${Math.round(currentSpeed)} °/s`;
+        // Affichage de la vitesse absolue avec l'indication explicite du sens
+        const speedAbs = Math.round(Math.abs(currentSpeed));
+        let dirString = "";
+        if (speedAbs > 0) {
+            dirString = currentSpeed > 0 ? " (Horaire ↻)" : " (Anti-horaire ↺)";
+        }
+        speedText.textContent = `Vitesse : ${speedAbs} °/s ${dirString}`;
         target.appendChild(speedText);
       }
     }
@@ -733,7 +756,7 @@
       state.layout = computeLayout(geomA, geomB, geomC);
       
       const angleA = state.angleA;
-      const omegaA = state.omegaA;
+      const omegaA = state.omegaA; // Ceci contient déjà le sens (positif ou négatif)
       
       let angleB, omegaB, angleC, omegaC;
       if (state.hasGearC) {
@@ -806,22 +829,32 @@
     ui.panelHasGearC.addEventListener("change", (e) => toggleGearC(e.target.checked));
     ui.fsHasGearC.addEventListener("change", (e) => toggleGearC(e.target.checked));
 
-    window.changeSpeed = function(delta) { setSpeed(state.omegaA + delta); };
+    // NOUVELLE LOGIQUE DE VITESSE ABSOLUE (0 à 360)
+    window.changeSpeed = function(delta) { setSpeed(state.speedMagnitude + delta); };
+    
     function setSpeed(v){
-      state.omegaA = Math.round(clamp(v, -360, 360));
-      ui.speedNumber.value = state.omegaA;
-      ui.fsSpeed.value = state.omegaA; 
+      state.speedMagnitude = clamp(Math.abs(Math.round(v)), 0, 360);
+      state.omegaA = state.speedMagnitude * state.speedDirection;
+      ui.speedNumber.value = state.speedMagnitude;
+      ui.fsSpeed.value = state.speedMagnitude; 
+      render();
     }
 
     ui.speedNumber.addEventListener("input", (e) => { let val = parseInt(e.target.value, 10); if(!isNaN(val)) setSpeed(val); });
     ui.fsSpeed.addEventListener("input", (e) => { let val = parseInt(e.target.value, 10); if(!isNaN(val)) setSpeed(val); });
     
     document.querySelectorAll("[data-speed-step]").forEach(btn => {
-      btn.addEventListener("click", () => setSpeed(state.omegaA + parseInt(btn.dataset.speedStep, 10)));
+      btn.addEventListener("click", () => setSpeed(state.speedMagnitude + parseInt(btn.dataset.speedStep, 10)));
     });
     
     document.getElementById("speedZeroBtn").addEventListener("click", () => setSpeed(0));
-    ui.reverseBtn.addEventListener("click", () => setSpeed(-state.omegaA));
+    
+    // Le bouton Inverser ne fait que changer le signe du sens
+    ui.reverseBtn.addEventListener("click", () => {
+      state.speedDirection *= -1;
+      state.omegaA = state.speedMagnitude * state.speedDirection;
+      render();
+    });
 
     function syncCheckboxes(stateKey, id1, id2) {
       ui[id1].addEventListener("change", (e) => { state[stateKey] = e.target.checked; ui[id2].checked = e.target.checked; render(); });
@@ -847,7 +880,8 @@
     ui.fsResetBtn.addEventListener("click", resetAngles);
 
     function doOneTurn(gear) {
-      const direction = state.omegaA >= 0 ? 1 : -1;
+      // Sens de rotation calculé sur la direction actuelle
+      const direction = state.speedDirection; 
       const turnsOfA = gear === 'A' ? 1 : (state.teethB / state.teethA); 
       state.oneTurnMode = true;
       state.oneTurnTarget = state.angleA + direction * 360 * turnsOfA;
@@ -914,20 +948,19 @@
       if (deltaAngle > 180) deltaAngle -= 360;
       if (deltaAngle < -180) deltaAngle += 360;
 
-      if (draggedGear === "A") {
-        state.angleA += deltaAngle;
-        state.omegaA = clamp(Math.round(deltaAngle * 10), -360, 360);
-      } else if (draggedGear === "B") {
-        let deltaA = state.hasGearC ? deltaAngle * (state.teethB / state.teethA) : -deltaAngle * (state.teethB / state.teethA);
-        state.angleA += deltaA;
-        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);
-      } else if (draggedGear === "C") {
-        let deltaA = -deltaAngle * (state.teethC / state.teethA);
-        state.angleA += deltaA;
-        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);
-      }
+      let newOmega = Math.round((draggedGear === "A" ? deltaAngle : -deltaAngle * (state.teethB / state.teethA)) * 10);
       
-      ui.speedNumber.value = state.omegaA; ui.fsSpeed.value = state.omegaA;
+      // On met à jour la direction selon le glissement de la souris, sans que la vitesse n'affiche de moins.
+      if (newOmega !== 0) state.speedDirection = newOmega > 0 ? 1 : -1;
+      state.speedMagnitude = clamp(Math.abs(newOmega), 0, 360);
+      state.omegaA = state.speedMagnitude * state.speedDirection;
+      
+      ui.speedNumber.value = state.speedMagnitude; 
+      ui.fsSpeed.value = state.speedMagnitude;
+
+      if (draggedGear === "A") { state.angleA += deltaAngle; state.angleB -= deltaAngle * (state.teethA / state.teethB); } 
+      else { state.angleB += deltaAngle; state.angleA -= deltaAngle * (state.teethB / state.teethA); }
+
       lastMouseAngle = currentMouseAngle; render(); 
     }
 
@@ -958,7 +991,8 @@
         state.angleA += state.omegaA * dt;
 
         if(state.oneTurnMode){
-          if((state.omegaA >= 0 && state.angleA >= state.oneTurnTarget) || (state.omegaA < 0 && state.angleA <= state.oneTurnTarget)){
+          // Vérification selon le sens de rotation actuel
+          if((state.speedDirection >= 0 && state.angleA >= state.oneTurnTarget) || (state.speedDirection < 0 && state.angleA <= state.oneTurnTarget)){
             state.angleA = state.oneTurnTarget;
             state.oneTurnMode = false; state.playing = false;
             ui.playPauseBtn.textContent = "▶"; ui.fsPlayPauseBtn.textContent = "▶";
