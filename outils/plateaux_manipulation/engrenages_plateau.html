@@ -273,6 +273,13 @@
           <label class="checkbox-row"><input type="checkbox" id="panelShowTurns"> ⏱️ Tours</label>
           <label class="checkbox-row"><input type="checkbox" id="panelShowSpeed"> ⚡ Vitesse</label>
         </div>
+        <div style="margin-top: 10px; display:flex; align-items:center; gap:10px;">
+          <label for="panelMarkerMode" style="font-weight:600; color:#20304b;">Position du repère</label>
+          <select id="panelMarkerMode" class="val-input" style="width:auto; min-width:170px;">
+            <option value="top">Repères à midi</option>
+            <option value="facing">Repères en face</option>
+          </select>
+        </div>
         <div style="margin-top: 10px; border-top: 1px solid #dbe4f3; padding-top: 10px;">
           <label class="checkbox-row"><input type="checkbox" id="panelShowInfos" checked> 📝 Explications texte</label>
         </div>
@@ -357,6 +364,13 @@
               <label class="checkbox-row"><input type="checkbox" id="fsShowTurns"> ⏱️ Tours</label>
               <label class="checkbox-row"><input type="checkbox" id="fsShowSpeed"> ⚡ Vitesse</label>
             </div>
+            <div style="margin-top: 10px; display:flex; align-items:center; gap:10px;">
+              <label for="fsMarkerMode" style="font-weight:600; color:#20304b;">Position du repère</label>
+              <select id="fsMarkerMode" class="val-input" style="width:auto; min-width:170px;">
+                <option value="top">Repères à midi</option>
+                <option value="facing">Repères en face</option>
+              </select>
+            </div>
             
           </div>
         </div>
@@ -420,6 +434,7 @@
       layout: { cxA: 0, cyA: 0, cxB: 0, cyB: 0, cxC: 0, cyC: 0 },
       showArrows: false,
       showMarker: false,
+      markerMode: "top",
       showLabels: true,
       showPitch: false,
       showTurns: false,
@@ -461,6 +476,7 @@
       
       panelShowArrows: document.getElementById("panelShowArrows"),
       panelShowMarker: document.getElementById("panelShowMarker"),
+      panelMarkerMode: document.getElementById("panelMarkerMode"),
       panelShowLabels: document.getElementById("panelShowLabels"),
       panelShowPitch: document.getElementById("panelShowPitch"),
       panelShowTurns: document.getElementById("panelShowTurns"),
@@ -470,6 +486,7 @@
       
       fsShowArrows: document.getElementById("fsShowArrows"),
       fsShowMarker: document.getElementById("fsShowMarker"),
+      fsMarkerMode: document.getElementById("fsMarkerMode"),
       fsShowLabels: document.getElementById("fsShowLabels"),
       fsShowTurns: document.getElementById("fsShowTurns"),
       fsShowSpeed: document.getElementById("fsShowSpeed"),
@@ -491,6 +508,8 @@
     ui.fsTeethB.value = state.teethB;
     ui.fsTeethC.value = state.teethC;
     ui.fsSpeed.value = state.speedMagnitude;
+    ui.panelMarkerMode.value = state.markerMode;
+    ui.fsMarkerMode.value = state.markerMode;
 
     ui.panelShowInfos.addEventListener("change", (e) => {
       ui.infosPanel.style.display = e.target.checked ? "block" : "none";
@@ -655,6 +674,59 @@
       return { phaseA, phaseB, phaseC };
     }
 
+    function getMarkerBaseAngle(label){
+      if (state.markerMode !== "facing") return 0;
+      if (!state.hasGearC) {
+        if (label === "A") return 90;
+        if (label === "B") return -90;
+        return 0;
+      }
+      if (label === "A") return 90;
+      if (label === "B") return -90;
+      return 0;
+    }
+
+    function getGearPolygonPoints(geom){
+      const { teeth, toothAngle, rootRadius, outerRadius, pitchRadius } = geom;
+      const pts = [];
+      for(let i = 0; i < teeth; i++){
+        const c = i * toothAngle;
+        pts.push(
+          polar(rootRadius, c - toothAngle * 0.32),
+          polar(pitchRadius, c - toothAngle * 0.245),
+          polar(outerRadius, c - toothAngle * 0.15),
+          polar(outerRadius, c + toothAngle * 0.15),
+          polar(pitchRadius, c + toothAngle * 0.245),
+          polar(rootRadius, c + toothAngle * 0.32)
+        );
+      }
+      return pts;
+    }
+
+    function getMarkerBoundaryRadius(geom, markerRotationDeg){
+      const rayAngle = (markerRotationDeg - 90) * Math.PI / 180;
+      const dx = Math.cos(rayAngle);
+      const dy = Math.sin(rayAngle);
+      const pts = getGearPolygonPoints(geom);
+      let bestT = geom.rootRadius;
+
+      for(let i = 0; i < pts.length; i++){
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % pts.length];
+        const sx = p2.x - p1.x;
+        const sy = p2.y - p1.y;
+        const denom = dx * sy - dy * sx;
+        if (Math.abs(denom) < 1e-9) continue;
+
+        const t = (p1.x * sy - p1.y * sx) / denom;
+        const u = (p1.x * dy - p1.y * dx) / denom;
+        if (t >= 0 && u >= 0 && u <= 1) {
+          bestT = Math.max(bestT, t);
+        }
+      }
+      return bestT;
+    }
+
     function buildGearGroup(target, cx, cy, geom, visualAngleDeg, rawAngleDeg, currentSpeed, fillColorCSS, label, strokeColorCSS){
       target.innerHTML = "";
       const group = createSVG("g", { transform: `translate(${cx} ${cy}) rotate(${visualAngleDeg})` });
@@ -662,7 +734,33 @@
       group.appendChild(createSVG("path", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "2.4", filter: "url(#softShadow)" }));
 
       if (state.showMarker) {
-        group.appendChild(createSVG("path", { d: singleToothPath(geom, 0), fill: "var(--marker)", stroke: "#ffffff", "stroke-width": "1.8" }));
+        const markerBaseAngle = getMarkerBaseAngle(label);
+        const markerRotation = markerBaseAngle + rawAngleDeg - visualAngleDeg;
+        const markerGroup = createSVG("g", { transform: `rotate(${markerRotation})` });
+        const markerTipGap = Math.max(2.8, geom.modulePx * 0.16);
+        const markerStart = -(geom.holeRadius - 0.5);
+        const boundaryRadius = getMarkerBoundaryRadius(geom, markerRotation);
+        const markerEndRadius = Math.max(geom.holeRadius + 6, boundaryRadius - markerTipGap);
+        const markerEnd = -markerEndRadius;
+        markerGroup.appendChild(createSVG("line", {
+          x1: "0",
+          y1: markerStart.toFixed(2),
+          x2: "0",
+          y2: markerEnd.toFixed(2),
+          stroke: "#ffffff",
+          "stroke-width": (geom.modulePx * 0.62).toFixed(2),
+          "stroke-linecap": "round"
+        }));
+        markerGroup.appendChild(createSVG("line", {
+          x1: "0",
+          y1: markerStart.toFixed(2),
+          x2: "0",
+          y2: markerEnd.toFixed(2),
+          stroke: "var(--marker)",
+          "stroke-width": (geom.modulePx * 0.34).toFixed(2),
+          "stroke-linecap": "round"
+        }));
+        group.appendChild(markerGroup);
       }
       if (state.showPitch) {
         group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.pitchRadius.toFixed(2), fill: "none", stroke: "rgba(93,104,135,0.25)", "stroke-width": "2", "stroke-dasharray": "6 6" }));
@@ -862,6 +960,11 @@
     }
     syncCheckboxes("showArrows", "panelShowArrows", "fsShowArrows");
     syncCheckboxes("showMarker", "panelShowMarker", "fsShowMarker");
+    function syncSelects(stateKey, id1, id2) {
+      ui[id1].addEventListener("change", (e) => { state[stateKey] = e.target.value; ui[id2].value = e.target.value; render(); });
+      ui[id2].addEventListener("change", (e) => { state[stateKey] = e.target.value; ui[id1].value = e.target.value; render(); });
+    }
+    syncSelects("markerMode", "panelMarkerMode", "fsMarkerMode");
     syncCheckboxes("showLabels", "panelShowLabels", "fsShowLabels");
     syncCheckboxes("showTurns", "panelShowTurns", "fsShowTurns");
     syncCheckboxes("showSpeed", "panelShowSpeed", "fsShowSpeed");
