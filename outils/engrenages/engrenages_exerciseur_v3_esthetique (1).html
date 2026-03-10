@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exerciseur d'engrenages — V3 esthétique</title>
+  <style>
+    :root{
+      --bg:#eef3fb;
+      --panel:#ffffff;
+      --line:#d9e3f2;
+      --line-strong:#c6d5ee;
+      --text:#20304f;
+      --muted:#62718e;
+      --accent:#3f7cff;
+      --accent-soft:#eef4ff;
+      --good:#eaf9ee;
+      --good-line:#b9e3c3;
+      --shadow:0 16px 38px rgba(28,45,82,0.10);
+      --shadow-soft:0 8px 24px rgba(28,45,82,0.08);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);
+    }
+    button,input,select{font:inherit}
+    .app-shell{max-width:1180px;margin:0 auto;padding:20px 18px 28px;display:grid;gap:18px}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+    .generator-panel{padding:28px 28px 22px}
+    .generator-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+    .gear-badge{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#f4efff;font-size:1.35rem}
+    h1{margin:0;font-size:1.95rem;line-height:1.1}
+    .subtitle{margin:8px 0 0;color:var(--muted);font-size:1.02rem}
+    .generator-grid{display:grid;gap:14px}
+    .fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .field,.drawer-box{border:1px solid #e7eef9;border-radius:18px;background:#fbfdff;padding:14px 16px}
+    .field.field-wide{grid-column:1 / -1}
+    .field label,.drawer-title{display:block;font-size:.95rem;font-weight:700;color:#50617f;margin-bottom:8px}
+    select{width:100%;border:1px solid var(--line-strong);border-radius:14px;padding:12px 14px;background:#fff;color:var(--text)}
+    .quick-buttons,.drawer-actions,.action-row,.viewer-actions,.viewer-controls{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:none;border-radius:14px;padding:11px 16px;cursor:pointer;transition:transform .08s ease, opacity .15s ease, background .15s ease;white-space:nowrap}
+    button:hover{opacity:.98} button:active{transform:translateY(1px)}
+    .primary{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 10px 24px rgba(63,124,255,.22)}
+    .secondary{background:#edf3ff;color:var(--text);border:1px solid #d8e4ff;font-weight:700}
+    .ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .link-btn{padding:0;border:none;background:none;color:var(--accent);font-weight:700}
+    .field-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .selected-summary{display:flex;gap:8px;flex-wrap:wrap;min-height:38px;align-items:flex-start}
+    .selection-chip{display:inline-flex;align-items:center;padding:7px 11px;border-radius:999px;background:var(--accent-soft);border:1px solid #d7e3ff;color:#2e4772;font-size:.9rem;font-weight:700}
+    .selection-empty{color:var(--muted);font-size:.93rem;padding:7px 0}
+    .category-drawer{display:none;gap:14px;border:1px solid #e7eef9;border-radius:18px;background:#fbfdff;padding:16px}
+    .category-drawer.open{display:grid}
+    .drawer-note{font-size:.92rem;color:var(--muted);line-height:1.45}
+    .theme-group{display:grid;gap:10px;padding:14px;border:1px solid #e2eaf8;border-radius:16px;background:#ffffff}
+    .theme-title{font-weight:800;color:#243558}
+    .levels{display:flex;gap:8px;flex-wrap:wrap}
+    .level-chip{display:inline-flex;align-items:center;justify-content:center;border:1px solid #d7e3ff;border-radius:12px;background:#f4f8ff;padding:9px 10px;font-size:.9rem;gap:6px;min-width:64px}
+    .level-chip input{margin:0;accent-color:var(--accent)}
+    .small{font-size:.9rem;color:var(--muted);line-height:1.45}
+    .action-row{margin-top:2px}
+
+    .viewer-panel{overflow:hidden}
+    .viewer-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);background:#fbfdff}
+    .viewer-status{text-align:center}
+    .viewer-step{font-size:1.55rem;font-weight:800;line-height:1.1}
+    .viewer-sub{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:var(--accent-soft);border:1px solid #d7e3ff;font-size:.88rem;color:#29406b;font-weight:700}
+    .nav-pill{min-width:126px}
+
+    .question-strip{padding:26px 26px 20px;background:#fff;text-align:center}
+    .question-meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+    .question-title{font-size:1rem;color:#51627f;font-weight:700;margin-bottom:10px}
+    .question-text{font-size:1.18rem;line-height:1.45;font-weight:800;max-width:860px;margin:0 auto}
+
+    .stage-shell{padding:0 18px 16px;background:linear-gradient(180deg,#fff 0%, #f7faff 100%)}
+    iframe{width:100%;height:540px;border:1px solid var(--line);border-radius:22px;background:white;box-shadow:var(--shadow-soft)}
+
+    .thumbs-shell{padding:0 18px 8px;background:#f7faff}
+    .thumbs-title{font-size:.95rem;font-weight:700;color:#51627f;margin:0 0 10px 2px}
+    .series-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+    .series-card{border:1px solid var(--line);border-radius:18px;padding:10px 10px 12px;background:#fcfdff;cursor:pointer;transition:border-color .15s ease, box-shadow .15s ease, transform .08s ease}
+    .series-card:hover{border-color:#b8cdf8}
+    .series-card:active{transform:translateY(1px)}
+    .series-card.active{border-color:#8cb3ff;background:#f4f8ff;box-shadow:inset 0 0 0 1px #b7cffd}
+    .series-card-title{font-weight:800;margin-bottom:6px;font-size:.95rem}
+    .series-card-sub{font-size:.84rem;color:var(--muted);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .mini-svg{width:100%;height:116px;display:block;margin-bottom:8px}
+
+    .viewer-controls{justify-content:center;padding:16px 18px 12px;background:#f7faff}
+    .answer-wrap{padding:0 18px 20px;background:#f7faff}
+    .answer-box{padding:14px 16px;border-radius:18px;border:1px solid var(--good-line);background:var(--good);display:none;max-width:940px;margin:0 auto}
+    .answer-box.show{display:block}
+    .answer-title{font-weight:800;margin-bottom:8px}
+    .answer-text{line-height:1.45}
+    .footer-note{padding:0 8px;color:var(--muted);font-size:.9rem;text-align:center}
+    .print-sheet{display:none}
+
+    .viewer-panel:fullscreen{max-width:none;border-radius:0;border:none}
+    .viewer-panel:fullscreen .stage-shell{padding:0 18px 18px}
+    .viewer-panel:fullscreen iframe{height:68vh;border-radius:20px}
+
+    @media (max-width: 900px){
+      .app-shell{padding:14px}
+      .generator-panel{padding:22px 18px 18px}
+      .fields-grid{grid-template-columns:1fr}
+      .viewer-header{grid-template-columns:1fr;justify-items:center;text-align:center}
+      .viewer-actions{justify-content:center}
+      .nav-pill{min-width:0}
+      iframe{height:420px}
+    }
+    @media print{
+      body{background:white}
+      .generator-panel,.viewer-panel,.footer-note{display:none !important}
+      .print-sheet{display:block !important;padding:0;margin:0}
+      .print-page{page-break-after:always;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:10mm;padding:10mm;min-height:297mm}
+      .print-page:last-child{page-break-after:auto}
+      .print-card{border:1px solid #bcc7da;border-radius:16px;padding:6mm;display:flex;flex-direction:column;justify-content:flex-start;gap:4mm}
+      .print-card h3{margin:0;font-size:12pt}
+      .print-card p{margin:0;font-size:10.5pt;line-height:1.35}
+      .print-meta{font-size:9pt;color:#4b5b7a}
+      .mini-svg{height:36mm;margin:0}
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <section class="panel generator-panel">
+      <div class="generator-head">
+        <div class="gear-badge">⚙️</div>
+        <div>
+          <h1>Générateur d'exercices</h1>
+          <div class="subtitle">Créez une série de questions calibrées pédagogiquement, à projeter ou à imprimer.</div>
+        </div>
+      </div>
+
+      <div class="generator-grid">
+        <div class="fields-grid">
+          <div class="field">
+            <label for="cardCount">Nombre de questions</label>
+            <select id="cardCount">
+              <option value="5">5 questions</option>
+              <option value="6" selected>6 questions</option>
+              <option value="10">10 questions</option>
+              <option value="12">12 questions</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="outputMode">Sortie</label>
+            <select id="outputMode">
+              <option value="projection" selected>Projection</option>
+              <option value="print">Impression / PDF</option>
+            </select>
+          </div>
+
+          <div class="field field-wide">
+            <label>Sélection rapide</label>
+            <div class="quick-buttons">
+              <button class="secondary" id="selectObserver">Observer seul</button>
+              <button class="secondary" id="selectPrevoir">Prévoir seul</button>
+              <button class="secondary" id="selectCalculer">Calculer seul</button>
+            </div>
+          </div>
+
+          <div class="field field-wide">
+            <div class="field-top">
+              <label>Catégories choisies</label>
+              <button class="link-btn" id="toggleCategories" type="button">Choisir précisément</button>
+            </div>
+            <div class="selected-summary" id="selectedSummary"></div>
+          </div>
+        </div>
+
+        <div class="category-drawer" id="categoryDrawer">
+          <div class="drawer-note">Choisis exactement les niveaux à mélanger. La série répartit automatiquement les cartes entre les catégories cochées.</div>
+          <div id="categoryChooser"></div>
+          <div class="drawer-actions">
+            <button class="ghost" id="selectAll">Tout cocher</button>
+            <button class="ghost" id="clearAll">Tout décocher</button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="primary" id="generateBtn">🚀 Générer la série</button>
+          <button class="secondary" id="shuffleBtn">↻ Regénérer</button>
+          <button class="ghost" id="printBtn">🖨️ Imprimer / PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel viewer-panel" id="viewerPanel">
+      <div class="viewer-header">
+        <button class="ghost nav-pill" id="prevBtn">◀ Précédente</button>
+        <div class="viewer-status">
+          <div class="viewer-step" id="cardInfo">Question —</div>
+          <div class="viewer-sub">
+            <span class="badge" id="seriesInfo">Aucune série générée</span>
+          </div>
+        </div>
+        <div class="viewer-actions">
+          <button class="ghost" id="fullscreenBtn">⛶ Plein écran</button>
+          <button class="secondary nav-pill" id="nextBtn">Suivante ▶</button>
+        </div>
+      </div>
+
+      <div class="question-strip">
+        <div class="question-meta" id="questionMeta"></div>
+        <div class="question-title" id="questionTitle">Pas encore de question</div>
+        <div class="question-text" id="questionText">Clique sur <strong>Générer la série</strong> pour produire une première séance.</div>
+      </div>
+
+      <div class="stage-shell">
+        <iframe id="plateauFrame" title="Plateau d'engrenages animé"></iframe>
+      </div>
+
+      <div class="thumbs-shell">
+        <div class="thumbs-title">Série générée</div>
+        <div class="series-list" id="seriesList"></div>
+      </div>
+
+      <div class="viewer-controls">
+        <button class="primary" id="showAnswerBtn">👀 Afficher la réponse</button>
+        <button class="ghost" id="animateOnceBtn">Animer la correction</button>
+        <button class="ghost" id="animatePlayBtn">Lecture</button>
+        <button class="ghost" id="resetStageBtn">Réinitialiser</button>
+      </div>
+
+      <div class="answer-wrap">
+        <div class="answer-box" id="answerBox">
+          <div class="answer-title">Correction</div>
+          <div class="answer-text" id="answerText"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="print-sheet" id="printSheet"></section>
+    <div class="footer-note">Version esthétique V3 — le moteur de génération reste inchangé ; seuls la présentation, la navigation et le rendu des cartes ont été retravaillés.</div>
+  </div>
+
+  <script>
+    const PLATEAU_HTML = "<!DOCTYPE html>\n<html lang=\"fr\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Engrenages</title>\n  <style>\n    :root{\n      --bg:#eef4ff;\n      --panel:#ffffff;\n      --panel-border:#dbe4f3;\n      --text:#1f2a44;\n      --muted:#5a6784;\n      --accent:#3f7cff;\n      --gearA:#79a6ff;\n      --gearB:#f5b35f;\n      --gearC:#8ce071;\n      --marker:#ff4d6d;\n      --shadow:0 10px 28px rgba(31,42,68,0.10);\n      --stage-h:740px;\n      --control-w:400px;\n    }\n\n    *{box-sizing:border-box}\n    body{\n      margin:0;\n      font-family:Arial, Helvetica, sans-serif;\n      color:var(--text);\n      background:linear-gradient(180deg,#f7faff 0%, var(--bg) 100%);\n      min-height:100vh;\n      overflow-x:hidden;\n    }\n\n    header{ padding:16px 18px 12px; }\n    h1{ margin:0; font-size:1.55rem; color: #1f2a44; }\n\n    .app{\n      display:grid;\n      grid-template-columns: var(--control-w) 1fr;\n      gap:16px;\n      padding:0 16px 18px;\n    }\n    .panel{\n      background:var(--panel);\n      border:1px solid var(--panel-border);\n      border-radius:18px;\n      box-shadow:var(--shadow);\n    }\n    .controls{\n      padding:16px;\n      display:flex;\n      flex-direction:column;\n      gap:14px;\n    }\n    .block{\n      border:1px solid #e7edf8;\n      border-radius:14px;\n      padding:12px;\n      background:#fbfdff;\n    }\n    .block h2{ margin:0 0 10px; font-size:1rem; }\n    \n    .control-row {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      margin-bottom: 10px;\n    }\n    .control-row:last-child { margin-bottom: 0; }\n    \n    .input-group {\n      display: flex;\n      align-items: center;\n      gap: 4px;\n    }\n\n    .val-input { \n      width: 46px; \n      text-align: center; \n      border: 1px solid #cfd8ea; \n      border-radius: 8px; \n      padding: 6px 2px; \n      font-size: 1rem; \n      font-weight: bold; \n      color: var(--text);\n      background: white;\n    }\n    .val-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }\n    .val-input::-webkit-outer-spin-button, .val-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }\n    .val-input[type=number] { -moz-appearance: textfield; }\n\n    .btn-pm {\n      width: 30px; height: 30px; border-radius: 8px; border: 1px solid #d7e3ff;\n      background: #eef4ff; color: #29406b; cursor: pointer; font-size: 1.1rem;\n      font-weight: bold; display: flex; align-items: center; justify-content: center;\n      padding: 0; transition: background 0.1s;\n    }\n    .btn-pm:hover { background: #dbe7ff; }\n    .btn-pm:active { transform: translateY(1px); }\n\n    .speed-buttons{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }\n    .mini-btn{\n      padding:6px 10px; border-radius:10px; border:1px solid #d7e3ff;\n      background:#eef4ff; color:#29406b; cursor:pointer; font-size:0.9rem;\n      font-weight: bold; flex-grow: 1; text-align: center;\n    }\n    .mini-btn:hover{ background:#dbe7ff; }\n    \n    .buttons{ display:flex; flex-wrap:wrap; gap:10px; }\n    button{\n      border:none; border-radius:12px; padding:10px 14px; cursor:pointer; font-size:0.95rem;\n      transition:transform 0.08s ease, opacity 0.18s ease;\n    }\n    button:hover{ opacity:0.96; }\n    button:active{ transform:translateY(1px); }\n    .primary{ background:var(--accent); color:white; font-weight:bold; }\n    .secondary{ background:#edf3ff; color:var(--text); border:1px solid #d9e5ff; font-weight:bold; }\n    .ghost{ background:#fff7ec; color:#7a4b00; border:1px solid #ffe0b0; font-weight:bold; }\n    .action-btn { background:#fff0f3; color:#a61d37; border:1px solid #ffd1d9; font-weight:bold; }\n    .action-btn:hover { background:#ffe0e6; }\n\n    .play-btn {\n      width: 44px; height: 44px; padding: 0; font-size: 1.2rem;\n      display: flex; align-items: center; justify-content: center;\n    }\n\n    .stage-panel{\n      display:grid; grid-template-rows: 1fr auto; min-height:var(--stage-h); overflow:hidden;\n    }\n    .stage-wrap{ \n      padding:10px; position:relative; background: white; border-radius: 18px 18px 0 0;\n    }\n    \n    .stage-wrap:fullscreen {\n      padding: 0; border-radius: 0; display: flex; flex-direction: column;\n      justify-content: center; align-items: center;\n      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f6f9ff 48%, #edf3ff 100%);\n    }\n    .stage-wrap:fullscreen svg { border-radius: 0; height: 100vh; width: 100vw; }\n\n    .fullscreen-ui {\n      position: absolute; top: 20px; left: 20px; display: none; flex-direction: column; gap: 10px; z-index: 10;\n    }\n    .stage-wrap:fullscreen .fullscreen-ui { display: flex; }\n    \n    .fs-main-bar {\n      display: flex; gap: 12px; background: rgba(255, 255, 255, 0.94);\n      padding: 8px 12px; border-radius: 14px; border: 1px solid #d6dfef; box-shadow: 0 4px 16px rgba(31,42,68,0.12);\n    }\n    \n    .fs-settings-panel {\n      display: none; \n      flex-direction: column; gap: 14px; background: rgba(255, 255, 255, 0.96);\n      padding: 16px; border-radius: 14px; border: 1px solid #d6dfef; box-shadow: 0 8px 24px rgba(31,42,68,0.15);\n      width: max-content;\n    }\n    .fs-settings-panel.open { display: flex; }\n\n    .fs-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }\n    .fs-label { font-weight: bold; color: #5a6784; font-size: 0.95rem; }\n\n    .checkbox-row {\n      display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.92rem; color: #384665;\n      font-weight: 500; margin-bottom: 0;\n    }\n    .checkbox-row input[type=\"checkbox\"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); margin:0; }\n    .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }\n\n    .float-btn{\n      width:44px; height:44px; border-radius:12px; border:none;\n      background:#edf3ff; color:#3f7cff; cursor:pointer; font-size:1.3rem;\n      display: flex; align-items: center; justify-content: center; padding: 0;\n    }\n    .float-btn:hover { background: #dbe7ff; }\n\n    svg{\n      width:100%; height:100%; min-height:560px; display:block; border-radius:12px;\n      background:radial-gradient(circle at 50% 35%, #ffffff 0%, #f6f9ff 48%, #edf3ff 100%);\n      touch-action:none; \n    }\n    #gearAGroup, #gearBGroup, #gearCGroup { cursor: grab; }\n    #gearAGroup:active, #gearBGroup:active, #gearCGroup:active { cursor: grabbing; }\n\n    .infos{\n      padding:14px 16px 16px; border-top:1px solid var(--panel-border); background:#fcfdff;\n    }\n    .info-grid{\n      display:grid; grid-template-columns: repeat(2, minmax(220px,1fr)); gap:10px;\n    }\n    .card{\n      border:1px solid #e7edf8; border-radius:14px; background:white; padding:12px;\n    }\n    .small{ font-size:0.86rem; color:var(--muted); margin-bottom:6px; }\n    .big{ font-size:1.04rem; font-weight:700; line-height:1.35; }\n    .formula{ font-size:0.98rem; line-height:1.45; }\n    \n    .hidden { display: none !important; }\n\n    @media (max-width: 1050px){\n      .app{ grid-template-columns: 1fr; }\n      svg{ min-height:440px; }\n    }\n  </style>\n\n<style id=\"exerciseurPlateauPatch\">\nheader, .controls, .infos-panel{display:none !important;}\n.app{display:block !important; padding:0 !important;}\n.stage-panel{min-height:auto !important; box-shadow:none !important; border:none !important; background:transparent !important;}\n.stage-wrap{padding:0 !important; min-height:auto !important; background:transparent !important;}\n#stageSvg{width:100% !important; height:520px !important; background:linear-gradient(180deg,#f7faff 0%, #eef4ff 100%) !important;}\nbody{background:white !important; min-height:auto !important; overflow:hidden !important;}\n</style>\n</head>\n<body>\n  <header>\n    <h1>\u2699\ufe0f Engrenages</h1>\n  </header>\n\n  <main class=\"app\">\n    <section class=\"panel controls\">\n      \n      <div class=\"block\">\n        <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;\">\n          <h2 style=\"margin:0;\">M\u00e9canisme</h2>\n          <label class=\"checkbox-row\" style=\"font-size:0.9rem; font-weight:bold; color:var(--accent);\">\n            <input type=\"checkbox\" id=\"panelHasGearC\"> + Roue centrale\n          </label>\n        </div>\n        \n        <div class=\"control-row\">\n          <label>Moteur bleu (A)</label>\n          <div class=\"input-group\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('A', -1)\">\u2212</button>\n            <input type=\"number\" id=\"teethA\" class=\"val-input\" value=\"12\" min=\"8\" max=\"60\" step=\"1\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('A', 1)\">+</button>\n          </div>\n        </div>\n\n        <div class=\"control-row hidden\" id=\"rowGearC\">\n          <label>Roue verte (C)</label>\n          <div class=\"input-group\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('C', -1)\">\u2212</button>\n            <input type=\"number\" id=\"teethC\" class=\"val-input\" value=\"16\" min=\"8\" max=\"60\" step=\"1\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('C', 1)\">+</button>\n          </div>\n        </div>\n\n        <div class=\"control-row\">\n          <label>Sortie orange (B)</label>\n          <div class=\"input-group\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('B', -1)\">\u2212</button>\n            <input type=\"number\" id=\"teethB\" class=\"val-input\" value=\"24\" min=\"8\" max=\"60\" step=\"1\">\n            <button class=\"btn-pm\" onclick=\"changeTeeth('B', 1)\">+</button>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"block\">\n        <h2>Animation</h2>\n        <div class=\"control-row\" style=\"margin-bottom: 6px;\">\n          <label>Vitesse (\u00b0/s)</label>\n          <div class=\"input-group\">\n            <button class=\"btn-pm\" onclick=\"changeSpeed(-10)\">\u2212</button>\n            <input type=\"number\" id=\"speedNumber\" class=\"val-input\" value=\"20\" min=\"-360\" max=\"360\" step=\"10\">\n            <button class=\"btn-pm\" onclick=\"changeSpeed(10)\">+</button>\n          </div>\n        </div>\n        <div class=\"speed-buttons\">\n          <button class=\"mini-btn\" id=\"reverseBtn\">\u21c4 Inverser</button>\n          <button class=\"mini-btn\" data-speed-step=\"-10\">\u221210</button>\n          <button class=\"mini-btn\" data-speed-step=\"10\">+10</button>\n          <button class=\"mini-btn\" id=\"speedZeroBtn\">Stop</button>\n        </div>\n      </div>\n\n      <div class=\"block\">\n        <h2>Affichage sur le plateau</h2>\n        <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px;\">\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowArrows\"> \ud83d\udd04 Fl\u00e8ches</label>\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowMarker\"> \ud83d\udd34 Rep\u00e8re</label>\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowLabels\" checked> \ud83c\udff7\ufe0f Dents</label>\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowPitch\"> \u2b55 Contact</label>\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowTurns\"> \u23f1\ufe0f Tours</label>\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowSpeed\"> \u26a1 Vitesse</label>\n        </div>\n        <div style=\"margin-top: 10px; border-top: 1px solid #dbe4f3; padding-top: 10px;\">\n          <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"panelShowInfos\" checked> \ud83d\udcdd Explications texte</label>\n        </div>\n      </div>\n\n      <div class=\"block\">\n        <h2>Commandes</h2>\n        <div class=\"buttons\">\n          <button id=\"playPauseBtn\" class=\"primary play-btn\" title=\"Lecture/Pause\">\u23f8</button>\n          <button id=\"resetBtn\" class=\"secondary\" style=\"flex-grow:1;\">\u23ee D\u00e9part</button>\n          <button id=\"fullscreenBtn\" class=\"ghost\" style=\"flex-grow:1;\">\u26f6 Plein \u00e9cran</button>\n        </div>\n        <div class=\"buttons\" style=\"margin-top: 10px;\">\n          <button id=\"panelOneTurnABtn\" class=\"action-btn\" style=\"flex-grow:1;\">1 tour A</button>\n          <button id=\"panelOneTurnBBtn\" class=\"action-btn\" style=\"flex-grow:1;\">1 tour B</button>\n        </div>\n      </div>\n    </section>\n\n    <section class=\"panel stage-panel\">\n      <div class=\"stage-wrap\" id=\"stageWrap\">\n        \n        <div class=\"fullscreen-ui\">\n          <div class=\"fs-main-bar\">\n            <button id=\"fsMenuBtn\" class=\"secondary\" style=\"font-weight:bold; padding: 0 16px;\">\u2699\ufe0f Menu</button>\n            <button id=\"fsPlayPauseBtn\" class=\"primary play-btn\">\u23f8</button>\n            <button id=\"fsResetBtn\" class=\"float-btn\" title=\"Remettre au d\u00e9part\">\u23ee</button>\n            <button id=\"fsFullscreenBtn\" class=\"float-btn\" title=\"Quitter le Plein \u00e9cran\">\ud83d\uddd7</button>\n          </div>\n\n          <div id=\"fsSettingsPanel\" class=\"fs-settings-panel\">\n            \n            <label class=\"checkbox-row\" style=\"padding-bottom:10px; border-bottom:1px solid #dbe4f3; color:var(--accent); font-weight:bold;\">\n              <input type=\"checkbox\" id=\"fsHasGearC\"> + Ins\u00e9rer une roue centrale\n            </label>\n\n            <div class=\"fs-row\">\n              <span class=\"fs-label\">Dents A (Bleu)</span>\n              <div class=\"input-group\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('A', -1)\">\u2212</button>\n                <input type=\"number\" id=\"fsTeethA\" class=\"val-input\" min=\"8\" max=\"60\" step=\"1\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('A', 1)\">+</button>\n              </div>\n            </div>\n\n            <div class=\"fs-row hidden\" id=\"fsRowGearC\">\n              <span class=\"fs-label\">Dents C (Vert)</span>\n              <div class=\"input-group\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('C', -1)\">\u2212</button>\n                <input type=\"number\" id=\"fsTeethC\" class=\"val-input\" min=\"8\" max=\"60\" step=\"1\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('C', 1)\">+</button>\n              </div>\n            </div>\n            \n            <div class=\"fs-row\">\n              <span class=\"fs-label\">Dents B (Orange)</span>\n              <div class=\"input-group\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('B', -1)\">\u2212</button>\n                <input type=\"number\" id=\"fsTeethB\" class=\"val-input\" min=\"8\" max=\"60\" step=\"1\">\n                <button class=\"btn-pm\" onclick=\"changeTeeth('B', 1)\">+</button>\n              </div>\n            </div>\n\n            <div class=\"fs-row\" style=\"border-top: 1px solid #dbe4f3; padding-top: 10px;\">\n              <span class=\"fs-label\">Vitesse (\u00b0/s)</span>\n              <div class=\"input-group\">\n                <button class=\"btn-pm\" onclick=\"changeSpeed(-10)\">\u2212</button>\n                <input type=\"number\" id=\"fsSpeed\" class=\"val-input\" value=\"20\" min=\"-360\" max=\"360\" step=\"10\">\n                <button class=\"btn-pm\" onclick=\"changeSpeed(10)\">+</button>\n              </div>\n            </div>\n\n            <div class=\"fs-row\">\n              <button id=\"fsOneTurnABtn\" class=\"action-btn\" style=\"flex-grow:1; padding:8px;\">1 tour A</button>\n              <button id=\"fsOneTurnBBtn\" class=\"action-btn\" style=\"flex-grow:1; padding:8px; margin-left:8px;\">1 tour B</button>\n            </div>\n\n            <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid #dbe4f3; padding-top: 10px;\">\n              <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"fsShowArrows\"> \ud83d\udd04 Fl\u00e8ches</label>\n              <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"fsShowMarker\"> \ud83d\udd34 Rep\u00e8re</label>\n              <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"fsShowLabels\" checked> \ud83c\udff7\ufe0f Dents</label>\n              <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"fsShowTurns\"> \u23f1\ufe0f Tours</label>\n              <label class=\"checkbox-row\"><input type=\"checkbox\" id=\"fsShowSpeed\"> \u26a1 Vitesse</label>\n            </div>\n            \n          </div>\n        </div>\n\n        <svg id=\"svgStage\" viewBox=\"0 0 1400 820\" aria-label=\"Simulation d'engrenages\">\n          <defs>\n            <filter id=\"softShadow\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"140%\">\n              <feDropShadow dx=\"0\" dy=\"4\" stdDeviation=\"6\" flood-opacity=\"0.14\"/>\n            </filter>\n          </defs>\n          <g id=\"gearAGroup\" data-id=\"A\"></g>\n          <g id=\"gearCGroup\" data-id=\"C\"></g>\n          <g id=\"gearBGroup\" data-id=\"B\"></g>\n          <g id=\"overlayGroup\"></g>\n        </svg>\n      </div>\n\n      <div class=\"infos\" id=\"infosPanel\">\n        <div class=\"info-grid\">\n          <div class=\"card\">\n            <div class=\"small\">Rapport de transmission</div>\n            <div id=\"ratioText\" class=\"big\"></div>\n          </div>\n          <div class=\"card\">\n            <div class=\"small\">Sens de rotation</div>\n            <div id=\"directionText\" class=\"big\"></div>\n          </div>\n          <div class=\"card\" style=\"grid-column: 1 / -1;\">\n            <div class=\"small\">Principe math\u00e9matique & Exemple</div>\n            <div id=\"formulaText\" class=\"formula\"></div>\n          </div>\n        </div>\n      </div>\n    </section>\n  </main>\n\n  <script>\n    const svgNS = \"http://www.w3.org/2000/svg\";\n    const svgStage = document.getElementById(\"svgStage\");\n    const stageWrap = document.getElementById(\"stageWrap\");\n\n    const COLOR_A = \"#79a6ff\", STROKE_A = \"#4968b8\";\n    const COLOR_B = \"#f5b35f\", STROKE_B = \"#7c5a22\";\n    const COLOR_C = \"#8ce071\", STROKE_C = \"#4b9c32\";\n\n    const state = {\n      teethA: 12,\n      teethB: 24,\n      teethC: 16,\n      hasGearC: false,\n      angleA: 0,\n      omegaA: 20, // Vitesse par d\u00e9faut \u00e0 20 \u00b0/s\n      playing: true,\n      oneTurnMode: false,\n      oneTurnTarget: 0,\n      layout: { cxA: 0, cyA: 0, cxB: 0, cyB: 0, cxC: 0, cyC: 0 },\n      showArrows: false,\n      showMarker: false,\n      showLabels: true,\n      showPitch: false,\n      showTurns: false,\n      showSpeed: false,\n      fsMenuOpen: false\n    };\n\n    const ui = {\n      teethA: document.getElementById(\"teethA\"),\n      teethB: document.getElementById(\"teethB\"),\n      teethC: document.getElementById(\"teethC\"),\n      fsTeethA: document.getElementById(\"fsTeethA\"),\n      fsTeethB: document.getElementById(\"fsTeethB\"),\n      fsTeethC: document.getElementById(\"fsTeethC\"),\n      rowGearC: document.getElementById(\"rowGearC\"),\n      fsRowGearC: document.getElementById(\"fsRowGearC\"),\n      \n      panelHasGearC: document.getElementById(\"panelHasGearC\"),\n      fsHasGearC: document.getElementById(\"fsHasGearC\"),\n\n      speedNumber: document.getElementById(\"speedNumber\"),\n      fsSpeed: document.getElementById(\"fsSpeed\"),\n      \n      playPauseBtn: document.getElementById(\"playPauseBtn\"),\n      fsPlayPauseBtn: document.getElementById(\"fsPlayPauseBtn\"),\n      resetBtn: document.getElementById(\"resetBtn\"),\n      fsResetBtn: document.getElementById(\"fsResetBtn\"),\n      \n      panelOneTurnABtn: document.getElementById(\"panelOneTurnABtn\"),\n      panelOneTurnBBtn: document.getElementById(\"panelOneTurnBBtn\"),\n      fsOneTurnABtn: document.getElementById(\"fsOneTurnABtn\"),\n      fsOneTurnBBtn: document.getElementById(\"fsOneTurnBBtn\"),\n      \n      reverseBtn: document.getElementById(\"reverseBtn\"),\n      fullscreenBtn: document.getElementById(\"fullscreenBtn\"),\n      fsFullscreenBtn: document.getElementById(\"fsFullscreenBtn\"),\n      \n      panelShowArrows: document.getElementById(\"panelShowArrows\"),\n      panelShowMarker: document.getElementById(\"panelShowMarker\"),\n      panelShowLabels: document.getElementById(\"panelShowLabels\"),\n      panelShowPitch: document.getElementById(\"panelShowPitch\"),\n      panelShowTurns: document.getElementById(\"panelShowTurns\"),\n      panelShowSpeed: document.getElementById(\"panelShowSpeed\"),\n      panelShowInfos: document.getElementById(\"panelShowInfos\"),\n      infosPanel: document.getElementById(\"infosPanel\"),\n      \n      fsShowArrows: document.getElementById(\"fsShowArrows\"),\n      fsShowMarker: document.getElementById(\"fsShowMarker\"),\n      fsShowLabels: document.getElementById(\"fsShowLabels\"),\n      fsShowTurns: document.getElementById(\"fsShowTurns\"),\n      fsShowSpeed: document.getElementById(\"fsShowSpeed\"),\n      \n      fsMenuBtn: document.getElementById(\"fsMenuBtn\"),\n      fsSettingsPanel: document.getElementById(\"fsSettingsPanel\"),\n\n      gearAGroup: document.getElementById(\"gearAGroup\"),\n      gearBGroup: document.getElementById(\"gearBGroup\"),\n      gearCGroup: document.getElementById(\"gearCGroup\"),\n      overlayGroup: document.getElementById(\"overlayGroup\"),\n      \n      ratioText: document.getElementById(\"ratioText\"),\n      directionText: document.getElementById(\"directionText\"),\n      formulaText: document.getElementById(\"formulaText\")\n    };\n\n    ui.fsTeethA.value = state.teethA;\n    ui.fsTeethB.value = state.teethB;\n    ui.fsTeethC.value = state.teethC;\n    ui.fsSpeed.value = state.omegaA;\n\n    ui.panelShowInfos.addEventListener(\"change\", (e) => {\n      ui.infosPanel.style.display = e.target.checked ? \"block\" : \"none\";\n    });\n\n    ui.fsMenuBtn.addEventListener(\"click\", () => {\n      state.fsMenuOpen = !state.fsMenuOpen;\n      if(state.fsMenuOpen) ui.fsSettingsPanel.classList.add(\"open\");\n      else ui.fsSettingsPanel.classList.remove(\"open\");\n    });\n\n    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }\n    function createSVG(tag, attrs = {}){\n      const el = document.createElementNS(svgNS, tag);\n      for(const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);\n      return el;\n    }\n    function polar(r, aDeg){\n      const a = aDeg * Math.PI / 180;\n      return { x: r * Math.cos(a), y: r * Math.sin(a) };\n    }\n    function cartesian(cx, cy, r, deg){\n      const a = (deg - 90) * Math.PI / 180;\n      return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };\n    }\n    function formatNumber(x){ return String((Math.round(x * 100) / 100)).replace(\".\", \",\"); }\n    function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }\n    function simplifiedFraction(n, d){ const g = gcd(n, d); return { n: n / g, d: d / g }; }\n\n    function updateInfo(){\n      const ratio = state.teethA / state.teethB;\n      const frac = simplifiedFraction(state.teethA, state.teethB);\n      \n      ui.ratioText.innerHTML = `B tourne \u00e0 <strong>${formatNumber(Math.abs(ratio))}</strong> fois la vitesse de A.`;\n      \n      let formulaHTML = \"\";\n      if (state.hasGearC) {\n        ui.directionText.innerHTML = `La roue C inverse le mouvement.<br>A et B tournent dans le <strong>M\u00caME SENS</strong>.`;\n        formulaHTML = `<strong>Le rapport final ne d\u00e9pend que de A et B !</strong><br>Vitesse B = Vitesse A \u00d7 (Dents A / Dents C) \u00d7 (Dents C / Dents B) = Vitesse A \u00d7 (${state.teethA}/${state.teethB})<br><br><strong>Exemple :</strong> Si A fait <strong>1 tour</strong>, B fait <strong>${formatNumber(Math.abs(ratio))}</strong> tour(s). (Fraction simplifi\u00e9e A/B : <strong>${frac.n}/${frac.d}</strong>)`;\n      } else {\n        ui.directionText.innerHTML = `Les deux roues tournent en <strong>SENS INVERSES</strong>.`;\n        formulaHTML = `Vitesse Sortie (B) = - Vitesse Moteur (A) \u00d7 (Dents A / Dents B)<br><br><strong>Exemple :</strong> Si A fait <strong>1 tour</strong>, B fait <strong>${formatNumber(Math.abs(ratio))}</strong> tour(s). (Fraction simplifi\u00e9e : <strong>${frac.n}/${frac.d}</strong>)`;\n      }\n      ui.formulaText.innerHTML = formulaHTML;\n    }\n\n    function computeDynamicModule(tA, tB, tC, hasC) {\n      const targetTotalWidth = 1100;\n      const teethWidth = hasC ? (2*tA + 2*tC + 2*tB + 6) : (2*tA + 2*tB + 6);\n      return clamp(targetTotalWidth / teethWidth, 4, 22);\n    }\n\n    function buildGearGeometry(teeth, modulePx){\n      const pitchRadius = teeth * modulePx;\n      const addendum = modulePx * 1.0; \n      const dedendum = modulePx * 1.25; \n      const outerRadius = pitchRadius + addendum;\n      const rootRadius = pitchRadius - dedendum;\n      const innerRadius = pitchRadius * 0.55; \n      const holeRadius = Math.max(16, pitchRadius * 0.12);\n      return { teeth, toothAngle: 360 / teeth, pitchRadius, outerRadius, rootRadius, innerRadius, holeRadius, modulePx };\n    }\n\n    function gearPath(geom){\n      const { teeth, toothAngle, rootRadius, outerRadius, pitchRadius } = geom;\n      let d = \"\";\n      for(let i = 0; i < teeth; i++){\n        const c = i * toothAngle;\n        const a_root1 = c - toothAngle * 0.32; \n        const a_pitch1= c - toothAngle * 0.245; \n        const a_top1  = c - toothAngle * 0.15; \n        const a_top2  = c + toothAngle * 0.15;\n        const a_pitch2= c + toothAngle * 0.245;\n        const a_root2 = c + toothAngle * 0.32;\n\n        const p_root1 = polar(rootRadius, a_root1);\n        const p_pitch1= polar(pitchRadius, a_pitch1);\n        const p_top1  = polar(outerRadius, a_top1);\n        const p_top2  = polar(outerRadius, a_top2);\n        const p_pitch2= polar(pitchRadius, a_pitch2);\n        const p_root2 = polar(rootRadius, a_root2);\n\n        if(i === 0) d += `M ${p_root1.x.toFixed(2)} ${p_root1.y.toFixed(2)} `;\n        else d += `L ${p_root1.x.toFixed(2)} ${p_root1.y.toFixed(2)} `;\n        d += `L ${p_pitch1.x.toFixed(2)} ${p_pitch1.y.toFixed(2)} `;\n        d += `L ${p_top1.x.toFixed(2)} ${p_top1.y.toFixed(2)} `;\n        d += `L ${p_top2.x.toFixed(2)} ${p_top2.y.toFixed(2)} `;\n        d += `L ${p_pitch2.x.toFixed(2)} ${p_pitch2.y.toFixed(2)} `;\n        d += `L ${p_root2.x.toFixed(2)} ${p_root2.y.toFixed(2)} `;\n      }\n      d += \"Z\";\n      return d;\n    }\n\n    function singleToothPath(geom, toothIndex){\n      const { toothAngle, rootRadius, outerRadius, pitchRadius } = geom;\n      const c = toothIndex * toothAngle;\n      const p_root1 = polar(rootRadius, c - toothAngle * 0.32);\n      const p_pitch1= polar(pitchRadius, c - toothAngle * 0.245);\n      const p_top1  = polar(outerRadius, c - toothAngle * 0.15);\n      const p_top2  = polar(outerRadius, c + toothAngle * 0.15);\n      const p_pitch2= polar(pitchRadius, c + toothAngle * 0.245);\n      const p_root2 = polar(rootRadius, c + toothAngle * 0.32);\n\n      return `M 0 0 L ${p_root1.x} ${p_root1.y} L ${p_pitch1.x} ${p_pitch1.y} L ${p_top1.x} ${p_top1.y} L ${p_top2.x} ${p_top2.y} L ${p_pitch2.x} ${p_pitch2.y} L ${p_root2.x} ${p_root2.y} Z`;\n    }\n\n    function describeArcArrow(cx, cy, r, startDeg, endDeg, positive){\n      const start = cartesian(cx, cy, r, startDeg);\n      const end = cartesian(cx, cy, r, endDeg);\n      const largeArc = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;\n      const sweep = positive ? 1 : 0;\n      return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} ${sweep} ${end.x} ${end.y}`;\n    }\n\n    function drawArrowGroup(cx, cy, r, startDeg, sweepDeg, isCW, color) {\n        if(state.omegaA === 0) return createSVG(\"g\");\n        const endDeg = isCW ? startDeg + sweepDeg : startDeg - sweepDeg;\n        const arcEndOffset = isCW ? -6 : 6; \n        const pathData = describeArcArrow(cx, cy, r, startDeg, endDeg + arcEndOffset, isCW);\n        const endPt = cartesian(cx, cy, r, endDeg);\n        const headDir = isCW ? endDeg : endDeg - 180; \n        const headLen = 16;\n        const flare = 145; \n        const a1 = (headDir + flare) * Math.PI / 180;\n        const a2 = (headDir - flare) * Math.PI / 180;\n        \n        const p1x = endPt.x + headLen * Math.cos(a1);\n        const p1y = endPt.y + headLen * Math.sin(a1);\n        const p2x = endPt.x + headLen * Math.cos(a2);\n        const p2y = endPt.y + headLen * Math.sin(a2);\n        \n        const headPath = `M ${endPt.x} ${endPt.y} L ${p1x} ${p1y} L ${p2x} ${p2y} Z`;\n        \n        const g = createSVG(\"g\");\n        g.appendChild(createSVG(\"path\", { d: pathData, fill: \"none\", stroke: color, \"stroke-width\": \"4.5\", \"stroke-linecap\": \"butt\" }));\n        g.appendChild(createSVG(\"path\", { d: headPath, fill: color, stroke: color, \"stroke-linejoin\": \"round\", \"stroke-width\": \"2\" }));\n        return g;\n    }\n\n    function computePhaseOffsets(tA, tB, tC, hasC) {\n      let phaseA = 0;\n      let phaseB = 0;\n      let phaseC = 0;\n      if (!hasC) {\n        phaseB = 180 + 180/tB; \n      } else {\n        phaseC = 180 + 180/tC; \n        phaseB = -phaseC * (tC/tB) + 180 + 180/tB; \n      }\n      return { phaseA, phaseB, phaseC };\n    }\n\n    function buildGearGroup(target, cx, cy, geom, visualAngleDeg, rawAngleDeg, currentSpeed, fillColorCSS, label, strokeColorCSS){\n      target.innerHTML = \"\";\n      const group = createSVG(\"g\", { transform: `translate(${cx} ${cy}) rotate(${visualAngleDeg})` });\n\n      group.appendChild(createSVG(\"path\", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, \"stroke-width\": \"2.4\", filter: \"url(#softShadow)\" }));\n\n      if (state.showMarker) {\n        group.appendChild(createSVG(\"path\", { d: singleToothPath(geom, 0), fill: \"var(--marker)\", stroke: \"#ffffff\", \"stroke-width\": \"1.8\" }));\n      }\n      if (state.showPitch) {\n        group.appendChild(createSVG(\"circle\", { cx: \"0\", cy: \"0\", r: geom.pitchRadius.toFixed(2), fill: \"none\", stroke: \"rgba(93,104,135,0.25)\", \"stroke-width\": \"2\", \"stroke-dasharray\": \"6 6\" }));\n      }\n\n      group.appendChild(createSVG(\"circle\", { cx: \"0\", cy: \"0\", r: geom.innerRadius.toFixed(2), fill: \"rgba(255,255,255,0.20)\", stroke: strokeColorCSS, \"stroke-width\": \"1.8\" }));\n      group.appendChild(createSVG(\"circle\", { cx: \"0\", cy: \"0\", r: geom.holeRadius.toFixed(2), fill: \"#ffffff\", stroke: strokeColorCSS, \"stroke-width\": \"2.2\" }));\n      group.appendChild(createSVG(\"circle\", { cx: \"0\", cy: \"0\", r: \"4.2\", fill: strokeColorCSS }));\n      target.appendChild(group);\n\n      let textY = cy + geom.outerRadius + (document.fullscreenElement ? 40 : 34);\n\n      if (state.showLabels) {\n        const labelText = createSVG(\"text\", {\n          x: cx, y: textY, \"text-anchor\": \"middle\", \"font-size\": document.fullscreenElement ? \"30\" : \"24\",\n          \"font-weight\": \"700\", fill: \"#23304a\", \"pointer-events\": \"none\"\n        });\n        labelText.textContent = `${label} : ${geom.teeth} dents`;\n        target.appendChild(labelText);\n        textY += (document.fullscreenElement ? 34 : 26);\n      }\n\n      if (state.showTurns) {\n        const turns = Math.abs(rawAngleDeg / 360).toFixed(2);\n        const turnsText = createSVG(\"text\", {\n          x: cx, y: textY, \"text-anchor\": \"middle\", \"font-size\": document.fullscreenElement ? \"28\" : \"24\",\n          \"font-weight\": \"800\", fill: \"#3f7cff\", \"pointer-events\": \"none\"\n        });\n        turnsText.textContent = `Tours : ${turns}`;\n        target.appendChild(turnsText);\n        textY += (document.fullscreenElement ? 34 : 30);\n      }\n\n      if (state.showSpeed) {\n        const speedText = createSVG(\"text\", {\n          x: cx, y: textY, \"text-anchor\": \"middle\", \"font-size\": document.fullscreenElement ? \"22\" : \"18\",\n          \"font-weight\": \"600\", fill: \"#5a6784\", \"pointer-events\": \"none\"\n        });\n        speedText.textContent = `Vitesse : ${Math.round(currentSpeed)} \u00b0/s`;\n        target.appendChild(speedText);\n      }\n    }\n\n    function drawOverlay(layout, geomA, omegaA, geomB, omegaB, geomC, omegaC){\n      ui.overlayGroup.innerHTML = \"\";\n      if (!state.showArrows) return;\n\n      const drawArrowsFor = (cx, cy, geom, omega) => {\n        const rad = (geom.holeRadius + geom.innerRadius) / 2;\n        for(let i=0; i<3; i++) {\n          ui.overlayGroup.appendChild(drawArrowGroup(cx, cy, rad, i*120 + (omega>=0?0:90), 90, omega>=0, \"#4a5a80\"));\n        }\n      };\n\n      drawArrowsFor(layout.cxA, layout.cyA, geomA, omegaA);\n      if(state.hasGearC) drawArrowsFor(layout.cxC, layout.cyC, geomC, omegaC);\n      drawArrowsFor(layout.cxB, layout.cyB, geomB, omegaB);\n    }\n\n    function computeLayout(geomA, geomB, geomC){\n      const totalWidth = state.hasGearC \n        ? (geomA.pitchRadius*2 + geomC.pitchRadius*2 + geomB.pitchRadius*2)\n        : (geomA.pitchRadius*2 + geomB.pitchRadius*2);\n      \n      const cy = document.fullscreenElement ? 360 : 390; \n      const cxA = (1400 - totalWidth) / 2 + geomA.pitchRadius;\n      \n      if(state.hasGearC) {\n        const cxC = cxA + geomA.pitchRadius + geomC.pitchRadius;\n        const cxB = cxC + geomC.pitchRadius + geomB.pitchRadius;\n        return { cxA, cyA: cy, cxB, cyB: cy, cxC, cyC: cy };\n      } else {\n        const cxB = cxA + geomA.pitchRadius + geomB.pitchRadius;\n        return { cxA, cyA: cy, cxB, cyB: cy };\n      }\n    }\n\n    function render(){\n      const dynamicModule = computeDynamicModule(state.teethA, state.teethB, state.teethC, state.hasGearC);\n      const geomA = buildGearGeometry(state.teethA, dynamicModule);\n      const geomB = buildGearGeometry(state.teethB, dynamicModule);\n      const geomC = state.hasGearC ? buildGearGeometry(state.teethC, dynamicModule) : null;\n      \n      const phases = computePhaseOffsets(state.teethA, state.teethB, state.teethC, state.hasGearC);\n      state.layout = computeLayout(geomA, geomB, geomC);\n      \n      const angleA = state.angleA;\n      const omegaA = state.omegaA;\n      \n      let angleB, omegaB, angleC, omegaC;\n      if (state.hasGearC) {\n        angleC = angleA * (-state.teethA / state.teethC);\n        omegaC = omegaA * (-state.teethA / state.teethC);\n        angleB = angleC * (-state.teethC / state.teethB); \n        omegaB = omegaC * (-state.teethC / state.teethB);\n      } else {\n        angleB = angleA * (-state.teethA / state.teethB);\n        omegaB = omegaA * (-state.teethA / state.teethB);\n        angleC = 0; omegaC = 0;\n      }\n\n      buildGearGroup(ui.gearAGroup, state.layout.cxA, state.layout.cyA, geomA, angleA + phases.phaseA, angleA, omegaA, COLOR_A, \"A\", STROKE_A);\n      buildGearGroup(ui.gearBGroup, state.layout.cxB, state.layout.cyB, geomB, angleB + phases.phaseB, angleB, omegaB, COLOR_B, \"B\", STROKE_B);\n      \n      if(state.hasGearC) {\n        ui.gearCGroup.style.display = \"block\";\n        buildGearGroup(ui.gearCGroup, state.layout.cxC, state.layout.cyC, geomC, angleC + phases.phaseC, angleC, omegaC, COLOR_C, \"C\", STROKE_C);\n      } else {\n        ui.gearCGroup.style.display = \"none\";\n      }\n\n      drawOverlay(state.layout, geomA, omegaA, geomB, omegaB, geomC, omegaC);\n      updateInfo();\n    }\n\n    function resetAngles(){\n      state.angleA = 0;\n      state.oneTurnMode = false;\n      render();\n    }\n\n    window.changeTeeth = function(gear, delta) {\n      if(gear === 'A') updateTeeth(state.teethA + delta, state.teethB, state.teethC);\n      else if(gear === 'B') updateTeeth(state.teethA, state.teethB + delta, state.teethC);\n      else if(gear === 'C') updateTeeth(state.teethA, state.teethB, state.teethC + delta);\n    };\n\n    function updateTeeth(valA, valB, valC){\n      state.teethA = clamp(valA || 12, 8, 60);\n      state.teethB = clamp(valB || 24, 8, 60);\n      state.teethC = clamp(valC || 16, 8, 60);\n      ui.teethA.value = state.teethA; ui.fsTeethA.value = state.teethA;\n      ui.teethB.value = state.teethB; ui.fsTeethB.value = state.teethB;\n      ui.teethC.value = state.teethC; ui.fsTeethC.value = state.teethC;\n      resetAngles(); \n    }\n\n    ui.teethA.addEventListener(\"input\", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB, state.teethC));\n    ui.teethB.addEventListener(\"input\", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10), state.teethC));\n    ui.teethC.addEventListener(\"input\", (e) => updateTeeth(state.teethA, state.teethB, parseInt(e.target.value, 10)));\n    ui.fsTeethA.addEventListener(\"input\", (e) => updateTeeth(parseInt(e.target.value, 10), state.teethB, state.teethC));\n    ui.fsTeethB.addEventListener(\"input\", (e) => updateTeeth(state.teethA, parseInt(e.target.value, 10), state.teethC));\n    ui.fsTeethC.addEventListener(\"input\", (e) => updateTeeth(state.teethA, state.teethB, parseInt(e.target.value, 10)));\n\n    function toggleGearC(checked) {\n      state.hasGearC = checked;\n      ui.panelHasGearC.checked = checked;\n      ui.fsHasGearC.checked = checked;\n      if(checked) {\n        ui.rowGearC.classList.remove(\"hidden\");\n        ui.fsRowGearC.classList.remove(\"hidden\");\n      } else {\n        ui.rowGearC.classList.add(\"hidden\");\n        ui.fsRowGearC.classList.add(\"hidden\");\n      }\n      resetAngles();\n    }\n    ui.panelHasGearC.addEventListener(\"change\", (e) => toggleGearC(e.target.checked));\n    ui.fsHasGearC.addEventListener(\"change\", (e) => toggleGearC(e.target.checked));\n\n    window.changeSpeed = function(delta) { setSpeed(state.omegaA + delta); };\n    function setSpeed(v){\n      state.omegaA = Math.round(clamp(v, -360, 360));\n      ui.speedNumber.value = state.omegaA;\n      ui.fsSpeed.value = state.omegaA; \n    }\n\n    ui.speedNumber.addEventListener(\"input\", (e) => { let val = parseInt(e.target.value, 10); if(!isNaN(val)) setSpeed(val); });\n    ui.fsSpeed.addEventListener(\"input\", (e) => { let val = parseInt(e.target.value, 10); if(!isNaN(val)) setSpeed(val); });\n    \n    document.querySelectorAll(\"[data-speed-step]\").forEach(btn => {\n      btn.addEventListener(\"click\", () => setSpeed(state.omegaA + parseInt(btn.dataset.speedStep, 10)));\n    });\n    \n    document.getElementById(\"speedZeroBtn\").addEventListener(\"click\", () => setSpeed(0));\n    ui.reverseBtn.addEventListener(\"click\", () => setSpeed(-state.omegaA));\n\n    function syncCheckboxes(stateKey, id1, id2) {\n      ui[id1].addEventListener(\"change\", (e) => { state[stateKey] = e.target.checked; ui[id2].checked = e.target.checked; render(); });\n      ui[id2].addEventListener(\"change\", (e) => { state[stateKey] = e.target.checked; ui[id1].checked = e.target.checked; render(); });\n    }\n    syncCheckboxes(\"showArrows\", \"panelShowArrows\", \"fsShowArrows\");\n    syncCheckboxes(\"showMarker\", \"panelShowMarker\", \"fsShowMarker\");\n    syncCheckboxes(\"showLabels\", \"panelShowLabels\", \"fsShowLabels\");\n    syncCheckboxes(\"showTurns\", \"panelShowTurns\", \"fsShowTurns\");\n    syncCheckboxes(\"showSpeed\", \"panelShowSpeed\", \"fsShowSpeed\");\n    ui.panelShowPitch.addEventListener(\"change\", (e) => { state.showPitch = e.target.checked; render(); });\n\n    function togglePlay() {\n      state.playing = !state.playing;\n      const icon = state.playing ? \"\u23f8\" : \"\u25b6\";\n      ui.playPauseBtn.textContent = icon;\n      ui.fsPlayPauseBtn.textContent = icon;\n    }\n    ui.playPauseBtn.addEventListener(\"click\", togglePlay);\n    ui.fsPlayPauseBtn.addEventListener(\"click\", togglePlay);\n\n    ui.resetBtn.addEventListener(\"click\", resetAngles);\n    ui.fsResetBtn.addEventListener(\"click\", resetAngles);\n\n    function doOneTurn(gear) {\n      const direction = state.omegaA >= 0 ? 1 : -1;\n      const turnsOfA = gear === 'A' ? 1 : (state.teethB / state.teethA); \n      state.oneTurnMode = true;\n      state.oneTurnTarget = state.angleA + direction * 360 * turnsOfA;\n      state.playing = true;\n      ui.playPauseBtn.textContent = \"\u23f8\";\n      ui.fsPlayPauseBtn.textContent = \"\u23f8\";\n    }\n\n    ui.panelOneTurnABtn.addEventListener(\"click\", () => doOneTurn('A'));\n    ui.fsOneTurnABtn.addEventListener(\"click\", () => doOneTurn('A'));\n    ui.panelOneTurnBBtn.addEventListener(\"click\", () => doOneTurn('B'));\n    ui.fsOneTurnBBtn.addEventListener(\"click\", () => doOneTurn('B'));\n\n    function toggleFullscreen() {\n      if (!document.fullscreenElement) { stageWrap.requestFullscreen().catch(err => console.error(err)); } \n      else { document.exitFullscreen(); }\n    }\n    ui.fullscreenBtn.addEventListener(\"click\", toggleFullscreen);\n    ui.fsFullscreenBtn.addEventListener(\"click\", toggleFullscreen);\n\n    document.addEventListener(\"fullscreenchange\", () => {\n      if(!document.fullscreenElement) {\n        state.fsMenuOpen = false;\n        ui.fsSettingsPanel.classList.remove(\"open\");\n      }\n      render(); \n    });\n\n    let isDragging = false; let draggedGear = null; let lastMouseAngle = 0; let wasPlayingBeforeDrag = false;\n\n    function getMouseCoords(e) {\n      let cx = e.clientX, cy = e.clientY;\n      if (e.touches && e.touches.length > 0) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }\n      const pt = svgStage.createSVGPoint(); pt.x = cx; pt.y = cy;\n      return pt.matrixTransform(svgStage.getScreenCTM().inverse());\n    }\n\n    function calculateAngle(x, y, cx, cy) { return Math.atan2(y - cy, x - cx) * 180 / Math.PI; }\n\n    function onPointerDown(e, gearId) {\n      e.preventDefault();\n      isDragging = true; draggedGear = gearId; wasPlayingBeforeDrag = state.playing; state.playing = false; \n      ui.playPauseBtn.textContent = \"\u25b6\"; ui.fsPlayPauseBtn.textContent = \"\u25b6\";\n      const coords = getMouseCoords(e);\n      let cx, cy;\n      if(gearId === 'A') { cx = state.layout.cxA; cy = state.layout.cyA; }\n      else if(gearId === 'B') { cx = state.layout.cxB; cy = state.layout.cyB; }\n      else { cx = state.layout.cxC; cy = state.layout.cyC; }\n      lastMouseAngle = calculateAngle(coords.x, coords.y, cx, cy);\n    }\n\n    function onPointerMove(e) {\n      if (!isDragging) return;\n      e.preventDefault();\n      const coords = getMouseCoords(e);\n      let cx, cy;\n      if(draggedGear === 'A') { cx = state.layout.cxA; cy = state.layout.cyA; }\n      else if(draggedGear === 'B') { cx = state.layout.cxB; cy = state.layout.cyB; }\n      else { cx = state.layout.cxC; cy = state.layout.cyC; }\n      \n      const currentMouseAngle = calculateAngle(coords.x, coords.y, cx, cy);\n      let deltaAngle = currentMouseAngle - lastMouseAngle;\n\n      if (deltaAngle > 180) deltaAngle -= 360;\n      if (deltaAngle < -180) deltaAngle += 360;\n\n      if (draggedGear === \"A\") {\n        state.angleA += deltaAngle;\n        state.omegaA = clamp(Math.round(deltaAngle * 10), -360, 360);\n      } else if (draggedGear === \"B\") {\n        let deltaA = state.hasGearC ? deltaAngle * (state.teethB / state.teethA) : -deltaAngle * (state.teethB / state.teethA);\n        state.angleA += deltaA;\n        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);\n      } else if (draggedGear === \"C\") {\n        let deltaA = -deltaAngle * (state.teethC / state.teethA);\n        state.angleA += deltaA;\n        state.omegaA = clamp(Math.round(deltaA * 10), -360, 360);\n      }\n      \n      ui.speedNumber.value = state.omegaA; ui.fsSpeed.value = state.omegaA;\n      lastMouseAngle = currentMouseAngle; render(); \n    }\n\n    function onPointerUp() {\n      if (!isDragging) return;\n      isDragging = false; draggedGear = null;\n      if (wasPlayingBeforeDrag) { state.playing = true; ui.playPauseBtn.textContent = \"\u23f8\"; ui.fsPlayPauseBtn.textContent = \"\u23f8\"; }\n    }\n\n    ui.gearAGroup.addEventListener(\"mousedown\", (e) => onPointerDown(e, \"A\"));\n    ui.gearBGroup.addEventListener(\"mousedown\", (e) => onPointerDown(e, \"B\"));\n    ui.gearCGroup.addEventListener(\"mousedown\", (e) => onPointerDown(e, \"C\"));\n    ui.gearAGroup.addEventListener(\"touchstart\", (e) => onPointerDown(e, \"A\"), {passive: false});\n    ui.gearBGroup.addEventListener(\"touchstart\", (e) => onPointerDown(e, \"B\"), {passive: false});\n    ui.gearCGroup.addEventListener(\"touchstart\", (e) => onPointerDown(e, \"C\"), {passive: false});\n\n    window.addEventListener(\"mousemove\", onPointerMove); window.addEventListener(\"mouseup\", onPointerUp);\n    window.addEventListener(\"touchmove\", onPointerMove, {passive: false}); window.addEventListener(\"touchend\", onPointerUp);\n\n    let previousTime = null;\n\n    function animate(timestamp){\n      if(previousTime === null) previousTime = timestamp;\n      const dt = (timestamp - previousTime) / 1000;\n      previousTime = timestamp;\n\n      if(state.playing && !isDragging){\n        state.angleA += state.omegaA * dt;\n\n        if(state.oneTurnMode){\n          if((state.omegaA >= 0 && state.angleA >= state.oneTurnTarget) || (state.omegaA < 0 && state.angleA <= state.oneTurnTarget)){\n            state.angleA = state.oneTurnTarget;\n            state.oneTurnMode = false; state.playing = false;\n            ui.playPauseBtn.textContent = \"\u25b6\"; ui.fsPlayPauseBtn.textContent = \"\u25b6\";\n          }\n        }\n        render(); \n      }\n      requestAnimationFrame(animate);\n    }\n\n    render(); \n    requestAnimationFrame(animate);\n\n  <\/script>\n</body>\n</html>";
+
+    const CATEGORY_DEFS = [
+      { id:'observer-1', theme:'Observer', level:1, label:'Observer 1', desc:'Sens de rotation' },
+      { id:'observer-2', theme:'Observer', level:2, label:'Observer 2', desc:'Plus vite / moins vite / même rapidité' },
+      { id:'observer-3', theme:'Observer', level:3, label:'Observer 3', desc:'Avec 3 engrenages : sens final et comparaison' },
+      { id:'observer-4', theme:'Observer', level:4, label:'Observer 4', desc:'Après 1 tour de A : plus, moins ou pareil' },
+      { id:'observer-5', theme:'Observer', level:5, label:'Observer 5', desc:'Vrai / faux avec justification courte' },
+      { id:'prevoir-1', theme:'Prévoir', level:1, label:'Prévoir 1', desc:'Demi / un / deux tours' },
+      { id:'prevoir-2', theme:'Prévoir', level:2, label:'Prévoir 2', desc:'Nombre entier de tours ou non' },
+      { id:'prevoir-3', theme:'Prévoir', level:3, label:'Prévoir 3', desc:'Choix parmi fractions simples' },
+      { id:'prevoir-4', theme:'Prévoir', level:4, label:'Prévoir 4', desc:'3 engrenages : sens + quantité qualitative' },
+      { id:'prevoir-5', theme:'Prévoir', level:5, label:'Prévoir 5', desc:'Plus petit nombre parmi 1,2,3,4,5,6' },
+      { id:'calculer-1', theme:'Calculer', level:1, label:'Calculer 1', desc:'Résultats entiers' },
+      { id:'calculer-2', theme:'Calculer', level:2, label:'Calculer 2', desc:'Demi / double / fractions très simples' },
+      { id:'calculer-3', theme:'Calculer', level:3, label:'Calculer 3', desc:'Fractions simplifiées' },
+      { id:'calculer-4', theme:'Calculer', level:4, label:'Calculer 4', desc:'Vitesses ou nombre de dents' },
+      { id:'calculer-5', theme:'Calculer', level:5, label:'Calculer 5', desc:'Plus petit nombre de tours' }
+    ];
+
+    const ui = {
+      categoryChooser: document.getElementById('categoryChooser'),
+      cardCount: document.getElementById('cardCount'),
+      outputMode: document.getElementById('outputMode'),
+      generateBtn: document.getElementById('generateBtn'),
+      shuffleBtn: document.getElementById('shuffleBtn'),
+      printBtn: document.getElementById('printBtn'),
+      selectObserver: document.getElementById('selectObserver'),
+      selectPrevoir: document.getElementById('selectPrevoir'),
+      selectCalculer: document.getElementById('selectCalculer'),
+      selectAll: document.getElementById('selectAll'),
+      clearAll: document.getElementById('clearAll'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      showAnswerBtn: document.getElementById('showAnswerBtn'),
+      animateOnceBtn: document.getElementById('animateOnceBtn'),
+      animatePlayBtn: document.getElementById('animatePlayBtn'),
+      resetStageBtn: document.getElementById('resetStageBtn'),
+      seriesInfo: document.getElementById('seriesInfo'),
+      cardInfo: document.getElementById('cardInfo'),
+      questionMeta: document.getElementById('questionMeta'),
+      questionTitle: document.getElementById('questionTitle'),
+      questionText: document.getElementById('questionText'),
+      answerBox: document.getElementById('answerBox'),
+      answerText: document.getElementById('answerText'),
+      plateauFrame: document.getElementById('plateauFrame'),
+      seriesList: document.getElementById('seriesList'),
+      printSheet: document.getElementById('printSheet'),
+      selectedSummary: document.getElementById('selectedSummary'),
+      toggleCategories: document.getElementById('toggleCategories'),
+      categoryDrawer: document.getElementById('categoryDrawer'),
+      viewerPanel: document.getElementById('viewerPanel'),
+      fullscreenBtn: document.getElementById('fullscreenBtn')
+    };
+
+    const appState = { series: [], currentIndex: 0, answerShown: false, selectedForShuffle: [] };
+    let plateauReady = false;
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+    function randint(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+    function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+    function simplify(n,d){ const g=gcd(n,d); return {n:n/g,d:d/g}; }
+    function fracToStr(n,d){ if(d===1) return String(n); return `${n}/${d}`; }
+    function decimalComma(x){ return String(Math.round(x*100)/100).replace('.', ','); }
+    function absRatio(cfg){ return cfg.a / cfg.b; }
+    function directionText(cfg){ return cfg.hasC ? 'même sens' : 'sens contraire'; }
+    function speedCompareText(cfg){ const r = absRatio(cfg); if(Math.abs(r-1)<1e-9) return 'à la même rapidité'; return r>1 ? 'B tourne plus vite que A' : 'B tourne moins vite que A'; }
+    function makeTeethFromReduced(p,q){
+      const minScale = Math.max(Math.ceil(8/Math.min(p,q)), 2);
+      const maxScale = Math.max(minScale, Math.floor(36/Math.max(p,q)));
+      const scale = randint(minScale, maxScale);
+      return { a:p*scale, b:q*scale };
+    }
+    function makeThirdGear(a,b){
+      const pool = [8,10,12,14,16,18,20,24,28,30];
+      const filtered = pool.filter(v => v !== a && v !== b);
+      return choice(filtered.length ? filtered : pool);
+    }
+    function config2(p,q){ const t=makeTeethFromReduced(p,q); return { a:t.a, b:t.b, c:16, hasC:false }; }
+    function config3(p,q){ const t=makeTeethFromReduced(p,q); return { a:t.a, b:t.b, c:makeThirdGear(t.a,t.b), hasC:true }; }
+    function turnsOfB(turnsA, cfg){ return turnsA * cfg.a / cfg.b; }
+    function speedOfB(speedA, cfg){ return Math.abs(speedA) * cfg.a / cfg.b; }
+    function smallestTurnsForIntegerB(cfg){ return cfg.b / gcd(cfg.a,cfg.b); }
+
+    function mkCard(def, prompt, answer, cfg, extra={}){
+      return {
+        categoryId:def.id,
+        theme:def.theme,
+        level:def.level,
+        label:def.label,
+        desc:def.desc,
+        prompt,
+        answer,
+        cfg,
+        ...extra
+      };
+    }
+
+    const generators = {
+      'observer-1': def => {
+        const cfg = choice([config2(1,1), config2(1,2), config2(2,1), config3(1,2), config3(2,3)]);
+        const prompt = `Si A tourne dans le sens horaire, dans quel sens tourne B ?`;
+        const answer = cfg.hasC
+          ? `Avec 3 engrenages, A et B tournent dans le <strong>même sens</strong> : B tournera donc ici dans le <strong>sens horaire</strong>.`
+          : `Avec 2 engrenages en contact, le sens s'inverse : B tourne dans le <strong>sens antihoraire</strong>.`;
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'direction', animateTurnsA:1 });
+      },
+      'observer-2': def => {
+        const cfg = choice([config2(1,1), config2(1,2), config2(2,1), config2(2,3), config2(3,2)]);
+        const r = absRatio(cfg);
+        const answer = Math.abs(r-1)<1e-9
+          ? 'Les deux roues tournent à la <strong>même rapidité</strong>.'
+          : (r>1 ? '<strong>B</strong> tourne plus vite que A.' : '<strong>A</strong> tourne plus vite que B.');
+        return mkCard(def, 'Quelle roue tourne le plus vite ?', answer, cfg, { correctionDisplay:'speed', animateTurnsA:1, speedA:60 });
+      },
+      'observer-3': def => {
+        const cfg = config3(choice([1,2,2,3]), choice([2,1,3,4]));
+        const speedA = 1;
+        const speedC = cfg.a / cfg.c;
+        const speedB = cfg.a / cfg.b;
+        const arr = [{name:'A',v:speedA},{name:'C',v:speedC},{name:'B',v:speedB}].sort((x,y)=>y.v-x.v);
+        const prompt = 'Avec ces 3 engrenages, classe les roues de la plus rapide à la moins rapide.';
+        const answer = `Classement : <strong>${arr.map(x=>x.name).join(' > ')}</strong>. On compare ici la <strong>rapidité</strong>, pas le sens de rotation.`;
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'speed', animateTurnsA:1, speedA:60 });
+      },
+      'observer-4': def => {
+        const cfg = choice([config2(1,2), config2(2,1), config2(1,1), config2(2,3), config2(3,2)]);
+        const r = absRatio(cfg);
+        const prompt = `Si A fait 1 tour, B fait-il plus d'un tour, moins d'un tour ou exactement 1 tour ?`;
+        const answer = Math.abs(r-1)<1e-9 ? 'B fait <strong>exactement 1 tour</strong>.' : (r>1 ? `B fait <strong>plus d'un tour</strong>.` : `B fait <strong>moins d'un tour</strong>.`);
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'turns', animateTurnsA:1 });
+      },
+      'observer-5': def => {
+        const cfg = choice([config2(1,2), config2(2,1), config2(1,1), config3(1,2), config3(2,1)]);
+        const statements = [
+          { text:'La petite roue tourne toujours plus vite que la grande.', truth: cfg.a<cfg.b ? true : (cfg.a>cfg.b ? false : null), correctionDisplay:'speed', speedA:60 },
+          { text:'Deux roues qui se touchent tournent dans le même sens.', truth: false, correctionDisplay:'direction' },
+          { text:'Si deux roues ont le même nombre de dents, elles tournent à la même rapidité.', truth: true, correctionDisplay:'speed', speedA:60 },
+          { text:'Avec trois engrenages, A et B tournent dans le même sens.', truth: cfg.hasC, correctionDisplay:'direction' }
+        ];
+        const s = choice(statements.filter(x => x.truth !== null));
+        const answer = (s.truth ? '<strong>Vrai.</strong> ' : '<strong>Faux.</strong> ') + 'Regarde le nombre de contacts et compare les tailles des roues.';
+        return mkCard(def, `Vrai ou faux : ${s.text}`, answer, cfg, { correctionDisplay:s.correctionDisplay || 'none', speedA:s.speedA || null, animateTurnsA:1 });
+      },
+      'prevoir-1': def => {
+        const options = [{p:1,q:2},{p:1,q:1},{p:2,q:1}];
+        const opt = choice(options);
+        const cfg = config2(opt.p,opt.q);
+        const prompt = 'Si A fait 1 tour, B fera-t-il 1/2 tour, 1 tour ou 2 tours ?';
+        const ans = fracToStr(opt.p,opt.q);
+        return mkCard(def, prompt, `B fera <strong>${ans}</strong> tour(s).`, cfg, { correctionDisplay:'turns', animateTurnsA:1 });
+      },
+      'prevoir-2': def => {
+        const cfg = choice([config2(1,2), config2(2,3), config2(3,2), config2(1,3), config2(3,1)]);
+        const n = choice([1,2,3,4,5,6]);
+        const fr = simplify(n*cfg.a,cfg.b);
+        const prompt = `Si A fait ${n} tour(s), B fera-t-il un nombre entier de tours ?`;
+        const answer = fr.d===1 ? `Oui : B fera <strong>${fr.n}</strong> tour(s).` : `Non : B fera <strong>${fracToStr(fr.n,fr.d)}</strong> tour(s).`;
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'turns', animateTurnsA:n });
+      },
+      'prevoir-3': def => {
+        const pick = choice([{p:1,q:2},{p:3,q:2},{p:1,q:4},{p:3,q:4},{p:2,q:3}]);
+        const cfg = config2(pick.p,pick.q);
+        const good = fracToStr(pick.p,pick.q);
+        const distractors = shuffle(['1/2','1','2','3/2','1/4','3/4'].filter(x => x!==good)).slice(0,2);
+        const options = shuffle([good, ...distractors]);
+        const prompt = `Si A fait 1 tour, quelle réponse est possible pour B ? ${options.join(' / ')}`;
+        return mkCard(def, prompt, `La bonne réponse est <strong>${good}</strong> tour(s).`, cfg, { correctionDisplay:'turns', animateTurnsA:1 });
+      },
+      'prevoir-4': def => {
+        const cfg = config3(choice([1,2,2,3,3]), choice([2,1,4,2,3]));
+        const r = absRatio(cfg);
+        const prompt = `Avec 3 engrenages : si A fait 1 tour, B tourne-t-il dans le même sens que A ? Et fait-il plus d'un tour, moins d'un tour ou 1 tour ?`;
+        const q2 = Math.abs(r-1)<1e-9 ? 'exactement 1 tour' : (r>1 ? `plus d'un tour` : `moins d'un tour`);
+        const answer = `Oui, A et B tournent dans le <strong>même sens</strong>. B fait <strong>${q2}</strong>.`;
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'turns', animateTurnsA:1 });
+      },
+      'prevoir-5': def => {
+        const cfg = choice([config2(1,2), config2(2,3), config2(3,4), config2(3,5)]);
+        const good = smallestTurnsForIntegerB(cfg);
+        const options = shuffle([1,2,3,4,5,6]).slice(0,4);
+        if(!options.includes(good)) options[0] = good;
+        const ordered = options.sort((a,b)=>a-b);
+        const prompt = `Quel est le plus petit nombre parmi ${ordered.join(', ')} pour que B fasse un nombre entier de tours ?`;
+        return mkCard(def, prompt, `La plus petite réponse correcte est <strong>${good}</strong>.`, cfg, { correctionDisplay:'turns', animateTurnsA:good });
+      },
+      'calculer-1': def => {
+        const reduced = choice([{p:1,q:2},{p:2,q:1},{p:3,q:1},{p:1,q:1},{p:3,q:2}]);
+        const cfg = config2(reduced.p,reduced.q);
+        const n = choice([1,2,3,4,5,6].filter(v => simplify(v*cfg.a,cfg.b).d===1));
+        const fr = simplify(n*cfg.a,cfg.b);
+        const prompt = `Observe le dessin. Si A fait ${n} tour(s), combien de tours fait B ?`;
+        return mkCard(def, prompt, `B fait <strong>${fr.n}</strong> tour(s).`, cfg, { correctionDisplay:'turns', animateTurnsA:n });
+      },
+      'calculer-2': def => {
+        const reduced = choice([{p:1,q:2},{p:2,q:1},{p:3,q:2},{p:1,q:4},{p:3,q:4}]);
+        const cfg = config2(reduced.p,reduced.q);
+        const fr = simplify(cfg.a,cfg.b);
+        const prompt = `Observe le dessin. Si A fait 1 tour, combien de tours fait B ?`;
+        return mkCard(def, prompt, `B fait <strong>${fracToStr(fr.n,fr.d)}</strong> tour(s).`, cfg, { correctionDisplay:'turns', animateTurnsA:1 });
+      },
+      'calculer-3': def => {
+        const reduced = choice([{p:2,q:3},{p:3,q:5},{p:4,q:3},{p:5,q:4},{p:3,q:4}]);
+        const cfg = config2(reduced.p,reduced.q);
+        const n = choice([1,2,3,4]);
+        const fr = simplify(n*cfg.a,cfg.b);
+        const prompt = `Observe le dessin. Si A fait ${n} tour(s), combien de tours fait B ? Écris la réponse sous forme simplifiée.`;
+        return mkCard(def, prompt, `B fait <strong>${fracToStr(fr.n,fr.d)}</strong> tour(s).`, cfg, { correctionDisplay:'turns', animateTurnsA:n });
+      },
+      'calculer-4': def => {
+        const mode = choice(['speed','teeth']);
+        if(mode==='speed'){
+          const cfg = choice([config2(1,2), config2(2,1), config2(2,3), config2(3,2)]);
+          const speedA = choice([12,18,24,30,36]);
+          const fr = simplify(speedA*cfg.a,cfg.b);
+          const prompt = `Observe le dessin. A tourne à ${speedA} tours par minute. À quelle rapidité tourne B ?`;
+          const ans = fr.d===1 ? `${fr.n} tours/minute` : `${fracToStr(fr.n,fr.d)} tours/minute`;
+          return mkCard(def, prompt, `B tourne à <strong>${ans}</strong>.`, cfg, { correctionDisplay:'speed', animateTurnsA:1, speedA });
+        } else {
+          const a = choice([12,15,18,20]);
+          const nA = choice([2,3,4,5]);
+          const nB = choice([1,2,3,4]);
+          const b = Math.round(a*nA/nB);
+          const cfg = {a,b,c:16,hasC:false};
+          const prompt = `Observe le dessin. Quand A fait ${nA} tour(s), B fait ${nB} tour(s). Combien de dents a B ?`;
+          return mkCard(def, prompt, `B a <strong>${b}</strong> dents.`, cfg, { correctionDisplay:'turns', animateTurnsA:nA });
+        }
+      },
+      'calculer-5': def => {
+        const cfg = choice([config2(1,2), config2(2,3), config2(3,4), config2(3,5), config2(4,3)]);
+        const good = smallestTurnsForIntegerB(cfg);
+        const passedTeeth = good * cfg.a;
+        const prompt = `Quel est le plus petit nombre de tours de A pour que B fasse un nombre entier de tours ?`;
+        const answer = `Le plus petit nombre est <strong>${good}</strong> tour(s). Cela correspond à <strong>${passedTeeth}</strong> dents entraînées, soit un multiple du nombre de dents de B.`;
+        return mkCard(def, prompt, answer, cfg, { correctionDisplay:'turns', animateTurnsA:good });
+      }
+    };
+
+
+    function buildChooser() {
+      const groups = ['Observer','Prévoir','Calculer'];
+      ui.categoryChooser.innerHTML = groups.map(theme => {
+        const defs = CATEGORY_DEFS.filter(d => d.theme === theme);
+        return `
+          <div class="theme-group">
+            <div class="theme-title">${theme}</div>
+            <div class="levels">
+              ${defs.map(def => `
+                <label class="level-chip" title="${def.desc}">
+                  <input type="checkbox" data-cat="${def.id}" ${(theme==='Observer' && def.level<=2) ? 'checked' : ''}>
+                  <span>${theme} ${def.level}</span>
+                </label>`).join('')}
+            </div>
+            <div class="small">${defs.map(d => `<strong>${d.level}</strong> : ${d.desc}`).join(' · ')}</div>
+          </div>`;
+      }).join('');
+
+      [...document.querySelectorAll('[data-cat]')].forEach(el => {
+        el.addEventListener('change', refreshSelectionSummary);
+      });
+      refreshSelectionSummary();
+    }
+
+    function selectedCategories() {
+      return [...document.querySelectorAll('[data-cat]:checked')].map(el => el.dataset.cat);
+    }
+
+    function refreshSelectionSummary() {
+      const defs = selectedCategories().map(id => CATEGORY_DEFS.find(d => d.id === id)).filter(Boolean);
+      if(!defs.length) {
+        ui.selectedSummary.innerHTML = '<span class="selection-empty">Aucune catégorie sélectionnée.</span>';
+        return;
+      }
+      ui.selectedSummary.innerHTML = defs.map(def => `<span class="selection-chip">${def.theme} ${def.level}</span>`).join('');
+    }
+
+    function setDrawerOpen(open) {
+      ui.categoryDrawer.classList.toggle('open', open);
+      ui.toggleCategories.textContent = open ? 'Masquer les catégories' : 'Choisir précisément';
+    }
+
+    function checkTheme(theme, checked) {
+      CATEGORY_DEFS.filter(d => d.theme===theme).forEach(d => {
+        const el = document.querySelector(`[data-cat=\"${d.id}\"]`);
+        if(el) el.checked = checked;
+      });
+      refreshSelectionSummary();
+    }
+
+    function gearPath(cx, cy, teeth, outerR, innerR) {
+      const steps = teeth * 2;
+      const pts = [];
+      for (let i = 0; i < steps; i++) {
+        const r = i % 2 === 0 ? outerR : innerR;
+        const angle = (-Math.PI / 2) + (i / steps) * Math.PI * 2;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        pts.push(`${i===0?'M':'L'} ${x.toFixed(2)} ${y.toFixed(2)}`);
+      }
+      return pts.join(' ') + ' Z';
+    }
+
+    function renderMiniSVG(cfg) {
+      const svgW = 260, svgH = 126, baseY = 58, pad = 16, labelY = 112;
+      const rawA = 8 + cfg.a * 0.72;
+      const rawB = 8 + cfg.b * 0.72;
+      const rawC = 8 + (cfg.c || 12) * 0.72;
+      const rawMax = cfg.hasC ? Math.max(rawA, rawB, rawC) : Math.max(rawA, rawB);
+      const rawSpan = cfg.hasC ? 2 * (rawA + rawC + rawB) : 2 * (rawA + rawB);
+      const scale = Math.min((svgW - pad * 2) / rawSpan, 76 / rawMax);
+      const rAOuter = rawA * scale, rBOuter = rawB * scale, rCOuter = rawC * scale;
+      const rAInner = Math.max(7, rAOuter - 4.5), rBInner = Math.max(7, rBOuter - 4.5), rCInner = Math.max(7, rCOuter - 4.5);
+      let xA, xB, xC = null;
+      if(cfg.hasC) {
+        const total = 2 * (rAOuter + rCOuter + rBOuter);
+        const left = (svgW - total) / 2;
+        xA = left + rAOuter;
+        xC = xA + rAOuter + rCOuter;
+        xB = xC + rCOuter + rBOuter;
+      } else {
+        const total = 2 * (rAOuter + rBOuter);
+        const left = (svgW - total) / 2;
+        xA = left + rAOuter;
+        xB = xA + rAOuter + rBOuter;
+      }
+      return `
+        <svg class="mini-svg" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="${svgW-2}" height="${svgH-2}" rx="16" fill="#f7faff" stroke="#dbe4f3"/>
+          <path d="${gearPath(xA,baseY,cfg.a,rAOuter,rAInner)}" fill="#79a6ff" stroke="#4e79c8" stroke-width="2"/>
+          <circle cx="${xA}" cy="${baseY}" r="${Math.max(5, rAInner-5)}" fill="#dfeafe" stroke="#4e79c8" stroke-width="2"/>
+          ${cfg.hasC ? `<path d="${gearPath(xC,baseY,cfg.c,rCOuter,rCInner)}" fill="#8ce071" stroke="#5ba94a" stroke-width="2"/><circle cx="${xC}" cy="${baseY}" r="${Math.max(5, rCInner-5)}" fill="#e9f9e4" stroke="#5ba94a" stroke-width="2"/>` : ''}
+          <path d="${gearPath(xB,baseY,cfg.b,rBOuter,rBInner)}" fill="#f5b35f" stroke="#d18a2d" stroke-width="2"/>
+          <circle cx="${xB}" cy="${baseY}" r="${Math.max(5, rBInner-5)}" fill="#fff0da" stroke="#d18a2d" stroke-width="2"/>
+          <text x="${xA}" y="${baseY+4}" text-anchor="middle" font-size="13" font-weight="bold" fill="#16345f">A</text>
+          ${cfg.hasC ? `<text x="${xC}" y="${baseY+4}" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f5f1d">C</text>` : ''}
+          <text x="${xB}" y="${baseY+4}" text-anchor="middle" font-size="13" font-weight="bold" fill="#6b3d00">B</text>
+          <text x="${xA}" y="${labelY}" text-anchor="middle" font-size="11" fill="#29406b">A ${cfg.a}</text>
+          ${cfg.hasC ? `<text x="${xC}" y="${labelY}" text-anchor="middle" font-size="11" fill="#2f6d2b">C ${cfg.c}</text>` : ''}
+          <text x="${xB}" y="${labelY}" text-anchor="middle" font-size="11" fill="#7a4b00">B ${cfg.b}</text>
+        </svg>`;
+    }
+
+
+    function allocateCategories(count, selected) {
+      const pool = shuffle([...selected]);
+      const result = [];
+      for(let i=0;i<count;i++) result.push(pool[i % pool.length]);
+      return shuffle(result);
+    }
+
+    function generateSeries() {
+      const selected = selectedCategories();
+      if(!selected.length) {
+        alert('Il faut cocher au moins une catégorie.');
+        return;
+      }
+      const count = parseInt(ui.cardCount.value,10);
+      appState.selectedForShuffle = [...selected];
+      const bucket = allocateCategories(count, selected);
+      appState.series = bucket.map(catId => generators[catId](CATEGORY_DEFS.find(d => d.id===catId)));
+      appState.currentIndex = 0;
+      appState.answerShown = false;
+      renderSeries();
+      showCard(0);
+    }
+
+    function reshuffleSeries() {
+      const selected = appState.selectedForShuffle.length ? appState.selectedForShuffle : selectedCategories();
+      if(!selected.length) return generateSeries();
+      const count = parseInt(ui.cardCount.value,10);
+      const bucket = allocateCategories(count, selected);
+      appState.series = bucket.map(catId => generators[catId](CATEGORY_DEFS.find(d => d.id===catId)));
+      appState.currentIndex = 0;
+      appState.answerShown = false;
+      renderSeries();
+      showCard(0);
+    }
+
+    function renderSeries() {
+      ui.seriesInfo.textContent = `${appState.series.length} carte(s) générée(s)`;
+      ui.seriesList.innerHTML = appState.series.map((card, idx) => `
+        <div class="series-card ${idx===appState.currentIndex ? 'active' : ''}" data-idx="${idx}">
+          ${renderMiniSVG(card.cfg)}
+          <div class="series-card-title">Carte ${idx+1} — ${card.theme} ${card.level}</div>
+          <div class="series-card-sub">${card.prompt}</div>
+        </div>`).join('');
+      [...ui.seriesList.querySelectorAll('[data-idx]')].forEach(el => {
+        el.addEventListener('click', () => showCard(parseInt(el.dataset.idx,10)));
+      });
+      renderPrintSheet();
+    }
+
+    function showCard(index) {
+      if(!appState.series.length) return;
+      appState.currentIndex = (index + appState.series.length) % appState.series.length;
+      appState.answerShown = false;
+      const card = appState.series[appState.currentIndex];
+      ui.cardInfo.textContent = `Question ${appState.currentIndex+1} / ${appState.series.length}`;
+      ui.questionMeta.innerHTML = `
+        <span class="badge">${card.theme}</span>
+        <span class="badge">Niveau ${card.level}</span>
+        <span class="badge">${card.desc}</span>`;
+      ui.questionTitle.textContent = `${card.theme} ${card.level} — ${card.desc}`;
+      ui.questionText.innerHTML = card.prompt;
+      ui.answerText.innerHTML = card.answer;
+      ui.answerBox.classList.remove('show');
+      const turns = card.animateTurnsA || 1;
+      ui.animateOnceBtn.textContent = turns === 1 ? 'Animer 1 tour de A' : `Animer ${turns} tours de A`;
+      [...ui.seriesList.querySelectorAll('.series-card')].forEach((el,i) => el.classList.toggle('active', i===appState.currentIndex));
+      applyCardToPlateau(card, false);
+    }
+
+    function plateauDoc() { return ui.plateauFrame.contentDocument || ui.plateauFrame.contentWindow.document; }
+    function setInputValue(doc,id,val) { const el = doc.getElementById(id); if(!el) return; el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); }
+    function setCheckbox(doc,id,checked) { const el = doc.getElementById(id); if(!el) return; el.checked = checked; el.dispatchEvent(new Event('change', {bubbles:true})); }
+    function clickInside(doc,id) { const el = doc.getElementById(id); if(el) el.click(); }
+
+    function correctionFlags(card) {
+      return {
+        showTurns: card.correctionDisplay === 'turns' || card.correctionDisplay === 'both',
+        showSpeed: card.correctionDisplay === 'speed' || card.correctionDisplay === 'both',
+        showArrows: true,
+        showMarker: true
+      };
+    }
+
+    function applyCardToPlateau(card, correction=false) {
+      if(!plateauReady) return;
+      const doc = plateauDoc();
+      setCheckbox(doc,'panelHasGearC', !!card.cfg.hasC);
+      setInputValue(doc,'teethA', card.cfg.a);
+      setInputValue(doc,'teethB', card.cfg.b);
+      if(card.cfg.hasC) setInputValue(doc,'teethC', card.cfg.c);
+      setCheckbox(doc,'panelShowLabels', true);
+      setCheckbox(doc,'panelShowPitch', false);
+      const flags = correction ? correctionFlags(card) : {showTurns:false, showSpeed:false, showArrows:false, showMarker:false};
+      setCheckbox(doc,'panelShowTurns', !!flags.showTurns);
+      setCheckbox(doc,'panelShowSpeed', !!flags.showSpeed);
+      setCheckbox(doc,'panelShowArrows', !!flags.showArrows);
+      setCheckbox(doc,'panelShowMarker', !!flags.showMarker);
+      setInputValue(doc,'speedNumber', correction && card.speedA ? card.speedA : 0);
+      clickInside(doc,'resetBtn');
+    }
+
+    function showAnswer() {
+      if(!appState.series.length) return;
+      appState.answerShown = true;
+      ui.answerBox.classList.add('show');
+      applyCardToPlateau(appState.series[appState.currentIndex], true);
+    }
+
+    function waitForTurnSequence(doc, timeout=12000) {
+      return new Promise(resolve => {
+        const start = Date.now();
+        const timer = setInterval(() => {
+          const btn = doc.getElementById('playPauseBtn');
+          if(!btn || btn.textContent.trim() === '▶' || Date.now() - start > timeout) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 80);
+      });
+    }
+
+    let animationRunToken = 0;
+    async function animateOnce() {
+      if(!plateauReady || !appState.series.length) return;
+      const card = appState.series[appState.currentIndex];
+      const doc = plateauDoc();
+      showAnswer();
+      const turns = Math.max(1, card.animateTurnsA || 1);
+      const speed = card.speedA || 240;
+      setInputValue(doc,'speedNumber', speed);
+      const token = ++animationRunToken;
+      for(let i=0;i<turns;i++) {
+        if(token !== animationRunToken) return;
+        clickInside(doc,'panelOneTurnABtn');
+        await waitForTurnSequence(doc);
+      }
+    }
+
+    function playStage() {
+      if(!plateauReady || !appState.series.length) return;
+      const card = appState.series[appState.currentIndex];
+      const doc = plateauDoc();
+      showAnswer();
+      setInputValue(doc,'speedNumber', card.speedA || 60);
+      const btn = doc.getElementById('playPauseBtn');
+      if(btn && btn.textContent.trim() === '▶') btn.click();
+    }
+
+    function resetStage() {
+      animationRunToken++;
+      if(!plateauReady || !appState.series.length) return;
+      const doc = plateauDoc();
+      setInputValue(doc,'speedNumber', 0);
+      clickInside(doc,'resetBtn');
+      applyCardToPlateau(appState.series[appState.currentIndex], appState.answerShown);
+    }
+
+    function renderPrintSheet() {
+      const cards = appState.series;
+      const pages = [];
+      for(let i=0;i<cards.length;i+=6) pages.push(cards.slice(i,i+6));
+      ui.printSheet.innerHTML = pages.map(page => `
+        <section class="print-page">
+          ${page.map((card, idx) => `
+            <article class="print-card">
+              <div class="print-meta">${card.theme} · Niveau ${card.level}</div>
+              <h3>Carte</h3>
+              ${renderMiniSVG(card.cfg)}
+              <p>${card.prompt}</p>
+            </article>`).join('')}
+        </section>`).join('');
+    }
+
+
+    function loadPlateau() {
+      ui.plateauFrame.srcdoc = PLATEAU_HTML;
+      ui.plateauFrame.addEventListener('load', () => {
+        plateauReady = true;
+        if(appState.series.length) showCard(appState.currentIndex);
+      }, {once:true});
+    }
+
+    buildChooser();
+    loadPlateau();
+
+    ui.generateBtn.addEventListener('click', generateSeries);
+    ui.shuffleBtn.addEventListener('click', reshuffleSeries);
+    ui.prevBtn.addEventListener('click', () => showCard(appState.currentIndex-1));
+    ui.nextBtn.addEventListener('click', () => showCard(appState.currentIndex+1));
+    ui.showAnswerBtn.addEventListener('click', showAnswer);
+    ui.animateOnceBtn.addEventListener('click', animateOnce);
+    ui.animatePlayBtn.addEventListener('click', playStage);
+    ui.resetStageBtn.addEventListener('click', resetStage);
+    ui.printBtn.addEventListener('click', () => window.print());
+
+    ui.toggleCategories.addEventListener('click', () => setDrawerOpen(!ui.categoryDrawer.classList.contains('open')));
+    ui.selectObserver.addEventListener('click', () => { checkTheme('Observer', true); checkTheme('Prévoir', false); checkTheme('Calculer', false); });
+    ui.selectPrevoir.addEventListener('click', () => { checkTheme('Observer', false); checkTheme('Prévoir', true); checkTheme('Calculer', false); });
+    ui.selectCalculer.addEventListener('click', () => { checkTheme('Observer', false); checkTheme('Prévoir', false); checkTheme('Calculer', true); });
+    ui.selectAll.addEventListener('click', () => { CATEGORY_DEFS.forEach(d => { const el=document.querySelector(`[data-cat="${d.id}"]`); if(el) el.checked = true; }); refreshSelectionSummary(); });
+    ui.clearAll.addEventListener('click', () => { CATEGORY_DEFS.forEach(d => { const el=document.querySelector(`[data-cat="${d.id}"]`); if(el) el.checked = false; }); refreshSelectionSummary(); });
+
+    ui.fullscreenBtn.addEventListener('click', async () => {
+      if (!document.fullscreenElement) await ui.viewerPanel.requestFullscreen().catch(()=>{});
+      else await document.exitFullscreen().catch(()=>{});
+    });
+    document.addEventListener('fullscreenchange', () => {
+      ui.fullscreenBtn.textContent = document.fullscreenElement ? '⤢ Quitter le plein écran' : '⛶ Plein écran';
+    });
+
+    if(ui.outputMode) ui.outputMode.addEventListener('change', () => { if(ui.outputMode.value === 'print') window.print(); });
+
+    window.addEventListener('keydown', (e) => {
+      if(e.key === 'ArrowRight') showCard(appState.currentIndex+1);
+      if(e.key === 'ArrowLeft') showCard(appState.currentIndex-1);
+      if(e.key.toLowerCase() === 'c') showAnswer();
+      if(e.key.toLowerCase() === 'a') animateOnce();
+      if(e.key.toLowerCase() === 'r') resetStage();
+    });
+
+    generateSeries();
+  </script>
+</body>
+</html>
