@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Menu des Ateliers</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-gradient: radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
+                           radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, transparent 50%), 
+                           radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, transparent 50%);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --primary: #3b82f6; 
+        }
+
+        body {
+            background-color: var(--bg-page);
+            background-image: var(--bg-gradient);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        /* --- EN-TÊTE --- */
+        .header-section {
+            padding: 1.5rem 1rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .back-nav {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .back-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            background: #fff;
+            transform: translateX(-3px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0.5rem 0 1.5rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- CONTROLES --- */
+        .controls-wrapper {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            text-align: center;
+            outline: none;
+            background: #f8fafc;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .search-input::placeholder {
+            text-align: center;
+        }
+        .search-input:focus {
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .chip {
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chip:hover {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+        .chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        /* --- GRILLE --- */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 1.25rem;
+        }
+
+        .choice-card {
+            text-decoration: none;
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            border: 1px solid transparent; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+            position: relative;
+            color: var(--text-main);
+        }
+
+        .choice-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+            border-color: rgba(0,0,0,0.05);
+        }
+
+        .choice-card.hidden { display: none; }
+
+        .icon-wrapper {
+            height: 3rem;
+            width: 3rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            transition: transform 0.2s;
+        }
+        .choice-card:hover .icon-wrapper { transform: scale(1.1); }
+        
+        .icon-wrapper svg {
+            width: 32px;
+            height: 32px;
+            stroke-width: 2;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.3;
+            color: #334155;
+        }
+
+        /* Couleurs dynamiques (cycle de 6) */
+        .choice-card:nth-child(6n+1) .icon-wrapper { background: #eff6ff; color: #2563eb; }
+        .choice-card:nth-child(6n+1):hover { border-bottom: 3px solid #2563eb; }
+        
+        .choice-card:nth-child(6n+2) .icon-wrapper { background: #f0fdf4; color: #16a34a; }
+        .choice-card:nth-child(6n+2):hover { border-bottom: 3px solid #16a34a; }
+
+        .choice-card:nth-child(6n+3) .icon-wrapper { background: #f5f3ff; color: #7c3aed; }
+        .choice-card:nth-child(6n+3):hover { border-bottom: 3px solid #7c3aed; }
+
+        .choice-card:nth-child(6n+4) .icon-wrapper { background: #fff7ed; color: #ea580c; }
+        .choice-card:nth-child(6n+4):hover { border-bottom: 3px solid #ea580c; }
+
+        .choice-card:nth-child(6n+5) .icon-wrapper { background: #fdf2f8; color: #db2777; }
+        .choice-card:nth-child(6n+5):hover { border-bottom: 3px solid #db2777; }
+
+        .choice-card:nth-child(6n+6) .icon-wrapper { background: #eef2ff; color: #4f46e5; }
+        .choice-card:nth-child(6n+6):hover { border-bottom: 3px solid #4f46e5; }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            display: none;
+            font-style: italic;
+        }
+        
+        .construction-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #fff;
+            border-radius: 50%;
+            padding: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #f59e0b;
+        }
+        .construction-badge svg { width: 14px; height: 14px; }
+
+    </style>
+</head>
+<body>
+<header class="header-section">
+<nav class="back-nav">
+<a class="back-link" href="../">
+<i data-lucide="arrow-left"></i> Retour
+            </a>
+</nav>
+<h1>Les Plateaux</h1>
+<div class="controls-wrapper">
+<div class="search-box">
+<i data-lucide="search"></i>
+<input autocomplete="off" class="search-input" id="searchInput" placeholder="Chercher un outil." type="text"/>
+</div>
+<div class="filters">
+<span class="chip active" data-filter="all">Tout</span>
+<span class="chip" data-filter="relatifs">Relatifs</span>
+<span class="chip" data-filter="fractions">Fractions</span>
+<span class="chip" data-filter="puissances">Puissances</span> <span class="chip" data-filter="algebre">Algèbre</span>
+<span class="chip" data-filter="geometrie">Géométrie</span>
+<span class="chip" data-filter="mesures">Mesures</span>
+<span class="chip" data-filter="numeration">Numération</span>
+<span class="chip" data-filter="donnees">Données</span>
+</div>
+</div>
+</header>
+<div class="main-container">
+<div class="choice-grid" id="grid">
+<a class="choice-card" data-tags="mesures aire perimetre surface" href="aire_perimetre_plateau.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<rect height="18" rx="2" width="18" x="3" y="3"></rect>
+<path d="M9 3v18M15 3v18M3 9h18M3 15h18"></path>
+</svg>
+</div>
+<h2 class="card-title">Aire &amp; Périmètre</h2>
+</a>
+<a class="choice-card" data-tags="fractions partage" href="bandes_fractions.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<rect height="4" rx="1" width="18" x="3" y="4"></rect>
+<line x1="9" x2="9" y1="4" y2="8"></line>
+<line x1="15" x2="15" y1="4" y2="8"></line>
+<rect height="4" rx="1" width="18" x="3" y="10"></rect>
+<line x1="12" x2="12" y1="10" y2="14"></line>
+<rect height="4" rx="1" width="18" x="3" y="16"></rect>
+<line x1="7" x2="7" y1="16" y2="20"></line>
+<line x1="12" x2="12" y1="16" y2="20"></line>
+<line x1="17" x2="17" y1="16" y2="20"></line>
+</svg>
+</div>
+<h2 class="card-title">Bandes de fractions</h2>
+</a>
+<a class="choice-card" data-tags="geometrie construction" href="bandes_magnetiques.html">
+<div class="icon-wrapper"><i data-lucide="magnet"></i></div>
+<h2 class="card-title">Bandes Magnétiques</h2>
+</a>
+<a class="choice-card" data-tags="mesures longueur" href="conversions.html">
+<div class="icon-wrapper"><i data-lucide="arrow-left-right"></i></div>
+<h2 class="card-title">Conversions</h2>
+</a>
+<a class="choice-card" data-tags="geometrie 3d volume" href="cubes_construction.html">
+<div class="icon-wrapper"><i data-lucide="box"></i></div>
+<h2 class="card-title">Cubes Construction</h2>
+</a>
+<a class="choice-card" data-tags="fractions camembert" href="disques_fractions.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="9"></circle>
+<line x1="12" x2="12" y1="3" y2="21"></line>
+<line x1="3" x2="21" y1="12" y2="12"></line>
+<path d="M12 12 L12 3 A9 9 0 0 1 21 12 Z"></path>
+</svg>
+</div>
+<h2 class="card-title">Disques de fractions</h2>
+</a>
+<a class="choice-card" data-tags="geometrie engrenages rotation vitesse rapport dents mecanique transmission fraction fractions divisibilite divisible" href="engrenages_plateau.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="7"></circle>
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"></path>
+</svg>
+</div>
+<h2 class="card-title">Engrenages</h2>
+</a>
+<a class="choice-card" data-tags="geometrie angle rapporteur" href="gabarits_angles.html">
+<div class="icon-wrapper"><i data-lucide="triangle"></i></div>
+<h2 class="card-title">Gabarits Angles</h2>
+</a>
+<a class="choice-card" data-tags="numeration decimal tableau decimaux" href="glisse_nombres_decimaux.html">
+<div class="icon-wrapper"><i data-lucide="move"></i></div>
+<h2 class="card-title">Glisse décimaux</h2>
+</a>
+<a class="choice-card" data-tags="numeration tableau entiers" href="glisse_entiers_flex.html">
+<div class="icon-wrapper"><i data-lucide="move"></i></div>
+<h2 class="card-title">Glisse entiers</h2>
+</a>
+<a class="choice-card" data-tags="donnees probabilites hasard des" href="le_grand_pari.html">
+<div class="icon-wrapper"><i data-lucide="dices"></i></div>
+<h2 class="card-title">Le Grand Pari</h2>
+</a>
+<a class="choice-card" data-tags="mesures temps horloge" href="maitre_du_temps.html">
+<div class="icon-wrapper"><i data-lucide="clock"></i></div>
+<h2 class="card-title">Maître du temps</h2>
+</a>
+<a class="choice-card" data-tags="geometrie pythagore aires theoreme puzzle" href="moulin_pythagore.html">
+<div class="icon-wrapper"><i data-lucide="wind"></i></div>
+<h2 class="card-title">Moulin de Pythagore</h2>
+</a>
+<a class="choice-card" data-tags="donnees statistique" href="moyennes.html">
+<div class="icon-wrapper"><i data-lucide="bar-chart-3"></i></div>
+<h2 class="card-title">Moyennes</h2>
+</a>
+<a class="choice-card" data-tags="numeration decimal dixieme centieme plateau" href="numeration_decimale.html">
+<div class="icon-wrapper"><i data-lucide="hash"></i></div>
+<h2 class="card-title">Numération décimale</h2>
+</a>
+<a class="choice-card" data-tags="puissances exposant" href="feuille_coupee_puissance.html">
+<div class="icon-wrapper"><i data-lucide="scissors"></i></div>
+<h2 class="card-title">Puissances : Feuille coupée</h2>
+</a>
+<a class="choice-card" data-tags="agrandissement reduction proportionnalite geometrie puzzle" href="puzzle_brousseau.html">
+<div class="icon-wrapper"><i data-lucide="puzzle"></i></div>
+<h2 class="card-title">Puzzle de Brousseau</h2>
+</a>
+<a class="choice-card" data-tags="donnees proportionnalite" href="ratio.html">
+<div class="icon-wrapper"><i data-lucide="divide"></i></div>
+<h2 class="card-title">Ratio</h2>
+</a>
+<a class="choice-card" data-tags="relatifs addition soustraction" href="nombres_relatifs_somme_difference.html">
+<div class="icon-wrapper">
+<svg fill="none" viewBox="0 0 24 24">
+<circle cx="7" cy="12" fill="#ef4444" r="4.5"></circle> <circle cx="17" cy="12" fill="#22c55e" r="4.5"></circle> </svg>
+</div>
+<h2 class="card-title">Relatifs 1 : Découverte</h2>
+</a>
+<a class="choice-card" data-tags="relatifs automatique" href="nombres_relatifs_somme_differenceB.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="5" cy="8" fill="#ef4444" r="2.5" stroke="none"></circle>
+<circle cx="5" cy="16" fill="#22c55e" r="2.5" stroke="none"></circle>
+<polygon points="17 2 17 10 23 10 15 22 15 14 9 14 17 2"></polygon>
+</svg>
+</div>
+<h2 class="card-title">Relatifs 2 : Méthode auto</h2>
+</a>
+<a class="choice-card" data-tags="relatifs automatique claire" href="nombres_relatifs_somme_differenceBClaire.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="5" cy="8" fill="#ef4444" r="2.5" stroke="none"></circle>
+<circle cx="5" cy="16" fill="#22c55e" r="2.5" stroke="none"></circle>
+<polygon points="17 2 17 10 23 10 15 22 15 14 9 14 17 2"></polygon>
+</svg>
+</div>
+<h2 class="card-title">Relatifs 2 : méthode Claire</h2>
+</a>
+<a class="choice-card" data-tags="relatifs opposé" href="nombres_relatifs_somme_differenceC.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="6" cy="8" fill="#ef4444" r="3" stroke="none"></circle>
+<circle cx="6" cy="16" fill="#22c55e" r="3" stroke="none"></circle>
+<path d="M12 8h8"></path>
+<path d="M16 5l4 3-4 3"></path>
+<path d="M20 16h-8"></path>
+<path d="M16 13l-4 3 4 3"></path>
+</svg>
+</div>
+<h2 class="card-title">Relatifs 3 : Opposé</h2>
+</a>
+<a class="choice-card" data-tags="relatifs parentheses" href="nombres_relatifs_somme_differenceD.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<path d="M5 4 Q 1 12 5 20"></path> <path d="M19 4 Q 23 12 19 20"></path> <circle cx="8.5" cy="12" fill="#ef4444" r="3.5" stroke="none"></circle>
+<circle cx="15.5" cy="12" fill="#22c55e" r="3.5" stroke="none"></circle>
+</svg>
+</div>
+<h2 class="card-title">Relatifs 4 : Parenthèses</h2>
+</a>
+<a class="choice-card" data-tags="donnees graphiques" href="stats_city.html">
+<div class="icon-wrapper"><i data-lucide="activity"></i></div>
+<h2 class="card-title">Stats city</h2>
+</a>
+<a class="choice-card" data-tags="algebre calcul litteral" href="tuiles_algebriques.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<rect fill="#ef4444" height="8" rx="1" stroke="none" width="8" x="2" y="14"></rect>
+<rect fill="#22c55e" height="20" rx="1" stroke="none" width="8" x="12" y="2"></rect>
+</svg>
+</div>
+<h2 class="card-title">Tuiles algébriques</h2>
+</a>
+<a class="choice-card" data-tags="algebre equation egalite" href="tuiles_algebriques_mode_equation.html">
+<div class="icon-wrapper">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<rect fill="#22c55e" height="10" rx="1" stroke="none" width="6" x="2" y="4"></rect>
+<rect fill="#ef4444" height="6" rx="1" stroke="none" width="6" x="2" y="16"></rect>
+<line x1="10.5" x2="13.5" y1="11" y2="11"></line>
+<line x1="10.5" x2="13.5" y1="13" y2="13"></line>
+<rect fill="#22c55e" height="10" rx="1" stroke="none" width="6" x="16" y="4"></rect>
+<rect fill="#ef4444" height="6" rx="1" stroke="none" width="6" x="16" y="16"></rect>
+</svg>
+</div>
+<h2 class="card-title">Tuiles ax+b=cx+d</h2>
+</a>
+<a class="choice-card" data-tags="mesures aire surface conversions conversion" href="unites_aires.html">
+<div class="icon-wrapper"><i data-lucide="maximize"></i></div>
+<h2 class="card-title">Unités d'aire : conversions</h2>
+</a>
+</div>
+<div class="empty-state" id="emptyMsg">
+            Aucun outil ne correspond à votre recherche... 🕵️‍♂️
+        </div>
+</div>
+<script>
+        lucide.createIcons();
+
+        const searchInput = document.getElementById('searchInput');
+        const chips = document.querySelectorAll('.chip');
+        const cards = document.querySelectorAll('.choice-card');
+        const emptyMsg = document.getElementById('emptyMsg');
+
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function normalize(str) {
+            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function filterCards() {
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = normalize(card.querySelector('.card-title').textContent);
+                const tags = card.getAttribute('data-tags') || '';
+                const searchMatch = title.includes(currentSearch) || tags.includes(currentSearch);
+                const filterMatch = currentFilter === 'all' || tags.includes(currentFilter);
+
+                if (searchMatch && filterMatch) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            currentSearch = normalize(e.target.value);
+            filterCards();
+        });
+
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentFilter = chip.getAttribute('data-filter');
+                filterCards();
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
