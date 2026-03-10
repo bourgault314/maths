@@ -277,7 +277,7 @@
           <label for="panelMarkerMode" style="font-weight:600; color:#20304b;">Position du repère</label>
           <select id="panelMarkerMode" class="val-input" style="width:auto; min-width:170px;">
             <option value="top">Repères à midi</option>
-            <option value="facing">Repères en face</option>
+            <option value="facing" id="panelMarkerFacingOption">Repères en face</option>
           </select>
         </div>
         <div style="margin-top: 10px; border-top: 1px solid #dbe4f3; padding-top: 10px;">
@@ -368,7 +368,7 @@
               <label for="fsMarkerMode" style="font-weight:600; color:#20304b;">Position du repère</label>
               <select id="fsMarkerMode" class="val-input" style="width:auto; min-width:170px;">
                 <option value="top">Repères à midi</option>
-                <option value="facing">Repères en face</option>
+                <option value="facing" id="fsMarkerFacingOption">Repères en face</option>
               </select>
             </div>
             
@@ -477,6 +477,7 @@
       panelShowArrows: document.getElementById("panelShowArrows"),
       panelShowMarker: document.getElementById("panelShowMarker"),
       panelMarkerMode: document.getElementById("panelMarkerMode"),
+      panelMarkerFacingOption: document.getElementById("panelMarkerFacingOption"),
       panelShowLabels: document.getElementById("panelShowLabels"),
       panelShowPitch: document.getElementById("panelShowPitch"),
       panelShowTurns: document.getElementById("panelShowTurns"),
@@ -487,6 +488,7 @@
       fsShowArrows: document.getElementById("fsShowArrows"),
       fsShowMarker: document.getElementById("fsShowMarker"),
       fsMarkerMode: document.getElementById("fsMarkerMode"),
+      fsMarkerFacingOption: document.getElementById("fsMarkerFacingOption"),
       fsShowLabels: document.getElementById("fsShowLabels"),
       fsShowTurns: document.getElementById("fsShowTurns"),
       fsShowSpeed: document.getElementById("fsShowSpeed"),
@@ -504,12 +506,30 @@
       formulaText: document.getElementById("formulaText")
     };
 
+    function updateMarkerModeAvailability(){
+      const lockToTop = state.hasGearC;
+      if (ui.panelMarkerFacingOption) {
+        ui.panelMarkerFacingOption.hidden = lockToTop;
+        ui.panelMarkerFacingOption.disabled = lockToTop;
+      }
+      if (ui.fsMarkerFacingOption) {
+        ui.fsMarkerFacingOption.hidden = lockToTop;
+        ui.fsMarkerFacingOption.disabled = lockToTop;
+      }
+      if (lockToTop && state.markerMode !== "top") {
+        state.markerMode = "top";
+      }
+      ui.panelMarkerMode.value = state.markerMode;
+      ui.fsMarkerMode.value = state.markerMode;
+    }
+
     ui.fsTeethA.value = state.teethA;
     ui.fsTeethB.value = state.teethB;
     ui.fsTeethC.value = state.teethC;
     ui.fsSpeed.value = state.speedMagnitude;
     ui.panelMarkerMode.value = state.markerMode;
     ui.fsMarkerMode.value = state.markerMode;
+    updateMarkerModeAvailability();
 
     ui.panelShowInfos.addEventListener("change", (e) => {
       ui.infosPanel.style.display = e.target.checked ? "block" : "none";
@@ -922,6 +942,7 @@
         ui.rowGearC.classList.add("hidden");
         ui.fsRowGearC.classList.add("hidden");
       }
+      updateMarkerModeAvailability();
       resetAngles();
     }
     ui.panelHasGearC.addEventListener("change", (e) => toggleGearC(e.target.checked));
@@ -961,8 +982,16 @@
     syncCheckboxes("showArrows", "panelShowArrows", "fsShowArrows");
     syncCheckboxes("showMarker", "panelShowMarker", "fsShowMarker");
     function syncSelects(stateKey, id1, id2) {
-      ui[id1].addEventListener("change", (e) => { state[stateKey] = e.target.value; ui[id2].value = e.target.value; render(); });
-      ui[id2].addEventListener("change", (e) => { state[stateKey] = e.target.value; ui[id1].value = e.target.value; render(); });
+      ui[id1].addEventListener("change", (e) => {
+        state[stateKey] = (state.hasGearC && e.target.value === "facing") ? "top" : e.target.value;
+        updateMarkerModeAvailability();
+        render();
+      });
+      ui[id2].addEventListener("change", (e) => {
+        state[stateKey] = (state.hasGearC && e.target.value === "facing") ? "top" : e.target.value;
+        updateMarkerModeAvailability();
+        render();
+      });
     }
     syncSelects("markerMode", "panelMarkerMode", "fsMarkerMode");
     syncCheckboxes("showLabels", "panelShowLabels", "fsShowLabels");
