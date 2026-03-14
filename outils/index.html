@@ -107,9 +107,8 @@ a.card:hover {
   box-shadow: 0 8px 16px rgba(0,0,0,0.08);
 }
 
-/* Style léger pour indiquer l'état de développement sans bloquer le clic */
 a.card.working {
-  border-style: dashed; /* Bordure en pointillés pour l'effet "non fini" */
+  border-style: dashed; 
 }
 
 .badge-work {
@@ -155,7 +154,6 @@ footer {
   padding-bottom: 20px;
 }
 
-/* Bloc contact discret en bas de page */
 .site-footer {
   margin-top: 40px;
   padding-bottom: 20px;
@@ -172,61 +170,79 @@ footer {
   font-weight: 700;
 }
 
+/* --- DÉBUT MODAL ME CONTACTER UNIFIÉ --- */
 #contact-modal {
   display: none;
   position: fixed;
   z-index: 1000;
   inset: 0;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(5px);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
   align-items: center;
   justify-content: center;
   padding: 16px;
 }
 
 .modal-content {
-  background: #fff;
-  padding: 2rem;
+  background: #ffffff;
+  padding: 2.5rem;
   border-radius: 24px;
-  width: min(420px, 100%);
+  width: 100%;
+  max-width: 420px;
   position: relative;
-  border: 1px solid var(--border);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-sizing: border-box;
 }
 
 .close-modal {
   position: absolute;
-  top: 12px;
-  right: 18px;
+  top: 16px;
+  right: 20px;
   cursor: pointer;
   font-size: 28px;
   color: #94a3b8;
   line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-modal:hover {
+  color: #1e1b4b;
 }
 
 .modal-content h2 {
-  margin: 0 0 10px;
-  color: var(--c-teal);
-  font-size: 1.4rem;
+  margin: 0 0 12px;
+  color: #1e1b4b;
+  font-size: 1.5rem;
+  font-weight: 800;
 }
 
 .modal-note {
-  margin: 0 0 18px;
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  line-height: 1.45;
+  margin: 0 0 20px;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .modal-content input,
 .modal-content textarea {
   width: 100%;
   padding: 14px;
-  margin: 10px 0;
-  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  font: inherit;
-  color: var(--fg);
-  background: #fff;
+  font-family: inherit;
+  color: #1e1b4b;
+  background: #f8fafc;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #1e1b4b;
+  background: #ffffff;
 }
 
 .modal-content textarea {
@@ -235,23 +251,24 @@ footer {
 }
 
 .btn-send {
-  background: var(--c-teal);
-  color: #fff;
+  background: #1e1b4b;
+  color: #ffffff;
   border: none;
   width: 100%;
-  padding: 14px;
+  padding: 15px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
-  margin-top: 10px;
-  transition: filter 0.2s ease, transform 0.15s ease;
+  font-size: 1rem;
+  margin-top: 8px;
+  transition: transform 0.15s ease, filter 0.2s ease;
 }
 
 .btn-send:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
+  filter: brightness(1.2);
+  transform: translateY(-2px);
 }
-
+/* --- FIN MODAL ME CONTACTER UNIFIÉ --- */
 </style>
 </head>
 <body>
@@ -336,15 +353,6 @@ footer {
   </div>
   
 </main>
-
-<script>
-  window.onclick = function(event) {
-    const modal = document.getElementById('contact-modal');
-    if (event.target === modal) {
-      modal.style.display = 'none';
-    }
-  }
-</script>
 
 </body>
 </html>
