@@ -3,14 +3,9 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Bienvenue</title>
     <title>Outils Mathématiques | Bourgault Gwenaël</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-page: #f8fafc;
-            --text-main: #1e293b;
             --primary: #1e1b4b;
             --accent: #4338ca;
             --bg-page: #fdfcf9;
@@ -19,12 +14,8 @@
 
         body {
             background-color: var(--bg-page);
-            color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -32,21 +23,7 @@
             min-height: 100vh;
         }
 
-        /* Conteneur principal centré */
-        .welcome-container {
-            width: 100%;
-            max-width: 600px;
-            padding: 2rem;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        /* Carte d'accueil */
         .card {
-            background: white;
-            border-radius: 24px;
-            padding: 3rem 2rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             background: #ffffff;
             padding: 3.5rem 2.5rem;
             border-radius: 30px;
@@ -57,32 +34,20 @@
             width: 90%;
             transition: transform 0.3s ease;
         }
-        
-        /* Petit effet au survol de la carte globale */
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         .emoji-header {
             font-size: 4rem;
             margin-bottom: 1rem;
             animation: wave 2.5s infinite;
-            transform-origin: 70% 70%;
             display: inline-block;
             transform-origin: 70% 70%;
         }
 
         @keyframes wave {
-            0% { transform: rotate( 0.0deg) }
-            10% { transform: rotate(14.0deg) }
-            20% { transform: rotate(-8.0deg) }
-            30% { transform: rotate(14.0deg) }
-            40% { transform: rotate(-4.0deg) }
-            50% { transform: rotate(10.0deg) }
-            60% { transform: rotate( 0.0deg) }
-            100% { transform: rotate( 0.0deg) }
             0%, 100% { transform: rotate(0deg) }
             20% { transform: rotate(12deg) }
             40% { transform: rotate(-8deg) }
@@ -90,36 +55,23 @@
         }
 
         h1 {
-            font-size: 2.5rem;
             font-size: 2.6rem;
             font-weight: 800;
-            margin: 0 0 1rem 0;
-            color: var(--text-main);
-            letter-spacing: -0.05rem;
             color: var(--primary);
             margin: 0;
             letter-spacing: -1px;
         }
 
         p.subtitle {
-            font-size: 1.25rem;
             color: #475569;
             font-size: 1.15rem;
             line-height: 1.6;
-            color: var(--text-muted);
-            margin: 0 0 2.5rem 0;
-            font-weight: 500;
             margin: 1.5rem 0 2.5rem;
         }
 
-        /* Bouton d'action principal */
         .btn-start {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            background-color: var(--primary);
-            color: white;
             gap: 12px;
             background: #ffffff;
             color: var(--primary);
@@ -127,28 +79,16 @@
             padding: 14px 35px;
             border-radius: 16px;
             text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 600;
-            padding: 1rem 2.5rem;
-            border-radius: 50px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
             font-weight: 700;
             transition: all 0.3s ease;
         }
 
         .btn-start:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 12px -1px rgba(37, 99, 235, 0.4);
             background: var(--primary);
             color: #ffffff;
             box-shadow: 0 10px 20px rgba(30, 27, 75, 0.2);
         }
 
-        .btn-start svg {
-            width: 24px;
-            height: 24px;
         /* Fenêtre de Contact */
         #contact-modal {
             display: none;
@@ -212,18 +152,11 @@
 
         footer {
             margin-top: 3rem;
-            color: #94a3b8;
             color: var(--text-muted);
             font-size: 0.9rem;
-            font-weight: 500;
             text-align: center;
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
-            h1 { font-size: 2rem; }
-            .card { padding: 2rem 1.5rem; }
-            .emoji-header { font-size: 3rem; }
         .contact-btn {
             color: var(--primary);
             text-decoration: underline;
@@ -234,16 +167,6 @@
 </head>
 <body>
 
-    <div class="welcome-container">
-        
-        <div class="card">
-            <div class="emoji-header">👋</div>
-            
-            <h1>Bienvenue</h1>
-            
-            <p class="subtitle">
-                Outils à l'usage des profs et des élèves en mathématiques.
-            </p>
     <div class="card">
         <div class="emoji-header">👋</div>
         <h1>Bienvenue</h1>
@@ -254,11 +177,6 @@
         </a>
     </div>
 
-            <a href="outils/" class="btn-start">
-                <span>Accéder aux outils</span>
-                <!-- Flèche icon -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
     <footer>
         Site pédagogique — Bourgault Gwenaël<br>
         <span class="contact-btn" onclick="document.getElementById('contact-modal').style.display='flex'">Me contacter</span>
@@ -278,11 +196,6 @@
                 <button type="submit" class="btn-send">Envoyer le message</button>
             </form>
         </div>
-
-        <footer>
-            Site pédagogique — Bourgault Gwenaël
-        </footer>
-
     </div>
 
     <script>
