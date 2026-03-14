@@ -9,77 +9,40 @@
             --primary: #1e1b4b;
             --accent: #4338ca;
             --bg-page: #fdfcf9;
-            --text-muted: #64748b;
         }
 
         body {
             background-color: var(--bg-page);
+            /* PAVAGE NETTOYÉ : Suppression radicale des lignes centrales */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%231e1b4b' stroke-width='0.4' stroke-opacity='0.1'%3E%3Cpath d='M50 0 L62 38 L100 50 L62 62 L50 100 L38 62 L0 50 L38 38 Z'/%3E%3Cpath d='M15 15 L30 30 M85 15 L70 30 M15 85 L30 70 M85 85 L70 70'/%3E%3C/g%3E%3C/svg%3E");
             font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
         }
 
         .card {
-            background: #ffffff;
-            padding: 3.5rem 2.5rem;
-            border-radius: 30px;
-            text-align: center;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 3.5rem 2.5rem; border-radius: 30px; text-align: center;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-            max-width: 460px;
-            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            max-width: 460px; width: 90%;
             transition: transform 0.3s ease;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
+        .card:hover { transform: translateY(-5px); }
 
-        .emoji-header {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            animation: wave 2.5s infinite;
-            display: inline-block;
-            transform-origin: 70% 70%;
-        }
+        .emoji-header { font-size: 4rem; margin-bottom: 1rem; animation: wave 2.5s infinite; display: inline-block; transform-origin: 70% 70%; }
+        @keyframes wave { 0%, 100% { transform: rotate(0deg) } 20% { transform: rotate(12deg) } 40% { transform: rotate(-8deg) } 60% { transform: rotate(10deg) } }
 
-        @keyframes wave {
-            0%, 100% { transform: rotate(0deg) }
-            20% { transform: rotate(12deg) }
-            40% { transform: rotate(-8deg) }
-            60% { transform: rotate(10deg) }
-        }
-
-        h1 {
-            font-size: 2.6rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin: 0;
-            letter-spacing: -1px;
-        }
-
-        p.subtitle {
-            color: #475569;
-            font-size: 1.15rem;
-            line-height: 1.6;
-            margin: 1.5rem 0 2.5rem;
-        }
+        h1 { font-size: 2.6rem; font-weight: 800; color: var(--primary); margin: 0; letter-spacing: -1px; }
+        p.subtitle { color: #475569; font-size: 1.15rem; line-height: 1.6; margin: 1.5rem 0 2.5rem; }
 
         .btn-start {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: #ffffff;
-            color: var(--primary);
+            display: inline-flex; align-items: center; gap: 12px;
+            background: #ffffff; color: var(--primary); 
             border: 2px solid var(--primary);
-            padding: 14px 35px;
-            border-radius: 16px;
-            text-decoration: none;
-            font-weight: 700;
+            padding: 14px 35px; border-radius: 16px; 
+            text-decoration: none; font-weight: 700;
             transition: all 0.3s ease;
         }
 
@@ -89,80 +52,35 @@
             box-shadow: 0 10px 20px rgba(30, 27, 75, 0.2);
         }
 
-        /* Fenêtre de Contact */
         #contact-modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(5px);
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; z-index: 100; left: 0; top: 0;
+            width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(5px); align-items: center; justify-content: center;
         }
 
         .modal-content {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
+            background: white; padding: 2.5rem; border-radius: 24px;
+            width: 90%; max-width: 400px; position: relative;
         }
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 28px;
-            color: #94a3b8;
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 28px; color: #94a3b8; }
+        
+        input, textarea { 
+            width: 100%; padding: 14px; margin: 10px 0; 
+            border: 1px solid #e2e8f0; border-radius: 12px; 
+            font-family: inherit; box-sizing: border-box; 
         }
 
-        input, textarea {
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-family: inherit;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        .btn-send {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            margin-top: 10px;
+        .btn-send { 
+            background: var(--primary); color: white; border: none; 
+            width: 100%; padding: 14px; border-radius: 12px; 
+            cursor: pointer; font-weight: 700; margin-top: 10px; 
             transition: background 0.2s;
         }
+        .btn-send:hover { background: var(--accent); }
 
-        .btn-send:hover {
-            background: var(--accent);
-        }
-
-        footer {
-            margin-top: 3rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .contact-btn {
-            color: var(--primary);
-            text-decoration: underline;
-            cursor: pointer;
-            font-weight: 700;
-        }
+        footer { margin-top: 3rem; color: #64748b; font-size: 0.9rem; text-align: center; line-height: 1.6; }
+        .contact-btn { color: var(--primary); text-decoration: underline; cursor: pointer; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -186,7 +104,7 @@
         <div class="modal-content">
             <span class="close-modal" onclick="document.getElementById('contact-modal').style.display='none'">&times;</span>
             <h2 style="margin:0 0 10px 0; color: var(--primary)">Me contacter</h2>
-            <p style="margin: 0 0 20px 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.4;">
+            <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9rem; line-height: 1.4;">
                 N'hésitez pas pour toute remarque, question ou bug rencontré sur le site.
             </p>
             
@@ -201,9 +119,7 @@
     <script>
         window.onclick = function(event) {
             let modal = document.getElementById('contact-modal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
+            if (event.target == modal) { modal.style.display = "none"; }
         }
     </script>
 
