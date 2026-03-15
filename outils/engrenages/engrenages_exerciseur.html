@@ -52,7 +52,6 @@
     .cb-row input { margin-top: 2px; cursor: pointer; accent-color: var(--accent); }
     .cb-desc { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px;}
     
-    /* Le décalage pour l'option d'aide visuelle */
     .cb-sub-option { margin-left: 28px; margin-top: -4px; margin-bottom: 4px; font-size: 0.85rem; color: var(--muted); }
 
     .bottom-config {
@@ -99,6 +98,9 @@
     }
     .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
     .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Fixation de la taille du bouton Play/Pause pour éviter le décalage */
+    #btnPlay { min-width: 150px; text-align: center; }
 
     .question-box { padding: 24px 40px; text-align: center; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
     .question-text { font-size: 1.6rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
@@ -153,7 +155,7 @@
             <div><strong>Niv 3 : Estimation</strong><span class="cb-desc">Fera-t-il plus, moins, ou exactement 1 tour ?</span></div>
           </label>
           <label class="cb-row"><input type="checkbox" value="obs_4" class="q-type"> 
-            <div><strong>Niv 4 : Vrai / Faux</strong><span class="cb-desc">Proportionnalité logique.</span></div>
+            <div><strong>Niv 4 : Vrai / Faux</strong><span class="cb-desc">Logique et proportionnalité.</span></div>
           </label>
         </div>
       </div>
@@ -213,10 +215,10 @@
       <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédente</button>
       <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
       <div class="header-group">
-        <button class="btn-nav" id="btnReset" style="display:none;" onclick="resetToZero()">🔄 Réinitialisation</button>
-        <button class="btn-nav" id="btnPause" style="display:none; background-color: #fff1f2; color: #ff4d6d; border-color: #ffd6dd;" onclick="togglePause()">⏸ Pause</button>
+        <button class="btn-nav" id="btnReset" onclick="resetToZero()" style="display:none;">🔄 Remettre à zéro</button>
+        <button class="btn-nav" id="btnPlay" onclick="togglePlay()" style="display:none;">⏸ Pause</button>
         <button class="btn-nav" id="btnFs" onclick="toggleDiapoFullscreen()" title="Projeter en plein écran">⛶ Plein écran</button>
-        <button class="btn-nav" id="btnNext" onclick="nextSlide()">Suivante ►</button>
+        <button class="btn-nav" id="btnNext" onclick="nextSlide()" style="background-color: var(--accent); color: white;">Animer ►</button>
       </div>
     </div>
 
@@ -250,7 +252,7 @@
     const slideCounter = document.getElementById('slideCounter');
     const qText = document.getElementById('qText');
     const cText = document.getElementById('cText');
-    const btnPause = document.getElementById('btnPause');
+    const btnPlay = document.getElementById('btnPlay');
     const btnReset = document.getElementById('btnReset');
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
@@ -536,11 +538,160 @@
           break;
 
         case 'obs_4': 
-          hideTurnsText = true; 
+          let subCat = Math.floor(Math.random() * 3); 
           omegaA_val = 60;
-          tA = 20; tB = 40; turnsA = 1; turnsB = 0.5;
-          qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si je remplaçais la roue B par une roue deux fois plus grande, elle tournerait deux fois plus vite."`;
-          cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">Si on ajoute des dents à une roue, elle devient plus lourde à entraîner et tourne donc <strong>deux fois moins vite</strong>.</span>`;
+
+          if (subCat === 0) {
+            let ruleType = Math.floor(Math.random() * 6);
+            if (ruleType === 0) {
+                hasC = false; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false;
+                tA = Math.floor(Math.random() * 15 + 4) * 2;
+                tB = Math.floor(Math.random() * 15 + 4) * 2;
+                qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Deux roues qui s'engrènent tournent toujours dans le même sens."`;
+                cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">Le mouvement s'inverse à chaque contact entre deux roues.</span>`;
+            } else if (ruleType === 1) {
+                hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true;
+                tA = Math.floor(Math.random() * 15 + 4) * 2;
+                tB = Math.floor(Math.random() * 15 + 4) * 2;
+                while(tA === tB) tB = Math.floor(Math.random() * 15 + 4) * 2;
+                qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Plus une roue a de dents, plus elle tourne vite."`;
+                cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">C'est l'inverse : une grande roue met plus de temps à faire un tour, elle tourne moins vite.</span>`;
+            } else if (ruleType === 2) {
+                hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true;
+                tA = Math.floor(Math.random() * 15 + 4) * 2;
+                tB = Math.floor(Math.random() * 15 + 4) * 2;
+                while(tA === tB) tB = Math.floor(Math.random() * 15 + 4) * 2;
+                qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue qui a le moins de dents tourne toujours le plus vite."`;
+                cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">La petite roue doit faire plus de tours pour suivre le rythme de la grande.</span>`;
+            } else if (ruleType === 3) {
+                hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true;
+                tA = Math.floor(Math.random() * 6 + 4) * 2; 
+                tB = tA * 2; 
+                if (Math.random() > 0.5) {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois plus vite."`;
+                    cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Plus elle est grande, plus elle est longue à tourner : elle va 2 fois <strong>moins</strong> vite.</span>`;
+                } else {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois moins vite."`;
+                    cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Le nombre de dents et la vitesse sont inversement proportionnels.</span>`;
+                }
+            } else if (ruleType === 4) {
+                hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true;
+                tA = Math.floor(Math.random() * 3 + 4) * 2; 
+                tB = tA * 3; 
+                if (Math.random() > 0.5) {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois plus vite."`;
+                    cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}). Elle tournera 3 fois <strong>moins</strong> vite.</span>`;
+                } else {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois moins vite."`;
+                    cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}), sa vitesse est donc divisée par 3.</span>`;
+                }
+            } else {
+                hasC = true; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false;
+                tA = Math.floor(Math.random() * 10 + 4) * 2;
+                tC = Math.floor(Math.random() * 6 + 4) * 2;
+                tB = Math.floor(Math.random() * 10 + 4) * 2;
+                qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Dans une chaîne de 3 roues, la première et la dernière tournent toujours dans le même sens."`;
+                cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">La roue du milieu (C) inverse le sens, ce qui remet la 3ème roue (B) dans le même sens que la 1ère (A).</span>`;
+            }
+
+          } else if (subCat === 1) {
+            hasC = Math.random() > 0.5;
+            hideTurnsText = false; hideArrows_val = true; isSpeedQ = true;
+            
+            let speedType = Math.floor(Math.random() * 3);
+            
+            if (speedType === 0 && !hasC) {
+                let base = Math.floor(Math.random() * 5 + 4) * 2; 
+                let mult = Math.random() > 0.5 ? 2 : 3;
+                if (Math.random() > 0.5) { tA = base; tB = base * mult; }
+                else { tA = base * mult; tB = base; }
+                
+                let askTrue = Math.random() > 0.5;
+                if (askTrue) {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La petite roue tourne exactement ${mult} fois plus vite que la grande."`;
+                    cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">La grande a ${base*mult} dents et la petite ${base}. Le rapport est bien de ${mult}.</span>`;
+                } else {
+                    let wrongMult = mult === 2 ? 3 : 2;
+                    let trick = Math.random() > 0.5;
+                    if (trick) {
+                        qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La grande roue tourne ${mult} fois plus vite que la petite."`;
+                        cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">C'est la <strong>petite</strong> roue qui tourne plus vite, pas la grande !</span>`;
+                    } else {
+                        qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La petite roue tourne ${wrongMult} fois plus vite que la grande."`;
+                        cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">La grande a ${base*mult} dents et la petite ${base}. Elle tourne <strong>${mult} fois</strong> plus vite.</span>`;
+                    }
+                }
+            } else if (speedType === 1) {
+                tA = Math.floor(Math.random() * 10 + 4) * 2;
+                tB = tA;
+                if (hasC) { tC = tA; }
+                let trick = Math.random() > 0.5;
+                if (trick && !hasC) {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue A (bleue) tourne plus vite que la roue B (orange)."`;
+                    cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">Elles ont le même nombre de dents (${tA}), elles tournent donc exactement à la même vitesse.</span>`;
+                } else {
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Toutes les roues tournent exactement à la même vitesse."`;
+                    cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">Elles ont toutes le même nombre de dents (${tA}).</span>`;
+                }
+            } else {
+                tA = Math.floor(Math.random() * 15 + 4) * 2;
+                tB = Math.floor(Math.random() * 15 + 4) * 2;
+                tC = Math.floor(Math.random() * 15 + 4) * 2;
+                while(tA === tB || (hasC && (tB === tC || tA === tC))) {
+                    tB = Math.floor(Math.random() * 15 + 4) * 2;
+                    tC = Math.floor(Math.random() * 15 + 4) * 2;
+                }
+                
+                if (!hasC) {
+                    let aFaster = tA < tB;
+                    let askA = Math.random() > 0.5;
+                    if (askA) {
+                        qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue A (bleue) tourne plus vite que la roue B (orange)."`;
+                        if(aFaster) cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">A a moins de dents que B (${tA} contre ${tB}), elle est donc plus rapide.</span>`;
+                        else cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">A a plus de dents que B (${tA} contre ${tB}), elle est donc plus lente.</span>`;
+                    } else {
+                        qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue B (orange) tourne plus vite que la roue A (bleue)."`;
+                        if(!aFaster) cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">B a moins de dents que A (${tB} contre ${tA}), elle est donc plus rapide.</span>`;
+                        else cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">B a plus de dents que A (${tB} contre ${tA}), elle est donc plus lente.</span>`;
+                    }
+                } else {
+                    let minT = Math.min(tA, tB, tC);
+                    let target = Math.random() < 0.33 ? {name:"A (bleue)", t:tA} : (Math.random() < 0.5 ? {name:"B (orange)", t:tB} : {name:"C (verte)", t:tC});
+                    let isFastest = target.t === minT;
+                    qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue ${target.name} est la plus rapide des trois."`;
+                    if(isFastest) cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">C'est bien elle qui a le moins de dents (${target.t}), c'est donc la plus rapide.</span>`;
+                    else cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">La plus petite (et donc la plus rapide) est celle de ${minT} dents.</span>`;
+                }
+            }
+
+          } else {
+            hasC = Math.random() > 0.5;
+            tA = Math.floor(Math.random() * 15 + 4) * 2; 
+            tB = Math.floor(Math.random() * 15 + 4) * 2; 
+            tC = Math.floor(Math.random() * 15 + 4) * 2;
+            
+            hideTurnsText = true; hideArrows_val = false; isSpeedQ = false;
+            
+            let isClockwise = Math.random() > 0.5;
+            omegaA_val = isClockwise ? 60 : -60;
+            
+            let dirA_txt = isClockwise ? "horaire ↻" : "anti-horaire ↺";
+            let dirB_txt = (hasC ? isClockwise : !isClockwise) ? "horaire ↻" : "anti-horaire ↺";
+            
+            givenGear_val = 'A'; 
+            
+            let askClockwise = Math.random() > 0.5;
+            let askTxt = askClockwise ? "horaire ↻" : "anti-horaire ↺";
+            
+            qHtml = `La roue A (bleue) tourne dans le sens ${dirA_txt}.<br><strong>VRAI ou FAUX ?</strong> "La roue B (orange) au bout de la chaîne tourne dans le sens ${askTxt}."`;
+            
+            if (askTxt === dirB_txt) {
+                cHtml = `<strong>VRAI !</strong><br><span class="correction-detail">Le mouvement se transmet correctement jusqu'à B (${dirB_txt}).</span>`;
+            } else {
+                cHtml = `<strong>FAUX !</strong><br><span class="correction-detail">Elle tourne dans le sens inverse (${dirB_txt}).</span>`;
+            }
+          }
+          turnsA = 1; turnsB = tA/tB;
           break;
 
         case 'prev_1': 
@@ -628,11 +779,7 @@
           qHtml = "Erreur de génération."; cHtml = "Oups.";
       }
 
-      // --- LE NOUVEAU MOTEUR DE VITESSE CONSTANTE ---
-      // On règle la vitesse pour que exactement 2.5 dents passent par seconde.
-      // Ainsi, une grosse roue tournera doucement, et une petite plus vite, 
-      // mais l'œil verra toujours les dents s'engrener à la même vitesse !
-      let teethPerSecond = 2.5;
+      let teethPerSecond = 2.0; 
       let currentSign = Math.sign(omegaA_val) || 1;
       omegaA_val = currentSign * (teethPerSecond * 360 / tA);
 
@@ -645,7 +792,8 @@
         omegaA: omegaA_val, 
         teethA: tA, teethB: tB, teethC: tC || 16, hasGearC: hasC,
         turnsA: turnsA, expectedTurnsB: turnsB,
-        questionHtml: qHtml, correctionHtml: cHtml, isAnswerRevealed: false
+        questionHtml: qHtml, correctionHtml: cHtml,
+        phase: 0 
       };
     }
 
@@ -691,39 +839,111 @@
       currentIndex = 0;
       diapoContainer.style.display = "flex";
       diapoContainer.scrollIntoView({ behavior: "smooth" });
-      loadSlide(currentIndex);
+      loadSlide(currentIndex, 0);
     }
 
-    function updateNavButtons() {
-      let q = quizData[currentIndex];
-      btnPrev.disabled = (currentIndex === 0);
-      
-      if (!q.isAnswerRevealed) {
-        btnNext.innerHTML = "Correction 👀";
-        btnNext.disabled = false;
-      } else {
-        btnNext.innerHTML = "Suivante ►";
-        btnNext.disabled = (currentIndex === quizData.length - 1);
-      }
+    function updatePlayButtonUI() {
+        if (animationState.playing) {
+            btnPlay.textContent = "⏸ Pause";
+            btnPlay.style.backgroundColor = "#fff1f2";
+            btnPlay.style.color = "#ff4d6d";
+            btnPlay.style.borderColor = "#ffd6dd";
+        } else {
+            let q = quizData[currentIndex];
+            const isContinuous = ['obs_1', 'obs_2', 'obs_4'].includes(q.qType);
+            if (!isContinuous && Math.abs(animationState.angleA) >= Math.abs(animationState.targetAngleA)) {
+                btnPlay.textContent = "▶ Rejouer";
+            } else {
+                btnPlay.textContent = "▶ Reprendre";
+            }
+            btnPlay.style.backgroundColor = "#eef4ff";
+            btnPlay.style.color = "var(--accent)";
+            btnPlay.style.borderColor = "#acc4ff";
+        }
     }
 
-    function loadSlide(index) {
+    function setPhase(newPhase) {
+        let q = quizData[currentIndex];
+        let oldPhase = q.phase;
+        
+        if (oldPhase === 1 && newPhase === 2) {
+            animationState.angleA = 0;
+            animationState.playing = true;
+            lastTime = null;
+            if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+            reqAnimFrame = requestAnimationFrame(animate);
+        }
+        
+        q.phase = newPhase;
+
+        cText.style.display = (q.phase === 2) ? "block" : "none";
+        const isContinuous = ['obs_1', 'obs_2', 'obs_4'].includes(q.qType);
+
+        if (q.phase === 0) {
+            // CACHE LES BOUTONS DE LECTURE EN PHASE 0
+            btnReset.style.display = "none";
+            btnPlay.style.display = "none";
+            
+            animationState.playing = false;
+            if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+            animationState.angleA = 0;
+
+            btnNext.innerHTML = "Animer ►";
+            
+        } else {
+            // MONTRE LES BOUTONS DE LECTURE EN PHASE 1 & 2
+            btnReset.style.display = "inline-block";
+            btnPlay.style.display = "inline-block";
+
+            if (q.phase === 1) {
+                btnNext.innerHTML = "Correction 👀";
+                if (oldPhase === 2) {
+                    animationState.angleA = 0;
+                    animationState.playing = false;
+                    if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+                }
+            } else if (q.phase === 2) {
+                btnNext.innerHTML = "Question suiv. ►";
+                if (currentIndex === quizData.length - 1) btnNext.innerHTML = "Terminé ✓";
+                
+                if (oldPhase === undefined) {
+                    if (!isContinuous) {
+                        animationState.angleA = animationState.targetAngleA;
+                        animationState.playing = false;
+                    } else {
+                        animationState.playing = true;
+                        lastTime = null;
+                        if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+                        reqAnimFrame = requestAnimationFrame(animate);
+                    }
+                }
+            }
+
+            if (q.phase === 1 && oldPhase === 0) {
+                 animationState.angleA = 0;
+                 animationState.playing = true;
+                 lastTime = null;
+                 if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+                 reqAnimFrame = requestAnimationFrame(animate);
+            }
+
+            updatePlayButtonUI();
+        }
+
+        btnPrev.disabled = (currentIndex === 0 && q.phase === 0);
+        btnNext.disabled = (currentIndex === quizData.length - 1 && q.phase === 2);
+
+        renderStatic();
+    }
+
+    function loadSlide(index, startPhase = 0) {
       slideCounter.textContent = `Question ${index + 1} / ${quizData.length}`;
+      currentIndex = index;
       let q = quizData[index];
       
       qText.innerHTML = q.questionHtml;
       cText.innerHTML = q.correctionHtml;
       
-      q.isAnswerRevealed = false;
-      cText.style.display = "none";
-      
-      btnPause.style.display = "none"; 
-      btnReset.style.display = "none";
-      
-      btnPause.textContent = "⏸ Pause";
-      btnPause.style.backgroundColor = "#fff1f2";
-      btnPause.style.color = "#ff4d6d";
-
       animationState.playing = false;
       if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
       
@@ -734,42 +954,30 @@
 
       animationState.omegaA = q.omegaA || 60;
       animationState.angleA = 0; 
-      
       animationState.targetAngleA = (q.turnsA || 1) * 360 * Math.sign(animationState.omegaA); 
       
-      renderStatic();
-      updateNavButtons();
-    }
-
-    function prevSlide() { 
-      if(currentIndex > 0) { 
-        currentIndex--; 
-        loadSlide(currentIndex); 
-      } 
+      setPhase(startPhase);
     }
 
     function nextSlide() { 
       let q = quizData[currentIndex];
-      if (!q.isAnswerRevealed) {
-        q.isAnswerRevealed = true;
-        cText.style.display = "block";
-        
-        btnPause.style.display = "inline-block"; 
-        btnReset.style.display = "inline-block"; 
-        btnPause.textContent = "⏸ Pause";
-        btnPause.style.backgroundColor = "#fff1f2";
-        btnPause.style.color = "#ff4d6d";
-        
-        renderStatic();
-        updateNavButtons();
-        
-        animationState.playing = true;
-        lastTime = null; 
-        reqAnimFrame = requestAnimationFrame(animate);
-
+      if (q.phase === 0) {
+          setPhase(1); 
+      } else if (q.phase === 1) {
+          setPhase(2); 
       } else if (currentIndex < quizData.length - 1) {
-        currentIndex++; 
-        loadSlide(currentIndex);
+          loadSlide(currentIndex + 1, 0); 
+      }
+    }
+
+    function prevSlide() { 
+      let q = quizData[currentIndex];
+      if (q.phase === 2) {
+          setPhase(1); 
+      } else if (q.phase === 1) {
+          setPhase(0); 
+      } else if (currentIndex > 0) {
+          loadSlide(currentIndex - 1, 2); 
       }
     }
 
@@ -794,26 +1002,27 @@
 
     // --- LE SYSTÈME D'ANIMATION --- //
 
-    function togglePause() {
+    function togglePlay() {
       let q = quizData[currentIndex];
+      if (q.phase === 0) {
+          setPhase(1);
+          return;
+      }
+
       const isContinuous = ['obs_1', 'obs_2', 'obs_4'].includes(q.qType);
 
       if (animationState.playing) {
         animationState.playing = false;
         if (reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
-        btnPause.textContent = "▶ Reprendre";
-        btnPause.style.backgroundColor = "#eef4ff";
-        btnPause.style.color = "var(--accent)";
+        updatePlayButtonUI();
       } else {
         if (!isContinuous && Math.abs(animationState.angleA) >= Math.abs(animationState.targetAngleA)) {
           animationState.angleA = 0; 
         }
         animationState.playing = true;
         lastTime = null; 
-        btnPause.textContent = "⏸ Pause";
-        btnPause.style.backgroundColor = "#fff1f2";
-        btnPause.style.color = "#ff4d6d";
         reqAnimFrame = requestAnimationFrame(animate);
+        updatePlayButtonUI();
       }
     }
 
@@ -822,9 +1031,7 @@
       renderStatic();
       
       if (!animationState.playing) {
-        btnPause.textContent = "▶ Reprendre";
-        btnPause.style.backgroundColor = "#eef4ff";
-        btnPause.style.color = "var(--accent)";
+        updatePlayButtonUI();
       }
     }
 
@@ -838,16 +1045,12 @@
       animationState.angleA += animationState.omegaA * dt;
 
       const q = quizData[currentIndex];
-      
       const isContinuous = ['obs_1', 'obs_2', 'obs_4'].includes(q.qType);
 
       if (!isContinuous && Math.abs(animationState.angleA) >= Math.abs(animationState.targetAngleA)) {
         animationState.angleA = animationState.targetAngleA; 
         animationState.playing = false;
-        
-        btnPause.textContent = "▶ Rejouer"; 
-        btnPause.style.backgroundColor = "#eef4ff";
-        btnPause.style.color = "var(--accent)";
+        updatePlayButtonUI();
         renderStatic();
         return; 
       }
@@ -930,27 +1133,36 @@
 
       const useDot = ['obs_1', 'obs_2', 'obs_4'].includes(qType); 
       
+      const dotRadius = Math.max(7, Math.min(12, geom.modulePx * 0.45)); 
+      const lineThickness = Math.max(6, Math.min(12, geom.modulePx * 0.62)); 
+      const innerLineThickness = Math.max(3, Math.min(6, geom.modulePx * 0.34));
+
       if (useDot) {
+        let dotCenter = geom.rootRadius - dotRadius - 12; 
+        if (dotCenter - dotRadius < geom.holeRadius + 4) {
+            dotCenter = geom.holeRadius + dotRadius + 4; 
+        }
+
         markerGroup.appendChild(createSVG("circle", {
-          cx: markerEnd.toFixed(2), cy: "0",
-          r: (geom.modulePx * 0.45).toFixed(2),
+          cx: dotCenter.toFixed(2), cy: "0",
+          r: dotRadius.toFixed(2),
           fill: "var(--marker)",
           stroke: "#ffffff",
-          "stroke-width": "2"
+          "stroke-width": "2.5"
         }));
       } else {
         markerGroup.appendChild(createSVG("line", {
           x1: markerStart.toFixed(2), y1: "0",
           x2: markerEnd.toFixed(2), y2: "0",
           stroke: "#ffffff",
-          "stroke-width": (geom.modulePx * 0.62).toFixed(2),
+          "stroke-width": lineThickness.toFixed(2),
           "stroke-linecap": "round"
         }));
         markerGroup.appendChild(createSVG("line", {
           x1: markerStart.toFixed(2), y1: "0",
           x2: markerEnd.toFixed(2), y2: "0",
           stroke: "var(--marker)",
-          "stroke-width": (geom.modulePx * 0.34).toFixed(2),
+          "stroke-width": innerLineThickness.toFixed(2),
           "stroke-linecap": "round"
         }));
       }
@@ -1049,7 +1261,7 @@
       let showArrowA = false, showArrowB = false, showArrowC = false;
 
       if (!q.hideArrows && !q.isSpeedQuestion) {
-          if (q.isAnswerRevealed) {
+          if (q.phase === 2) {
               showArrowA = true;
               showArrowB = true;
               showArrowC = animationState.hasGearC;
@@ -1062,7 +1274,7 @@
           }
       }
 
-      const shouldShowTurns = !q.hideTurns;
+      const shouldShowTurns = (q.phase === 2) ? !q.hideTurns : false;
 
       buildGearGroup(gearAGroup, animationState.layout.cxA, animationState.layout.cyA, geomA, angleA + phases.phaseA, COLOR_A, "A", STROKE_A, angleA, dirA, showArrowA, q.qType, shouldShowTurns);
       buildGearGroup(gearBGroup, animationState.layout.cxB, animationState.layout.cyB, geomB, angleB + phases.phaseB, COLOR_B, "B", STROKE_B, angleB, dirB, showArrowB, q.qType, shouldShowTurns);
