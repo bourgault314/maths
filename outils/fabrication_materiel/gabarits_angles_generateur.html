@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur de gabarits d’angles</title>
+  <style>
+    :root {
+      --ui-bg: #f3f4f6;
+      --ui-card: #ffffff;
+      --ui-border: #d1d5db;
+      --ui-text: #111827;
+      --accent: #2563eb;
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-pad-x: 8mm;
+      --page-pad-y: 8mm;
+      --cell-gap: 6mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--ui-bg);
+      color: var(--ui-text);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      min-height: 100vh;
+    }
+
+    .panel {
+      background: var(--ui-card);
+      border-right: 1px solid var(--ui-border);
+      padding: 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: 1.35rem;
+    }
+
+    .help {
+      margin: 0 0 14px;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: #4b5563;
+    }
+
+    fieldset {
+      border: 1px solid var(--ui-border);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 0 0 14px;
+    }
+
+    legend {
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    .row { margin: 10px 0; }
+
+    .row label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--ui-border);
+      background: white;
+      font-size: 0.95rem;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 10px;
+    }
+
+    .inline-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      margin: 6px 0;
+    }
+
+    .btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #e5e7eb; color: #111827; }
+
+    .preview-wrap {
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .sheet {
+      width: var(--page-w);
+      height: var(--page-h);
+      background: white;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+      padding: var(--page-pad-y) var(--page-pad-x);
+      page-break-after: always;
+    }
+
+    .sheet:last-child { page-break-after: auto; }
+
+    .grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+    }
+
+    .grid.one {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      row-gap: 0;
+    }
+
+    .grid.two {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      row-gap: var(--cell-gap);
+    }
+
+    .cell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .angle-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: hidden;
+    }
+
+    .summary {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #4b5563;
+      line-height: 1.35;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+      body { background: white; }
+      .app { display: block; }
+      .panel { display: none !important; }
+      .preview-wrap { padding: 0; }
+      .sheet {
+        margin: 0;
+        box-shadow: none;
+        width: 210mm;
+        height: 297mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>Générateur de gabarits d’angles</h1>
+      <p class="help">
+        Crée des gabarits d’angles à imprimer, en grand format, avec un mode couleur pédagogique.
+      </p>
+
+      <fieldset>
+        <legend>Valeurs d’angles</legend>
+        <div class="check-grid" id="presetAngles"></div>
+        <div class="row">
+          <label for="customAngles">Autres valeurs (séparées par des virgules)</label>
+          <input id="customAngles" type="text" placeholder="Ex. 75, 120, 135" />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Format des gabarits</legend>
+        <div class="row">
+          <label for="scale">Longueur des côtés : <strong><span id="scaleValue"></span>%</strong></label>
+          <input id="scale" type="range" min="40" max="108" step="1" value="100" />
+        </div>
+
+        <div class="row">
+          <label for="perPage">Nombre de gabarits par page</label>
+          <select id="perPage">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="lineWidth">Épaisseur des traits</label>
+          <select id="lineWidth">
+            <option value="0.55">fin</option>
+            <option value="0.8" selected>moyen</option>
+            <option value="1.1">épais</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Affichage</legend>
+        <label class="inline-check"><input id="showArc" type="checkbox" checked /> Afficher l’arc de l’angle</label>
+        <label class="inline-check"><input id="showLabel" type="checkbox" checked /> Afficher la mesure de l’angle</label>
+        <label class="inline-check"><input id="useColors" type="checkbox" /> Mode couleur pédagogique</label>
+      </fieldset>
+
+      <div class="btns">
+        <button class="primary" id="printBtn">Imprimer / PDF</button>
+        <button class="secondary" id="resetBtn">Réinitialiser</button>
+      </div>
+
+      <div class="summary" id="summary"></div>
+    </aside>
+
+    <main class="preview-wrap">
+      <div id="pages"></div>
+    </main>
+  </div>
+
+  <script>
+    const presetValues = [15, 30, 45, 60, 90];
+
+    const colors = {
+      normalStroke: '#111827',
+      defaultPedagogic: {
+        fill: '#ddd6fe',
+        stroke: '#7c3aed',
+        text: '#5b21b6'
+      },
+      byAngle: {
+        15: { fill: '#ddd6fe', stroke: '#8b5cf6', text: '#6d28d9' },
+        30: { fill: '#dbeafe', stroke: '#60a5fa', text: '#2563eb' },
+        40: { fill: '#dcfce7', stroke: '#86efac', text: '#16a34a' },
+        45: { fill: '#dcfce7', stroke: '#86efac', text: '#16a34a' },
+        60: { fill: '#fef3c7', stroke: '#fcd34d', text: '#ca8a04' },
+        90: { fill: '#fee2e2', stroke: '#fca5a5', text: '#dc2626' }
+      }
+    };
+
+    const pageMm = {
+      width: 210,
+      height: 297,
+      padX: 8,
+      padY: 8,
+      gapY: 6
+    };
+
+    const els = {
+      presetAngles: document.getElementById('presetAngles'),
+      customAngles: document.getElementById('customAngles'),
+      scale: document.getElementById('scale'),
+      scaleValue: document.getElementById('scaleValue'),
+      perPage: document.getElementById('perPage'),
+      lineWidth: document.getElementById('lineWidth'),
+      showArc: document.getElementById('showArc'),
+      showLabel: document.getElementById('showLabel'),
+      useColors: document.getElementById('useColors'),
+      pages: document.getElementById('pages'),
+      printBtn: document.getElementById('printBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      summary: document.getElementById('summary')
+    };
+
+    function buildPresetCheckboxes() {
+      els.presetAngles.innerHTML = '';
+      presetValues.forEach(v => {
+        const label = document.createElement('label');
+        label.className = 'inline-check';
+        label.innerHTML = `<input type="checkbox" value="${v}" checked> ${v}°`;
+        els.presetAngles.appendChild(label);
+      });
+    }
+
+    function bindPresetCheckboxes() {
+      [...els.presetAngles.querySelectorAll('input')].forEach(input => {
+        input.addEventListener('change', render);
+      });
+    }
+
+    function getAngles() {
+      const selected = [...els.presetAngles.querySelectorAll('input:checked')].map(i => Number(i.value));
+      const customs = els.customAngles.value
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(Number)
+        .filter(n => Number.isFinite(n) && n > 0 && n < 180);
+
+      const all = [...new Set([...selected, ...customs])].sort((a, b) => a - b);
+      return all.length ? all : [90];
+    }
+
+    function fmt(n) {
+      return Number(n.toFixed(3));
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function getCellSizeMm(perPage) {
+      const usableW = pageMm.width - (2 * pageMm.padX);
+      const usableH = pageMm.height - (2 * pageMm.padY);
+      if (perPage === 1) {
+        return { width: usableW, height: usableH };
+      }
+      return {
+        width: usableW,
+        height: (usableH - pageMm.gapY) / 2
+      };
+    }
+
+    function getGeometry(angleDeg, orientation, scalePercent) {
+      const perPage = Number(els.perPage.value);
+      const cell = getCellSizeMm(perPage);
+      const halfRad = (angleDeg / 2) * Math.PI / 180;
+      const downward = orientation === 'single' || orientation === 'up';
+
+      const sideMargin = 8;
+      const apexMargin = orientation === 'single' ? 8 : 6;
+      const farMargin = orientation === 'single' ? 7 : 5;
+
+      const cx = cell.width / 2;
+      const cy = downward ? apexMargin : (cell.height - apexMargin);
+
+      const sinHalf = Math.max(Math.sin(halfRad), 0.001);
+      const cosHalf = Math.max(Math.cos(halfRad), 0.001);
+      const maxByWidth = ((cell.width / 2) - sideMargin) / sinHalf;
+      const maxByHeight = (cell.height - apexMargin - farMargin) / cosHalf;
+      const maxLen = Math.min(maxByWidth, maxByHeight);
+      const len = maxLen * (scalePercent / 100);
+      const dir = downward ? 1 : -1;
+
+      const left = {
+        x: cx - len * sinHalf,
+        y: cy + dir * len * cosHalf
+      };
+      const right = {
+        x: cx + len * sinHalf,
+        y: cy + dir * len * cosHalf
+      };
+
+      const arcR = clamp(len * 0.18, perPage === 1 ? 18 : 12, perPage === 1 ? 42 : 24);
+      const labelFont = clamp(
+        (perPage === 1 ? 10 : 7.3) + (angleDeg >= 75 ? 1.1 : 0) - (angleDeg <= 20 ? 1.0 : 0),
+        perPage === 1 ? 8 : 6,
+        perPage === 1 ? 12.5 : 8.8
+      );
+      const estimatedLabelWidth = labelFont * 1.8;
+      const labelMinRForWidth = estimatedLabelWidth / (2 * Math.max(sinHalf, 0.05)) + 1.5;
+      const labelR = clamp(Math.max(arcR + 7, labelMinRForWidth), arcR + 7, len * 0.58);
+      const label = {
+        x: cx,
+        y: cy + dir * labelR
+      };
+
+      return {
+        cell,
+        cx,
+        cy,
+        downward,
+        halfRad,
+        len,
+        maxLen,
+        left,
+        right,
+        arcR,
+        label,
+        labelFont,
+        lineWidth: Number(els.lineWidth.value)
+      };
+    }
+
+    function arcPoints(cx, cy, r, halfRad, downward, segments = 28) {
+      const pts = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = -halfRad + (2 * halfRad * i / segments);
+        const x = cx + r * Math.sin(t);
+        const y = downward ? (cy + r * Math.cos(t)) : (cy - r * Math.cos(t));
+        pts.push({ x, y });
+      }
+      return pts;
+    }
+
+    function pointsToPath(points) {
+      return points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${fmt(p.x)} ${fmt(p.y)}`).join(' ');
+    }
+
+    function makeAngleSVG(angleDeg, orientation, options) {
+      const scalePercent = Number(els.scale.value);
+      const geo = getGeometry(angleDeg, orientation, scalePercent);
+      const sectorPoints = arcPoints(geo.cx, geo.cy, geo.len, geo.halfRad, geo.downward, 40);
+      const smallArcPoints = arcPoints(geo.cx, geo.cy, geo.arcR, geo.halfRad, geo.downward, 30);
+      const sectorPath = `M ${fmt(geo.cx)} ${fmt(geo.cy)} L ${fmt(geo.left.x)} ${fmt(geo.left.y)} ${smallArcOrLargeArcPath(sectorPoints)} Z`;
+      const arcPath = pointsToPath(smallArcPoints);
+      const labelTransform = orientation === 'down' ? ` transform="rotate(180 ${fmt(geo.label.x)} ${fmt(geo.label.y)})"` : '';
+
+      return `
+        <svg class="angle-svg" viewBox="0 0 ${geo.cell.width} ${geo.cell.height}" width="${geo.cell.width}mm" height="${geo.cell.height}mm" aria-label="Gabarit ${angleDeg} degrés">
+          ${options.fillSector ? `<path d="${sectorPath}" fill="${options.fill}" stroke="none" />` : ''}
+          <line x1="${fmt(geo.cx)}" y1="${fmt(geo.cy)}" x2="${fmt(geo.left.x)}" y2="${fmt(geo.left.y)}" stroke="${options.stroke}" stroke-width="${fmt(geo.lineWidth)}" stroke-linecap="round" />
+          <line x1="${fmt(geo.cx)}" y1="${fmt(geo.cy)}" x2="${fmt(geo.right.x)}" y2="${fmt(geo.right.y)}" stroke="${options.stroke}" stroke-width="${fmt(geo.lineWidth)}" stroke-linecap="round" />
+          ${options.showArc ? `<path d="${arcPath}" fill="none" stroke="${options.arcColor}" stroke-width="${fmt(Math.max(0.45, geo.lineWidth * 0.82))}" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+          ${options.showLabel ? `<text x="${fmt(geo.label.x)}" y="${fmt(geo.label.y)}" text-anchor="middle" dominant-baseline="middle" font-size="${fmt(geo.labelFont)}" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="${options.textColor}"${labelTransform}>${angleDeg}°</text>` : ''}
+        </svg>`;
+    }
+
+    function smallArcOrLargeArcPath(points) {
+      return points.map(p => `L ${fmt(p.x)} ${fmt(p.y)}`).join(' ');
+    }
+
+    function getPedagogicPalette(angle) {
+      return colors.byAngle[angle] || colors.defaultPedagogic;
+    }
+
+    function makePage(angle) {
+      const perPage = Number(els.perPage.value);
+      const pedagogic = els.useColors.checked;
+      const palette = getPedagogicPalette(angle);
+
+      const options = {
+        showArc: els.showArc.checked,
+        showLabel: els.showLabel.checked,
+        fillSector: pedagogic,
+        fill: palette.fill,
+        stroke: pedagogic ? palette.stroke : colors.normalStroke,
+        arcColor: pedagogic ? palette.text : colors.normalStroke,
+        textColor: pedagogic ? palette.text : colors.normalStroke
+      };
+
+      const page = document.createElement('section');
+      page.className = 'sheet';
+      page.innerHTML = `<div class="grid ${perPage === 1 ? 'one' : 'two'}"></div>`;
+      const grid = page.querySelector('.grid');
+
+      if (perPage === 1) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = makeAngleSVG(angle, 'single', options);
+        grid.appendChild(cell);
+      } else {
+        const top = document.createElement('div');
+        top.className = 'cell';
+        top.innerHTML = makeAngleSVG(angle, 'up', options);
+
+        const bottom = document.createElement('div');
+        bottom.className = 'cell';
+        bottom.innerHTML = makeAngleSVG(angle, 'down', options);
+
+        grid.appendChild(top);
+        grid.appendChild(bottom);
+      }
+
+      return page;
+    }
+
+    function applyUrlConfig() {
+      const params = new URLSearchParams(window.location.search);
+      const angles = params.get('angles');
+      const custom = params.get('custom');
+      const scale = params.get('scale');
+      const perPage = params.get('perPage');
+      const lineWidth = params.get('lineWidth');
+      const pedagogic = params.get('pedagogic');
+      const showArc = params.get('showArc');
+      const showLabel = params.get('showLabel');
+
+      if (scale) els.scale.value = String(clamp(Number(scale), 40, 108));
+      if (perPage === '1' || perPage === '2') els.perPage.value = perPage;
+      if (lineWidth && [...els.lineWidth.options].some(o => o.value === lineWidth)) els.lineWidth.value = lineWidth;
+      if (pedagogic !== null) els.useColors.checked = pedagogic === '1' || pedagogic === 'true';
+      if (showArc !== null) els.showArc.checked = showArc === '1' || showArc === 'true';
+      if (showLabel !== null) els.showLabel.checked = showLabel === '1' || showLabel === 'true';
+
+      if (angles) {
+        const wanted = new Set(angles.split(',').map(s => Number(s.trim())).filter(Number.isFinite));
+        [...els.presetAngles.querySelectorAll('input')].forEach(input => {
+          input.checked = wanted.has(Number(input.value));
+        });
+      }
+
+      if (custom) {
+        els.customAngles.value = custom;
+      }
+    }
+
+    function render() {
+      els.scaleValue.textContent = els.scale.value;
+      const angles = getAngles();
+      els.pages.innerHTML = '';
+      angles.forEach(angle => els.pages.appendChild(makePage(angle)));
+
+      els.summary.textContent = `${angles.length} page(s) • ${els.perPage.value === '1' ? '1 grand gabarit' : '2 gabarits tête-bêche'} par page.`;
+    }
+
+    function resetAll() {
+      buildPresetCheckboxes();
+      bindPresetCheckboxes();
+      els.customAngles.value = '';
+      els.scale.value = '100';
+      els.perPage.value = '2';
+      els.lineWidth.value = '0.8';
+      els.showArc.checked = true;
+      els.showLabel.checked = true;
+      els.useColors.checked = false;
+      render();
+    }
+
+    buildPresetCheckboxes();
+    bindPresetCheckboxes();
+    applyUrlConfig();
+
+    [els.customAngles, els.scale, els.perPage, els.lineWidth, els.showArc, els.showLabel, els.useColors].forEach(el => {
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+
+    els.printBtn.addEventListener('click', () => window.print());
+    els.resetBtn.addEventListener('click', resetAll);
+
+    render();
+  </script>
+</body>
+</html>
