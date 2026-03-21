@@ -191,7 +191,7 @@
   .enonceLayout{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; margin: 8px 0 6px;}
   .puzzleBox{flex:0 0 auto;}
   .textBox{flex:1 1 320px; font-size:1.08rem; line-height:1.55;}
-  #paperSvg{border:1px solid #e5e7eb; background:#fff; display:block; width:350px; height:350px;}
+  #paperSvg{border:none; background:#fff; display:block; width:350px; height:350px;}
 
   @page{ size: A4; margin: 10mm; }
 
@@ -202,11 +202,11 @@
     .paper{box-shadow:none; border:none; padding:0;}
     .paper .topbar{display:none;}
     .enonceLayout{flex-direction:column; align-items:stretch;}
-    .enonceLayout{gap:14px; margin:6px 0 4px;}
+    .enonceLayout{gap:10px; margin:6px 0 4px;}
     .textBox{order:1;}
     .puzzleBox{order:2;}
-    .puzzleBox{align-self:center;}
-    #paperSvg{width:130mm; height:130mm; border:1px solid #111827;}
+    .puzzleBox{align-self:center; margin-top:-4mm;}
+    #paperSvg{width:130mm; height:130mm; border:none;}
     /* éléments utiles à l'écran mais inutiles sur la feuille */
     .noPrint{display:none !important;}
   }
