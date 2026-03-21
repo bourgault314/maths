@@ -29,14 +29,14 @@
 
     .app {
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 320px 1fr;
       min-height: 100vh;
     }
 
     .panel {
       background: var(--ui-card);
       border-right: 1px solid var(--ui-border);
-      padding: 18px;
+      padding: 14px;
       position: sticky;
       top: 0;
       height: 100vh;
@@ -44,30 +44,30 @@
     }
 
     h1 {
-      margin: 0 0 14px;
-      font-size: 1.35rem;
+      margin: 0 0 10px;
+      font-size: 1.25rem;
     }
 
     .help {
-      margin: 0 0 14px;
-      font-size: 0.92rem;
-      line-height: 1.35;
+      margin: 0 0 10px;
+      font-size: 0.88rem;
+      line-height: 1.3;
       color: #4b5563;
     }
 
     fieldset {
       border: 1px solid var(--ui-border);
       border-radius: 12px;
-      padding: 12px;
-      margin: 0 0 14px;
+      padding: 10px;
+      margin: 0 0 10px;
     }
 
     legend {
       font-weight: 700;
-      padding: 0 8px;
+      padding: 0 6px;
     }
 
-    .row { margin: 10px 0; }
+    .row { margin: 8px 0; }
 
     .row label {
       display: block;
@@ -84,12 +84,58 @@
       font-size: 0.95rem;
     }
 
+    input[type="text"]:focus,
+    input[type="range"]:focus,
+    button:focus {
+      outline: none;
+    }
+
     input[type="range"] { width: 100%; }
+
+    .compact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .segmented {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented label {
+      border: 1px solid var(--ui-border);
+      background: white;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.92rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .segmented span {
+      display: inline;
+    }
+
+    .segmented label.active-pill {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: white;
+    }
 
     .check-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px 10px;
     }
 
     .inline-check {
@@ -97,20 +143,20 @@
       align-items: center;
       gap: 8px;
       font-size: 0.95rem;
-      margin: 6px 0;
+      margin: 4px 0;
     }
 
     .btns {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     button {
       border: none;
       border-radius: 12px;
-      padding: 11px 12px;
+      padding: 10px 12px;
       font-size: 0.98rem;
       font-weight: 700;
       cursor: pointer;
@@ -170,10 +216,39 @@
     }
 
     .summary {
-      margin-top: 12px;
-      font-size: 0.9rem;
+      margin-top: 10px;
+      font-size: 0.88rem;
       color: #4b5563;
-      line-height: 1.35;
+      line-height: 1.3;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: static;
+        height: auto;
+        overflow: visible;
+        border-right: none;
+        border-bottom: 1px solid var(--ui-border);
+      }
+
+      .preview-wrap {
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .check-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .compact-grid,
+      .btns {
+        grid-template-columns: 1fr;
+      }
     }
 
     @page {
@@ -198,11 +273,7 @@
 <body>
   <div class="app">
     <aside class="panel">
-      <h1>Générateur de gabarits d’angles</h1>
-      <p class="help">
-        Crée des gabarits d’angles à imprimer, en grand format, avec un mode couleur pédagogique.
-      </p>
-
+      <h1>Générateur de gabarit d’angle</h1>
       <fieldset>
         <legend>Valeurs d’angles</legend>
         <div class="check-grid" id="presetAngles"></div>
@@ -219,26 +290,28 @@
           <input id="scale" type="range" min="40" max="108" step="1" value="100" />
         </div>
 
-        <div class="row">
-          <label for="perPage">Nombre de gabarits par page</label>
-          <select id="perPage">
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-          </select>
-        </div>
+        <div class="compact-grid">
+          <div class="row">
+            <label>Nombre de gabarits par page</label>
+            <div class="segmented" id="perPageGroup">
+              <label><input type="radio" name="perPage" value="1"><span>1</span></label>
+              <label><input type="radio" name="perPage" value="2" checked><span>2</span></label>
+            </div>
+          </div>
 
-        <div class="row">
-          <label for="lineWidth">Épaisseur des traits</label>
-          <select id="lineWidth">
-            <option value="0.55">fin</option>
-            <option value="0.8" selected>moyen</option>
-            <option value="1.1">épais</option>
-          </select>
+          <div class="row">
+            <label>Épaisseur des traits</label>
+            <div class="segmented" id="lineWidthGroup">
+              <label><input type="radio" name="lineWidth" value="0.45" checked><span>fin</span></label>
+              <label><input type="radio" name="lineWidth" value="0.68"><span>moyen</span></label>
+            </div>
+          </div>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Affichage</legend>
+        <label class="inline-check"><input id="singleSheet" type="checkbox" /> Mettre tous les angles sur une seule page</label>
         <label class="inline-check"><input id="showArc" type="checkbox" checked /> Afficher l’arc de l’angle</label>
         <label class="inline-check"><input id="showLabel" type="checkbox" checked /> Afficher la mesure de l’angle</label>
         <label class="inline-check"><input id="useColors" type="checkbox" /> Mode couleur pédagogique</label>
@@ -262,19 +335,24 @@
 
     const colors = {
       normalStroke: '#111827',
-      defaultPedagogic: {
-        fill: '#ddd6fe',
-        stroke: '#7c3aed',
-        text: '#5b21b6'
-      },
       byAngle: {
-        15: { fill: '#ddd6fe', stroke: '#8b5cf6', text: '#6d28d9' },
-        30: { fill: '#dbeafe', stroke: '#60a5fa', text: '#2563eb' },
-        40: { fill: '#dcfce7', stroke: '#86efac', text: '#16a34a' },
-        45: { fill: '#dcfce7', stroke: '#86efac', text: '#16a34a' },
-        60: { fill: '#fef3c7', stroke: '#fcd34d', text: '#ca8a04' },
-        90: { fill: '#fee2e2', stroke: '#fca5a5', text: '#dc2626' }
-      }
+        15: { fill: '#e9ddff', stroke: '#b08cff', text: '#6d28d9' },
+        30: { fill: '#dff0ff', stroke: '#8cc8ff', text: '#2563eb' },
+        40: { fill: '#e2f7e7', stroke: '#9fdcab', text: '#16a34a' },
+        45: { fill: '#e2f7e7', stroke: '#9fdcab', text: '#16a34a' },
+        60: { fill: '#fff3cf', stroke: '#f6d67d', text: '#b7791f' },
+        90: { fill: '#ffe3e3', stroke: '#f5a3a3', text: '#dc2626' }
+      },
+      extras: [
+        { fill: '#ffe9d6', stroke: '#f6b98a', text: '#c96a1a' },
+        { fill: '#dff7f3', stroke: '#8dd9cf', text: '#0f766e' },
+        { fill: '#fde7f2', stroke: '#f3abc9', text: '#be185d' },
+        { fill: '#e8f7ef', stroke: '#a8ddbf', text: '#15803d' },
+        { fill: '#ece9ff', stroke: '#b8acf6', text: '#5b21b6' },
+        { fill: '#fff0dd', stroke: '#f2c48d', text: '#b45309' },
+        { fill: '#e2f5fb', stroke: '#9ad7ea', text: '#0c4a6e' },
+        { fill: '#f3ebe3', stroke: '#d9c0a8', text: '#7c4a21' }
+      ]
     };
 
     const pageMm = {
@@ -290,8 +368,9 @@
       customAngles: document.getElementById('customAngles'),
       scale: document.getElementById('scale'),
       scaleValue: document.getElementById('scaleValue'),
-      perPage: document.getElementById('perPage'),
-      lineWidth: document.getElementById('lineWidth'),
+      perPageGroup: document.getElementById('perPageGroup'),
+      lineWidthGroup: document.getElementById('lineWidthGroup'),
+      singleSheet: document.getElementById('singleSheet'),
       showArc: document.getElementById('showArc'),
       showLabel: document.getElementById('showLabel'),
       useColors: document.getElementById('useColors'),
@@ -315,6 +394,26 @@
       [...els.presetAngles.querySelectorAll('input')].forEach(input => {
         input.addEventListener('change', render);
       });
+    }
+
+    function getSelectedRadioValue(groupEl) {
+      const input = groupEl.querySelector('input:checked');
+      return input ? input.value : '';
+    }
+
+    function syncSegmentedUI() {
+      [els.perPageGroup, els.lineWidthGroup].forEach(group => {
+        [...group.querySelectorAll('label')].forEach(label => {
+          const input = label.querySelector('input');
+          label.classList.toggle('active-pill', input.checked);
+        });
+      });
+    }
+
+    function setRadioGroupValue(groupEl, value) {
+      const found = [...groupEl.querySelectorAll('input')].find(input => input.value === String(value));
+      if (found) found.checked = true;
+      syncSegmentedUI();
     }
 
     function getAngles() {
@@ -350,15 +449,33 @@
       };
     }
 
-    function getGeometry(angleDeg, orientation, scalePercent) {
-      const perPage = Number(els.perPage.value);
-      const cell = getCellSizeMm(perPage);
+    function getGridForCount(count) {
+      const usableW = pageMm.width - (2 * pageMm.padX);
+      const usableH = pageMm.height - (2 * pageMm.padY);
+      let best = { cols: 1, rows: count, score: Infinity };
+      for (let cols = 1; cols <= count; cols++) {
+        const rows = Math.ceil(count / cols);
+        const gapX = cols > 1 ? pageMm.gapY * (cols - 1) : 0;
+        const gapY = rows > 1 ? pageMm.gapY * (rows - 1) : 0;
+        const cellW = (usableW - gapX) / cols;
+        const cellH = (usableH - gapY) / rows;
+        const aspect = cellW / cellH;
+        const score = Math.abs(aspect - 0.78) + Math.abs(cols - rows) * 0.08;
+        if (cellW > 26 && cellH > 26 && score < best.score) {
+          best = { cols, rows, score };
+        }
+      }
+      return best;
+    }
+
+    function getGeometry(angleDeg, orientation, scalePercent, cell) {
       const halfRad = (angleDeg / 2) * Math.PI / 180;
       const downward = orientation === 'single' || orientation === 'up';
 
-      const sideMargin = 8;
-      const apexMargin = orientation === 'single' ? 8 : 6;
-      const farMargin = orientation === 'single' ? 7 : 5;
+      const largeCell = cell.height > 180;
+      const sideMargin = largeCell ? 8 : 4.5;
+      const apexMargin = orientation === 'single' ? (largeCell ? 8 : 5) : (largeCell ? 6 : 4.5);
+      const farMargin = orientation === 'single' ? (largeCell ? 7 : 4.5) : (largeCell ? 5 : 4);
 
       const cx = cell.width / 2;
       const cy = downward ? apexMargin : (cell.height - apexMargin);
@@ -380,11 +497,11 @@
         y: cy + dir * len * cosHalf
       };
 
-      const arcR = clamp(len * 0.18, perPage === 1 ? 18 : 12, perPage === 1 ? 42 : 24);
+      const arcR = clamp(len * 0.18, largeCell ? 18 : 8, largeCell ? 42 : 20);
       const labelFont = clamp(
-        (perPage === 1 ? 10 : 7.3) + (angleDeg >= 75 ? 1.1 : 0) - (angleDeg <= 20 ? 1.0 : 0),
-        perPage === 1 ? 8 : 6,
-        perPage === 1 ? 12.5 : 8.8
+        (largeCell ? 10 : 6.4) + (angleDeg >= 75 ? 1.1 : 0) - (angleDeg <= 20 ? 1.0 : 0),
+        largeCell ? 8 : 5.4,
+        largeCell ? 12.5 : 8.2
       );
       const estimatedLabelWidth = labelFont * 1.8;
       const labelMinRForWidth = estimatedLabelWidth / (2 * Math.max(sinHalf, 0.05)) + 1.5;
@@ -407,7 +524,7 @@
         arcR,
         label,
         labelFont,
-        lineWidth: Number(els.lineWidth.value)
+        lineWidth: Number(getSelectedRadioValue(els.lineWidthGroup))
       };
     }
 
@@ -426,9 +543,9 @@
       return points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${fmt(p.x)} ${fmt(p.y)}`).join(' ');
     }
 
-    function makeAngleSVG(angleDeg, orientation, options) {
+    function makeAngleSVG(angleDeg, orientation, options, cell) {
       const scalePercent = Number(els.scale.value);
-      const geo = getGeometry(angleDeg, orientation, scalePercent);
+      const geo = getGeometry(angleDeg, orientation, scalePercent, cell);
       const sectorPoints = arcPoints(geo.cx, geo.cy, geo.len, geo.halfRad, geo.downward, 40);
       const smallArcPoints = arcPoints(geo.cx, geo.cy, geo.arcR, geo.halfRad, geo.downward, 30);
       const sectorPath = `M ${fmt(geo.cx)} ${fmt(geo.cy)} L ${fmt(geo.left.x)} ${fmt(geo.left.y)} ${smallArcOrLargeArcPath(sectorPoints)} Z`;
@@ -449,14 +566,23 @@
       return points.map(p => `L ${fmt(p.x)} ${fmt(p.y)}`).join(' ');
     }
 
-    function getPedagogicPalette(angle) {
-      return colors.byAngle[angle] || colors.defaultPedagogic;
+    function buildPedagogicPaletteMap(angles) {
+      const map = new Map();
+      const extras = angles.filter(angle => !colors.byAngle[angle]);
+      extras.forEach((angle, index) => {
+        map.set(angle, colors.extras[index % colors.extras.length]);
+      });
+      return map;
     }
 
-    function makePage(angle) {
-      const perPage = Number(els.perPage.value);
+    function getPedagogicPalette(angle, extraMap) {
+      return colors.byAngle[angle] || extraMap.get(angle) || colors.extras[0];
+    }
+
+    function makePage(angle, extraMap) {
+      const perPage = Number(getSelectedRadioValue(els.perPageGroup));
       const pedagogic = els.useColors.checked;
-      const palette = getPedagogicPalette(angle);
+      const palette = getPedagogicPalette(angle, extraMap);
 
       const options = {
         showArc: els.showArc.checked,
@@ -476,20 +602,58 @@
       if (perPage === 1) {
         const cell = document.createElement('div');
         cell.className = 'cell';
-        cell.innerHTML = makeAngleSVG(angle, 'single', options);
+        cell.innerHTML = makeAngleSVG(angle, 'single', options, getCellSizeMm(1));
         grid.appendChild(cell);
       } else {
         const top = document.createElement('div');
         top.className = 'cell';
-        top.innerHTML = makeAngleSVG(angle, 'up', options);
+        top.innerHTML = makeAngleSVG(angle, 'up', options, getCellSizeMm(2));
 
         const bottom = document.createElement('div');
         bottom.className = 'cell';
-        bottom.innerHTML = makeAngleSVG(angle, 'down', options);
+        bottom.innerHTML = makeAngleSVG(angle, 'down', options, getCellSizeMm(2));
 
         grid.appendChild(top);
         grid.appendChild(bottom);
       }
+
+      return page;
+    }
+
+    function makeCombinedPage(angles, extraMap) {
+      const page = document.createElement('section');
+      page.className = 'sheet';
+      const gridInfo = getGridForCount(angles.length);
+      const usableW = pageMm.width - (2 * pageMm.padX);
+      const usableH = pageMm.height - (2 * pageMm.padY);
+      const gapX = gridInfo.cols > 1 ? pageMm.gapY : 0;
+      const gapY = gridInfo.rows > 1 ? pageMm.gapY : 0;
+      const cell = {
+        width: (usableW - gapX * (gridInfo.cols - 1)) / gridInfo.cols,
+        height: (usableH - gapY * (gridInfo.rows - 1)) / gridInfo.rows
+      };
+
+      page.innerHTML = `<div class="grid" style="grid-template-columns: repeat(${gridInfo.cols}, 1fr); grid-template-rows: repeat(${gridInfo.rows}, 1fr); column-gap: ${pageMm.gapY}mm; row-gap: ${pageMm.gapY}mm;"></div>`;
+      const grid = page.querySelector('.grid');
+
+      angles.forEach(angle => {
+        const pedagogic = els.useColors.checked;
+        const palette = getPedagogicPalette(angle, extraMap);
+        const options = {
+          showArc: els.showArc.checked,
+          showLabel: els.showLabel.checked,
+          fillSector: pedagogic,
+          fill: palette.fill,
+          stroke: pedagogic ? palette.stroke : colors.normalStroke,
+          arcColor: pedagogic ? palette.text : colors.normalStroke,
+          textColor: pedagogic ? palette.text : colors.normalStroke
+        };
+
+        const cellEl = document.createElement('div');
+        cellEl.className = 'cell';
+        cellEl.innerHTML = makeAngleSVG(angle, 'single', options, cell);
+        grid.appendChild(cellEl);
+      });
 
       return page;
     }
@@ -501,13 +665,15 @@
       const scale = params.get('scale');
       const perPage = params.get('perPage');
       const lineWidth = params.get('lineWidth');
+      const singleSheet = params.get('singleSheet');
       const pedagogic = params.get('pedagogic');
       const showArc = params.get('showArc');
       const showLabel = params.get('showLabel');
 
       if (scale) els.scale.value = String(clamp(Number(scale), 40, 108));
-      if (perPage === '1' || perPage === '2') els.perPage.value = perPage;
-      if (lineWidth && [...els.lineWidth.options].some(o => o.value === lineWidth)) els.lineWidth.value = lineWidth;
+      if (perPage === '1' || perPage === '2') setRadioGroupValue(els.perPageGroup, perPage);
+      if (lineWidth && ['0.45', '0.68'].includes(lineWidth)) setRadioGroupValue(els.lineWidthGroup, lineWidth);
+      if (singleSheet !== null) els.singleSheet.checked = singleSheet === '1' || singleSheet === 'true';
       if (pedagogic !== null) els.useColors.checked = pedagogic === '1' || pedagogic === 'true';
       if (showArc !== null) els.showArc.checked = showArc === '1' || showArc === 'true';
       if (showLabel !== null) els.showLabel.checked = showLabel === '1' || showLabel === 'true';
@@ -525,12 +691,20 @@
     }
 
     function render() {
+      syncSegmentedUI();
       els.scaleValue.textContent = els.scale.value;
       const angles = getAngles();
+      const perPage = Number(getSelectedRadioValue(els.perPageGroup));
+      const extraMap = buildPedagogicPaletteMap(angles);
       els.pages.innerHTML = '';
-      angles.forEach(angle => els.pages.appendChild(makePage(angle)));
 
-      els.summary.textContent = `${angles.length} page(s) • ${els.perPage.value === '1' ? '1 grand gabarit' : '2 gabarits tête-bêche'} par page.`;
+      if (els.singleSheet.checked) {
+        els.pages.appendChild(makeCombinedPage(angles, extraMap));
+        els.summary.textContent = `1 page • ${angles.length} angle(s) réparti(s) automatiquement sur la feuille.`;
+      } else {
+        angles.forEach(angle => els.pages.appendChild(makePage(angle, extraMap)));
+        els.summary.textContent = `${angles.length} page(s) • ${perPage === 1 ? '1 grand gabarit' : '2 gabarits tête-bêche'} par page.`;
+      }
     }
 
     function resetAll() {
@@ -538,8 +712,9 @@
       bindPresetCheckboxes();
       els.customAngles.value = '';
       els.scale.value = '100';
-      els.perPage.value = '2';
-      els.lineWidth.value = '0.8';
+      setRadioGroupValue(els.perPageGroup, '2');
+      setRadioGroupValue(els.lineWidthGroup, '0.45');
+      els.singleSheet.checked = false;
       els.showArc.checked = true;
       els.showLabel.checked = true;
       els.useColors.checked = false;
@@ -548,11 +723,19 @@
 
     buildPresetCheckboxes();
     bindPresetCheckboxes();
+    setRadioGroupValue(els.perPageGroup, '2');
+    setRadioGroupValue(els.lineWidthGroup, '0.45');
     applyUrlConfig();
 
-    [els.customAngles, els.scale, els.perPage, els.lineWidth, els.showArc, els.showLabel, els.useColors].forEach(el => {
+    [els.customAngles, els.scale, els.singleSheet, els.showArc, els.showLabel, els.useColors].forEach(el => {
       el.addEventListener('input', render);
       el.addEventListener('change', render);
+    });
+
+    [els.perPageGroup, els.lineWidthGroup].forEach(group => {
+      [...group.querySelectorAll('input')].forEach(input => {
+        input.addEventListener('change', render);
+      });
     });
 
     els.printBtn.addEventListener('click', () => window.print());
