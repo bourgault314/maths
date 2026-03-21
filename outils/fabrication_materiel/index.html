@@ -8,154 +8,178 @@
         :root {
             --bg-page: #f8fafc;
             --text-main: #1e293b;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,0.92);
+            --card-radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-page);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(191, 219, 254, 0.22), transparent 28%),
+                radial-gradient(circle at top right, rgba(167, 243, 208, 0.18), transparent 26%),
+                linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
         }
 
-        /* En-tête simplifié et flottant */
         .top-nav {
             padding: 1rem 2rem;
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            box-sizing: border-box;
             z-index: 10;
         }
 
         .back-link {
             text-decoration: none;
-            color: #64748b;
+            color: var(--text-soft);
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .back-link:hover {
-            transform: translateX(-3px);
-            color: #1e293b;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.78);
+            padding: 0.52rem 1rem;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.55);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
         }
 
-        /* Conteneur Principal Centré */
+        .back-link:hover {
+            transform: translateX(-2px);
+            color: #1e293b;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.09);
+        }
+
         .main-container {
             flex: 1;
+            width: 100%;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 5.5rem 1.25rem 3.2rem;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            padding: 4rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            justify-content: center;
         }
 
         .page-title {
-            font-size: 2.5rem;
+            margin: 0 0 2.2rem;
+            text-align: center;
+            font-size: clamp(2.1rem, 3.2vw, 3.1rem);
             font-weight: 800;
-            margin-bottom: 3rem;
-            text-align: center;
+            line-height: 1.12;
+            letter-spacing: -0.04em;
             color: #334155;
-            letter-spacing: -1px;
-            line-height: 1.2;
         }
 
-        /* La Grille de Choix */
         .choice-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            column-gap: 2rem;
-            row-gap: 6.2rem;
             width: 100%;
-            max-width: 1000px;
+            max-width: 960px;
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 1.35rem;
+            align-items: stretch;
         }
 
-        /* Les Cartes "Boutons" */
         .choice-card {
-            text-decoration: none;
+            grid-column: span 2;
             position: relative;
-            background: white;
-            border-radius: 24px;
-            padding: 2rem 1.5rem;
+            isolation: isolate;
+            text-decoration: none;
+            background: var(--card-bg);
+            border-radius: var(--card-radius);
+            padding: 1.55rem 1.25rem 1.35rem;
+            min-height: 215px;
             text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.03);
+            border: 1.5px solid transparent;
+            box-shadow:
+                0 10px 22px rgba(15, 23, 42, 0.05),
+                0 2px 6px rgba(15, 23, 42, 0.04);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
-            min-height: 240px;
+            transition:
+                transform 0.22s ease,
+                box-shadow 0.22s ease,
+                border-color 0.22s ease,
+                background 0.22s ease;
             overflow: hidden;
         }
 
-        /* Effet de brillance au survol */
-        .choice-card::after {
+        .choice-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0));
+            opacity: 0.75;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .choice-card:hover {
-            transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 16px 20px -6px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+            transform: translateY(-4px);
+            box-shadow:
+                0 18px 34px rgba(15, 23, 42, 0.09),
+                0 8px 18px rgba(15, 23, 42, 0.06);
         }
 
-        /* ICONES */
         .icon-wrapper {
-            height: 4rem;
-            margin-bottom: 1.5rem;
-            transition: transform 0.3s;
+            height: 3.7rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem; 
+            font-size: 3.6rem;
             line-height: 1;
             white-space: nowrap;
+            transition: transform 0.22s ease;
         }
-        
+
         .choice-card:hover .icon-wrapper {
-            transform: scale(1.15) rotate(-5deg);
+            transform: scale(1.06);
         }
 
         .card-title {
-            font-size: 1.4rem;
-            font-weight: 700;
             margin: 0;
+            font-size: 1.35rem;
+            line-height: 1.22;
+            font-weight: 750;
             color: #1e293b;
-            line-height: 1.3;
+            text-wrap: balance;
         }
 
         .card-desc {
-            margin-top: 0.6rem;
-            font-size: 0.95rem;
-            opacity: 0.7;
-            font-weight: 500;
+            margin-top: 0.62rem;
+            max-width: 24ch;
+            font-size: 0.96rem;
+            line-height: 1.42;
+            font-weight: 550;
+            opacity: 0.78;
+            text-wrap: balance;
         }
 
-        /* THÈMES SPÉCIFIQUES (Couleurs adaptées) */
-        
-        /* Cartes (Rose/Rouge) */
+        /* Grille desktop : 3 cartes puis 2 cartes centrées */
+        .choice-card:nth-child(4) {
+            grid-column: 2 / span 2;
+        }
+
+        .choice-card:nth-child(5) {
+            grid-column: 4 / span 2;
+        }
+
+        /* THÈMES */
         .theme-cartes { border-color: #fce7f3; }
         .theme-cartes:hover {
             border-color: #ec4899;
@@ -164,7 +188,6 @@
         .theme-cartes .card-title { color: #db2777; }
         .theme-cartes .card-desc { color: #f472b6; }
 
-        /* Bandes (Bleu/Indigo) */
         .theme-bandes { border-color: #e0e7ff; }
         .theme-bandes:hover {
             border-color: #6366f1;
@@ -173,8 +196,7 @@
         .theme-bandes .card-title { color: #4f46e5; }
         .theme-bandes .card-desc { color: #818cf8; }
 
-        /* Disques (Orange/Ambre) */
-        .theme-disques { border-color: #fff7ed; }
+        .theme-disques { border-color: #ffedd5; }
         .theme-disques:hover {
             border-color: #f97316;
             background: linear-gradient(to bottom right, #ffffff, #fff7ed);
@@ -182,8 +204,6 @@
         .theme-disques .card-title { color: #c2410c; }
         .theme-disques .card-desc { color: #fb923c; }
 
-
-        /* Numération décimale (Vert/Émeraude) */
         .theme-decimale { border-color: #d1fae5; }
         .theme-decimale:hover {
             border-color: #10b981;
@@ -192,13 +212,6 @@
         .theme-decimale .card-title { color: #059669; }
         .theme-decimale .card-desc { color: #34d399; }
 
-        /* Couleurs décimales : unités / dixièmes / centièmes */
-        .dec-unit{ color:#ef4444; }   /* rouge */
-        .dec-tenth{ color:#22c55e; }  /* vert */
-        .dec-hund{ color:#facc15; }   /* jaune */
-        .dec-sep{ color:#334155; }    /* virgule / neutre */
-
-        /* Angles (Cyan/Bleu) */
         .theme-angles { border-color: #dbeafe; }
         .theme-angles:hover {
             border-color: #0ea5e9;
@@ -207,59 +220,103 @@
         .theme-angles .card-title { color: #0369a1; }
         .theme-angles .card-desc { color: #38bdf8; }
 
+        .dec-unit  { color: #ef4444; }
+        .dec-tenth { color: #22c55e; }
+        .dec-hund  { color: #facc15; }
+        .dec-sep   { color: #334155; }
+
         footer {
             text-align: center;
-            padding: 2rem;
+            padding: 1rem 1.5rem 1.6rem;
             color: #cbd5e1;
             font-size: 0.8rem;
         }
 
+        @media (max-width: 900px) {
+            .main-container {
+                padding-top: 5.2rem;
+                justify-content: flex-start;
+            }
+
+            .choice-grid {
+                max-width: 760px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .choice-card,
+            .choice-card:nth-child(4),
+            .choice-card:nth-child(5) {
+                grid-column: span 1;
+            }
+        }
+
         @media (max-width: 600px) {
-            .page-title { font-size: 2rem; margin-top: 3rem; }
-            .choice-card { min-height: 180px; padding: 1.25rem; }
-            .icon-wrapper { font-size: 3rem; height: 3rem; margin-bottom: 0.8rem; }
+            .top-nav {
+                padding: 0.9rem 1rem;
+            }
+
+            .main-container {
+                padding: 4.7rem 0.95rem 2rem;
+            }
+
+            .page-title {
+                margin-bottom: 1.4rem;
+            }
+
+            .choice-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .choice-card,
+            .choice-card:nth-child(4),
+            .choice-card:nth-child(5) {
+                grid-column: auto;
+                min-height: 180px;
+                padding: 1.25rem 1rem 1.15rem;
+            }
+
+            .icon-wrapper {
+                height: 3.1rem;
+                font-size: 3rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .card-title {
+                font-size: 1.24rem;
+            }
+
+            .card-desc {
+                font-size: 0.92rem;
+            }
         }
     </style>
 </head>
 <body>
 
     <nav class="top-nav">
-        <!-- Lien retour vers le dossier parent (Outils Pédagogiques) -->
-        <a href="../index.html" class="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <a href="../index.html" class="back-link" aria-label="Retour à l’index précédent">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Retour
         </a>
     </nav>
 
     <div class="main-container">
-        
-        <h1 class="page-title">
-            Fabrication de matériel
-        </h1>
+        <h1 class="page-title">Fabrication de matériel</h1>
 
         <div class="choice-grid">
-            
-            <!-- CARTES PREMIERS -->
             <a href="cartes_premiers_1_100.html" class="choice-card theme-cartes">
-                <div class="icon-wrapper">
-                    🃏
-                </div>
+                <div class="icon-wrapper">🃏</div>
                 <h2 class="card-title">Générateur de Cartes</h2>
                 <span class="card-desc">Nombres premiers, composés, diviseurs (1-100)</span>
             </a>
 
-            <!-- BANDES MAKER -->
             <a href="bandes_maker_v2.html" class="choice-card theme-bandes">
-                <div class="icon-wrapper">
-                   📏
-                </div>
+                <div class="icon-wrapper">📏</div>
                 <h2 class="card-title">Bandes Maker</h2>
                 <span class="card-desc">Générateur de bandes de fractions à découper</span>
             </a>
 
-
-
-            <!-- NUMERATION DECIMALE -->
             <a href="numeration_decimale_maker.html" class="choice-card theme-decimale">
                 <div class="icon-wrapper">
                     <span class="dec-unit">1</span><span class="dec-sep">,</span><span class="dec-tenth">2</span><span class="dec-hund">3</span>
@@ -268,31 +325,20 @@
                 <span class="card-desc">Génération de bandes d’unités, dixièmes, centièmes à découper</span>
             </a>
 
-            <!-- DISQUE MAKER -->
             <a href="disque_maker.html" class="choice-card theme-disques">
-                <div class="icon-wrapper">
-                    ⭕️
-                </div>
+                <div class="icon-wrapper">⭕️</div>
                 <h2 class="card-title">Disques de fractions</h2>
                 <span class="card-desc">Générateur de disques de fractions à découper</span>
             </a>
 
-            <!-- GABARITS D'ANGLES -->
             <a href="gabarits_angles_generateur.html" class="choice-card theme-angles">
-                <div class="icon-wrapper">
-                    ∠
-                </div>
+                <div class="icon-wrapper">∠</div>
                 <h2 class="card-title">Gabarits d’angles</h2>
                 <span class="card-desc">Grand format à imprimer, avec options d’arc et de mesure</span>
             </a>
-
         </div>
-
     </div>
 
-    <footer>
-        <!-- Pied de page -->
-    </footer>
-
+    <footer></footer>
 </body>
 </html>
