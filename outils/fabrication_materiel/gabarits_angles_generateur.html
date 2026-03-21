@@ -468,23 +468,52 @@
       return best;
     }
 
-    function getGeometry(angleDeg, orientation, scalePercent, cell) {
+    function getGeometryConstraints(angleDeg, orientation, cell) {
       const halfRad = (angleDeg / 2) * Math.PI / 180;
       const downward = orientation === 'single' || orientation === 'up';
-
       const largeCell = cell.height > 180;
       const sideMargin = largeCell ? 8 : 4.5;
       const apexMargin = orientation === 'single' ? (largeCell ? 8 : 5) : (largeCell ? 6 : 4.5);
       const farMargin = orientation === 'single' ? (largeCell ? 7 : 4.5) : (largeCell ? 5 : 4);
-
       const cx = cell.width / 2;
       const cy = downward ? apexMargin : (cell.height - apexMargin);
-
       const sinHalf = Math.max(Math.sin(halfRad), 0.001);
       const cosHalf = Math.max(Math.cos(halfRad), 0.001);
       const maxByWidth = ((cell.width / 2) - sideMargin) / sinHalf;
-      const maxByHeight = (cell.height - apexMargin - farMargin) / cosHalf;
-      const maxLen = Math.min(maxByWidth, maxByHeight);
+      const maxByEndpoints = (cell.height - apexMargin - farMargin) / cosHalf;
+      const maxBySector = cell.height - apexMargin - farMargin;
+
+      return {
+        halfRad,
+        downward,
+        largeCell,
+        sideMargin,
+        apexMargin,
+        farMargin,
+        cx,
+        cy,
+        sinHalf,
+        cosHalf,
+        maxLenSidesOnly: Math.min(maxByWidth, maxByEndpoints),
+        maxLenWithSector: Math.min(maxByWidth, maxByEndpoints, maxBySector)
+      };
+    }
+
+    function getSafeScalePercent(angles, perPage, singleSheet, fillSector) {
+      if (!angles.length) return 108;
+      if (!fillSector) return 108;
+
+      // En mode pédagogique, getGeometry() utilise déjà maxLenWithSector.
+      // Le plafond précédent appliquait une deuxième fois la marge de sécurité,
+      // ce qui rendait surtout le mode 2 par page inutilement petit.
+      // Ici, 100% = plus grande taille propre qui reste dans la zone utile.
+      return 100;
+    }
+
+    function getGeometry(angleDeg, orientation, scalePercent, cell, keepSectorInside = false) {
+      const constraints = getGeometryConstraints(angleDeg, orientation, cell);
+      const { halfRad, downward, largeCell, cx, cy, sinHalf, cosHalf } = constraints;
+      const maxLen = keepSectorInside ? constraints.maxLenWithSector : constraints.maxLenSidesOnly;
       const len = maxLen * (scalePercent / 100);
       const dir = downward ? 1 : -1;
 
@@ -545,7 +574,7 @@
 
     function makeAngleSVG(angleDeg, orientation, options, cell) {
       const scalePercent = Number(els.scale.value);
-      const geo = getGeometry(angleDeg, orientation, scalePercent, cell);
+      const geo = getGeometry(angleDeg, orientation, scalePercent, cell, options.fillSector);
       const sectorPoints = arcPoints(geo.cx, geo.cy, geo.len, geo.halfRad, geo.downward, 40);
       const smallArcPoints = arcPoints(geo.cx, geo.cy, geo.arcR, geo.halfRad, geo.downward, 30);
       const sectorPath = `M ${fmt(geo.cx)} ${fmt(geo.cy)} L ${fmt(geo.left.x)} ${fmt(geo.left.y)} ${smallArcOrLargeArcPath(sectorPoints)} Z`;
@@ -692,9 +721,14 @@
 
     function render() {
       syncSegmentedUI();
-      els.scaleValue.textContent = els.scale.value;
       const angles = getAngles();
       const perPage = Number(getSelectedRadioValue(els.perPageGroup));
+      const safeScaleMax = getSafeScalePercent(angles, perPage, els.singleSheet.checked, els.useColors.checked);
+      els.scale.max = String(safeScaleMax);
+      if (Number(els.scale.value) > safeScaleMax) {
+        els.scale.value = String(safeScaleMax);
+      }
+      els.scaleValue.textContent = els.scale.value;
       const extraMap = buildPedagogicPaletteMap(angles);
       els.pages.innerHTML = '';
 
