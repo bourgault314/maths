@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur d'Exercices — Pourcentages V1.9</title>
+  <title>Générateur d'Exercices — Pourcentages V2.0</title>
   <style>
     :root {
       --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
@@ -41,11 +41,14 @@
     hr { border: none; border-top: 1px dashed #cfd8ea; margin: 10px 0; }
 
     .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
-    .config-options { display: flex; gap: 15px; flex-wrap: wrap; }
+    .config-options { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
     .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
     .config-block select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; }
-    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
-    .btn-main:hover:not(:disabled) { opacity: 0.95; }
+    
+    .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; }
+    .btn-main.print { background: var(--inverse); }
+    .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
     .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1000px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; }
     .diapo-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; }
@@ -70,14 +73,39 @@
     .thumb-btn:hover { background: #eef4ff; }
     .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
+
+    /* LAYOUT IMPRESSION */
+    #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
+    @media print {
+      body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
+      .config-panel, .diapo-container, svg.defs-only { display: none !important; }
+      #printContainer { display: block !important; margin: 0 auto; }
+      .print-page { page-break-after: always; padding: 1cm 0; }
+      .print-page:last-child { page-break-after: auto; }
+      .print-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.1rem;}
+      .print-q { margin-bottom: 30px; page-break-inside: avoid; }
+      .print-q-text { font-size: 1.2rem; margin-bottom: 15px; line-height: 1.4; }
+      .print-q svg { width: 100%; max-width: 650px; display: block; margin: 0 auto; }
+      .print-c-text { color: var(--text); font-weight: bold; font-size: 1.1rem; margin-top: 5px; margin-bottom: 15px; }
+      .spacer-reponse { height: 80px; }
+    }
   </style>
 </head>
 <body>
 
+  <svg class="defs-only" width="0" height="0" style="position:absolute;">
+    <defs>
+      <pattern id="patternHatch" width="15" height="15" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <rect width="15" height="15" fill="#e2e8f0"></rect>
+        <line x1="0" y1="0" x2="0" y2="15" stroke="#ff4d6d" stroke-width="3"></line>
+      </pattern>
+    </defs>
+  </svg>
+
   <div class="config-panel">
     <div class="config-header">
-      <h2>📊 Générateur : Pourcentages (V1.9) — Socle Complet & Évolutions</h2>
-      <p>Méthode Singapour — Toutes les catégories restaurées + Nouveautés</p>
+      <h2>📊 Générateur : Pourcentages (V2.0) — Diaporama & Mode Fiche Papier</h2>
+      <p>Méthode Singapour — Imprimez des évaluations ou projetez l'animation au tableau.</p>
     </div>
     
     <div class="theme-grid">
@@ -136,7 +164,7 @@
     <div class="bottom-config">
       <div class="config-options">
         <div class="config-block">
-          <label>Taille des nombres :</label>
+          <label>Taille :</label>
           <select id="selLevel">
             <option value="1" selected>Petits (< 100)</option>
             <option value="2">Moyens (< 400)</option>
@@ -151,8 +179,15 @@
             <option value="10">10</option>
           </select>
         </div>
+        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
+          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Inclure les gabarits vides sur la fiche</label>
+        </div>
       </div>
-      <button class="btn-main" onclick="generateQuiz()">🚀 Générer la série</button>
+      
+      <div class="btn-wrap">
+        <button class="btn-main" onclick="generateQuiz()">💻 Projeter au tableau</button>
+        <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
+      </div>
     </div>
   </div>
 
@@ -169,6 +204,8 @@
     
     <div class="thumbnails-bar" id="thumbBar"></div>
   </div>
+
+  <div id="printContainer"></div>
 
   <script>
     const svgNS = "http://www.w3.org/2000/svg";
@@ -202,29 +239,24 @@
       return rand(min, max) * multiplier * scale;
     }
 
-    // Le moteur de textes complet (Tous les cas pris en compte)
     function buildText(q) {
       let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite']);
       let qHtml = "", cHtml = "", unit = "";
       
-      // EVOLUTIONS
       if (q.mode === 'evo_inc') {
-        let contexts = ['loyer', 'facture', 'population'];
-        cType = pick(contexts);
+        cType = pick(['loyer', 'facture', 'population']);
         if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${q.totalVal} €</strong> augmente de <strong>${q.percent} %</strong>.<br>Quel est le nouveau loyer ?`; }
         else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${q.totalVal} €</strong> s'alourdit de <strong>${q.percent} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
         else { unit = " habitants"; qHtml = `Un village de <strong>${q.totalVal} habitants</strong> a vu sa population croître de <strong>${q.percent} %</strong>.<br>Quelle est la nouvelle population ?`; }
         cHtml = `Le nouveau total est <strong>${q.calcVal} ${unit}</strong>.`;
       }
       else if (q.mode === 'evo_dec') {
-        let contexts = ['solde', 'jeu', 'population'];
-        cType = pick(contexts);
+        cType = pick(['solde', 'jeu', 'population']);
         if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${q.totalVal} €</strong> est soldé à <strong>- ${q.percent} %</strong>.<br>Quel est le nouveau prix ?`; }
         else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${q.totalVal} €</strong> baisse de <strong>${q.percent} %</strong>.<br>Quel est son nouveau prix ?`; }
         else { unit = " habitants"; qHtml = `Un club de <strong>${q.totalVal} membres</strong> perd <strong>${q.percent} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
         cHtml = `La nouvelle valeur est <strong>${q.calcVal} ${unit}</strong>.`;
       }
-      // TROUVER LE TOUT (100%)
       else if (q.mode === 'find_total') {
         if (cType === 'brut') { qHtml = `<strong>${q.percent} %</strong> d'un nombre vaut <strong>${q.calcVal}</strong>.<br>Quel est ce nombre entier ?`; } 
         else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
@@ -233,7 +265,6 @@
         else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale ?`; }
         cHtml = `Le total (100 %) est <strong>${q.totalVal} ${unit}</strong>.`;
       }
-      // TROUVER LE POURCENTAGE
       else if (q.mode === 'find_percent') {
         if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${q.calcVal}</strong> par rapport à <strong>${q.totalVal}</strong> ?`; } 
         else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${q.totalVal} €</strong>. La réduction est de <strong>${q.calcVal} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
@@ -241,7 +272,6 @@
         else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, <strong>${q.calcVal} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
         cHtml = `Cela représente <strong>${q.percent} %</strong>.`;
       }
-      // CALCUL DIRECT (Parties et Multiples)
       else {
         if (cType === 'brut') { qHtml = `Calcule <strong>${q.percent} %</strong> de <strong>${q.totalVal}</strong>.`; } 
         else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûte <strong>${q.totalVal} €</strong>. Il y a une réduction de <strong>${q.percent} %</strong>.<br>Quel est le montant de la réduction ?`; } 
@@ -252,14 +282,12 @@
       return { qHtml, cHtml, unit };
     }
 
-    // Le créateur de questions reconstruit
     function createQuestion(type, level) {
       let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
       
       if (type.startsWith('evo_')) {
          mode = type; 
-         let baseParts = pick([4, 5, 10]); // Pour les évolutions, on évite le 50% qui est moins pertinent que les petits pourcentages
-         parts = baseParts; activeParts = pick([1, 2]); 
+         parts = pick([4, 5, 10]); activeParts = pick([1, 2]); 
          percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
          if (type === 'evo_inc') calcVal = (totalVal / parts) * (parts + activeParts);
          else calcVal = (totalVal / parts) * (parts - activeParts);
@@ -297,7 +325,6 @@
          }
       }
 
-      // Re-calcul par sécurité
       if (mode !== 'evo_inc' && mode !== 'evo_dec') calcVal = (totalVal / parts) * activeParts;
 
       let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
@@ -306,7 +333,115 @@
       return q;
     }
 
-    // Gestion des miniatures textuelles
+    // --- LE MOTEUR SVG REFONDU (Prend un conteneur en paramètre) ---
+    function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+    function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
+
+    function drawSVGBar(q, isCorrection, svgContainer) {
+      emptyElement(svgContainer);
+      let displayParts = (q.mode === 'evo_inc') ? q.parts + q.activeParts : q.parts;
+      const wTotalDisplay = (800 / displayParts) * q.parts; 
+      const wPart = wTotalDisplay / q.parts;
+      const hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
+      const partVal = q.totalVal / q.parts;
+      const partPercent = 100 / q.parts;
+      
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      
+      if (q.mode === 'find_total' && !isCorrection) {
+          svgContainer.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
+      } else {
+          let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+          txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
+      }
+      drawBrace(svgContainer, xStart, yTop - 5, wTotalDisplay, "100 %", true);
+
+      for (let i = 0; i < displayParts; i++) {
+        let xPart = xStart + (i * wPart);
+        let isAdded = (q.mode === 'evo_inc' && i >= q.parts); 
+        let isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts); 
+        let fillColor = colors[q.parts];
+        if (isRemoved && isCorrection) fillColor = "url(#patternHatch)"; 
+        
+        let op = "0.5";
+        if (isCorrection) {
+           if (isRemoved) op = "1"; else if (isAdded) op = "0.9";
+           else if (q.mode === 'direct' || q.mode === 'find_percent' || q.mode === 'find_total') op = (i < q.activeParts) ? "0.9" : "0.2";
+           else op = "0.9"; 
+        } else {
+           if (isAdded) op = "0.1"; 
+        }
+
+        if (!(isAdded && !isCorrection)) {
+            svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
+        }
+
+        if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
+            if (!(isAdded && !isCorrection)) {
+                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+                txtVal.textContent = partVal; svgContainer.appendChild(txtVal);
+            }
+        } else {
+            svgContainer.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
+        }
+        
+        if (!(isAdded && !isCorrection)) {
+            let label = partPercent + " %";
+            if (isRemoved && isCorrection) label = "- " + label;
+            if (isAdded && isCorrection) label = "+ " + label;
+            drawBrace(svgContainer, xPart, yBot + hBar + 5, wPart, label, false, (isRemoved && isCorrection ? "#ff4d6d" : (isAdded ? "var(--accent)" : "#1f2a44")));
+        }
+      }
+
+      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
+        if (q.mode === 'evo_inc') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau total = ${q.calcVal}`, false, "var(--accent)"); } 
+        else if (q.mode === 'evo_dec') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste = ${q.calcVal}`, false, "var(--success)"); } 
+        else if (q.mode === 'find_percent') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.calcVal}  ➔  ${q.percent} %`, false, "var(--accent)"); } 
+        else if (q.mode === 'find_total' && !isCorrection) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); } 
+        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} %  ➔  ${q.calcVal}`, false, "var(--accent)"); }
+      }
+    }
+
+    function draw100Parts(q, isCorrection, svgContainer) {
+      emptyElement(svgContainer);
+      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
+      const partVal = q.totalVal / 100;
+      
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+      txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
+      drawBrace(svgContainer, xStart, yTop - 5, wTotal, "100 %", true);
+
+      const wPart = wTotal / 100;
+      for (let i = 0; i < 100; i++) {
+        let xPart = xStart + (i * wPart);
+        let isActive = i < q.activeParts;
+        let op = isCorrection ? (isActive ? "1" : "0.2") : "0.5";
+        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "var(--c-1)", stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
+      }
+
+      if (isCorrection) {
+          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 % = " + partVal, false, "var(--text)", 14);
+          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); }
+      } else {
+          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
+          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} %`, false, "var(--accent)"); }
+      }
+    }
+
+    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
+      if(width <= 0) return;
+      const h = width < 20 ? 6 : 12; const dir = isUp ? -1 : 1; const yTip = y + (h * dir);
+      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
+      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "2.5" }));
+
+      let fSize = forceFontSize || (width < 20 ? "14" : "20");
+      let yOffset = isUp ? -12 : (width < 20 ? 18 : 24);
+      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
+      txt.textContent = text; svg.appendChild(txt);
+    }
+
+    // --- GESTION DU DIAPORAMA (Écran) ---
     function buildThumbnails() {
       const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
       quizData.forEach((q, idx) => {
@@ -333,22 +468,24 @@
       }
     }
 
-    function generateQuiz() {
-      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return; }
+    function getQuizData() {
+      const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
       let types = Array.from(checkboxes).map(cb => cb.value);
       const count = parseInt(document.getElementById('selCount').value, 10);
       const level = parseInt(document.getElementById('selLevel').value, 10); 
       
       quizData = [];
       for (let i = 0; i < count; i++) { quizData.push(createQuestion(pick(types), level)); }
-      
+      return true;
+    }
+
+    function generateQuiz() {
+      if(!getQuizData()) return;
       document.getElementById('diapoContainer').style.display = 'flex';
       buildThumbnails(); loadSlide(0, 0);
       document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
     }
-
-    function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
     function updateUI() {
       const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
@@ -356,17 +493,19 @@
       document.getElementById('qText').innerHTML = q.qHtml;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
       
+      let stage = document.getElementById('svgStage');
+
       if (q.phase === 0) {
         document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
         btnNext.innerHTML = "Indice (Schéma) 💡";
       } else if (q.phase === 1) {
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
         btnNext.innerHTML = "Correction 👀"; 
-        if(q.parts === 100) draw100Parts(q, false); else drawSVGBar(q, false);
+        if(q.parts === 100) draw100Parts(q, false, stage); else drawSVGBar(q, false, stage);
       } else if (q.phase === 2) {
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
         document.getElementById('cText').innerHTML = q.cHtml; 
-        if(q.parts === 100) draw100Parts(q, true); else drawSVGBar(q, true);
+        if(q.parts === 100) draw100Parts(q, true, stage); else drawSVGBar(q, true, stage);
         
         if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
         else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
@@ -378,133 +517,66 @@
     function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
     function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
-    function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
+    // --- GESTION DE L'IMPRESSION (Mode Fiche) ---
+    function generatePrint() {
+      if(!getQuizData()) return;
+      const withGabarits = document.getElementById('cbEmptyGabarits').checked;
+      const container = document.getElementById('printContainer');
+      container.innerHTML = ''; // Nettoyer l'ancienne fiche
 
-    // --- LE MOTEUR SVG COMPLET ---
-    function drawSVGBar(q, isCorrection) {
-      const svg = document.getElementById('svgStage'); emptyElement(svg);
-
-      if (!document.getElementById('patternHatch')) {
-        let defs = createSVG("defs", {});
-        let pat = createSVG("pattern", {id: "patternHatch", width: "15", height: "15", patternTransform: "rotate(45)", patternUnits: "userSpaceOnUse"});
-        pat.appendChild(createSVG("rect", {width: "15", height: "15", fill: "#e2e8f0"})); 
-        pat.appendChild(createSVG("line", {x1: "0", y1: "0", x2: "0", y2: "15", stroke: "#ff4d6d", "stroke-width": "3"})); 
-        defs.appendChild(pat); svg.appendChild(defs);
-      }
-
-      let displayParts = (q.mode === 'evo_inc') ? q.parts + q.activeParts : q.parts;
-      const wTotalDisplay = (800 / displayParts) * q.parts; 
-      const wPart = wTotalDisplay / q.parts;
-      const hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / q.parts;
-      const partPercent = 100 / q.parts;
+      // PAGE 1 : ÉLÈVE
+      let page1 = document.createElement('div');
+      page1.className = 'print-page';
+      page1.innerHTML = `
+        <div class="print-header">
+          <div><strong>Nom :</strong> ....................................................</div>
+          <div><strong>Prénom :</strong> ....................................................</div>
+          <div><strong>Classe :</strong> ........................</div>
+        </div>
+        <h2 style="text-align:center; font-size: 1.6rem; margin-bottom: 30px;">Exercices : Les Pourcentages</h2>
+      `;
       
-      // BARRE DU HAUT
-      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
-      
-      if (q.mode === 'find_total' && !isCorrection) {
-          svg.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
-      } else {
-          let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-          txtTotal.textContent = q.totalVal; svg.appendChild(txtTotal);
-      }
-      drawBrace(svg, xStart, yTop - 5, wTotalDisplay, "100 %", true);
-
-      // BARRES DU BAS
-      for (let i = 0; i < displayParts; i++) {
-        let xPart = xStart + (i * wPart);
-        let isAdded = (q.mode === 'evo_inc' && i >= q.parts); 
-        let isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts); 
-        let fillColor = colors[q.parts];
-        if (isRemoved && isCorrection) fillColor = "url(#patternHatch)"; 
+      quizData.forEach((q, i) => {
+        let qDiv = document.createElement('div');
+        qDiv.className = 'print-q';
+        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
         
-        let op = "0.5";
-        if (isCorrection) {
-           if (isRemoved) op = "1"; 
-           else if (isAdded) op = "0.9";
-           else if (q.mode === 'direct' || q.mode === 'find_percent' || q.mode === 'find_total') op = (i < q.activeParts) ? "0.9" : "0.2";
-           else op = "0.9"; 
+        if (withGabarits) {
+          let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
+          let svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 320");
+          svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
+          if(q.parts === 100) draw100Parts(q, false, svg); else drawSVGBar(q, false, svg);
         } else {
-           if (isAdded) op = "0.1"; 
+          qDiv.innerHTML += `<div class="spacer-reponse"></div>`; // De la place pour écrire la réponse
         }
+        page1.appendChild(qDiv);
+      });
+      container.appendChild(page1);
 
-        if (!(isAdded && !isCorrection)) {
-            svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
-        }
-
-        if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
-            if (!(isAdded && !isCorrection)) {
-                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-                txtVal.textContent = partVal; svg.appendChild(txtVal);
-            }
-        } else {
-            svg.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
-        }
-        
-        if (!(isAdded && !isCorrection)) {
-            let label = partPercent + " %";
-            if (isRemoved && isCorrection) label = "- " + label;
-            if (isAdded && isCorrection) label = "+ " + label;
-            drawBrace(svg, xPart, yBot + hBar + 5, wPart, label, false, (isRemoved && isCorrection ? "#ff4d6d" : (isAdded ? "var(--accent)" : "#1f2a44")));
-        }
-      }
-
-      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
-        if (q.mode === 'evo_inc') {
-           drawBrace(svg, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau prix (100% + ${q.percent}%) = ${q.calcVal}`, false, "var(--accent)");
-        } else if (q.mode === 'evo_dec') {
-           drawBrace(svg, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste (100% - ${q.percent}%) = ${q.calcVal}`, false, "var(--success)");
-        } else if (q.mode === 'find_percent') {
-           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.calcVal}  ➔  ${q.percent} %`, false, "var(--accent)");
-        } else if (q.mode === 'find_total' && !isCorrection) {
-           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)");
-        } else if (q.activeParts > 1) {
-           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} %  ➔  ${q.calcVal}`, false, "var(--accent)");
-        }
-      }
-    }
-
-    // Le moteur SVG SPÉCIAL 100 cases (Boss)
-    function draw100Parts(q, isCorrection) {
-      const svg = document.getElementById('svgStage'); emptyElement(svg);
-      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / 100;
+      // PAGE 2 : CORRECTION PROF
+      let page2 = document.createElement('div');
+      page2.className = 'print-page';
+      page2.innerHTML = `<h2 style="text-align:center; color: #1f2a44; font-size: 1.6rem; margin-bottom: 30px;">Correction Détaillée</h2>`;
       
-      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
-      let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-      txtTotal.textContent = q.totalVal; svg.appendChild(txtTotal);
-      drawBrace(svg, xStart, yTop - 5, wTotal, "100 %", true);
+      quizData.forEach((q, i) => {
+        let qDiv = document.createElement('div');
+        qDiv.className = 'print-q';
+        qDiv.innerHTML = `
+          <div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>
+          <div class="print-c-text">✅ ${q.cHtml}</div>
+        `;
+        
+        let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
+        let svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 320");
+        svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
+        if(q.parts === 100) draw100Parts(q, true, svg); else drawSVGBar(q, true, svg);
+        
+        page2.appendChild(qDiv);
+      });
+      container.appendChild(page2);
 
-      const wPart = wTotal / 100;
-      for (let i = 0; i < 100; i++) {
-        let xPart = xStart + (i * wPart);
-        let isActive = i < q.activeParts;
-        let op = isCorrection ? (isActive ? "1" : "0.2") : "0.5";
-        svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "var(--c-1)", stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
-      }
-
-      if (isCorrection) {
-          drawBrace(svg, xStart, yBot + hBar + 5, wPart, "1 % = " + partVal, false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); }
-      } else {
-          drawBrace(svg, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} %`, false, "var(--accent)"); }
-      }
-    }
-
-    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
-      if(width <= 0) return;
-      const h = width < 20 ? 6 : 12;
-      const dir = isUp ? -1 : 1; 
-      const yTip = y + (h * dir);
-      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
-      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "2.5" }));
-
-      let fSize = forceFontSize || (width < 20 ? "14" : "20");
-      let yOffset = isUp ? -12 : (width < 20 ? 18 : 24);
-      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
-      txt.textContent = text;
-      svg.appendChild(txt);
+      // Lancer l'impression native du navigateur
+      setTimeout(() => { window.print(); }, 300);
     }
   </script>
 </body>
