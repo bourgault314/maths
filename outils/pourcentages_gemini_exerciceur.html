@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur d'Exercices — Pourcentages V1.7</title>
+  <style>
+    :root {
+      --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
+      --text: #1f2a44; --muted: #5a6784; --accent: #3f7cff;
+      --success: #10b981; --inverse: #9c27b0; --totalkey: #ff9800;
+      --shadow: 0 10px 30px rgba(31,42,68,0.08);
+      --c-100: rgb(235, 100, 100); --c-50: rgb(255, 230, 100);
+      --c-25: rgb(150, 220, 150); --c-20: rgb(150, 200, 235);
+      --c-10: rgb(250, 180, 100); --c-1: rgb(210, 170, 255);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+
+    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 950px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); }
+    .config-header h2 { margin: 0 0 4px 0; font-size: 1.25rem; }
+    .config-header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    
+    .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; }
+    .theme-col h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--accent); border-bottom: 2px solid #eef4ff; padding-bottom: 4px;}
+    .theme-col.inverse h3 { color: var(--inverse); border-bottom-color: #f3e5f5; }
+    .theme-col.totalkey h3 { color: var(--totalkey); border-bottom-color: #fff3e0; }
+    
+    .checkbox-list { display: flex; flex-direction: column; gap: 8px; }
+    .cb-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.9rem; line-height: 1.3;}
+    .cb-row input { margin-top: 2px; cursor: pointer; accent-color: var(--accent); }
+    .theme-col.inverse .cb-row input { accent-color: var(--inverse); }
+    .theme-col.totalkey .cb-row input { accent-color: var(--totalkey); }
+    .cb-desc { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px;}
+
+    .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
+    .config-options { display: flex; gap: 15px; flex-wrap: wrap; }
+    .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
+    .config-block select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; }
+    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+    .btn-main:hover:not(:disabled) { opacity: 0.95; }
+
+    .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1000px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; }
+    .diapo-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; }
+    .slide-counter { font-weight: bold; color: var(--muted); font-size: 1.1rem; }
+    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; }
+    .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
+    .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .question-box { padding: 30px 40px 10px 40px; text-align: center; }
+    .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
+
+    .hint-box { padding: 10px 40px 0 40px; display: none; justify-content: center; }
+    .correction-box { padding: 15px 40px; background: #fdfdfd; text-align: center; border-top: 1px solid #e7edf8; display: none;}
+    .correction-text { font-size: 1.6rem; font-weight: bold; color: var(--success); margin: 0; }
+    .stage-wrap { display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; }
+    svg { width: 100%; max-width: 850px; height: auto; }
+
+    /* LES MINIATURES */
+    .thumbnails-bar { display: flex; justify-content: center; gap: 10px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; }
+    .thumb-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; font-weight: bold; color: var(--muted); cursor: pointer; transition: 0.2s; }
+    .thumb-btn:hover { background: #eef4ff; }
+    .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.1); }
+    .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
+
+  </style>
+</head>
+<body>
+
+  <div class="config-panel">
+    <div class="config-header">
+      <h2>📊 Générateur : Pourcentages (V1.7)</h2>
+      <p>Méthode Singapour — Socle complet (Calculer, Trouver le %, Trouver le 100%) + Miniatures</p>
+    </div>
+    
+    <div class="theme-grid">
+      <div class="theme-col">
+        <h3>🧊 1. Calculer : Fractions & Multiples</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="base_50"> <div><strong>50 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_25"> <div><strong>25 % / 75 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_20"> <div><strong>20 %, 40 %, 60 %...</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_10"> <div><strong>10 %, 30 %, 70 %...</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>Le Boss (1 %, 17 %...)</strong></div></label>
+        </div>
+      </div>
+
+      <div class="theme-col inverse">
+        <h3>🎯 2. Trouver le % (Problème Inverse)</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="inv_50"> <div><strong>Moitié</strong><span class="cb-desc">Trouver 50 %</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="inv_25"> <div><strong>Quarts</strong><span class="cb-desc">Trouver 25 % ou 75 %</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="inv_20"> <div><strong>Cinquièmes</strong><span class="cb-desc">Trouver 20, 40, 60, 80 %</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="inv_10"> <div><strong>Dixièmes</strong><span class="cb-desc">Trouver 10, 30, 70 %...</span></div></label>
+        </div>
+      </div>
+
+      <div class="theme-col totalkey">
+        <h3>🔑 3. Trouver le TOUT (100 %)</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="tot_50"> <div><strong>À partir de 50 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_25"> <div><strong>À partir de 25 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_20"> <div><strong>À partir de 20 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_10"> <div><strong>À partir de 10 %</strong></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-config">
+      <div class="config-options">
+        <div class="config-block">
+          <label>Taille :</label>
+          <select id="selLevel">
+            <option value="1">Petits (< 100)</option>
+            <option value="2" selected>Moyens (< 400)</option>
+            <option value="3">Grands (Infini)</option>
+          </select>
+        </div>
+        <div class="config-block">
+          <label>Questions :</label>
+          <select id="selCount">
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-main" onclick="generateQuiz()">🚀 Générer la série</button>
+    </div>
+  </div>
+
+  <div class="diapo-container" id="diapoContainer">
+    <div class="diapo-header">
+      <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
+      <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
+      <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+    </div>
+
+    <div class="question-box"><p class="question-text" id="qText"></p></div>
+    <div class="hint-box" id="hBox"><div class="stage-wrap"><svg id="svgStage" viewBox="0 0 1000 320"></svg></div></div>
+    <div class="correction-box" id="cBox"><p class="correction-text" id="cText"></p></div>
+    
+    <div class="thumbnails-bar" id="thumbBar"></div>
+  </div>
+
+  <script>
+    const svgNS = "http://www.w3.org/2000/svg";
+    let quizData = [];
+    let currentIndex = 0;
+
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 100: "var(--c-1)" };
+
+    document.addEventListener("keydown", (e) => {
+      if (document.getElementById('diapoContainer').style.display !== "none") {
+        if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); } 
+        else if (e.key === "ArrowLeft") { if (!document.getElementById('btnPrev').disabled) prevSlide(); }
+      }
+    });
+
+    function getFriendlyTotal(multiplier, level) {
+      let min = 2, max = 25, scale = 1;
+      if (level === 1) {
+        if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 4) { min = 3; max = 25; }
+        else if (multiplier === 5) { min = 2; max = 20; } else if (multiplier === 10) { min = 2; max = 10; }
+      } else if (level === 2) {
+        if (multiplier === 2) { min = 10; max = 200; } else if (multiplier === 4) { min = 5; max = 100; }
+        else if (multiplier === 5) { min = 5; max = 80; } else if (multiplier === 10) { min = 5; max = 40; }
+      } else {
+        if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 10) { min = 2; max = 30; }
+        scale = pick([1, 10, 100]); 
+      }
+      return rand(min, max) * multiplier * scale;
+    }
+
+    function buildText(q) {
+      const contexts = ['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite'];
+      let cType = pick(contexts);
+      let qHtml = "", cHtml = "", unit = "";
+      
+      // 1. CHERCHER LE TOUT (Nouveau !)
+      if (q.mode === 'find_total') {
+        if (cType === 'brut') { qHtml = `<strong>${q.percent} %</strong> d'un nombre vaut <strong>${q.calcVal}</strong>.<br>Quel est ce nombre entier ?`; } 
+        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> sur un article représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${q.percent} %</strong> des élèves sont demi-pensionnaires. Cela représente <strong>${q.calcVal} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
+        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${q.percent} %</strong>, ce qui correspond à <strong>${q.calcVal} spectateurs</strong>.<br>Quelle est la capacité totale du stade ?`; } 
+        else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale du trajet ?`; }
+        cHtml = `Le total (100 %) est <strong>${q.totalVal} ${unit}</strong>.`;
+      }
+      // 2. CHERCHER LE POURCENTAGE (Mode Inverse)
+      else if (q.mode === 'find_percent') {
+        if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${q.calcVal}</strong> par rapport à <strong>${q.totalVal}</strong> ?`; } 
+        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${q.totalVal} €</strong>. La réduction est de <strong>${q.calcVal} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.calcVal}</strong> font du latin.<br>Quel pourcentage cela représente-t-il ?`; } 
+        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, <strong>${q.calcVal} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
+        cHtml = `Cela représente <strong>${q.percent} %</strong>.`;
+      }
+      // 3. CHERCHER LA VALEUR (Calcul direct)
+      else {
+        if (cType === 'brut') { qHtml = `Calcule <strong>${q.percent} %</strong> de <strong>${q.totalVal}</strong>.`; } 
+        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûte <strong>${q.totalVal} €</strong>. Il y a une réduction de <strong>${q.percent} %</strong>.<br>Quel est le montant de la réduction ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.percent} %</strong> font du latin.<br>Combien d'élèves étudient le latin ?`; } 
+        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, une famille a parcouru <strong>${q.percent} %</strong>.<br>Combien de kilomètres ont-ils parcourus ?`; }
+        cHtml = `La réponse est <strong>${q.calcVal} ${unit}</strong>.`;
+      }
+      return { qHtml, cHtml, unit };
+    }
+
+    function createQuestion(type, level) {
+      let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
+      
+      // Parse du type de question
+      if (type.startsWith('tot_')) {
+         mode = 'find_total';
+         if (type === 'tot_50') { parts = 2; activeParts = 1; percent = 50; }
+         else if (type === 'tot_25') { parts = 4; activeParts = 1; percent = 25; }
+         else if (type === 'tot_20') { parts = 5; activeParts = 1; percent = 20; }
+         else if (type === 'tot_10') { parts = 10; activeParts = 1; percent = 10; }
+         totalVal = getFriendlyTotal(parts, level);
+      }
+      else if (type.startsWith('inv_')) {
+         mode = 'find_percent';
+         if (type === 'inv_50') { parts = 2; activeParts = 1; }
+         else if (type === 'inv_25') { parts = 4; activeParts = pick([1, 3]); } 
+         else if (type === 'inv_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
+         else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
+         totalVal = getFriendlyTotal(parts, level);
+         percent = (100 / parts) * activeParts;
+      } else {
+         mode = 'direct';
+         if (type === 'base_50') { parts = 2; activeParts = 1; percent = 50; totalVal = getFriendlyTotal(2, level); }
+         else if (type === 'base_25') { parts = 4; activeParts = pick([1, 3]); percent = activeParts*25; totalVal = getFriendlyTotal(4, level); }
+         else if (type === 'base_20') { parts = 5; activeParts = pick([1,2,3,4]); percent = activeParts*20; totalVal = getFriendlyTotal(5, level); }
+         else if (type === 'base_10') { parts = 10; activeParts = pick([1,3,7,9]); percent = activeParts*10; totalVal = getFriendlyTotal(10, level); }
+         else if (type === 'base_1' || type === 'mult_1') { parts = 100; activeParts = (type === 'base_1') ? 1 : rand(2, 45); percent = activeParts; totalVal = (level === 1) ? rand(1, 5) * 100 : rand(5, 20) * 100; }
+      }
+
+      calcVal = (totalVal / parts) * activeParts;
+      let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
+      let texts = buildText(q);
+      q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit;
+      return q;
+    }
+
+    function buildThumbnails() {
+      const tb = document.getElementById('thumbBar');
+      tb.innerHTML = '';
+      quizData.forEach((q, idx) => {
+        let btn = document.createElement('button');
+        btn.className = 'thumb-btn';
+        btn.textContent = idx + 1;
+        btn.onclick = () => loadSlide(idx, q.phase); // Conserve la phase actuelle de la question
+        tb.appendChild(btn);
+      });
+    }
+
+    function updateThumbnails() {
+      const btns = document.getElementById('thumbBar').children;
+      for(let i=0; i<btns.length; i++) {
+        btns[i].className = 'thumb-btn';
+        if (quizData[i].phase === 2) btns[i].classList.add('done');
+        if (i === currentIndex) btns[i].classList.add('active');
+      }
+    }
+
+    function generateQuiz() {
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return; }
+      let types = Array.from(checkboxes).map(cb => cb.value);
+      const count = parseInt(document.getElementById('selCount').value, 10);
+      const level = parseInt(document.getElementById('selLevel').value, 10); 
+      
+      quizData = [];
+      for (let i = 0; i < count; i++) { quizData.push(createQuestion(pick(types), level)); }
+      
+      document.getElementById('diapoContainer').style.display = 'flex';
+      buildThumbnails();
+      loadSlide(0, 0);
+      document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
+    }
+
+    function emptyElement(el) { while (el.firstChild) { el.removeChild(el.firstChild); } }
+
+    function updateUI() {
+      const q = quizData[currentIndex];
+      const btnNext = document.getElementById('btnNext');
+      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
+      document.getElementById('qText').innerHTML = q.qHtml;
+      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
+      
+      if (q.phase === 0) {
+        document.getElementById('hBox').style.display = 'none';
+        document.getElementById('cBox').style.display = 'none';
+        btnNext.innerHTML = "Indice (Schéma) 💡";
+      } else if (q.phase === 1) {
+        document.getElementById('hBox').style.display = 'flex';
+        document.getElementById('cBox').style.display = 'none';
+        btnNext.innerHTML = "Correction 👀";
+        drawSVGBar(q, false);
+      } else if (q.phase === 2) {
+        document.getElementById('hBox').style.display = 'flex';
+        document.getElementById('cBox').style.display = 'block';
+        document.getElementById('cText').innerHTML = q.cHtml;
+        drawSVGBar(q, true);
+        
+        if (currentIndex === quizData.length - 1) {
+          btnNext.innerHTML = "Terminé ✓";
+          btnNext.disabled = true;
+        } else {
+          btnNext.innerHTML = "Question suiv. ►";
+          btnNext.disabled = false;
+        }
+      }
+      updateThumbnails();
+    }
+
+    function loadSlide(index, startPhase = 0) {
+      currentIndex = index;
+      quizData[currentIndex].phase = startPhase;
+      document.getElementById('btnNext').disabled = false;
+      updateUI();
+    }
+
+    function nextAction() {
+      const q = quizData[currentIndex];
+      if (q.phase === 0) q.phase = 1;
+      else if (q.phase === 1) q.phase = 2;
+      else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0);
+      updateUI();
+    }
+
+    function prevSlide() {
+      const q = quizData[currentIndex];
+      if (q.phase === 2) q.phase = 1;
+      else if (q.phase === 1) q.phase = 0;
+      else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2);
+      updateUI();
+    }
+
+    function createSVG(tag, attrs) {
+      const el = document.createElementNS(svgNS, tag);
+      for (let k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+
+    // Le moteur SVG Unifié
+    function drawSVGBar(q, isCorrection) {
+      const svg = document.getElementById('svgStage');
+      emptyElement(svg);
+
+      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
+      const partVal = q.totalVal / q.parts;
+      
+      // BARRE DU HAUT (100%)
+      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      
+      let topText = "?";
+      // Si on cherche le total, on l'affiche qu'à la correction. Sinon on l'affiche tout le temps.
+      if (q.mode === 'find_total' && !isCorrection) {
+          svg.appendChild(createSVG("line", { x1: xStart + wTotal/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotal/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
+      } else {
+          let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+          txtTotal.textContent = q.totalVal; 
+          svg.appendChild(txtTotal);
+      }
+      drawBrace(svg, xStart, yTop - 5, wTotal, "100 %", true);
+
+      // BARRES DU BAS
+      const wPart = wTotal / q.parts;
+      const partPercent = 100 / q.parts;
+
+      for (let i = 0; i < q.parts; i++) {
+        let xPart = xStart + (i * wPart);
+        let isActive = i < q.activeParts;
+        let op = "0.5";
+        
+        // Logique d'opacité selon le mode
+        if (q.mode === 'find_percent' && isCorrection) op = isActive ? "0.9" : "0.2";
+        else if (q.mode === 'find_total') op = (isCorrection || isActive) ? "0.9" : "0.2";
+        else if (q.mode === 'direct' && isCorrection) op = isActive ? "0.9" : "0.2";
+
+        svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: (q.parts===100 ? "var(--c-1)" : colors[q.parts]), stroke: "#1f2a44", "stroke-width": (q.parts===100 ? "1.5" : "2.5"), opacity: op }));
+
+        // Texte dans les cases
+        if (q.parts < 100) {
+            if (isCorrection || (q.mode === 'find_total' && isActive)) {
+               let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+               txtVal.textContent = partVal; 
+               svg.appendChild(txtVal);
+            } else {
+               svg.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
+            }
+            drawBrace(svg, xPart, yBot + hBar + 5, wPart, partPercent + " %", false);
+        }
+      }
+
+      // GRANDE ACCOLADE DE RÉPONSE
+      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
+        let textBrace = "";
+        if (q.mode === 'find_percent') textBrace = `${q.calcVal}  ➔  ${q.percent} %`;
+        else if (q.mode === 'find_total' && !isCorrection) textBrace = `${q.percent} % = ${q.calcVal}`;
+        else textBrace = `${q.percent} %  ➔  ${q.calcVal}`;
+        
+        if (q.activeParts > 1) {
+          drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, textBrace, false, "var(--accent)");
+        } else if (q.mode !== 'find_total' && q.parts < 100) {
+          drawBrace(svg, xStart, yBot + hBar + 5, wPart, textBrace, false, "var(--accent)");
+        }
+      }
+      
+      // Accolades spécifiques pour les 100 cases (Boss)
+      if (q.parts === 100) {
+         drawBrace(svg, xStart, yBot + hBar + 5, wPart, (isCorrection ? `1 % = ${partVal}` : "1 %"), false, "var(--text)", 14);
+         if (q.activeParts > 1 && isCorrection) {
+            drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)");
+         }
+      }
+    }
+
+    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
+      const h = width < 20 ? 6 : 12;
+      const dir = isUp ? -1 : 1; 
+      const yTip = y + (h * dir);
+      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
+      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "2.5" }));
+
+      let fSize = forceFontSize || (width < 20 ? "14" : "20");
+      let yOffset = isUp ? -12 : (width < 20 ? 18 : 24);
+      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
+      txt.textContent = text;
+      svg.appendChild(txt);
+    }
+  </script>
+</body>
+</html>
