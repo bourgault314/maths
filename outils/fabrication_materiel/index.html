@@ -185,7 +185,6 @@
         .theme-disques .card-title { color: #c2410c; }
         .theme-disques .card-desc { color: #fb923c; }
 
-
         /* Numération décimale (Vert/Émeraude) */
         .theme-decimale { border-color: #d1fae5; }
         .theme-decimale:hover {
@@ -209,6 +208,15 @@
         }
         .theme-angles .card-title { color: #0369a1; }
         .theme-angles .card-desc { color: #38bdf8; }
+
+        /* Grilles de Nombres (Violet/Améthyste) */
+        .theme-grilles { border-color: #f3e8ff; }
+        .theme-grilles:hover {
+            border-color: #a855f7;
+            background: linear-gradient(to bottom right, #ffffff, #faf5ff);
+        }
+        .theme-grilles .card-title { color: #7e22ce; }
+        .theme-grilles .card-desc { color: #c084fc; }
 
         footer {
             text-align: center;
@@ -258,8 +266,6 @@
                 <span class="card-desc">Générateur de bandes de fractions à découper</span>
             </a>
 
-
-
             <a href="numeration_decimale_maker.html" class="choice-card theme-decimale">
                 <div class="icon-wrapper">
                     <span class="dec-unit">1</span><span class="dec-sep">,</span><span class="dec-tenth">2</span><span class="dec-hund">3</span>
@@ -284,12 +290,20 @@
                 <span class="card-desc">Grand format à imprimer, avec options d’arc et de mesure</span>
             </a>
 
+            <a href="grille_de_nombres.html" class="choice-card theme-grilles">
+                <div class="icon-wrapper">
+                    🔢
+                </div>
+                <h2 class="card-title">Grille numérique</h2>
+                <span class="card-desc">Générateur de grilles de nombres A4 personnalisables</span>
+            </a>
+
         </div>
 
     </div>
 
     <footer>
-        </footer>
+    </footer>
 
 </body>
 </html>
