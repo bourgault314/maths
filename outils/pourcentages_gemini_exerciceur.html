@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur d'Exercices — Pourcentages V1.7</title>
+  <title>Générateur d'Exercices — Pourcentages V1.9</title>
   <style>
     :root {
       --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
       --text: #1f2a44; --muted: #5a6784; --accent: #3f7cff;
       --success: #10b981; --inverse: #9c27b0; --totalkey: #ff9800;
-      --shadow: 0 10px 30px rgba(31,42,68,0.08);
+      --evo: #e91e63; --shadow: 0 10px 30px rgba(31,42,68,0.08);
       --c-100: rgb(235, 100, 100); --c-50: rgb(255, 230, 100);
       --c-25: rgb(150, 220, 150); --c-20: rgb(150, 200, 235);
       --c-10: rgb(250, 180, 100); --c-1: rgb(210, 170, 255);
@@ -18,23 +18,27 @@
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Arial, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
 
-    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 950px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1100px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); }
     .config-header h2 { margin: 0 0 4px 0; font-size: 1.25rem; }
     .config-header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
     
-    .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
     .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; }
-    .theme-col h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--accent); border-bottom: 2px solid #eef4ff; padding-bottom: 4px;}
+    .theme-col h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: var(--accent); border-bottom: 2px solid #eef4ff; padding-bottom: 4px;}
     .theme-col.inverse h3 { color: var(--inverse); border-bottom-color: #f3e5f5; }
     .theme-col.totalkey h3 { color: var(--totalkey); border-bottom-color: #fff3e0; }
+    .theme-col.evo h3 { color: var(--evo); border-bottom-color: #fce4ec; }
     
-    .checkbox-list { display: flex; flex-direction: column; gap: 8px; }
-    .cb-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.9rem; line-height: 1.3;}
+    .checkbox-list { display: flex; flex-direction: column; gap: 6px; }
+    .cb-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.85rem; line-height: 1.3;}
     .cb-row input { margin-top: 2px; cursor: pointer; accent-color: var(--accent); }
     .theme-col.inverse .cb-row input { accent-color: var(--inverse); }
     .theme-col.totalkey .cb-row input { accent-color: var(--totalkey); }
-    .cb-desc { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px;}
+    .theme-col.evo .cb-row input { accent-color: var(--evo); }
+    .cb-desc { color: var(--muted); font-size: 0.75rem; display: block; margin-top: 1px;}
+
+    hr { border: none; border-top: 1px dashed #cfd8ea; margin: 10px 0; }
 
     .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
     .config-options { display: flex; gap: 15px; flex-wrap: wrap; }
@@ -59,37 +63,57 @@
     .stage-wrap { display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; }
     svg { width: 100%; max-width: 850px; height: auto; }
 
-    /* LES MINIATURES */
-    .thumbnails-bar { display: flex; justify-content: center; gap: 10px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; }
-    .thumb-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; font-weight: bold; color: var(--muted); cursor: pointer; transition: 0.2s; }
+    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; }
+    .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; }
+    .thumb-btn .th-q { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; display: block; color: inherit; }
+    .thumb-btn .th-txt { font-size: 0.75rem; opacity: 0.9; }
     .thumb-btn:hover { background: #eef4ff; }
-    .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.1); }
+    .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
-
   </style>
 </head>
 <body>
 
   <div class="config-panel">
     <div class="config-header">
-      <h2>📊 Générateur : Pourcentages (V1.7)</h2>
-      <p>Méthode Singapour — Socle complet (Calculer, Trouver le %, Trouver le 100%) + Miniatures</p>
+      <h2>📊 Générateur : Pourcentages (V1.9) — Socle Complet & Évolutions</h2>
+      <p>Méthode Singapour — Toutes les catégories restaurées + Nouveautés</p>
     </div>
     
     <div class="theme-grid">
       <div class="theme-col">
-        <h3>🧊 1. Calculer : Fractions & Multiples</h3>
+        <h3>🧊 1. Calculer une part</h3>
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="base_50"> <div><strong>50 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_25"> <div><strong>25 % / 75 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_20"> <div><strong>20 %, 40 %, 60 %...</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_10"> <div><strong>10 %, 30 %, 70 %...</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>Le Boss (1 %, 17 %...)</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_25"> <div><strong>25 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_20"> <div><strong>20 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_10"> <div><strong>10 %</strong></div></label>
+        </div>
+        <hr>
+        <h3>🥞 Multiples</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="mult_25"> <div><strong>75 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_20"> <div><strong>40 %, 60 %, 80 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_10"> <div><strong>30 %, 70 %, 90 %...</strong></div></label>
+        </div>
+      </div>
+
+      <div class="theme-col evo">
+        <h3>🔥 2. Le Boss (100 cases)</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>1 %</strong><span class="cb-desc">Le centième pur</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_1"> <div><strong>13 %, 42 %...</strong></div></label>
+        </div>
+        <hr>
+        <h3>📈 Les Évolutions (4ème)</h3>
+        <div class="checkbox-list">
+          <label class="cb-row"><input type="checkbox" value="evo_inc"> <div><strong>Augmentations (+ X%)</strong><span class="cb-desc">Loyers, factures...</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="evo_dec"> <div><strong>Réductions (- X%)</strong><span class="cb-desc">Soldes, baisses...</span></div></label>
         </div>
       </div>
 
       <div class="theme-col inverse">
-        <h3>🎯 2. Trouver le % (Problème Inverse)</h3>
+        <h3>🎯 3. Trouver le %</h3>
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="inv_50"> <div><strong>Moitié</strong><span class="cb-desc">Trouver 50 %</span></div></label>
           <label class="cb-row"><input type="checkbox" value="inv_25"> <div><strong>Quarts</strong><span class="cb-desc">Trouver 25 % ou 75 %</span></div></label>
@@ -99,12 +123,12 @@
       </div>
 
       <div class="theme-col totalkey">
-        <h3>🔑 3. Trouver le TOUT (100 %)</h3>
+        <h3>🔑 4. Trouver le TOUT</h3>
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="tot_50"> <div><strong>À partir de 50 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_25"> <div><strong>À partir de 25 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_20"> <div><strong>À partir de 20 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_10"> <div><strong>À partir de 10 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_25"> <div><strong>À partir de 25 % ou 75 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_20"> <div><strong>À partir des cinquièmes</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="tot_10"> <div><strong>À partir des dixièmes</strong></div></label>
         </div>
       </div>
     </div>
@@ -112,10 +136,10 @@
     <div class="bottom-config">
       <div class="config-options">
         <div class="config-block">
-          <label>Taille :</label>
+          <label>Taille des nombres :</label>
           <select id="selLevel">
-            <option value="1">Petits (< 100)</option>
-            <option value="2" selected>Moyens (< 400)</option>
+            <option value="1" selected>Petits (< 100)</option>
+            <option value="2">Moyens (< 400)</option>
             <option value="3">Grands (Infini)</option>
           </select>
         </div>
@@ -178,21 +202,38 @@
       return rand(min, max) * multiplier * scale;
     }
 
+    // Le moteur de textes complet (Tous les cas pris en compte)
     function buildText(q) {
-      const contexts = ['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite'];
-      let cType = pick(contexts);
+      let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite']);
       let qHtml = "", cHtml = "", unit = "";
       
-      // 1. CHERCHER LE TOUT (Nouveau !)
-      if (q.mode === 'find_total') {
+      // EVOLUTIONS
+      if (q.mode === 'evo_inc') {
+        let contexts = ['loyer', 'facture', 'population'];
+        cType = pick(contexts);
+        if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${q.totalVal} €</strong> augmente de <strong>${q.percent} %</strong>.<br>Quel est le nouveau loyer ?`; }
+        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${q.totalVal} €</strong> s'alourdit de <strong>${q.percent} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
+        else { unit = " habitants"; qHtml = `Un village de <strong>${q.totalVal} habitants</strong> a vu sa population croître de <strong>${q.percent} %</strong>.<br>Quelle est la nouvelle population ?`; }
+        cHtml = `Le nouveau total est <strong>${q.calcVal} ${unit}</strong>.`;
+      }
+      else if (q.mode === 'evo_dec') {
+        let contexts = ['solde', 'jeu', 'population'];
+        cType = pick(contexts);
+        if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${q.totalVal} €</strong> est soldé à <strong>- ${q.percent} %</strong>.<br>Quel est le nouveau prix ?`; }
+        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${q.totalVal} €</strong> baisse de <strong>${q.percent} %</strong>.<br>Quel est son nouveau prix ?`; }
+        else { unit = " habitants"; qHtml = `Un club de <strong>${q.totalVal} membres</strong> perd <strong>${q.percent} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
+        cHtml = `La nouvelle valeur est <strong>${q.calcVal} ${unit}</strong>.`;
+      }
+      // TROUVER LE TOUT (100%)
+      else if (q.mode === 'find_total') {
         if (cType === 'brut') { qHtml = `<strong>${q.percent} %</strong> d'un nombre vaut <strong>${q.calcVal}</strong>.<br>Quel est ce nombre entier ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> sur un article représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${q.percent} %</strong> des élèves sont demi-pensionnaires. Cela représente <strong>${q.calcVal} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${q.percent} %</strong>, ce qui correspond à <strong>${q.calcVal} spectateurs</strong>.<br>Quelle est la capacité totale du stade ?`; } 
-        else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale du trajet ?`; }
+        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${q.percent} %</strong> des élèves sont externes. Cela représente <strong>${q.calcVal} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
+        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${q.percent} %</strong>, ce qui correspond à <strong>${q.calcVal} spectateurs</strong>.<br>Quelle est la capacité totale ?`; } 
+        else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale ?`; }
         cHtml = `Le total (100 %) est <strong>${q.totalVal} ${unit}</strong>.`;
       }
-      // 2. CHERCHER LE POURCENTAGE (Mode Inverse)
+      // TROUVER LE POURCENTAGE
       else if (q.mode === 'find_percent') {
         if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${q.calcVal}</strong> par rapport à <strong>${q.totalVal}</strong> ?`; } 
         else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${q.totalVal} €</strong>. La réduction est de <strong>${q.calcVal} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
@@ -200,7 +241,7 @@
         else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, <strong>${q.calcVal} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
         cHtml = `Cela représente <strong>${q.percent} %</strong>.`;
       }
-      // 3. CHERCHER LA VALEUR (Calcul direct)
+      // CALCUL DIRECT (Parties et Multiples)
       else {
         if (cType === 'brut') { qHtml = `Calcule <strong>${q.percent} %</strong> de <strong>${q.totalVal}</strong>.`; } 
         else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûte <strong>${q.totalVal} €</strong>. Il y a une réduction de <strong>${q.percent} %</strong>.<br>Quel est le montant de la réduction ?`; } 
@@ -211,50 +252,74 @@
       return { qHtml, cHtml, unit };
     }
 
+    // Le créateur de questions reconstruit
     function createQuestion(type, level) {
       let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
       
-      // Parse du type de question
-      if (type.startsWith('tot_')) {
-         mode = 'find_total';
-         if (type === 'tot_50') { parts = 2; activeParts = 1; percent = 50; }
-         else if (type === 'tot_25') { parts = 4; activeParts = 1; percent = 25; }
-         else if (type === 'tot_20') { parts = 5; activeParts = 1; percent = 20; }
-         else if (type === 'tot_10') { parts = 10; activeParts = 1; percent = 10; }
-         totalVal = getFriendlyTotal(parts, level);
+      if (type.startsWith('evo_')) {
+         mode = type; 
+         let baseParts = pick([4, 5, 10]); // Pour les évolutions, on évite le 50% qui est moins pertinent que les petits pourcentages
+         parts = baseParts; activeParts = pick([1, 2]); 
+         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
+         if (type === 'evo_inc') calcVal = (totalVal / parts) * (parts + activeParts);
+         else calcVal = (totalVal / parts) * (parts - activeParts);
+      }
+      else if (type.startsWith('tot_')) {
+         mode = 'find_total'; 
+         if (type === 'tot_50') { parts = 2; activeParts = 1; }
+         else if (type === 'tot_25') { parts = 4; activeParts = pick([1, 3]); }
+         else if (type === 'tot_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
+         else if (type === 'tot_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
+         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
+         calcVal = (totalVal / parts) * activeParts;
       }
       else if (type.startsWith('inv_')) {
-         mode = 'find_percent';
+         mode = 'find_percent'; 
          if (type === 'inv_50') { parts = 2; activeParts = 1; }
          else if (type === 'inv_25') { parts = 4; activeParts = pick([1, 3]); } 
          else if (type === 'inv_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
          else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
          totalVal = getFriendlyTotal(parts, level);
-         percent = (100 / parts) * activeParts;
-      } else {
+         percent = (100 / parts) * activeParts; calcVal = (totalVal / parts) * activeParts;
+      } 
+      else {
          mode = 'direct';
          if (type === 'base_50') { parts = 2; activeParts = 1; percent = 50; totalVal = getFriendlyTotal(2, level); }
-         else if (type === 'base_25') { parts = 4; activeParts = pick([1, 3]); percent = activeParts*25; totalVal = getFriendlyTotal(4, level); }
-         else if (type === 'base_20') { parts = 5; activeParts = pick([1,2,3,4]); percent = activeParts*20; totalVal = getFriendlyTotal(5, level); }
-         else if (type === 'base_10') { parts = 10; activeParts = pick([1,3,7,9]); percent = activeParts*10; totalVal = getFriendlyTotal(10, level); }
-         else if (type === 'base_1' || type === 'mult_1') { parts = 100; activeParts = (type === 'base_1') ? 1 : rand(2, 45); percent = activeParts; totalVal = (level === 1) ? rand(1, 5) * 100 : rand(5, 20) * 100; }
+         else if (type === 'base_25') { parts = 4; activeParts = 1; percent = 25; totalVal = getFriendlyTotal(4, level); }
+         else if (type === 'base_20') { parts = 5; activeParts = 1; percent = 20; totalVal = getFriendlyTotal(5, level); }
+         else if (type === 'base_10') { parts = 10; activeParts = 1; percent = 10; totalVal = getFriendlyTotal(10, level); }
+         else if (type === 'mult_25') { parts = 4; activeParts = 3; percent = 75; totalVal = getFriendlyTotal(4, level); }
+         else if (type === 'mult_20') { activeParts = pick([2,3,4]); percent = activeParts*20; parts = 5; totalVal = getFriendlyTotal(5, level); }
+         else if (type === 'mult_10') { activeParts = pick([3,4,6,7,8,9]); percent = activeParts*10; parts = 10; totalVal = getFriendlyTotal(10, level); }
+         else if (type === 'base_1' || type === 'mult_1') { 
+             parts = 100; activeParts = (type === 'base_1') ? 1 : rand(2, 45); percent = activeParts; 
+             totalVal = (level === 1) ? rand(1, 5) * 100 : rand(5, 20) * 100; 
+         }
       }
 
-      calcVal = (totalVal / parts) * activeParts;
+      // Re-calcul par sécurité
+      if (mode !== 'evo_inc' && mode !== 'evo_dec') calcVal = (totalVal / parts) * activeParts;
+
       let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
       let texts = buildText(q);
       q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit;
       return q;
     }
 
+    // Gestion des miniatures textuelles
     function buildThumbnails() {
-      const tb = document.getElementById('thumbBar');
-      tb.innerHTML = '';
+      const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
       quizData.forEach((q, idx) => {
-        let btn = document.createElement('button');
-        btn.className = 'thumb-btn';
-        btn.textContent = idx + 1;
-        btn.onclick = () => loadSlide(idx, q.phase); // Conserve la phase actuelle de la question
+        let btn = document.createElement('button'); btn.className = 'thumb-btn';
+        let txt = "";
+        if (q.mode === 'evo_inc') txt = `${q.totalVal} + ${q.percent}%`;
+        else if (q.mode === 'evo_dec') txt = `${q.totalVal} - ${q.percent}%`;
+        else if (q.mode === 'direct') txt = `${q.percent}% de ${q.totalVal}`;
+        else if (q.mode === 'find_percent') txt = `${q.calcVal} sur ${q.totalVal}`;
+        else if (q.mode === 'find_total') txt = `${q.percent}% = ${q.calcVal}`;
+
+        btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${txt}</span>`;
+        btn.onclick = () => loadSlide(idx, q.phase); 
         tb.appendChild(btn);
       });
     }
@@ -279,150 +344,156 @@
       for (let i = 0; i < count; i++) { quizData.push(createQuestion(pick(types), level)); }
       
       document.getElementById('diapoContainer').style.display = 'flex';
-      buildThumbnails();
-      loadSlide(0, 0);
+      buildThumbnails(); loadSlide(0, 0);
       document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
     }
 
-    function emptyElement(el) { while (el.firstChild) { el.removeChild(el.firstChild); } }
+    function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
     function updateUI() {
-      const q = quizData[currentIndex];
-      const btnNext = document.getElementById('btnNext');
+      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
       document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
       document.getElementById('qText').innerHTML = q.qHtml;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
       
       if (q.phase === 0) {
-        document.getElementById('hBox').style.display = 'none';
-        document.getElementById('cBox').style.display = 'none';
+        document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
         btnNext.innerHTML = "Indice (Schéma) 💡";
       } else if (q.phase === 1) {
-        document.getElementById('hBox').style.display = 'flex';
-        document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Correction 👀";
-        drawSVGBar(q, false);
+        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
+        btnNext.innerHTML = "Correction 👀"; 
+        if(q.parts === 100) draw100Parts(q, false); else drawSVGBar(q, false);
       } else if (q.phase === 2) {
-        document.getElementById('hBox').style.display = 'flex';
-        document.getElementById('cBox').style.display = 'block';
-        document.getElementById('cText').innerHTML = q.cHtml;
-        drawSVGBar(q, true);
+        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
+        document.getElementById('cText').innerHTML = q.cHtml; 
+        if(q.parts === 100) draw100Parts(q, true); else drawSVGBar(q, true);
         
-        if (currentIndex === quizData.length - 1) {
-          btnNext.innerHTML = "Terminé ✓";
-          btnNext.disabled = true;
-        } else {
-          btnNext.innerHTML = "Question suiv. ►";
-          btnNext.disabled = false;
-        }
+        if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+        else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
       }
       updateThumbnails();
     }
 
-    function loadSlide(index, startPhase = 0) {
-      currentIndex = index;
-      quizData[currentIndex].phase = startPhase;
-      document.getElementById('btnNext').disabled = false;
-      updateUI();
-    }
+    function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
+    function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
+    function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
-    function nextAction() {
-      const q = quizData[currentIndex];
-      if (q.phase === 0) q.phase = 1;
-      else if (q.phase === 1) q.phase = 2;
-      else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0);
-      updateUI();
-    }
+    function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
 
-    function prevSlide() {
-      const q = quizData[currentIndex];
-      if (q.phase === 2) q.phase = 1;
-      else if (q.phase === 1) q.phase = 0;
-      else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2);
-      updateUI();
-    }
-
-    function createSVG(tag, attrs) {
-      const el = document.createElementNS(svgNS, tag);
-      for (let k in attrs) el.setAttribute(k, attrs[k]);
-      return el;
-    }
-
-    // Le moteur SVG Unifié
+    // --- LE MOTEUR SVG COMPLET ---
     function drawSVGBar(q, isCorrection) {
-      const svg = document.getElementById('svgStage');
-      emptyElement(svg);
+      const svg = document.getElementById('svgStage'); emptyElement(svg);
 
-      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / q.parts;
-      
-      // BARRE DU HAUT (100%)
-      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
-      
-      let topText = "?";
-      // Si on cherche le total, on l'affiche qu'à la correction. Sinon on l'affiche tout le temps.
-      if (q.mode === 'find_total' && !isCorrection) {
-          svg.appendChild(createSVG("line", { x1: xStart + wTotal/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotal/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
-      } else {
-          let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-          txtTotal.textContent = q.totalVal; 
-          svg.appendChild(txtTotal);
+      if (!document.getElementById('patternHatch')) {
+        let defs = createSVG("defs", {});
+        let pat = createSVG("pattern", {id: "patternHatch", width: "15", height: "15", patternTransform: "rotate(45)", patternUnits: "userSpaceOnUse"});
+        pat.appendChild(createSVG("rect", {width: "15", height: "15", fill: "#e2e8f0"})); 
+        pat.appendChild(createSVG("line", {x1: "0", y1: "0", x2: "0", y2: "15", stroke: "#ff4d6d", "stroke-width": "3"})); 
+        defs.appendChild(pat); svg.appendChild(defs);
       }
-      drawBrace(svg, xStart, yTop - 5, wTotal, "100 %", true);
+
+      let displayParts = (q.mode === 'evo_inc') ? q.parts + q.activeParts : q.parts;
+      const wTotalDisplay = (800 / displayParts) * q.parts; 
+      const wPart = wTotalDisplay / q.parts;
+      const hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
+      const partVal = q.totalVal / q.parts;
+      const partPercent = 100 / q.parts;
+      
+      // BARRE DU HAUT
+      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      
+      if (q.mode === 'find_total' && !isCorrection) {
+          svg.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
+      } else {
+          let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+          txtTotal.textContent = q.totalVal; svg.appendChild(txtTotal);
+      }
+      drawBrace(svg, xStart, yTop - 5, wTotalDisplay, "100 %", true);
 
       // BARRES DU BAS
-      const wPart = wTotal / q.parts;
-      const partPercent = 100 / q.parts;
+      for (let i = 0; i < displayParts; i++) {
+        let xPart = xStart + (i * wPart);
+        let isAdded = (q.mode === 'evo_inc' && i >= q.parts); 
+        let isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts); 
+        let fillColor = colors[q.parts];
+        if (isRemoved && isCorrection) fillColor = "url(#patternHatch)"; 
+        
+        let op = "0.5";
+        if (isCorrection) {
+           if (isRemoved) op = "1"; 
+           else if (isAdded) op = "0.9";
+           else if (q.mode === 'direct' || q.mode === 'find_percent' || q.mode === 'find_total') op = (i < q.activeParts) ? "0.9" : "0.2";
+           else op = "0.9"; 
+        } else {
+           if (isAdded) op = "0.1"; 
+        }
 
-      for (let i = 0; i < q.parts; i++) {
+        if (!(isAdded && !isCorrection)) {
+            svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
+        }
+
+        if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
+            if (!(isAdded && !isCorrection)) {
+                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+                txtVal.textContent = partVal; svg.appendChild(txtVal);
+            }
+        } else {
+            svg.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
+        }
+        
+        if (!(isAdded && !isCorrection)) {
+            let label = partPercent + " %";
+            if (isRemoved && isCorrection) label = "- " + label;
+            if (isAdded && isCorrection) label = "+ " + label;
+            drawBrace(svg, xPart, yBot + hBar + 5, wPart, label, false, (isRemoved && isCorrection ? "#ff4d6d" : (isAdded ? "var(--accent)" : "#1f2a44")));
+        }
+      }
+
+      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
+        if (q.mode === 'evo_inc') {
+           drawBrace(svg, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau prix (100% + ${q.percent}%) = ${q.calcVal}`, false, "var(--accent)");
+        } else if (q.mode === 'evo_dec') {
+           drawBrace(svg, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste (100% - ${q.percent}%) = ${q.calcVal}`, false, "var(--success)");
+        } else if (q.mode === 'find_percent') {
+           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.calcVal}  ➔  ${q.percent} %`, false, "var(--accent)");
+        } else if (q.mode === 'find_total' && !isCorrection) {
+           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)");
+        } else if (q.activeParts > 1) {
+           drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} %  ➔  ${q.calcVal}`, false, "var(--accent)");
+        }
+      }
+    }
+
+    // Le moteur SVG SPÉCIAL 100 cases (Boss)
+    function draw100Parts(q, isCorrection) {
+      const svg = document.getElementById('svgStage'); emptyElement(svg);
+      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
+      const partVal = q.totalVal / 100;
+      
+      svg.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+      txtTotal.textContent = q.totalVal; svg.appendChild(txtTotal);
+      drawBrace(svg, xStart, yTop - 5, wTotal, "100 %", true);
+
+      const wPart = wTotal / 100;
+      for (let i = 0; i < 100; i++) {
         let xPart = xStart + (i * wPart);
         let isActive = i < q.activeParts;
-        let op = "0.5";
-        
-        // Logique d'opacité selon le mode
-        if (q.mode === 'find_percent' && isCorrection) op = isActive ? "0.9" : "0.2";
-        else if (q.mode === 'find_total') op = (isCorrection || isActive) ? "0.9" : "0.2";
-        else if (q.mode === 'direct' && isCorrection) op = isActive ? "0.9" : "0.2";
-
-        svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: (q.parts===100 ? "var(--c-1)" : colors[q.parts]), stroke: "#1f2a44", "stroke-width": (q.parts===100 ? "1.5" : "2.5"), opacity: op }));
-
-        // Texte dans les cases
-        if (q.parts < 100) {
-            if (isCorrection || (q.mode === 'find_total' && isActive)) {
-               let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-               txtVal.textContent = partVal; 
-               svg.appendChild(txtVal);
-            } else {
-               svg.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
-            }
-            drawBrace(svg, xPart, yBot + hBar + 5, wPart, partPercent + " %", false);
-        }
+        let op = isCorrection ? (isActive ? "1" : "0.2") : "0.5";
+        svg.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "var(--c-1)", stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
       }
 
-      // GRANDE ACCOLADE DE RÉPONSE
-      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
-        let textBrace = "";
-        if (q.mode === 'find_percent') textBrace = `${q.calcVal}  ➔  ${q.percent} %`;
-        else if (q.mode === 'find_total' && !isCorrection) textBrace = `${q.percent} % = ${q.calcVal}`;
-        else textBrace = `${q.percent} %  ➔  ${q.calcVal}`;
-        
-        if (q.activeParts > 1) {
-          drawBrace(svg, xStart, yBot + hBar + 45, wPart * q.activeParts, textBrace, false, "var(--accent)");
-        } else if (q.mode !== 'find_total' && q.parts < 100) {
-          drawBrace(svg, xStart, yBot + hBar + 5, wPart, textBrace, false, "var(--accent)");
-        }
-      }
-      
-      // Accolades spécifiques pour les 100 cases (Boss)
-      if (q.parts === 100) {
-         drawBrace(svg, xStart, yBot + hBar + 5, wPart, (isCorrection ? `1 % = ${partVal}` : "1 %"), false, "var(--text)", 14);
-         if (q.activeParts > 1 && isCorrection) {
-            drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)");
-         }
+      if (isCorrection) {
+          drawBrace(svg, xStart, yBot + hBar + 5, wPart, "1 % = " + partVal, false, "var(--text)", 14);
+          if (q.activeParts > 1) { drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); }
+      } else {
+          drawBrace(svg, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
+          if (q.activeParts > 1) { drawBrace(svg, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} %`, false, "var(--accent)"); }
       }
     }
 
     function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
+      if(width <= 0) return;
       const h = width < 20 ? 6 : 12;
       const dir = isUp ? -1 : 1; 
       const yTip = y + (h * dir);
