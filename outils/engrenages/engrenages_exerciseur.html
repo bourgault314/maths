@@ -74,8 +74,8 @@
       padding: 10px 24px; font-size: 1rem; font-weight: bold; cursor: pointer;
       box-shadow: 0 4px 10px rgba(63, 124, 255, 0.25); transition: transform 0.1s; white-space: nowrap;
     }
-    .btn-main:hover { opacity: 0.95; }
-    .btn-main:active { transform: translateY(2px); }
+    .btn-main:hover:not(:disabled) { opacity: 0.95; }
+    .btn-main:active:not(:disabled) { transform: translateY(2px); }
 
     /* --- ZONE DIAPORAMA --- */
     .diapo-container {
@@ -149,6 +149,70 @@
     /* Cacher les miniatures en plein écran */
     .diapo-container:fullscreen .thumbnails-wrap { display: none; }
     .diapo-container:-webkit-full-screen .thumbnails-wrap { display: none; }
+
+    /* --- LOGIQUE D'IMPRESSION (A4 - 4 Par Page) --- */
+    @media screen {
+      #printArea { display: none; }
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 8mm; }
+      body { background: white; margin: 0; padding: 0; font-size: 11pt; }
+      .config-panel, .diapo-container { display: none !important; }
+
+      #printArea {
+        display: block;
+        width: 100%;
+        visibility: visible;
+      }
+
+      .print-page {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 131mm;
+        gap: 4mm;
+        width: 100%;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .print-q {
+        border: 1.5px solid #333;
+        padding: 3mm 3.2mm;
+        border-radius: 6px;
+        break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        min-height: 0;
+        box-sizing: border-box;
+      }
+
+      .print-title { font-weight: bold; margin-bottom: 1.4mm; border-bottom: 1px solid #ccc; padding-bottom: 1mm; font-size: 1rem; color: #000; }
+      .print-text { font-size: 0.84rem; line-height: 1.2; margin-bottom: 1mm; text-align: center; color: #000; flex: 0 0 auto; }
+      .print-q svg { width: 100%; flex: 0 0 58mm; min-height: 58mm; max-height: 58mm; }
+
+      .print-ans {
+        margin-top: 1.6mm;
+        min-height: 24mm;
+        border: 1px dashed #666;
+        border-radius: 4px;
+        padding: 3mm 2.4mm;
+        font-style: italic;
+        font-size: 0.98rem;
+        color: #555;
+        background: #fdfdfd;
+        box-sizing: border-box;
+        flex: 1 1 auto;
+      }
+
+      .print-key {
+        padding-top: 0;
+      }
+      .print-key h2 { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 20px; color:#000; }
+      .print-key li { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.4; color:#000; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+      .print-key .correction-detail { color: #444; font-size: 0.85rem; margin-top: 4px; }
+    }
 
   </style>
 </head>
@@ -244,7 +308,9 @@
           <select id="selCount">
             <option value="3">3 questions</option>
             <option value="5" selected>5 questions</option>
+            <option value="6">6 questions (Idéal Impression)</option>
             <option value="10">10 questions</option>
+            <option value="12">12 questions (2 pages)</option>
             <option value="20">20 questions</option>
           </select>
         </div>
@@ -256,7 +322,10 @@
           </div>
         </div>
       </div>
-      <button class="btn-main" onclick="generateQuiz()">🚀 Générer la série</button>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-main" onclick="generateQuiz()">🚀 Générer la série</button>
+        <button class="btn-main" id="btnPrintBtn" onclick="printQuiz()" disabled style="background-color: #5a6784; opacity: 0.4; cursor: not-allowed;">🖨️ Imprimer</button>
+      </div>
     </div>
   </div>
 
@@ -297,6 +366,8 @@
 
   </div>
 
+  <div id="printArea"></div>
+
   <script>
     const svgNS = "http://www.w3.org/2000/svg";
     
@@ -323,6 +394,7 @@
     const btnNext = document.getElementById('btnNext');
     const btnFs = document.getElementById('btnFs');
     const thumbnailsWrap = document.getElementById('thumbnailsWrap');
+    const btnPrintBtn = document.getElementById('btnPrintBtn');
     
     const gearAGroup = document.getElementById('gearAGroup');
     const gearBGroup = document.getElementById('gearBGroup');
@@ -411,8 +483,8 @@
       let baseType = type;
       if (type.startsWith('obs_1_') || type.startsWith('obs_2_')) baseType = type.split('_').slice(0, 2).join('_');
 
-      let tA, tB, tC, turnsA, turnsB, qHtml = "", cHtml = "", hasC = false, isSpeedQ = false, hideTurnsText = false, hideArrows_val = false, omegaA_val = 60, givenGear_val = 'A', markerType_val = 'dot';
-      let unknownG_val = null; // Gère les roues mystères pour le problème inverse
+      let tA, tB, tC, turnsA, turnsB, qHtml = "", cHtml = "", hasC = false, isSpeedQ = false, hideTurnsText = false, hideArrows_val = false, omegaA_val = 60, givenGear_val = 'A', markerType_val = 'dot', isInverseProblem = false;
+      let unknownG_val = null;
 
       switch(type) {
         
@@ -612,11 +684,9 @@
 
         case 'calc_3': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          // NOUVEAU : On force le ratio à être x2 ou x4 pour être sûr d'avoir des moitiés
           let validPairs3 = allValidPairs.filter(p => { let r = Math.max(p[0], p[1]) / Math.min(p[0], p[1]); return r === 2 || r === 4; });
           let p_c3 = validPairs3[Math.floor(randomFloat() * validPairs3.length)];
           
-          // NOUVEAU : On force la PETITE roue à être le moteur pour avoir un départ entier et une arrivée ,5
           let motorIsA3 = randomFloat() > 0.5;
           if (motorIsA3) { tA = Math.min(p_c3[0], p_c3[1]); tB = Math.max(p_c3[0], p_c3[1]); } 
           else { tA = Math.max(p_c3[0], p_c3[1]); tB = Math.min(p_c3[0], p_c3[1]); }
@@ -643,18 +713,15 @@
 
         case 'calc_4': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          // NOUVEAU : On force le ratio à être x4
           let validPairs4 = allValidPairs.filter(p => Math.max(p[0], p[1]) / Math.min(p[0], p[1]) === 4);
           if (validPairs4.length === 0) validPairs4 = [[10, 40]]; // Sécurité
           let p_c4 = validPairs4[Math.floor(randomFloat() * validPairs4.length)]; 
           
-          // NOUVEAU : On force la PETITE roue à être le moteur
           let motorIsA4 = randomFloat() > 0.5;
           if (motorIsA4) { tA = Math.min(p_c4[0], p_c4[1]); tB = Math.max(p_c4[0], p_c4[1]); } 
           else { tA = Math.max(p_c4[0], p_c4[1]); tB = Math.min(p_c4[0], p_c4[1]); }
           
           let valids_c4 = []; 
-          // NOUVEAU : On force un départ IMPAIR pour tomber sur du ,25 ou du ,75
           for(let turns=1; turns<=15; turns+=2) {
               let res = motorIsA4 ? turns * (tA / tB) : turns * (tB / tA);
               if (!Number.isInteger(res) && res % 0.5 !== 0) valids_c4.push(turns);
@@ -680,7 +747,6 @@
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let p_c5 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)];
           
-          // NOUVEAU : On force la GRANDE roue à être le moteur pour éviter les fractions bizarres
           let motorIsA5 = randomFloat() > 0.5;
           if (motorIsA5) { tA = Math.max(p_c5[0], p_c5[1]); tB = Math.min(p_c5[0], p_c5[1]); }
           else { tA = Math.min(p_c5[0], p_c5[1]); tB = Math.max(p_c5[0], p_c5[1]); }
@@ -702,7 +768,6 @@
         }
 
         case 'calc_6': {
-          // BOSS ULTIME : Les Fractions Pures !
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let validScenariosBoss = [];
           for (let i = 7; i <= 40; i++) {
@@ -710,7 +775,6 @@
                   if (i === j) continue;
                   for (let tr = 1; tr <= 6; tr++) {
                       let fTest1 = simplifyFrac(tr * i, j); let fTest2 = simplifyFrac(tr * j, i);
-                      // On garantit que le résultat ne tombe jamais sur un entier ni un simple demi/quart
                       if (fTest1.d > 2 && fTest2.d > 2 && fTest1.d !== 4 && fTest2.d !== 4) { 
                           validScenariosBoss.push({tA: i, tB: j, turns: tr});
                       }
@@ -761,7 +825,6 @@
           let vi = []; for(let a=1; a<=10; a++) { if ((a * tA) % tB === 0) vi.push({a: a, b: (a * tA) / tB}); }
           if (vi.length === 0) vi.push({a: lcm(tA,tB)/tA, b: lcm(tA,tB)/tB}); let choice_i = vi[Math.floor(randomFloat() * vi.length)]; turnsA = choice_i.a; turnsB = choice_i.b; isInverseProblem = true;
           
-          // NOUVEAU : On tire au sort la roue à deviner pour cacher ses dents !
           unknownG_val = randomFloat() > 0.5 ? 'B' : 'A';
           if (unknownG_val === 'B') {
               qHtml = `La roue A (bleue) possède <strong>${tA} dents</strong> et effectue <strong>${formatDual(turnsA)}</strong>.<br>La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Combien de dents possède la roue B ?`;
@@ -817,9 +880,70 @@
       buildThumbnails();
       
       currentIndex = 0; diapoContainer.style.display = "flex"; diapoContainer.scrollIntoView({ behavior: "smooth" }); loadSlide(currentIndex, 0);
+      
+      // Activer le bouton d'impression une fois le quiz généré
+      btnPrintBtn.disabled = false;
+      btnPrintBtn.style.opacity = "1";
+      btnPrintBtn.style.cursor = "pointer";
+    }
+
+    function printQuiz() {
+      const pa = document.getElementById('printArea');
+      pa.innerHTML = '';
+      
+      // 1. Générer les pages de questions
+      const questionsPerPage = 4;
+      for (let start = 0; start < quizData.length; start += questionsPerPage) {
+        const page = document.createElement('div');
+        page.className = 'print-page';
+
+        quizData.slice(start, start + questionsPerPage).forEach((q, offset) => {
+          const i = start + offset;
+          const wrap = document.createElement('div');
+          wrap.className = 'print-q';
+
+          const title = document.createElement('div');
+          title.className = 'print-title';
+          title.innerHTML = `Question ${i+1}`;
+          wrap.appendChild(title);
+
+          const text = document.createElement('div');
+          text.className = 'print-text';
+          text.innerHTML = q.questionHtml;
+          wrap.appendChild(text);
+
+          const svg = document.createElementNS(svgNS, 'svg');
+          svg.setAttribute('viewBox', '0 0 1400 820');
+          wrap.appendChild(svg);
+
+          renderThumbnailSVG(svg, q, true);
+
+          const ans = document.createElement('div');
+          ans.className = 'print-ans';
+          ans.innerHTML = 'Réponse :';
+          wrap.appendChild(ans);
+
+          page.appendChild(wrap);
+        });
+
+        pa.appendChild(page);
+      }
+
+      // 2. Générer la page de correction du professeur
+      const keyWrap = document.createElement('div');
+      keyWrap.className = 'print-key';
+      let keyHtml = `<h2>Correction Professeur</h2><ol>`;
+      quizData.forEach((q, i) => {
+          keyHtml += `<li><strong>Q${i+1} :</strong> ${q.correctionHtml}</li>`;
+      });
+      keyHtml += `</ol>`;
+      keyWrap.innerHTML = keyHtml;
+      pa.appendChild(keyWrap);
+      
+      setTimeout(() => { window.print(); }, 400);
     }
     
-    function renderThumbnailSVG(targetSVG, q) {
+    function renderThumbnailSVG(targetSVG, q, showTeethLabels = false) {
         emptyElement(targetSVG);
         const mod = computeDynamicModule(q.teethA, q.teethB, q.teethC, q.hasGearC);
         const geomA = buildGearGeometry(q.teethA, mod);
@@ -842,7 +966,6 @@
         const gA = createSVG("g"); const gB = createSVG("g"); const gC = createSVG("g");
         const dirA = Math.sign(q.omegaA); const dirC = q.hasGearC ? -dirA : 0; const dirB = q.hasGearC ? dirA : -dirA;
 
-        // Gestion des roues mystères pour les miniatures
         const hideALabel = q.unknownGear === 'A';
         const hideBLabel = q.unknownGear === 'B';
         const hideATeeth = q.unknownGear === 'A';
@@ -857,6 +980,19 @@
             targetSVG.appendChild(gC);
         }
         targetSVG.appendChild(gB);
+
+        if (showTeethLabels) {
+            appendPrintGearLabel(targetSVG, cxA, cy, geomA, "A", hideALabel);
+            if (q.hasGearC) appendPrintGearLabel(targetSVG, cxC, cy, geomC, "C", false);
+            appendPrintGearLabel(targetSVG, cxB, cy, geomB, "B", hideBLabel);
+        }
+    }
+
+    function appendPrintGearLabel(targetSVG, cx, cy, geom, label, isHiddenLabel) {
+        const textY = cy + geom.outerRadius + 40;
+        const txt = createSVG("text", { x: cx, y: textY, "text-anchor": "middle", "font-size": "38", "font-weight": "800", fill: "#23304a" });
+        txt.innerHTML = isHiddenLabel ? `${label} : <tspan fill="#ff4d6d">?</tspan> dents` : `${label} : ${geom.teeth} dents`;
+        targetSVG.appendChild(txt);
     }
     
     function buildThumbnails() {
@@ -950,11 +1086,14 @@
     function buildGearGroup(target, cx, cy, geom, visualAngleDeg, fillColorCSS, label, strokeColorCSS, rawAngleDeg, phaseOffset, direction, showArrow, markerType, showTurns, isHiddenLabel, isThumb = false, hideTeeth = false){
       emptyElement(target); const group = createSVG("g", { transform: `translate(${cx} ${cy}) rotate(${visualAngleDeg})` });
       
-      // Cache les dents si demandé (Problème inverse)
       if (hideTeeth) {
-          group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.pitchRadius.toFixed(2), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "4", filter: "url(#softShadow)", "stroke-dasharray": "12,6" }));
+          const circleEl = createSVG("circle", { cx: "0", cy: "0", r: geom.pitchRadius.toFixed(2), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "4", "stroke-dasharray": "12,6" });
+          if (!isThumb) circleEl.setAttribute("filter", "url(#softShadow)");
+          group.appendChild(circleEl);
       } else {
-          group.appendChild(createSVG("path", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "2.4", filter: "url(#softShadow)" }));
+          const gearPathEl = createSVG("path", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "2.4" });
+          if (!isThumb) gearPathEl.setAttribute("filter", "url(#softShadow)");
+          group.appendChild(gearPathEl);
       }
 
       let toothAngle = 360 / geom.teeth; let snappedLocalAngle = Math.round((-90 - phaseOffset) / toothAngle) * toothAngle;
@@ -969,7 +1108,6 @@
       
       group.appendChild(markerGroup); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.innerRadius.toFixed(2), fill: "rgba(255,255,255,0.20)", stroke: strokeColorCSS, "stroke-width": "1.8" })); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.holeRadius.toFixed(2), fill: "#ffffff", stroke: strokeColorCSS, "stroke-width": "2.2" })); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: "4.2", fill: strokeColorCSS })); target.appendChild(group);
 
-      // --- AJOUT DU REPÈRE FANTÔME ---
       if (!isThumb) {
           const ghostContainer = createSVG("g", { transform: `translate(${cx} ${cy}) rotate(${phaseOffset + snappedLocalAngle})` });
           if (markerType === 'dot') {
@@ -981,7 +1119,6 @@
           }
           target.appendChild(ghostContainer);
       }
-      // --- FIN AJOUT ---
 
       if (showArrow) {
         const r = (geom.innerRadius + geom.rootRadius) / 2; const bandWidth = geom.rootRadius - geom.innerRadius; const hSize = Math.max(6, Math.min(14, bandWidth * 0.25)); let dArrow = "";
