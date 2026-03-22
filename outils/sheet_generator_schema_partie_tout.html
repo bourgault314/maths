@@ -49,29 +49,42 @@
     .btn-main.print { background: var(--inverse); }
     .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
+    /* LAYOUT DIAPORAMA */
     .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1000px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; }
     .diapo-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; }
     .slide-counter { font-weight: bold; color: var(--muted); font-size: 1.1rem; }
-    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; }
+    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; transition: background 0.1s; }
     .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
     .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-icon { min-width: 40px; padding: 8px 12px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
 
-    .question-box { padding: 30px 40px 10px 40px; text-align: center; }
+    /* MISE EN PAGE COMPACTE ET ALIGNEE EN HAUT */
+    .question-box { padding: 20px 40px 10px 40px; text-align: center; }
     .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
 
-    .hint-box { padding: 10px 40px 0 40px; display: none; justify-content: center; }
-    .correction-box { padding: 15px 40px; background: #fdfdfd; text-align: center; border-top: 1px solid #e7edf8; display: none;}
-    .correction-text { font-size: 1.6rem; font-weight: bold; color: var(--success); margin: 0; }
-    .stage-wrap { display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; }
-    svg { width: 100%; max-width: 850px; height: auto; }
+    .hint-box { padding: 10px 40px; display: none; justify-content: center; }
+    .correction-box { padding: 10px 40px 30px 40px; text-align: center; display: none; }
+    .correction-text { font-size: 1.8rem; font-weight: bold; color: var(--success); margin: 0; }
+    
+    .stage-wrap { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
+    svg { width: 100%; max-width: 850px; height: auto; max-height: 55vh; }
 
-    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; }
+    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; margin-top: auto; }
     .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; }
     .thumb-btn .th-q { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; display: block; color: inherit; }
     .thumb-btn .th-txt { font-size: 0.75rem; opacity: 0.9; }
     .thumb-btn:hover { background: #eef4ff; }
     .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
+
+    /* CSS PLEIN ECRAN STABLE */
+    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:-webkit-full-screen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
+    #diapoContainer:-webkit-full-screen .thumbnails-bar { display: none !important; }
+    
+    #diapoContainer:fullscreen svg { max-height: 65vh; }
+    #diapoContainer:-webkit-full-screen svg { max-height: 65vh; }
 
     /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
@@ -203,7 +216,11 @@
     <div class="diapo-header">
       <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
       <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
-      <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+      
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+      </div>
     </div>
 
     <div class="question-box"><p class="question-text" id="qText"></p></div>
@@ -236,16 +253,26 @@
         let seedInput = document.getElementById('inputSeed').value.trim();
         let s;
         if (!seedInput || isNaN(seedInput)) {
-            // S'il n'y a rien, on crée un numéro au hasard
             s = Math.floor(Math.random() * 9999) + 1;
-            document.getElementById('inputSeed').value = ""; // On s'assure que c'est vide pour le prochain clic
-            document.getElementById('inputSeed').placeholder = s; // On l'affiche en filigrane
+            document.getElementById('inputSeed').value = ""; 
+            document.getElementById('inputSeed').placeholder = s; 
         } else {
-            // Si le prof a tapé un numéro, on l'utilise (et il reste bloqué dans la case)
             s = parseInt(seedInput, 10);
         }
         setSeed(s);
         return s;
+    }
+
+    // --- FONCTION PLEIN ECRAN ---
+    function toggleFullscreen() {
+      let elem = document.getElementById("diapoContainer");
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {
+          alert(`Erreur : impossible de passer en plein écran (${err.message})`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
     }
 
     const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 100: "var(--c-1)" };
@@ -564,7 +591,6 @@
       const container = document.getElementById('printContainer');
       container.innerHTML = ''; 
 
-      // PAGE ELEVE
       let page1 = document.createElement('div');
       page1.className = 'print-page';
       page1.innerHTML = `
@@ -594,7 +620,6 @@
       });
       container.appendChild(page1);
 
-      // PAGE CORRECTION
       let page2 = document.createElement('div');
       page2.className = 'print-page';
       page2.innerHTML = `
