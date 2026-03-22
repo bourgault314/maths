@@ -222,13 +222,16 @@
             <div><strong>Niv 5 : Départ décimal</strong><span class="cb-desc">Le moteur fait des demi ou quarts de tours.</span></div>
           </label>
           <label class="cb-row"><input type="checkbox" value="calc_6" class="q-type"> 
-            <div><strong>Niv 6 : Le piège (3 roues)</strong><span class="cb-desc">Comprendre que la roue du milieu ne compte pas.</span></div>
+            <div><strong>Niv 6 : Boss Ultime (Fractions)</strong><span class="cb-desc">Le résultat est une vraie fraction.</span></div>
+          </label>
+          <label class="cb-row"><input type="checkbox" value="calc_7" class="q-type"> 
+            <div><strong>Niv 7 : Le piège (3 roues)</strong><span class="cb-desc">Comprendre que la roue du milieu ne compte pas.</span></div>
           </label>
           <label class="cb-row"><input type="checkbox" value="calc_inv" class="q-type"> 
-            <div><strong>Niv 7 : Problème Inverse !</strong><span class="cb-desc">Trouver le nombre de dents d'une roue.</span></div>
+            <div><strong>Niv 8 : Problème Inverse !</strong><span class="cb-desc">Trouver le nombre de dents de la roue mystère.</span></div>
           </label>
-          <label class="cb-row"><input type="checkbox" value="calc_8" class="q-type"> 
-            <div><strong>Niv 8 : Le PPCM</strong><span class="cb-desc">Alignement cyclique des repères.</span></div>
+          <label class="cb-row"><input type="checkbox" value="calc_9" class="q-type"> 
+            <div><strong>Niv 9 : Le PPCM</strong><span class="cb-desc">Alignement cyclique des repères.</span></div>
           </label>
         </div>
       </div>
@@ -247,7 +250,10 @@
         </div>
         <div class="config-block" title="Tapez un code pour rejouer exactement la même série !">
           <label>Code Série :</label>
-          <input type="text" id="seedInput" placeholder="Aléatoire">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <input type="text" id="seedInput" placeholder="Aléatoire">
+            <button onclick="document.getElementById('seedInput').value=''" title="Effacer pour créer une nouvelle série aléatoire" style="border:none; background:#ff4d6d; color:white; border-radius:4px; cursor:pointer; width:28px; height:28px; font-weight:bold; display:flex; align-items:center; justify-content:center;">✖</button>
+          </div>
         </div>
       </div>
       <button class="btn-main" onclick="generateQuiz()">🚀 Générer la série</button>
@@ -405,14 +411,15 @@
       let baseType = type;
       if (type.startsWith('obs_1_') || type.startsWith('obs_2_')) baseType = type.split('_').slice(0, 2).join('_');
 
-      let tA, tB, tC, turnsA, turnsB, qHtml = "", cHtml = "", hasC = false, isSpeedQ = false, hideTurnsText = false, hideArrows_val = false, omegaA_val = 60, givenGear_val = 'A', markerType_val = 'dot', isInverseProblem = false;
+      let tA, tB, tC, turnsA, turnsB, qHtml = "", cHtml = "", hasC = false, isSpeedQ = false, hideTurnsText = false, hideArrows_val = false, omegaA_val = 60, givenGear_val = 'A', markerType_val = 'dot';
+      let unknownG_val = null; // Gère les roues mystères pour le problème inverse
 
       switch(type) {
         
-        case 'obs_1_sens': case 'obs_1_vit': case 'obs_1': 
+        case 'obs_1_sens': case 'obs_1_vit': case 'obs_1': {
           let isSens1 = type === 'obs_1_sens' || (type === 'obs_1' && randomFloat() > 0.5);
-          if (randomFloat() < 0.2) { tA = tB = Math.floor(randomFloat() * 17 + 4) * 2; } 
-          else { tA = Math.floor(randomFloat() * 17 + 4) * 2; tB = Math.floor(randomFloat() * 17 + 4) * 2; while(tA === tB) tB = Math.floor(randomFloat() * 17 + 4) * 2; }
+          if (randomFloat() < 0.2) { tA = tB = Math.floor(randomFloat() * 34) + 7; } 
+          else { tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; while(tA === tB) tB = Math.floor(randomFloat() * 34) + 7; }
           turnsA = 1; turnsB = tA/tB;
           
           if (isSens1) {
@@ -432,11 +439,12 @@
             else { let faster = tA < tB ? "A (bleue)" : "B (orange)"; let smaller = tA < tB ? "A" : "B"; cHtml = `La roue <strong>${faster}</strong> tourne le plus vite.<br><div class="correction-detail">La roue ${smaller} a moins de dents, elle doit tourner plus vite pour suivre le rythme.</div>`; }
           }
           break;
+        }
 
-        case 'obs_2_sens': case 'obs_2_vit': case 'obs_2': 
+        case 'obs_2_sens': case 'obs_2_vit': case 'obs_2': {
           let isSens2 = type === 'obs_2_sens' || (type === 'obs_2' && randomFloat() > 0.5);
-          hasC = true; tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; tC = Math.floor(randomFloat() * 15 + 4) * 2; 
-          while (tA === tB && tB === tC) tC = Math.floor(randomFloat() * 15 + 4) * 2;
+          hasC = true; tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; tC = Math.floor(randomFloat() * 34) + 7; 
+          while (tA === tB && tB === tC) tC = Math.floor(randomFloat() * 34) + 7;
           turnsA = 1; turnsB = tA/tB;
           
           if (isSens2) {
@@ -456,14 +464,15 @@
             else { qHtml = `<strong>Classe</strong> ces trois roues de la <strong>plus rapide</strong> à la <strong>moins rapide</strong>.`; let rankingStr = ""; if (gears[0].t === gears[1].t) rankingStr = `<strong>${gears[0].id} et ${gears[1].id}</strong> (égalité) puis <strong>${gears[2].id}</strong>`; else if (gears[1].t === gears[2].t) rankingStr = `<strong>${gears[0].id}</strong> puis <strong>${gears[1].id} et ${gears[2].id}</strong> (égalité)`; else rankingStr = `<strong>${gears[0].id}</strong>, puis <strong>${gears[1].id}</strong>, puis <strong>${gears[2].id}</strong>`; cHtml = `L'ordre (du plus rapide au plus lent) est :<br>${rankingStr}.<br><div class="correction-detail">Plus une roue a de dents, plus elle tourne lentement (${gears[0].t} dents ➔ ${gears[1].t} dents ➔ ${gears[2].t} dents).</div>`; }
           }
           break;
+        }
 
-        case 'obs_3': 
+        case 'obs_3': {
           hasC = false; markerType_val = 'line'; let r3 = randomFloat();
-          if (r3 < 0.2) { tA = tB = Math.floor(randomFloat() * 13 + 4) * 2; } 
+          if (r3 < 0.2) { tA = tB = Math.floor(randomFloat() * 34) + 7; } 
           else if (r3 < 0.6) {
-            let base = Math.floor(randomFloat() * 7 + 4) * 2; let maxMult = Math.floor(40 / base);
+            let base = Math.floor(randomFloat() * 20) + 7; let maxMult = Math.floor(40 / base);
             if (maxMult < 2) { tA = base; tB = base - 2; } else { let mult = Math.floor(randomFloat() * (maxMult - 1)) + 2; if (randomFloat() > 0.5) { tA = base; tB = base * mult; } else { tA = base * mult; tB = base; } }
-          } else { tA = Math.floor(randomFloat() * 17 + 4) * 2; tB = Math.floor(randomFloat() * 17 + 4) * 2; while(tA === tB) tB = Math.floor(randomFloat() * 17 + 4) * 2; }
+          } else { tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; while(tA === tB) tB = Math.floor(randomFloat() * 34) + 7; }
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; let driveA = randomFloat() > 0.5;
           if (driveA) {
             turnsA = 1; turnsB = tA/tB; qHtml = `Si la roue A (bleue) effectue exactement <strong>1 tour complet</strong>...<br>La roue B (orange) fera-t-elle : <em>plus d'un tour</em>, <em>moins d'un tour</em>, ou <em>exactement 1 tour</em> ?`;
@@ -473,35 +482,37 @@
             let ans3 = tB === tA ? "exactement 1 tour" : (tB > tA ? "<strong>plus</strong> d'un tour" : "<strong>moins</strong> d'un tour"); let rsn3 = tB > tA ? `B a plus de dents (${tB}), elle force A (${tA}) à faire plus d'un tour.` : `B n'a pas assez de dents (${tB}) pour faire faire un tour complet à A (${tA}).`; if(tA===tB) rsn3 = `Elles ont le même nombre de dents (${tB}).`; cHtml = `La roue A fera <strong>${ans3}</strong>.<br><div class="correction-detail">${rsn3}</div>`;
           }
           break;
+        }
 
-        case 'obs_4': 
+        case 'obs_4': {
           let subCat = Math.floor(randomFloat() * 3); omegaA_val = 60; markerType_val = 'dot';
           if (subCat === 0) {
             let ruleType = Math.floor(randomFloat() * 6);
-            if (ruleType === 0) { hasC = false; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false; tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Deux roues qui s'engrènent tournent toujours dans le même sens."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">Le mouvement s'inverse à chaque contact entre deux roues.</div>`; } 
-            else if (ruleType === 1) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; while(tA === tB) tB = Math.floor(randomFloat() * 15 + 4) * 2; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Plus une roue a de dents, plus elle tourne vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">C'est l'inverse : une grande roue met plus de temps à faire un tour, elle tourne moins vite.</div>`; } 
-            else if (ruleType === 2) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; while(tA === tB) tB = Math.floor(randomFloat() * 15 + 4) * 2; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue qui a le moins de dents tourne toujours le plus vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La petite roue doit faire plus de tours pour suivre le rythme de la grande.</div>`; } 
-            else if (ruleType === 3) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 6 + 4) * 2; tB = tA * 2; if (randomFloat() > 0.5) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois plus vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Plus elle est grande, plus elle est longue à tourner : elle va 2 fois <strong>moins</strong> vite.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois moins vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Le nombre de dents et la vitesse sont inversement proportionnels.</div>`; } } 
-            else if (ruleType === 4) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 3 + 4) * 2; tB = tA * 3; if (randomFloat() > 0.5) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois plus vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}). Elle tournera 3 fois <strong>moins</strong> vite.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois moins vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}), sa vitesse est donc divisée par 3.</div>`; } } 
-            else { hasC = true; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false; tA = Math.floor(randomFloat() * 10 + 4) * 2; tC = Math.floor(randomFloat() * 6 + 4) * 2; tB = Math.floor(randomFloat() * 10 + 4) * 2; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Dans une chaîne de 3 roues, la première et la dernière tournent toujours dans le même sens."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue du milieu (C) inverse le sens, ce qui remet la 3ème roue (B) dans le même sens que la 1ère (A).</div>`; }
+            if (ruleType === 0) { hasC = false; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false; tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Deux roues qui s'engrènent tournent toujours dans le même sens."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">Le mouvement s'inverse à chaque contact entre deux roues.</div>`; } 
+            else if (ruleType === 1) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; while(tA === tB) tB = Math.floor(randomFloat() * 34) + 7; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Plus une roue a de dents, plus elle tourne vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">C'est l'inverse : une grande roue met plus de temps à faire un tour, elle tourne moins vite.</div>`; } 
+            else if (ruleType === 2) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; while(tA === tB) tB = Math.floor(randomFloat() * 34) + 7; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue qui a le moins de dents tourne toujours le plus vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La petite roue doit faire plus de tours pour suivre le rythme de la grande.</div>`; } 
+            else if (ruleType === 3) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 14) + 7; tB = tA * 2; if (randomFloat() > 0.5) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois plus vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Plus elle est grande, plus elle est longue à tourner : elle va 2 fois <strong>moins</strong> vite.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on double la taille d'une roue, elle tournera deux fois moins vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue B est 2 fois plus grande (${tB} dents contre ${tA}). Le nombre de dents et la vitesse sont inversement proportionnels.</div>`; } } 
+            else if (ruleType === 4) { hasC = false; hideTurnsText = false; isSpeedQ = true; hideArrows_val = true; tA = Math.floor(randomFloat() * 7) + 7; tB = tA * 3; if (randomFloat() > 0.5) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois plus vite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}). Elle tournera 3 fois <strong>moins</strong> vite.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Si on triple la taille d'une roue, elle tournera trois fois moins vite."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue B est 3 fois plus grande (${tB} dents contre ${tA}), sa vitesse est donc divisée par 3.</div>`; } } 
+            else { hasC = true; hideTurnsText = true; isSpeedQ = false; hideArrows_val = false; tA = Math.floor(randomFloat() * 34) + 7; tC = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Dans une chaîne de 3 roues, la première et la dernière tournent toujours dans le même sens."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La roue du milieu (C) inverse le sens, ce qui remet la 3ème roue (B) dans le même sens que la 1ère (A).</div>`; }
           } else if (subCat === 1) {
             hasC = randomFloat() > 0.5; hideTurnsText = false; hideArrows_val = true; isSpeedQ = true; let speedType = Math.floor(randomFloat() * 3);
             if (speedType === 0 && !hasC) {
-                let base = Math.floor(randomFloat() * 5 + 4) * 2; let mult = randomFloat() > 0.5 ? 2 : 3; if (randomFloat() > 0.5) { tA = base; tB = base * mult; } else { tA = base * mult; tB = base; } let askTrue = randomFloat() > 0.5;
+                let base = Math.floor(randomFloat() * 15) + 7; let mult = randomFloat() > 0.5 ? 2 : 3; if (randomFloat() > 0.5) { tA = base; tB = base * mult; } else { tA = base * mult; tB = base; } let askTrue = randomFloat() > 0.5;
                 if (askTrue) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La petite roue tourne exactement ${mult} fois plus vite que la grande."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">La grande a ${base*mult} dents et la petite ${base}. Le rapport est bien de ${mult}.</div>`; } else { let wrongMult = mult === 2 ? 3 : 2; let trick = randomFloat() > 0.5; if (trick) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La grande roue tourne ${mult} fois plus vite que la petite."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">C'est la <strong>petite</strong> roue qui tourne plus vite, pas la grande !</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La petite roue tourne ${wrongMult} fois plus vite que la grande."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La grande a ${base*mult} dents et la petite ${base}. Elle tourne <strong>${mult} fois</strong> plus vite.</div>`; } }
             } else if (speedType === 1) {
-                tA = Math.floor(randomFloat() * 10 + 4) * 2; tB = tA; if (hasC) { tC = tA; } let trick = randomFloat() > 0.5;
+                tA = Math.floor(randomFloat() * 34) + 7; tB = tA; if (hasC) { tC = tA; } let trick = randomFloat() > 0.5;
                 if (trick && !hasC) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue A (bleue) tourne plus vite que la roue B (orange)."`; cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">Elles ont le même nombre de dents (${tA}), elles tournent donc exactement à la même vitesse.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"Toutes les roues tournent exactement à la même vitesse."`; cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">Elles ont toutes le même nombre de dents (${tA}).</div>`; }
             } else {
-                tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; tC = Math.floor(randomFloat() * 15 + 4) * 2; while(tA === tB || (hasC && (tB === tC || tA === tC))) { tB = Math.floor(randomFloat() * 15 + 4) * 2; tC = Math.floor(randomFloat() * 15 + 4) * 2; }
+                tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; tC = Math.floor(randomFloat() * 34) + 7; while(tA === tB || (hasC && (tB === tC || tA === tC))) { tB = Math.floor(randomFloat() * 34) + 7; tC = Math.floor(randomFloat() * 34) + 7; }
                 if (!hasC) { let aFaster = tA < tB; let askA = randomFloat() > 0.5; if (askA) { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue A (bleue) tourne plus vite que la roue B (orange)."`; if(aFaster) cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">A a moins de dents que B (${tA} contre ${tB}), elle est donc plus rapide.</div>`; else cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">A a plus de dents que B (${tA} contre ${tB}), elle est donc plus lente.</div>`; } else { qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue B (orange) tourne plus vite que la roue A (bleue)."`; if(!aFaster) cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">B a moins de dents que A (${tB} contre ${tA}), elle est donc plus rapide.</div>`; else cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">B a plus de dents que A (${tB} contre ${tA}), elle est donc plus lente.</div>`; } } else { let minT = Math.min(tA, tB, tC); let target = randomFloat() < 0.33 ? {name:"A (bleue)", t:tA} : (randomFloat() < 0.5 ? {name:"B (orange)", t:tB} : {name:"C (verte)", t:tC}); let isFastest = target.t === minT; qHtml = `<strong>VRAI ou FAUX ?</strong><br>"La roue ${target.name} est la plus rapide des trois."`; if(isFastest) cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">C'est bien elle qui a le moins de dents (${target.t}), c'est donc la plus rapide.</div>`; else cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">La plus petite (et donc la plus rapide) est celle de ${minT} dents.</div>`; }
             }
           } else {
-            hasC = randomFloat() > 0.5; tA = Math.floor(randomFloat() * 15 + 4) * 2; tB = Math.floor(randomFloat() * 15 + 4) * 2; tC = Math.floor(randomFloat() * 15 + 4) * 2; hideTurnsText = true; hideArrows_val = false; isSpeedQ = false; let isClockwise = randomFloat() > 0.5; omegaA_val = isClockwise ? 60 : -60; let dirA_txt = isClockwise ? "horaire ↻" : "anti-horaire ↺"; let dirB_txt = (hasC ? isClockwise : !isClockwise) ? "horaire ↻" : "anti-horaire ↺"; givenGear_val = 'A'; let askClockwise = randomFloat() > 0.5; let askTxt = askClockwise ? "horaire ↻" : "anti-horaire ↺"; qHtml = `La roue A (bleue) tourne dans le sens ${dirA_txt}.<br><strong>VRAI ou FAUX ?</strong> "La roue B (orange) au bout de la chaîne tourne dans le sens ${askTxt}."`; if (askTxt === dirB_txt) { cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">Le mouvement se transmet correctement jusqu'à B (${dirB_txt}).</div>`; } else { cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">Elle tourne dans le sens inverse (${dirB_txt}).</div>`; }
+            hasC = randomFloat() > 0.5; tA = Math.floor(randomFloat() * 34) + 7; tB = Math.floor(randomFloat() * 34) + 7; tC = Math.floor(randomFloat() * 34) + 7; hideTurnsText = true; hideArrows_val = false; isSpeedQ = false; let isClockwise = randomFloat() > 0.5; omegaA_val = isClockwise ? 60 : -60; let dirA_txt = isClockwise ? "horaire ↻" : "anti-horaire ↺"; let dirB_txt = (hasC ? isClockwise : !isClockwise) ? "horaire ↻" : "anti-horaire ↺"; givenGear_val = 'A'; let askClockwise = randomFloat() > 0.5; let askTxt = askClockwise ? "horaire ↻" : "anti-horaire ↺"; qHtml = `La roue A (bleue) tourne dans le sens ${dirA_txt}.<br><strong>VRAI ou FAUX ?</strong> "La roue B (orange) au bout de la chaîne tourne dans le sens ${askTxt}."`; if (askTxt === dirB_txt) { cHtml = `<strong>VRAI !</strong><br><div class="correction-detail">Le mouvement se transmet correctement jusqu'à B (${dirB_txt}).</div>`; } else { cHtml = `<strong>FAUX !</strong><br><div class="correction-detail">Elle tourne dans le sens inverse (${dirB_txt}).</div>`; }
           }
           break;
+        }
 
-        case 'prev_1': 
+        case 'prev_1': {
           hideTurnsText = false; hideArrows_val = true; isSpeedQ = false; markerType_val = 'line';
           let pair_p1 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = pair_p1[0]; tB = pair_p1[1];
           let valids_p1 = []; for(let a=1; a<=6; a++) { if ((a * tA) % tB === 0) valids_p1.push({a:a, b: (a * tA) / tB}); }
@@ -509,7 +520,7 @@
           let choice_p1 = valids_p1[Math.floor(randomFloat() * valids_p1.length)]; 
           
           let motorIsA_p1 = randomFloat() > 0.5;
-          if (motorIsA_p1) { turnsA = choice_p1.a; turnsB = choice_p1.b; } else { turnsB = choice_p1.a; turnsA = choice_p1.b; }
+          turnsA = choice_p1.a; turnsB = choice_p1.b;
 
           let isQcm1 = false; let cbQcm1 = document.getElementById('cbPrev1Qcm') ? document.getElementById('cbPrev1Qcm').checked : true; let cbOpen1 = document.getElementById('cbPrev1Open') ? document.getElementById('cbPrev1Open').checked : true;
           if (cbQcm1 && cbOpen1) isQcm1 = randomFloat() > 0.5; else if (cbQcm1) isQcm1 = true; else if (cbOpen1) isQcm1 = false; else isQcm1 = false;
@@ -530,8 +541,9 @@
             cHtml = `La roue A fera <strong>${turnsA} tour${turnsA>1?'s':''}</strong>.<br><div class="correction-detail">Le rapport de taille est de ${Math.max(tA,tB)} / ${Math.min(tA,tB)}. L'animation valide le résultat !</div>`;
           }
           break;
+        }
 
-        case 'prev_2': 
+        case 'prev_2': {
           hideTurnsText = false; hideArrows_val = true; isSpeedQ = false; markerType_val = 'line';
           let pair_p2 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = pair_p2[0]; tB = pair_p2[1];
           let valids_p2 = [];
@@ -540,7 +552,7 @@
           let choice_p2 = valids_p2[Math.floor(randomFloat() * valids_p2.length)]; 
           
           let motorIsA_p2 = randomFloat() > 0.5;
-          if (motorIsA_p2) { turnsA = choice_p2.a; turnsB = choice_p2.b; } else { turnsB = choice_p2.a; turnsA = choice_p2.b; }
+          turnsA = choice_p2.a; turnsB = choice_p2.b;
 
           let isQcm2 = false; let cbQcm2 = document.getElementById('cbPrev2Qcm') ? document.getElementById('cbPrev2Qcm').checked : true; let cbOpen2 = document.getElementById('cbPrev2Open') ? document.getElementById('cbPrev2Open').checked : true;
           if (cbQcm2 && cbOpen2) isQcm2 = randomFloat() > 0.5; else if (cbQcm2) isQcm2 = true; else if (cbOpen2) isQcm2 = false; else isQcm2 = false;
@@ -561,10 +573,11 @@
              cHtml = `La roue A fera <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Le repère bâton valide visuellement le résultat.</div>`;
           }
           break;
+        }
 
         // --- CALCULER ---
         
-        case 'calc_1': 
+        case 'calc_1': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let p_c1 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)];
           let motorIsA1 = randomFloat() > 0.5;
@@ -578,75 +591,201 @@
               cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : La roue A est ${String(turnsA).replace('.',',')} fois plus petite que B (${tB} / ${tA}). Elle tourne donc ${String(turnsA).replace('.',',')} fois pour compenser.</div>`;
           }
           break;
+        }
 
-        case 'calc_2': 
+        case 'calc_2': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let p_c2 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c2[0]; tB = p_c2[1];
           let valids_c2 = []; for(let a=1; a<=10; a++) { if ((a * tA) % tB === 0) valids_c2.push({a: a, b: (a * tA) / tB}); }
           if (valids_c2.length === 0) valids_c2.push({a: lcm(tA,tB)/tA, b: lcm(tA,tB)/tB});
           let choice_c2 = valids_c2[Math.floor(randomFloat() * valids_c2.length)]; let motorIsA2 = randomFloat() > 0.5;
-          if (motorIsA2) { turnsA = choice_c2.a; turnsB = choice_c2.b; qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${tA} / ${tB}) = ${turnsB}.</div>`;
-          } else { turnsB = choice_c2.a; turnsA = choice_c2.b; qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${tB} / ${tA}) = ${turnsA}.</div>`; }
+          turnsA = choice_c2.a; turnsB = choice_c2.b;
+          if (motorIsA2) { 
+              qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; 
+              cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${tA} / ${tB}) = ${turnsB}.</div>`;
+          } else { 
+              qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; 
+              cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${tB} / ${tA}) = ${turnsA}.</div>`; 
+          }
           break;
+        }
 
-        case 'calc_3': 
+        case 'calc_3': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          let p_c3 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c3[0]; tB = p_c3[1];
-          let valids_c3 = []; for(let a=1; a<=20; a++) { let b = (a * tA) / tB; if (b % 0.5 === 0 && !Number.isInteger(b)) valids_c3.push({a: a, b: b}); }
-          if (valids_c3.length === 0) valids_c3.push({a: 1, b: tA/tB}); 
-          let choice_c3 = valids_c3[Math.floor(randomFloat() * valids_c3.length)]; let motorIsA3 = randomFloat() > 0.5;
-          if (motorIsA3) { turnsA = choice_c3.a; turnsB = choice_c3.b; qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
-          } else { turnsB = choice_c3.a; turnsA = choice_c3.b; qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; }
-          break;
-
-        case 'calc_4': 
-          hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          let p_c4 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c4[0]; tB = p_c4[1];
-          let valids_c4 = []; for(let a=1; a<=20; a++) { let b = (a * tA) / tB; if (b % 0.25 === 0 && b % 0.5 !== 0) valids_c4.push({a: a, b: b}); }
-          if (valids_c4.length === 0) { tA = 10; tB = 40; valids_c4.push({a: 1, b: 0.25}); } let choice_c4 = valids_c4[Math.floor(randomFloat() * valids_c4.length)]; let motorIsA4 = randomFloat() > 0.5;
-          if (motorIsA4) { turnsA = choice_c4.a; turnsB = choice_c4.b; qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; let f3 = simplifyFrac(tA, tB); cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${f3.n}/${f3.d}) = ${String(turnsB).replace('.',',')}.</div>`;
-          } else { turnsB = choice_c4.a; turnsA = choice_c4.b; qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; let f3 = simplifyFrac(tB, tA); cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${f3.n}/${f3.d}) = ${String(turnsA).replace('.',',')}.</div>`; }
-          break;
-
-        case 'calc_5': 
-          hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          let p_c5 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c5[0]; tB = p_c5[1];
-          let valids_c5 = []; for(let a4=1; a4<=20; a4++) { let a = a4 / 4; if (!Number.isInteger(a)) { let b = (a * tA) / tB; valids_c5.push({a: a, b: b}); } }
-          if (valids_c5.length === 0) valids_c5.push({a: 1.5, b: (1.5*tA)/tB}); let choice_c5 = valids_c5[Math.floor(randomFloat() * valids_c5.length)]; let motorIsA5 = randomFloat() > 0.5;
-          if (motorIsA5) { turnsA = choice_c5.a; turnsB = choice_c5.b; qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${String(turnsA).replace('.',',')} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
-          } else { turnsB = choice_c5.a; turnsA = choice_c5.b; qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${String(turnsB).replace('.',',')} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; }
-          break;
+          // NOUVEAU : On force le ratio à être x2 ou x4 pour être sûr d'avoir des moitiés
+          let validPairs3 = allValidPairs.filter(p => { let r = Math.max(p[0], p[1]) / Math.min(p[0], p[1]); return r === 2 || r === 4; });
+          let p_c3 = validPairs3[Math.floor(randomFloat() * validPairs3.length)];
           
-        case 'calc_6': 
+          // NOUVEAU : On force la PETITE roue à être le moteur pour avoir un départ entier et une arrivée ,5
+          let motorIsA3 = randomFloat() > 0.5;
+          if (motorIsA3) { tA = Math.min(p_c3[0], p_c3[1]); tB = Math.max(p_c3[0], p_c3[1]); } 
+          else { tA = Math.max(p_c3[0], p_c3[1]); tB = Math.min(p_c3[0], p_c3[1]); }
+          
+          let valids_c3 = []; 
+          for(let turns=1; turns<=20; turns++) {
+              let res = motorIsA3 ? turns * (tA / tB) : turns * (tB / tA);
+              if (res % 0.5 === 0 && !Number.isInteger(res)) valids_c3.push(turns);
+          }
+          let chosenTurns3 = valids_c3[Math.floor(randomFloat() * valids_c3.length)]; 
+          
+          if (motorIsA3) { turnsA = chosenTurns3; turnsB = turnsA * (tA / tB); }
+          else { turnsB = chosenTurns3; turnsA = turnsB * (tB / tA); }
+          
+          if (motorIsA3) { 
+              qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; 
+              cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
+          } else { 
+              qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; 
+              cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; 
+          }
+          break;
+        }
+
+        case 'calc_4': {
+          hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
+          // NOUVEAU : On force le ratio à être x4
+          let validPairs4 = allValidPairs.filter(p => Math.max(p[0], p[1]) / Math.min(p[0], p[1]) === 4);
+          if (validPairs4.length === 0) validPairs4 = [[10, 40]]; // Sécurité
+          let p_c4 = validPairs4[Math.floor(randomFloat() * validPairs4.length)]; 
+          
+          // NOUVEAU : On force la PETITE roue à être le moteur
+          let motorIsA4 = randomFloat() > 0.5;
+          if (motorIsA4) { tA = Math.min(p_c4[0], p_c4[1]); tB = Math.max(p_c4[0], p_c4[1]); } 
+          else { tA = Math.max(p_c4[0], p_c4[1]); tB = Math.min(p_c4[0], p_c4[1]); }
+          
+          let valids_c4 = []; 
+          // NOUVEAU : On force un départ IMPAIR pour tomber sur du ,25 ou du ,75
+          for(let turns=1; turns<=15; turns+=2) {
+              let res = motorIsA4 ? turns * (tA / tB) : turns * (tB / tA);
+              if (!Number.isInteger(res) && res % 0.5 !== 0) valids_c4.push(turns);
+          }
+          let chosenTurns4 = valids_c4[Math.floor(randomFloat() * valids_c4.length)]; 
+          
+          if (motorIsA4) { turnsA = chosenTurns4; turnsB = turnsA * (tA / tB); }
+          else { turnsB = chosenTurns4; turnsA = turnsB * (tB / tA); }
+          
+          if (motorIsA4) { 
+              qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; 
+              let f3 = simplifyFrac(tA, tB); 
+              cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${f3.n}/${f3.d}) = ${String(turnsB).replace('.',',')}.</div>`;
+          } else { 
+              qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; 
+              let f3 = simplifyFrac(tB, tA); 
+              cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${f3.n}/${f3.d}) = ${String(turnsA).replace('.',',')}.</div>`; 
+          }
+          break;
+        }
+
+        case 'calc_5': {
+          hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
+          let p_c5 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)];
+          
+          // NOUVEAU : On force la GRANDE roue à être le moteur pour éviter les fractions bizarres
+          let motorIsA5 = randomFloat() > 0.5;
+          if (motorIsA5) { tA = Math.max(p_c5[0], p_c5[1]); tB = Math.min(p_c5[0], p_c5[1]); }
+          else { tA = Math.min(p_c5[0], p_c5[1]); tB = Math.max(p_c5[0], p_c5[1]); }
+
+          let valids_c5 = [0.5, 1.5, 2.5, 3.5, 0.25, 0.75, 1.25, 1.75];
+          let chosenTurns5 = valids_c5[Math.floor(randomFloat() * valids_c5.length)];
+
+          if (motorIsA5) { turnsA = chosenTurns5; turnsB = turnsA * (tA / tB); }
+          else { turnsB = chosenTurns5; turnsA = turnsB * (tB / tA); }
+          
+          if (motorIsA5) { 
+              qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; 
+              cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail">Calcul : ${String(turnsA).replace('.',',')} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
+          } else { 
+              qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; 
+              cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail">Calcul : ${String(turnsB).replace('.',',')} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; 
+          }
+          break;
+        }
+
+        case 'calc_6': {
+          // BOSS ULTIME : Les Fractions Pures !
+          hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
+          let validScenariosBoss = [];
+          for (let i = 7; i <= 40; i++) {
+              for (let j = 7; j <= 40; j++) {
+                  if (i === j) continue;
+                  for (let tr = 1; tr <= 6; tr++) {
+                      let fTest1 = simplifyFrac(tr * i, j); let fTest2 = simplifyFrac(tr * j, i);
+                      // On garantit que le résultat ne tombe jamais sur un entier ni un simple demi/quart
+                      if (fTest1.d > 2 && fTest2.d > 2 && fTest1.d !== 4 && fTest2.d !== 4) { 
+                          validScenariosBoss.push({tA: i, tB: j, turns: tr});
+                      }
+                  }
+              }
+          }
+          let scBoss = validScenariosBoss[Math.floor(randomFloat() * validScenariosBoss.length)];
+          tA = scBoss.tA; tB = scBoss.tB;
+
+          let motorIsABoss = randomFloat() > 0.5;
+          let fAns;
+          
+          if (motorIsABoss) {
+              turnsA = scBoss.turns; turnsB = turnsA * (tA / tB); fAns = simplifyFrac(turnsA * tA, tB);
+              let htmlFrac = `<span style="display:inline-block; vertical-align:middle; text-align:center; font-size: 1.1em; line-height: 1.2;"><span style="border-bottom:2px solid var(--success); display:block; padding: 0 2px;">${fAns.n}</span><span style="display:block; padding: 0 2px;">${fAns.d}</span></span>`;
+              let htmlFracSmall = `<span style="display:inline-block; vertical-align:middle; text-align:center; font-size: 1em; line-height: 1.1;"><span style="border-bottom:1px solid var(--muted); display:block; padding: 0 2px;">${fAns.n}</span><span style="display:block; padding: 0 2px;">${fAns.d}</span></span>`;
+              qHtml = `La roue A (bleue) effectue exactement <strong>${turnsA} tour${turnsA>1?'s':''}</strong>.<br>Calcule combien de tours effectue la roue B (orange).<br><span style="font-size:0.85em; color:var(--muted); font-weight:normal;">Donne ton résultat sous forme de fraction.</span>`;
+              cHtml = `La roue B effectue <strong>${htmlFrac} de tour</strong>.<br><div class="correction-detail">Calcul : ${turnsA} × (${tA} / ${tB}) = ${htmlFracSmall} de tour.</div>`;
+          } else {
+              turnsB = scBoss.turns; turnsA = turnsB * (tB / tA); fAns = simplifyFrac(turnsB * tB, tA);
+              let htmlFrac = `<span style="display:inline-block; vertical-align:middle; text-align:center; font-size: 1.1em; line-height: 1.2;"><span style="border-bottom:2px solid var(--success); display:block; padding: 0 2px;">${fAns.n}</span><span style="display:block; padding: 0 2px;">${fAns.d}</span></span>`;
+              let htmlFracSmall = `<span style="display:inline-block; vertical-align:middle; text-align:center; font-size: 1em; line-height: 1.1;"><span style="border-bottom:1px solid var(--muted); display:block; padding: 0 2px;">${fAns.n}</span><span style="display:block; padding: 0 2px;">${fAns.d}</span></span>`;
+              qHtml = `La roue B (orange) effectue exactement <strong>${turnsB} tour${turnsB>1?'s':''}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).<br><span style="font-size:0.85em; color:var(--muted); font-weight:normal;">Donne ton résultat sous forme de fraction.</span>`;
+              cHtml = `La roue A effectue <strong>${htmlFrac} de tour</strong>.<br><div class="correction-detail">Calcul : ${turnsB} × (${tB} / ${tA}) = ${htmlFracSmall} de tour.</div>`;
+          }
+          break;
+        }
+
+        case 'calc_7': {
           hasC = true; hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
-          let p_c6 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c6[0]; tB = p_c6[1]; tC = Math.floor(randomFloat() * 15 + 4) * 2; while(tC === tA || tC === tB) tC = Math.floor(randomFloat() * 15 + 4) * 2;
+          let p_c6 = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = p_c6[0]; tB = p_c6[1]; tC = Math.floor(randomFloat() * 34) + 7; while(tC === tA || tC === tB) tC = Math.floor(randomFloat() * 34) + 7;
           let valids_c6 = []; for(let a2=2; a2<=20; a2++) { if ((a2 * tA) % tB === 0) valids_c6.push({a: a2/2, b: ((a2 * tA) / tB) / 2}); }
           if (valids_c6.length === 0) valids_c6.push({a: lcm(tA,tB)/tA, b: lcm(tA,tB)/tB}); let choice_c6 = valids_c6[Math.floor(randomFloat() * valids_c6.length)]; let motorIsA6 = randomFloat() > 0.5;
-          if (motorIsA6) { turnsA = choice_c6.a; turnsB = choice_c6.b; qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail"><strong>Piège !</strong> La roue centrale (verte) ne compte pas. ${String(turnsA).replace('.',',')} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
-          } else { turnsB = choice_c6.a; turnsA = choice_c6.b; qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail"><strong>Piège !</strong> La roue centrale (verte) ne compte pas. ${String(turnsB).replace('.',',')} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; }
+          turnsA = choice_c6.a; turnsB = choice_c6.b;
+          if (motorIsA6) { 
+              qHtml = `La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Calcule combien de tours effectue la roue B (orange).`; 
+              cHtml = `La roue B effectue <strong>${formatDual(turnsB)}</strong>.<br><div class="correction-detail"><strong>Piège !</strong> La roue centrale (verte) ne compte pas. ${String(turnsA).replace('.',',')} × (${tA} / ${tB}) = ${String(turnsB).replace('.',',')}.</div>`;
+          } else { 
+              qHtml = `La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Calcule combien de tours effectue la roue A (bleue).`; 
+              cHtml = `La roue A effectue <strong>${formatDual(turnsA)}</strong>.<br><div class="correction-detail"><strong>Piège !</strong> La roue centrale (verte) ne compte pas. ${String(turnsB).replace('.',',')} × (${tB} / ${tA}) = ${String(turnsA).replace('.',',')}.</div>`; 
+          }
           break;
+        }
           
-        case 'calc_inv':
+        case 'calc_inv': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let pi = allValidPairs[Math.floor(randomFloat() * allValidPairs.length)]; tA = pi[0]; tB = pi[1];
           let vi = []; for(let a=1; a<=10; a++) { if ((a * tA) % tB === 0) vi.push({a: a, b: (a * tA) / tB}); }
           if (vi.length === 0) vi.push({a: lcm(tA,tB)/tA, b: lcm(tA,tB)/tB}); let choice_i = vi[Math.floor(randomFloat() * vi.length)]; turnsA = choice_i.a; turnsB = choice_i.b; isInverseProblem = true;
-          qHtml = `La roue A (bleue) possède <strong>${tA} dents</strong> et effectue <strong>${formatDual(turnsA)}</strong>.<br>La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Combien de dents possède la roue B ?`;
-          cHtml = `La roue B possède <strong>${tB} dents</strong> !<br><div class="correction-detail">La roue A fait passer ${tA} × ${turnsA} = ${tA*turnsA} dents.<br>La roue B a donc fait passer le même nombre de dents en ${turnsB} tour(s) : ${tA*turnsA} ÷ ${turnsB} = ${tB}.</div>`;
+          
+          // NOUVEAU : On tire au sort la roue à deviner pour cacher ses dents !
+          unknownG_val = randomFloat() > 0.5 ? 'B' : 'A';
+          if (unknownG_val === 'B') {
+              qHtml = `La roue A (bleue) possède <strong>${tA} dents</strong> et effectue <strong>${formatDual(turnsA)}</strong>.<br>La roue B (orange) effectue <strong>${formatDual(turnsB)}</strong>.<br>Combien de dents possède la roue B ?`;
+              cHtml = `La roue B possède <strong>${tB} dents</strong> !<br><div class="correction-detail">La roue A fait passer ${tA} × ${turnsA} = ${tA*turnsA} dents.<br>La roue B a donc fait passer le même nombre de dents en ${turnsB} tour(s) : ${tA*turnsA} ÷ ${turnsB} = ${tB}.</div>`;
+          } else {
+              qHtml = `La roue B (orange) possède <strong>${tB} dents</strong> et effectue <strong>${formatDual(turnsB)}</strong>.<br>La roue A (bleue) effectue <strong>${formatDual(turnsA)}</strong>.<br>Combien de dents possède la roue A ?`;
+              cHtml = `La roue A possède <strong>${tA} dents</strong> !<br><div class="correction-detail">La roue B fait passer ${tB} × ${turnsB} = ${tB*turnsB} dents.<br>La roue A a donc fait passer le même nombre de dents en ${turnsA} tour(s) : ${tB*turnsB} ÷ ${turnsA} = ${tA}.</div>`;
+          }
           break;
+        }
 
-        case 'calc_8': 
+        case 'calc_9': {
           hideTurnsText = false; hideArrows_val = true; omegaA_val = 60; markerType_val = 'line';
           let p9 = pairsPPCM[Math.floor(randomFloat() * pairsPPCM.length)]; tA = p9[0]; tB = p9[1]; let ppcm = lcm(tA, tB); turnsA = ppcm / tA; turnsB = ppcm / tB;
           qHtml = `Les repères rouges sont alignés.<br>Combien de tours <strong>au minimum</strong> doit faire la roue A pour que les deux repères se retrouvent exactement dans leur position de départ ?`;
           cHtml = `La roue A doit faire <strong>${turnsA} tours</strong>.<br><div class="correction-detail">Le multiple commun de ${tA} et ${tB} est ${ppcm} dents. Pour passer ${ppcm} dents, A doit faire ${turnsA} tours, et B fera ${turnsB} tours entiers.</div>`;
           break;
+        }
 
         default: tA = 12; tB = 24; turnsA = 2; turnsB = 1; omegaA_val = 60; qHtml = "Erreur de génération."; cHtml = "Oups.";
       }
 
       let teethPerSecond = 2.0; let currentSign = Math.sign(omegaA_val) || 1; omegaA_val = currentSign * (teethPerSecond * 360 / tA);
-      return { qType: baseType, isSpeedQuestion: isSpeedQ, hideTurns: hideTurnsText, hideArrows: hideArrows_val, givenGear: givenGear_val, omegaA: omegaA_val, teethA: tA, teethB: tB, teethC: tC || 16, hasGearC: hasC, turnsA: turnsA, expectedTurnsB: turnsB, questionHtml: qHtml, correctionHtml: cHtml, phase: 0, marker: markerType_val, isInverse: isInverseProblem };
+      return { qType: baseType, isSpeedQuestion: isSpeedQ, hideTurns: hideTurnsText, hideArrows: hideArrows_val, givenGear: givenGear_val, omegaA: omegaA_val, teethA: tA, teethB: tB, teethC: tC || 16, hasGearC: hasC, turnsA: turnsA, expectedTurnsB: turnsB, questionHtml: qHtml, correctionHtml: cHtml, phase: 0, marker: markerType_val, isInverse: isInverseProblem, unknownGear: unknownG_val };
     }
 
 
@@ -703,13 +842,18 @@
         const gA = createSVG("g"); const gB = createSVG("g"); const gC = createSVG("g");
         const dirA = Math.sign(q.omegaA); const dirC = q.hasGearC ? -dirA : 0; const dirB = q.hasGearC ? dirA : -dirA;
 
-        // isThumb = true (dernier paramètre) pour cacher les gros textes dans la miniature
-        buildGearGroup(gA, cxA, cy, geomA, phases.phaseA, COLOR_A, "A", STROKE_A, 0, dirA, false, q.marker, false, false, true);
-        buildGearGroup(gB, cxB, cy, geomB, phases.phaseB, COLOR_B, "B", STROKE_B, 0, dirB, false, q.marker, false, q.isInverse, true);
+        // Gestion des roues mystères pour les miniatures
+        const hideALabel = q.unknownGear === 'A';
+        const hideBLabel = q.unknownGear === 'B';
+        const hideATeeth = q.unknownGear === 'A';
+        const hideBTeeth = q.unknownGear === 'B';
+
+        buildGearGroup(gA, cxA, cy, geomA, phases.phaseA, COLOR_A, "A", STROKE_A, 0, phases.phaseA, dirA, false, q.marker, false, hideALabel, true, hideATeeth);
+        buildGearGroup(gB, cxB, cy, geomB, phases.phaseB, COLOR_B, "B", STROKE_B, 0, phases.phaseB, dirB, false, q.marker, false, hideBLabel, true, hideBTeeth);
         
         targetSVG.appendChild(gA);
         if(q.hasGearC) {
-            buildGearGroup(gC, cxC, cy, geomC, phases.phaseC, COLOR_C, "C", STROKE_C, 0, dirC, false, q.marker, false, false, true);
+            buildGearGroup(gC, cxC, cy, geomC, phases.phaseC, COLOR_C, "C", STROKE_C, 0, phases.phaseC, dirC, false, q.marker, false, false, true, false);
             targetSVG.appendChild(gC);
         }
         targetSVG.appendChild(gB);
@@ -803,20 +947,41 @@
     }
     function createSVG(tag, attrs = {}){ const el = document.createElementNS(svgNS, tag); for(const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
 
-    function buildGearGroup(target, cx, cy, geom, visualAngleDeg, fillColorCSS, label, strokeColorCSS, rawAngleDeg, direction, showArrow, markerType, showTurns, isHiddenLabel, isThumb = false){
+    function buildGearGroup(target, cx, cy, geom, visualAngleDeg, fillColorCSS, label, strokeColorCSS, rawAngleDeg, phaseOffset, direction, showArrow, markerType, showTurns, isHiddenLabel, isThumb = false, hideTeeth = false){
       emptyElement(target); const group = createSVG("g", { transform: `translate(${cx} ${cy}) rotate(${visualAngleDeg})` });
-      group.appendChild(createSVG("path", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "2.4", filter: "url(#softShadow)" }));
+      
+      // Cache les dents si demandé (Problème inverse)
+      if (hideTeeth) {
+          group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.pitchRadius.toFixed(2), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "4", filter: "url(#softShadow)", "stroke-dasharray": "12,6" }));
+      } else {
+          group.appendChild(createSVG("path", { d: gearPath(geom), fill: fillColorCSS, stroke: strokeColorCSS, "stroke-width": "2.4", filter: "url(#softShadow)" }));
+      }
 
-      let phaseOffset = visualAngleDeg - rawAngleDeg; let toothAngle = 360 / geom.teeth; let snappedLocalAngle = Math.round((-90 - phaseOffset) / toothAngle) * toothAngle;
+      let toothAngle = 360 / geom.teeth; let snappedLocalAngle = Math.round((-90 - phaseOffset) / toothAngle) * toothAngle;
       const markerGroup = createSVG("g", { transform: `rotate(${snappedLocalAngle})` });
-      const boundaryRadius = getMarkerBoundaryRadius(geom, snappedLocalAngle); const markerTipGap = Math.max(2.8, geom.modulePx * 0.16);
+      const boundaryRadius = hideTeeth ? geom.pitchRadius : getMarkerBoundaryRadius(geom, snappedLocalAngle); 
+      const markerTipGap = Math.max(2.8, geom.modulePx * 0.16);
       const markerStart = geom.holeRadius - 0.5; const markerEnd = boundaryRadius - markerTipGap; 
       const dotRadius = Math.max(7, Math.min(12, geom.modulePx * 0.45)); const lineThickness = Math.max(6, Math.min(12, geom.modulePx * 0.62)); const innerLineThickness = Math.max(3, Math.min(6, geom.modulePx * 0.34));
 
-      if (markerType === 'dot') { let dotCenter = geom.rootRadius - dotRadius - 3; markerGroup.appendChild(createSVG("circle", { cx: dotCenter.toFixed(2), cy: "0", r: dotRadius.toFixed(2), fill: "var(--marker)", stroke: "#ffffff", "stroke-width": "2.5" })); } 
+      if (markerType === 'dot') { let dotCenter = hideTeeth ? (geom.pitchRadius - dotRadius - 6) : (geom.rootRadius - dotRadius - 3); markerGroup.appendChild(createSVG("circle", { cx: dotCenter.toFixed(2), cy: "0", r: dotRadius.toFixed(2), fill: "var(--marker)", stroke: "#ffffff", "stroke-width": "2.5" })); } 
       else { markerGroup.appendChild(createSVG("line", { x1: markerStart.toFixed(2), y1: "0", x2: markerEnd.toFixed(2), y2: "0", stroke: "#ffffff", "stroke-width": lineThickness.toFixed(2), "stroke-linecap": "round" })); markerGroup.appendChild(createSVG("line", { x1: markerStart.toFixed(2), y1: "0", x2: markerEnd.toFixed(2), y2: "0", stroke: "var(--marker)", "stroke-width": innerLineThickness.toFixed(2), "stroke-linecap": "round" })); }
       
       group.appendChild(markerGroup); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.innerRadius.toFixed(2), fill: "rgba(255,255,255,0.20)", stroke: strokeColorCSS, "stroke-width": "1.8" })); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: geom.holeRadius.toFixed(2), fill: "#ffffff", stroke: strokeColorCSS, "stroke-width": "2.2" })); group.appendChild(createSVG("circle", { cx: "0", cy: "0", r: "4.2", fill: strokeColorCSS })); target.appendChild(group);
+
+      // --- AJOUT DU REPÈRE FANTÔME ---
+      if (!isThumb) {
+          const ghostContainer = createSVG("g", { transform: `translate(${cx} ${cy}) rotate(${phaseOffset + snappedLocalAngle})` });
+          if (markerType === 'dot') {
+              let dotCenter = hideTeeth ? (geom.pitchRadius - dotRadius - 6) : (geom.rootRadius - dotRadius - 3);
+              ghostContainer.appendChild(createSVG("circle", { cx: dotCenter.toFixed(2), cy: "0", r: dotRadius.toFixed(2), fill: "rgba(0,0,0,0.15)", stroke: "rgba(255,255,255,0.4)", "stroke-width": "2.5" }));
+          } else {
+              ghostContainer.appendChild(createSVG("line", { x1: markerStart.toFixed(2), y1: "0", x2: markerEnd.toFixed(2), y2: "0", stroke: "rgba(255,255,255,0.4)", "stroke-width": lineThickness.toFixed(2), "stroke-linecap": "round" }));
+              ghostContainer.appendChild(createSVG("line", { x1: markerStart.toFixed(2), y1: "0", x2: markerEnd.toFixed(2), y2: "0", stroke: "rgba(0,0,0,0.15)", "stroke-width": innerLineThickness.toFixed(2), "stroke-linecap": "round" }));
+          }
+          target.appendChild(ghostContainer);
+      }
+      // --- FIN AJOUT ---
 
       if (showArrow) {
         const r = (geom.innerRadius + geom.rootRadius) / 2; const bandWidth = geom.rootRadius - geom.innerRadius; const hSize = Math.max(6, Math.min(14, bandWidth * 0.25)); let dArrow = "";
@@ -854,11 +1019,16 @@
       const helpEnabled = document.getElementById('cbShowArrowHelp').checked && q.qType.startsWith('obs_1');
       let showArrowA = false, showArrowB = false, showArrowC = false;
       if (!q.hideArrows && !q.isSpeedQuestion) { if (q.phase === 2) { showArrowA = true; showArrowB = true; showArrowC = animationState.hasGearC; } else { if (helpEnabled) { if (q.givenGear === 'A') showArrowA = true; if (q.givenGear === 'B') showArrowB = true; if (q.givenGear === 'C') showArrowC = true; } } }
-      const shouldShowTurns = (q.phase === 2) ? !q.hideTurns : false; const hideBLabel = q.isInverse && q.phase !== 2;
+      const shouldShowTurns = (q.phase === 2) ? !q.hideTurns : false; 
       
-      buildGearGroup(gearAGroup, animationState.layout.cxA, animationState.layout.cyA, geomA, angleA + phases.phaseA, COLOR_A, "A", STROKE_A, angleA, dirA, showArrowA, q.marker, shouldShowTurns, false, false);
-      buildGearGroup(gearBGroup, animationState.layout.cxB, animationState.layout.cyB, geomB, angleB + phases.phaseB, COLOR_B, "B", STROKE_B, angleB, dirB, showArrowB, q.marker, shouldShowTurns, hideBLabel, false);
-      if(animationState.hasGearC) { gearCGroup.style.display = "block"; buildGearGroup(gearCGroup, animationState.layout.cxC, animationState.layout.cyC, geomC, angleC + phases.phaseC, COLOR_C, "C", STROKE_C, angleC, dirC, showArrowC, q.marker, shouldShowTurns, false, false); } else { gearCGroup.style.display = "none"; }
+      const hideALabel = q.unknownGear === 'A' && q.phase !== 2;
+      const hideBLabel = q.unknownGear === 'B' && q.phase !== 2;
+      const hideATeeth = q.unknownGear === 'A' && q.phase !== 2;
+      const hideBTeeth = q.unknownGear === 'B' && q.phase !== 2;
+      
+      buildGearGroup(gearAGroup, animationState.layout.cxA, animationState.layout.cyA, geomA, angleA + phases.phaseA, COLOR_A, "A", STROKE_A, angleA, phases.phaseA, dirA, showArrowA, q.marker, shouldShowTurns, hideALabel, false, hideATeeth);
+      buildGearGroup(gearBGroup, animationState.layout.cxB, animationState.layout.cyB, geomB, angleB + phases.phaseB, COLOR_B, "B", STROKE_B, angleB, phases.phaseB, dirB, showArrowB, q.marker, shouldShowTurns, hideBLabel, false, hideBTeeth);
+      if(animationState.hasGearC) { gearCGroup.style.display = "block"; buildGearGroup(gearCGroup, animationState.layout.cxC, animationState.layout.cyC, geomC, angleC + phases.phaseC, COLOR_C, "C", STROKE_C, angleC, phases.phaseC, dirC, showArrowC, q.marker, shouldShowTurns, false, false, false); } else { gearCGroup.style.display = "none"; }
     }
   </script>
 </body>
