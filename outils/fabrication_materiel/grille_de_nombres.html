@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grille numérique A4</title>
+  <style>
+    :root {
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #111827;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.10);
+      --page-w: 210mm;
+      --page-h: 297mm;
+      --page-margin: 6mm;
+      --grid-w: 198mm;
+      --grid-h: 285mm;
+      --cell-size: 18mm;
+      --font-size: 6.2mm;
+      --line-width: 0.35mm;
+      --page-scale: 1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef3ff 0%, #f8fafc 100%);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.18rem;
+      line-height: 1.2;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.35;
+      margin: 6px 0 12px;
+    }
+
+    .grid-controls {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row-2,
+    .row-3 {
+      display: grid;
+      gap: 8px;
+    }
+
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    input, select, button {
+      width: 100%;
+      font: inherit;
+      border-radius: 10px;
+    }
+
+    input, select {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      background: #fff;
+      min-height: 38px;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.16);
+      border-color: var(--accent);
+    }
+
+    .mode-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    button {
+      border: none;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, opacity 0.2s ease;
+      min-height: 40px;
+    }
+
+    button:hover { opacity: 0.95; }
+    button:active { transform: translateY(1px); }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .ghost {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      width: auto;
+      padding: 7px 10px;
+      min-height: 32px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1e40af;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    details.advanced {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      background: #fafbfc;
+      overflow: hidden;
+    }
+
+    details.advanced summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #374151;
+      user-select: none;
+    }
+
+    details.advanced summary::-webkit-details-marker { display: none; }
+
+    .advanced-body {
+      padding: 0 12px 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .small-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: #374151;
+    }
+
+    .small-toggle input {
+      width: auto;
+      margin: 0;
+      transform: translateY(1px);
+    }
+
+    .mini-meta {
+      font-size: 0.83rem;
+      line-height: 1.4;
+      color: #475569;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .mini-meta strong { color: #111827; }
+
+    .preview-wrap {
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 4px;
+    }
+
+    .preview-stage {
+      width: min(100%, 1100px);
+      display: flex;
+      justify-content: center;
+      overflow: auto;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(148,163,184,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    .page {
+      width: var(--page-w);
+      height: var(--page-h);
+      background: white;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+      position: relative;
+      padding: var(--page-margin);
+      transform: scale(var(--page-scale));
+      transform-origin: top center;
+      flex: 0 0 auto;
+    }
+
+    .grid-area {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .number-grid {
+      width: var(--grid-w);
+      height: var(--grid-h);
+      display: grid;
+      justify-content: start;
+      align-content: start;
+      background: white;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      border-right: var(--line-width) solid var(--border);
+      border-bottom: var(--line-width) solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size);
+      font-weight: 700;
+      line-height: 1;
+      user-select: none;
+      color: #111827;
+    }
+
+    .cell.top { border-top: var(--line-width) solid var(--border); }
+    .cell.left { border-left: var(--line-width) solid var(--border); }
+    .cell.empty { color: transparent; }
+
+    .footer-note {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .panel {
+        position: static;
+      }
+    }
+
+    @media print {
+      html, body {
+        width: 100%;
+        height: 100%;
+        background: white;
+      }
+
+      body { margin: 0; }
+
+      .panel,
+      .footer-note {
+        display: none !important;
+      }
+
+      .app {
+        display: block;
+        padding: 0;
+      }
+
+      .preview-wrap,
+      .preview-stage {
+        display: block;
+        padding: 0;
+        margin: 0;
+        background: white;
+        border: none;
+        box-shadow: none;
+        width: auto;
+      }
+
+      .page {
+        transform: none !important;
+        box-shadow: none;
+        margin: 0;
+        padding: var(--page-margin);
+      }
+    }
+  </style>
+  <style id="pageStyle">
+    @page { size: A4 portrait; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>Grille numérique A4</h1>
+      <div class="sub">Simple, rapide, imprimable. Le mode auto sert vraiment quand on veut grossir au maximum une plage comme 1 à 50.</div>
+
+      <div class="grid-controls">
+        <div class="row-2">
+          <div>
+            <label for="start">De</label>
+            <input id="start" type="number" value="1" step="1" />
+          </div>
+          <div>
+            <label for="end">À</label>
+            <input id="end" type="number" value="100" step="1" />
+          </div>
+        </div>
+
+        <div class="mode-row">
+          <div>
+            <label for="layoutMode">Disposition</label>
+            <select id="layoutMode">
+              <option value="fixed">10 colonnes</option>
+              <option value="auto">Auto maxi</option>
+            </select>
+          </div>
+          <div id="fixedColsWrap" class="hidden" style="width:78px;">
+            <label for="fixedCols">Cols</label>
+            <input id="fixedCols" type="number" value="10" min="1" step="1" />
+          </div>
+        </div>
+
+        <div class="presets">
+          <button class="preset-btn" id="preset100" type="button">1–100</button>
+          <button class="preset-btn" id="preset50" type="button">1–50</button>
+          <button class="preset-btn" id="preset30" type="button">1–30</button>
+          <button class="preset-btn" id="presetPrime" type="button">Crible 1–100</button>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="printBtn">Imprimer</button>
+        </div>
+
+        <details class="advanced">
+          <summary>Réglages avancés</summary>
+          <div class="advanced-body">
+            <div class="row-3">
+              <div>
+                <label for="orientation">Orientation</label>
+                <select id="orientation">
+                  <option value="auto">Auto</option>
+                  <option value="portrait" selected>Portrait</option>
+                  <option value="landscape">Paysage</option>
+                </select>
+              </div>
+              <div>
+                <label for="margin">Marge</label>
+                <input id="margin" type="number" value="6" min="0" max="20" step="1" />
+              </div>
+              <div>
+                <label for="lineWidth">Trait</label>
+                <input id="lineWidth" type="number" value="0.35" min="0.1" max="1" step="0.05" />
+              </div>
+            </div>
+
+            <div class="small-toggle">
+              <input id="fillLastRow" type="checkbox" checked />
+              <label for="fillLastRow" style="margin:0; font-weight:600;">Compléter la dernière ligne</label>
+            </div>
+          </div>
+        </details>
+
+        <div class="mini-meta" id="meta"></div>
+      </div>
+    </aside>
+
+    <main class="preview-wrap">
+      <div>
+        <div class="preview-stage" id="previewStage">
+          <div class="page" id="page">
+            <div class="grid-area">
+              <div class="number-grid" id="numberGrid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note">Aperçu A4 — le panneau ne s’imprime pas.</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const startInput = document.getElementById('start');
+    const endInput = document.getElementById('end');
+    const layoutMode = document.getElementById('layoutMode');
+    const fixedCols = document.getElementById('fixedCols');
+    const fixedColsWrap = document.getElementById('fixedColsWrap');
+    const orientationSelect = document.getElementById('orientation');
+    const marginInput = document.getElementById('margin');
+    const lineWidthInput = document.getElementById('lineWidth');
+    const fillLastRowInput = document.getElementById('fillLastRow');
+    const numberGrid = document.getElementById('numberGrid');
+    const meta = document.getElementById('meta');
+    const previewStage = document.getElementById('previewStage');
+    const root = document.documentElement;
+    const pageStyle = document.getElementById('pageStyle');
+
+    const A4 = {
+      portrait: { w: 210, h: 297 },
+      landscape: { w: 297, h: 210 }
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function getCount(start, end) {
+      return end >= start ? (end - start + 1) : 0;
+    }
+
+    function mm(value) {
+      return `${value.toFixed(3).replace(/\.000$/, '').replace(/(\.\d*[1-9])0+$/, '$1')}mm`;
+    }
+
+    function computeLayout(count, mode, forcedCols, orientationMode, margin) {
+      const orientations = orientationMode === 'auto' ? ['portrait', 'landscape'] : [orientationMode];
+      let best = null;
+
+      for (const ori of orientations) {
+        const page = A4[ori];
+        const availW = Math.max(1, page.w - margin * 2);
+        const availH = Math.max(1, page.h - margin * 2);
+
+        if (mode === 'fixed') {
+          const cols = Math.max(1, Math.floor(forcedCols));
+          const rows = Math.ceil(count / cols);
+          const cell = Math.min(availW / cols, availH / rows);
+          const candidate = { orientation: ori, cols, rows, cell, gridW: cols * cell, gridH: rows * cell, availW, availH };
+          if (!best || isBetter(candidate, best)) best = candidate;
+        } else {
+          for (let cols = 1; cols <= count; cols++) {
+            const rows = Math.ceil(count / cols);
+            const cell = Math.min(availW / cols, availH / rows);
+            const candidate = { orientation: ori, cols, rows, cell, gridW: cols * cell, gridH: rows * cell, availW, availH };
+            if (!best || isBetter(candidate, best)) best = candidate;
+          }
+        }
+      }
+
+      return best;
+    }
+
+    function isBetter(a, b) {
+      if (a.cell > b.cell + 0.0001) return true;
+      if (Math.abs(a.cell - b.cell) <= 0.0001) {
+        const fillA = (a.gridW * a.gridH) / (a.availW * a.availH);
+        const fillB = (b.gridW * b.gridH) / (b.availW * b.availH);
+        if (fillA > fillB + 0.0001) return true;
+        if (Math.abs(fillA - fillB) <= 0.0001) {
+          const ratioA = a.cols / a.rows;
+          const ratioB = b.cols / b.rows;
+          const targetA = a.availW / a.availH;
+          const targetB = b.availW / b.availH;
+          if (Math.abs(ratioA - targetA) < Math.abs(ratioB - targetB)) return true;
+        }
+      }
+      return false;
+    }
+
+    function updateOrientationStyle(orientation) {
+      const page = A4[orientation];
+      root.style.setProperty('--page-w', mm(page.w));
+      root.style.setProperty('--page-h', mm(page.h));
+      pageStyle.textContent = `@page { size: A4 ${orientation}; margin: 0; }`;
+      scalePreview();
+      document.title = orientation === 'landscape' ? 'Grille numérique A4 paysage' : 'Grille numérique A4 portrait';
+    }
+
+    function scalePreview() {
+      const page = document.getElementById('page');
+      const pageW = page.offsetWidth || 794;
+      const stage = previewStage.clientWidth || 900;
+      const available = stage - 20;
+      const scale = clamp(available / pageW, 0.25, 1);
+      root.style.setProperty('--page-scale', scale.toFixed(4));
+    }
+
+    function render() {
+      let start = parseInt(startInput.value, 10);
+      let end = parseInt(endInput.value, 10);
+
+      if (!Number.isFinite(start)) start = 1;
+      if (!Number.isFinite(end)) end = 100;
+      if (end < start) [start, end] = [end, start];
+
+      startInput.value = start;
+      endInput.value = end;
+
+      const count = getCount(start, end);
+      const mode = layoutMode.value === 'fixed' ? 'fixed' : 'auto';
+      const forcedCols = Math.max(1, parseInt(fixedCols.value, 10) || 10);
+      const orientationMode = orientationSelect.value;
+      const margin = clamp(parseFloat(marginInput.value) || 6, 0, 20);
+      const lineWidth = clamp(parseFloat(lineWidthInput.value) || 0.35, 0.1, 1);
+      const fillLastRow = fillLastRowInput.checked;
+
+      fixedColsWrap.classList.toggle('hidden', mode !== 'fixed' || forcedCols === 10);
+
+      const layout = computeLayout(count, mode, forcedCols, orientationMode, margin);
+      updateOrientationStyle(layout.orientation);
+
+      root.style.setProperty('--page-margin', mm(margin));
+      root.style.setProperty('--grid-w', mm(layout.gridW));
+      root.style.setProperty('--grid-h', mm(layout.gridH));
+      root.style.setProperty('--cell-size', mm(layout.cell));
+      root.style.setProperty('--line-width', mm(lineWidth));
+
+      const fontScale = clamp(layout.cell * 0.34, 2.8, 12);
+      root.style.setProperty('--font-size', mm(fontScale));
+
+      numberGrid.innerHTML = '';
+      numberGrid.style.gridTemplateColumns = `repeat(${layout.cols}, var(--cell-size))`;
+      numberGrid.style.gridTemplateRows = `repeat(${layout.rows}, var(--cell-size))`;
+
+      const totalCells = fillLastRow ? layout.cols * layout.rows : count;
+
+      for (let index = 0; index < totalCells; index++) {
+        const cell = document.createElement('div');
+        const row = Math.floor(index / layout.cols);
+        const col = index % layout.cols;
+        cell.className = 'cell';
+        if (row === 0) cell.classList.add('top');
+        if (col === 0) cell.classList.add('left');
+
+        if (index < count) {
+          cell.textContent = String(start + index);
+        } else {
+          cell.classList.add('empty');
+          cell.textContent = '·';
+        }
+
+        numberGrid.appendChild(cell);
+      }
+
+      const modeText = mode === 'fixed' ? `${layout.cols} colonnes` : 'auto maxi';
+      meta.innerHTML = `<strong>${start}–${end}</strong> · ${modeText} · ${layout.cols} × ${layout.rows} · cases ${layout.cell.toFixed(1).replace('.', ',')} mm · ${layout.orientation}`;
+      requestAnimationFrame(scalePreview);
+    }
+
+    function setPreset(start, end, mode = 'fixed', cols = 10, orientation = 'portrait') {
+      startInput.value = start;
+      endInput.value = end;
+      layoutMode.value = mode;
+      fixedCols.value = cols;
+      orientationSelect.value = orientation;
+      render();
+    }
+
+    document.getElementById('printBtn').addEventListener('click', () => {
+      render();
+      window.print();
+    });
+
+    document.getElementById('preset100').addEventListener('click', () => setPreset(1, 100, 'fixed', 10, 'portrait'));
+    document.getElementById('preset50').addEventListener('click', () => setPreset(1, 50, 'auto', 10, 'auto'));
+    document.getElementById('preset30').addEventListener('click', () => setPreset(1, 30, 'auto', 10, 'auto'));
+    document.getElementById('presetPrime').addEventListener('click', () => setPreset(1, 100, 'fixed', 10, 'portrait'));
+
+    [startInput, endInput, layoutMode, fixedCols, orientationSelect, marginInput, lineWidthInput, fillLastRowInput].forEach(el => {
+      el.addEventListener('change', render);
+      el.addEventListener('input', render);
+    });
+
+    window.addEventListener('resize', scalePreview);
+    render();
+  </script>
+</body>
+</html>
