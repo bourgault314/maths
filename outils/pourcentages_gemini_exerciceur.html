@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur d'Exercices — Pourcentages V2.0</title>
+  <title>Générateur d'Exercices — Pourcentages V2.1</title>
   <style>
     :root {
       --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
@@ -74,20 +74,24 @@
     .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
 
-    /* LAYOUT IMPRESSION */
+    /* LAYOUT IMPRESSION OPTIMISÉ (Gain de place max) */
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
     @media print {
       body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
       .config-panel, .diapo-container, svg.defs-only { display: none !important; }
       #printContainer { display: block !important; margin: 0 auto; }
-      .print-page { page-break-after: always; padding: 1cm 0; }
+      .print-page { page-break-after: always; padding: 10px 0; }
       .print-page:last-child { page-break-after: auto; }
-      .print-header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.1rem;}
-      .print-q { margin-bottom: 30px; page-break-inside: avoid; }
-      .print-q-text { font-size: 1.2rem; margin-bottom: 15px; line-height: 1.4; }
-      .print-q svg { width: 100%; max-width: 650px; display: block; margin: 0 auto; }
-      .print-c-text { color: var(--text); font-weight: bold; font-size: 1.1rem; margin-top: 5px; margin-bottom: 15px; }
-      .spacer-reponse { height: 80px; }
+      
+      /* En-tête très compact */
+      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ccc; }
+      .print-title { text-align: center; font-size: 1.2rem; margin: 5px 0 20px 0; color: #1f2a44; font-weight: bold; }
+      
+      .print-q { margin-bottom: 15px; page-break-inside: avoid; }
+      .print-q-text { font-size: 1.15rem; margin-bottom: 5px; line-height: 1.4; }
+      .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } /* SVG légèrement réduit pour gagner en hauteur */
+      .print-c-text { color: var(--text); font-weight: bold; font-size: 1.1rem; margin-top: 5px; margin-bottom: 10px; }
+      .spacer-reponse { height: 60px; } /* Moins d'espace vide si on n'a pas les gabarits */
     }
   </style>
 </head>
@@ -104,8 +108,8 @@
 
   <div class="config-panel">
     <div class="config-header">
-      <h2>📊 Générateur : Pourcentages (V2.0) — Diaporama & Mode Fiche Papier</h2>
-      <p>Méthode Singapour — Imprimez des évaluations ou projetez l'animation au tableau.</p>
+      <h2>📊 Générateur : Pourcentages (V2.1) — Diaporama & Mode Fiche Papier optimisé</h2>
+      <p>Méthode Singapour — Gain de place sur le PDF et équilibrage intelligent des questions.</p>
     </div>
     
     <div class="theme-grid">
@@ -177,6 +181,8 @@
             <option value="3">3</option>
             <option value="5" selected>5</option>
             <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
           </select>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
@@ -333,7 +339,32 @@
       return q;
     }
 
-    // --- LE MOTEUR SVG REFONDU (Prend un conteneur en paramètre) ---
+    // Extraction et répartition équilibrée
+    function getQuizData() {
+      const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
+      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
+      let types = Array.from(checkboxes).map(cb => cb.value);
+      const count = parseInt(document.getElementById('selCount').value, 10);
+      const level = parseInt(document.getElementById('selLevel').value, 10); 
+      
+      // 1. Répartition équitable des catégories choisies
+      let distributedTypes = [];
+      for (let i = 0; i < count; i++) {
+          distributedTypes.push(types[i % types.length]);
+      }
+      
+      // 2. Mélange (Shuffle de Fisher-Yates)
+      for (let i = distributedTypes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [distributedTypes[i], distributedTypes[j]] = [distributedTypes[j], distributedTypes[i]];
+      }
+
+      quizData = [];
+      for (let i = 0; i < count; i++) { quizData.push(createQuestion(distributedTypes[i], level)); }
+      return true;
+    }
+
+    // Moteur de rendu SVG complet
     function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
     function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
 
@@ -441,7 +472,7 @@
       txt.textContent = text; svg.appendChild(txt);
     }
 
-    // --- GESTION DU DIAPORAMA (Écran) ---
+    // --- DIAPORAMA ECRAN ---
     function buildThumbnails() {
       const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
       quizData.forEach((q, idx) => {
@@ -466,18 +497,6 @@
         if (quizData[i].phase === 2) btns[i].classList.add('done');
         if (i === currentIndex) btns[i].classList.add('active');
       }
-    }
-
-    function getQuizData() {
-      const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
-      let types = Array.from(checkboxes).map(cb => cb.value);
-      const count = parseInt(document.getElementById('selCount').value, 10);
-      const level = parseInt(document.getElementById('selLevel').value, 10); 
-      
-      quizData = [];
-      for (let i = 0; i < count; i++) { quizData.push(createQuestion(pick(types), level)); }
-      return true;
     }
 
     function generateQuiz() {
@@ -506,7 +525,6 @@
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
         document.getElementById('cText').innerHTML = q.cHtml; 
         if(q.parts === 100) draw100Parts(q, true, stage); else drawSVGBar(q, true, stage);
-        
         if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
         else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
       }
@@ -517,23 +535,23 @@
     function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
     function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
-    // --- GESTION DE L'IMPRESSION (Mode Fiche) ---
+    // --- GENERATION PDF ---
     function generatePrint() {
       if(!getQuizData()) return;
       const withGabarits = document.getElementById('cbEmptyGabarits').checked;
       const container = document.getElementById('printContainer');
-      container.innerHTML = ''; // Nettoyer l'ancienne fiche
+      container.innerHTML = ''; 
 
-      // PAGE 1 : ÉLÈVE
+      // PAGE ELEVE
       let page1 = document.createElement('div');
       page1.className = 'print-page';
       page1.innerHTML = `
         <div class="print-header">
-          <div><strong>Nom :</strong> ....................................................</div>
-          <div><strong>Prénom :</strong> ....................................................</div>
-          <div><strong>Classe :</strong> ........................</div>
+          <div>Nom : ........................................</div>
+          <div>Prénom : ........................................</div>
+          <div>Classe : ....................</div>
         </div>
-        <h2 style="text-align:center; font-size: 1.6rem; margin-bottom: 30px;">Exercices : Les Pourcentages</h2>
+        <h2 class="print-title">Exercices : Les Pourcentages</h2>
       `;
       
       quizData.forEach((q, i) => {
@@ -547,16 +565,16 @@
           svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
           if(q.parts === 100) draw100Parts(q, false, svg); else drawSVGBar(q, false, svg);
         } else {
-          qDiv.innerHTML += `<div class="spacer-reponse"></div>`; // De la place pour écrire la réponse
+          qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
         }
         page1.appendChild(qDiv);
       });
       container.appendChild(page1);
 
-      // PAGE 2 : CORRECTION PROF
+      // PAGE CORRECTION
       let page2 = document.createElement('div');
       page2.className = 'print-page';
-      page2.innerHTML = `<h2 style="text-align:center; color: #1f2a44; font-size: 1.6rem; margin-bottom: 30px;">Correction Détaillée</h2>`;
+      page2.innerHTML = `<h2 class="print-title">Correction Détaillée</h2>`;
       
       quizData.forEach((q, i) => {
         let qDiv = document.createElement('div');
@@ -575,7 +593,6 @@
       });
       container.appendChild(page2);
 
-      // Lancer l'impression native du navigateur
       setTimeout(() => { window.print(); }, 300);
     }
   </script>
