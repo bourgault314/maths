@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur d'Exercices — Pourcentages V2.1</title>
+  <title>Générateur de pourcentages</title>
   <style>
     :root {
       --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
@@ -20,8 +20,7 @@
 
     .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1100px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); }
-    .config-header h2 { margin: 0 0 4px 0; font-size: 1.25rem; }
-    .config-header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .config-header h2 { margin: 0; font-size: 1.25rem; color: #1f2a44; }
     
     .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
     .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; }
@@ -43,30 +42,34 @@
     .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
     .config-options { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
     .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
-    .config-block select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; }
+    .config-block select, .config-block input[type="text"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; }
     
     .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; }
     .btn-main.print { background: var(--inverse); }
     .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
+    /* LAYOUT DIAPORAMA */
     .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1000px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; }
     .diapo-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; }
     .slide-counter { font-weight: bold; color: var(--muted); font-size: 1.1rem; }
-    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; }
+    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; transition: background 0.1s; }
     .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
     .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-icon { min-width: 40px; padding: 8px 12px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
 
-    .question-box { padding: 30px 40px 10px 40px; text-align: center; }
+    /* MISE EN PAGE COMPACTE ET ALIGNEE EN HAUT */
+    .question-box { padding: 20px 40px 10px 40px; text-align: center; }
     .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
 
-    .hint-box { padding: 10px 40px 0 40px; display: none; justify-content: center; }
-    .correction-box { padding: 15px 40px; background: #fdfdfd; text-align: center; border-top: 1px solid #e7edf8; display: none;}
-    .correction-text { font-size: 1.6rem; font-weight: bold; color: var(--success); margin: 0; }
-    .stage-wrap { display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 20px; }
-    svg { width: 100%; max-width: 850px; height: auto; }
+    .hint-box { padding: 10px 40px; display: none; justify-content: center; }
+    .correction-box { padding: 10px 40px 30px 40px; text-align: center; display: none; }
+    .correction-text { font-size: 1.8rem; font-weight: bold; color: var(--success); margin: 0; }
+    
+    .stage-wrap { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
+    svg { width: 100%; max-width: 850px; height: auto; max-height: 55vh; }
 
-    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; }
+    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; margin-top: auto; }
     .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; }
     .thumb-btn .th-q { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; display: block; color: inherit; }
     .thumb-btn .th-txt { font-size: 0.75rem; opacity: 0.9; }
@@ -74,7 +77,16 @@
     .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
 
-    /* LAYOUT IMPRESSION OPTIMISÉ (Gain de place max) */
+    /* CSS PLEIN ECRAN STABLE */
+    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:-webkit-full-screen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
+    #diapoContainer:-webkit-full-screen .thumbnails-bar { display: none !important; }
+    
+    #diapoContainer:fullscreen svg { max-height: 65vh; }
+    #diapoContainer:-webkit-full-screen svg { max-height: 65vh; }
+
+    /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
     @media print {
       body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
@@ -83,15 +95,15 @@
       .print-page { page-break-after: always; padding: 10px 0; }
       .print-page:last-child { page-break-after: auto; }
       
-      /* En-tête très compact */
-      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ccc; }
+      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ccc; position: relative;}
+      .print-seed { position: absolute; right: 0; top: 0; font-weight: bold; color: var(--muted); }
       .print-title { text-align: center; font-size: 1.2rem; margin: 5px 0 20px 0; color: #1f2a44; font-weight: bold; }
       
       .print-q { margin-bottom: 15px; page-break-inside: avoid; }
       .print-q-text { font-size: 1.15rem; margin-bottom: 5px; line-height: 1.4; }
-      .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } /* SVG légèrement réduit pour gagner en hauteur */
+      .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } 
       .print-c-text { color: var(--text); font-weight: bold; font-size: 1.1rem; margin-top: 5px; margin-bottom: 10px; }
-      .spacer-reponse { height: 60px; } /* Moins d'espace vide si on n'a pas les gabarits */
+      .spacer-reponse { height: 60px; } 
     }
   </style>
 </head>
@@ -108,8 +120,7 @@
 
   <div class="config-panel">
     <div class="config-header">
-      <h2>📊 Générateur : Pourcentages (V2.1) — Diaporama & Mode Fiche Papier optimisé</h2>
-      <p>Méthode Singapour — Gain de place sur le PDF et équilibrage intelligent des questions.</p>
+      <h2>📊 Générateur de pourcentages : diaporama et mode fiche papier</h2>
     </div>
     
     <div class="theme-grid">
@@ -186,12 +197,16 @@
           </select>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Inclure les gabarits vides sur la fiche</label>
+          <label>N° Fiche (Seed) :</label>
+          <input type="text" id="inputSeed" placeholder="Auto" style="width: 70px; text-align: center;">
+        </div>
+        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
+          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Inclure les gabarits</label>
         </div>
       </div>
       
       <div class="btn-wrap">
-        <button class="btn-main" onclick="generateQuiz()">💻 Projeter au tableau</button>
+        <button class="btn-main" onclick="generateQuiz()">💻 Générer le diapo</button>
         <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
       </div>
     </div>
@@ -201,7 +216,11 @@
     <div class="diapo-header">
       <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
       <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
-      <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+      
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+      </div>
     </div>
 
     <div class="question-box"><p class="question-text" id="qText"></p></div>
@@ -217,9 +236,44 @@
     const svgNS = "http://www.w3.org/2000/svg";
     let quizData = [];
     let currentIndex = 0;
+    let quizSeed = 1; 
 
-    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    // --- MOTEUR DE HASARD CONTRÔLÉ (SEED / GRAINE) ---
+    let currentSeed = 1;
+    function setSeed(s) { currentSeed = s; }
+    function seededRandom() {
+        currentSeed = (currentSeed * 9301 + 49297) % 233280;
+        return currentSeed / 233280;
+    }
+    function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
+
+    // --- L'ASTUCE DU PLACEHOLDER ---
+    function initSeed() {
+        let seedInput = document.getElementById('inputSeed').value.trim();
+        let s;
+        if (!seedInput || isNaN(seedInput)) {
+            s = Math.floor(Math.random() * 9999) + 1;
+            document.getElementById('inputSeed').value = ""; 
+            document.getElementById('inputSeed').placeholder = s; 
+        } else {
+            s = parseInt(seedInput, 10);
+        }
+        setSeed(s);
+        return s;
+    }
+
+    // --- FONCTION PLEIN ECRAN ---
+    function toggleFullscreen() {
+      let elem = document.getElementById("diapoContainer");
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {
+          alert(`Erreur : impossible de passer en plein écran (${err.message})`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
 
     const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 100: "var(--c-1)" };
 
@@ -339,23 +393,21 @@
       return q;
     }
 
-    // Extraction et répartition équilibrée
     function getQuizData() {
       const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
       if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
+      
+      quizSeed = initSeed();
+      
       let types = Array.from(checkboxes).map(cb => cb.value);
       const count = parseInt(document.getElementById('selCount').value, 10);
       const level = parseInt(document.getElementById('selLevel').value, 10); 
       
-      // 1. Répartition équitable des catégories choisies
       let distributedTypes = [];
-      for (let i = 0; i < count; i++) {
-          distributedTypes.push(types[i % types.length]);
-      }
+      for (let i = 0; i < count; i++) { distributedTypes.push(types[i % types.length]); }
       
-      // 2. Mélange (Shuffle de Fisher-Yates)
       for (let i = distributedTypes.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
+          const j = Math.floor(seededRandom() * (i + 1));
           [distributedTypes[i], distributedTypes[j]] = [distributedTypes[j], distributedTypes[i]];
       }
 
@@ -364,7 +416,6 @@
       return true;
     }
 
-    // Moteur de rendu SVG complet
     function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
     function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
 
@@ -472,7 +523,6 @@
       txt.textContent = text; svg.appendChild(txt);
     }
 
-    // --- DIAPORAMA ECRAN ---
     function buildThumbnails() {
       const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
       quizData.forEach((q, idx) => {
@@ -535,14 +585,12 @@
     function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
     function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
-    // --- GENERATION PDF ---
     function generatePrint() {
       if(!getQuizData()) return;
       const withGabarits = document.getElementById('cbEmptyGabarits').checked;
       const container = document.getElementById('printContainer');
       container.innerHTML = ''; 
 
-      // PAGE ELEVE
       let page1 = document.createElement('div');
       page1.className = 'print-page';
       page1.innerHTML = `
@@ -550,6 +598,7 @@
           <div>Nom : ........................................</div>
           <div>Prénom : ........................................</div>
           <div>Classe : ....................</div>
+          <div class="print-seed">Fiche n° ${quizSeed}</div>
         </div>
         <h2 class="print-title">Exercices : Les Pourcentages</h2>
       `;
@@ -571,10 +620,13 @@
       });
       container.appendChild(page1);
 
-      // PAGE CORRECTION
       let page2 = document.createElement('div');
       page2.className = 'print-page';
-      page2.innerHTML = `<h2 class="print-title">Correction Détaillée</h2>`;
+      page2.innerHTML = `
+        <div class="print-header">
+          <div class="print-seed">CORRIGÉ — Fiche n° ${quizSeed}</div>
+        </div>
+        <h2 class="print-title">Correction Détaillée</h2>`;
       
       quizData.forEach((q, i) => {
         let qDiv = document.createElement('div');
