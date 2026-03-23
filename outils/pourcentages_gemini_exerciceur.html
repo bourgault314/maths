@@ -57,8 +57,10 @@
     .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
     .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-icon { min-width: 40px; padding: 8px 12px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+    
+    /* MODIFICATION : Largeur fixe pour le bouton suivant pour éviter le sautillement */
+    #btnNext { min-width: 220px; text-align: center; }
 
-    /* MISE EN PAGE COMPACTE ET ALIGNEE EN HAUT */
     .question-box { padding: 20px 40px 10px 40px; text-align: center; }
     .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
 
@@ -219,7 +221,7 @@
       
       <div style="display: flex; gap: 8px;">
         <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
-        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡 ►</button>
       </div>
     </div>
 
@@ -238,7 +240,7 @@
     let currentIndex = 0;
     let quizSeed = 1; 
 
-    // --- MOTEUR DE HASARD CONTRÔLÉ (SEED / GRAINE) ---
+    // --- MOTEUR DE HASARD CONTRÔLÉ ---
     let currentSeed = 1;
     function setSeed(s) { currentSeed = s; }
     function seededRandom() {
@@ -248,7 +250,6 @@
     function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
 
-    // --- L'ASTUCE DU PLACEHOLDER ---
     function initSeed() {
         let seedInput = document.getElementById('inputSeed').value.trim();
         let s;
@@ -263,7 +264,6 @@
         return s;
     }
 
-    // --- FONCTION PLEIN ECRAN ---
     function toggleFullscreen() {
       let elem = document.getElementById("diapoContainer");
       if (!document.fullscreenElement) {
@@ -566,10 +566,10 @@
 
       if (q.phase === 0) {
         document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Indice (Schéma) 💡";
+        btnNext.innerHTML = "Indice (Schéma) 💡 ►";
       } else if (q.phase === 1) {
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Correction 👀"; 
+        btnNext.innerHTML = "Correction 👀 ►"; 
         if(q.parts === 100) draw100Parts(q, false, stage); else drawSVGBar(q, false, stage);
       } else if (q.phase === 2) {
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
@@ -586,7 +586,13 @@
     function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
     function generatePrint() {
-      if(!getQuizData()) return;
+      // MODIFICATION : On n'appelle plus getQuizData() pour ne pas générer de nouveau hasard.
+      // On utilise les données existantes dans la mémoire de l'écran.
+      if (quizData.length === 0) {
+        alert("⚠️ Veuillez d'abord cliquer sur '💻 Générer le diapo' pour créer la série !");
+        return;
+      }
+      
       const withGabarits = document.getElementById('cbEmptyGabarits').checked;
       const container = document.getElementById('printContainer');
       container.innerHTML = ''; 
