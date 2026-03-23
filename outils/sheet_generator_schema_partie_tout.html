@@ -1,652 +1,331 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur de pourcentages</title>
-  <style>
-    :root {
-      --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
-      --text: #1f2a44; --muted: #5a6784; --accent: #3f7cff;
-      --success: #10b981; --inverse: #9c27b0; --totalkey: #ff9800;
-      --evo: #e91e63; --shadow: 0 10px 30px rgba(31,42,68,0.08);
-      --c-100: rgb(235, 100, 100); --c-50: rgb(255, 230, 100);
-      --c-25: rgb(150, 220, 150); --c-20: rgb(150, 200, 235);
-      --c-10: rgb(250, 180, 100); --c-1: rgb(210, 170, 255);
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Schémas partie-tout</title>
+<style>
+    :root{
+      --bg:#f3f4f6;
+      --ink:#111827;
+      --muted:#6b7280;
+      --card:rgba(255,255,255,.92);
+      --line:rgba(17,24,39,.12);
+      --shadow:0 14px 40px rgba(17,24,39,.10);
+      --blue:#2f6bff;
+      --blueSoft:rgba(47,107,255,.12);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+      min-height:100vh;
+      overflow-x:hidden;
     }
 
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-
-    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1100px; box-shadow: var(--shadow); margin-bottom: 12px; }
-    .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); }
-    .config-header h2 { margin: 0; font-size: 1.25rem; color: #1f2a44; }
-    
-    .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-    .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; }
-    .theme-col h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: var(--accent); border-bottom: 2px solid #eef4ff; padding-bottom: 4px;}
-    .theme-col.inverse h3 { color: var(--inverse); border-bottom-color: #f3e5f5; }
-    .theme-col.totalkey h3 { color: var(--totalkey); border-bottom-color: #fff3e0; }
-    .theme-col.evo h3 { color: var(--evo); border-bottom-color: #fce4ec; }
-    
-    .checkbox-list { display: flex; flex-direction: column; gap: 6px; }
-    .cb-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.85rem; line-height: 1.3;}
-    .cb-row input { margin-top: 2px; cursor: pointer; accent-color: var(--accent); }
-    .theme-col.inverse .cb-row input { accent-color: var(--inverse); }
-    .theme-col.totalkey .cb-row input { accent-color: var(--totalkey); }
-    .theme-col.evo .cb-row input { accent-color: var(--evo); }
-    .cb-desc { color: var(--muted); font-size: 0.75rem; display: block; margin-top: 1px;}
-
-    hr { border: none; border-top: 1px dashed #cfd8ea; margin: 10px 0; }
-
-    .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
-    .config-options { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
-    .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
-    .config-block select, .config-block input[type="text"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; }
-    
-    .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; }
-    .btn-main.print { background: var(--inverse); }
-    .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-
-    /* LAYOUT DIAPORAMA */
-    .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1000px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; }
-    .diapo-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; }
-    .slide-counter { font-weight: bold; color: var(--muted); font-size: 1.1rem; }
-    .btn-nav { background: white; border: 1px solid #dbe4f3; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; color: var(--text); min-width: 130px; transition: background 0.1s; }
-    .btn-nav:hover:not(:disabled) { background: #f1f5f9; }
-    .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-icon { min-width: 40px; padding: 8px 12px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
-
-    /* MISE EN PAGE COMPACTE ET ALIGNEE EN HAUT */
-    .question-box { padding: 20px 40px 10px 40px; text-align: center; }
-    .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
-
-    .hint-box { padding: 10px 40px; display: none; justify-content: center; }
-    .correction-box { padding: 10px 40px 30px 40px; text-align: center; display: none; }
-    .correction-text { font-size: 1.8rem; font-weight: bold; color: var(--success); margin: 0; }
-    
-    .stage-wrap { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
-    svg { width: 100%; max-width: 850px; height: auto; max-height: 55vh; }
-
-    .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; margin-top: auto; }
-    .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; }
-    .thumb-btn .th-q { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; display: block; color: inherit; }
-    .thumb-btn .th-txt { font-size: 0.75rem; opacity: 0.9; }
-    .thumb-btn:hover { background: #eef4ff; }
-    .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
-    .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
-
-    /* CSS PLEIN ECRAN STABLE */
-    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
-    #diapoContainer:-webkit-full-screen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
-    #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
-    #diapoContainer:-webkit-full-screen .thumbnails-bar { display: none !important; }
-    
-    #diapoContainer:fullscreen svg { max-height: 65vh; }
-    #diapoContainer:-webkit-full-screen svg { max-height: 65vh; }
-
-    /* LAYOUT IMPRESSION */
-    #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
-    @media print {
-      body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
-      .config-panel, .diapo-container, svg.defs-only { display: none !important; }
-      #printContainer { display: block !important; margin: 0 auto; }
-      .print-page { page-break-after: always; padding: 10px 0; }
-      .print-page:last-child { page-break-after: auto; }
-      
-      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ccc; position: relative;}
-      .print-seed { position: absolute; right: 0; top: 0; font-weight: bold; color: var(--muted); }
-      .print-title { text-align: center; font-size: 1.2rem; margin: 5px 0 20px 0; color: #1f2a44; font-weight: bold; }
-      
-      .print-q { margin-bottom: 15px; page-break-inside: avoid; }
-      .print-q-text { font-size: 1.15rem; margin-bottom: 5px; line-height: 1.4; }
-      .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } 
-      .print-c-text { color: var(--text); font-weight: bold; font-size: 1.1rem; margin-top: 5px; margin-bottom: 10px; }
-      .spacer-reponse { height: 60px; } 
+    .bg{position:fixed; inset:0; pointer-events:none; z-index:-1;}
+    .bg::before{
+      content:"";
+      position:absolute; inset:-40px;
+      background:
+        radial-gradient(700px 420px at 18% 18%, rgba(47,107,255,.10), transparent 60%),
+        radial-gradient(560px 380px at 88% 22%, rgba(157,78,221,.08), transparent 62%),
+        radial-gradient(600px 420px at 22% 86%, rgba(249,115,22,.07), transparent 62%);
     }
-  </style>
+    .splat{
+      position:absolute;
+      width:240px; height:240px;
+      background-repeat:no-repeat;
+      background-size:240px 240px;
+      opacity:.55;
+      filter: drop-shadow(0 10px 18px rgba(17,24,39,.10));
+    }
+    .s1{left:-70px; top:-70px; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%236aa7ff%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(-12deg) scale(1.08);}
+    .s2{right:-90px; top:60px; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%239d4edd%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(18deg) scale(1.02);}
+    .s3{left:40px; bottom:-110px; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%23f97316%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(9deg) scale(1.10); opacity:.42;}
+    .s4{right:80px; bottom:-90px; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%236aa7ff%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(-6deg) scale(.95); opacity:.40;}
+    .s5{left:62%; top:44%; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%236aa7ff%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(8deg) scale(.85); opacity:.22;}
+    .s6{left:10%; top:52%; background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22240%22%20height=%22240%22%20viewBox=%220%200%20240%20240%22%3E%0A%20%20%3Cg%20opacity=%220.9%22%3E%0A%20%20%20%20%3Cpath%20d=%22M%20214.500%20120.000%20C%20219.794%20124.928,%20227.326%20131.566,%20229.218%20137.298%20C%20231.110%20143.031,%20228.882%20149.545,%20225.853%20154.394%20C%20222.823%20159.242,%20215.943%20162.863,%20211.043%20166.388%20C%20206.142%20169.914,%20201.394%20173.045,%20196.452%20175.546%20C%20191.510%20178.046,%20186.522%20180.172,%20181.391%20181.391%20C%20176.261%20182.611,%20169.969%20181.447,%20165.671%20182.861%20C%20161.373%20184.274,%20158.347%20185.371,%20155.602%20189.873%20C%20152.857%20194.376,%20152.253%20203.317,%20149.202%20209.875%20C%20146.151%20216.432,%20142.165%20225.647,%20137.298%20229.218%20C%20132.431%20232.789,%20125.547%20232.683,%20120.000%20231.300%20C%20114.453%20229.917,%20108.883%20224.492,%20104.016%20220.921%20C%2099.149%20217.351,%2094.703%20213.802,%2090.798%20209.875%20C%2086.893%20205.948,%2083.329%20201.860,%2080.584%20197.358%20C%2077.839%20192.855,%2077.002%20186.512,%2074.329%20182.861%20C%2071.656%20179.210,%2069.678%20176.671,%2064.548%20175.452%20C%2059.418%20174.233,%2050.727%20176.421,%2043.548%20175.546%20C%2036.369%20174.671,%2026.373%20173.727,%2021.473%20170.202%20C%2016.573%20166.677,%2014.546%20160.097,%2014.147%20154.394%20C%2013.748%20148.691,%2017.187%20141.717,%2019.079%20135.984%20C%2020.971%20130.252,%2022.972%20124.928,%2025.500%20120.000%20C%2028.028%20115.072,%2030.814%20110.420,%2034.248%20106.418%20C%2037.682%20102.416,%2043.457%2099.659,%2046.103%2095.989%20C%2048.749%2092.319,%2050.553%2089.654,%2050.127%2084.398%20C%2049.701%2079.142,%2044.934%2071.552,%2043.548%2064.454%20C%2042.162%2057.356,%2039.970%2047.558,%2041.809%2041.809%20C%2043.647%2036.059,%2049.279%2032.098,%2054.580%2029.956%20C%2059.880%2027.815,%2067.575%2028.929,%2073.612%2028.957%20C%2079.648%2028.986,%2085.330%2029.243,%2090.798%2030.125%20C%2096.266%2031.007,%20101.551%2032.219,%20106.418%2034.248%20C%20111.285%2036.277,%20115.692%2040.917,%20120.000%2042.300%20C%20124.308%2043.683,%20127.401%2044.574,%20132.268%2042.545%20C%20137.135%2040.516,%20142.880%2033.637,%20149.202%2030.125%20C%20155.524%2026.613,%20164.166%2021.501,%20170.202%2021.473%20C%20176.238%2021.445,%20181.746%2025.577,%20185.420%2029.956%20C%20189.095%2034.336,%20190.413%2041.999,%20192.252%2047.748%20C%20194.090%2053.498,%20195.601%2058.982,%20196.452%2064.454%20C%20197.303%2069.927,%20197.784%2075.328,%20197.358%2080.584%20C%20196.932%2085.840,%20193.881%2091.465,%20193.897%2095.989%20C%20193.913%20100.514,%20194.021%20103.731,%20197.455%20107.732%20C%20200.889%20111.734,%20209.206%20115.072,%20214.500%20120.000%20Z%22%0A%20%20%20%20%20%20%20%20%20%20fill=%22none%22%20stroke=%22%239d4edd%22%20stroke-width=%224%22%20stroke-linejoin=%22round%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E"); transform:rotate(-10deg) scale(.80); opacity:.18;}
+
+    .bille{
+      position:absolute;
+      width:12px; height:12px;
+      border-radius:999px;
+      background: rgba(47,107,255,.22);
+      box-shadow: 0 8px 16px rgba(17,24,39,.06);
+      opacity:.9;
+    }
+    .bille.p{background: rgba(157,78,221,.20);}
+    .bille.o{background: rgba(249,115,22,.18);}
+    .b1{left:120px; top:145px;}
+    .b2{left:210px; top:270px;}
+    .b3{left:160px; top:210px; opacity:.7;}
+    .b4{right:190px; top:170px;}
+    .b5{right:260px; top:250px; opacity:.7;}
+    .b6{left:260px; bottom:220px;}
+    .b7{right:220px; bottom:240px;}
+    .b8{left:58%; top:56%; opacity:.5;}
+    .b9{left:30%; top:62%; opacity:.5;}
+    .b10{right:34%; bottom:26%; opacity:.45;}
+
+    .wrap{max-width:900px; margin:0 auto; padding:24px 16px 48px;}
+    header{padding:8px 8px 16px; display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
+    h1{margin:0; font-size:clamp(24px,4.2vw,36px); letter-spacing:.2px;}
+    .small{margin:6px 0 0; color:var(--muted); font-size:14px;}
+
+    .home{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:52px;
+      height:52px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.75);
+      box-shadow:0 10px 24px rgba(17,24,39,.08);
+      text-decoration:none;
+      color:var(--ink);
+      font-weight:900;
+      font-size:20px;
+      line-height:1;
+      user-select:none;
+    }
+    .home:hover{border-color:rgba(47,107,255,.30);}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px; padding:0 8px;}
+    .card{
+      grid-column:span 6;
+      display:flex; align-items:center; gap:12px;
+      padding:16px 16px;
+      border-radius:var(--radius);
+      background:var(--card);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      text-decoration:none;
+      color:inherit;
+      transition:transform .08s ease, border-color .2s ease;
+      backdrop-filter:blur(6px);
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+    }
+    .card:hover{transform:translateY(-2px); border-color:rgba(47,107,255,.28);}
+    .card:active{transform:translateY(0px);}
+
+    .icon{
+      width:46px; height:46px; border-radius:14px;
+      display:grid; place-items:center;
+      background:linear-gradient(135deg, var(--blueSoft), rgba(255,255,255,.0));
+      border:1px solid rgba(47,107,255,.14);
+      flex:0 0 auto;
+    }
+    .icon svg{width:28px; height:28px;}
+    .icon path, .icon circle, .icon line {fill:var(--blue); opacity:.95; stroke:var(--blue);}
+    .icon.icon-splat-black path{fill:#000000; stroke:none;}
+    .icon.icon-outline path, .icon.icon-outline circle, .icon.icon-outline line {fill:none;}
+
+    .txt{min-width:0;}
+    .card h2{margin:0; font-size:15px; letter-spacing:.2px; line-height:1.15; white-space:nowrap;}
+    .card p{margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.25;}
+
+    .pills{
+      margin-left:auto;
+      display:flex;
+      gap: 6px;
+      align-items:center;
+    }
+    .pill{
+      text-decoration:none;
+      font-weight:800;
+      font-size:11px;
+      padding:6px 8px;
+      border-radius:999px;
+      border:1px solid rgba(17,24,39,.14);
+      background:rgba(255,255,255,.70);
+      color:var(--ink);
+      box-shadow: 0 8px 18px rgba(17,24,39,.08);
+      width:62px; min-width:62px;
+      text-align:center;
+      line-height:1;
+    }
+    .pill:hover{ border-color:rgba(47,107,255,.35); }
+
+    @media (max-width: 820px){
+      .card{grid-column:span 12;}
+      header{padding-left:0; padding-right:0;}
+      .grid{padding-left:0; padding-right:0;}
+      .b1{left:26px; top:175px;}
+      .b2{left:120px; top:260px;}
+      .b4{right:110px; top:200px;}
+      .b6{left:140px; bottom:230px;}
+      .b7{right:120px; bottom:250px;}
+    }
+
+    .small .credit{
+      color: var(--blue);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(47,107,255,.45);
+      padding-bottom: 1px;
+    }
+    .small .credit:hover{ border-bottom-style: solid; }
+</style>
 </head>
 <body>
+<div aria-hidden="true" class="bg">
+<div class="splat s1"></div>
+<div class="splat s2"></div>
+<div class="splat s3"></div>
+<div class="splat s4"></div>
+<div class="splat s5"></div>
+<div class="splat s6"></div>
+<div class="bille b1"></div>
+<div class="bille o b2"></div>
+<div class="bille p b3"></div>
+<div class="bille b4"></div>
+<div class="bille p b5"></div>
+<div class="bille o b6"></div>
+<div class="bille b7"></div>
+<div class="bille p b8"></div>
+<div class="bille o b9"></div>
+<div class="bille b10"></div>
+</div>
+<div class="wrap">
+<header>
+<div>
+<h1>Schémas partie-tout</h1>
+<p class="small">
+      Idée originale : <a class="credit" href="https://stevewyborney.com/" rel="noopener" target="_blank">SPLAT! par Steve Wyborney</a> — merci !
+</p>
+</div>
+<a class="home" href="./index.html" title="Outils"><svg aria-hidden="true" style="width:22px;height:22px;display:block" viewbox="0 0 24 24">
+<path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
+</svg></a>
+</header>
+<main class="grid">
+<a class="card" href="./splat_tache_barre.html">
+<div aria-hidden="true" class="icon">
+<svg aria-hidden="true" viewbox="-2 -2 28 28">
+<path d="M 21.450 12.000 C 21.979 12.493, 22.733 13.157, 22.922 13.730 C 23.111 14.303, 22.888 14.955, 22.585 15.439 C 22.282 15.924, 21.594 16.286, 21.104 16.639 C 20.614 16.991, 20.139 17.305, 19.645 17.555 C 19.151 17.805, 18.652 18.017, 18.139 18.139 C 17.626 18.261, 16.997 18.145, 16.567 18.286 C 16.137 18.427, 15.835 18.537, 15.560 18.987 C 15.286 19.438, 15.225 20.332, 14.920 20.987 C 14.615 21.643, 14.217 22.565, 13.730 22.922 C 13.243 23.279, 12.555 23.268, 12.000 23.130 C 11.445 22.992, 10.888 22.449, 10.402 22.092 C 9.915 21.735, 9.470 21.380, 9.080 20.987 C 8.689 20.595, 8.333 20.186, 8.058 19.736 C 7.784 19.286, 7.700 18.651, 7.433 18.286 C 7.166 17.921, 6.968 17.667, 6.455 17.545 C 5.942 17.423, 5.073 17.642, 4.355 17.555 C 3.637 17.467, 2.637 17.373, 2.147 17.020 C 1.657 16.668, 1.455 16.010, 1.415 15.439 C 1.375 14.869, 1.719 14.172, 1.908 13.598 C 2.097 13.025, 2.297 12.493, 2.550 12.000 C 2.803 11.507, 3.081 11.042, 3.425 10.642 C 3.768 10.242, 4.346 9.966, 4.610 9.599 C 4.875 9.232, 5.055 8.965, 5.013 8.440 C 4.970 7.914, 4.493 7.155, 4.355 6.445 C 4.216 5.736, 3.997 4.756, 4.181 4.181 C 4.365 3.606, 4.928 3.210, 5.458 2.996 C 5.988 2.781, 6.758 2.893, 7.361 2.896 C 7.965 2.899, 8.533 2.924, 9.080 3.013 C 9.627 3.101, 10.155 3.222, 10.642 3.425 C 11.129 3.628, 11.569 4.092, 12.000 4.230 C 12.431 4.368, 12.740 4.457, 13.227 4.254 C 13.713 4.052, 14.288 3.364, 14.920 3.013 C 15.552 2.661, 16.417 2.150, 17.020 2.147 C 17.624 2.144, 18.175 2.558, 18.542 2.996 C 18.910 3.434, 19.041 4.200, 19.225 4.775 C 19.409 5.350, 19.560 5.898, 19.645 6.445 C 19.730 6.993, 19.778 7.533, 19.736 8.058 C 19.693 8.584, 19.388 9.146, 19.390 9.599 C 19.391 10.051, 19.402 10.373, 19.746 10.773 C 20.089 11.173, 20.921 11.507, 21.450 12.000 Z" fill="#2f6bff" opacity=".95" stroke="none"></path>
+</svg>
+</div>
+<div class="txt">
+<h2>SPLAT!</h2>
+<p>Primaire<br/>Générateur + schéma</p>
+</div>
+</a>
+<a class="card" href="./splat.html">
+<div aria-hidden="true" class="icon icon-splat-black">
+<svg aria-hidden="true" viewbox="-2 -2 28 28">
+<path d="M 21.450 12.000 C 21.979 12.493, 22.733 13.157, 22.922 13.730 C 23.111 14.303, 22.888 14.955, 22.585 15.439 C 22.282 15.924, 21.594 16.286, 21.104 16.639 C 20.614 16.991, 20.139 17.305, 19.645 17.555 C 19.151 17.805, 18.652 18.017, 18.139 18.139 C 17.626 18.261, 16.997 18.145, 16.567 18.286 C 16.137 18.427, 15.835 18.537, 15.560 18.987 C 15.286 19.438, 15.225 20.332, 14.920 20.987 C 14.615 21.643, 14.217 22.565, 13.730 22.922 C 13.243 23.279, 12.555 23.268, 12.000 23.130 C 11.445 22.992, 10.888 22.449, 10.402 22.092 C 9.915 21.735, 9.470 21.380, 9.080 20.987 C 8.689 20.595, 8.333 20.186, 8.058 19.736 C 7.784 19.286, 7.700 18.651, 7.433 18.286 C 7.166 17.921, 6.968 17.667, 6.455 17.545 C 5.942 17.423, 5.073 17.642, 4.355 17.555 C 3.637 17.467, 2.637 17.373, 2.147 17.020 C 1.657 16.668, 1.455 16.010, 1.415 15.439 C 1.375 14.869, 1.719 14.172, 1.908 13.598 C 2.097 13.025, 2.297 12.493, 2.550 12.000 C 2.803 11.507, 3.081 11.042, 3.425 10.642 C 3.768 10.242, 4.346 9.966, 4.610 9.599 C 4.875 9.232, 5.055 8.965, 5.013 8.440 C 4.970 7.914, 4.493 7.155, 4.355 6.445 C 4.216 5.736, 3.997 4.756, 4.181 4.181 C 4.365 3.606, 4.928 3.210, 5.458 2.996 C 5.988 2.781, 6.758 2.893, 7.361 2.896 C 7.965 2.899, 8.533 2.924, 9.080 3.013 C 9.627 3.101, 10.155 3.222, 10.642 3.425 C 11.129 3.628, 11.569 4.092, 12.000 4.230 C 12.431 4.368, 12.740 4.457, 13.227 4.254 C 13.713 4.052, 14.288 3.364, 14.920 3.013 C 15.552 2.661, 16.417 2.150, 17.020 2.147 C 17.624 2.144, 18.175 2.558, 18.542 2.996 C 18.910 3.434, 19.041 4.200, 19.225 4.775 C 19.409 5.350, 19.560 5.898, 19.645 6.445 C 19.730 6.993, 19.778 7.533, 19.736 8.058 C 19.693 8.584, 19.388 9.146, 19.390 9.599 C 19.391 10.051, 19.402 10.373, 19.746 10.773 C 20.089 11.173, 20.921 11.507, 21.450 12.000 Z" fill="#000000" opacity=".95" stroke="none"></path>
+</svg>
+</div>
+<div class="txt">
+<h2>SPLAT!</h2>
+<p>Primaire / collège<br/>Diaporama + générateur</p>
+</div>
+</a>
+<a class="card" href="./box_barre_final.html">
+<div aria-hidden="true" class="icon">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M4 7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7Zm3 2h10v2H7V9Zm0 4h10v2H7v-2Z" stroke="none"></path></svg>
+</div>
+<div class="txt">
+<h2>BOX</h2>
+<p>Générateur<br/>Schémas en barre</p>
+</div>
+</a>
+<a class="card" href="./box_pasbarre_final.html">
+<div aria-hidden="true" class="icon">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Zm2 3h10v2H7V9Zm0 4h10v2H7v-2Z" stroke="none"></path></svg>
+</div>
+<div class="txt">
+<h2>BOX</h2>
+<p>Générateur</p>
+</div>
+</a>
 
-  <svg class="defs-only" width="0" height="0" style="position:absolute;">
-    <defs>
-      <pattern id="patternHatch" width="15" height="15" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-        <rect width="15" height="15" fill="#e2e8f0"></rect>
-        <line x1="0" y1="0" x2="0" y2="15" stroke="#ff4d6d" stroke-width="3"></line>
-      </pattern>
-    </defs>
-  </svg>
+<div class="card card-picker" data-default="./gabarits_enquetes_additive.pdf" role="link" tabindex="0">
+<div aria-hidden="true" class="icon">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 1v3h3M8 11h8v2H8v-2Zm0 4h8v2H8v-2Z" stroke="none"></path></svg>
+</div><div class="txt">
+<h2>Enquêtes additives</h2>
+<p>Gabarits à imprimer en A3 ou A4, puis plastifier</p>
+</div><div aria-label="Téléchargements" class="pills"><a class="pill" href="./gabarits_enquetes_additive.pdf" rel="noopener" target="_blank">PDF</a><a class="pill" download="" href="./gabarits_enquetes_additive.tex" rel="noopener">TEX</a></div></div>
 
-  <div class="config-panel">
-    <div class="config-header">
-      <h2>📊 Générateur de pourcentages : diaporama et mode fiche papier</h2>
-    </div>
-    
-    <div class="theme-grid">
-      <div class="theme-col">
-        <h3>🧊 1. Calculer une part</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="base_50"> <div><strong>50 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_25"> <div><strong>25 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_20"> <div><strong>20 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="base_10"> <div><strong>10 %</strong></div></label>
-        </div>
-        <hr>
-        <h3>🥞 Multiples</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="mult_25"> <div><strong>75 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_20"> <div><strong>40 %, 60 %, 80 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_10"> <div><strong>30 %, 70 %, 90 %...</strong></div></label>
-        </div>
-      </div>
-
-      <div class="theme-col evo">
-        <h3>🔥 2. Le Boss (100 cases)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>1 %</strong><span class="cb-desc">Le centième pur</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_1"> <div><strong>13 %, 42 %...</strong></div></label>
-        </div>
-        <hr>
-        <h3>📈 Les Évolutions (4ème)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="evo_inc"> <div><strong>Augmentations (+ X%)</strong><span class="cb-desc">Loyers, factures...</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="evo_dec"> <div><strong>Réductions (- X%)</strong><span class="cb-desc">Soldes, baisses...</span></div></label>
-        </div>
-      </div>
-
-      <div class="theme-col inverse">
-        <h3>🎯 3. Trouver le %</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="inv_50"> <div><strong>Moitié</strong><span class="cb-desc">Trouver 50 %</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="inv_25"> <div><strong>Quarts</strong><span class="cb-desc">Trouver 25 % ou 75 %</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="inv_20"> <div><strong>Cinquièmes</strong><span class="cb-desc">Trouver 20, 40, 60, 80 %</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="inv_10"> <div><strong>Dixièmes</strong><span class="cb-desc">Trouver 10, 30, 70 %...</span></div></label>
-        </div>
-      </div>
-
-      <div class="theme-col totalkey">
-        <h3>🔑 4. Trouver le TOUT</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="tot_50"> <div><strong>À partir de 50 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_25"> <div><strong>À partir de 25 % ou 75 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_20"> <div><strong>À partir des cinquièmes</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="tot_10"> <div><strong>À partir des dixièmes</strong></div></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="bottom-config">
-      <div class="config-options">
-        <div class="config-block">
-          <label>Taille :</label>
-          <select id="selLevel">
-            <option value="1" selected>Petits (< 100)</option>
-            <option value="2">Moyens (< 400)</option>
-            <option value="3">Grands (Infini)</option>
-          </select>
-        </div>
-        <div class="config-block">
-          <label>Questions :</label>
-          <select id="selCount">
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-            <option value="15">15</option>
-            <option value="20">20</option>
-          </select>
-        </div>
-        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label>N° Fiche (Seed) :</label>
-          <input type="text" id="inputSeed" placeholder="Auto" style="width: 70px; text-align: center;">
-        </div>
-        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Inclure les gabarits</label>
-        </div>
-      </div>
-      
-      <div class="btn-wrap">
-        <button class="btn-main" onclick="generateQuiz()">💻 Générer le diapo</button>
-        <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
-      </div>
-    </div>
+<div class="card card-picker" data-default="./detective_des_grandeurs_additive__1.pdf" role="link" tabindex="0">
+  <div aria-hidden="true" class="icon">
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 1v3h3M8 11h8v2H8v-2Zm0 4h8v2H8v-2Z" stroke="none"></path></svg>
   </div>
-
-  <div class="diapo-container" id="diapoContainer">
-    <div class="diapo-header">
-      <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
-      <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
-      
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
-        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Indice (Schéma) 💡</button>
-      </div>
-    </div>
-
-    <div class="question-box"><p class="question-text" id="qText"></p></div>
-    <div class="hint-box" id="hBox"><div class="stage-wrap"><svg id="svgStage" viewBox="0 0 1000 320"></svg></div></div>
-    <div class="correction-box" id="cBox"><p class="correction-text" id="cText"></p></div>
-    
-    <div class="thumbnails-bar" id="thumbBar"></div>
+  <div class="txt">
+    <h2>Enquêtes additives</h2>
+    <p>Énoncés<br/>Détective des grandeurs</p>
   </div>
+  <div class="pills" aria-label="Choix des fiches">
+    <a class="pill" href="./detective_des_grandeurs_additive__1.pdf" rel="noopener" target="_blank">Fiche 1</a>
+    <a class="pill" href="./detective_des_grandeurs_additive__2.pdf" rel="noopener" target="_blank">Fiche 2</a>
+  </div>
+</div>
 
-  <div id="printContainer"></div>
+<div class="card card-picker" data-default="./gabarits_enquetes_multiplicative.pdf" role="link" tabindex="0">
+<div aria-hidden="true" class="icon">
+<svg aria-hidden="true" viewbox="0 0 24 24"><path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 1v3h3M8 11h8v2H8v-2Zm0 4h8v2H8v-2Z" stroke="none"></path></svg>
+</div><div class="txt">
+<h2>Enquêtes multiplicatives</h2>
+<p>Gabarits à imprimer en A3 ou A4, puis plastifier</p>
+</div><div aria-label="Téléchargements" class="pills"><a class="pill" href="./gabarits_enquetes_multiplicative.pdf" rel="noopener" target="_blank">PDF</a><a class="pill" download="" href="./gabarits_enquete_multiplicative.tex" rel="noopener">TEX</a></div></div>
 
-  <script>
-    const svgNS = "http://www.w3.org/2000/svg";
-    let quizData = [];
-    let currentIndex = 0;
-    let quizSeed = 1; 
+<div class="card card-picker" data-default="./detective_des_grandeurs_multiplicative__1.pdf" role="link" tabindex="0">
+  <div aria-hidden="true" class="icon">
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 1v3h3M8 11h8v2H8v-2Zm0 4h8v2H8v-2Z" stroke="none"></path></svg>
+  </div>
+  <div class="txt">
+    <h2>Enquêtes multiplicatives</h2>
+    <p>Énoncés<br/>Détective des grandeurs</p>
+  </div>
+  <div class="pills" aria-label="Choix des fiches">
+    <a class="pill" href="./detective_des_grandeurs_multiplicative__1.pdf" rel="noopener" target="_blank">Fiche 1</a>
+  </div>
+</div>
 
-    // --- MOTEUR DE HASARD CONTRÔLÉ (SEED / GRAINE) ---
-    let currentSeed = 1;
-    function setSeed(s) { currentSeed = s; }
-    function seededRandom() {
-        currentSeed = (currentSeed * 9301 + 49297) % 233280;
-        return currentSeed / 233280;
+<div class="card card-picker" data-default="./pourcentages_gemini_exerciceur.html" role="link" tabindex="0">
+  <div aria-hidden="true" class="icon icon-outline">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="8" r="1.5"></circle>
+      <circle cx="16" cy="16" r="1.5"></circle>
+      <line x1="16" y1="8" x2="8" y2="16"></line>
+    </svg>
+  </div>
+  <div class="txt">
+    <h2>Pourcentages</h2>
+    <p>Générateur d'exercices</p>
+  </div>
+  <div class="pills" aria-label="Fichiers Pourcentages">
+    <a class="pill" href="./pourcentages_gemini_exerciceur.html" rel="noopener" target="_blank">DIAPO</a>
+    <a class="pill" href="./gabarits__accolades_1%25.pdf" rel="noopener" target="_blank">PDF</a>
+    <a class="pill" download href="./gabarits_pourcentages _1%25.tex" rel="noopener">TEX</a>
+  </div>
+</div>
+
+</main>
+</div>
+<script>
+document.querySelectorAll('.card-picker').forEach(card=>{
+  const openDefault = () => window.open(card.dataset.default, '_blank', 'noopener');
+
+  card.addEventListener('click', (e)=>{
+    if(e.target.closest('.pill')) return;
+    openDefault();
+  });
+
+  card.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' ') { 
+      e.preventDefault(); 
+      openDefault(); 
     }
-    function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
-    function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
-
-    // --- L'ASTUCE DU PLACEHOLDER ---
-    function initSeed() {
-        let seedInput = document.getElementById('inputSeed').value.trim();
-        let s;
-        if (!seedInput || isNaN(seedInput)) {
-            s = Math.floor(Math.random() * 9999) + 1;
-            document.getElementById('inputSeed').value = ""; 
-            document.getElementById('inputSeed').placeholder = s; 
-        } else {
-            s = parseInt(seedInput, 10);
-        }
-        setSeed(s);
-        return s;
-    }
-
-    // --- FONCTION PLEIN ECRAN ---
-    function toggleFullscreen() {
-      let elem = document.getElementById("diapoContainer");
-      if (!document.fullscreenElement) {
-        elem.requestFullscreen().catch(err => {
-          alert(`Erreur : impossible de passer en plein écran (${err.message})`);
-        });
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 100: "var(--c-1)" };
-
-    document.addEventListener("keydown", (e) => {
-      if (document.getElementById('diapoContainer').style.display !== "none") {
-        if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); } 
-        else if (e.key === "ArrowLeft") { if (!document.getElementById('btnPrev').disabled) prevSlide(); }
-      }
-    });
-
-    function getFriendlyTotal(multiplier, level) {
-      let min = 2, max = 25, scale = 1;
-      if (level === 1) {
-        if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 4) { min = 3; max = 25; }
-        else if (multiplier === 5) { min = 2; max = 20; } else if (multiplier === 10) { min = 2; max = 10; }
-      } else if (level === 2) {
-        if (multiplier === 2) { min = 10; max = 200; } else if (multiplier === 4) { min = 5; max = 100; }
-        else if (multiplier === 5) { min = 5; max = 80; } else if (multiplier === 10) { min = 5; max = 40; }
-      } else {
-        if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 10) { min = 2; max = 30; }
-        scale = pick([1, 10, 100]); 
-      }
-      return rand(min, max) * multiplier * scale;
-    }
-
-    function buildText(q) {
-      let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite']);
-      let qHtml = "", cHtml = "", unit = "";
-      
-      if (q.mode === 'evo_inc') {
-        cType = pick(['loyer', 'facture', 'population']);
-        if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${q.totalVal} €</strong> augmente de <strong>${q.percent} %</strong>.<br>Quel est le nouveau loyer ?`; }
-        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${q.totalVal} €</strong> s'alourdit de <strong>${q.percent} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
-        else { unit = " habitants"; qHtml = `Un village de <strong>${q.totalVal} habitants</strong> a vu sa population croître de <strong>${q.percent} %</strong>.<br>Quelle est la nouvelle population ?`; }
-        cHtml = `Le nouveau total est <strong>${q.calcVal} ${unit}</strong>.`;
-      }
-      else if (q.mode === 'evo_dec') {
-        cType = pick(['solde', 'jeu', 'population']);
-        if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${q.totalVal} €</strong> est soldé à <strong>- ${q.percent} %</strong>.<br>Quel est le nouveau prix ?`; }
-        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${q.totalVal} €</strong> baisse de <strong>${q.percent} %</strong>.<br>Quel est son nouveau prix ?`; }
-        else { unit = " habitants"; qHtml = `Un club de <strong>${q.totalVal} membres</strong> perd <strong>${q.percent} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
-        cHtml = `La nouvelle valeur est <strong>${q.calcVal} ${unit}</strong>.`;
-      }
-      else if (q.mode === 'find_total') {
-        if (cType === 'brut') { qHtml = `<strong>${q.percent} %</strong> d'un nombre vaut <strong>${q.calcVal}</strong>.<br>Quel est ce nombre entier ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${q.percent} %</strong> des élèves sont externes. Cela représente <strong>${q.calcVal} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${q.percent} %</strong>, ce qui correspond à <strong>${q.calcVal} spectateurs</strong>.<br>Quelle est la capacité totale ?`; } 
-        else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale ?`; }
-        cHtml = `Le total (100 %) est <strong>${q.totalVal} ${unit}</strong>.`;
-      }
-      else if (q.mode === 'find_percent') {
-        if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${q.calcVal}</strong> par rapport à <strong>${q.totalVal}</strong> ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${q.totalVal} €</strong>. La réduction est de <strong>${q.calcVal} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.calcVal}</strong> font du latin.<br>Quel pourcentage cela représente-t-il ?`; } 
-        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, <strong>${q.calcVal} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
-        cHtml = `Cela représente <strong>${q.percent} %</strong>.`;
-      }
-      else {
-        if (cType === 'brut') { qHtml = `Calcule <strong>${q.percent} %</strong> de <strong>${q.totalVal}</strong>.`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûte <strong>${q.totalVal} €</strong>. Il y a une réduction de <strong>${q.percent} %</strong>.<br>Quel est le montant de la réduction ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.percent} %</strong> font du latin.<br>Combien d'élèves étudient le latin ?`; } 
-        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, une famille a parcouru <strong>${q.percent} %</strong>.<br>Combien de kilomètres ont-ils parcourus ?`; }
-        cHtml = `La réponse est <strong>${q.calcVal} ${unit}</strong>.`;
-      }
-      return { qHtml, cHtml, unit };
-    }
-
-    function createQuestion(type, level) {
-      let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
-      
-      if (type.startsWith('evo_')) {
-         mode = type; 
-         parts = pick([4, 5, 10]); activeParts = pick([1, 2]); 
-         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
-         if (type === 'evo_inc') calcVal = (totalVal / parts) * (parts + activeParts);
-         else calcVal = (totalVal / parts) * (parts - activeParts);
-      }
-      else if (type.startsWith('tot_')) {
-         mode = 'find_total'; 
-         if (type === 'tot_50') { parts = 2; activeParts = 1; }
-         else if (type === 'tot_25') { parts = 4; activeParts = pick([1, 3]); }
-         else if (type === 'tot_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'tot_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
-         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
-         calcVal = (totalVal / parts) * activeParts;
-      }
-      else if (type.startsWith('inv_')) {
-         mode = 'find_percent'; 
-         if (type === 'inv_50') { parts = 2; activeParts = 1; }
-         else if (type === 'inv_25') { parts = 4; activeParts = pick([1, 3]); } 
-         else if (type === 'inv_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
-         totalVal = getFriendlyTotal(parts, level);
-         percent = (100 / parts) * activeParts; calcVal = (totalVal / parts) * activeParts;
-      } 
-      else {
-         mode = 'direct';
-         if (type === 'base_50') { parts = 2; activeParts = 1; percent = 50; totalVal = getFriendlyTotal(2, level); }
-         else if (type === 'base_25') { parts = 4; activeParts = 1; percent = 25; totalVal = getFriendlyTotal(4, level); }
-         else if (type === 'base_20') { parts = 5; activeParts = 1; percent = 20; totalVal = getFriendlyTotal(5, level); }
-         else if (type === 'base_10') { parts = 10; activeParts = 1; percent = 10; totalVal = getFriendlyTotal(10, level); }
-         else if (type === 'mult_25') { parts = 4; activeParts = 3; percent = 75; totalVal = getFriendlyTotal(4, level); }
-         else if (type === 'mult_20') { activeParts = pick([2,3,4]); percent = activeParts*20; parts = 5; totalVal = getFriendlyTotal(5, level); }
-         else if (type === 'mult_10') { activeParts = pick([3,4,6,7,8,9]); percent = activeParts*10; parts = 10; totalVal = getFriendlyTotal(10, level); }
-         else if (type === 'base_1' || type === 'mult_1') { 
-             parts = 100; activeParts = (type === 'base_1') ? 1 : rand(2, 45); percent = activeParts; 
-             totalVal = (level === 1) ? rand(1, 5) * 100 : rand(5, 20) * 100; 
-         }
-      }
-
-      if (mode !== 'evo_inc' && mode !== 'evo_dec') calcVal = (totalVal / parts) * activeParts;
-
-      let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
-      let texts = buildText(q);
-      q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit;
-      return q;
-    }
-
-    function getQuizData() {
-      const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
-      
-      quizSeed = initSeed();
-      
-      let types = Array.from(checkboxes).map(cb => cb.value);
-      const count = parseInt(document.getElementById('selCount').value, 10);
-      const level = parseInt(document.getElementById('selLevel').value, 10); 
-      
-      let distributedTypes = [];
-      for (let i = 0; i < count; i++) { distributedTypes.push(types[i % types.length]); }
-      
-      for (let i = distributedTypes.length - 1; i > 0; i--) {
-          const j = Math.floor(seededRandom() * (i + 1));
-          [distributedTypes[i], distributedTypes[j]] = [distributedTypes[j], distributedTypes[i]];
-      }
-
-      quizData = [];
-      for (let i = 0; i < count; i++) { quizData.push(createQuestion(distributedTypes[i], level)); }
-      return true;
-    }
-
-    function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
-    function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
-
-    function drawSVGBar(q, isCorrection, svgContainer) {
-      emptyElement(svgContainer);
-      let displayParts = (q.mode === 'evo_inc') ? q.parts + q.activeParts : q.parts;
-      const wTotalDisplay = (800 / displayParts) * q.parts; 
-      const wPart = wTotalDisplay / q.parts;
-      const hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / q.parts;
-      const partPercent = 100 / q.parts;
-      
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
-      
-      if (q.mode === 'find_total' && !isCorrection) {
-          svgContainer.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
-      } else {
-          let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-          txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
-      }
-      drawBrace(svgContainer, xStart, yTop - 5, wTotalDisplay, "100 %", true);
-
-      for (let i = 0; i < displayParts; i++) {
-        let xPart = xStart + (i * wPart);
-        let isAdded = (q.mode === 'evo_inc' && i >= q.parts); 
-        let isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts); 
-        let fillColor = colors[q.parts];
-        if (isRemoved && isCorrection) fillColor = "url(#patternHatch)"; 
-        
-        let op = "0.5";
-        if (isCorrection) {
-           if (isRemoved) op = "1"; else if (isAdded) op = "0.9";
-           else if (q.mode === 'direct' || q.mode === 'find_percent' || q.mode === 'find_total') op = (i < q.activeParts) ? "0.9" : "0.2";
-           else op = "0.9"; 
-        } else {
-           if (isAdded) op = "0.1"; 
-        }
-
-        if (!(isAdded && !isCorrection)) {
-            svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
-        }
-
-        if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
-            if (!(isAdded && !isCorrection)) {
-                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-                txtVal.textContent = partVal; svgContainer.appendChild(txtVal);
-            }
-        } else {
-            svgContainer.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
-        }
-        
-        if (!(isAdded && !isCorrection)) {
-            let label = partPercent + " %";
-            if (isRemoved && isCorrection) label = "- " + label;
-            if (isAdded && isCorrection) label = "+ " + label;
-            drawBrace(svgContainer, xPart, yBot + hBar + 5, wPart, label, false, (isRemoved && isCorrection ? "#ff4d6d" : (isAdded ? "var(--accent)" : "#1f2a44")));
-        }
-      }
-
-      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
-        if (q.mode === 'evo_inc') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau total = ${q.calcVal}`, false, "var(--accent)"); } 
-        else if (q.mode === 'evo_dec') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste = ${q.calcVal}`, false, "var(--success)"); } 
-        else if (q.mode === 'find_percent') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.calcVal}  ➔  ${q.percent} %`, false, "var(--accent)"); } 
-        else if (q.mode === 'find_total' && !isCorrection) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); } 
-        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} %  ➔  ${q.calcVal}`, false, "var(--accent)"); }
-      }
-    }
-
-    function draw100Parts(q, isCorrection, svgContainer) {
-      emptyElement(svgContainer);
-      const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / 100;
-      
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
-      let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-      txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
-      drawBrace(svgContainer, xStart, yTop - 5, wTotal, "100 %", true);
-
-      const wPart = wTotal / 100;
-      for (let i = 0; i < 100; i++) {
-        let xPart = xStart + (i * wPart);
-        let isActive = i < q.activeParts;
-        let op = isCorrection ? (isActive ? "1" : "0.2") : "0.5";
-        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "var(--c-1)", stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
-      }
-
-      if (isCorrection) {
-          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 % = " + partVal, false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); }
-      } else {
-          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} %`, false, "var(--accent)"); }
-      }
-    }
-
-    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
-      if(width <= 0) return;
-      const h = width < 20 ? 6 : 12; const dir = isUp ? -1 : 1; const yTip = y + (h * dir);
-      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
-      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "2.5" }));
-
-      let fSize = forceFontSize || (width < 20 ? "14" : "20");
-      let yOffset = isUp ? -12 : (width < 20 ? 18 : 24);
-      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
-      txt.textContent = text; svg.appendChild(txt);
-    }
-
-    function buildThumbnails() {
-      const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
-      quizData.forEach((q, idx) => {
-        let btn = document.createElement('button'); btn.className = 'thumb-btn';
-        let txt = "";
-        if (q.mode === 'evo_inc') txt = `${q.totalVal} + ${q.percent}%`;
-        else if (q.mode === 'evo_dec') txt = `${q.totalVal} - ${q.percent}%`;
-        else if (q.mode === 'direct') txt = `${q.percent}% de ${q.totalVal}`;
-        else if (q.mode === 'find_percent') txt = `${q.calcVal} sur ${q.totalVal}`;
-        else if (q.mode === 'find_total') txt = `${q.percent}% = ${q.calcVal}`;
-
-        btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${txt}</span>`;
-        btn.onclick = () => loadSlide(idx, q.phase); 
-        tb.appendChild(btn);
-      });
-    }
-
-    function updateThumbnails() {
-      const btns = document.getElementById('thumbBar').children;
-      for(let i=0; i<btns.length; i++) {
-        btns[i].className = 'thumb-btn';
-        if (quizData[i].phase === 2) btns[i].classList.add('done');
-        if (i === currentIndex) btns[i].classList.add('active');
-      }
-    }
-
-    function generateQuiz() {
-      if(!getQuizData()) return;
-      document.getElementById('diapoContainer').style.display = 'flex';
-      buildThumbnails(); loadSlide(0, 0);
-      document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
-    }
-
-    function updateUI() {
-      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
-      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
-      document.getElementById('qText').innerHTML = q.qHtml;
-      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
-      
-      let stage = document.getElementById('svgStage');
-
-      if (q.phase === 0) {
-        document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Indice (Schéma) 💡";
-      } else if (q.phase === 1) {
-        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Correction 👀"; 
-        if(q.parts === 100) draw100Parts(q, false, stage); else drawSVGBar(q, false, stage);
-      } else if (q.phase === 2) {
-        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
-        document.getElementById('cText').innerHTML = q.cHtml; 
-        if(q.parts === 100) draw100Parts(q, true, stage); else drawSVGBar(q, true, stage);
-        if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
-        else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
-      }
-      updateThumbnails();
-    }
-
-    function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
-    function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
-    function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
-
-    function generatePrint() {
-      if(!getQuizData()) return;
-      const withGabarits = document.getElementById('cbEmptyGabarits').checked;
-      const container = document.getElementById('printContainer');
-      container.innerHTML = ''; 
-
-      let page1 = document.createElement('div');
-      page1.className = 'print-page';
-      page1.innerHTML = `
-        <div class="print-header">
-          <div>Nom : ........................................</div>
-          <div>Prénom : ........................................</div>
-          <div>Classe : ....................</div>
-          <div class="print-seed">Fiche n° ${quizSeed}</div>
-        </div>
-        <h2 class="print-title">Exercices : Les Pourcentages</h2>
-      `;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
-        
-        if (withGabarits) {
-          let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-          let svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 320");
-          svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
-          if(q.parts === 100) draw100Parts(q, false, svg); else drawSVGBar(q, false, svg);
-        } else {
-          qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
-        }
-        page1.appendChild(qDiv);
-      });
-      container.appendChild(page1);
-
-      let page2 = document.createElement('div');
-      page2.className = 'print-page';
-      page2.innerHTML = `
-        <div class="print-header">
-          <div class="print-seed">CORRIGÉ — Fiche n° ${quizSeed}</div>
-        </div>
-        <h2 class="print-title">Correction Détaillée</h2>`;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `
-          <div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>
-          <div class="print-c-text">✅ ${q.cHtml}</div>
-        `;
-        
-        let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-        let svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 320");
-        svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
-        if(q.parts === 100) draw100Parts(q, true, svg); else drawSVGBar(q, true, svg);
-        
-        page2.appendChild(qDiv);
-      });
-      container.appendChild(page2);
-
-      setTimeout(() => { window.print(); }, 300);
-    }
-  </script>
+  });
+});
+</script>
 </body>
 </html>
