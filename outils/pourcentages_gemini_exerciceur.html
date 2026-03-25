@@ -12,7 +12,7 @@
       --evo: #e91e63; --shadow: 0 10px 30px rgba(31,42,68,0.08);
       --c-100: rgb(235, 100, 100); --c-50: rgb(255, 230, 100);
       --c-25: rgb(150, 220, 150); --c-20: rgb(150, 200, 235);
-      --c-10: rgb(250, 180, 100); --c-1: rgb(210, 170, 255);
+      --c-10: rgb(250, 180, 100); --c-5: rgb(255, 160, 120); --c-1: rgb(210, 170, 255);
     }
 
     * { box-sizing: border-box; }
@@ -58,18 +58,17 @@
     .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-icon { min-width: 40px; padding: 8px 12px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
     
-    /* MODIFICATION : Largeur fixe pour le bouton suivant pour éviter le sautillement */
     #btnNext { min-width: 220px; text-align: center; }
 
-    .question-box { padding: 20px 40px 10px 40px; text-align: center; }
-    .question-text { font-size: 1.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
+    .question-box { padding: 30px 40px 10px 40px; text-align: center; }
+    .question-text { font-size: 2.8rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
 
     .hint-box { padding: 10px 40px; display: none; justify-content: center; }
     .correction-box { padding: 10px 40px 30px 40px; text-align: center; display: none; }
-    .correction-text { font-size: 1.8rem; font-weight: bold; color: var(--success); margin: 0; }
+    .correction-text { font-size: 2.8rem; font-weight: bold; color: var(--success); margin: 0; }
     
     .stage-wrap { display: flex; justify-content: center; align-items: flex-start; width: 100%; }
-    svg { width: 100%; max-width: 850px; height: auto; max-height: 55vh; }
+    svg { width: 100%; max-width: 950px; height: auto; max-height: 60vh; }
 
     .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; margin-top: auto; }
     .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; }
@@ -85,8 +84,8 @@
     #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
     #diapoContainer:-webkit-full-screen .thumbnails-bar { display: none !important; }
     
-    #diapoContainer:fullscreen svg { max-height: 65vh; }
-    #diapoContainer:-webkit-full-screen svg { max-height: 65vh; }
+    #diapoContainer:fullscreen svg { max-height: 75vh; max-width: 1200px; }
+    #diapoContainer:-webkit-full-screen svg { max-height: 75vh; max-width: 1200px; }
 
     /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
@@ -133,6 +132,7 @@
           <label class="cb-row"><input type="checkbox" value="base_25"> <div><strong>25 %</strong></div></label>
           <label class="cb-row"><input type="checkbox" value="base_20"> <div><strong>20 %</strong></div></label>
           <label class="cb-row"><input type="checkbox" value="base_10"> <div><strong>10 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="base_5"> <div><strong>5 %</strong></div></label>
         </div>
         <hr>
         <h3>🥞 Multiples</h3>
@@ -181,11 +181,11 @@
     <div class="bottom-config">
       <div class="config-options">
         <div class="config-block">
-          <label>Taille :</label>
+          <label>Niveau :</label>
           <select id="selLevel">
-            <option value="1" selected>Petits (< 100)</option>
-            <option value="2">Moyens (< 400)</option>
-            <option value="3">Grands (Infini)</option>
+            <option value="1" selected>Niveau 1 (Facile)</option>
+            <option value="2">Niveau 2 (Moyen)</option>
+            <option value="3">Niveau 3 (Difficile)</option>
           </select>
         </div>
         <div class="config-block">
@@ -199,11 +199,14 @@
           </select>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label>N° Fiche (Seed) :</label>
-          <input type="text" id="inputSeed" placeholder="Auto" style="width: 70px; text-align: center;">
+          <label style="cursor: pointer;"><input type="checkbox" id="cbDecimals" style="accent-color: var(--accent); transform: scale(1.2);"> 🧮 Décimaux</label>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Inclure les gabarits</label>
+          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Gabarits</label>
+        </div>
+        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
+          <label>Seed :</label>
+          <input type="text" id="inputSeed" placeholder="Auto" style="width: 80px; text-align: center;">
         </div>
       </div>
       
@@ -240,7 +243,6 @@
     let currentIndex = 0;
     let quizSeed = 1; 
 
-    // --- MOTEUR DE HASARD CONTRÔLÉ ---
     let currentSeed = 1;
     function setSeed(s) { currentSeed = s; }
     function seededRandom() {
@@ -249,6 +251,9 @@
     }
     function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
+
+    // Fonction magique pour transformer les points en virgules à l'affichage
+    function fmt(n) { return n.toString().replace('.', ','); }
 
     function initSeed() {
         let seedInput = document.getElementById('inputSeed').value.trim();
@@ -275,7 +280,7 @@
       }
     }
 
-    const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 100: "var(--c-1)" };
+    const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 20: "var(--c-5)", 100: "var(--c-1)" };
 
     document.addEventListener("keydown", (e) => {
       if (document.getElementById('diapoContainer').style.display !== "none") {
@@ -289,60 +294,98 @@
       if (level === 1) {
         if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 4) { min = 3; max = 25; }
         else if (multiplier === 5) { min = 2; max = 20; } else if (multiplier === 10) { min = 2; max = 10; }
+        else if (multiplier === 20) { min = 1; max = 5; } 
       } else if (level === 2) {
         if (multiplier === 2) { min = 10; max = 200; } else if (multiplier === 4) { min = 5; max = 100; }
         else if (multiplier === 5) { min = 5; max = 80; } else if (multiplier === 10) { min = 5; max = 40; }
+        else if (multiplier === 20) { min = 2; max = 20; }
       } else {
         if (multiplier === 2) { min = 5; max = 50; } else if (multiplier === 10) { min = 2; max = 30; }
+        else if (multiplier === 20) { min = 2; max = 15; }
         scale = pick([1, 10, 100]); 
       }
       return rand(min, max) * multiplier * scale;
     }
 
     function buildText(q) {
-      let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite']);
+      let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite', 'nourriture']);
       let qHtml = "", cHtml = "", unit = "";
       
       if (q.mode === 'evo_inc') {
         cType = pick(['loyer', 'facture', 'population']);
-        if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${q.totalVal} €</strong> augmente de <strong>${q.percent} %</strong>.<br>Quel est le nouveau loyer ?`; }
-        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${q.totalVal} €</strong> s'alourdit de <strong>${q.percent} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
-        else { unit = " habitants"; qHtml = `Un village de <strong>${q.totalVal} habitants</strong> a vu sa population croître de <strong>${q.percent} %</strong>.<br>Quelle est la nouvelle population ?`; }
-        cHtml = `Le nouveau total est <strong>${q.calcVal} ${unit}</strong>.`;
+        if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${fmt(q.totalVal)} €</strong> augmente de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau loyer ?`; }
+        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${fmt(q.totalVal)} €</strong> s'alourdit de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
+        else { unit = " habitants"; qHtml = `Un village de <strong>${fmt(q.totalVal)} habitants</strong> a vu sa population croître de <strong>${fmt(q.percent)} %</strong>.<br>Quelle est la nouvelle population ?`; }
+        cHtml = `Le nouveau total est <strong>${fmt(q.calcVal)} ${unit}</strong>.`;
       }
       else if (q.mode === 'evo_dec') {
         cType = pick(['solde', 'jeu', 'population']);
-        if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${q.totalVal} €</strong> est soldé à <strong>- ${q.percent} %</strong>.<br>Quel est le nouveau prix ?`; }
-        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${q.totalVal} €</strong> baisse de <strong>${q.percent} %</strong>.<br>Quel est son nouveau prix ?`; }
-        else { unit = " habitants"; qHtml = `Un club de <strong>${q.totalVal} membres</strong> perd <strong>${q.percent} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
-        cHtml = `La nouvelle valeur est <strong>${q.calcVal} ${unit}</strong>.`;
+        if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${fmt(q.totalVal)} €</strong> est soldé à <strong>- ${fmt(q.percent)} %</strong>.<br>Quel est le nouveau prix ?`; }
+        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${fmt(q.totalVal)} €</strong> baisse de <strong>${fmt(q.percent)} %</strong>.<br>Quel est son nouveau prix ?`; }
+        else { unit = " habitants"; qHtml = `Un club de <strong>${fmt(q.totalVal)} membres</strong> perd <strong>${fmt(q.percent)} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
+        cHtml = `La nouvelle valeur est <strong>${fmt(q.calcVal)} ${unit}</strong>.`;
       }
       else if (q.mode === 'find_total') {
-        if (cType === 'brut') { qHtml = `<strong>${q.percent} %</strong> d'un nombre vaut <strong>${q.calcVal}</strong>.<br>Quel est ce nombre entier ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${q.percent} %</strong> représente <strong>${q.calcVal} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${q.percent} %</strong> des élèves sont externes. Cela représente <strong>${q.calcVal} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${q.percent} %</strong>, ce qui correspond à <strong>${q.calcVal} spectateurs</strong>.<br>Quelle est la capacité totale ?`; } 
-        else { unit = " km"; qHtml = `Une famille a parcouru <strong>${q.percent} %</strong> de son trajet, soit <strong>${q.calcVal} km</strong>.<br>Quelle est la distance totale ?`; }
-        cHtml = `Le total (100 %) est <strong>${q.totalVal} ${unit}</strong>.`;
+        if (cType === 'brut') { qHtml = `<strong>${fmt(q.percent)} %</strong> d'un nombre vaut <strong>${fmt(q.calcVal)}</strong>.<br>Quel est ce nombre ?`; } 
+        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${fmt(q.percent)} %</strong> représente <strong>${fmt(q.calcVal)} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${fmt(q.percent)} %</strong> des élèves sont externes. Cela représente <strong>${fmt(q.calcVal)} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
+        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${fmt(q.percent)} %</strong>, ce qui correspond à <strong>${fmt(q.calcVal)} spectateurs</strong>.<br>Quelle est la capacité totale ?`; } 
+        else if (cType === 'distance') { unit = " km"; qHtml = `Une famille a parcouru <strong>${fmt(q.percent)} %</strong> de son trajet, soit <strong>${fmt(q.calcVal)} km</strong>.<br>Quelle est la distance totale ?`; }
+        else if (cType === 'poids') { unit = " kg"; qHtml = `<strong>${fmt(q.percent)} %</strong> du poids d'un bagage correspond à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total du bagage ?`; }
+        else if (cType === 'capacite') { unit = " L"; qHtml = `Une cuve est remplie à <strong>${fmt(q.percent)} %</strong>, ce qui représente <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle est la contenance totale de la cuve ?`; }
+        else if (cType === 'nourriture') { unit = " g"; qHtml = `Tu as mangé <strong>${fmt(q.calcVal)} g</strong> de riz, ce qui représente <strong>${fmt(q.percent)} %</strong> du paquet.<br>Quel était le poids total du paquet ?`; }
+        cHtml = `Le total (100 %) est <strong>${fmt(q.totalVal)} ${unit}</strong>.`;
       }
       else if (q.mode === 'find_percent') {
-        if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${q.calcVal}</strong> par rapport à <strong>${q.totalVal}</strong> ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${q.totalVal} €</strong>. La réduction est de <strong>${q.calcVal} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.calcVal}</strong> font du latin.<br>Quel pourcentage cela représente-t-il ?`; } 
-        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, <strong>${q.calcVal} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
-        cHtml = `Cela représente <strong>${q.percent} %</strong>.`;
+        if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${fmt(q.calcVal)}</strong> par rapport à <strong>${fmt(q.totalVal)}</strong> ?`; } 
+        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${fmt(q.totalVal)} €</strong>. La réduction est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
+        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${fmt(q.totalVal)} élèves</strong>, <strong>${fmt(q.calcVal)}</strong> font du latin.<br>Quel pourcentage cela représente-t-il ?`; } 
+        else if (cType === 'distance') { unit = " km"; qHtml = `Sur un voyage de <strong>${fmt(q.totalVal)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
+        else if (cType === 'poids') { unit = " kg"; qHtml = `Un chargement pèse <strong>${fmt(q.totalVal)} kg</strong>. On en retire <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel pourcentage a été retiré ?`; }
+        else if (cType === 'capacite') { unit = " L"; qHtml = `Sur une réserve d'eau de <strong>${fmt(q.totalVal)} L</strong>, <strong>${fmt(q.calcVal)} L</strong> ont été utilisés.<br>Quel pourcentage de la réserve a été vidé ?`; }
+        else if (cType === 'nourriture') { unit = " g"; qHtml = `Dans un gâteau de <strong>${fmt(q.totalVal)} g</strong>, il y a <strong>${fmt(q.calcVal)} g</strong> de sucre.<br>Quel est le pourcentage de sucre dans ce gâteau ?`; }
+        cHtml = `Cela représente <strong>${fmt(q.percent)} %</strong>.`;
       }
       else {
-        if (cType === 'brut') { qHtml = `Calcule <strong>${q.percent} %</strong> de <strong>${q.totalVal}</strong>.`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûte <strong>${q.totalVal} €</strong>. Il y a une réduction de <strong>${q.percent} %</strong>.<br>Quel est le montant de la réduction ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${q.totalVal} élèves</strong>, <strong>${q.percent} %</strong> font du latin.<br>Combien d'élèves étudient le latin ?`; } 
-        else { unit = " km"; qHtml = `Sur un voyage de <strong>${q.totalVal} km</strong>, une famille a parcouru <strong>${q.percent} %</strong>.<br>Combien de kilomètres ont-ils parcourus ?`; }
-        cHtml = `La réponse est <strong>${q.calcVal} ${unit}</strong>.`;
+        if (cType === 'brut') { 
+            qHtml = `Calcule <strong>${fmt(q.percent)} %</strong> de <strong>${fmt(q.totalVal)}</strong>.`; 
+            cHtml = `Cela fait <strong>${fmt(q.calcVal)}</strong>.`;
+        } 
+        else if (cType === 'argent') { 
+            unit = " €"; 
+            qHtml = `Un article coûte <strong>${fmt(q.totalVal)} €</strong>. Il y a une réduction de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le montant de la réduction ?`; 
+            cHtml = `La réduction est de <strong>${fmt(q.calcVal)} €</strong>.`;
+        } 
+        else if (cType === 'ecole') { 
+            unit = " élèves"; 
+            qHtml = `Dans un collège de <strong>${fmt(q.totalVal)} élèves</strong>, <strong>${fmt(q.percent)} %</strong> font du latin.<br>Combien d'élèves étudient le latin ?`; 
+            cHtml = `<strong>${fmt(q.calcVal)} élèves</strong> étudient le latin.`;
+        } 
+        else if (cType === 'distance') { 
+            unit = " km"; 
+            qHtml = `Sur un voyage de <strong>${fmt(q.totalVal)} km</strong>, une famille a parcouru <strong>${fmt(q.percent)} %</strong>.<br>Combien de kilomètres ont-ils parcourus ?`; 
+            cHtml = `Ils ont parcouru <strong>${fmt(q.calcVal)} km</strong>.`;
+        }
+        else if (cType === 'poids') { 
+            unit = " kg"; 
+            qHtml = `Un sac de ciment pèse <strong>${fmt(q.totalVal)} kg</strong>. On doit en utiliser <strong>${fmt(q.percent)} %</strong>.<br>Quelle masse cela représente-t-il ?`; 
+            cHtml = `Cela représente <strong>${fmt(q.calcVal)} kg</strong>.`;
+        }
+        else if (cType === 'capacite') { 
+            unit = " L"; 
+            qHtml = `Une piscine contient <strong>${fmt(q.totalVal)} L</strong> d'eau. On la vide de <strong>${fmt(q.percent)} %</strong>.<br>Combien de litres ont été retirés ?`; 
+            cHtml = `<strong>${fmt(q.calcVal)} L</strong> ont été retirés.`;
+        }
+        else if (cType === 'nourriture') { 
+            unit = " g"; 
+            qHtml = `Une recette demande <strong>${fmt(q.totalVal)} g</strong> de farine. Tu dois n'en mettre que <strong>${fmt(q.percent)} %</strong>.<br>Quelle quantité de farine vas-tu utiliser ?`; 
+            cHtml = `Tu vas utiliser <strong>${fmt(q.calcVal)} g</strong>.`;
+        }
       }
       return { qHtml, cHtml, unit };
     }
 
-    function createQuestion(type, level) {
+    function createQuestion(type, level, useDecimals) {
       let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
       
       if (type.startsWith('evo_')) {
@@ -372,20 +415,62 @@
       } 
       else {
          mode = 'direct';
-         if (type === 'base_50') { parts = 2; activeParts = 1; percent = 50; totalVal = getFriendlyTotal(2, level); }
-         else if (type === 'base_25') { parts = 4; activeParts = 1; percent = 25; totalVal = getFriendlyTotal(4, level); }
-         else if (type === 'base_20') { parts = 5; activeParts = 1; percent = 20; totalVal = getFriendlyTotal(5, level); }
-         else if (type === 'base_10') { parts = 10; activeParts = 1; percent = 10; totalVal = getFriendlyTotal(10, level); }
+         if (type === 'base_50') { 
+             parts = 2; activeParts = 1; percent = 50; 
+             if (useDecimals) {
+                 totalVal = (level === 1) ? rand(5, 49) * 2 + 1 : (level === 2 ? rand(50, 199) * 2 + 1 : rand(200, 499) * 2 + 1);
+             } else {
+                 totalVal = getFriendlyTotal(2, level); 
+             }
+         }
+         else if (type === 'base_25') { 
+             parts = 4; activeParts = 1; percent = 25; 
+             if (useDecimals) {
+                 let k = (level === 1) ? rand(2, 24) : (level === 2 ? rand(25, 99) : rand(100, 249));
+                 totalVal = k * 4 + 2;
+             } else {
+                 totalVal = getFriendlyTotal(4, level); 
+             }
+         }
+         else if (type === 'base_20') { 
+             parts = 5; activeParts = 1; percent = 20; 
+             if (useDecimals) {
+                 let val = 0;
+                 do { val = (level === 1) ? rand(11, 99) : (level === 2 ? rand(101, 399) : rand(401, 999)); } while (val % 5 === 0);
+                 totalVal = val;
+             } else {
+                 totalVal = getFriendlyTotal(5, level); 
+             }
+         }
+         else if (type === 'base_10') { 
+             parts = 10; activeParts = 1; percent = 10; 
+             if (useDecimals) {
+                 let val = 0;
+                 do { val = (level === 1) ? rand(11, 99) : (level === 2 ? rand(101, 399) : rand(401, 999)); } while (val % 10 === 0);
+                 totalVal = val;
+             } else {
+                 totalVal = getFriendlyTotal(10, level); 
+             }
+         }
+         else if (type === 'base_5') { parts = 20; activeParts = 1; percent = 5; totalVal = getFriendlyTotal(20, level); }
          else if (type === 'mult_25') { parts = 4; activeParts = 3; percent = 75; totalVal = getFriendlyTotal(4, level); }
          else if (type === 'mult_20') { activeParts = pick([2,3,4]); percent = activeParts*20; parts = 5; totalVal = getFriendlyTotal(5, level); }
          else if (type === 'mult_10') { activeParts = pick([3,4,6,7,8,9]); percent = activeParts*10; parts = 10; totalVal = getFriendlyTotal(10, level); }
-         else if (type === 'base_1' || type === 'mult_1') { 
-             parts = 100; activeParts = (type === 'base_1') ? 1 : rand(2, 45); percent = activeParts; 
+         else if (type === 'base_1') { 
+             parts = 100; activeParts = 1; percent = 1; 
+             if (level === 1) totalVal = rand(10, 99);
+             else if (level === 2) totalVal = rand(100, 399);
+             else totalVal = rand(400, 999);
+         }
+         else if (type === 'mult_1') { 
+             parts = 100; activeParts = rand(2, 45); percent = activeParts; 
              totalVal = (level === 1) ? rand(1, 5) * 100 : rand(5, 20) * 100; 
          }
       }
 
       if (mode !== 'evo_inc' && mode !== 'evo_dec') calcVal = (totalVal / parts) * activeParts;
+
+      calcVal = parseFloat(calcVal.toFixed(2));
 
       let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
       let texts = buildText(q);
@@ -402,6 +487,7 @@
       let types = Array.from(checkboxes).map(cb => cb.value);
       const count = parseInt(document.getElementById('selCount').value, 10);
       const level = parseInt(document.getElementById('selLevel').value, 10); 
+      const useDecimals = document.getElementById('cbDecimals').checked;
       
       let distributedTypes = [];
       for (let i = 0; i < count; i++) { distributedTypes.push(types[i % types.length]); }
@@ -412,7 +498,7 @@
       }
 
       quizData = [];
-      for (let i = 0; i < count; i++) { quizData.push(createQuestion(distributedTypes[i], level)); }
+      for (let i = 0; i < count; i++) { quizData.push(createQuestion(distributedTypes[i], level, useDecimals)); }
       return true;
     }
 
@@ -425,8 +511,8 @@
       const wTotalDisplay = (800 / displayParts) * q.parts; 
       const wPart = wTotalDisplay / q.parts;
       const hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / q.parts;
-      const partPercent = 100 / q.parts;
+      const partVal = parseFloat((q.totalVal / q.parts).toFixed(2));
+      const partPercent = parseFloat((100 / q.parts).toFixed(2));
       
       svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
       
@@ -434,7 +520,7 @@
           svgContainer.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
       } else {
           let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-          txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
+          txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       }
       drawBrace(svgContainer, xStart, yTop - 5, wTotalDisplay, "100 %", true);
 
@@ -460,15 +546,17 @@
 
         if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
             if (!(isAdded && !isCorrection)) {
-                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-                txtVal.textContent = partVal; svgContainer.appendChild(txtVal);
+                let fSizeVal = wPart < 45 ? "16" : "24"; 
+                let yOffsetVal = wPart < 45 ? 5 : 8;
+                let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + yOffsetVal, "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeVal, fill: "#1f2a44" });
+                txtVal.textContent = fmt(partVal); svgContainer.appendChild(txtVal);
             }
         } else {
             svgContainer.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4" }));
         }
         
         if (!(isAdded && !isCorrection)) {
-            let label = partPercent + " %";
+            let label = fmt(partPercent) + " %";
             if (isRemoved && isCorrection) label = "- " + label;
             if (isAdded && isCorrection) label = "+ " + label;
             drawBrace(svgContainer, xPart, yBot + hBar + 5, wPart, label, false, (isRemoved && isCorrection ? "#ff4d6d" : (isAdded ? "var(--accent)" : "#1f2a44")));
@@ -476,22 +564,22 @@
       }
 
       if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
-        if (q.mode === 'evo_inc') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau total = ${q.calcVal}`, false, "var(--accent)"); } 
-        else if (q.mode === 'evo_dec') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste = ${q.calcVal}`, false, "var(--success)"); } 
-        else if (q.mode === 'find_percent') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.calcVal}  ➔  ${q.percent} %`, false, "var(--accent)"); } 
-        else if (q.mode === 'find_total' && !isCorrection) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); } 
-        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${q.percent} %  ➔  ${q.calcVal}`, false, "var(--accent)"); }
+        if (q.mode === 'evo_inc') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau total = ${fmt(q.calcVal)}`, false, "var(--accent)"); } 
+        else if (q.mode === 'evo_dec') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste = ${fmt(q.calcVal)}`, false, "var(--success)"); } 
+        else if (q.mode === 'find_percent') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.calcVal)}  ➔  ${fmt(q.percent)} %`, false, "var(--accent)"); } 
+        else if (q.mode === 'find_total' && !isCorrection) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} % = ${fmt(q.calcVal)}`, false, "var(--accent)"); } 
+        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} %  ➔  ${fmt(q.calcVal)}`, false, "var(--accent)"); }
       }
     }
 
     function draw100Parts(q, isCorrection, svgContainer) {
       emptyElement(svgContainer);
       const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
-      const partVal = q.totalVal / 100;
+      const partVal = parseFloat((q.totalVal / 100).toFixed(2));
       
       svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
       let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
-      txtTotal.textContent = q.totalVal; svgContainer.appendChild(txtTotal);
+      txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       drawBrace(svgContainer, xStart, yTop - 5, wTotal, "100 %", true);
 
       const wPart = wTotal / 100;
@@ -503,11 +591,11 @@
       }
 
       if (isCorrection) {
-          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 % = " + partVal, false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} % = ${q.calcVal}`, false, "var(--accent)"); }
+          drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 % = " + fmt(partVal), false, "var(--text)", 14);
+          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${fmt(q.percent)} % = ${fmt(q.calcVal)}`, false, "var(--accent)"); }
       } else {
           drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
-          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${q.percent} %`, false, "var(--accent)"); }
+          if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 55, wPart * q.activeParts, `${fmt(q.percent)} %`, false, "var(--accent)"); }
       }
     }
 
@@ -528,11 +616,11 @@
       quizData.forEach((q, idx) => {
         let btn = document.createElement('button'); btn.className = 'thumb-btn';
         let txt = "";
-        if (q.mode === 'evo_inc') txt = `${q.totalVal} + ${q.percent}%`;
-        else if (q.mode === 'evo_dec') txt = `${q.totalVal} - ${q.percent}%`;
-        else if (q.mode === 'direct') txt = `${q.percent}% de ${q.totalVal}`;
-        else if (q.mode === 'find_percent') txt = `${q.calcVal} sur ${q.totalVal}`;
-        else if (q.mode === 'find_total') txt = `${q.percent}% = ${q.calcVal}`;
+        if (q.mode === 'evo_inc') txt = `${fmt(q.totalVal)} + ${fmt(q.percent)}%`;
+        else if (q.mode === 'evo_dec') txt = `${fmt(q.totalVal)} - ${fmt(q.percent)}%`;
+        else if (q.mode === 'direct') txt = `${fmt(q.percent)}% de ${fmt(q.totalVal)}`;
+        else if (q.mode === 'find_percent') txt = `${fmt(q.calcVal)} sur ${fmt(q.totalVal)}`;
+        else if (q.mode === 'find_total') txt = `${fmt(q.percent)}% = ${fmt(q.calcVal)}`;
 
         btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${txt}</span>`;
         btn.onclick = () => loadSlide(idx, q.phase); 
@@ -586,8 +674,6 @@
     function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
 
     function generatePrint() {
-      // MODIFICATION : On n'appelle plus getQuizData() pour ne pas générer de nouveau hasard.
-      // On utilise les données existantes dans la mémoire de l'écran.
       if (quizData.length === 0) {
         alert("⚠️ Veuillez d'abord cliquer sur '💻 Générer le diapo' pour créer la série !");
         return;
