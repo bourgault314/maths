@@ -138,8 +138,7 @@
         <h3>🥞 Multiples</h3>
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="mult_25"> <div><strong>75 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_20"> <div><strong>40 %, 60 %, 80 %</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_10"> <div><strong>30 %, 70 %, 90 %...</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_10"> <div><strong>20 %, 30 %, 40 %, 60 %...</strong><span class="cb-desc">Multiples de 10 %</span></div></label>
         </div>
       </div>
 
@@ -163,7 +162,7 @@
           <label class="cb-row"><input type="checkbox" value="inv_50"> <div><strong>Moitié</strong><span class="cb-desc">Trouver 50 %</span></div></label>
           <label class="cb-row"><input type="checkbox" value="inv_25"> <div><strong>Quarts</strong><span class="cb-desc">Trouver 25 % ou 75 %</span></div></label>
           <label class="cb-row"><input type="checkbox" value="inv_20"> <div><strong>Cinquièmes</strong><span class="cb-desc">Trouver 20, 40, 60, 80 %</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="inv_10"> <div><strong>Dixièmes</strong><span class="cb-desc">Trouver 10, 30, 70 %...</span></div></label>
+          <label class="cb-row"><input type="checkbox" value="inv_10"> <div><strong>Dixièmes</strong><span class="cb-desc">Trouver 10, 20, 30, 40 %...</span></div></label>
         </div>
       </div>
 
@@ -310,76 +309,110 @@
     function buildText(q) {
       let cType = pick(['brut', 'argent', 'ecole', 'sport', 'distance', 'poids', 'capacite', 'nourriture']);
       let qHtml = "", cHtml = "", unit = "";
-      
+      const t = q.totalVal; // Raccourci pour simplifier le code
+
       if (q.mode === 'evo_inc') {
         cType = pick(['loyer', 'facture', 'population']);
-        if (cType === 'loyer') { unit = " €"; qHtml = `Un loyer de <strong>${fmt(q.totalVal)} €</strong> augmente de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau loyer ?`; }
-        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${fmt(q.totalVal)} €</strong> s'alourdit de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
-        else { unit = " habitants"; qHtml = `Un village de <strong>${fmt(q.totalVal)} habitants</strong> a vu sa population croître de <strong>${fmt(q.percent)} %</strong>.<br>Quelle est la nouvelle population ?`; }
+        if (cType === 'loyer') { 
+            unit = " €"; 
+            let subject = t < 150 ? "Un abonnement téléphonique" : "Un loyer";
+            qHtml = `${subject} de <strong>${fmt(t)} €</strong> augmente de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant ?`; 
+        }
+        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${fmt(t)} €</strong> s'alourdit de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
+        else { 
+            unit = " habitants"; 
+            let subject = t < 500 ? "Un village" : "Une ville";
+            qHtml = `${subject} de <strong>${fmt(t)} habitants</strong> a vu sa population croître de <strong>${fmt(q.percent)} %</strong>.<br>Quelle est la nouvelle population ?`; 
+        }
         cHtml = `Le nouveau total est <strong>${fmt(q.calcVal)} ${unit}</strong>.`;
       }
       else if (q.mode === 'evo_dec') {
         cType = pick(['solde', 'jeu', 'population']);
-        if (cType === 'solde') { unit = " €"; qHtml = `Un vélo à <strong>${fmt(q.totalVal)} €</strong> est soldé à <strong>- ${fmt(q.percent)} %</strong>.<br>Quel est le nouveau prix ?`; }
-        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${fmt(q.totalVal)} €</strong> baisse de <strong>${fmt(q.percent)} %</strong>.<br>Quel est son nouveau prix ?`; }
-        else { unit = " habitants"; qHtml = `Un club de <strong>${fmt(q.totalVal)} membres</strong> perd <strong>${fmt(q.percent)} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; }
+        if (cType === 'solde') { 
+            unit = " €"; 
+            let subject = t < 50 ? "Un t-shirt" : (t <= 200 ? "Un vélo" : "Un ordinateur");
+            qHtml = `${subject} à <strong>${fmt(t)} €</strong> est soldé à <strong>- ${fmt(q.percent)} %</strong>.<br>Quel est le nouveau prix ?`; 
+        }
+        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${fmt(t)} €</strong> baisse de <strong>${fmt(q.percent)} %</strong>.<br>Quel est son nouveau prix ?`; }
+        else { 
+            unit = " membres"; 
+            let subject = t < 50 ? "Un petit club" : "Une association";
+            qHtml = `${subject} de <strong>${fmt(t)} membres</strong> perd <strong>${fmt(q.percent)} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; 
+        }
         cHtml = `La nouvelle valeur est <strong>${fmt(q.calcVal)} ${unit}</strong>.`;
       }
-      else if (q.mode === 'find_total') {
-        if (cType === 'brut') { qHtml = `<strong>${fmt(q.percent)} %</strong> d'un nombre vaut <strong>${fmt(q.calcVal)}</strong>.<br>Quel est ce nombre ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${fmt(q.percent)} %</strong> représente <strong>${fmt(q.calcVal)} €</strong>.<br>Quel était le prix initial de l'article ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège, <strong>${fmt(q.percent)} %</strong> des élèves sont externes. Cela représente <strong>${fmt(q.calcVal)} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-        else if (cType === 'sport') { unit = " places"; qHtml = `Un stade est rempli à <strong>${fmt(q.percent)} %</strong>, ce qui correspond à <strong>${fmt(q.calcVal)} spectateurs</strong>.<br>Quelle est la capacité totale ?`; } 
-        else if (cType === 'distance') { unit = " km"; qHtml = `Une famille a parcouru <strong>${fmt(q.percent)} %</strong> de son trajet, soit <strong>${fmt(q.calcVal)} km</strong>.<br>Quelle est la distance totale ?`; }
-        else if (cType === 'poids') { unit = " kg"; qHtml = `<strong>${fmt(q.percent)} %</strong> du poids d'un bagage correspond à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total du bagage ?`; }
-        else if (cType === 'capacite') { unit = " L"; qHtml = `Une cuve est remplie à <strong>${fmt(q.percent)} %</strong>, ce qui représente <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle est la contenance totale de la cuve ?`; }
-        else if (cType === 'nourriture') { unit = " g"; qHtml = `Tu as mangé <strong>${fmt(q.calcVal)} g</strong> de riz, ce qui représente <strong>${fmt(q.percent)} %</strong> du paquet.<br>Quel était le poids total du paquet ?`; }
-        cHtml = `Le total (100 %) est <strong>${fmt(q.totalVal)} ${unit}</strong>.`;
-      }
-      else if (q.mode === 'find_percent') {
-        if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${fmt(q.calcVal)}</strong> par rapport à <strong>${fmt(q.totalVal)}</strong> ?`; } 
-        else if (cType === 'argent') { unit = " €"; qHtml = `Un article coûtait <strong>${fmt(q.totalVal)} €</strong>. La réduction est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
-        else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans un collège de <strong>${fmt(q.totalVal)} élèves</strong>, <strong>${fmt(q.calcVal)}</strong> font du latin.<br>Quel pourcentage cela représente-t-il ?`; } 
-        else if (cType === 'distance') { unit = " km"; qHtml = `Sur un voyage de <strong>${fmt(q.totalVal)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
-        else if (cType === 'poids') { unit = " kg"; qHtml = `Un chargement pèse <strong>${fmt(q.totalVal)} kg</strong>. On en retire <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel pourcentage a été retiré ?`; }
-        else if (cType === 'capacite') { unit = " L"; qHtml = `Sur une réserve d'eau de <strong>${fmt(q.totalVal)} L</strong>, <strong>${fmt(q.calcVal)} L</strong> ont été utilisés.<br>Quel pourcentage de la réserve a été vidé ?`; }
-        else if (cType === 'nourriture') { unit = " g"; qHtml = `Dans un gâteau de <strong>${fmt(q.totalVal)} g</strong>, il y a <strong>${fmt(q.calcVal)} g</strong> de sucre.<br>Quel est le pourcentage de sucre dans ce gâteau ?`; }
-        cHtml = `Cela représente <strong>${fmt(q.percent)} %</strong>.`;
-      }
       else {
-        if (cType === 'brut') { 
-            qHtml = `Calcule <strong>${fmt(q.percent)} %</strong> de <strong>${fmt(q.totalVal)}</strong>.`; 
-            cHtml = `Cela fait <strong>${fmt(q.calcVal)}</strong>.`;
-        } 
-        else if (cType === 'argent') { 
-            unit = " €"; 
-            qHtml = `Un article coûte <strong>${fmt(q.totalVal)} €</strong>. Il y a une réduction de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le montant de la réduction ?`; 
-            cHtml = `La réduction est de <strong>${fmt(q.calcVal)} €</strong>.`;
-        } 
-        else if (cType === 'ecole') { 
-            unit = " élèves"; 
-            qHtml = `Dans un collège de <strong>${fmt(q.totalVal)} élèves</strong>, <strong>${fmt(q.percent)} %</strong> font du latin.<br>Combien d'élèves étudient le latin ?`; 
-            cHtml = `<strong>${fmt(q.calcVal)} élèves</strong> étudient le latin.`;
-        } 
-        else if (cType === 'distance') { 
-            unit = " km"; 
-            qHtml = `Sur un voyage de <strong>${fmt(q.totalVal)} km</strong>, une famille a parcouru <strong>${fmt(q.percent)} %</strong>.<br>Combien de kilomètres ont-ils parcourus ?`; 
-            cHtml = `Ils ont parcouru <strong>${fmt(q.calcVal)} km</strong>.`;
+        // --- Dictionnaire intelligent selon la valeur totale ---
+        let ecoleLieu = t < 40 ? "une classe" : (t <= 200 ? "une école" : "un collège");
+        let sportLieu = t < 20 ? "Un minibus" : (t <= 200 ? "Une salle de cinéma" : "Un stade");
+        let distLieu = t < 10 ? "une randonnée à pied" : (t <= 100 ? "une balade à vélo" : "un voyage");
+        let poidsObjet = t < 10 ? "un colis postal" : (t <= 50 ? "une valise" : "un chargement");
+        let capObjet = t < 5 ? "Une grande bouteille" : (t <= 50 ? "Un grand seau" : (t <= 500 ? "Une cuve" : "Une piscine"));
+        let nourObjet = t < 50 ? "une barre de chocolat" : "un gâteau";
+        let argentObjet = t < 20 ? "un livre" : (t <= 150 ? "un vêtement" : "un ordinateur");
+
+        if (q.mode === 'find_total') {
+            if (cType === 'brut') { qHtml = `<strong>${fmt(q.percent)} %</strong> d'un nombre vaut <strong>${fmt(q.calcVal)}</strong>.<br>Quel est ce nombre ?`; } 
+            else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${fmt(q.percent)} %</strong> sur ${argentObjet} représente <strong>${fmt(q.calcVal)} €</strong>.<br>Quel était le prix initial ?`; } 
+            else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu}, <strong>${fmt(q.percent)} %</strong> des élèves sont externes. Cela représente <strong>${fmt(q.calcVal)} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
+            else if (cType === 'sport') { unit = " places"; qHtml = `${sportLieu} est rempli(e) à <strong>${fmt(q.percent)} %</strong>, ce qui correspond à <strong>${fmt(q.calcVal)} spectateurs</strong> (ou passagers).<br>Quelle est la capacité totale ?`; } 
+            else if (cType === 'distance') { unit = " km"; qHtml = `Lors d'${distLieu}, tu as parcouru <strong>${fmt(q.percent)} %</strong> du trajet, soit <strong>${fmt(q.calcVal)} km</strong>.<br>Quelle est la distance totale ?`; }
+            else if (cType === 'poids') { unit = " kg"; qHtml = `<strong>${fmt(q.percent)} %</strong> du poids d'${poidsObjet} correspond à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total ?`; }
+            else if (cType === 'capacite') { unit = " L"; qHtml = `${capObjet} est remplie à <strong>${fmt(q.percent)} %</strong>, ce qui représente <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle est la contenance totale ?`; }
+            else if (cType === 'nourriture') { unit = " g"; qHtml = `Tu as mangé <strong>${fmt(q.calcVal)} g</strong>, ce qui représente <strong>${fmt(q.percent)} %</strong> d'${nourObjet}.<br>Quel était le poids total ?`; }
+            cHtml = `Le total (100 %) est <strong>${fmt(t)} ${unit}</strong>.`;
         }
-        else if (cType === 'poids') { 
-            unit = " kg"; 
-            qHtml = `Un sac de ciment pèse <strong>${fmt(q.totalVal)} kg</strong>. On doit en utiliser <strong>${fmt(q.percent)} %</strong>.<br>Quelle masse cela représente-t-il ?`; 
-            cHtml = `Cela représente <strong>${fmt(q.calcVal)} kg</strong>.`;
+        else if (q.mode === 'find_percent') {
+            if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${fmt(q.calcVal)}</strong> par rapport à <strong>${fmt(t)}</strong> ?`; } 
+            else if (cType === 'argent') { unit = " €"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûtait <strong>${fmt(t)} €</strong>. La réduction est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
+            else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} élèves</strong>, <strong>${fmt(q.calcVal)}</strong> mangent à la cantine.<br>Quel pourcentage cela représente-t-il ?`; } 
+            else if (cType === 'sport') { unit = " places"; qHtml = `${sportLieu} de <strong>${fmt(t)} places</strong> est occupé(e) par <strong>${fmt(q.calcVal)} personnes</strong>.<br>Quel est le pourcentage de remplissage ?`; }
+            else if (cType === 'distance') { unit = " km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
+            else if (cType === 'poids') { unit = " kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. On en retire <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel pourcentage a été retiré ?`; }
+            else if (cType === 'capacite') { unit = " L"; qHtml = `Sur ${capObjet.toLowerCase()} de <strong>${fmt(t)} L</strong>, <strong>${fmt(q.calcVal)} L</strong> ont été utilisés.<br>Quel pourcentage a été vidé ?`; }
+            else if (cType === 'nourriture') { unit = " g"; qHtml = `Dans ${nourObjet} de <strong>${fmt(t)} g</strong>, il y a <strong>${fmt(q.calcVal)} g</strong> de sucre.<br>Quel est le pourcentage de sucre ?`; }
+            cHtml = `Cela représente <strong>${fmt(q.percent)} %</strong>.`;
         }
-        else if (cType === 'capacite') { 
-            unit = " L"; 
-            qHtml = `Une piscine contient <strong>${fmt(q.totalVal)} L</strong> d'eau. On la vide de <strong>${fmt(q.percent)} %</strong>.<br>Combien de litres ont été retirés ?`; 
-            cHtml = `<strong>${fmt(q.calcVal)} L</strong> ont été retirés.`;
-        }
-        else if (cType === 'nourriture') { 
-            unit = " g"; 
-            qHtml = `Une recette demande <strong>${fmt(q.totalVal)} g</strong> de farine. Tu dois n'en mettre que <strong>${fmt(q.percent)} %</strong>.<br>Quelle quantité de farine vas-tu utiliser ?`; 
-            cHtml = `Tu vas utiliser <strong>${fmt(q.calcVal)} g</strong>.`;
+        else {
+            if (cType === 'brut') { 
+                qHtml = `Calcule <strong>${fmt(q.percent)} %</strong> de <strong>${fmt(t)}</strong>.`; 
+                cHtml = `Cela fait <strong>${fmt(q.calcVal)}</strong>.`;
+            } 
+            else if (cType === 'argent') { 
+                unit = " €"; 
+                qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûte <strong>${fmt(t)} €</strong>. Il y a une réduction de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le montant de la réduction ?`; 
+                cHtml = `La réduction est de <strong>${fmt(q.calcVal)} €</strong>.`;
+            } 
+            else if (cType === 'ecole') { 
+                unit = " élèves"; 
+                qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} élèves</strong>, <strong>${fmt(q.percent)} %</strong> mangent à la cantine.<br>Combien d'élèves mangent à la cantine ?`; 
+                cHtml = `<strong>${fmt(q.calcVal)} élèves</strong> mangent à la cantine.`;
+            } 
+            else if (cType === 'sport') { 
+                unit = " personnes"; 
+                qHtml = `${sportLieu} de <strong>${fmt(t)} places</strong> est rempli(e) à <strong>${fmt(q.percent)} %</strong>.<br>Combien y a-t-il de personnes ?`; 
+                cHtml = `Il y a <strong>${fmt(q.calcVal)} personnes</strong>.`;
+            }
+            else if (cType === 'distance') { 
+                unit = " km"; 
+                qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, tu as parcouru <strong>${fmt(q.percent)} %</strong>.<br>Combien de kilomètres as-tu parcourus ?`; 
+                cHtml = `Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>.`;
+            }
+            else if (cType === 'poids') { 
+                unit = " kg"; 
+                qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. On doit en retirer <strong>${fmt(q.percent)} %</strong>.<br>Quelle masse cela représente-t-il ?`; 
+                cHtml = `Cela représente <strong>${fmt(q.calcVal)} kg</strong>.`;
+            }
+            else if (cType === 'capacite') { 
+                unit = " L"; 
+                qHtml = `${capObjet} contient <strong>${fmt(t)} L</strong> d'eau. On la vide de <strong>${fmt(q.percent)} %</strong>.<br>Combien de litres ont été retirés ?`; 
+                cHtml = `<strong>${fmt(q.calcVal)} L</strong> ont été retirés.`;
+            }
+            else if (cType === 'nourriture') { 
+                unit = " g"; 
+                qHtml = `Pour préparer ${nourObjet} de <strong>${fmt(t)} g</strong>, la recette demande <strong>${fmt(q.percent)} %</strong> de sucre.<br>Quelle quantité vas-tu utiliser ?`; 
+                cHtml = `Tu vas utiliser <strong>${fmt(q.calcVal)} g</strong>.`;
+            }
         }
       }
       return { qHtml, cHtml, unit };
@@ -400,7 +433,7 @@
          if (type === 'tot_50') { parts = 2; activeParts = 1; }
          else if (type === 'tot_25') { parts = 4; activeParts = pick([1, 3]); }
          else if (type === 'tot_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'tot_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
+         else if (type === 'tot_10') { parts = 10; activeParts = pick([1, 2, 3, 4, 6, 7, 8, 9]); }
          percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
          calcVal = (totalVal / parts) * activeParts;
       }
@@ -409,7 +442,7 @@
          if (type === 'inv_50') { parts = 2; activeParts = 1; }
          else if (type === 'inv_25') { parts = 4; activeParts = pick([1, 3]); } 
          else if (type === 'inv_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 3, 7, 9]); }
+         else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 2, 3, 4, 6, 7, 8, 9]); }
          totalVal = getFriendlyTotal(parts, level);
          percent = (100 / parts) * activeParts; calcVal = (totalVal / parts) * activeParts;
       } 
@@ -454,8 +487,7 @@
          }
          else if (type === 'base_5') { parts = 20; activeParts = 1; percent = 5; totalVal = getFriendlyTotal(20, level); }
          else if (type === 'mult_25') { parts = 4; activeParts = 3; percent = 75; totalVal = getFriendlyTotal(4, level); }
-         else if (type === 'mult_20') { activeParts = pick([2,3,4]); percent = activeParts*20; parts = 5; totalVal = getFriendlyTotal(5, level); }
-         else if (type === 'mult_10') { activeParts = pick([3,4,6,7,8,9]); percent = activeParts*10; parts = 10; totalVal = getFriendlyTotal(10, level); }
+         else if (type === 'mult_10') { activeParts = pick([2,3,4,6,7,8,9]); percent = activeParts*10; parts = 10; totalVal = getFriendlyTotal(10, level); }
          else if (type === 'base_1') { 
              parts = 100; activeParts = 1; percent = 1; 
              if (level === 1) totalVal = rand(10, 99);
