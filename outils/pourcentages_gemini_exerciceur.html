@@ -98,6 +98,14 @@
     #diapoContainer.layout-shift-10 .hint-box { padding: 6px 40px 0 40px; }
     #diapoContainer.layout-shift-10 .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
 
+    #diapoContainer.layout-evo .hint-box { padding: 8px 40px 0 40px; }
+    #diapoContainer.layout-evo .correction-box { padding: 0 40px 8px 40px; margin-top: -24px; }
+
+    #diapoContainer.layout-find-percent .hint-box,
+    #diapoContainer.layout-find-total .hint-box { padding: 6px 40px 0 40px; }
+    #diapoContainer.layout-find-percent .correction-box,
+    #diapoContainer.layout-find-total .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
+
     /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
     @media print {
@@ -321,6 +329,78 @@
       return rand(min, max) * multiplier * scale;
     }
 
+
+    function canonicalConfigForPercent(percent) {
+      if (percent === 10) return { parts: 10, activeParts: 1, percent };
+      if (percent === 20) return { parts: 5, activeParts: 1, percent };
+      if (percent === 25) return { parts: 4, activeParts: 1, percent };
+      if (percent === 30) return { parts: 10, activeParts: 3, percent };
+      if (percent === 40) return { parts: 10, activeParts: 4, percent };
+      if (percent === 50) return { parts: 2, activeParts: 1, percent };
+      if (percent === 60) return { parts: 10, activeParts: 6, percent };
+      if (percent === 70) return { parts: 10, activeParts: 7, percent };
+      if (percent === 75) return { parts: 4, activeParts: 3, percent };
+      if (percent === 80) return { parts: 10, activeParts: 8, percent };
+      return { parts: 10, activeParts: 9, percent };
+    }
+
+    function buildEvolutionValuePools(useDecimals) {
+      const pools = { tenths: {1: [], 2: [], 3: []}, quarter: {1: [], 2: [], 3: []}, half: {1: [], 2: [], 3: []} };
+
+      if (!useDecimals) {
+        for (let v = 10; v <= 9990; v += 10) {
+          const nz = countNonZeroDigits(v);
+          if (nz === 1) pools.tenths[1].push(v);
+          else if (nz === 2) pools.tenths[2].push(v);
+          else pools.tenths[3].push(v);
+        }
+      } else {
+        for (let v = 1; v <= 9999; v++) {
+          if (v % 10 === 0) continue;
+          const nz = countNonZeroDigits(v);
+          if (nz === 2 && v <= 1000) pools.tenths[1].push(v);
+          else if ((nz === 2 && v > 1000) || (nz === 3 && hasInternalZero(v))) pools.tenths[2].push(v);
+          else pools.tenths[3].push(v);
+        }
+      }
+
+      if (!useDecimals) {
+        for (let v = 4; v <= 200; v += 4) pools.quarter[1].push(v);
+        for (let v = 204; v <= 1000; v += 4) pools.quarter[2].push(v);
+        for (let v = 1004; v <= 4000; v += 4) pools.quarter[3].push(v);
+      } else {
+        for (let v = 1; v <= 199; v++) if (v % 4 !== 0) pools.quarter[1].push(v);
+        for (let v = 201; v <= 999; v++) if (v % 4 !== 0) pools.quarter[2].push(v);
+        for (let v = 1001; v <= 3999; v++) if (v % 4 !== 0) pools.quarter[3].push(v);
+      }
+
+      if (!useDecimals) {
+        for (let v = 2; v <= 200; v += 2) pools.half[1].push(v);
+        for (let v = 202; v <= 2000; v += 2) pools.half[2].push(v);
+        for (let v = 2002; v <= 9998; v += 2) pools.half[3].push(v);
+      } else {
+        for (let v = 1; v <= 199; v += 2) pools.half[1].push(v);
+        for (let v = 201; v <= 1999; v += 2) pools.half[2].push(v);
+        for (let v = 2001; v <= 9999; v += 2) pools.half[3].push(v);
+      }
+
+      return pools;
+    }
+
+    function pickEvolutionConfig(level, useDecimals) {
+      const percentsByLevel = {
+        1: [10, 20, 25, 30, 50],
+        2: [10, 20, 25, 30, 40, 50, 60, 70],
+        3: [10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90]
+      };
+      const percent = pick(percentsByLevel[level] || percentsByLevel[1]);
+      const family = (percent === 50) ? 'half' : ((percent === 25 || percent === 75) ? 'quarter' : 'tenths');
+      const pools = buildEvolutionValuePools(useDecimals);
+      const totalVal = pick(pools[family][level]);
+      return { ...canonicalConfigForPercent(percent), totalVal };
+    }
+
+
     function buildText(q) {
       const hasDecimals = !Number.isInteger(q.totalVal) || !Number.isInteger(q.calcVal);
       
@@ -451,6 +531,18 @@
         }
       }
       return { qHtml, cHtml, unit };
+    }
+
+    function pickBase50Total(level, useDecimals) {
+      if (!useDecimals) {
+        if (level === 1) return rand(1, 100) * 2;     // 2 à 200
+        if (level === 2) return rand(101, 1000) * 2;  // 202 à 2000
+        return rand(1001, 4999) * 2;                  // 2002 à 9998
+      }
+
+      if (level === 1) return rand(0, 99) * 2 + 1;    // 1 à 199 impairs
+      if (level === 2) return rand(100, 999) * 2 + 1; // 201 à 1999 impairs
+      return rand(1000, 4999) * 2 + 1;                // 2001 à 9999 impairs
     }
 
     function pickBase20Total(level, useDecimals) {
@@ -610,8 +702,13 @@
       return [2, 3, 4, 6, 7, 8, 9];
     }
 
+    function getInverseTenthsActiveParts() {
+      return [1, 2, 3, 4, 6, 7, 8, 9];
+    }
+
+
     function getAntiDoublonKey(type, q) {
-      if (type === 'mult_10' || type === 'mult_hi') return `${q.percent}|${q.totalVal}`;
+      if (type.startsWith('mult_') || type.startsWith('inv_') || type.startsWith('tot_')) return `${q.percent}|${q.totalVal}`;
       return `${q.totalVal}`;
     }
 
@@ -619,43 +716,46 @@
       let percent, parts, activeParts, totalVal, calcVal, mode = 'direct';
       
       if (type.startsWith('evo_')) {
-         mode = type; 
-         parts = pick([4, 5, 10]); activeParts = pick([1, 2]); 
-         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
+         mode = type;
+         let evo = pickEvolutionConfig(level, useDecimals);
+         parts = evo.parts; activeParts = evo.activeParts; percent = evo.percent;
+         totalVal = evo.totalVal;
          if (type === 'evo_inc') calcVal = (totalVal / parts) * (parts + activeParts);
          else calcVal = (totalVal / parts) * (parts - activeParts);
       }
       else if (type.startsWith('tot_')) {
-         mode = 'find_total'; 
-         if (type === 'tot_50') { parts = 2; activeParts = 1; }
-         else if (type === 'tot_25') { parts = 4; activeParts = pick([1, 3]); }
-         else if (type === 'tot_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'tot_10') { parts = 10; activeParts = pick([1, 2, 3, 4, 6, 7, 8, 9]); }
-         percent = (100 / parts) * activeParts; totalVal = getFriendlyTotal(parts, level);
+         mode = 'find_total';
+         if (type === 'tot_50') {
+             parts = 2; activeParts = 1; totalVal = pickBase50Total(level, useDecimals);
+         } else if (type === 'tot_25') {
+             parts = 4; activeParts = pick([1, 3]); totalVal = pickBase25LikeTotal(level, useDecimals);
+         } else if (type === 'tot_20') {
+             parts = 5; activeParts = pick([1, 2, 3, 4]); totalVal = pickBase20Total(level, useDecimals);
+         } else if (type === 'tot_10') {
+             parts = 10; activeParts = pick(getInverseTenthsActiveParts()); totalVal = pickMult10Total(level, useDecimals);
+         }
+         percent = (100 / parts) * activeParts;
          calcVal = (totalVal / parts) * activeParts;
       }
       else if (type.startsWith('inv_')) {
-         mode = 'find_percent'; 
-         if (type === 'inv_50') { parts = 2; activeParts = 1; }
-         else if (type === 'inv_25') { parts = 4; activeParts = pick([1, 3]); } 
-         else if (type === 'inv_20') { parts = 5; activeParts = pick([1, 2, 3, 4]); }
-         else if (type === 'inv_10') { parts = 10; activeParts = pick([1, 2, 3, 4, 6, 7, 8, 9]); }
-         totalVal = getFriendlyTotal(parts, level);
-         percent = (100 / parts) * activeParts; calcVal = (totalVal / parts) * activeParts;
+         mode = 'find_percent';
+         if (type === 'inv_50') {
+             parts = 2; activeParts = 1; totalVal = pickBase50Total(level, useDecimals);
+         } else if (type === 'inv_25') {
+             parts = 4; activeParts = pick([1, 3]); totalVal = pickBase25LikeTotal(level, useDecimals);
+         } else if (type === 'inv_20') {
+             parts = 5; activeParts = pick([1, 2, 3, 4]); totalVal = pickBase20Total(level, useDecimals);
+         } else if (type === 'inv_10') {
+             parts = 10; activeParts = pick(getInverseTenthsActiveParts()); totalVal = pickMult10Total(level, useDecimals);
+         }
+         percent = (100 / parts) * activeParts;
+         calcVal = (totalVal / parts) * activeParts;
       } 
       else {
          mode = 'direct';
          if (type === 'base_50') { 
              parts = 2; activeParts = 1; percent = 50; 
-             if (!useDecimals) {
-                 if (level === 1) { totalVal = rand(1, 100) * 2; } 
-                 else if (level === 2) { totalVal = rand(101, 1000) * 2; } 
-                 else { totalVal = rand(1001, 4999) * 2; }
-             } else {
-                 if (level === 1) { totalVal = rand(0, 99) * 2 + 1; } 
-                 else if (level === 2) { totalVal = rand(100, 999) * 2 + 1; } 
-                 else { totalVal = rand(1000, 4999) * 2 + 1; }
-             }
+             totalVal = pickBase50Total(level, useDecimals);
          }
          else if (type === 'base_25') { 
              parts = 4; activeParts = 1; percent = 25; 
@@ -795,8 +895,13 @@
       }
 
       quizData = [];
-      const antiDoublonTypes = new Set(['base_50', 'base_25', 'base_20', 'base_10', 'base_5', 'mult_25', 'mult_10', 'mult_hi']);
-      const usedTotalsByType = { base_50: new Set(), base_25: new Set(), base_20: new Set(), base_10: new Set(), base_5: new Set(), mult_25: new Set(), mult_10: new Set(), mult_hi: new Set() };
+      const antiDoublonTypes = new Set(['base_50', 'base_25', 'base_20', 'base_10', 'base_5', 'base_1', 'mult_25', 'mult_10', 'mult_hi', 'mult_1', 'inv_50', 'inv_25', 'inv_20', 'inv_10', 'tot_50', 'tot_25', 'tot_20', 'tot_10']);
+      const usedTotalsByType = {
+        base_50: new Set(), base_25: new Set(), base_20: new Set(), base_10: new Set(), base_5: new Set(), base_1: new Set(),
+        mult_25: new Set(), mult_10: new Set(), mult_hi: new Set(), mult_1: new Set(),
+        inv_50: new Set(), inv_25: new Set(), inv_20: new Set(), inv_10: new Set(),
+        tot_50: new Set(), tot_25: new Set(), tot_20: new Set(), tot_10: new Set()
+      };
 
       for (let i = 0; i < count; i++) {
         const type = distributedTypes[i];
@@ -820,6 +925,52 @@
 
     function emptyElement(el) { while (el.firstChild) el.removeChild(el.firstChild); }
     function createSVG(tag, attrs) { const el = document.createElementNS(svgNS, tag); for (let k in attrs) el.setAttribute(k, attrs[k]); return el; }
+
+
+    function drawEvolutionBar(q, isCorrection, svgContainer, yOffset = 0) {
+      const displayParts = q.parts + (q.mode === 'evo_inc' ? q.activeParts : 0);
+      const hBar = 60, xStart = 80, yTop = 58 + yOffset, yBot = yTop + hBar;
+      const wPart = 800 / displayParts;
+      const wTotalDisplay = wPart * q.parts;
+      const partVal = parseFloat((q.totalVal / q.parts).toFixed(2));
+      const partPercent = parseFloat((100 / q.parts).toFixed(2));
+      const fillColor = colors[q.parts] || "var(--c-10)";
+
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
+      txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
+      drawBrace(svgContainer, xStart, yTop - 8, wTotalDisplay, "100 %", true);
+
+      for (let i = 0; i < displayParts; i++) {
+        const xPart = xStart + (i * wPart);
+        const isAdded = (q.mode === 'evo_inc' && i >= q.parts);
+        const isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts);
+        let partFill = fillColor;
+        let opacity = isCorrection ? "0.9" : (isAdded ? "0.18" : "0.5");
+        if (isRemoved && isCorrection) partFill = "url(#patternHatch)";
+
+        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: partFill, stroke: "#1f2a44", "stroke-width": "2.5", opacity: opacity }));
+
+        let fSizeVal = wPart < 45 ? "16" : "24";
+        let yOffsetVal = wPart < 45 ? 5 : 8;
+        let txtVal = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + yOffsetVal, "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeVal, fill: "#1f2a44" });
+        txtVal.textContent = isCorrection ? fmt(partVal) : "...";
+        svgContainer.appendChild(txtVal);
+
+        let label = fmt(partPercent) + " %";
+        if (isCorrection && isAdded) label = "+ " + label;
+        if (isCorrection && isRemoved) label = "- " + label;
+        drawBrace(svgContainer, xPart, yBot + hBar + 5, wPart, label, false, (isCorrection && isRemoved ? "#ff4d6d" : (isCorrection && isAdded ? "var(--accent)" : "#1f2a44")));
+      }
+
+      if (isCorrection) {
+        if (q.mode === 'evo_inc') {
+          drawBrace(svgContainer, xStart, yBot + hBar + 48, wPart * displayParts, `Nouveau total = ${fmt(q.calcVal)}`, false, "var(--accent)");
+        } else {
+          drawBrace(svgContainer, xStart, yBot + hBar + 48, wPart * (q.parts - q.activeParts), `Reste = ${fmt(q.calcVal)}`, false, "var(--success)");
+        }
+      }
+    }
 
     function drawSVGBar(q, isCorrection, svgContainer, yOffset = 0) {
       let displayParts = (q.mode === 'evo_inc') ? q.parts + q.activeParts : q.parts;
@@ -859,7 +1010,7 @@
             svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
         }
 
-        if (isCorrection || (q.mode === 'find_total' && i < q.activeParts) || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
+        if (isCorrection || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
             if (!(isAdded && !isCorrection)) {
                 let fSizeVal = wPart < 45 ? "16" : "24"; 
                 let yOffsetVal = wPart < 45 ? 5 : 8;
@@ -878,12 +1029,18 @@
         }
       }
 
-      if (isCorrection || (q.mode === 'find_total' && !isCorrection)) {
+      if (!isCorrection && q.mode === 'find_total' && q.activeParts > 1) {
+        drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} %  ➔  ${fmt(q.calcVal)}`, false, "var(--accent)");
+      }
+      if (isCorrection) {
         if (q.mode === 'evo_inc') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * displayParts, `Nouveau total = ${fmt(q.calcVal)}`, false, "var(--accent)"); } 
         else if (q.mode === 'evo_dec') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * (q.parts - q.activeParts), `Reste = ${fmt(q.calcVal)}`, false, "var(--success)"); } 
-        else if (q.mode === 'find_percent') { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.calcVal)}  ➔  ${fmt(q.percent)} %`, false, "var(--accent)"); } 
-        else if (q.mode === 'find_total' && !isCorrection) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} %  ➔  ${fmt(q.calcVal)}`, false, "var(--accent)"); } 
-        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} %  ➔  ${fmt(q.calcVal)}`, false, "var(--accent)"); }
+        else if (q.mode === 'find_percent') {
+          if (q.parts !== 2 && q.parts !== 4) {
+            drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.calcVal)}  ➔  ${fmt(q.percent)} %`, false, "var(--accent)");
+          }
+        } 
+        else if (q.mode !== 'find_total' && q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 45, wPart * q.activeParts, `${fmt(q.percent)} %  ➔  ${fmt(q.calcVal)}`, false, "var(--accent)"); }
       }
     }
 
@@ -984,6 +1141,9 @@
       document.getElementById('diapoContainer').classList.remove('layout-tall-25');
       document.getElementById('diapoContainer').classList.remove('layout-shift-50');
       document.getElementById('diapoContainer').classList.remove('layout-shift-10');
+      document.getElementById('diapoContainer').classList.remove('layout-evo');
+      document.getElementById('diapoContainer').classList.remove('layout-find-percent');
+      document.getElementById('diapoContainer').classList.remove('layout-find-total');
       emptyElement(stage);
 
       if (q.phase === 0) {
@@ -993,7 +1153,19 @@
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
         btnNext.innerHTML = "Correction 👀 ►"; 
         
-        if(q.parts === 100) {
+        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
+            document.getElementById('diapoContainer').classList.add('layout-evo');
+            stage.setAttribute("viewBox", "0 0 1000 380");
+            drawEvolutionBar(q, false, stage, 0);
+        } else if (q.mode === 'find_percent') {
+            document.getElementById('diapoContainer').classList.add('layout-find-percent');
+            stage.setAttribute("viewBox", "0 0 1000 320");
+            drawSVGBar(q, false, stage, 18);
+        } else if (q.mode === 'find_total') {
+            document.getElementById('diapoContainer').classList.add('layout-find-total');
+            stage.setAttribute("viewBox", "0 0 1000 320");
+            drawSVGBar(q, false, stage, 18);
+        } else if(q.parts === 100) {
             stage.setAttribute("viewBox", "0 0 1000 320");
             draw100Parts(q, false, stage); 
         } else if (q.parts === 4 && q.mode === 'direct') {
@@ -1030,7 +1202,19 @@
         document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
         document.getElementById('cText').innerHTML = q.cHtml; 
         
-        if(q.parts === 100) {
+        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
+            document.getElementById('diapoContainer').classList.add('layout-evo');
+            stage.setAttribute("viewBox", "0 0 1000 380");
+            drawEvolutionBar(q, true, stage, 0);
+        } else if (q.mode === 'find_percent') {
+            document.getElementById('diapoContainer').classList.add('layout-find-percent');
+            stage.setAttribute("viewBox", "0 0 1000 320");
+            drawSVGBar(q, true, stage, 18);
+        } else if (q.mode === 'find_total') {
+            document.getElementById('diapoContainer').classList.add('layout-find-total');
+            stage.setAttribute("viewBox", "0 0 1000 320");
+            drawSVGBar(q, true, stage, 18);
+        } else if(q.parts === 100) {
             stage.setAttribute("viewBox", "0 0 1000 320");
             draw100Parts(q, true, stage); 
         } else if (q.parts === 4 && q.mode === 'direct') {
@@ -1104,7 +1288,13 @@
         if (withGabarits) {
           let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
           let svg = document.createElementNS(svgNS, "svg"); 
-          if (q.parts === 4 && q.mode === 'direct') {
+          if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
+              svg.setAttribute("viewBox", "0 0 1000 380");
+              drawEvolutionBar(q, false, svg, 0);
+          } else if (q.mode === 'find_percent' || q.mode === 'find_total') {
+              svg.setAttribute("viewBox", "0 0 1000 320");
+              drawSVGBar(q, false, svg, 18);
+          } else if (q.parts === 4 && q.mode === 'direct') {
               svg.setAttribute("viewBox", "0 0 1000 520");
               let q50 = { ...q, parts: 2, activeParts: 1, percent: 50, calcVal: q.totalVal / 2 };
               drawSVGBar(q50, false, svg, 18);
@@ -1152,7 +1342,13 @@
         
         let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
         let svg = document.createElementNS(svgNS, "svg"); 
-        if (q.parts === 4 && q.mode === 'direct') {
+        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
+            svg.setAttribute("viewBox", "0 0 1000 380");
+            drawEvolutionBar(q, true, svg, 0);
+        } else if (q.mode === 'find_percent' || q.mode === 'find_total') {
+            svg.setAttribute("viewBox", "0 0 1000 320");
+            drawSVGBar(q, true, svg, 18);
+        } else if (q.parts === 4 && q.mode === 'direct') {
             svg.setAttribute("viewBox", "0 0 1000 520");
             let q50 = { ...q, parts: 2, activeParts: 1, percent: 50, calcVal: q.totalVal / 2 };
             drawSVGBar(q50, true, svg, 18);
