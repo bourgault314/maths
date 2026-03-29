@@ -38,18 +38,25 @@
 
         /* --- STYLE DU BADGE IA --- */
         .ai-badge {
-            background-color: #e0e7ff; /* Fond bleu très clair */
-            color: #312e81; /* Texte bleu foncé */
+            background-color: #e0e7ff; 
+            color: #312e81; 
             padding: 10px 16px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-flex;
+            font-size: 0.95rem;
+            display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 8px;
             margin: 0 auto 2rem auto;
             border: 1px solid #c7d2fe;
-            line-height: 1.4;
-            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ai-badge:hover {
+            background-color: #c7d2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49, 46, 129, 0.1);
         }
 
         .btn-start {
@@ -70,8 +77,8 @@
         footer { margin-top: 3rem; color: #64748b; font-size: 0.9rem; text-align: center; line-height: 1.6; }
         .contact-btn { color: var(--primary); text-decoration: underline; cursor: pointer; font-weight: 700; }
 
-        /* --- DÉBUT MODAL ME CONTACTER UNIFIÉ --- */
-        #contact-modal {
+        /* --- MODALES --- */
+        .modal-overlay {
           display: none;
           position: fixed;
           z-index: 1000;
@@ -107,16 +114,13 @@
           transition: color 0.2s;
         }
 
-        .close-modal:hover {
-          color: #1e1b4b;
-        }
+        .close-modal:hover { color: #1e1b4b; }
 
         .modal-content h2 {
           margin: 0 0 12px;
           color: #1e1b4b;
           font-size: 1.5rem;
           font-weight: 800;
-          letter-spacing: normal;
         }
 
         .modal-note {
@@ -126,51 +130,34 @@
           line-height: 1.5;
         }
 
-        .modal-content input,
-        .modal-content textarea {
-          width: 100%;
-          padding: 14px;
-          margin-bottom: 12px;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          font-family: inherit;
-          color: #1e1b4b;
-          background: #f8fafc;
-          box-sizing: border-box;
-          transition: border-color 0.2s;
+        .modal-text-block {
+            color: #334155;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
         }
 
-        .modal-content input:focus,
-        .modal-content textarea:focus {
-          outline: none;
-          border-color: #1e1b4b;
-          background: #ffffff;
+        .modal-content input, .modal-content textarea {
+          width: 100%; padding: 14px; margin-bottom: 12px;
+          border: 1px solid #e2e8f0; border-radius: 12px;
+          font-family: inherit; color: #1e1b4b; background: #f8fafc;
+          box-sizing: border-box; transition: border-color 0.2s;
         }
 
-        .modal-content textarea {
-          resize: vertical;
-          min-height: 120px;
+        .modal-content input:focus, .modal-content textarea:focus {
+          outline: none; border-color: #1e1b4b; background: #ffffff;
         }
+
+        .modal-content textarea { resize: vertical; min-height: 120px; }
 
         .btn-send {
-          background: #1e1b4b;
-          color: #ffffff;
-          border: none;
-          width: 100%;
-          padding: 15px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-weight: 700;
-          font-size: 1rem;
-          margin-top: 8px;
+          background: #1e1b4b; color: #ffffff; border: none; width: 100%;
+          padding: 15px; border-radius: 12px; cursor: pointer;
+          font-weight: 700; font-size: 1rem; margin-top: 8px;
           transition: transform 0.15s ease, filter 0.2s ease;
         }
 
-        .btn-send:hover {
-          filter: brightness(1.2);
-          transform: translateY(-2px);
-        }
-        /* --- FIN MODAL ME CONTACTER UNIFIÉ --- */
+        .btn-send:hover { filter: brightness(1.2); transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -180,10 +167,11 @@
         <h1>Bienvenue</h1>
         <p class="subtitle">Outils numériques à l'usage des enseignants et des élèves en mathématiques.</p>
         
-        <div class="ai-badge">
+        <div class="ai-badge" onclick="document.getElementById('ia-modal').style.display='flex'">
             <span style="font-size: 1.2rem;">🤖</span>
-            <span><b>Transparence :</b> Idées et conception 100% prof, code généré avec l'aide de l'IA.</span>
+            <span><b>Démarche IA :</b> Transparence et limites</span>
         </div>
+
         <a href="outils/" class="btn-start">
             <span>Accéder aux outils</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -195,18 +183,28 @@
         <span class="contact-btn" onclick="document.getElementById('contact-modal').style.display='flex'">Me contacter</span>
     </footer>
 
-    <div id="contact-modal" aria-hidden="true">
+    <div id="contact-modal" class="modal-overlay" aria-hidden="true">
       <div class="modal-content">
         <span class="close-modal" onclick="document.getElementById('contact-modal').style.display='none'">&times;</span>
         <h2>Me contacter</h2>
-        <p class="modal-note">
-          N'hésitez pas pour toute remarque, question ou bug rencontré sur le site.
-        </p>
+        <p class="modal-note">N'hésitez pas pour toute remarque, question ou bug rencontré sur le site.</p>
         <form action="https://formspree.io/f/xvzwqwdl" method="POST">
           <input type="email" name="email" placeholder="Votre adresse e-mail" required>
           <textarea name="message" rows="5" placeholder="Votre message..." required></textarea>
           <button type="submit" class="btn-send">Envoyer le message</button>
         </form>
+      </div>
+    </div>
+
+    <div id="ia-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <span class="close-modal" onclick="document.getElementById('ia-modal').style.display='none'">&times;</span>
+        <h2>Transparence & IA</h2>
+        <div class="modal-text-block">
+          <p><b>🛠️ Conception collaborative :</b> J'apporte la vision pédagogique et je teste le rendu final. L'Intelligence Artificielle m'assiste pour la génération du code informatique, la mise en page, et m'aide parfois à brainstormer sur de nouvelles idées.</p>
+          <p><b>⚠️ Limites techniques :</b> N'étant pas développeur, <b>je ne sais pas lire ni vérifier le code généré</b>. Je juge l'outil sur son fonctionnement visuel et pratique, mais je ne peux pas garantir l'optimisation du code "en coulisses". Des bugs ou des erreurs peuvent donc toujours subsister.</p>
+          <p><b>👨‍🏫 Responsabilité :</b> Chaque enseignant reste entièrement responsable de la vérification des outils avant leur utilisation et de la pertinence de ce qu'il projette à ses élèves en classe.</p>
+        </div>
       </div>
     </div>
 
