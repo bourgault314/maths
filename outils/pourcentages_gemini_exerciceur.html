@@ -161,6 +161,7 @@
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>1 %</strong><span class="cb-desc">Le centième pur</span></div></label>
           <label class="cb-row"><input type="checkbox" value="mult_1"> <div><strong>2 % à 49 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_hi"> <div><strong>51 % à 99 %</strong><span class="cb-desc">Gros pourcentages</span></div></label>
         </div>
         <hr>
         <h3>📈 Les Évolutions (4ème)</h3>
@@ -568,12 +569,49 @@
       return val;
     }
 
+
+    function pickHighPercentTotal(level, useDecimals) {
+      if (!useDecimals) {
+        const level1OnePct = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90];
+        const level2OnePct = [12,15,18,22,24,25,32,35,42,45,55,62,65,72,75,82,85,95];
+        if (level === 1) return pick(level1OnePct) * 100;
+        if (level === 2) return pick(level2OnePct) * 100;
+
+        const excluded = new Set([...level1OnePct, ...level2OnePct]);
+        const values = [];
+        for (let onePct = 11; onePct <= 99; onePct++) {
+          if (!excluded.has(onePct)) values.push(onePct * 100);
+        }
+        return pick(values);
+      }
+
+      const values = [];
+      if (level === 1) {
+        for (let v = 10; v <= 990; v += 10) {
+          if (v % 100 !== 0 && countNonZeroDigits(v) === 2) values.push(v);
+        }
+        return pick(values);
+      }
+
+      if (level === 2) {
+        for (let v = 1010; v <= 9990; v += 10) {
+          if (v % 100 !== 0 && countNonZeroDigits(v) === 2) values.push(v);
+        }
+        return pick(values);
+      }
+
+      for (let v = 10; v <= 9990; v += 10) {
+        if (v % 100 !== 0 && countNonZeroDigits(v) === 3) values.push(v);
+      }
+      return pick(values);
+    }
+
     function getMult10ActiveParts(level, useDecimals) {
       return [2, 3, 4, 6, 7, 8, 9];
     }
 
     function getAntiDoublonKey(type, q) {
-      if (type === 'mult_10') return `${q.percent}|${q.totalVal}`;
+      if (type === 'mult_10' || type === 'mult_hi') return `${q.percent}|${q.totalVal}`;
       return `${q.totalVal}`;
     }
 
@@ -661,6 +699,12 @@
                  else if (level === 2) { let val; do { val = rand(101, 999); } while (val % 10 === 0); totalVal = val; } 
                  else { if (rand(0, 1) === 0) { totalVal = rand(1, 99); } else { totalVal = rand(1001, 9999); } }
              }
+         }
+         else if (type === 'mult_hi') { 
+             parts = 100;
+             activeParts = rand(51, 99);
+             percent = activeParts;
+             totalVal = pickHighPercentTotal(level, useDecimals);
          }
          else if (type === 'mult_1') { 
              parts = 100; 
@@ -751,8 +795,8 @@
       }
 
       quizData = [];
-      const antiDoublonTypes = new Set(['base_50', 'base_25', 'base_20', 'base_10', 'base_5', 'mult_25', 'mult_10']);
-      const usedTotalsByType = { base_50: new Set(), base_25: new Set(), base_20: new Set(), base_10: new Set(), base_5: new Set(), mult_25: new Set(), mult_10: new Set() };
+      const antiDoublonTypes = new Set(['base_50', 'base_25', 'base_20', 'base_10', 'base_5', 'mult_25', 'mult_10', 'mult_hi']);
+      const usedTotalsByType = { base_50: new Set(), base_25: new Set(), base_20: new Set(), base_10: new Set(), base_5: new Set(), mult_25: new Set(), mult_10: new Set(), mult_hi: new Set() };
 
       for (let i = 0; i < count; i++) {
         const type = distributedTypes[i];
