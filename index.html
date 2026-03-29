@@ -34,7 +34,23 @@
         @keyframes wave { 0%, 100% { transform: rotate(0deg) } 20% { transform: rotate(12deg) } 40% { transform: rotate(-8deg) } 60% { transform: rotate(10deg) } }
 
         h1 { font-size: 2.6rem; font-weight: 800; color: var(--primary); margin: 0; letter-spacing: -1px; }
-        p.subtitle { color: #475569; font-size: 1.15rem; line-height: 1.6; margin: 1.5rem 0 2.5rem; }
+        p.subtitle { color: #475569; font-size: 1.15rem; line-height: 1.6; margin: 1.5rem 0 1.5rem; }
+
+        /* --- STYLE DU BADGE IA --- */
+        .ai-badge {
+            background-color: #e0e7ff; /* Fond bleu très clair */
+            color: #312e81; /* Texte bleu foncé */
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto 2rem auto;
+            border: 1px solid #c7d2fe;
+            line-height: 1.4;
+            text-align: left;
+        }
 
         .btn-start {
             display: inline-flex; align-items: center; gap: 12px;
@@ -163,6 +179,11 @@
         <div class="emoji-header">👋</div>
         <h1>Bienvenue</h1>
         <p class="subtitle">Outils numériques à l'usage des enseignants et des élèves en mathématiques.</p>
+        
+        <div class="ai-badge">
+            <span style="font-size: 1.2rem;">🤖</span>
+            <span><b>Transparence :</b> Idées et conception 100% prof, code généré avec l'aide de l'IA.</span>
+        </div>
         <a href="outils/" class="btn-start">
             <span>Accéder aux outils</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
