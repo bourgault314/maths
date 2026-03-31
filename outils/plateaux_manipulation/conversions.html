@@ -22,12 +22,15 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  .inner{position:relative;padding-top:140px} 
+  /* AJUSTEMENT : On équilibre parfaitement le haut et le bas pour laisser la place aux deux badges */
+  .inner{position:relative;padding-top:120px; padding-bottom:120px;} 
   .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;margin-bottom:6px;position:relative;z-index:2}
   .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;user-select:none;position:relative;z-index:1}
 
   .cursor{
-    position:absolute; left:0; top:110px; bottom:-6px;
+    position:absolute; left:0; 
+    /* Le curseur dépasse symétriquement de 30px en haut et en bas du tableau */
+    top:90px; bottom:90px;
     box-sizing: border-box; 
     background: color-mix(in srgb, var(--accent) 15%, transparent);
     border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
@@ -37,11 +40,11 @@
     z-index:3;
   }
   
-  /* LA VIRGULE : Encore un peu remontée pour un alignement parfait */
+  /* LA VIRGULE : Recalculée pour s'aligner parfaitement malgré le nouveau padding du bas */
   .cursor::after {
     content: ",";
     position: absolute;
-    bottom: 42px; /* <-- AJUSTEMENT : 42px au lieu de 36px pour la remonter d'un cran */
+    bottom: 72px; /* Recalculé pour garder ton alignement parfait */
     right: 2px; 
     font-family: 'Nunito', Arial, sans-serif;
     font-size: 3.2rem; 
@@ -50,38 +53,49 @@
     line-height: 0;
   }
 
-  .handle{
-    position:absolute; left:0; top:5px;
-    width: 100px;
-    height: 100px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    border: 2px solid #fff;
-    border-radius: 15px;
+  /* LE NOUVEAU CONTENEUR DU CURSEUR */
+  .handle-wrapper {
+    position:absolute; left:0; top:0; bottom:0;
+    width: 130px; /* Un peu plus large pour le texte plus gros */
     z-index:11;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #fff; font-weight: 800;
-    line-height: 1.1; text-align: center;
-    user-select: none; cursor: grab;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    box-sizing: border-box;
-    padding: 8px 4px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    pointer-events: none; /* Laisse passer les clics au centre */
     transition: transform .15s ease-out;
     touch-action: none;
   }
-  .handle.dragging{cursor:grabbing; filter: brightness(1.1); z-index:20;}
-  
-  .handle::after {
-    content: "";
-    position: absolute; bottom: -10px; left: 50%;
-    transform: translateX(-50%);
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid var(--accent-dark);
+  .handle-wrapper.dragging { z-index:20; }
+  .handle-wrapper.dragging .handle-badge { cursor:grabbing; filter: brightness(1.1); }
+
+  /* LE STYLE COMMUN AUX DEUX BADGES */
+  .handle-badge {
+    position: absolute; left: 0; right: 0;
+    pointer-events: auto; /* Réactive les clics sur les badges */
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    border: 2px solid #fff;
+    border-radius: 12px;
+    color: #fff; font-weight: 900;
+    text-align: center;
+    user-select: none; cursor: grab;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-sizing: border-box;
+    padding: 10px 4px;
   }
 
-  .h-unit { font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-bottom: 2px; }
-  .h-arrow { font-size: 1.2rem; margin: 2px 0; }
-  .h-main { font-size: 0.85rem; font-weight: 900; }
+  /* POSITIONS SPÉCIFIQUES ET FLÈCHES EN CSS PUR */
+  .handle-top { top: 15px; }
+  .handle-bottom { bottom: 15px; }
+
+  .handle-top::after {
+    content: ""; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+    border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 12px solid var(--accent-dark);
+  }
+  .handle-bottom::before {
+    content: ""; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 12px solid var(--accent);
+  }
+
+  /* TEXTE PLUS GROS COMME DEMANDÉ */
+  .h-text { font-size: 1.1rem; line-height: 1.15; text-transform: uppercase; }
 
   .unitBtn{
     background:color-mix(in srgb, var(--accent) 12%, #fff);
@@ -157,10 +171,13 @@
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
       
-      <div class="handle" id="handle">
-        <div class="h-unit">Unités de<br>mesure</div>
-        <div class="h-arrow">▼</div>
-        <div class="h-main">Chiffre des<br>unités</div>
+      <div class="handle-wrapper" id="handle">
+        <div class="handle-badge handle-top">
+          <div class="h-text">Unités de<br>mesure</div>
+        </div>
+        <div class="handle-badge handle-bottom">
+          <div class="h-text">Chiffre des<br>unités</div>
+        </div>
       </div>
 
       <div class="head" id="head"></div>
