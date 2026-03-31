@@ -54,8 +54,8 @@
   /* BULLES ÉLARGIES ET TEXTE PLUS GROS */
   .handle{
     position:absolute; left:0;
-    width: 140px;  /* <-- Plus large */
-    height: 75px;  /* <-- Un poil plus haute */
+    width: 140px; 
+    height: 75px; 
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     border: 2px solid #fff;
     border-radius: 12px;
@@ -71,7 +71,6 @@
   }
   .handle.dragging{cursor:grabbing; filter: brightness(1.1); z-index:20;}
   
-  /* Police grossie */
   .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
 
   .handle-top::after {
@@ -314,7 +313,6 @@
         const handleTop = document.getElementById('handleTop');
         const handleBottom = document.getElementById('handleBottom');
         
-        // Ajustement à -75 pour correspondre à la nouvelle hauteur des bulles (75px)
         if (handleTop) handleTop.style.top = `${topPx - 75 - 14}px`;
         if (handleBottom) handleBottom.style.top = `${bottomPx + 14}px`;
     }
@@ -403,7 +401,9 @@
       let colVal=0; for(let si=0;si<S;si++){ const ch=inputs[ci][si].value.trim(); colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0); }
       sum += colVal * Math.pow(10, (baseIdx-ci)*S);
     }
-    return sum * Math.pow(10, -(baseIdx-targetIdx)*S);
+    // CORRECTION DU BUG DES FLOTTANTS : On force l'arrondi sécurisé pour effacer la "poussière" binaire
+    let rawVal = sum * Math.pow(10, -(baseIdx-targetIdx)*S);
+    return Number(rawVal.toFixed(12)); 
   }
 
   function minFractionDigitsForTarget(){
@@ -429,7 +429,7 @@
       const alt = (u === 'hm²') ? 'ha' : 'a'; addEqLine(`${compact} ${u} = ${compact} ${alt}`);
     }
     if(kind === 'cross'){
-      if(u === 'm³') addEqLine(`${compact} m³ = ${formatFR(val * 1000)} L`);
+      if(u === 'm³') addEqLine(`${compact} m³ = ${Number((val * 1000).toFixed(12)).toLocaleString('fr-FR')} L`);
       else if(u === 'dm³') addEqLine(`${compact} dm³ = ${compact} L`);
       else if(u === 'cm³') addEqLine(`${compact} cm³ = ${compact} mL`);
     }
@@ -439,7 +439,6 @@
     const p = s.split(','); if(p[0].length > 0){ p[0] = p[0].slice(0,-1) + `<span class="unit-highlight">${p[0].slice(-1)}</span>`; } return p.join(',');
   }
   function addEqLine(t){ const e = document.createElement('span'); e.className = 'eqLine'; e.innerHTML = t; result.appendChild(e); }
-  function formatFR(x){ return x.toLocaleString('fr-FR'); }
 
   btnTog.addEventListener('click', ()=>{ if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display='flex'; btnTog.textContent='Masquer'; isShown=true; } else { restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; } });
   btnRst.addEventListener('click', ()=>{ inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); })); setTarget(schema.units.indexOf(schema.base),true); });
