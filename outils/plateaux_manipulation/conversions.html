@@ -23,8 +23,8 @@
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
   .inner{position:relative;padding-top:70px}
-  .head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;position:relative;z-index:1}
+  .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
+  .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;user-select:none;position:relative;z-index:1}
 
   .cursor{
     position:absolute; left:0; top:40px; bottom:-6px;
@@ -139,6 +139,7 @@
       <select id="kind">
         <option value="length" selected>Longueur (m)</option>
         <option value="mass">Masse (g)</option>
+        <option value="massT">Masse complète (t ↔ mg)</option>
         <option value="volL">Volume (L)</option>
         <option value="area">Aire (m²)</option>
         <option value="volM3">Volume (m³)</option>
@@ -167,9 +168,9 @@
       <div class="head" id="head"></div>
 
       <div class="subhead" id="subhead">
-        <div class="sub-lab" id="labKL">kL</div>
-        <div class="sub-lab" id="labL">L</div>
-        <div class="sub-lab" id="labML">mL</div>
+        <div class="sub-lab" id="lab1"></div>
+        <div class="sub-lab" id="lab2"></div>
+        <div class="sub-lab" id="lab3"></div>
       </div>
 
       <div class="grid" id="grid"></div>
@@ -180,13 +181,17 @@
 <script>
 (function(){
   const THEMES = {
-    length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'],
-    volL:['#06b6d4','#0a8aa3'],   area:['#f59e0b','#b77207'],
-    volM3:['#7c3aed','#5a27b0'],  cross:['#db2777','#a81d5a'],
+    length:['#1283ff','#0b67c6'], 
+    mass:['#16a34a','#0e7a36'], massT:['#16a34a','#0e7a36'],
+    volL:['#06b6d4','#0a8aa3'],   
+    area:['#f59e0b','#b77207'],
+    volM3:['#7c3aed','#5a27b0'],  
+    cross:['#db2777','#a81d5a'],
   };
   const SCHEMAS = {
     length:{label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], base:'m',  slots:1},
     mass:  {label:'Masse (g)',    units:['kg','hg','dag','g','dg','cg','mg'],  base:'g',  slots:1},
+    massT: {label:'Masse complète (t)',    units:['t','q','-','kg','hg','dag','g','dg','cg','mg'], base:'g', slots:1},
     volL:  {label:'Volume (L)',   units:['kL','hL','daL','L','dL','cL','mL'],   base:'L',  slots:1},
     area:  {label:'Aire (m²)',    units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], base:'m²', slots:2},
     volM3: {label:'Volume (m³)',  units:['km³','hm³','dam³','m³','dm³','cm³','mm³'],  base:'m³', slots:3},
@@ -211,13 +216,13 @@
   const zoomLabel = document.getElementById('zoomLabel');
   const fsBtn     = document.getElementById('fsBtn');
   const subhead   = document.getElementById('subhead');
-  const labKL     = document.getElementById('labKL');
-  const labL      = document.getElementById('labL');
-  const labML     = document.getElementById('labML');
+  const lab1      = document.getElementById('lab1');
+  const lab2      = document.getElementById('lab2');
+  const lab3      = document.getElementById('lab3');
 
   let schema = SCHEMAS.length;
   let targetIdx = 3;
-  let isShown = true; /* Affiché par défaut */
+  let isShown = true;
   let inputs = [];
   let savedStudent = null;
 
@@ -246,6 +251,9 @@
     setTheme(kind);
     titleEl.textContent = `CONVERSIONS – ${schema.label}`;
 
+    head.style.setProperty('--cols', schema.units.length);
+    grid.style.setProperty('--cols', schema.units.length);
+
     head.innerHTML=''; grid.innerHTML=''; inputs=[];
     schema.units.forEach((u,i)=>{
       const b=document.createElement('div');
@@ -261,7 +269,15 @@
       head.appendChild(b);
     });
 
-    subhead.style.display = (kind==='cross')?'block':'none';
+    if (kind === 'cross') {
+        subhead.style.display = 'block';
+        lab1.textContent = 'kL'; lab2.textContent = 'L'; lab3.textContent = 'mL';
+    } else if (kind === 'area') {
+        subhead.style.display = 'block';
+        lab1.textContent = 'ha'; lab2.textContent = 'a'; lab3.textContent = ''; // On n'affiche plus "ca"
+    } else {
+        subhead.style.display = 'none';
+    }
 
     schema.units.forEach((u,i)=>{
       const cell=document.createElement('div'); cell.className='cell';
@@ -290,12 +306,22 @@
       cell.appendChild(wrap); grid.appendChild(cell); inputs.push(slots);
     });
 
+    let defaultIdx = schema.units.indexOf(schema.base);
+    if(defaultIdx === -1) defaultIdx = 3; 
+
     requestAnimationFrame(() => {
-        setTarget(schema.units.indexOf(schema.base), false);
+        setTarget(defaultIdx, false);
         positionCoupleLabels();
         if(isShown){ completeZerosInTable(); updateResult(); }
     });
   }
+
+  grid.addEventListener('focusout', () => {
+    setTimeout(() => {
+      if (document.activeElement && document.activeElement.classList.contains('digit')) return;
+      if (isShown) { completeZerosInTable(); updateResult(); }
+    }, 10);
+  });
 
   function getSlotMetrics(ci) {
       const cell = grid.children[ci];
@@ -315,16 +341,23 @@
   }
 
   function positionCoupleLabels(){
-    if(kindSel.value!=='cross') return;
+    const kind = kindSel.value;
+    if(kind !== 'cross' && kind !== 'area') return;
     
     const setLabelPos = (lab, ci) => {
         const metrics = getSlotMetrics(ci);
         lab.style.left = `${metrics.cx}px`;
     };
 
-    setLabelPos(labKL, 3);
-    setLabelPos(labL, 4);
-    setLabelPos(labML, 5);
+    if (kind === 'cross') {
+        setLabelPos(lab1, 3); 
+        setLabelPos(lab2, 4); 
+        setLabelPos(lab3, 5); 
+    } else if (kind === 'area') {
+        setLabelPos(lab1, 1); // hm² -> ha
+        setLabelPos(lab2, 2); // dam² -> a
+        // On ne positionne plus lab3 pour "ca"
+    }
   }
   
   window.addEventListener('resize', () => requestAnimationFrame(() => setTarget(targetIdx,false)));
@@ -337,7 +370,6 @@
   }
   function focusNext(ci,si){ if(si<schema.slots-1) inputs[ci][si+1].focus(); else if(ci<inputs.length-1) inputs[ci+1][0].focus(); }
   function focusPrev(ci,si){ if(si>0) inputs[ci][si-1].focus(); else if(ci>0) inputs[ci-1][schema.slots-1].focus(); }
-
 
   function setTarget(i,refresh){
     targetIdx = i;
@@ -379,9 +411,10 @@
       const relativeX = (e.clientX - innerRect.left) / zoomScale;
       const clampedX = clamp(relativeX, 0, innerRect.width / zoomScale);
       
+      const cols = schema.units.length;
       const totalW = innerRect.width / zoomScale;
-      const colW = totalW / 7; 
-      const cellW = colW - (36/7); 
+      const colW = totalW / cols; 
+      const cellW = colW - (((cols-1)*6)/cols); 
       const subW = cellW / schema.slots; 
 
       cursor.style.width = `${subW + 6}px`;
@@ -397,10 +430,11 @@
       cursor.style.transition = 'transform .15s ease-out, width .15s ease-out';
       handle.style.transition = 'transform .15s ease-out';
       
+      const cols = schema.units.length;
       const innerRect = inner.getBoundingClientRect();
       const relativeX = (e.clientX - innerRect.left) / zoomScale;
-      const colWidth = (innerRect.width / zoomScale) / 7;
-      const i = clamp(Math.floor(relativeX / colWidth), 0, 6);
+      const colWidth = (innerRect.width / zoomScale) / cols;
+      const i = clamp(Math.floor(relativeX / colWidth), 0, cols - 1);
       setTarget(i, true);
     }
     handle.addEventListener('pointerup', endDrag);
@@ -423,6 +457,10 @@
       if(/^[0-9]$/.test(v)){ if(first===-1) first=k; last=k; }
     }
     if(first===-1) return;
+
+    if (document.activeElement && document.activeElement.classList.contains('digit')) {
+      return;
+    }
 
     const targetRightSlot = targetIdx * S + (S - 1);
     const lastUserCol = Math.floor(last / S);
@@ -532,13 +570,16 @@
     const main = document.createElement('span');
     main.className = 'mainLine';
     
-    main.innerHTML = `${highlightUnitDigit(compact)} <span class="unit-highlight">${u}</span>`;
+    let displayU = u;
+    if (u === '-') displayU = 'dizaines de kg';
+
+    main.innerHTML = `${highlightUnitDigit(compact)} <span class="unit-highlight">${displayU}</span>`;
     result.appendChild(main);
 
     const kind = kindSel.value;
 
     if(kind === 'area' && (u === 'hm²' || u === 'dam²')){
-      const alt = (u === 'hm²') ? 'ha' : 'a';
+      const alt = (u === 'hm²') ? 'ha' : 'a'; // Plus de logique pour les ca
       if(raw !== compact){
         addEqLine(`${raw} ${u} = ${compact} ${u} = ${compact} ${alt}`);
       }else{
@@ -546,7 +587,7 @@
       }
     }else{
       if(raw !== compact){
-        addEqLine(`${raw} ${u} = ${compact} ${u}`);
+        addEqLine(`${raw} ${displayU} = ${compact} ${displayU}`);
       }
     }
 
@@ -569,7 +610,7 @@
   document.getElementById('reset').addEventListener('click', ()=>{
     inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); }));
     setTarget(schema.units.indexOf(schema.base),false);
-    result.style.display='flex'; /* Reste affiché même après reset si on le souhaite, ou tu peux le masquer selon préférence. Ici j'ai remis le code d'origine de reset mais en gardant la cohérence du bouton */
+    result.style.display='flex'; 
     isShown=true; 
     btnTog.textContent='Masquer'; 
     savedStudent=null;
