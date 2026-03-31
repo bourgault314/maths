@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Glisse unité - Virgule Parfaite V3</title>
+<title>Glisse unité - Alignement Chirurgical V2</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{ --accent:#1283ff; --accent-dark:#0b67c6; --bg:#fbfbfe; --panel:#fff; --ink:#1b1b1b; --border:#d5d7de }
@@ -22,26 +22,27 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  .inner{position:relative;padding-top:100px; padding-bottom:100px;} 
+  /* SYMÉTRIE */
+  .inner{position:relative;padding-top:120px; padding-bottom:120px;} 
+  
   .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;margin-bottom:6px;position:relative;z-index:2}
   .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;user-select:none;position:relative;z-index:1}
 
   .cursor{
     position:absolute; left:0; 
-    top:100px; bottom:100px; /* Le curseur encadre la colonne */
     box-sizing: border-box; 
     background: color-mix(in srgb, var(--accent) 15%, transparent);
     border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
     border-radius: 8px; 
     pointer-events:none;
-    transition:transform .15s ease-out, width .15s ease-out;
+    transition:transform .15s ease-out, width .15s ease-out, top .15s ease-out, height .15s ease-out;
     z-index:3;
   }
   
   .cursor::after {
     content: ",";
     position: absolute;
-    bottom: 64px; 
+    bottom: 36px; 
     right: 2px; 
     font-family: 'Nunito', Arial, sans-serif;
     font-size: 3.2rem; 
@@ -50,54 +51,37 @@
     line-height: 0;
   }
 
-  .handle-wrapper {
-    position:absolute; left:0; 
-    /* AJUSTEMENT MAGIQUE : Le conteneur fait la même taille exacte que le curseur */
-    top:100px; bottom:100px; 
-    width: 130px; 
-    z-index:11;
-    display: flex; flex-direction: column;
-    pointer-events: none; 
-    transition: transform .15s ease-out;
-    touch-action: none;
-  }
-  .handle-wrapper.dragging { z-index:20; }
-  .handle-wrapper.dragging .handle-badge { cursor:grabbing; filter: brightness(1.1); }
-
-  .handle-badge {
-    position: absolute; left: 0; right: 0;
-    pointer-events: auto; 
+  /* BULLES ÉLARGIES ET TEXTE PLUS GROS */
+  .handle{
+    position:absolute; left:0;
+    width: 140px;  /* <-- Plus large */
+    height: 75px;  /* <-- Un poil plus haute */
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     border: 2px solid #fff;
     border-radius: 12px;
-    color: #fff; font-weight: 900;
-    text-align: center;
+    z-index:11;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; text-align: center;
     user-select: none; cursor: grab;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     box-sizing: border-box;
-    padding: 10px 4px;
+    padding: 6px;
+    transition: transform .15s ease-out, top .15s ease-out;
+    touch-action: none;
   }
-
-  /* ON ANCRE LES BADGES EXACTEMENT SUR LA BORDURE AVEC LA BONNE MARGE POUR LA FLÈCHE */
-  .handle-top { 
-    bottom: 100%; 
-    margin-bottom: 12px; /* Laisse pile 12px de place pour la flèche */
-  } 
-  .handle-bottom { 
-    top: 100%; 
-    margin-top: 12px; /* Pareil en bas */
-  }
+  .handle.dragging{cursor:grabbing; filter: brightness(1.1); z-index:20;}
+  
+  /* Police grossie */
+  .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
 
   .handle-top::after {
-    content: ""; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
-    border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 12px solid var(--accent-dark);
+    content: ""; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
+    border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark);
   }
   .handle-bottom::before {
-    content: ""; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 12px solid var(--accent);
+    content: ""; position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent);
   }
-
-  .h-text { font-size: 1.1rem; line-height: 1.15; text-transform: uppercase; }
 
   .unitBtn{
     background:color-mix(in srgb, var(--accent) 12%, #fff);
@@ -173,13 +157,12 @@
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
       
-      <div class="handle-wrapper" id="handle">
-        <div class="handle-badge handle-top">
-          <div class="h-text">UNITÉ de<br>mesure</div>
-        </div>
-        <div class="handle-badge handle-bottom">
-          <div class="h-text">Chiffre des<br>unités</div>
-        </div>
+      <div class="handle handle-top" id="handleTop" title="Glisse pour choisir l'unité">
+        <div class="h-text">Unité de<br>mesure</div>
+      </div>
+
+      <div class="handle handle-bottom" id="handleBottom" title="Glisse pour choisir l'unité">
+        <div class="h-text">Chiffre des<br>unités</div>
       </div>
 
       <div class="head" id="head"></div>
@@ -209,7 +192,9 @@
     cross: {label:'Litres ↔ mètres cubes', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], base:'m³', slots:3},
   };
 
-  const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), head = document.getElementById('head'), grid = document.getElementById('grid'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor'), handle = document.getElementById('handle'), btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn'), subhead = document.getElementById('subhead'), lab1 = document.getElementById('lab1'), lab2 = document.getElementById('lab2'), lab3 = document.getElementById('lab3');
+  const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), head = document.getElementById('head'), grid = document.getElementById('grid'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor');
+  const handles = [document.getElementById('handleTop'), document.getElementById('handleBottom')];
+  const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn'), subhead = document.getElementById('subhead'), lab1 = document.getElementById('lab1'), lab2 = document.getElementById('lab2'), lab3 = document.getElementById('lab3');
 
   let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
 
@@ -309,10 +294,34 @@
 
   function setTarget(i,refresh){
     targetIdx = i; const metrics = getSlotMetrics(i);
-    const padding = 6;
-    cursor.style.width = `${metrics.w + padding}px`;
-    cursor.style.transform = `translateX(${metrics.x - padding/2}px)`;
-    if(handle) handle.style.transform = `translateX(calc(${metrics.cx}px - 50%))`;
+    
+    cursor.style.width = `${metrics.w}px`;
+    cursor.style.transform = `translateX(${metrics.x}px)`;
+    
+    const headBtn = head.children[i];
+    const cell = grid.children[i];
+    if (headBtn && cell) {
+        const innerRect = inner.getBoundingClientRect();
+        const headRect = headBtn.getBoundingClientRect();
+        const cellRect = cell.getBoundingClientRect();
+        
+        const topPx = (headRect.top - innerRect.top) / zoomScale;
+        const bottomPx = (cellRect.bottom - innerRect.top) / zoomScale;
+        
+        cursor.style.top = `${topPx}px`;
+        cursor.style.height = `${bottomPx - topPx}px`;
+        
+        const handleTop = document.getElementById('handleTop');
+        const handleBottom = document.getElementById('handleBottom');
+        
+        // Ajustement à -75 pour correspondre à la nouvelle hauteur des bulles (75px)
+        if (handleTop) handleTop.style.top = `${topPx - 75 - 14}px`;
+        if (handleBottom) handleBottom.style.top = `${bottomPx + 14}px`;
+    }
+
+    handles.forEach(h => {
+        if(h) h.style.transform = `translateX(calc(${metrics.cx}px - 50%))`;
+    });
     
     inputs.forEach(col => col.forEach(inp => inp.classList.remove('unit-highlight')));
     if(inputs[targetIdx] && inputs[targetIdx][schema.slots - 1]) inputs[targetIdx][schema.slots - 1].classList.add('unit-highlight');
@@ -323,14 +332,18 @@
   let isDragging = false;
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
-  if(handle){
+  handles.forEach(handle => {
+    if(!handle) return;
+    
     handle.addEventListener('pointerdown', (e)=>{
       e.preventDefault(); 
       if(document.activeElement && document.activeElement.classList.contains('digit')) {
          document.activeElement.blur();
       }
-      isDragging = true; handle.classList.add('dragging');
-      cursor.style.transition = 'none'; handle.style.transition = 'none';
+      isDragging = true; 
+      handles.forEach(h => h.classList.add('dragging'));
+      cursor.style.transition = 'none'; 
+      handles.forEach(h => h.style.transition = 'none');
       handle.setPointerCapture(e.pointerId);
     });
 
@@ -341,14 +354,16 @@
       const clampedX = clamp(relativeX, 0, innerRect.width / zoomScale);
       
       cursor.style.transform = `translateX(calc(${clampedX}px - 50%))`;
-      handle.style.transform = `translateX(calc(${clampedX}px - 50%))`;
+      handles.forEach(h => h.style.transform = `translateX(calc(${clampedX}px - 50%))`);
     });
 
     const endDrag = (e) => {
-      if(!isDragging) return; isDragging = false;
-      handle.classList.remove('dragging'); handle.releasePointerCapture(e.pointerId);
-      cursor.style.transition = 'transform .15s ease-out, width .15s ease-out';
-      handle.style.transition = 'transform .15s ease-out';
+      if(!isDragging) return; 
+      isDragging = false;
+      handles.forEach(h => h.classList.remove('dragging')); 
+      handle.releasePointerCapture(e.pointerId);
+      cursor.style.transition = 'transform .15s ease-out, width .15s ease-out, top .15s ease-out, height .15s ease-out';
+      handles.forEach(h => h.style.transition = 'transform .15s ease-out, top .15s ease-out');
       
       const innerRect = inner.getBoundingClientRect();
       const relativeX = (e.clientX - innerRect.left) / zoomScale;
@@ -359,7 +374,7 @@
     };
     handle.addEventListener('pointerup', endDrag);
     handle.addEventListener('pointercancel', endDrag);
-  }
+  });
 
   function completeZerosInTable(){
     const S = schema.slots, total = schema.units.length * S;
