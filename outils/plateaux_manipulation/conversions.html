@@ -22,15 +22,13 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  /* AJUSTEMENT : On équilibre parfaitement le haut et le bas pour laisser la place aux deux badges */
-  .inner{position:relative;padding-top:120px; padding-bottom:120px;} 
+  .inner{position:relative;padding-top:100px; padding-bottom:100px;} 
   .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;margin-bottom:6px;position:relative;z-index:2}
   .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;user-select:none;position:relative;z-index:1}
 
   .cursor{
     position:absolute; left:0; 
-    /* Le curseur dépasse symétriquement de 30px en haut et en bas du tableau */
-    top:90px; bottom:90px;
+    top:100px; bottom:100px; /* Le curseur encadre la colonne */
     box-sizing: border-box; 
     background: color-mix(in srgb, var(--accent) 15%, transparent);
     border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
@@ -40,11 +38,10 @@
     z-index:3;
   }
   
-  /* LA VIRGULE : Recalculée pour s'aligner parfaitement malgré le nouveau padding du bas */
   .cursor::after {
     content: ",";
     position: absolute;
-    bottom: 72px; /* Recalculé pour garder ton alignement parfait */
+    bottom: 64px; 
     right: 2px; 
     font-family: 'Nunito', Arial, sans-serif;
     font-size: 3.2rem; 
@@ -53,23 +50,23 @@
     line-height: 0;
   }
 
-  /* LE NOUVEAU CONTENEUR DU CURSEUR */
   .handle-wrapper {
-    position:absolute; left:0; top:0; bottom:0;
-    width: 130px; /* Un peu plus large pour le texte plus gros */
+    position:absolute; left:0; 
+    /* AJUSTEMENT MAGIQUE : Le conteneur fait la même taille exacte que le curseur */
+    top:100px; bottom:100px; 
+    width: 130px; 
     z-index:11;
-    display: flex; flex-direction: column; justify-content: space-between;
-    pointer-events: none; /* Laisse passer les clics au centre */
+    display: flex; flex-direction: column;
+    pointer-events: none; 
     transition: transform .15s ease-out;
     touch-action: none;
   }
   .handle-wrapper.dragging { z-index:20; }
   .handle-wrapper.dragging .handle-badge { cursor:grabbing; filter: brightness(1.1); }
 
-  /* LE STYLE COMMUN AUX DEUX BADGES */
   .handle-badge {
     position: absolute; left: 0; right: 0;
-    pointer-events: auto; /* Réactive les clics sur les badges */
+    pointer-events: auto; 
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     border: 2px solid #fff;
     border-radius: 12px;
@@ -81,9 +78,15 @@
     padding: 10px 4px;
   }
 
-  /* POSITIONS SPÉCIFIQUES ET FLÈCHES EN CSS PUR */
-  .handle-top { top: 15px; }
-  .handle-bottom { bottom: 15px; }
+  /* ON ANCRE LES BADGES EXACTEMENT SUR LA BORDURE AVEC LA BONNE MARGE POUR LA FLÈCHE */
+  .handle-top { 
+    bottom: 100%; 
+    margin-bottom: 12px; /* Laisse pile 12px de place pour la flèche */
+  } 
+  .handle-bottom { 
+    top: 100%; 
+    margin-top: 12px; /* Pareil en bas */
+  }
 
   .handle-top::after {
     content: ""; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
@@ -94,7 +97,6 @@
     border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 12px solid var(--accent);
   }
 
-  /* TEXTE PLUS GROS COMME DEMANDÉ */
   .h-text { font-size: 1.1rem; line-height: 1.15; text-transform: uppercase; }
 
   .unitBtn{
@@ -173,7 +175,7 @@
       
       <div class="handle-wrapper" id="handle">
         <div class="handle-badge handle-top">
-          <div class="h-text">Unités de<br>mesure</div>
+          <div class="h-text">UNITÉ de<br>mesure</div>
         </div>
         <div class="handle-badge handle-bottom">
           <div class="h-text">Chiffre des<br>unités</div>
