@@ -1,0 +1,106 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+% Marges réduites pour optimiser l'espace de la page
+\usepackage[left=1.2cm, right=1.2cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+
+% Couleurs Mathnipulez d'origine (Fractions <-> Pourcentages)
+\definecolor{color50}{RGB}{255, 230, 100}  % Jaune (Double/Moitié <-> 50%)
+\definecolor{color25}{RGB}{150, 220, 150}  % Vert (Quadruple/Quart <-> 25%)
+\definecolor{color33}{RGB}{255, 180, 200}  % Rose pastel (Triple/Tiers <-> NOUVEAU)
+\definecolor{color20}{RGB}{150, 200, 235}  % Bleu (Quintuple/Cinquième <-> 20%)
+\definecolor{color10}{RGB}{250, 180, 100}  % Orange (Décuple/Dixième <-> 10%)
+
+% Largeur de chaque gabarit pour tenir sur deux colonnes
+\newcommand{\Largeur}{8.5}
+
+% GABARIT MULTIPLES (Accolade en haut)
+\newcommand{\gabaritMultiple}[3]{%
+    \begin{tikzpicture}[scale=1]
+        \useasboundingbox (0, -1) rectangle (\Largeur, 3.5);
+        \pgfmathsetmacro{\w}{\Largeur/#1}
+        
+        \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
+        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1}, 1.8) -- ({\Largeur/2 + 1}, 1.8);
+        
+        \draw[decorate, decoration={brace, amplitude=8pt, raise=2pt}, thick]
+            (0, 2.4) -- (\Largeur, 2.4) node[midway, above=10pt, font=\bfseries] {#3};
+            
+        \foreach \i in {1,...,#1} {
+            \pgfmathsetmacro{\xpos}{(\i-1)*\w}
+            \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
+            \pgfmathsetmacro{\dotw}{min(\w*0.2, 0.4)}
+            \draw[dotted, thick, line cap=round] (\xpos+\w/2-\dotw, 0.6) -- (\xpos+\w/2+\dotw, 0.6);
+        }
+    \end{tikzpicture}%
+}
+
+% GABARIT FRACTIONS (Accolade en bas)
+\newcommand{\gabaritFraction}[3]{%
+    \begin{tikzpicture}[scale=1]
+        \useasboundingbox (0, -1) rectangle (\Largeur, 3.5);
+        \pgfmathsetmacro{\w}{\Largeur/#1}
+        
+        \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
+        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1}, 1.8) -- ({\Largeur/2 + 1}, 1.8);
+        
+        \foreach \i in {1,...,#1} {
+            \pgfmathsetmacro{\xpos}{(\i-1)*\w}
+            \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
+            \pgfmathsetmacro{\dotw}{min(\w*0.2, 0.4)}
+            \draw[dotted, thick, line cap=round] (\xpos+\w/2-\dotw, 0.6) -- (\xpos+\w/2+\dotw, 0.6);
+        }
+        
+        \draw[decorate, decoration={brace, amplitude=6pt, mirror, raise=2pt}, thick]
+            (0, 0) -- (\w, 0) node[midway, below=8pt, font=\bfseries] {#3};
+    \end{tikzpicture}%
+}
+
+\begin{document}
+\thispagestyle{empty}
+
+\begin{center}
+    {\huge \textbf{Multiples et fractions d'une quantité}}\\[1cm]
+\end{center}
+
+% En-têtes des colonnes
+\noindent
+\begin{minipage}{0.48\textwidth}
+    \centering \Large \textbf{Multiples}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering \Large \textbf{Fractions}
+\end{minipage}
+
+\vspace{0.5cm}
+
+% Ligne 1 : Double / Moitié (Jaune)
+\noindent
+\gabaritMultiple{2}{color50}{le double} \hfill \gabaritFraction{2}{color50}{la moitié}
+\vfill
+
+% Ligne 2 : Quadruple / Quart (Vert)
+\noindent
+\gabaritMultiple{4}{color25}{le quadruple} \hfill \gabaritFraction{4}{color25}{le quart}
+\vfill
+
+% Ligne 3 : Triple / Tiers (Rose)
+\noindent
+\gabaritMultiple{3}{color33}{le triple} \hfill \gabaritFraction{3}{color33}{le tiers}
+\vfill
+
+% Ligne 4 : Quintuple / Cinquième (Bleu)
+\noindent
+\gabaritMultiple{5}{color20}{le quintuple} \hfill \gabaritFraction{5}{color20}{le cinquième}
+\vfill
+
+% Ligne 5 : Décuple / Dixième (Orange)
+\noindent
+\gabaritMultiple{10}{color10}{le décuple} \hfill \gabaritFraction{10}{color10}{le dixième}
+
+\vspace*{\fill}
+
+\end{document}
