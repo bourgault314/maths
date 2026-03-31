@@ -938,7 +938,7 @@
       const fillColor = colors[q.parts] || "var(--c-10)";
 
       /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": "0.15" }));
       let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
       txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       drawBrace(svgContainer, xStart, yTop - 8, wTotalDisplay, "100 %", true);
@@ -957,7 +957,7 @@
 
         if (isRemoved && isCorrection) partFill = "url(#patternHatch)";
 
-        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: partFill, stroke: "#1f2a44", "stroke-width": "2.5", opacity: opacity }));
+        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: partFill, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": opacity }));
 
         let fSizeVal = wPart < 45 ? "16" : "24";
         let yOffsetVal = wPart < 45 ? 5 : 8;
@@ -991,7 +991,7 @@
       const baseColor = colors[q.parts] || "var(--c-10)";
       
       /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": "0.15" }));
       
       if (q.mode === 'find_total' && !isCorrection) {
           svgContainer.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
@@ -1018,7 +1018,7 @@
         }
 
         if (!(isAdded && !isCorrection)) {
-            svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: op }));
+            svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": op }));
         }
 
         if (isCorrection || (isAdded && isCorrection) || (q.mode.startsWith('evo') && !isAdded)) {
@@ -1062,7 +1062,7 @@
       const baseColor = "var(--c-1)";
       
       /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": "0.15" }));
       let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
       txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       drawBrace(svgContainer, xStart, yTop - 5, wTotal, "100 %", true);
@@ -1073,7 +1073,7 @@
         let xPart = xStart + (i * wPart);
         let isActive = i < q.activeParts;
         let op = isActive ? "1" : "0.4";
-        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
+        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "1.5", "fill-opacity": op }));
       }
 
       drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
