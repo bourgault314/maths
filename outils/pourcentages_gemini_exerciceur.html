@@ -934,19 +934,27 @@
       const wTotalDisplay = wPart * q.parts;
       const partVal = parseFloat((q.totalVal / q.parts).toFixed(2));
       const partPercent = parseFloat((100 / q.parts).toFixed(2));
+      
       const fillColor = colors[q.parts] || "var(--c-10)";
 
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: fillColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
       let txtTotal = createSVG("text", { x: xStart + wTotalDisplay/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
       txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       drawBrace(svgContainer, xStart, yTop - 8, wTotalDisplay, "100 %", true);
 
+      /* CASES DU BAS */
       for (let i = 0; i < displayParts; i++) {
         const xPart = xStart + (i * wPart);
         const isAdded = (q.mode === 'evo_inc' && i >= q.parts);
         const isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts);
+        
         let partFill = fillColor;
-        let opacity = isCorrection ? "0.9" : (isAdded ? "0.18" : "0.5");
+        
+        let opacity = "1"; // Base active parts
+        if (isRemoved) opacity = "0.4"; // Removed parts (inactive)
+        if (isAdded) opacity = isCorrection ? "1" : "0.15"; // Added parts
+
         if (isRemoved && isCorrection) partFill = "url(#patternHatch)";
 
         svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: partFill, stroke: "#1f2a44", "stroke-width": "2.5", opacity: opacity }));
@@ -980,7 +988,10 @@
       const partVal = parseFloat((q.totalVal / q.parts).toFixed(2));
       const partPercent = parseFloat((100 / q.parts).toFixed(2));
       
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      const baseColor = colors[q.parts] || "var(--c-10)";
+      
+      /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotalDisplay, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
       
       if (q.mode === 'find_total' && !isCorrection) {
           svgContainer.appendChild(createSVG("line", { x1: xStart + wTotalDisplay/2 - 20, y1: yTop + hBar/2, x2: xStart + wTotalDisplay/2 + 20, y2: yTop + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "5,5" }));
@@ -990,20 +1001,20 @@
       }
       drawBrace(svgContainer, xStart, yTop - 5, wTotalDisplay, "100 %", true);
 
+      /* CASES DU BAS */
       for (let i = 0; i < displayParts; i++) {
         let xPart = xStart + (i * wPart);
         let isAdded = (q.mode === 'evo_inc' && i >= q.parts); 
         let isRemoved = (q.mode === 'evo_dec' && i >= q.parts - q.activeParts); 
-        let fillColor = colors[q.parts];
+        
+        let fillColor = baseColor;
         if (isRemoved && isCorrection) fillColor = "url(#patternHatch)"; 
         
-        let op = "0.5";
-        if (isCorrection) {
-           if (isRemoved) op = "1"; else if (isAdded) op = "0.9";
-           else if (q.mode === 'direct' || q.mode === 'find_percent' || q.mode === 'find_total') op = (i < q.activeParts) ? "0.9" : "0.2";
-           else op = "0.9"; 
-        } else {
-           if (isAdded) op = "0.1"; 
+        let op = (i < q.activeParts) ? "1" : "0.4";
+        if (q.mode === 'evo_inc') {
+            op = isAdded ? (isCorrection ? "1" : "0.15") : "1";
+        } else if (q.mode === 'evo_dec') {
+            op = isRemoved ? "0.4" : "1";
         }
 
         if (!(isAdded && !isCorrection)) {
@@ -1048,17 +1059,21 @@
       const wTotal = 800, hBar = 60, xStart = 100, yTop = 70, yBot = yTop + hBar;
       const partVal = parseFloat((q.totalVal / 100).toFixed(2));
       
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: "var(--c-100)", stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.5" }));
+      const baseColor = "var(--c-1)";
+      
+      /* BARRE DU HAUT : Couleur de famille avec opacité très claire (0.15) */
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTotal, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", opacity: "0.15" }));
       let txtTotal = createSVG("text", { x: xStart + wTotal/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "24", fill: "#1f2a44" });
       txtTotal.textContent = fmt(q.totalVal); svgContainer.appendChild(txtTotal);
       drawBrace(svgContainer, xStart, yTop - 5, wTotal, "100 %", true);
 
       const wPart = wTotal / 100;
+      /* CASES DU BAS */
       for (let i = 0; i < 100; i++) {
         let xPart = xStart + (i * wPart);
         let isActive = i < q.activeParts;
-        let op = isCorrection ? (isActive ? "1" : "0.2") : "0.5";
-        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "var(--c-1)", stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
+        let op = isActive ? "1" : "0.4";
+        svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "1.5", opacity: op }));
       }
 
       drawBrace(svgContainer, xStart, yBot + hBar + 5, wPart, "1 %", false, "var(--text)", 14);
