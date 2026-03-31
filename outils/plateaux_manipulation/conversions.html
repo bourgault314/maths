@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Glisse unité</title>
+<title>Glisse unité - Virgule Parfaite V3</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{ --accent:#1283ff; --accent-dark:#0b67c6; --bg:#fbfbfe; --panel:#fff; --ink:#1b1b1b; --border:#d5d7de }
@@ -22,20 +22,32 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  .inner{position:relative;padding-top:140px} /* Espace pour la bulle */
-  .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
-  .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;user-select:none;position:relative;z-index:1}
+  .inner{position:relative;padding-top:140px} 
+  .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;margin-bottom:6px;position:relative;z-index:2}
+  .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;user-select:none;position:relative;z-index:1}
 
   .cursor{
     position:absolute; left:0; top:110px; bottom:-6px;
     box-sizing: border-box; 
-    background: color-mix(in srgb, var(--accent) 25%, transparent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
     border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
     border-radius: 8px; 
     pointer-events:none;
     transition:transform .15s ease-out, width .15s ease-out;
     z-index:3;
-    mix-blend-mode: multiply; 
+  }
+  
+  /* LA VIRGULE : Encore un peu remontée pour un alignement parfait */
+  .cursor::after {
+    content: ",";
+    position: absolute;
+    bottom: 42px; /* <-- AJUSTEMENT : 42px au lieu de 36px pour la remonter d'un cran */
+    right: 2px; 
+    font-family: 'Nunito', Arial, sans-serif;
+    font-size: 3.2rem; 
+    font-weight: 800;
+    color: var(--accent-dark);
+    line-height: 0;
   }
 
   .handle{
@@ -45,7 +57,7 @@
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     border: 2px solid #fff;
     border-radius: 15px;
-    z-index:10;
+    z-index:11;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: #fff; font-weight: 800;
     line-height: 1.1; text-align: center;
@@ -87,7 +99,13 @@
 
   .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:92px;display:flex;align-items:center;justify-content:center}
   .slots{margin-top:0;display:flex;gap:0;width:calc(100% - 12px);}
-  .digit{box-sizing:border-box;width:calc(100% / var(--S));text-align:center;font-weight:500;font-size:2.1rem;line-height:2.1rem;border:none;outline:none;background:transparent;color:#000;padding:0 4px; transition: color 0.2s, font-weight 0.2s;}
+  
+  .digit{
+    box-sizing:border-box; width:calc(100% / var(--S)); text-align:center;
+    font-weight:600; font-size:2.8rem; 
+    line-height:2.8rem; border:none; outline:none; background:transparent; color:#000; padding:0 4px; transition: color 0.2s, font-weight 0.2s;
+  }
+  
   .slots[data-slots="2"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
@@ -201,7 +219,12 @@
       b.style.gridTemplateColumns = `repeat(${schema.slots}, 1fr)`;
       const span = document.createElement('span'); span.textContent = u;
       span.style.gridColumn = schema.slots; b.appendChild(span);
-      b.addEventListener('click', ()=>setTarget(i,true));
+      b.addEventListener('click', ()=>{
+        if(document.activeElement && document.activeElement.classList.contains('digit')) {
+           document.activeElement.blur();
+        }
+        setTarget(i,true);
+      });
       head.appendChild(b);
     });
 
@@ -271,6 +294,7 @@
     cursor.style.width = `${metrics.w + padding}px`;
     cursor.style.transform = `translateX(${metrics.x - padding/2}px)`;
     if(handle) handle.style.transform = `translateX(calc(${metrics.cx}px - 50%))`;
+    
     inputs.forEach(col => col.forEach(inp => inp.classList.remove('unit-highlight')));
     if(inputs[targetIdx] && inputs[targetIdx][schema.slots - 1]) inputs[targetIdx][schema.slots - 1].classList.add('unit-highlight');
     positionCoupleLabels();
@@ -282,7 +306,11 @@
 
   if(handle){
     handle.addEventListener('pointerdown', (e)=>{
-      e.preventDefault(); isDragging = true; handle.classList.add('dragging');
+      e.preventDefault(); 
+      if(document.activeElement && document.activeElement.classList.contains('digit')) {
+         document.activeElement.blur();
+      }
+      isDragging = true; handle.classList.add('dragging');
       cursor.style.transition = 'none'; handle.style.transition = 'none';
       handle.setPointerCapture(e.pointerId);
     });
