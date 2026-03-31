@@ -22,14 +22,14 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  .inner{position:relative;padding-top:70px}
+  .inner{position:relative;padding-top:140px} /* Espace pour la bulle */
   .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;margin-bottom:6px;position:relative;z-index:2}
   .grid{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:6px;user-select:none;position:relative;z-index:1}
 
   .cursor{
-    position:absolute; left:0; top:40px; bottom:-6px;
+    position:absolute; left:0; top:110px; bottom:-6px;
     box-sizing: border-box; 
-    background: color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
     border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
     border-radius: 8px; 
     pointer-events:none;
@@ -37,35 +37,39 @@
     z-index:3;
     mix-blend-mode: multiply; 
   }
-  .cursor::before{
-    content:"";position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-    border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid color-mix(in srgb, var(--accent-dark) 80%, transparent);
-  }
-  
+
   .handle{
-    position:absolute; left:0; top:12px;
-    width:max-content;
-    height:28px;
-    background:linear-gradient(to bottom, color-mix(in srgb, var(--accent) 92%, #000), color-mix(in srgb, var(--accent-dark) 92%, #000));
-    border:2px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
-    border-radius:999px;
-    z-index:4;
-    display:flex;align-items:center;
-    color:#fff;font-weight:900;
-    font-size:15px;line-height:1;
-    user-select:none;
-    cursor:grab;
-    box-shadow:0 10px 20px rgba(0,0,0,.18);
-    box-sizing:border-box;
-    padding:0 16px 0 30px; 
-    transition:transform .15s ease-out;
+    position:absolute; left:0; top:5px;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    border: 2px solid #fff;
+    border-radius: 15px;
+    z-index:10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800;
+    line-height: 1.1; text-align: center;
+    user-select: none; cursor: grab;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-sizing: border-box;
+    padding: 8px 4px;
+    transition: transform .15s ease-out;
+    touch-action: none;
   }
-  .handle::before{
-    content:"⋮⋮";
-    position:absolute;left:10px;top:50%;transform:translateY(-50%);
-    opacity:.85;font-weight:900;letter-spacing:-2px
+  .handle.dragging{cursor:grabbing; filter: brightness(1.1); z-index:20;}
+  
+  .handle::after {
+    content: "";
+    position: absolute; bottom: -10px; left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid var(--accent-dark);
   }
-  .handle.dragging{cursor:grabbing;filter:drop-shadow(0 10px 14px rgba(0,0,0,.22))}
+
+  .h-unit { font-size: 0.75rem; text-transform: uppercase; opacity: 0.9; margin-bottom: 2px; }
+  .h-arrow { font-size: 1.2rem; margin: 2px 0; }
+  .h-main { font-size: 0.85rem; font-weight: 900; }
 
   .unitBtn{
     background:color-mix(in srgb, var(--accent) 12%, #fff);
@@ -88,47 +92,18 @@
   .slots[data-slots="3"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
 
-  .unit-highlight {
-    color: var(--accent-dark);
-    font-weight: 900 !important;
-  }
+  .unit-highlight { color: var(--accent-dark); font-weight: 900 !important; }
 
   .result{
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width:fit-content;
-    max-width:100%;
-    margin:10px auto 12px;
-    padding:12px 24px;
-    border-radius:12px;
-    background:#f5f9ff;
-    border:1px solid #cfe0ff;
-    text-align:center;
-    min-height: 105px;
+    display:flex; flex-direction: column; align-items: center; justify-content: center;
+    width:fit-content; max-width:100%; margin:10px auto 12px; padding:12px 24px;
+    border-radius:12px; background:#f5f9ff; border:1px solid #cfe0ff; text-align:center; min-height: 105px;
   }
-
-  .result .mainLine{
-    display:block;
-    font-weight:500; 
-    font-size:2.75rem;
-    color:#000;
-    line-height:1.12;
-  }
-  .result .eqLine{
-    display:block;
-    margin-top:8px;
-    font-weight:500;
-    font-size:1.05rem;
-    color:#000;
-    opacity:.8;
-  }
+  .result .mainLine{ display:block; font-weight:500; font-size:2.75rem; color:#000; line-height:1.12; }
+  .result .eqLine{ display:block; margin-top:8px; font-weight:500; font-size:1.05rem; color:#000; opacity:.8; }
 
   .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:4;pointer-events:none}
   .sub-lab{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black)}
-
-  .ghost0{}
 </style>
 </head>
 <body>
@@ -147,32 +122,35 @@
       </select>
       <button class="btn" id="toggleShow">Masquer</button>
       <button class="btn secondary" id="reset">Remise à zéro</button>
-</div>
-    <div class="right" aria-label="Affichage">
-      <button class="btn secondary small" id="fsBtn" title="Plein écran">⛶</button>
-      <button class="btn secondary small" id="zoomOut" title="Zoom -" aria-label="Zoom arrière">−</button>
-      <span class="zoomLabel" id="zoomLabel" aria-label="Niveau de zoom">100%</span>
-      <button class="btn secondary small" id="zoomIn" title="Zoom +" aria-label="Zoom avant">+</button>
-      <button class="btn secondary small" id="zoomReset" title="Réinitialiser le zoom" aria-label="Réinitialiser le zoom">⟲</button>
+    </div>
+    <div class="right">
+      <button class="btn secondary small" id="fsBtn">⛶</button>
+      <button class="btn secondary small" id="zoomOut">−</button>
+      <span class="zoomLabel" id="zoomLabel">100%</span>
+      <button class="btn secondary small" id="zoomIn">+</button>
+      <button class="btn secondary small" id="zoomReset">⟲</button>
     </div>
   </div>
 
   <div class="board">
-    <div class="title" id="title">CONVERSIONS – Longueur (m)</div>
-
-    <div class="result" id="result" style="display:flex;"></div>
+    <div class="title" id="title">CONVERSIONS</div>
+    <div class="result" id="result"></div>
 
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
-      <div class="handle" id="handle" title="Glisse pour choisir l’unité" aria-label="Glisser pour choisir l’unité">Chiffre des unités</div>
-      <div class="head" id="head"></div>
+      
+      <div class="handle" id="handle">
+        <div class="h-unit">Unités de<br>mesure</div>
+        <div class="h-arrow">▼</div>
+        <div class="h-main">Chiffre des<br>unités</div>
+      </div>
 
+      <div class="head" id="head"></div>
       <div class="subhead" id="subhead">
         <div class="sub-lab" id="lab1"></div>
         <div class="sub-lab" id="lab2"></div>
         <div class="sub-lab" id="lab3"></div>
       </div>
-
       <div class="grid" id="grid"></div>
     </div>
   </div>
@@ -181,62 +159,28 @@
 <script>
 (function(){
   const THEMES = {
-    length:['#1283ff','#0b67c6'], 
-    mass:['#16a34a','#0e7a36'], massT:['#16a34a','#0e7a36'],
-    volL:['#06b6d4','#0a8aa3'],   
-    area:['#f59e0b','#b77207'],
-    volM3:['#7c3aed','#5a27b0'],  
-    cross:['#db2777','#a81d5a'],
+    length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'], massT:['#16a34a','#0e7a36'],
+    volL:['#06b6d4','#0a8aa3'], area:['#f59e0b','#b77207'], volM3:['#7c3aed','#5a27b0'], cross:['#db2777','#a81d5a'],
   };
   const SCHEMAS = {
-    length:{label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], base:'m',  slots:1},
-    mass:  {label:'Masse (g)',    units:['kg','hg','dag','g','dg','cg','mg'],  base:'g',  slots:1},
-    massT: {label:'Masse complète (t)',    units:['t','q','-','kg','hg','dag','g','dg','cg','mg'], base:'g', slots:1},
-    volL:  {label:'Volume (L)',   units:['kL','hL','daL','L','dL','cL','mL'],   base:'L',  slots:1},
-    area:  {label:'Aire (m²)',    units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], base:'m²', slots:2},
-    volM3: {label:'Volume (m³)',  units:['km³','hm³','dam³','m³','dm³','cm³','mm³'],  base:'m³', slots:3},
+    length:{label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], base:'m', slots:1},
+    mass:  {label:'Masse (g)', units:['kg','hg','dag','g','dg','cg','mg'], base:'g', slots:1},
+    massT: {label:'Masse complète (t)', units:['t','q','-','kg','hg','dag','g','dg','cg','mg'], base:'g', slots:1},
+    volL:  {label:'Volume (L)', units:['kL','hL','daL','L','dL','cL','mL'], base:'L', slots:1},
+    area:  {label:'Aire (m²)', units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], base:'m²', slots:2},
+    volM3: {label:'Volume (m³)', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], base:'m³', slots:3},
     cross: {label:'Litres ↔ mètres cubes', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], base:'m³', slots:3},
   };
 
-  const kindSel = document.getElementById('kind');
-  const titleEl = document.getElementById('title');
-  const head    = document.getElementById('head');
-  const grid    = document.getElementById('grid');
-  const inner   = document.getElementById('inner');
-  const board   = document.querySelector('.board');
-  const cursor  = document.getElementById('cursor');
-  const handle  = document.getElementById('handle');
-  const btnTog  = document.getElementById('toggleShow');
-  const btnRst  = document.getElementById('reset');
-  const result  = document.getElementById('result');
+  const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), head = document.getElementById('head'), grid = document.getElementById('grid'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor'), handle = document.getElementById('handle'), btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn'), subhead = document.getElementById('subhead'), lab1 = document.getElementById('lab1'), lab2 = document.getElementById('lab2'), lab3 = document.getElementById('lab3');
 
-  const zoomOut   = document.getElementById('zoomOut');
-  const zoomIn    = document.getElementById('zoomIn');
-  const zoomReset = document.getElementById('zoomReset');
-  const zoomLabel = document.getElementById('zoomLabel');
-  const fsBtn     = document.getElementById('fsBtn');
-  const subhead   = document.getElementById('subhead');
-  const lab1      = document.getElementById('lab1');
-  const lab2      = document.getElementById('lab2');
-  const lab3      = document.getElementById('lab3');
-
-  let schema = SCHEMAS.length;
-  let targetIdx = 3;
-  let isShown = true;
-  let inputs = [];
-  let savedStudent = null;
-
-  let zoomScale = 1;
+  let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
 
   function applyZoom(){
-    if(!board) return;
     board.style.transform = `scale(${zoomScale})`;
     board.style.transformOrigin = 'top center';
-    if(zoomLabel) zoomLabel.textContent = `${Math.round(zoomScale*100)}%`;
-    requestAnimationFrame(() => {
-        positionCoupleLabels();
-        setTarget(targetIdx, false);
-    });
+    zoomLabel.textContent = `${Math.round(zoomScale*100)}%`;
+    requestAnimationFrame(() => { positionCoupleLabels(); setTarget(targetIdx, false); });
   }
 
   function setTheme(kind){
@@ -246,48 +190,32 @@
   }
 
   function rebuild(){
-    const kind = kindSel.value;
-    schema = SCHEMAS[kind];
-    setTheme(kind);
+    const kind = kindSel.value; schema = SCHEMAS[kind]; setTheme(kind);
     titleEl.textContent = `CONVERSIONS – ${schema.label}`;
-
     head.style.setProperty('--cols', schema.units.length);
     grid.style.setProperty('--cols', schema.units.length);
-
     head.innerHTML=''; grid.innerHTML=''; inputs=[];
-    schema.units.forEach((u,i)=>{
-      const b=document.createElement('div');
-      b.className='unitBtn'; 
-      b.style.gridTemplateColumns = `repeat(${schema.slots}, 1fr)`;
-      
-      const span = document.createElement('span');
-      span.textContent = u;
-      span.style.gridColumn = schema.slots; 
-      b.appendChild(span);
 
+    schema.units.forEach((u,i)=>{
+      const b=document.createElement('div'); b.className='unitBtn'; 
+      b.style.gridTemplateColumns = `repeat(${schema.slots}, 1fr)`;
+      const span = document.createElement('span'); span.textContent = u;
+      span.style.gridColumn = schema.slots; b.appendChild(span);
       b.addEventListener('click', ()=>setTarget(i,true));
       head.appendChild(b);
     });
 
-    if (kind === 'cross') {
-        subhead.style.display = 'block';
-        lab1.textContent = 'kL'; lab2.textContent = 'L'; lab3.textContent = 'mL';
-    } else if (kind === 'area') {
-        subhead.style.display = 'block';
-        lab1.textContent = 'ha'; lab2.textContent = 'a'; lab3.textContent = ''; // On n'affiche plus "ca"
-    } else {
-        subhead.style.display = 'none';
-    }
+    if (kind === 'cross') { subhead.style.display = 'block'; lab1.textContent = 'kL'; lab2.textContent = 'L'; lab3.textContent = 'mL'; }
+    else if (kind === 'area') { subhead.style.display = 'block'; lab1.textContent = 'ha'; lab2.textContent = 'a'; lab3.textContent = ''; }
+    else { subhead.style.display = 'none'; }
 
     schema.units.forEach((u,i)=>{
       const cell=document.createElement('div'); cell.className='cell';
-      const wrap=document.createElement('div');
-      wrap.className='slots'; wrap.dataset.slots=String(schema.slots);
+      const wrap=document.createElement('div'); wrap.className='slots'; wrap.dataset.slots=String(schema.slots);
       wrap.style.setProperty('--S', schema.slots);
       const slots=[];
       for(let s=0;s<schema.slots;s++){
-        const inp=document.createElement('input');
-        inp.className='digit'; inp.maxLength=1; inp.inputMode='numeric';
+        const inp=document.createElement('input'); inp.className='digit'; inp.maxLength=1; inp.inputMode='numeric';
         inp.addEventListener('input', ()=>{
           const m=inp.value.match(/[0-9]/); inp.value=m?m[0]:'';
           if(isShown){ completeZerosInTable(); updateResult(); }
@@ -308,86 +236,43 @@
 
     let defaultIdx = schema.units.indexOf(schema.base);
     if(defaultIdx === -1) defaultIdx = 3; 
-
-    requestAnimationFrame(() => {
-        setTarget(defaultIdx, false);
-        positionCoupleLabels();
-        if(isShown){ completeZerosInTable(); updateResult(); }
-    });
+    requestAnimationFrame(() => { setTarget(defaultIdx, false); positionCoupleLabels(); if(isShown){ completeZerosInTable(); updateResult(); } });
   }
 
-  grid.addEventListener('focusout', () => {
-    setTimeout(() => {
-      if (document.activeElement && document.activeElement.classList.contains('digit')) return;
-      if (isShown) { completeZerosInTable(); updateResult(); }
-    }, 10);
-  });
-
   function getSlotMetrics(ci) {
-      const cell = grid.children[ci];
-      if(!cell) return { x: 0, w: 0, cx: 0 };
-      
-      const innerRect = inner.getBoundingClientRect();
-      const cellRect = cell.getBoundingClientRect();
-      
-      const realCellW = cellRect.width / zoomScale;
-      const realCellLeft = (cellRect.left - innerRect.left) / zoomScale;
-      
-      const subW = realCellW / schema.slots;
-      
-      const x = realCellLeft + (schema.slots - 1) * subW;
-      
-      return { x, w: subW, cx: x + subW / 2 };
+    const cell = grid.children[ci]; if(!cell) return { x: 0, w: 0, cx: 0 };
+    const innerRect = inner.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
+    const realCellW = cellRect.width / zoomScale;
+    const realCellLeft = (cellRect.left - innerRect.left) / zoomScale;
+    const subW = realCellW / schema.slots;
+    const x = realCellLeft + (schema.slots - 1) * subW;
+    return { x, w: subW, cx: x + subW / 2 };
   }
 
   function positionCoupleLabels(){
-    const kind = kindSel.value;
-    if(kind !== 'cross' && kind !== 'area') return;
-    
-    const setLabelPos = (lab, ci) => {
-        const metrics = getSlotMetrics(ci);
-        lab.style.left = `${metrics.cx}px`;
-    };
-
-    if (kind === 'cross') {
-        setLabelPos(lab1, 3); 
-        setLabelPos(lab2, 4); 
-        setLabelPos(lab3, 5); 
-    } else if (kind === 'area') {
-        setLabelPos(lab1, 1); // hm² -> ha
-        setLabelPos(lab2, 2); // dam² -> a
-        // On ne positionne plus lab3 pour "ca"
-    }
+    const kind = kindSel.value; if(kind !== 'cross' && kind !== 'area') return;
+    const setLabelPos = (lab, ci) => { const metrics = getSlotMetrics(ci); lab.style.left = `${metrics.cx}px`; };
+    if (kind === 'cross') { setLabelPos(lab1, 3); setLabelPos(lab2, 4); setLabelPos(lab3, 5); }
+    else if (kind === 'area') { setLabelPos(lab1, 1); setLabelPos(lab2, 2); }
   }
-  
-  window.addEventListener('resize', () => requestAnimationFrame(() => setTarget(targetIdx,false)));
 
   function findIndex(inp){
     for(let ci=0;ci<inputs.length;ci++){
-      const si=inputs[ci].indexOf(inp);
-      if(si!==-1) return [ci,si];
+      const si=inputs[ci].indexOf(inp); if(si!==-1) return [ci,si];
     } return [-1,-1];
   }
   function focusNext(ci,si){ if(si<schema.slots-1) inputs[ci][si+1].focus(); else if(ci<inputs.length-1) inputs[ci+1][0].focus(); }
   function focusPrev(ci,si){ if(si>0) inputs[ci][si-1].focus(); else if(ci>0) inputs[ci-1][schema.slots-1].focus(); }
 
   function setTarget(i,refresh){
-    targetIdx = i;
-    const metrics = getSlotMetrics(i);
-    
+    targetIdx = i; const metrics = getSlotMetrics(i);
     const padding = 6;
     cursor.style.width = `${metrics.w + padding}px`;
     cursor.style.transform = `translateX(${metrics.x - padding/2}px)`;
-    
-    if(handle){
-      handle.style.transform = `translateX(calc(${metrics.cx}px - 50%))`;
-    }
-
+    if(handle) handle.style.transform = `translateX(calc(${metrics.cx}px - 50%))`;
     inputs.forEach(col => col.forEach(inp => inp.classList.remove('unit-highlight')));
-    if(inputs[targetIdx] && inputs[targetIdx][schema.slots - 1]) {
-      inputs[targetIdx][schema.slots - 1].classList.add('unit-highlight');
-    }
-
+    if(inputs[targetIdx] && inputs[targetIdx][schema.slots - 1]) inputs[targetIdx][schema.slots - 1].classList.add('unit-highlight');
     positionCoupleLabels();
     if(isShown && refresh){ completeZerosInTable(); updateResult(); }
   }
@@ -397,12 +282,9 @@
 
   if(handle){
     handle.addEventListener('pointerdown', (e)=>{
-      e.preventDefault();
-      isDragging = true;
-      handle.classList.add('dragging');
-      cursor.style.transition = 'none';
-      handle.style.transition = 'none';
-      try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault(); isDragging = true; handle.classList.add('dragging');
+      cursor.style.transition = 'none'; handle.style.transition = 'none';
+      handle.setPointerCapture(e.pointerId);
     });
 
     handle.addEventListener('pointermove', (e)=>{
@@ -411,248 +293,101 @@
       const relativeX = (e.clientX - innerRect.left) / zoomScale;
       const clampedX = clamp(relativeX, 0, innerRect.width / zoomScale);
       
-      const cols = schema.units.length;
-      const totalW = innerRect.width / zoomScale;
-      const colW = totalW / cols; 
-      const cellW = colW - (((cols-1)*6)/cols); 
-      const subW = cellW / schema.slots; 
-
-      cursor.style.width = `${subW + 6}px`;
       cursor.style.transform = `translateX(calc(${clampedX}px - 50%))`;
       handle.style.transform = `translateX(calc(${clampedX}px - 50%))`;
     });
 
-    function endDrag(e){
-      if(!isDragging) return;
-      isDragging = false;
-      handle.classList.remove('dragging');
-      try{ handle.releasePointerCapture(e.pointerId); }catch(_){}
+    const endDrag = (e) => {
+      if(!isDragging) return; isDragging = false;
+      handle.classList.remove('dragging'); handle.releasePointerCapture(e.pointerId);
       cursor.style.transition = 'transform .15s ease-out, width .15s ease-out';
       handle.style.transition = 'transform .15s ease-out';
       
-      const cols = schema.units.length;
       const innerRect = inner.getBoundingClientRect();
       const relativeX = (e.clientX - innerRect.left) / zoomScale;
-      const colWidth = (innerRect.width / zoomScale) / cols;
-      const i = clamp(Math.floor(relativeX / colWidth), 0, cols - 1);
+      const totalWidth = innerRect.width / zoomScale;
+      const colWidth = totalWidth / schema.units.length;
+      const i = clamp(Math.floor(relativeX / colWidth), 0, schema.units.length - 1);
       setTarget(i, true);
-    }
+    };
     handle.addEventListener('pointerup', endDrag);
     handle.addEventListener('pointercancel', endDrag);
   }
 
   function completeZerosInTable(){
-    const S = schema.slots;
-    const total = schema.units.length * S;
+    const S = schema.slots, total = schema.units.length * S;
     const slot = (k)=> inputs[Math.floor(k/S)][k%S];
-
-    for(let k=0;k<total;k++){
-      const el = slot(k);
-      if(el.classList.contains('ghost0')){ el.value=''; el.classList.remove('ghost0'); }
-    }
-
+    for(let k=0;k<total;k++){ const el = slot(k); if(el.classList.contains('ghost0')){ el.value=''; el.classList.remove('ghost0'); } }
     let first=-1, last=-1;
-    for(let k=0;k<total;k++){
-      const v = slot(k).value.trim();
-      if(/^[0-9]$/.test(v)){ if(first===-1) first=k; last=k; }
-    }
+    for(let k=0;k<total;k++){ const v = slot(k).value.trim(); if(/^[0-9]$/.test(v)){ if(first===-1) first=k; last=k; } }
     if(first===-1) return;
-
-    if (document.activeElement && document.activeElement.classList.contains('digit')) {
-      return;
-    }
-
+    if (document.activeElement && document.activeElement.classList.contains('digit')) return;
     const targetRightSlot = targetIdx * S + (S - 1);
-    const lastUserCol = Math.floor(last / S);
-    const userNumberEnd = lastUserCol * S + (S - 1);
-
-    const start = Math.min(first, targetRightSlot);
-    const end   = Math.max(userNumberEnd, targetRightSlot);
-
-    for(let k=start; k<=end; k++){
-      const el = slot(k);
-      if(el.value===''){
-        el.value='0';
-        el.classList.add('ghost0');
-      }
-    }
+    const lastUserCol = Math.floor(last / S), userNumberEnd = lastUserCol * S + (S - 1);
+    const start = Math.min(first, targetRightSlot), end = Math.max(userNumberEnd, targetRightSlot);
+    for(let k=start; k<=end; k++){ const el = slot(k); if(el.value===''){ el.value='0'; el.classList.add('ghost0'); } }
   }
 
   function saveStudent(){ savedStudent = inputs.map(col=>col.map(inp=>inp.value)); }
   function restoreStudent(){
     if(!savedStudent) return;
     for(let i=0;i<inputs.length;i++)
-      for(let s=0;s<inputs[i].length;s++){
-        inputs[i][s].value=savedStudent[i][s];
-        inputs[i][s].classList.remove('ghost0');
-      }
+      for(let s=0;s<inputs[i].length;s++){ inputs[i][s].value=savedStudent[i][s]; inputs[i][s].classList.remove('ghost0'); }
   }
 
   function valueInTarget(){
-    const S=schema.slots, baseIdx=schema.units.indexOf(schema.base);
-    let sum=0;
+    const S=schema.slots, baseIdx=schema.units.indexOf(schema.base); let sum=0;
     for(let ci=0;ci<schema.units.length;ci++){
-      let colVal=0;
-      for(let si=0;si<S;si++){
-        const ch=inputs[ci][si].value.trim();
-        colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0);
-      }
-      const pow=(baseIdx-ci)*S;
-      sum += colVal * Math.pow(10, pow);
+      let colVal=0; for(let si=0;si<S;si++){ const ch=inputs[ci][si].value.trim(); colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0); }
+      sum += colVal * Math.pow(10, (baseIdx-ci)*S);
     }
-    const powToTarget=(baseIdx-targetIdx)*S;
-    return sum * Math.pow(10, -powToTarget);
+    return sum * Math.pow(10, -(baseIdx-targetIdx)*S);
   }
 
   function minFractionDigitsForTarget(){
-    const S = schema.slots;
-    let minFrac = 0;
+    const S = schema.slots; let minFrac = 0;
     for(let ci=0; ci<inputs.length; ci++){
-      let hasUserDigit = false;
-      for(let si=0; si<S; si++){
-        const el = inputs[ci][si];
-        const v  = el.value.trim();
-        if(/^[0-9]$/.test(v) && !el.classList.contains('ghost0')){
-          hasUserDigit = true; break;
-        }
-      }
-      if(hasUserDigit){
-        const delta = (ci - targetIdx) * S;
-        if(delta > minFrac) minFrac = delta;
-      }
+      let hasUserDigit = false; for(let si=0; si<S; si++){ const el = inputs[ci][si]; if(/^[0-9]$/.test(el.value.trim()) && !el.classList.contains('ghost0')){ hasUserDigit = true; break; } }
+      if(hasUserDigit){ const delta = (ci - targetIdx) * S; if(delta > minFrac) minFrac = delta; }
     }
     return minFrac;
   }
 
-  function compactFR(str){
-    const p = str.split(',');
-    if(p.length===1) return str;
-    let dec = p[1].replace(/0+$/,'');
-    return dec.length ? (p[0]+','+dec) : p[0];
-  }
-
-  function formatFR(x){
-    const y = Number.isFinite(x) ? Number(x.toFixed(12)) : x;
-    return y.toLocaleString('fr-FR', { minimumFractionDigits:0, maximumFractionDigits:12 });
-  }
-
-  function addEqLine(txt){
-    const eq = document.createElement('span');
-    eq.className = 'eqLine';
-    eq.innerHTML = txt;
-    result.appendChild(eq);
-  }
-
-  function highlightUnitDigit(compactStr) {
-    const parts = compactStr.split(',');
-    let intPart = parts[0];
-    if (intPart.length > 0) {
-      const lastChar = intPart.slice(-1);
-      const rest = intPart.slice(0, -1);
-      parts[0] = rest + `<span class="unit-highlight">${lastChar}</span>`;
-    }
-    return parts.join(',');
-  }
-
   function updateResult(){
-    const u = schema.units[targetIdx];
-    const val = valueInTarget();
-    const minFrac = minFractionDigitsForTarget();
-
-    const raw = val.toLocaleString('fr-FR', {
-      minimumFractionDigits: minFrac,
-      maximumFractionDigits: Math.max(minFrac, 12)
-    });
-    const compact = compactFR(raw);
-
+    const u = schema.units[targetIdx], val = valueInTarget(), minFrac = minFractionDigitsForTarget();
+    const raw = val.toLocaleString('fr-FR', { minimumFractionDigits: minFrac, maximumFractionDigits: Math.max(minFrac, 12) });
+    const compact = raw.split(',').length > 1 ? raw.replace(/0+$/, '').replace(/,$/, '') : raw;
     result.innerHTML = '';
-
-    const main = document.createElement('span');
-    main.className = 'mainLine';
-    
-    let displayU = u;
-    if (u === '-') displayU = 'dizaines de kg';
-
+    const main = document.createElement('span'); main.className = 'mainLine';
+    let displayU = (u === '-') ? 'dizaines de kg' : u;
     main.innerHTML = `${highlightUnitDigit(compact)} <span class="unit-highlight">${displayU}</span>`;
     result.appendChild(main);
-
     const kind = kindSel.value;
-
     if(kind === 'area' && (u === 'hm²' || u === 'dam²')){
-      const alt = (u === 'hm²') ? 'ha' : 'a'; // Plus de logique pour les ca
-      if(raw !== compact){
-        addEqLine(`${raw} ${u} = ${compact} ${u} = ${compact} ${alt}`);
-      }else{
-        addEqLine(`${compact} ${u} = ${compact} ${alt}`);
-      }
-    }else{
-      if(raw !== compact){
-        addEqLine(`${raw} ${displayU} = ${compact} ${displayU}`);
-      }
+      const alt = (u === 'hm²') ? 'ha' : 'a'; addEqLine(`${compact} ${u} = ${compact} ${alt}`);
     }
-
     if(kind === 'cross'){
-      if(u === 'm³'){
-        const lStr = formatFR(val * 1000);
-        addEqLine(`${compact} m³ = ${compact} kL = ${lStr} L`);
-      }else if(u === 'dm³'){
-        addEqLine(`${compact} dm³ = ${compact} L`);
-      }else if(u === 'cm³'){
-        addEqLine(`${compact} cm³ = ${compact} mL`);
-      }
+      if(u === 'm³') addEqLine(`${compact} m³ = ${formatFR(val * 1000)} L`);
+      else if(u === 'dm³') addEqLine(`${compact} dm³ = ${compact} L`);
+      else if(u === 'cm³') addEqLine(`${compact} cm³ = ${compact} mL`);
     }
-}
-
-  document.getElementById('toggleShow').addEventListener('click', ()=>{
-    if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display='flex'; btnTog.textContent='Masquer'; isShown=true; }
-    else{ restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; savedStudent=null; }
-  });
-  document.getElementById('reset').addEventListener('click', ()=>{
-    inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); }));
-    setTarget(schema.units.indexOf(schema.base),false);
-    result.style.display='flex'; 
-    isShown=true; 
-    btnTog.textContent='Masquer'; 
-    savedStudent=null;
-    updateResult();
-  });
-
-  async function toggleFullscreen(){
-    try{
-      if(!document.fullscreenElement){
-        await document.documentElement.requestFullscreen();
-      }else{
-        await document.exitFullscreen();
-      }
-    }catch(e){}
   }
 
-  if(fsBtn) fsBtn.addEventListener('click', toggleFullscreen);
+  function highlightUnitDigit(s) {
+    const p = s.split(','); if(p[0].length > 0){ p[0] = p[0].slice(0,-1) + `<span class="unit-highlight">${p[0].slice(-1)}</span>`; } return p.join(',');
+  }
+  function addEqLine(t){ const e = document.createElement('span'); e.className = 'eqLine'; e.innerHTML = t; result.appendChild(e); }
+  function formatFR(x){ return x.toLocaleString('fr-FR'); }
 
-  document.addEventListener('keydown', (e)=>{
-    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
-    if(tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+  btnTog.addEventListener('click', ()=>{ if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display='flex'; btnTog.textContent='Masquer'; isShown=true; } else { restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; } });
+  btnRst.addEventListener('click', ()=>{ inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); })); setTarget(schema.units.indexOf(schema.base),true); });
+  zoomIn.addEventListener('click', ()=>{ zoomScale = Math.min(1.6, zoomScale + 0.1); applyZoom(); });
+  zoomOut.addEventListener('click', ()=>{ zoomScale = Math.max(0.8, zoomScale - 0.1); applyZoom(); });
+  zoomReset.addEventListener('click', ()=>{ zoomScale = 1; applyZoom(); });
+  fsBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); });
+  kindSel.addEventListener('change', rebuild);
 
-    if(e.key === 'f' || e.key === 'F'){ toggleFullscreen(); }
-    if(isShown) updateResult();
-  });
-
-  if(zoomIn) zoomIn.addEventListener('click', ()=>{
-    zoomScale = Math.min(1.6, Math.round((zoomScale + 0.1) * 100) / 100);
-    applyZoom();
-  });
-  if(zoomOut) zoomOut.addEventListener('click', ()=>{
-    zoomScale = Math.max(0.8, Math.round((zoomScale - 0.1) * 100) / 100);
-    applyZoom();
-  });
-  if(zoomReset) zoomReset.addEventListener('click', ()=>{
-    zoomScale = 1;
-    applyZoom();
-  });
-
-  kindSel.addEventListener('change', ()=>{ rebuild(); applyZoom(); });
-
-  setTheme('length'); rebuild(); applyZoom();
+  rebuild(); applyZoom();
 })();
 </script>
 </body>
