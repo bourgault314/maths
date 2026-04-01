@@ -22,7 +22,6 @@
   .board{background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:16px 10px 14px;box-shadow:0 10px 26px rgba(0,0,0,.08)}
   .title{font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black);margin:0 0 20px 2px; font-size:1.6rem}
 
-  /* SYMÉTRIE */
   .inner{position:relative;padding-top:120px; padding-bottom:120px;} 
   
   .head{display:grid;grid-template-columns:repeat(var(--cols, 7),1fr);gap:8px;margin-bottom:6px;position:relative;z-index:2}
@@ -51,7 +50,6 @@
     line-height: 0;
   }
 
-  /* BULLES ÉLARGIES ET TEXTE PLUS GROS */
   .handle{
     position:absolute; left:0;
     width: 140px; 
@@ -96,20 +94,25 @@
   .unitBtn span { font-weight:700; display:flex; justify-content:center; }
   .unitBtn:hover{background:color-mix(in srgb, var(--accent) 18%, #fff)}
 
-  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:92px;display:flex;align-items:center;justify-content:center}
-  .slots{margin-top:0;display:flex;gap:0;width:calc(100% - 12px);}
+  .cell{position:relative;background:#fff;border:2px solid var(--accent);border-radius:8px;min-height:92px;display:flex;align-items:stretch;justify-content:center}
+  .slots{margin-top:0;display:flex;gap:0;width:100%;align-items:stretch;}
   
   .digit{
     box-sizing:border-box; width:calc(100% / var(--S)); text-align:center;
     font-weight:600; font-size:2.8rem; 
-    line-height:2.8rem; border:none; outline:none; background:transparent; color:#000; padding:0 4px; transition: color 0.2s, font-weight 0.2s;
+    border:none; outline:none; background:transparent; color:#000; padding:0 4px; 
+    transition: color 0.2s;
   }
   
   .slots[data-slots="2"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(2),
   .slots[data-slots="3"] .digit:nth-child(3){border-left:1px solid #000}
 
-  .unit-highlight { color: var(--accent-dark); font-weight: 900 !important; }
+  .unit-highlight { 
+    color: var(--accent-dark); 
+    font-weight: 600 !important; 
+    text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark);
+  }
 
   .result{
     display:flex; flex-direction: column; align-items: center; justify-content: center;
@@ -266,19 +269,33 @@
   }
 
   function getSlotMetrics(ci) {
-    const cell = grid.children[ci]; if(!cell) return { x: 0, w: 0, cx: 0 };
+    const cell = grid.children[ci];
+    if (!cell) return { x: 0, w: 0, cx: 0 };
+    
     const innerRect = inner.getBoundingClientRect();
     const cellRect = cell.getBoundingClientRect();
-    const realCellW = cellRect.width / zoomScale;
-    const realCellLeft = (cellRect.left - innerRect.left) / zoomScale;
-    const subW = realCellW / schema.slots;
-    const x = realCellLeft + (schema.slots - 1) * subW;
-    return { x, w: subW, cx: x + subW / 2 };
+    
+    let x = (cellRect.left - innerRect.left) / zoomScale;
+    let w = cellRect.width / zoomScale;
+    
+    const subW = w / schema.slots;
+    x = x + (schema.slots - 1) * subW;
+    
+    return { x: x, w: subW, cx: x + subW / 2 };
   }
 
+  /* CORRECTION 1 : Alignement précis des étiquettes (kL, L, mL, ha, a) sur la case des unités */
   function positionCoupleLabels(){
     const kind = kindSel.value; if(kind !== 'cross' && kind !== 'area') return;
-    const setLabelPos = (lab, ci) => { const metrics = getSlotMetrics(ci); lab.style.left = `${metrics.cx}px`; };
+    const setLabelPos = (lab, ci) => { 
+      const targetInput = inputs[ci] && inputs[ci][schema.slots - 1];
+      if(!targetInput) return;
+      const innerRect = inner.getBoundingClientRect();
+      const inpRect = targetInput.getBoundingClientRect();
+      const x = (inpRect.left - innerRect.left) / zoomScale;
+      const w = inpRect.width / zoomScale;
+      lab.style.left = `${x + w / 2}px`; 
+    };
     if (kind === 'cross') { setLabelPos(lab1, 3); setLabelPos(lab2, 4); setLabelPos(lab3, 5); }
     else if (kind === 'area') { setLabelPos(lab1, 1); setLabelPos(lab2, 2); }
   }
@@ -374,6 +391,7 @@
     handle.addEventListener('pointercancel', endDrag);
   });
 
+  /* CORRECTION 3 : Fini les zéros fantômes. On s'arrête strictement au dernier chiffre significatif saisi. */
   function completeZerosInTable(){
     const S = schema.slots, total = schema.units.length * S;
     const slot = (k)=> inputs[Math.floor(k/S)][k%S];
@@ -383,8 +401,8 @@
     if(first===-1) return;
     if (document.activeElement && document.activeElement.classList.contains('digit')) return;
     const targetRightSlot = targetIdx * S + (S - 1);
-    const lastUserCol = Math.floor(last / S), userNumberEnd = lastUserCol * S + (S - 1);
-    const start = Math.min(first, targetRightSlot), end = Math.max(userNumberEnd, targetRightSlot);
+    const start = Math.min(first, targetRightSlot);
+    const end = Math.max(last, targetRightSlot);
     for(let k=start; k<=end; k++){ const el = slot(k); if(el.value===''){ el.value='0'; el.classList.add('ghost0'); } }
   }
 
@@ -401,7 +419,6 @@
       let colVal=0; for(let si=0;si<S;si++){ const ch=inputs[ci][si].value.trim(); colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0); }
       sum += colVal * Math.pow(10, (baseIdx-ci)*S);
     }
-    // CORRECTION DU BUG DES FLOTTANTS : On force l'arrondi sécurisé pour effacer la "poussière" binaire
     let rawVal = sum * Math.pow(10, -(baseIdx-targetIdx)*S);
     return Number(rawVal.toFixed(12)); 
   }
@@ -415,6 +432,7 @@
     return minFrac;
   }
 
+  /* CORRECTION 2 : m³ s'affiche directement en kL sans passer par un multiple de 1000 */
   function updateResult(){
     const u = schema.units[targetIdx], val = valueInTarget(), minFrac = minFractionDigitsForTarget();
     const raw = val.toLocaleString('fr-FR', { minimumFractionDigits: minFrac, maximumFractionDigits: Math.max(minFrac, 12) });
@@ -429,7 +447,7 @@
       const alt = (u === 'hm²') ? 'ha' : 'a'; addEqLine(`${compact} ${u} = ${compact} ${alt}`);
     }
     if(kind === 'cross'){
-      if(u === 'm³') addEqLine(`${compact} m³ = ${Number((val * 1000).toFixed(12)).toLocaleString('fr-FR')} L`);
+      if(u === 'm³') addEqLine(`${compact} m³ = ${compact} kL`);
       else if(u === 'dm³') addEqLine(`${compact} dm³ = ${compact} L`);
       else if(u === 'cm³') addEqLine(`${compact} cm³ = ${compact} mL`);
     }
