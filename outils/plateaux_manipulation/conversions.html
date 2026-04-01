@@ -134,10 +134,9 @@
     text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark);
   }
 
-  .result-wrapper { display:flex; flex-direction:column; align-items:center; margin-bottom:12px; }
-  .result {
+  .result{
     display:flex; flex-direction: column; align-items: center; justify-content: center;
-    width:fit-content; max-width:100%; margin:10px auto 8px; padding:12px 24px;
+    width:fit-content; max-width:100%; margin:10px auto 12px; padding:12px 24px;
     border-radius:12px; background:#f5f9ff; border:1px solid #cfe0ff; text-align:center; min-height: 105px;
   }
   .result .mainLine{ display:block; font-weight:500; font-size:2.75rem; color:#000; line-height:1.12; }
@@ -186,24 +185,20 @@
       </select>
       <button class="btn" id="toggleShow">Masquer</button>
       <button class="btn secondary" id="reset">Remise à zéro</button>
+      <button class="btn" id="freezeBtn" style="width: 170px;">📌 Figer le départ</button>
     </div>
     <div class="right">
       <button class="btn small print-btn" id="printBtn" title="Imprimer tous les tableaux (2 par page)">🖨️ Tout imprimer</button>
-      <button class="btn secondary small" id="fsBtn">⛶</button>
-      <button class="btn secondary small" id="zoomOut">−</button>
+      <button class="btn secondary small" id="fsBtn" title="Plein écran">⛶</button>
+      <button class="btn secondary small" id="zoomOut" title="Dézoomer">−</button>
       <span class="zoomLabel" id="zoomLabel">100%</span>
-      <button class="btn secondary small" id="zoomIn">+</button>
-      <button class="btn secondary small" id="zoomReset">⟲</button>
+      <button class="btn secondary small" id="zoomIn" title="Zoomer">+</button>
     </div>
   </div>
 
   <div class="board">
     <div class="title" id="title">CONVERSIONS</div>
-    
-    <div class="result-wrapper">
-      <div class="result" id="result"></div>
-      <button class="btn small" id="freezeBtn" style="width: 180px;">📌 Figer le départ</button>
-    </div>
+    <div class="result" id="result"></div>
 
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
@@ -242,12 +237,12 @@
 
   const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), boardColumns = document.getElementById('boardColumns'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor');
   const handles = [document.getElementById('handleTop'), document.getElementById('handleBottom')];
-  const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn');
+  const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn');
   const printBtn = document.getElementById('printBtn');
   const freezeBtn = document.getElementById('freezeBtn');
 
   let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
-  let isFrozen = false, frozenUnitIdx = -1; // Nouvelles variables pour Figer
+  let isFrozen = false, frozenUnitIdx = -1;
 
   function applyZoom(){
     board.style.transform = `scale(${zoomScale})`;
@@ -268,7 +263,6 @@
     boardColumns.style.setProperty('--cols', schema.units.length);
     boardColumns.innerHTML=''; inputs=[];
     
-    // Réinitialise le bouton Figer au changement de grandeur
     isFrozen = false;
     frozenUnitIdx = -1;
     if(freezeBtn) {
@@ -495,8 +489,6 @@
       for(let s=0;s<inputs[i].length;s++){ inputs[i][s].value=savedStudent[i][s]; inputs[i][s].classList.remove('ghost0'); }
   }
 
-  // --- NOUVEAU MOTEUR ZÉRO MATHÉMATIQUES ---
-  // Calcule la valeur affichée pour une colonne précise
   function getFormattedValueInfo(uIdx) {
     const u = schema.units[uIdx];
     const S = schema.slots;
@@ -555,17 +547,15 @@
 
     let liveInfo = getFormattedValueInfo(targetIdx);
 
-    // LOGIQUE DE FIGEAGE
     if (isFrozen && frozenUnitIdx !== -1 && frozenUnitIdx !== targetIdx) {
         let frozenInfo = getFormattedValueInfo(frozenUnitIdx);
-        main.innerHTML = `${frozenInfo.html} <span style="color:var(--accent); font-weight:900; margin:0 8px;">=</span> ${liveInfo.html}`;
+        main.innerHTML = `${frozenInfo.html} <span style="color:#000; font-weight:900; margin:0 8px;">=</span> ${liveInfo.html}`;
     } else {
         main.innerHTML = liveInfo.html;
     }
 
     result.appendChild(main);
 
-    // Égalités de références (ha, a, L, etc.) basées sur la valeur live
     const kind = kindSel.value;
     const u = liveInfo.u;
     const compact = liveInfo.compact;
@@ -590,7 +580,6 @@
   
   function addEqLine(t){ const e = document.createElement('span'); e.className = 'eqLine'; e.innerHTML = t; result.appendChild(e); }
 
-  // Gestion des clics sur le bouton Figer
   freezeBtn.addEventListener('click', () => {
     if (!isFrozen) {
         isFrozen = true;
@@ -608,7 +597,6 @@
 
   btnTog.addEventListener('click', ()=>{ if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display='flex'; btnTog.textContent='Masquer'; isShown=true; } else { restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; } });
   
-  // Le bouton Remise à zéro défige aussi tout
   btnRst.addEventListener('click', ()=>{ 
     inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); })); 
     isFrozen = false;
@@ -622,7 +610,6 @@
   
   zoomIn.addEventListener('click', ()=>{ zoomScale = Math.min(1.6, zoomScale + 0.1); applyZoom(); });
   zoomOut.addEventListener('click', ()=>{ zoomScale = Math.max(0.8, zoomScale - 0.1); applyZoom(); });
-  zoomReset.addEventListener('click', ()=>{ zoomScale = 1; applyZoom(); });
   fsBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); });
   kindSel.addEventListener('change', rebuild);
   
