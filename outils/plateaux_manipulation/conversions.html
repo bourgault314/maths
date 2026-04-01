@@ -16,6 +16,7 @@
   .btn{border:none;background:var(--accent);color:#fff;font-weight:700;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent)}
   .btn.secondary{background:#6b7280}
   .btn.small{padding:7px 10px;border-radius:10px}
+  .btn.print-btn{background:#10b981; box-shadow:0 6px 14px color-mix(in srgb, #10b981 30%, transparent)}
   .zoomLabel{font-weight:700;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff}
   .btn:active{transform:translateY(1px)}
 
@@ -124,6 +125,43 @@
 
   .subhead{position:relative;height:22px;margin:2px 0 8px;display:none;z-index:4;pointer-events:none}
   .sub-lab{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black)}
+
+  /* --- RÈGLES SPÉCIALES POUR L'IMPRESSION EN LOT --- */
+  #print-container { display: none; }
+  
+  @media print {
+    @page { size: A4 landscape; margin: 12mm; }
+    body { background: #fff; }
+    .app { display: none !important; } /* Masque l'outil interactif */
+    
+    #print-container { 
+      display: block !important; /* Affiche les grilles générées */
+      width: 100%; 
+    }
+    .print-page {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 185mm; /* Hauteur A4 paysage moins les marges */
+      page-break-after: always;
+    }
+    .print-board {
+      box-shadow: none !important; 
+      border: 2px solid var(--accent); 
+      margin: 0; 
+      padding: 10px 10px 20px 10px; 
+      border-radius: 10px;
+      transform: none !important;
+    }
+    .print-inner { 
+      padding-top: 0 !important; 
+      padding-bottom: 0 !important; 
+    }
+    .print-title { font-size: 1.6rem; text-align: center; margin-bottom: 15px; color: var(--accent-dark); font-weight: 900; }
+    .print-subhead { height: 22px; margin: 2px 0 4px; position: relative; display: block; }
+    
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
 </style>
 </head>
 <body>
@@ -144,6 +182,7 @@
       <button class="btn secondary" id="reset">Remise à zéro</button>
     </div>
     <div class="right">
+      <button class="btn small print-btn" id="printBtn" title="Imprimer tous les tableaux (2 par page)">🖨️ Tout imprimer</button>
       <button class="btn secondary small" id="fsBtn">⛶</button>
       <button class="btn secondary small" id="zoomOut">−</button>
       <span class="zoomLabel" id="zoomLabel">100%</span>
@@ -197,6 +236,7 @@
   const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), head = document.getElementById('head'), grid = document.getElementById('grid'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor');
   const handles = [document.getElementById('handleTop'), document.getElementById('handleBottom')];
   const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn'), subhead = document.getElementById('subhead'), lab1 = document.getElementById('lab1'), lab2 = document.getElementById('lab2'), lab3 = document.getElementById('lab3');
+  const printBtn = document.getElementById('printBtn');
 
   let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
 
@@ -284,7 +324,6 @@
     return { x: x, w: subW, cx: x + subW / 2 };
   }
 
-  /* CORRECTION 1 : Alignement précis des étiquettes (kL, L, mL, ha, a) sur la case des unités */
   function positionCoupleLabels(){
     const kind = kindSel.value; if(kind !== 'cross' && kind !== 'area') return;
     const setLabelPos = (lab, ci) => { 
@@ -391,7 +430,6 @@
     handle.addEventListener('pointercancel', endDrag);
   });
 
-  /* CORRECTION 3 : Fini les zéros fantômes. On s'arrête strictement au dernier chiffre significatif saisi. */
   function completeZerosInTable(){
     const S = schema.slots, total = schema.units.length * S;
     const slot = (k)=> inputs[Math.floor(k/S)][k%S];
@@ -432,7 +470,6 @@
     return minFrac;
   }
 
-  /* CORRECTION 2 : m³ s'affiche directement en kL sans passer par un multiple de 1000 */
   function updateResult(){
     const u = schema.units[targetIdx], val = valueInTarget(), minFrac = minFractionDigitsForTarget();
     const raw = val.toLocaleString('fr-FR', { minimumFractionDigits: minFrac, maximumFractionDigits: Math.max(minFrac, 12) });
@@ -465,6 +502,115 @@
   zoomReset.addEventListener('click', ()=>{ zoomScale = 1; applyZoom(); });
   fsBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); });
   kindSel.addEventListener('change', rebuild);
+  
+  // LOGIQUE MAGIQUE POUR L'IMPRESSION EN LOT
+  if(printBtn) {
+    printBtn.addEventListener('click', () => {
+      // Création du conteneur invisible qui va stocker tous les tableaux
+      const printContainer = document.createElement('div');
+      printContainer.id = 'print-container';
+      
+      const kinds = Object.keys(SCHEMAS);
+      let pageDiv = null;
+      
+      kinds.forEach((k, index) => {
+        // Nouvelle page toutes les 2 grilles
+        if(index % 2 === 0) {
+          pageDiv = document.createElement('div');
+          pageDiv.className = 'print-page';
+          printContainer.appendChild(pageDiv);
+        }
+        
+        const s = SCHEMAS[k];
+        const [c, cd] = THEMES[k];
+        
+        // Construction du panneau pour ce tableau spécifique
+        const boardDiv = document.createElement('div');
+        boardDiv.className = 'board print-board';
+        boardDiv.style.setProperty('--accent', c);
+        boardDiv.style.setProperty('--accent-dark', cd);
+        
+        const title = document.createElement('div');
+        title.className = 'print-title';
+        title.textContent = `CONVERSIONS – ${s.label}`;
+        boardDiv.appendChild(title);
+        
+        const innerPrint = document.createElement('div');
+        innerPrint.className = 'inner print-inner';
+        
+        // En-têtes (Unités)
+        const headPrint = document.createElement('div');
+        headPrint.className = 'head';
+        headPrint.style.setProperty('--cols', s.units.length);
+        s.units.forEach(u => {
+          const b = document.createElement('div');
+          b.className = 'unitBtn';
+          b.style.gridTemplateColumns = `repeat(${s.slots}, 1fr)`;
+          const span = document.createElement('span');
+          span.textContent = u;
+          span.style.gridColumn = s.slots;
+          b.appendChild(span);
+          headPrint.appendChild(b);
+        });
+        innerPrint.appendChild(headPrint);
+        
+        // Sous-en-têtes (L, mL, ha, a) générés via calcul CSS !
+        if(k === 'cross' || k === 'area') {
+          const subhead = document.createElement('div');
+          subhead.className = 'print-subhead';
+          
+          const setLab = (txt, ci) => {
+            const lab = document.createElement('div');
+            lab.className = 'sub-lab';
+            lab.textContent = txt;
+            
+            // Calcul mathématique magique pour placer le texte parfaitement au-dessus de la case unité
+            const colWidth = 100 / s.units.length;
+            const slotWidth = colWidth / s.slots;
+            const leftPct = (ci * colWidth) + ((s.slots - 1) * slotWidth) + (slotWidth / 2);
+            
+            lab.style.left = `${leftPct}%`;
+            subhead.appendChild(lab);
+          };
+          
+          if(k === 'cross') { setLab('kL', 3); setLab('L', 4); setLab('mL', 5); }
+          if(k === 'area') { setLab('ha', 1); setLab('a', 2); }
+          
+          innerPrint.appendChild(subhead);
+        }
+        
+        // Grille de saisie
+        const gridPrint = document.createElement('div');
+        gridPrint.className = 'grid';
+        gridPrint.style.setProperty('--cols', s.units.length);
+        s.units.forEach(() => {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          const wrap = document.createElement('div');
+          wrap.className = 'slots';
+          wrap.dataset.slots = String(s.slots);
+          wrap.style.setProperty('--S', s.slots);
+          for(let i=0; i<s.slots; i++){
+            const inp = document.createElement('input');
+            inp.className = 'digit';
+            inp.disabled = true; // Empêche l'interaction sur l'impression
+            wrap.appendChild(inp);
+          }
+          cell.appendChild(wrap);
+          gridPrint.appendChild(cell);
+        });
+        innerPrint.appendChild(gridPrint);
+        
+        boardDiv.appendChild(innerPrint);
+        pageDiv.appendChild(boardDiv);
+      });
+      
+      // On attache la création invisible au document, on imprime, puis on nettoie
+      document.body.appendChild(printContainer);
+      window.print();
+      document.body.removeChild(printContainer);
+    });
+  }
 
   rebuild(); applyZoom();
 })();
