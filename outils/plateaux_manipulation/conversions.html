@@ -14,7 +14,7 @@
   .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;font-weight:700; font-size:1rem}
   .btn{border:none;background:var(--accent);color:#fff;font-weight:700;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 6px 14px color-mix(in srgb, var(--accent) 30%, transparent)}
-  .btn.secondary{background:#6b7280}
+  .btn.secondary{background:#6b7280; box-shadow:0 6px 14px color-mix(in srgb, #6b7280 30%, transparent)}
   .btn.small{padding:7px 10px;border-radius:10px}
   .btn.print-btn{background:#10b981; box-shadow:0 6px 14px color-mix(in srgb, #10b981 30%, transparent)}
   .zoomLabel{font-weight:700;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff}
@@ -25,7 +25,6 @@
 
   .inner{position:relative;padding-top:120px; padding-bottom:120px;} 
   
-  /* Conteneur global : espacement uniforme de 4px partout */
   .board-columns {
     display: grid;
     grid-template-columns: repeat(var(--cols, 7), 1fr);
@@ -35,11 +34,10 @@
     user-select: none;
   }
 
-  /* La "Maison" n'a plus ni fond, ni bordure, ni padding, c'est juste une colonne structurelle */
   .family-col {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* Espace vertical entre l'entête et les cases */
+    gap: 6px; 
   }
 
   .cursor{
@@ -53,12 +51,11 @@
     z-index:3;
   }
   
-  /* Virgule : Taille légèrement réduite (3.5rem) et ajustée pour le tout petit espace de 4px */
   .cursor::after {
     content: ",";
     position: absolute;
     bottom: 32px; 
-    right: -13px; /* Tombe pile sur la frontière / chevauche un peu la case d'à côté */
+    right: -13px; 
     font-family: 'Nunito', Arial, sans-serif;
     font-size: 3.5rem; 
     font-weight: 800;
@@ -98,7 +95,7 @@
     border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent);
   }
 
-  .head-group { display: grid; gap: 4px; } /* Maintien du gap 4px uniforme */
+  .head-group { display: grid; gap: 4px; }
 
   .unitBtn{
     background:color-mix(in srgb, var(--accent) 12%, #fff);
@@ -120,7 +117,7 @@
 
   .cell{position:relative;background:transparent;min-height:auto;display:flex;align-items:stretch;justify-content:center}
   
-  .slots{margin-top:0;display:grid;gap:4px;width:100%;align-items:stretch;} /* Maintien du gap 4px uniforme */
+  .slots{margin-top:0;display:grid;gap:4px;width:100%;align-items:stretch;}
   
   .digit{
     box-sizing:border-box; width:100%; text-align:center;
@@ -137,9 +134,10 @@
     text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark);
   }
 
-  .result{
+  .result-wrapper { display:flex; flex-direction:column; align-items:center; margin-bottom:12px; }
+  .result {
     display:flex; flex-direction: column; align-items: center; justify-content: center;
-    width:fit-content; max-width:100%; margin:10px auto 12px; padding:12px 24px;
+    width:fit-content; max-width:100%; margin:10px auto 8px; padding:12px 24px;
     border-radius:12px; background:#f5f9ff; border:1px solid #cfe0ff; text-align:center; min-height: 105px;
   }
   .result .mainLine{ display:block; font-weight:500; font-size:2.75rem; color:#000; line-height:1.12; }
@@ -201,7 +199,11 @@
 
   <div class="board">
     <div class="title" id="title">CONVERSIONS</div>
-    <div class="result" id="result"></div>
+    
+    <div class="result-wrapper">
+      <div class="result" id="result"></div>
+      <button class="btn small" id="freezeBtn" style="width: 180px;">📌 Figer le départ</button>
+    </div>
 
     <div class="inner" id="inner">
       <div class="cursor" id="cursor"></div>
@@ -242,8 +244,10 @@
   const handles = [document.getElementById('handleTop'), document.getElementById('handleBottom')];
   const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomReset = document.getElementById('zoomReset'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn');
   const printBtn = document.getElementById('printBtn');
+  const freezeBtn = document.getElementById('freezeBtn');
 
   let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
+  let isFrozen = false, frozenUnitIdx = -1; // Nouvelles variables pour Figer
 
   function applyZoom(){
     board.style.transform = `scale(${zoomScale})`;
@@ -263,6 +267,14 @@
     titleEl.textContent = `CONVERSIONS – ${schema.label}`;
     boardColumns.style.setProperty('--cols', schema.units.length);
     boardColumns.innerHTML=''; inputs=[];
+    
+    // Réinitialise le bouton Figer au changement de grandeur
+    isFrozen = false;
+    frozenUnitIdx = -1;
+    if(freezeBtn) {
+        freezeBtn.innerHTML = '📌 Figer le départ';
+        freezeBtn.classList.remove('secondary');
+    }
 
     schema.units.forEach((u,i)=>{
       const col = document.createElement('div');
@@ -344,7 +356,17 @@
 
     let defaultIdx = schema.units.indexOf(schema.base);
     if(defaultIdx === -1) defaultIdx = 3; 
-    requestAnimationFrame(() => { setTarget(defaultIdx, false); if(isShown){ completeZerosInTable(); updateResult(); } });
+
+    cursor.style.transition = 'none';
+    handles.forEach(h => { if(h) h.style.transition = 'none'; });
+
+    requestAnimationFrame(() => { 
+      setTarget(defaultIdx, false); 
+      if(isShown){ completeZerosInTable(); updateResult(); } 
+      void inner.offsetWidth;
+      cursor.style.transition = 'transform .15s ease-out, width .15s ease-out, top .15s ease-out, height .15s ease-out';
+      handles.forEach(h => { if(h) h.style.transition = 'transform .15s ease-out, top .15s ease-out'; });
+    });
   }
 
   function getSlotMetrics(ci) {
@@ -473,35 +495,81 @@
       for(let s=0;s<inputs[i].length;s++){ inputs[i][s].value=savedStudent[i][s]; inputs[i][s].classList.remove('ghost0'); }
   }
 
-  function valueInTarget(){
-    const S=schema.slots, baseIdx=schema.units.indexOf(schema.base); let sum=0;
-    for(let ci=0;ci<schema.units.length;ci++){
-      let colVal=0; for(let si=0;si<S;si++){ const ch=inputs[ci][si].value.trim(); colVal = colVal*10 + (/^[0-9]$/.test(ch)? ch.charCodeAt(0)-48 : 0); }
-      sum += colVal * Math.pow(10, (baseIdx-ci)*S);
+  // --- NOUVEAU MOTEUR ZÉRO MATHÉMATIQUES ---
+  // Calcule la valeur affichée pour une colonne précise
+  function getFormattedValueInfo(uIdx) {
+    const u = schema.units[uIdx];
+    const S = schema.slots;
+    const targetPos = uIdx * S + (S - 1);
+    
+    let arr = [];
+    for(let ci=0; ci<schema.units.length; ci++){
+      for(let si=0; si<S; si++){
+        arr.push(inputs[ci][si].value.trim());
+      }
     }
-    let rawVal = sum * Math.pow(10, -(baseIdx-targetIdx)*S);
-    return Number(rawVal.toFixed(12)); 
-  }
+    
+    let firstIndex = -1, lastIndex = -1;
+    for(let i=0; i<arr.length; i++) {
+      if(/^[0-9]$/.test(arr[i])) {
+        if(firstIndex === -1) firstIndex = i;
+        lastIndex = i;
+      }
+    }
+    
+    let displayU = (u === '-') ? 'dizaines de kg' : u;
 
-  function minFractionDigitsForTarget(){
-    const S = schema.slots; let minFrac = 0;
-    for(let ci=0; ci<inputs.length; ci++){
-      let hasUserDigit = false; for(let si=0; si<S; si++){ const el = inputs[ci][si]; if(/^[0-9]$/.test(el.value.trim()) && !el.classList.contains('ghost0')){ hasUserDigit = true; break; } }
-      if(hasUserDigit){ const delta = (ci - targetIdx) * S; if(delta > minFrac) minFrac = delta; }
+    if(firstIndex === -1) {
+      let compact = '0';
+      let html = `${highlightUnitDigit(compact)} <span class="unit-highlight">${displayU}</span>`;
+      return { html, compact, u };
     }
-    return minFrac;
+    
+    let start = Math.min(firstIndex, targetPos);
+    let end = Math.max(lastIndex, targetPos);
+    
+    let left = "";
+    let right = "";
+    
+    for(let i = start; i <= end; i++) {
+      let char = (/^[0-9]$/.test(arr[i])) ? arr[i] : '0';
+      if (i <= targetPos) left += char;
+      else right += char;
+    }
+    
+    left = left.replace(/^0+/, '');
+    if (left === '') left = '0';
+    right = right.replace(/0+$/, '');
+    
+    left = left.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    let compact = left + (right.length > 0 ? ',' + right : '');
+    let html = `${highlightUnitDigit(compact)} <span class="unit-highlight">${displayU}</span>`;
+    
+    return { html, compact, u };
   }
 
   function updateResult(){
-    const u = schema.units[targetIdx], val = valueInTarget(), minFrac = minFractionDigitsForTarget();
-    const raw = val.toLocaleString('fr-FR', { minimumFractionDigits: minFrac, maximumFractionDigits: Math.max(minFrac, 12) });
-    const compact = raw.split(',').length > 1 ? raw.replace(/0+$/, '').replace(/,$/, '') : raw;
     result.innerHTML = '';
     const main = document.createElement('span'); main.className = 'mainLine';
-    let displayU = (u === '-') ? 'dizaines de kg' : u;
-    main.innerHTML = `${highlightUnitDigit(compact)} <span class="unit-highlight">${displayU}</span>`;
+
+    let liveInfo = getFormattedValueInfo(targetIdx);
+
+    // LOGIQUE DE FIGEAGE
+    if (isFrozen && frozenUnitIdx !== -1 && frozenUnitIdx !== targetIdx) {
+        let frozenInfo = getFormattedValueInfo(frozenUnitIdx);
+        main.innerHTML = `${frozenInfo.html} <span style="color:var(--accent); font-weight:900; margin:0 8px;">=</span> ${liveInfo.html}`;
+    } else {
+        main.innerHTML = liveInfo.html;
+    }
+
     result.appendChild(main);
+
+    // Égalités de références (ha, a, L, etc.) basées sur la valeur live
     const kind = kindSel.value;
+    const u = liveInfo.u;
+    const compact = liveInfo.compact;
+
     if(kind === 'area' && (u === 'hm²' || u === 'dam²')){
       const alt = (u === 'hm²') ? 'ha' : 'a'; addEqLine(`${compact} ${u} = ${compact} ${alt}`);
     }
@@ -513,12 +581,45 @@
   }
 
   function highlightUnitDigit(s) {
-    const p = s.split(','); if(p[0].length > 0){ p[0] = p[0].slice(0,-1) + `<span class="unit-highlight">${p[0].slice(-1)}</span>`; } return p.join(',');
+    const p = s.split(','); 
+    if(p[0].length > 0){ 
+      p[0] = p[0].slice(0,-1) + `<span class="unit-highlight">${p[0].slice(-1)}</span>`; 
+    } 
+    return p.join(',');
   }
+  
   function addEqLine(t){ const e = document.createElement('span'); e.className = 'eqLine'; e.innerHTML = t; result.appendChild(e); }
 
+  // Gestion des clics sur le bouton Figer
+  freezeBtn.addEventListener('click', () => {
+    if (!isFrozen) {
+        isFrozen = true;
+        frozenUnitIdx = targetIdx;
+        freezeBtn.innerHTML = '🔓 Modifier';
+        freezeBtn.classList.add('secondary');
+    } else {
+        isFrozen = false;
+        frozenUnitIdx = -1;
+        freezeBtn.innerHTML = '📌 Figer le départ';
+        freezeBtn.classList.remove('secondary');
+    }
+    updateResult();
+  });
+
   btnTog.addEventListener('click', ()=>{ if(!isShown){ saveStudent(); completeZerosInTable(); updateResult(); result.style.display='flex'; btnTog.textContent='Masquer'; isShown=true; } else { restoreStudent(); result.style.display='none'; btnTog.textContent='Afficher'; isShown=false; } });
-  btnRst.addEventListener('click', ()=>{ inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); })); setTarget(schema.units.indexOf(schema.base),true); });
+  
+  // Le bouton Remise à zéro défige aussi tout
+  btnRst.addEventListener('click', ()=>{ 
+    inputs.forEach(col=>col.forEach(inp=>{ inp.value=''; inp.classList.remove('ghost0'); })); 
+    isFrozen = false;
+    frozenUnitIdx = -1;
+    if(freezeBtn) {
+        freezeBtn.innerHTML = '📌 Figer le départ';
+        freezeBtn.classList.remove('secondary');
+    }
+    setTarget(schema.units.indexOf(schema.base),true); 
+  });
+  
   zoomIn.addEventListener('click', ()=>{ zoomScale = Math.min(1.6, zoomScale + 0.1); applyZoom(); });
   zoomOut.addEventListener('click', ()=>{ zoomScale = Math.max(0.8, zoomScale - 0.1); applyZoom(); });
   zoomReset.addEventListener('click', ()=>{ zoomScale = 1; applyZoom(); });
