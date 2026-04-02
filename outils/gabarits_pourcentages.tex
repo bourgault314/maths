@@ -8,7 +8,7 @@
 \usetikzlibrary{decorations.pathreplacing,arrows.meta}
 
 % Couleurs Mathnipulez
-\definecolor{color100}{RGB}{235, 100, 100} % Rouge (plus utilisé pour le tout global)
+\definecolor{color100}{RGB}{235, 100, 100} % Rouge
 \definecolor{color50}{RGB}{255, 230, 100}  % Jaune
 \definecolor{color25}{RGB}{150, 220, 150}  % Vert
 \definecolor{color20}{RGB}{150, 200, 235}  % Bleu
@@ -18,116 +18,151 @@
 % Largeur totale commune à tous les gabarits
 \newcommand{\LargeurTotale}{18}
 
-% COMMANDE GÉNÉRALE
-\newcommand{\barrePourcent}[2]{%
-    % Échelle réduite à 0.78 au lieu de 0.88 pour faire de la place au titre
+% ==========================================
+% MACROS POUR LE RECTO (Gabarits à compléter)
+% ==========================================
+\newcommand{\barreRecto}[2]{%
     \begin{tikzpicture}[scale=0.78]
-        % Boîte invisible pour forcer un centrage parfait
+        % Boîte invisible identique pour un alignement recto/verso parfait
         \useasboundingbox (0, -1.5) rectangle (\LargeurTotale, 4.5);
         
         \pgfmathsetmacro{\w}{\LargeurTotale/#1}
-        \pgfmathsetmacro{\p}{int(100/#1)}
         
-        % Bloc total (Assorti à la couleur des parts, mais plus clair : #2!20)
+        % Bloc total
         \draw[thick, fill=#2!20] (0, 1.8) rectangle (\LargeurTotale, 3.6);
         \draw[dotted, thick, line cap=round] ({\LargeurTotale/2 - 2}, 2.4) -- ({\LargeurTotale/2 + 2}, 2.4);
-        
-        % Accolade 100%
-        \draw[decorate, decoration={brace, amplitude=10pt, raise=2pt}, thick]
-            (0, 3.6) -- (\LargeurTotale, 3.6)
-            node[midway, above=12pt, font=\bfseries\Large] {100 \%};
         
         % Cases du bas
         \foreach \i in {1,...,#1} {
             \pgfmathsetmacro{\xpos}{(\i-1)*\w}
-            
             \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.8);
             
             \pgfmathsetmacro{\dotwidth}{\w * 0.22}
             \draw[dotted, thick, line cap=round]
                 (\xpos + \w/2 - \dotwidth, 0.6) -- (\xpos + \w/2 + \dotwidth, 0.6);
-            
-            \draw[decorate, decoration={brace, amplitude=6pt, mirror, raise=2pt}, thick]
-                (\xpos, 0) -- (\xpos + \w, 0)
-                node[midway, below=10pt, font=\bfseries] {\p \%};
         }
     \end{tikzpicture}%
 }
 
-% VERSION SPÉCIALE POUR 1%
-\newcommand{\barrePourcentUn}{%
-    % Échelle réduite à 0.78
+\newcommand{\barreRectoUn}{%
     \begin{tikzpicture}[scale=0.78]
-        % La même boîte invisible pour aligner avec les autres
         \useasboundingbox (0, -1.5) rectangle (\LargeurTotale, 4.5);
-        
         \pgfmathsetmacro{\w}{\LargeurTotale/100}
         
-        % Bloc total (Assorti au violet des parts : color1!20)
+        % Bloc total
         \draw[thick, fill=color1!20] (0, 1.8) rectangle (\LargeurTotale, 3.6);
         \draw[dotted, thick, line cap=round] ({\LargeurTotale/2 - 2}, 2.4) -- ({\LargeurTotale/2 + 2}, 2.4);
         
-        % Accolade 100%
-        \draw[decorate, decoration={brace, amplitude=10pt, raise=2pt}, thick]
-            (0, 3.6) -- (\LargeurTotale, 3.6)
-            node[midway, above=12pt, font=\bfseries\Large] {100 \%};
-
-        % Bloc des parts (Violet : color1!35)
+        % Bloc des parts (100 cases)
         \draw[thick, fill=color1!35] (0,0) rectangle (\LargeurTotale,1.8);
-        
-        % Lignes de séparation intérieures
         \foreach \i in {1,...,99} {
             \pgfmathsetmacro{\xpos}{\i*\w}
             \draw[thick] (\xpos,0) -- (\xpos,1.8);
         }
 
-        % Accolade sous la 1re case
-        \draw[decorate, decoration={brace, amplitude=5pt, mirror, raise=2pt}, thick]
-            (0,0) -- (\w,0)
-            node[midway, below=9pt, font=\bfseries\small] {1 \%};
-
-        % Flèche vers la 2e case
+        % Indicateur à compléter pour 1 case
         \draw[-{Latex[length=1.8mm]}, thick]
-            (1.8,-0.55) -- ({1.5*\w},0.03);
+            (1.8,-0.55) -- ({\w/2},0);
+        \node[font=\bfseries\small, anchor=west] at (1.9,-0.55) {1 case = ...};
+    \end{tikzpicture}%
+}
 
-        % Texte à compléter
-        \node[font=\bfseries\small, anchor=west] at (1.9,-0.55) {Une case = ...};
+% ==========================================
+% MACROS POUR LE VERSO (Pourcentages inclus)
+% ==========================================
+\newcommand{\barreVerso}[2]{%
+    \begin{tikzpicture}[scale=0.78]
+        \useasboundingbox (0, -1.5) rectangle (\LargeurTotale, 4.5);
+        
+        \pgfmathsetmacro{\w}{\LargeurTotale/#1}
+        \pgfmathsetmacro{\p}{int(100/#1)}
+        
+        % Bloc total avec 100% à l'intérieur
+        \draw[thick, fill=#2!20] (0, 1.8) rectangle (\LargeurTotale, 3.6);
+        \node[font=\bfseries\Large] at ({\LargeurTotale/2}, 2.7) {100 \%};
+        
+        % Cases du bas avec pourcentages à l'intérieur
+        \foreach \i in {1,...,#1} {
+            \pgfmathsetmacro{\xpos}{(\i-1)*\w}
+            \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.8);
+            \node[font=\bfseries] at (\xpos + \w/2, 0.9) {\p \%};
+        }
+    \end{tikzpicture}%
+}
+
+\newcommand{\barreVersoUn}{%
+    \begin{tikzpicture}[scale=0.78]
+        \useasboundingbox (0, -1.5) rectangle (\LargeurTotale, 4.5);
+        \pgfmathsetmacro{\w}{\LargeurTotale/100}
+        
+        % Bloc total avec 100% à l'intérieur
+        \draw[thick, fill=color1!20] (0, 1.8) rectangle (\LargeurTotale, 3.6);
+        \node[font=\bfseries\Large] at ({\LargeurTotale/2}, 2.7) {100 \%};
+
+        % Bloc des parts
+        \draw[thick, fill=color1!35] (0,0) rectangle (\LargeurTotale,1.8);
+        \foreach \i in {1,...,99} {
+            \pgfmathsetmacro{\xpos}{\i*\w}
+            \draw[thick] (\xpos,0) -- (\xpos,1.8);
+        }
+
+        % Indicateur 1% (trop petit pour écrire dans la case)
+        \draw[-{Latex[length=1.8mm]}, thick]
+            (1.8,-0.55) -- ({\w/2},0);
+        \node[font=\bfseries\small, anchor=west] at (1.9,-0.55) {1 case = 1 \%};
     \end{tikzpicture}%
 }
 
 \begin{document}
 \thispagestyle{empty}
 
-% --- TITRE DE LA PAGE ---
+% ==========================================
+% PAGE 1 : RECTO
+% ==========================================
 \begin{center}
-    {\Huge \textbf{Gabarits de pourcentages}}\\[0.5cm]
+    {\Huge \textbf{Gabarits à compléter}}\\[0.5cm]
 \end{center}
 
-% --- RESSORT DU HAUT ---
 \vspace*{\fill}
 
 \begin{center}
-    \barrePourcent{2}{color50}
-    
-    % --- RESSORT ENTRE LES TABLEAUX ---
+    \barreRecto{2}{color50}
     \vfill
-    
-    \barrePourcent{4}{color25}
-    
+    \barreRecto{4}{color25}
     \vfill
-    
-    \barrePourcent{5}{color20}
-    
+    \barreRecto{5}{color20}
     \vfill
-    
-    \barrePourcent{10}{color10}
-    
+    \barreRecto{10}{color10}
     \vfill
-    
-    \barrePourcentUn
+    \barreRectoUn
 \end{center}
 
-% --- RESSORT DU BAS ---
+\vspace*{\fill}
+
+\newpage
+\thispagestyle{empty}
+
+% ==========================================
+% PAGE 2 : VERSO
+% ==========================================
+\begin{center}
+    {\Huge \textbf{Gabarits des pourcentages}}\\[0.5cm]
+\end{center}
+
+\vspace*{\fill}
+
+\begin{center}
+    \barreVerso{2}{color50}
+    \vfill
+    \barreVerso{4}{color25}
+    \vfill
+    \barreVerso{5}{color20}
+    \vfill
+    \barreVerso{10}{color10}
+    \vfill
+    \barreVersoUn
+\end{center}
+
 \vspace*{\fill}
 
 \end{document}
