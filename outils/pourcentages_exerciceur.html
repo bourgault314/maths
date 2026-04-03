@@ -203,14 +203,17 @@
     <div class="bottom-config">
       <div class="config-options">
         <div class="config-block">
-          <label>Niveau :</label>
-          <select id="selLevel">
-            <option value="1" selected>Niveau 1 (Facile)</option>
-            <option value="2">Niveau 2 (Moyen)</option>
-            <option value="3">Niveau 3 (Difficile)</option>
-          </select>
+          <label>Niveaux :</label>
+          <label style="cursor: pointer;"><input type="checkbox" value="1" class="cb-niveau" checked style="accent-color: var(--accent); transform: scale(1.2);"> 1</label>
+          <label style="cursor: pointer;"><input type="checkbox" value="2" class="cb-niveau" style="accent-color: var(--accent); transform: scale(1.2);"> 2</label>
+          <label style="cursor: pointer;"><input type="checkbox" value="3" class="cb-niveau" style="accent-color: var(--accent); transform: scale(1.2);"> 3</label>
         </div>
-        <div class="config-block">
+        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
+          <label>Nombres :</label>
+          <label style="cursor: pointer;"><input type="checkbox" value="entiers" class="cb-nombres" checked style="accent-color: var(--accent); transform: scale(1.2);"> Entiers</label>
+          <label style="cursor: pointer;"><input type="checkbox" value="decimaux" class="cb-nombres" style="accent-color: var(--accent); transform: scale(1.2);"> Décimaux</label>
+        </div>
+        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
           <label>Questions :</label>
           <select id="selCount">
             <option value="3">3</option>
@@ -226,9 +229,6 @@
             <option value="4eme" selected>Détaillée (4ème)</option>
             <option value="3eme">Directe (3ème)</option>
           </select>
-        </div>
-        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbDecimals" style="accent-color: var(--accent); transform: scale(1.2);"> 🧮 Décimaux</label>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
           <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Gabarits</label>
@@ -925,13 +925,19 @@
     function getQuizData() {
       const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
       if (checkboxes.length === 0) { alert("⚠️ Cochez au moins un type de question !"); return false; }
+
+      const levelCheckboxes = document.querySelectorAll('.cb-niveau:checked');
+      if (levelCheckboxes.length === 0) { alert("⚠️ Cochez au moins un niveau !"); return false; }
+      const selectedLevels = Array.from(levelCheckboxes).map(cb => parseInt(cb.value, 10));
+
+      const nbCheckboxes = document.querySelectorAll('.cb-nombres:checked');
+      if (nbCheckboxes.length === 0) { alert("⚠️ Cochez au moins un type de nombre (Entiers ou Décimaux) !"); return false; }
+      const selectedNombres = Array.from(nbCheckboxes).map(cb => cb.value);
       
       quizSeed = initSeed();
       
       let types = Array.from(checkboxes).map(cb => cb.value);
       const count = parseInt(document.getElementById('selCount').value, 10);
-      const level = parseInt(document.getElementById('selLevel').value, 10); 
-      const useDecimals = document.getElementById('cbDecimals').checked;
       
       let distributedTypes = [];
       for (let i = 0; i < count; i++) { distributedTypes.push(types[i % types.length]); }
@@ -954,15 +960,18 @@
         const type = distributedTypes[i];
         let q = null;
 
+        let currentLevel = pick(selectedLevels);
+        let currentUseDecimals = pick(selectedNombres) === 'decimaux';
+
         if (antiDoublonTypes.has(type)) {
           let attempts = 0;
           do {
-            q = createQuestion(type, level, useDecimals);
+            q = createQuestion(type, currentLevel, currentUseDecimals);
             attempts++;
           } while (usedTotalsByType[type].has(getAntiDoublonKey(type, q)) && attempts < 300);
           usedTotalsByType[type].add(getAntiDoublonKey(type, q));
         } else {
-          q = createQuestion(type, level, useDecimals);
+          q = createQuestion(type, currentLevel, currentUseDecimals);
         }
 
         quizData.push(q);
