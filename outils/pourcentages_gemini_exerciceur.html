@@ -1086,7 +1086,7 @@
             drawBrace(svgContainer, xStart, yBot + hBar + 15, wPart * q.activeParts, `${fmt(q.calcVal)}`, false, "var(--accent)");
           }
         } 
-        else if (q.mode !== 'find_total' && q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 15, wPart * q.activeParts, `${fmt(q.calcVal)}`, false, "var(--accent)"); }
+        else if (q.activeParts > 1) { drawBrace(svgContainer, xStart, yBot + hBar + 15, wPart * q.activeParts, `${fmt(q.calcVal)}`, false, "var(--accent)"); }
       }
     }
 
