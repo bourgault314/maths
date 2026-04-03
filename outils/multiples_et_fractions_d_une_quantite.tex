@@ -2,105 +2,143 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
-% Marges réduites pour optimiser l'espace de la page
+% Marges réduites pour optimiser l'espace
 \usepackage[left=1.2cm, right=1.2cm, top=1.5cm, bottom=1.5cm]{geometry}
 \usepackage{tikz}
-\usetikzlibrary{decorations.pathreplacing}
+\usepackage{amsmath} % Pour les belles fractions
+\usepackage{graphicx} % Pour \scalebox (réduction de la taille du texte)
 
-% Couleurs Mathnipulez d'origine (Fractions <-> Pourcentages)
-\definecolor{color50}{RGB}{255, 230, 100}  % Jaune (Double/Moitié <-> 50%)
-\definecolor{color25}{RGB}{150, 220, 150}  % Vert (Quadruple/Quart <-> 25%)
-\definecolor{color33}{RGB}{255, 180, 200}  % Rose pastel (Triple/Tiers <-> NOUVEAU)
-\definecolor{color20}{RGB}{150, 200, 235}  % Bleu (Quintuple/Cinquième <-> 20%)
-\definecolor{color10}{RGB}{250, 180, 100}  % Orange (Décuple/Dixième <-> 10%)
+% Couleurs Mathnipulez d'origine
+\definecolor{color50}{RGB}{255, 230, 100}  % Jaune
+\definecolor{color25}{RGB}{150, 220, 150}  % Vert
+\definecolor{color33}{RGB}{255, 180, 200}  % Rose pastel
+\definecolor{color20}{RGB}{150, 200, 235}  % Bleu
+\definecolor{color10}{RGB}{250, 180, 100}  % Orange
 
 % Largeur de chaque gabarit pour tenir sur deux colonnes
 \newcommand{\Largeur}{8.5}
 
-% GABARIT MULTIPLES (Accolade en haut)
-\newcommand{\gabaritMultiple}[3]{%
+% Macro pour écrire sur deux étages (gardée pour les pages 1 et 2)
+\newcommand{\empile}[2]{%
+    \renewcommand{\arraystretch}{0.7}%
+    \begin{tabular}{@{}c@{}}#1 \\ #2\end{tabular}%
+}
+
+% ==========================================
+% MACROS : GABARITS REMPLIS (COLONNE GAUCHE)
+% ==========================================
+\newcommand{\gabaritRempli}[4]{%
     \begin{tikzpicture}[scale=1]
-        \useasboundingbox (0, -1) rectangle (\Largeur, 3.5);
+        \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
         \pgfmathsetmacro{\w}{\Largeur/#1}
         
+        % Bloc total (Haut)
         \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
-        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1}, 1.8) -- ({\Largeur/2 + 1}, 1.8);
+        \node[font=\bfseries] at ({\Largeur/2}, 1.8) {#3};
         
-        \draw[decorate, decoration={brace, amplitude=8pt, raise=2pt}, thick]
-            (0, 2.4) -- (\Largeur, 2.4) node[midway, above=10pt, font=\bfseries] {#3};
-            
+        % Bloc des parts (Bas)
         \foreach \i in {1,...,#1} {
             \pgfmathsetmacro{\xpos}{(\i-1)*\w}
             \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
-            \pgfmathsetmacro{\dotw}{min(\w*0.2, 0.4)}
-            \draw[dotted, thick, line cap=round] (\xpos+\w/2-\dotw, 0.6) -- (\xpos+\w/2+\dotw, 0.6);
+            \node[font=\bfseries] at (\xpos+\w/2, 0.6) {#4};
         }
     \end{tikzpicture}%
 }
 
-% GABARIT FRACTIONS (Accolade en bas)
-\newcommand{\gabaritFraction}[3]{%
+% ==========================================
+% MACROS : GABARITS VIDES (COLONNE DROITE)
+% ==========================================
+\newcommand{\gabaritVide}[2]{%
     \begin{tikzpicture}[scale=1]
-        \useasboundingbox (0, -1) rectangle (\Largeur, 3.5);
+        \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
         \pgfmathsetmacro{\w}{\Largeur/#1}
         
+        % Bloc total (Haut) avec pointillés
         \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
-        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1}, 1.8) -- ({\Largeur/2 + 1}, 1.8);
+        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1.5}, 1.8) -- ({\Largeur/2 + 1.5}, 1.8);
         
+        % Bloc des parts (Bas) avec pointillés
         \foreach \i in {1,...,#1} {
             \pgfmathsetmacro{\xpos}{(\i-1)*\w}
             \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
-            \pgfmathsetmacro{\dotw}{min(\w*0.2, 0.4)}
+            \pgfmathsetmacro{\dotw}{min(\w*0.25, 0.5)}
             \draw[dotted, thick, line cap=round] (\xpos+\w/2-\dotw, 0.6) -- (\xpos+\w/2+\dotw, 0.6);
         }
-        
-        \draw[decorate, decoration={brace, amplitude=6pt, mirror, raise=2pt}, thick]
-            (0, 0) -- (\w, 0) node[midway, below=8pt, font=\bfseries] {#3};
     \end{tikzpicture}%
 }
 
 \begin{document}
-\thispagestyle{empty}
 
+% =========================================================
+% PAGE 1 : FRACTIONS (MOTS)
+% =========================================================
+\thispagestyle{empty}
 \begin{center}
-    {\huge \textbf{Multiples et fractions d'une quantité}}\\[1cm]
+    {\Huge \textbf{Les fractions d'une quantité}}\\[0.8cm]
 \end{center}
 
-% En-têtes des colonnes
 \noindent
 \begin{minipage}{0.48\textwidth}
-    \centering \Large \textbf{Multiples}
+    \centering \Large \textbf{Modèle}
 \end{minipage}\hfill
 \begin{minipage}{0.48\textwidth}
-    \centering \Large \textbf{Fractions}
+    \centering \Large \textbf{À compléter}
 \end{minipage}
 
-\vspace{0.5cm}
+\vspace{0.6cm}
 
-% Ligne 1 : Double / Moitié (Jaune)
 \noindent
-\gabaritMultiple{2}{color50}{le double} \hfill \gabaritFraction{2}{color50}{la moitié}
+\gabaritRempli{2}{color50}{LE TOUT}{la moitié} \hfill \gabaritVide{2}{color50}
 \vfill
-
-% Ligne 2 : Quadruple / Quart (Vert)
 \noindent
-\gabaritMultiple{4}{color25}{le quadruple} \hfill \gabaritFraction{4}{color25}{le quart}
+\gabaritRempli{4}{color25}{LE TOUT}{le quart} \hfill \gabaritVide{4}{color25}
 \vfill
-
-% Ligne 3 : Triple / Tiers (Rose)
 \noindent
-\gabaritMultiple{3}{color33}{le triple} \hfill \gabaritFraction{3}{color33}{le tiers}
+\gabaritRempli{3}{color33}{LE TOUT}{le tiers} \hfill \gabaritVide{3}{color33}
 \vfill
-
-% Ligne 4 : Quintuple / Cinquième (Bleu)
 \noindent
-\gabaritMultiple{5}{color20}{le quintuple} \hfill \gabaritFraction{5}{color20}{le cinquième}
+\gabaritRempli{5}{color20}{LE TOUT}{\empile{\scriptsize le}{\scriptsize cinquième}} \hfill \gabaritVide{5}{color20}
 \vfill
-
-% Ligne 5 : Décuple / Dixième (Orange)
 \noindent
-\gabaritMultiple{10}{color10}{le décuple} \hfill \gabaritFraction{10}{color10}{le dixième}
+\gabaritRempli{10}{color10}{LE TOUT}{\scalebox{0.7}{\empile{\tiny le}{\tiny dixième}}} \hfill \gabaritVide{10}{color10}
 
 \vspace*{\fill}
+\newpage
+
+% =========================================================
+% PAGE 2 : MULTIPLES (MOTS)
+% =========================================================
+\thispagestyle{empty}
+\begin{center}
+    {\Huge \textbf{Les multiples d'une quantité}}\\[0.8cm]
+\end{center}
+
+\noindent
+\begin{minipage}{0.48\textwidth}
+    \centering \Large \textbf{Modèle}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+    \centering \Large \textbf{À compléter}
+\end{minipage}
+
+\vspace{0.6cm}
+
+\noindent
+\gabaritRempli{2}{color50}{LE DOUBLE}{une part} \hfill \gabaritVide{2}{color50}
+\vfill
+\noindent
+\gabaritRempli{4}{color25}{LE QUADRUPLE}{une part} \hfill \gabaritVide{4}{color25}
+\vfill
+\noindent
+\gabaritRempli{3}{color33}{LE TRIPLE}{une part} \hfill \gabaritVide{3}{color33}
+\vfill
+\noindent
+\gabaritRempli{5}{color20}{LE QUINTUPLE}{\empile{\scriptsize une}{\scriptsize part}} \hfill \gabaritVide{5}{color20}
+\vfill
+\noindent
+\gabaritRempli{10}{color10}{LE DÉCUPLE}{\empile{\tiny une}{\tiny part}} \hfill \gabaritVide{10}{color10}
+
+\vspace*{\fill}
+
 
 \end{document}
