@@ -470,30 +470,43 @@ input[type="number"]{appearance:textfield}
           <input id="numVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-      <div class="row" style="margin-top:10px; flex-wrap:nowrap">
-        <div style="flex:0 0 auto">
-          <label>Billes cachées<br>par tache</label>
-          <select id="numHiddenCount" style="width:72px">
+      
+      <div class="row" style="margin-top:10px; flex-wrap:nowrap;">
+        
+        <div id="numHiddenCountWrap" style="flex:1; min-width:0;">
+          <label>Cachées<br>par tache</label>
+          <select id="numHiddenCount" style="width:100%; padding:8px 4px; font-size:13px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
           </select>
         </div>
 
-        <div id="numBeadAbsMaxWrap" style="flex:0 0 auto; display:none">
-          <label>Valeur max<br>des billes (|v|)</label>
-          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:72px" />
+        <div id="eqUnknownModeWrap" style="flex:1; min-width:0; display:none">
+          <label>Inconnues<br>(x)</label>
+          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:13px;">
+            <option value="MIX" selected>Mélange</option>
+            <option value="ONE_SIDE">1 côté</option>
+            <option value="BOTH">2 côtés</option>
+          </select>
         </div>
-        <div id="numOpposeModeWrap" style="flex:0 0 auto; display:none">
-          <label>Taches opposees<br>(±X)</label>
-          <select id="numOpposeMode" style="width:130px">
+
+        <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
+          <label>Billes max<br>(|v|)</label>
+          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
+        </div>
+
+        <div id="numOpposeModeWrap" style="flex:1; min-width:0; display:none">
+          <label>Opposées<br>(±X)</label>
+          <select id="numOpposeMode" style="width:100%; padding:8px 4px; font-size:13px;">
           <option value="off" selected>Aucune</option>
-          <option value="all">Toutes opposees</option>
+          <option value="all">Toutes</option>
           <option value="auto">Parfois</option>
-          <option value="mix">Melange</option>
+          <option value="mix">Mélange</option>
         </select>
         </div>
 
       </div>
+
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
           <label>Total (min)</label>
@@ -696,20 +709,21 @@ input[type="number"]{appearance:textfield}
         <input id="count" type="number" min="1" max="300" value="10" style="width:96px" />
       </div>
       <button class="btn primary" id="btnGen">Générer</button>
-<button class="btn danger" id="btnClear">Vider</button>
+      <button class="btn danger" id="btnClear">Vider</button>
     </div>
 
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="btnPrev">◀</button>
-      <button class="btn" id="btnNext">▶</button>
-      <button class="iconbtn" id="btnFullscreen" title="Plein écran">
+    <div class="row" style="margin-top:10px; flex-wrap:nowrap;">
+      <button class="btn" id="btnPrev" style="flex:0 0 auto">◀</button>
+      <button class="btn" id="btnNext" style="flex:0 0 auto">▶</button>
+      <button class="iconbtn" id="btnFullscreen" title="Plein écran" style="flex:0 0 auto">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
         </svg>
       </button>
       
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; height:42px; padding:0 12px; border-radius:12px;">
-        <input type="checkbox" id="numColorMode" checked> <span style="font-weight:600;">Jetons (+Vert / -Rouge)</span>
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
+        <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
+        <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
       </label>
     </div>
 
@@ -933,7 +947,10 @@ function syncNumTasksUI(act){
 
 const numVisibleMinEl = document.getElementById("numVisibleMin");
 const numVisibleMaxEl = document.getElementById("numVisibleMax");
+const numHiddenCountWrapEl = document.getElementById("numHiddenCountWrap");
 const numHiddenCountEl = document.getElementById("numHiddenCount");
+const eqUnknownModeWrapEl = document.getElementById("eqUnknownModeWrap");
+const eqUnknownModeEl = document.getElementById("eqUnknownMode");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
@@ -1179,6 +1196,10 @@ function syncSettingsUI(){
   const isSystem = act === "D";
   const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
 
+  // Menu conditionnel pour "Billes cachées" (B/B±) ou "Inconnues (x)" (E/E±)
+  if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = isEquation ? "none" : "block";
+  if(eqUnknownModeWrapEl) eqUnknownModeWrapEl.style.display = isEquation ? "block" : "none";
+
   // En EQ, on autorise jusqu’à 6 billes visibles (par plateau).
   // Dans les autres modes, on garde le plafond historique à 5 pour ne rien casser.
   if(isEquation){
@@ -1294,7 +1315,7 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 [
   countEl, diffEl, seedEl,
   unitTasksMinEl, unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
+  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, eqUnknownModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -1577,6 +1598,7 @@ function assignPositionsEquation(card, rng){
   const splatR = 74;        // taches : même taille quelle que soit la quantité
 
   function layoutSplats(tray, n){
+    if(n <= 0) return [];
     // Zone haute dédiée aux taches (évite toute ambiguïté visuelle)
     const area = { x: tray.x + 70, y: tray.y + 75, w: tray.w - 140, h: 330 };
 
@@ -1931,7 +1953,7 @@ function genNumberedSigned(rng){
   const vMax = clamp(numberOr(numVisibleMaxEl.value, 3), vMin, 5);
   const visibleCount = rInt(rng, vMin, vMax);
 
-  const hiddenCount = clamp(numberOr(numHiddenCountEl.value, 1), 1, 2);
+  const hiddenCount = clamp(numberOr(numHiddenCountEl ? numHiddenCountEl.value : 1, 1), 1, 2);
 
   let totalMin = clamp(numberOr(numTotalMinEl.value, -50), -99, 99);
   let totalMax = clamp(numberOr(numTotalMaxEl.value, 50), -99, 99);
@@ -1942,7 +1964,7 @@ function genNumberedSigned(rng){
 
   // Mode "taches opposées" :
   // - "Aucune" : B± classique (toutes les tâches ont la même somme H, H peut être + ou -)
-  // - "Toutes opposees" : toutes les tâches ont la somme -A (A>0)
+  // - "Toutes" : toutes les tâches ont la somme -A (A>0)
   // - "Mélange" : certaines tâches ont +A, d'autres -A, sans annulation globale
   // - "Parfois" : une fois sur deux, aucune / toutes opposées
   const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? numOpposeModeEl.value : "off";
@@ -2103,60 +2125,66 @@ function randomCompositionBounded(rng, sum, parts, maxPart=99){
 function genEquation(rng){
   // Mode EQ : deux plateaux (gauche/droite) avec la même quantité totale.
   // Chaque tache cache le même nombre X (1 bille cachée par tache), identique partout.
-  // Pour que l'équation soit résoluble, on impose tasksGauche !== tasksDroite.
 
   const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
   const maxTasksEq = Math.max(2, maxTasksUser);
 
-  // IMPORTANT : en EQ, Billes visibles (min/max) s'appliquent PAR PLATEAU (gauche ET droite),
-  // et non sur la somme des deux plateaux.
+  // Billes visibles
   let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
 
-  // Total min/max = total à gauche (et donc le même à droite), pas la somme des 2 plateaux.
+  // Total min/max = total à gauche (et donc le même à droite)
   let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20);
   let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
   userMin = clamp(userMin, 1, 999);
   userMax = clamp(userMax, 1, 999);
 
-  // Génération robuste :
-  // On choisit (a,b,x, nbVisL, nbVisR) puis on choisit un total T dans l'intersection
-  // des contraintes de décomposition sur les billes visibles.
+  const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
+
   const MAX_TRIES = 8000;
 
   for(let tries=0; tries<MAX_TRIES; tries++){
-    // 1) Nombre de taches par plateau (1..max), mais DIFFERENTS.
-    const a = rInt(rng, 1, maxTasksEq);
-    let b = rInt(rng, 1, maxTasksEq);
-    if(b === a){
-      // petit "shift" pour éviter de retomber tout le temps sur l'égalité
-      b = (b % maxTasksEq) + 1;
+    let mode = unknownModeSetting;
+    if(mode === "MIX") mode = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
+
+    let a, b;
+    if(mode === "ONE_SIDE") {
+        // Un côté à 0 tache, l'autre à au moins 1
+        if(rng() < 0.5) {
+            a = 0;
+            b = rInt(rng, 1, maxTasksEq);
+        } else {
+            a = rInt(rng, 1, maxTasksEq);
+            b = 0;
+        }
+    } else {
+        // Des deux côtés
+        a = rInt(rng, 1, maxTasksEq);
+        b = rInt(rng, 1, maxTasksEq);
+        if(b === a) b = (b % maxTasksEq) + 1; // Forcer différent
     }
+    
     if(a === b) continue;
 
-    // 2) Nombre de billes visibles par plateau (dans [vMin..vMax]) : INDEPENDANT gauche/droite.
     const vCountL = rInt(rng, vMin, vMax);
     const vCountR = rInt(rng, vMin, vMax);
+    
     if(vCountL === 0 && vCountR === 0) continue; // exercice vide
+    // Si 0 tache d'un côté, il FAUT des billes visibles de ce côté !
+    if(a === 0 && vCountL === 0) continue;
+    if(b === 0 && vCountR === 0) continue;
 
-    // 3) Choisir X (valeur cachée sous une tache)
-    // On borne X pour rester compatible avec userMax (au pire, il reste au moins 1 par bille visible).
-    const minVisAny = Math.min(
-      vCountL > 0 ? vCountL : 1,
-      vCountR > 0 ? vCountR : 1
-    );
+    // Choisir X
+    const minVisAny = Math.min(vCountL > 0 ? vCountL : 1, vCountR > 0 ? vCountR : 1);
     const denom = Math.max(1, Math.min(a, b));
     let xMax = Math.floor((userMax - minVisAny) / denom);
     xMax = Math.max(1, Math.min(99, xMax));
     if(xMax < 1) continue;
     const x = rInt(rng, 1, xMax);
 
-    // 4) Trouver un total T dans l'intersection des contraintes :
-    //    VL = T - a*x doit être décomposable en vCountL nombres entre 1 et 99
-    //    VR = T - b*x doit être décomposable en vCountR nombres entre 1 et 99
-    // => T ∈ [a*x + vCountL*1, a*x + vCountL*99] ∩ [b*x + vCountR*1, b*x + vCountR*99] ∩ [userMin,userMax]
+    // Trouver un total T
     let tLow = userMin;
     let tHigh = userMax;
 
@@ -2183,7 +2211,7 @@ function genEquation(rng){
 
     return {
       family: "EQ",
-      total: total, // stocké mais non affiché dans ce mode
+      total: total,
       visible: leftVisible.concat(rightVisible),
       hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
       _eq: {
@@ -2195,58 +2223,7 @@ function genEquation(rng){
     };
   }
 
-  // Phase 2 : recherche déterministe si les paramètres sont très contraignants.
-  for(let a=1; a<=maxTasksEq; a++){
-    for(let b=1; b<=maxTasksEq; b++){
-      if(a === b) continue;
-      for(let x=1; x<=99; x++){
-        for(let vCountL=vMin; vCountL<=vMax; vCountL++){
-          for(let vCountR=vMin; vCountR<=vMax; vCountR++){
-            if(vCountL === 0 && vCountR === 0) continue;
-
-            let tLow = userMin;
-            let tHigh = userMax;
-
-            const lMinT = a*x + (vCountL * 1);
-            const lMaxT = a*x + (vCountL * 99);
-            const rMinT = b*x + (vCountR * 1);
-            const rMaxT = b*x + (vCountR * 99);
-
-            tLow = Math.max(tLow, lMinT, rMinT);
-            tHigh = Math.min(tHigh, lMaxT, rMaxT);
-            if(tHigh < tLow) continue;
-
-            const total = tLow; // on prend le plus petit faisable
-            const VL = total - a*x;
-            const VR = total - b*x;
-
-            const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
-            const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
-            if(leftVisible === null || rightVisible === null) continue;
-
-            const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
-            const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
-
-            return {
-              family: "EQ",
-              total: total,
-              visible: leftVisible.concat(rightVisible),
-              hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
-              _eq: {
-                total,
-                x,
-                left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
-                right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
-              }
-            };
-          }
-        }
-      }
-    }
-  }
-
-  // Ultime fallback (ne devrait jamais arriver) : on fabrique quelque chose de cohérent,
-  // même si les réglages utilisateur sont impossibles.
+  // Fallback
   const a = 2, b = 1, x = 2;
   const vCountL = Math.max(1, vMin), vCountR = Math.max(1, vMin);
   const total = Math.max(userMin, a*x + vCountL);
@@ -2276,31 +2253,22 @@ function genEquation(rng){
 function genEquationSigned(rng){
   // Mode EQPM : deux plateaux (gauche/droite) avec la même quantité totale,
   // mais avec billes visibles signées et possibilité de taches "opposees" (-x).
-  // Chaque tache cache exactement 1 bille (valeur +x ou -x), identique en valeur absolue partout.
-  // Pour que l'équation soit résoluble, on impose coefGauche !== coefDroite (et coef != 0).
 
   const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
   const maxTasksEq = Math.max(2, maxTasksUser);
 
-  // Billes visibles (min/max) s'appliquent PAR PLATEAU (gauche ET droite)
   let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
 
-  // Total min/max = total à gauche (et donc le même à droite), pas la somme des 2 plateaux.
   let userMin = clamp(numberOr(numTotalMinEl.value, -20), -99, 99);
   let userMax = clamp(numberOr(numTotalMaxEl.value, 20), -99, 99);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
 
   const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
-
-// Mode "taches opposees" (comme B±) :
-// - off  : aucune tache opposee (tout +x)
-// - all  : pas de melange : chaque cote est soit tout +x, soit tout -x (au hasard)
-// - auto : parfois aucun oppose, parfois melange
-// - mix  : melange possible dans un cote
-const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
-const autoPick = (opposeSetting === "auto") ? "auto" : null;
+  const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
+  const autoPick = (opposeSetting === "auto") ? "auto" : null;
+  const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
 
 function sumArr(a){ let s=0; for(const x of a) s+=x; return s; }
 function hasBothSigns(arr){
@@ -2310,11 +2278,13 @@ function hasBothSigns(arr){
 }
 
 function chooseUniformSigns(n){
+  if(n === 0) return [];
   const s = (rng() < 0.5) ? 1 : -1;
   return new Array(n).fill(s);
 }
 function chooseMixedSignsNonZero(n){
-  // n>=3 attendu
+  if(n === 0) return [];
+  if(n < 3) return chooseUniformSigns(n);
   const candidates = [];
   for(let k=1; k<=n-1; k++){
     if(n % 2 === 0 && k === (n/2)) continue; // eviter somme = 0
@@ -2329,23 +2299,16 @@ function chooseMixedSignsNonZero(n){
 }
 function chooseSignsPair(nL, nR, mode){
   if(mode === "off"){
-    // aucune tache opposee : tout +x
     return { L:new Array(nL).fill(1), R:new Array(nR).fill(1) };
   }
   if(mode === "all"){
-    // tout oppose : tout -x a gauche ET a droite
     return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
   }
   if(mode === "auto"){
-    // parfois : majoritairement "contraste" (un cote tout +x, l'autre tout -x)
-    // repartition : 60% contraste, 20% tout +x, 20% tout -x
     const r = rng();
     if(r < 0.60){
-      if(rng() < 0.5){
-        return { L:new Array(nL).fill(1),  R:new Array(nR).fill(-1) };
-      }else{
-        return { L:new Array(nL).fill(-1), R:new Array(nR).fill(1) };
-      }
+      if(rng() < 0.5) return { L:new Array(nL).fill(1),  R:new Array(nR).fill(-1) };
+      else return { L:new Array(nL).fill(-1), R:new Array(nR).fill(1) };
     }else if(r < 0.80){
       return { L:new Array(nL).fill(1),  R:new Array(nR).fill(1) };
     }else{
@@ -2353,82 +2316,74 @@ function chooseSignsPair(nL, nR, mode){
     }
   }
 
-  // mode "mix" : tous les cas (uniforme ou melange par cote)
+  // mix
   const canMixL = (nL >= 3);
   const canMixR = (nR >= 3);
-
-  const patterns = [];
-  // 0: uni/uni, 1: uni/mix, 2: mix/uni, 3: mix/mix
-  patterns.push(0);
+  const patterns = [0];
   if(canMixR) patterns.push(1);
   if(canMixL) patterns.push(2);
   if(canMixL && canMixR) patterns.push(3);
 
   const pattern = patterns[rInt(rng, 0, patterns.length-1)];
-
-  const makeUni = (n)=> chooseUniformSigns(n);
-  const makeMix = (n)=> chooseMixedSignsNonZero(n);
-
   let L, R;
-  if(pattern === 0){
-    L = makeUni(nL);
-    R = makeUni(nR);
-  }else if(pattern === 1){
-    L = makeUni(nL);
-    R = makeMix(nR);
-  }else if(pattern === 2){
-    L = makeMix(nL);
-    R = makeUni(nR);
-  }else{
-    L = makeMix(nL);
-    R = makeMix(nR);
-  }
+  if(pattern === 0){ L = chooseUniformSigns(nL); R = chooseUniformSigns(nR); }
+  else if(pattern === 1){ L = chooseUniformSigns(nL); R = chooseMixedSignsNonZero(nR); }
+  else if(pattern === 2){ L = chooseMixedSignsNonZero(nL); R = chooseUniformSigns(nR); }
+  else { L = chooseMixedSignsNonZero(nL); R = chooseMixedSignsNonZero(nR); }
   return { L, R };
 }
 
   for(let tries=0; tries<6000; tries++){
-    const tasksL = rInt(rng, 1, maxTasksEq);
-    const tasksR = rInt(rng, 1, maxTasksEq);
+    let modeUnk = unknownModeSetting;
+    if(modeUnk === "MIX") modeUnk = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
 
-    let mode = opposeSetting;
-    if(mode === "auto") mode = autoPick;
+    let tasksL, tasksR;
+    if(modeUnk === "ONE_SIDE") {
+        if(rng() < 0.5) { tasksL = 0; tasksR = rInt(rng, 1, maxTasksEq); }
+        else { tasksL = rInt(rng, 1, maxTasksEq); tasksR = 0; }
+    } else {
+        tasksL = rInt(rng, 1, maxTasksEq);
+        tasksR = rInt(rng, 1, maxTasksEq);
+        if(tasksR === tasksL) tasksR = (tasksR % maxTasksEq) + 1;
+    }
 
-    const pair = chooseSignsPair(tasksL, tasksR, mode);
+    let modeOpp = opposeSetting;
+    if(modeOpp === "auto") modeOpp = autoPick;
+
+    const pair = chooseSignsPair(tasksL, tasksR, modeOpp);
     if(!pair) continue;
     const signsL = pair.L;
     const signsR = pair.R;
-if(mode === "mix"){
-      // Forcer un vrai "melange" (au moins un cote avec + et -)
+
+    if(modeOpp === "mix"){
       if(!(hasBothSigns(signsL) || hasBothSigns(signsR))) continue;
     }
 
     const a = sumArr(signsL);
     const b = sumArr(signsR);
 
-    // Eviter les simplifications "0x" (sur un plateau) et l'annulation complète
-    if(a === 0 || b === 0) continue;
+    // Eviter annulation
     if(a === b) continue;
 
     const vCountL = rInt(rng, vMin, vMax);
     const vCountR = rInt(rng, vMin, vMax);
 
+    if(vCountL === 0 && vCountR === 0) continue;
+    if(tasksL === 0 && vCountL === 0) continue;
+    if(tasksR === 0 && vCountR === 0) continue;
+
     const maxCoeff = Math.max(Math.abs(a), Math.abs(b), 1);
-    // borne grossière pour |x|, puis on tire x signé (non nul)
     const maxTotalAbs = Math.max(Math.abs(userMin), Math.abs(userMax));
     let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
     xAbsMax = clamp(xAbsMax, 1, maxAbs);
     const absX = rInt(rng, 1, xAbsMax);
     const x = ((rng() < 0.5) ? -1 : 1) * absX;
 
-    // Chercher un total T faisable pour les deux plateaux :
-    // VL = T - a*x doit être décomposable en vCountL nombres non nuls avec |val|<=maxAbs
-    // VR = T - b*x doit être décomposable en vCountR nombres non nuls avec |val|<=maxAbs
     let tLow = userMin;
     let tHigh = userMax;
 
     function applyRange(coef, vCount){
       if(vCount === 0){
-        // somme visible doit être 0 => T = coef*x
         const t = coef * x;
         tLow = Math.max(tLow, t);
         tHigh = Math.min(tHigh, t);
@@ -2444,15 +2399,10 @@ if(mode === "mix"){
 
     if(tHigh < tLow) continue;
 
-    // Petit biais vers des totaux proches des bornes pour varier (et obtenir plus souvent des négatifs)
     let total;
-    if(rng() < 0.25){
-      total = tLow;
-    }else if(rng() < 0.50){
-      total = tHigh;
-    }else{
-      total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
-    }
+    if(rng() < 0.25) total = tLow;
+    else if(rng() < 0.50) total = tHigh;
+    else total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
 
     const VL = total - a*x;
     const VR = total - b*x;
@@ -2478,7 +2428,6 @@ if(mode === "mix"){
     };
   }
 
-  // Fallback robuste : EQ classique
   return genEquation(rng);
 }
 
@@ -3132,8 +3081,13 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 function renderCard(card, revealed){
   clearSvg();
 
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+
   if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquation(card, revealed);
+    renderCardEquation(card, revealed, useTokens);
     return;
   }
 
@@ -3157,11 +3111,6 @@ function renderCard(card, revealed){
   let totalLabelColor = "var(--total-label)";
   let totalBoxFill = "var(--totalbox-fill)";
   let totalBoxStroke = "#000";
-
-  const actEl = document.getElementById("activity");
-  const act = actEl ? actEl.value : "";
-  const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
   
   if(useTokens && card.total !== 0) {
     const col = beadColorForValue(card.total);
@@ -3381,7 +3330,14 @@ indices.forEach((txt, i) => {
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
-      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
+      
+      let f = "var(--beadH-fill)";
+      let s = "var(--beadH-stroke)";
+      if(useTokens){
+          const c = beadColorForValue(card.hidden[i]);
+          f = c.fill; s = c.stroke;
+      }
+      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
       layer.appendChild(text(cx, cy, String(card.hidden[i]), {
         "text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"var(--ink)","font-weight":"900"
       }));
@@ -3478,7 +3434,7 @@ indices.forEach((txt, i) => {
 }
 
 
-function renderCardEquation(card, revealed){
+function renderCardEquation(card, revealed, useTokens){
   const eq = card._eq;
   const trays = card._eqTrays;
   const pos = card._eqPos;
@@ -3518,8 +3474,13 @@ function renderCardEquation(card, revealed){
     for(const taskArr of metaSide.hiddenByTask){
       for(const val of taskArr){
         const p = side.posH?.[hIndex] || {cx:820, cy:610};
-        const col = beadColorForValue(val);
-        layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+        let f = "var(--beadH-fill)";
+        let s = "var(--beadH-stroke)";
+        if(useTokens){
+            const col = beadColorForValue(val);
+            f = col.fill; s = col.stroke;
+        }
+        layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
         layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
           "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
         }));
@@ -3568,7 +3529,7 @@ function renderCardEquation(card, revealed){
   drawSide(pos.right, eq.right);
 }
 
-function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText){
+function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens){
   // Version impression : identique au rendu écran, mais sur targetSvg
   const eq = card._eq;
   const trays = card._eqTrays;
@@ -3595,8 +3556,13 @@ function drawSide(side, metaSide){
     for(const taskArr of metaSide.hiddenByTask){
       for(const val of taskArr){
         const p = side.posH?.[hIndex] || {cx:820, cy:610};
-        const col = beadColorForValue(val);
-        targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+        let f = "rgba(0,0,0,0.06)";
+        let s = "rgba(0,0,0,0.22)";
+        if(useTokens){
+            const col = beadColorForValue(val);
+            f = col.fill; s = col.stroke;
+        }
+        targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
         targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
         hIndex++;
       }
@@ -3639,6 +3605,11 @@ function drawSide(side, metaSide){
 function renderCardIntoSvg(targetSvg, card, revealAnswers){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
 
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+
   const W = 1600;
   const H = 2200;
 
@@ -3654,7 +3625,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
 
   if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText);
+    renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens);
     return;
   }
 
@@ -3683,10 +3654,6 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   let boxFill = "rgba(0,0,0,0.02)";
   let boxStroke = "rgba(0,0,0,0.22)";
 
-  const actEl = document.getElementById("activity");
-  const act = actEl ? actEl.value : "";
-  const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
   if(useTokens && card.total !== 0) {
     const col = beadColorForValue(card.total);
     boxFill = col.fill;
@@ -3830,8 +3797,15 @@ const gBM = tEl("g",{id:"barModelPrint"});
       // APPLIQUER OFFSET POUR C/D
       const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
       
-      // Billes cachées : grisées (comme le mode B) pour les distinguer des billes visibles
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.06)", stroke:"rgba(0,0,0,0.22)","stroke-width":"5"}));
+      let f = "rgba(0,0,0,0.06)";
+      let s = "rgba(0,0,0,0.22)";
+      if(useTokens){
+          const c = beadColorForValue(card.hidden[i]);
+          f = c.fill; s = c.stroke;
+      }
+      
+      // Billes cachées : grisées ou en couleur selon l'option jetons
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:f, stroke:s,"stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
 
