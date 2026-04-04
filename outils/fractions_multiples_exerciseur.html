@@ -296,7 +296,6 @@
       }
     });
 
-    // Logique d'harmonisation stricte (un tiers, la moitié)
     function getFractionNaturalText(num, den) {
         const dens = { 2: "demi", 3: "tiers", 4: "quart", 5: "cinquième", 10: "dixième" };
         const nums = { 1: "un", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six", 7: "sept", 8: "huit", 9: "neuf", 10: "dix", 11: "onze", 12: "douze", 13: "treize", 14: "quatorze", 15: "quinze", 20: "vingt" };
@@ -339,7 +338,6 @@
 
       let qHtml = "", unit = "";
       
-      // Extraction spéciale pour le Niveau 0 : le thème forcé contient le mot + l'émoji
       if (cType && cType.startsWith('niveau0|')) {
           let parts = cType.split('|');
           unit = " " + parts[1] + " " + parts[2]; 
@@ -379,7 +377,6 @@
       let unitWithEmoji = cleanUnit ? cleanUnit + " " + q.emoji : q.emoji;
 
       if (q.level === 0) {
-          // NOUVEAUX PROBLÈMES NARRATIFS CONCRETS (NIVEAU 0)
           if (q.num > q.den && q.den !== 1) {
               qHtml = `Une recette demande <strong>${fmt(t)} ${unitWithEmoji}</strong>.<br>Je veux préparer <strong>${fracStr}</strong> de cette recette.<br>Combien me faut-il de ${cleanUnit} ?`;
               sentenceLine = `Il me faut ${fmt(q.calcVal)} ${cleanUnit}.`;
@@ -724,3 +721,485 @@
             let wPart = 600 / q.den;
             let extraBoxes = q.num - q.den;
             return Math.max(1000, 600 + (extraBoxes * wPart) + 150);
+        }
+        return 1000;
+    }
+
+    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
+      if(width <= 0) return;
+      const h = 12; const dir = isUp ? -1 : 1; const yTip = y + (h * dir);
+      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
+      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "3" }));
+
+      let fSize = forceFontSize || (width < 50 ? "16" : "24");
+      let yOffset = isUp ? -12 : 38; 
+      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
+      txt.textContent = text; svg.appendChild(txt);
+    }
+
+    function drawEmojiGroup(svg, x, y, w, h, count, emoji, op=1, clustered=false) {
+        if(count === 0) return;
+        let cy = y + h/2 + 8; 
+        
+        if (clustered) {
+            let sp = 28; 
+            let totalW = count * sp;
+            let startX = x + w/2 - totalW/2 + sp/2;
+            for(let i=0; i<count; i++) {
+                let txt = createSVG("text", { x: startX + i*sp, y: cy, "text-anchor": "middle", "font-size": "26", "opacity": op });
+                txt.textContent = emoji;
+                svg.appendChild(txt);
+            }
+        } else {
+            let sp = w / count; 
+            for(let i=0; i<count; i++) {
+                let cx = x + (sp / 2) + i * sp;
+                let txt = createSVG("text", { x: cx, y: cy, "text-anchor": "middle", "font-size": "26", "opacity": op });
+                txt.textContent = emoji;
+                svg.appendChild(txt);
+            }
+        }
+    }
+
+    function drawSVGFraction(q, isCorrection, svgContainer, yOffset = 0, reqW = 1000, forceX = null, isPrint = false) {
+      let wTop = 600; 
+      let baseParts = q.den === 1 ? q.num : q.den;
+      let wPart = wTop / baseParts; 
+      
+      let maxBoxes = q.den === 1 ? q.num : Math.max(q.den, q.num);
+      if (q.mode === 'var_aug') maxBoxes = baseParts + q.num; 
+
+      let xStart;
+      let totalW = wPart * maxBoxes;
+      
+      if (forceX !== null) {
+          xStart = forceX;
+      } else if (q.mode === 'var_aug' || (q.den !== 1 && q.num > q.den)) {
+          xStart = (reqW - totalW) / 2;
+      } else {
+          xStart = (reqW - wTop) / 2; 
+      }
+
+      const hBar = 60;
+      const yTop = 60 + yOffset;
+      const yBot = yTop + hBar;
+      const familyNumber = q.den === 1 ? q.num : q.den;
+      const baseColor = colors[familyNumber] || "var(--c-10)";
+
+      // 1. TOP BAR (Le Tout)
+      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTop, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": "0.15" }));
+
+      if (!isPrint) {
+          if (q.level === 0) {
+              let showTopEmojis = false;
+              let drawQuestionMark = false;
+
+              if (q.mode === 'find_total' && !isCorrection) {
+                  drawQuestionMark = true;
+              } else if (q.den === 1 && q.mode !== 'find_frac' && !isCorrection) {
+                  drawQuestionMark = true;
+              } else {
+                  showTopEmojis = true;
+              }
+
+              if (drawQuestionMark) {
+                  let txtTopSVG = createSVG("text", { x: xStart + wTop/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": "36", fill: "#1f2a44" });
+                  txtTopSVG.textContent = "?";
+                  svgContainer.appendChild(txtTopSVG);
+              }
+              if (showTopEmojis) {
+                  let count = (q.den === 1) ? q.calcVal : q.totalVal;
+                  drawEmojiGroup(svgContainer, xStart, yTop, wTop, hBar, count, q.emoji, 1, true);
+              }
+          } else {
+              const mults_names = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUADRUPLE", 5: "QUINTUPLE", 10: "DÉCUPLE" };
+              let textTop = "";
+              if (isCorrection) {
+                  textTop = q.den === 1 ? fmt(q.calcVal) : fmt(q.totalVal);
+              } else {
+                  if (q.mode === 'find_total') {
+                      textTop = "?";
+                  } else if (q.den === 1) {
+                      if (q.mode === 'find_frac') {
+                          textTop = fmt(q.calcVal); // Affiche la valeur cible pour les multiples en recherche
+                      } else {
+                          textTop = "LE " + mults_names[q.num];
+                      }
+                  } else {
+                      textTop = "LE TOUT";
+                  }
+              }
+              let txtTopSVG = createSVG("text", { x: xStart + wTop/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": wTop < 100 ? "18" : "26", fill: "#1f2a44" });
+              txtTopSVG.textContent = textTop;
+              svgContainer.appendChild(txtTopSVG);
+          }
+      }
+
+      // 2. BOTTOM BAR (Les Cases)
+      // ASTUCE GENIALE : Le Bloc Neutre unique pour chercher la fraction !
+      if (q.mode === 'find_frac' && !isCorrection) {
+          let knownBoxes = q.den === 1 ? 1 : q.num;
+          let blockW = wPart * knownBoxes;
+          let knownVal = q.den === 1 ? q.totalVal : q.calcVal;
+          let frameW = Math.max(wTop, totalW); 
+
+          // Cadre global pointillé pour montrer l'espace vide
+          svgContainer.appendChild(createSVG("rect", {
+              x: xStart, y: yBot, width: frameW, height: hBar,
+              fill: "none", stroke: "#1f2a44", "stroke-width": "2.5", "stroke-dasharray": "6,4", opacity: "0.4"
+          }));
+
+          // Bloc neutre de la part connue (gris clair pour ne pas donner la couleur de la famille)
+          let fillCol = isPrint ? "none" : "#e2e8f0";
+          svgContainer.appendChild(createSVG("rect", {
+              x: xStart, y: yBot, width: blockW, height: hBar,
+              fill: fillCol, stroke: "#1f2a44", "stroke-width": "2.5" 
+          }));
+
+          // Contenu du bloc neutre
+          if (q.level === 0 && !isPrint) {
+              drawEmojiGroup(svgContainer, xStart, yBot, blockW, hBar, knownVal, q.emoji, 1, false);
+          } else {
+              let fSizeBot = blockW < 65 ? "16" : (blockW < 100 ? "20" : "30");
+              let txtBotSVG = createSVG("text", {
+                  x: xStart + blockW/2, y: yBot + hBar/2 + 10,
+                  "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeBot, fill: "#1f2a44", opacity: isPrint ? "0.3" : "1"
+              });
+              txtBotSVG.textContent = fmt(knownVal);
+              svgContainer.appendChild(txtBotSVG);
+          }
+
+          // Le gros "?" dans l'espace vide restant
+          let remainW = frameW - blockW;
+          if (remainW > 0 && !isPrint) {
+              let remainX = xStart + blockW;
+              let txtBotBg = createSVG("text", { x: remainX + remainW/2, y: yBot + hBar/2 + 12, "text-anchor": "middle", "font-weight": "bold", "font-size": "36", stroke: "white", "stroke-width": "6", "paint-order": "stroke" });
+              txtBotBg.textContent = "?"; svgContainer.appendChild(txtBotBg);
+              let txtBotSVG = createSVG("text", { x: remainX + remainW/2, y: yBot + hBar/2 + 12, "text-anchor": "middle", "font-weight": "bold", "font-size": "36", fill: "#1f2a44" });
+              txtBotSVG.textContent = "?"; svgContainer.appendChild(txtBotSVG);
+          }
+
+      } else {
+          // BOUCLE CLASSIQUE
+          for (let i = 0; i < maxBoxes; i++) {
+            let xPart = xStart + (i * wPart);
+            let partVal = q.den === 1 ? q.totalVal : q.totalVal / q.den;
+
+            let fillOpacity = "1";
+            let useHatch = false;
+            let useDots = false;
+            let isDashed = false;
+
+            if (q.mode === 'var_reste' || q.mode === 'var_dim') {
+                if (i < q.num) { useHatch = true; fillOpacity = "0"; }
+            } else if (q.mode === 'var_aug') {
+                if (i >= baseParts) { useDots = true; isDashed = true; fillOpacity = "0.2"; }
+            } else {
+                if (i >= q.num && q.den !== 1) fillOpacity = "0.4";
+            }
+
+            let rectAttrs = { x: xPart, y: yBot, width: wPart, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": fillOpacity };
+            if (isDashed) rectAttrs["stroke-dasharray"] = "6,4";
+            svgContainer.appendChild(createSVG("rect", rectAttrs));
+
+            if (isPrint) {
+                svgContainer.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4", "opacity": "0.3" }));
+            } else {
+                if (useHatch) {
+                    svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "url(#hatch)" }));
+                } else if (useDots) {
+                    svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "url(#dots)" }));
+                }
+
+                if (q.level === 0) {
+                    let showEmojis = false;
+                    let drawText = false;
+                    
+                    if (isCorrection) {
+                        if (q.den === 1) showEmojis = true; 
+                        else if (i < q.num) showEmojis = true; 
+                    } else {
+                        if (q.mode === 'find_total' && i < q.num) {
+                            showEmojis = true;
+                        } else if (q.den === 1 && i === 0) {
+                            showEmojis = true;
+                        } else {
+                            drawText = false; // Plus aucun texte dans les boites vides (Niveau 0)
+                        }
+                    }
+                    
+                    if (showEmojis) {
+                        let op = fillOpacity;
+                        if (useHatch) op = "0.2";
+                        if (useDots) op = "0.5";
+                        drawEmojiGroup(svgContainer, xPart, yBot, wPart, hBar, partVal, q.emoji, op, false);
+                    }
+                } else {
+                    if (isCorrection) {
+                        let fSizeBot = wPart < 65 ? "16" : (wPart < 100 ? "20" : "30");
+                        let txtBotSVG = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 10, "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeBot, fill: "#1f2a44" });
+                        txtBotSVG.textContent = fmt(partVal);
+                        svgContainer.appendChild(txtBotSVG);
+                    } else {
+                        if (q.den === 1) { 
+                            let fSizePart = wPart < 65 ? "14" : "20";
+                            let txtPref = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?22:26), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizePart, fill: "#1f2a44" });
+                            txtPref.textContent = "une"; svgContainer.appendChild(txtPref);
+                            let txtWord = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?42:48), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizePart, fill: "#1f2a44" });
+                            txtWord.textContent = "part"; svgContainer.appendChild(txtWord);
+                        } else {
+                            let prefix = q.den === 2 ? "la" : "un";
+                            let word = { 2: "moitié", 3: "tiers", 4: "quart", 5: "cinquième", 10: "dixième" }[q.den];
+                            let fSizeLettres = wPart < 65 ? "14" : "20";
+                            let txtPref = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?22:24), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeLettres, fill: "#1f2a44" });
+                            txtPref.textContent = prefix; svgContainer.appendChild(txtPref);
+                            let txtWord = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?42:46), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeLettres, fill: "#1f2a44" });
+                            txtWord.textContent = word; svgContainer.appendChild(txtWord);
+                        }
+                    }
+                }
+            }
+          }
+      }
+
+      // 3. ACCOLADES 
+      if (!isPrint) {
+          if (q.mode === 'var_reste' || q.mode === 'var_dim') {
+              let remainBoxes = q.den - q.num;
+              let label = isCorrection ? fmt(q.calcVal) : "?";
+              let color = isCorrection ? "var(--success)" : "#1f2a44";
+              drawBrace(svgContainer, xStart + (q.num * wPart), yBot + hBar + 10, remainBoxes * wPart, label, false, color, "32");
+          }
+          else if (q.mode === 'var_aug') {
+              let totalBoxes = baseParts + q.num;
+              let label = isCorrection ? fmt(q.calcVal) : "?";
+              let color = isCorrection ? "var(--success)" : "#1f2a44";
+              drawBrace(svgContainer, xStart, yBot + hBar + 10, totalBoxes * wPart, label, false, color, "32");
+          }
+          else {
+              let shouldDraw = false;
+              let color = "var(--accent)";
+              let label = fmt(q.calcVal);
+              
+              if (isCorrection) {
+                  if (q.level === 0 || q.num > 1 || q.den === 1 || q.mode === 'find_frac' || q.mode === 'find_total') { 
+                      shouldDraw = true;
+                      color = "var(--success)";
+                  }
+              } else if (q.mode === 'find_total') {
+                  if (q.level === 0 || q.num > 1 || q.den === 1) {
+                      shouldDraw = true;
+                      color = "var(--accent)";
+                      label = fmt(q.calcVal);
+                  }
+              }
+              // Pour find_frac à l'indice, l'accolade reste cachée exprès !
+              
+              if (shouldDraw) {
+                  drawBrace(svgContainer, xStart, yBot + hBar + 10, q.num * wPart, label, false, color, "32");
+              }
+          }
+      }
+    }
+
+    function buildThumbnails() {
+      const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
+      quizData.forEach((q, idx) => {
+        let btn = document.createElement('button'); btn.className = 'thumb-btn';
+        let txt = "";
+        
+        if (q.den === 1) { 
+            if (q.mode === 'direct') txt = `${q.num} &times; ${fmt(q.totalVal)}`;
+            else if (q.mode === 'find_frac') txt = `${fmt(q.calcVal)} = ? &times; ${fmt(q.totalVal)}`;
+            else if (q.mode === 'find_total') txt = `${q.num} &times; ? = ${fmt(q.calcVal)}`;
+        } else {
+            let fStr = getFractionSymbolicText(q.num, q.den, document.getElementById('selFormat').value, true);
+            if (q.mode === 'direct') txt = `${fStr} de ${fmt(q.totalVal)}`;
+            else if (q.mode === 'find_frac') txt = `${fmt(q.calcVal)} sur ${fmt(q.totalVal)}`;
+            else if (q.mode === 'find_total') txt = `${fStr} ➔ ${fmt(q.calcVal)}`;
+            else if (q.mode === 'var_reste' || q.mode === 'var_dim') txt = `${fmt(q.totalVal)} - ${fStr}`;
+            else if (q.mode === 'var_aug') txt = `${fmt(q.totalVal)} + ${fStr}`;
+        }
+
+        btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${txt}</span>`;
+        btn.onclick = () => loadSlide(idx, q.phase); 
+        tb.appendChild(btn);
+      });
+    }
+
+    function updateThumbnails() {
+      const btns = document.getElementById('thumbBar').children;
+      for(let i=0; i<btns.length; i++) {
+        btns[i].className = 'thumb-btn';
+        if (quizData[i].phase === 2) btns[i].classList.add('done');
+        if (i === currentIndex) btns[i].classList.add('active');
+      }
+    }
+
+    function generateQuiz() {
+      if(!getQuizData()) return;
+      document.getElementById('diapoContainer').style.display = 'flex';
+      buildThumbnails(); loadSlide(0, 0);
+      document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
+    }
+
+    function updateUI() {
+      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
+      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
+      document.getElementById('qText').innerHTML = q.qHtml;
+      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
+      
+      let stage = document.getElementById('svgStage');
+      emptyElement(stage);
+
+      if (q.phase === 0) {
+        document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
+        btnNext.innerHTML = "Indice (Schéma) 💡 ►";
+      } else {
+        let isCorr = (q.phase === 2);
+        if(isCorr) {
+            document.getElementById('cBox').style.display = 'block';
+            document.getElementById('cText').innerHTML = q.cHtml;
+            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+            else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
+        } else {
+            document.getElementById('cBox').style.display = 'none';
+            btnNext.innerHTML = "Correction 👀 ►"; 
+        }
+        document.getElementById('hBox').style.display = 'flex'; 
+
+        let reqW = getReqW(q);
+
+        if (q.level === 0) {
+            stage.setAttribute("viewBox", `0 0 ${reqW} 300`); 
+            drawSVGFraction(q, isCorr, stage, 0, reqW);
+        } else if (q.mode === 'direct' && q.den === 4) { 
+            stage.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(qHalf, isCorr, stage, 0, reqW, alignX);
+            drawSVGFraction(q, isCorr, stage, 220, reqW, alignX);
+        } else if (q.mode === 'direct' && q.den === 5) { 
+            stage.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(q, isCorr, stage, 0, reqW, alignX); 
+            drawSVGFraction(qDix, isCorr, stage, 220, reqW, alignX); 
+        } else {
+            stage.setAttribute("viewBox", `0 0 ${reqW} 300`); 
+            drawSVGFraction(q, isCorr, stage, 0, reqW);
+        }
+      }
+      updateThumbnails();
+    }
+
+    function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
+    function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
+    function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
+
+    function generatePrint() {
+      if (quizData.length === 0) { alert("⚠️ Veuillez d'abord cliquer sur '💻 Générer le diapo' pour créer la série !"); return; }
+      
+      const withGabarits = document.getElementById('cbEmptyGabarits').checked;
+      const container = document.getElementById('printContainer');
+      container.innerHTML = ''; 
+
+      let page1 = document.createElement('div');
+      page1.className = 'print-page';
+      page1.innerHTML = `
+        <div class="print-header">
+          <div>Nom : ........................................</div>
+          <div>Prénom : ........................................</div>
+          <div>Classe : ....................</div>
+          <div class="print-seed">Fiche n° ${quizSeed}</div>
+        </div>
+        <h2 class="print-title">Exercices : Fractions et Multiples</h2>
+      `;
+      
+      quizData.forEach((q, i) => {
+        let qDiv = document.createElement('div');
+        qDiv.className = 'print-q';
+        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
+        
+        if (withGabarits) {
+          let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
+          let svg = document.createElementNS(svgNS, "svg"); 
+          let reqW = getReqW(q);
+          
+          if (q.level === 0) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
+            drawSVGFraction(q, false, svg, 0, reqW, null, true);
+          } else if (q.mode === 'direct' && q.den === 4) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(qHalf, false, svg, 0, reqW, alignX, true); 
+            drawSVGFraction(q, false, svg, 220, reqW, alignX, true);
+          } else if (q.mode === 'direct' && q.den === 5) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(q, false, svg, 0, reqW, alignX, true); 
+            drawSVGFraction(qDix, false, svg, 220, reqW, alignX, true);
+          } else {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
+            drawSVGFraction(q, false, svg, 0, reqW, null, true);
+          }
+          
+          svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
+        } else {
+          qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
+        }
+        page1.appendChild(qDiv);
+      });
+      container.appendChild(page1);
+
+      let page2 = document.createElement('div');
+      page2.className = 'print-page';
+      page2.innerHTML = `
+        <div class="print-header">
+          <div class="print-seed">CORRIGÉ — Fiche n° ${quizSeed}</div>
+        </div>
+        <h2 class="print-title">Correction Détaillée</h2>`;
+      
+      quizData.forEach((q, i) => {
+        let qDiv = document.createElement('div');
+        qDiv.className = 'print-q';
+        qDiv.innerHTML = `
+          <div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>
+          <div class="print-c-text">✅ ${q.cHtml}</div>
+        `;
+        
+        let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
+        let svg = document.createElementNS(svgNS, "svg"); 
+        let reqW = getReqW(q);
+        
+        if (q.level === 0) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
+            drawSVGFraction(q, true, svg, 0, reqW);
+        } else if (q.mode === 'direct' && q.den === 4) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(qHalf, true, svg, 0, reqW, alignX); drawSVGFraction(q, true, svg, 220, reqW, alignX);
+        } else if (q.mode === 'direct' && q.den === 5) {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
+            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
+            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
+            drawSVGFraction(q, true, svg, 0, reqW, alignX); drawSVGFraction(qDix, true, svg, 220, reqW, alignX);
+        } else {
+            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
+            drawSVGFraction(q, true, svg, 0, reqW);
+        }
+        
+        svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
+        
+        page2.appendChild(qDiv);
+      });
+      container.appendChild(page2);
+
+      setTimeout(() => { window.print(); }, 300);
+    }
+  </script>
+</body>
+</html>
