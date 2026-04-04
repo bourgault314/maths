@@ -195,7 +195,8 @@
         <div class="config-block">
           <label>Niveau :</label>
           <select id="selLevel">
-            <option value="1" selected>Niveau 1 (Tables & Réflexes)</option>
+            <option value="0" selected>Niveau 0 (Objets / Manipulation)</option>
+            <option value="1">Niveau 1 (Tables & Réflexes)</option>
             <option value="2">Niveau 2 (Astuces & Intermédiaires)</option>
             <option value="3">Niveau 3 (Grands nombres)</option>
           </select>
@@ -295,7 +296,7 @@
       }
     });
 
-    // GRAMMAIRE FRANÇAISE : Retourne "un tiers", "deux tiers" (pas d'article "le/les" par défaut pour s'intégrer partout)
+    // Logique d'harmonisation stricte (un tiers, la moitié)
     function getFractionNaturalText(num, den) {
         const dens = { 2: "demi", 3: "tiers", 4: "quart", 5: "cinquième", 10: "dixième" };
         const nums = { 1: "un", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six", 7: "sept", 8: "huit", 9: "neuf", 10: "dix", 11: "onze", 12: "douze", 13: "treize", 14: "quatorze", 15: "quinze", 20: "vingt" };
@@ -326,7 +327,7 @@
 
     function getDePrefix(fs, qNum, qDen, formatSetting) {
         if (fs.startsWith("un ") || fs.startsWith("1/") || fs.includes(">1<") || fs.includes(">1/<")) {
-            if (qNum === 1 && qDen === 2 && formatSetting === 'lettres') return "de "; // de la moitié
+            if (qNum === 1 && qDen === 2 && formatSetting === 'lettres') return "de "; 
             return "d'";
         }
         return "de ";
@@ -338,8 +339,17 @@
 
       let qHtml = "", unit = "";
       
-      // Attribution des unités aléatoires pour le mode BRUT
-      if (cType === 'brut') {
+      // Extraction spéciale pour le Niveau 0 : le thème forcé contient le mot + l'émoji
+      if (cType && cType.startsWith('niveau0|')) {
+          let parts = cType.split('|');
+          unit = " " + parts[1] + " " + parts[2]; 
+          q.emoji = parts[2];
+          cType = 'brut'; 
+      } else {
+          q.emoji = '⬛'; 
+      }
+      
+      if (cType === 'brut' && q.level > 0) {
           unit = pick([" €", " kg", " L", " min", " km", ""]);
       }
 
@@ -363,108 +373,163 @@
       }
 
       let dePrefix = getDePrefix(fracStr, q.num, q.den, formatSetting);
-
       let mathLine = "";
       let sentenceLine = "";
+      let cleanUnit = unit.replace(q.emoji, '').trim();
+      let unitWithEmoji = cleanUnit ? cleanUnit + " " + q.emoji : q.emoji;
 
-      if (q.mode === 'var_reste') {
-          if (cType === 'argent') { unit = " €"; qHtml = `J'avais <strong>${fmt(t)} €</strong>. J'ai dépensé <strong>${fracStr}</strong> de mon argent.<br>Combien me reste-t-il ?`; }
-          else if (cType === 'distance') { unit = " km"; qHtml = `Sur un trajet de <strong>${fmt(t)} km</strong>, j'ai déjà parcouru <strong>${fracStr}</strong>.<br>Combien de kilomètres me reste-t-il à faire ?`; }
-          else if (cType === 'capacite') { unit = " L"; qHtml = `Une cuve contenait <strong>${fmt(t)} L</strong> d'eau. On en a utilisé <strong>${fracStr}</strong>.<br>Combien de litres reste-t-il dans la cuve ?`; }
-          else if (cType === 'temps') { unit = " min"; qHtml = `Sur un examen de <strong>${fmt(t)} min</strong>, j'ai passé <strong>${fracStr}</strong> du temps sur un exercice.<br>Combien de temps me reste-t-il ?`; }
-          else if (cType === 'brut') { qHtml = `Calcule le reste si l'on enlève <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; }
-          else { unit = " kg"; qHtml = `On a consommé <strong>${fracStr}</strong> d'un sac de riz de <strong>${fmt(t)} kg</strong>.<br>Combien pèse le reste du sac ?`; }
-          
-          let part = (t / q.den) * q.num;
-          mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} - ${fmt(part)} = ${fmt(q.calcVal)}`;
-          sentenceLine = unit ? `Il reste ${fmt(q.calcVal)}${unit}.` : `Il reste ${fmt(q.calcVal)}.`;
-      }
-      else if (q.mode === 'var_dim') {
-          if (cType === 'argent') { unit = " €"; qHtml = `Un objet coûtait <strong>${fmt(t)} €</strong>. Son prix baisse ${dePrefix}<strong>${fracStr}</strong>.<br>Quel est son nouveau prix ?`; }
-          else if (cType === 'ecole') { unit = " élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> voit ses effectifs baisser ${dePrefix}<strong>${fracStr}</strong>.<br>Combien d'élèves y a-t-il cette année ?`; }
-          else if (cType === 'poids') { unit = " kg"; qHtml = `J'ai allégé mon sac de <strong>${fmt(t)} kg</strong> en enlevant <strong>${fracStr}</strong> de son poids.<br>Combien pèse-t-il maintenant ?`; }
-          else if (cType === 'brut') { qHtml = `Diminue <strong>${fmt(t)}${unit}</strong> ${dePrefix}<strong>${fracStr}</strong> de sa valeur.`; }
-          else { unit = " min"; qHtml = `Un trajet prenait <strong>${fmt(t)} min</strong>. On a réduit le temps ${dePrefix}<strong>${fracStr}</strong>.<br>Quelle est la nouvelle durée ?`; }
-          
-          let part = (t / q.den) * q.num;
-          mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} - ${fmt(part)} = ${fmt(q.calcVal)}`;
-          sentenceLine = unit ? `Le nouveau total est ${fmt(q.calcVal)}${unit}.` : `On trouve ${fmt(q.calcVal)}.`;
-      }
-      else if (q.mode === 'var_aug') {
-          if (cType === 'argent') { unit = " €"; qHtml = `Un objet coûte <strong>${fmt(t)} €</strong>. Son prix augmente ${dePrefix}<strong>${fracStr}</strong>.<br>Quel est son nouveau prix ?`; }
-          else if (cType === 'ecole') { unit = " élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> voit ses effectifs augmenter ${dePrefix}<strong>${fracStr}</strong>.<br>Combien d'élèves y a-t-il cette année ?`; }
-          else if (cType === 'distance') { unit = " km"; qHtml = `Un trajet de <strong>${fmt(t)} km</strong> a été rallongé ${dePrefix}<strong>${fracStr}</strong> suite à des travaux.<br>Quelle est la nouvelle distance ?`; }
-          else if (cType === 'brut') { qHtml = `Augmente <strong>${fmt(t)}${unit}</strong> ${dePrefix}<strong>${fracStr}</strong> de sa valeur.`; }
-          else { unit = " min"; qHtml = `Une réunion de <strong>${fmt(t)} min</strong> a débordé et pris <strong>${fracStr}</strong> de temps en plus.<br>Combien de temps a-t-elle duré au total ?`; }
-          
-          let part = (t / q.den) * q.num;
-          mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} + ${fmt(part)} = ${fmt(q.calcVal)}`;
-          sentenceLine = unit ? `Le nouveau total est ${fmt(q.calcVal)}${unit}.` : `On trouve ${fmt(q.calcVal)}.`;
-      }
-      else if (q.mode === 'find_total') {
-          if (q.den === 1) { 
-              if (cType === 'temps') { unit = " min"; qHtml = `Un trajet a été rallongé et dure <strong>${fmt(q.calcVal)} min</strong>. Il représente <strong>${fracStr}</strong> du trajet initial.<br>Quelle était la durée initiale ?`; }
-              else if (cType === 'brut') { qHtml = `<strong>${fracStr}</strong> d'une quantité vaut <strong>${fmt(q.calcVal)}${unit}</strong>.<br>Quelle est cette quantité totale ?`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `Le nouveau prix d'un objet est <strong>${fmt(q.calcVal)} €</strong>, ce qui représente <strong>${fracStr}</strong> de son prix de départ.<br>Quel était le prix de départ ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `Une école compte <strong>${fmt(q.calcVal)} élèves</strong>, ce qui représente <strong>${fracStr}</strong> d'une petite école voisine.<br>Combien y a-t-il d'élèves dans la petite école ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>, ce qui est <strong>${fracStr}</strong> de la distance d'hier.<br>Quelle distance as-tu parcourue hier ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `Un colis pèse <strong>${fmt(q.calcVal)} kg</strong>, soit <strong>${fracStr}</strong> d'un petit paquet.<br>Quel est le poids du petit paquet ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `Une cuve contient <strong>${fmt(q.calcVal)} L</strong>, ce qui représente <strong>${fracStr}</strong> d'un seau.<br>Quelle est la contenance du seau ?`; }
+      if (q.level === 0) {
+          // NOUVEAUX PROBLÈMES NARRATIFS CONCRETS (NIVEAU 0)
+          if (q.num > q.den && q.den !== 1) {
+              qHtml = `Une recette demande <strong>${fmt(t)} ${unitWithEmoji}</strong>.<br>Je veux préparer <strong>${fracStr}</strong> de cette recette.<br>Combien me faut-il de ${cleanUnit} ?`;
+              sentenceLine = `Il me faut ${fmt(q.calcVal)} ${cleanUnit}.`;
+          } else if (q.mode === 'var_reste' || q.mode === 'var_dim') {
+              qHtml = `J'avais <strong>${fmt(t)} ${unitWithEmoji}</strong>.<br>J'en ai perdu (ou mangé) <strong>${fracStr}</strong>.<br>Combien m'en reste-t-il ?`;
+              sentenceLine = `Il m'en reste ${fmt(q.calcVal)} ${cleanUnit}.`;
+          } else if (q.mode === 'var_aug') {
+              qHtml = `J'ai <strong>${fmt(t)} ${unitWithEmoji}</strong>.<br>Mon ami m'en donne <strong>${fracStr}</strong> en plus.<br>Combien en ai-je maintenant ?`;
+              sentenceLine = `J'ai maintenant ${fmt(q.calcVal)} ${cleanUnit}.`;
+          } else if (q.mode === 'find_total') {
+              if (q.den === 1) { 
+                  qHtml = `Léo a <strong>${fmt(q.calcVal)} ${unitWithEmoji}</strong>.<br>C'est <strong>${fracStr}</strong> de ce que j'ai.<br>Combien ai-je de ${cleanUnit} ?`;
+              } else {
+                  let startWord = fracStr.charAt(0).toUpperCase() + fracStr.slice(1);
+                  qHtml = `<strong>${startWord}</strong> de mon paquet représente <strong>${fmt(q.calcVal)} ${unitWithEmoji}</strong>.<br>Combien y a-t-il de ${cleanUnit} au total dans le paquet ?`;
+              }
+              sentenceLine = `Le total est de ${fmt(t)} ${cleanUnit}.`;
+          } else if (q.mode === 'find_frac') {
+              if (q.den === 1) {
+                  qHtml = `J'ai <strong>${fmt(t)} ${unitWithEmoji}</strong>. Léo en a <strong>${fmt(q.calcVal)}</strong>.<br>Quel mot (le double, le triple...) décrit la quantité de Léo ?`;
+                  sentenceLine = `C'est ${fracMathStr}.`;
+              } else {
+                  qHtml = `J'ai pris <strong>${fmt(q.calcVal)} ${unitWithEmoji}</strong> dans un paquet qui en contenait <strong>${fmt(t)}</strong>.<br>Quelle fraction du paquet ai-je prise ?`;
+                  sentenceLine = `J'ai pris ${fracMathStr} du paquet.`;
+              }
           } else { 
-              if (cType === 'temps') { unit = " min"; qHtml = `<strong>${fracStr}</strong> d'un trajet prend <strong>${fmt(q.calcVal)} min</strong>.<br>Quelle est la durée totale ?`; }
-              else if (cType === 'brut') { qHtml = `<strong>${fracStr}</strong> d'une quantité vaut <strong>${fmt(q.calcVal)}${unit}</strong>.<br>Quelle est cette quantité totale ?`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `<strong>${fracStr}</strong> du prix d'${argentObjet} correspond à <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le prix total ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu}, <strong>${fracStr}</strong> des élèves font du sport. Cela représente <strong>${fmt(q.calcVal)} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>, ce qui représente <strong>${fracStr}</strong> du trajet.<br>Quelle est la distance totale ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `<strong>${fracStr}</strong> du poids d'${poidsObjet} pèse <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `${capObjet} contient <strong>${fmt(q.calcVal)} L</strong>, ce qui représente <strong>${fracStr}</strong> de sa contenance.<br>Quelle est la contenance totale ?`; }
+              if (q.den === 1) { 
+                  qHtml = `Léo a <strong>${fmt(t)} ${unitWithEmoji}</strong>. J'en ai <strong>${fracStr}</strong>.<br>Combien ai-je de ${cleanUnit} ?`;
+                  sentenceLine = `J'ai ${fmt(q.calcVal)} ${cleanUnit}.`;
+              } else {
+                  qHtml = `J'ai un paquet de <strong>${fmt(t)} ${unitWithEmoji}</strong>.<br>Je veux en prendre <strong>${fracStr}</strong>.<br>Combien dois-je en prendre ?`;
+                  sentenceLine = `Je dois en prendre ${fmt(q.calcVal)} ${cleanUnit}.`;
+              }
           }
-          mathLine = `${fracMathStr} = ${fmt(q.calcVal)} ➔ Le Tout = ${fmt(t)}`;
-          sentenceLine = `La quantité de base est de ${fmt(t)}${unit}.`;
-      }
-      else if (q.mode === 'find_frac') {
-          if (q.den === 1) { 
-              if (cType === 'temps') { unit = " min"; qHtml = `Un trajet passait de <strong>${fmt(t)} min</strong> à <strong>${fmt(q.calcVal)} min</strong>.<br>Quel mot (le double, le triple...) décrit ce rallongement ?`; }
-              else if (cType === 'brut') { qHtml = `Quel terme mathématique (le double, le triple...) décrit le passage de <strong>${fmt(t)}${unit}</strong> à <strong>${fmt(q.calcVal)}${unit}</strong> ?`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `Le prix est passé de <strong>${fmt(t)} €</strong> à <strong>${fmt(q.calcVal)} €</strong>.<br>Combien de fois est-il plus cher ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `Une école passe de <strong>${fmt(t)}</strong> à <strong>${fmt(q.calcVal)} élèves</strong>.<br>Par combien les effectifs ont-ils été multipliés ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `La distance passe de <strong>${fmt(t)} km</strong> à <strong>${fmt(q.calcVal)} km</strong>.<br>Quel terme décrit cette différence ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `Le poids passe de <strong>${fmt(t)} kg</strong> à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel mot permet de décrire cet écart ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `La contenance passe de <strong>${fmt(t)} L</strong> à <strong>${fmt(q.calcVal)} L</strong>.<br>Combien de fois est-elle plus grande ?`; }
-              mathLine = `${fmt(t)} &times; ? = ${fmt(q.calcVal)} ➔ ${fracMathStr}`;
-              sentenceLine = `C'est ${fracMathStr}.`;
-          } else { 
-              if (cType === 'temps') { unit = " min"; qHtml = `Un trajet initial de <strong>${fmt(t)} min</strong> a été raccourci. On a mis <strong>${fmt(q.calcVal)} min</strong>.<br>Quelle fraction de la durée initiale cela représente-t-il ?`; }
-              else if (cType === 'brut') { qHtml = `Quelle fraction représente <strong>${fmt(q.calcVal)}${unit}</strong> par rapport à <strong>${fmt(t)}${unit}</strong> ?`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûtait <strong>${fmt(t)} €</strong>. Le nouveau prix est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quelle fraction du prix de base cela représente-t-il ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> compte <strong>${fmt(q.calcVal)} externes</strong>.<br>Quelle fraction cela représente-t-il ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quelle fraction du trajet a été effectuée ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. Un deuxième objet pèse <strong>${fmt(q.calcVal)} kg</strong>.<br>Quelle fraction du premier objet représente le second ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `Sur ${capObjet.toLowerCase()} de <strong>${fmt(t)} L</strong>, on a utilisé <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle fraction a été utilisée ?`; }
-              mathLine = `${fmt(q.calcVal)} sur ${fmt(t)} = ${fracMathStr}`;
-              sentenceLine = `Cela représente ${fracMathStr}.`;
+
+          if (q.mode === 'find_frac') {
+              mathLine = q.den === 1 ? `${fmt(t)} &times; ? = ${fmt(q.calcVal)} ➔ ${fracMathStr}` : `${fmt(q.calcVal)} sur ${fmt(t)} = ${fracMathStr}`;
+          } else if (q.mode === 'find_total') {
+              mathLine = `${fracMathStr} = ${fmt(q.calcVal)} ➔ Le Tout = ${fmt(t)}`;
+          } else if (q.mode === 'var_reste' || q.mode === 'var_dim') {
+              let part = (t / q.den) * q.num;
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} - ${fmt(part)} = ${fmt(q.calcVal)}`;
+          } else if (q.mode === 'var_aug') {
+              let part = (t / q.den) * q.num;
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} + ${fmt(part)} = ${fmt(q.calcVal)}`;
+          } else {
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(q.calcVal)}`;
           }
-      }
-      else { // direct classique
-          if (q.den === 1) { 
-              if (cType === 'temps') { unit = " min"; qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)} min</strong>.`; }
-              else if (cType === 'brut') { qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `Un objet coûte <strong>${fmt(t)} €</strong>. Un autre coûte <strong>${fracStr}</strong>.<br>Combien coûte le deuxième objet ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `Il y a <strong>${fmt(t)} élèves</strong> dans une classe. Une école en possède <strong>${fracStr}</strong>.<br>Combien y a-t-il d'élèves dans cette école ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `Un trajet fait <strong>${fmt(t)} km</strong>. Un autre fait <strong>${fracStr}</strong>.<br>Combien de kilomètres fait le deuxième trajet ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `Un colis pèse <strong>${fmt(t)} kg</strong>. Un autre pèse <strong>${fracStr}</strong>.<br>Combien pèse le deuxième colis ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `Un seau contient <strong>${fmt(t)} L</strong>. Une cuve en contient <strong>${fracStr}</strong>.<br>Combien de litres contient la cuve ?`; }
-          } else { 
-              if (cType === 'temps') { unit = " min"; qHtml = `Un trajet dure <strong>${fmt(t)} min</strong>. Calcule <strong>${fracStr}</strong> de cette durée.`; }
-              else if (cType === 'brut') { qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; } 
-              else if (cType === 'argent') { unit = " €"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûte <strong>${fmt(t)} €</strong>. Tu dois payer <strong>${fracStr}</strong> du prix.<br>Quel montant dois-tu payer ?`; } 
-              else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} élèves</strong>, <strong>${fracStr}</strong> mangent à la cantine.<br>Combien d'élèves mangent à la cantine ?`; } 
-              else if (cType === 'distance') { unit = " km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, tu as parcouru <strong>${fracStr}</strong>.<br>Combien de kilomètres as-tu parcourus ?`; }
-              else if (cType === 'poids') { unit = " kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. Tu dois soulever <strong>${fracStr}</strong> de ce poids.<br>Quelle masse cela représente-t-il ?`; }
-              else if (cType === 'capacite') { unit = " L"; qHtml = `${capObjet} contient <strong>${fmt(t)} L</strong> d'eau. On en récupère <strong>${fracStr}</strong>.<br>Combien de litres a-t-on récupérés ?`; }
+
+      } else {
+          // TEXTES CLASSIQUES (Niveaux 1, 2, 3)
+          if (q.mode === 'var_reste') {
+              if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `J'avais <strong>${fmt(t)} €</strong>. J'ai dépensé <strong>${fracStr}</strong> de mon argent.<br>Combien me reste-t-il ?`; }
+              else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Sur un trajet de <strong>${fmt(t)} km</strong>, j'ai déjà parcouru <strong>${fracStr}</strong>.<br>Combien de kilomètres me reste-t-il à faire ?`; }
+              else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `Une cuve contenait <strong>${fmt(t)} L</strong> d'eau. On en a utilisé <strong>${fracStr}</strong>.<br>Combien de litres reste-t-il dans la cuve ?`; }
+              else if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Sur un examen de <strong>${fmt(t)} min</strong>, j'ai passé <strong>${fracStr}</strong> du temps sur un exercice.<br>Combien de temps me reste-t-il ?`; }
+              else if (cType === 'brut') { qHtml = `Calcule le reste si l'on enlève <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; }
+              else { unit = " kg"; cleanUnit = "kg"; qHtml = `On a consommé <strong>${fracStr}</strong> d'un sac de riz de <strong>${fmt(t)} kg</strong>.<br>Combien pèse le reste du sac ?`; }
+              
+              let part = (t / q.den) * q.num;
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} - ${fmt(part)} = ${fmt(q.calcVal)}`;
+              sentenceLine = cleanUnit ? `Il reste ${fmt(q.calcVal)} ${cleanUnit}.` : `Il reste ${fmt(q.calcVal)}.`;
           }
-          mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(q.calcVal)}`;
-          sentenceLine = unit ? `On trouve ${fmt(q.calcVal)}${unit}.` : `On trouve ${fmt(q.calcVal)}.`;
+          else if (q.mode === 'var_dim') {
+              if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `Un objet coûtait <strong>${fmt(t)} €</strong>. Son prix baisse ${dePrefix}<strong>${fracStr}</strong>.<br>Quel est son nouveau prix ?`; }
+              else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> voit ses effectifs baisser ${dePrefix}<strong>${fracStr}</strong>.<br>Combien d'élèves y a-t-il cette année ?`; }
+              else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `J'ai allégé mon sac de <strong>${fmt(t)} kg</strong> en enlevant <strong>${fracStr}</strong> de son poids.<br>Combien pèse-t-il maintenant ?`; }
+              else if (cType === 'brut') { qHtml = `Diminue <strong>${fmt(t)}${unit}</strong> ${dePrefix}<strong>${fracStr}</strong> de sa quantité totale.`; }
+              else { unit = " min"; cleanUnit = "min"; qHtml = `Un trajet prenait <strong>${fmt(t)} min</strong>. On a réduit le temps ${dePrefix}<strong>${fracStr}</strong>.<br>Quelle est la nouvelle durée ?`; }
+              
+              let part = (t / q.den) * q.num;
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} - ${fmt(part)} = ${fmt(q.calcVal)}`;
+              sentenceLine = cleanUnit ? `Le nouveau total est ${fmt(q.calcVal)} ${cleanUnit}.` : `On trouve ${fmt(q.calcVal)}.`;
+          }
+          else if (q.mode === 'var_aug') {
+              if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `Un objet coûte <strong>${fmt(t)} €</strong>. Son prix augmente ${dePrefix}<strong>${fracStr}</strong>.<br>Quel est son nouveau prix ?`; }
+              else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> voit ses effectifs augmenter ${dePrefix}<strong>${fracStr}</strong>.<br>Combien d'élèves y a-t-il cette année ?`; }
+              else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Un trajet de <strong>${fmt(t)} km</strong> a été rallongé ${dePrefix}<strong>${fracStr}</strong> suite à des travaux.<br>Quelle est la nouvelle distance ?`; }
+              else if (cType === 'brut') { qHtml = `Augmente <strong>${fmt(t)}${unit}</strong> ${dePrefix}<strong>${fracStr}</strong> de sa quantité totale.`; }
+              else { unit = " min"; cleanUnit = "min"; qHtml = `Une réunion de <strong>${fmt(t)} min</strong> a débordé et pris <strong>${fracStr}</strong> de temps en plus.<br>Combien de temps a-t-elle duré au total ?`; }
+              
+              let part = (t / q.den) * q.num;
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(part)}<br>${fmt(t)} + ${fmt(part)} = ${fmt(q.calcVal)}`;
+              sentenceLine = cleanUnit ? `Le nouveau total est ${fmt(q.calcVal)} ${cleanUnit}.` : `On trouve ${fmt(q.calcVal)}.`;
+          }
+          else if (q.mode === 'find_total') {
+              if (q.den === 1) { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Un trajet a été rallongé et dure <strong>${fmt(q.calcVal)} min</strong>. Il représente <strong>${fracStr}</strong> du trajet initial.<br>Quelle était la durée initiale ?`; }
+                  else if (cType === 'brut') { qHtml = `<strong>${fracStr}</strong> d'une quantité vaut <strong>${fmt(q.calcVal)}${unit}</strong>.<br>Quelle est cette quantité totale ?`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `Le nouveau prix d'un objet est <strong>${fmt(q.calcVal)} €</strong>, ce qui représente <strong>${fracStr}</strong> de son prix de départ.<br>Quel était le prix de départ ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `Une école compte <strong>${fmt(q.calcVal)} élèves</strong>, ce qui représente <strong>${fracStr}</strong> d'une petite école voisine.<br>Combien y a-t-il d'élèves dans la petite école ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>, ce qui est <strong>${fracStr}</strong> de la distance d'hier.<br>Quelle distance as-tu parcourue hier ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `Un colis pèse <strong>${fmt(q.calcVal)} kg</strong>, soit <strong>${fracStr}</strong> d'un petit paquet.<br>Quel est le poids du petit paquet ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `Une cuve contient <strong>${fmt(q.calcVal)} L</strong>, ce qui représente <strong>${fracStr}</strong> d'un seau.<br>Quelle est la contenance du seau ?`; }
+              } else { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `<strong>${fracStr}</strong> d'un trajet prend <strong>${fmt(q.calcVal)} min</strong>.<br>Quelle est la durée totale ?`; }
+                  else if (cType === 'brut') { qHtml = `<strong>${fracStr}</strong> d'une quantité vaut <strong>${fmt(q.calcVal)}${unit}</strong>.<br>Quelle est cette quantité totale ?`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `<strong>${fracStr}</strong> du prix d'${argentObjet} correspond à <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le prix total ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `Dans ${ecoleLieu}, <strong>${fracStr}</strong> des élèves font du sport. Cela représente <strong>${fmt(q.calcVal)} élèves</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>, ce qui représente <strong>${fracStr}</strong> du trajet.<br>Quelle est la distance totale ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `<strong>${fracStr}</strong> du poids d'${poidsObjet} pèse <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `${capObjet} contient <strong>${fmt(q.calcVal)} L</strong>, ce qui représente <strong>${fracStr}</strong> de sa contenance.<br>Quelle est la contenance totale ?`; }
+              }
+              mathLine = `${fracMathStr} = ${fmt(q.calcVal)} ➔ Le Tout = ${fmt(t)}`;
+              sentenceLine = cleanUnit ? `Le total est de ${fmt(t)} ${cleanUnit}.` : `Le total est de ${fmt(t)}.`;
+          }
+          else if (q.mode === 'find_frac') {
+              if (q.den === 1) { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Un trajet passait de <strong>${fmt(t)} min</strong> à <strong>${fmt(q.calcVal)} min</strong>.<br>Quel mot (le double, le triple...) décrit ce rallongement ?`; }
+                  else if (cType === 'brut') { qHtml = `Quel terme mathématique (le double, le triple...) décrit le passage de <strong>${fmt(t)}${unit}</strong> à <strong>${fmt(q.calcVal)}${unit}</strong> ?`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `Le prix est passé de <strong>${fmt(t)} €</strong> à <strong>${fmt(q.calcVal)} €</strong>.<br>Combien de fois est-il plus cher ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `Une école passe de <strong>${fmt(t)}</strong> à <strong>${fmt(q.calcVal)} élèves</strong>.<br>Par combien les effectifs ont-ils été multipliés ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `La distance passe de <strong>${fmt(t)} km</strong> à <strong>${fmt(q.calcVal)} km</strong>.<br>Quel terme décrit cette différence ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `Le poids passe de <strong>${fmt(t)} kg</strong> à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel mot permet de décrire cet écart ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `La contenance passe de <strong>${fmt(t)} L</strong> à <strong>${fmt(q.calcVal)} L</strong>.<br>Combien de fois est-elle plus grande ?`; }
+                  mathLine = `${fmt(t)} &times; ? = ${fmt(q.calcVal)} ➔ ${fracMathStr}`;
+                  sentenceLine = `C'est ${fracMathStr}.`;
+              } else { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Un trajet initial de <strong>${fmt(t)} min</strong> a été raccourci. On a mis <strong>${fmt(q.calcVal)} min</strong>.<br>Quelle fraction de la durée initiale cela représente-t-il ?`; }
+                  else if (cType === 'brut') { qHtml = `Quelle fraction représente <strong>${fmt(q.calcVal)}${unit}</strong> par rapport à <strong>${fmt(t)}${unit}</strong> ?`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûtait <strong>${fmt(t)} €</strong>. Le nouveau prix est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quelle fraction du prix de base cela représente-t-il ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `${ecoleLieuCap} de <strong>${fmt(t)} élèves</strong> compte <strong>${fmt(q.calcVal)} externes</strong>.<br>Quelle fraction cela représente-t-il ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quelle fraction du trajet a été effectuée ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. Un deuxième objet pèse <strong>${fmt(q.calcVal)} kg</strong>.<br>Quelle fraction du premier objet représente le second ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `Sur ${capObjet.toLowerCase()} de <strong>${fmt(t)} L</strong>, on a utilisé <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle fraction a été utilisée ?`; }
+                  mathLine = `${fmt(q.calcVal)} sur ${fmt(t)} = ${fracMathStr}`;
+                  sentenceLine = `Cela représente ${fracMathStr}.`;
+              }
+          }
+          else { 
+              if (q.den === 1) { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)} min</strong>.`; }
+                  else if (cType === 'brut') { qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `Un objet coûte <strong>${fmt(t)} €</strong>. Un autre coûte <strong>${fracStr}</strong>.<br>Combien coûte le deuxième objet ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `Il y a <strong>${fmt(t)} élèves</strong> dans une classe. Une école en possède <strong>${fracStr}</strong>.<br>Combien y a-t-il d'élèves dans cette école ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Un trajet fait <strong>${fmt(t)} km</strong>. Un autre fait <strong>${fracStr}</strong>.<br>Combien de kilomètres fait le deuxième trajet ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `Un colis pèse <strong>${fmt(t)} kg</strong>. Un autre pèse <strong>${fracStr}</strong>.<br>Combien pèse le deuxième colis ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `Un seau contient <strong>${fmt(t)} L</strong>. Une cuve en contient <strong>${fracStr}</strong>.<br>Combien de litres contient la cuve ?`; }
+              } else { 
+                  if (cType === 'temps') { unit = " min"; cleanUnit = "min"; qHtml = `Un trajet dure <strong>${fmt(t)} min</strong>. Calcule <strong>${fracStr}</strong> de cette durée.`; }
+                  else if (cType === 'brut') { qHtml = `Calcule <strong>${fracStr}</strong> de <strong>${fmt(t)}${unit}</strong>.`; } 
+                  else if (cType === 'argent') { unit = " €"; cleanUnit = "€"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûte <strong>${fmt(t)} €</strong>. Tu dois payer <strong>${fracStr}</strong> du prix.<br>Quel montant dois-tu payer ?`; } 
+                  else if (cType === 'ecole') { unit = " élèves"; cleanUnit = "élèves"; qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} élèves</strong>, <strong>${fracStr}</strong> mangent à la cantine.<br>Combien d'élèves mangent à la cantine ?`; } 
+                  else if (cType === 'distance') { unit = " km"; cleanUnit = "km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, tu as parcouru <strong>${fracStr}</strong>.<br>Combien de kilomètres as-tu parcourus ?`; }
+                  else if (cType === 'poids') { unit = " kg"; cleanUnit = "kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. Tu dois soulever <strong>${fracStr}</strong> de ce poids.<br>Quelle masse cela représente-t-il ?`; }
+                  else if (cType === 'capacite') { unit = " L"; cleanUnit = "L"; qHtml = `${capObjet} contient <strong>${fmt(t)} L</strong> d'eau. On en récupère <strong>${fracStr}</strong>.<br>Combien de litres a-t-on récupérés ?`; }
+              }
+              mathLine = `${fracMathStr} de ${fmt(t)} = ${fmt(q.calcVal)}`;
+              sentenceLine = cleanUnit ? `On trouve ${fmt(q.calcVal)} ${cleanUnit}.` : `On trouve ${fmt(q.calcVal)}.`;
+          }
       }
 
       let cHtml = `
@@ -479,7 +544,19 @@
       let val, forcedTheme = null;
       let roll = seededRandom();
 
-      if (level === 1) {
+      if (level === 0) {
+          let maxVal = Math.floor(20 / Math.max(den, num));
+          if(maxVal < 1) maxVal = 1;
+          val = rand(1, maxVal);
+          
+          let items = [
+            {n:'pommes', e:'🍎'}, {n:'bonbons', e:'🍬'}, {n:'ballons', e:'⚽'}, 
+            {n:'billes', e:'🔵'}, {n:'étoiles', e:'⭐️'}, {n:'cookies', e:'🍪'}
+          ];
+          let it = pick(items);
+          forcedTheme = 'niveau0|' + it.n + '|' + it.e;
+      }
+      else if (level === 1) {
           if (roll > 0.3) { 
               val = rand(2, 10);
           } else { 
@@ -575,8 +652,8 @@
 
       let data = getBaseData(den, num, level);
       
-      if (den !== 1 && num > den) {
-          data.forcedTheme = 'brut';
+      if (den !== 1 && num > den && level !== 0) {
+          data.forcedTheme = data.forcedTheme || 'brut';
       }
 
       let totalVal = data.totalVal;
@@ -591,7 +668,7 @@
           calcVal = partVal;
       }
 
-      let q = { num, den, totalVal, calcVal, mode, phase: 0, forcedTheme: data.forcedTheme };
+      let q = { num, den, totalVal, calcVal, mode, phase: 0, forcedTheme: data.forcedTheme, level: level };
       let texts = buildText(q);
       q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit;
       return q;
@@ -647,343 +724,3 @@
             let wPart = 600 / q.den;
             let extraBoxes = q.num - q.den;
             return Math.max(1000, 600 + (extraBoxes * wPart) + 150);
-        }
-        return 1000;
-    }
-
-    function drawBrace(svg, x, y, width, text, isUp, color="#1f2a44", forceFontSize=null) {
-      if(width <= 0) return;
-      const h = 12; const dir = isUp ? -1 : 1; const yTip = y + (h * dir);
-      const d = `M ${x} ${y} Q ${x} ${yTip}, ${x + Math.min(10, width/3)} ${yTip} L ${x + width/2 - Math.min(8, width/4)} ${yTip} Q ${x + width/2} ${yTip}, ${x + width/2} ${yTip + (4*dir)} Q ${x + width/2} ${yTip}, ${x + width/2 + Math.min(8, width/4)} ${yTip} L ${x + width - Math.min(10, width/3)} ${yTip} Q ${x + width} ${yTip}, ${x + width} ${y} `;
-      svg.appendChild(createSVG("path", { d: d, fill: "none", stroke: color, "stroke-width": "3" }));
-
-      let fSize = forceFontSize || (width < 50 ? "16" : "24");
-      let yOffset = isUp ? -12 : 38; // Décalage augmenté pour faire "respirer" le texte
-      let txt = createSVG("text", { x: x + width/2, y: yTip + yOffset, "text-anchor": "middle", "font-weight": "bold", "font-size": fSize, fill: color });
-      txt.textContent = text; svg.appendChild(txt);
-    }
-
-    function drawSVGFraction(q, isCorrection, svgContainer, yOffset = 0, reqW = 1000, forceX = null, isPrint = false) {
-      let wTop = 600; 
-      let baseParts = q.den === 1 ? q.num : q.den;
-      let wPart = wTop / baseParts; 
-      
-      let maxBoxes = q.den === 1 ? q.num : Math.max(q.den, q.num);
-      if (q.mode === 'var_aug') maxBoxes = baseParts + q.num; 
-
-      let xStart;
-      let totalW = wPart * maxBoxes;
-      
-      if (forceX !== null) {
-          xStart = forceX;
-      } else if (q.mode === 'var_aug' || (q.den !== 1 && q.num > q.den)) {
-          xStart = (reqW - totalW) / 2;
-      } else {
-          xStart = (reqW - wTop) / 2; 
-      }
-
-      const hBar = 60;
-      const yTop = 60 + yOffset;
-      const yBot = yTop + hBar;
-      const familyNumber = q.den === 1 ? q.num : q.den;
-      const baseColor = colors[familyNumber] || "var(--c-10)";
-
-      // 1. TOP BAR (Le Tout)
-      svgContainer.appendChild(createSVG("rect", { x: xStart, y: yTop, width: wTop, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": "0.15" }));
-
-      if (!isPrint) {
-          const mults_names = { 2: "DOUBLE", 3: "TRIPLE", 4: "QUADRUPLE", 5: "QUINTUPLE", 10: "DÉCUPLE" };
-          let textTop = "";
-          if (isCorrection) {
-              textTop = q.den === 1 ? fmt(q.calcVal) : fmt(q.totalVal);
-          } else {
-              if (q.den === 1) { textTop = "LE " + mults_names[q.num]; } 
-              else { textTop = "LE TOUT"; }
-              if (q.mode === 'find_total') textTop = "?";
-          }
-          let txtTopSVG = createSVG("text", { x: xStart + wTop/2, y: yTop + hBar/2 + 8, "text-anchor": "middle", "font-weight": "bold", "font-size": wTop < 100 ? "18" : "26", fill: "#1f2a44" });
-          txtTopSVG.textContent = textTop;
-          svgContainer.appendChild(txtTopSVG);
-      }
-
-      // 2. BOTTOM BAR (Les Cases)
-      for (let i = 0; i < maxBoxes; i++) {
-        let xPart = xStart + (i * wPart);
-        let partVal = q.den === 1 ? q.totalVal : q.totalVal / q.den;
-
-        let fillOpacity = "1";
-        let useHatch = false;
-        let useDots = false;
-        let isDashed = false;
-
-        if (q.mode === 'var_reste' || q.mode === 'var_dim') {
-            if (i < q.num) { useHatch = true; fillOpacity = "0"; }
-        } else if (q.mode === 'var_aug') {
-            if (i >= baseParts) { useDots = true; isDashed = true; fillOpacity = "0.2"; }
-        } else {
-            if (i >= q.num && q.den !== 1) fillOpacity = "0.4";
-            if (q.mode === 'find_frac' && !isCorrection) fillOpacity = "0.4";
-        }
-
-        // Dessin de la case
-        let rectAttrs = { x: xPart, y: yBot, width: wPart, height: hBar, fill: baseColor, stroke: "#1f2a44", "stroke-width": "2.5", "fill-opacity": fillOpacity };
-        if (isDashed) rectAttrs["stroke-dasharray"] = "6,4";
-        svgContainer.appendChild(createSVG("rect", rectAttrs));
-
-        if (isPrint) {
-            // Ligne pointillée fine pour aider l'élève à écrire
-            svgContainer.appendChild(createSVG("line", { x1: xPart + wPart/2 - 12, y1: yBot + hBar/2, x2: xPart + wPart/2 + 12, y2: yBot + hBar/2, stroke: "#1f2a44", "stroke-width": "3", "stroke-dasharray": "4,4", "opacity": "0.3" }));
-        } else {
-            if (useHatch) {
-                svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "url(#hatch)" }));
-            } else if (useDots) {
-                svgContainer.appendChild(createSVG("rect", { x: xPart, y: yBot, width: wPart, height: hBar, fill: "url(#dots)" }));
-            }
-
-            // TEXTES INTERNES
-            if (isCorrection) {
-                let fSizeBot = wPart < 65 ? "16" : (wPart < 100 ? "20" : "30");
-                let txtBotSVG = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 10, "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeBot, fill: "#1f2a44" });
-                txtBotSVG.textContent = fmt(partVal);
-                svgContainer.appendChild(txtBotSVG);
-            } else {
-                if (q.mode === 'find_frac') {
-                    let txtBotSVG = createSVG("text", { x: xPart + wPart/2, y: yBot + hBar/2 + 10, "text-anchor": "middle", "font-weight": "bold", "font-size": "30", fill: "#1f2a44" });
-                    txtBotSVG.textContent = "?"; svgContainer.appendChild(txtBotSVG);
-                } else {
-                    if (q.den === 1) { 
-                        let fSizePart = wPart < 65 ? "14" : "20";
-                        let txtPref = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?22:26), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizePart, fill: "#1f2a44" });
-                        txtPref.textContent = "une"; svgContainer.appendChild(txtPref);
-                        let txtWord = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?42:48), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizePart, fill: "#1f2a44" });
-                        txtWord.textContent = "part"; svgContainer.appendChild(txtWord);
-                    } else {
-                        let prefix = q.den === 2 ? "la" : "le";
-                        let word = { 2: "moitié", 3: "tiers", 4: "quart", 5: "cinquième", 10: "dixième" }[q.den];
-                        let fSizeLettres = wPart < 65 ? "14" : "20";
-                        let txtPref = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?22:24), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeLettres, fill: "#1f2a44" });
-                        txtPref.textContent = prefix; svgContainer.appendChild(txtPref);
-                        let txtWord = createSVG("text", { x: xPart + wPart/2, y: yBot + (wPart<65?42:46), "text-anchor": "middle", "font-weight": "bold", "font-size": fSizeLettres, fill: "#1f2a44" });
-                        txtWord.textContent = word; svgContainer.appendChild(txtWord);
-                    }
-                }
-            }
-        }
-      }
-
-      // 3. ACCOLADES 
-      if (!isPrint) {
-          if (q.mode === 'var_reste' || q.mode === 'var_dim') {
-              let remainBoxes = q.den - q.num;
-              let label = isCorrection ? fmt(q.calcVal) : "?";
-              let color = isCorrection ? "var(--success)" : "#1f2a44";
-              drawBrace(svgContainer, xStart + (q.num * wPart), yBot + hBar + 10, remainBoxes * wPart, label, false, color, "32");
-          }
-          else if (q.mode === 'var_aug') {
-              let totalBoxes = baseParts + q.num;
-              let label = isCorrection ? fmt(q.calcVal) : "?";
-              let color = isCorrection ? "var(--success)" : "#1f2a44";
-              drawBrace(svgContainer, xStart, yBot + hBar + 10, totalBoxes * wPart, label, false, color, "32");
-          }
-          else if (q.den !== 1 && q.num > 1) {
-              if (q.mode === 'direct' && isCorrection) {
-                  drawBrace(svgContainer, xStart, yBot + hBar + 10, q.num * wPart, fmt(q.calcVal), false, "var(--success)", "32");
-              } else if ((q.mode === 'find_total' || q.mode === 'find_frac') && !isCorrection) {
-                  drawBrace(svgContainer, xStart, yBot + hBar + 10, q.num * wPart, fmt(q.calcVal), false, "var(--accent)", "32");
-              }
-          }
-      }
-    }
-
-    function buildThumbnails() {
-      const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
-      quizData.forEach((q, idx) => {
-        let btn = document.createElement('button'); btn.className = 'thumb-btn';
-        let txt = "";
-        
-        if (q.den === 1) { 
-            if (q.mode === 'direct') txt = `${q.num} &times; ${fmt(q.totalVal)}`;
-            else if (q.mode === 'find_frac') txt = `${fmt(q.calcVal)} = ? &times; ${fmt(q.totalVal)}`;
-            else if (q.mode === 'find_total') txt = `${q.num} &times; ? = ${fmt(q.calcVal)}`;
-        } else {
-            let fStr = getFractionSymbolicText(q.num, q.den, document.getElementById('selFormat').value, true);
-            if (q.mode === 'direct') txt = `${fStr} de ${fmt(q.totalVal)}`;
-            else if (q.mode === 'find_frac') txt = `${fmt(q.calcVal)} sur ${fmt(q.totalVal)}`;
-            else if (q.mode === 'find_total') txt = `${fStr} ➔ ${fmt(q.calcVal)}`;
-            else if (q.mode === 'var_reste' || q.mode === 'var_dim') txt = `${fmt(q.totalVal)} - ${fStr}`;
-            else if (q.mode === 'var_aug') txt = `${fmt(q.totalVal)} + ${fStr}`;
-        }
-
-        btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${txt}</span>`;
-        btn.onclick = () => loadSlide(idx, q.phase); 
-        tb.appendChild(btn);
-      });
-    }
-
-    function updateThumbnails() {
-      const btns = document.getElementById('thumbBar').children;
-      for(let i=0; i<btns.length; i++) {
-        btns[i].className = 'thumb-btn';
-        if (quizData[i].phase === 2) btns[i].classList.add('done');
-        if (i === currentIndex) btns[i].classList.add('active');
-      }
-    }
-
-    function generateQuiz() {
-      if(!getQuizData()) return;
-      document.getElementById('diapoContainer').style.display = 'flex';
-      buildThumbnails(); loadSlide(0, 0);
-      document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
-    }
-
-    function updateUI() {
-      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
-      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
-      document.getElementById('qText').innerHTML = q.qHtml;
-      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
-      
-      let stage = document.getElementById('svgStage');
-      emptyElement(stage);
-
-      if (q.phase === 0) {
-        document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Indice (Schéma) 💡 ►";
-      } else {
-        let isCorr = (q.phase === 2);
-        if(isCorr) {
-            document.getElementById('cBox').style.display = 'block';
-            document.getElementById('cText').innerHTML = q.cHtml;
-            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
-            else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
-        } else {
-            document.getElementById('cBox').style.display = 'none';
-            btnNext.innerHTML = "Correction 👀 ►"; 
-        }
-        document.getElementById('hBox').style.display = 'flex'; 
-
-        let reqW = getReqW(q);
-
-        if (q.mode === 'direct' && q.den === 4) { 
-            stage.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(qHalf, isCorr, stage, 0, reqW, alignX);
-            drawSVGFraction(q, isCorr, stage, 220, reqW, alignX);
-        } else if (q.mode === 'direct' && q.den === 5) { 
-            stage.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(q, isCorr, stage, 0, reqW, alignX); 
-            drawSVGFraction(qDix, isCorr, stage, 220, reqW, alignX); 
-        } else {
-            stage.setAttribute("viewBox", `0 0 ${reqW} 300`); 
-            drawSVGFraction(q, isCorr, stage, 0, reqW);
-        }
-      }
-      updateThumbnails();
-    }
-
-    function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
-    function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
-    function prevSlide() { const q = quizData[currentIndex]; if (q.phase === 2) q.phase = 1; else if (q.phase === 1) q.phase = 0; else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); updateUI(); }
-
-    function generatePrint() {
-      if (quizData.length === 0) { alert("⚠️ Veuillez d'abord cliquer sur '💻 Générer le diapo' pour créer la série !"); return; }
-      
-      const withGabarits = document.getElementById('cbEmptyGabarits').checked;
-      const container = document.getElementById('printContainer');
-      container.innerHTML = ''; 
-
-      let page1 = document.createElement('div');
-      page1.className = 'print-page';
-      page1.innerHTML = `
-        <div class="print-header">
-          <div>Nom : ........................................</div>
-          <div>Prénom : ........................................</div>
-          <div>Classe : ....................</div>
-          <div class="print-seed">Fiche n° ${quizSeed}</div>
-        </div>
-        <h2 class="print-title">Exercices : Fractions et Multiples</h2>
-      `;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
-        
-        if (withGabarits) {
-          let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-          let svg = document.createElementNS(svgNS, "svg"); 
-          let reqW = getReqW(q);
-          
-          if (q.mode === 'direct' && q.den === 4) {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(qHalf, false, svg, 0, reqW, alignX, true); 
-            drawSVGFraction(q, false, svg, 220, reqW, alignX, true);
-          } else if (q.mode === 'direct' && q.den === 5) {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(q, false, svg, 0, reqW, alignX, true); 
-            drawSVGFraction(qDix, false, svg, 220, reqW, alignX, true);
-          } else {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
-            drawSVGFraction(q, false, svg, 0, reqW, null, true);
-          }
-          
-          svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
-        } else {
-          qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
-        }
-        page1.appendChild(qDiv);
-      });
-      container.appendChild(page1);
-
-      let page2 = document.createElement('div');
-      page2.className = 'print-page';
-      page2.innerHTML = `
-        <div class="print-header">
-          <div class="print-seed">CORRIGÉ — Fiche n° ${quizSeed}</div>
-        </div>
-        <h2 class="print-title">Correction Détaillée</h2>`;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `
-          <div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>
-          <div class="print-c-text">✅ ${q.cHtml}</div>
-        `;
-        
-        let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-        let svg = document.createElementNS(svgNS, "svg"); 
-        let reqW = getReqW(q);
-        
-        if (q.mode === 'direct' && q.den === 4) {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qHalf = { ...q, den: 2, num: 1, calcVal: q.totalVal / 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(qHalf, true, svg, 0, reqW, alignX); drawSVGFraction(q, true, svg, 220, reqW, alignX);
-        } else if (q.mode === 'direct' && q.den === 5) {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 520`);
-            let qDix = { ...q, den: 10, num: 2, calcVal: (q.totalVal / 10) * 2 };
-            let alignX = (reqW - (600 / q.den) * Math.max(q.den, q.num)) / 2;
-            drawSVGFraction(q, true, svg, 0, reqW, alignX); drawSVGFraction(qDix, true, svg, 220, reqW, alignX);
-        } else {
-            svg.setAttribute("viewBox", `0 0 ${reqW} 300`);
-            drawSVGFraction(q, true, svg, 0, reqW);
-        }
-        
-        svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
-        
-        page2.appendChild(qDiv);
-      });
-      container.appendChild(page2);
-
-      setTimeout(() => { window.print(); }, 300);
-    }
-  </script>
-</body>
-</html>
