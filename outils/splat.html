@@ -707,6 +707,10 @@ input[type="number"]{appearance:textfield}
           <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
         </svg>
       </button>
+      
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; margin-left:auto; border-color:var(--btn-border);">
+        <input type="checkbox" id="numColorMode" checked> <span style="font-weight:600;">Jetons (+Vert / -Rouge)</span>
+      </label>
     </div>
 
     <div class="row" style="margin-top:10px">
@@ -753,17 +757,41 @@ function rFloat(rng,a,b){return a + rng()*(b-a);}
 function shuffleInPlace(arr,rng){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}}
 
 function beadColorForValue(v){
-  // Couleur = valeur (avec une distinction claire entre + et −, mais sans changer les couleurs des positifs)
-  const mag = Math.abs(v);
-  let hue = (((mag * 37) % 360) + 360) % 360;
-  if(v < 0) hue = (hue + 180) % 360;
-
   const isLight = document.body.classList.contains("light");
-  const fillA = isLight ? 0.18 : 0.24;
-  const strokeA = isLight ? 0.55 : 0.65;
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+
+  // Actif seulement si on est dans un mode relatif (NPM ou EQPM) et que la case est cochée
+  const isSignedMode = (act === "NPM" || act === "EQPM");
+  const useTokens = isSignedMode && colorModeEl && colorModeEl.checked;
+
+  let hue, s, lFill, lStroke, fillA, strokeA;
+
+  if(useTokens){
+    // Mode Jetons : Vert (gain) pour positif, Rouge (dette) pour négatif
+    hue = (v >= 0) ? 142 : 348;
+    s = "80%";
+    lFill = isLight ? "50%" : "55%";
+    lStroke = isLight ? "40%" : "45%";
+    // Légèrement plus opaque pour bien marquer le signe
+    fillA = isLight ? 0.25 : 0.30;
+    strokeA = isLight ? 0.70 : 0.80;
+  } else {
+    // Mode Classique : Couleur liée à la valeur absolue
+    const mag = Math.abs(v);
+    hue = (((mag * 37) % 360) + 360) % 360;
+    if(v < 0) hue = (hue + 180) % 360;
+    s = "78%";
+    lFill = "54%";
+    lStroke = "48%";
+    fillA = isLight ? 0.18 : 0.24;
+    strokeA = isLight ? 0.55 : 0.65;
+  }
+
   return {
-    fill: `hsla(${hue}, 78%, 54%, ${fillA})`,
-    stroke: `hsla(${hue}, 78%, 48%, ${strokeA})`
+    fill: `hsla(${hue}, ${s}, ${lFill}, ${fillA})`,
+    stroke: `hsla(${hue}, ${s}, ${lStroke}, ${strokeA})`
   };
 }
 
@@ -913,6 +941,8 @@ const numBeadAbsMaxWrapEl = document.getElementById("numBeadAbsMaxWrap");
 const numBeadAbsMaxEl = document.getElementById("numBeadAbsMax");
 const numOpposeModeWrapEl = document.getElementById("numOpposeModeWrap");
 const numOpposeModeEl = document.getElementById("numOpposeMode");
+const numColorModeWrapEl = document.getElementById("numColorModeWrap");
+const numColorModeEl = document.getElementById("numColorMode");
 
 
 /* Helpers */
@@ -1114,7 +1144,8 @@ function syncSettingsUI(){
     if(lastActivityForSigned === "NPM" || lastActivityForSigned === "EQPM"){
       lastSignedModeSettings[lastActivityForSigned] = {
         absMax: String(numBeadAbsMaxEl.value),
-        oppose: String(numOpposeModeEl.value)
+        oppose: String(numOpposeModeEl.value),
+        color: numColorModeEl ? numColorModeEl.checked : true
       };
     }
     // Restore signed settings for the mode we enter
@@ -1123,10 +1154,12 @@ function syncSettingsUI(){
       if(saved){
         numBeadAbsMaxEl.value = saved.absMax;
         numOpposeModeEl.value = saved.oppose;
+        if(numColorModeEl && saved.color !== undefined) numColorModeEl.checked = saved.color;
       } else {
         // Defaults per mode (keep the UI initial values)
         numBeadAbsMaxEl.value = "30";
         numOpposeModeEl.value = "off";
+        if(numColorModeEl) numColorModeEl.checked = true;
       }
     }
   }
@@ -1170,6 +1203,7 @@ function syncSettingsUI(){
   // B± uniquement : borne sur la valeur absolue des billes
   if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "block" : "none";
   if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "block" : "none";
+  if(numColorModeWrapEl) numColorModeWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "flex" : "none";
   if(act === "NPM" || act === "EQPM") sanitizeBeadAbsMaxForBPM();
 
   if(isInvestigate){
@@ -1260,7 +1294,7 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 [
   countEl, diffEl, seedEl,
   unitTasksMinEl, unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, seedNEl,
+  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -2881,13 +2915,13 @@ function minCellWidthForNumber(num, fontSize, pad){
 
 /**
  * Dessine un "schéma en barre" (tableau 2 lignes) :
- *  - ligne 1 : TOTAL
- *  - ligne 2 : visible / caché (largeurs proportionnelles), la partie cachée est grisée.
+ * - ligne 1 : TOTAL
+ * - ligne 2 : visible / caché (largeurs proportionnelles), la partie cachée est grisée.
  *
  * API attendue :
- *  - rect(attrs) -> <rect>
- *  - line(attrs) -> <line>
- *  - text(x,y,txt,attrs) -> <text>
+ * - rect(attrs) -> <rect>
+ * - line(attrs) -> <line>
+ * - text(x,y,txt,attrs) -> <text>
  */
 function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
   const baseW = (api && api.w) ? api.w : 300;
@@ -2903,6 +2937,7 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
 
   const dyVal = (api && api.textDy) ? api.textDy : "0";
   const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
+  const totalTextColor = (api && api.totalTextColor) ? api.totalTextColor : ink;
 
   const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
 
@@ -2954,7 +2989,7 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
     "alignment-baseline":"middle",
     "dy":dyVal,
     "font-size":String(fontTop),
-    "fill":ink,
+    "fill":totalTextColor,
     "font-weight":"900"
   }));
 
@@ -2986,9 +3021,9 @@ function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
 
 /**
  * Variante "multi-parties" du schéma en barre :
- *  - ligne 1 : TOTAL (une seule case sur toute la largeur)
- *  - ligne 2 : plusieurs cases (1 visible + n cachées), largeurs proportionnelles
- *    Les cases "cachées" sont grisées.
+ * - ligne 1 : TOTAL (une seule case sur toute la largeur)
+ * - ligne 2 : plusieurs cases (1 visible + n cachées), largeurs proportionnelles
+ * Les cases "cachées" sont grisées.
  *
  * parts = [{value:number, hidden:boolean}, ...]
  */
@@ -3007,6 +3042,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const dyVal = (api && api.textDy) ? api.textDy : "0";
   const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
   const hiddenTextColor = (api && api.hiddenTextColor) ? api.hiddenTextColor : ink;
+  const totalTextColor = (api && api.totalTextColor) ? api.totalTextColor : ink;
 
   const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
 
@@ -3046,7 +3082,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
     "alignment-baseline":"middle",
     "dy":dyVal,
     "font-size":String(fontTop),
-    "fill":ink,
+    "fill":totalTextColor,
     "font-weight":"900"
   }));
 
@@ -3116,22 +3152,31 @@ function renderCard(card, revealed){
   // TOTAL Position
   let tx = 800, ty = 92; 
 
+  // Gestion des couleurs du TOTAL
+  let totalColor = "var(--ink)";
+  let totalLabelColor = "var(--total-label)";
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+  
+  if(useTokens && card.total !== 0) {
+    const isLight = document.body.classList.contains("light");
+    totalColor = card.total > 0 
+      ? (isLight ? "#16a34a" : "#4ade80") // Vert
+      : (isLight ? "#e11d48" : "#fb7185"); // Rouge
+    totalLabelColor = totalColor;
+  }
+
   const gTotal = el("g", {id:"totalGroup"});
 
   const isBarModelTotalU = (card.family === "U" && revealed);
   const isBarModelTotalN = (card.family === "N" && revealed);
   const isBarModelTotal = isBarModelTotalU || isBarModelTotalN;
 
-  // Mode A (U) : à la révélation (bouton Suivant), on affiche un schéma en barre
-  // à la place du nombre du total (projection), uniquement à l'écran (pas l'impression).
-  // Mode B (N) : idem, mais les "visibles" sont la SOMME des billes visibles (numérotées),
-  // et si plusieurs taches : on sépare en plusieurs cases cachées (une par tache).
   if(isBarModelTotal){
     if(isBarModelTotalU){
       const vis = sumArray(card.visible);
-
-      // Mode A (U) : si plusieurs taches, on découpe la partie cachée en plusieurs cases (une par tache),
-      // exactement comme en mode B, au lieu d'une seule case "caché total".
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
@@ -3149,23 +3194,17 @@ function renderCard(card, revealed){
         hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
-if(hiddenSums.length <= 1){
+      
+      if(hiddenSums.length <= 1){
         const hid = (hiddenSums[0] ?? sumArray(card.hidden));
         drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
           rect:(a)=>el("rect", a),
           line:(a)=>el("line", a),
           text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380,
-          hTop: 86,
-          hBottom: 86,
-          stroke:"#000",
-          strokeWidth:4,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)",
-          visibleTextColor:"var(--accent)",
-          textDy:"0.10em",
-          fontTop:70,
-          fontBottom:70
+          w: 380, hTop: 86, hBottom: 86,
+          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)", visibleTextColor:"var(--accent)", totalTextColor: totalColor,
+          textDy:"0.10em", fontTop:70, fontBottom:70
         });
       }else{
         const parts = [{value: vis, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
@@ -3173,22 +3212,14 @@ if(hiddenSums.length <= 1){
           rect:(a)=>el("rect", a),
           line:(a)=>el("line", a),
           text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380,
-          hTop: 86,
-          hBottom: 86,
-          stroke:"#000",
-          strokeWidth:4,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)",
-          visibleTextColor:"var(--accent)",
-          textDy:"0.10em",
-          fontTop:70,
-          fontBottom:70
+          w: 380, hTop: 86, hBottom: 86,
+          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)", visibleTextColor:"var(--accent)", totalTextColor: totalColor,
+          textDy:"0.10em", fontTop:70, fontBottom:70
         });
       }
     }else{
       const visSum = sumArray(card.visible);
-
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
 
@@ -3208,17 +3239,10 @@ if(hiddenSums.length <= 1){
           rect:(a)=>el("rect", a),
           line:(a)=>el("line", a),
           text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380,
-          hTop: 86,
-          hBottom: 86,
-          stroke:"#000",
-          strokeWidth:4,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)",
-          visibleTextColor:"var(--ink)",
-          textDy:"0.10em",
-          fontTop:70,
-          fontBottom:70
+          w: 380, hTop: 86, hBottom: 86,
+          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)", visibleTextColor:"var(--ink)", totalTextColor: totalColor,
+          textDy:"0.10em", fontTop:70, fontBottom:70
         });
       }else{
         const parts = [{value: visSum, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
@@ -3226,29 +3250,21 @@ if(hiddenSums.length <= 1){
           rect:(a)=>el("rect", a),
           line:(a)=>el("line", a),
           text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380,
-          hTop: 86,
-          hBottom: 86,
-          stroke:"#000",
-          strokeWidth:4,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)",
-          visibleTextColor:"var(--ink)",
-          hiddenTextColor:"var(--ink)",
-          textDy:"0.10em",
-          fontTop:70,
-          fontBottom:70
+          w: 380, hTop: 86, hBottom: 86,
+          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+          ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
+          textDy:"0.10em", fontTop:70, fontBottom:70
         });
       }
     }
   }else{
     const tLabel = text(tx, ty, "TOTAL", {
       "text-anchor":"middle","font-size":"42",
-      "fill":"var(--total-label)","font-weight":"800","letter-spacing":"2"
+      "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
     const tNum = text(tx, ty+83, String(card.total), {
       "text-anchor":"middle","font-size":"96",
-      "fill":"var(--ink)","font-weight":"900"
+      "fill":totalColor,"font-weight":"900"
     });
     gTotal.appendChild(tLabel);
     gTotal.appendChild(tNum);
@@ -3660,9 +3676,20 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     ty = 92;
   }
 
+  let totalColor = "#000";
+  let totalLabelColor = "rgba(0,0,0,0.92)";
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+  if(useTokens && card.total !== 0) {
+    totalColor = card.total > 0 ? "#16a34a" : "#e11d48";
+    totalLabelColor = totalColor;
+  }
+
   const g = tEl("g",{id:"totalGroupPrint"});
-  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":"rgba(0,0,0,0.92)","font-weight":"900","letter-spacing":"2"});
-  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":"#000","font-weight":"900"});
+  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
+  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
   targetSvg.appendChild(g);
 
@@ -3761,6 +3788,7 @@ const gBM = tEl("g",{id:"barModelPrint"});
           greyFill:"rgba(0,0,0,0.10)",
           ink:"#000",
           visibleTextColor:"rgb(106,167,255)",
+          totalTextColor: totalColor,
           fontTop:118,
           fontBottom:118
         });
@@ -3778,6 +3806,7 @@ const gBM = tEl("g",{id:"barModelPrint"});
           greyFill:"rgba(0,0,0,0.10)",
           ink:"#000",
           visibleTextColor:"rgb(106,167,255)",
+          totalTextColor: totalColor,
           fontTop:118,
           fontBottom:118
         });
@@ -3883,6 +3912,7 @@ const gBM = tEl("g",{id:"barModelPrint"});
           greyFill:"rgba(0,0,0,0.10)",
           ink:"#000",
           visibleTextColor:"#000",
+          totalTextColor: totalColor,
           textDy:"0.06em",
           fontTop:118,
           fontBottom:118
@@ -3902,6 +3932,7 @@ const gBM = tEl("g",{id:"barModelPrint"});
           ink:"#000",
           visibleTextColor:"#000",
           hiddenTextColor:"#000",
+          totalTextColor: totalColor,
           textDy:"0.06em",
           fontTop:118,
           fontBottom:118
