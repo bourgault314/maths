@@ -708,7 +708,7 @@ input[type="number"]{appearance:textfield}
         </svg>
       </button>
       
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; margin-left:auto; border-color:var(--btn-border);">
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; height:42px; padding:0 12px; border-radius:12px;">
         <input type="checkbox" id="numColorMode" checked> <span style="font-weight:600;">Jetons (+Vert / -Rouge)</span>
       </label>
     </div>
@@ -3155,17 +3155,19 @@ function renderCard(card, revealed){
   // Gestion des couleurs du TOTAL
   let totalColor = "var(--ink)";
   let totalLabelColor = "var(--total-label)";
+  let totalBoxFill = "var(--totalbox-fill)";
+  let totalBoxStroke = "#000";
+
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
   const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
   
   if(useTokens && card.total !== 0) {
-    const isLight = document.body.classList.contains("light");
-    totalColor = card.total > 0 
-      ? (isLight ? "#16a34a" : "#4ade80") // Vert
-      : (isLight ? "#e11d48" : "#fb7185"); // Rouge
-    totalLabelColor = totalColor;
+    const col = beadColorForValue(card.total);
+    totalBoxFill = col.fill;
+    totalBoxStroke = col.stroke;
+    // On garde le texte en noir pour être lisible
   }
 
   const gTotal = el("g", {id:"totalGroup"});
@@ -3283,8 +3285,8 @@ function renderCard(card, revealed){
       width: bbTotal.width + padX*2,
       height: bbTotal.height + padY*2,
       rx: 22,
-      fill:"var(--totalbox-fill)",
-      stroke:"#000",
+      fill: totalBoxFill,
+      stroke: totalBoxStroke,
       "stroke-width":"4"
     }), gTotal);
   }
@@ -3678,13 +3680,18 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
 
   let totalColor = "#000";
   let totalLabelColor = "rgba(0,0,0,0.92)";
+  let boxFill = "rgba(0,0,0,0.02)";
+  let boxStroke = "rgba(0,0,0,0.22)";
+
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
   const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
   if(useTokens && card.total !== 0) {
-    totalColor = card.total > 0 ? "#16a34a" : "#e11d48";
-    totalLabelColor = totalColor;
+    const col = beadColorForValue(card.total);
+    boxFill = col.fill;
+    boxStroke = col.stroke;
+    // On garde le texte noir pour bien voir à l'impression
   }
 
   const g = tEl("g",{id:"totalGroupPrint"});
@@ -3712,7 +3719,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   }
 targetSvg.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
-    fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4"
+    fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
 
     /* Indices impression Mode C/D : SOUS LE PLATEAU */
