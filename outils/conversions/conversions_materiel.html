@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générateur - Glisse Unité (Final Compact)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { 
+    --accent: #1283ff; 
+    --accent-dark: #0b67c6; 
+    --bg: #ffffff; 
+    --ink: #1b1b1b; 
+    
+    /* Variables par défaut (Standard) */
+    --table-cell-min-height: 92px;
+    --head-btn-min-height: 44px;
+    --head-font-size: 1.25rem;
+    --c-total-height: 14.5cm;
+    --c-window-height: 4.6cm;
+  }
+  
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; overflow-x: hidden; }
+  
+  /* --- UI ÉCRAN COMPACT --- */
+  .no-print { padding: 15px; background: white; border-bottom: 2px solid #ddd; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+  .controls { display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  select { padding: 8px 12px; border-radius: 8px; border: 2px solid #ccc; font-family: 'Nunito'; font-weight: 700; font-size: 1rem; cursor: pointer; }
+  
+  .toggle-container { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; cursor: pointer; font-weight: 900; font-size: 1rem; color: #334155; }
+  .toggle-container input { width: 18px; height: 18px; cursor: pointer; accent-color: #10b981; }
+
+  .btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 14px color-mix(in srgb, #10b981 30%, transparent); transition: transform 0.1s; }
+  .btn:active { transform: translateY(2px); }
+  
+  .instruction-box { background: #f8fafc; padding: 15px 25px; border-radius: 12px; border: 2px dashed #10b981; max-width: 800px; width: 100%; box-sizing: border-box; }
+  .instruction-box h3 { margin: 0 0 5px 0; color: #047857; text-align: center; font-size: 1.1rem; }
+  .instruction-list { padding-left: 20px; margin: 0; line-height: 1.4; font-size: 1rem; color: #334155; }
+
+  /* --- ZONE D'IMPRESSION (Écran = collé, Impression = espacé) --- */
+  .print-area { width: 29.7cm; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  
+  /* CADRE DE DECOUPE DU TABLEAU */
+  .table-cut-area {
+    border: 2px dashed #9ca3af;
+    padding: 15px 2.5cm; 
+    border-radius: 12px;
+    position: relative;
+    background: #fff;
+    margin-top: 5px;
+    transition: all 0.3s ease;
+  }
+  .table-cut-area::before {
+    content: "✂️ Découpez sur ces pointillés (laisse de la marge pour écrire des nombres)";
+    position: absolute; top: -25px; left: 2.5cm; 
+    color: #6b7280; font-weight: 700; font-size: 0.9rem;
+  }
+
+  /* LA BANDE DU TABLEAU */
+  .board-columns {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 7), 1fr);
+    gap: 4px; 
+    position: relative;
+    width: 26cm; 
+    background: transparent;
+  }
+
+  .family-col { display: flex; flex-direction: column; gap: 6px; }
+  .head-group { display: grid; gap: 4px; }
+
+  .unitBtn {
+    background: color-mix(in srgb, var(--accent) 12%, #fff);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    font-size: var(--head-font-size); 
+    display: flex; align-items: center; justify-content: center;
+    min-height: var(--head-btn-min-height); 
+    padding: 0;
+    transition: all 0.3s ease;
+  }
+  .unitBtn span { font-weight: 700; color: var(--ink); }
+  .unitBtn.empty-unit { background: transparent; border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+
+  .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; }
+  .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
+  .sub-lab { white-space: nowrap; font-weight: 900; color: color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1; }
+
+  .cell { position: relative; background: transparent; display: flex; align-items: stretch; justify-content: center; }
+  .slots { display: grid; gap: 4px; width: 100%; align-items: stretch; }
+  
+  .digit {
+    box-sizing: border-box; width: 100%; text-align: center;
+    border: 2px solid var(--accent); border-radius: 8px; background: #fff;
+    min-height: var(--table-cell-min-height); 
+    transition: all 0.3s ease;
+  }
+
+  /* --- LE CURSEUR --- */
+  
+  .curseur-wrapper {
+    width: var(--c-total-height); 
+    height: 6cm; 
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 0; /* Collé au tableau sur l'écran */
+    transition: all 0.3s ease;
+  }
+
+  .curseur { 
+    --gap-main: calc((var(--cols) - 1) * 4px);
+    --col-width: calc((26cm - var(--gap-main)) / var(--cols));
+    --gap-sub: calc((var(--slots) - 1) * 4px);
+    --sub-col-width: calc((var(--col-width) - var(--gap-sub)) / var(--slots));
+    
+    --montant: 3mm; 
+    
+    box-sizing: border-box; 
+    width: calc(var(--sub-col-width) + (var(--montant) * 2)); 
+    height: var(--c-total-height); 
+    border-radius: 8px; 
+    background: transparent; 
+    display: flex; flex-direction: column; align-items: center;
+    border: 2px solid var(--accent-dark);
+    overflow: hidden;
+    transform: rotate(-90deg); 
+    transition: all 0.3s ease;
+  }
+
+  .c-top, .c-bottom { 
+    flex: 1; 
+    width: 100%; 
+    display: flex; flex-direction: column; align-items: center; 
+    text-align: center; font-weight: 900; color: white; line-height: 1.1;
+    background: var(--accent);
+    position: relative;
+    box-sizing: border-box;
+    padding: 2px;
+    word-break: break-word; 
+  }
+
+  .c-top { justify-content: flex-end; padding-bottom: 12px; }
+  .c-bottom { justify-content: flex-start; padding-top: 12px; }
+
+  .arrow-down { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid white; margin-top: 6px; }
+  .arrow-up { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 10px solid white; margin-bottom: 6px; }
+
+  .c-middle { 
+    height: var(--c-window-height); 
+    flex: none; 
+    width: 100%; 
+    background: #fff; 
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-sizing: border-box;
+    border-left: var(--montant) solid var(--accent);
+    border-right: var(--montant) solid var(--accent);
+    transition: all 0.3s ease;
+  }
+
+  /* LA VIRGULE BIEN CALÉE ET REMONTÉE */
+  .c-comma-container {
+    position: absolute;
+    top: 0; 
+    left: 50%;
+    width: var(--sub-col-width);
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .c-comma {
+    position: absolute;
+    right: 2px;
+    font-weight: 900; color: #ef4444; line-height: 0; font-family: 'Nunito', sans-serif;
+    text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
+    /* La propriété 'top' est injectée dynamiquement par le JS selon la taille */
+  }
+
+  /* --- REGLES D'IMPRESSION --- */
+  @media print {
+    .no-print { display: none !important; }
+    @page { size: A4 landscape; margin: 10mm; }
+    html, body { background: #ffffff !important; } 
+    /* Écarte le curseur du tableau pour l'impression (pour le découpage) */
+    .print-area { gap: 1.5cm; padding-top: 0cm; }
+    .curseur-wrapper { margin-top: 1cm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <div class="controls">
+    <label for="kind"><strong>Grandeur :</strong></label>
+    <select id="kind">
+      <option value="length" selected>Longueur (m)</option>
+      <option value="mass">Masse (g)</option>
+      <option value="massT">Masse complète (t ↔ mg)</option>
+      <option value="volL">Volume (L)</option>
+      <option value="area">Aire (m²)</option>
+      <option value="volM3">Volume (m³)</option>
+      <option value="cross">L ↔ m³</option>
+    </select>
+    
+    <label class="toggle-container" for="xlMode">
+      <input type="checkbox" id="xlMode"> Version XL
+    </label>
+
+    <button class="btn" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+
+  <div class="instruction-box">
+    <h3>🛠️ Instructions d'assemblage</h3>
+    <ol class="instruction-list">
+      <li><strong>Imprimez</strong> le modèle. L'option "Version XL" agrandit la hauteur pour faciliter l'écriture !</li>
+      <li><strong>Le Tableau :</strong> Découpez en suivant les pointillés gris (conservez la marge pour écrire).</li>
+      <li><strong>Le Curseur :</strong> Découpez le contour bleu extérieur. Avec un cutter, <strong>évidez le rectangle blanc central</strong> (gardez les fins montants colorés).</li>
+      <li><strong>Fentes et assemblage :</strong> Plastifiez vos éléments. Incisez des fentes dans le plastique du curseur pour faire passer la bande <em>derrière</em> la fenêtre et <em>devant</em> les montants.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="print-area" id="printArea">
+  </div>
+
+<script>
+const THEMES = { length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'], massT:['#16a34a','#0e7a36'], volL:['#06b6d4','#0a8aa3'], area:['#f59e0b','#b77207'], volM3:['#7c3aed','#5a27b0'], cross:['#db2777','#a81d5a'] };
+const SCHEMAS = {
+  length:{ units:['km','hm','dam','m','dm','cm','mm'], slots:1 },
+  mass:  { units:['kg','hg','dag','g','dg','cg','mg'], slots:1 },
+  massT: { units:['t','q','-','kg','hg','dag','g','dg','cg','mg'], slots:1 },
+  volL:  { units:['kL','hL','daL','L','dL','cL','mL'], slots:1 },
+  area:  { units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], slots:2 },
+  volM3: { units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3 },
+  cross: { units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3 },
+};
+
+const CROSS_LABELS = { '3_2': 'kL', '4_0': 'hL', '4_1': 'daL', '4_2': 'L', '5_0': 'dL', '5_1': 'cL', '5_2': 'mL' };
+const AREA_LABELS = { '1_1': 'ha', '2_1': 'a' };
+
+const kindSel = document.getElementById('kind');
+const xlCheckbox = document.getElementById('xlMode');
+const printArea = document.getElementById('printArea');
+
+function buildPaperTool() {
+  const kind = kindSel.value;
+  const isXL = xlCheckbox.checked;
+  const s = SCHEMAS[kind];
+  const [accent, accentDark] = THEMES[kind];
+  
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--accent-dark', accentDark);
+  document.documentElement.style.setProperty('--cols', s.units.length);
+  document.documentElement.style.setProperty('--slots', s.slots);
+
+  document.documentElement.style.setProperty('--table-cell-min-height', isXL ? '120px' : '92px');
+  document.documentElement.style.setProperty('--head-btn-min-height', isXL ? '60px' : '44px');
+  document.documentElement.style.setProperty('--head-font-size', isXL ? '1.4rem' : '1.25rem');
+  document.documentElement.style.setProperty('--c-total-height', isXL ? '18cm' : '14.5cm');
+  document.documentElement.style.setProperty('--c-window-height', isXL ? '5.8cm' : '4.6cm');
+
+  const topText = "L'unité de<br>mesure";
+  const botText = "Le chiffre des<br>unités";
+  
+  /* L'OUBLI RÉPARÉ : On recalcule bien le Top (offset) de la virgule à chaque fois ! */
+  let fontSize, commaSize, commaTop;
+  if (isXL) {
+    fontSize = s.slots === 3 ? "0.95rem" : "1.3rem";
+    commaSize = s.slots === 3 ? "4rem" : "6.5rem";
+    commaTop = s.slots === 3 ? "-18px" : "-28px";
+  } else {
+    fontSize = s.slots === 3 ? "0.85rem" : "1.1rem";
+    commaSize = s.slots === 3 ? "3.5rem" : "5.5rem";
+    commaTop = s.slots === 3 ? "-15px" : "-25px";
+  }
+
+  let columnsHTML = '';
+
+  s.units.forEach((u, ci) => {
+    let headHTML = `<div class="head-group" style="grid-template-columns: repeat(${s.slots}, 1fr);">`;
+    for(let si=0; si < s.slots; si++){
+        if(si === s.slots - 1) {
+            let style = (u.length >= 4 && s.slots === 3) ? 'style="font-size: 0.82em; letter-spacing: -0.5px;"' : '';
+            headHTML += `<div class="unitBtn"><span ${style}>${u}</span></div>`;
+        } else {
+            headHTML += `<div class="unitBtn empty-unit"></div>`;
+        }
+    }
+    headHTML += `</div>`;
+
+    let subHTML = '';
+    if(kind === 'cross' || kind === 'area') {
+      subHTML = `<div class="subhead-group" style="grid-template-columns: repeat(${s.slots}, 1fr);">`;
+      const labelsMap = kind === 'cross' ? CROSS_LABELS : AREA_LABELS;
+      for (let si = 0; si < s.slots; si++) {
+          const key = `${ci}_${si}`;
+          const labelText = labelsMap[key] ? labelsMap[key] : '';
+          subHTML += `<div class="sub-lab-wrapper"><span class="sub-lab">${labelText}</span></div>`;
+      }
+      subHTML += `</div>`;
+    }
+
+    let slotsHTML = `<div class="cell"><div class="slots" style="grid-template-columns: repeat(${s.slots}, 1fr);">`;
+    for(let i=0; i<s.slots; i++){ slotsHTML += `<div class="digit"></div>`; }
+    slotsHTML += `</div></div>`;
+
+    columnsHTML += `<div class="family-col">${headHTML}${subHTML}${slotsHTML}</div>`;
+  });
+
+  printArea.innerHTML = `
+    <div class="table-cut-area">
+      <div class="board-columns">
+        ${columnsHTML}
+      </div>
+    </div>
+
+    <div class="curseur-wrapper">
+      <div class="curseur">
+        
+        <div class="c-top" style="font-size: ${fontSize};">
+          ${topText}
+          <div class="arrow-down"></div>
+        </div>
+        
+        <div class="c-middle"></div>
+        
+        <div class="c-bottom" style="font-size: ${fontSize};">
+          <div class="c-comma-container">
+            <div class="c-comma" style="font-size: ${commaSize}; top: ${commaTop}; transform: translateY(-50%);">,</div>
+          </div>
+          <div class="arrow-up"></div>
+          ${botText}
+        </div>
+        
+      </div>
+    </div>
+  `;
+}
+
+kindSel.addEventListener('change', buildPaperTool);
+xlCheckbox.addEventListener('change', buildPaperTool);
+
+buildPaperTool(); // Init
+</script>
+</body>
+</html>
