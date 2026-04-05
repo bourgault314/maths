@@ -27,68 +27,86 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%} 
+html,body{height:100%}
 html{-webkit-text-size-adjust:100%}
 
 body{
-  margin:0; 
+  margin:0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: var(--bg); 
+  background: var(--bg);
   color: var(--fg);
-  display: flex; 
-  justify-content: center; 
+  display: flex;
+  justify-content: center;
   padding: clamp(12px, 3vw, 28px);
-  padding-left: max(12px, env(safe-area-inset-left)); 
+  padding-left: max(12px, env(safe-area-inset-left));
   padding-right: max(12px, env(safe-area-inset-right));
 }
 
-.wrap{ width: min(1000px, 100%); }
-
-.topbar {
-  display: flex; 
-  align-items: center; 
-  margin-bottom: 20px;
+.wrap{
+  width: min(1000px, 100%);
 }
 
-.back {
+.topbar{
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 56px;
+  margin-bottom: 14px;
+}
+
+.back{
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background-color: rgba(255, 255, 255, 0.7);
-  color: #555;
-  border: 1px solid #ccc;
-  border-radius: 9999px;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid rgba(17,24,39,.12);
+  background: rgba(255,255,255,.75);
+  box-shadow: 0 10px 24px rgba(17,24,39,.08);
   text-decoration: none;
-  font-weight: 500;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
+  color: var(--fg);
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  backdrop-filter: blur(6px);
 }
 
-.back:hover {
-  background-color: #fff;
-  color: #000;
-  border-color: #bbb;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  transform: translateX(-2px);
+.back:hover{
+  background: rgba(255,255,255,.95);
+  border-color: rgba(47,107,255,.30);
+  transform: translateY(-50%) translateY(-1px);
 }
 
-header h1 {
-  margin: 0 0 8px;
+.back svg{
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+header{
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+header h1{
+  margin: 0;
   font-weight: 800;
   font-size: clamp(24px, 4vw, 32px);
   letter-spacing: -0.5px;
 }
 
-.grid {
+.grid{
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   margin-top: 20px;
 }
 
-a.card {
+a.card{
   display: flex;
   flex-direction: column;
   text-decoration: none;
@@ -102,16 +120,16 @@ a.card {
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-a.card:hover {
+a.card:hover{
   transform: translateY(-3px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.08);
 }
 
-a.card.working {
-  border-style: dashed; 
+a.card.working{
+  border-style: dashed;
 }
 
-.badge-work {
+.badge-work{
   font-size: 0.75rem;
   background: #fef3c7;
   padding: 2px 8px;
@@ -132,7 +150,7 @@ a.card[data-color="cahier"]:hover      { border-top-color: var(--c-magenta); }
 a.card[data-color="patterns"]:hover    { border-top-color: var(--c-slate); }
 a.card[data-color="engrenages"]:hover  { border-top-color: var(--c-teal); }
 
-.card-title {
+.card-title{
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -142,19 +160,19 @@ a.card[data-color="engrenages"]:hover  { border-top-color: var(--c-teal); }
   font-size: 1.15rem;
 }
 
-.card-desc {
+.card-desc{
   margin: 0;
   color: var(--text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
-footer {
+footer{
   margin-top: 40px;
   padding-bottom: 20px;
 }
 
-.site-footer {
+.site-footer{
   margin-top: 40px;
   padding-bottom: 20px;
   text-align: center;
@@ -163,7 +181,7 @@ footer {
   line-height: 1.6;
 }
 
-.contact-btn {
+.contact-btn{
   color: #111827;
   text-decoration: underline;
   cursor: pointer;
@@ -171,7 +189,7 @@ footer {
 }
 
 /* --- DÉBUT MODAL ME CONTACTER UNIFIÉ --- */
-#contact-modal {
+#contact-modal{
   display: none;
   position: fixed;
   z-index: 1000;
@@ -183,7 +201,7 @@ footer {
   padding: 16px;
 }
 
-.modal-content {
+.modal-content{
   background: #ffffff;
   padding: 2.5rem;
   border-radius: 24px;
@@ -195,7 +213,7 @@ footer {
   box-sizing: border-box;
 }
 
-.close-modal {
+.close-modal{
   position: absolute;
   top: 16px;
   right: 20px;
@@ -206,18 +224,18 @@ footer {
   transition: color 0.2s;
 }
 
-.close-modal:hover {
+.close-modal:hover{
   color: #1e1b4b;
 }
 
-.modal-content h2 {
+.modal-content h2{
   margin: 0 0 12px;
   color: #1e1b4b;
   font-size: 1.5rem;
   font-weight: 800;
 }
 
-.modal-note {
+.modal-note{
   margin: 0 0 20px;
   color: #64748b;
   font-size: 0.95rem;
@@ -225,7 +243,7 @@ footer {
 }
 
 .modal-content input,
-.modal-content textarea {
+.modal-content textarea{
   width: 100%;
   padding: 14px;
   margin-bottom: 12px;
@@ -239,18 +257,18 @@ footer {
 }
 
 .modal-content input:focus,
-.modal-content textarea:focus {
+.modal-content textarea:focus{
   outline: none;
   border-color: #1e1b4b;
   background: #ffffff;
 }
 
-.modal-content textarea {
+.modal-content textarea{
   resize: vertical;
   min-height: 120px;
 }
 
-.btn-send {
+.btn-send{
   background: #1e1b4b;
   color: #ffffff;
   border: none;
@@ -264,26 +282,44 @@ footer {
   transition: transform 0.15s ease, filter 0.2s ease;
 }
 
-.btn-send:hover {
+.btn-send:hover{
   filter: brightness(1.2);
   transform: translateY(-2px);
 }
 /* --- FIN MODAL ME CONTACTER UNIFIÉ --- */
+
+@media (max-width: 640px){
+  .topbar{
+    min-height: 52px;
+    margin-bottom: 12px;
+  }
+
+  .back{
+    width: 48px;
+    height: 48px;
+  }
+
+  header h1{
+    padding-right: 56px;
+    padding-left: 56px;
+  }
+}
 </style>
 </head>
 <body>
 
 <main class="wrap">
-  
-  <div class="topbar">
-    <a class="back" href="../">
-      <span>←</span> Retour
-    </a>
-  </div>
 
-  <header>
-    <h1>Outils pédagogiques</h1>
-  </header>
+  <div class="topbar">
+    <a class="back" href="../" title="Accueil des outils" aria-label="Retour à l’accueil des outils">
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
+      </svg>
+    </a>
+    <header>
+      <h1>Outils pédagogiques</h1>
+    </header>
+  </div>
 
   <section class="grid">
 
@@ -324,7 +360,7 @@ footer {
 
     <a class="card" href="sheet_generator_schema_partie_tout.html" data-color="diagrammes">
       <div class="card-title"><span>🧩 Schémas partie-tout</span></div>
-      <p class="card-desc">Un parcours vers l'algèbre avec SPLAT! </p>
+      <p class="card-desc">Schémas, pourcentages, fractions… et un chemin vers l’algèbre avec SPLAT&nbsp;!</p>
     </a>
 
     <a class="card working" href="patterns.html" data-color="patterns">
@@ -336,9 +372,9 @@ footer {
     </a>
 
   </section>
-  
+
   <footer class="site-footer">
-    Site pédagogique — Bourgault Gwenaël<br>
+    Bourgault Gwenaël<br>
     <span class="contact-btn" onclick="document.getElementById('contact-modal').style.display='flex'">Me contacter</span>
   </footer>
 
@@ -356,7 +392,7 @@ footer {
       </form>
     </div>
   </div>
-  
+
 </main>
 
 </body>
