@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Générateur - Glisse Unité (PRO - Virgule Nette Parfaite)</title>
+<title>Générateur - Glisse Unité</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root { 
@@ -124,7 +124,6 @@
     border-right: var(--montant) solid var(--accent);
   }
 
-  /* LA VIRGULE SVG PURE SANS BORDURE BLANCHE ET SANS BUG DE ROGNAGE */
   .c-comma-container {
     position: absolute;
     top: 0; left: 50%;
@@ -168,13 +167,15 @@
       <option value="cross">L ↔ m³</option>
     </select>
     <label class="toggle-container" for="xlMode"><input type="checkbox" id="xlMode"> Version XL</label>
-    <button class="btn" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer le matériel</button>
   </div>
   <div class="instruction-box">
-    <h3>🛠️ Version PRO - Virgule Nette</h3>
+    <h3>🛠️ Instructions de fabrication</h3>
     <ol class="instruction-list">
-      <li><strong>Virgule :</strong> Bug de l'extrémité coupée réparé, l'arrondi est maintenant 100% lisse.</li>
-      <li><strong>Fabrication :</strong> Découpez sur les pointillés, évidez la fenêtre blanche du curseur et insérez la bande.</li>
+      <li><strong>Impression :</strong> Imprimez ce document sur une feuille A4 épaisse. (Cochez "Version XL" si vous souhaitez de plus grandes cases pour écrire).</li>
+      <li><strong>Le Tableau :</strong> Découpez en suivant le grand cadre en pointillés gris. Conservez bien la marge blanche pour écrire les grands nombres.</li>
+      <li><strong>Le Curseur :</strong> Découpez le contour bleu extérieur. Avec un cutter, <strong>évidez le grand rectangle blanc central</strong> (en gardant les fines bordures bleues intactes).</li>
+      <li><strong>Assemblage :</strong> Plastifiez les deux éléments séparément. Faites deux fentes verticales dans le plastique du curseur pour faire glisser la grande bande dedans.</li>
     </ol>
   </div>
 </div>
