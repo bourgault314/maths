@@ -76,11 +76,25 @@
     .b10{right:34%; bottom:26%; opacity:.45;}
 
     .wrap{max-width:900px; margin:0 auto; padding:24px 16px 48px;}
-    header{padding:8px 8px 16px; display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
-    h1{margin:0; font-size:clamp(24px,4.2vw,36px); letter-spacing:.2px;}
-    .small{margin:6px 0 0; color:var(--muted); font-size:14px;}
+
+    header{
+      position:relative;
+      margin-bottom:16px;
+      padding:8px 8px 16px;
+    }
+
+    .header-center{
+      text-align:center;
+      padding:0 72px;
+    }
+
+    h1{margin:0; font-size:clamp(26px,4.4vw,38px); letter-spacing:.2px;}
+    .small{margin:8px 0 0; color:var(--muted); font-size:14px;}
 
     .home{
+      position:absolute;
+      top:8px;
+      left:8px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -97,7 +111,12 @@
       line-height:1;
       user-select:none;
     }
-    .home:hover{border-color:rgba(47,107,255,.30);}
+    .home:hover{
+      transform:translateY(-3px);
+      border-color:rgba(47,107,255,.30);
+      color:var(--blue);
+      background:#fff;
+    }
 
     .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px; padding:0 8px;}
     .card{
@@ -191,7 +210,19 @@
 
     @media (max-width: 820px){
       .card{grid-column:span 12;}
-      header{padding-left:0; padding-right:0;}
+      header{
+        padding-left:0;
+        padding-right:0;
+        padding-top:72px;
+      }
+      .header-center{padding:0;}
+      .home{
+        left:50%;
+        transform:translateX(-50%);
+      }
+      .home:hover{
+        transform:translateX(-50%) translateY(-3px);
+      }
       .grid{padding-left:0; padding-right:0;}
       .b1{left:26px; top:175px;}
       .b2{left:120px; top:260px;}
@@ -230,15 +261,15 @@
 </div>
 <div class="wrap">
 <header>
-<div>
+<a class="home" href="./index.html" title="Outils"><svg aria-hidden="true" style="width:22px;height:22px;display:block" viewbox="0 0 24 24">
+<path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
+</svg></a>
+<div class="header-center">
 <h1>Schémas partie-tout</h1>
 <p class="small">
       Idée originale : <a class="credit" href="https://stevewyborney.com/" rel="noopener" target="_blank">SPLAT! par Steve Wyborney</a> — merci !
 </p>
 </div>
-<a class="home" href="./index.html" title="Outils"><svg aria-hidden="true" style="width:22px;height:22px;display:block" viewbox="0 0 24 24">
-<path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
-</svg></a>
 </header>
 <main class="grid">
 
