@@ -43,15 +43,15 @@ body{
 }
 
 .wrap{
-  width: min(1340px, 100%);
+  width: min(1000px, 100%);
 }
 
 .topbar{
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 68px;
-  margin-bottom: 18px;
+  min-height: 56px;
+  margin-bottom: 14px;
 }
 
 .back{
@@ -87,24 +87,23 @@ body{
 }
 
 header{
-  width: 100%;
-  padding-left: 78px;
   text-align: left;
+  margin-bottom: 6px;
+  padding-left: 72px;
 }
 
 header h1{
   margin: 0;
   font-weight: 800;
-  font-size: clamp(30px, 4.8vw, 42px);
-  line-height: 1.05;
-  letter-spacing: -0.7px;
+  font-size: clamp(27px, 4.5vw, 36px);
+  letter-spacing: -0.5px;
 }
 
 .grid{
   display: grid;
-  gap: 22px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 18px;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin-top: 20px;
 }
 
 a.card{
@@ -115,11 +114,10 @@ a.card{
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-top: 6px solid var(--border);
-  border-radius: 16px;
-  padding: 22px 26px;
+  border-radius: 12px;
+  padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  min-height: 160px;
 }
 
 a.card:hover{
@@ -154,29 +152,28 @@ a.card[data-color="engrenages"]:hover  { border-top-color: var(--c-teal); }
 
 .card-title{
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin: 0 0 12px;
-  font-weight: 800;
-  font-size: 1.05rem;
-  line-height: 1.2;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-weight: 700;
+  font-size: 1.15rem;
 }
 
 .card-desc{
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.98rem;
-  line-height: 1.45;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 footer{
-  margin-top: 52px;
+  margin-top: 40px;
   padding-bottom: 20px;
 }
 
 .site-footer{
-  margin-top: 52px;
+  margin-top: 40px;
   padding-bottom: 20px;
   text-align: center;
   color: var(--text-muted);
@@ -291,16 +288,10 @@ footer{
 }
 /* --- FIN MODAL ME CONTACTER UNIFIÉ --- */
 
-@media (max-width: 1100px){
-  .grid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 700px){
+@media (max-width: 640px){
   .topbar{
-    min-height: 56px;
-    margin-bottom: 14px;
+    min-height: 52px;
+    margin-bottom: 12px;
   }
 
   .back{
@@ -313,17 +304,7 @@ footer{
   }
 
   header h1{
-    font-size: clamp(28px, 7vw, 36px);
-  }
-
-  .grid{
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  a.card{
-    min-height: auto;
-    padding: 20px 20px;
+    font-size: clamp(25px, 6vw, 31px);
   }
 }
 </style>
