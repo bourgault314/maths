@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Générateur - Glisse Unité (PRO - Notice Parfaite)</title>
+<title>Générateur - Glisse Unité (Final - Millimétré)</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root { 
@@ -11,8 +11,6 @@
     --accent-dark: #0b67c6; 
     --bg: #ffffff; 
     --ink: #1b1b1b; 
-    
-    /* Variables Standard */
     --table-cell-min-height: 92px;
     --head-btn-min-height: 44px;
     --head-font-size: 1.25rem;
@@ -22,140 +20,79 @@
   
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; overflow-x: hidden; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Nunito', sans-serif; overflow-x: auto; }
   
-  /* --- UI ÉCRAN COMPACT --- */
-  .no-print { padding: 15px; background: white; border-bottom: 2px solid #ddd; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+  .no-print { padding: 15px 20px; background: white; border-bottom: 2px solid #ddd; display: flex; flex-direction: column; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
   .controls { display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap; }
   select { padding: 8px 12px; border-radius: 8px; border: 2px solid #ccc; font-family: 'Nunito'; font-weight: 700; font-size: 1rem; cursor: pointer; }
-  
   .toggle-container { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 2px solid #e2e8f0; cursor: pointer; font-weight: 900; font-size: 1rem; color: #334155; }
   .toggle-container input { width: 18px; height: 18px; cursor: pointer; accent-color: #10b981; }
-
-  .btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3); transition: transform 0.1s; }
+  .btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: transform 0.1s; }
   .btn:active { transform: translateY(2px); }
 
-  /* --- ZONE D'IMPRESSION --- */
-  .print-area { width: 29.7cm; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .instruction-box { background: #f8fafc; padding: 15px 25px; border-radius: 12px; border: 2px dashed #10b981; max-width: 1000px; width: 100%; box-sizing: border-box; }
+  .instruction-box h3 { margin: 0 0 10px 0; color: #047857; text-align: center; font-size: 1.1rem; text-transform: uppercase; }
   
-  .table-cut-area {
-    border: 2px dashed #9ca3af;
-    padding: 15px 1.8cm; 
-    border-radius: 12px;
-    position: relative;
-    background: #fff;
-    margin-top: 45px; 
-    transition: all 0.3s ease;
-  }
-  .table-cut-area::before {
-    content: "✂️ Découpez sur ces pointillés (laisse de la marge pour écrire des nombres)";
-    position: absolute; 
-    top: -32px; 
-    left: 1.8cm; 
-    color: #6b7280; font-weight: 700; font-size: 0.95rem;
-  }
+  .grid-instr { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; grid-auto-flow: column; gap: 12px 30px; }
+  .step { display: flex; gap: 10px; align-items: flex-start; line-height: 1.3; font-size: 0.95rem; color: #334155; }
+  .num { background: #10b981; color: white; border-radius: 50%; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; }
 
-  .board-columns {
-    display: grid;
-    grid-template-columns: repeat(var(--cols, 7), 1fr);
-    gap: 4px; 
-    width: 26cm; 
-    background: transparent;
-  }
+  /* GESTION DU SCROLL HORIZONTAL : Max-width 100% et Gap réduit */
+  .print-area { width: 100%; max-width: 100%; margin: 15px auto; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px; padding: 15px; box-sizing: border-box; }
+  
+  .table-cut-area { border: 2px dashed #9ca3af; padding: 15px 1.8cm; border-radius: 12px; position: relative; background: #fff; flex-shrink: 0; }
+  .table-cut-area::before { content: "✂️ Découpez sur ces pointillés gris (laisse de la marge pour écrire)"; position: absolute; top: -28px; left: 1.8cm; color: #6b7280; font-weight: 700; font-size: 0.95rem; }
 
-  .family-col { display: flex; flex-direction: column; gap: 6px; }
-  .head-group { display: grid; gap: 4px; }
-
-  .unitBtn {
-    background: color-mix(in srgb, var(--accent) 12%, #fff);
-    border: 2px solid var(--accent);
-    border-radius: 8px;
-    font-size: var(--head-font-size); 
-    display: flex; align-items: center; justify-content: center;
-    min-height: var(--head-btn-min-height); 
-  }
-  .unitBtn span { font-weight: 700; color: var(--ink); }
+  /* --- LE TABLEAU --- */
+  .board-columns { display: grid; grid-template-columns: repeat(var(--cols, 7), 1fr); gap: 4px; width: 26cm; background: transparent; }
+  .family-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .head-group { display: grid; gap: 4px; min-width: 0; }
+  
+  .unitBtn { background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent); border-radius: 8px; font-size: var(--head-font-size); display: flex; align-items: center; justify-content: center; min-height: var(--head-btn-min-height); width: 100%; box-sizing: border-box; }
+  .unitBtn span { font-weight: 700; color: var(--ink); text-align: center; }
   .unitBtn.empty-unit { background: transparent; border-color: #cbd5e1; }
-
-  .cell { position: relative; background: transparent; display: flex; align-items: stretch; justify-content: center; }
-  .slots { display: grid; gap: 4px; width: 100%; align-items: stretch; }
-  .digit { border: 2px solid var(--accent); border-radius: 8px; background: #fff; min-height: var(--table-cell-min-height); }
+  
+  .cell { position: relative; background: transparent; display: flex; align-items: stretch; justify-content: center; min-width: 0; }
+  .slots { display: grid; gap: 4px; width: 100%; align-items: stretch; min-width: 0; }
+  .digit { border: 2px solid var(--accent); border-radius: 8px; background: #fff; min-height: var(--table-cell-min-height); min-width: 0; }
 
   /* --- LE CURSEUR --- */
-  .curseur-wrapper {
-    width: var(--c-total-height); 
-    height: 6cm; 
-    display: flex; align-items: center; justify-content: center;
-    margin-top: 0; 
-  }
-
+  .curseur-wrapper { width: var(--c-total-height); height: 6cm; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .curseur { 
     --gap-main: calc((var(--cols) - 1) * 4px);
     --col-width: calc((26cm - var(--gap-main)) / var(--cols));
     --gap-sub: calc((var(--slots) - 1) * 4px);
     --sub-col-width: calc((var(--col-width) - var(--gap-sub)) / var(--slots));
     --montant: 3mm; 
-    box-sizing: border-box; 
-    width: calc(var(--sub-col-width) + (var(--montant) * 2)); 
-    height: var(--c-total-height); 
-    border-radius: 8px; 
-    display: flex; flex-direction: column; align-items: center;
-    border: 2px solid var(--accent-dark);
-    overflow: hidden;
-    transform: rotate(-90deg); 
+    box-sizing: border-box; width: calc(var(--sub-col-width) + (var(--montant) * 2)); height: var(--c-total-height); 
+    border-radius: 8px; display: flex; flex-direction: column; align-items: center; border: 2px solid var(--accent-dark); overflow: hidden; transform: rotate(-90deg); position: relative;
+    transition: height 0.3s, width 0.3s;
   }
 
-  .c-top, .c-bottom { 
-    flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; 
-    text-align: center; font-weight: 900; color: white; line-height: 1.1;
-    background: var(--accent); position: relative; box-sizing: border-box; padding: 2px;
-  }
-
+  .c-top, .c-bottom { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; font-weight: 900; color: white; line-height: 1.1; background: var(--accent); position: relative; box-sizing: border-box; padding: 5px; }
   .c-top { justify-content: flex-end; padding-bottom: 12px; }
   .c-bottom { justify-content: flex-start; padding-top: 12px; }
-
   .arrow-down { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid white; margin-top: 6px; }
   .arrow-up { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 10px solid white; margin-bottom: 6px; }
 
-  .c-middle { 
-    height: var(--c-window-height); flex: none; width: 100%; background: #fff; 
-    position: relative; box-sizing: border-box;
-    border-left: var(--montant) solid var(--accent);
-    border-right: var(--montant) solid var(--accent);
-  }
-
-  /* LA VIRGULE SVG PURE SANS BORDURE BLANCHE ET SANS BUG DE ROGNAGE */
-  .c-comma-container {
-    position: absolute;
-    top: 0; left: 50%;
-    width: var(--sub-col-width);
-    transform: translateX(-50%);
-    pointer-events: none;
-    z-index: 10;
-  }
+  /* Fenêtre centrale */
+  .c-middle { height: var(--c-window-height); flex: none; width: 100%; background: #fff; position: relative; box-sizing: border-box; border-left: var(--montant) solid var(--accent); border-right: var(--montant) solid var(--accent); transition: height 0.3s; }
   
-  .c-comma-svg {
-    position: absolute;
-    right: 2px;
-  }
+  .c-comma-container { position: absolute; top: 0; left: 50%; width: var(--sub-col-width); transform: translateX(-50%); pointer-events: none; z-index: 10; }
+  .c-comma-svg { position: absolute; right: 2px; filter: drop-shadow(0px 0px 1px white); }
 
   .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; }
-  .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
-  .sub-lab { white-space: nowrap; font-weight: 900; color: #1e293b; line-height: 1; }
-
-  /* INSTRUCTIONS */
-  .instruction-box { background: #f8fafc; padding: 15px 25px; border-radius: 12px; border: 2px dashed #10b981; max-width: 800px; width: 100%; box-sizing: border-box; }
-  .instruction-box h3 { margin: 0 0 5px 0; color: #047857; text-align: center; font-size: 1.1rem; }
-  .instruction-list { padding-left: 20px; margin: 0; line-height: 1.5; font-size: 1.05rem; color: #334155; }
-  .instruction-list li { margin-bottom: 6px; }
+  /* Ajout d'une limite pour que les textes "daL" ne forcent jamais l'élargissement de la colonne */
+  .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; min-width: 0; overflow: visible; }
+  .sub-lab { white-space: nowrap; font-weight: 900; color: #1e293b; line-height: 1; font-size: 0.85rem; letter-spacing: -0.5px; }
 
   @media print {
     .no-print { display: none !important; }
     @page { size: A4 landscape; margin: 0; } 
-    html, body { background: #ffffff !important; width: 29.7cm; height: 21cm; } 
-    .print-area { width: 29.7cm; margin: 0 auto; align-items: center; justify-content: center; }
-    .table-cut-area { margin-left: auto; margin-right: auto; }
-    .curseur-wrapper { margin-top: 1.8cm; margin-left: auto; margin-right: auto; }
+    html, body { background: #ffffff !important; width: 29.7cm; height: 21cm; overflow: hidden; margin: 0; padding: 0; } 
+    .print-area { display: flex; flex-direction: column; width: 29.7cm; height: 21cm; margin: 0 auto; gap: 30px; padding: 10px 0; justify-content: center; align-items: center; }
+    .table-cut-area { margin-top: 0; }
+    .curseur-wrapper { margin-top: 0; }
   }
 </style>
 </head>
@@ -163,7 +100,6 @@
 
 <div class="no-print">
   <div class="controls">
-    <label for="kind"><strong>Grandeur :</strong></label>
     <select id="kind">
       <option value="length">Longueur (m)</option>
       <option value="mass">Masse (g)</option>
@@ -177,13 +113,13 @@
     <button class="btn" onclick="window.print()">🖨️ Imprimer</button>
   </div>
   <div class="instruction-box">
-    <h3>🛠️ Instructions de fabrication (Méthode Robuste)</h3>
-    <ol class="instruction-list">
-      <li><strong>Impression & Plastification :</strong> Imprimez le document, puis <strong>plastifiez directement le curseur ENTIER</strong> (ne découpez pas le fond blanc central, il sert de support rigide !).</li>
-      <li><strong>Le Tableau :</strong> Découpez la bande en suivant le grand cadre pointillé gris et plastifiez-la.</li>
-      <li><strong>Les Fentes :</strong> Avec un cutter, faites une fente verticale à gauche du rectangle blanc. Faites la même chose à droite, <strong>en contournant soigneusement la virgule au cutter</strong> pour créer une petite encoche.</li>
-      <li><strong>Assemblage :</strong> Glissez la bande dans le curseur. Elle doit passer <strong>devant</strong> le fond blanc rigide, mais <strong>sous</strong> la virgule !</li>
-    </ol>
+    <h3>Instructions de fabrication</h3>
+    <div class="grid-instr">
+      <div class="step"><div class="num">1</div><span><strong>Le Tableau :</strong> Découpez sur les pointillés gris et plastifiez la bande.</span></div>
+      <div class="step"><div class="num">2</div><span><strong>Le Curseur :</strong> Découpez le contour bleu et plastifiez-le <strong>en entier</strong> (gardez le fond blanc).</span></div>
+      <div class="step"><div class="num">3</div><span><strong>Cutter :</strong> Incisez sur les <strong>pointillés noirs</strong> (ou à ras du bord bleu pour les m³). À droite, contournez la virgule.</span></div>
+      <div class="step"><div class="num">4</div><span><strong>Montage :</strong> La bande passe <strong>devant</strong> le fond blanc rigide, mais <strong>sous</strong> la virgule.</span></div>
+    </div>
   </div>
 </div>
 
@@ -220,18 +156,30 @@ function buildPaperTool() {
   document.documentElement.style.setProperty('--table-cell-min-height', isXL ? '120px' : '92px');
   document.documentElement.style.setProperty('--head-btn-min-height', isXL ? '60px' : '44px');
   document.documentElement.style.setProperty('--head-font-size', isXL ? '1.4rem' : '1.25rem');
-  document.documentElement.style.setProperty('--c-total-height', isXL ? '18cm' : '14.5cm');
-  document.documentElement.style.setProperty('--c-window-height', isXL ? '5.8cm' : '4.6cm');
+
+  // CALCUL MILLIMÉTRÉ (28px = 0.74cm de plus pour laisser la place aux sous-unités)
+  let baseWinH = isXL ? 5.8 : 4.6;
+  let baseTotH = isXL ? 18.0 : 14.5;
+  
+  if (kind === 'cross' || kind === 'area') {
+      baseWinH += 0.74; 
+      baseTotH += 0.74; 
+  }
+  document.documentElement.style.setProperty('--c-window-height', baseWinH + 'cm');
+  document.documentElement.style.setProperty('--c-total-height', baseTotH + 'cm');
 
   let fontSize = isXL ? (s.slots === 3 ? "0.95rem" : "1.3rem") : (s.slots === 3 ? "0.85rem" : "1.1rem");
-  
   let commaWidth = isXL ? (s.slots === 3 ? "2rem" : "2.8rem") : (s.slots === 3 ? "1.5rem" : "2.2rem");
   let commaTop = isXL ? (s.slots === 3 ? "-35px" : "-45px") : (s.slots === 3 ? "-25px" : "-35px");
 
   let colsHTML = '';
   s.units.forEach((u, ci) => {
+    // EN-TÊTE AVEC LES CASES TRANSPARENTES (Structure parfaite)
     let head = `<div class="head-group" style="grid-template-columns:repeat(${s.slots},1fr)">`;
-    for(let i=0; i<s.slots; i++) head += `<div class="unitBtn ${i<s.slots-1?'empty-unit':''}"><span>${i===s.slots-1?u:''}</span></div>`;
+    for(let i=0; i<s.slots; i++) {
+        let isEmpty = (i < s.slots - 1) || (u === '-');
+        head += `<div class="unitBtn ${isEmpty ? 'empty-unit' : ''}"><span>${isEmpty ? '' : u}</span></div>`;
+    }
     head += '</div>';
     
     let sub = '';
@@ -248,20 +196,40 @@ function buildPaperTool() {
     colsHTML += `<div class="family-col">${head}${sub}${digits}</div>`;
   });
 
+  // GESTION DES POINTILLÉS : Actifs uniquement s'il y a assez de place (1 ou 2 slots)
+  let guidesHTML = '';
+  if (s.slots < 3) {
+    guidesHTML = `
+      <svg style="position:absolute; left:0; top:0; width:10px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 10 100" preserveAspectRatio="none">
+        <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke" opacity="0.6"/>
+      </svg>
+      <svg style="position:absolute; right:0; top:0; width:40px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 40 100" preserveAspectRatio="none">
+        <path d="M 40,0 L 40,40 Q 40,65 15,80 L 15,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke" opacity="0.6"/>
+      </svg>
+    `;
+  }
+
   printArea.innerHTML = `
     <div class="table-cut-area"><div class="board-columns">${colsHTML}</div></div>
-    <div class="curseur-wrapper"><div class="curseur">
-      <div class="c-top" style="font-size:${fontSize}">L'unité de<br>mesure<div class="arrow-down"></div></div>
-      <div class="c-middle"></div>
-      <div class="c-bottom" style="font-size:${fontSize}">
-        <div class="c-comma-container">
-          <svg class="c-comma-svg" style="width: ${commaWidth}; top: ${commaTop};" viewBox="0 0 40 60">
-            <path d="M 28,12 Q 28,32 12,48" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" />
-          </svg>
+    <div class="curseur-wrapper">
+      <div class="curseur">
+        
+        <div class="c-top" style="font-size:${fontSize}">L'unité de<br>mesure<div class="arrow-down"></div></div>
+        
+        <div class="c-middle">
+          ${guidesHTML}
         </div>
-        <div class="arrow-up"></div>Le chiffre des<br>unités
+
+        <div class="c-bottom" style="font-size:${fontSize}">
+          <div class="c-comma-container">
+            <svg class="c-comma-svg" style="width: ${commaWidth}; top: ${commaTop};" viewBox="0 0 40 60">
+              <path d="M 28,12 Q 28,32 12,48" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="arrow-up"></div>Le chiffre des<br>unités
+        </div>
       </div>
-    </div></div>`;
+    </div>`;
 }
 
 kindSel.addEventListener('change', buildPaperTool);
