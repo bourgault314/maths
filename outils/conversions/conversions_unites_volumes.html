@@ -3,68 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier : Unités de Volume 3D - Centrage Parfait</title>
+    <title>Atelier : Unités de Volume 3D - Projection Finale</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: sans-serif; }
         
-        #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
+        #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
         
-        /* L'ASTUCE EST ICI : Par défaut le canvas prend tout l'écran... */
-        #canvas-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+        /* Conteneur 3D ajusté pour le panneau légèrement plus large */
+        #canvas-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; }
         
-        /* ... Mais sur un écran d'ordinateur ou projecteur, on laisse 420px vides à gauche pour le menu ! */
         @media (min-width: 800px) {
-            #canvas-container { left: 420px; }
+            #canvas-container { left: 480px; } /* Décalé à 480px pour laisser place au menu de 440px */
+        }
+
+        /* Le TITRE FIXE en haut de l'écran */
+        #volume-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #1e293b;
+            font-size: 26px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            pointer-events: none;
+            z-index: 50;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.9), 0 0 5px rgba(255, 255, 255, 1);
+        }
+
+        /* L'étiquette flottante de l'arête */
+        #edge-label {
+            transform: translate(-50%, calc(-100% - 8px));
+            pointer-events: none;
+            will-change: transform, left, top;
+            transition: opacity 0.15s ease-in-out;
+        }
+        
+        #edge-label::after {
+            content: '';
+            position: absolute;
+            top: 100%; left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
         }
     </style>
 </head>
 <body>
 
     <div id="ui-layer" class="pointer-events-none">
-        <div class="bg-white/95 p-5 rounded-xl shadow-xl border border-slate-200 pointer-events-auto flex flex-col w-[380px] max-w-[calc(100vw-40px)]">
+        <div class="bg-white/95 p-6 rounded-xl shadow-xl border border-slate-200 pointer-events-auto flex flex-col w-[440px] max-w-[calc(100vw-40px)]">
             
-            <div class="flex gap-2 mb-3">
-                <button onclick="changeUnit('m')" id="btn-u-m" class="unit-btn flex-1 py-1.5 rounded bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">m³</button>
-                <button onclick="changeUnit('dm')" id="btn-u-dm" class="unit-btn flex-1 py-1.5 rounded bg-blue-500 text-white font-bold shadow-sm transition-colors">dm³</button>
-                <button onclick="changeUnit('cm')" id="btn-u-cm" class="unit-btn flex-1 py-1.5 rounded bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors">cm³</button>
+            <div class="flex gap-2 mb-4">
+                <button onclick="changeUnit('m')" id="btn-u-m" class="unit-btn flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors text-lg">m³</button>
+                <button onclick="changeUnit('dm')" id="btn-u-dm" class="unit-btn flex-1 py-2 rounded-lg bg-blue-500 text-white font-bold shadow-sm transition-colors text-lg">dm³</button>
+                <button onclick="changeUnit('cm')" id="btn-u-cm" class="unit-btn flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors text-lg">cm³</button>
             </div>
 
-            <div class="mb-3 border-b border-slate-100 pb-4 min-h-[85px]">
-                <div class="flex justify-between items-start mb-1">
-                    <h1 class="text-2xl font-black text-slate-800" id="main-equation">
-                        1 dm³ <span class="text-slate-300">= ?</span>
-                    </h1>
-                    <button id="btn-reveal" class="shrink-0 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 py-1.5 px-3 rounded-full font-bold transition-colors ml-2 mt-1">
+            <div class="mb-4 border-b border-slate-100 pb-5 min-h-[110px] flex flex-col justify-between">
+                <h1 class="text-4xl font-black text-slate-800 tracking-tight whitespace-nowrap" id="main-equation">
+                    1 dm³ <span class="text-slate-300">= ?</span>
+                </h1>
+                
+                <div class="flex justify-between items-end mt-2">
+                    <p id="sub-text" class="text-base text-slate-400 font-medium italic leading-tight">Que représente un petit cube ?</p>
+                    
+                    <button id="btn-reveal" class="shrink-0 w-[110px] text-center text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 py-1.5 px-0 rounded-full font-bold transition-colors ml-2 shadow-sm">
                         👀 Réponse
                     </button>
                 </div>
-                
-                <p id="sub-text" class="text-sm text-slate-400 font-medium italic">Que représente un petit cube ?</p>
             </div>
             
-            <div class="bg-slate-50 p-2 rounded text-xs font-semibold text-slate-600 flex flex-col gap-1 border border-slate-100 mb-4">
-                <div>🖱️ <span class="text-slate-400">Clic + Glisser :</span> Tourner la vue</div>
-                <div>↕️ <span class="text-slate-400">Molette souris :</span> Zoomer / Dézoomer</div>
+            <div class="bg-slate-50 p-3 rounded-lg text-sm font-semibold text-slate-600 flex flex-col gap-1.5 border border-slate-100 mb-4">
+                <div class="flex items-center gap-2"><span>🖱️</span> <span class="text-slate-400">Clic + Glisser :</span> Tourner la vue</div>
+                <div class="flex items-center gap-2"><span>↕️</span> <span class="text-slate-400">Molette souris :</span> Zoomer / Dézoomer</div>
+            </div>
+
+            <div class="flex justify-end mb-3">
+                <button id="btn-edge-toggle" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1.5 px-3 rounded border border-slate-200 transition-colors">
+                    📏 Masquer l'arête
+                </button>
             </div>
             
-            <div class="flex flex-col gap-2">
-                <button id="btn-plaques" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm flex justify-between items-center">
-                    <span>1. Écarter les plaques</span> <span class="text-xs bg-white/20 px-1.5 py-0.5 rounded">x10</span>
+            <div class="flex flex-col gap-2.5">
+                <button id="btn-plaques" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-xl transition-colors shadow-sm flex justify-between items-center text-lg">
+                    <span>1. Écarter les plaques</span> <span class="text-sm bg-white/20 px-2 py-1 rounded">x10</span>
                 </button>
                 
-                <button id="btn-barres" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm flex justify-between items-center">
-                    <span>2. Écarter les barres</span> <span class="text-xs bg-white/20 px-1.5 py-0.5 rounded">x100</span>
+                <button id="btn-barres" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-xl transition-colors shadow-sm flex justify-between items-center text-lg">
+                    <span>2. Écarter les barres</span> <span class="text-sm bg-white/20 px-2 py-1 rounded">x100</span>
                 </button>
 
-                <button id="btn-cubes" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm flex justify-between items-center">
-                    <span>3. Écarter les unités</span> <span class="text-xs bg-white/20 px-1.5 py-0.5 rounded">x1000</span>
+                <button id="btn-cubes" class="w-full text-left bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-xl transition-colors shadow-sm flex justify-between items-center text-lg">
+                    <span>3. Écarter les unités</span> <span class="text-sm bg-white/20 px-2 py-1 rounded">x1000</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="canvas-container"></div>
+    <div id="canvas-container">
+        <div id="volume-title">
+            Un décimètre cube
+        </div>
+        
+        <div id="edge-label" class="absolute bg-white px-3 py-1.5 text-blue-600 font-black text-[13px] uppercase tracking-wide rounded-md shadow-lg border border-slate-200 z-20">
+            Arête = 1 cm
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -74,19 +123,14 @@
         // 1. SCÈNE, CAMÉRA, RENDU
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        
-        // On rend le fond de la scène transparent pour qu'il fusionne avec le body
         scene.background = null; 
 
-        // On utilise la largeur et hauteur DU CONTENEUR (et non plus de la fenêtre entière)
         let w = container.clientWidth;
         let h = container.clientHeight;
 
         const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-        // On recule un tout petit peu la caméra (z:34) car notre zone de dessin est un peu plus étroite
-        camera.position.set(28, 20, 34); 
+        camera.position.set(24, 18, 28); 
 
-        // Alpha: true permet d'avoir le fond transparent
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(w, h);
         renderer.shadowMap.enabled = true; 
@@ -104,13 +148,20 @@
         dirLight.position.set(20, 40, 20);
         scene.add(dirLight);
 
-        // 2. LE PAVAGE 
+        // 2. LE PAVAGE ET LE MARQUEUR D'ARÊTE
         const unitGeometry = new THREE.BoxGeometry(1, 1, 1);
         const unitEdges = new THREE.EdgesGeometry(unitGeometry);
         const material = new THREE.MeshLambertMaterial({ color: 0x60a5fa }); 
         const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x1e3a8a, linewidth: 1, transparent: true, opacity: 0.5 });
 
         const mainGroup = new THREE.Group();
+        
+        const labelMarker = new THREE.Object3D();
+        labelMarker.position.set(0, 0.5, 0.5); 
+        const dotGeo = new THREE.SphereGeometry(0.08, 8, 8);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0x2563eb });
+        const dotMesh = new THREE.Mesh(dotGeo, dotMat);
+        labelMarker.add(dotMesh); 
 
         for (let x = 0; x < 10; x++) {
             const plaqueGroup = new THREE.Group();
@@ -128,6 +179,10 @@
                     cube.userData.baseZ = z - 4.5;
                     cube.position.set(0, 0, cube.userData.baseZ); 
                     barreGroup.add(cube);
+
+                    if (x === 0 && y === 9 && z === 9) {
+                        cube.add(labelMarker);
+                    }
                 }
                 barreGroup.position.set(0, barreGroup.userData.baseY, 0);
                 plaqueGroup.add(barreGroup);
@@ -137,7 +192,7 @@
         }
         scene.add(mainGroup);
 
-        // 3. LOGIQUE D'ANIMATION
+        // 3. LOGIQUE D'ANIMATION DES BOUTONS
         let isPlaquesEclatees = false, isBarresEclatees = false, isCubesEclates = false;
         const btnPlaques = document.getElementById('btn-plaques');
         const btnBarres = document.getElementById('btn-barres');
@@ -185,35 +240,58 @@
 
         // 4. LOGIQUE D'AFFICHAGE ET GESTION DES UNITÉS
         const unitData = {
-            'm': { left: '1 m³', right: '1000 dm³', subRight: '1 dm³' },
-            'dm': { left: '1 dm³', right: '1000 cm³', subRight: '1 cm³' },
-            'cm': { left: '1 cm³', right: '1000 mm³', subRight: '1 mm³' }
+            'm': { left: '1 m³', right: '1000 dm³', subRight: '1 dm³', edgeLabel: 'Arête = 1 dm', fullVolume: 'Un mètre cube' },
+            'dm': { left: '1 dm³', right: '1000 cm³', subRight: '1 cm³', edgeLabel: 'Arête = 1 cm', fullVolume: 'Un décimètre cube' },
+            'cm': { left: '1 cm³', right: '1000 mm³', subRight: '1 mm³', edgeLabel: 'Arête = 1 mm', fullVolume: 'Un centimètre cube' }
         };
 
         let currentUnit = 'dm';
         let isRevealed = false;
+        let isEdgeVisible = true; 
         
         const btnReveal = document.getElementById('btn-reveal');
+        const btnEdgeToggle = document.getElementById('btn-edge-toggle');
         const eqEl = document.getElementById('main-equation');
         const subEl = document.getElementById('sub-text');
+        const edgeLabelEl = document.getElementById('edge-label');
+        const volumeTitleEl = document.getElementById('volume-title');
+
+        btnEdgeToggle.addEventListener('click', () => {
+            isEdgeVisible = !isEdgeVisible;
+            dotMesh.visible = isEdgeVisible; 
+            
+            if (isEdgeVisible) {
+                btnEdgeToggle.innerText = "📏 Masquer l'arête";
+                btnEdgeToggle.classList.replace('bg-blue-100', 'bg-slate-100');
+                btnEdgeToggle.classList.replace('text-blue-700', 'text-slate-600');
+            } else {
+                btnEdgeToggle.innerText = "📏 Afficher l'arête";
+                btnEdgeToggle.classList.replace('bg-slate-100', 'bg-blue-100');
+                btnEdgeToggle.classList.replace('text-slate-600', 'text-blue-700');
+            }
+        });
 
         function updateUI() {
             const data = unitData[currentUnit];
             
+            edgeLabelEl.innerText = data.edgeLabel;
+            volumeTitleEl.innerText = data.fullVolume;
+
             if (isRevealed) {
                 eqEl.innerHTML = `${data.left} <span class="text-blue-600">= ${data.right}</span>`;
                 subEl.innerHTML = `1 petit cube = <strong class="text-blue-600">${data.subRight}</strong>`;
-                subEl.className = "text-sm text-slate-600 font-medium";
+                subEl.className = "text-base text-slate-600 font-bold leading-tight";
                 
                 btnReveal.innerHTML = "🙈 Cacher";
-                btnReveal.className = "shrink-0 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 py-1.5 px-3 rounded-full font-bold transition-colors ml-2 mt-1";
+                // L'ajout critique de la largeur fixe w-[110px] et text-center :
+                btnReveal.className = "shrink-0 w-[110px] text-center text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 py-1.5 px-0 rounded-full font-bold transition-colors ml-2 shadow-sm";
             } else {
                 eqEl.innerHTML = `${data.left} <span class="text-slate-300">= ?</span>`;
                 subEl.innerHTML = "Que représente un petit cube ?";
-                subEl.className = "text-sm text-slate-400 font-medium italic";
+                subEl.className = "text-base text-slate-400 font-medium italic leading-tight";
                 
                 btnReveal.innerHTML = "👀 Réponse";
-                btnReveal.className = "shrink-0 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 py-1.5 px-3 rounded-full font-bold transition-colors ml-2 mt-1";
+                btnReveal.className = "shrink-0 w-[110px] text-center text-sm bg-slate-200 hover:bg-slate-300 text-slate-800 py-1.5 px-0 rounded-full font-bold transition-colors ml-2 shadow-sm";
             }
         }
 
@@ -239,15 +317,34 @@
 
         updateUI();
 
+        // 5. FONCTION POUR METTRE À JOUR LA POSITION DE L'ÉTIQUETTE
+        const vectorEdge = new THREE.Vector3();
+
+        function updateFloatingLabels() {
+            labelMarker.getWorldPosition(vectorEdge);
+            vectorEdge.project(camera);
+
+            if (!isEdgeVisible || vectorEdge.z > 1) {
+                edgeLabelEl.style.opacity = 0;
+            } else {
+                const x = (vectorEdge.x * 0.5 + 0.5) * w;
+                const y = (vectorEdge.y * -0.5 + 0.5) * h;
+                edgeLabelEl.style.left = `${x}px`;
+                edgeLabelEl.style.top = `${y}px`;
+                edgeLabelEl.style.opacity = 1;
+            }
+        }
+
         // BOUCLE D'ANIMATION
         function animate() {
             requestAnimationFrame(animate);
             controls.update(); 
+            updateFloatingLabels(); 
             renderer.render(scene, camera);
         }
         animate();
 
-        // GESTION DU REDIMENSIONNEMENT ADAPTÉE
+        // GESTION DU REDIMENSIONNEMENT
         window.addEventListener('resize', () => {
             w = container.clientWidth;
             h = container.clientHeight;
