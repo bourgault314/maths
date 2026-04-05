@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Générateur - Glisse Unité</title>
+<title>Générateur - Glisse Unité (PRO - Notice Parfaite)</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root { 
@@ -124,6 +124,7 @@
     border-right: var(--montant) solid var(--accent);
   }
 
+  /* LA VIRGULE SVG PURE SANS BORDURE BLANCHE ET SANS BUG DE ROGNAGE */
   .c-comma-container {
     position: absolute;
     top: 0; left: 50%;
@@ -141,6 +142,12 @@
   .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; }
   .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
   .sub-lab { white-space: nowrap; font-weight: 900; color: #1e293b; line-height: 1; }
+
+  /* INSTRUCTIONS */
+  .instruction-box { background: #f8fafc; padding: 15px 25px; border-radius: 12px; border: 2px dashed #10b981; max-width: 800px; width: 100%; box-sizing: border-box; }
+  .instruction-box h3 { margin: 0 0 5px 0; color: #047857; text-align: center; font-size: 1.1rem; }
+  .instruction-list { padding-left: 20px; margin: 0; line-height: 1.5; font-size: 1.05rem; color: #334155; }
+  .instruction-list li { margin-bottom: 6px; }
 
   @media print {
     .no-print { display: none !important; }
@@ -167,15 +174,15 @@
       <option value="cross">L ↔ m³</option>
     </select>
     <label class="toggle-container" for="xlMode"><input type="checkbox" id="xlMode"> Version XL</label>
-    <button class="btn" onclick="window.print()">🖨️ Imprimer le matériel</button>
+    <button class="btn" onclick="window.print()">🖨️ Imprimer</button>
   </div>
   <div class="instruction-box">
-    <h3>🛠️ Instructions de fabrication</h3>
+    <h3>🛠️ Instructions de fabrication (Méthode Robuste)</h3>
     <ol class="instruction-list">
-      <li><strong>Impression :</strong> Imprimez ce document sur une feuille A4 épaisse. (Cochez "Version XL" si vous souhaitez de plus grandes cases pour écrire).</li>
-      <li><strong>Le Tableau :</strong> Découpez en suivant le grand cadre en pointillés gris. Conservez bien la marge blanche pour écrire les grands nombres.</li>
-      <li><strong>Le Curseur :</strong> Découpez le contour bleu extérieur. Avec un cutter, <strong>évidez le grand rectangle blanc central</strong> (en gardant les fines bordures bleues intactes).</li>
-      <li><strong>Assemblage :</strong> Plastifiez les deux éléments séparément. Faites deux fentes verticales dans le plastique du curseur pour faire glisser la grande bande dedans.</li>
+      <li><strong>Impression & Plastification :</strong> Imprimez le document, puis <strong>plastifiez directement le curseur ENTIER</strong> (ne découpez pas le fond blanc central, il sert de support rigide !).</li>
+      <li><strong>Le Tableau :</strong> Découpez la bande en suivant le grand cadre pointillé gris et plastifiez-la.</li>
+      <li><strong>Les Fentes :</strong> Avec un cutter, faites une fente verticale à gauche du rectangle blanc. Faites la même chose à droite, <strong>en contournant soigneusement la virgule au cutter</strong> pour créer une petite encoche.</li>
+      <li><strong>Assemblage :</strong> Glissez la bande dans le curseur. Elle doit passer <strong>devant</strong> le fond blanc rigide, mais <strong>sous</strong> la virgule !</li>
     </ol>
   </div>
 </div>
