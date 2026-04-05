@@ -60,18 +60,49 @@
 
     /* --- HEADER --- */
     .wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
-    header { display: flex; justify-content: space-between; gap: 15px; align-items: flex-start; margin-bottom: 40px; }
-    h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); font-weight: 800; letter-spacing: -0.5px; }
-    .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 16px; font-weight: 500; }
+
+    header {
+      position: relative;
+      margin-bottom: 48px;
+      padding-top: 4px;
+    }
+
+    .header-center {
+      text-align: center;
+      padding: 0 72px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 500;
+    }
 
     .btn-back {
+      position: absolute;
+      top: 0;
+      left: 0;
       display: inline-flex; align-items: center; justify-content: center;
       width: 48px; height: 48px; border-radius: 50%;
       border: 1px solid var(--line); background: rgba(255,255,255,0.7);
       backdrop-filter: blur(10px); color: var(--ink); text-decoration: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s;
     }
-    .btn-back:hover { transform: translateY(-3px); border-color: var(--c-blue); color: var(--c-blue); background: white; }
+
+    .btn-back:hover {
+      transform: translateY(-3px);
+      border-color: var(--c-blue);
+      color: var(--c-blue);
+      background: white;
+    }
 
     /* --- GRILLE DE CARTES --- */
     .grid { 
@@ -97,11 +128,16 @@
     }
     
     .card::before {
-      content: ''; position: absolute; inset: 0;
-      border-radius: var(--radius); padding: 2px;
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      padding: 2px;
       background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
     }
 
     .card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.12); }
@@ -112,6 +148,7 @@
       display: grid; place-items: center; flex: 0 0 auto;
       border: 1px solid rgba(0,0,0,0.05);
     }
+
     .icon svg { width: 28px; height: 28px; }
 
     .card-blue:hover { border-color: rgba(59, 130, 246, 0.3); }
@@ -139,6 +176,24 @@
     .card h2 { margin: 0 0 6px 0; font-size: 18px; font-weight: 800; line-height: 1.2; }
     .card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; font-weight: 500; }
 
+    @media (max-width: 560px) {
+      header {
+        padding-top: 62px;
+      }
+
+      .header-center {
+        padding: 0;
+      }
+
+      .btn-back {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .btn-back:hover {
+        transform: translateX(-50%) translateY(-3px);
+      }
+    }
 </style>
 </head>
 <body>
@@ -151,15 +206,16 @@
 
 <div class="wrap">
   <header>
-    <div>
-      <h1>Conversions & Grandeurs</h1>
-      <p class="subtitle">Ateliers, affichages et outils de manipulation</p>
-    </div>
     <a class="btn-back" href="../index.html" title="Retour aux outils">
       <svg aria-hidden="true" style="width:22px;height:22px;display:block" viewBox="0 0 24 24">
         <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
       </svg>
     </a>
+
+    <div class="header-center">
+      <h1>Conversions &amp; Grandeurs</h1>
+      <p class="subtitle">Ateliers, affichages et outils de manipulation</p>
+    </div>
   </header>
 
   <main class="grid">
@@ -173,7 +229,7 @@
         </svg>
       </div>
       <div class="txt">
-        <h2>Générateur & Exerciseur</h2>
+        <h2>Générateur &amp; Exerciseur</h2>
         <p>Diaporamas pour TBI et création de fiches d'exercices PDF.</p>
       </div>
     </a>
