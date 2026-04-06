@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Générateur de Conversions</title>
+  <title>Générateur de Conversions & Ordres de Grandeur</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #f4f7fc; --panel: #ffffff; --panel-border: #dbe4f3;
       --text: #1f2a44; --muted: #5a6784; --accent: #1283ff; --accent-dark: #0b67c6;
       --success: #10b981; --length: #1283ff; --mass: #16a34a; 
-      --cap: #06b6d4; --area: #f59e0b; --vol: #7c3aed;
+      --cap: #06b6d4; --area: #f59e0b; --vol: #7c3aed; --prob: #ef4444; --est: #0d9488;
       --shadow: 0 10px 30px rgba(31,42,68,0.08);
       --ink:#1b1b1b;
     }
@@ -19,12 +19,14 @@
     body { margin: 0; font-family: 'Nunito', Arial, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
 
     /* PANNEAU DE CONFIGURATION */
-    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1100px; box-shadow: var(--shadow); margin-bottom: 12px; }
-    .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); }
+    .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1200px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center;}
     .config-header h2 { margin: 0; font-size: 1.25rem; color: #1f2a44; }
     
-    .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
-    .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; }
+    .theme-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 16px; align-items: stretch; }
+    .config-col { display: flex; flex-direction: column; gap: 15px; }
+    
+    .theme-col { background: #fbfdff; border: 1px solid #e7edf8; border-radius: 8px; padding: 12px; flex-grow: 1;}
     .theme-col h3 { margin: 0 0 10px 0; font-size: 0.95rem; border-bottom: 2px solid #eef4ff; padding-bottom: 4px;}
     
     .theme-col.length h3 { color: var(--length); border-bottom-color: color-mix(in srgb, var(--length) 20%, transparent); }
@@ -32,6 +34,8 @@
     .theme-col.cap h3 { color: var(--cap); border-bottom-color: color-mix(in srgb, var(--cap) 20%, transparent); }
     .theme-col.area h3 { color: var(--area); border-bottom-color: color-mix(in srgb, var(--area) 20%, transparent); }
     .theme-col.vol h3 { color: var(--vol); border-bottom-color: color-mix(in srgb, var(--vol) 20%, transparent); }
+    .theme-col.prob h3 { color: var(--prob); border-bottom-color: color-mix(in srgb, var(--prob) 20%, transparent); }
+    .theme-col.est h3 { color: var(--est); border-bottom-color: color-mix(in srgb, var(--est) 20%, transparent); }
     
     .checkbox-list { display: flex; flex-direction: column; gap: 6px; }
     .cb-row { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.85rem; line-height: 1.3;}
@@ -41,6 +45,8 @@
     .theme-col.cap .cb-row input { accent-color: var(--cap); }
     .theme-col.area .cb-row input { accent-color: var(--area); }
     .theme-col.vol .cb-row input { accent-color: var(--vol); }
+    .theme-col.prob .cb-row input { accent-color: var(--prob); }
+    .theme-col.est .cb-row input { accent-color: var(--est); }
 
     .bottom-config { display: flex; justify-content: space-between; align-items: stretch; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
     .config-options { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
@@ -67,9 +73,38 @@
     #btnNext { min-width: 220px; text-align: center; }
 
     .question-box { padding: 25px 40px 10px 40px; text-align: center; }
-    .question-text { font-size: 2.8rem; font-weight: 900; color: #1f2a44; line-height: 1.4; margin: 0; }
+    .question-emoji { font-size: 5.5rem; margin-bottom: 15px; line-height: 1; display: none; text-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .question-text { font-size: 2.4rem; font-weight: 900; color: #1f2a44; line-height: 1.4; margin: 0; }
+    .question-subtext { font-size: 1.5rem; color: var(--muted); font-weight: bold; margin-top: 15px; line-height: 1.3;}
 
-    .table-box { padding: 10px 40px; display: none; justify-content: center; align-items: center; flex-grow: 1; width: 100%;}
+    .table-box { padding: 10px 40px; display: none; justify-content: center; align-items: flex-start; flex-grow: 1; width: 100%; position: relative;}
+
+    /* BOÎTE POUR LES ORDRES DE GRANDEUR (QCM) */
+    .est-board { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; margin-top: 20px; padding-bottom: 40px;}
+    
+    .est-frise { display: flex; justify-content: center; gap: 15px; width: 100%; margin-bottom: 20px; flex-wrap: wrap; background: #f0fdfa; padding: 15px; border-radius: 12px; border: 2px dashed #0d9488; }
+    .est-frise-item { display: flex; flex-direction: column; align-items: center; gap: 8px; background: white; padding: 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-width: 70px;}
+    .est-frise-unit { font-weight: 900; color: var(--est); font-size: 1.2rem; }
+    .est-frise-emoji { font-size: 2.5rem; line-height: 1;}
+
+    .est-choices-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; width: 100%; }
+    .est-btn { 
+      background: white; border: 3px solid #cfd8ea; border-radius: 16px; 
+      padding: 15px 25px; font-size: 1.8rem; font-weight: 900; color: var(--text);
+      transition: 0.3s; display: flex; align-items: center; justify-content: flex-start;
+      min-width: 220px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      font-family: 'Nunito', sans-serif;
+    }
+    .est-badge {
+      background: #eef4ff; color: var(--accent); width: 45px; height: 45px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 900; margin-right: 20px; flex-shrink: 0;
+    }
+    .est-btn.correct { background: var(--success); color: white; border-color: var(--success); transform: scale(1.05); box-shadow: 0 10px 25px rgba(16,185,129,0.3); }
+    .est-btn.correct .est-badge { background: rgba(255,255,255,0.3); color: white; }
+    .est-btn.wrong { opacity: 0.3; filter: grayscale(1); border-color: #e2e8f0; background: #f8fafc; }
+    
+    .est-action-msg { font-size: 2rem; font-weight: 900; color: var(--est); background: #f0fdfa; padding: 20px 40px; border-radius: 15px; border: 3px dashed var(--est); }
 
     .thumbnails-bar { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border-top: 1px solid #e7edf8; margin-top: auto; }
     .thumb-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #cfd8ea; background: white; color: var(--muted); cursor: pointer; transition: 0.2s; text-align: center; line-height: 1.2; font-family: 'Nunito', sans-serif;}
@@ -79,102 +114,55 @@
     .thumb-btn.active { background: var(--accent); color: white; border-color: var(--accent); transform: scale(1.05); }
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
 
-    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; padding-top: 4vh; overflow-y: auto; background: white;}
     #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
+    #diapoContainer:fullscreen .table-box { padding-top: 30px; }
 
-    /* =========================================
-       LE MOTEUR DU TABLEAU EXACT
-       ========================================= */
+    /* LE MOTEUR DU TABLEAU EXACT */
     .board { background: transparent; border: none; padding: 0; width: 100%; max-width: 1000px; margin: 0 auto;}
     .inner { position: relative; padding-top: 100px; padding-bottom: 100px; } 
-    
     .board-columns { display: grid; grid-template-columns: repeat(var(--cols, 7), 1fr); gap: 4px; position: relative; z-index: 1; user-select: none; }
     .family-col { display: flex; flex-direction: column; gap: 6px; }
-
-    .cursor {
-      position: absolute; left: 0; box-sizing: border-box; 
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent);
-      border-radius: 8px; pointer-events: none;
-      transition: transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out;
-      z-index: 3;
-    }
-    .cursor::after {
-      content: ","; position: absolute; bottom: 32px; right: -11px;
-      font-family: 'Nunito', Arial, sans-serif; font-size: 3.5rem; font-weight: 800;
-      color: var(--accent-dark); line-height: 0;
-      text-shadow: 2px 2px 0 var(--panel), -2px -2px 0 var(--panel), 2px -2px 0 var(--panel), -2px 2px 0 var(--panel);
-      z-index: 10;
-    }
-
-    .handle {
-      position: absolute; left: 0; width: 140px; height: 75px; 
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      border: 2px solid #fff; border-radius: 12px; z-index: 11;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #fff; text-align: center; user-select: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      padding: 6px; transition: transform 1s ease-in-out, top 1s ease-in-out;
-    }
+    .cursor { position: absolute; left: 0; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 15%, transparent); border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent); border-radius: 8px; pointer-events: none; transition: transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out; z-index: 3; }
+    .cursor::after { content: ","; position: absolute; bottom: 32px; right: -11px; font-family: 'Nunito', Arial, sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--accent-dark); line-height: 0; text-shadow: 2px 2px 0 var(--panel), -2px -2px 0 var(--panel), 2px -2px 0 var(--panel), -2px 2px 0 var(--panel); z-index: 10; }
+    .handle { position: absolute; left: 0; width: 140px; height: 75px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: 2px solid #fff; border-radius: 12px; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; user-select: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2); padding: 6px; transition: transform 1s ease-in-out, top 1s ease-in-out; }
     .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
-    .handle-top::after {
-      content: ""; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%);
-      border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark);
-    }
-    .handle-bottom::before {
-      content: ""; position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-      border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent);
-    }
-
+    .handle-top::after { content: ""; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark); }
+    .handle-bottom::before { content: ""; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent); }
     .head-group { display: grid; gap: 4px; }
-    .unitBtn {
-      background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent);
-      border-radius: 8px; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0;
-    }
+    .unitBtn { background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent); border-radius: 8px; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0; }
     .unitBtn span { font-weight: 700; }
     .unitBtn.empty-unit { background: transparent; border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-
     .cell { position: relative; background: transparent; min-height: auto; display: flex; align-items: stretch; justify-content: center; }
     .slots { margin-top: 0; display: grid; gap: 4px; width: 100%; align-items: stretch; }
-    
-    .digit {
-      box-sizing: border-box; width: 100%; text-align: center;
-      font-weight: 600; font-size: 2.8rem; border: 2px solid var(--accent); border-radius: 8px; background: #fff; color: #000; padding: 0 4px; 
-      min-height: 92px; outline: none; font-family: 'Nunito', sans-serif;
-    }
-    
-    .unit-highlight, .unit-highlight-text { 
-      color: var(--accent-dark) !important; font-weight: 900 !important; 
-      text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark);
-    }
-
+    .digit { box-sizing: border-box; width: 100%; text-align: center; font-weight: 600; font-size: 2.8rem; border: 2px solid var(--accent); border-radius: 8px; background: #fff; color: #000; padding: 0 4px; min-height: 92px; outline: none; font-family: 'Nunito', sans-serif; }
+    .unit-highlight, .unit-highlight-text { color: var(--accent-dark) !important; font-weight: 900 !important; text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark); }
     .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; z-index: 4; pointer-events: none; }
     .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
     .sub-lab { white-space: nowrap; font-weight: 900; color: color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1; }
 
-    /* =========================================
-       LAYOUT IMPRESSION
-       ========================================= */
+    /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 950px; background: white; }
     @media print {
       body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
       .config-panel, .diapo-container { display: none !important; }
       #printContainer { display: block !important; margin: 0 auto; }
-      
       .print-page { page-break-after: always; padding: 10px 0; }
-      
-      /* CORRECTION DE L'ENTÊTE ET DE LA BOÎTE SÉRIE */
       .print-header { display: flex; align-items: center; justify-content: flex-start; gap: 20px; font-size: 0.95rem; color: #333; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #ccc; }
       .print-seed { margin-left: auto; font-weight: bold; color: var(--muted); border: 2px solid var(--muted); padding: 4px 8px; border-radius: 6px; }
-      
       .print-title { text-align: center; font-size: 1.4rem; margin: 5px 0 25px 0; color: #1f2a44; font-weight: bold; }
-      
       .print-q { margin-bottom: 30px; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center;}
-      .print-q-text { font-size: 1.35rem; margin-bottom: 15px; width: 100%; font-weight: bold;}
-      
+      .print-q-text { font-size: 1.35rem; margin-bottom: 15px; width: 100%; font-weight: bold; text-align: center;}
       .print-board { box-shadow: none !important; border: 2px solid var(--accent); margin: 0; padding: 10px 10px 20px 10px; border-radius: 10px; transform: none !important; width: 100%;}
       .print-inner { padding-top: 0 !important; padding-bottom: 0 !important; position: relative;}
-      
       .print-static-comma { position: absolute; bottom: 8px; right: -12px; font-family: 'Nunito', sans-serif; font-size: 3.5rem; font-weight: 900; color: var(--accent-dark); line-height: 0; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff; z-index: 10;}
+      
+      .print-est-choices { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
+      .print-est-box { border: 2px solid #ccc; padding: 8px 15px; border-radius: 8px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;}
+      .print-est-box.correct { border-color: var(--success); background: #f0fdf4; font-weight: bold;}
+      .print-est-check { width: 20px; height: 20px; border: 2px solid #999; border-radius: 4px; display: inline-block;}
+      .print-est-box.correct .print-est-check { background: var(--success); border-color: var(--success); position: relative;}
+      .print-est-box.correct .print-est-check::after { content: "✓"; color: white; position: absolute; top: -4px; left: 2px; font-size: 16px;}
       
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
@@ -184,41 +172,74 @@
 
   <div class="config-panel">
     <div class="config-header">
-      <h2>📏 Générateur : Conversions de Grandeurs</h2>
+      <h2>📏 Générateur : Conversions & Ordres de Grandeur</h2>
     </div>
     
     <div class="theme-grid">
-      <div class="theme-col length">
-        <h3>Longueur (m)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="length" checked> <div><strong>km ↔ mm</strong></div></label>
-        </div>
+      <div class="config-col" style="flex: 1; min-width: 160px;">
+          <div class="theme-col length">
+            <h3>Longueur (m)</h3>
+            <div class="checkbox-list">
+              <label class="cb-row"><input type="checkbox" value="length"> <div><strong>km ↔ mm</strong></div></label>
+            </div>
+          </div>
+          <div class="theme-col mass">
+            <h3>Masse (g)</h3>
+            <div class="checkbox-list">
+              <label class="cb-row"><input type="checkbox" value="mass"> <div><strong>kg ↔ mg</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="massT"> <div><strong>t ↔ mg</strong></div></label>
+            </div>
+          </div>
+          <div class="theme-col cap">
+            <h3>Capacité (L)</h3>
+            <div class="checkbox-list">
+              <label class="cb-row"><input type="checkbox" value="volL"> <div><strong>kL ↔ mL</strong></div></label>
+            </div>
+          </div>
       </div>
-      <div class="theme-col mass">
-        <h3>Masse (g)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="mass"> <div><strong>kg ↔ mg</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="massT"> <div><strong>t ↔ mg</strong></div></label>
-        </div>
+
+      <div class="config-col" style="flex: 1; min-width: 160px;">
+          <div class="theme-col area">
+            <h3>Aire (m²)</h3>
+            <div class="checkbox-list">
+              <label class="cb-row"><input type="checkbox" value="area"> <div><strong>km² ↔ mm²</strong></div></label>
+            </div>
+          </div>
+          <div class="theme-col vol">
+            <h3>Volume (m³)</h3>
+            <div class="checkbox-list">
+              <label class="cb-row"><input type="checkbox" value="volM3"> <div><strong>km³ ↔ mm³</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="cross"> <div><strong>L ↔ m³</strong></div></label>
+            </div>
+          </div>
       </div>
-      <div class="theme-col cap">
-        <h3>Capacité (L)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="volL"> <div><strong>kL ↔ mL</strong></div></label>
-        </div>
+
+      <div class="config-col" style="flex: 1.5; min-width: 250px;">
+          <div class="theme-col prob" style="height: 100%;">
+            <h3>Problèmes Calcul</h3>
+            <div class="checkbox-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <label class="cb-row"><input type="checkbox" value="prob_add"> <div><strong>Additions (+)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_sub"> <div><strong>Soustractions (-)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_mult"> <div><strong>Multiplications (×)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_div"> <div><strong>Divisions (÷)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_frac"> <div><strong>Fractions (¼, ½)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_geom"> <div><strong>Périmètres/Aires</strong></div></label>
+            </div>
+          </div>
       </div>
-      <div class="theme-col area">
-        <h3>Aire (m²)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="area"> <div><strong>km² ↔ mm²</strong></div></label>
-        </div>
-      </div>
-      <div class="theme-col vol">
-        <h3>Volume (m³)</h3>
-        <div class="checkbox-list">
-          <label class="cb-row"><input type="checkbox" value="volM3"> <div><strong>km³ ↔ mm³</strong></div></label>
-          <label class="cb-row"><input type="checkbox" value="cross"> <div><strong>L ↔ m³</strong></div></label>
-        </div>
+
+      <div class="config-col" style="flex: 1.5; min-width: 250px;">
+          <div class="theme-col est" style="height: 100%;">
+            <h3>Ordres de grandeur</h3>
+            <div class="checkbox-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <label class="cb-row"><input type="checkbox" value="est_grandeur"> <div><strong>Quelle Grandeur ?</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_unit"> <div><strong>Quelle Unité ?</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_val"> <div><strong>Ordre de Valeur</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_tf"> <div><strong>Vrai / Faux</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_action"> <div><strong>Action en Classe 🏃</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_pont"> <div><strong>Ponts Experts</strong></div></label>
+            </div>
+          </div>
       </div>
     </div>
 
@@ -242,21 +263,21 @@
           </select>
         </div>
         <div class="config-block">
-          <label title="Laisse vide pour une série aléatoire. Copie le code d'une fiche imprimée pour la rejouer au tableau !">Code Série :</label>
+          <label title="Laisse vide pour générer aléatoirement. Modifie pour rejouer !">Code Série :</label>
           <input type="text" id="inputSeed" placeholder="Auto" maxlength="6">
         </div>
       </div>
       
       <div class="btn-wrap">
-        <button class="btn-main" onclick="generateQuiz()">💻 Lancer Diapo Tableau</button>
+        <button class="btn-main" onclick="generateQuiz()">💻 Lancer Diapo</button>
         
         <div class="print-group">
           <div class="print-options-col">
             <label style="cursor: pointer;"><input type="checkbox" id="cbStudentEmpty" checked style="accent-color: var(--success);"> 📝 Élève : Gabarits vides</label>
             <label style="cursor: pointer;"><input type="checkbox" id="cbStudentFilled" style="accent-color: var(--success);"> 📝 Élève : Gabarits remplis</label>
-            <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success);"> 📝 Corrigé : Tableaux inclus</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success);"> 📝 Corrigé : Tableaux/Choix</label>
           </div>
-          <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
+          <button class="btn-main print" onclick="generatePrint()">🖨️ Imprimer PDF</button>
         </div>
       </div>
     </div>
@@ -265,30 +286,30 @@
   <div class="diapo-container" id="diapoContainer">
     <div class="diapo-header">
       <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
-      <div class="slide-counter" id="slideCounter">Série Auto | Question 1 / 5</div>
+      <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
       <div style="display: flex; gap: 8px;">
         <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
-        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Afficher Tableau 💡 ►</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Placer au Tableau 💡 ►</button>
       </div>
     </div>
     
-    <div class="question-box"><p class="question-text" id="qText"></p></div>
+    <div class="question-box">
+        <div id="qEmoji" class="question-emoji"></div>
+        <p class="question-text" id="qText"></p>
+        <div class="question-subtext" id="qSubtext"></div>
+    </div>
     
     <div class="table-box" id="tBox">
         <div class="board" id="mainBoard">
             <div class="inner" id="diapoInner">
                 <div class="cursor" id="diapoCursor"></div>
-                
-                <div class="handle handle-top" id="diapoHandleTop">
-                  <div class="h-text">L'UNITÉ DE<br>MESURE</div>
-                </div>
-                <div class="handle handle-bottom" id="diapoHandleBottom">
-                  <div class="h-text">LE CHIFFRE DES<br>UNITÉS</div>
-                </div>
-
+                <div class="handle handle-top" id="diapoHandleTop"><div class="h-text">L'UNITÉ DE<br>MESURE</div></div>
+                <div class="handle handle-bottom" id="diapoHandleBottom"><div class="h-text">LE CHIFFRE DES<br>UNITÉS</div></div>
                 <div class="board-columns" id="diapoBoardColumns"></div>
             </div>
         </div>
+        
+        <div class="est-board" id="estBoard"></div>
     </div>
 
     <div class="thumbnails-bar" id="thumbBar"></div>
@@ -308,15 +329,128 @@
       volL:  {id:'volL', label:'Volume (L)', units:['kL','hL','daL','L','dL','cL','mL'], slots:1},
       area:  {id:'area', label:'Aire (m²)', units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], slots:2},
       volM3: {id:'volM3', label:'Volume (m³)', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3},
-      cross: {id:'cross', label:'Litres ↔ mètres cubes', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3}
+      cross: {id:'cross', label:'Litres ↔ m³', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3}
     };
     const CROSS_LABELS = { '3_2': 'kL', '4_0': 'hL', '4_1': 'daL', '4_2': 'L', '5_0': 'dL', '5_1': 'cL', '5_2': 'mL' };
     const AREA_LABELS = { '1_1': 'ha', '2_1': 'a' };
 
+    const DICTIONNAIRE_PROBLEMES = {
+        add: {
+            length: ["un ruban", "une ficelle", "un tuyau", "une corde", "un câble", "un fil de fer", "une planche"],
+            mass: ["un sac de pommes", "un colis", "un sac à dos", "un filet de patates", "une valise"],
+            cap: ["un seau d'eau", "un bidon de jus", "une carafe de sirop", "un arrosoir"]
+        },
+        sub: {
+            length: { actions: ["Je coupe", "Je retire", "J'enlève"], objets: ["d'un ruban", "d'une ficelle", "d'une planche", "d'un câble"] },
+            mass: { actions: ["J'utilise", "Je retire", "Je prends"], objets: ["d'un sac de riz", "d'un bloc d'argile", "d'une meule de fromage"] },
+            cap: { actions: ["Je bois", "Je verse", "Je vide"], objets: ["d'une bouteille", "d'un pichet", "d'un réservoir", "d'un jerrican"] }
+        },
+        mult: {
+            length: ["Une dalle de terrasse", "Une latte de parquet", "Un carreau de faïence", "Une règle de classe"],
+            mass: ["Un dictionnaire", "Un cahier", "Un steak", "Un pavé", "Un paquet de biscuits"],
+            cap: ["Un grand verre", "Une canette", "Une gourde", "Un biberon", "Une tasse de café"]
+        },
+        div: {
+            length: ["une poutre", "une baguette de bois", "un rouleau de fil", "une barre de métal"],
+            mass: ["un gâteau", "un gros pain", "un tas de sable", "un sac d'engrais", "un bloc de beurre"],
+            cap: ["un bidon de lessive", "une bouteille de jus", "une carafe d'eau", "un jerrican"]
+        },
+        frac: {
+            mass: ["de beurre", "de sucre", "de farine", "de chocolat", "de viande", "de gruyère râpé"],
+            cap: ["de lait", "de crème fraîche", "d'eau", "d'huile", "de soupe", "de jus de pomme"]
+        }
+    };
+
+    /* LES ÉMOJIS POUR LA FRISE DES ÉTALONS */
+    const FRISE_EMOJIS = {
+       len: [ {u:'mm', e:'🐜'}, {u:'cm', e:'🎲'}, {u:'dm', e:'📏'}, {u:'m', e:'🚪'}, {u:'dam', e:'🏢'}, {u:'hm', e:'🗼'}, {u:'km', e:'🛣️'} ],
+       mass: [ {u:'mg', e:'🏖️'}, {u:'cg', e:'🎊'}, {u:'dg', e:'✉️'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🚗'} ],
+       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🥛'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:'🏊'} ],
+       area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:'⌨️'}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'⚽'}, {u:'km²', e:'🏙️'} ],
+       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🧊'}, {u:'dm³', e:'🥛'}, {u:'m³', e:'📦'}, {u:'dam³', e:'🚌'}, {u:'hm³', e:'🏟️'}, {u:'km³', e:'🗻'} ]
+    };
+
+    function generateFriseHTML(dim) {
+        let html = '<div class="est-frise">';
+        FRISE_EMOJIS[dim].forEach(item => {
+            html += `<div class="est-frise-item"><div class="est-frise-unit">${item.u}</div><div class="est-frise-emoji">${item.e}</div></div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    /* LA BASE DE DONNÉES SINGAPOUR MASSIVEMENT ÉTOFFÉE */
+    const EST_DB = {
+        len: [
+            { items: [{n: "l'épaisseur d'une clé", e: "🔑"}, {n: "une puce électronique", e: "💽"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une pièce de monnaie", lvl: 2 },
+            { items: [{n: "une fourmi", e: "🐜"}, {n: "un grain de riz", e: "🍚"}], val: 5, unit: "mm", repere: "5 mm = un très petit insecte", lvl: 1 },
+            { items: [{n: "une abeille", e: "🐝"}, {n: "le diamètre d'un bouton", e: "🔘"}], val: 1, unit: "cm", repere: "1 cm = la largeur de l'ongle du petit doigt", lvl: 1 },
+            { items: [{n: "une gomme", e: "🧼"}], val: 4, unit: "cm", repere: "4 cm = un petit objet de trousse", lvl: 1 },
+            { items: [{n: "un stylo", e: "🖊️"}, {n: "un feutre", e: "🖍️"}], val: 15, unit: "cm", repere: "15 cm = l'empan (la largeur d'une main écartée)", lvl: 1 },
+            { items: [{n: "une feuille de papier (longueur)", e: "📄"}, {n: "une règle d'écolier", e: "📏"}], val: 30, unit: "cm", repere: "30 cm = la grande règle en plastique de la trousse", lvl: 1 },
+            { items: [{n: "la hauteur d'une table", e: "🪑"}, {n: "un meuble de cuisine", e: "🗄️"}], val: 80, unit: "cm", repere: "80 cm = on arrive environ à la taille", lvl: 2 },
+            { items: [{n: "la taille d'un enfant de 10 ans", e: "🧒"}], val: 1.4, unit: "m", repere: "1,40 m = la taille moyenne d'un élève de CM2", lvl: 2 },
+            { items: [{n: "un vélo", e: "🚲"}, {n: "un lit d'adulte", e: "🛏️"}], val: 2, unit: "m", repere: "2 m = la hauteur d'une porte standard", lvl: 1 },
+            { items: [{n: "une petite voiture", e: "🚗"}, {n: "une camionnette", e: "🚐"}], val: 4, unit: "m", repere: "4 m = une place de parking classique", lvl: 2 },
+            { items: [{n: "un bus scolaire", e: "🚌"}], val: 12, unit: "m", repere: "12 m = un très long véhicule", lvl: 2 },
+            { items: [{n: "un terrain de football", e: "⚽"}, {n: "la longueur d'un sprint olympique", e: "🏃"}], val: 100, unit: "m", repere: "100 m = la longueur d'un stade", lvl: 2 },
+            { items: [{n: "le Mont Blanc", e: "🏔️"}], val: 4.8, unit: "km", repere: "4,8 km = une très haute montagne", lvl: 2 },
+            { items: [{n: "la distance Paris-Lyon", e: "🗺️"}, {n: "un long voyage", e: "🚄"}], val: 500, unit: "km", repere: "Des centaines de km = rouler longtemps sur l'autoroute", lvl: 1 }
+        ],
+        mass: [
+            { items: [{n: "un grain de sable", e: "🏖️"}], val: 1, unit: "mg", repere: "1 mg = un grain de sable (presque invisible)", lvl: 2 },
+            { items: [{n: "un confetti", e: "🎊"}, {n: "un pépin de pomme", e: "🍏"}], val: 1, unit: "cg", repere: "1 cg = un confetti de papier", lvl: 2 },
+            { items: [{n: "un timbre postal", e: "✉️"}, {n: "une mouche", e: "🪰"}], val: 1, unit: "dg", repere: "1 dg = un timbre de la poste", lvl: 2 },
+            { items: [{n: "un trombone", e: "📎"}, {n: "un billet de banque", e: "💵"}], val: 1, unit: "g", repere: "1 g = un trombone métallique", lvl: 1 },
+            { items: [{n: "une pièce de monnaie", e: "🪙"}, {n: "un macaron", e: "🍪"}], val: 1, unit: "dag", repere: "1 dag (10 g) = une grosse pièce de monnaie", lvl: 2 },
+            { items: [{n: "une balle de tennis", e: "🎾"}], val: 60, unit: "g", repere: "60 g = un objet léger qu'on lance", lvl: 1 },
+            { items: [{n: "une pomme", e: "🍎"}, {n: "un smartphone", e: "📱"}], val: 150, unit: "g", repere: "150 g = un fruit de taille moyenne", lvl: 1 },
+            { items: [{n: "une plaquette de beurre", e: "🧈"}, {n: "un steak", e: "🥩"}], val: 250, unit: "g", repere: "250 g = un bloc familier dans la cuisine", lvl: 2 },
+            { items: [{n: "une tablette de chocolat", e: "🍫"}], val: 1, unit: "hg", repere: "1 hg (100 g) = une tablette de chocolat", lvl: 2 },
+            { items: [{n: "un dictionnaire", e: "辞"}, {n: "un grand cahier", e: "📓"}], val: 1, unit: "kg", repere: "1 kg = un paquet de farine", lvl: 1 },
+            { items: [{n: "un chat adulte", e: "🐈"}, {n: "un cartable rempli", e: "🎒"}], val: 4, unit: "kg", repere: "4 kg = un sac lourd pour l'école", lvl: 1 },
+            { items: [{n: "un vélo adulte", e: "🚲"}, {n: "un gros chien", e: "🐕"}], val: 15, unit: "kg", repere: "15 kg = un objet lourd à soulever à deux mains", lvl: 2 },
+            { items: [{n: "un homme adulte", e: "👨"}, {n: "une femme adulte", e: "👩"}], val: 75, unit: "kg", repere: "75 kg = la masse d'un être humain standard", lvl: 1 },
+            { items: [{n: "une vache", e: "🐄"}, {n: "un cheval", e: "🐎"}], val: 600, unit: "kg", repere: "600 kg = un animal de ferme très lourd", lvl: 3 },
+            { items: [{n: "une petite voiture", e: "🚗"}, {n: "une caravane", e: "🏕️"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1000 kg", lvl: 2 },
+            { items: [{n: "un éléphant", e: "🐘"}, {n: "un gros camion", e: "🚛"}], val: 5, unit: "t", repere: "5 t = un véhicule lourd ou un animal immense", lvl: 1 }
+        ],
+        cap: [
+            { items: [{n: "une goutte d'eau", e: "💧"}, {n: "une larme", e: "😢"}], val: 1, unit: "mL", repere: "1 mL = une toute petite goutte", lvl: 2 },
+            { items: [{n: "une cuillère à soupe", e: "🥄"}, {n: "une dose de sirop", e: "🥣"}], val: 15, unit: "mL", repere: "15 mL = une cuillère pleine", lvl: 3 },
+            { items: [{n: "une tasse à café", e: "☕"}, {n: "un petit pot de yaourt", e: "🍮"}], val: 10, unit: "cL", repere: "10 cL = un petit récipient", lvl: 2 },
+            { items: [{n: "un verre d'eau", e: "🥛"}, {n: "une petite brique de jus", e: "🧃"}], val: 20, unit: "cL", repere: "20 cL = un verre standard", lvl: 1 },
+            { items: [{n: "une canette de soda", e: "🥤"}], val: 33, unit: "cL", repere: "33 cL est environ égal à un tiers de litre", lvl: 1 },
+            { items: [{n: "une grande bouteille d'eau", e: "🍾"}], val: 1.5, unit: "L", repere: "1,5 L = une bouteille classique de supermarché", lvl: 1 },
+            { items: [{n: "un grand seau d'eau", e: "🪣"}, {n: "un arrosoir", e: "🚿"}], val: 10, unit: "L", repere: "10 L = un seau lourd à porter", lvl: 1 },
+            { items: [{n: "un réservoir de voiture", e: "⛽"}, {n: "un tonneau moyen", e: "🛢️"}], val: 50, unit: "L", repere: "50 L = faire le plein d'essence", lvl: 2 },
+            { items: [{n: "une baignoire pleine", e: "🛁"}, {n: "un grand aquarium", e: "🐠"}], val: 150, unit: "L", repere: "150 L = un grand bain", lvl: 2 }
+        ],
+        area: [
+            { items: [{n: "une puce électronique", e: "💽"}, {n: "une mine de stylo", e: "✏️"}], val: 1, unit: "mm²", repere: "1 mm² = la pointe d'un stylo à bille", lvl: 2 },
+            { items: [{n: "une touche de clavier", e: "⌨️"}, {n: "une carte SIM", e: "💳"}], val: 1, unit: "cm²", repere: "1 cm² = une touche d'ordinateur", lvl: 1 },
+            { items: [{n: "un boîtier de CD", e: "💿"}, {n: "une main posée à plat", e: "🖐️"}], val: 1, unit: "dm²", repere: "1 dm² = la surface de ta main", lvl: 2 },
+            { items: [{n: "une petite table", e: "🪑"}, {n: "une grande fenêtre", e: "🪟"}], val: 1, unit: "m²", repere: "1 m² = un carré d'un mètre sur un mètre", lvl: 1 },
+            { items: [{n: "une cour d'école", e: "🏫"}, {n: "une grande maison", e: "🏠"}], val: 1, unit: "dam²", repere: "1 dam² = 1 are (100 m²)", lvl: 3 },
+            { items: [{n: "un terrain de football", e: "⚽"}, {n: "un grand parc", e: "🌲"}], val: 1, unit: "hm²", repere: "1 hm² = 1 hectare (10 000 m²)", lvl: 2 },
+            { items: [{n: "une ville entière", e: "🏙️"}, {n: "une très grande forêt", e: "🌳"}], val: 1, unit: "km²", repere: "1 km² = un million de m²", lvl: 1 }
+        ],
+        vol: [
+            { items: [{n: "un grain de gros sel", e: "🧂"}, {n: "un petit cristal", e: "💎"}], val: 1, unit: "mm³", repere: "1 mm³ = un grain de sel", lvl: 2 },
+            { items: [{n: "un dé à jouer", e: "🎲"}, {n: "un morceau de sucre", e: "🧊"}], val: 1, unit: "cm³", repere: "1 cm³ = un petit dé", lvl: 1 },
+            { items: [{n: "une brique de lait", e: "🥛"}, {n: "une grosse bouteille d'eau", e: "🍾"}], val: 1, unit: "dm³", repere: "1 dm³ = 1 Litre", lvl: 1 },
+            { items: [{n: "un gros carton de déménagement", e: "📦"}, {n: "une poubelle de rue", e: "🗑️"}], val: 1, unit: "m³", repere: "1 m³ = 1000 Litres", lvl: 1 },
+            { items: [{n: "une grande piscine municipale", e: "🏊"}, {n: "un château d'eau", e: "🗼"}], val: 1, unit: "dam³", repere: "1 dam³ = 1 million de Litres", lvl: 3 },
+            { items: [{n: "un grand lac de montagne", e: "🏞️"}, {n: "une mer intérieure", e: "🌊"}], val: 1, unit: "km³", repere: "1 km³ = un volume gigantesque", lvl: 2 }
+        ]
+    };
+
     let quizData = [];
+    let usedQuestionsText = []; 
     let currentIndex = 0;
     let currentSchema = null;
     let currentSeedStr = ""; 
+    let lastGeneratedSeed = ""; 
     
     let prngSeed = 1;
     function seededRandom() {
@@ -327,36 +461,39 @@
     }
     function setSeed(str) {
         let h = 2166136261 >>> 0;
-        for(let i = 0; i < str.length; i++) {
-            h = Math.imul(h ^ str.charCodeAt(i), 16777619);
-        }
-        prngSeed = h;
-        for(let i=0; i<10; i++) seededRandom();
+        for(let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+        prngSeed = h; for(let i=0; i<10; i++) seededRandom();
     }
-
     function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
     function fmt(n) { return Number(n.toFixed(8)).toString().replace('.', ','); }
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            let j = Math.floor(seededRandom() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 
     function highlightUnitText(valStr) {
-      let parts = valStr.split(',');
-      let intPart = parts[0];
+      let parts = valStr.split(','); let intPart = parts[0];
       if (intPart.length > 0) {
-          let lastDigit = intPart.slice(-1);
-          let rest = intPart.slice(0, -1);
+          let lastDigit = intPart.slice(-1); let rest = intPart.slice(0, -1);
           parts[0] = rest + `<span class="unit-highlight-text">${lastDigit}</span>`;
       }
       return parts.join(',');
     }
 
+    /* =========================================
+       GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES)
+       ========================================= */
     function generateValue(level) {
       if (level === 1) { 
         let size = rand(1, 3);
         if (size === 1) return rand(1, 9).toString();
         if (size === 2) return rand(10, 99).toString();
         return rand(100, 999).toString();
-      } 
-      else if (level === 2) {
+      } else if (level === 2) {
         let type = rand(1, 4);
         if(type === 1) return rand(1, 99).toString(); 
         if(type === 2) return rand(100, 9999).toString(); 
@@ -364,61 +501,291 @@
         return (rand(101, 9999) / 100).toString().replace('.', ','); 
       } else {
         let type = rand(1, 4);
-        if(type === 1) {
-            let zeros = rand(1, 2) === 1 ? "0,0" : "0,00";
-            return zeros + rand(1, 9);
-        } else if (type === 2) {
-            if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9);
-            else return rand(1, 9) + "0," + rand(1, 9);
-        } else if (type === 3) {
-            return rand(1, 99) + "," + rand(1, 9) + "0";
-        } else {
-            let zeros = rand(1, 2) === 1 ? "00" : "000";
-            return rand(1, 99) + zeros;
-        }
+        if(type === 1) { let zeros = rand(1, 2) === 1 ? "0,0" : "0,00"; return zeros + rand(1, 9); } 
+        else if (type === 2) { if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9); else return rand(1, 9) + "0," + rand(1, 9); } 
+        else if (type === 3) { return rand(1, 99) + "," + rand(1, 9) + "0"; } 
+        else { let zeros = rand(1, 2) === 1 ? "00" : "000"; return rand(1, 99) + zeros; }
       }
     }
 
     function buildQuestionLogic(type, level) {
       const schema = SCHEMAS[type];
-      
-      let maxGap = 3;
-      if (schema.slots === 2) maxGap = 2; 
-      if (schema.slots === 3) maxGap = 2; 
-      
+      let maxGap = 3; if (schema.slots === 2 || schema.slots === 3) maxGap = 2; 
       let gap = rand(1, maxGap);
-      let direction;
-      if (level === 1) { direction = 1; } 
-      else { direction = rand(1, 2) === 1 ? 1 : -1; }
+      let direction = (level === 1) ? 1 : (rand(1, 2) === 1 ? 1 : -1);
 
       let validStarts = [];
       for (let i = 0; i < schema.units.length; i++) {
           let targetIdx = i + (gap * direction);
-          if (targetIdx >= 0 && targetIdx < schema.units.length) {
-              if (schema.units[i] !== '-' && schema.units[targetIdx] !== '-') {
-                  validStarts.push(i);
-              }
-          }
+          if (targetIdx >= 0 && targetIdx < schema.units.length && schema.units[i] !== '-' && schema.units[targetIdx] !== '-') validStarts.push(i);
       }
-
-      let uIndex1 = pick(validStarts);
-      let uIndex2 = uIndex1 + (gap * direction);
-
-      let sourceUnit = schema.units[uIndex1];
-      let targetUnit = schema.units[uIndex2];
-      
-      let valStr = generateValue(level);
-      let numVal = parseFloat(valStr.replace(',', '.'));
-      
+      let uIndex1 = pick(validStarts); let uIndex2 = uIndex1 + (gap * direction);
+      let valStr = generateValue(level); let numVal = parseFloat(valStr.replace(',', '.'));
       let shift = (uIndex2 - uIndex1) * schema.slots;
       let calcVal = numVal * Math.pow(10, shift); 
       
-      return { schema, sourceUnit, targetUnit, sourceIdx: uIndex1, targetIdx: uIndex2, valStr, calcValStr: fmt(calcVal), phase: 0 };
+      let textId = `${valStr}${schema.units[uIndex1]}_${schema.units[uIndex2]}`; 
+      return { isProblem: false, isEstimation: false, schema, sourceUnit: schema.units[uIndex1], targetUnit: schema.units[uIndex2], sourceIdx: uIndex1, targetIdx: uIndex2, valStr, calcValStr: fmt(calcVal), phase: 0, textId };
     }
 
+    function buildProblemLogic(level, family) {
+        let schema, sourceUnit, targetUnit, sourceIdx, targetIdx, valStr, calcValStr, problemText, correctionText;
+
+        if (family === 'add') {
+            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.add.length }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, txt: DICTIONNAIRE_PROBLEMES.add.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.add.cap } ];
+            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
+            let v1; if (level === 1) v1 = rand(1, 9); else if (level === 2) v1 = pick([1.5, 2.5, 3.2, 4.5]); else v1 = pick([1, 2, 3]); 
+            let v2; if (level === 1) v2 = rand(15, 85); else if (level === 2) v2 = rand(1, 9) * 10; else v2 = pick([5, 8, 12]); 
+            if (level === 3 && sourceUnit === 'm') { targetUnit = 'mm'; targetIdx = 6; } 
+
+            problemText = `J'assemble ${pick(sub.txt)} de <strong>${fmt(v1)} ${sourceUnit}</strong> avec un autre de <strong>${v2} ${targetUnit}</strong>. Quel est le total en <strong>${targetUnit}</strong> ?`;
+            valStr = fmt(v1); let convertedV1 = v1 * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
+            correctionText = `Calcul : ${convertedV1} + ${v2} = <strong>${convertedV1 + v2} ${targetUnit}</strong>.`;
+        }
+        else if (family === 'sub') {
+            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.sub.length.actions, obj: DICTIONNAIRE_PROBLEMES.sub.length.objets }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, txt: DICTIONNAIRE_PROBLEMES.sub.mass.actions, obj: DICTIONNAIRE_PROBLEMES.sub.mass.objets }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.sub.cap.actions, obj: DICTIONNAIRE_PROBLEMES.sub.cap.objets } ];
+            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
+            let v1; if (level === 1) v1 = rand(2, 5); else if (level === 2) v1 = pick([1.5, 2.5]); else v1 = pick([1.05, 2.05, 1.08]); 
+            let v2 = rand(1, 8) * 10;
+            problemText = `Dans ${pick(sub.obj)} de <strong>${fmt(v1)} ${sourceUnit}</strong>, ${pick(sub.txt).toLowerCase()} <strong>${v2} ${targetUnit}</strong>. Combien reste-t-il en <strong>${targetUnit}</strong> ?`;
+            valStr = fmt(v1); let convertedV1 = v1 * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
+            correctionText = `Calcul : ${convertedV1} - ${v2} = <strong>${convertedV1 - v2} ${targetUnit}</strong>.`;
+        }
+        else if (family === 'mult') {
+            const subjects = [ { s: SCHEMAS.mass, u1: 'g', u2: 'kg', idx1: 3, idx2: 0, obj: DICTIONNAIRE_PROBLEMES.mult.mass }, { s: SCHEMAS.length, u1: 'cm', u2: 'm', idx1: 5, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.mult.length }, { s: SCHEMAS.volL, u1: 'cL', u2: 'L', idx1: 5, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.mult.cap } ];
+            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
+            let v1 = rand(1, 5) * 50; let qte = (level === 1) ? rand(2, 4) : rand(5, 9); let total = v1 * qte;
+            problemText = `${pick(sub.obj)} fait <strong>${v1} ${sourceUnit}</strong>. Quel est le total pour <strong>${qte} identiques</strong> en <strong>${targetUnit}</strong> ?`;
+            valStr = total.toString(); calcValStr = fmt(total / Math.pow(10, sourceIdx - targetIdx));
+            correctionText = `1) Calcul : ${qte} × ${v1} = ${total} ${sourceUnit}. <br> 2) Conversion : <strong>${calcValStr} ${targetUnit}</strong>.`;
+        }
+        else if (family === 'div') {
+            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, obj: DICTIONNAIRE_PROBLEMES.div.length }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.div.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, obj: DICTIONNAIRE_PROBLEMES.div.cap } ];
+            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
+            let div = (level === 1) ? pick([2, 4, 5]) : pick([3, 4, 6]); 
+            let partConvertie = rand(15, 60) * 10; let totalConverti = partConvertie * div; let v1 = totalConverti / Math.pow(10, targetIdx - sourceIdx); 
+            if (level === 1) { v1 = Math.round(v1); totalConverti = v1 * Math.pow(10, targetIdx - sourceIdx); partConvertie = totalConverti / div; }
+            problemText = `Je partage ${pick(sub.obj)} de <strong>${fmt(v1)} ${sourceUnit}</strong> en <strong>${div} parts égales</strong>. Combien fait une part en <strong>${targetUnit}</strong> ?`;
+            valStr = fmt(v1); calcValStr = totalConverti.toString();
+            correctionText = `Calcul après conversion : ${totalConverti} ÷ ${div} = <strong>${partConvertie} ${targetUnit}</strong>.`;
+        }
+        else if (family === 'frac') {
+            const subjects = [ { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.frac.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'mL', idx1: 3, idx2: 6, obj: DICTIONNAIRE_PROBLEMES.frac.cap } ];
+            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
+            let frac = pick([ {t:`un demi-${sourceUnit === 'kg' ? 'kilogramme' : 'litre'}`, v:0.5}, {t:`un quart d'un ${sourceUnit === 'kg' ? 'kilogramme' : 'litre'}`, v:0.25}, {t:`trois quarts d'un ${sourceUnit === 'kg' ? 'kilogramme' : 'litre'}`, v:0.75} ]);
+            problemText = `Dans une recette, il faut <strong>${frac.t}</strong> ${pick(sub.obj)}. Combien cela fait-il en <strong>${targetUnit}</strong> ?`;
+            valStr = fmt(frac.v); let convertedV1 = frac.v * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
+            correctionText = `Astuce : ${frac.t} = ${fmt(frac.v)} ${sourceUnit}. Donc la réponse est <strong>${calcValStr} ${targetUnit}</strong>.`;
+        }
+        else if (family === 'geom') {
+            schema = SCHEMAS.length; let mode = (level === 3) ? pick(['perim', 'area']) : 'perim';
+            if (mode === 'perim') {
+                sourceUnit = 'm'; targetUnit = 'cm'; sourceIdx = 3; targetIdx = 5;
+                let m = (level === 1) ? rand(1, 4) : pick([1.5, 2.5]); let cm = rand(1, 8) * 10;
+                problemText = `Un rectangle mesure <strong>${fmt(m)} m</strong> de long et <strong>${cm} cm</strong> de large. Quel est son périmètre en <strong>cm</strong> ?`;
+                valStr = fmt(m); let mToCm = m * 100; calcValStr = mToCm.toString(); let perim = (mToCm + cm) * 2;
+                correctionText = `1) Conversion : ${fmt(m)} m = ${mToCm} cm.<br> 2) Calcul : ( ${mToCm} + ${cm} ) × 2 = <strong>${perim} cm</strong>.`;
+            } else {
+                sourceUnit = 'cm'; targetUnit = 'm'; sourceIdx = 5; targetIdx = 3;
+                let m = rand(2, 6); let cm = pick([10, 20, 50]);
+                problemText = `Un mur rectangulaire mesure <strong>${m} m</strong> de long et <strong>${cm} cm</strong> de large. Quelle est son aire en <strong>m²</strong> ?`;
+                valStr = cm.toString(); let cmToM = cm / 100; calcValStr = fmt(cmToM); let area = m * cmToM;
+                correctionText = `1) Conversion : ${cm} cm = ${fmt(cmToM)} m.<br> 2) Aire : ${m} m × ${fmt(cmToM)} m = <strong>${fmt(area)} m²</strong>.`;
+            }
+        }
+
+        let textId = problemText; 
+        return { isProblem: true, isEstimation: false, schema, sourceUnit, targetUnit, sourceIdx, targetIdx, valStr, calcValStr, problemText, correctionText, phase: 0, textId };
+    }
+
+    /* =========================================
+       LE GÉNÉRATEUR DES ORDRES DE GRANDEUR (NOUVELLES 6 FAMILLES)
+       ========================================= */
+    function buildEstimationLogic(level, qTypeStr, allowedDims) {
+        
+        let qType = 1;
+        if(qTypeStr === 'est_val') qType = 2;
+        if(qTypeStr === 'est_obj') qType = 3;
+        if(qTypeStr === 'est_tf') qType = 4;
+        if(qTypeStr === 'est_action') qType = 5;
+        if(qTypeStr === 'est_grandeur') qType = 6;
+        if(qTypeStr === 'est_pont') qType = 7;
+
+        // TYPE 5 : ACTIONS EN CLASSE ! (Totalement nouveau)
+        if (qType === 5) {
+            let actions = [
+                { q: "Montrez environ 1 cm avec vos doigts !", c: "C'est à peu près l'épaisseur de votre petit doigt." },
+                { q: "Montrez environ 1 mètre avec votre corps !", c: "C'est souvent la distance entre le sol et votre taille/poitrine." },
+                { q: "Trouvez un objet dans la classe qui mesure environ 30 cm.", c: "Exemples : La grande règle, une feuille A4 dans sa longueur." },
+                { q: "Trouvez un objet qui pèse environ 1 kg.", c: "Exemples : Un dictionnaire, une grande bouteille d'eau pleine." },
+                { q: "Écartez les bras pour montrer une longueur d'environ 1,50 m !", c: "C'est souvent l'envergure totale de vos deux bras écartés." }
+            ];
+            let act = pick(actions);
+            return { isProblem: false, isEstimation: true, qType: 5, problemText: act.q, choices: [], correctIndex: 0, correctionText: act.c, phase: 0, textId: act.q, emoji: "🕵️" };
+        }
+
+        // TYPE 6 : QUELLE GRANDEUR ? (Totalement nouveau)
+        if (qType === 6) {
+            let dim = pick(['len', 'mass', 'cap', 'area', 'vol']);
+            let item = pick(EST_DB[dim]);
+            let pickedQItem = pick(item.items);
+            let qObject = pickedQItem.n;
+            
+            let correctG = dim === 'len' ? "Une longueur" : (dim === 'mass' ? "Une masse" : (dim === 'cap' ? "Une capacité" : (dim === 'area' ? "Une aire" : "Un volume")));
+            let allG = ["Une longueur", "Une masse", "Une capacité", "Une aire", "Un volume"];
+            let wrongG = shuffle(allG.filter(g => g !== correctG)).slice(0, 2);
+            let choices = [correctG, wrongG[0], wrongG[1]];
+            
+            let finalChoices = []; let correctIndex = 0;
+            let indices = [0, 1, 2]; shuffle(indices);
+            for(let i=0; i<3; i++) { finalChoices.push(choices[indices[i]]); if(indices[i]===0) correctIndex = i; }
+
+            let problemText = `Quelle grandeur mesure-t-on pour : <strong>${qObject}</strong> ?`;
+            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: finalChoices, correctIndex: correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+        }
+
+        // TYPE 7 : PONTS EXPERTS (Totalement nouveau)
+        if (qType === 7) {
+            let ponts = [
+                { q: "1 Litre d'eau, c'est exactement la même quantité que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "💧" },
+                { q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1000 L", w1: "10 L", w2: "100 L", e: "📦" },
+                { q: "1 millilitre (1 mL), c'est équivalent à :", c: "1 cm³", w1: "1 dm³", w2: "1 mm³", e: "🧪" },
+                { q: "1 hectare, c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🏟️" }
+            ];
+            let pont = pick(ponts);
+            let choices = [pont.c, pont.w1, pont.w2];
+            let finalChoices = []; let correctIndex = 0;
+            let indices = [0, 1, 2]; shuffle(indices);
+            for(let i=0; i<3; i++) { finalChoices.push(choices[indices[i]]); if(indices[i]===0) correctIndex = i; }
+            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: finalChoices, correctIndex: correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e };
+        }
+
+        // POUR LES TYPES 1 A 4 (Base de données objets)
+        let dim = pick(allowedDims);
+        let db = EST_DB[dim].filter(item => item.lvl <= level);
+        if(db.length === 0) db = EST_DB[dim]; 
+        let targetItem = pick(db);
+        
+        let pickedQItem = pick(targetItem.items); 
+        let qObject = pickedQItem.n; 
+        let emoji = pickedQItem.e; 
+
+        let problemText = "";
+        let correctionText = `Rappel : ${targetItem.repere}.`;
+        let choices = [];
+        let correctIndex = 0;
+        let friseHtml = ""; 
+
+        let isLen = dim === 'len';
+        let verb = isLen ? "mesure" : (dim === 'mass' ? "pèse" : (dim === 'area' ? "couvre" : (dim === 'vol' ? "occupe" : "contient")));
+        let prefix = verb + " environ";
+
+        if (qType === 1) { 
+            problemText = `Pour exprimer <strong>${qObject}</strong>, quelle est l'unité la plus adaptée ?`;
+            let unitsArr = [];
+            if(dim === 'len') unitsArr = ['mm', 'cm', 'm', 'km'];
+            else if(dim === 'mass') unitsArr = ['g', 'kg', 't'];
+            else if(dim === 'area') unitsArr = ['cm²', 'm²', 'km²'];
+            else if(dim === 'vol') unitsArr = ['cm³', 'm³', 'km³'];
+            else unitsArr = ['mL', 'cL', 'L'];
+            
+            let wrongUnits = shuffle(unitsArr.filter(u => u !== targetItem.unit)).slice(0, 2);
+            if(wrongUnits.length < 2) wrongUnits.push(unitsArr.filter(u => u !== targetItem.unit)[0]); 
+            
+            choices = [targetItem.unit, wrongUnits[0], wrongUnits[1]];
+            friseHtml = generateFriseHTML(dim);
+        } 
+        else if (qType === 2) { 
+            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${prefix} :`;
+            
+            if (level === 1) {
+                let v1 = targetItem.val;
+                let c1 = `${fmt(v1)} ${targetItem.unit}`;
+                let c2 = `${fmt(v1 * 1000)} ${targetItem.unit}`; 
+                let c3 = (v1 >= 100) ? `${fmt(v1 / 100)} ${targetItem.unit}` : `${fmt(v1 * 100)} ${targetItem.unit}`; 
+                choices = [c1, c2, c3];
+            } else if (level === 2) {
+                let v1 = targetItem.val;
+                let c1 = `${fmt(v1)} ${targetItem.unit}`;
+                let c2 = `${fmt(v1 * 10)} ${targetItem.unit}`; 
+                let c3 = `${fmt(v1 / 10)} ${targetItem.unit}`;
+                choices = [c1, c2, c3];
+            } else {
+                let conv = convertTricky(targetItem.val, targetItem.unit);
+                let c1 = `${fmt(conv.val)} ${conv.unit}`; 
+                let c2 = `${fmt(targetItem.val * 10)} ${targetItem.unit}`; 
+                let c3 = `${fmt(conv.val * 100)} ${conv.unit}`; 
+                choices = [c1, c2, c3];
+            }
+        }
+        else if (qType === 3) { 
+            problemText = `Qu'est-ce qui ${prefix} <strong>${fmt(targetItem.val)} ${targetItem.unit}</strong> ?`;
+            let wrongItems = shuffle(EST_DB[dim].filter(i => i.val !== targetItem.val || i.unit !== targetItem.unit)).slice(0, 2);
+            
+            let wrongN1 = pick(wrongItems[0].items).n;
+            let wrongN2 = pick(wrongItems[1].items).n;
+            
+            choices = [
+                qObject.charAt(0).toUpperCase() + qObject.slice(1), 
+                wrongN1.charAt(0).toUpperCase() + wrongN1.slice(1), 
+                wrongN2.charAt(0).toUpperCase() + wrongN2.slice(1)
+            ];
+            emoji = null; 
+        }
+        else if (qType === 4) { 
+            let isTrue = rand(1, 2) === 1;
+            let displayedVal = targetItem.val;
+            
+            if (!isTrue) displayedVal = targetItem.val * pick([100, 1000]); 
+            
+            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${verb} environ <strong>${fmt(displayedVal)} ${targetItem.unit}</strong>.`;
+            choices = ["Vrai", "Faux"];
+            correctIndex = isTrue ? 0 : 1;
+            correctionText = (isTrue ? "C'est vrai ! " : "C'est faux ! ") + correctionText;
+            
+            return { isProblem: false, isEstimation: true, qType, problemText, choices, correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
+        }
+
+        let finalChoices = [];
+        let finalCorrectIndex = 0;
+        let indices = [0, 1, 2];
+        shuffle(indices);
+        for(let i=0; i<indices.length; i++) {
+            finalChoices.push(choices[indices[i]]);
+            if (indices[i] === 0) finalCorrectIndex = i;
+        }
+
+        return { isProblem: false, isEstimation: true, qType, problemText, choices: finalChoices, correctIndex: finalCorrectIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
+    }
+
+    function convertTricky(val, unit) {
+        if (unit === 'g') return { val: val / 1000, unit: 'kg' };
+        if (unit === 'kg') return { val: val * 1000, unit: 'g' };
+        if (unit === 't') return { val: val * 1000, unit: 'kg' };
+        if (unit === 'mm') return { val: val / 10, unit: 'cm' };
+        if (unit === 'cm') return { val: val / 100, unit: 'm' };
+        if (unit === 'm') return { val: val * 100, unit: 'cm' };
+        if (unit === 'km') return { val: val * 1000, unit: 'm' };
+        if (unit === 'mL') return { val: val / 10, unit: 'cL' };
+        if (unit === 'cL') return { val: val * 10, unit: 'mL' };
+        if (unit === 'L') return { val: val * 100, unit: 'cL' };
+        return { val: val, unit: unit }; 
+    }
+
+    /* =========================================
+       RÉCUPÉRATION DES DONNÉES 
+       ========================================= */
     function getQuizData() {
-      const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
-      if (checkboxes.length === 0) { alert("⚠️ Cochez au moins une grandeur !"); return false; }
+      let rawTypes = Array.from(document.querySelectorAll('.theme-grid input[type="checkbox"]:checked')).map(cb => cb.value);
+      
+      let allowedDims = [];
+      if (rawTypes.includes('length')) allowedDims.push('len');
+      if (rawTypes.includes('mass') || rawTypes.includes('massT')) allowedDims.push('mass');
+      if (rawTypes.includes('volL')) allowedDims.push('cap');
+      if (rawTypes.includes('area')) allowedDims.push('area');
+      if (rawTypes.includes('volM3') || rawTypes.includes('cross')) allowedDims.push('vol');
+      
+      if (rawTypes.length === 0) { alert("⚠️ Cochez au moins une case dans le menu !"); return false; }
       
       const levelCbs = document.querySelectorAll('input[name="cbLevel"]:checked');
       if (levelCbs.length === 0) { alert("⚠️ Cochez au moins un niveau !"); return false; }
@@ -426,30 +793,53 @@
       let seedInputElem = document.getElementById('inputSeed');
       let seedInput = seedInputElem.value.trim().toUpperCase();
       
-      if (!seedInput) {
+      if (!seedInput || seedInput === lastGeneratedSeed) {
           const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+          seedInput = "";
           for(let i=0; i<4; i++) seedInput += chars.charAt(Math.floor(Math.random() * chars.length));
           seedInputElem.value = seedInput;
+          lastGeneratedSeed = seedInput; 
+      } else {
+          lastGeneratedSeed = ""; 
       }
       
-      currentSeedStr = seedInput;
+      currentSeedStr = seedInput; 
       setSeed(currentSeedStr); 
       
-      let types = Array.from(checkboxes).map(cb => cb.value);
       let levels = Array.from(levelCbs).map(cb => parseInt(cb.value));
       let targetCount = parseInt(document.getElementById('selCount').value, 10);
       
       quizData = [];
+      usedQuestionsText = []; 
+      
       for (let i = 0; i < targetCount; i++) {
-        let chosenType = pick(types);
+        let chosenType = pick(rawTypes);
         let chosenLevel = pick(levels);
-        quizData.push(buildQuestionLogic(chosenType, chosenLevel));
+        
+        let newQuestion;
+        let attempts = 0;
+        
+        do {
+            if (chosenType.startsWith('prob_')) {
+                let family = chosenType.replace('prob_', '');
+                newQuestion = buildProblemLogic(chosenLevel, family);
+            } else if (chosenType.startsWith('est_')) {
+                let dimList = allowedDims.length > 0 ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']; 
+                newQuestion = buildEstimationLogic(chosenLevel, chosenType, dimList);
+            } else {
+                newQuestion = buildQuestionLogic(chosenType, chosenLevel);
+            }
+            attempts++;
+        } while (usedQuestionsText.includes(newQuestion.textId) && attempts < 15);
+        
+        usedQuestionsText.push(newQuestion.textId);
+        quizData.push(newQuestion);
       }
       return true;
     }
 
     /* =========================================
-       CONSTRUCTION DU DOM
+       CONSTRUCTION DU DOM (TABLEAU ET ESTIMATION)
        ========================================= */
     function buildHTMLColumns(schema, isPrint = false, q = null, mode = 'diapo') {
       let html = '';
@@ -486,11 +876,7 @@
         for(let si=0; si<schema.slots; si++){
           let isLast = (si === schema.slots - 1);
           let classes = `unitBtn ${!isLast ? 'empty-unit' : ''}`;
-          
-          if (isPrint && mode === 'correction' && isLast && ci === q.targetIdx) {
-              classes += ' unit-highlight-text';
-          }
-          
+          if (isPrint && mode === 'correction' && isLast && ci === q.targetIdx) classes += ' unit-highlight-text';
           let styleText = '';
           if (isLast && u.length >= 4 && schema.slots === 3) styleText = 'font-size: 0.82em; letter-spacing: -0.5px;';
           html += `<div class="${classes}">${isLast ? `<span style="${styleText}">${u}</span>` : ''}</div>`;
@@ -510,14 +896,9 @@
         for(let i=0; i<schema.slots; i++){
           let isTargetSlot = isPrint && mode === 'correction' && slotIndex === (q.targetIdx * schema.slots + (schema.slots - 1));
           let extraClass = isTargetSlot ? ' unit-highlight' : '';
-          
           let val = (isPrint && mode !== 'empty') ? digits[slotIndex] : '';
-          
           html += `<input class="digit${extraClass}" readonly value="${val}" />`;
-          
-          if (isPrint && isTargetSlot && q.calcValStr.includes(',')) {
-              html += `<div class="print-static-comma">,</div>`;
-          }
+          if (isPrint && isTargetSlot && q.calcValStr.includes(',')) html += `<div class="print-static-comma">,</div>`;
           slotIndex++;
         }
         html += `</div></div></div>`;
@@ -534,6 +915,48 @@
       const columnsContainer = document.getElementById('diapoBoardColumns');
       columnsContainer.style.setProperty('--cols', schema.units.length);
       columnsContainer.innerHTML = buildHTMLColumns(schema, false, null, 'diapo');
+    }
+
+    function buildEstimationDOM(q, showCorrection = false) {
+      const estBoard = document.getElementById('estBoard');
+      estBoard.innerHTML = '';
+      
+      if (q.qType === 1) {
+          estBoard.innerHTML = q.friseHtml;
+      }
+      
+      if (q.choices.length > 0) {
+          let choicesContainer = document.createElement('div');
+          choicesContainer.className = 'est-choices-container';
+          
+          const labels = ["A", "B", "C"];
+          
+          q.choices.forEach((choice, idx) => {
+             let btn = document.createElement('div');
+             btn.className = 'est-btn';
+             
+             if (q.choices.length === 2) {
+                 btn.innerHTML = choice;
+                 btn.style.justifyContent = 'center';
+             } else {
+                 btn.innerHTML = `<div class="est-badge">${labels[idx]}</div> <div>${choice}</div>`;
+             }
+             
+             if (showCorrection) {
+                 if (idx === q.correctIndex) btn.classList.add('correct');
+                 else btn.classList.add('wrong');
+             }
+             
+             choicesContainer.appendChild(btn);
+          });
+          
+          estBoard.appendChild(choicesContainer);
+      } else {
+          // POUR L'ACTION EN CLASSE (Pas de QCM, juste un message d'attente)
+          if (!showCorrection) {
+              estBoard.innerHTML = `<div class="est-action-msg">🕵️ À vous de jouer... Préparez-vous à montrer !</div>`;
+          }
+      }
     }
 
     function fillDiapoDigits(q, isCorrection) {
@@ -559,7 +982,7 @@
       }
     }
 
-    function positionDiapoCursor(colIdx, animate) {
+    function positionDiapoCursor(colIdx, animate, q, isFinal) {
       const cursor = document.getElementById('diapoCursor');
       const handles = [document.getElementById('diapoHandleTop'), document.getElementById('diapoHandleBottom')];
       const inner = document.getElementById('diapoInner');
@@ -606,8 +1029,6 @@
       Array.from(document.querySelectorAll('#diapoBoardColumns .unitBtn')).forEach(b => b.classList.remove('unit-highlight-text'));
       headBtn.classList.add('unit-highlight-text');
 
-      const q = quizData[currentIndex];
-      const isFinal = animate === true;
       let currentStr = isFinal ? q.calcValStr : q.valStr;
       
       if(!document.getElementById('hideCommaStyle')) {
@@ -616,22 +1037,28 @@
          style.innerHTML = `.cursor.hide-comma::after { display: none !important; }`;
          document.head.appendChild(style);
       }
-      
-      if (!currentStr.includes(',')) {
-          cursor.classList.add('hide-comma');
-      } else {
-          cursor.classList.remove('hide-comma');
-      }
+      if (!currentStr.includes(',')) cursor.classList.add('hide-comma');
+      else cursor.classList.remove('hide-comma');
     }
 
     /* =========================================
-       NAVIGATION DIAPORAMA
+       NAVIGATION DIAPORAMA ET UI
        ========================================= */
     function buildThumbnails() {
       const tb = document.getElementById('thumbBar'); tb.innerHTML = '';
       quizData.forEach((q, idx) => {
         let btn = document.createElement('button'); btn.className = 'thumb-btn';
-        btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${q.valStr} ${q.sourceUnit} = ... ${q.targetUnit}</span>`;
+        if(q.isEstimation) {
+            let label = "Estimer";
+            if(q.qType === 5) label = "Action";
+            if(q.qType === 6) label = "Grandeur";
+            if(q.qType === 7) label = "Pont";
+            btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${label}</span>`;
+        } else if(q.isProblem) {
+            btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">Problème</span>`;
+        } else {
+            btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${q.valStr} ${q.sourceUnit} = ... ${q.targetUnit}</span>`;
+        }
         btn.onclick = () => loadSlide(idx, q.phase); 
         tb.appendChild(btn);
       });
@@ -646,51 +1073,127 @@
       }
     }
 
+    function updateUI() {
+      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
+      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
+      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
+      
+      const tBox = document.getElementById('tBox');
+      const mainBoard = document.getElementById('mainBoard');
+      const estBoard = document.getElementById('estBoard');
+      
+      const qText = document.getElementById('qText');
+      const qSubtext = document.getElementById('qSubtext');
+      const qEmoji = document.getElementById('qEmoji');
+      
+      qSubtext.innerHTML = "";
+
+      if (q.isEstimation && q.emoji) {
+          qEmoji.innerText = q.emoji;
+          qEmoji.style.display = 'block';
+      } else {
+          qEmoji.style.display = 'none';
+      }
+
+      if (q.isEstimation) {
+          mainBoard.style.display = 'none';
+          document.documentElement.style.setProperty('--accent', '#0d9488'); 
+          
+          if (q.phase === 0) {
+              qText.innerHTML = q.problemText;
+              estBoard.style.display = 'none';
+              tBox.style.display = 'flex';
+              btnNext.innerHTML = (q.qType === 5) ? "Lancer l'action 💡 ►" : "Voir les choix 💡 ►";
+          } 
+          else if (q.phase === 1) {
+              qText.innerHTML = q.problemText;
+              qSubtext.innerHTML = (q.qType === 5) ? "" : `<span style="color:var(--muted)">Quel est votre choix ?</span>`;
+              tBox.style.display = 'flex';
+              estBoard.style.display = 'flex';
+              buildEstimationDOM(q, false);
+              btnNext.innerHTML = "Correction ✓ ►";
+          }
+          else if (q.phase === 2) {
+              qText.innerHTML = q.problemText;
+              qSubtext.innerHTML = `<span style="color:var(--success)">${q.correctionText}</span>`;
+              tBox.style.display = 'flex';
+              estBoard.style.display = 'flex';
+              buildEstimationDOM(q, true);
+              if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+              else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
+          }
+      } 
+      else if (q.isProblem) {
+          mainBoard.style.display = 'block';
+          estBoard.style.display = 'none';
+          
+          if (q.phase === 0) {
+            qText.innerHTML = q.problemText;
+            tBox.style.display = 'none'; 
+            btnNext.innerHTML = "Aide : Placer dans le tableau 💡 ►";
+          } 
+          else if (q.phase === 1) {
+            qText.innerHTML = q.problemText;
+            qSubtext.innerHTML = `<span style="color:var(--muted)">Étape 1 : Place la grandeur à convertir correctement.</span>`;
+            tBox.style.display = 'flex'; 
+            buildDiapoTableDOM(q.schema);
+            fillDiapoDigits(q, false);
+            requestAnimationFrame(() => positionDiapoCursor(q.sourceIdx, false, q, false));
+            btnNext.innerHTML = "Correction et Calcul ✓ ►"; 
+          } 
+          else if (q.phase === 2) {
+            qText.innerHTML = q.problemText;
+            qSubtext.innerHTML = `<span style="color:var(--success)">${q.correctionText}</span>`;
+            tBox.style.display = 'flex'; 
+            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== q.schema) {
+               buildDiapoTableDOM(q.schema);
+            }
+            fillDiapoDigits(q, true); 
+            requestAnimationFrame(() => positionDiapoCursor(q.targetIdx, true, q, true));
+            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+            else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
+          }
+      } 
+      else {
+          mainBoard.style.display = 'block';
+          estBoard.style.display = 'none';
+          
+          let formattedSource = `${highlightUnitText(q.valStr)} <span class="unit-highlight-text">${q.sourceUnit}</span>`;
+          let formattedTarget = `${highlightUnitText(q.calcValStr)} <span class="unit-highlight-text">${q.targetUnit}</span>`;
+
+          if (q.phase === 0) {
+            qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
+            tBox.style.display = 'none'; 
+            btnNext.innerHTML = "Placer au Tableau 💡 ►";
+          } 
+          else if (q.phase === 1) {
+            qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
+            tBox.style.display = 'flex'; 
+            buildDiapoTableDOM(q.schema);
+            fillDiapoDigits(q, false);
+            requestAnimationFrame(() => positionDiapoCursor(q.sourceIdx, false, q, false));
+            btnNext.innerHTML = "Correction 👀 ►"; 
+          } 
+          else if (q.phase === 2) {
+            qText.innerHTML = `Convertis : ${q.valStr} ${q.sourceUnit} = ${formattedTarget}`;
+            tBox.style.display = 'flex'; 
+            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== q.schema) {
+               buildDiapoTableDOM(q.schema);
+            }
+            fillDiapoDigits(q, true); 
+            requestAnimationFrame(() => positionDiapoCursor(q.targetIdx, true, q, true));
+            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+            else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
+          }
+      }
+      updateThumbnails();
+    }
+
     function generateQuiz() {
       if(!getQuizData()) return;
       document.getElementById('diapoContainer').style.display = 'flex';
       buildThumbnails(); loadSlide(0, 0);
       document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
-    }
-
-    function updateUI() {
-      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
-      document.getElementById('slideCounter').textContent = `Série ${currentSeedStr} | Question ${currentIndex + 1} / ${quizData.length}`;
-      document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
-      
-      const tBox = document.getElementById('tBox');
-      const qText = document.getElementById('qText');
-      
-      let formattedSource = `${highlightUnitText(q.valStr)} <span class="unit-highlight-text">${q.sourceUnit}</span>`;
-      let formattedTarget = `${highlightUnitText(q.calcValStr)} <span class="unit-highlight-text">${q.targetUnit}</span>`;
-
-      if (q.phase === 0) {
-        qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
-        tBox.style.display = 'none'; 
-        btnNext.innerHTML = "Placer au Tableau 💡 ►";
-      } 
-      else if (q.phase === 1) {
-        qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
-        tBox.style.display = 'flex'; 
-        buildDiapoTableDOM(q.schema);
-        fillDiapoDigits(q, false);
-        requestAnimationFrame(() => positionDiapoCursor(q.sourceIdx, false));
-        btnNext.innerHTML = "Correction 👀 ►"; 
-      } 
-      else if (q.phase === 2) {
-        qText.innerHTML = `Convertis : ${q.valStr} ${q.sourceUnit} = ${formattedTarget}`;
-        tBox.style.display = 'flex'; 
-        
-        if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== q.schema) {
-           buildDiapoTableDOM(q.schema);
-        }
-        fillDiapoDigits(q, true); 
-        requestAnimationFrame(() => positionDiapoCursor(q.targetIdx, true));
-        
-        if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
-        else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
-      }
-      updateThumbnails();
     }
 
     function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
@@ -714,6 +1217,20 @@
        MOTEUR IMPRESSION PDF
        ========================================= */
     function buildPrintContainer(q, mode) {
+      if (q.isEstimation) {
+          if (q.choices.length === 0) return `<div style="margin-top:10px; height: 30px; border-bottom: 2px dashed #ccc;"></div>`;
+          
+          let html = `<div class="print-est-choices">`;
+          const labels = ["A", "B", "C"];
+          q.choices.forEach((choice, idx) => {
+              let isCorrectClass = (mode === 'correction' && idx === q.correctIndex) ? 'correct' : '';
+              let labelStr = (q.choices.length === 2) ? "" : `<strong>${labels[idx]}</strong>) `;
+              html += `<div class="print-est-box ${isCorrectClass}"><div class="print-est-check"></div> ${labelStr}${choice}</div>`;
+          });
+          html += `</div>`;
+          return html;
+      }
+        
       const s = q.schema;
       const [c, cd] = THEMES[s.id];
       let html = `<div class="board print-board" style="--accent: ${c}; --accent-dark: ${cd};"><div class="inner print-inner">`;
@@ -735,19 +1252,20 @@
 
       if (cbStudentEmpty || cbStudentFilled) {
           let page1 = document.createElement('div'); page1.className = 'print-page';
-          page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Série : ${currentSeedStr}</div></div><h2 class="print-title">Conversions</h2>`;
+          page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Série : ${currentSeedStr}</div></div><h2 class="print-title">Conversions & Problèmes</h2>`;
           
           quizData.forEach((q, i) => {
             let qDiv = document.createElement('div'); qDiv.className = 'print-q';
             
-            let qTextHtml = `${i+1}) Convertis : <strong>${q.valStr} ${q.sourceUnit}</strong> = .............................. <strong>${q.targetUnit}</strong>`;
+            let qTextHtml;
+            if (q.isEstimation) qTextHtml = `${i+1}) ${q.emoji ? q.emoji + ' ' : ''}${q.problemText}`;
+            else if (q.isProblem) qTextHtml = `${i+1}) ${q.problemText}`;
+            else qTextHtml = `${i+1}) Convertis : <strong>${q.valStr} ${q.sourceUnit}</strong> = .............................. <strong>${q.targetUnit}</strong>`;
+            
             qDiv.innerHTML = `<div class="print-q-text">${qTextHtml}</div>`;
             
-            if (cbStudentFilled) {
-                qDiv.innerHTML += buildPrintContainer(q, 'filled');
-            } else if (cbStudentEmpty) {
-                qDiv.innerHTML += buildPrintContainer(q, 'empty');
-            }
+            if (cbStudentFilled && !q.isEstimation) qDiv.innerHTML += buildPrintContainer(q, 'filled');
+            else if (cbStudentEmpty || q.isEstimation) qDiv.innerHTML += buildPrintContainer(q, 'empty');
             
             page1.appendChild(qDiv);
           });
@@ -759,12 +1277,14 @@
       quizData.forEach((q, i) => {
         let qDiv = document.createElement('div'); qDiv.className = 'print-q';
         
-        let cTextHtml = `${i+1}) <strong>${q.valStr} ${q.sourceUnit}</strong> = <strong>${q.calcValStr} ${q.targetUnit}</strong>`;
+        let cTextHtml;
+        if (q.isEstimation || q.isProblem) cTextHtml = `${i+1}) ${q.emoji ? q.emoji + ' ' : ''}${q.problemText}<br><span style="color:var(--success); font-size:0.9em; display:block; margin-top:5px;">${q.correctionText}</span>`;
+        else cTextHtml = `${i+1}) <strong>${q.valStr} ${q.sourceUnit}</strong> = <strong>${q.calcValStr} ${q.targetUnit}</strong>`;
+        
         qDiv.innerHTML = `<div class="print-q-text">${cTextHtml}</div>`;
         
-        if (cbCorrGabarits) {
-            qDiv.innerHTML += buildPrintContainer(q, 'correction');
-        } else {
+        if (cbCorrGabarits) qDiv.innerHTML += buildPrintContainer(q, 'correction');
+        else {
             qDiv.style.marginBottom = "15px";
             qDiv.style.borderBottom = "1px solid #eee";
             qDiv.style.paddingBottom = "10px";
