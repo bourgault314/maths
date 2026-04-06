@@ -42,15 +42,18 @@
     .theme-col.area .cb-row input { accent-color: var(--area); }
     .theme-col.vol .cb-row input { accent-color: var(--vol); }
 
-    .bottom-config { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
-    .config-options { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+    .bottom-config { display: flex; justify-content: space-between; align-items: stretch; flex-wrap: wrap; gap: 12px; background: #f4f7fc; padding: 12px 16px; border-radius: 8px; border: 1px solid #dbe4f3; }
+    .config-options { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
     .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
     .config-block select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; font-family: 'Nunito', sans-serif;}
     
-    .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; font-family: 'Nunito', sans-serif;}
+    .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;}
+    .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; font-family: 'Nunito', sans-serif; display: flex; align-items: center; justify-content: center;}
     .btn-main.print { background: #9c27b0; }
     .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+
+    .print-group { display: flex; gap: 15px; border: 2px dashed #cfd8ea; padding: 8px 15px; border-radius: 8px; background: white; align-items: center;}
+    .print-options-col { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: bold;}
 
     /* LAYOUT DIAPORAMA */
     .diapo-container { background: white; border-radius: 18px; box-shadow: var(--shadow); width: 100%; max-width: 1100px; display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--panel-border); margin-top: 20px; min-height: 600px;}
@@ -87,7 +90,6 @@
     .board-columns { display: grid; grid-template-columns: repeat(var(--cols, 7), 1fr); gap: 4px; position: relative; z-index: 1; user-select: none; }
     .family-col { display: flex; flex-direction: column; gap: 6px; }
 
-    /* ANIMATION RALENTIE (1s) */
     .cursor {
       position: absolute; left: 0; box-sizing: border-box; 
       background: color-mix(in srgb, var(--accent) 15%, transparent);
@@ -219,12 +221,12 @@
     <div class="bottom-config">
       <div class="config-options">
         <div class="config-block">
-          <label>Niveau :</label>
-          <select id="selLevel">
-            <option value="1" selected>Niveau 1 (Entiers sans virgule)</option>
-            <option value="2">Niveau 2 (Entiers et décimaux simples)</option>
-            <option value="3">Niveau 3 (Pièges, zéros intercalés)</option>
-          </select>
+          <label>Niveaux :</label>
+          <div style="display: flex; gap: 12px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cfd8ea;">
+            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="1" checked style="accent-color: var(--accent);"> 1</label>
+            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="2" style="accent-color: var(--accent);"> 2</label>
+            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="3" style="accent-color: var(--accent);"> 3</label>
+          </div>
         </div>
         <div class="config-block">
           <label>Questions :</label>
@@ -235,17 +237,19 @@
             <option value="20">20</option>
           </select>
         </div>
-        
-        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px; flex-direction: column; align-items: flex-start; gap: 4px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbStudentEmpty" checked style="accent-color: var(--success); transform: scale(1.1);"> 📝 Élève : Gabarits vides</label>
-          <label style="cursor: pointer;"><input type="checkbox" id="cbStudentFilled" style="accent-color: var(--success); transform: scale(1.1);"> 📝 Élève : Gabarits pré-remplis</label>
-          <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success); transform: scale(1.1);"> 📝 Corrigé : Afficher les tableaux</label>
-        </div>
       </div>
       
-      <div class="btn-wrap" style="margin-top:10px;">
-        <button class="btn-main" onclick="generateQuiz()">💻 Lancer au Tableau (Diapo)</button>
-        <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
+      <div class="btn-wrap">
+        <button class="btn-main" onclick="generateQuiz()">💻 Lancer Diapo Tableau</button>
+        
+        <div class="print-group">
+          <div class="print-options-col">
+            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentEmpty" checked style="accent-color: var(--success);"> 📝 Élève : Gabarits vides</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentFilled" style="accent-color: var(--success);"> 📝 Élève : Gabarits remplis</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success);"> 📝 Corrigé : Tableaux inclus</label>
+          </div>
+          <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
+        </div>
       </div>
     </div>
   </div>
@@ -305,12 +309,10 @@
     let currentIndex = 0;
     let currentSchema = null;
     
-    // Utilitaires
     function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
     function fmt(n) { return Number(n.toFixed(8)).toString().replace('.', ','); }
 
-    // DÉCOUPE LE TEXTE POUR NE COLORER QUE LE CHIFFRE DES UNITÉS
     function highlightUnitText(valStr) {
       let parts = valStr.split(',');
       let intPart = parts[0];
@@ -322,35 +324,62 @@
       return parts.join(',');
     }
 
+    // Le générateur de valeurs intelligent selon les Niveaux
     function generateValue(level) {
-      if (level === 1) { return rand(1, 999).toString(); } 
+      if (level === 1) { 
+        return rand(1, 999).toString(); 
+      } 
       else if (level === 2) {
-        if(Math.random() > 0.5) return rand(1, 999).toString();
-        return (rand(10, 999) / 10).toString().replace('.', ',');
+        let roll = Math.random();
+        if(roll < 0.3) return rand(1, 999).toString(); // Entier classique
+        if(roll < 0.7) return (rand(11, 999) / 10).toString().replace('.', ','); // 1 chiffre après virgule
+        return (rand(101, 9999) / 100).toString().replace('.', ','); // 2 chiffres après virgule
       } else {
         let roll = Math.random();
-        if(roll < 0.33) return "0," + rand(1, 99);
-        if(roll < 0.66) return rand(1, 9) + ",0" + rand(1, 9);
-        return rand(10, 999).toString();
+        if(roll < 0.33) {
+            // Petits nombres : 0,X ou 0,0X
+            let zeros = rand(1, 2) === 1 ? "0," : "0,0";
+            return zeros + rand(1, 9);
+        }
+        if(roll < 0.66) {
+            // Zéro intercalé : ex 12,04
+            return rand(1, 99) + ",0" + rand(1, 9);
+        }
+        return "0," + rand(1, 9);
       }
     }
 
     function buildQuestionLogic(type, level) {
       const schema = SCHEMAS[type];
-      let uIndex1 = rand(0, schema.units.length - 2);
-      let uIndex2 = rand(0, schema.units.length - 1);
-      while(uIndex1 === uIndex2) uIndex2 = rand(0, schema.units.length - 1);
+      let uIndex1, uIndex2;
+      let valid = false;
       
-      let sourceUnit = schema.units[uIndex1];
-      let targetUnit = schema.units[uIndex2];
-      while(sourceUnit === '-' || targetUnit === '-') {
+      // Ajustement dynamique de l'écart max (La fameuse règle !)
+      let maxGap = 3;
+      if (schema.slots === 2) maxGap = 2; // Aires
+      if (schema.slots === 3) maxGap = 2; // Volumes
+      
+      let attempts = 0;
+      while(!valid && attempts < 100) {
           uIndex1 = rand(0, schema.units.length - 1);
           uIndex2 = rand(0, schema.units.length - 1);
-          while(uIndex1 === uIndex2) uIndex2 = rand(0, schema.units.length - 1);
-          sourceUnit = schema.units[uIndex1];
-          targetUnit = schema.units[uIndex2];
+          attempts++;
+          
+          if(uIndex1 === uIndex2) continue; 
+          if(schema.units[uIndex1] === '-' || schema.units[uIndex2] === '-') continue; 
+          
+          let gap = Math.abs(uIndex1 - uIndex2);
+          if (gap > maxGap) continue;
+          
+          // Niveau 1 : on ne va QUE vers la droite (uIndex1 < uIndex2)
+          if (level === 1 && uIndex1 >= uIndex2) continue;
+          
+          valid = true;
       }
 
+      let sourceUnit = schema.units[uIndex1];
+      let targetUnit = schema.units[uIndex2];
+      
       let valStr = generateValue(level);
       let numVal = parseFloat(valStr.replace(',', '.'));
       
@@ -364,12 +393,19 @@
       const checkboxes = document.querySelectorAll('.theme-grid input[type="checkbox"]:checked');
       if (checkboxes.length === 0) { alert("⚠️ Cochez au moins une grandeur !"); return false; }
       
+      const levelCbs = document.querySelectorAll('input[name="cbLevel"]:checked');
+      if (levelCbs.length === 0) { alert("⚠️ Cochez au moins un niveau !"); return false; }
+      
       let types = Array.from(checkboxes).map(cb => cb.value);
+      let levels = Array.from(levelCbs).map(cb => parseInt(cb.value));
       let targetCount = parseInt(document.getElementById('selCount').value, 10);
-      const level = parseInt(document.getElementById('selLevel').value, 10); 
       
       quizData = [];
-      for (let i = 0; i < targetCount; i++) quizData.push(buildQuestionLogic(pick(types), level));
+      for (let i = 0; i < targetCount; i++) {
+        let chosenType = pick(types);
+        let chosenLevel = pick(levels);
+        quizData.push(buildQuestionLogic(chosenType, chosenLevel));
+      }
       return true;
     }
 
@@ -377,27 +413,23 @@
        CONSTRUCTION DU DOM
        ========================================= */
     function buildHTMLColumns(schema, isPrint = false, q = null, mode = 'diapo') {
-      // mode = 'diapo', 'empty', 'filled', 'correction'
       let html = '';
       const labelsMap = schema.id === 'cross' ? CROSS_LABELS : (schema.id === 'area' ? AREA_LABELS : null);
       
       let digits = [];
       let totalSlots = schema.units.length * schema.slots;
       
-      // On remplit les chiffres uniquement si on n'est PAS en mode "empty" (donc "filled" ou "correction")
       if(isPrint && q && mode !== 'empty') {
           digits = new Array(totalSlots).fill('');
           let parts = q.valStr.split(',');
           let intPart = parts[0], decPart = parts[1] || "";
           let sourceRightSlot = q.sourceIdx * schema.slots + (schema.slots - 1);
           
-          // Place la valeur d'origine
           let c = sourceRightSlot;
           for(let i=intPart.length-1; i>=0; i--) { if(c >= 0) digits[c] = intPart[i]; c--; }
           c = sourceRightSlot + 1;
           for(let i=0; i<decPart.length; i++) { if(c < totalSlots) digits[c] = decPart[i]; c++; }
 
-          // S'il s'agit de la correction, on rajoute les zéros de remplissage
           if(mode === 'correction') {
               let minIdx = totalSlots, maxIdx = -1;
               digits.forEach((val, idx) => { if(val !== '') { minIdx = Math.min(minIdx, idx); maxIdx = Math.max(maxIdx, idx); } });
@@ -416,7 +448,6 @@
           let isLast = (si === schema.slots - 1);
           let classes = `unitBtn ${!isLast ? 'empty-unit' : ''}`;
           
-          // La couleur spéciale ne s'applique qu'au moment de la correction, sur l'unité cible
           if (isPrint && mode === 'correction' && isLast && ci === q.targetIdx) {
               classes += ' unit-highlight-text';
           }
@@ -441,12 +472,10 @@
           let isTargetSlot = isPrint && mode === 'correction' && slotIndex === (q.targetIdx * schema.slots + (schema.slots - 1));
           let extraClass = isTargetSlot ? ' unit-highlight' : '';
           
-          // Le contenu dépend du mode
           let val = (isPrint && mode !== 'empty') ? digits[slotIndex] : '';
           
           html += `<input class="digit${extraClass}" readonly value="${val}" />`;
           
-          // Virgule uniquement pour la correction
           if (isPrint && isTargetSlot && q.calcValStr.includes(',')) {
               html += `<div class="print-static-comma">,</div>`;
           }
@@ -505,7 +534,6 @@
 
       if (!headBtn || !cellTarget) return;
 
-      // ANIMATION RALENTIE : 1 SECONDE EXACTEMENT
       const trans = animate ? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out' : 'none';
       const handleTrans = animate ? 'transform 1s ease-in-out, top 1s ease-in-out' : 'none';
       cursor.style.transition = trans;
@@ -539,15 +567,19 @@
       Array.from(document.querySelectorAll('#diapoBoardColumns .unitBtn')).forEach(b => b.classList.remove('unit-highlight-text'));
       headBtn.classList.add('unit-highlight-text');
 
+      // VÉRIFICATION DE LA VIRGULE FANTÔME
       const q = quizData[currentIndex];
       const isFinal = animate === true;
-      if (isFinal && !q.calcValStr.includes(',')) {
-          if(!document.getElementById('hideCommaStyle')) {
-             const style = document.createElement('style');
-             style.id = 'hideCommaStyle';
-             style.innerHTML = `.cursor.hide-comma::after { display: none !important; }`;
-             document.head.appendChild(style);
-          }
+      let currentStr = isFinal ? q.calcValStr : q.valStr;
+      
+      if(!document.getElementById('hideCommaStyle')) {
+         const style = document.createElement('style');
+         style.id = 'hideCommaStyle';
+         style.innerHTML = `.cursor.hide-comma::after { display: none !important; }`;
+         document.head.appendChild(style);
+      }
+      
+      if (!currentStr.includes(',')) {
           cursor.classList.add('hide-comma');
       } else {
           cursor.classList.remove('hide-comma');
@@ -591,7 +623,6 @@
       const tBox = document.getElementById('tBox');
       const qText = document.getElementById('qText');
       
-      // TYPOGRAPHIE EXACTE : Uniquement le chiffre des unités et l'unité en couleur
       let formattedSource = `${highlightUnitText(q.valStr)} <span class="unit-highlight-text">${q.sourceUnit}</span>`;
       let formattedTarget = `${highlightUnitText(q.calcValStr)} <span class="unit-highlight-text">${q.targetUnit}</span>`;
 
@@ -642,7 +673,7 @@
     });
 
     /* =========================================
-       MOTEUR IMPRESSION PDF (AVEC MODES)
+       MOTEUR IMPRESSION PDF
        ========================================= */
     function buildPrintContainer(q, mode) {
       const s = q.schema;
@@ -664,7 +695,6 @@
       const container = document.getElementById('printContainer');
       container.innerHTML = ''; 
 
-      // On crée la page élève uniquement s'il y a au moins une option cochée
       if (cbStudentEmpty || cbStudentFilled) {
           let page1 = document.createElement('div'); page1.className = 'print-page';
           page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Fiche d'Exercices</div></div><h2 class="print-title">Conversions</h2>`;
@@ -672,11 +702,9 @@
           quizData.forEach((q, i) => {
             let qDiv = document.createElement('div'); qDiv.className = 'print-q';
             
-            // Formatage de la question
             let qTextHtml = `${i+1}) Convertis : <strong>${q.valStr} ${q.sourceUnit}</strong> = .............................. <strong>${q.targetUnit}</strong>`;
             qDiv.innerHTML = `<div class="print-q-text">${qTextHtml}</div>`;
             
-            // Gabarits au choix
             if (cbStudentFilled) {
                 qDiv.innerHTML += buildPrintContainer(q, 'filled');
             } else if (cbStudentEmpty) {
@@ -688,7 +716,6 @@
           container.appendChild(page1);
       }
 
-      // Page Correction
       let page2 = document.createElement('div'); page2.className = 'print-page';
       page2.innerHTML = `<div class="print-header"><div class="print-seed">CORRIGÉ</div></div><h2 class="print-title">Correction Détaillée</h2>`;
       quizData.forEach((q, i) => {
@@ -700,7 +727,6 @@
         if (cbCorrGabarits) {
             qDiv.innerHTML += buildPrintContainer(q, 'correction');
         } else {
-            // Espace léger si on n'imprime pas les tableaux du corrigé
             qDiv.style.marginBottom = "15px";
             qDiv.style.borderBottom = "1px solid #eee";
             qDiv.style.paddingBottom = "10px";
