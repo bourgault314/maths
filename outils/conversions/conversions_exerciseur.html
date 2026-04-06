@@ -324,63 +324,86 @@
       return parts.join(',');
     }
 
-    // Le générateur de valeurs intelligent selon les Niveaux
+    // LE NOUVEAU GÉNÉRATEUR INTELLIGENT DE VALEURS
     function generateValue(level) {
       if (level === 1) { 
-        return rand(1, 999).toString(); 
+        // Niveau 1 : Entiers uniquement, mais 1/3 de chance pour 1, 2 ou 3 chiffres
+        let size = rand(1, 3);
+        if (size === 1) return rand(1, 9).toString();
+        if (size === 2) return rand(10, 99).toString();
+        return rand(100, 999).toString();
       } 
       else if (level === 2) {
-        let roll = Math.random();
-        if(roll < 0.3) return rand(1, 999).toString(); // Entier classique
-        if(roll < 0.7) return (rand(11, 999) / 10).toString().replace('.', ','); // 1 chiffre après virgule
-        return (rand(101, 9999) / 100).toString().replace('.', ','); // 2 chiffres après virgule
+        // Niveau 2 : Distribution équilibrée (4 sous-catégories de 25%)
+        let type = rand(1, 4);
+        if(type === 1) return rand(1, 99).toString(); // Entier à 1 ou 2 chiffres
+        if(type === 2) return rand(100, 9999).toString(); // Grand entier
+        if(type === 3) return (rand(11, 999) / 10).toString().replace('.', ','); // x,x ou xx,x
+        return (rand(101, 9999) / 100).toString().replace('.', ','); // x,xx ou xx,xx
       } else {
-        let roll = Math.random();
-        if(roll < 0.33) {
-            // Petits nombres : 0,X ou 0,0X
-            let zeros = rand(1, 2) === 1 ? "0," : "0,0";
+        // Niveau 3 : Les boss (4 catégories de pièges de 25%)
+        let type = rand(1, 4);
+        if(type === 1) {
+            // Micro-décimal (0,0x ou 0,00x)
+            let zeros = rand(1, 2) === 1 ? "0,0" : "0,00";
             return zeros + rand(1, 9);
+        } else if (type === 2) {
+            // Zéro intercalé (x,0x ou x0,x)
+            if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9);
+            else return rand(1, 9) + "0," + rand(1, 9);
+        } else if (type === 3) {
+            // Zéro final inutile pour tester l'élève (x,x0)
+            return rand(1, 99) + "," + rand(1, 9) + "0";
+        } else {
+            // Grands ronds qui reculent (x00 ou x000)
+            let zeros = rand(1, 2) === 1 ? "00" : "000";
+            return rand(1, 99) + zeros;
         }
-        if(roll < 0.66) {
-            // Zéro intercalé : ex 12,04
-            return rand(1, 99) + ",0" + rand(1, 9);
-        }
-        return "0," + rand(1, 9);
       }
     }
 
+    // LE NOUVEAU GÉNÉRATEUR D'ÉCARTS (Distribution parfaite)
     function buildQuestionLogic(type, level) {
       const schema = SCHEMAS[type];
-      let uIndex1, uIndex2;
-      let valid = false;
       
-      // Ajustement dynamique de l'écart max (La fameuse règle !)
+      // 1. Détermination de l'écart maximum autorisé
       let maxGap = 3;
       if (schema.slots === 2) maxGap = 2; // Aires
       if (schema.slots === 3) maxGap = 2; // Volumes
       
-      let attempts = 0;
-      while(!valid && attempts < 100) {
-          uIndex1 = rand(0, schema.units.length - 1);
-          uIndex2 = rand(0, schema.units.length - 1);
-          attempts++;
-          
-          if(uIndex1 === uIndex2) continue; 
-          if(schema.units[uIndex1] === '-' || schema.units[uIndex2] === '-') continue; 
-          
-          let gap = Math.abs(uIndex1 - uIndex2);
-          if (gap > maxGap) continue;
-          
-          // Niveau 1 : on ne va QUE vers la droite (uIndex1 < uIndex2)
-          if (level === 1 && uIndex1 >= uIndex2) continue;
-          
-          valid = true;
+      // 2. On choisit l'écart (1, 2 ou 3 colonnes) de manière parfaitement aléatoire
+      let gap = rand(1, maxGap);
+      
+      // 3. On choisit la direction de manière contrôlée
+      // direction = 1 (vers la droite / multiplier), direction = -1 (vers la gauche / diviser)
+      let direction;
+      if (level === 1) {
+          direction = 1; // Niveau 1 : Uniquement vers la droite
+      } else {
+          direction = rand(1, 2) === 1 ? 1 : -1; // 50% de chance pour droite ou gauche
       }
+
+      // 4. On cherche tous les index de départ valides pour ce saut
+      let validStarts = [];
+      for (let i = 0; i < schema.units.length; i++) {
+          let targetIdx = i + (gap * direction);
+          if (targetIdx >= 0 && targetIdx < schema.units.length) {
+              if (schema.units[i] !== '-' && schema.units[targetIdx] !== '-') {
+                  validStarts.push(i);
+              }
+          }
+      }
+
+      // 5. On choisit au hasard parmi les possibilités valides
+      let uIndex1 = pick(validStarts);
+      let uIndex2 = uIndex1 + (gap * direction);
 
       let sourceUnit = schema.units[uIndex1];
       let targetUnit = schema.units[uIndex2];
       
       let valStr = generateValue(level);
+      // Remarque technique : si on a un zéro final piège ("15,40"), le parseFloat le transforme en 15.4 pour le calcul mathématique. 
+      // C'est parfait : la réponse mathématique sera propre, mais l'affichage au tableau conservera le 0 initial.
       let numVal = parseFloat(valStr.replace(',', '.'));
       
       let shift = (uIndex2 - uIndex1) * schema.slots;
@@ -567,7 +590,6 @@
       Array.from(document.querySelectorAll('#diapoBoardColumns .unitBtn')).forEach(b => b.classList.remove('unit-highlight-text'));
       headBtn.classList.add('unit-highlight-text');
 
-      // VÉRIFICATION DE LA VIRGULE FANTÔME
       const q = quizData[currentIndex];
       const isFinal = animate === true;
       let currentStr = isFinal ? q.calcValStr : q.valStr;
