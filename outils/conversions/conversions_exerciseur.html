@@ -46,6 +46,7 @@
     .config-options { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
     .config-block { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
     .config-block select { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; font-family: 'Nunito', sans-serif;}
+    .config-block input[type="text"] { padding: 6px 10px; border-radius: 6px; border: 1px solid #cfd8ea; font-size: 0.95rem; outline: none; font-family: 'Nunito', sans-serif; text-transform: uppercase; width: 90px;}
     
     .btn-wrap { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch;}
     .btn-main { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.1s; font-family: 'Nunito', sans-serif; display: flex; align-items: center; justify-content: center;}
@@ -160,8 +161,11 @@
       #printContainer { display: block !important; margin: 0 auto; }
       
       .print-page { page-break-after: always; padding: 10px 0; }
-      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 20px; padding-bottom: 5px; border-bottom: 1px solid #ccc; position: relative;}
-      .print-seed { position: absolute; right: 0; top: 0; font-weight: bold; color: var(--muted); }
+      
+      /* CORRECTION DE L'ENTÊTE ET DE LA BOÎTE SÉRIE */
+      .print-header { display: flex; align-items: center; justify-content: flex-start; gap: 20px; font-size: 0.95rem; color: #333; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #ccc; }
+      .print-seed { margin-left: auto; font-weight: bold; color: var(--muted); border: 2px solid var(--muted); padding: 4px 8px; border-radius: 6px; }
+      
       .print-title { text-align: center; font-size: 1.4rem; margin: 5px 0 25px 0; color: #1f2a44; font-weight: bold; }
       
       .print-q { margin-bottom: 30px; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center;}
@@ -237,6 +241,10 @@
             <option value="20">20</option>
           </select>
         </div>
+        <div class="config-block">
+          <label title="Laisse vide pour une série aléatoire. Copie le code d'une fiche imprimée pour la rejouer au tableau !">Code Série :</label>
+          <input type="text" id="inputSeed" placeholder="Auto" maxlength="6">
+        </div>
       </div>
       
       <div class="btn-wrap">
@@ -257,7 +265,7 @@
   <div class="diapo-container" id="diapoContainer">
     <div class="diapo-header">
       <button class="btn-nav" id="btnPrev" onclick="prevSlide()">◄ Précédent</button>
-      <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
+      <div class="slide-counter" id="slideCounter">Série Auto | Question 1 / 5</div>
       <div style="display: flex; gap: 8px;">
         <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
         <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Afficher Tableau 💡 ►</button>
@@ -308,9 +316,26 @@
     let quizData = [];
     let currentIndex = 0;
     let currentSchema = null;
+    let currentSeedStr = ""; 
     
-    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    let prngSeed = 1;
+    function seededRandom() {
+        var t = prngSeed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+    function setSeed(str) {
+        let h = 2166136261 >>> 0;
+        for(let i = 0; i < str.length; i++) {
+            h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+        }
+        prngSeed = h;
+        for(let i=0; i<10; i++) seededRandom();
+    }
+
+    function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
     function fmt(n) { return Number(n.toFixed(8)).toString().replace('.', ','); }
 
     function highlightUnitText(valStr) {
@@ -324,66 +349,48 @@
       return parts.join(',');
     }
 
-    // LE NOUVEAU GÉNÉRATEUR INTELLIGENT DE VALEURS
     function generateValue(level) {
       if (level === 1) { 
-        // Niveau 1 : Entiers uniquement, mais 1/3 de chance pour 1, 2 ou 3 chiffres
         let size = rand(1, 3);
         if (size === 1) return rand(1, 9).toString();
         if (size === 2) return rand(10, 99).toString();
         return rand(100, 999).toString();
       } 
       else if (level === 2) {
-        // Niveau 2 : Distribution équilibrée (4 sous-catégories de 25%)
         let type = rand(1, 4);
-        if(type === 1) return rand(1, 99).toString(); // Entier à 1 ou 2 chiffres
-        if(type === 2) return rand(100, 9999).toString(); // Grand entier
-        if(type === 3) return (rand(11, 999) / 10).toString().replace('.', ','); // x,x ou xx,x
-        return (rand(101, 9999) / 100).toString().replace('.', ','); // x,xx ou xx,xx
+        if(type === 1) return rand(1, 99).toString(); 
+        if(type === 2) return rand(100, 9999).toString(); 
+        if(type === 3) return (rand(11, 999) / 10).toString().replace('.', ','); 
+        return (rand(101, 9999) / 100).toString().replace('.', ','); 
       } else {
-        // Niveau 3 : Les boss (4 catégories de pièges de 25%)
         let type = rand(1, 4);
         if(type === 1) {
-            // Micro-décimal (0,0x ou 0,00x)
             let zeros = rand(1, 2) === 1 ? "0,0" : "0,00";
             return zeros + rand(1, 9);
         } else if (type === 2) {
-            // Zéro intercalé (x,0x ou x0,x)
             if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9);
             else return rand(1, 9) + "0," + rand(1, 9);
         } else if (type === 3) {
-            // Zéro final inutile pour tester l'élève (x,x0)
             return rand(1, 99) + "," + rand(1, 9) + "0";
         } else {
-            // Grands ronds qui reculent (x00 ou x000)
             let zeros = rand(1, 2) === 1 ? "00" : "000";
             return rand(1, 99) + zeros;
         }
       }
     }
 
-    // LE NOUVEAU GÉNÉRATEUR D'ÉCARTS (Distribution parfaite)
     function buildQuestionLogic(type, level) {
       const schema = SCHEMAS[type];
       
-      // 1. Détermination de l'écart maximum autorisé
       let maxGap = 3;
-      if (schema.slots === 2) maxGap = 2; // Aires
-      if (schema.slots === 3) maxGap = 2; // Volumes
+      if (schema.slots === 2) maxGap = 2; 
+      if (schema.slots === 3) maxGap = 2; 
       
-      // 2. On choisit l'écart (1, 2 ou 3 colonnes) de manière parfaitement aléatoire
       let gap = rand(1, maxGap);
-      
-      // 3. On choisit la direction de manière contrôlée
-      // direction = 1 (vers la droite / multiplier), direction = -1 (vers la gauche / diviser)
       let direction;
-      if (level === 1) {
-          direction = 1; // Niveau 1 : Uniquement vers la droite
-      } else {
-          direction = rand(1, 2) === 1 ? 1 : -1; // 50% de chance pour droite ou gauche
-      }
+      if (level === 1) { direction = 1; } 
+      else { direction = rand(1, 2) === 1 ? 1 : -1; }
 
-      // 4. On cherche tous les index de départ valides pour ce saut
       let validStarts = [];
       for (let i = 0; i < schema.units.length; i++) {
           let targetIdx = i + (gap * direction);
@@ -394,7 +401,6 @@
           }
       }
 
-      // 5. On choisit au hasard parmi les possibilités valides
       let uIndex1 = pick(validStarts);
       let uIndex2 = uIndex1 + (gap * direction);
 
@@ -402,8 +408,6 @@
       let targetUnit = schema.units[uIndex2];
       
       let valStr = generateValue(level);
-      // Remarque technique : si on a un zéro final piège ("15,40"), le parseFloat le transforme en 15.4 pour le calcul mathématique. 
-      // C'est parfait : la réponse mathématique sera propre, mais l'affichage au tableau conservera le 0 initial.
       let numVal = parseFloat(valStr.replace(',', '.'));
       
       let shift = (uIndex2 - uIndex1) * schema.slots;
@@ -418,6 +422,18 @@
       
       const levelCbs = document.querySelectorAll('input[name="cbLevel"]:checked');
       if (levelCbs.length === 0) { alert("⚠️ Cochez au moins un niveau !"); return false; }
+
+      let seedInputElem = document.getElementById('inputSeed');
+      let seedInput = seedInputElem.value.trim().toUpperCase();
+      
+      if (!seedInput) {
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+          for(let i=0; i<4; i++) seedInput += chars.charAt(Math.floor(Math.random() * chars.length));
+          seedInputElem.value = seedInput;
+      }
+      
+      currentSeedStr = seedInput;
+      setSeed(currentSeedStr); 
       
       let types = Array.from(checkboxes).map(cb => cb.value);
       let levels = Array.from(levelCbs).map(cb => parseInt(cb.value));
@@ -639,7 +655,7 @@
 
     function updateUI() {
       const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
-      document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
+      document.getElementById('slideCounter').textContent = `Série ${currentSeedStr} | Question ${currentIndex + 1} / ${quizData.length}`;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
       
       const tBox = document.getElementById('tBox');
@@ -708,7 +724,7 @@
     }
 
     function generatePrint() {
-      if (quizData.length === 0) { alert("⚠️ Veuillez d'abord générer la série avec l'autre bouton !"); return; }
+      if(!getQuizData()) return;
       
       const cbStudentEmpty = document.getElementById('cbStudentEmpty').checked;
       const cbStudentFilled = document.getElementById('cbStudentFilled').checked;
@@ -719,7 +735,7 @@
 
       if (cbStudentEmpty || cbStudentFilled) {
           let page1 = document.createElement('div'); page1.className = 'print-page';
-          page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Fiche d'Exercices</div></div><h2 class="print-title">Conversions</h2>`;
+          page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Série : ${currentSeedStr}</div></div><h2 class="print-title">Conversions</h2>`;
           
           quizData.forEach((q, i) => {
             let qDiv = document.createElement('div'); qDiv.className = 'print-q';
@@ -739,7 +755,7 @@
       }
 
       let page2 = document.createElement('div'); page2.className = 'print-page';
-      page2.innerHTML = `<div class="print-header"><div class="print-seed">CORRIGÉ</div></div><h2 class="print-title">Correction Détaillée</h2>`;
+      page2.innerHTML = `<div class="print-header"><div class="print-seed">CORRIGÉ | Série : ${currentSeedStr}</div></div><h2 class="print-title">Correction Détaillée</h2>`;
       quizData.forEach((q, i) => {
         let qDiv = document.createElement('div'); qDiv.className = 'print-q';
         
