@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier Volumes 3D - La Chaîne Complète (Gros plan parfait)</title>
+    <title>Atelier Volumes 3D - La Chaîne Complète (Version Finale)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: sans-serif; }
@@ -52,6 +52,11 @@
                     <p id="sub-text" class="text-base text-slate-400 font-medium italic">Que représente un petit cube ?</p>
                     <button id="btn-reveal" class="bg-slate-800 text-white text-sm py-2 px-4 rounded-full font-bold hover:bg-black transition-colors">👀 RÉPONSE</button>
                 </div>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg text-sm font-semibold text-slate-600 flex flex-col gap-1.5 border border-slate-100 mb-6">
+                <div class="flex items-center gap-2"><span>🖱️</span> <span class="text-slate-400">Clic + Glisser :</span> Tourner la vue</div>
+                <div class="flex items-center gap-2"><span>↕️</span> <span class="text-slate-400">Molette souris :</span> Zoomer / Dézoomer 🚀</div>
             </div>
             
             <div class="flex flex-col gap-3">
@@ -222,7 +227,7 @@
 
         window.flyToUnit = function(unit) {
             let target;
-            if (unit === 'mm') target = { x: -8, y: 7.5, z: 8.5 }; // Moins collé que la version précédente
+            if (unit === 'mm') target = { x: -8, y: 7.5, z: 8.5 }; 
             else if (unit === 'cm') target = { x: -24, y: 18, z: 28 };
             else if (unit === 'dm') target = { x: -240, y: 180, z: 280 };
             else if (unit === 'm') target = { x: -2400, y: 1800, z: 2800 };
