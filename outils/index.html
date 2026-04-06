@@ -54,42 +54,9 @@ body{
   margin-bottom: 14px;
 }
 
-.back{
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  border: 1px solid rgba(17,24,39,.12);
-  background: rgba(255,255,255,.75);
-  box-shadow: 0 10px 24px rgba(17,24,39,.08);
-  text-decoration: none;
-  color: var(--fg);
-  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
-  backdrop-filter: blur(6px);
-}
-
-.back:hover{
-  background: rgba(255,255,255,.95);
-  border-color: rgba(47,107,255,.30);
-  transform: translateY(-50%) translateY(-1px);
-}
-
-.back svg{
-  width: 22px;
-  height: 22px;
-  display: block;
-}
-
 header{
   text-align: left;
   margin-bottom: 6px;
-  padding-left: 72px;
 }
 
 header h1{
@@ -294,15 +261,6 @@ footer{
     margin-bottom: 12px;
   }
 
-  .back{
-    width: 48px;
-    height: 48px;
-  }
-
-  header{
-    padding-left: 60px;
-  }
-
   header h1{
     font-size: clamp(25px, 6vw, 31px);
   }
@@ -314,11 +272,6 @@ footer{
 <main class="wrap">
 
   <div class="topbar">
-    <a class="back" href="../" title="Accueil des outils" aria-label="Retour à l’accueil des outils">
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor" stroke="none"></path>
-      </svg>
-    </a>
     <header>
       <h1>Outils pédagogiques</h1>
     </header>
