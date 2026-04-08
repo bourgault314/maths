@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier Volumes 3D - La Chaîne Complète (Version Finale)</title>
+    <title>Atelier Volumes 3D - La Chaîne Complète</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: sans-serif; }
+        
         #ui-layer { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
         #canvas-container { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; }
         @media (min-width: 800px) { #canvas-container { left: 480px; } }
@@ -22,10 +23,10 @@
         #btn-reset-view {
             position: absolute; top: 20px; right: 20px; z-index: 100; pointer-events: auto;
             background: white; border: 2px solid #e2e8f0; padding: 10px 20px; border-radius: 50px;
-            font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.3s;
+            font-weight: 800; color: #475569; cursor: pointer; transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        #btn-reset-view:hover { background: #f1f5f9; transform: translateY(-2px); color: #1e293b; border-color: #cbd5e1; }
+        #btn-reset-view:hover { background: #f1f5f9; transform: scale(1.05); color: #1e293b; border-color: #cbd5e1; }
 
         .color-transition { transition: all 0.4s ease; }
     </style>
@@ -35,39 +36,39 @@
     <button id="btn-reset-view" onclick="flyToUnit('mm')">🏠 REVENIR AU DÉPART</button>
 
     <div id="ui-layer">
-        <div class="bg-white/95 p-6 rounded-2xl shadow-2xl border border-slate-200 pointer-events-auto flex flex-col w-[440px]">
+        <div id="ui-card" class="bg-white/95 p-6 rounded-2xl shadow-2xl border border-slate-200 pointer-events-auto flex flex-col w-[440px]">
             
             <div class="flex gap-1.5 mb-6" id="unit-indicators">
-                <button onclick="flyToUnit('m')" id="ind-m" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 hover:text-slate-600 cursor-pointer">m³</button>
-                <button onclick="flyToUnit('dm')" id="ind-dm" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 hover:text-slate-600 cursor-pointer">dm³</button>
-                <button onclick="flyToUnit('cm')" id="ind-cm" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 hover:text-slate-600 cursor-pointer">cm³</button>
+                <button onclick="flyToUnit('m')" id="ind-m" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 cursor-pointer">m³</button>
+                <button onclick="flyToUnit('dm')" id="ind-dm" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 cursor-pointer">dm³</button>
+                <button onclick="flyToUnit('cm')" id="ind-cm" class="color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 cursor-pointer">cm³</button>
                 <button onclick="flyToUnit('mm')" id="ind-mm" class="color-transition flex-1 py-2 rounded-xl bg-red-500 text-white font-bold text-[15px] border-2 border-red-600 shadow-md cursor-pointer">mm³</button>
             </div>
 
-            <div class="mb-6 border-b border-slate-100 pb-6 min-h-[120px]">
+            <div class="mb-6 border-b border-slate-200 pb-6 min-h-[120px]">
                 <h1 class="text-4xl font-black color-transition" id="main-equation">
-                    <span class="text-blue-600">1 cm³</span> <span class="text-slate-300">= ?</span>
+                    <span class="text-blue-600">1 cm³</span> <strong class="text-slate-800">= ?</strong>
                 </h1>
                 <div class="flex justify-between items-center mt-4">
-                    <p id="sub-text" class="text-base text-slate-400 font-medium italic">Que représente un petit cube ?</p>
-                    <button id="btn-reveal" class="bg-slate-800 text-white text-sm py-2 px-4 rounded-full font-bold hover:bg-black transition-colors">👀 RÉPONSE</button>
+                    <p id="sub-text" class="text-base text-slate-800 font-bold italic">Que représente un petit cube ?</p>
+                    <button id="btn-reveal" class="bg-slate-800 text-white text-sm py-2 px-4 rounded-full font-bold hover:brightness-110 transition-colors">👀 RÉPONSE</button>
                 </div>
             </div>
             
-            <div class="bg-slate-50 p-3 rounded-lg text-sm font-semibold text-slate-600 flex flex-col gap-1.5 border border-slate-100 mb-6">
-                <div class="flex items-center gap-2"><span>🖱️</span> <span class="text-slate-400">Clic + Glisser :</span> Tourner la vue</div>
-                <div class="flex items-center gap-2"><span>↕️</span> <span class="text-slate-400">Molette souris :</span> Zoomer / Dézoomer 🚀</div>
+            <div class="bg-slate-100 p-3 rounded-lg text-sm font-semibold flex flex-col gap-1.5 border border-slate-300 mb-6">
+                <div class="flex items-center gap-2"><span class="text-lg">🖱️</span> <span class="text-slate-800 font-bold">Clic + Glisser :</span> <span class="text-slate-600">Tourner la vue</span></div>
+                <div class="flex items-center gap-2"><span class="text-lg">↕️</span> <span class="text-slate-800 font-bold">Molette souris :</span> <span class="text-slate-600">Zoomer / Dézoomer 🚀</span></div>
             </div>
             
             <div class="flex flex-col gap-3">
                 <button id="btn-plaques" class="action-btn color-transition w-full text-left hover:brightness-90 text-white font-bold py-4 px-6 rounded-xl shadow-md flex justify-between items-center text-lg bg-blue-500">
-                    <span>1. Écarter les plaques</span> <span class="text-xs bg-white/20 px-2 py-1 rounded">x10</span>
+                    <span>1. Écarter les plaques</span> <span class="text-xs bg-black/20 px-2 py-1 rounded">x10</span>
                 </button>
                 <button id="btn-barres" class="action-btn color-transition w-full text-left hover:brightness-90 text-white font-bold py-4 px-6 rounded-xl shadow-md flex justify-between items-center text-lg bg-blue-500">
-                    <span>2. Écarter les barres</span> <span class="text-xs bg-white/20 px-2 py-1 rounded">x100</span>
+                    <span>2. Écarter les barres</span> <span class="text-xs bg-black/20 px-2 py-1 rounded">x100</span>
                 </button>
                 <button id="btn-cubes" class="action-btn color-transition w-full text-left hover:brightness-90 text-white font-bold py-4 px-6 rounded-xl shadow-md flex justify-between items-center text-lg bg-blue-500">
-                    <span>3. Écarter les unités</span> <span class="text-xs bg-white/20 px-2 py-1 rounded">x1000</span>
+                    <span>3. Écarter les unités</span> <span class="text-xs bg-black/20 px-2 py-1 rounded">x1000</span>
                 </button>
             </div>
         </div>
@@ -88,7 +89,6 @@
         let w = container.clientWidth, h = container.clientHeight;
         const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 40000);
         
-        // DÉMARRAGE SUR LA VUE MM³ (Légèrement reculée pour bien apprécier le cube)
         camera.position.set(-8, 7.5, 8.5); 
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -104,7 +104,7 @@
         dirLight.position.set(-50, 100, 50); scene.add(dirLight);
 
         const COLORS = {
-            mm: 0xef4444, cm: 0x3b82f6, cmDark: 0x1e3a8a, dm: 0x10b981, m: 0x64748b
+            mm: 0xef4444, cm: 0x3b82f6, dm: 0x10b981, m: 0x64748b
         };
 
         const mainGroup = new THREE.Group(); 
@@ -112,10 +112,11 @@
         const l2Group = new THREE.Group();   
         scene.add(mainGroup, l1Group, l2Group);
 
-        // --- 2. NIVEAU 0 : LES 1000 PETITS CUBES (999 Bleus + 1 Rouge) ---
+        // --- 2. NIVEAU 0 : QUADRILLAGE FORT CONTRASTE ---
         const unitGeo = new THREE.BoxGeometry(1, 1, 1);
         const l0Mat = new THREE.MeshLambertMaterial({ color: COLORS.cm });
-        const l0EdgeMat = new THREE.LineBasicMaterial({ color: COLORS.cmDark, transparent: true, opacity: 0.3 });
+        // Lignes presque noires et très opaques pour le vidéoprojecteur
+        const l0EdgeMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.85 });
 
         for (let x = 0; x < 10; x++) {
             const pGrp = new THREE.Group(); pGrp.userData.baseX = x - 4.5;
@@ -157,14 +158,14 @@
         createMegaStructure(l2Group, 100, COLORS.m);
 
         // --- 4. GESTION DES NIVEAUX ET UI ---
-        let currentZoomLevel = -2; // Force la mise à jour à l'initialisation
+        let currentZoomLevel = -2; 
         let isRevealed = false;
 
         const levelsData = {
             "-1": { 
                 title: 'Un millimètre cube', eqLeft: '1 mm³', eqRight: '?', subText: '', 
                 textColorClass: 'text-red-600', bgColorClass: 'bg-red-500', 
-                eqLeftColor: 'text-red-600', eqRightColor: 'text-slate-300'
+                eqLeftColor: 'text-red-600', eqRightColor: 'text-slate-600'
             },
             "0": { 
                 title: 'Un centimètre cube', eqLeft: '1 cm³', eqRight: '1000 mm³', subText: '1 mm³', 
@@ -188,21 +189,22 @@
             document.getElementById('volume-title').innerText = data.title;
             document.getElementById('volume-title').className = data.textColorClass;
             
-            const rCol = isRevealed ? data.eqRightColor : 'text-slate-300';
+            const defaultTextClass = 'text-slate-800';
+
+            const rCol = isRevealed ? data.eqRightColor : defaultTextClass;
             const rTxt = isRevealed ? `= ${data.eqRight}` : '= ?';
             
-            document.getElementById('main-equation').innerHTML = `<span class="${data.eqLeftColor}">${data.eqLeft}</span> <span class="${rCol}">${rTxt}</span>`;
+            document.getElementById('main-equation').innerHTML = `<span class="${data.eqLeftColor}">${data.eqLeft}</span> <strong class="${rCol}">${rTxt}</strong>`;
 
             if (isRevealed && currentZoomLevel !== -1) {
                 document.getElementById('sub-text').innerHTML = `1 petit cube = <strong class="${data.eqRightColor}">${data.subText}</strong>`;
             } else {
                 document.getElementById('sub-text').innerHTML = currentZoomLevel === -1 ? "L'unité la plus petite de notre modèle." : "Que représente un petit cube ?";
             }
+            document.getElementById('sub-text').className = `text-base font-bold italic ${defaultTextClass}`;
 
-            // Mémorisation visuelle des Poupées Russes sur les boutons
             ['ind-m', 'ind-dm', 'ind-cm', 'ind-mm'].forEach(id => {
                 const el = document.getElementById(id);
-                
                 let btnLevel; let bgColor;
                 if (id === 'ind-mm') { btnLevel = -1; bgColor = 'bg-red-500'; }
                 if (id === 'ind-cm') { btnLevel = 0; bgColor = 'bg-blue-500'; }
@@ -212,7 +214,7 @@
                 if (currentZoomLevel >= btnLevel) {
                     el.className = `color-transition flex-1 py-2 rounded-xl text-white text-center font-bold text-[15px] border-2 shadow-md ${bgColor} border-transparent hover:brightness-110 cursor-pointer`;
                 } else {
-                    el.className = `color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-400 text-center font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 hover:text-slate-600 cursor-pointer`;
+                    el.className = `color-transition flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-center font-bold text-[15px] border-2 border-transparent hover:bg-slate-200 cursor-pointer`;
                 }
             });
 
@@ -241,7 +243,7 @@
             if (dist > 1400) newLvl = 2;
             else if (dist > 140) newLvl = 1;
             else if (dist > 25) newLvl = 0; 
-            else newLvl = -1; // Vue mm³ au plus proche
+            else newLvl = -1; 
             
             if(newLvl !== currentZoomLevel) {
                 currentZoomLevel = newLvl;
