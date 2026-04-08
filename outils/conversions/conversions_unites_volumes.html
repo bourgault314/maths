@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier Volumes 3D - La Chaîne Complète</title>
+    <title>Atelier Volumes 3D - La Chaîne Complète (Alignement en coin)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: sans-serif; }
@@ -89,7 +89,8 @@
         let w = container.clientWidth, h = container.clientHeight;
         const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 40000);
         
-        camera.position.set(-8, 7.5, 8.5); 
+        // La caméra démarre près du cube rouge
+        camera.position.set(-8, 8, 12); 
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(w, h);
@@ -98,6 +99,10 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.maxDistance = 15000;
+        
+        // POINT CLÉ : La caméra fixe toujours le cube rouge (-4.5, 4.5, 4.5)
+        controls.target.set(-4.5, 4.5, 4.5);
+        controls.update();
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.9));
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
@@ -112,12 +117,12 @@
         const l2Group = new THREE.Group();   
         scene.add(mainGroup, l1Group, l2Group);
 
-        // --- 2. NIVEAU 0 : QUADRILLAGE FORT CONTRASTE ---
+        // --- 2. NIVEAU 0 : LE CENTIMÈTRE CUBE (Fort Contraste) ---
         const unitGeo = new THREE.BoxGeometry(1, 1, 1);
         const l0Mat = new THREE.MeshLambertMaterial({ color: COLORS.cm });
-        // Lignes presque noires et très opaques pour le vidéoprojecteur
         const l0EdgeMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.85 });
 
+        // Le cube rouge de référence est placé à (0, 9, 9) dans la boucle
         for (let x = 0; x < 10; x++) {
             const pGrp = new THREE.Group(); pGrp.userData.baseX = x - 4.5;
             for (let y = 0; y < 10; y++) {
@@ -137,14 +142,15 @@
             pGrp.position.set(pGrp.userData.baseX, 0, 0); mainGroup.add(pGrp);
         }
 
-        // --- 3. STRUCTURES GÉANTES ---
+        // --- 3. STRUCTURES GÉANTES EN COIN ---
         function createMegaStructure(group, size, colorGrid) {
             const geo = new THREE.BoxGeometry(size, size, size);
             const gridMat = new THREE.LineBasicMaterial({ color: colorGrid, transparent: true, opacity: 0.25 });
             for (let x = 0; x < 10; x++) {
                 for (let y = 0; y < 10; y++) {
                     for (let z = 0; z < 10; z++) {
-                        if (x === 4 && y === 4 && z === 4) continue;
+                        // Le vide est maintenant dans le coin supérieur gauche (0, 9, 9)
+                        if (x === 0 && y === 9 && z === 9) continue;
                         const px = (x - 4.5) * size, py = (y - 4.5) * size, pz = (z - 4.5) * size;
                         const shell = new THREE.LineSegments(new THREE.EdgesGeometry(geo), gridMat);
                         shell.position.set(px, py, pz); group.add(shell);
@@ -154,8 +160,14 @@
             const wrap = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(size*10,size*10,size*10)), new THREE.LineBasicMaterial({ color: colorGrid, transparent: true, opacity: 0.6 }));
             group.add(wrap);
         }
+        
         createMegaStructure(l1Group, 10, COLORS.dm);
+        // On décale le décimètre cube pour que son trou (0,9,9) englobe parfaitement le centimètre cube
+        l1Group.position.set(45, -45, -45); 
+
         createMegaStructure(l2Group, 100, COLORS.m);
+        // On décale le mètre cube pour que son trou (0,9,9) englobe parfaitement le décimètre cube
+        l2Group.position.set(495, -495, -495);
 
         // --- 4. GESTION DES NIVEAUX ET UI ---
         let currentZoomLevel = -2; 
@@ -229,16 +241,18 @@
 
         window.flyToUnit = function(unit) {
             let target;
-            if (unit === 'mm') target = { x: -8, y: 7.5, z: 8.5 }; 
-            else if (unit === 'cm') target = { x: -24, y: 18, z: 28 };
-            else if (unit === 'dm') target = { x: -240, y: 180, z: 280 };
-            else if (unit === 'm') target = { x: -2400, y: 1800, z: 2800 };
+            // Coordonnées ajustées pour la nouvelle position d'ancrage
+            if (unit === 'mm') target = { x: -8, y: 8, z: 12 }; 
+            else if (unit === 'cm') target = { x: -25, y: 20, z: 35 };
+            else if (unit === 'dm') target = { x: -150, y: 120, z: 180 };
+            else if (unit === 'm') target = { x: -1500, y: 1200, z: 1800 };
             
             gsap.to(camera.position, { x: target.x, y: target.y, z: target.z, duration: 1.5, onUpdate: () => controls.update() });
         };
 
         function checkZoom() {
-            const dist = camera.position.length();
+            // Le zoom est maintenant calculé par rapport à l'ancre (le cube rouge)
+            const dist = camera.position.distanceTo(controls.target);
             let newLvl;
             if (dist > 1400) newLvl = 2;
             else if (dist > 140) newLvl = 1;
