@@ -501,15 +501,31 @@
     };
 
     const TRI_DB = [
+        // Lvl 1: Même nombre, unités différentes ou Même unité, nombres différents
         { lvl: 1, arr: ['5 mm', '5 cm', '5 m', '5 km'], dim: 'Longueur' },
         { lvl: 1, arr: ['2 mg', '2 g', '2 kg', '2 t'], dim: 'Masse' },
         { lvl: 1, arr: ['10 mL', '10 cL', '10 L', '10 hL'], dim: 'Capacité' },
-        { lvl: 2, arr: ['1 mm²', '1 cm²', '1 m²', '1 km²'], dim: 'Aire' },
-        { lvl: 2, arr: ['3 cm³', '3 dm³', '3 m³', '3 dam³'], dim: 'Volume' },
+        { lvl: 1, arr: ['1 mm²', '1 cm²', '1 m²', '1 km²'], dim: 'Aire' },
+        { lvl: 1, arr: ['3 cm³', '3 dm³', '3 m³', '3 dam³'], dim: 'Volume' },
+        { lvl: 1, arr: ['15 g', '15 dag', '15 kg', '15 t'], dim: 'Masse' },
+        { lvl: 1, arr: ['8 cL', '8 dL', '8 L', '8 daL'], dim: 'Capacité' },
+        
+        // Lvl 2: Mélange de nombres et d'unités standard
         { lvl: 2, arr: ['12 mm', '15 cm', '1,2 m', '10 km'], dim: 'Longueur' },
+        { lvl: 2, arr: ['500 g', '2 kg', '15 kg', '1,5 t'], dim: 'Masse' },
+        { lvl: 2, arr: ['33 cL', '1,5 L', '10 L', '150 L'], dim: 'Capacité' },
+        { lvl: 2, arr: ['40 cm²', '12 dm²', '4 m²', '50 m²'], dim: 'Aire' },
+        { lvl: 2, arr: ['15 cm³', '6 dm³', '1 m³', '30 m³'], dim: 'Volume' },
+        { lvl: 2, arr: ['2 mm', '5 cm', '80 cm', '2 m'], dim: 'Longueur' },
+        { lvl: 2, arr: ['20 g', '250 g', '4 kg', '1,2 t'], dim: 'Masse' },
+
+        // Lvl 3: Conversions pièges et extrêmes
         { lvl: 3, arr: ['1 cL', '100 mL', '1 L', '1000 L'], dim: 'Capacité' },
         { lvl: 3, arr: ['3000 mg', '2500 g', '4 kg', '0,5 t'], dim: 'Masse' },
-        { lvl: 3, arr: ['50 cm²', '5 dm²', '0,5 m²', '500 m²'], dim: 'Aire' }
+        { lvl: 3, arr: ['50 cm²', '5 dm²', '0,5 m²', '500 m²'], dim: 'Aire' },
+        { lvl: 3, arr: ['150 mm', '0,2 m', '25 cm', '0,001 km'], dim: 'Longueur' },
+        { lvl: 3, arr: ['0,5 L', '75 cL', '1 dm³', '2000 mL'], dim: 'Capacité' },
+        { lvl: 3, arr: ['2000 g', '2,5 kg', '0,01 t', '15 kg'], dim: 'Masse' }
     ];
 
     let quizData = [];
@@ -741,15 +757,33 @@
         }
         
         if (qType === 8) {
-            let dims = shuffle(['len', 'mass', 'cap', 'area', 'vol']).slice(0, 3);
-            let objects = []; let values = [];
-            dims.forEach(dim => {
-                let db = EST_DB[dim].filter(i => i.lvl <= level);
-                if(db.length === 0) db = EST_DB[dim];
-                let it = pick(db);
-                objects.push(pick(it.items).n);
-                values.push(`${fmt(it.val)} ${it.unit}`);
-            });
+            let objects = [], values = [];
+            if (level === 1) {
+                let dims = shuffle(['len', 'mass', 'cap', 'area', 'vol']).slice(0, 3);
+                dims.forEach(dim => {
+                    let it = pick(EST_DB[dim].filter(i => i.lvl === 1));
+                    if (!it) it = pick(EST_DB[dim]);
+                    objects.push(pick(it.items).n);
+                    values.push(`${fmt(it.val)} ${it.unit}`);
+                });
+            } else if (level === 2) {
+                let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
+                let pool = shuffle(EST_DB[dim].filter(i => i.lvl <= 2));
+                if(pool.length < 3) pool = shuffle(EST_DB[dim]);
+                for(let i=0; i<3; i++) {
+                    objects.push(pick(pool[i].items).n);
+                    values.push(`${fmt(pool[i].val)} ${pool[i].unit}`);
+                }
+            } else {
+                let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
+                let pool = shuffle(EST_DB[dim]);
+                for(let i=0; i<3; i++) {
+                    objects.push(pick(pool[i].items).n);
+                    let conv = convertTricky(pool[i].val, pool[i].unit);
+                    if (rand(1,2) === 1) values.push(`${fmt(conv.val)} ${conv.unit}`);
+                    else values.push(`${fmt(pool[i].val)} ${pool[i].unit}`);
+                }
+            }
             let shuffledVals = shuffle([...values]);
             
             let letters = ["A", "B", "C"];
@@ -765,7 +799,7 @@
         }
         
         if (qType === 9) {
-            let dim = pick(allowedDims);
+            let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
             let db = EST_DB[dim].filter(item => item.lvl <= level);
             if(db.length === 0) db = EST_DB[dim]; 
             let targetItem = pick(db);
@@ -774,8 +808,19 @@
             let isLen = dim === 'len';
             let verb = isLen ? "mesure" : (dim === 'mass' ? "pèse" : (dim === 'area' ? "couvre" : (dim === 'vol' ? "occupe" : "contient")));
             
-            let problemText = `Complète la phrase :<br><br><strong>${pickedQItem.n.charAt(0).toUpperCase() + pickedQItem.n.slice(1)}</strong> ${verb} environ ....... <strong>${targetItem.unit}</strong>.`;
-            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${fmt(targetItem.val)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+            let displayUnit = targetItem.unit;
+            let displayVal = targetItem.val;
+
+            if (level === 3) {
+                let conv = convertTricky(targetItem.val, targetItem.unit);
+                if (conv.unit !== targetItem.unit) {
+                    displayUnit = conv.unit;
+                    displayVal = conv.val;
+                }
+            }
+            
+            let problemText = `Complète la phrase :<br><br><strong>${pickedQItem.n.charAt(0).toUpperCase() + pickedQItem.n.slice(1)}</strong> ${verb} environ ....... <strong>${displayUnit}</strong>.`;
+            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${fmt(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
         }
         
         if (qType === 10) {
@@ -789,7 +834,7 @@
             return { isProblem: false, isEstimation: true, qType: 10, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${sorted.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, phase: 0, textId: problemText, emoji: "📶" };
         }
 
-        let dim = pick(allowedDims);
+        let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
         let db = EST_DB[dim].filter(item => item.lvl <= level);
         if(db.length === 0) db = EST_DB[dim]; 
         let targetItem = pick(db);
