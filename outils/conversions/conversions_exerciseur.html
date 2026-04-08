@@ -18,7 +18,7 @@
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Nunito', Arial, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
 
-    /* PANNEAU DE CONFIGURATION COMPACT (Design d'origine restauré) */
+    /* PANNEAU DE CONFIGURATION COMPACT */
     .config-panel { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px 20px; width: 100%; max-width: 1200px; box-shadow: var(--shadow); margin-bottom: 12px; }
     .config-header { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center;}
     .config-header h2 { margin: 0; font-size: 1.25rem; color: #1f2a44; }
@@ -296,7 +296,7 @@
       <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
       <div style="display: flex; gap: 8px;">
         <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
-        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Placer au Tableau 💡 ►</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Aide : Placer dans le tableau 💡 ►</button>
       </div>
     </div>
     
@@ -369,11 +369,11 @@
     };
 
     const FRISE_EMOJIS = {
-       len: [ {u:'mm', e:'🐜'}, {u:'cm', e:'🎲'}, {u:'dm', e:'📏'}, {u:'m', e:'🚪'}, {u:'dam', e:'🏢'}, {u:'hm', e:'🗼'}, {u:'km', e:'🛣️'} ],
-       mass: [ {u:'mg', e:'🏖️'}, {u:'cg', e:'🎊'}, {u:'dg', e:'✉️'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🚗'} ],
-       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🥛'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:'🏊'} ],
-       area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:'⌨️'}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'⚽'}, {u:'km²', e:'🏙️'} ],
-       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🧊'}, {u:'dm³', e:'🥛'}, {u:'m³', e:'📦'}, {u:'dam³', e:'🚌'}, {u:'hm³', e:'🏟️'}, {u:'km³', e:'🗻'} ]
+       len: [ {u:'mm', e:'🐜'}, {u:'cm', e:'🐞'}, {u:'dm', e:'📏'}, {u:'m', e:'🚪'}, {u:'dam', e:'🏢'}, {u:'hm', e:'🗼'}, {u:'km', e:'🛣️'} ],
+       mass: [ {u:'mg', e:'🪶'}, {u:'cg', e:'💊'}, {u:'dg', e:'✉️'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🐘'} ],
+       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🥛'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:'🛢️'} ],
+       area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:'⌨️'}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'⛳'}, {u:'km²', e:'🏙️'} ],
+       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🎲'}, {u:'dm³', e:'🧃'}, {u:'m³', e:'🗑️'}, {u:'dam³', e:'🚌'}, {u:'hm³', e:'🏭'}, {u:'km³', e:'🌋'} ]
     };
 
     function generateFriseHTML(dim) {
@@ -385,78 +385,118 @@
         return html;
     }
 
+    const ACTIONS_DB = [
+        { lvl: 1, q: "Tracez un trait d'environ 1 millimètre (1 mm) sur votre ardoise.", c: "C'est un petit point ou l'épaisseur de la mine de votre crayon." },
+        { lvl: 1, q: "Tracez un trait d'exactement 1 décimètre (1 dm).", c: "C'est 10 cm, environ la largeur de votre main." },
+        { lvl: 1, q: "Montrez environ 1 cm avec vos doigts !", c: "C'est à peu près l'épaisseur de votre petit doigt." },
+        { lvl: 1, q: "Montrez un espace de 10 cm entre vos deux mains.", c: "Vérifiez avec votre règle graduée !" },
+        { lvl: 1, q: "Écartez les bras pour montrer une longueur d'environ 1 mètre !", c: "C'est souvent du bout des doigts à l'épaule opposée." },
+        { lvl: 1, q: "À quelle hauteur se trouve la poignée de la porte de la classe ?", c: "À environ 1 mètre du sol." },
+        { lvl: 1, q: "Montrez la hauteur d'une table d'écolier avec votre main.", c: "À environ 80 centimètres du sol." },
+        { lvl: 1, q: "Trouvez un objet sur votre table qui pèse environ 10 grammes.", c: "Exemples : Un gros stylo, un effaceur, un tube de colle." },
+        { lvl: 1, q: "Trouvez un objet dans votre trousse qui pèse environ 1 gramme.", c: "Exemples : Un petit trombone, un tout petit bout de gomme." },
+        { lvl: 1, q: "Levez un objet qui pèse environ 1 kilogramme (1 kg).", c: "Exemples : Une gourde pleine, un gros dictionnaire." },
+        
+        { lvl: 2, q: "Dessinez un carré d'environ 1 cm² sur votre ardoise.", c: "Un carré de 1 cm de côté (la taille de l'ongle du pouce)." },
+        { lvl: 2, q: "Dessinez un carré d'environ 1 dm² sur votre ardoise.", c: "Un carré de 10 cm de côté (la taille de la paume de la main)." },
+        { lvl: 2, q: "Mimez avec vos mains la taille d'un objet de 1 dm³ (1 Litre).", c: "Un cube de 10x10x10 cm, comme une brique de lait ou un gros dé géant." },
+        { lvl: 2, q: "Estimez la longueur totale du grand tableau de la classe.", c: "Il mesure très souvent entre 2 et 4 mètres." },
+        { lvl: 2, q: "Estimez la hauteur de la grande armoire de la classe.", c: "Généralement autour de 2 mètres." },
+        { lvl: 2, q: "Quelle est à peu près la surface au sol de votre chambre à la maison ?", c: "Souvent entre 9 m² et 12 m²." },
+        { lvl: 2, q: "Faites exactement 3 grands pas dans la classe. Quelle distance avez-vous parcourue ?", c: "Un grand pas fait environ 1 mètre, donc 3 mètres." },
+        { lvl: 2, q: "Combien de verres d'eau peut-on remplir avec une bouteille d'1 Litre ?", c: "Environ 4 ou 5 verres de 20 cL." },
+        { lvl: 2, q: "Prenez votre cartable rempli : combien de kilos pèse-t-il selon vous ?", c: "Souvent entre 4 et 7 kilogrammes." },
+        { lvl: 2, q: "Montrez un objet dans la classe qui a une capacité d'environ 10 Litres.", c: "Exemples : Une grande poubelle de classe, un grand seau." },
+
+        { lvl: 3, q: "Montrez une surface plane dans la classe qui fait environ 1 m².", c: "Exemples : Une demi-porte, un grand bureau, 4 dalles de plafond." },
+        { lvl: 3, q: "Trouvez une surface dans la classe qui fait environ 10 m².", c: "Exemples : Un quart de la salle, un très grand tapis de regroupement." },
+        { lvl: 3, q: "Quelle est la surface au sol de toute notre salle de classe ?", c: "Souvent autour de 50 m²." },
+        { lvl: 3, q: "Citez un objet du quotidien qui a un volume d'environ 1 cm³.", c: "Exemples : Un dé à jouer normal, un gros morceau de sucre." },
+        { lvl: 3, q: "Regardez par la fenêtre : montrez un objet situé à environ 100 mètres de nous.", c: "Exemples : Le bout de la cour, un arbre très éloigné, un bâtiment d'en face." },
+        { lvl: 3, q: "À quelle distance se trouve le portail de l'école depuis notre salle ?", c: "Débattez pour savoir si c'est plutôt 50 m, 100 m ou 200 m !" },
+        { lvl: 3, q: "Citez un animal ou un objet de la rue qui pèse environ 1 Tonne (1000 kg).", c: "Exemples : Une petite voiture citadine, une vache très lourde, un rhinocéros." },
+        { lvl: 3, q: "Quel est à peu près le volume intérieur de votre sac à dos (en Litres) ?", c: "Un sac de classe fait souvent entre 15 et 30 Litres (15 à 30 dm³)." },
+        { lvl: 3, q: "Combien de seaux d'eau de 10 L faut-il pour faire 1 m³ d'eau ?", c: "Il faut 100 seaux ! (Puisque 1 m³ = 1000 L)." }
+    ];
+
+    const PONTS_DB = [
+        { lvl: 1, q: "1 Litre d'eau pèse exactement :", c: "1 kg", w1: "100 g", w2: "10 kg", e: "💧" },
+        { lvl: 1, q: "Un demi-litre (½ L), c'est la même chose que :", c: "50 cL", w1: "5 cL", w2: "500 cL", e: "🥛" },
+        { lvl: 1, q: "Un demi-kilo (½ kg) de farine, c'est :", c: "500 g", w1: "50 g", w2: "5000 g", e: "⚖️" },
+        { lvl: 1, q: "Le mot 'kilo' (comme dans kilomètre ou kilogramme) veut dire :", c: "1000", w1: "100", w2: "10 000", e: "🧠" },
+        { lvl: 1, q: "1 kilogramme (1 kg) c'est la même masse que :", c: "1000 g", w1: "100 g", w2: "10 g", e: "⚖️" },
+        { lvl: 1, q: "1 kilomètre (1 km) c'est la même distance que :", c: "1000 m", w1: "100 m", w2: "10 000 m", e: "📏" },
+        { lvl: 1, q: "1 Tonne (1 t) c'est la même chose que :", c: "1000 kg", w1: "100 kg", w2: "10 000 kg", e: "🐘" },
+        { lvl: 1, q: "1 mètre (1 m), c'est :", c: "100 cm", w1: "10 cm", w2: "1000 cm", e: "📏" },
+
+        { lvl: 2, q: "1 Litre, c'est exactement le même volume que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "📦" },
+        { lvl: 2, q: "1 mètre cube (1 m³) d'eau pèse :", c: "1 Tonne (1000 kg)", w1: "100 kg", w2: "10 Tonnes", e: "🌊" },
+        { lvl: 2, q: "Un quart de litre (¼ L), c'est :", c: "25 cL", w1: "15 cL", w2: "250 cL", e: "🥛" },
+        { lvl: 2, q: "Trois quarts de kilo (¾ kg), c'est :", c: "750 g", w1: "75 g", w2: "340 g", e: "⚖️" },
+        { lvl: 2, q: "Le mot 'milli' (comme dans millimètre) veut dire :", c: "Mille fois plus petit", w1: "Cent fois plus petit", w2: "Un million de fois plus petit", e: "🔍" },
+        { lvl: 2, q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1000 L", w1: "100 L", w2: "10 L", e: "📦" },
+        { lvl: 2, q: "En surface, 1 are (1 a) représente :", c: "100 m² (1 dam²)", w1: "10 m²", w2: "1000 m²", e: "🟨" },
+        { lvl: 2, q: "1 centimètre (1 cm) c'est :", c: "10 mm", w1: "100 mm", w2: "1000 mm", e: "📏" },
+
+        { lvl: 3, q: "1 millilitre (1 mL), c'est équivalent à :", c: "1 cm³", w1: "1 dm³", w2: "1 mm³", e: "🧪" },
+        { lvl: 3, q: "1 millilitre (1 mL) d'eau pèse exactement :", c: "1 gramme (1 g)", w1: "1 milligramme", w2: "10 grammes", e: "💧" },
+        { lvl: 3, q: "Un dixième de Litre (1/10 L), c'est :", c: "10 cL (ou 1 dL)", w1: "1 cL", w2: "100 cL", e: "🥛" },
+        { lvl: 3, q: "En agriculture, 1 hectare (1 ha) c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🚜" },
+        { lvl: 3, q: "1 kiloLitre (1 kL) d'eau, c'est :", c: "1 m³", w1: "1 dam³", w2: "1 km³", e: "🛢️" },
+        { lvl: 3, q: "Un carré de 1 mètre de côté (1 m²), c'est :", c: "10 000 cm²", w1: "100 cm²", w2: "1000 cm²", e: "🟨" },
+        { lvl: 3, q: "Un kilomètre carré (1 km²), c'est immense, cela fait :", c: "100 hectares", w1: "10 hectares", w2: "1000 hectares", e: "🗺️" }
+    ];
+
     const EST_DB = {
         len: [
-            { items: [{n: "l'épaisseur d'un cheveu", e: "💇"}], val: 0.1, unit: "mm", repere: "0,1 mm = une chose minuscule", lvl: 3 },
-            { items: [{n: "l'épaisseur d'une clé", e: "🔑"}, {n: "l'épaisseur d'une pièce", e: "🪙"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une pièce de monnaie", lvl: 2 },
-            { items: [{n: "une fourmi", e: "🐜"}, {n: "un grain de riz", e: "🍚"}], val: 5, unit: "mm", repere: "5 mm = un très petit insecte", lvl: 1 },
-            { items: [{n: "une abeille", e: "🐝"}, {n: "le diamètre d'un bouton", e: "🔘"}], val: 1, unit: "cm", repere: "1 cm = la largeur de l'ongle du petit doigt", lvl: 1 },
-            { items: [{n: "la largeur d'un doigt", e: "☝️"}], val: 2, unit: "cm", repere: "2 cm = la largeur de ton pouce ou index", lvl: 1 },
-            { items: [{n: "une gomme", e: "🧼"}], val: 4, unit: "cm", repere: "4 cm = un petit objet de trousse", lvl: 1 },
-            { items: [{n: "un stylo", e: "🖊️"}, {n: "l'empan d'une main", e: "🖐️"}], val: 15, unit: "cm", repere: "15 cm = l'empan", lvl: 1 },
-            { items: [{n: "une feuille de papier (longueur)", e: "📄"}, {n: "une règle d'écolier", e: "📏"}], val: 30, unit: "cm", repere: "30 cm = la grande règle", lvl: 1 },
-            { items: [{n: "la hauteur d'une table", e: "🪑"}, {n: "un meuble de cuisine", e: "🗄️"}], val: 80, unit: "cm", repere: "80 cm = on arrive environ à la taille", lvl: 2 },
-            { items: [{n: "la taille d'un enfant", e: "🧒"}], val: 1.4, unit: "m", repere: "1,40 m = la taille moyenne d'un élève", lvl: 2 },
-            { items: [{n: "l'envergure des bras écartés", e: "🤷"}, {n: "un vélo", e: "🚲"}], val: 1.5, unit: "m", repere: "1,5 m = la distance entre tes deux mains", lvl: 2 },
-            { items: [{n: "une porte", e: "🚪"}], val: 2, unit: "m", repere: "2 m = la hauteur d'une porte standard", lvl: 1 },
-            { items: [{n: "une petite voiture", e: "🚗"}], val: 4, unit: "m", repere: "4 m = une place de parking classique", lvl: 1 },
-            { items: [{n: "un bus scolaire", e: "🚌"}], val: 12, unit: "m", repere: "12 m = un très long véhicule", lvl: 2 },
-            { items: [{n: "un terrain de football", e: "⚽"}, {n: "un tour de piste d'athlétisme", e: "🏃"}], val: 400, unit: "m", repere: "400 m = un grand tour en courant", lvl: 2 },
-            { items: [{n: "le trajet maison-école", e: "🎒"}], val: 3, unit: "km", repere: "Quelques km = une distance familière", lvl: 1 },
-            { items: [{n: "l'altitude d'un avion de ligne", e: "✈️"}], val: 10, unit: "km", repere: "10 km = la hauteur de croisière des avions", lvl: 3 },
-            { items: [{n: "la distance Paris-Lyon", e: "🗺️"}], val: 500, unit: "km", repere: "Des centaines de km = traverser la France", lvl: 2 },
-            { items: [{n: "le tour de la Terre", e: "🌍"}], val: 40000, unit: "km", repere: "40 000 km = le tour complet", lvl: 3 }
+            { items: [{n: "la taille de ton pouce", e: "☝️"}], val: 5, unit: "cm", repere: "5 cm = la largeur de deux doigts", lvl: 1 },
+            { items: [{n: "la longueur d'un stylo", e: "🖊️"}], val: 15, unit: "cm", repere: "15 cm = un petit objet de trousse", lvl: 1 },
+            { items: [{n: "la longueur d'un lit", e: "🛏️"}], val: 2, unit: "m", repere: "2 m = pour qu'un adulte puisse s'allonger", lvl: 1 },
+            { items: [{n: "la longueur d'un vélo", e: "🚲"}], val: 1.5, unit: "m", repere: "1,5 m = l'envergure d'un vélo", lvl: 1 },
+            { items: [{n: "l'épaisseur d'une pièce de 2€", e: "🪙"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une grosse pièce", lvl: 2 },
+            { items: [{n: "la distance de la maison à l'école", e: "🎒"}], val: 1, unit: "km", repere: "1 km = une petite marche", lvl: 2 },
+            { items: [{n: "la longueur d'une piscine municipale", e: "🏊"}], val: 25, unit: "m", repere: "25 m = le petit bassin", lvl: 2 },
+            { items: [{n: "l'épaisseur d'une carte bancaire", e: "💳"}], val: 1, unit: "mm", repere: "1 mm = une fente très fine", lvl: 3 },
+            { items: [{n: "l'altitude de vol d'un avion", e: "✈️"}], val: 10, unit: "km", repere: "10 km = tout en haut dans le ciel", lvl: 3 }
         ],
         mass: [
-            { items: [{n: "un grain de sable", e: "🏖️"}], val: 1, unit: "mg", repere: "1 mg = un grain de sable", lvl: 3 },
-            { items: [{n: "un confetti", e: "🎊"}], val: 1, unit: "cg", repere: "1 cg = un confetti de papier", lvl: 3 },
-            { items: [{n: "un trombone", e: "📎"}, {n: "un billet de banque", e: "💵"}], val: 1, unit: "g", repere: "1 g = un trombone métallique", lvl: 1 },
-            { items: [{n: "une pièce de 2€", e: "🪙"}], val: 1, unit: "dag", repere: "1 dag (10 g) = une grosse pièce de monnaie", lvl: 2 },
-            { items: [{n: "une balle de tennis", e: "🎾"}], val: 60, unit: "g", repere: "60 g = un objet léger qu'on lance", lvl: 1 },
-            { items: [{n: "une pomme", e: "🍎"}, {n: "un smartphone", e: "📱"}], val: 150, unit: "g", repere: "150 g = un fruit de taille moyenne", lvl: 1 },
-            { items: [{n: "une plaquette de beurre", e: "🧈"}], val: 250, unit: "g", repere: "250 g = un bloc familier dans la cuisine", lvl: 2 },
-            { items: [{n: "une trousse pleine", e: "👝"}], val: 300, unit: "g", repere: "300 g = une trousse d'école", lvl: 2 },
-            { items: [{n: "une tablette de chocolat", e: "🍫"}], val: 1, unit: "hg", repere: "1 hg (100 g) = une tablette de chocolat", lvl: 3 },
-            { items: [{n: "un paquet de farine", e: "🌾"}], val: 1, unit: "kg", repere: "1 kg = un paquet de farine", lvl: 1 },
-            { items: [{n: "un bébé à la naissance", e: "👶"}], val: 3.5, unit: "kg", repere: "3,5 kg = un petit animal ou un nouveau-né", lvl: 1 },
-            { items: [{n: "un cartable rempli", e: "🎒"}], val: 6, unit: "kg", repere: "6 kg = un sac lourd pour l'école", lvl: 2 },
-            { items: [{n: "un homme adulte", e: "👨"}], val: 75, unit: "kg", repere: "75 kg = la masse d'un être humain standard", lvl: 1 },
-            { items: [{n: "une vache", e: "🐄"}], val: 600, unit: "kg", repere: "600 kg = un animal de ferme très lourd", lvl: 3 },
-            { items: [{n: "une petite voiture", e: "🚗"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1000 kg", lvl: 2 },
-            { items: [{n: "une baleine bleue", e: "🐋"}], val: 150, unit: "t", repere: "150 t = l'animal le plus lourd sur Terre", lvl: 3 }
+            { items: [{n: "la masse d'un tube de colle", e: "🖍️"}], val: 20, unit: "g", repere: "20 g = un petit objet léger", lvl: 1 },
+            { items: [{n: "la masse d'un œuf", e: "🥚"}], val: 60, unit: "g", repere: "60 g = le poids standard d'un œuf", lvl: 1 },
+            { items: [{n: "la masse d'une baguette de pain", e: "🥖"}], val: 250, unit: "g", repere: "250 g = le poids classique du boulanger", lvl: 1 },
+            { items: [{n: "la masse d'un dictionnaire", e: "📖"}], val: 1, unit: "kg", repere: "1 kg = un gros livre", lvl: 1 },
+            { items: [{n: "la masse d'un chat", e: "🐈"}], val: 4, unit: "kg", repere: "4 kg = un animal de compagnie", lvl: 1 },
+            { items: [{n: "la masse d'un pack de 6 bouteilles d'eau", e: "💧"}], val: 9, unit: "kg", repere: "9 kg = très lourd à porter", lvl: 1 },
+            { items: [{n: "la masse d'une petite voiture", e: "🚗"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1000 kg", lvl: 2 },
+            { items: [{n: "la masse d'un gros macaron", e: "🍪"}], val: 2, unit: "dag", repere: "2 dag (20 g) = une petite douceur", lvl: 2 },
+            { items: [{n: "la masse d'une plume", e: "🪶"}], val: 1, unit: "mg", repere: "1 mg = presque rien", lvl: 3 },
+            { items: [{n: "la masse d'un steak haché", e: "🥩"}], val: 1, unit: "hg", repere: "1 hg (100 g) = la portion classique", lvl: 3 },
+            { items: [{n: "la masse d'une baleine", e: "🐋"}], val: 150, unit: "t", repere: "150 t = l'animal le plus lourd", lvl: 3 }
         ],
         cap: [
-            { items: [{n: "une goutte d'eau", e: "💧"}], val: 1, unit: "mL", repere: "1 mL = une toute petite goutte", lvl: 2 },
-            { items: [{n: "une cuillère à café", e: "🥄"}], val: 5, unit: "mL", repere: "5 mL = une petite cuillère", lvl: 2 },
-            { items: [{n: "une dose de sirop", e: "🧪"}], val: 15, unit: "mL", repere: "15 mL = une grande cuillère", lvl: 3 },
-            { items: [{n: "une tasse à café", e: "☕"}], val: 10, unit: "cL", repere: "10 cL = un petit récipient", lvl: 2 },
-            { items: [{n: "un verre d'eau", e: "🥛"}], val: 20, unit: "cL", repere: "20 cL = un verre standard", lvl: 1 },
-            { items: [{n: "une canette de soda", e: "🥤"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1 },
-            { items: [{n: "une grande bouteille d'eau", e: "🍾"}], val: 1.5, unit: "L", repere: "1,5 L = une bouteille classique", lvl: 1 },
-            { items: [{n: "un seau d'eau", e: "🪣"}], val: 10, unit: "L", repere: "10 L = un seau lourd à porter", lvl: 1 },
-            { items: [{n: "un réservoir de voiture", e: "⛽"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 2 },
-            { items: [{n: "une baignoire", e: "🛁"}], val: 150, unit: "L", repere: "150 L = un grand bain", lvl: 2 }
+            { items: [{n: "la quantité de boisson dans une canette", e: "🥤"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1 },
+            { items: [{n: "la quantité d'essence dans une voiture", e: "⛽"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 1 },
+            { items: [{n: "la quantité d'eau dans un grand arrosoir", e: "🚿"}], val: 10, unit: "L", repere: "10 L = lourd à porter", lvl: 1 },
+            { items: [{n: "la dose de sirop pour la toux", e: "🥄"}], val: 15, unit: "mL", repere: "15 mL = une cuillère à soupe", lvl: 2 },
+            { items: [{n: "la quantité d'eau dans une grande bouteille", e: "🍾"}], val: 1.5, unit: "L", repere: "1,5 L = la bouteille classique", lvl: 2 },
+            { items: [{n: "l'eau dans une baignoire bien remplie", e: "🛁"}], val: 150, unit: "L", repere: "150 L = un très grand bain", lvl: 2 },
+            { items: [{n: "la quantité d'eau dans une petite piscine gonflable", e: "🛟"}], val: 1, unit: "hL", repere: "1 hL (100 L) = beaucoup de seaux", lvl: 3 }
         ],
         area: [
-            { items: [{n: "une mine de stylo", e: "✏️"}], val: 1, unit: "mm²", repere: "1 mm² = la pointe d'un stylo", lvl: 3 },
-            { items: [{n: "une touche de clavier", e: "⌨️"}], val: 1, unit: "cm²", repere: "1 cm² = un carré d'un centimètre de côté", lvl: 1 },
-            { items: [{n: "un petit post-it", e: "📝"}], val: 25, unit: "cm²", repere: "25 cm² = un carré de 5 cm sur 5 cm", lvl: 2 },
-            { items: [{n: "une main posée à plat", e: "🖐️"}], val: 1, unit: "dm²", repere: "1 dm² = la surface de ta main", lvl: 3 },
-            { items: [{n: "la couverture d'un grand cahier", e: "📓"}], val: 600, unit: "cm²", repere: "600 cm² = environ un format A4", lvl: 2 },
-            { items: [{n: "une grande fenêtre", e: "🪟"}], val: 1, unit: "m²", repere: "1 m² = un carré d'un mètre sur un mètre", lvl: 1 },
-            { items: [{n: "un tableau de classe", e: "🏫"}], val: 4, unit: "m²", repere: "4 m² = une belle surface au mur", lvl: 2 },
-            { items: [{n: "le sol d'une salle de classe", e: "👨‍🏫"}], val: 50, unit: "m²", repere: "50 m² = une grande pièce", lvl: 2 },
-            { items: [{n: "un terrain de football", e: "⚽"}], val: 1, unit: "hm²", repere: "1 hm² = 1 hectare (10 000 m²)", lvl: 3 },
-            { items: [{n: "une ville entière", e: "🏙️"}], val: 1, unit: "km²", repere: "1 km² = un million de m²", lvl: 1 }
+            { items: [{n: "la surface d'une carte vitale", e: "💳"}], val: 40, unit: "cm²", repere: "40 cm² = un petit rectangle de plastique", lvl: 1 },
+            { items: [{n: "la surface du sol d'une chambre", e: "🛏️"}], val: 12, unit: "m²", repere: "12 m² = une belle pièce", lvl: 1 },
+            { items: [{n: "l'espace recouvert par un tapis", e: "🧶"}], val: 4, unit: "m²", repere: "4 m² = une zone de jeu", lvl: 1 },
+            { items: [{n: "la surface de l'écran d'une tablette", e: "📱"}], val: 3, unit: "dm²", repere: "3 dm² = un petit écran", lvl: 2 },
+            { items: [{n: "la surface d'un cahier ouvert", e: "📓"}], val: 12, unit: "dm²", repere: "12 dm² = deux feuilles A4", lvl: 2 },
+            { items: [{n: "la trace d'un coup de feutre", e: "🖍️"}], val: 4, unit: "mm²", repere: "4 mm² = une toute petite pointe", lvl: 3 },
+            { items: [{n: "la superficie d'une grande forêt", e: "🌲"}], val: 10, unit: "km²", repere: "10 km² = une zone immense", lvl: 3 }
         ],
         vol: [
-            { items: [{n: "un grain de gros sel", e: "🧂"}], val: 1, unit: "mm³", repere: "1 mm³ = un grain de sel", lvl: 3 },
-            { items: [{n: "un dé à jouer", e: "🎲"}], val: 1, unit: "cm³", repere: "1 cm³ = un petit dé", lvl: 1 },
-            { items: [{n: "une brique de lait", e: "🥛"}], val: 1, unit: "dm³", repere: "1 dm³ = 1 Litre", lvl: 2 },
-            { items: [{n: "une poubelle de rue", e: "🗑️"}], val: 1, unit: "m³", repere: "1 m³ = 1000 Litres", lvl: 1 },
-            { items: [{n: "une grande chambre", e: "🛏️"}], val: 30, unit: "m³", repere: "30 m³ = l'espace pour vivre", lvl: 2 },
-            { items: [{n: "une piscine municipale", e: "🏊"}], val: 1, unit: "dam³", repere: "1 dam³ = 1 million de Litres", lvl: 3 },
-            { items: [{n: "un lac de montagne", e: "🏞️"}], val: 1, unit: "km³", repere: "1 km³ = un volume gigantesque", lvl: 2 }
+            { items: [{n: "l'espace pris par une grosse gomme", e: "🧼"}], val: 15, unit: "cm³", repere: "15 cm³ = un petit objet 3D", lvl: 1 },
+            { items: [{n: "l'espace à l'intérieur d'une cabine téléphonique", e: "☎️"}], val: 1, unit: "m³", repere: "1 m³ = la place pour une personne debout", lvl: 1 },
+            { items: [{n: "l'espace pris par une boîte à chaussures", e: "👟"}], val: 6, unit: "dm³", repere: "6 dm³ = 6 Litres", lvl: 2 },
+            { items: [{n: "l'espace dans le coffre d'une voiture familiale", e: "🚗"}], val: 500, unit: "dm³", repere: "500 dm³ = 500 Litres", lvl: 2 },
+            { items: [{n: "le volume d'eau d'un lac de montagne", e: "🏞️"}], val: 1, unit: "km³", repere: "1 km³ = un lac géant", lvl: 3 },
+            { items: [{n: "l'espace de chargement d'un camion de déménagement", e: "🚛"}], val: 30, unit: "m³", repere: "30 m³ = beaucoup de meubles", lvl: 3 }
         ]
     };
 
@@ -512,7 +552,7 @@
     }
 
     /* =========================================
-       GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES) REVISÉS L1/L2/L3
+       GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES)
        ========================================= */
     function buildQuestionLogic(type, level) {
       const schema = SCHEMAS[type];
@@ -619,8 +659,11 @@
             let tStr = v1 === 1 ? `${frac.t} de ${motUnite}` : `${frac.t} de ${fmt(v1)} ${sourceUnit}`;
             
             problemText = `Dans une recette, il faut <strong>${tStr}</strong> ${pick(sub.obj)}. Combien cela fait-il en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(v1 * frac.v); let convertedV1 = (v1 * frac.v) * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
-            correctionText = `Astuce : La valeur est ${fmt(v1 * frac.v)} ${sourceUnit}. Donc la réponse est <strong>${calcValStr} ${targetUnit}</strong>.`;
+            valStr = fmt(v1); 
+            let totalConverti = Math.round(v1 * Math.pow(10, targetIdx - sourceIdx)); 
+            calcValStr = totalConverti.toString();
+            let reponseFinale = totalConverti * frac.v;
+            correctionText = `1) Conversion : ${fmt(v1)} ${sourceUnit} = ${totalConverti} ${targetUnit}.<br> 2) Calcul : ${frac.t} de ${totalConverti} = <strong>${reponseFinale} ${targetUnit}</strong>.`;
         }
         else if (family === 'geom') {
             schema = SCHEMAS.length; let mode = (level === 1) ? 'perim' : (level === 2 ? 'area' : pick(['perim', 'area']));
@@ -660,14 +703,9 @@
         if(qTypeStr === 'est_tri') qType = 10;
 
         if (qType === 5) {
-            let actions = [
-                { q: "Montrez environ 1 cm avec vos doigts !", c: "C'est à peu près l'épaisseur de votre petit doigt." },
-                { q: "Montrez environ 1 mètre avec votre corps !", c: "C'est souvent la distance entre le sol et votre taille/poitrine." },
-                { q: "Trouvez un objet dans la classe qui mesure environ 30 cm.", c: "Exemples : La grande règle, une feuille A4 dans sa longueur." },
-                { q: "Trouvez un objet qui pèse environ 1 kg.", c: "Exemples : Un dictionnaire, une grande gourde pleine." },
-                { q: "Écartez les bras pour montrer une longueur d'environ 1,50 m !", c: "C'est souvent l'envergure totale de vos deux bras écartés." }
-            ];
-            let act = pick(actions);
+            let actionsList = ACTIONS_DB.filter(a => a.lvl <= level);
+            if(actionsList.length === 0) actionsList = ACTIONS_DB;
+            let act = pick(actionsList);
             return { isProblem: false, isEstimation: true, qType: 5, problemText: act.q, choices: [], correctIndex: 0, correctionText: act.c, phase: 0, textId: act.q, emoji: "🕵️" };
         }
 
@@ -691,13 +729,10 @@
         }
 
         if (qType === 7) {
-            let ponts = [
-                { q: "1 Litre d'eau, c'est exactement la même quantité que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "💧" },
-                { q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1000 L", w1: "10 L", w2: "100 L", e: "📦" },
-                { q: "1 millilitre (1 mL), c'est équivalent à :", c: "1 cm³", w1: "1 dm³", w2: "1 mm³", e: "🧪" },
-                { q: "1 hectare, c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🏟️" }
-            ];
-            let pont = pick(ponts);
+            let pontsList = PONTS_DB.filter(p => p.lvl <= level);
+            if(pontsList.length === 0) pontsList = PONTS_DB;
+            let pont = pick(pontsList);
+            
             let choices = [pont.c, pont.w1, pont.w2];
             let finalChoices = []; let correctIndex = 0;
             let indices = [0, 1, 2]; shuffle(indices);
@@ -718,7 +753,7 @@
             let shuffledVals = shuffle([...values]);
             
             let letters = ["A", "B", "C"];
-            let htmlStr = `Associe chaque objet à la bonne valeur :<br><br>
+            let htmlStr = `Associe chaque élément à la bonne valeur :<br><br>
                <div style="display:flex; justify-content:center; gap: 50px; font-size:0.9em; text-align:left;">
                  <div>1) ${objects[0]}<br>2) ${objects[1]}<br>3) ${objects[2]}</div>
                  <div>A) ${shuffledVals[0]}<br>B) ${shuffledVals[1]}<br>C) ${shuffledVals[2]}</div>
@@ -774,7 +809,7 @@
         let prefix = verb + " environ";
 
         if (qType === 1) { 
-            problemText = `Pour exprimer <strong>${qObject}</strong>, quelle est l'unité la plus adaptée ?`;
+            problemText = `Pour <strong>${qObject}</strong>, quelle est l'unité la plus adaptée ?`;
             let unitsArr = [];
             if(dim === 'len') unitsArr = ['mm', 'cm', 'm', 'km'];
             else if(dim === 'mass') unitsArr = ['g', 'kg', 't'];
@@ -791,24 +826,32 @@
         else if (qType === 2) { 
             problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${prefix} :`;
             
-            if (level === 1) {
-                let v1 = targetItem.val;
-                let c1 = `${fmt(v1)} ${targetItem.unit}`;
-                let c2 = `${fmt(v1 * 1000)} ${targetItem.unit}`; 
-                let c3 = (v1 >= 100) ? `${fmt(v1 / 100)} ${targetItem.unit}` : `${fmt(v1 * 100)} ${targetItem.unit}`; 
-                choices = [c1, c2, c3];
-            } else if (level === 2) {
-                let v1 = targetItem.val;
-                let c1 = `${fmt(v1)} ${targetItem.unit}`;
-                let c2 = `${fmt(v1 * 10)} ${targetItem.unit}`; 
-                let c3 = `${fmt(v1 / 10)} ${targetItem.unit}`;
+            let v1 = targetItem.val;
+            let pool = [];
+            let c1 = `${fmt(v1)} ${targetItem.unit}`; 
+            
+            if (level === 1 || level === 2) {
+                if (v1 >= 10) pool.push(v1 / 10);
+                if (v1 >= 100) pool.push(v1 / 100);
+                pool.push(v1 * 10);
+                pool.push(v1 * 100);
+                pool.push(v1 * 1000);
+                pool = shuffle(pool);
+                
+                let c2 = `${fmt(pool[0])} ${targetItem.unit}`; 
+                let c3 = `${fmt(pool[1])} ${targetItem.unit}`;
                 choices = [c1, c2, c3];
             } else {
                 let conv = convertTricky(targetItem.val, targetItem.unit);
-                let c1 = `${fmt(conv.val)} ${conv.unit}`; 
-                let c2 = `${fmt(targetItem.val * 10)} ${targetItem.unit}`; 
-                let c3 = `${fmt(conv.val * 100)} ${conv.unit}`; 
-                choices = [c1, c2, c3];
+                let c1Conv = `${fmt(conv.val)} ${conv.unit}`; 
+                let poolLevel3 = [
+                    `${fmt(targetItem.val * 10)} ${targetItem.unit}`,
+                    `${fmt(conv.val * 100)} ${conv.unit}`,
+                    `${fmt(targetItem.val / 10)} ${targetItem.unit}`,
+                    `${fmt(conv.val / 10)} ${conv.unit}`
+                ];
+                poolLevel3 = shuffle(poolLevel3);
+                choices = [c1Conv, poolLevel3[0], poolLevel3[1]];
             }
         }
         else if (qType === 3) { 
@@ -828,10 +871,23 @@
         else if (qType === 4) { 
             let isTrue = rand(1, 2) === 1;
             let displayedVal = targetItem.val;
+            let unitDisplayed = targetItem.unit;
             
-            if (!isTrue) displayedVal = targetItem.val * pick([100, 1000]); 
+            if (!isTrue) {
+                if (level === 1) displayedVal = targetItem.val * pick([100, 1000]);
+                else if (level === 2) displayedVal = pick([targetItem.val * 10, targetItem.val / 10]);
+                else {
+                    if (rand(1, 2) === 1) {
+                        let altUnits = ['mg','cg','dg','g','dag','hg','kg','t','mm','cm','dm','m','dam','hm','km','mL','cL','dL','L','daL','hL','kL','cm²','m²','km²','cm³','dm³','m³'];
+                        altUnits = altUnits.filter(u => u !== targetItem.unit);
+                        unitDisplayed = pick(altUnits);
+                    } else {
+                        displayedVal = targetItem.val * pick([2, 0.5, 5]);
+                    }
+                }
+            }
             
-            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${verb} environ <strong>${fmt(displayedVal)} ${targetItem.unit}</strong>.`;
+            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${verb} environ <strong>${fmt(displayedVal)} ${unitDisplayed}</strong>.`;
             choices = ["Vrai", "Faux"];
             correctIndex = isTrue ? 0 : 1;
             correctionText = (isTrue ? "C'est vrai ! " : "C'est faux ! ") + correctionText;
@@ -1264,7 +1320,7 @@
           if (q.phase === 0) {
             qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
             tBox.style.display = 'none'; 
-            btnNext.innerHTML = "Placer au Tableau 💡 ►";
+            btnNext.innerHTML = "Aide : Placer dans le tableau 💡 ►";
           } 
           else if (q.phase === 1) {
             qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
