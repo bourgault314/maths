@@ -16,6 +16,7 @@
     --head-font-size: 1.25rem;
     --c-total-height: 14.5cm;
     --c-window-height: 4.6cm;
+    --montant: 3mm; /* Épaisseur par défaut, modifiée en JS pour les m3 */
   }
   
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -63,7 +64,6 @@
     --col-width: calc((26cm - var(--gap-main)) / var(--cols));
     --gap-sub: calc((var(--slots) - 1) * 4px);
     --sub-col-width: calc((var(--col-width) - var(--gap-sub)) / var(--slots));
-    --montant: 3mm; 
     box-sizing: border-box; width: calc(var(--sub-col-width) + (var(--montant) * 2)); height: var(--c-total-height); 
     border-radius: 8px; display: flex; flex-direction: column; align-items: center; border: 2px solid var(--accent-dark); overflow: hidden; transform: rotate(-90deg); position: relative;
     transition: height 0.3s, width 0.3s;
@@ -76,13 +76,12 @@
   .arrow-up { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 10px solid white; margin-bottom: 6px; }
 
   /* Fenêtre centrale */
-  .c-middle { height: var(--c-window-height); flex: none; width: 100%; background: #fff; position: relative; box-sizing: border-box; border-left: var(--montant) solid var(--accent); border-right: var(--montant) solid var(--accent); transition: height 0.3s; }
+  .c-middle { height: var(--c-window-height); flex: none; width: 100%; background: #fff; position: relative; box-sizing: border-box; border-left: var(--montant) solid var(--accent); border-right: var(--montant) solid var(--accent); transition: height 0.3s, border-width 0.3s; }
   
   .c-comma-container { position: absolute; top: 0; left: 50%; width: var(--sub-col-width); transform: translateX(-50%); pointer-events: none; z-index: 10; }
   .c-comma-svg { position: absolute; right: 2px; filter: drop-shadow(0px 0px 1px white); }
 
   .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; }
-  /* Ajout d'une limite pour que les textes "daL" ne forcent jamais l'élargissement de la colonne */
   .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; min-width: 0; overflow: visible; }
   .sub-lab { white-space: nowrap; font-weight: 900; color: #1e293b; line-height: 1; font-size: 0.85rem; letter-spacing: -0.5px; }
 
@@ -117,7 +116,7 @@
     <div class="grid-instr">
       <div class="step"><div class="num">1</div><span><strong>Le Tableau :</strong> Découpez sur les pointillés gris et plastifiez la bande.</span></div>
       <div class="step"><div class="num">2</div><span><strong>Le Curseur :</strong> Découpez le contour bleu et plastifiez-le <strong>en entier</strong> (gardez le fond blanc).</span></div>
-      <div class="step"><div class="num">3</div><span><strong>Cutter :</strong> Incisez sur les <strong>pointillés noirs</strong> (ou à ras du bord bleu pour les m³). À droite, contournez la virgule.</span></div>
+      <div class="step"><div class="num">3</div><span><strong>Cutter :</strong> Incisez sur les <strong>pointillés noirs</strong> (ou à ras du bord intérieur pour les m³). À droite, contournez la virgule.</span></div>
       <div class="step"><div class="num">4</div><span><strong>Montage :</strong> La bande passe <strong>devant</strong> le fond blanc rigide, mais <strong>sous</strong> la virgule.</span></div>
     </div>
   </div>
@@ -156,6 +155,9 @@ function buildPaperTool() {
   document.documentElement.style.setProperty('--table-cell-min-height', isXL ? '120px' : '92px');
   document.documentElement.style.setProperty('--head-btn-min-height', isXL ? '60px' : '44px');
   document.documentElement.style.setProperty('--head-font-size', isXL ? '1.4rem' : '1.25rem');
+  
+  // Rendre les montants latéraux plus fins pour les tableaux à 3 colonnes (m3)
+  document.documentElement.style.setProperty('--montant', s.slots === 3 ? '1.5mm' : '3mm');
 
   // CALCUL MILLIMÉTRÉ (28px = 0.74cm de plus pour laisser la place aux sous-unités)
   let baseWinH = isXL ? 5.8 : 4.6;
@@ -174,7 +176,7 @@ function buildPaperTool() {
 
   let colsHTML = '';
   s.units.forEach((u, ci) => {
-    // EN-TÊTE AVEC LES CASES TRANSPARENTES (Structure parfaite)
+    // EN-TÊTE AVEC LES CASES TRANSPARENTES
     let head = `<div class="head-group" style="grid-template-columns:repeat(${s.slots},1fr)">`;
     for(let i=0; i<s.slots; i++) {
         let isEmpty = (i < s.slots - 1) || (u === '-');
@@ -196,15 +198,25 @@ function buildPaperTool() {
     colsHTML += `<div class="family-col">${head}${sub}${digits}</div>`;
   });
 
-  // GESTION DES POINTILLÉS : Actifs uniquement s'il y a assez de place (1 ou 2 slots)
+  // GESTION DES POINTILLÉS
   let guidesHTML = '';
-  if (s.slots < 3) {
+  if (s.slots === 1) {
     guidesHTML = `
       <svg style="position:absolute; left:0; top:0; width:10px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 10 100" preserveAspectRatio="none">
-        <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke" opacity="0.6"/>
+        <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
       </svg>
       <svg style="position:absolute; right:0; top:0; width:40px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 40 100" preserveAspectRatio="none">
-        <path d="M 40,0 L 40,40 Q 40,65 15,80 L 15,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke" opacity="0.6"/>
+        <path d="M 40,0 L 40,60 Q 40,80 12,85 L 12,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
+      </svg>
+    `;
+  } else if (s.slots === 2) {
+    // Tracé spécifique pour m2 : la courbe plonge plus bas et enveloppe la virgule de plus près
+    guidesHTML = `
+      <svg style="position:absolute; left:0; top:0; width:10px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 10 100" preserveAspectRatio="none">
+        <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <svg style="position:absolute; right:0; top:0; width:40px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 40 100" preserveAspectRatio="none">
+        <path d="M 40,0 L 40,65 Q 40,84 10,88 L 10,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
       </svg>
     `;
   }
