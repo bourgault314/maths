@@ -16,7 +16,7 @@
     --head-font-size: 1.25rem;
     --c-total-height: 14.5cm;
     --c-window-height: 4.6cm;
-    --montant: 3mm; /* Épaisseur par défaut, modifiée en JS pour les m3 */
+    --montant: 3mm; /* Toujours 3mm pour la solidité */
   }
   
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -49,8 +49,9 @@
   .family-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .head-group { display: grid; gap: 4px; min-width: 0; }
   
-  .unitBtn { background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent); border-radius: 8px; font-size: var(--head-font-size); display: flex; align-items: center; justify-content: center; min-height: var(--head-btn-min-height); width: 100%; box-sizing: border-box; }
-  .unitBtn span { font-weight: 700; color: var(--ink); text-align: center; }
+  /* On force le bouton à cacher ce qui dépasse (overflow) au cas où, pour ne pas casser la grille */
+  .unitBtn { background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent); border-radius: 8px; font-size: var(--head-font-size); display: flex; align-items: center; justify-content: center; min-height: var(--head-btn-min-height); width: 100%; box-sizing: border-box; overflow: hidden; }
+  .unitBtn span { font-weight: 700; color: var(--ink); text-align: center; letter-spacing: -0.5px; }
   .unitBtn.empty-unit { background: transparent; border-color: #cbd5e1; }
   
   .cell { position: relative; background: transparent; display: flex; align-items: stretch; justify-content: center; min-width: 0; }
@@ -153,11 +154,10 @@ function buildPaperTool() {
   document.documentElement.style.setProperty('--cols', s.units.length);
   document.documentElement.style.setProperty('--slots', s.slots);
   document.documentElement.style.setProperty('--table-cell-min-height', isXL ? '120px' : '92px');
-  document.documentElement.style.setProperty('--head-btn-min-height', isXL ? '60px' : '44px');
-  document.documentElement.style.setProperty('--head-font-size', isXL ? '1.4rem' : '1.25rem');
   
-  // Rendre les montants latéraux plus fins pour les tableaux à 3 colonnes (m3)
-  document.documentElement.style.setProperty('--montant', s.slots === 3 ? '1.5mm' : '3mm');
+  // On remet la taille de police globale à sa valeur normale pour tout le monde
+  document.documentElement.style.setProperty('--head-font-size', isXL ? '1.4rem' : '1.25rem');
+  document.documentElement.style.setProperty('--head-btn-min-height', isXL ? '60px' : '44px');
 
   // CALCUL MILLIMÉTRÉ (28px = 0.74cm de plus pour laisser la place aux sous-unités)
   let baseWinH = isXL ? 5.8 : 4.6;
@@ -180,7 +180,10 @@ function buildPaperTool() {
     let head = `<div class="head-group" style="grid-template-columns:repeat(${s.slots},1fr)">`;
     for(let i=0; i<s.slots; i++) {
         let isEmpty = (i < s.slots - 1) || (u === '-');
-        head += `<div class="unitBtn ${isEmpty ? 'empty-unit' : ''}"><span>${isEmpty ? '' : u}</span></div>`;
+        // Ciblage chirurgical : on réduit la police SEULEMENT pour "dam³"
+        let customStyle = (!isEmpty && u === 'dam³') ? `style="font-size: ${isXL ? '1rem' : '0.85rem'};"` : '';
+        
+        head += `<div class="unitBtn ${isEmpty ? 'empty-unit' : ''}"><span ${customStyle}>${isEmpty ? '' : u}</span></div>`;
     }
     head += '</div>';
     
