@@ -146,12 +146,28 @@
   .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
   .sub-lab{white-space:nowrap;font-weight:900;color:color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1;}
 
+  /* --- NOUVEAUX STYLES POUR LA MODALE D'IMPRESSION --- */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal { background: #fff; padding: 24px; border-radius: 14px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.2s; }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  .modal h3 { margin-top: 0; color: var(--accent-dark); font-size: 1.4rem; margin-bottom: 20px; }
+  .print-options-list { max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px; }
+  .print-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 1.1rem; font-weight: 700; }
+  .print-item:last-child { border-bottom: none; }
+  .counter-ui { display: flex; align-items: center; gap: 12px; }
+  .counter-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); background: #fff; color: var(--accent); font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; transition: all 0.1s; }
+  .counter-btn:hover { background: var(--accent); color: #fff; }
+  .counter-btn:active { transform: scale(0.9); }
+  .counter-val { min-width: 24px; text-align: center; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+  
   #print-container { display: none; }
   
   @media print {
     @page { size: A4 landscape; margin: 12mm; }
     body { background: #fff; }
-    .app { display: none !important; } 
+    .app, .modal-overlay { display: none !important; } 
     
     #print-container { display: block !important; width: 100%; }
     .print-page {
@@ -188,7 +204,7 @@
       <button class="btn" id="freezeBtn" style="width: 170px;">📌 Figer le départ</button>
     </div>
     <div class="right">
-      <button class="btn small print-btn" id="printBtn" title="Imprimer tous les tableaux (2 par page)">🖨️ Tout imprimer</button>
+      <button class="btn small print-btn" id="openPrintModalBtn" title="Choisir quels tableaux imprimer">🖨️ Imprimer</button>
       <button class="btn secondary small" id="fsBtn" title="Plein écran">⛶</button>
       <button class="btn secondary small" id="zoomOut" title="Dézoomer">−</button>
       <span class="zoomLabel" id="zoomLabel">100%</span>
@@ -216,6 +232,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="printModal">
+  <div class="modal">
+    <h3>Configuration d'impression</h3>
+    <div class="print-options-list" id="printOptionsList">
+      </div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancelPrintBtn">Annuler</button>
+      <button class="btn print-btn" id="confirmPrintBtn">Générer les fiches</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   const THEMES = {
@@ -238,11 +266,18 @@
   const kindSel = document.getElementById('kind'), titleEl = document.getElementById('title'), boardColumns = document.getElementById('boardColumns'), inner = document.getElementById('inner'), board = document.querySelector('.board'), cursor = document.getElementById('cursor');
   const handles = [document.getElementById('handleTop'), document.getElementById('handleBottom')];
   const btnTog = document.getElementById('toggleShow'), btnRst = document.getElementById('reset'), result = document.getElementById('result'), zoomOut = document.getElementById('zoomOut'), zoomIn = document.getElementById('zoomIn'), zoomLabel = document.getElementById('zoomLabel'), fsBtn = document.getElementById('fsBtn');
-  const printBtn = document.getElementById('printBtn');
   const freezeBtn = document.getElementById('freezeBtn');
+
+  // Eléments de la modale
+  const printModal = document.getElementById('printModal');
+  const openPrintModalBtn = document.getElementById('openPrintModalBtn');
+  const cancelPrintBtn = document.getElementById('cancelPrintBtn');
+  const confirmPrintBtn = document.getElementById('confirmPrintBtn');
+  const printOptionsList = document.getElementById('printOptionsList');
 
   let schema = SCHEMAS.length, targetIdx = 3, isShown = true, inputs = [], savedStudent = null, zoomScale = 1;
   let isFrozen = false, frozenUnitIdx = -1;
+  let printQuantities = {};
 
   function applyZoom(){
     board.style.transform = `scale(${zoomScale})`;
@@ -613,15 +648,96 @@
   fsBtn.addEventListener('click', ()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); });
   kindSel.addEventListener('change', rebuild);
   
-  if(printBtn) {
-    printBtn.addEventListener('click', () => {
+  // --- GESTION DE LA MODALE D'IMPRESSION ---
+  
+  function updateModalCounters() {
+    printOptionsList.innerHTML = '';
+    const kinds = Object.keys(SCHEMAS);
+    
+    kinds.forEach(k => {
+      // Par défaut, si l'utilisateur ouvre pour la 1ère fois, on met 1 au tableau actif, 0 aux autres
+      if (printQuantities[k] === undefined) {
+         printQuantities[k] = (k === kindSel.value) ? 1 : 0;
+      }
+      
+      const item = document.createElement('div');
+      item.className = 'print-item';
+      
+      const label = document.createElement('span');
+      label.textContent = SCHEMAS[k].label;
+      item.appendChild(label);
+      
+      const ui = document.createElement('div');
+      ui.className = 'counter-ui';
+      
+      const btnMinus = document.createElement('button');
+      btnMinus.className = 'counter-btn';
+      btnMinus.textContent = '−';
+      btnMinus.onclick = () => {
+        if(printQuantities[k] > 0) {
+          printQuantities[k]--;
+          val.textContent = printQuantities[k];
+        }
+      };
+      
+      const val = document.createElement('span');
+      val.className = 'counter-val';
+      val.textContent = printQuantities[k];
+      
+      const btnPlus = document.createElement('button');
+      btnPlus.className = 'counter-btn';
+      btnPlus.textContent = '+';
+      btnPlus.onclick = () => {
+        printQuantities[k]++;
+        val.textContent = printQuantities[k];
+      };
+      
+      ui.appendChild(btnMinus);
+      ui.appendChild(val);
+      ui.appendChild(btnPlus);
+      item.appendChild(ui);
+      
+      printOptionsList.appendChild(item);
+    });
+  }
+
+  if(openPrintModalBtn) {
+    openPrintModalBtn.addEventListener('click', () => {
+      updateModalCounters();
+      printModal.classList.add('active');
+    });
+  }
+  
+  if(cancelPrintBtn) {
+    cancelPrintBtn.addEventListener('click', () => {
+      printModal.classList.remove('active');
+    });
+  }
+
+  if(confirmPrintBtn) {
+    confirmPrintBtn.addEventListener('click', () => {
+      // Créer la liste de tous les tableaux à imprimer selon les compteurs
+      let tablesToPrint = [];
+      Object.keys(SCHEMAS).forEach(k => {
+        for(let i = 0; i < printQuantities[k]; i++) {
+          tablesToPrint.push(k);
+        }
+      });
+      
+      if(tablesToPrint.length === 0) {
+        alert("Veuillez sélectionner au moins un tableau à imprimer.");
+        return;
+      }
+
+      printModal.classList.remove('active');
+      
       const printContainer = document.createElement('div');
       printContainer.id = 'print-container';
       
-      const kinds = Object.keys(SCHEMAS);
       let pageDiv = null;
       
-      kinds.forEach((k, index) => {
+      tablesToPrint.forEach((k, index) => {
+        // Regroupement par 2 sur une page
         if(index % 2 === 0) {
           pageDiv = document.createElement('div');
           pageDiv.className = 'print-page';
