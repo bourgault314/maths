@@ -170,7 +170,12 @@ function buildPaperTool() {
   document.documentElement.style.setProperty('--c-window-height', baseWinH + 'cm');
   document.documentElement.style.setProperty('--c-total-height', baseTotH + 'cm');
 
+  // Police d'origine inchangée pour le tableau
   let fontSize = isXL ? (s.slots === 3 ? "0.95rem" : "1.3rem") : (s.slots === 3 ? "0.85rem" : "1.1rem");
+  
+  // POLICE ENCORE PLUS GROSSE pour le curseur uniquement
+  let cursorFontSize = isXL ? (s.slots === 3 ? "1.2rem" : "1.8rem") : (s.slots === 3 ? "1.1rem" : "1.5rem");
+  
   let commaWidth = isXL ? (s.slots === 3 ? "2rem" : "2.8rem") : (s.slots === 3 ? "1.5rem" : "2.2rem");
   let commaTop = isXL ? (s.slots === 3 ? "-35px" : "-45px") : (s.slots === 3 ? "-25px" : "-35px");
 
@@ -204,16 +209,17 @@ function buildPaperTool() {
   // GESTION DES POINTILLÉS
   let guidesHTML = '';
   if (s.slots === 1) {
+    // NOUVEAU TRACÉ : Tourne plus tôt (à 45) et finit bien plus à gauche (à 4) pour esquiver la virgule
     guidesHTML = `
       <svg style="position:absolute; left:0; top:0; width:10px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 10 100" preserveAspectRatio="none">
         <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
       </svg>
       <svg style="position:absolute; right:0; top:0; width:40px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 40 100" preserveAspectRatio="none">
-        <path d="M 40,0 L 40,60 Q 40,80 12,85 L 12,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
+        <path d="M 40,0 L 40,45 Q 40,85 4,90 L 4,100" fill="none" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
       </svg>
     `;
   } else if (s.slots === 2) {
-    // Tracé spécifique pour m2 : la courbe plonge plus bas et enveloppe la virgule de plus près
+    // TRACÉ D'ORIGINE REMIS EN PLACE
     guidesHTML = `
       <svg style="position:absolute; left:0; top:0; width:10px; height:100%; pointer-events:none; z-index:5;" viewBox="0 0 10 100" preserveAspectRatio="none">
         <line x1="0" y1="0" x2="0" y2="100" stroke="#1b1b1b" stroke-width="2" stroke-dasharray="6,6" vector-effect="non-scaling-stroke"/>
@@ -229,13 +235,13 @@ function buildPaperTool() {
     <div class="curseur-wrapper">
       <div class="curseur">
         
-        <div class="c-top" style="font-size:${fontSize}">L'unité de<br>mesure<div class="arrow-down"></div></div>
+        <div class="c-top" style="font-size:${cursorFontSize}">L'unité de<br>mesure<div class="arrow-down"></div></div>
         
         <div class="c-middle">
           ${guidesHTML}
         </div>
 
-        <div class="c-bottom" style="font-size:${fontSize}">
+        <div class="c-bottom" style="font-size:${cursorFontSize}">
           <div class="c-comma-container">
             <svg class="c-comma-svg" style="width: ${commaWidth}; top: ${commaTop};" viewBox="0 0 40 60">
               <path d="M 28,12 Q 28,32 12,48" fill="none" stroke="#ef4444" stroke-width="12" stroke-linecap="round" />
