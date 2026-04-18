@@ -62,31 +62,26 @@
     .page-inner { position: absolute; top: var(--page-margin); bottom: var(--page-margin); left: var(--page-margin); right: var(--page-margin); display: flex; flex-direction: column; }
     
     .grid { flex: 1; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); border: 2px solid var(--ink); min-height: 0; }
-    .cell { border: 1px solid var(--grid-line); display: flex; flex-direction: column; padding: 4px; position: relative; overflow: hidden; }
+    .cell { border: 1px solid var(--grid-line); display: flex; flex-direction: column; padding: 4px; position: relative; overflow: hidden; background: white; }
     
+    /* ANIMATIONS TBI MODE */
+    .tbi-mode { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .tbi-mode:hover { transform: scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 5; border-color: var(--accent); }
+    .splat-path { transition: opacity 0.6s ease; }
+    .tbi-mode.revealed .splat-path { opacity: 0.15; }
+    .hidden-val { opacity: 0; transition: opacity 0.6s ease; }
+    .tbi-mode.revealed .hidden-val { opacity: 1; }
+
     .part-splat { flex: 1; position: relative; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px; overflow: hidden; min-height: 0; }
     .splat-svg { width: 100%; height: 100%; display: block; }
 
-    /* BOÎTE DU TOTAL ANCRÉE */
     .total-badge {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        width: 38px;
-        height: 38px;
-        background: white;
-        border: 2px solid #334155;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        font-weight: 900;
-        color: #111827;
-        z-index: 10;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+        position: absolute; top: 5px; right: 5px; width: 38px; height: 38px;
+        background: white; border: 2px solid #334155; display: flex; align-items: center; justify-content: center;
+        font-size: 18px; font-weight: 900; color: #111827; z-index: 10; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
     }
 
-    /* DIAGRAMME PROPORTIONNEL */
+    /* DIAGRAMME */
     .diagram-container { flex: 0 0 70px; display: flex; flex-direction: column; width: 90%; margin: 0 auto 5px auto; }
     .diagram-inner { display: flex; flex-direction: column; flex: 1; border: 2px solid #111827; border-radius: 4px; overflow: hidden; background: white; }
     .row-top { flex: 1; border-bottom: 2px solid #111827; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; background: #fff; min-height: 25px; }
@@ -97,10 +92,7 @@
     .grid-mirror { direction: rtl; } 
     .grid-mirror .cell { direction: ltr; }
 
-    .page-label {
-        position: absolute; bottom: -25px; left: 0; right: 0; text-align: center;
-        font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;
-    }
+    .page-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
 
     @media print { 
       @page { size: A4; margin: 0; } 
@@ -119,16 +111,17 @@
 <aside>
   <div class="sb-header"><h2 class="sb-title" data-i18n="title">Splat! Expert</h2></div>
   <div class="sb-scroll">
-    <div class="section">
-        <div class="sec-title" data-i18n="lang">Langue</div>
-        <div class="flags">
-            <div class="flag-btn active" onclick="setLang('fr', this)">FR</div>
-            <div class="flag-btn" onclick="setLang('en', this)">EN</div>
-        </div>
+    
+    <div class="section" style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+        <div class="sec-title" style="color: #1e3a8a;">Support d'utilisation</div>
+        <select id="supportMode" onchange="toggleMode()" style="background: white; border-color: #93c5fd; font-weight: 800; color: #1e40af;">
+            <option value="print" selected>📄 Fiche (Impression PDF)</option>
+            <option value="tbi">💻 Écran Interactif (TBI)</option>
+        </select>
     </div>
 
-    <div class="section">
-      <div class="sec-title" data-i18n="options">Options</div>
+    <div class="section" id="printOptionsSection">
+      <div class="sec-title" data-i18n="options">Options d'impression</div>
       <div class="corr-group">
           <label class="check-control">
               <input type="checkbox" id="showCorr" onchange="toggleCorr()">
@@ -184,7 +177,7 @@
 
     <div class="actions">
       <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">MÉLANGER</button>
-      <button class="btn btn-print" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+      <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
     </div>
   </div>
 </aside>
@@ -220,6 +213,7 @@ const SPLAT_SHAPES = [
 let currentLang = 'fr';
 let state = [];
 let isRVMode = false; 
+let isTBI = false;
 
 function setLang(l, el) { 
     currentLang = l; 
@@ -237,10 +231,29 @@ function updateUI() {
     });
 }
 
+function toggleMode() {
+    isTBI = document.getElementById('supportMode').value === 'tbi';
+    const printSection = document.getElementById('printOptionsSection');
+    const printBtn = document.getElementById('printBtn');
+    
+    if (isTBI) {
+        printSection.style.display = 'none';
+        printBtn.style.display = 'none';
+        if(document.getElementById('gridSize').value === '3x4') {
+            document.getElementById('gridSize').value = '3x3';
+            document.documentElement.style.setProperty('--cols', 3);
+            document.documentElement.style.setProperty('--rows', 3);
+        }
+    } else {
+        printSection.style.display = 'block';
+        printBtn.style.display = 'block';
+    }
+    renderPages();
+}
+
 function toggleCorr() {
     const isCorr = document.getElementById('showCorr').checked;
     const rvBtn = document.getElementById('btnRV');
-    
     if(isCorr) { rvBtn.classList.remove('disabled'); } 
     else { rvBtn.classList.add('disabled'); rvBtn.classList.remove('active'); isRVMode = false; }
     renderPages();
@@ -298,7 +311,6 @@ function createItem(mode, maxTarget, splatMode) {
     const splatShape = Math.floor(Math.random() * SPLAT_SHAPES.length);
     const splatRot = Math.floor(Math.random() * 360);
 
-    // NOUVELLES ANCRES : Plus écartées pour laisser le centre et les côtés respirer
     const layouts = {
         1: [{x: 135, y: 110, s: 0.85}],
         2: [{x: 75, y: 115, s: 0.6}, {x: 185, y: 115, s: 0.6}],
@@ -310,13 +322,87 @@ function createItem(mode, maxTarget, splatMode) {
     
     let splats = layouts[numSplats].map(l => ({ cx: l.x, cy: l.y, scale: l.s, rot: splatRot }));
     const dotsPositions = generateDotPositions(visible, maxTarget, splatShape, splats);
+    
+    // Génération ultra-sécurisée des points cachés
+    const hiddenDots = generateHiddenDots(splats, hiddenPerSplat, splatShape, maxTarget);
 
     return { 
         total, visible, hidden, numSplats, hiddenPerSplat,
         mode: actualMode, clueGiven, splatShape, splats,
-        dots: dotsPositions, maxTargetContext: maxTarget
+        dots: dotsPositions, hiddenDots: hiddenDots, maxTargetContext: maxTarget
     };
 }
+
+// CORRECTION MAJEURE: Le générateur de points cachés
+function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
+    const W = 300, H = 200;
+    let dotR = (maxTarget > 50) ? 5 : 8;
+    let ctx = null, splatPath = null;
+
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        ctx = canvas.getContext('2d');
+        splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
+        
+        // LA MAGIE EST ICI : On crée une épaisse marge de sécurité vers l'intérieur
+        // Égale au diamètre du point + une petite marge (x3.5)
+        ctx.lineWidth = dotR * 3.5; 
+    } catch (e) { return []; }
+
+    const allHiddenDots = [];
+    
+    for (let s of splats) {
+        const placed = [];
+        for (let k = 0; k < countPerSplat; k++) {
+            let safe = false;
+            let bestDX = undefined, bestDY = undefined;
+            let attempts = 0;
+            
+            while (!safe && attempts < 300) {
+                attempts++;
+                let localX = 150 + (Math.random() - 0.5) * 160;
+                let localY = 100 + (Math.random() - 0.5) * 160;
+                
+                // 1. Le centre est-il dans la tache ?
+                if (!ctx.isPointInPath(splatPath, localX, localY)) continue;
+                
+                // 2. Le point frôle-t-il la bordure ? (Grâce à notre épaisse marge)
+                if (ctx.isPointInStroke(splatPath, localX, localY)) continue;
+                
+                // Si le code arrive ici, le point est PARFAITEMENT à l'intérieur
+                let rad = s.rot * Math.PI / 180;
+                let cos = Math.cos(rad), sin = Math.sin(rad);
+                let scaledX = (localX - 150) * s.scale;
+                let scaledY = (localY - 100) * s.scale;
+                let currentDX = (scaledX * cos - scaledY * sin) + s.cx;
+                let currentDY = (scaledX * sin + scaledY * cos) + s.cy;
+
+                bestDX = currentDX;
+                bestDY = currentDY;
+
+                // 3. Gestion intelligente du chevauchement (L'anti-panique pour les 100 billes)
+                let overlap = false;
+                let minReqDist = dotR * 2.2; // On veut qu'elles ne se touchent pas au début
+                if (attempts > 100) minReqDist = dotR * 1.2; // Au bout de 100 essais, on les laisse se frôler
+                if (attempts > 200) minReqDist = 0; // Au bout de 200 essais, on les laisse se superposer comme un tas
+
+                for (let p of placed) {
+                    if (Math.sqrt((currentDX - p.x)**2 + (currentDY - p.y)**2) < minReqDist) { overlap = true; break; }
+                }
+                if (!overlap) safe = true;
+            }
+            
+            // On sauvegarde le meilleur point trouvé, qui est forcément dans les frontières
+            if (bestDX !== undefined) {
+                placed.push({x: bestDX, y: bestDY});
+                allHiddenDots.push({x: bestDX, y: bestDY, r: dotR});
+            }
+        }
+    }
+    return allHiddenDots;
+}
+
 
 function generateDotPositions(count, maxTarget, splatShape, splats) {
     const W = 300, H = 200;
@@ -342,57 +428,48 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
 
     const placed = [];
     
-    // ALGORYTHME DU MEILLEUR CANDIDAT (POUR ÉVITER LES GRUMEAUX)
     for (let k = 0; k < count; k++) {
         let bestCand = null;
         let maxMinDist = -1;
         
-        // On tire 40 positions au hasard pour en choisir UNE seule (la meilleure)
         for (let c = 0; c < 40; c++) {
             let dX = 15 + Math.random() * (W - 30);
             let dY = 15 + Math.random() * (H - 30);
 
-            // On protège le coin Total (En haut à droite)
             if (dX > 220 && dY < 80) continue;
 
             let touchSplat = false;
             if (canTestSplat) {
                 for(let s of splats) {
                     let p = inverseTransform(dX, dY, s.cx, s.cy, s.rot, s.scale);
-                    // CHAMP DE FORCE DYNAMIQUE : L'épaisseur repousse les points même si la tache est petite !
                     ctx.lineWidth = ((dotR * 2) + 12) / s.scale; 
                     if (ctx.isPointInPath(splatPath, p.x, p.y) || ctx.isPointInStroke(splatPath, p.x, p.y)) { touchSplat = true; break; }
                 }
             } else {
-                // Fallback mathématique (sans canvas)
                 for(let s of splats) {
                     let dist = Math.sqrt((dX - s.cx)**2 + (dY - s.cy)**2);
                     if (dist < 90 * s.scale) { touchSplat = true; break; }
                 }
             }
-            if (touchSplat) continue; // Si on touche la tache, on rejette le point
+            if (touchSplat) continue;
 
-            // Si c'est le tout premier point valide, on le garde
             if (placed.length === 0) {
                 bestCand = {x: dX, y: dY};
                 break;
             }
 
-            // Calcul de la distance avec les autres points déjà posés
             let minDist = 9999;
             for (let p of placed) {
                 let distP = Math.sqrt((dX - p.x)**2 + (dY - p.y)**2);
                 if (distP < minDist) minDist = distP;
             }
 
-            // On garde le candidat qui est LE PLUS LOIN possible des autres points
             if (minDist > maxMinDist) {
                 maxMinDist = minDist;
                 bestCand = {x: dX, y: dY};
             }
         }
         
-        // On ajoute le meilleur point trouvé
         if (bestCand) placed.push(bestCand);
     }
     return { arr: placed, r: dotR };
@@ -407,18 +484,26 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     const hideDiagram = document.getElementById('hideDiagram').checked;
 
     chunk.forEach(item => {
-        const cell = document.createElement('div'); cell.className = 'cell';
+        const cell = document.createElement('div'); 
+        cell.className = 'cell';
+        
+        if (isTBI) {
+            cell.className += ' tbi-mode';
+            cell.onclick = function() { this.classList.toggle('revealed'); };
+        }
         
         let showVisualTotal = false, showVisualDots = false;
         let textTotal = "", textVis = "", textHid = "";
 
         if (item.mode === 'find_hidden') {
             showVisualTotal = true; showVisualDots = true;
-            if (isCorrectionPage) {
+            if (isCorrectionPage || isTBI) {
                 textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
+            } else {
+                textTotal = item.total; textVis = item.visible; textHid = "";
             }
         } else if (item.mode === 'construct') {
-            if (isCorrectionPage) {
+            if (isCorrectionPage || isTBI) {
                 showVisualTotal = true; showVisualDots = true; 
                 textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
             } else {
@@ -442,7 +527,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
         const diag = document.createElement('div'); diag.className = 'diagram-container';
         
-        if (hideDiagram && !isCorrectionPage) {
+        if (hideDiagram && !isCorrectionPage && !isTBI) {
             diag.innerHTML = ``;
         } else {
             let flexVis = Math.max(item.visible, item.total * 0.05, 1);
@@ -458,7 +543,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             }
 
             for(let i = 0; i < item.numSplats; i++) {
-                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexHid}; flex-basis: 0; background: #e2e8f0; color: #111827; min-width: ${minW}; font-size: ${fSize};">${textHid}</div>`;
+                let displayVal = isTBI ? `<span class="hidden-val">${textHid}</span>` : textHid;
+                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexHid}; flex-basis: 0; background: #e2e8f0; color: #111827; min-width: ${minW}; font-size: ${fSize};">${displayVal}</div>`;
             }
             bottomRowHTML += `</div>`;
 
@@ -475,10 +561,13 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
     inner.appendChild(grid);
     
-    const label = document.createElement('div');
-    label.className = 'page-label';
-    label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "— EXERCICE —";
-    inner.appendChild(label);
+    if (!isTBI) {
+        const label = document.createElement('div');
+        label.className = 'page-label';
+        label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "— EXERCICE —";
+        inner.appendChild(label);
+    }
+    
     page.appendChild(inner); 
     return page;
 }
@@ -492,14 +581,19 @@ function renderPages() {
 
   for (let i = 0; i < state.length; i += itemsPerPage) {
       const chunk = state.slice(i, i + itemsPerPage);
-      if (!isCorr) { main.appendChild(createPageElement(chunk, false, false)); } 
-      else {
-          if (isRVMode) {
-              main.appendChild(createPageElement(chunk, false, false));
-              main.appendChild(createPageElement(chunk, true, true)); 
-          } else {
-              main.appendChild(createPageElement(chunk, true, false));
-              main.appendChild(createPageElement(chunk, false, false));
+      
+      if (isTBI) {
+          main.appendChild(createPageElement(chunk, false, false));
+      } else {
+          if (!isCorr) { main.appendChild(createPageElement(chunk, false, false)); } 
+          else {
+              if (isRVMode) {
+                  main.appendChild(createPageElement(chunk, false, false));
+                  main.appendChild(createPageElement(chunk, true, true)); 
+              } else {
+                  main.appendChild(createPageElement(chunk, true, false));
+                  main.appendChild(createPageElement(chunk, false, false));
+              }
           }
       }
   }
@@ -511,6 +605,12 @@ function getSplatSvg(item, drawDots) {
     
     let svg = `<svg class="splat-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
     
+    if (isTBI && item.hiddenDots && item.hiddenDots.length > 0) {
+        for(let p of item.hiddenDots) {
+             svg += `<circle cx="${p.x}" cy="${p.y}" r="${p.r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
+        }
+    }
+
     if (drawDots && item.visible > 0) {
         for(let p of item.dots.arr) {
              svg += `<circle cx="${p.x}" cy="${p.y}" r="${item.dots.r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
@@ -519,7 +619,7 @@ function getSplatSvg(item, drawDots) {
     
     for(let s of item.splats) {
         svg += `<g transform="translate(${s.cx}, ${s.cy}) scale(${s.scale}) rotate(${s.rot}) translate(-150, -100)">`;
-        svg += `<path d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
+        svg += `<path class="splat-path" d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
         svg += `</g>`;
     }
 
@@ -527,7 +627,7 @@ function getSplatSvg(item, drawDots) {
     return svg;
 }
 
-window.onload = () => { startGen(); updateUI(); };
+window.onload = () => { startGen(); updateUI(); toggleMode(); };
 </script>
 </body>
 </html>
