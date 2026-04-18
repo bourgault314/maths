@@ -434,7 +434,7 @@
         <div class="u-controls">
           <div class="u-mini">
             <div class="u-mini-label">visibles ≤</div>
-            <input id="unitVisibleMax" type="number" min="1" max="20" value="15" />
+            <input id="unitVisibleMax" type="number" min="0" max="20" value="15" />
           </div>
           <div class="u-mini">
             <div class="u-mini-label">cachees ≤</div>
@@ -473,11 +473,11 @@
         </div>
         <div style="flex:1">
           <label>Billes visibles num (min)</label>
-          <input id="numVisibleMin" type="number" min="1" max="5" value="2" />
+          <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
         </div>
         <div style="flex:1">
           <label>Billes visibles num (max)</label>
-          <input id="numVisibleMax" type="number" min="1" max="5" value="3" />
+          <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
         </div>
       </div>
       
@@ -1201,13 +1201,14 @@ function syncUnitTotalBounds(){
     unitTasksEl.value = String(b);
   }
 
-  const vMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
+  const vMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 0, 20);
   const hMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
 
   const HARD_CAP = 50; 
   const maxPossible = vMax + tasks * hMax;
   const maxAllowed = clamp(Math.min(maxPossible, HARD_CAP), 1, HARD_CAP);
-  const minPossible = 1 + tasks * (hMax > 0 ? 1 : 0);
+  
+  const minPossible = Math.max(1, (vMax > 0 ? 0 : 1) + tasks * (hMax > 0 ? 1 : 0));
 
   unitTotalMinEl.min = 1;
   unitTotalMinEl.max = String(maxAllowed);
@@ -1827,28 +1828,57 @@ function genNumbered(rng){
   let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
   if(tMax < tMin) [tMin, tMax] = [tMax, tMin];
   const tasks = rInt(rng, tMin, tMax);
-  let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
-  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 1, 5);
+  
+  let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 0, 5);
+  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 5);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
+  
   let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 10, 10);
   let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
   let totalMin = clamp(userMin, 1, 1000);
   let totalMax = clamp(userMax, 1, 1000);
+  
   const hiddenBeadsPerTask = clamp(numberOr(numHiddenCountEl ? numHiddenCountEl.value : 1, 1), 1, 2);
   const minPossible = vMin + tasks*hiddenBeadsPerTask;
   if(totalMax < minPossible) totalMax = minPossible;
   if(totalMin < minPossible) totalMin = minPossible;
   if(totalMax < totalMin) totalMax = totalMin;
+  
   for(let tries=0; tries<2000; tries++){
     const total = rInt(rng, totalMin, totalMax);
     const visibleCount = rInt(rng, vMin, vMax);
+    
+    if (visibleCount === 0) {
+      let H = Math.floor(total / tasks);
+      if (H < hiddenBeadsPerTask) H = hiddenBeadsPerTask;
+      const newTotal = H * tasks;
+      if (newTotal >= totalMin && newTotal <= totalMax) {
+          const visible = [];
+          const hiddenByTask = [];
+          for(let t=0; t<tasks; t++){
+            if(hiddenBeadsPerTask === 1){
+              hiddenByTask.push([H]);
+            }else{
+              const a = rInt(rng, 1, H-1);
+              hiddenByTask.push([a, H-a]);
+            }
+          }
+          return {
+            family: "N", total: newTotal, visible, hidden: hiddenByTask.flat(),
+            _num: { tasks, visibleCount: 0, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
+          };
+      }
+      continue;
+    }
+
     const maxH = Math.floor((total - visibleCount) / tasks);
     if(maxH < hiddenBeadsPerTask) continue;
     const H = rInt(rng, hiddenBeadsPerTask, maxH);
     const visibleSum = total - tasks*H;
     if(visibleSum < visibleCount) continue;
     const visible = randomComposition(rng, visibleSum, visibleCount);
+    
     const hiddenByTask = [];
     for(let t=0; t<tasks; t++){
       if(hiddenBeadsPerTask === 1){
@@ -1860,25 +1890,21 @@ function genNumbered(rng){
     }
     const hidden = hiddenByTask.flat();
     return {
-      family: "N",
-      total,
-      visible,
-      hidden,
+      family: "N", total, visible, hidden,
       _num: { tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
     };
   }
-  const total = totalMin;
-  const visibleCount = vMin;
-  const H = hiddenBeadsPerTask;
-  const visible = Array.from({length: visibleCount}, ()=>1);
-  const hiddenByTask = Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H] : [1, H-1]) );
-  const hidden = hiddenByTask.flat();
+  
+  // Fallback
+  const H_fb = Math.max(hiddenBeadsPerTask, Math.floor(totalMin / tasks));
+  const vCount_fb = vMin;
+  const visible_fb = (vCount_fb === 0) ? [] : Array.from({length: vCount_fb}, ()=>1);
+  const finalTotal = (vCount_fb === 0) ? H_fb * tasks : totalMin;
+  
   return {
-    family:"N",
-    total,
-    visible,
-    hidden,
-    _num:{ tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
+    family:"N", total: finalTotal, visible: visible_fb,
+    hidden: Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H_fb] : [1, H_fb-1])).flat(),
+    _num:{ tasks, visibleCount: vCount_fb, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H: H_fb, hiddenByTask: Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H_fb] : [1, H_fb-1])) }
   };
 }
 
@@ -1888,9 +1914,8 @@ function genNumberedSigned(rng){
   if(tMin > tMax) [tMin, tMax] = [tMax, tMin];
   const tasks = rInt(rng, tMin, tMax);
 
-  const vMin = clamp(numberOr(numVisibleMinEl.value, 2), 1, 5);
-  const vMax = clamp(numberOr(numVisibleMaxEl.value, 3), vMin, 5);
-  const visibleCount = rInt(rng, vMin, vMax);
+  const vMin = clamp(numberOr(numVisibleMinEl.value, 2), 0, 5);
+  const vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 5);
 
   const hiddenCount = clamp(numberOr(numHiddenCountEl ? numHiddenCountEl.value : 1, 1), 1, 2);
 
@@ -1925,8 +1950,7 @@ function genNumberedSigned(rng){
 
   function tryClassic(){
     for(let attempt=0; attempt<700; attempt++){
-      const total = rInt(rng, totalMin, totalMax);
-
+      const vCount = rInt(rng, vMin, vMax);
       let H = rInt(rng, -maxTaskAbs, maxTaskAbs);
       if(H === 0) continue;
       if(hiddenCount === 1 && Math.abs(H) > maxAbs) continue;
@@ -1934,13 +1958,21 @@ function genNumberedSigned(rng){
       const targetSums = new Array(tasks).fill(H);
       const hiddenByTask = buildHiddenByTask(targetSums);
       if(!hiddenByTask) continue;
-
+      
       const hidden = hiddenByTask.flat();
       const hiddenSum = targetSums.reduce((a,b)=>a+b,0);
-      const visibleSum = total - hiddenSum;
 
-      const visible = randomSignedCompositionNonZero(rng, visibleSum, visibleCount, maxAbs);
-      if(!visible) continue;
+      let total, visible;
+      if(vCount === 0){
+        total = hiddenSum;
+        if(total < totalMin || total > totalMax) continue;
+        visible = [];
+      } else {
+        total = rInt(rng, totalMin, totalMax);
+        const visibleSum = total - hiddenSum;
+        visible = randomSignedCompositionNonZero(rng, visibleSum, vCount, maxAbs);
+        if(!visible) continue;
+      }
 
       return { family:"NPM", total, visible, hidden, _num:{ tasks, hiddenCount, H, hiddenByTask } };
     }
@@ -1949,8 +1981,7 @@ function genNumberedSigned(rng){
 
   function tryOppose(mode){
     for(let attempt=0; attempt<900; attempt++){
-      const total = rInt(rng, totalMin, totalMax);
-
+      const vCount = rInt(rng, vMin, vMax);
       let H = rInt(rng, -maxTaskAbs, maxTaskAbs);
       if(H === 0) continue;
       if(hiddenCount === 1 && Math.abs(H) > maxAbs) continue;
@@ -1986,10 +2017,18 @@ function genNumberedSigned(rng){
       if(!hiddenByTask) continue;
 
       const hidden = hiddenByTask.flat();
-      const visibleSum = total - hiddenSum;
 
-      const visible = randomSignedCompositionNonZero(rng, visibleSum, visibleCount, maxAbs);
-      if(!visible) continue;
+      let total, visible;
+      if(vCount === 0){
+        total = hiddenSum;
+        if(total < totalMin || total > totalMax) continue;
+        visible = [];
+      } else {
+        total = rInt(rng, totalMin, totalMax);
+        const visibleSum = total - hiddenSum;
+        visible = randomSignedCompositionNonZero(rng, visibleSum, vCount, maxAbs);
+        if(!visible) continue;
+      }
 
       return {
         family:"NPM", total, visible, hidden,
@@ -2665,13 +2704,15 @@ function genUnits(rng){
   let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
   if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
   const tasks = rInt(rng, tasksMin, tasksMax);
-  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
+  
+  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 0, 20);
   const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
   const userMin = numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1);
   const userMax = numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50);
-  const minHiddenPerTask = (hiddenMax === 0) ? 0 : 1;
-  const minPossible = 1 + tasks * minHiddenPerTask;
+  
+  const minPossible = Math.max(1, (visibleMax > 0 ? 0 : 1) + tasks * (hiddenMax > 0 ? 1 : 0));
   const maxPossible = visibleMax + tasks * hiddenMax;
+  
   let totalMin = clamp(userMin, 1, 80);
   let totalMax = clamp(userMax, 1, 80);
   totalMin = Math.min(totalMin, maxPossible);
@@ -2679,21 +2720,26 @@ function genUnits(rng){
   totalMax = Math.max(totalMax, minPossible);
   if(totalMin < minPossible) totalMin = minPossible;
   if(totalMax < totalMin) totalMax = totalMin;
-  let visibleCount = 1;
+  
+  let visibleCount = 0;
   let hiddenPerTask = 0;
   let total = 0;
+  
+  let vMin = (hiddenMax === 0) ? 1 : 0;
+  if (vMin > visibleMax) vMin = visibleMax;
+
   for(let tries=0; tries<500; tries++){
-    visibleCount = rInt(rng, 1, visibleMax);
+    visibleCount = rInt(rng, vMin, visibleMax);
     hiddenPerTask = (hiddenMax === 0) ? 0 : rInt(rng, 1, hiddenMax);
     total = visibleCount + tasks * hiddenPerTask;
     if(total >= totalMin && total <= totalMax) break;
   }
   if(total > totalMax){
     hiddenPerTask = clamp(Math.floor((totalMax - visibleCount) / tasks), 0, hiddenMax);
-    if(hiddenMax > 0 && hiddenPerTask === 0 && totalMax >= (1 + tasks)) hiddenPerTask = 1;
+    if(hiddenMax > 0 && hiddenPerTask === 0 && totalMax >= (vMin + tasks)) hiddenPerTask = 1;
     total = visibleCount + tasks * hiddenPerTask;
     if(total > totalMax){
-      visibleCount = clamp(totalMax - tasks * hiddenPerTask, 1, visibleMax);
+      visibleCount = clamp(totalMax - tasks * hiddenPerTask, vMin, visibleMax);
       total = visibleCount + tasks * hiddenPerTask;
     }
   }
@@ -2703,7 +2749,7 @@ function genUnits(rng){
     hiddenPerTask = clamp(hiddenPerTask + add, (hiddenMax===0?0:1), hiddenMax);
     total = visibleCount + tasks * hiddenPerTask;
     if(total < totalMin){
-      visibleCount = clamp(totalMin - tasks * hiddenPerTask, 1, visibleMax);
+      visibleCount = clamp(totalMin - tasks * hiddenPerTask, vMin, visibleMax);
       total = visibleCount + tasks * hiddenPerTask;
     }
   }
@@ -2768,96 +2814,6 @@ function minCellWidthForNumber(num, fontSize, pad){
 }
 
 
-function drawBarModelInGroup(g, cx, topY, total, visibleVal, hiddenVal, api){
-  const baseW = (api && api.w) ? api.w : 300;
-  const hTop = (api && api.hTop) ? api.hTop : 56;
-  const hBottom = (api && api.hBottom) ? api.hBottom : 72;
-
-  const stroke = (api && api.stroke) ? api.stroke : "#000";
-  const strokeWidth = (api && api.strokeWidth) ? api.strokeWidth : 3;
-  const greyFill = (api && api.greyFill) ? api.greyFill : "rgba(0,0,0,0.10)";
-  const ink = (api && api.ink) ? api.ink : "#000";
-  const fontTop = (api && api.fontTop) ? api.fontTop : 72;
-  const fontBottom = (api && api.fontBottom) ? api.fontBottom : 72;
-
-  const dyVal = (api && api.textDy) ? api.textDy : "0";
-  const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
-  const totalTextColor = (api && api.totalTextColor) ? api.totalTextColor : ink;
-
-  const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
-
-  const mkRect = api.rect;
-  const mkLine = api.line;
-  const mkText = api.text;
-
-  const vis = Math.max(0, Number(visibleVal) || 0);
-  const hid = Math.max(0, Number(hiddenVal) || 0);
-  const denom = (vis + hid) > 0 ? (vis + hid) : (Number(total) || 1);
-
-  const visWProp = (denom > 0) ? (baseW * (vis / denom)) : (baseW * 0.5);
-  const hidWProp = baseW - visWProp;
-
-  const minVisW = minCellWidthForNumber(vis, fontBottom, minPad);
-  const minHidW = minCellWidthForNumber(hid, fontBottom, minPad);
-
-  const visW = Math.max(visWProp, minVisW);
-  const hidW = Math.max(hidWProp, minHidW);
-
-  const w = Math.max(baseW, visW + hidW);
-
-  const x0 = cx - w/2;
-  const y0 = topY;
-  const ySplit = y0 + hTop;
-
-  const xSplit = x0 + visW;
-  const hidWDraw = w - visW;
-
-  g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
-  g.appendChild(mkRect({x:x0, y:ySplit, width:visW, height:hBottom, fill:"rgba(255,255,255,0)"}));
-  if(hidWDraw > 0.5){
-    g.appendChild(mkRect({x:xSplit, y:ySplit, width:hidWDraw, height:hBottom, fill:greyFill}));
-  }
-
-  g.appendChild(mkRect({x:x0, y:y0, width:w, height:(hTop+hBottom), rx:0, fill:"none", stroke, "stroke-width":strokeWidth}));
-  g.appendChild(mkLine({x1:x0, y1:ySplit, x2:x0+w, y2:ySplit, stroke, "stroke-width":strokeWidth}));
-  if(hidWDraw > 0.5 && visW > 0.5){
-    g.appendChild(mkLine({x1:xSplit, y1:ySplit, x2:xSplit, y2:ySplit+hBottom, stroke, "stroke-width":strokeWidth}));
-  }
-
-  g.appendChild(mkText(cx, y0 + hTop/2, String(total), {
-    "text-anchor":"middle",
-    "dominant-baseline":"middle",
-    "alignment-baseline":"middle",
-    "dy":dyVal,
-    "font-size":String(fontTop),
-    "fill":totalTextColor,
-    "font-weight":"900"
-  }));
-
-  g.appendChild(mkText(x0 + visW/2, ySplit + hBottom/2, String(vis), {
-    "text-anchor":"middle",
-    "dominant-baseline":"middle",
-    "alignment-baseline":"middle",
-    "dy":dyVal,
-    "font-size":String(fontBottom),
-    "fill":visibleTextColor,
-    "font-weight":"900"
-  }));
-
-  if(hidWDraw > 0.5){
-    g.appendChild(mkText(xSplit + hidWDraw/2, ySplit + hBottom/2, String(hid), {
-      "text-anchor":"middle",
-      "dominant-baseline":"middle",
-      "alignment-baseline":"middle",
-      "dy":dyVal,
-      "font-size":String(fontBottom),
-      "fill":ink,
-      "font-weight":"900"
-    }));
-  }
-}
-
-
 function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const baseW = (api && api.w) ? api.w : 300;
   const hTop = (api && api.hTop) ? api.hTop : 56;
@@ -2871,8 +2827,6 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const fontBottom = (api && api.fontBottom) ? api.fontBottom : 72;
 
   const dyVal = (api && api.textDy) ? api.textDy : "0";
-  const visibleTextColor = (api && api.visibleTextColor) ? api.visibleTextColor : ink;
-  const hiddenTextColor = (api && api.hiddenTextColor) ? api.hiddenTextColor : ink;
   const totalTextColor = (api && api.totalTextColor) ? api.totalTextColor : ink;
 
   const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
@@ -2928,14 +2882,14 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
     }
 
     if(segW > 1){
-      const fill = (i === 0) ? visibleTextColor : hiddenTextColor;
+      const fillCol = flagsHidden[i] ? (api.hiddenTextColor || ink) : (api.visibleTextColor || ink);
       g.appendChild(mkText(x + segW/2, ySplit + hBottom/2, String(v), {
         "text-anchor":"middle",
         "dominant-baseline":"middle",
         "alignment-baseline":"middle",
         "dy":dyVal,
         "font-size":String(fontBottom),
-        "fill":fill,
+        "fill":fillCol,
         "font-weight":"900"
       }));
     }
@@ -3078,29 +3032,20 @@ function renderCard(card, revealed){
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
       
-      if(hiddenSums.length <= 1){
-        const hid = (hiddenSums[0] ?? sumArray(card.hidden));
-        drawBarModelInGroup(gTotal, tx, ty-56, card.total, vis, hid, {
-          rect:(a)=>el("rect", a),
-          line:(a)=>el("line", a),
-          text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380, hTop: 86, hBottom: 86,
-          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)", visibleTextColor:"var(--accent)", totalTextColor: totalColor,
-          textDy:"0.10em", fontTop:70, fontBottom:70
-        });
-      }else{
-        const parts = [{value: vis, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
-        drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
-          rect:(a)=>el("rect", a),
-          line:(a)=>el("line", a),
-          text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380, hTop: 86, hBottom: 86,
-          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)", visibleTextColor:"var(--accent)", totalTextColor: totalColor,
-          textDy:"0.10em", fontTop:70, fontBottom:70
-        });
-      }
+      const parts = [];
+      if (vis > 0) parts.push({value: vis, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+        rect:(a)=>el("rect", a),
+        line:(a)=>el("line", a),
+        text:(x,y,t,a)=>text(x,y,t,a),
+        w: 380, hTop: 86, hBottom: 86,
+        stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+        ink:"var(--ink)", visibleTextColor:"var(--accent)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
+        textDy:"0.10em", fontTop:70, fontBottom:70
+      });
+
     }else{
       const visSum = sumArray(card.visible);
       const num = card._num || {};
@@ -3116,29 +3061,19 @@ function renderCard(card, revealed){
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
 
-      if(hiddenSums.length <= 1){
-        const hidSum = (hiddenSums[0] ?? sumArray(card.hidden));
-        drawBarModelInGroup(gTotal, tx, ty-56, card.total, visSum, hidSum, {
-          rect:(a)=>el("rect", a),
-          line:(a)=>el("line", a),
-          text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380, hTop: 86, hBottom: 86,
-          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)", visibleTextColor:"var(--ink)", totalTextColor: totalColor,
-          textDy:"0.10em", fontTop:70, fontBottom:70
-        });
-      }else{
-        const parts = [{value: visSum, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
-        drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
-          rect:(a)=>el("rect", a),
-          line:(a)=>el("line", a),
-          text:(x,y,t,a)=>text(x,y,t,a),
-          w: 380, hTop: 86, hBottom: 86,
-          stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
-          ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
-          textDy:"0.10em", fontTop:70, fontBottom:70
-        });
-      }
+      const parts = [];
+      if (visSum > 0) parts.push({value: visSum, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+        rect:(a)=>el("rect", a),
+        line:(a)=>el("line", a),
+        text:(x,y,t,a)=>text(x,y,t,a),
+        w: 380, hTop: 86, hBottom: 86,
+        stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
+        ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
+        textDy:"0.10em", fontTop:70, fontBottom:70
+      });
     }
   }else{
     const tLabel = text(tx, ty, "TOTAL", {
@@ -3683,44 +3618,29 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
         hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+      
       const gBM = tEl("g",{id:"barModelPrint"});
-      if(hiddenSums.length <= 1){
-        const hid = (hiddenSums[0] ?? sumArray(card.hidden));
-        drawBarModelInGroup(gBM, 800, 980, card.total, vis, hid, {
-          rect:(a)=>tEl("rect", a),
-          line:(a)=>tEl("line", a),
-          text:(x,y,t,a)=>tText(x,y,t,a),
-          w: 1200,
-          hTop: 140,
-          hBottom: 140,
-          stroke:"#000",
-          strokeWidth:5,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"#000",
-          visibleTextColor:"rgb(106,167,255)",
-          totalTextColor: totalColor,
-          fontTop:118,
-          fontBottom:118
-        });
-      }else{
-        const parts = [{value: vis, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
-        drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
-          rect:(a)=>tEl("rect", a),
-          line:(a)=>tEl("line", a),
-          text:(x,y,t,a)=>tText(x,y,t,a),
-          w: 1200,
-          hTop: 140,
-          hBottom: 140,
-          stroke:"#000",
-          strokeWidth:5,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"#000",
-          visibleTextColor:"rgb(106,167,255)",
-          totalTextColor: totalColor,
-          fontTop:118,
-          fontBottom:118
-        });
-      }
+      const parts = [];
+      if (vis > 0) parts.push({value: vis, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        w: 1200,
+        hTop: 140,
+        hBottom: 140,
+        stroke:"#000",
+        strokeWidth:5,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"#000",
+        visibleTextColor:"rgb(106,167,255)",
+        hiddenTextColor:"#000",
+        totalTextColor: totalColor,
+        fontTop:118,
+        fontBottom:118
+      });
       targetSvg.appendChild(gBM);
     }
 
@@ -3810,46 +3730,28 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
 
       const gBM = tEl("g",{id:"barModelPrint"});
-      if(hiddenSums.length <= 1){
-        const hidSum = (hiddenSums[0] ?? sumArray(card.hidden));
-        drawBarModelInGroup(gBM, 800, 980, card.total, visSum, hidSum, {
-          rect:(a)=>tEl("rect", a),
-          line:(a)=>tEl("line", a),
-          text:(x,y,t,a)=>tText(x,y,t,a),
-          w: 1200,
-          hTop: 140,
-          hBottom: 140,
-          stroke:"#000",
-          strokeWidth:5,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"#000",
-          visibleTextColor:"#000",
-          totalTextColor: totalColor,
-          textDy:"0.06em",
-          fontTop:118,
-          fontBottom:118
-        });
-      }else{
-        const parts = [{value: visSum, hidden:false}, ...hiddenSums.map(v => ({value:v, hidden:true}))];
-        drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
-          rect:(a)=>tEl("rect", a),
-          line:(a)=>tEl("line", a),
-          text:(x,y,t,a)=>tText(x,y,t,a),
-          w: 1200,
-          hTop: 140,
-          hBottom: 140,
-          stroke:"#000",
-          strokeWidth:5,
-          greyFill:"rgba(0,0,0,0.10)",
-          ink:"#000",
-          visibleTextColor:"#000",
-          hiddenTextColor:"#000",
-          totalTextColor: totalColor,
-          textDy:"0.06em",
-          fontTop:118,
-          fontBottom:118
-        });
-      }
+      const parts = [];
+      if (visSum > 0) parts.push({value: visSum, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        w: 1200,
+        hTop: 140,
+        hBottom: 140,
+        stroke:"#000",
+        strokeWidth:5,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"#000",
+        visibleTextColor:"#000",
+        hiddenTextColor:"#000",
+        totalTextColor: totalColor,
+        textDy:"0.06em",
+        fontTop:118,
+        fontBottom:118
+      });
       targetSvg.appendChild(gBM);
     }
 
