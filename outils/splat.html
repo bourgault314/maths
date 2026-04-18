@@ -3344,4 +3344,587 @@ function renderCardEquation(card, revealed, useTokens){
 
     let hIndex = 0;
     for(const taskArr of metaSide.hiddenByTask){
-      for(const val of taskArr
+      for(const val of taskArr){
+        const p = side.posH?.[hIndex] || {cx:820, cy:610};
+        let f = "var(--beadH-fill)";
+        let s = "var(--beadH-stroke)";
+        if(useTokens){
+            const col = beadColorForValue(val);
+            f = col.fill; s = col.stroke;
+        }
+        layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
+        layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+          "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
+        }));
+        hIndex++;
+      }
+    }
+
+    const oppFlags = Array.isArray(metaSide.opposeFlags) ? metaSide.opposeFlags : null;
+    (side.splats || []).forEach((s, idx)=>{
+      const pSplat = el("path",{
+        d: blobPath(s.cx, s.cy, s.r),
+        fill: revealed ? reveal : cover,
+        stroke:"rgba(0,0,0,0.18)",
+        "stroke-width":"5"
+      });
+      layer.appendChild(pSplat);
+
+      if(oppFlags && oppFlags[idx]){
+        const fs = clamp(Math.round(s.r*0.28), 16, 44);
+        const yy = revealed ? (s.cy - s.r*0.65) : (s.cy);
+        layer.appendChild(text(s.cx, yy, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": String(fs),
+          "font-weight":"900",
+          "fill": (revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke": (revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width": (revealed ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+
+      if(revealed){
+        const pCov = el("path",{
+          d: blobPath(s.cx, s.cy, s.r),
+          fill: cover,
+          stroke: "none",
+          "class": "anim-fade-out"
+        });
+        layer.appendChild(pCov);
+      }
+    });
+
+    for(let i=0;i<metaSide.visible.length;i++){
+      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
+      const val = metaSide.visible[i];
+      const col = beadColorForValue(val);
+      layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
+        "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
+      }));
+    }
+  }
+
+  drawSide(pos.left, eq.left);
+  drawSide(pos.right, eq.right);
+}
+
+function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens){
+  const eq = card._eq;
+  const trays = card._eqTrays;
+  const pos = card._eqPos;
+  if(!eq || !trays || !pos) return;
+
+  const cover = "rgba(0,0,0,0.95)";
+  const reveal = "rgba(220,220,220,0.35)";
+
+  targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+  targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+
+  targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"#000","stroke-width":"10","stroke-linecap":"round"}));
+
+  targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
+  
+  function drawSide(side, metaSide){
+    const beadR = side.beadR ?? 26;
+    const font = Math.max(18, Math.round(beadR * 0.95));
+
+    let hIndex = 0;
+    for(const taskArr of metaSide.hiddenByTask){
+      for(const val of taskArr){
+        const p = side.posH?.[hIndex] || {cx:820, cy:610};
+        let f = "rgba(0,0,0,0.06)";
+        let s = "rgba(0,0,0,0.22)";
+        if(useTokens){
+            const col = beadColorForValue(val);
+            f = col.fill; s = col.stroke;
+        }
+        targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
+        targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+        hIndex++;
+      }
+    }
+
+    const oppFlags = Array.isArray(metaSide.opposeFlags) ? metaSide.opposeFlags : null;
+    (side.splats || []).forEach((s, idx)=>{
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? reveal : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      if(oppFlags && oppFlags[idx]){
+        const fs = clamp(Math.round(s.r*0.28), 16, 44);
+        const yy = revealAnswers ? (s.cy - s.r*0.65) : (s.cy);
+        targetSvg.appendChild(tText(s.cx, yy, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": String(fs),
+          "font-weight":"900",
+          "fill": (revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke": (revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width": (revealAnswers ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+    });
+
+    for(let i=0;i<metaSide.visible.length;i++){
+      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
+      const val = metaSide.visible[i];
+      const col = beadColorForValue(val);
+      targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
+      targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
+    }
+  }
+
+  drawSide(pos.left, eq.left);
+  drawSide(pos.right, eq.right);
+}
+
+
+/* Render impression */
+function renderCardIntoSvg(targetSvg, card, revealAnswers){
+  while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
+
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  const colorModeEl = document.getElementById("numColorMode");
+  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+
+  const W = 1600;
+  const H = 2200;
+
+  function tEl(name, attrs={}){
+    const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function tText(x,y,txt,attrs={}){
+    const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
+  }
+
+  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
+
+  if(card.family === "EQ" || card.family === "EQPM"){
+    renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens);
+    return;
+  }
+
+  const isModeC_or_D = (card.family === "C" || card.family === "D");
+  const isModeC = (card.family === "C");
+  const isModeD = (card.family === "D");
+
+  const trayY = (isModeC || isModeD) ? 270 : 260;
+  const trayH = (isModeC || isModeD) ? 550 : 650;
+
+  targetSvg.appendChild(tEl("rect",{x:120,y:trayY,width:1360,height:trayH,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+
+  let tx = 800, ty = 92;
+  let printOffsetY = 0;
+  if(isModeC || isModeD){
+    tx = 800;
+    ty = 92;
+  }
+
+  let totalColor = "#000";
+  let totalLabelColor = "rgba(0,0,0,0.92)";
+  let boxFill = "rgba(0,0,0,0.02)";
+  let boxStroke = "rgba(0,0,0,0.22)";
+
+  if(useTokens && card.total !== 0) {
+    const col = beadColorForValue(card.total);
+    boxFill = col.fill;
+    boxStroke = col.stroke;
+  }
+
+  const g = tEl("g",{id:"totalGroupPrint"});
+  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
+  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":totalColor,"font-weight":"900"});
+  g.appendChild(lbl); g.appendChild(num);
+  targetSvg.appendChild(g);
+
+  const boxH = 210;
+  const boxY = ty - 70;
+
+  let boxW = 360;
+  let boxX = tx - boxW/2;
+
+  if(isModeD){
+    boxW = 280;
+    boxX = tx - boxW/2;
+  } else if(isModeC){
+    boxW = 280;
+    boxX = 120;
+  }
+  targetSvg.insertBefore(tEl("rect",{
+    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
+    fill:boxFill, stroke:boxStroke, "stroke-width":"4"
+  }), g);
+
+  /* Indices impression Mode C/D */
+  if(isModeC_or_D && card._inv && card._inv.indices){
+    const indices = card._inv.indices;
+    const lineH = 84;
+    const startY = trayY + trayH + 220;
+
+    indices.forEach((txt, i) => {
+      const cyLine = startY + i*lineH;
+      if (typeof txt === 'string') {
+        targetSvg.appendChild(tText(800, cyLine, txt, {
+          "text-anchor":"middle","font-size":"56","fill":"#000","font-weight":"700"
+        }));
+      } else if (Array.isArray(txt)) {
+        renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers);
+      }
+    });
+  }
+
+  const cover = "rgb(0,0,0)";
+  const reveal = "rgba(210,210,210,0.35)";
+  const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
+  const colorsERev = ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"];
+
+  if(card.family === "U"){
+    const beadR = card._beadR ?? 26;
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = card._posH?.[i]?.cy ?? 610;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.05)", stroke:"rgba(0,0,0,0.18)","stroke-width":"3"}));
+    }
+    const splats = card._splats || [{cx:820, cy:610, r:220}];
+    for(const s of splats){
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    }
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*40);
+      const cy = card._posV?.[i]?.cy ?? 360;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(106,167,255,0.20)", stroke:"rgba(106,167,255,0.55)","stroke-width":"3"}));
+    }
+
+    if(revealAnswers){
+      const vis = sumArray(card.visible);
+      const unit = card._unit || {};
+      const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
+      const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
+
+      const totalHid = sumArray(card.hidden);
+
+      let hiddenSums = [];
+      if(totalHid === 0){
+        hiddenSums = [0];
+      }else if(Array.isArray(unit.hiddenByTask) && unit.hiddenByTask.length === tasks){
+        hiddenSums = unit.hiddenByTask.map(v => Array.isArray(v) ? sumArray(v) : Number(v));
+      }else{
+        const base = Math.floor(totalHid / tasks);
+        let rem = totalHid - base * tasks;
+        hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+      
+      const gBM = tEl("g",{id:"barModelPrint"});
+      const parts = [];
+      if (vis > 0) parts.push({value: vis, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        w: 1200,
+        hTop: 140,
+        hBottom: 140,
+        stroke:"#000",
+        strokeWidth:5,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"#000",
+        visibleTextColor:"rgb(106,167,255)",
+        hiddenTextColor:"#000",
+        totalTextColor: totalColor,
+        fontTop:118,
+        fontBottom:118
+      });
+      targetSvg.appendChild(gBM);
+    }
+
+  }else if(["N","NPM","C","D","C9","C8"].includes(card.family)){
+    const beadR = card._beadR ?? 52;
+    const font = Math.round(beadR * 0.9);
+
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
+      
+      let f = "rgba(0,0,0,0.06)";
+      let s = "rgba(0,0,0,0.22)";
+      if(useTokens){
+          const c = beadColorForValue(card.hidden[i]);
+          f = c.fill; s = c.stroke;
+      }
+      
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:f, stroke:s,"stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
+    }
+
+    const splats = card._splats || [{cx:820, cy:610, r:220}];
+    const oppP = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
+    splats.forEach((s,idx)=>{
+      let f;
+      if(card.family === "C" || card.family === "D"){
+        f = revealAnswers ? colorsERev[idx%3] : colorsE[idx%3];
+      } else {
+        f = revealAnswers ? reveal : cover;
+      }
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        targetSvg.appendChild(tText(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealAnswers ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+      if(oppP && oppP.flags[idx]){
+        const fs = clamp(Math.round(s.r*0.34), 28, 64);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        targetSvg.appendChild(tText(s.cx, y, "opposé", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "font-size": fs,
+          "font-weight":"900",
+          "fill":(revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealAnswers ? "5" : "0"),
+          "paint-order":"stroke fill"
+        }));
+      }
+
+    });
+
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
+      const cy = (card._posV?.[i]?.cy ?? 380) + printOffsetY;
+
+      const colV = beadColorForValue(card.visible[i]);
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colV.fill, stroke:colV.stroke,"stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
+    }
+    
+    if(card.family === "N" && revealAnswers){
+      const visSum = sumArray(card.visible);
+
+      const num = card._num || {};
+      const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+
+      let hiddenSums = [];
+      if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
+        hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
+      }else{
+        const totalHid = sumArray(card.hidden);
+        const each = Math.round(totalHid / tasks);
+        hiddenSums = Array.from({length: tasks}, ()=> each);
+      }
+      hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+
+      const gBM = tEl("g",{id:"barModelPrint"});
+      const parts = [];
+      if (visSum > 0) parts.push({value: visSum, hidden: false});
+      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+
+      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        w: 1200,
+        hTop: 140,
+        hBottom: 140,
+        stroke:"#000",
+        strokeWidth:5,
+        greyFill:"rgba(0,0,0,0.10)",
+        ink:"#000",
+        visibleTextColor:"#000",
+        hiddenTextColor:"#000",
+        totalTextColor: totalColor,
+        textDy:"0.06em",
+        fontTop:118,
+        fontBottom:118
+      });
+      targetSvg.appendChild(gBM);
+    }
+
+
+  }else{
+    const beadR=95;
+    for(let i=0;i<card.hidden.length;i++){
+      const cx = card._posH?.[i]?.cx ?? 820;
+      const cy = card._posH?.[i]?.cy ?? 610;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
+    }
+    const s0 = card._splat || {cx:820, cy:610, r:220};
+    targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    for(let i=0;i<card.visible.length;i++){
+      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
+      const cy = card._posV?.[i]?.cy ?? 380;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
+    }
+  }
+}
+
+function printSheet(){
+  if(cards.length===0) return;
+  const showAnswers = !!document.getElementById("printAnswers").checked;
+  const printArea = document.getElementById("printArea");
+  printArea.innerHTML = "";
+  const perSheet = 4; 
+  const sheets = Math.ceil(cards.length / perSheet);
+  for(let s=0;s<sheets;s++){
+    const sheet = document.createElement("div");
+    sheet.className = "sheet";
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    for(let i=0;i<perSheet;i++){
+      const k = s*perSheet + i;
+      if(k >= cards.length) break;
+      const holder = document.createElement("div");
+      holder.className = "pCard";
+      const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      sv.setAttribute("viewBox","0 0 1600 2200");
+      sv.style.width = "100%";
+      renderCardIntoSvg(sv, cards[k], showAnswers);
+      holder.appendChild(sv);
+      grid.appendChild(holder);
+    }
+    sheet.appendChild(grid);
+    printArea.appendChild(sheet);
+  }
+  window.print();
+}
+
+let cards = [];
+let idx = 0;
+let revealed = false;
+const counterEl = document.getElementById("counter");
+const fsHost = document.getElementById("fsHost");
+
+function updateUI(){
+  counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
+  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && !revealed));
+  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));
+  if(cards.length===0){ renderEmpty(); }
+  else { renderCard(cards[idx], revealed); }
+}
+function renderEmpty(){
+  clearSvg();
+  svg.appendChild(el("rect",{x:0,y:0,width:1600,height:1000,rx:26,fill:"rgba(255,255,255,0.03)"}));
+  svg.appendChild(text(800, 520, "Génère une série pour commencer", {"text-anchor":"middle","font-size":"54","fill":"rgba(0,0,0,0.35)"}));
+}
+
+function generate(){
+  const act = activityEl.value;
+  const n = clamp(numberOr(countEl.value, 30), 1, 300);
+
+  if(act==="U") syncUnitTotalBounds();
+
+  const seedValue = getSeedForCurrentMode();
+  const rng = makeRng(seedValue);
+
+  const out = [];
+  for(let i=0;i<n;i++){
+    let c;
+    if(act==="U"){
+      c = genUnits(rng);
+    }else if(act==="N"){
+      c = genNumbered(rng);
+    }else if(act==="NPM"){
+      c = genNumberedSigned(rng);
+    }else if(act==="EQ"){
+      c = genEquation(rng);
+    }else if(act==="EQPM"){
+      c = genEquationSigned(rng);
+    }else if(act==="C"){
+      c = genInvestigate(rng);
+    }else if(act==="D"){
+      c = genSystem(rng);
+    }else if(act==="C9"){
+      c = genOp9(rng);
+    }else if(act==="C8"){
+      c = genOp8(rng);
+    }else{
+      const diff = clamp(numberOr(diffEl.value, 2), 1, 3);
+      c = genMinusMix(rng, diff);
+    }
+    assignPositions(c, rng);
+    out.push(c);
+  }
+
+  cards = out;
+  idx = 0;
+  revealed = false;
+  updateUI();
+}
+
+function shuffleCards(){
+  if(cards.length<=1) return;
+  const seedValue = getSeedForCurrentMode();
+  const rng = makeRng(seedValue);
+  shuffleInPlace(cards, rng);
+  idx = 0;
+  revealed = false;
+  updateUI();
+}
+
+async function toggleFullscreen(){
+  try{
+    if(!document.fullscreenElement) await fsHost.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch(e){ console.warn("Fullscreen non dispo:", e); }
+}
+
+document.getElementById("btnGen").addEventListener("click", generate);
+document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
+document.getElementById("btnPrev").addEventListener("click", ()=>{
+  if(cards.length===0) return;
+  if(revealed){ revealed = false; updateUI(); return; }
+  if(idx>0){ idx--; revealed=false; updateUI(); }
+});
+document.getElementById("btnNext").addEventListener("click", ()=>{
+  if(cards.length===0) return;
+  if(!revealed){ revealed = true; updateUI(); return; }
+  if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+});
+document.getElementById("btnPrint").addEventListener("click", printSheet);
+document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
+window.addEventListener("keydown",(e)=>{
+  const _ae = document.activeElement;
+  if((_ae && _ae.id==="activity") && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
+    e.preventDefault();
+    try{ _ae.blur(); }catch(_e){}
+    const _ms = document.getElementById("mainSvg");
+    if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
+  }
+  if(e.key==="ArrowLeft"){
+    if(cards.length===0) return;
+    if(revealed){ revealed=false; updateUI(); return; }
+    if(idx>0){ idx--; revealed=false; updateUI(); }
+  }
+  if(e.key==="ArrowRight"){
+    if(cards.length===0) return;
+    if(!revealed){ revealed=true; updateUI(); return; }
+    if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+  }
+  if(e.key===" "){
+    e.preventDefault();
+    if(cards.length){ revealed=!revealed; updateUI(); }
+  }
+  if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
+});
+syncSettingsUI();
+generate();
+</script>
+</body>
+</html>
