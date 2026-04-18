@@ -67,7 +67,7 @@
     .part-splat { flex: 1; position: relative; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px; overflow: hidden; min-height: 0; }
     .splat-svg { width: 100%; height: 100%; display: block; }
 
-    /* LA NOUVELLE BOÎTE DU TOTAL (Ancrée physiquement au coin) */
+    /* BOÎTE DU TOTAL ANCRÉE */
     .total-badge {
         position: absolute;
         top: 5px;
@@ -298,13 +298,14 @@ function createItem(mode, maxTarget, splatMode) {
     const splatShape = Math.floor(Math.random() * SPLAT_SHAPES.length);
     const splatRot = Math.floor(Math.random() * 360);
 
+    // NOUVELLES ANCRES : Plus écartées pour laisser le centre et les côtés respirer
     const layouts = {
         1: [{x: 135, y: 110, s: 0.85}],
-        2: [{x: 80, y: 115, s: 0.6}, {x: 180, y: 115, s: 0.6}],
-        3: [{x: 60, y: 120, s: 0.45}, {x: 135, y: 120, s: 0.45}, {x: 210, y: 120, s: 0.45}],
-        4: [{x: 85, y: 80, s: 0.4}, {x: 180, y: 80, s: 0.4}, {x: 85, y: 145, s: 0.4}, {x: 180, y: 145, s: 0.4}],
-        5: [{x: 60, y: 85, s: 0.35}, {x: 195, y: 85, s: 0.35}, {x: 130, y: 115, s: 0.35}, {x: 60, y: 145, s: 0.35}, {x: 195, y: 145, s: 0.35}],
-        6: [{x: 60, y: 85, s: 0.35}, {x: 135, y: 85, s: 0.35}, {x: 210, y: 85, s: 0.35}, {x: 60, y: 145, s: 0.35}, {x: 135, y: 145, s: 0.35}, {x: 210, y: 145, s: 0.35}]
+        2: [{x: 75, y: 115, s: 0.6}, {x: 185, y: 115, s: 0.6}],
+        3: [{x: 55, y: 125, s: 0.45}, {x: 135, y: 125, s: 0.45}, {x: 215, y: 125, s: 0.45}],
+        4: [{x: 75, y: 85, s: 0.4}, {x: 185, y: 85, s: 0.4}, {x: 75, y: 155, s: 0.4}, {x: 185, y: 155, s: 0.4}],
+        5: [{x: 55, y: 85, s: 0.35}, {x: 195, y: 85, s: 0.35}, {x: 125, y: 120, s: 0.35}, {x: 55, y: 160, s: 0.35}, {x: 195, y: 160, s: 0.35}],
+        6: [{x: 55, y: 90, s: 0.35}, {x: 125, y: 90, s: 0.35}, {x: 195, y: 90, s: 0.35}, {x: 55, y: 160, s: 0.35}, {x: 125, y: 160, s: 0.35}, {x: 195, y: 160, s: 0.35}]
     };
     
     let splats = layouts[numSplats].map(l => ({ cx: l.x, cy: l.y, scale: l.s, rot: splatRot }));
@@ -336,43 +337,63 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
         canvas.width = W; canvas.height = H;
         ctx = canvas.getContext('2d');
         splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
-        ctx.lineWidth = (dotR * 2) + 6;
         canTestSplat = !!ctx && !!splatPath;
     } catch (e) { canTestSplat = false; }
 
     const placed = [];
-    for (let k=0; k<count; k++) {
-        let safe = false, dX, dY, attempts = 0;
-        while(!safe && attempts < 200) {
-            attempts++;
-            dX = 20 + Math.random() * (W - 40);
-            dY = 20 + Math.random() * (H - 40);
+    
+    // ALGORYTHME DU MEILLEUR CANDIDAT (POUR ÉVITER LES GRUMEAUX)
+    for (let k = 0; k < count; k++) {
+        let bestCand = null;
+        let maxMinDist = -1;
+        
+        // On tire 40 positions au hasard pour en choisir UNE seule (la meilleure)
+        for (let c = 0; c < 40; c++) {
+            let dX = 15 + Math.random() * (W - 30);
+            let dY = 15 + Math.random() * (H - 30);
 
-            // On garde une zone d'exclusion pour que les points n'aillent pas se cacher sous le Total
-            if (dX > 230 && dY < 70) continue;
+            // On protège le coin Total (En haut à droite)
+            if (dX > 220 && dY < 80) continue;
 
             let touchSplat = false;
             if (canTestSplat) {
                 for(let s of splats) {
                     let p = inverseTransform(dX, dY, s.cx, s.cy, s.rot, s.scale);
+                    // CHAMP DE FORCE DYNAMIQUE : L'épaisseur repousse les points même si la tache est petite !
+                    ctx.lineWidth = ((dotR * 2) + 12) / s.scale; 
                     if (ctx.isPointInPath(splatPath, p.x, p.y) || ctx.isPointInStroke(splatPath, p.x, p.y)) { touchSplat = true; break; }
                 }
             } else {
+                // Fallback mathématique (sans canvas)
                 for(let s of splats) {
                     let dist = Math.sqrt((dX - s.cx)**2 + (dY - s.cy)**2);
-                    if (dist < 85 * s.scale) { touchSplat = true; break; }
+                    if (dist < 90 * s.scale) { touchSplat = true; break; }
                 }
             }
-            if(touchSplat) continue;
+            if (touchSplat) continue; // Si on touche la tache, on rejette le point
 
-            let overlap = false;
-            for (let p of placed) {
-                const distP = Math.sqrt((dX - p.x)**2 + (dY - p.y)**2);
-                if (distP < (dotR * 2.2)) { overlap = true; break; }
+            // Si c'est le tout premier point valide, on le garde
+            if (placed.length === 0) {
+                bestCand = {x: dX, y: dY};
+                break;
             }
-            if (!overlap) safe = true;
+
+            // Calcul de la distance avec les autres points déjà posés
+            let minDist = 9999;
+            for (let p of placed) {
+                let distP = Math.sqrt((dX - p.x)**2 + (dY - p.y)**2);
+                if (distP < minDist) minDist = distP;
+            }
+
+            // On garde le candidat qui est LE PLUS LOIN possible des autres points
+            if (minDist > maxMinDist) {
+                maxMinDist = minDist;
+                bestCand = {x: dX, y: dY};
+            }
         }
-        if (safe) placed.push({x:dX, y:dY});
+        
+        // On ajoute le meilleur point trouvé
+        if (bestCand) placed.push(bestCand);
     }
     return { arr: placed, r: dotR };
 }
@@ -412,7 +433,6 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
         const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
         
-        // C'EST ICI LA MAGIE : La boîte totale devient un élément HTML indépendant
         let htmlContent = getSplatSvg(item, showVisualDots);
         if (showVisualTotal) {
             htmlContent += `<div class="total-badge">${item.total}</div>`;
@@ -502,8 +522,6 @@ function getSplatSvg(item, drawDots) {
         svg += `<path d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
         svg += `</g>`;
     }
-    
-    /* La boîte du total a été retirée d'ici pour être placée en HTML par-dessus le SVG */
 
     svg += `</svg>`;
     return svg;
