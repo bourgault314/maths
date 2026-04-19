@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SPLAT!</title>
+  <title>SPLAT! — VERSION FINALE STABLE</title>
   <style>
     :root {
       --ink: #111827;
@@ -185,7 +185,6 @@
 <main id="mainArea"></main>
 
 <script>
-// CHANGEMENT DE TEXTE : Mise à jour du dictionnaire i18n
 const i18n = {
     fr: {
         title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
@@ -487,10 +486,11 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         if (item.mode === 'find_hidden') {
             showVisualTotal = true; showVisualDots = true;
             if (isCorrectionPage || isTBI) {
+                // En mode Correction ou TBI, on charge les réponses en mémoire
                 textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
             } else {
-                // CORRECTION DU BUG ICI : Les deux cases du bas sont maintenant complètement vides
-                textTotal = item.total; textVis = ""; textHid = "";
+                // En mode Énoncé (Fiche Élève), TOUT le tableau doit être vide
+                textTotal = ""; textVis = ""; textHid = "";
             }
         } else if (item.mode === 'construct') {
             if (isCorrectionPage || isTBI) {
@@ -526,22 +526,26 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             let minW = item.numSplats >= 4 ? "25px" : "40px";
             let fSize = item.numSplats >= 4 ? "14px" : "18px";
 
+            // POUR LE TBI : On enveloppe toutes les valeurs dans la classe 'hidden-val'
+            // Elles seront invisibles par défaut et apparaîtront au clic (.revealed)
+            let displayTotal = (isTBI && textTotal !== "") ? `<span class="hidden-val">${textTotal}</span>` : textTotal;
+            let displayVis   = (isTBI && textVis !== "")   ? `<span class="hidden-val">${textVis}</span>`   : textVis;
+            let displayHid   = (isTBI && textHid !== "")   ? `<span class="hidden-val">${textHid}</span>`   : textHid;
+
             let bottomRowHTML = `<div class="row-bottom">`;
             
-            // On s'assure d'afficher la case visible même si textVis est vide
             if (item.visible > 0 || textVis === "") {
-                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexVis}; flex-basis: 0; background: white; color: #2563eb; min-width: ${minW}; font-size: ${fSize};">${textVis}</div>`;
+                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexVis}; flex-basis: 0; background: white; color: #2563eb; min-width: ${minW}; font-size: ${fSize};">${displayVis}</div>`;
             }
 
             for(let i = 0; i < item.numSplats; i++) {
-                let displayVal = isTBI ? `<span class="hidden-val">${textHid}</span>` : textHid;
-                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexHid}; flex-basis: 0; background: #e2e8f0; color: #111827; min-width: ${minW}; font-size: ${fSize};">${displayVal}</div>`;
+                bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexHid}; flex-basis: 0; background: #e2e8f0; color: #111827; min-width: ${minW}; font-size: ${fSize};">${displayHid}</div>`;
             }
             bottomRowHTML += `</div>`;
 
             diag.innerHTML = `
                 <div class="diagram-inner">
-                    <div class="row-top">${textTotal}</div>
+                    <div class="row-top">${displayTotal}</div>
                     ${bottomRowHTML}
                 </div>`;
         }
