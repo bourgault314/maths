@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SPLAT! — VERSION FINALE STABLE</title>
+  <title>SPLAT!</title>
   <style>
     :root {
       --ink: #111827;
@@ -169,9 +169,9 @@
 
       <div class="sec-title" style="margin-top:15px;" data-i18n="exercise">Exercice</div>
       <select id="gameMode" onchange="startGen()" style="width:100%">
-        <option value="find_hidden" selected data-i18n="mode_hidden">Trouver le caché</option>
+        <option value="find_hidden" selected data-i18n="mode_hidden">Trouver ce qui est caché ?</option>
         <option value="construct" data-i18n="mode_draw">Dessiner les points</option>
-        <option value="mix" data-i18n="mode_mix">Mélanger les types</option>
+        <option value="mix" data-i18n="mode_mix">Mélange</option>
       </select>
     </div>
 
@@ -185,19 +185,20 @@
 <main id="mainArea"></main>
 
 <script>
+// CHANGEMENT DE TEXTE : Mise à jour du dictionnaire i18n
 const i18n = {
     fr: {
         title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
         content: "Contenu", target: "Cible Max", splat_count: "Nombre de taches",
-        exercise: "Exercice", mode_hidden: "Trouver le caché", mode_draw: "Dessiner les points", mode_mix: "Mélanger",
+        exercise: "Exercice", mode_hidden: "Trouver ce qui est caché ?", mode_draw: "Dessiner les points", mode_mix: "Mélange",
         btn_mix: "MÉLANGER", btn_print: "IMPRIMER"
     },
     en: {
         title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
         content: "Content", target: "Max Target", splat_count: "Number of Splats",
-        exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mixed",
+        exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mix",
         btn_mix: "SHUFFLE", btn_print: "PRINT"
     }
 };
@@ -322,8 +323,6 @@ function createItem(mode, maxTarget, splatMode) {
     
     let splats = layouts[numSplats].map(l => ({ cx: l.x, cy: l.y, scale: l.s, rot: splatRot }));
     const dotsPositions = generateDotPositions(visible, maxTarget, splatShape, splats);
-    
-    // Génération ultra-sécurisée des points cachés
     const hiddenDots = generateHiddenDots(splats, hiddenPerSplat, splatShape, maxTarget);
 
     return { 
@@ -333,7 +332,6 @@ function createItem(mode, maxTarget, splatMode) {
     };
 }
 
-// CORRECTION MAJEURE: Le générateur de points cachés
 function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
     const W = 300, H = 200;
     let dotR = (maxTarget > 50) ? 5 : 8;
@@ -344,9 +342,6 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
         canvas.width = W; canvas.height = H;
         ctx = canvas.getContext('2d');
         splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
-        
-        // LA MAGIE EST ICI : On crée une épaisse marge de sécurité vers l'intérieur
-        // Égale au diamètre du point + une petite marge (x3.5)
         ctx.lineWidth = dotR * 3.5; 
     } catch (e) { return []; }
 
@@ -364,13 +359,9 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
                 let localX = 150 + (Math.random() - 0.5) * 160;
                 let localY = 100 + (Math.random() - 0.5) * 160;
                 
-                // 1. Le centre est-il dans la tache ?
                 if (!ctx.isPointInPath(splatPath, localX, localY)) continue;
-                
-                // 2. Le point frôle-t-il la bordure ? (Grâce à notre épaisse marge)
                 if (ctx.isPointInStroke(splatPath, localX, localY)) continue;
                 
-                // Si le code arrive ici, le point est PARFAITEMENT à l'intérieur
                 let rad = s.rot * Math.PI / 180;
                 let cos = Math.cos(rad), sin = Math.sin(rad);
                 let scaledX = (localX - 150) * s.scale;
@@ -381,11 +372,10 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
                 bestDX = currentDX;
                 bestDY = currentDY;
 
-                // 3. Gestion intelligente du chevauchement (L'anti-panique pour les 100 billes)
                 let overlap = false;
-                let minReqDist = dotR * 2.2; // On veut qu'elles ne se touchent pas au début
-                if (attempts > 100) minReqDist = dotR * 1.2; // Au bout de 100 essais, on les laisse se frôler
-                if (attempts > 200) minReqDist = 0; // Au bout de 200 essais, on les laisse se superposer comme un tas
+                let minReqDist = dotR * 2.2; 
+                if (attempts > 100) minReqDist = dotR * 1.2; 
+                if (attempts > 200) minReqDist = 0; 
 
                 for (let p of placed) {
                     if (Math.sqrt((currentDX - p.x)**2 + (currentDY - p.y)**2) < minReqDist) { overlap = true; break; }
@@ -393,7 +383,6 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
                 if (!overlap) safe = true;
             }
             
-            // On sauvegarde le meilleur point trouvé, qui est forcément dans les frontières
             if (bestDX !== undefined) {
                 placed.push({x: bestDX, y: bestDY});
                 allHiddenDots.push({x: bestDX, y: bestDY, r: dotR});
@@ -500,7 +489,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             if (isCorrectionPage || isTBI) {
                 textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
             } else {
-                textTotal = item.total; textVis = item.visible; textHid = "";
+                // CORRECTION DU BUG ICI : Les deux cases du bas sont maintenant complètement vides
+                textTotal = item.total; textVis = ""; textHid = "";
             }
         } else if (item.mode === 'construct') {
             if (isCorrectionPage || isTBI) {
@@ -538,7 +528,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
             let bottomRowHTML = `<div class="row-bottom">`;
             
-            if (item.visible > 0) {
+            // On s'assure d'afficher la case visible même si textVis est vide
+            if (item.visible > 0 || textVis === "") {
                 bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexVis}; flex-basis: 0; background: white; color: #2563eb; min-width: ${minW}; font-size: ${fSize};">${textVis}</div>`;
             }
 
