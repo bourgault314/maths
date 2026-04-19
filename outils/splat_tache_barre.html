@@ -84,7 +84,8 @@
     /* DIAGRAMME */
     .diagram-container { flex: 0 0 70px; display: flex; flex-direction: column; width: 90%; margin: 0 auto 5px auto; }
     .diagram-inner { display: flex; flex-direction: column; flex: 1; border: 2px solid #111827; border-radius: 4px; overflow: hidden; background: white; }
-    .row-top { flex: 1; border-bottom: 2px solid #111827; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; background: #fff; min-height: 25px; }
+    /* La taille de police fixe a été retirée de .row-top pour être gérée dynamiquement par le script */
+    .row-top { flex: 1; border-bottom: 2px solid #111827; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #fff; min-height: 25px; }
     .row-bottom { flex: 1; display: flex; min-height: 25px; }
     .part-box { display: flex; align-items: center; justify-content: center; font-weight: 900; border-right: 2px solid #111827; overflow: hidden; }
     .part-box:last-child { border-right: none; }
@@ -486,10 +487,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         if (item.mode === 'find_hidden') {
             showVisualTotal = true; showVisualDots = true;
             if (isCorrectionPage || isTBI) {
-                // En mode Correction ou TBI, on charge les réponses en mémoire
                 textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
             } else {
-                // En mode Énoncé (Fiche Élève), TOUT le tableau doit être vide
                 textTotal = ""; textVis = ""; textHid = "";
             }
         } else if (item.mode === 'construct') {
@@ -524,10 +523,9 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             let flexHid = Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
 
             let minW = item.numSplats >= 4 ? "25px" : "40px";
-            let fSize = item.numSplats >= 4 ? "14px" : "18px";
+            // VARIABLE COMMUNE POUR L'HARMONIE (S'applique en haut ET en bas)
+            let fSize = item.numSplats >= 4 ? "14px" : "18px"; 
 
-            // POUR LE TBI : On enveloppe toutes les valeurs dans la classe 'hidden-val'
-            // Elles seront invisibles par défaut et apparaîtront au clic (.revealed)
             let displayTotal = (isTBI && textTotal !== "") ? `<span class="hidden-val">${textTotal}</span>` : textTotal;
             let displayVis   = (isTBI && textVis !== "")   ? `<span class="hidden-val">${textVis}</span>`   : textVis;
             let displayHid   = (isTBI && textHid !== "")   ? `<span class="hidden-val">${textHid}</span>`   : textHid;
@@ -545,7 +543,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
             diag.innerHTML = `
                 <div class="diagram-inner">
-                    <div class="row-top">${displayTotal}</div>
+                    <div class="row-top" style="font-size: ${fSize};">${displayTotal}</div>
                     ${bottomRowHTML}
                 </div>`;
         }
