@@ -84,7 +84,6 @@
     /* DIAGRAMME */
     .diagram-container { flex: 0 0 70px; display: flex; flex-direction: column; width: 90%; margin: 0 auto 5px auto; }
     .diagram-inner { display: flex; flex-direction: column; flex: 1; border: 2px solid #111827; border-radius: 4px; overflow: hidden; background: white; }
-    /* La taille de police fixe a été retirée de .row-top pour être gérée dynamiquement par le script */
     .row-top { flex: 1; border-bottom: 2px solid #111827; display: flex; align-items: center; justify-content: center; font-weight: 900; background: #fff; min-height: 25px; }
     .row-bottom { flex: 1; display: flex; min-height: 25px; }
     .part-box { display: flex; align-items: center; justify-content: center; font-weight: 900; border-right: 2px solid #111827; overflow: hidden; }
@@ -508,9 +507,13 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
         
         let htmlContent = getSplatSvg(item, showVisualDots);
-        if (showVisualTotal) {
-            htmlContent += `<div class="total-badge">${item.total}</div>`;
-        }
+        
+        // LA SOLUTION CHIRURGICALE EST ICI : On dessine TOUJOURS la boîte. 
+        // Si on ne doit pas montrer le total (comme dans "Dessiner les points" sur la fiche élève), 
+        // le texte à l'intérieur est juste vide ("").
+        let displayBadge = showVisualTotal ? item.total : "";
+        htmlContent += `<div class="total-badge">${displayBadge}</div>`;
+        
         splatPart.innerHTML = htmlContent;
         cell.appendChild(splatPart);
 
@@ -523,7 +526,6 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             let flexHid = Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
 
             let minW = item.numSplats >= 4 ? "25px" : "40px";
-            // VARIABLE COMMUNE POUR L'HARMONIE (S'applique en haut ET en bas)
             let fSize = item.numSplats >= 4 ? "14px" : "18px"; 
 
             let displayTotal = (isTBI && textTotal !== "") ? `<span class="hidden-val">${textTotal}</span>` : textTotal;
