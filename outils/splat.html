@@ -348,23 +348,12 @@
     body{background:#fff;color:#000}
     header,.wrap{display:none !important}
     .printArea{display:block}
-    
-    /* Correction de la page blanche supplémentaire */
-    .sheet{padding:6mm; page-break-after: always; break-after: page;}
-    .sheet:last-child { page-break-after: auto; break-after: auto; }
-    
-    /* Style du pied de page (URL) sans trait */
-    .print-footer { 
-      text-align: center; 
-      font-size: 10pt; 
-      color: #666; 
-      margin-top: 6mm; 
-    }
-
+    .sheet{page-break-after:always;padding:6mm}
     /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
     .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm}
     .pCard svg{width:100%;height:auto}
+    .print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 6mm; }
   }
 
   /* Plein écran */
@@ -1325,48 +1314,41 @@ function blobPath(cx, cy, r){
   return d;
 }
 
+/* TRAY CONFIGURATION */
+/* PLATEAU UNIFORME H:550 POUR TOUS LES MODES */
+function getTrayConfig(mode){
+  return { x:120, y:270, w:1360, h:550, isHigh: false };
+}
+
 function getUnitSplats(taskCount){
-  const tray = { x:120, y:260, w:1360, h:650 };
+  const tray = getTrayConfig("U");
   const cyMid = tray.y + tray.h/2; 
   const anchors = {
-    1:[{cx:820, cy:cyMid+25}],
-    2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
-    3:[{cx:820, cy:470},{cx:610, cy:690},{cx:1030, cy:690}],
-    4:[{cx:610, cy:480},{cx:1030, cy:480},{cx:610, cy:740},{cx:1030, cy:740}],
-    5:[{cx:820, cy:367},{cx:560, cy:585},{cx:1080, cy:585},{cx:560, cy:803},{cx:1080, cy:803}],
+    1:[{cx:820, cy:cyMid}],
+    2:[{cx:580, cy:cyMid},{cx:1060, cy:cyMid}],
+    3:[{cx:820, cy:440},{cx:610, cy:670},{cx:1030, cy:670}],
+    4:[{cx:610, cy:440},{cx:1030, cy:440},{cx:610, cy:670},{cx:1030, cy:670}],
+    5:[{cx:820, cy:370},{cx:560, cy:545},{cx:1080, cy:545},{cx:560, cy:720},{cx:1080, cy:720}],
   };
   const base = anchors[taskCount] || anchors[2];
-  const r = (taskCount<=1) ? 235 : (taskCount===2 ? 185 : (taskCount===3 ? 155 : (taskCount===4 ? 135 : 102)));
+  const r = (taskCount<=1) ? 220 : (taskCount===2 ? 180 : (taskCount===3 ? 145 : (taskCount===4 ? 125 : 95)));
   return base.map(p => ({...p, r}));
 }
 
-/* TRAY CONFIGURATION */
-function getTrayConfig(mode){
-  if(mode === "C") return { x:120, y:270, w:1360, h:550, isHigh: false };
-  if(mode === "D") return { x:120, y:270, w:1360, h:550, isHigh: false };
-  return { x:120, y:260, w:1360, h:650, isHigh: false };
-}
 
 function getNumberedSplats(taskCount, mode){
   const tray = getTrayConfig(mode);
   const cyMid = tray.y + tray.h/2; 
-
   const anchors = {
-    1:[{cx:820, cy:cyMid+25}],
-    2:[{cx:580, cy:cyMid+25},{cx:1060, cy:cyMid+25}],
-    
-    3:[{cx:820, cy:cyMid-110},{cx:580, cy:cyMid+130},{cx:1060, cy:cyMid+130}],
-
-    4:[{cx:610, cy:465},{cx:1030, cy:465},{cx:610, cy:745},{cx:1030, cy:745}],
-    5:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:680, cy:750},{cx:960, cy:750}],
-    6:[{cx:540, cy:430},{cx:820, cy:430},{cx:1100, cy:430},{cx:540, cy:750},{cx:820, cy:750},{cx:1100, cy:750}],
+    1:[{cx:820, cy:cyMid}],
+    2:[{cx:580, cy:cyMid},{cx:1060, cy:cyMid}],
+    3:[{cx:820, cy:cyMid-90},{cx:580, cy:cyMid+110},{cx:1060, cy:cyMid+110}],
+    4:[{cx:610, cy:440},{cx:1030, cy:440},{cx:610, cy:670},{cx:1030, cy:670}],
+    5:[{cx:540, cy:420},{cx:820, cy:420},{cx:1100, cy:420},{cx:680, cy:680},{cx:960, cy:680}],
+    6:[{cx:540, cy:420},{cx:820, cy:420},{cx:1100, cy:420},{cx:540, cy:680},{cx:820, cy:680},{cx:1100, cy:680}],
   };
   let base = anchors[taskCount] || anchors[2];
-  let r = (taskCount<=1) ? 260 : (taskCount===2 ? 210 : (taskCount===3 ? 165 : (taskCount===4 ? 150 : (taskCount===5 ? 130 : 118))));
-  if((mode === "C" || mode === "D") && taskCount === 3){
-    base = [{cx:820, cy:cyMid-90},{cx:580, cy:cyMid+110},{cx:1060, cy:cyMid+110}];
-    r = 145;
-  }
+  let r = (taskCount<=1) ? 220 : (taskCount===2 ? 180 : (taskCount===3 ? 145 : (taskCount===4 ? 130 : (taskCount===5 ? 120 : 110))));
   return base.map(p => ({...p, r}));
 }
 
@@ -1522,6 +1504,7 @@ function assignPositionsNumbered(card, rng){
 
   card._posV = card.visible.map(()=> pickVisible());
 }
+
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
@@ -2109,7 +2092,7 @@ function genEquation(rng){
 
   let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20);
   let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
-  if(userMax < userMin) [userMax, userMin];
+  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
   userMin = clamp(userMin, 1, 999);
   userMax = clamp(userMax, 1, 999);
 
@@ -2507,10 +2490,10 @@ function genOp8(rng){
 }
 
 function assignPositionsClassic(card, rng){
-  const tray = { x:120, y:260, w:1360, h:650 };
+  const tray = { x:120, y:270, w:1360, h:550 };
   const beadR = 95;
   const margin = 18;
-  const splat = { cx: 820, cy: 610, r: 260 };
+  const splat = { cx: 820, cy: 545, r: 220 };
   card._splat = splat;
   const placed = [];
   function okSpotVisible(cx, cy){
@@ -2570,7 +2553,7 @@ function assignPositionsClassic(card, rng){
 }
 
 function assignPositionsUnits(card, rng){
-  const tray = { x:120, y:260, w:1360, h:650 };
+  const tray = { x:120, y:270, w:1360, h:550 };
   const margin = 8;
   const tasks = card._unit?.tasks ?? 1;
   const hiddenByTask = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
@@ -3153,10 +3136,15 @@ function renderCard(card, revealed){
   // Contrat didactique : la phrase en dessous du plateau si > 1 tache
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if(!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)){
+    const isSigned = (card.family === "NPM");
+    const ruleText = isSigned 
+        ? "Sous chaque tache se cache le même nombre." 
+        : "Sous chaque tache, il y a le même nombre de billes.";
+
     const gInd = el("g", {id: "clueGroupRule"});
     const trayBottom = trayCfg.y + trayCfg.h;
     const startY = trayBottom + 70;
-    gInd.appendChild(text(800, startY, "Sous chaque tache, il y a le même nombre de billes.", {
+    gInd.appendChild(text(800, startY, ruleText, {
       "text-anchor":"middle",
       "font-size":"45",
       "fill":"var(--ink)",
@@ -3367,7 +3355,11 @@ function renderCardEquation(card, revealed, useTokens){
   }));
 
   if ((eq.left.tasks + eq.right.tasks) > 1) {
-    layer.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre de billes.",{
+    const isSigned = (card.family === "EQPM");
+    const ruleText = isSigned 
+        ? "Sous chaque tache se cache le même nombre." 
+        : "Sous chaque tache, il y a le même nombre de billes.";
+    layer.appendChild(text(800, 130, ruleText,{
       "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
     }));
   }
@@ -3462,7 +3454,11 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
   targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
 
   if ((eq.left.tasks + eq.right.tasks) > 1) {
-    targetSvg.appendChild(tText(800, 130, "Sous chaque tache, il y a le même nombre de billes.", {
+    const isSigned = (card.family === "EQPM");
+    const ruleText = isSigned 
+        ? "Sous chaque tache se cache le même nombre." 
+        : "Sous chaque tache, il y a le même nombre de billes.";
+    targetSvg.appendChild(tText(800, 130, ruleText, {
       "text-anchor":"middle",
       "font-size":"32",
       "fill":"rgba(0,0,0,0.70)",
@@ -3552,20 +3548,15 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   }
 
   const isModeC_or_D = (card.family === "C" || card.family === "D");
-  const isModeC = (card.family === "C");
-  const isModeD = (card.family === "D");
 
-  const trayY = (isModeC || isModeD) ? 270 : 260;
-  const trayH = (isModeC || isModeD) ? 550 : 650;
+  // TOUS LES PLATEAUX SONT MAINTENANT A H:550 ET Y:270 (comme C et D)
+  const trayY = 270;
+  const trayH = 550;
 
   targetSvg.appendChild(tEl("rect",{x:120,y:trayY,width:1360,height:trayH,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
 
   let tx = 800, ty = 92;
   let printOffsetY = 0;
-  if(isModeC || isModeD){
-    tx = 800;
-    ty = 92;
-  }
 
   let totalColor = "#000";
   let totalLabelColor = "rgba(0,0,0,0.92)";
@@ -3586,18 +3577,9 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
 
   const boxH = 210;
   const boxY = ty - 70;
-
-  let boxW = 360;
+  let boxW = 280;
   let boxX = tx - boxW/2;
 
-  // Correction centrage cadre TOTAL pour Mode C à l'impression
-  if(isModeD){
-    boxW = 280;
-    boxX = tx - boxW/2;
-  } else if(isModeC){
-    boxW = 280;
-    boxX = tx - boxW/2;
-  }
   targetSvg.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
@@ -3607,12 +3589,11 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   if(isModeC_or_D && card._inv && card._inv.indices){
     const indices = card._inv.indices;
     const lineH = 84;
-    const startY = trayY + trayH + 220;
+    const startY = trayY + trayH + 80;
 
     indices.forEach((txt, i) => {
       const cyLine = startY + i*lineH;
       if (typeof txt === 'string') {
-        // Réduction taille de police à 42 pour éviter que le texte soit coupé
         targetSvg.appendChild(tText(800, cyLine, txt, {
           "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"700"
         }));
@@ -3625,8 +3606,12 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   // Contrat didactique impression PDF : la phrase en dessous du plateau si > 1 tache
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)) {
-    const startY = trayY + trayH + 220;
-    targetSvg.appendChild(tText(800, startY, "Sous chaque tache, il y a le même nombre de billes.", {
+    const isSigned = (card.family === "NPM");
+    const ruleText = isSigned 
+        ? "Sous chaque tache se cache le même nombre." 
+        : "Sous chaque tache, il y a le même nombre de billes.";
+    const startY = trayY + trayH + 80;
+    targetSvg.appendChild(tText(800, startY, ruleText, {
       "text-anchor":"middle",
       "font-size":"42",
       "fill":"#000",
@@ -3681,7 +3666,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       if (vis > 0) parts.push({value: vis, hidden: false});
       parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
 
-      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+      drawBarModelPartsInGroup(gBM, 800, 1080, card.total, parts, {
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
@@ -3791,7 +3776,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       if (visSum > 0) parts.push({value: visSum, hidden: false});
       parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
 
-      drawBarModelPartsInGroup(gBM, 800, 980, card.total, parts, {
+      drawBarModelPartsInGroup(gBM, 800, 1080, card.total, parts, {
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
@@ -3821,7 +3806,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
-    const s0 = card._splat || {cx:820, cy:610, r:220};
+    const s0 = card._splat || {cx:820, cy:545, r:220}; // recentré pour h:550
     targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
