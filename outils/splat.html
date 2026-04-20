@@ -769,6 +769,9 @@
 <div class="printArea" id="printArea"></div>
 
 <script>
+/* Le véritable X mathématique unicode ! */
+const xChar = "𝑥"; 
+
 /* RNG */
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
 function makeRng(seed){
@@ -1334,7 +1337,6 @@ function getUnitSplats(taskCount){
   const r = (taskCount<=1) ? 220 : (taskCount===2 ? 180 : (taskCount===3 ? 145 : (taskCount===4 ? 125 : 95)));
   return base.map(p => ({...p, r}));
 }
-
 
 function getNumberedSplats(taskCount, mode){
   const tray = getTrayConfig(mode);
@@ -2866,6 +2868,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   let x = x0;
   for(let i=0;i<values.length;i++){
     const v = values[i];
+    const textToDisplay = (parts[i] && parts[i].text !== undefined) ? parts[i].text : String(v);
 
     let segW = (i === values.length - 1) ? ((x0 + w) - x) : widths[i];
     if(segW < 0) segW = 0;
@@ -2878,14 +2881,23 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 
     if(segW > 1){
       const fillCol = flagsHidden[i] ? (api.hiddenTextColor || ink) : (api.visibleTextColor || ink);
-      g.appendChild(mkText(x + segW/2, ySplit + hBottom/2, String(v), {
+      
+      const isX = textToDisplay === "x" || textToDisplay === "𝑥";
+      const fs = isX ? String(Number(fontBottom)*1.2) : String(fontBottom);
+      const ff = isX ? "'Times New Roman', Times, serif" : "inherit";
+      const fSt = isX ? "italic" : "normal";
+      const fW = isX ? "normal" : "900";
+
+      g.appendChild(mkText(x + segW/2, ySplit + hBottom/2, textToDisplay, {
         "text-anchor":"middle",
         "dominant-baseline":"middle",
         "alignment-baseline":"middle",
         "dy":dyVal,
-        "font-size":String(fontBottom),
+        "font-size":fs,
+        "font-family":ff,
+        "font-style":fSt,
         "fill":fillCol,
-        "font-weight":"900"
+        "font-weight":fW
       }));
     }
 
@@ -2897,10 +2909,12 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
       x = xNext;
     }
   }
+
+  // Renvoie la largeur totale pour pouvoir s'ancrer dessus (diaporama !)
+  return w;
 }
 
 function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed) {
-  // Correction taille police d'indice mixte pour impression
   const fontSize = isPrint ? 42 : 45;
   const charW = isPrint ? 22 : 24;
   const spaceW = isPrint ? 14 : 12;
@@ -2930,7 +2944,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
       if(item.type === 'splat') {
           const coverCol = opqCols[item.id%3];
           const revealCol = revCols[item.id%3];
-          const fillCol = revealed ? revealCol : coverCol;
+          const fillCol = (revealed === 2 || revealed === true) ? revealCol : coverCol;
 
           const p = mkEl("path", {
               d: blobPath(x + item.w/2, cy - yOffset, splatR),
@@ -2940,8 +2954,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
           });
           targetGroup.appendChild(p);
 
-          // Calque évanescent pour les mini-splats
-          if (!isPrint && revealed) {
+          if (!isPrint && (revealed === 2 || revealed === true)) {
               const pCover = mkEl("path", {
                   d: blobPath(x + item.w/2, cy - yOffset, splatR),
                   fill: coverCol,
@@ -2965,7 +2978,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
 }
 
 /* Render écran */
-function renderCard(card, revealed){
+function renderCard(card, revealState){
   clearSvg();
 
   const actEl = document.getElementById("activity");
@@ -2974,13 +2987,12 @@ function renderCard(card, revealed){
   const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
 
   if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquation(card, revealed, useTokens);
+    renderCardEquation(card, revealState, useTokens);
     return;
   }
 
   const trayCfg = getTrayConfig(card.family);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
-  const isModeC = (card.family === "C");
 
   const trayLayer = svg;
   trayLayer.appendChild(el("rect",{
@@ -3003,8 +3015,8 @@ function renderCard(card, revealed){
 
   const gTotal = el("g", {id:"totalGroup"});
 
-  const isBarModelTotalU = (card.family === "U" && revealed);
-  const isBarModelTotalN = (card.family === "N" && revealed);
+  const isBarModelTotalU = (card.family === "U" && revealState > 0);
+  const isBarModelTotalN = (card.family === "N" && revealState > 0);
   const isBarModelTotal = isBarModelTotalU || isBarModelTotalN;
 
   if(isBarModelTotal){
@@ -3013,7 +3025,6 @@ function renderCard(card, revealed){
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
-
       const totalHid = sumArray(card.hidden);
 
       let hiddenSums = [];
@@ -3030,9 +3041,13 @@ function renderCard(card, revealed){
       
       const parts = [];
       if (vis > 0) parts.push({value: vis, hidden: false});
-      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+      parts.push(...hiddenSums.map(v => ({
+        value: v, 
+        hidden: true,
+        text: revealState === 1 ? "?" : String(v)
+      })));
 
-      drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+      const barW = drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -3042,16 +3057,41 @@ function renderCard(card, revealed){
         textDy:"0.10em", fontTop:70, fontBottom:70
       });
 
+      if (revealState === 2) {
+        let calcLines = 0;
+        if(vis > 0) calcLines++;
+        if(tasks > 1) calcLines++;
+        
+        let calcY = (ty + 30) - ((calcLines - 1) * 35); 
+        const calcGroup = el("g");
+        
+        // ANCRAGE DYNAMIQUE : On ne cognera plus jamais le tableau même avec 5 taches !
+        const centerX = tx + (barW / 2) + 240;
+
+        if (vis > 0) {
+            calcGroup.appendChild(text(centerX - 30, calcY, `${card.total} − ${vis}`, { "text-anchor":"end", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX, calcY, `=`, { "text-anchor":"middle", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX + 30, calcY, `${totalHid}`, { "text-anchor":"start", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcY += 70;
+        }
+        if (tasks > 1) {
+            calcGroup.appendChild(text(centerX - 30, calcY, `${totalHid} ÷ ${tasks}`, { "text-anchor":"end", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX, calcY, `=`, { "text-anchor":"middle", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX + 30, calcY, `${hiddenSums[0]}`, { "text-anchor":"start", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+        }
+        gTotal.appendChild(calcGroup);
+      }
+
     }else{
       const visSum = sumArray(card.visible);
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+      const totalHid = sumArray(card.hidden);
 
       let hiddenSums = [];
       if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
         hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
       }else{
-        const totalHid = sumArray(card.hidden);
         const each = Math.round(totalHid / tasks);
         hiddenSums = Array.from({length: tasks}, ()=> each);
       }
@@ -3059,9 +3099,13 @@ function renderCard(card, revealed){
 
       const parts = [];
       if (visSum > 0) parts.push({value: visSum, hidden: false});
-      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+      parts.push(...hiddenSums.map(v => ({
+          value: v, 
+          hidden: true,
+          text: revealState === 1 ? xChar : String(v)
+      })));
 
-      drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
+      const barW = drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -3070,6 +3114,40 @@ function renderCard(card, revealed){
         ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
         textDy:"0.10em", fontTop:70, fontBottom:70
       });
+
+      if (revealState > 0) {
+        let calcLines = 1;
+        if(revealState === 2) {
+            if(visSum > 0 && tasks > 1) calcLines++;
+            if(tasks > 1 || (tasks === 1 && visSum > 0)) calcLines++;
+        }
+        
+        let calcY = (ty + 30) - ((calcLines - 1) * 35);
+        const calcGroup = el("g");
+        
+        // ANCRAGE DYNAMIQUE POUR LE B AUSSI ET ESPACEMENT
+        const centerX = tx + (barW / 2) + 240;
+        
+        const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${xChar} + ${visSum}` : `${tasks}${xChar}`) : (visSum > 0 ? `${xChar} + ${visSum}` : `${xChar}`);
+
+        const addEq = (l, r) => {
+            const mathFont = "'Times New Roman', Times, serif";
+            calcGroup.appendChild(text(centerX - 30, calcY, l, { "text-anchor":"end", "font-size":"46", "fill":"var(--ink)", "font-weight":"normal", "font-family":mathFont, "font-style":"italic", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX, calcY, `=`, { "text-anchor":"middle", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
+            calcGroup.appendChild(text(centerX + 30, calcY, r, { "text-anchor":"start", "font-size":"46", "fill":"var(--ink)", "font-weight":"normal", "font-family":mathFont, "font-style":"italic", "dominant-baseline":"middle" }));
+            calcY += 70;
+        };
+
+        // Ligne 1 : Dès le 1er clic
+        addEq(eqLeft1, String(card.total));
+
+        // Lignes 2 et 3 : Au 2ème clic (Résolution)
+        if (revealState === 2) {
+            if (visSum > 0 && tasks > 1) addEq(`${tasks}${xChar}`, String(totalHid));
+            if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${xChar}`, String(hiddenSums[0]));
+        }
+        gTotal.appendChild(calcGroup);
+      }
     }
   }else{
     const tLabel = text(tx, ty, "TOTAL", {
@@ -3127,13 +3205,12 @@ function renderCard(card, revealed){
           "font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
-        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, revealed);
+        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, revealState === 2);
       }
     });
     svg.appendChild(gInd);
   }
 
-  // Contrat didactique : la phrase en dessous du plateau si > 1 tache
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if(!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)){
     const isSigned = (card.family === "NPM");
@@ -3157,25 +3234,22 @@ function renderCard(card, revealed){
 
   if(card.family === "U"){
     const beadR = card._beadR ?? 26;
-    // 1. Billes cachées
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
       layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
     }
-    // 2. Taches
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
       const p = el("path",{
         d: blobPath(s.cx, s.cy, s.r),
-        fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
+        fill: revealState === 2 ? "var(--splat-reveal)" : "var(--splat-cover)",
         stroke: "var(--splat-stroke)",
         "stroke-width":"5"
       });
       layer.appendChild(p);
 
-      // Calque évanescent
-      if(revealed){
+      if(revealState === 2){
         const pCov = el("path",{
           d: blobPath(s.cx, s.cy, s.r),
           fill: "var(--splat-cover)",
@@ -3185,7 +3259,6 @@ function renderCard(card, revealed){
         layer.appendChild(pCov);
       }
     }
-    // 3. Billes visibles
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
@@ -3198,7 +3271,6 @@ function renderCard(card, revealed){
     const beadR = card._beadR ?? 52;
     const font = Math.round(beadR * 0.9);
 
-    // 1. Billes cachées
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
@@ -3215,57 +3287,53 @@ function renderCard(card, revealed){
       }));
     }
 
-    // 2. Taches (base transparente si révélé)
     const splats = card._splats || [{cx:820, cy:610, r:220}];
-    
     const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
     const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
-
     const opp = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
+    
     splats.forEach((s, idx) => {
       let coverCol = (card.family === "C" || card.family === "D") ? opqCols[idx%3] : "var(--splat-cover)";
       let revealCol = (card.family === "C" || card.family === "D") ? revCols[idx%3] : "var(--splat-reveal)";
       
       const p = el("path",{
         d: blobPath(s.cx, s.cy, s.r),
-        fill: revealed ? revealCol : coverCol,
+        fill: revealState === 2 ? revealCol : coverCol,
         stroke: "var(--splat-stroke)",
         "stroke-width":"5"
       });
       layer.appendChild(p);
 
-      // Texte opposé éventuel (posé sous le calque évanescent)
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealed ? (s.cy - s.r*0.65) : (s.cy);
+        const y = revealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "font-size": fs,
           "font-weight":"900",
-          "fill":(revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke":(revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width":(revealed ? "5" : "0"),
+          "fill":(revealState === 2 ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealState === 2 ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealState === 2 ? "5" : "0"),
           "paint-order":"stroke fill"
         }));
       }
       if(opp && opp.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealed ? (s.cy - s.r*0.65) : (s.cy);
+        const y = revealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "font-size": fs,
           "font-weight":"900",
-          "fill":(revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke":(revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width":(revealed ? "5" : "0"),
+          "fill":(revealState === 2 ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke":(revealState === 2 ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width":(revealState === 2 ? "5" : "0"),
           "paint-order":"stroke fill"
         }));
       }
 
-      // Calque évanescent par dessus le texte et les billes
-      if(revealed){
+      if(revealState === 2){
         const pCov = el("path",{
           d: blobPath(s.cx, s.cy, s.r),
           fill: coverCol,
@@ -3276,7 +3344,6 @@ function renderCard(card, revealed){
       }
     });
 
-    // 3. Billes visibles
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
@@ -3289,7 +3356,7 @@ function renderCard(card, revealed){
     return;
   }
 
-  // Fallback mode classique
+  // Fallback
   const beadR=95;
   for(let i=0;i<card.hidden.length;i++){
     const cx = card._posH?.[i]?.cx ?? 820;
@@ -3297,16 +3364,16 @@ function renderCard(card, revealed){
     layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"5"}));
     layer.appendChild(text(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"var(--ink)","font-weight":"900"}));
   }
-  const s0 = card._splat || {cx:820, cy:610, r:220};
+  const s0 = card._splat || {cx:820, cy:545, r:220};
   const pSplat = el("path",{
     d: blobPath(s0.cx, s0.cy, s0.r),
-    fill: revealed ? "var(--splat-reveal)" : "var(--splat-cover)",
+    fill: revealState === 2 ? "var(--splat-reveal)" : "var(--splat-cover)",
     stroke: "var(--splat-stroke)",
     "stroke-width":"5"
   });
   layer.appendChild(pSplat);
 
-  if(revealed){
+  if(revealState === 2){
     layer.appendChild(el("path",{
       d: blobPath(s0.cx, s0.cy, s0.r),
       fill: "var(--splat-cover)",
@@ -3324,8 +3391,7 @@ function renderCard(card, revealed){
   }
 }
 
-
-function renderCardEquation(card, revealed, useTokens){
+function renderCardEquation(card, revealState, useTokens){
   const eq = card._eq;
   const trays = card._eqTrays;
   const pos = card._eqPos;
@@ -3333,7 +3399,7 @@ function renderCardEquation(card, revealed, useTokens){
   const layer = svg; 
 
   const cover = "rgba(0,0,0,0.95)";
-  const reveal = "rgba(220,220,220,0.35)";
+  const revealCol = "rgba(220,220,220,0.35)";
 
   layer.appendChild(el("rect",{
     x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
@@ -3390,7 +3456,7 @@ function renderCardEquation(card, revealed, useTokens){
     (side.splats || []).forEach((s, idx)=>{
       const pSplat = el("path",{
         d: blobPath(s.cx, s.cy, s.r),
-        fill: revealed ? reveal : cover,
+        fill: revealState === 2 ? revealCol : cover,
         stroke:"rgba(0,0,0,0.18)",
         "stroke-width":"5"
       });
@@ -3398,20 +3464,20 @@ function renderCardEquation(card, revealed, useTokens){
 
       if(oppFlags && oppFlags[idx]){
         const fs = clamp(Math.round(s.r*0.28), 16, 44);
-        const yy = revealed ? (s.cy - s.r*0.65) : (s.cy);
+        const yy = revealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
         layer.appendChild(text(s.cx, yy, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "font-size": String(fs),
           "font-weight":"900",
-          "fill": (revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke": (revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width": (revealed ? "5" : "0"),
+          "fill": (revealState === 2 ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
+          "stroke": (revealState === 2 ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
+          "stroke-width": (revealState === 2 ? "5" : "0"),
           "paint-order":"stroke fill"
         }));
       }
 
-      if(revealed){
+      if(revealState === 2){
         const pCov = el("path",{
           d: blobPath(s.cx, s.cy, s.r),
           fill: cover,
@@ -3444,7 +3510,7 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
   if(!eq || !trays || !pos) return;
 
   const cover = "rgba(0,0,0,0.95)";
-  const reveal = "rgba(220,220,220,0.35)";
+  const revealCol = "rgba(220,220,220,0.35)";
 
   targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
   targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
@@ -3488,7 +3554,7 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
 
     const oppFlags = Array.isArray(metaSide.opposeFlags) ? metaSide.opposeFlags : null;
     (side.splats || []).forEach((s, idx)=>{
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? reveal : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? revealCol : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
       if(oppFlags && oppFlags[idx]){
         const fs = clamp(Math.round(s.r*0.28), 16, 44);
         const yy = revealAnswers ? (s.cy - s.r*0.65) : (s.cy);
@@ -3517,7 +3583,6 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
   drawSide(pos.left, eq.left);
   drawSide(pos.right, eq.right);
 }
-
 
 /* Render impression */
 function renderCardIntoSvg(targetSvg, card, revealAnswers){
@@ -3549,7 +3614,6 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
 
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
-  // TOUS LES PLATEAUX SONT MAINTENANT A H:550 ET Y:270 (comme C et D)
   const trayY = 270;
   const trayH = 550;
 
@@ -3603,7 +3667,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     });
   }
 
-  // Contrat didactique impression PDF : la phrase en dessous du plateau si > 1 tache
+  // Contrat didactique impression PDF
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)) {
     const isSigned = (card.family === "NPM");
@@ -3620,7 +3684,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   }
 
   const cover = "rgb(0,0,0)";
-  const reveal = "rgba(210,210,210,0.35)";
+  const revealCol = "rgba(210,210,210,0.35)";
   const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
   const colorsERev = ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"];
 
@@ -3633,7 +3697,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     }
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
@@ -3646,7 +3710,6 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
-
       const totalHid = sumArray(card.hidden);
 
       let hiddenSums = [];
@@ -3661,28 +3724,81 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
       
-      const gBM = tEl("g",{id:"barModelPrint"});
-      const parts = [];
-      if (vis > 0) parts.push({value: vis, hidden: false});
-      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+      const gBM = tEl("g",{id:"barModelPrintSteps"});
+      let currentY = 920;
 
-      drawBarModelPartsInGroup(gBM, 800, 1080, card.total, parts, {
-        rect:(a)=>tEl("rect", a),
-        line:(a)=>tEl("line", a),
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        w: 1200,
-        hTop: 140,
-        hBottom: 140,
-        stroke:"#000",
-        strokeWidth:5,
-        greyFill:"rgba(0,0,0,0.10)",
-        ink:"#000",
-        visibleTextColor:"rgb(106,167,255)",
-        hiddenTextColor:"#000",
-        totalTextColor: totalColor,
-        fontTop:118,
-        fontBottom:118
+      const fullW = 1000;
+      const startX = 800 - fullW / 2;
+      const visW = (card.total > 0) ? fullW * (vis / card.total) : 0;
+      const hidW = (card.total > 0) ? fullW * (totalHid / card.total) : fullW;
+      const unitW = (tasks > 0) ? hidW / tasks : hidW;
+
+      // ETAPE 1 : Tableau avec les '?'
+      const parts1 = [];
+      if(vis > 0) parts1.push({value: vis, hidden: false});
+      for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: "?"});
+      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
+        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+        visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
       });
+      currentY += 260;
+
+      if (vis > 0) {
+          gBM.appendChild(tText(800, currentY, `${card.total} − ${vis} = ${totalHid}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
+          currentY += 100;
+          
+          if(tasks > 1) {
+              // ETAPE 2 : Tableau intermédiaire aligné
+              const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: "?"});
+              const cxHid = startX + visW + (hidW / 2);
+              drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
+                rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+                w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+                visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+              });
+              currentY += 260;
+          }
+      }
+
+      if (tasks > 1) {
+          // CENTRAGE PARFAIT DE LA DIVISION SOUS LE TABLEAU DU RESTE
+          const cxHid = startX + visW + (hidW / 2);
+          gBM.appendChild(tText(cxHid, currentY, `${totalHid} ÷ ${tasks} = ${hiddenSums[0]}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
+          currentY += 100;
+
+          // ETAPE 3 : Tableau Unité (avec le ?)
+          const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
+          const cxUnit = startX + visW + (unitW / 2);
+          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+            w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+            visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+          });
+          currentY += 260;
+      } else if (tasks === 1 && vis > 0) {
+          // ETAPE FINAL si 1 seule tache mais des billes visibles
+          const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
+          const cxUnit = startX + visW + (hidW / 2);
+          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+            w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+            visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+          });
+          currentY += 260;
+      }
+
+      // ETAPE FINALE : Tableau résolu COMPLET
+      const partsFinal = [];
+      if(vis > 0) partsFinal.push({value: vis, hidden: false});
+      for(let i=0; i<tasks; i++) partsFinal.push({value: hiddenSums[0], hidden: true, text: String(hiddenSums[0])});
+      
+      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsFinal, {
+        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+        visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+      });
+
       targetSvg.appendChild(gBM);
     }
 
@@ -3712,7 +3828,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       if(card.family === "C" || card.family === "D"){
         f = revealAnswers ? colorsERev[idx%3] : colorsE[idx%3];
       } else {
-        f = revealAnswers ? reveal : cover;
+        f = revealAnswers ? revealCol : cover;
       }
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
@@ -3757,43 +3873,84 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     
     if(card.family === "N" && revealAnswers){
       const visSum = sumArray(card.visible);
-
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+      const totalHid = sumArray(card.hidden);
 
       let hiddenSums = [];
       if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
         hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
       }else{
-        const totalHid = sumArray(card.hidden);
         const each = Math.round(totalHid / tasks);
         hiddenSums = Array.from({length: tasks}, ()=> each);
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
 
-      const gBM = tEl("g",{id:"barModelPrint"});
-      const parts = [];
-      if (visSum > 0) parts.push({value: visSum, hidden: false});
-      parts.push(...hiddenSums.map(v => ({value:v, hidden:true})));
+      const gBM = tEl("g",{id:"barModelPrintStepsN"});
+      let currentY = 920;
+      
+      const fullW = 1000;
+      const startX = 800 - fullW / 2;
+      const visW = (card.total > 0) ? fullW * (visSum / card.total) : 0;
+      const hidW = (card.total > 0) ? fullW * (totalHid / card.total) : fullW;
+      const unitW = (tasks > 0) ? hidW / tasks : hidW;
 
-      drawBarModelPartsInGroup(gBM, 800, 1080, card.total, parts, {
-        rect:(a)=>tEl("rect", a),
-        line:(a)=>tEl("line", a),
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        w: 1200,
-        hTop: 140,
-        hBottom: 140,
-        stroke:"#000",
-        strokeWidth:5,
-        greyFill:"rgba(0,0,0,0.10)",
-        ink:"#000",
-        visibleTextColor:"#000",
-        hiddenTextColor:"#000",
-        totalTextColor: totalColor,
-        textDy:"0.06em",
-        fontTop:118,
-        fontBottom:118
+      const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${xChar} + ${visSum}` : `${tasks}${xChar}`) : (visSum > 0 ? `${xChar} + ${visSum}` : `${xChar}`);
+
+      // ETAPE 1 : Tableau initial avec les 'x'
+      const parts1 = [];
+      if(visSum > 0) parts1.push({value: visSum, hidden: false});
+      for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: xChar});
+      
+      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
+        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+        visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
       });
+      currentY += 260;
+
+      if (visSum > 0 && tasks > 1) {
+          // ETAPE 2 : Tableau intermédiaire parfaitement aligné
+          const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: xChar});
+          const cxHid = startX + visW + (hidW / 2);
+          drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
+            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+            w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+            visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+          });
+          currentY += 260;
+      }
+
+      if (tasks > 1 || (tasks === 1 && visSum > 0)) {
+          // ETAPE 3 : Tableau unité
+          const parts3 = [{value: hiddenSums[0], hidden: true, text: xChar}];
+          const cxUnit = startX + visW + (unitW / 2);
+          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+            w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+            visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
+          });
+          currentY += 260;
+      }
+
+      // ESPACE POUR LES ÉQUATIONS (Marges agrandies)
+      currentY += 80;
+      const addEq = (l, r) => {
+          const mathFont = "'Times New Roman', Times, serif";
+          gBM.appendChild(tText(800 - 40, currentY, l, {"text-anchor":"end", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+          gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":"64", "fill":"#000", "font-weight":"700"}));
+          gBM.appendChild(tText(800 + 40, currentY, r, {"text-anchor":"start", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+          currentY += 90;
+      };
+
+      addEq(eqLeft1, String(card.total));
+      if (visSum > 0 && tasks > 1) {
+          addEq(`${tasks}${xChar}`, String(totalHid));
+      }
+      if (tasks > 1 || (tasks === 1 && visSum > 0)) {
+          addEq(`${xChar}`, String(hiddenSums[0]));
+      }
+
       targetSvg.appendChild(gBM);
     }
 
@@ -3807,7 +3964,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
     const s0 = card._splat || {cx:820, cy:545, r:220}; // recentré pour h:550
-    targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?reveal:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+    targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
       const cy = card._posV?.[i]?.cy ?? 380;
@@ -3856,16 +4013,16 @@ function printSheet(){
 
 let cards = [];
 let idx = 0;
-let revealed = false;
+let revealState = 0; // 0: hidden, 1: hint, 2: revealed
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function updateUI(){
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
-  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && !revealed));
-  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealed));
+  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && revealState===0));
+  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealState===2));
   if(cards.length===0){ renderEmpty(); }
-  else { renderCard(cards[idx], revealed); }
+  else { renderCard(cards[idx], revealState); }
 }
 function renderEmpty(){
   clearSvg();
@@ -3913,7 +4070,7 @@ function generate(){
 
   cards = out;
   idx = 0;
-  revealed = false;
+  revealState = 0;
   updateUI();
 }
 
@@ -3923,7 +4080,7 @@ function shuffleCards(){
   const rng = makeRng(seedValue);
   shuffleInPlace(cards, rng);
   idx = 0;
-  revealed = false;
+  revealState = 0;
   updateUI();
 }
 
@@ -3935,16 +4092,25 @@ async function toggleFullscreen(){
 }
 
 document.getElementById("btnGen").addEventListener("click", generate);
-document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealed=false; updateUI(); });
+document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", ()=>{
   if(cards.length===0) return;
-  if(revealed){ revealed = false; updateUI(); return; }
-  if(idx>0){ idx--; revealed=false; updateUI(); }
+  if(revealState > 0){ revealState = 0; updateUI(); return; }
+  if(idx>0){ idx--; revealState=0; updateUI(); }
 });
 document.getElementById("btnNext").addEventListener("click", ()=>{
   if(cards.length===0) return;
-  if(!revealed){ revealed = true; updateUI(); return; }
-  if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+  const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+  if(is3Steps && revealState < 2) {
+      revealState++;
+      updateUI();
+      return;
+  } else if (!is3Steps && revealState === 0) {
+      revealState = 2;
+      updateUI();
+      return;
+  }
+  if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
 });
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
@@ -3958,17 +4124,34 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="ArrowLeft"){
     if(cards.length===0) return;
-    if(revealed){ revealed=false; updateUI(); return; }
-    if(idx>0){ idx--; revealed=false; updateUI(); }
+    if(revealState > 0){ revealState=0; updateUI(); return; }
+    if(idx>0){ idx--; revealState=0; updateUI(); }
   }
   if(e.key==="ArrowRight"){
     if(cards.length===0) return;
-    if(!revealed){ revealed=true; updateUI(); return; }
-    if(idx<cards.length-1){ idx++; revealed=false; updateUI(); }
+    const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+    if(is3Steps && revealState < 2) {
+        revealState++;
+        updateUI();
+        return;
+    } else if (!is3Steps && revealState === 0) {
+        revealState = 2;
+        updateUI();
+        return;
+    }
+    if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
   }
   if(e.key===" "){
     e.preventDefault();
-    if(cards.length){ revealed=!revealed; updateUI(); }
+    if(cards.length){ 
+        const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+        if (is3Steps) {
+            revealState = (revealState + 1) % 3;
+        } else {
+            revealState = revealState === 0 ? 2 : 0;
+        }
+        updateUI(); 
+    }
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
