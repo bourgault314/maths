@@ -2109,7 +2109,7 @@ function genEquation(rng){
 
   let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20);
   let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
+  if(userMax < userMin) [userMax, userMin];
   userMin = clamp(userMin, 1, 999);
   userMax = clamp(userMax, 1, 999);
 
@@ -2917,7 +2917,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 }
 
 function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed) {
-  // Correction taille police d'indice mixte pour impression [cite: 1]
+  // Correction taille police d'indice mixte pour impression
   const fontSize = isPrint ? 42 : 45;
   const charW = isPrint ? 22 : 24;
   const spaceW = isPrint ? 14 : 12;
@@ -3150,6 +3150,21 @@ function renderCard(card, revealed){
     svg.appendChild(gInd);
   }
 
+  // Contrat didactique : la phrase en dessous du plateau si > 1 tache
+  const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
+  if(!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)){
+    const gInd = el("g", {id: "clueGroupRule"});
+    const trayBottom = trayCfg.y + trayCfg.h;
+    const startY = trayBottom + 70;
+    gInd.appendChild(text(800, startY, "Sous chaque tache, il y a le même nombre de billes.", {
+      "text-anchor":"middle",
+      "font-size":"45",
+      "fill":"var(--ink)",
+      "font-weight":"700"
+    }));
+    svg.appendChild(gInd);
+  }
+
   const layer = trayLayer;
 
   if(card.family === "U"){
@@ -3350,6 +3365,12 @@ function renderCardEquation(card, revealed, useTokens){
   layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
     "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
   }));
+
+  if ((eq.left.tasks + eq.right.tasks) > 1) {
+    layer.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre de billes.",{
+      "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
+    }));
+  }
   
   function drawSide(side, metaSide){
     const beadR = side.beadR ?? 26;
@@ -3439,6 +3460,15 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
   targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"#000","stroke-width":"10","stroke-linecap":"round"}));
 
   targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
+
+  if ((eq.left.tasks + eq.right.tasks) > 1) {
+    targetSvg.appendChild(tText(800, 130, "Sous chaque tache, il y a le même nombre de billes.", {
+      "text-anchor":"middle",
+      "font-size":"32",
+      "fill":"rgba(0,0,0,0.70)",
+      "font-weight":"700"
+    }));
+  }
   
   function drawSide(side, metaSide){
     const beadR = side.beadR ?? 26;
@@ -3560,7 +3590,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   let boxW = 360;
   let boxX = tx - boxW/2;
 
-  // Correction centrage cadre TOTAL pour Mode C à l'impression [cite: 1]
+  // Correction centrage cadre TOTAL pour Mode C à l'impression
   if(isModeD){
     boxW = 280;
     boxX = tx - boxW/2;
@@ -3582,7 +3612,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     indices.forEach((txt, i) => {
       const cyLine = startY + i*lineH;
       if (typeof txt === 'string') {
-        // Réduction taille de police à 42 pour éviter que le texte soit coupé 
+        // Réduction taille de police à 42 pour éviter que le texte soit coupé
         targetSvg.appendChild(tText(800, cyLine, txt, {
           "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"700"
         }));
@@ -3590,6 +3620,18 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
         renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers);
       }
     });
+  }
+
+  // Contrat didactique impression PDF : la phrase en dessous du plateau si > 1 tache
+  const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
+  if (!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)) {
+    const startY = trayY + trayH + 220;
+    targetSvg.appendChild(tText(800, startY, "Sous chaque tache, il y a le même nombre de billes.", {
+      "text-anchor":"middle",
+      "font-size":"42",
+      "fill":"#000",
+      "font-weight":"700"
+    }));
   }
 
   const cover = "rgb(0,0,0)";
