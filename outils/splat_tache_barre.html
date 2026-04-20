@@ -350,12 +350,15 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
         canvas.width = W; canvas.height = H;
         ctx = canvas.getContext('2d');
         splatPath = new Path2D(SPLAT_SHAPES[splatShape % SPLAT_SHAPES.length]);
-        ctx.lineWidth = dotR * 3.5; 
     } catch (e) { return []; }
 
     const allHiddenDots = [];
     
     for (let s of splats) {
+        // CORRECTION ICI : La ligne virtuelle qui repousse les billes s'adapte à l'échelle de la tache
+        // pour garantir qu'aucune bille ne dépasse, même si la tache est très petite !
+        ctx.lineWidth = ((dotR * 2) + 6) / s.scale; 
+
         const placed = [];
         for (let k = 0; k < countPerSplat; k++) {
             let safe = false;
@@ -590,7 +593,6 @@ function renderPages() {
           if (!isCorr) { 
               main.appendChild(createPageElement(chunk, false, false)); 
           } else {
-              // Logique simplifiée : Exercice toujours en 1er, Correction en 2ème
               main.appendChild(createPageElement(chunk, false, false));
               main.appendChild(createPageElement(chunk, true, isRVMode));
           }
