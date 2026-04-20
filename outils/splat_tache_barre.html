@@ -92,7 +92,8 @@
     .grid-mirror { direction: rtl; } 
     .grid-mirror .cell { direction: ltr; }
 
-    .page-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+    /* Label de page : URL en minuscules et positionné tout en bas */
+    .page-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; color: #64748b; text-transform: none; }
 
     @media print { 
       @page { size: A4; margin: 0; } 
@@ -100,9 +101,9 @@
       aside { display: none !important; } 
       main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; } 
       .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
+      .page:last-child { page-break-after: auto; } 
       .grid { border: 2px solid #000; } 
       .diagram-inner, .part-box, .total-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .page-label { display: none; } 
     }
   </style>
 </head>
@@ -134,6 +135,12 @@
               <input type="checkbox" id="hideDiagram" onchange="renderPages()">
               <span class="check-text" data-i18n="opt_hide_diag">Schéma à tracer</span>
           </label>
+      </div>
+      <div class="corr-group" style="margin-bottom: 0; margin-top: 8px;">
+        <label class="check-control">
+            <input type="checkbox" id="nonPropDiagram" onchange="renderPages()">
+            <span class="check-text" data-i18n="opt_non_prop">Schémas non proportionnels</span>
+        </label>
       </div>
     </div>
 
@@ -188,6 +195,7 @@
 const i18n = {
     fr: {
         title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
+        opt_non_prop: "Schémas non proportionnels",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
         content: "Contenu", target: "Cible Max", splat_count: "Nombre de taches",
         exercise: "Exercice", mode_hidden: "Trouver ce qui est caché ?", mode_draw: "Dessiner les points", mode_mix: "Mélange",
@@ -195,6 +203,7 @@ const i18n = {
     },
     en: {
         title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
+        opt_non_prop: "Non-proportional diagrams",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
         content: "Content", target: "Max Target", splat_count: "Number of Splats",
         exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mix",
@@ -470,6 +479,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     
     grid.className = mirror ? 'grid grid-mirror' : 'grid';
     const hideDiagram = document.getElementById('hideDiagram').checked;
+    const isNonProp = document.getElementById('nonPropDiagram').checked; // Récupération de l'option non proportionnelle
 
     chunk.forEach(item => {
         const cell = document.createElement('div'); 
@@ -508,9 +518,6 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         
         let htmlContent = getSplatSvg(item, showVisualDots);
         
-        // LA SOLUTION CHIRURGICALE EST ICI : On dessine TOUJOURS la boîte. 
-        // Si on ne doit pas montrer le total (comme dans "Dessiner les points" sur la fiche élève), 
-        // le texte à l'intérieur est juste vide ("").
         let displayBadge = showVisualTotal ? item.total : "";
         htmlContent += `<div class="total-badge">${displayBadge}</div>`;
         
@@ -522,8 +529,9 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         if (hideDiagram && !isCorrectionPage && !isTBI) {
             diag.innerHTML = ``;
         } else {
-            let flexVis = Math.max(item.visible, item.total * 0.05, 1);
-            let flexHid = Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
+            // Modification ICI pour appliquer l'option "Schémas non proportionnels"
+            let flexVis = isNonProp ? 1 : Math.max(item.visible, item.total * 0.05, 1);
+            let flexHid = isNonProp ? 1 : Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
 
             let minW = item.numSplats >= 4 ? "25px" : "40px";
             let fSize = item.numSplats >= 4 ? "14px" : "18px"; 
@@ -534,7 +542,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
             let bottomRowHTML = `<div class="row-bottom">`;
             
-            if (item.visible > 0 || textVis === "") {
+            if (item.visible > 0) {
                 bottomRowHTML += `<div class="part-box" style="flex-grow: ${flexVis}; flex-basis: 0; background: white; color: #2563eb; min-width: ${minW}; font-size: ${fSize};">${displayVis}</div>`;
             }
 
@@ -559,7 +567,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const label = document.createElement('div');
         label.className = 'page-label';
-        label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "— EXERCICE —";
+        // Le texte reste bien tel que tu l'as demandé et sera en minuscules grâce au CSS
+        label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "https://bourgault314.github.io/maths/outils/splat_tache_barre.html";
         inner.appendChild(label);
     }
     
