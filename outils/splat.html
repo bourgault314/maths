@@ -348,7 +348,19 @@
     body{background:#fff;color:#000}
     header,.wrap{display:none !important}
     .printArea{display:block}
-    .sheet{page-break-after:always;padding:6mm}
+    
+    /* Correction de la page blanche supplémentaire */
+    .sheet{padding:6mm; page-break-after: always; break-after: page;}
+    .sheet:last-child { page-break-after: auto; break-after: auto; }
+    
+    /* Style du pied de page (URL) sans trait */
+    .print-footer { 
+      text-align: center; 
+      font-size: 10pt; 
+      color: #666; 
+      margin-top: 6mm; 
+    }
+
     /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
     .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm}
@@ -2214,7 +2226,7 @@ function genEquationSigned(rng){
 
   let userMin = clamp(numberOr(numTotalMinEl.value, -20), -99, 99);
   let userMax = clamp(numberOr(numTotalMaxEl.value, 20), -99, 99);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
+  if(userMax < userMin) [userMax, userMin];
 
   const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
   const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
@@ -2905,8 +2917,9 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 }
 
 function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed) {
-  const fontSize = isPrint ? 56 : 45;
-  const charW = isPrint ? 30 : 24;
+  // Correction taille police d'indice mixte pour impression [cite: 1]
+  const fontSize = isPrint ? 42 : 45;
+  const charW = isPrint ? 22 : 24;
   const spaceW = isPrint ? 14 : 12;
   const splatW = isPrint ? 70 : 60;
   const splatR = isPrint ? 26 : 22;
@@ -3547,12 +3560,13 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   let boxW = 360;
   let boxX = tx - boxW/2;
 
+  // Correction centrage cadre TOTAL pour Mode C à l'impression [cite: 1]
   if(isModeD){
     boxW = 280;
     boxX = tx - boxW/2;
   } else if(isModeC){
     boxW = 280;
-    boxX = 120;
+    boxX = tx - boxW/2;
   }
   targetSvg.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
@@ -3568,8 +3582,9 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
     indices.forEach((txt, i) => {
       const cyLine = startY + i*lineH;
       if (typeof txt === 'string') {
+        // Réduction taille de police à 42 pour éviter que le texte soit coupé 
         targetSvg.appendChild(tText(800, cyLine, txt, {
-          "text-anchor":"middle","font-size":"56","fill":"#000","font-weight":"700"
+          "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
         renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers);
@@ -3800,6 +3815,13 @@ function printSheet(){
       grid.appendChild(holder);
     }
     sheet.appendChild(grid);
+    
+    // Ajout du footer avec l'URL en bas de chaque feuille sans trait séparateur
+    const footer = document.createElement("div");
+    footer.className = "print-footer";
+    footer.textContent = "aca.re/maths/splat";
+    sheet.appendChild(footer);
+
     printArea.appendChild(sheet);
   }
   window.print();
