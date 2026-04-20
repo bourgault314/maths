@@ -479,7 +479,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     
     grid.className = mirror ? 'grid grid-mirror' : 'grid';
     const hideDiagram = document.getElementById('hideDiagram').checked;
-    const isNonProp = document.getElementById('nonPropDiagram').checked; // Récupération de l'option non proportionnelle
+    const isNonProp = document.getElementById('nonPropDiagram').checked; 
 
     chunk.forEach(item => {
         const cell = document.createElement('div'); 
@@ -529,7 +529,6 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         if (hideDiagram && !isCorrectionPage && !isTBI) {
             diag.innerHTML = ``;
         } else {
-            // Modification ICI pour appliquer l'option "Schémas non proportionnels"
             let flexVis = isNonProp ? 1 : Math.max(item.visible, item.total * 0.05, 1);
             let flexHid = isNonProp ? 1 : Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
 
@@ -567,7 +566,6 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const label = document.createElement('div');
         label.className = 'page-label';
-        // Le texte reste bien tel que tu l'as demandé et sera en minuscules grâce au CSS
         label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "https://bourgault314.github.io/maths/outils/splat_tache_barre.html";
         inner.appendChild(label);
     }
@@ -589,15 +587,12 @@ function renderPages() {
       if (isTBI) {
           main.appendChild(createPageElement(chunk, false, false));
       } else {
-          if (!isCorr) { main.appendChild(createPageElement(chunk, false, false)); } 
-          else {
-              if (isRVMode) {
-                  main.appendChild(createPageElement(chunk, false, false));
-                  main.appendChild(createPageElement(chunk, true, true)); 
-              } else {
-                  main.appendChild(createPageElement(chunk, true, false));
-                  main.appendChild(createPageElement(chunk, false, false));
-              }
+          if (!isCorr) { 
+              main.appendChild(createPageElement(chunk, false, false)); 
+          } else {
+              // Logique simplifiée : Exercice toujours en 1er, Correction en 2ème
+              main.appendChild(createPageElement(chunk, false, false));
+              main.appendChild(createPageElement(chunk, true, isRVMode));
           }
       }
   }
