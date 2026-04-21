@@ -2,11 +2,12 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>MathsBars - Contrôle Total</title>
+    <title>MathsBars - Final Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
-        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1000px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
+        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1050px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
         
         .toolbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; flex-wrap: nowrap; }
         .toolbar-row.second { border-top: 1px solid #e2e8f0; padding-top: 8px; margin-bottom: 10px; }
@@ -17,8 +18,8 @@
         .spacing-control.disabled { opacity: 0.4; }
         .spacing-control.disabled input[type="range"] { pointer-events: none; }
 
-        .tool-selector { display: flex; align-items: center; background: #f1f5f9; padding: 3px; border-radius: 6px; gap: 3px; }
-        .tool-selector label { padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; color: #64748b; font-size: 13px;}
+        .tool-selector { display: flex; align-items: center; background: #f1f5f9; padding: 3px; border-radius: 6px; gap: 3px; flex-wrap: wrap;}
+        .tool-selector label { padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; color: #64748b; font-size: 13px;}
         .tool-selector input[type="radio"] { display: none; }
         .tool-selector input[type="radio"]:checked + label { background: white; color: #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
@@ -26,24 +27,28 @@
         .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
         .color-swatch.active { border-color: #0f172a; transform: scale(1.15); }
 
-        .lines-container { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; padding-right: 5px;}
-        .line-input { display: flex; gap: 8px; align-items: center; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;}
+        .lines-container { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; padding-right: 5px;}
+        .line-input { display: flex; gap: 6px; align-items: center; background: #f8fafc; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;}
         .line-input input[type="text"].main-input { flex-grow: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; font-family: monospace; }
-        .line-input input[type="text"].total-input { width: 60px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
+        .line-input input[type="text"].total-input { width: 50px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
         
         button { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; white-space: nowrap;}
         .btn-add { background: #3b82f6; color: white; } .btn-add:hover { background: #2563eb; }
         .btn-remove { background: #ef4444; color: white; padding: 4px 8px; } .btn-remove:hover { background: #dc2626; }
+        .btn-move { background: #cbd5e1; color: #0f172a; padding: 4px 6px; font-size: 10px;} .btn-move:hover:not(:disabled) { background: #94a3b8; } .btn-move:disabled { opacity: 0.3; cursor: default; }
         
-        .btn-export { background: #10b981; color: white; font-size: 14px;} .btn-export:hover { background: #059669; }
-        .btn-copy { background: #6366f1; color: white; font-size: 14px;} .btn-copy:hover { background: #4f46e5; }
+        .btn-export { background: #10b981; color: white; font-size: 13px;} .btn-export:hover { background: #059669; }
+        .btn-copy { background: #6366f1; color: white; font-size: 13px;} .btn-copy:hover { background: #4f46e5; }
+        .btn-save { background: #f59e0b; color: white; font-size: 13px;} .btn-save:hover { background: #d97706; }
+        .btn-load { background: #8b5cf6; color: white; font-size: 13px;} .btn-load:hover { background: #7c3aed; }
         
-        .btn-clear-braces { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 12px;}
+        .btn-clear-braces { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 12px;} .btn-clear-braces:hover { background: #e2e8f0; }
+        .btn-reset { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-size: 12px; } .btn-reset:hover { background: #fecaca; }
         
         .checkbox-label { display: flex; align-items: center; gap: 4px; font-weight: bold; color: #475569; cursor: pointer; font-size: 13px;}
         
-        .canvas-container { background: white; width: 100%; max-width: 1000px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 20px; overflow: auto; flex-grow: 1; display: flex; justify-content: center; align-items: flex-start;}
-        svg { user-select: none; }
+        .canvas-container { background: white; width: 100%; max-width: 1050px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 20px; overflow: auto; flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; touch-action: none;}
+        svg { user-select: none; touch-action: none; }
         .bar { cursor: pointer; transition: filter 0.1s; }
         .bar:hover rect { filter: brightness(0.95); }
         .bar.brace-ready rect { stroke: #f59e0b; stroke-width: 4; stroke-dasharray: 4,4; }
@@ -59,7 +64,7 @@
     <div class="top-panel">
         <div class="toolbar-row">
             <div style="display: flex; gap: 12px; align-items: center;">
-                <h1 class="brand">MathsBars</h1>
+                <h1 class="brand">MathsBars Pro</h1>
                 <button class="btn-add" onclick="addLine()">+ Ligne</button>
                 <label class="checkbox-label" style="cursor: pointer;">
                     <input type="checkbox" id="chkGlue" onchange="toggleGlue()"> 🧲 Coller
@@ -69,16 +74,25 @@
                     <input type="range" id="gapSlider" min="5" max="100" value="40" oninput="renderAll()">
                 </div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier l'image</button>
-                <button class="btn-export" onclick="exportToPng()">💾 Sauvegarder (PNG)</button>
+            <div style="display: flex; gap: 6px;">
+                <button class="btn-save" onclick="saveProject()">💾 Sauvegarder Projet</button>
+                <button class="btn-load" onclick="document.getElementById('fileLoad').click()">📂 Charger Projet</button>
+                <input type="file" id="fileLoad" style="display:none" accept=".json" onchange="loadProject(event)">
+                
+                <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
+                
+                <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier (Word)</button>
+                <button class="btn-export" onclick="exportToPng()">🖼️ Export PNG</button>
             </div>
         </div>
 
         <div class="toolbar-row second">
             <div style="display: flex; align-items: center;">
                 <div class="tool-selector">
-                    <input type="radio" id="toolHatch" name="tool" value="hatch" checked onchange="setTool('hatch')">
+                    <input type="radio" id="toolCursor" name="tool" value="cursor" checked onchange="setTool('cursor')">
+                    <label for="toolCursor">👆 Souris</label>
+
+                    <input type="radio" id="toolHatch" name="tool" value="hatch" onchange="setTool('hatch')">
                     <label for="toolHatch">🏁 Hachurer</label>
                     
                     <input type="radio" id="toolDash" name="tool" value="dash" onchange="setTool('dash')">
@@ -88,36 +102,127 @@
                     <label for="toolColor">🎨 Colorier</label>
                     
                     <input type="radio" id="toolBraceTop" name="tool" value="braceTop" onchange="setTool('braceTop')">
-                    <label for="toolBraceTop">⬆️ Accolade Haut</label>
+                    <label for="toolBraceTop">⬆️ Accol. Haut</label>
+                    
                     <input type="radio" id="toolBraceBottom" name="tool" value="braceBottom" onchange="setTool('braceBottom')">
-                    <label for="toolBraceBottom">⬇️ Accolade Bas</label>
+                    <label for="toolBraceBottom">⬇️ Accol. Bas</label>
+
+                    <input type="radio" id="toolText" name="tool" value="text" onchange="setTool('text')">
+                    <label for="toolText">📝 Texte</label>
+                    
+                    <input type="radio" id="toolArrow" name="tool" value="arrow" onchange="setTool('arrow')">
+                    <label for="toolArrow">↗️ Flèche (Arrondie)</label>
                 </div>
                 <div id="paletteUI" class="color-palette"></div>
             </div>
-            <button class="btn-clear-braces" onclick="clearBraces()">🗑️ Effacer Accolades</button>
+            
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-clear-braces" onclick="clearAnnotations()">🗑️ Effacer Annotations</button>
+                <button class="btn-reset" onclick="resetAll()">⚠️ Nouveau</button>
+            </div>
         </div>
 
         <div id="linesWrapper" class="lines-container"></div>
     </div>
 
     <div class="canvas-container">
-        <svg id="svgCanvas" width="900" height="300"></svg>
+        <svg id="svgCanvas" width="1050" height="350" 
+             onpointerdown="onSvgPointerDown(event)" 
+             onpointermove="onSvgPointerMove(event)" 
+             onpointerup="onSvgPointerUp(event)"
+             onpointerleave="onSvgPointerUp(event)"></svg>
     </div>
 
     <script>
-        let currentTool = 'hatch'; 
+        let currentTool = 'cursor'; 
         let braceStart = null; 
+        
+        let pointerState = { isDown: false, moved: false, startX: 0, startY: 0 };
+        let draggedTextData = null;
+        let drawingArrow = null;
         
         const colorPalette = ['#93c5fd', '#fdba74', '#86efac', '#f9a8d4', '#e2e8f0', '#d8b4fe', '#fef08a'];
         let activeColorIndex = 0; 
 
-        // Exemple réinitialisé
         let linesData = [
             { id: 1, text: "3[120]", showBracket: true, customTotal: "Total", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] },
             { id: 2, text: "1[40] ; 1[40] ; 1[40]", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [1, 1, 1], topBraces: [], bottomBraces: [] },
             { id: 3, text: "1[40] ; 2[x]", showBracket: true, customTotal: "120", hatchedBoxes: [0], dashedBoxes: [1], boxColors: [1, 6], topBraces: [], bottomBraces: [] }
         ];
+        let floatingTexts = [];
+        let floatingArrows = []; 
         let idCounter = 4;
+
+        function getSvgPt(e) {
+            const svg = document.getElementById('svgCanvas');
+            const pt = svg.createSVGPoint();
+            pt.x = e.clientX; pt.y = e.clientY;
+            return pt.matrixTransform(svg.getScreenCTM().inverse());
+        }
+
+        function onSvgPointerDown(e) {
+            pointerState.isDown = true;
+            pointerState.moved = false;
+            const pt = getSvgPt(e);
+            pointerState.startX = pt.x;
+            pointerState.startY = pt.y;
+
+            if (currentTool === 'arrow') {
+                drawingArrow = { id: Date.now(), x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y };
+            }
+        }
+
+        function onSvgPointerMove(e) {
+            if (!pointerState.isDown) return;
+            pointerState.moved = true;
+            const pt = getSvgPt(e);
+
+            if (draggedTextData && (currentTool === 'text' || currentTool === 'cursor')) {
+                draggedTextData.x = pt.x;
+                draggedTextData.y = pt.y;
+                renderAll();
+            } else if (drawingArrow && currentTool === 'arrow') {
+                drawingArrow.x2 = pt.x;
+                drawingArrow.y2 = pt.y;
+                renderAll();
+            }
+        }
+
+        function onSvgPointerUp(e) {
+            if (!pointerState.isDown) return;
+            pointerState.isDown = false;
+            const pt = getSvgPt(e);
+
+            if (drawingArrow && currentTool === 'arrow') {
+                if (Math.hypot(drawingArrow.x2 - drawingArrow.x1, drawingArrow.y2 - drawingArrow.y1) > 10) {
+                    floatingArrows.push(drawingArrow);
+                }
+                drawingArrow = null;
+                renderAll();
+                return;
+            }
+
+            if (draggedTextData) {
+                if (!pointerState.moved) {
+                    let newTxt = prompt("Modifier le texte (laissez vide pour supprimer) :", draggedTextData.text);
+                    if (newTxt !== null) {
+                        if (newTxt.trim() === "") floatingTexts = floatingTexts.filter(t => t.id !== draggedTextData.id);
+                        else draggedTextData.text = newTxt;
+                    }
+                }
+                draggedTextData = null;
+                renderAll();
+                return;
+            }
+
+            if (!pointerState.moved && currentTool === 'text' && (e.target.tagName === 'svg' || e.target.tagName === 'path')) {
+                let txt = prompt("Saisissez votre texte :");
+                if (txt) {
+                    floatingTexts.push({ id: Date.now(), x: pt.x, y: pt.y, text: txt });
+                    renderAll();
+                }
+            }
+        }
 
         function buildPalette() {
             const container = document.getElementById('paletteUI');
@@ -144,13 +249,71 @@
                         <input type="checkbox" ${line.showBracket ? 'checked' : ''} onchange="toggleBracket(${line.id}, this.checked)"> { }
                     </label>
                     <input type="text" class="total-input" placeholder="Total" value="${line.customTotal || ''}" oninput="updateTotalText(${line.id}, this.value)">
-                    <button class="btn-remove" onclick="removeLine(${line.id})">X</button>
+                    
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-left:5px;">
+                        <button class="btn-move" onclick="moveLine(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
+                        <button class="btn-move" onclick="moveLine(${index}, 1)" ${index === linesData.length - 1 ? 'disabled' : ''}>▼</button>
+                    </div>
+                    <button class="btn-remove" onclick="removeLine(${line.id})" style="margin-left:5px;">X</button>
                 `;
                 wrapper.appendChild(div);
             });
         }
 
-        function addLine() { linesData.push({ id: idCounter++, text: "1[10]", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [Math.floor(Math.random() * colorPalette.length)], topBraces: [], bottomBraces: [] }); renderUI(); renderAll(); }
+        function clearAnnotations() {
+            linesData.forEach(l => { 
+                l.topBraces = []; l.bottomBraces = []; 
+                l.hatchedBoxes = []; l.dashedBoxes = [];
+                l.showBracket = false; l.customTotal = "";
+            });
+            floatingTexts = []; floatingArrows = []; braceStart = null; 
+            renderUI(); renderAll();
+        }
+
+        function resetAll() {
+            if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau schéma ?")) {
+                linesData = [{ id: 1, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }];
+                idCounter = 2; floatingTexts = []; floatingArrows = []; braceStart = null;
+                document.getElementById('chkGlue').checked = false; toggleGlue();
+                renderUI(); renderAll();
+            }
+        }
+
+        function moveLine(index, direction) {
+            if (index + direction < 0 || index + direction >= linesData.length) return;
+            const temp = linesData[index];
+            linesData[index] = linesData[index + direction];
+            linesData[index + direction] = temp;
+            renderUI(); renderAll();
+        }
+
+        function saveProject() {
+            const dataToSave = { linesData, floatingTexts, floatingArrows, idCounter };
+            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'Projet_MathsBars.json';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        }
+
+        function loadProject(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (loadedData.linesData) linesData = loadedData.linesData;
+                    if (loadedData.floatingTexts) floatingTexts = loadedData.floatingTexts;
+                    if (loadedData.floatingArrows) floatingArrows = loadedData.floatingArrows;
+                    if (loadedData.idCounter) idCounter = loadedData.idCounter;
+                    renderUI(); renderAll();
+                } catch(err) { alert("Erreur: Impossible de lire ce fichier de sauvegarde."); }
+            };
+            reader.readAsText(file); event.target.value = ''; 
+        }
+
+        function addLine() { linesData.push({ id: idCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [Math.floor(Math.random() * colorPalette.length)], topBraces: [], bottomBraces: [] }); renderUI(); renderAll(); }
         function removeLine(id) { linesData = linesData.filter(l => l.id !== id); braceStart = null; renderUI(); renderAll(); }
         function updateLine(id, val) { const line = linesData.find(l => l.id === id); if (line) { line.text = val; renderAll(); } }
         function toggleBracket(id, isChecked) { const line = linesData.find(l => l.id === id); if (line) { line.showBracket = isChecked; renderAll(); } }
@@ -159,28 +322,25 @@
         function setTool(tool) { 
             currentTool = tool; braceStart = null; 
             document.getElementById('paletteUI').style.display = (tool === 'color') ? 'flex' : 'none';
+            
+            const svg = document.getElementById('svgCanvas');
+            if (tool === 'text') svg.style.cursor = 'text';
+            else if (tool === 'arrow') svg.style.cursor = 'crosshair';
+            else svg.style.cursor = 'default';
             renderAll(); 
         }
 
         function toggleGlue() {
             const isGlued = document.getElementById('chkGlue').checked;
             const panel = document.getElementById('spacingPanel');
-            if (isGlued) {
-                panel.classList.add('disabled');
-                document.getElementById('gapSlider').disabled = true;
-            } else {
-                panel.classList.remove('disabled');
-                document.getElementById('gapSlider').disabled = false;
-            }
+            if (isGlued) { panel.classList.add('disabled'); document.getElementById('gapSlider').disabled = true; } 
+            else { panel.classList.remove('disabled'); document.getElementById('gapSlider').disabled = false; }
             renderAll();
         }
-        
-        function clearBraces() {
-            linesData.forEach(l => { l.topBraces = []; l.bottomBraces = []; });
-            braceStart = null; renderAll();
-        }
 
-        function handleBoxClick(lineId, boxIndex) {
+        function handleBoxClick(lineId, boxIndex, event) {
+            if (currentTool === 'cursor' || currentTool === 'text' || currentTool === 'arrow') return;
+            
             const line = linesData.find(l => l.id === lineId);
             if (!line) return;
 
@@ -188,14 +348,11 @@
                 const idx = line.hatchedBoxes.indexOf(boxIndex);
                 if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
             } else if (currentTool === 'dash') {
-                // LOGIQUE POINTILLÉS MANUELS
                 const idx = line.dashedBoxes.indexOf(boxIndex);
                 if (idx > -1) line.dashedBoxes.splice(idx, 1); else line.dashedBoxes.push(boxIndex);
             } else if (currentTool === 'color') {
                 while(line.boxColors.length <= boxIndex) line.boxColors.push(0);
                 line.boxColors[boxIndex] = activeColorIndex;
-                const hatchIdx = line.hatchedBoxes.indexOf(boxIndex);
-                if (hatchIdx > -1) line.hatchedBoxes.splice(hatchIdx, 1);
             } else if (currentTool === 'braceTop' || currentTool === 'braceBottom') {
                 if (!braceStart) {
                     braceStart = { lineId, boxIndex };
@@ -208,9 +365,7 @@
                             if (currentTool === 'braceTop') line.topBraces.push({start, end, text: txt});
                             else line.bottomBraces.push({start, end, text: txt});
                         }
-                    } else {
-                        alert("Les accolades doivent relier des cases de la MÊME ligne.");
-                    }
+                    } else { alert("Les accolades doivent relier des cases de la MÊME ligne."); }
                     braceStart = null;
                 }
             }
@@ -224,12 +379,11 @@
                 const match = p.match(/^([^\[]+)(?:\[(.*?)\])?$/);
                 let rawLeft = match ? match[1] : p;
                 let customText = match && match[2] !== undefined ? match[2] : undefined;
-                
                 let width = parseFloat(rawLeft.replace(',', '.'));
                 if (isNaN(width)) width = 10; 
-                
                 let textToDisplay = customText !== undefined ? customText : rawLeft;
-                return { width: width, text: textToDisplay };
+                let isVar = (textToDisplay.toLowerCase() === 'x' || textToDisplay === '?');
+                return { width: width, text: textToDisplay, isVar: isVar };
             }).filter(item => item !== null);
         }
 
@@ -243,16 +397,42 @@
             return `M ${x} ${y} C ${x+d} ${y}, ${x+d} ${y+5}, ${x+d} ${y+10} L ${x+d} ${midY-10} C ${x+d} ${midY-5}, ${x+d+d/2} ${midY}, ${x+d+d} ${midY} C ${x+d+d/2} ${midY}, ${x+d} ${midY+5}, ${x+d} ${midY+10} L ${x+d} ${y+h-10} C ${x+d} ${y+h-5}, ${x+d} ${y+h}, ${x} ${y+h}`;
         }
 
+        // --- MATH POUR LA FLÈCHE COURBÉE (BÉZIER) ---
+        function getCurvedArrowPath(x1, y1, x2, y2) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const dist = Math.hypot(dx, dy);
+            
+            // Sécurité si clic très court
+            if (dist < 5) return `M ${x1} ${y1} L ${x2} ${y2}`;
+
+            // Calcul de la perpendiculaire pour faire "gonfler" la courbe
+            const nx = -dy / dist;
+            const ny = dx / dist;
+            
+            // La courbe gonfle de 25% de sa longueur (Max 100 pixels pour ne pas faire d'énormes boucles)
+            const bulge = Math.min(dist * 0.25, 100);
+            
+            const cx = midX + nx * bulge;
+            const cy = midY + ny * bulge;
+            
+            return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+        }
+
         function renderAll() {
             const svg = document.getElementById('svgCanvas');
             svg.innerHTML = `<defs>
                 <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse">
                     <path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="#94a3b8" stroke-width="2"/>
                 </pattern>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#334155" />
+                </marker>
             </defs>`;
 
             let parsedLines = linesData.map(l => ({ ...l, parsed: parseValues(l.text) }));
-            
             let maxTotal = 0;
             parsedLines.forEach(line => {
                 const total = line.parsed.reduce((sum, item) => sum + item.width, 0);
@@ -265,10 +445,18 @@
             const barHeight = 46;
             const rowSpacing = isGlued ? barHeight : barHeight + gapValue; 
             
-            const maxBarWidth = 750; 
-            const startX = 30; const startY = 40; 
+            const maxBarWidth = 700; 
+            
+            // NOUVEAU: Marge de 120 pixels à gauche pour avoir toute la place nécessaire !
+            const startX = 120; 
+            const startY = 50; 
 
-            svg.setAttribute("height", Math.max(300, parsedLines.length * rowSpacing + 80));
+            let maxItemY = 0;
+            floatingTexts.forEach(ft => { if (ft.y > maxItemY) maxItemY = ft.y; });
+            floatingArrows.forEach(fa => { if (fa.y1 > maxItemY) maxItemY = fa.y1; if (fa.y2 > maxItemY) maxItemY = fa.y2; });
+            if (drawingArrow) { if (drawingArrow.y2 > maxItemY) maxItemY = drawingArrow.y2; }
+            
+            svg.setAttribute("height", Math.max(350, parsedLines.length * rowSpacing + 80, maxItemY + 50));
 
             parsedLines.forEach((line, lineIndex) => {
                 const currentY = startY + (lineIndex * rowSpacing);
@@ -289,7 +477,15 @@
                     let cssClass = "bar";
                     if (braceStart && braceStart.lineId === line.id && braceStart.boxIndex === boxIndex) cssClass += " brace-ready";
                     group.setAttribute("class", cssClass);
-                    group.onclick = () => handleBoxClick(line.id, boxIndex);
+                    
+                    group.onpointerdown = (e) => {
+                        if (currentTool === 'text' || currentTool === 'arrow' || currentTool === 'cursor') {
+                            // Laisser le SVG gérer
+                        } else {
+                            e.stopPropagation(); 
+                            handleBoxClick(line.id, boxIndex, e);
+                        }
+                    };
 
                     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     rect.setAttribute("x", currentX); rect.setAttribute("y", currentY);
@@ -297,16 +493,12 @@
                     
                     if (isHatched) {
                         rect.setAttribute("fill", "url(#hatch)");
-                        rect.setAttribute("stroke", "#ef4444"); 
-                        rect.setAttribute("stroke-width", "2");
-                        rect.setAttribute("stroke-dasharray", "5,5"); // Hachure = bordure rouge pointillée
+                        rect.setAttribute("stroke", "#ef4444"); rect.setAttribute("stroke-width", "2");
+                        rect.setAttribute("stroke-dasharray", "5,5");
                     } else {
                         rect.setAttribute("fill", colorPalette[colorIndex]);
-                        rect.setAttribute("stroke", "#334155"); 
-                        rect.setAttribute("stroke-width", "2");
-                        if (isDashed) {
-                            rect.setAttribute("stroke-dasharray", "6,6"); // Pointillés manuels noirs
-                        }
+                        rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2");
+                        if (isDashed || item.isVar) rect.setAttribute("stroke-dasharray", "5,5");
                     }
 
                     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -314,7 +506,9 @@
                     text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif");
                     text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold");
                     
-                    text.setAttribute("fill", isHatched ? "#94a3b8" : "#0f172a");
+                    let textColor = "#0f172a";
+                    if (isHatched) textColor = "#94a3b8"; else if (item.isVar) textColor = "#854d0e";
+                    text.setAttribute("fill", textColor);
                     text.textContent = item.text.replace('.', ',');
 
                     group.appendChild(rect); group.appendChild(text);
@@ -369,6 +563,61 @@
                     svg.appendChild(totalText);
                 }
             });
+
+            // Affichage des Flèches Courbes enregistrées
+            floatingArrows.forEach(arrow => {
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", getCurvedArrowPath(arrow.x1, arrow.y1, arrow.x2, arrow.y2));
+                path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "3");
+                path.setAttribute("fill", "none");
+                path.setAttribute("marker-end", "url(#arrowhead)");
+                path.style.cursor = "pointer";
+                
+                path.onpointerdown = (e) => {
+                    if (currentTool === 'arrow') {
+                        e.stopPropagation();
+                        floatingArrows = floatingArrows.filter(a => a.id !== arrow.id);
+                        renderAll();
+                    }
+                };
+                svg.appendChild(path);
+            });
+
+            // Affichage de la Flèche Courbe en cours de dessin
+            if (drawingArrow) {
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", getCurvedArrowPath(drawingArrow.x1, drawingArrow.y1, drawingArrow.x2, drawingArrow.y2));
+                path.setAttribute("stroke", "#3b82f6"); path.setAttribute("stroke-width", "3");
+                path.setAttribute("stroke-dasharray", "4,4");
+                path.setAttribute("fill", "none");
+                path.setAttribute("marker-end", "url(#arrowhead)");
+                svg.appendChild(path);
+            }
+
+            // Affichage des Textes Libres
+            floatingTexts.forEach(ft => {
+                const txtNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                txtNode.setAttribute("x", ft.x);
+                txtNode.setAttribute("y", ft.y);
+                txtNode.setAttribute("text-anchor", "middle");
+                txtNode.setAttribute("dominant-baseline", "middle");
+                txtNode.setAttribute("font-family", "'Caveat', cursive, Arial, sans-serif");
+                txtNode.setAttribute("font-size", "26");
+                txtNode.setAttribute("fill", "#1e293b");
+                txtNode.style.cursor = (currentTool === 'cursor' || currentTool === 'text') ? "grab" : "default";
+                txtNode.textContent = ft.text;
+                
+                txtNode.onpointerdown = (e) => {
+                    if (currentTool === 'text' || currentTool === 'cursor') {
+                        e.stopPropagation(); 
+                        draggedTextData = ft;
+                        pointerState.isDown = true;
+                        pointerState.moved = false;
+                        txtNode.style.cursor = "grabbing";
+                    }
+                };
+                svg.appendChild(txtNode);
+            });
         }
 
         function exportToPng() {
@@ -377,7 +626,7 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            canvas.width = 900; canvas.height = svg.getAttribute('height');
+            canvas.width = 1050; canvas.height = svg.getAttribute('height');
             const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'});
             const url = URL.createObjectURL(blob);
             img.onload = () => {
@@ -396,7 +645,7 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
-            canvas.width = 900; canvas.height = svg.getAttribute('height');
+            canvas.width = 1050; canvas.height = svg.getAttribute('height');
             const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'});
             const url = URL.createObjectURL(blob);
             
@@ -408,10 +657,10 @@
                         const item = new ClipboardItem({ "image/png": blob });
                         await navigator.clipboard.write([item]);
                         btn.textContent = "✅ Copié !";
-                        setTimeout(() => btn.textContent = "📋 Copier l'image", 2000);
+                        setTimeout(() => btn.textContent = "📋 Copier (Word)", 2000);
                     } catch (err) {
-                        alert("Erreur: Votre navigateur ne permet pas la copie automatique depuis un fichier local. Utilisez le bouton Sauvegarder PNG.");
-                        btn.textContent = "📋 Copier l'image";
+                        alert("Erreur copie : Utilisez plutôt le bouton Export PNG.");
+                        btn.textContent = "📋 Copier (Word)";
                     }
                 });
             };
