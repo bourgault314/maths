@@ -743,7 +743,7 @@
       <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Tableau vide</option>
-        <option value="correction">Correction complète</option>
+        <option value="correction">Correction</option>
       </select>
       <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 auto; height:44px; padding:0 10px; gap:8px; white-space:nowrap; margin-left:0;">
         <input id="printDuplex" type="checkbox" style="margin:0; flex:0 0 auto;" />
@@ -2897,11 +2897,14 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
       const fSt = isX ? "italic" : "normal";
       const fW = isX ? "normal" : "900";
 
-      g.appendChild(mkText(x + segW/2, ySplit + hBottom/2, textToDisplay, {
+      const extraXShift = isX ? Number((api && api.xTextShiftForX) || 0) : 0;
+      const xOpticalShift = isX ? Math.min(3, Math.max(0, segW * 0.015)) : 0;
+      const dyForText = isX ? (((api && api.xTextDyForX) != null) ? api.xTextDyForX : "-0.02em") : dyVal;
+      g.appendChild(mkText(x + segW/2 + xOpticalShift + extraXShift, ySplit + hBottom/2, textToDisplay, {
         "text-anchor":"middle",
         "dominant-baseline":"middle",
         "alignment-baseline":"middle",
-        "dy":dyVal,
+        "dy":dyForText,
         "font-size":fs,
         "font-family":ff,
         "font-style":fSt,
@@ -3121,7 +3124,9 @@ function renderCard(card, revealState){
         w: 380, hTop: 86, hBottom: 86,
         stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
         ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
-        textDy:"0.10em", fontTop:70, fontBottom:70
+        textDy:"0.10em", fontTop:70, fontBottom:70,
+        xTextShiftForX: 0,
+        xTextDyForX:"-0.05em"
       });
 
       if (revealState > 0) {
@@ -3400,15 +3405,439 @@ function renderCard(card, revealState){
   }
 }
 
+
+function approxTextWidthForLabel(label, fontSize){
+  const s = String(label == null ? "" : label);
+  const n = Math.max(1, s.length);
+  return n * (Number(fontSize) || 0) * 0.56;
+}
+function minCellWidthForLabel(label, fontSize, pad){
+  const p = (pad == null) ? 22 : Number(pad) || 22;
+  if(label == null || label === "") return Math.max(54, p * 2);
+  return approxTextWidthForLabel(label, fontSize) + p;
+}
+function eqVisibleSum(side){
+  return sumArray(side && side.visible);
+}
+function coeffXLabel(n){
+  const c = Math.abs(Number(n) || 0);
+  if(c <= 0) return "0";
+  return c === 1 ? xChar : `${c}${xChar}`;
+}
+function formatEqSideFromCoeffVis(coeff, vis){
+  const c = Math.abs(Number(coeff) || 0);
+  const v = Math.abs(Number(vis) || 0);
+  if(c === 0 && v === 0) return "0";
+  if(c === 0) return String(v);
+  if(v === 0) return coeffXLabel(c);
+  return `${coeffXLabel(c)} + ${v}`;
+}
+function buildEquationSolveLines(eq){
+  const a = Math.max(0, Number(eq?.left?.tasks) || 0);
+  const b = Math.max(0, Number(eq?.right?.tasks) || 0);
+  const vl = Math.max(0, eqVisibleSum(eq?.left));
+  const vr = Math.max(0, eqVisibleSum(eq?.right));
+  const xVal = Number(eq?.x) || 0;
+
+  const lines = [];
+  function pushLine(leftCoeff, leftVis, rightCoeff, rightVis){
+    const line = `${formatEqSideFromCoeffVis(leftCoeff, leftVis)} = ${formatEqSideFromCoeffVis(rightCoeff, rightVis)}`;
+    if(!lines.length || lines[lines.length - 1] !== line) lines.push(line);
+  }
+
+  pushLine(a, vl, b, vr);
+
+  const commonX = Math.min(a, b);
+  const a2 = a - commonX;
+  const b2 = b - commonX;
+  if(commonX > 0){
+    pushLine(a2, vl, b2, vr);
+  }
+
+  const commonV = Math.min(vl, vr);
+  const vl2 = vl - commonV;
+  const vr2 = vr - commonV;
+  if(commonV > 0){
+    pushLine(a2, vl2, b2, vr2);
+  }
+
+  if(a2 > 1 && b2 === 0 && vl2 === 0 && vr2 > 0){
+    const finalLine = `${xChar} = ${xVal}`;
+    if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
+  } else if(b2 > 1 && a2 === 0 && vr2 === 0 && vl2 > 0){
+    const finalLine = `${xVal} = ${xChar}`;
+    if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
+  }
+
+  return lines.filter(Boolean);
+}
+function buildEquationTableParts(total, coeff, visSum, xVal, mode){
+  const totalSafe = Math.max(1, Number(total) || 1);
+  const coeffSafe = Math.max(0, Number(coeff) || 0);
+  const visSafe = Math.max(0, Number(visSum) || 0);
+  const xSafe = Math.max(1, Number(xVal) || 1);
+  const parts = [];
+
+  for(let i=0;i<coeffSafe;i++){
+    let label = "";
+    let measureLabel = "";
+    if(mode === "symbolic"){
+      label = xChar;
+      measureLabel = String(xSafe);
+    } else if(mode === "filled") {
+      label = String(xSafe);
+      measureLabel = label;
+    }
+    parts.push({ value:xSafe, label, measureLabel, hidden:true });
+  }
+  if(visSafe > 0){
+    const label = (mode === "blank") ? "" : String(visSafe);
+    parts.push({ value:visSafe, label, measureLabel: label, hidden:false });
+  }
+
+  if(parts.length === 0){
+    parts.push({ value:totalSafe, label:"", measureLabel:"", hidden:false });
+  }
+  return parts;
+}
+function buildEquationReductionModels(eq){
+  const xVal = Math.max(1, Number(eq?.x) || 1);
+  const a = Math.max(0, Number(eq?.left?.tasks) || 0);
+  const b = Math.max(0, Number(eq?.right?.tasks) || 0);
+  const vl = Math.max(0, eqVisibleSum(eq?.left));
+  const vr = Math.max(0, eqVisibleSum(eq?.right));
+
+  const models = [];
+  function pushModel(total, leftCoeff, leftVis, rightCoeff, rightVis, extras){
+    const totalSafe = Math.max(1, Number(total) || 1);
+    const sig = [totalSafe, leftCoeff, leftVis, rightCoeff, rightVis, extras && extras.unitFinal ? 1 : 0].join('|');
+    if(models.length && models[models.length-1]._sig === sig) return;
+    models.push({
+      total: totalSafe,
+      left: { coeff: Math.max(0, Number(leftCoeff) || 0), vis: Math.max(0, Number(leftVis) || 0) },
+      right:{ coeff: Math.max(0, Number(rightCoeff) || 0), vis: Math.max(0, Number(rightVis) || 0) },
+      unitFinal: !!(extras && extras.unitFinal),
+      _sig: sig
+    });
+  }
+
+  pushModel(eq.total, a, vl, b, vr);
+
+  const commonX = Math.min(a, b);
+  const a2 = a - commonX;
+  const b2 = b - commonX;
+  const total2 = Math.max(1, (Number(eq.total) || 1) - commonX * xVal);
+  pushModel(total2, a2, vl, b2, vr);
+
+  const commonV = Math.min(vl, vr);
+  const vl3 = vl - commonV;
+  const vr3 = vr - commonV;
+  const total3 = Math.max(1, total2 - commonV);
+  pushModel(total3, a2, vl3, b2, vr3);
+
+  const diffCoeff = Math.abs(a - b);
+  const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl3 === 0 && vr3 > 0) ||
+                            (b2 === 1 && a2 === 0 && vr3 === 0 && vl3 > 0);
+  if(diffCoeff >= 1 && !alreadySolvedUnit){
+    if(a2 > 1 && b2 === 0 && vl3 === 0 && vr3 > 0){
+      pushModel(xVal, 1, 0, 0, xVal, { unitFinal: true });
+    } else if(b2 > 1 && a2 === 0 && vr3 === 0 && vl3 > 0){
+      pushModel(xVal, 0, xVal, 1, 0, { unitFinal: true });
+    } else if(a2 >= b2){
+      pushModel(xVal, 1, 0, 0, xVal, { unitFinal: true });
+    } else {
+      pushModel(xVal, 0, xVal, 1, 0, { unitFinal: true });
+    }
+  }
+
+  return models.map(({_sig, ...rest}) => rest);
+}
+function drawEquationSingaporeTable(targetGroup, opts){
+  const total = Math.max(1, Number(opts.total) || 1);
+  const row1 = Array.isArray(opts.row1) ? opts.row1 : [];
+  const row2 = Array.isArray(opts.row2) ? opts.row2 : [];
+  const fontSize = Number(opts.fontSize) || 58;
+  const rowH = Number(opts.rowH) || 64;
+  const pad = (opts.pad == null) ? 28 : Number(opts.pad) || 28;
+  const baseW = Number(opts.baseW) || 620;
+  const stroke = opts.stroke || "#000";
+  const strokeWidth = Number(opts.strokeWidth) || 4;
+  const hiddenFill = opts.hiddenFill || "rgba(0,0,0,0.10)";
+  const visibleFill = opts.visibleFill || "rgba(255,255,255,0)";
+  const textColor = opts.textColor || "#000";
+  const mkRect = opts.rect;
+  const mkLine = opts.line;
+  const mkText = opts.text;
+  const compactEquation = !!opts.compactEquation;
+
+  const fixedUnitOpt = Number(opts.fixedUnit);
+  const hasFixedUnit = Number.isFinite(fixedUnitOpt) && fixedUnitOpt > 0;
+  const disableLabelInflation = !!opts.disableLabelInflation;
+  const minHiddenCellW = Math.max(0, Number(opts.minHiddenCellW) || 0);
+  const minVisibleCellW = Math.max(0, Number(opts.minVisibleCellW) || 0);
+  const maxWOpt = Number(opts.maxW);
+  const hasMaxW = Number.isFinite(maxWOpt) && maxWOpt > 0;
+  let unit = hasFixedUnit ? fixedUnitOpt : (baseW / total);
+  if(!compactEquation && !hasFixedUnit && !disableLabelInflation){
+    [...row1, ...row2].forEach(part => {
+      const val = Math.max(1, Number(part && part.value) || 1);
+      const widthLabel = (part && part.measureLabel != null) ? part.measureLabel : (part && part.label);
+      const minW = minCellWidthForLabel(widthLabel, fontSize, pad);
+      unit = Math.max(unit, minW / val);
+    });
+  }
+
+  let w = total * unit;
+  let rowMetrics = null;
+
+  if(compactEquation){
+    const hiddenCellW = Math.max(48, Number(opts.hiddenCellW) || 66);
+    const visibleMinW = Math.max(96, Number(opts.visibleMinW) || 150);
+    const visibleMaxW = Math.max(visibleMinW, Number(opts.visibleMaxW) || 220);
+    const tableMinW = Math.max(360, Number(opts.tableMinW) || 540);
+
+    function buildRowMetrics(parts){
+      const hiddenCount = parts.filter(p => p && p.hidden).length;
+      const visiblePart = parts.find(p => p && !p.hidden) || null;
+      const visibleLabel = visiblePart ? ((visiblePart.measureLabel != null) ? visiblePart.measureLabel : visiblePart.label) : "";
+      const visibleNeed = visiblePart ? clamp(minCellWidthForLabel(visibleLabel, fontSize, pad), visibleMinW, visibleMaxW) : 0;
+      return { hiddenCount, visiblePart, visibleNeed };
+    }
+
+    const m1 = buildRowMetrics(row1);
+    const m2 = buildRowMetrics(row2);
+    rowMetrics = [m1, m2];
+    w = Math.max(
+      tableMinW,
+      m1.hiddenCount * hiddenCellW + (m1.visiblePart ? m1.visibleNeed : 0),
+      m2.hiddenCount * hiddenCellW + (m2.visiblePart ? m2.visibleNeed : 0)
+    );
+
+    rowMetrics = rowMetrics.map(m => ({
+      ...m,
+      visibleW: m.visiblePart ? Math.max(m.visibleNeed, w - m.hiddenCount * hiddenCellW) : 0,
+      hiddenCellW
+    }));
+  } else {
+    function buildLinearMetrics(parts){
+      const mins = parts.map(part => ((part && part.hidden) ? minHiddenCellW : minVisibleCellW));
+      const widths = parts.map((part, idx) => {
+        const baseSegW = Math.max(1, (Number(part && part.value) || 0) * unit);
+        return Math.max(baseSegW, mins[idx]);
+      });
+
+      let totalW = widths.reduce((a,b)=>a+b, 0);
+      if(hasMaxW && totalW > maxWOpt){
+        let surplus = totalW - maxWOpt;
+        const reducibles = widths.map((w, idx) => Math.max(0, w - mins[idx]));
+        let reducibleTotal = reducibles.reduce((a,b)=>a+b, 0);
+        if(reducibleTotal > 0){
+          for(let i=0;i<widths.length;i++){
+            const reducible = reducibles[i];
+            if(reducible <= 0) continue;
+            const cut = Math.min(reducible, surplus * (reducible / reducibleTotal));
+            widths[i] = Math.max(mins[i], widths[i] - cut);
+          }
+          totalW = widths.reduce((a,b)=>a+b, 0);
+          if(totalW > maxWOpt + 0.5){
+            for(let i=widths.length-1;i>=0 && totalW > maxWOpt + 0.5;i--){
+              const extra = Math.max(0, widths[i] - mins[i]);
+              if(extra <= 0) continue;
+              const cut = Math.min(extra, totalW - maxWOpt);
+              widths[i] -= cut;
+              totalW -= cut;
+            }
+          }
+        }
+      }
+      const hiddenCount = parts.filter(part => part && part.hidden).length;
+      const visibleIndex = parts.findIndex(part => part && !part.hidden);
+      const visibleNeed = (visibleIndex >= 0) ? Math.max(minVisibleCellW, Math.max(1, (Number(parts[visibleIndex] && parts[visibleIndex].value) || 0) * unit)) : 0;
+      const hiddenNeed = hiddenCount > 0 ? Math.max(minHiddenCellW, Math.max(...parts.filter(part => part && part.hidden).map(part => Math.max(1, (Number(part && part.value) || 0) * unit)))) : 0;
+      return { widths, totalW, visibleIndex, hiddenCount, visibleNeed, hiddenNeed };
+    }
+
+    const m1 = buildLinearMetrics(row1);
+    const m2 = buildLinearMetrics(row2);
+    const forceCommonHiddenCellW = !!opts.forceCommonHiddenCellW;
+
+    if(forceCommonHiddenCellW){
+      const targetW = hasMaxW ? maxWOpt : Math.max(w, m1.totalW, m2.totalW);
+      const maxHiddenCount = Math.max(m1.hiddenCount || 0, m2.hiddenCount || 0, 0);
+      const maxVisibleNeed = Math.max(m1.visibleNeed || 0, m2.visibleNeed || 0, 0);
+      let commonHiddenCellW = Math.max(m1.hiddenNeed || 0, m2.hiddenNeed || 0, minHiddenCellW);
+      if(maxHiddenCount > 0){
+        const fitHiddenW = (targetW - maxVisibleNeed) / maxHiddenCount;
+        if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
+          commonHiddenCellW = Math.max(minHiddenCellW, Math.min(commonHiddenCellW, fitHiddenW));
+        }
+      }
+      function buildCommonMetrics(parts){
+        const hiddenCount = parts.filter(part => part && part.hidden).length;
+        const visibleIndex = parts.findIndex(part => part && !part.hidden);
+        const widths = parts.map(part => (part && part.hidden) ? commonHiddenCellW : 0);
+        let usedW = hiddenCount * commonHiddenCellW;
+        if(visibleIndex >= 0){
+          const visibleW = Math.max(minVisibleCellW, targetW - usedW);
+          widths[visibleIndex] = visibleW;
+          usedW += visibleW;
+        }
+        if(visibleIndex < 0 && widths.length){
+          widths[widths.length - 1] += Math.max(0, targetW - usedW);
+          usedW = widths.reduce((a,b)=>a+b, 0);
+        }
+        return { widths, totalW: usedW, visibleIndex, hiddenCount, hiddenCellW: commonHiddenCellW };
+      }
+      rowMetrics = [buildCommonMetrics(row1), buildCommonMetrics(row2)];
+      w = targetW;
+    } else {
+      w = Math.max(w, m1.totalW, m2.totalW);
+      if(hasMaxW) w = Math.min(w, maxWOpt);
+
+      [m1, m2].forEach(m => {
+        const extra = w - m.totalW;
+        if(extra > 0){
+          const idx = (m.visibleIndex >= 0) ? m.visibleIndex : (m.widths.length - 1);
+          if(idx >= 0) m.widths[idx] += extra;
+        }
+      });
+
+      rowMetrics = [m1, m2];
+    }
+  }
+
+  const x0 = (opts.cx != null) ? (Number(opts.cx) - w / 2) : (Number(opts.x) || 160);
+  const y0 = Number(opts.y) || 36;
+  const totalH = rowH * 2;
+
+  targetGroup.appendChild(mkRect({
+    x:x0, y:y0, width:w, height:totalH,
+    fill:"rgba(255,255,255,0)", stroke, "stroke-width":strokeWidth
+  }));
+  targetGroup.appendChild(mkLine({
+    x1:x0, y1:y0 + rowH, x2:x0 + w, y2:y0 + rowH,
+    stroke, "stroke-width":strokeWidth
+  }));
+
+  function drawRow(parts, rowIndex){
+    let x = x0;
+    const y = y0 + rowIndex * rowH;
+    const metrics = rowMetrics ? rowMetrics[rowIndex] : null;
+    for(let i=0;i<parts.length;i++){
+      const part = parts[i] || {};
+      let segW;
+      if(metrics){
+        if(Array.isArray(metrics.widths)){
+          segW = Math.max(1, Number(metrics.widths[i]) || 0);
+        } else {
+          segW = part.hidden ? metrics.hiddenCellW : metrics.visibleW;
+        }
+      } else {
+        segW = Math.max(1, (Number(part.value) || 0) * unit);
+      }
+      const label = (part.label == null) ? "" : String(part.label);
+      const fill = part.hidden ? hiddenFill : visibleFill;
+      targetGroup.appendChild(mkRect({x, y, width:segW, height:rowH, fill}));
+      if(label){
+        const isX = label === xChar || label === "x";
+        const xTargetFs = fontSize * 1.16;
+        const xMaxFs = Math.max(20, segW * 0.70);
+        const fs = isX ? Math.min(xTargetFs, xMaxFs) : fontSize;
+        targetGroup.appendChild(mkText(x + segW/2, y + rowH/2, label, {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "alignment-baseline":"middle",
+          "font-size": String(fs),
+          "fill": textColor,
+          "font-weight": isX ? "normal" : "900",
+          "font-family": isX ? "'Times New Roman', Times, serif" : "inherit",
+          "font-style": isX ? "italic" : "normal"
+        }));
+      }
+      x += segW;
+      if(i < parts.length - 1){
+        targetGroup.appendChild(mkLine({
+          x1:x, y1:y, x2:x, y2:y + rowH,
+          stroke, "stroke-width":strokeWidth
+        }));
+      }
+    }
+  }
+
+  drawRow(row1, 0);
+  drawRow(row2, 1);
+
+  return { x:x0, y:y0, w, h:totalH, right:x0 + w };
+}
+function drawEquationLines(targetGroup, lines, x, y, api){
+  const mkText = api.text;
+  const fill = api.fill || "#000";
+  const fontSize = Number(api.fontSize) || 54;
+  const gap = Number(api.gap) || 72;
+  const anchor = api.anchor || "start";
+  const fontFamily = api.fontFamily || "'Times New Roman', Times, serif";
+  const fontStyle = api.fontStyle || "italic";
+  const alignEquals = !!api.alignEquals;
+  const eqGap = Number(api.eqGap) || 18;
+  let cy = y;
+  for(const line of lines){
+    if(alignEquals){
+      const raw = String(line == null ? "" : line);
+      const eqIndex = raw.indexOf("=");
+      if(eqIndex >= 0){
+        const lhs = raw.slice(0, eqIndex).trim();
+        const rhs = raw.slice(eqIndex + 1).trim();
+        targetGroup.appendChild(mkText(x - eqGap, cy, lhs, {
+          "text-anchor": "end",
+          "font-size": String(fontSize),
+          "fill": fill,
+          "font-weight": "normal",
+          "font-family": fontFamily,
+          "font-style": fontStyle
+        }));
+        targetGroup.appendChild(mkText(x, cy, "=", {
+          "text-anchor": "middle",
+          "font-size": String(fontSize),
+          "fill": fill,
+          "font-weight": "normal",
+          "font-family": fontFamily,
+          "font-style": fontStyle
+        }));
+        targetGroup.appendChild(mkText(x + eqGap, cy, rhs, {
+          "text-anchor": "start",
+          "font-size": String(fontSize),
+          "fill": fill,
+          "font-weight": "normal",
+          "font-family": fontFamily,
+          "font-style": fontStyle
+        }));
+        cy += gap;
+        continue;
+      }
+    }
+    targetGroup.appendChild(mkText(x, cy, line, {
+      "text-anchor": anchor,
+      "font-size": String(fontSize),
+      "fill": fill,
+      "font-weight": "normal",
+      "font-family": fontFamily,
+      "font-style": fontStyle
+    }));
+    cy += gap;
+  }
+  return cy;
+}
+
 function renderCardEquation(card, revealState, useTokens){
   const eq = card._eq;
   const trays = card._eqTrays;
   const pos = card._eqPos;
   if(!eq || !trays || !pos) return;
-  const layer = svg; 
+  const layer = svg;
 
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
+  const hasAidTable = (card.family === "EQ" && revealState > 0);
 
   layer.appendChild(el("rect",{
     x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
@@ -3425,20 +3854,22 @@ function renderCardEquation(card, revealState, useTokens){
     stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
   }));
 
-  layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
-    "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
-  }));
-
-  if ((eq.left.tasks + eq.right.tasks) > 1) {
-    const isSigned = (card.family === "EQPM");
-    const ruleText = isSigned 
-        ? "Sous chaque tache se cache le même nombre." 
-        : "Sous chaque tache, il y a le même nombre de billes.";
-    layer.appendChild(text(800, 130, ruleText,{
-      "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
+  if(!hasAidTable){
+    layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
+      "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
+
+    if ((eq.left.tasks + eq.right.tasks) > 1) {
+      const isSigned = (card.family === "EQPM");
+      const ruleText = isSigned
+          ? "Sous chaque tache se cache le même nombre."
+          : "Sous chaque tache, il y a le même nombre de billes.";
+      layer.appendChild(text(800, 130, ruleText,{
+        "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
+      }));
+    }
   }
-  
+
   function drawSide(side, metaSide){
     const beadR = side.beadR ?? 26;
     const font = Math.max(18, Math.round(beadR * 0.95));
@@ -3510,7 +3941,72 @@ function renderCardEquation(card, revealState, useTokens){
 
   drawSide(pos.left, eq.left);
   drawSide(pos.right, eq.right);
+
+  if(hasAidTable){
+    const visL = eqVisibleSum(eq.left);
+    const visR = eqVisibleSum(eq.right);
+    const tableMode = (revealState === 1) ? "symbolic" : "filled";
+    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode);
+    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode);
+    const gTable = el("g", {id:"eqSingaporeTable"});
+    const projTableW = 660;
+    const layout = drawEquationSingaporeTable(gTable, {
+      cx: 520,
+      y: 34,
+      total: eq.total,
+      row1: row1Parts,
+      row2: row2Parts,
+      rect:(a)=>el("rect", a),
+      line:(a)=>el("line", a),
+      text:(x,y,t,a)=>text(x,y,t,a),
+      compactEquation: false,
+      baseW: projTableW,
+      maxW: projTableW,
+      forceCommonHiddenCellW: true,
+      disableLabelInflation: true,
+      minHiddenCellW: 68,
+      minVisibleCellW: 84,
+      rowH: 56,
+      fontSize: 50,
+      pad: 24,
+      stroke: "#000",
+      strokeWidth: 4,
+      hiddenFill: "rgba(0,0,0,0.10)",
+      visibleFill: "rgba(255,255,255,0)",
+      textColor: "#000"
+    });
+    layer.appendChild(gTable);
+
+    const lines = (revealState === 1) ? [buildEquationSolveLines(eq)[0]] : buildEquationSolveLines(eq);
+    const eqFontSize = revealState === 1 ? 40 : 38;
+    const eqAlignGap = 18;
+    const longestLhs = Math.max(0, ...lines.map(line => {
+      const raw = String(line == null ? "" : line);
+      const idx = raw.indexOf("=");
+      if(idx < 0) return 0;
+      return approxTextWidthForLabel(raw.slice(0, idx).trim(), eqFontSize);
+    }));
+    const eqLeftPad = 36;
+    const eqX = Math.max(1085, Math.round(layout.right + eqLeftPad + longestLhs + eqAlignGap));
+    const eqY = (revealState === 1)
+      ? 96
+      : (lines.length >= 4 ? 58 : 82);
+    const eqGap = (revealState === 1)
+      ? 44
+      : (lines.length >= 4 ? 34 : 40);
+    drawEquationLines(layer, lines, eqX, eqY, {
+      text:(x,y,t,a)=>text(x,y,t,a),
+      fill:"#000",
+      fontSize: eqFontSize,
+      gap: eqGap,
+      anchor:"start",
+      alignEquals: true,
+      eqGap: eqAlignGap
+    });
+  }
 }
+
+
 
 function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens){
   const revealAnswers = (printMode === "correction");
@@ -3521,6 +4017,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
 
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
+  const usePrintTables = (card.family === "EQ" && (printMode === "worksheet" || printMode === "correction"));
 
   targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
   targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
@@ -3531,8 +4028,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
 
   if ((eq.left.tasks + eq.right.tasks) > 1) {
     const isSigned = (card.family === "EQPM");
-    const ruleText = isSigned 
-        ? "Sous chaque tache se cache le même nombre." 
+    const ruleText = isSigned
+        ? "Sous chaque tache se cache le même nombre."
         : "Sous chaque tache, il y a le même nombre de billes.";
     targetSvg.appendChild(tText(800, 130, ruleText, {
       "text-anchor":"middle",
@@ -3541,7 +4038,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       "font-weight":"700"
     }));
   }
-  
+
   function drawSide(side, metaSide){
     const beadR = side.beadR ?? 26;
     const font = Math.max(18, Math.round(beadR * 0.95));
@@ -3592,7 +4089,101 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
 
   drawSide(pos.left, eq.left);
   drawSide(pos.right, eq.right);
+
+  if(!usePrintTables) return;
+
+  const gEq = tEl("g", {id:"eqPrintSteps"});
+  let currentY = 920;
+  const visL = eqVisibleSum(eq.left);
+  const visR = eqVisibleSum(eq.right);
+
+  if(printMode === "worksheet"){
+    drawEquationSingaporeTable(gEq, {
+      cx: 800,
+      y: currentY,
+      total: eq.total,
+      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank"),
+      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank"),
+      rect:(a)=>tEl("rect", a),
+      line:(a)=>tEl("line", a),
+      text:(x,y,t,a)=>tText(x,y,t,a),
+      baseW: 980,
+      rowH: 100,
+      fontSize: 86,
+      pad: 38,
+      stroke: "#000",
+      strokeWidth: 5,
+      hiddenFill: "rgba(0,0,0,0.10)",
+      visibleFill: "rgba(255,255,255,0)",
+      textColor: "#000"
+    });
+  } else {
+    const models = buildEquationReductionModels(eq);
+    const fullW = 1040;
+    const maxTableW = 1040;
+    const minHiddenPrintW = 76;
+    const minVisiblePrintW = 94;
+    const startX = 800 - fullW / 2;
+    const unit = fullW / Math.max(1, Number(eq.total) || 1);
+    const commonX = Math.min(Math.max(0, Number(eq.left?.tasks) || 0), Math.max(0, Number(eq.right?.tasks) || 0));
+
+    let alignedX = startX;
+    let shiftApplied = false;
+    models.forEach((model, idx) => {
+      if(idx > 0 && !shiftApplied && commonX > 0){
+        alignedX += commonX * Math.max(1, Number(eq.x) || 1) * unit;
+        shiftApplied = true;
+      }
+
+      const isSolvedUnitModel = (!model.unitFinal) && (((model.left.coeff === 1) && (model.right.coeff === 0) && (model.left.vis === 0) && (model.right.vis > 0)) || (((model.right.coeff === 1) && (model.left.coeff === 0) && (model.right.vis === 0) && (model.left.vis > 0))));
+      const mode = (model.unitFinal || isSolvedUnitModel) ? "symbolic" : ((idx === models.length - 1) ? "filled" : "symbolic");
+      drawEquationSingaporeTable(gEq, {
+        x: alignedX,
+        y: currentY,
+        total: model.total,
+        row1: buildEquationTableParts(model.total, model.left.coeff, model.left.vis, eq.x, mode),
+        row2: buildEquationTableParts(model.total, model.right.coeff, model.right.vis, eq.x, mode),
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        fixedUnit: unit,
+        baseW: fullW,
+        maxW: maxTableW,
+        disableLabelInflation: true,
+        rowH: 100,
+        fontSize: 86,
+        pad: 34,
+        stroke: "#000",
+        strokeWidth: 5,
+        hiddenFill: "rgba(0,0,0,0.10)",
+        visibleFill: "rgba(255,255,255,0)",
+        textColor: "#000",
+        minHiddenCellW: minHiddenPrintW,
+        minVisibleCellW: minVisiblePrintW
+      });
+      currentY += 250;
+    });
+
+    currentY += 40;
+    const lines = buildEquationSolveLines(eq);
+    const eqFontSize = (lines.length >= 4) ? 58 : 68;
+    const eqGap = (lines.length >= 4) ? 74 : 88;
+    drawEquationLines(gEq, lines, 800, currentY, {
+      text:(x,y,t,a)=>tText(x,y,t,a),
+      fill:"#000",
+      fontSize: eqFontSize,
+      gap: eqGap,
+      anchor:"start",
+      alignEquals: true,
+      eqGap: 24,
+      fontFamily: "'Times New Roman', Times, serif",
+      fontStyle: "italic"
+    });
+  }
+
+  targetSvg.appendChild(gEq);
 }
+
 
 /* Render impression */
 function renderCardIntoSvg(targetSvg, card, printMode){
@@ -4158,7 +4749,7 @@ document.getElementById("btnPrev").addEventListener("click", ()=>{
 });
 document.getElementById("btnNext").addEventListener("click", ()=>{
   if(cards.length===0) return;
-  const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+  const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "EQ";
   if(is3Steps && revealState < 2) {
       revealState++;
       updateUI();
@@ -4187,7 +4778,7 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="ArrowRight"){
     if(cards.length===0) return;
-    const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+    const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "EQ";
     if(is3Steps && revealState < 2) {
         revealState++;
         updateUI();
@@ -4202,7 +4793,7 @@ window.addEventListener("keydown",(e)=>{
   if(e.key===" "){
     e.preventDefault();
     if(cards.length){ 
-        const is3Steps = cards[idx].family === "U" || cards[idx].family === "N";
+        const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "EQ";
         if (is3Steps) {
             revealState = (revealState + 1) % 3;
         } else {
