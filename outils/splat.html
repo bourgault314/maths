@@ -3664,15 +3664,17 @@ function drawEquationSingaporeTable(targetGroup, opts){
 
     if(forceCommonHiddenCellW){
       const targetW = hasMaxW ? maxWOpt : Math.max(w, m1.totalW, m2.totalW);
-      const maxHiddenCount = Math.max(m1.hiddenCount || 0, m2.hiddenCount || 0, 0);
-      const maxVisibleNeed = Math.max(m1.visibleNeed || 0, m2.visibleNeed || 0, 0);
       let commonHiddenCellW = Math.max(m1.hiddenNeed || 0, m2.hiddenNeed || 0, minHiddenCellW);
-      if(maxHiddenCount > 0){
-        const fitHiddenW = (targetW - maxVisibleNeed) / maxHiddenCount;
-        if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
-          commonHiddenCellW = Math.max(minHiddenCellW, Math.min(commonHiddenCellW, fitHiddenW));
+      [m1, m2].forEach(m => {
+        if((m.hiddenCount || 0) > 0 && (m.visibleIndex || m.visibleIndex === 0)){
+          const fitHiddenW = (targetW - (m.visibleNeed || minVisibleCellW)) / m.hiddenCount;
+          if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
+            commonHiddenCellW = Math.min(commonHiddenCellW, fitHiddenW);
+          }
         }
-      }
+      });
+      commonHiddenCellW = Math.max(minHiddenCellW, commonHiddenCellW);
+
       function buildCommonMetrics(parts){
         const hiddenCount = parts.filter(part => part && part.hidden).length;
         const visibleIndex = parts.findIndex(part => part && !part.hidden);
@@ -3682,10 +3684,10 @@ function drawEquationSingaporeTable(targetGroup, opts){
           const visibleW = Math.max(minVisibleCellW, targetW - usedW);
           widths[visibleIndex] = visibleW;
           usedW += visibleW;
-        }
-        if(visibleIndex < 0 && widths.length){
-          widths[widths.length - 1] += Math.max(0, targetW - usedW);
-          usedW = widths.reduce((a,b)=>a+b, 0);
+        } else if(widths.length){
+          const equalHiddenW = targetW / Math.max(1, widths.length);
+          for(let i=0;i<widths.length;i++) widths[i] = equalHiddenW;
+          usedW = targetW;
         }
         return { widths, totalW: usedW, visibleIndex, hiddenCount, hiddenCellW: commonHiddenCellW };
       }
@@ -3950,7 +3952,7 @@ function renderCardEquation(card, revealState, useTokens){
     const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode);
     const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode);
     const gTable = el("g", {id:"eqSingaporeTable"});
-    const projTableW = 660;
+    const projTableW = 640;
     const layout = drawEquationSingaporeTable(gTable, {
       cx: 520,
       y: 34,
