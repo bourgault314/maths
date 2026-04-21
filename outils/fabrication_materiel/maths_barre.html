@@ -2,14 +2,23 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>MathsBars - Final Pro</title>
+    <title>MathsBars - La Perfection</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
-        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1050px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
+        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1100px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
         
-        .toolbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; flex-wrap: nowrap; }
+        .module-tabs { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; border-bottom: 2px solid #e2e8f0; padding-bottom: 2px; align-items: flex-end;}
+        .tab { padding: 6px 15px; background: #f1f5f9; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; color: #64748b; font-size: 14px; border: 1px solid transparent; border-bottom: none; white-space: nowrap; transition: 0.2s;}
+        .tab:hover { background: #e2e8f0; }
+        .tab.active { background: white; color: #3b82f6; border-color: #e2e8f0; margin-bottom: -2px; padding-bottom: 8px; border-bottom: 2px solid white; }
+        .btn-add-mod { padding: 6px 12px; background: transparent; color: #10b981; cursor: pointer; font-weight: bold; border: 2px dashed #10b981; border-radius: 6px 6px 0 0; font-size: 13px;}
+        .btn-add-mod:hover { background: #ecfdf5; }
+        .btn-del-mod { background: none; border: none; color: #ef4444; font-size: 12px; margin-left: 8px; cursor: pointer; padding: 0; }
+        .btn-del-mod:hover { color: #b91c1c; text-decoration: underline; }
+
+        .toolbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; flex-wrap: wrap; }
         .toolbar-row.second { border-top: 1px solid #e2e8f0; padding-top: 8px; margin-bottom: 10px; }
         
         .brand { color: #1e293b; font-size: 18px; font-weight: bold; margin: 0; padding-right: 15px; border-right: 1px solid #e2e8f0; }
@@ -23,11 +32,13 @@
         .tool-selector input[type="radio"] { display: none; }
         .tool-selector input[type="radio"]:checked + label { background: white; color: #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .color-palette { display: none; align-items: center; gap: 4px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #cbd5e1; }
+        .color-palette { display: flex; align-items: center; gap: 4px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #cbd5e1; transition: opacity 0.2s;}
+        .color-palette.hidden { visibility: hidden; opacity: 0; }
+        
         .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
-        .color-swatch.active { border-color: #0f172a; transform: scale(1.15); }
+        .color-swatch.active { border-color: #0f172a; transform: scale(1.15); box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
 
-        .lines-container { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; padding-right: 5px;}
+        .lines-container { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; padding-right: 5px;}
         .line-input { display: flex; gap: 6px; align-items: center; background: #f8fafc; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;}
         .line-input input[type="text"].main-input { flex-grow: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; font-family: monospace; }
         .line-input input[type="text"].total-input { width: 50px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
@@ -41,17 +52,17 @@
         .btn-copy { background: #6366f1; color: white; font-size: 13px;} .btn-copy:hover { background: #4f46e5; }
         .btn-save { background: #f59e0b; color: white; font-size: 13px;} .btn-save:hover { background: #d97706; }
         .btn-load { background: #8b5cf6; color: white; font-size: 13px;} .btn-load:hover { background: #7c3aed; }
+        .btn-undo { background: #334155; color: white; font-size: 13px;} .btn-undo:hover:not(:disabled) { background: #0f172a; } .btn-undo:disabled { opacity: 0.4; cursor: not-allowed;}
         
         .btn-clear-braces { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 12px;} .btn-clear-braces:hover { background: #e2e8f0; }
         .btn-reset { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-size: 12px; } .btn-reset:hover { background: #fecaca; }
         
         .checkbox-label { display: flex; align-items: center; gap: 4px; font-weight: bold; color: #475569; cursor: pointer; font-size: 13px;}
         
-        .canvas-container { background: white; width: 100%; max-width: 1050px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 20px; overflow: auto; flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; touch-action: none;}
+        .canvas-container { background: white; width: 100%; max-width: 1100px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 20px; overflow: auto; flex-grow: 1; display: flex; justify-content: center; align-items: flex-start; touch-action: none;}
         svg { user-select: none; touch-action: none; }
         .bar { cursor: pointer; transition: filter 0.1s; }
         .bar:hover rect { filter: brightness(0.95); }
-        .bar.brace-ready rect { stroke: #f59e0b; stroke-width: 4; stroke-dasharray: 4,4; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px;}
@@ -62,32 +73,33 @@
 <body>
 
     <div class="top-panel">
+        <div class="module-tabs" id="moduleTabs"></div>
+
         <div class="toolbar-row">
-            <div style="display: flex; gap: 12px; align-items: center;">
-                <h1 class="brand">MathsBars Pro</h1>
-                <button class="btn-add" onclick="addLine()">+ Ligne</button>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button class="btn-add" onclick="addLine()">+ Ligne au Module</button>
                 <label class="checkbox-label" style="cursor: pointer;">
-                    <input type="checkbox" id="chkGlue" onchange="toggleGlue()"> 🧲 Coller
+                    <input type="checkbox" id="chkGlue" onchange="toggleGlue()"> 🧲 Coller le Module
                 </label>
                 <div class="spacing-control" id="spacingPanel">
                     <label for="gapSlider">Écart :</label>
-                    <input type="range" id="gapSlider" min="5" max="100" value="40" oninput="renderAll()">
+                    <input type="range" id="gapSlider" min="5" max="100" value="40" oninput="changeGap()">
                 </div>
             </div>
-            <div style="display: flex; gap: 6px;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="btn-undo" id="btnUndo" onclick="undo()" disabled>↩️ Annuler</button>
+                <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
                 <button class="btn-save" onclick="saveProject()">💾 Sauvegarder Projet</button>
                 <button class="btn-load" onclick="document.getElementById('fileLoad').click()">📂 Charger Projet</button>
                 <input type="file" id="fileLoad" style="display:none" accept=".json" onchange="loadProject(event)">
-                
                 <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
-                
                 <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier (Word)</button>
                 <button class="btn-export" onclick="exportToPng()">🖼️ Export PNG</button>
             </div>
         </div>
 
         <div class="toolbar-row second">
-            <div style="display: flex; align-items: center;">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div class="tool-selector">
                     <input type="radio" id="toolCursor" name="tool" value="cursor" checked onchange="setTool('cursor')">
                     <label for="toolCursor">👆 Souris</label>
@@ -111,14 +123,14 @@
                     <label for="toolText">📝 Texte</label>
                     
                     <input type="radio" id="toolArrow" name="tool" value="arrow" onchange="setTool('arrow')">
-                    <label for="toolArrow">↗️ Flèche (Arrondie)</label>
+                    <label for="toolArrow">↗️ Flèche Courbe</label>
                 </div>
-                <div id="paletteUI" class="color-palette"></div>
+                <div id="paletteUI" class="color-palette hidden"></div>
             </div>
             
             <div style="display: flex; gap: 8px;">
                 <button class="btn-clear-braces" onclick="clearAnnotations()">🗑️ Effacer Annotations</button>
-                <button class="btn-reset" onclick="resetAll()">⚠️ Nouveau</button>
+                <button class="btn-reset" onclick="resetAll()">⚠️ Nouveau Document</button>
             </div>
         </div>
 
@@ -126,7 +138,7 @@
     </div>
 
     <div class="canvas-container">
-        <svg id="svgCanvas" width="1050" height="350" 
+        <svg id="svgCanvas" width="1050" height="400" 
              onpointerdown="onSvgPointerDown(event)" 
              onpointermove="onSvgPointerMove(event)" 
              onpointerup="onSvgPointerUp(event)"
@@ -135,8 +147,6 @@
 
     <script>
         let currentTool = 'cursor'; 
-        let braceStart = null; 
-        
         let pointerState = { isDown: false, moved: false, startX: 0, startY: 0 };
         let draggedTextData = null;
         let drawingArrow = null;
@@ -144,115 +154,127 @@
         const colorPalette = ['#93c5fd', '#fdba74', '#86efac', '#f9a8d4', '#e2e8f0', '#d8b4fe', '#fef08a'];
         let activeColorIndex = 0; 
 
-        let linesData = [
-            { id: 1, text: "3[120]", showBracket: true, customTotal: "Total", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] },
-            { id: 2, text: "1[40] ; 1[40] ; 1[40]", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [1, 1, 1], topBraces: [], bottomBraces: [] },
-            { id: 3, text: "1[40] ; 2[x]", showBracket: true, customTotal: "120", hatchedBoxes: [0], dashedBoxes: [1], boxColors: [1, 6], topBraces: [], bottomBraces: [] }
-        ];
-        let floatingTexts = [];
-        let floatingArrows = []; 
-        let idCounter = 4;
+        let appData = {
+            modules: [
+                {
+                    id: 1, name: "Module 1", isGlued: false, gapValue: 40,
+                    lines: [
+                        { id: 101, text: "3[120]", showBracket: true, customTotal: "Total", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] },
+                        { id: 102, text: "1[40] ; 1[40] ; 1[40]", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [1, 1, 1], topBraces: [], bottomBraces: [] },
+                        { id: 103, text: "1[40] ; 2[x]", showBracket: true, customTotal: "120", hatchedBoxes: [0], dashedBoxes: [1], boxColors: [1, 6], topBraces: [], bottomBraces: [] }
+                    ]
+                }
+            ],
+            floatingTexts: [],
+            floatingArrows: []
+        };
+        
+        let currentModuleId = 1;
+        let modIdCounter = 2;
+        let lineIdCounter = 200;
+        let historyStack = [];
+
+        function saveState() {
+            historyStack.push(JSON.stringify({appData, currentModuleId, modIdCounter, lineIdCounter}));
+            if (historyStack.length > 20) historyStack.shift(); 
+            document.getElementById('btnUndo').disabled = false;
+        }
+
+        function undo() {
+            if (historyStack.length > 0) {
+                const state = JSON.parse(historyStack.pop());
+                appData = state.appData; currentModuleId = state.currentModuleId; modIdCounter = state.modIdCounter; lineIdCounter = state.lineIdCounter;
+                document.getElementById('btnUndo').disabled = (historyStack.length === 0);
+                renderTabs();
+                const mod = getActiveModule();
+                if(mod) { document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); }
+                renderUI(); renderAll();
+            }
+        }
+
+        function getActiveModule() { return appData.modules.find(m => m.id === currentModuleId); }
+
+        function renderTabs() {
+            const container = document.getElementById('moduleTabs'); container.innerHTML = '';
+            appData.modules.forEach((mod, index) => {
+                const tab = document.createElement('div'); tab.className = `tab ${mod.id === currentModuleId ? 'active' : ''}`; tab.onclick = () => selectModule(mod.id);
+                let html = `<span>${mod.name}</span>`;
+                if (appData.modules.length > 1) { html += `<button class="btn-del-mod" onclick="deleteModule(event, ${mod.id})" title="Supprimer ce module">x</button>`; }
+                tab.innerHTML = html; container.appendChild(tab);
+            });
+            const addBtn = document.createElement('button'); addBtn.className = 'btn-add-mod'; addBtn.innerText = '+ Nouveau Module'; addBtn.onclick = addModule; container.appendChild(addBtn);
+        }
+
+        function selectModule(id) {
+            currentModuleId = id; renderTabs(); renderUI();
+            const mod = getActiveModule(); document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); renderAll();
+        }
+
+        function addModule() { saveState(); const newMod = { id: modIdCounter++, name: `Module ${appData.modules.length + 1}`, isGlued: false, gapValue: 40, lines: [{ id: lineIdCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }; appData.modules.push(newMod); selectModule(newMod.id); }
+        function deleteModule(event, id) { event.stopPropagation(); if (confirm("Voulez-vous supprimer ce module ?")) { saveState(); appData.modules = appData.modules.filter(m => m.id !== id); appData.modules.forEach((m, idx) => m.name = `Module ${idx + 1}`); if (currentModuleId === id) selectModule(appData.modules[0].id); else { renderTabs(); renderAll(); } } }
 
         function getSvgPt(e) {
-            const svg = document.getElementById('svgCanvas');
-            const pt = svg.createSVGPoint();
-            pt.x = e.clientX; pt.y = e.clientY;
+            const svg = document.getElementById('svgCanvas'); const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
             return pt.matrixTransform(svg.getScreenCTM().inverse());
         }
 
         function onSvgPointerDown(e) {
-            pointerState.isDown = true;
-            pointerState.moved = false;
-            const pt = getSvgPt(e);
-            pointerState.startX = pt.x;
-            pointerState.startY = pt.y;
-
-            if (currentTool === 'arrow') {
-                drawingArrow = { id: Date.now(), x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y };
-            }
+            pointerState.isDown = true; pointerState.moved = false; const pt = getSvgPt(e); pointerState.startX = pt.x; pointerState.startY = pt.y;
+            if (currentTool === 'arrow') { drawingArrow = { id: Date.now(), x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y }; }
         }
 
         function onSvgPointerMove(e) {
             if (!pointerState.isDown) return;
-            pointerState.moved = true;
-            const pt = getSvgPt(e);
-
-            if (draggedTextData && (currentTool === 'text' || currentTool === 'cursor')) {
-                draggedTextData.x = pt.x;
-                draggedTextData.y = pt.y;
-                renderAll();
-            } else if (drawingArrow && currentTool === 'arrow') {
-                drawingArrow.x2 = pt.x;
-                drawingArrow.y2 = pt.y;
-                renderAll();
-            }
+            pointerState.moved = true; const pt = getSvgPt(e);
+            if (draggedTextData && (currentTool === 'text' || currentTool === 'cursor')) { draggedTextData.x = pt.x; draggedTextData.y = pt.y; renderAll(); } 
+            else if (drawingArrow && currentTool === 'arrow') { drawingArrow.x2 = pt.x; drawingArrow.y2 = pt.y; renderAll(); }
         }
 
         function onSvgPointerUp(e) {
             if (!pointerState.isDown) return;
-            pointerState.isDown = false;
-            const pt = getSvgPt(e);
+            pointerState.isDown = false; const pt = getSvgPt(e);
 
             if (drawingArrow && currentTool === 'arrow') {
-                if (Math.hypot(drawingArrow.x2 - drawingArrow.x1, drawingArrow.y2 - drawingArrow.y1) > 10) {
-                    floatingArrows.push(drawingArrow);
-                }
-                drawingArrow = null;
-                renderAll();
-                return;
+                if (Math.hypot(drawingArrow.x2 - drawingArrow.x1, drawingArrow.y2 - drawingArrow.y1) > 10) { saveState(); appData.floatingArrows.push(drawingArrow); }
+                drawingArrow = null; renderAll(); return;
             }
 
             if (draggedTextData) {
                 if (!pointerState.moved) {
                     let newTxt = prompt("Modifier le texte (laissez vide pour supprimer) :", draggedTextData.text);
-                    if (newTxt !== null) {
-                        if (newTxt.trim() === "") floatingTexts = floatingTexts.filter(t => t.id !== draggedTextData.id);
-                        else draggedTextData.text = newTxt;
-                    }
-                }
-                draggedTextData = null;
-                renderAll();
-                return;
+                    if (newTxt !== null) { saveState(); if (newTxt.trim() === "") appData.floatingTexts = appData.floatingTexts.filter(t => t.id !== draggedTextData.id); else draggedTextData.text = newTxt; }
+                } else { saveState(); }
+                draggedTextData = null; renderAll(); return;
             }
 
             if (!pointerState.moved && currentTool === 'text' && (e.target.tagName === 'svg' || e.target.tagName === 'path')) {
-                let txt = prompt("Saisissez votre texte :");
-                if (txt) {
-                    floatingTexts.push({ id: Date.now(), x: pt.x, y: pt.y, text: txt });
-                    renderAll();
-                }
+                let txt = prompt("Saisissez votre texte :"); if (txt) { saveState(); appData.floatingTexts.push({ id: Date.now(), x: pt.x, y: pt.y, text: txt }); renderAll(); }
             }
         }
 
         function buildPalette() {
-            const container = document.getElementById('paletteUI');
-            container.innerHTML = '';
+            const container = document.getElementById('paletteUI'); container.innerHTML = '';
             colorPalette.forEach((color, index) => {
-                const swatch = document.createElement('div');
-                swatch.className = `color-swatch ${index === activeColorIndex ? 'active' : ''}`;
-                swatch.style.backgroundColor = color;
-                swatch.onclick = () => { activeColorIndex = index; buildPalette(); };
+                const swatch = document.createElement('div'); swatch.className = `color-swatch ${index === activeColorIndex ? 'active' : ''}`; swatch.style.backgroundColor = color;
+                swatch.onclick = () => { activeColorIndex = index; buildPalette(); setTool('color'); document.getElementById('toolColor').checked = true; };
                 container.appendChild(swatch);
             });
         }
 
         function renderUI() {
-            const wrapper = document.getElementById('linesWrapper');
-            wrapper.innerHTML = '';
-            linesData.forEach((line, index) => {
-                const div = document.createElement('div');
-                div.className = 'line-input';
+            const wrapper = document.getElementById('linesWrapper'); wrapper.innerHTML = ''; const mod = getActiveModule();
+            mod.lines.forEach((line, index) => {
+                const div = document.createElement('div'); div.className = 'line-input';
                 div.innerHTML = `
                     <span style="font-weight:bold; color:#475569; width: 20px; font-size:12px;">L.${index + 1}</span>
-                    <input type="text" class="main-input" value="${line.text}" oninput="updateLine(${line.id}, this.value)">
+                    <input type="text" class="main-input" value="${line.text}" onchange="updateLine(${line.id}, this.value)">
                     <label class="checkbox-label" title="Accolade">
                         <input type="checkbox" ${line.showBracket ? 'checked' : ''} onchange="toggleBracket(${line.id}, this.checked)"> { }
                     </label>
-                    <input type="text" class="total-input" placeholder="Total" value="${line.customTotal || ''}" oninput="updateTotalText(${line.id}, this.value)">
-                    
+                    <input type="text" class="total-input" placeholder="Total" value="${line.customTotal || ''}" onchange="updateTotalText(${line.id}, this.value)">
                     <div style="display:flex; flex-direction:column; gap:2px; margin-left:5px;">
                         <button class="btn-move" onclick="moveLine(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
-                        <button class="btn-move" onclick="moveLine(${index}, 1)" ${index === linesData.length - 1 ? 'disabled' : ''}>▼</button>
+                        <button class="btn-move" onclick="moveLine(${index}, 1)" ${index === mod.lines.length - 1 ? 'disabled' : ''}>▼</button>
                     </div>
                     <button class="btn-remove" onclick="removeLine(${line.id})" style="margin-left:5px;">X</button>
                 `;
@@ -260,114 +282,42 @@
             });
         }
 
-        function clearAnnotations() {
-            linesData.forEach(l => { 
-                l.topBraces = []; l.bottomBraces = []; 
-                l.hatchedBoxes = []; l.dashedBoxes = [];
-                l.showBracket = false; l.customTotal = "";
-            });
-            floatingTexts = []; floatingArrows = []; braceStart = null; 
-            renderUI(); renderAll();
-        }
+        function clearAnnotations() { saveState(); appData.modules.forEach(mod => { mod.lines.forEach(l => { l.topBraces = []; l.bottomBraces = []; l.hatchedBoxes = []; l.dashedBoxes = []; l.showBracket = false; l.customTotal = ""; }); }); appData.floatingTexts = []; appData.floatingArrows = []; renderUI(); renderAll(); }
+        function resetAll() { if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau document vierge ?")) { saveState(); appData = { modules: [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: [{ id: 101, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }], floatingTexts: [], floatingArrows: [] }; currentModuleId = 1; modIdCounter = 2; lineIdCounter = 200; document.getElementById('chkGlue').checked = false; toggleGlueVisual(); renderTabs(); renderUI(); renderAll(); } }
+        function moveLine(index, direction) { saveState(); const mod = getActiveModule(); if (index + direction < 0 || index + direction >= mod.lines.length) return; const temp = mod.lines[index]; mod.lines[index] = mod.lines[index + direction]; mod.lines[index + direction] = temp; renderUI(); renderAll(); }
+        
+        function saveProject() { const dataToSave = { appData: appData, modIdCounter: modIdCounter, lineIdCounter: lineIdCounter }; const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'Document_MathsBars.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+        function loadProject(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { saveState(); const loadedData = JSON.parse(e.target.result); if (loadedData.appData) { appData = loadedData.appData; modIdCounter = loadedData.modIdCounter; lineIdCounter = loadedData.lineIdCounter; } else if (loadedData.linesData) { appData.modules = [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: loadedData.linesData }]; appData.floatingTexts = loadedData.floatingTexts || []; appData.floatingArrows = loadedData.floatingArrows || []; currentModuleId = 1; modIdCounter = 2; } selectModule(appData.modules[0].id); } catch(err) { alert("Erreur: Impossible de lire ce fichier de sauvegarde."); } }; reader.readAsText(file); event.target.value = ''; }
 
-        function resetAll() {
-            if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau schéma ?")) {
-                linesData = [{ id: 1, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }];
-                idCounter = 2; floatingTexts = []; floatingArrows = []; braceStart = null;
-                document.getElementById('chkGlue').checked = false; toggleGlue();
-                renderUI(); renderAll();
-            }
-        }
-
-        function moveLine(index, direction) {
-            if (index + direction < 0 || index + direction >= linesData.length) return;
-            const temp = linesData[index];
-            linesData[index] = linesData[index + direction];
-            linesData[index + direction] = temp;
-            renderUI(); renderAll();
-        }
-
-        function saveProject() {
-            const dataToSave = { linesData, floatingTexts, floatingArrows, idCounter };
-            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'Projet_MathsBars.json';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-        }
-
-        function loadProject(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const loadedData = JSON.parse(e.target.result);
-                    if (loadedData.linesData) linesData = loadedData.linesData;
-                    if (loadedData.floatingTexts) floatingTexts = loadedData.floatingTexts;
-                    if (loadedData.floatingArrows) floatingArrows = loadedData.floatingArrows;
-                    if (loadedData.idCounter) idCounter = loadedData.idCounter;
-                    renderUI(); renderAll();
-                } catch(err) { alert("Erreur: Impossible de lire ce fichier de sauvegarde."); }
-            };
-            reader.readAsText(file); event.target.value = ''; 
-        }
-
-        function addLine() { linesData.push({ id: idCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [Math.floor(Math.random() * colorPalette.length)], topBraces: [], bottomBraces: [] }); renderUI(); renderAll(); }
-        function removeLine(id) { linesData = linesData.filter(l => l.id !== id); braceStart = null; renderUI(); renderAll(); }
-        function updateLine(id, val) { const line = linesData.find(l => l.id === id); if (line) { line.text = val; renderAll(); } }
-        function toggleBracket(id, isChecked) { const line = linesData.find(l => l.id === id); if (line) { line.showBracket = isChecked; renderAll(); } }
-        function updateTotalText(id, val) { const line = linesData.find(l => l.id === id); if (line) { line.customTotal = val; renderAll(); } }
+        function addLine() { saveState(); getActiveModule().lines.push({ id: lineIdCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [Math.floor(Math.random() * colorPalette.length)], topBraces: [], bottomBraces: [] }); renderUI(); renderAll(); }
+        function findLineModule(lineId) { for (let m of appData.modules) { const l = m.lines.find(x => x.id === lineId); if (l) return { line: l, mod: m }; } return null; }
+        function removeLine(id) { saveState(); const mod = getActiveModule(); mod.lines = mod.lines.filter(l => l.id !== id); renderUI(); renderAll(); }
+        function updateLine(id, val) { saveState(); const r = findLineModule(id); if (r) { r.line.text = val; renderAll(); } }
+        function toggleBracket(id, isChecked) { saveState(); const r = findLineModule(id); if (r) { r.line.showBracket = isChecked; renderAll(); } }
+        function updateTotalText(id, val) { saveState(); const r = findLineModule(id); if (r) { r.line.customTotal = val; renderAll(); } }
         
         function setTool(tool) { 
-            currentTool = tool; braceStart = null; 
-            document.getElementById('paletteUI').style.display = (tool === 'color') ? 'flex' : 'none';
-            
-            const svg = document.getElementById('svgCanvas');
-            if (tool === 'text') svg.style.cursor = 'text';
-            else if (tool === 'arrow') svg.style.cursor = 'crosshair';
-            else svg.style.cursor = 'default';
-            renderAll(); 
+            currentTool = tool; const palette = document.getElementById('paletteUI');
+            if(tool === 'color') palette.classList.remove('hidden'); else palette.classList.add('hidden');
+            const svg = document.getElementById('svgCanvas'); if (tool === 'text') svg.style.cursor = 'text'; else if (tool === 'arrow') svg.style.cursor = 'crosshair'; else svg.style.cursor = 'default';
         }
 
-        function toggleGlue() {
-            const isGlued = document.getElementById('chkGlue').checked;
-            const panel = document.getElementById('spacingPanel');
-            if (isGlued) { panel.classList.add('disabled'); document.getElementById('gapSlider').disabled = true; } 
-            else { panel.classList.remove('disabled'); document.getElementById('gapSlider').disabled = false; }
-            renderAll();
-        }
+        function toggleGlue() { saveState(); const mod = getActiveModule(); mod.isGlued = document.getElementById('chkGlue').checked; toggleGlueVisual(); renderAll(); }
+        function changeGap() { getActiveModule().gapValue = parseInt(document.getElementById('gapSlider').value); renderAll(); }
+        function toggleGlueVisual() { const isGlued = document.getElementById('chkGlue').checked; const panel = document.getElementById('spacingPanel'); if (isGlued) { panel.classList.add('disabled'); document.getElementById('gapSlider').disabled = true; } else { panel.classList.remove('disabled'); document.getElementById('gapSlider').disabled = false; } }
 
         function handleBoxClick(lineId, boxIndex, event) {
             if (currentTool === 'cursor' || currentTool === 'text' || currentTool === 'arrow') return;
-            
-            const line = linesData.find(l => l.id === lineId);
-            if (!line) return;
+            const res = findLineModule(lineId); if (!res) return; const line = res.line;
+            saveState();
 
-            if (currentTool === 'hatch') {
-                const idx = line.hatchedBoxes.indexOf(boxIndex);
-                if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
-            } else if (currentTool === 'dash') {
-                const idx = line.dashedBoxes.indexOf(boxIndex);
-                if (idx > -1) line.dashedBoxes.splice(idx, 1); else line.dashedBoxes.push(boxIndex);
-            } else if (currentTool === 'color') {
-                while(line.boxColors.length <= boxIndex) line.boxColors.push(0);
-                line.boxColors[boxIndex] = activeColorIndex;
+            if (currentTool === 'hatch') { const idx = line.hatchedBoxes.indexOf(boxIndex); if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
+            } else if (currentTool === 'dash') { const idx = line.dashedBoxes.indexOf(boxIndex); if (idx > -1) line.dashedBoxes.splice(idx, 1); else line.dashedBoxes.push(boxIndex);
+            } else if (currentTool === 'color') { while(line.boxColors.length <= boxIndex) line.boxColors.push(0); line.boxColors[boxIndex] = activeColorIndex;
             } else if (currentTool === 'braceTop' || currentTool === 'braceBottom') {
-                if (!braceStart) {
-                    braceStart = { lineId, boxIndex };
-                } else {
-                    if (braceStart.lineId === lineId) {
-                        let start = Math.min(braceStart.boxIndex, boxIndex);
-                        let end = Math.max(braceStart.boxIndex, boxIndex);
-                        let txt = prompt("Texte de l'accolade :");
-                        if (txt !== null) {
-                            if (currentTool === 'braceTop') line.topBraces.push({start, end, text: txt});
-                            else line.bottomBraces.push({start, end, text: txt});
-                        }
-                    } else { alert("Les accolades doivent relier des cases de la MÊME ligne."); }
-                    braceStart = null;
-                }
+                let txt = prompt("Texte de l'accolade (laissez vide pour annuler) :");
+                if (txt) { if (currentTool === 'braceTop') line.topBraces.push({start: boxIndex, end: boxIndex, text: txt}); else line.bottomBraces.push({start: boxIndex, end: boxIndex, text: txt}); } 
+                else { historyStack.pop(); }
             }
             renderAll();
         }
@@ -375,14 +325,10 @@
         function parseValues(str) {
             const parts = str.trim().split(/[\s;+]+/);
             return parts.map(p => {
-                if (!p) return null;
-                const match = p.match(/^([^\[]+)(?:\[(.*?)\])?$/);
-                let rawLeft = match ? match[1] : p;
-                let customText = match && match[2] !== undefined ? match[2] : undefined;
-                let width = parseFloat(rawLeft.replace(',', '.'));
-                if (isNaN(width)) width = 10; 
-                let textToDisplay = customText !== undefined ? customText : rawLeft;
-                let isVar = (textToDisplay.toLowerCase() === 'x' || textToDisplay === '?');
+                if (!p) return null; const match = p.match(/^([^\[]+)(?:\[(.*?)\])?$/);
+                let rawLeft = match ? match[1] : p; let customText = match && match[2] !== undefined ? match[2] : undefined;
+                let width = parseFloat(rawLeft.replace(',', '.')); if (isNaN(width)) width = 10; 
+                let textToDisplay = customText !== undefined ? customText : rawLeft; let isVar = (textToDisplay.toLowerCase() === 'x' || textToDisplay === '?');
                 return { width: width, text: textToDisplay, isVar: isVar };
             }).filter(item => item !== null);
         }
@@ -391,33 +337,29 @@
             const d = isTop ? -10 : 10; const midX = x + w / 2;
             return `M ${x} ${y} C ${x} ${y+d}, ${x+5} ${y+d}, ${x+10} ${y+d} L ${midX-10} ${y+d} C ${midX-5} ${y+d}, ${midX} ${y+d+d/2}, ${midX} ${y+d+d} C ${midX} ${y+d+d/2}, ${midX+5} ${y+d}, ${midX+10} ${y+d} L ${x+w-10} ${y+d} C ${x+w-5} ${y+d}, ${x+w} ${y+d}, ${x+w} ${y}`;
         }
-
         function drawVertBrace(x, y, h) {
             const d = 10; const midY = y + h/2;
             return `M ${x} ${y} C ${x+d} ${y}, ${x+d} ${y+5}, ${x+d} ${y+10} L ${x+d} ${midY-10} C ${x+d} ${midY-5}, ${x+d+d/2} ${midY}, ${x+d+d} ${midY} C ${x+d+d/2} ${midY}, ${x+d} ${midY+5}, ${x+d} ${midY+10} L ${x+d} ${y+h-10} C ${x+d} ${y+h-5}, ${x+d} ${y+h}, ${x} ${y+h}`;
         }
-
-        // --- MATH POUR LA FLÈCHE COURBÉE (BÉZIER) ---
+        
+        // --- LOGIQUE GÉOGRAPHIQUE DE LA FLÈCHE ---
         function getCurvedArrowPath(x1, y1, x2, y2) {
-            const midX = (x1 + x2) / 2;
-            const midY = (y1 + y2) / 2;
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const dist = Math.hypot(dx, dy);
-            
-            // Sécurité si clic très court
+            const dx = x2 - x1; const dy = y2 - y1; const dist = Math.hypot(dx, dy);
             if (dist < 5) return `M ${x1} ${y1} L ${x2} ${y2}`;
-
-            // Calcul de la perpendiculaire pour faire "gonfler" la courbe
-            const nx = -dy / dist;
-            const ny = dx / dist;
+            const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
+            let cx = midX; let cy = midY;
+            const bulge = Math.min(dist * 0.4, 100);
             
-            // La courbe gonfle de 25% de sa longueur (Max 100 pixels pour ne pas faire d'énormes boucles)
-            const bulge = Math.min(dist * 0.25, 100);
-            
-            const cx = midX + nx * bulge;
-            const cy = midY + ny * bulge;
-            
+            // Logique selon la position à l'écran :
+            if (Math.abs(dy) > Math.abs(dx)) {
+                // Flèche verticale
+                if (midX < 450) { cx = midX - bulge; } // A GAUCHE du centre de l'écran -> arrondi à gauche
+                else { cx = midX + bulge; }            // A DROITE du centre -> arrondi à droite
+            } else {
+                // Flèche horizontale
+                if (midY < 160) { cy = midY - bulge; } // En HAUT du schéma -> arrondi en haut
+                else { cy = midY + bulge; }            // En BAS du schéma -> arrondi en bas
+            }
             return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
         }
 
@@ -432,242 +374,104 @@
                 </marker>
             </defs>`;
 
-            let parsedLines = linesData.map(l => ({ ...l, parsed: parseValues(l.text) }));
-            let maxTotal = 0;
-            parsedLines.forEach(line => {
-                const total = line.parsed.reduce((sum, item) => sum + item.width, 0);
-                if (total > maxTotal) maxTotal = total;
-            });
-            if (maxTotal === 0) return;
-
-            const isGlued = document.getElementById('chkGlue').checked;
-            const gapValue = parseInt(document.getElementById('gapSlider').value);
-            const barHeight = 46;
-            const rowSpacing = isGlued ? barHeight : barHeight + gapValue; 
-            
             const maxBarWidth = 700; 
-            
-            // NOUVEAU: Marge de 120 pixels à gauche pour avoir toute la place nécessaire !
-            const startX = 120; 
-            const startY = 50; 
+            const startX = 120; // GRANDE MARGE À GAUCHE
+            let globalY = 140;  // ENORME MARGE EN HAUT !
+            const barHeight = 46;
 
-            let maxItemY = 0;
-            floatingTexts.forEach(ft => { if (ft.y > maxItemY) maxItemY = ft.y; });
-            floatingArrows.forEach(fa => { if (fa.y1 > maxItemY) maxItemY = fa.y1; if (fa.y2 > maxItemY) maxItemY = fa.y2; });
-            if (drawingArrow) { if (drawingArrow.y2 > maxItemY) maxItemY = drawingArrow.y2; }
-            
-            svg.setAttribute("height", Math.max(350, parsedLines.length * rowSpacing + 80, maxItemY + 50));
+            appData.modules.forEach(mod => {
+                let parsedLines = mod.lines.map(l => ({ ...l, parsed: parseValues(l.text) }));
+                let maxTotal = 0;
+                parsedLines.forEach(line => { const total = line.parsed.reduce((sum, item) => sum + item.width, 0); if (total > maxTotal) maxTotal = total; });
 
-            parsedLines.forEach((line, lineIndex) => {
-                const currentY = startY + (lineIndex * rowSpacing);
-                let currentX = startX;
-                let lineTotalVal = 0;
-                let boxCoords = []; 
-
-                line.parsed.forEach((item, boxIndex) => {
-                    const width = (item.width / maxTotal) * maxBarWidth; 
-                    lineTotalVal += item.width;
-                    boxCoords.push({ startX: currentX, endX: currentX + width });
+                if (maxTotal > 0) {
+                    const rowSpacing = mod.isGlued ? barHeight : barHeight + mod.gapValue; 
                     
-                    const isHatched = line.hatchedBoxes.includes(boxIndex);
-                    const isDashed = line.dashedBoxes && line.dashedBoxes.includes(boxIndex);
-                    const colorIndex = (line.boxColors && line.boxColors[boxIndex] !== undefined) ? line.boxColors[boxIndex] : (boxIndex % colorPalette.length);
+                    parsedLines.forEach((line, lineIndex) => {
+                        let currentX = startX; let lineTotalVal = 0; let boxCoords = []; 
+                        line.parsed.forEach((item, boxIndex) => {
+                            const width = (item.width / maxTotal) * maxBarWidth; lineTotalVal += item.width; boxCoords.push({ startX: currentX, endX: currentX + width });
+                            const isHatched = line.hatchedBoxes.includes(boxIndex); const isDashed = line.dashedBoxes && line.dashedBoxes.includes(boxIndex); const colorIndex = (line.boxColors && line.boxColors[boxIndex] !== undefined) ? line.boxColors[boxIndex] : (boxIndex % colorPalette.length);
 
-                    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    let cssClass = "bar";
-                    if (braceStart && braceStart.lineId === line.id && braceStart.boxIndex === boxIndex) cssClass += " brace-ready";
-                    group.setAttribute("class", cssClass);
-                    
-                    group.onpointerdown = (e) => {
-                        if (currentTool === 'text' || currentTool === 'arrow' || currentTool === 'cursor') {
-                            // Laisser le SVG gérer
-                        } else {
-                            e.stopPropagation(); 
-                            handleBoxClick(line.id, boxIndex, e);
+                            const group = document.createElementNS("http://www.w3.org/2000/svg", "g"); group.setAttribute("class", "bar");
+                            group.onpointerdown = (e) => { if (currentTool === 'text' || currentTool === 'arrow' || currentTool === 'cursor') {} else { e.stopPropagation(); handleBoxClick(line.id, boxIndex, e); } };
+
+                            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                            rect.setAttribute("x", currentX); rect.setAttribute("y", globalY); rect.setAttribute("width", width); rect.setAttribute("height", barHeight);
+                            if (isHatched) { rect.setAttribute("fill", "url(#hatch)"); rect.setAttribute("stroke", "#ef4444"); rect.setAttribute("stroke-width", "2"); rect.setAttribute("stroke-dasharray", "5,5"); } 
+                            else { rect.setAttribute("fill", colorPalette[colorIndex]); rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2"); if (isDashed || item.isVar) rect.setAttribute("stroke-dasharray", "5,5"); }
+
+                            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", globalY + 30); text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif"); text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold"); text.setAttribute("fill", isHatched ? "#94a3b8" : (item.isVar ? "#854d0e" : "#0f172a")); text.textContent = item.text.replace('.', ',');
+
+                            group.appendChild(rect); group.appendChild(text); svg.appendChild(group); currentX += width;
+                        });
+
+                        line.topBraces.forEach(brace => {
+                            if(!boxCoords[brace.start] || !boxCoords[brace.end]) return;
+                            const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
+                            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            path.setAttribute("d", drawHorizBrace(bStartX, globalY - 4, bWidth, true)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                            const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY - 26); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            svg.appendChild(path); svg.appendChild(txt);
+                        });
+
+                        line.bottomBraces.forEach(brace => {
+                            if(!boxCoords[brace.start] || !boxCoords[brace.end]) return;
+                            const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
+                            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            path.setAttribute("d", drawHorizBrace(bStartX, globalY + barHeight + 4, bWidth, false)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                            const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY + barHeight + 36); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            svg.appendChild(path); svg.appendChild(txt);
+                        });
+
+                        if (line.showBracket && currentX > startX) {
+                            const braceX = currentX + 10; const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            path.setAttribute("d", drawVertBrace(braceX, globalY, barHeight)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none"; svg.appendChild(path);
+                            const totalText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            totalText.setAttribute("x", braceX + 30); totalText.setAttribute("y", globalY + (barHeight/2) + 6); totalText.setAttribute("font-family", "Arial, sans-serif"); totalText.setAttribute("font-size", "20"); totalText.setAttribute("font-weight", "bold"); totalText.setAttribute("fill", "#0f172a"); totalText.textContent = line.customTotal !== "" ? line.customTotal : lineTotalVal; svg.appendChild(totalText);
                         }
-                    };
-
-                    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    rect.setAttribute("x", currentX); rect.setAttribute("y", currentY);
-                    rect.setAttribute("width", width); rect.setAttribute("height", barHeight);
-                    
-                    if (isHatched) {
-                        rect.setAttribute("fill", "url(#hatch)");
-                        rect.setAttribute("stroke", "#ef4444"); rect.setAttribute("stroke-width", "2");
-                        rect.setAttribute("stroke-dasharray", "5,5");
-                    } else {
-                        rect.setAttribute("fill", colorPalette[colorIndex]);
-                        rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2");
-                        if (isDashed || item.isVar) rect.setAttribute("stroke-dasharray", "5,5");
-                    }
-
-                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", currentY + 30);
-                    text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif");
-                    text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold");
-                    
-                    let textColor = "#0f172a";
-                    if (isHatched) textColor = "#94a3b8"; else if (item.isVar) textColor = "#854d0e";
-                    text.setAttribute("fill", textColor);
-                    text.textContent = item.text.replace('.', ',');
-
-                    group.appendChild(rect); group.appendChild(text);
-                    svg.appendChild(group);
-
-                    currentX += width;
-                });
-
-                line.topBraces.forEach(brace => {
-                    if(!boxCoords[brace.start] || !boxCoords[brace.end]) return;
-                    const bStartX = boxCoords[brace.start].startX;
-                    const bEndX = boxCoords[brace.end].endX;
-                    const bWidth = bEndX - bStartX;
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("d", drawHorizBrace(bStartX, currentY - 4, bWidth, true));
-                    path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.setAttribute("fill", "none");
-                    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", currentY - 22);
-                    txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif");
-                    txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a");
-                    txt.textContent = brace.text;
-                    svg.appendChild(path); svg.appendChild(txt);
-                });
-
-                line.bottomBraces.forEach(brace => {
-                    if(!boxCoords[brace.start] || !boxCoords[brace.end]) return;
-                    const bStartX = boxCoords[brace.start].startX;
-                    const bEndX = boxCoords[brace.end].endX;
-                    const bWidth = bEndX - bStartX;
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("d", drawHorizBrace(bStartX, currentY + barHeight + 4, bWidth, false));
-                    path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.setAttribute("fill", "none");
-                    const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", currentY + barHeight + 32);
-                    txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif");
-                    txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a");
-                    txt.textContent = brace.text;
-                    svg.appendChild(path); svg.appendChild(txt);
-                });
-
-                if (line.showBracket && currentX > startX) {
-                    const braceX = currentX + 10;
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("d", drawVertBrace(braceX, currentY, barHeight));
-                    path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.setAttribute("fill", "none");
-                    svg.appendChild(path);
-                    const totalText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    totalText.setAttribute("x", braceX + 30); totalText.setAttribute("y", currentY + (barHeight/2) + 6);
-                    totalText.setAttribute("font-family", "Arial, sans-serif"); totalText.setAttribute("font-size", "20");
-                    totalText.setAttribute("font-weight", "bold"); totalText.setAttribute("fill", "#0f172a");
-                    totalText.textContent = line.customTotal !== "" ? line.customTotal : lineTotalVal;
-                    svg.appendChild(totalText);
+                        globalY += rowSpacing; 
+                    });
+                    globalY += 50; 
                 }
             });
 
-            // Affichage des Flèches Courbes enregistrées
-            floatingArrows.forEach(arrow => {
+            appData.floatingArrows.forEach(arrow => {
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", getCurvedArrowPath(arrow.x1, arrow.y1, arrow.x2, arrow.y2));
-                path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "3");
-                path.setAttribute("fill", "none");
-                path.setAttribute("marker-end", "url(#arrowhead)");
-                path.style.cursor = "pointer";
-                
-                path.onpointerdown = (e) => {
-                    if (currentTool === 'arrow') {
-                        e.stopPropagation();
-                        floatingArrows = floatingArrows.filter(a => a.id !== arrow.id);
-                        renderAll();
-                    }
-                };
+                path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "3"); path.style.fill = "none"; path.setAttribute("marker-end", "url(#arrowhead)"); path.style.cursor = "pointer";
+                path.onpointerdown = (e) => { if (currentTool === 'arrow' || currentTool === 'cursor') { e.stopPropagation(); saveState(); appData.floatingArrows = appData.floatingArrows.filter(a => a.id !== arrow.id); renderAll(); } };
                 svg.appendChild(path);
             });
 
-            // Affichage de la Flèche Courbe en cours de dessin
             if (drawingArrow) {
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", getCurvedArrowPath(drawingArrow.x1, drawingArrow.y1, drawingArrow.x2, drawingArrow.y2));
-                path.setAttribute("stroke", "#3b82f6"); path.setAttribute("stroke-width", "3");
-                path.setAttribute("stroke-dasharray", "4,4");
-                path.setAttribute("fill", "none");
-                path.setAttribute("marker-end", "url(#arrowhead)");
+                path.setAttribute("stroke", "#3b82f6"); path.setAttribute("stroke-width", "3"); path.setAttribute("stroke-dasharray", "4,4"); path.style.fill = "none"; path.setAttribute("marker-end", "url(#arrowhead)");
                 svg.appendChild(path);
             }
 
-            // Affichage des Textes Libres
-            floatingTexts.forEach(ft => {
+            let maxItemY = globalY;
+            appData.floatingTexts.forEach(ft => {
+                if (ft.y > maxItemY) maxItemY = ft.y;
                 const txtNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                txtNode.setAttribute("x", ft.x);
-                txtNode.setAttribute("y", ft.y);
-                txtNode.setAttribute("text-anchor", "middle");
-                txtNode.setAttribute("dominant-baseline", "middle");
-                txtNode.setAttribute("font-family", "'Caveat', cursive, Arial, sans-serif");
-                txtNode.setAttribute("font-size", "26");
-                txtNode.setAttribute("fill", "#1e293b");
-                txtNode.style.cursor = (currentTool === 'cursor' || currentTool === 'text') ? "grab" : "default";
-                txtNode.textContent = ft.text;
-                
-                txtNode.onpointerdown = (e) => {
-                    if (currentTool === 'text' || currentTool === 'cursor') {
-                        e.stopPropagation(); 
-                        draggedTextData = ft;
-                        pointerState.isDown = true;
-                        pointerState.moved = false;
-                        txtNode.style.cursor = "grabbing";
-                    }
-                };
+                txtNode.setAttribute("x", ft.x); txtNode.setAttribute("y", ft.y); txtNode.setAttribute("text-anchor", "middle"); txtNode.setAttribute("dominant-baseline", "middle"); txtNode.setAttribute("font-family", "'Caveat', cursive, Arial, sans-serif"); txtNode.setAttribute("font-size", "26"); txtNode.setAttribute("fill", "#1e293b"); txtNode.style.cursor = (currentTool === 'cursor' || currentTool === 'text') ? "grab" : "default"; txtNode.textContent = ft.text;
+                txtNode.onpointerdown = (e) => { if (currentTool === 'text' || currentTool === 'cursor') { e.stopPropagation(); draggedTextData = ft; pointerState.isDown = true; pointerState.moved = false; txtNode.style.cursor = "grabbing"; } };
                 svg.appendChild(txtNode);
             });
-        }
-
-        function exportToPng() {
-            const svg = document.getElementById('svgCanvas');
-            const serializer = new XMLSerializer();
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            canvas.width = 1050; canvas.height = svg.getAttribute('height');
-            const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'});
-            const url = URL.createObjectURL(blob);
-            img.onload = () => {
-                ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'MathsBars_Schema.png'; a.click(); });
-            };
-            img.src = url;
-        }
-
-        function copyToClipboard() {
-            const btn = document.getElementById('btnCopyText');
-            btn.textContent = "⏳ Copie...";
-            const svg = document.getElementById('svgCanvas');
-            const serializer = new XMLSerializer();
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            canvas.width = 1050; canvas.height = svg.getAttribute('height');
-            const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'});
-            const url = URL.createObjectURL(blob);
             
-            img.onload = () => {
-                ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0);
-                canvas.toBlob(async blob => {
-                    try {
-                        const item = new ClipboardItem({ "image/png": blob });
-                        await navigator.clipboard.write([item]);
-                        btn.textContent = "✅ Copié !";
-                        setTimeout(() => btn.textContent = "📋 Copier (Word)", 2000);
-                    } catch (err) {
-                        alert("Erreur copie : Utilisez plutôt le bouton Export PNG.");
-                        btn.textContent = "📋 Copier (Word)";
-                    }
-                });
-            };
-            img.src = url;
+            appData.floatingArrows.forEach(fa => { if (fa.y1 > maxItemY) maxItemY = fa.y1; if (fa.y2 > maxItemY) maxItemY = fa.y2; });
+            if (drawingArrow && drawingArrow.y2 > maxItemY) maxItemY = drawingArrow.y2;
+            svg.setAttribute("height", Math.max(400, maxItemY + 50));
         }
 
-        buildPalette(); renderUI(); renderAll();
+        function exportToPng() { const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1050; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Document_MathsBars.png'; a.click(); }); }; img.src = url; }
+        function copyToClipboard() { const btn = document.getElementById('btnCopyText'); btn.textContent = "⏳ Copie..."; const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1050; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { const item = new ClipboardItem({ "image/png": blob }); await navigator.clipboard.write([item]); btn.textContent = "✅ Copié !"; setTimeout(() => btn.textContent = "📋 Copier (Word)", 2000); } catch (err) { alert("Erreur copie : Utilisez plutôt le bouton Export PNG."); btn.textContent = "📋 Copier (Word)"; } }); }; img.src = url; }
+
+        buildPalette(); renderTabs(); renderUI(); renderAll();
     </script>
 </body>
 </html>
