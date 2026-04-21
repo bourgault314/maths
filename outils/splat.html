@@ -738,11 +738,16 @@
       </label>
     </div>
 
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="btnPrint">Imprimer planche</button>
-      <label class="checkInline" title="Imprime avec la/les taches en mode révélé (réponses visibles)">
-        <input id="printAnswers" type="checkbox" />
-        <span>Avec réponses</span>
+    <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
+      <button class="btn" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
+      <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
+        <option value="statement">Énoncé seul</option>
+        <option value="worksheet">Tableau vide</option>
+        <option value="correction">Correction complète</option>
+      </select>
+      <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 auto; height:44px; padding:0 10px; gap:8px; white-space:nowrap; margin-left:0;">
+        <input id="printDuplex" type="checkbox" style="margin:0; flex:0 0 auto;" />
+        <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
       </label>
     </div>
     <div class="hint">
@@ -2854,8 +2859,9 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   g.appendChild(mkRect({x:x0, y:y0, width:w, height:(hTop+hBottom), rx:0, fill:"none", stroke, "stroke-width":strokeWidth}));
   g.appendChild(mkLine({x1:x0, y1:ySplit, x2:x0+w, y2:ySplit, stroke, "stroke-width":strokeWidth}));
 
+  const totalText = (api && Object.prototype.hasOwnProperty.call(api, "totalTextOverride")) ? api.totalTextOverride : String(total);
   g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
-  g.appendChild(mkText(cx, y0 + hTop/2, String(total), {
+  g.appendChild(mkText(cx, y0 + hTop/2, totalText, {
     "text-anchor":"middle",
     "dominant-baseline":"middle",
     "alignment-baseline":"middle",
@@ -2883,7 +2889,10 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
       const fillCol = flagsHidden[i] ? (api.hiddenTextColor || ink) : (api.visibleTextColor || ink);
       
       const isX = textToDisplay === "x" || textToDisplay === "𝑥";
-      const fs = isX ? String(Number(fontBottom)*1.2) : String(fontBottom);
+      const baseFs = Number(fontBottom) || 72;
+      const xTargetFs = baseFs * 1.2;
+      const xMaxFs = Math.max(18, segW * 0.72);
+      const fs = String(isX ? Math.min(xTargetFs, xMaxFs) : baseFs);
       const ff = isX ? "'Times New Roman', Times, serif" : "inherit";
       const fSt = isX ? "italic" : "normal";
       const fW = isX ? "normal" : "900";
@@ -3503,7 +3512,8 @@ function renderCardEquation(card, revealState, useTokens){
   drawSide(pos.right, eq.right);
 }
 
-function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens){
+function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens){
+  const revealAnswers = (printMode === "correction");
   const eq = card._eq;
   const trays = card._eqTrays;
   const pos = card._eqPos;
@@ -3585,8 +3595,12 @@ function renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, use
 }
 
 /* Render impression */
-function renderCardIntoSvg(targetSvg, card, revealAnswers){
+function renderCardIntoSvg(targetSvg, card, printMode){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
+
+  printMode = ["statement","worksheet","correction"].includes(printMode) ? printMode : "statement";
+  const revealAnswers = (printMode === "correction");
+  const wantsWorksheet = (printMode === "worksheet");
 
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
@@ -3608,7 +3622,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
 
   if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquationPrint(targetSvg, card, revealAnswers, tEl, tText, useTokens);
+    renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens);
     return;
   }
 
@@ -3705,8 +3719,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(106,167,255,0.20)", stroke:"rgba(106,167,255,0.55)","stroke-width":"3"}));
     }
 
-    if(revealAnswers){
-      const vis = sumArray(card.visible);
+    if(printMode === "worksheet" || printMode === "correction"){      const vis = sumArray(card.visible);
       const unit = card._unit || {};
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
@@ -3733,71 +3746,82 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       const hidW = (card.total > 0) ? fullW * (totalHid / card.total) : fullW;
       const unitW = (tasks > 0) ? hidW / tasks : hidW;
 
-      // ETAPE 1 : Tableau avec les '?'
-      const parts1 = [];
-      if(vis > 0) parts1.push({value: vis, hidden: false});
-      for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: "?"});
-      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
-        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-        visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-      });
-      currentY += 260;
+      // ETAPE 1 : premier tableau
+      if(printMode === "worksheet"){
+        const partsBlank = [];
+        if(vis > 0) partsBlank.push({value: vis, hidden: false, text: ""});
+        for(let i=0; i<tasks; i++) partsBlank.push({value: hiddenSums[0], hidden: true, text: ""});
+        drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsBlank, {
+          rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+          w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24,
+          totalTextOverride: ""
+        });
+      } else {
+        const parts1 = [];
+        if(vis > 0) parts1.push({value: vis, hidden: false});
+        for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: "?"});
+        drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
+          rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+          w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+        });
+        currentY += 260;
 
-      if (vis > 0) {
-          gBM.appendChild(tText(800, currentY, `${card.total} − ${vis} = ${totalHid}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
-          currentY += 100;
-          
-          if(tasks > 1) {
-              // ETAPE 2 : Tableau intermédiaire aligné
-              const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: "?"});
-              const cxHid = startX + visW + (hidW / 2);
-              drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
-                rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-                w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-                visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-              });
-              currentY += 260;
-          }
+        if (vis > 0) {
+            gBM.appendChild(tText(800, currentY, `${card.total} − ${vis} = ${totalHid}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
+            currentY += 100;
+            
+            if(tasks > 1) {
+                // ETAPE 2 : Tableau intermédiaire aligné
+                const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: "?"});
+                const cxHid = startX + visW + (hidW / 2);
+                drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
+                  rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+                  w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+                  visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+                });
+                currentY += 260;
+            }
+        }
+
+        if (tasks > 1) {
+            // CENTRAGE PARFAIT DE LA DIVISION SOUS LE TABLEAU DU RESTE
+            const cxHid = startX + visW + (hidW / 2);
+            gBM.appendChild(tText(cxHid, currentY, `${totalHid} ÷ ${tasks} = ${hiddenSums[0]}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
+            currentY += 100;
+
+            // ETAPE 3 : Tableau Unité (avec le ?)
+            const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
+            const cxUnit = startX + visW + (unitW / 2);
+            drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+              rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+              w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+              visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+            });
+            currentY += 260;
+        } else if (tasks === 1 && vis > 0) {
+            // ETAPE FINAL si 1 seule tache mais des billes visibles
+            const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
+            const cxUnit = startX + visW + (hidW / 2);
+            drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+              rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+              w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+              visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+            });
+            currentY += 260;
+        }
+
+        const partsFinal = [];
+        if(vis > 0) partsFinal.push({value: vis, hidden: false});
+        for(let i=0; i<tasks; i++) partsFinal.push({value: hiddenSums[0], hidden: true, text: String(hiddenSums[0])});
+        
+        drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsFinal, {
+          rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+          w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+        });
       }
-
-      if (tasks > 1) {
-          // CENTRAGE PARFAIT DE LA DIVISION SOUS LE TABLEAU DU RESTE
-          const cxHid = startX + visW + (hidW / 2);
-          gBM.appendChild(tText(cxHid, currentY, `${totalHid} ÷ ${tasks} = ${hiddenSums[0]}`, {"text-anchor":"middle", "font-size":"54", "fill":"#000", "font-weight":"700"}));
-          currentY += 100;
-
-          // ETAPE 3 : Tableau Unité (avec le ?)
-          const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
-          const cxUnit = startX + visW + (unitW / 2);
-          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
-            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-            w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-            visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-          });
-          currentY += 260;
-      } else if (tasks === 1 && vis > 0) {
-          // ETAPE FINAL si 1 seule tache mais des billes visibles
-          const parts3 = [{value: hiddenSums[0], hidden: true, text: "?"}];
-          const cxUnit = startX + visW + (hidW / 2);
-          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
-            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-            w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-            visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-          });
-          currentY += 260;
-      }
-
-      // ETAPE FINALE : Tableau résolu COMPLET
-      const partsFinal = [];
-      if(vis > 0) partsFinal.push({value: vis, hidden: false});
-      for(let i=0; i<tasks; i++) partsFinal.push({value: hiddenSums[0], hidden: true, text: String(hiddenSums[0])});
-      
-      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsFinal, {
-        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-        visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-      });
 
       targetSvg.appendChild(gBM);
     }
@@ -3871,7 +3895,7 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
     }
     
-    if(card.family === "N" && revealAnswers){
+    if(card.family === "N" && (printMode === "worksheet" || printMode === "correction")){
       const visSum = sumArray(card.visible);
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
@@ -3897,58 +3921,70 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
 
       const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${xChar} + ${visSum}` : `${tasks}${xChar}`) : (visSum > 0 ? `${xChar} + ${visSum}` : `${xChar}`);
 
-      // ETAPE 1 : Tableau initial avec les 'x'
-      const parts1 = [];
-      if(visSum > 0) parts1.push({value: visSum, hidden: false});
-      for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: xChar});
-      
-      drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
-        rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-        w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-        visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-      });
-      currentY += 260;
+      // ETAPE 1 : premier tableau
+      if(printMode === "worksheet"){
+        const partsBlank = [];
+        if(visSum > 0) partsBlank.push({value: visSum, hidden: false, text: ""});
+        for(let i=0; i<tasks; i++) partsBlank.push({value: hiddenSums[0], hidden: true, text: ""});
+        drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsBlank, {
+          rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+          w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+          visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 34,
+          totalTextOverride: ""
+        });
+      } else {
+        const parts1 = [];
+        if(visSum > 0) parts1.push({value: visSum, hidden: false});
+        for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: xChar});
+        
+        drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
+          rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+          w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+          visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 34
+        });
+        currentY += 260;
 
-      if (visSum > 0 && tasks > 1) {
-          // ETAPE 2 : Tableau intermédiaire parfaitement aligné
-          const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: xChar});
-          const cxHid = startX + visW + (hidW / 2);
-          drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
-            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-            w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-            visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-          });
-          currentY += 260;
-      }
+        if (visSum > 0 && tasks > 1) {
+            // ETAPE 2 : Tableau intermédiaire parfaitement aligné
+            const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: xChar});
+            const cxHid = startX + visW + (hidW / 2);
+            drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
+              rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+              w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+              visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 34
+            });
+            currentY += 260;
+        }
 
-      if (tasks > 1 || (tasks === 1 && visSum > 0)) {
-          // ETAPE 3 : Tableau unité
-          const parts3 = [{value: hiddenSums[0], hidden: true, text: xChar}];
-          const cxUnit = startX + visW + (unitW / 2);
-          drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
-            rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
-            w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-            visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 0
-          });
-          currentY += 260;
-      }
+        if (tasks > 1 || (tasks === 1 && visSum > 0)) {
+            // ETAPE 3 : Tableau unité
+            const parts3 = [{value: hiddenSums[0], hidden: true, text: xChar}];
+            const cxUnit = startX + visW + (unitW / 2);
+            drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
+              rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
+              w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
+              visibleTextColor:"#000", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 34
+            });
+            currentY += 260;
+        }
 
-      // ESPACE POUR LES ÉQUATIONS (Marges agrandies)
-      currentY += 80;
-      const addEq = (l, r) => {
-          const mathFont = "'Times New Roman', Times, serif";
-          gBM.appendChild(tText(800 - 40, currentY, l, {"text-anchor":"end", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
-          gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":"64", "fill":"#000", "font-weight":"700"}));
-          gBM.appendChild(tText(800 + 40, currentY, r, {"text-anchor":"start", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
-          currentY += 90;
-      };
+        // ESPACE POUR LES ÉQUATIONS (Marges agrandies)
+        currentY += 80;
+        const addEq = (l, r) => {
+            const mathFont = "'Times New Roman', Times, serif";
+            gBM.appendChild(tText(800 - 40, currentY, l, {"text-anchor":"end", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+            gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":"64", "fill":"#000", "font-weight":"700"}));
+            gBM.appendChild(tText(800 + 40, currentY, r, {"text-anchor":"start", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+            currentY += 90;
+        };
 
-      addEq(eqLeft1, String(card.total));
-      if (visSum > 0 && tasks > 1) {
-          addEq(`${tasks}${xChar}`, String(totalHid));
-      }
-      if (tasks > 1 || (tasks === 1 && visSum > 0)) {
-          addEq(`${xChar}`, String(hiddenSums[0]));
+        addEq(eqLeft1, String(card.total));
+        if (visSum > 0 && tasks > 1) {
+            addEq(`${tasks}${xChar}`, String(totalHid));
+        }
+        if (tasks > 1 || (tasks === 1 && visSum > 0)) {
+            addEq(`${xChar}`, String(hiddenSums[0]));
+        }
       }
 
       targetSvg.appendChild(gBM);
@@ -3972,41 +4008,63 @@ function renderCardIntoSvg(targetSvg, card, revealAnswers){
       targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
   }
+
 }
 
 function printSheet(){
   if(cards.length===0) return;
-  const showAnswers = !!document.getElementById("printAnswers").checked;
+  const printModeEl = document.getElementById("printMode");
+  const printDuplexEl = document.getElementById("printDuplex");
+  const printMode = printModeEl ? printModeEl.value : "statement";
+  const printDuplex = !!(printDuplexEl && printDuplexEl.checked);
   const printArea = document.getElementById("printArea");
   printArea.innerHTML = "";
-  const perSheet = 4; 
+  const perSheet = 4;
   const sheets = Math.ceil(cards.length / perSheet);
-  for(let s=0;s<sheets;s++){
+
+  function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
     sheet.className = "sheet";
     const grid = document.createElement("div");
     grid.className = "grid";
+
     for(let i=0;i<perSheet;i++){
-      const k = s*perSheet + i;
-      if(k >= cards.length) break;
       const holder = document.createElement("div");
       holder.className = "pCard";
-      const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
-      sv.setAttribute("viewBox","0 0 1600 2200");
-      sv.style.width = "100%";
-      renderCardIntoSvg(sv, cards[k], showAnswers);
-      holder.appendChild(sv);
+      const card = slotCards[i] || null;
+      if(card){
+        const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        sv.setAttribute("viewBox","0 0 1600 2200");
+        sv.style.width = "100%";
+        renderCardIntoSvg(sv, card, mode);
+        holder.appendChild(sv);
+      }
       grid.appendChild(holder);
     }
+
     sheet.appendChild(grid);
-    
-    // Ajout du footer avec l'URL en bas de chaque feuille sans trait séparateur
+
     const footer = document.createElement("div");
     footer.className = "print-footer";
     footer.textContent = "aca.re/maths/splat";
     sheet.appendChild(footer);
 
     printArea.appendChild(sheet);
+  }
+
+  for(let s=0;s<sheets;s++){
+    const frontSlots = Array(perSheet).fill(null);
+    for(let i=0;i<perSheet;i++){
+      const k = s*perSheet + i;
+      if(k < cards.length) frontSlots[i] = cards[k];
+    }
+
+    appendSheet(frontSlots, printDuplex ? "statement" : printMode);
+
+    if(printDuplex){
+      const backSlots = [frontSlots[1], frontSlots[0], frontSlots[3], frontSlots[2]];
+      appendSheet(backSlots, printMode);
+    }
   }
   window.print();
 }
