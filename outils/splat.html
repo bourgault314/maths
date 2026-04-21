@@ -351,8 +351,9 @@
     .sheet{page-break-after:always;padding:6mm}
     /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
-    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm}
+    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box}
     .pCard svg{width:100%;height:auto}
+    .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
     .print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 6mm; }
   }
 
@@ -4629,6 +4630,8 @@ function printSheet(){
         sv.style.width = "100%";
         renderCardIntoSvg(sv, card, mode);
         holder.appendChild(sv);
+      } else {
+        holder.classList.add("empty");
       }
       grid.appendChild(holder);
     }
