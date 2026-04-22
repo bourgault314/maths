@@ -50,6 +50,7 @@
         .btn-move { background: #cbd5e1; color: #0f172a; padding: 4px 6px; font-size: 10px;} .btn-move:hover:not(:disabled) { background: #94a3b8; } .btn-move:disabled { opacity: 0.3; cursor: default; }
         
         .btn-export { background: #10b981; color: white; font-size: 13px;} .btn-export:hover { background: #059669; }
+        .btn-export-svg { background: #0284c7; color: white; font-size: 13px;} .btn-export-svg:hover { background: #0369a1; }
         .btn-copy { background: #6366f1; color: white; font-size: 13px;} .btn-copy:hover { background: #4f46e5; }
         .btn-save { background: #f59e0b; color: white; font-size: 13px;} .btn-save:hover { background: #d97706; }
         .btn-load { background: #8b5cf6; color: white; font-size: 13px;} .btn-load:hover { background: #7c3aed; }
@@ -93,6 +94,11 @@
                     <label for="modGapSlider">Modules :</label>
                     <input type="range" id="modGapSlider" min="20" max="200" value="60" oninput="changeModGap()">
                 </div>
+
+                <div style="width: 1px; background: #e2e8f0; margin: 0 5px; height: 20px;"></div>
+                <label class="checkbox-label" style="cursor: pointer; color: #0f766e;">
+                    <input type="checkbox" id="chkSketch" onchange="renderAll()" checked> 🖍️ Style Crayon
+                </label>
             </div>
             
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -106,6 +112,7 @@
                 
                 <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier</button>
                 <button class="btn-export" onclick="exportToPng()">🖼️ Export PNG</button>
+                <button class="btn-export-svg" onclick="exportToSvg()">📥 Export SVG</button>
             </div>
         </div>
 
@@ -152,7 +159,7 @@
     </div>
 
     <div class="canvas-container">
-        <svg id="svgCanvas" width="1050" height="400" 
+        <svg id="svgCanvas" width="1050" height="400" xmlns="http://www.w3.org/2000/svg"
              onpointerdown="onSvgPointerDown(event)" 
              onpointermove="onSvgPointerMove(event)" 
              onpointerup="onSvgPointerUp(event)"
@@ -439,13 +446,21 @@
 
         function renderAll() {
             const svg = document.getElementById('svgCanvas');
+            const isSketch = document.getElementById('chkSketch').checked;
+            const mainFont = isSketch ? "'Caveat', cursive, Arial, sans-serif" : "Arial, sans-serif";
+
             svg.innerHTML = `<defs>
+                <style>@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600&amp;display=swap");</style>
                 <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse">
                     <path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="#94a3b8" stroke-width="2"/>
                 </pattern>
                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                     <polygon points="0 0, 10 3.5, 0 7" fill="#334155" />
                 </marker>
+                <filter id="sketch" x="-10%" y="-10%" width="120%" height="120%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
             </defs>`;
 
             const maxBarWidth = 700; 
@@ -484,9 +499,13 @@
                                 rect.setAttribute("fill", colorPalette[colorIndex]); rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2"); 
                                 if (isDashed) rect.setAttribute("stroke-dasharray", "5,5"); 
                             }
+                            if (isSketch) rect.setAttribute("filter", "url(#sketch)");
 
                             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                            text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", globalY + 30); text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif"); text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold"); 
+                            text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", globalY + (isSketch ? 28 : 30)); text.setAttribute("text-anchor", "middle"); 
+                            text.setAttribute("font-family", mainFont); 
+                            text.setAttribute("font-size", isSketch ? "26" : "20"); 
+                            text.setAttribute("font-weight", "bold"); 
                             text.setAttribute("fill", isHatched ? "#94a3b8" : "#0f172a"); 
                             text.textContent = item.text.replace('.', ',');
 
@@ -498,11 +517,21 @@
                             const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
                             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                             path.setAttribute("d", drawHorizBrace(bStartX, globalY - 4, bWidth, true)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
-                            
+                            if (isSketch) path.setAttribute("filter", "url(#sketch)");
+
                             const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                            txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY - 26); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY - (isSketch ? 22 : 26)); txt.setAttribute("text-anchor", "middle"); 
+                            txt.setAttribute("font-family", mainFont); txt.setAttribute("font-size", isSketch ? "24" : "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
                             
-                            const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.topBraces = line.topBraces.filter(b => b !== brace); renderAll(); } };
+                            const deleteBrace = (e) => { 
+                                e.stopPropagation(); 
+                                if(confirm("Supprimer cette accolade ?")) { 
+                                    saveState(); 
+                                    const realLine = mod.lines.find(l => l.id === line.id);
+                                    realLine.topBraces = realLine.topBraces.filter(b => b !== brace); 
+                                    renderAll(); 
+                                } 
+                            };
                             path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
                             svg.appendChild(path); svg.appendChild(txt);
                         });
@@ -512,20 +541,36 @@
                             const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
                             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                             path.setAttribute("d", drawHorizBrace(bStartX, globalY + barHeight + 4, bWidth, false)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
-                            
+                            if (isSketch) path.setAttribute("filter", "url(#sketch)");
+
                             const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                            txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY + barHeight + 36); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            txt.setAttribute("x", bStartX + bWidth/2); 
+                            txt.setAttribute("y", globalY + barHeight + (isSketch ? 45 : 48)); 
+                            txt.setAttribute("text-anchor", "middle"); 
+                            txt.setAttribute("font-family", mainFont); txt.setAttribute("font-size", isSketch ? "24" : "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
                             
-                            const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.bottomBraces = line.bottomBraces.filter(b => b !== brace); renderAll(); } };
+                            const deleteBrace = (e) => { 
+                                e.stopPropagation(); 
+                                if(confirm("Supprimer cette accolade ?")) { 
+                                    saveState(); 
+                                    const realLine = mod.lines.find(l => l.id === line.id);
+                                    realLine.bottomBraces = realLine.bottomBraces.filter(b => b !== brace); 
+                                    renderAll(); 
+                                } 
+                            };
                             path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
                             svg.appendChild(path); svg.appendChild(txt);
                         });
 
                         if (line.showBracket && currentX > startX) {
                             const braceX = currentX + 10; const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                            path.setAttribute("d", drawVertBrace(braceX, globalY, barHeight)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none"; svg.appendChild(path);
+                            path.setAttribute("d", drawVertBrace(braceX, globalY, barHeight)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none"; 
+                            if (isSketch) path.setAttribute("filter", "url(#sketch)");
+                            svg.appendChild(path);
+
                             const totalText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                            totalText.setAttribute("x", braceX + 30); totalText.setAttribute("y", globalY + (barHeight/2) + 6); totalText.setAttribute("font-family", "Arial, sans-serif"); totalText.setAttribute("font-size", "20"); totalText.setAttribute("font-weight", "bold"); totalText.setAttribute("fill", "#0f172a"); totalText.textContent = line.customTotal !== "" ? line.customTotal : lineTotalVal; svg.appendChild(totalText);
+                            totalText.setAttribute("x", braceX + 30); totalText.setAttribute("y", globalY + (barHeight/2) + (isSketch ? 4 : 6)); 
+                            totalText.setAttribute("font-family", mainFont); totalText.setAttribute("font-size", isSketch ? "26" : "20"); totalText.setAttribute("font-weight", "bold"); totalText.setAttribute("fill", "#0f172a"); totalText.textContent = line.customTotal !== "" ? line.customTotal : lineTotalVal; svg.appendChild(totalText);
                         }
                         globalY += rowSpacing; 
                     });
@@ -545,11 +590,20 @@
                                 const pathData = `M ${xPos} ${yTop} C ${xPos-d} ${yTop}, ${xPos-d} ${yTop+5}, ${xPos-d} ${yTop+10} L ${xPos-d} ${midY-10} C ${xPos-d} ${midY-5}, ${xPos-d-d/2} ${midY}, ${xPos-d-d} ${midY} C ${xPos-d-d/2} ${midY}, ${xPos-d} ${midY+5}, ${xPos-d} ${midY+10} L ${xPos-d} ${yBottom-10} C ${xPos-d} ${yBottom-5}, ${xPos-d} ${yBottom}, ${xPos} ${yBottom}`;
                                 
                                 path.setAttribute("d", pathData); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                                if (isSketch) path.setAttribute("filter", "url(#sketch)");
                                 
                                 const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                                txt.setAttribute("x", xPos - 35); txt.setAttribute("y", midY + 6); txt.setAttribute("text-anchor", "end"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = vb.text;
+                                txt.setAttribute("x", xPos - 35); txt.setAttribute("y", midY + (isSketch ? 4 : 6)); txt.setAttribute("text-anchor", "end"); 
+                                txt.setAttribute("font-family", mainFont); txt.setAttribute("font-size", isSketch ? "24" : "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = vb.text;
 
-                                const deleteVB = (e) => { e.stopPropagation(); if(confirm("Supprimer ce groupe ?")) { saveState(); mod.verticalBraces = mod.verticalBraces.filter(x => x !== vb); renderAll(); } };
+                                const deleteVB = (e) => { 
+                                    e.stopPropagation(); 
+                                    if(confirm("Supprimer ce groupe ?")) { 
+                                        saveState(); 
+                                        mod.verticalBraces = mod.verticalBraces.filter(x => x !== vb); 
+                                        renderAll(); 
+                                    } 
+                                };
                                 path.style.cursor = "pointer"; path.onpointerdown = deleteVB; txt.style.cursor = "pointer"; txt.onpointerdown = deleteVB;
                                 svg.appendChild(path); svg.appendChild(txt);
                             }
@@ -564,6 +618,8 @@
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", getCurvedArrowPath(arrow.x1, arrow.y1, arrow.x2, arrow.y2));
                 path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "3"); path.style.fill = "none"; path.setAttribute("marker-end", "url(#arrowhead)"); path.style.cursor = "pointer";
+                if (isSketch) path.setAttribute("filter", "url(#sketch)");
+                
                 path.onpointerdown = (e) => { if (currentTool === 'arrow' || currentTool === 'cursor') { e.stopPropagation(); saveState(); appData.floatingArrows = appData.floatingArrows.filter(a => a.id !== arrow.id); renderAll(); } };
                 svg.appendChild(path);
             });
@@ -572,6 +628,7 @@
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", getCurvedArrowPath(drawingArrow.x1, drawingArrow.y1, drawingArrow.x2, drawingArrow.y2));
                 path.setAttribute("stroke", "#3b82f6"); path.setAttribute("stroke-width", "3"); path.setAttribute("stroke-dasharray", "4,4"); path.style.fill = "none"; path.setAttribute("marker-end", "url(#arrowhead)");
+                if (isSketch) path.setAttribute("filter", "url(#sketch)");
                 svg.appendChild(path);
             }
 
@@ -589,8 +646,107 @@
             svg.setAttribute("height", Math.max(400, maxItemY + 50));
         }
 
-        function exportToPng() { const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1100; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Document_MathsBars.png'; a.click(); }); }; img.src = url; }
-        function copyToClipboard() { const btn = document.getElementById('btnCopyText'); btn.textContent = "⏳ Copie..."; const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1100; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { const item = new ClipboardItem({ "image/png": blob }); await navigator.clipboard.write([item]); btn.textContent = "✅ Copié !"; setTimeout(() => btn.textContent = "📋 Copier", 2000); } catch (err) { alert("Erreur copie : Utilisez plutôt le bouton Export PNG."); btn.textContent = "📋 Copier"; } }); }; img.src = url; }
+        function getSvgStringForExport() {
+            const svg = document.getElementById('svgCanvas');
+            const clonedSvg = svg.cloneNode(true);
+            const width = 1100;
+            const height = parseInt(svg.getAttribute('height'));
+            clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            clonedSvg.setAttribute('width', width);
+            clonedSvg.setAttribute('height', height);
+            
+            const serializer = new XMLSerializer();
+            return serializer.serializeToString(clonedSvg);
+        }
+
+        function exportToSvg() {
+            const svgString = getSvgStringForExport();
+            const blob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Document_MathsBars.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportToPng() { 
+            const canvas = document.createElement('canvas'); 
+            const ctx = canvas.getContext('2d'); 
+            const img = new Image(); 
+            
+            const svg = document.getElementById('svgCanvas');
+            const scale = 3; 
+            const width = 1100;
+            const height = parseInt(svg.getAttribute('height'));
+            
+            canvas.width = width * scale; 
+            canvas.height = height * scale; 
+            
+            const clonedSvg = svg.cloneNode(true);
+            clonedSvg.setAttribute('width', canvas.width);
+            clonedSvg.setAttribute('height', canvas.height);
+            clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+            const serializer = new XMLSerializer(); 
+            const blob = new Blob([serializer.serializeToString(clonedSvg)], {type: 'image/svg+xml;charset=utf-8'}); 
+            const url = URL.createObjectURL(blob); 
+            
+            img.onload = () => { 
+                ctx.fillStyle = "#ffffff"; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height); 
+                ctx.drawImage(img, 0, 0); 
+                canvas.toBlob(b => { 
+                    const a = document.createElement('a'); 
+                    a.href = URL.createObjectURL(b); 
+                    a.download = 'Document_MathsBars.png'; 
+                    a.click(); 
+                }); 
+            }; 
+            img.src = url; 
+        }
+
+        function copyToClipboard() { 
+            const btn = document.getElementById('btnCopyText'); btn.textContent = "⏳ Copie..."; 
+            const canvas = document.createElement('canvas'); 
+            const ctx = canvas.getContext('2d'); 
+            const img = new Image(); 
+            
+            const svg = document.getElementById('svgCanvas');
+            const scale = 2; 
+            const width = 1100;
+            const height = parseInt(svg.getAttribute('height'));
+            
+            canvas.width = width * scale; 
+            canvas.height = height * scale; 
+            
+            const clonedSvg = svg.cloneNode(true);
+            clonedSvg.setAttribute('width', canvas.width);
+            clonedSvg.setAttribute('height', canvas.height);
+            clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+            const serializer = new XMLSerializer(); 
+            const blob = new Blob([serializer.serializeToString(clonedSvg)], {type: 'image/svg+xml;charset=utf-8'}); 
+            const url = URL.createObjectURL(blob); 
+            
+            img.onload = () => { 
+                ctx.fillStyle = "#ffffff"; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height); 
+                ctx.drawImage(img, 0, 0); 
+                canvas.toBlob(async blob => { 
+                    try { 
+                        const item = new ClipboardItem({ "image/png": blob }); 
+                        await navigator.clipboard.write([item]); 
+                        btn.textContent = "✅ Copié !"; 
+                        setTimeout(() => btn.textContent = "📋 Copier", 2000); 
+                    } catch (err) { 
+                        alert("Erreur copie : Utilisez plutôt les boutons Export."); 
+                        btn.textContent = "📋 Copier"; 
+                    } 
+                }); 
+            }; 
+            img.src = url; 
+        }
 
         document.getElementById('modGapSlider').value = appData.globalModuleGap;
         buildPalette(); renderTabs(); renderUI(); renderAll();
