@@ -507,7 +507,10 @@
                             text.setAttribute("font-size", isSketch ? "26" : "20"); 
                             text.setAttribute("font-weight", "bold"); 
                             text.setAttribute("fill", isHatched ? "#94a3b8" : "#0f172a"); 
-                            text.textContent = item.text.replace('.', ',');
+                            
+                            // --> CORRECTION OPTION 2 ICI <--
+                            // On remplace le point par une virgule SEULEMENT s'il est entre deux chiffres !
+                            text.textContent = item.text.replace(/(\d)\.(\d)/g, '$1,$2');
 
                             group.appendChild(rect); group.appendChild(text); svg.appendChild(group); currentX += width;
                         });
