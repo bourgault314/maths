@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>MathsBars - La Perfection</title>
+    <title>MathsBars - Final Ultime</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
-        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1100px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
+        .top-panel { background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%; max-width: 1150px; margin-bottom: 15px; border-top: 4px solid #3b82f6; flex-shrink: 0; }
         
         .module-tabs { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; border-bottom: 2px solid #e2e8f0; padding-bottom: 2px; align-items: flex-end;}
         .tab { padding: 6px 15px; background: #f1f5f9; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; color: #64748b; font-size: 14px; border: 1px solid transparent; border-bottom: none; white-space: nowrap; transition: 0.2s;}
@@ -23,17 +23,18 @@
         
         .brand { color: #1e293b; font-size: 18px; font-weight: bold; margin: 0; padding-right: 15px; border-right: 1px solid #e2e8f0; }
         
-        .spacing-control { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #475569; transition: opacity 0.2s;}
+        .spacing-control { display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #475569; transition: opacity 0.2s;}
         .spacing-control.disabled { opacity: 0.4; }
         .spacing-control.disabled input[type="range"] { pointer-events: none; }
+        input[type="range"] { width: 70px; cursor: pointer;}
 
         .tool-selector { display: flex; align-items: center; background: #f1f5f9; padding: 3px; border-radius: 6px; gap: 3px; flex-wrap: wrap;}
         .tool-selector label { padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; color: #64748b; font-size: 13px;}
         .tool-selector input[type="radio"] { display: none; }
         .tool-selector input[type="radio"]:checked + label { background: white; color: #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .color-palette { display: flex; align-items: center; gap: 4px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #cbd5e1; transition: opacity 0.2s;}
-        .color-palette.hidden { visibility: hidden; opacity: 0; }
+        .color-palette { display: flex; visibility: hidden; opacity: 0; align-items: center; gap: 4px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #cbd5e1; transition: opacity 0.2s;}
+        .color-palette.show { visibility: visible; opacity: 1; }
         
         .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
         .color-swatch.active { border-color: #0f172a; transform: scale(1.15); box-shadow: 0 1px 3px rgba(0,0,0,0.2);}
@@ -63,6 +64,7 @@
         svg { user-select: none; touch-action: none; }
         .bar { cursor: pointer; transition: filter 0.1s; }
         .bar:hover rect { filter: brightness(0.95); }
+        .bar.brace-ready rect { stroke: #f59e0b; stroke-width: 4; stroke-dasharray: 4,4; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px;}
@@ -81,19 +83,28 @@
                 <label class="checkbox-label" style="cursor: pointer;">
                     <input type="checkbox" id="chkGlue" onchange="toggleGlue()"> 🧲 Coller le Module
                 </label>
-                <div class="spacing-control" id="spacingPanel">
-                    <label for="gapSlider">Écart :</label>
+                
+                <div class="spacing-control" id="spacingPanel" title="Espacement entre les lignes du module">
+                    <label for="gapSlider">Lignes :</label>
                     <input type="range" id="gapSlider" min="5" max="100" value="40" oninput="changeGap()">
                 </div>
+                
+                <div class="spacing-control" title="Espacement vertical entre les modules">
+                    <label for="modGapSlider">Modules :</label>
+                    <input type="range" id="modGapSlider" min="20" max="200" value="60" oninput="changeModGap()">
+                </div>
             </div>
+            
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                 <button class="btn-undo" id="btnUndo" onclick="undo()" disabled>↩️ Annuler</button>
                 <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
-                <button class="btn-save" onclick="saveProject()">💾 Sauvegarder Projet</button>
-                <button class="btn-load" onclick="document.getElementById('fileLoad').click()">📂 Charger Projet</button>
+                <button class="btn-save" onclick="saveProject()">💾 Sauvegarder</button>
+                <button class="btn-load" onclick="document.getElementById('fileLoad').click()">📂 Charger</button>
                 <input type="file" id="fileLoad" style="display:none" accept=".json" onchange="loadProject(event)">
+                
                 <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
-                <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier (Word)</button>
+                
+                <button class="btn-copy" onclick="copyToClipboard()" id="btnCopyText">📋 Copier</button>
                 <button class="btn-export" onclick="exportToPng()">🖼️ Export PNG</button>
             </div>
         </div>
@@ -125,7 +136,7 @@
                     <input type="radio" id="toolArrow" name="tool" value="arrow" onchange="setTool('arrow')">
                     <label for="toolArrow">↗️ Flèche Courbe</label>
                 </div>
-                <div id="paletteUI" class="color-palette hidden"></div>
+                <div id="paletteUI" class="color-palette"></div>
             </div>
             
             <div style="display: flex; gap: 8px;">
@@ -150,11 +161,14 @@
         let pointerState = { isDown: false, moved: false, startX: 0, startY: 0 };
         let draggedTextData = null;
         let drawingArrow = null;
+        let braceStart = null;
         
         const colorPalette = ['#93c5fd', '#fdba74', '#86efac', '#f9a8d4', '#e2e8f0', '#d8b4fe', '#fef08a'];
         let activeColorIndex = 0; 
 
+        // Exemple par défaut restauré avec les bonnes couleurs (Bleu, orange, jaune)
         let appData = {
+            globalModuleGap: 60,
             modules: [
                 {
                     id: 1, name: "Module 1", isGlued: false, gapValue: 40,
@@ -185,6 +199,9 @@
                 const state = JSON.parse(historyStack.pop());
                 appData = state.appData; currentModuleId = state.currentModuleId; modIdCounter = state.modIdCounter; lineIdCounter = state.lineIdCounter;
                 document.getElementById('btnUndo').disabled = (historyStack.length === 0);
+                
+                document.getElementById('modGapSlider').value = appData.globalModuleGap || 60;
+                braceStart = null; 
                 renderTabs();
                 const mod = getActiveModule();
                 if(mod) { document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); }
@@ -206,7 +223,7 @@
         }
 
         function selectModule(id) {
-            currentModuleId = id; renderTabs(); renderUI();
+            currentModuleId = id; braceStart = null; renderTabs(); renderUI();
             const mod = getActiveModule(); document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); renderAll();
         }
 
@@ -282,12 +299,39 @@
             });
         }
 
-        function clearAnnotations() { saveState(); appData.modules.forEach(mod => { mod.lines.forEach(l => { l.topBraces = []; l.bottomBraces = []; l.hatchedBoxes = []; l.dashedBoxes = []; l.showBracket = false; l.customTotal = ""; }); }); appData.floatingTexts = []; appData.floatingArrows = []; renderUI(); renderAll(); }
-        function resetAll() { if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau document vierge ?")) { saveState(); appData = { modules: [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: [{ id: 101, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }], floatingTexts: [], floatingArrows: [] }; currentModuleId = 1; modIdCounter = 2; lineIdCounter = 200; document.getElementById('chkGlue').checked = false; toggleGlueVisual(); renderTabs(); renderUI(); renderAll(); } }
+        function clearAnnotations() { saveState(); appData.modules.forEach(mod => { mod.lines.forEach(l => { l.topBraces = []; l.bottomBraces = []; l.hatchedBoxes = []; l.dashedBoxes = []; l.showBracket = false; l.customTotal = ""; }); }); appData.floatingTexts = []; appData.floatingArrows = []; braceStart = null; renderUI(); renderAll(); }
+        
+        function resetAll() { 
+            if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau document vierge ?")) { 
+                saveState(); 
+                appData = { 
+                    globalModuleGap: 60,
+                    modules: [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: [{ id: 101, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }], 
+                    floatingTexts: [], floatingArrows: [] 
+                }; 
+                currentModuleId = 1; modIdCounter = 2; lineIdCounter = 200; braceStart = null;
+                document.getElementById('chkGlue').checked = false; 
+                document.getElementById('modGapSlider').value = 60;
+                toggleGlueVisual(); renderTabs(); renderUI(); renderAll(); 
+            } 
+        }
+        
         function moveLine(index, direction) { saveState(); const mod = getActiveModule(); if (index + direction < 0 || index + direction >= mod.lines.length) return; const temp = mod.lines[index]; mod.lines[index] = mod.lines[index + direction]; mod.lines[index + direction] = temp; renderUI(); renderAll(); }
         
         function saveProject() { const dataToSave = { appData: appData, modIdCounter: modIdCounter, lineIdCounter: lineIdCounter }; const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'Document_MathsBars.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
-        function loadProject(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { saveState(); const loadedData = JSON.parse(e.target.result); if (loadedData.appData) { appData = loadedData.appData; modIdCounter = loadedData.modIdCounter; lineIdCounter = loadedData.lineIdCounter; } else if (loadedData.linesData) { appData.modules = [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: loadedData.linesData }]; appData.floatingTexts = loadedData.floatingTexts || []; appData.floatingArrows = loadedData.floatingArrows || []; currentModuleId = 1; modIdCounter = 2; } selectModule(appData.modules[0].id); } catch(err) { alert("Erreur: Impossible de lire ce fichier de sauvegarde."); } }; reader.readAsText(file); event.target.value = ''; }
+        function loadProject(event) { 
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); 
+            reader.onload = function(e) { 
+                try { 
+                    saveState(); const loadedData = JSON.parse(e.target.result); 
+                    if (loadedData.appData) { appData = loadedData.appData; modIdCounter = loadedData.modIdCounter; lineIdCounter = loadedData.lineIdCounter; } 
+                    else if (loadedData.linesData) { appData.globalModuleGap = 60; appData.modules = [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: loadedData.linesData }]; appData.floatingTexts = loadedData.floatingTexts || []; appData.floatingArrows = loadedData.floatingArrows || []; currentModuleId = 1; modIdCounter = 2; } 
+                    if(!appData.globalModuleGap) appData.globalModuleGap = 60;
+                    document.getElementById('modGapSlider').value = appData.globalModuleGap;
+                    selectModule(appData.modules[0].id); 
+                } catch(err) { alert("Erreur: Impossible de lire ce fichier de sauvegarde."); } 
+            }; reader.readAsText(file); event.target.value = ''; 
+        }
 
         function addLine() { saveState(); getActiveModule().lines.push({ id: lineIdCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [Math.floor(Math.random() * colorPalette.length)], topBraces: [], bottomBraces: [] }); renderUI(); renderAll(); }
         function findLineModule(lineId) { for (let m of appData.modules) { const l = m.lines.find(x => x.id === lineId); if (l) return { line: l, mod: m }; } return null; }
@@ -297,39 +341,59 @@
         function updateTotalText(id, val) { saveState(); const r = findLineModule(id); if (r) { r.line.customTotal = val; renderAll(); } }
         
         function setTool(tool) { 
-            currentTool = tool; const palette = document.getElementById('paletteUI');
-            if(tool === 'color') palette.classList.remove('hidden'); else palette.classList.add('hidden');
+            currentTool = tool; braceStart = null; 
+            const palette = document.getElementById('paletteUI');
+            if(tool === 'color') palette.classList.add('show'); else palette.classList.remove('show');
             const svg = document.getElementById('svgCanvas'); if (tool === 'text') svg.style.cursor = 'text'; else if (tool === 'arrow') svg.style.cursor = 'crosshair'; else svg.style.cursor = 'default';
+            renderAll();
         }
 
         function toggleGlue() { saveState(); const mod = getActiveModule(); mod.isGlued = document.getElementById('chkGlue').checked; toggleGlueVisual(); renderAll(); }
         function changeGap() { getActiveModule().gapValue = parseInt(document.getElementById('gapSlider').value); renderAll(); }
+        function changeModGap() { appData.globalModuleGap = parseInt(document.getElementById('modGapSlider').value); renderAll(); }
         function toggleGlueVisual() { const isGlued = document.getElementById('chkGlue').checked; const panel = document.getElementById('spacingPanel'); if (isGlued) { panel.classList.add('disabled'); document.getElementById('gapSlider').disabled = true; } else { panel.classList.remove('disabled'); document.getElementById('gapSlider').disabled = false; } }
 
         function handleBoxClick(lineId, boxIndex, event) {
             if (currentTool === 'cursor' || currentTool === 'text' || currentTool === 'arrow') return;
             const res = findLineModule(lineId); if (!res) return; const line = res.line;
-            saveState();
-
-            if (currentTool === 'hatch') { const idx = line.hatchedBoxes.indexOf(boxIndex); if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
-            } else if (currentTool === 'dash') { const idx = line.dashedBoxes.indexOf(boxIndex); if (idx > -1) line.dashedBoxes.splice(idx, 1); else line.dashedBoxes.push(boxIndex);
-            } else if (currentTool === 'color') { while(line.boxColors.length <= boxIndex) line.boxColors.push(0); line.boxColors[boxIndex] = activeColorIndex;
+            
+            if (currentTool === 'hatch') { 
+                saveState(); const idx = line.hatchedBoxes.indexOf(boxIndex); if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
+            } else if (currentTool === 'dash') { 
+                saveState(); const idx = line.dashedBoxes.indexOf(boxIndex); if (idx > -1) line.dashedBoxes.splice(idx, 1); else line.dashedBoxes.push(boxIndex);
+            } else if (currentTool === 'color') { 
+                saveState(); while(line.boxColors.length <= boxIndex) line.boxColors.push(0); line.boxColors[boxIndex] = activeColorIndex;
             } else if (currentTool === 'braceTop' || currentTool === 'braceBottom') {
-                let txt = prompt("Texte de l'accolade (laissez vide pour annuler) :");
-                if (txt) { if (currentTool === 'braceTop') line.topBraces.push({start: boxIndex, end: boxIndex, text: txt}); else line.bottomBraces.push({start: boxIndex, end: boxIndex, text: txt}); } 
-                else { historyStack.pop(); }
+                if (!braceStart) {
+                    braceStart = { lineId: lineId, boxIndex: boxIndex };
+                } else {
+                    if (braceStart.lineId === lineId) {
+                        let txt = prompt("Texte de l'accolade (laissez vide pour annuler) :");
+                        if (txt !== null && txt.trim() !== "") {
+                            saveState(); 
+                            let start = Math.min(braceStart.boxIndex, boxIndex);
+                            let end = Math.max(braceStart.boxIndex, boxIndex);
+                            if (currentTool === 'braceTop') line.topBraces.push({start, end, text: txt});
+                            else line.bottomBraces.push({start, end, text: txt});
+                        }
+                    } else {
+                        alert("L'accolade doit commencer et finir sur la même ligne !");
+                    }
+                    braceStart = null;
+                }
             }
             renderAll();
         }
 
+        // SUPPRESSION AUTO DES VARIABLES (x et ?) -> Juste du texte brut !
         function parseValues(str) {
             const parts = str.trim().split(/[\s;+]+/);
             return parts.map(p => {
                 if (!p) return null; const match = p.match(/^([^\[]+)(?:\[(.*?)\])?$/);
                 let rawLeft = match ? match[1] : p; let customText = match && match[2] !== undefined ? match[2] : undefined;
                 let width = parseFloat(rawLeft.replace(',', '.')); if (isNaN(width)) width = 10; 
-                let textToDisplay = customText !== undefined ? customText : rawLeft; let isVar = (textToDisplay.toLowerCase() === 'x' || textToDisplay === '?');
-                return { width: width, text: textToDisplay, isVar: isVar };
+                let textToDisplay = customText !== undefined ? customText : rawLeft; 
+                return { width: width, text: textToDisplay };
             }).filter(item => item !== null);
         }
 
@@ -342,7 +406,6 @@
             return `M ${x} ${y} C ${x+d} ${y}, ${x+d} ${y+5}, ${x+d} ${y+10} L ${x+d} ${midY-10} C ${x+d} ${midY-5}, ${x+d+d/2} ${midY}, ${x+d+d} ${midY} C ${x+d+d/2} ${midY}, ${x+d} ${midY+5}, ${x+d} ${midY+10} L ${x+d} ${y+h-10} C ${x+d} ${y+h-5}, ${x+d} ${y+h}, ${x} ${y+h}`;
         }
         
-        // --- LOGIQUE GÉOGRAPHIQUE DE LA FLÈCHE ---
         function getCurvedArrowPath(x1, y1, x2, y2) {
             const dx = x2 - x1; const dy = y2 - y1; const dist = Math.hypot(dx, dy);
             if (dist < 5) return `M ${x1} ${y1} L ${x2} ${y2}`;
@@ -350,15 +413,12 @@
             let cx = midX; let cy = midY;
             const bulge = Math.min(dist * 0.4, 100);
             
-            // Logique selon la position à l'écran :
-            if (Math.abs(dy) > Math.abs(dx)) {
-                // Flèche verticale
-                if (midX < 450) { cx = midX - bulge; } // A GAUCHE du centre de l'écran -> arrondi à gauche
-                else { cx = midX + bulge; }            // A DROITE du centre -> arrondi à droite
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (x2 > x1) { cy = midY - bulge; } 
+                else { cy = midY + bulge; }         
             } else {
-                // Flèche horizontale
-                if (midY < 160) { cy = midY - bulge; } // En HAUT du schéma -> arrondi en haut
-                else { cy = midY + bulge; }            // En BAS du schéma -> arrondi en bas
+                if (y2 > y1) { cx = midX + bulge; } 
+                else { cx = midX - bulge; }         
             }
             return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
         }
@@ -375,8 +435,8 @@
             </defs>`;
 
             const maxBarWidth = 700; 
-            const startX = 120; // GRANDE MARGE À GAUCHE
-            let globalY = 140;  // ENORME MARGE EN HAUT !
+            const startX = 120; 
+            let globalY = 140;  
             const barHeight = 46;
 
             appData.modules.forEach(mod => {
@@ -393,16 +453,25 @@
                             const width = (item.width / maxTotal) * maxBarWidth; lineTotalVal += item.width; boxCoords.push({ startX: currentX, endX: currentX + width });
                             const isHatched = line.hatchedBoxes.includes(boxIndex); const isDashed = line.dashedBoxes && line.dashedBoxes.includes(boxIndex); const colorIndex = (line.boxColors && line.boxColors[boxIndex] !== undefined) ? line.boxColors[boxIndex] : (boxIndex % colorPalette.length);
 
-                            const group = document.createElementNS("http://www.w3.org/2000/svg", "g"); group.setAttribute("class", "bar");
+                            const group = document.createElementNS("http://www.w3.org/2000/svg", "g"); 
+                            let cssClass = "bar";
+                            if (braceStart && braceStart.lineId === line.id && braceStart.boxIndex === boxIndex) cssClass += " brace-ready";
+                            group.setAttribute("class", cssClass);
+                            
                             group.onpointerdown = (e) => { if (currentTool === 'text' || currentTool === 'arrow' || currentTool === 'cursor') {} else { e.stopPropagation(); handleBoxClick(line.id, boxIndex, e); } };
 
                             const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                             rect.setAttribute("x", currentX); rect.setAttribute("y", globalY); rect.setAttribute("width", width); rect.setAttribute("height", barHeight);
                             if (isHatched) { rect.setAttribute("fill", "url(#hatch)"); rect.setAttribute("stroke", "#ef4444"); rect.setAttribute("stroke-width", "2"); rect.setAttribute("stroke-dasharray", "5,5"); } 
-                            else { rect.setAttribute("fill", colorPalette[colorIndex]); rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2"); if (isDashed || item.isVar) rect.setAttribute("stroke-dasharray", "5,5"); }
+                            else { 
+                                rect.setAttribute("fill", colorPalette[colorIndex]); rect.setAttribute("stroke", "#334155"); rect.setAttribute("stroke-width", "2"); 
+                                if (isDashed) rect.setAttribute("stroke-dasharray", "5,5"); 
+                            }
 
                             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                            text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", globalY + 30); text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif"); text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold"); text.setAttribute("fill", isHatched ? "#94a3b8" : (item.isVar ? "#854d0e" : "#0f172a")); text.textContent = item.text.replace('.', ',');
+                            text.setAttribute("x", currentX + (width / 2)); text.setAttribute("y", globalY + 30); text.setAttribute("text-anchor", "middle"); text.setAttribute("font-family", "Arial, sans-serif"); text.setAttribute("font-size", "20"); text.setAttribute("font-weight", "bold"); 
+                            text.setAttribute("fill", isHatched ? "#94a3b8" : "#0f172a"); 
+                            text.textContent = item.text.replace('.', ',');
 
                             group.appendChild(rect); group.appendChild(text); svg.appendChild(group); currentX += width;
                         });
@@ -412,8 +481,13 @@
                             const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
                             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                             path.setAttribute("d", drawHorizBrace(bStartX, globalY - 4, bWidth, true)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                            
                             const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY - 26); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            
+                            const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.topBraces = line.topBraces.filter(b => b !== brace); renderAll(); } };
+                            path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
+
                             svg.appendChild(path); svg.appendChild(txt);
                         });
 
@@ -422,8 +496,13 @@
                             const bStartX = boxCoords[brace.start].startX; const bEndX = boxCoords[brace.end].endX; const bWidth = bEndX - bStartX;
                             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                             path.setAttribute("d", drawHorizBrace(bStartX, globalY + barHeight + 4, bWidth, false)); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                            
                             const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             txt.setAttribute("x", bStartX + bWidth/2); txt.setAttribute("y", globalY + barHeight + 36); txt.setAttribute("text-anchor", "middle"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = brace.text;
+                            
+                            const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.bottomBraces = line.bottomBraces.filter(b => b !== brace); renderAll(); } };
+                            path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
+
                             svg.appendChild(path); svg.appendChild(txt);
                         });
 
@@ -435,7 +514,8 @@
                         }
                         globalY += rowSpacing; 
                     });
-                    globalY += 50; 
+                    
+                    globalY += (appData.globalModuleGap !== undefined ? appData.globalModuleGap : 60); 
                 }
             });
 
@@ -468,9 +548,10 @@
             svg.setAttribute("height", Math.max(400, maxItemY + 50));
         }
 
-        function exportToPng() { const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1050; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Document_MathsBars.png'; a.click(); }); }; img.src = url; }
-        function copyToClipboard() { const btn = document.getElementById('btnCopyText'); btn.textContent = "⏳ Copie..."; const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1050; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { const item = new ClipboardItem({ "image/png": blob }); await navigator.clipboard.write([item]); btn.textContent = "✅ Copié !"; setTimeout(() => btn.textContent = "📋 Copier (Word)", 2000); } catch (err) { alert("Erreur copie : Utilisez plutôt le bouton Export PNG."); btn.textContent = "📋 Copier (Word)"; } }); }; img.src = url; }
+        function exportToPng() { const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1100; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'Document_MathsBars.png'; a.click(); }); }; img.src = url; }
+        function copyToClipboard() { const btn = document.getElementById('btnCopyText'); btn.textContent = "⏳ Copie..."; const svg = document.getElementById('svgCanvas'); const serializer = new XMLSerializer(); const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const img = new Image(); canvas.width = 1100; canvas.height = svg.getAttribute('height'); const blob = new Blob([serializer.serializeToString(svg)], {type: 'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob); img.onload = () => { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); canvas.toBlob(async blob => { try { const item = new ClipboardItem({ "image/png": blob }); await navigator.clipboard.write([item]); btn.textContent = "✅ Copié !"; setTimeout(() => btn.textContent = "📋 Copier", 2000); } catch (err) { alert("Erreur copie : Utilisez plutôt le bouton Export PNG."); btn.textContent = "📋 Copier"; } }); }; img.src = url; }
 
+        document.getElementById('modGapSlider').value = appData.globalModuleGap;
         buildPalette(); renderTabs(); renderUI(); renderAll();
     </script>
 </body>
