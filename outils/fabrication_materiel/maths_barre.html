@@ -42,7 +42,7 @@
         .lines-container { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; padding-right: 5px;}
         .line-input { display: flex; gap: 6px; align-items: center; background: #f8fafc; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;}
         .line-input input[type="text"].main-input { flex-grow: 1; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; font-family: monospace; }
-        .line-input input[type="text"].total-input { width: 50px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
+        .line-input input[type="text"].total-input { width: 60px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
         
         button { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background 0.2s; white-space: nowrap;}
         .btn-add { background: #3b82f6; color: white; } .btn-add:hover { background: #2563eb; }
@@ -86,7 +86,7 @@
                 
                 <div class="spacing-control" id="spacingPanel" title="Espacement entre les lignes du module">
                     <label for="gapSlider">Lignes :</label>
-                    <input type="range" id="gapSlider" min="5" max="100" value="40" oninput="changeGap()">
+                    <input type="range" id="gapSlider" min="0" max="100" value="40" oninput="changeGap()">
                 </div>
                 
                 <div class="spacing-control" title="Espacement vertical entre les modules">
@@ -130,6 +130,9 @@
                     <input type="radio" id="toolBraceBottom" name="tool" value="braceBottom" onchange="setTool('braceBottom')">
                     <label for="toolBraceBottom">⬇️ Accol. Bas</label>
 
+                    <input type="radio" id="toolBraceMulti" name="tool" value="braceMulti" onchange="setTool('braceMulti')">
+                    <label for="toolBraceMulti">}{ Multi-lignes</label>
+
                     <input type="radio" id="toolText" name="tool" value="text" onchange="setTool('text')">
                     <label for="toolText">📝 Texte</label>
                     
@@ -162,16 +165,16 @@
         let draggedTextData = null;
         let drawingArrow = null;
         let braceStart = null;
+        let multiBraceStart = null;
         
         const colorPalette = ['#93c5fd', '#fdba74', '#86efac', '#f9a8d4', '#e2e8f0', '#d8b4fe', '#fef08a'];
         let activeColorIndex = 0; 
 
-        // Exemple par défaut restauré avec les bonnes couleurs (Bleu, orange, jaune)
         let appData = {
             globalModuleGap: 60,
             modules: [
                 {
-                    id: 1, name: "Module 1", isGlued: false, gapValue: 40,
+                    id: 1, name: "Module 1", isGlued: false, gapValue: 40, verticalBraces: [],
                     lines: [
                         { id: 101, text: "3[120]", showBracket: true, customTotal: "Total", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] },
                         { id: 102, text: "1[40] ; 1[40] ; 1[40]", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [1, 1, 1], topBraces: [], bottomBraces: [] },
@@ -201,7 +204,7 @@
                 document.getElementById('btnUndo').disabled = (historyStack.length === 0);
                 
                 document.getElementById('modGapSlider').value = appData.globalModuleGap || 60;
-                braceStart = null; 
+                braceStart = null; multiBraceStart = null;
                 renderTabs();
                 const mod = getActiveModule();
                 if(mod) { document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); }
@@ -223,11 +226,11 @@
         }
 
         function selectModule(id) {
-            currentModuleId = id; braceStart = null; renderTabs(); renderUI();
+            currentModuleId = id; braceStart = null; multiBraceStart = null; renderTabs(); renderUI();
             const mod = getActiveModule(); document.getElementById('chkGlue').checked = mod.isGlued; document.getElementById('gapSlider').value = mod.gapValue; toggleGlueVisual(); renderAll();
         }
 
-        function addModule() { saveState(); const newMod = { id: modIdCounter++, name: `Module ${appData.modules.length + 1}`, isGlued: false, gapValue: 40, lines: [{ id: lineIdCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }; appData.modules.push(newMod); selectModule(newMod.id); }
+        function addModule() { saveState(); const newMod = { id: modIdCounter++, name: `Module ${appData.modules.length + 1}`, isGlued: false, gapValue: 40, verticalBraces: [], lines: [{ id: lineIdCounter++, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }; appData.modules.push(newMod); selectModule(newMod.id); }
         function deleteModule(event, id) { event.stopPropagation(); if (confirm("Voulez-vous supprimer ce module ?")) { saveState(); appData.modules = appData.modules.filter(m => m.id !== id); appData.modules.forEach((m, idx) => m.name = `Module ${idx + 1}`); if (currentModuleId === id) selectModule(appData.modules[0].id); else { renderTabs(); renderAll(); } } }
 
         function getSvgPt(e) {
@@ -285,10 +288,10 @@
                 div.innerHTML = `
                     <span style="font-weight:bold; color:#475569; width: 20px; font-size:12px;">L.${index + 1}</span>
                     <input type="text" class="main-input" value="${line.text}" onchange="updateLine(${line.id}, this.value)">
-                    <label class="checkbox-label" title="Accolade">
-                        <input type="checkbox" ${line.showBracket ? 'checked' : ''} onchange="toggleBracket(${line.id}, this.checked)"> { }
+                    <label class="checkbox-label" title="Total en fin de ligne">
+                        <input type="checkbox" ${line.showBracket ? 'checked' : ''} onchange="toggleBracket(${line.id}, this.checked)"> } Total
                     </label>
-                    <input type="text" class="total-input" placeholder="Total" value="${line.customTotal || ''}" onchange="updateTotalText(${line.id}, this.value)">
+                    <input type="text" class="total-input" placeholder="Valeur" value="${line.customTotal || ''}" onchange="updateTotalText(${line.id}, this.value)">
                     <div style="display:flex; flex-direction:column; gap:2px; margin-left:5px;">
                         <button class="btn-move" onclick="moveLine(${index}, -1)" ${index === 0 ? 'disabled' : ''}>▲</button>
                         <button class="btn-move" onclick="moveLine(${index}, 1)" ${index === mod.lines.length - 1 ? 'disabled' : ''}>▼</button>
@@ -299,17 +302,17 @@
             });
         }
 
-        function clearAnnotations() { saveState(); appData.modules.forEach(mod => { mod.lines.forEach(l => { l.topBraces = []; l.bottomBraces = []; l.hatchedBoxes = []; l.dashedBoxes = []; l.showBracket = false; l.customTotal = ""; }); }); appData.floatingTexts = []; appData.floatingArrows = []; braceStart = null; renderUI(); renderAll(); }
+        function clearAnnotations() { saveState(); appData.modules.forEach(mod => { mod.lines.forEach(l => { l.topBraces = []; l.bottomBraces = []; l.hatchedBoxes = []; l.dashedBoxes = []; l.showBracket = false; l.customTotal = ""; }); mod.verticalBraces = []; }); appData.floatingTexts = []; appData.floatingArrows = []; braceStart = null; multiBraceStart = null; renderUI(); renderAll(); }
         
         function resetAll() { 
             if (confirm("Voulez-vous vraiment TOUT effacer pour commencer un nouveau document vierge ?")) { 
                 saveState(); 
                 appData = { 
                     globalModuleGap: 60,
-                    modules: [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: [{ id: 101, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }], 
+                    modules: [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, verticalBraces: [], lines: [{ id: 101, text: "10", showBracket: false, customTotal: "", hatchedBoxes: [], dashedBoxes: [], boxColors: [0], topBraces: [], bottomBraces: [] }] }], 
                     floatingTexts: [], floatingArrows: [] 
                 }; 
-                currentModuleId = 1; modIdCounter = 2; lineIdCounter = 200; braceStart = null;
+                currentModuleId = 1; modIdCounter = 2; lineIdCounter = 200; braceStart = null; multiBraceStart = null;
                 document.getElementById('chkGlue').checked = false; 
                 document.getElementById('modGapSlider').value = 60;
                 toggleGlueVisual(); renderTabs(); renderUI(); renderAll(); 
@@ -325,7 +328,7 @@
                 try { 
                     saveState(); const loadedData = JSON.parse(e.target.result); 
                     if (loadedData.appData) { appData = loadedData.appData; modIdCounter = loadedData.modIdCounter; lineIdCounter = loadedData.lineIdCounter; } 
-                    else if (loadedData.linesData) { appData.globalModuleGap = 60; appData.modules = [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: loadedData.linesData }]; appData.floatingTexts = loadedData.floatingTexts || []; appData.floatingArrows = loadedData.floatingArrows || []; currentModuleId = 1; modIdCounter = 2; } 
+                    else if (loadedData.linesData) { appData.globalModuleGap = 60; appData.modules = [{ id: 1, name: "Module 1", isGlued: false, gapValue: 40, lines: loadedData.linesData, verticalBraces: [] }]; appData.floatingTexts = loadedData.floatingTexts || []; appData.floatingArrows = loadedData.floatingArrows || []; currentModuleId = 1; modIdCounter = 2; } 
                     if(!appData.globalModuleGap) appData.globalModuleGap = 60;
                     document.getElementById('modGapSlider').value = appData.globalModuleGap;
                     selectModule(appData.modules[0].id); 
@@ -341,7 +344,7 @@
         function updateTotalText(id, val) { saveState(); const r = findLineModule(id); if (r) { r.line.customTotal = val; renderAll(); } }
         
         function setTool(tool) { 
-            currentTool = tool; braceStart = null; 
+            currentTool = tool; braceStart = null; multiBraceStart = null;
             const palette = document.getElementById('paletteUI');
             if(tool === 'color') palette.classList.add('show'); else palette.classList.remove('show');
             const svg = document.getElementById('svgCanvas'); if (tool === 'text') svg.style.cursor = 'text'; else if (tool === 'arrow') svg.style.cursor = 'crosshair'; else svg.style.cursor = 'default';
@@ -355,7 +358,7 @@
 
         function handleBoxClick(lineId, boxIndex, event) {
             if (currentTool === 'cursor' || currentTool === 'text' || currentTool === 'arrow') return;
-            const res = findLineModule(lineId); if (!res) return; const line = res.line;
+            const res = findLineModule(lineId); if (!res) return; const line = res.line; const mod = res.mod;
             
             if (currentTool === 'hatch') { 
                 saveState(); const idx = line.hatchedBoxes.indexOf(boxIndex); if (idx > -1) line.hatchedBoxes.splice(idx, 1); else line.hatchedBoxes.push(boxIndex);
@@ -381,11 +384,22 @@
                     }
                     braceStart = null;
                 }
+            } else if (currentTool === 'braceMulti') {
+                if (!multiBraceStart) {
+                    multiBraceStart = { lineId: lineId };
+                } else {
+                    let txt = prompt("Texte du groupe (laissez vide pour annuler) :");
+                    if (txt !== null && txt.trim() !== "") {
+                        saveState();
+                        if (!mod.verticalBraces) mod.verticalBraces = [];
+                        mod.verticalBraces.push({ startLineId: multiBraceStart.lineId, endLineId: lineId, text: txt });
+                    }
+                    multiBraceStart = null;
+                }
             }
             renderAll();
         }
 
-        // SUPPRESSION AUTO DES VARIABLES (x et ?) -> Juste du texte brut !
         function parseValues(str) {
             const parts = str.trim().split(/[\s;+]+/);
             return parts.map(p => {
@@ -446,8 +460,10 @@
 
                 if (maxTotal > 0) {
                     const rowSpacing = mod.isGlued ? barHeight : barHeight + mod.gapValue; 
-                    
+                    let lineYPositions = {}; 
+
                     parsedLines.forEach((line, lineIndex) => {
+                        lineYPositions[line.id] = { top: globalY, bottom: globalY + barHeight };
                         let currentX = startX; let lineTotalVal = 0; let boxCoords = []; 
                         line.parsed.forEach((item, boxIndex) => {
                             const width = (item.width / maxTotal) * maxBarWidth; lineTotalVal += item.width; boxCoords.push({ startX: currentX, endX: currentX + width });
@@ -455,7 +471,8 @@
 
                             const group = document.createElementNS("http://www.w3.org/2000/svg", "g"); 
                             let cssClass = "bar";
-                            if (braceStart && braceStart.lineId === line.id && braceStart.boxIndex === boxIndex) cssClass += " brace-ready";
+                            if ((braceStart && braceStart.lineId === line.id && braceStart.boxIndex === boxIndex) || 
+                                (multiBraceStart && multiBraceStart.lineId === line.id)) cssClass += " brace-ready";
                             group.setAttribute("class", cssClass);
                             
                             group.onpointerdown = (e) => { if (currentTool === 'text' || currentTool === 'arrow' || currentTool === 'cursor') {} else { e.stopPropagation(); handleBoxClick(line.id, boxIndex, e); } };
@@ -487,7 +504,6 @@
                             
                             const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.topBraces = line.topBraces.filter(b => b !== brace); renderAll(); } };
                             path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
-
                             svg.appendChild(path); svg.appendChild(txt);
                         });
 
@@ -502,7 +518,6 @@
                             
                             const deleteBrace = (e) => { e.stopPropagation(); if(confirm("Supprimer cette accolade ?")) { saveState(); line.bottomBraces = line.bottomBraces.filter(b => b !== brace); renderAll(); } };
                             path.style.cursor = "pointer"; path.onpointerdown = deleteBrace; txt.style.cursor = "pointer"; txt.onpointerdown = deleteBrace;
-
                             svg.appendChild(path); svg.appendChild(txt);
                         });
 
@@ -514,6 +529,32 @@
                         }
                         globalY += rowSpacing; 
                     });
+
+                    if (mod.verticalBraces) {
+                        mod.verticalBraces.forEach(vb => {
+                            const startPos = lineYPositions[vb.startLineId];
+                            const endPos = lineYPositions[vb.endLineId];
+                            if (startPos && endPos) {
+                                const yTop = Math.min(startPos.top, endPos.top);
+                                const yBottom = Math.max(startPos.bottom, endPos.bottom);
+                                const h = yBottom - yTop;
+                                const xPos = startX - 25;
+
+                                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                                const d = 10; const midY = yTop + h/2;
+                                const pathData = `M ${xPos} ${yTop} C ${xPos-d} ${yTop}, ${xPos-d} ${yTop+5}, ${xPos-d} ${yTop+10} L ${xPos-d} ${midY-10} C ${xPos-d} ${midY-5}, ${xPos-d-d/2} ${midY}, ${xPos-d-d} ${midY} C ${xPos-d-d/2} ${midY}, ${xPos-d} ${midY+5}, ${xPos-d} ${midY+10} L ${xPos-d} ${yBottom-10} C ${xPos-d} ${yBottom-5}, ${xPos-d} ${yBottom}, ${xPos} ${yBottom}`;
+                                
+                                path.setAttribute("d", pathData); path.setAttribute("stroke", "#334155"); path.setAttribute("stroke-width", "2"); path.style.fill = "none";
+                                
+                                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                                txt.setAttribute("x", xPos - 35); txt.setAttribute("y", midY + 6); txt.setAttribute("text-anchor", "end"); txt.setAttribute("font-family", "Arial, sans-serif"); txt.setAttribute("font-size", "18"); txt.setAttribute("font-weight", "bold"); txt.setAttribute("fill", "#0f172a"); txt.textContent = vb.text;
+
+                                const deleteVB = (e) => { e.stopPropagation(); if(confirm("Supprimer ce groupe ?")) { saveState(); mod.verticalBraces = mod.verticalBraces.filter(x => x !== vb); renderAll(); } };
+                                path.style.cursor = "pointer"; path.onpointerdown = deleteVB; txt.style.cursor = "pointer"; txt.onpointerdown = deleteVB;
+                                svg.appendChild(path); svg.appendChild(txt);
+                            }
+                        });
+                    }
                     
                     globalY += (appData.globalModuleGap !== undefined ? appData.globalModuleGap : 60); 
                 }
