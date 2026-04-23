@@ -494,7 +494,7 @@
         </div>
 
         <div id="eqUnknownModeWrap" style="flex:1; min-width:0; display:none">
-          <label>Inconnues<br>(x)</label>
+          <label>Inconnues<br>(lettre)</label>
           <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:13px;">
             <option value="MIX" selected>Mélange</option>
             <option value="ONE_SIDE">1 côté</option>
@@ -777,6 +777,20 @@
 <script>
 /* Le véritable X mathématique unicode ! */
 const xChar = "𝑥"; 
+const variableChars = [xChar, "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
+const variableCharSet = new Set([...variableChars, "x", "a", "b", "c", "m", "n", "t"]);
+
+function pickVariableChar(rng){
+  return variableChars[rInt(rng, 0, variableChars.length - 1)];
+}
+function getCardVarChar(card){
+  if(card && typeof card.varChar === "string" && card.varChar.trim()) return card.varChar;
+  return xChar;
+}
+function isVariableLabel(label){
+  return variableCharSet.has(String(label == null ? "" : label));
+}
+
 
 /* RNG */
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
@@ -1868,7 +1882,7 @@ function genNumbered(rng){
             }
           }
           return {
-            family: "N", total: newTotal, visible, hidden: hiddenByTask.flat(),
+            family: "N", total: newTotal, visible, hidden: hiddenByTask.flat(), varChar: pickVariableChar(rng),
             _num: { tasks, visibleCount: 0, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
           };
       }
@@ -1893,7 +1907,7 @@ function genNumbered(rng){
     }
     const hidden = hiddenByTask.flat();
     return {
-      family: "N", total, visible, hidden,
+      family: "N", total, visible, hidden, varChar: pickVariableChar(rng),
       _num: { tasks, visibleCount, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H, hiddenByTask }
     };
   }
@@ -1905,7 +1919,7 @@ function genNumbered(rng){
   const finalTotal = (vCount_fb === 0) ? H_fb * tasks : totalMin;
   
   return {
-    family:"N", total: finalTotal, visible: visible_fb,
+    family:"N", total: finalTotal, visible: visible_fb, varChar: pickVariableChar(rng),
     hidden: Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H_fb] : [1, H_fb-1])).flat(),
     _num:{ tasks, visibleCount: vCount_fb, vMin, vMax, totalMin, totalMax, hiddenBeadsPerTask, H: H_fb, hiddenByTask: Array.from({length: tasks}, ()=> (hiddenBeadsPerTask===1 ? [H_fb] : [1, H_fb-1])) }
   };
@@ -2172,6 +2186,7 @@ function genEquation(rng){
       total: total,
       visible: leftVisible.concat(rightVisible),
       hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+      varChar: pickVariableChar(rng),
       _eq: {
         total,
         x,
@@ -2196,6 +2211,7 @@ function genEquation(rng){
     total: total,
     visible: leftVisible.concat(rightVisible),
     hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+    varChar: pickVariableChar(rng),
     _eq: {
       total,
       x,
@@ -3039,6 +3055,7 @@ function renderCard(card, revealState){
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
       const totalHid = sumArray(card.hidden);
+      const varChar = getCardVarChar(card);
 
       let hiddenSums = [];
       if(totalHid === 0){
@@ -3100,6 +3117,7 @@ function renderCard(card, revealState){
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
       const totalHid = sumArray(card.hidden);
+      const varChar = getCardVarChar(card);
 
       let hiddenSums = [];
       if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
@@ -3115,7 +3133,7 @@ function renderCard(card, revealState){
       parts.push(...hiddenSums.map(v => ({
           value: v, 
           hidden: true,
-          text: revealState === 1 ? xChar : String(v)
+          text: revealState === 1 ? varChar : String(v)
       })));
 
       const barW = drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
@@ -3143,7 +3161,7 @@ function renderCard(card, revealState){
         // ANCRAGE DYNAMIQUE POUR LE B AUSSI ET ESPACEMENT
         const centerX = tx + (barW / 2) + 240;
         
-        const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${xChar} + ${visSum}` : `${tasks}${xChar}`) : (visSum > 0 ? `${xChar} + ${visSum}` : `${xChar}`);
+        const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${varChar} + ${visSum}` : `${tasks}${varChar}`) : (visSum > 0 ? `${varChar} + ${visSum}` : `${varChar}`);
 
         const addEq = (l, r) => {
             const mathFont = "'Times New Roman', Times, serif";
@@ -3158,8 +3176,8 @@ function renderCard(card, revealState){
 
         // Lignes 2 et 3 : Au 2ème clic (Résolution)
         if (revealState === 2) {
-            if (visSum > 0 && tasks > 1) addEq(`${tasks}${xChar}`, String(totalHid));
-            if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${xChar}`, String(hiddenSums[0]));
+            if (visSum > 0 && tasks > 1) addEq(`${tasks}${varChar}`, String(totalHid));
+            if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${varChar}`, String(hiddenSums[0]));
         }
         gTotal.appendChild(calcGroup);
       }
@@ -3420,20 +3438,20 @@ function minCellWidthForLabel(label, fontSize, pad){
 function eqVisibleSum(side){
   return sumArray(side && side.visible);
 }
-function coeffXLabel(n){
+function coeffXLabel(n, varChar = xChar){
   const c = Math.abs(Number(n) || 0);
   if(c <= 0) return "0";
-  return c === 1 ? xChar : `${c}${xChar}`;
+  return c === 1 ? varChar : `${c}${varChar}`;
 }
-function formatEqSideFromCoeffVis(coeff, vis){
+function formatEqSideFromCoeffVis(coeff, vis, varChar = xChar){
   const c = Math.abs(Number(coeff) || 0);
   const v = Math.abs(Number(vis) || 0);
   if(c === 0 && v === 0) return "0";
   if(c === 0) return String(v);
-  if(v === 0) return coeffXLabel(c);
-  return `${coeffXLabel(c)} + ${v}`;
+  if(v === 0) return coeffXLabel(c, varChar);
+  return `${coeffXLabel(c, varChar)} + ${v}`;
 }
-function buildEquationSolveLines(eq){
+function buildEquationSolveLines(eq, varChar = xChar){
   const a = Math.max(0, Number(eq?.left?.tasks) || 0);
   const b = Math.max(0, Number(eq?.right?.tasks) || 0);
   const vl = Math.max(0, eqVisibleSum(eq?.left));
@@ -3442,7 +3460,7 @@ function buildEquationSolveLines(eq){
 
   const lines = [];
   function pushLine(leftCoeff, leftVis, rightCoeff, rightVis){
-    const line = `${formatEqSideFromCoeffVis(leftCoeff, leftVis)} = ${formatEqSideFromCoeffVis(rightCoeff, rightVis)}`;
+    const line = `${formatEqSideFromCoeffVis(leftCoeff, leftVis, varChar)} = ${formatEqSideFromCoeffVis(rightCoeff, rightVis, varChar)}`;
     if(!lines.length || lines[lines.length - 1] !== line) lines.push(line);
   }
 
@@ -3463,16 +3481,16 @@ function buildEquationSolveLines(eq){
   }
 
   if(a2 > 1 && b2 === 0 && vl2 === 0 && vr2 > 0){
-    const finalLine = `${xChar} = ${xVal}`;
+    const finalLine = `${varChar} = ${xVal}`;
     if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
   } else if(b2 > 1 && a2 === 0 && vr2 === 0 && vl2 > 0){
-    const finalLine = `${xVal} = ${xChar}`;
+    const finalLine = `${xVal} = ${varChar}`;
     if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
   }
 
   return lines.filter(Boolean);
 }
-function buildEquationTableParts(total, coeff, visSum, xVal, mode){
+function buildEquationTableParts(total, coeff, visSum, xVal, mode, varChar = xChar){
   const totalSafe = Math.max(1, Number(total) || 1);
   const coeffSafe = Math.max(0, Number(coeff) || 0);
   const visSafe = Math.max(0, Number(visSum) || 0);
@@ -3483,7 +3501,7 @@ function buildEquationTableParts(total, coeff, visSum, xVal, mode){
     let label = "";
     let measureLabel = "";
     if(mode === "symbolic"){
-      label = xChar;
+      label = varChar;
       measureLabel = String(xSafe);
     } else if(mode === "filled") {
       label = String(xSafe);
@@ -3570,13 +3588,27 @@ function drawEquationSingaporeTable(targetGroup, opts){
   const mkLine = opts.line;
   const mkText = opts.text;
   const compactEquation = !!opts.compactEquation;
+  const variableFontSizeOpt = Number(opts.variableFontSize);
+  const hasVariableFontSize = Number.isFinite(variableFontSizeOpt) && variableFontSizeOpt > 0;
+  const variableFontFamily = opts.variableFontFamily || "'Times New Roman', Times, serif";
+  const fitLabelToCell = !!opts.fitLabelToCell;
 
   const fixedUnitOpt = Number(opts.fixedUnit);
   const hasFixedUnit = Number.isFinite(fixedUnitOpt) && fixedUnitOpt > 0;
   const disableLabelInflation = !!opts.disableLabelInflation;
   const minHiddenCellW = Math.max(0, Number(opts.minHiddenCellW) || 0);
   const minVisibleCellW = Math.max(0, Number(opts.minVisibleCellW) || 0);
+  const minHiddenCellWValue1 = Math.max(minHiddenCellW, Number(opts.minHiddenCellWValue1) || 0);
+  const minVisibleCellWValue1 = Math.max(minVisibleCellW, Number(opts.minVisibleCellWValue1) || 0);
   const maxWOpt = Number(opts.maxW);
+
+  function minWidthForPart(part){
+    const value = Math.max(0, Number(part && part.value) || 0);
+    if(part && part.hidden){
+      return (value === 1) ? minHiddenCellWValue1 : minHiddenCellW;
+    }
+    return (value === 1) ? minVisibleCellWValue1 : minVisibleCellW;
+  }
   const hasMaxW = Number.isFinite(maxWOpt) && maxWOpt > 0;
   let unit = hasFixedUnit ? fixedUnitOpt : (baseW / total);
   if(!compactEquation && !hasFixedUnit && !disableLabelInflation){
@@ -3621,7 +3653,7 @@ function drawEquationSingaporeTable(targetGroup, opts){
     }));
   } else {
     function buildLinearMetrics(parts){
-      const mins = parts.map(part => ((part && part.hidden) ? minHiddenCellW : minVisibleCellW));
+      const mins = parts.map(part => minWidthForPart(part));
       const widths = parts.map((part, idx) => {
         const baseSegW = Math.max(1, (Number(part && part.value) || 0) * unit);
         return Math.max(baseSegW, mins[idx]);
@@ -3653,8 +3685,11 @@ function drawEquationSingaporeTable(targetGroup, opts){
       }
       const hiddenCount = parts.filter(part => part && part.hidden).length;
       const visibleIndex = parts.findIndex(part => part && !part.hidden);
-      const visibleNeed = (visibleIndex >= 0) ? Math.max(minVisibleCellW, Math.max(1, (Number(parts[visibleIndex] && parts[visibleIndex].value) || 0) * unit)) : 0;
-      const hiddenNeed = hiddenCount > 0 ? Math.max(minHiddenCellW, Math.max(...parts.filter(part => part && part.hidden).map(part => Math.max(1, (Number(part && part.value) || 0) * unit)))) : 0;
+      const visiblePart = (visibleIndex >= 0) ? parts[visibleIndex] : null;
+      const visibleNeed = (visibleIndex >= 0) ? Math.max(minWidthForPart(visiblePart), Math.max(1, (Number(visiblePart && visiblePart.value) || 0) * unit)) : 0;
+      const hiddenNeed = hiddenCount > 0
+        ? Math.max(...parts.filter(part => part && part.hidden).map(part => Math.max(minWidthForPart(part), Math.max(1, (Number(part && part.value) || 0) * unit))))
+        : 0;
       return { widths, totalW, visibleIndex, hiddenCount, visibleNeed, hiddenNeed };
     }
 
@@ -3742,19 +3777,32 @@ function drawEquationSingaporeTable(targetGroup, opts){
       const fill = part.hidden ? hiddenFill : visibleFill;
       targetGroup.appendChild(mkRect({x, y, width:segW, height:rowH, fill}));
       if(label){
-        const isX = label === xChar || label === "x";
-        const xTargetFs = fontSize * 1.16;
-        const xMaxFs = Math.max(20, segW * 0.70);
-        const fs = isX ? Math.min(xTargetFs, xMaxFs) : fontSize;
+        const isVar = isVariableLabel(label);
+        let fs = fontSize;
+        if(isVar){
+          if(hasVariableFontSize){
+            fs = variableFontSizeOpt;
+          } else {
+            const varTargetFs = fontSize * 1.16;
+            const varMaxFs = Math.max(20, segW * 0.70);
+            fs = Math.min(varTargetFs, varMaxFs);
+          }
+        }
+        if(fitLabelToCell){
+          const unitLabelW = Math.max(0.56, approxTextWidthForLabel(label, 1));
+          const fitPad = Math.min(pad * 0.60, Math.max(8, segW * 0.22));
+          const fitFs = Math.max(18, (Math.max(8, segW - fitPad)) / unitLabelW);
+          fs = Math.min(fs, fitFs);
+        }
         targetGroup.appendChild(mkText(x + segW/2, y + rowH/2, label, {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "alignment-baseline":"middle",
           "font-size": String(fs),
           "fill": textColor,
-          "font-weight": isX ? "normal" : "900",
-          "font-family": isX ? "'Times New Roman', Times, serif" : "inherit",
-          "font-style": isX ? "italic" : "normal"
+          "font-weight": isVar ? "normal" : "900",
+          "font-family": isVar ? variableFontFamily : "inherit",
+          "font-style": isVar ? "italic" : "normal"
         }));
       }
       x += segW;
@@ -3770,7 +3818,42 @@ function drawEquationSingaporeTable(targetGroup, opts){
   drawRow(row1, 0);
   drawRow(row2, 1);
 
-  return { x:x0, y:y0, w, h:totalH, right:x0 + w };
+  function buildRowLayout(parts, rowIndex){
+    const metrics = rowMetrics ? rowMetrics[rowIndex] : null;
+    let x = x0;
+    const segments = [];
+    for(let i=0;i<parts.length;i++){
+      const part = parts[i] || {};
+      let segW;
+      if(metrics){
+        if(Array.isArray(metrics.widths)){
+          segW = Math.max(1, Number(metrics.widths[i]) || 0);
+        } else {
+          segW = part.hidden ? metrics.hiddenCellW : metrics.visibleW;
+        }
+      } else {
+        segW = Math.max(1, (Number(part.value) || 0) * unit);
+      }
+      segments.push({
+        x,
+        w: segW,
+        hidden: !!part.hidden,
+        label: (part.label == null) ? "" : String(part.label),
+        value: Math.max(0, Number(part.value) || 0)
+      });
+      x += segW;
+    }
+    return { x:x0, right:x, w:x - x0, segments };
+  }
+
+  return {
+    x:x0,
+    y:y0,
+    w,
+    h:totalH,
+    right:x0 + w,
+    rows:[buildRowLayout(row1, 0), buildRowLayout(row2, 1)]
+  };
 }
 function drawEquationLines(targetGroup, lines, x, y, api){
   const mkText = api.text;
@@ -3841,6 +3924,7 @@ function renderCardEquation(card, revealState, useTokens){
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
   const hasAidTable = (card.family === "EQ" && revealState > 0);
+  const varChar = getCardVarChar(card);
 
   layer.appendChild(el("rect",{
     x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
@@ -3949,8 +4033,8 @@ function renderCardEquation(card, revealState, useTokens){
     const visL = eqVisibleSum(eq.left);
     const visR = eqVisibleSum(eq.right);
     const tableMode = (revealState === 1) ? "symbolic" : "filled";
-    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode);
-    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode);
+    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode, varChar);
+    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode, varChar);
     const gTable = el("g", {id:"eqSingaporeTable"});
     const projTableW = 640;
     const layout = drawEquationSingaporeTable(gTable, {
@@ -3980,7 +4064,7 @@ function renderCardEquation(card, revealState, useTokens){
     });
     layer.appendChild(gTable);
 
-    const lines = (revealState === 1) ? [buildEquationSolveLines(eq)[0]] : buildEquationSolveLines(eq);
+    const lines = (revealState === 1) ? [buildEquationSolveLines(eq, varChar)[0]] : buildEquationSolveLines(eq, varChar);
     const eqFontSize = revealState === 1 ? 40 : 38;
     const eqAlignGap = 18;
     const longestLhs = Math.max(0, ...lines.map(line => {
@@ -4021,6 +4105,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
   const usePrintTables = (card.family === "EQ" && (printMode === "worksheet" || printMode === "correction"));
+  const varChar = getCardVarChar(card);
 
   targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
   targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
@@ -4105,8 +4190,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       cx: 800,
       y: currentY,
       total: eq.total,
-      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank"),
-      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank"),
+      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank", varChar),
+      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank", varChar),
       rect:(a)=>tEl("rect", a),
       line:(a)=>tEl("line", a),
       text:(x,y,t,a)=>tText(x,y,t,a),
@@ -4131,21 +4216,15 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
     const commonX = Math.min(Math.max(0, Number(eq.left?.tasks) || 0), Math.max(0, Number(eq.right?.tasks) || 0));
 
     let alignedX = startX;
-    let shiftApplied = false;
     models.forEach((model, idx) => {
-      if(idx > 0 && !shiftApplied && commonX > 0){
-        alignedX += commonX * Math.max(1, Number(eq.x) || 1) * unit;
-        shiftApplied = true;
-      }
-
       const isSolvedUnitModel = (!model.unitFinal) && (((model.left.coeff === 1) && (model.right.coeff === 0) && (model.left.vis === 0) && (model.right.vis > 0)) || (((model.right.coeff === 1) && (model.left.coeff === 0) && (model.right.vis === 0) && (model.left.vis > 0))));
       const mode = (model.unitFinal || isSolvedUnitModel) ? "symbolic" : ((idx === models.length - 1) ? "filled" : "symbolic");
-      drawEquationSingaporeTable(gEq, {
-        x: alignedX,
+      const tableLayout = drawEquationSingaporeTable(gEq, {
+        x: (idx === 0 ? startX : alignedX),
         y: currentY,
         total: model.total,
-        row1: buildEquationTableParts(model.total, model.left.coeff, model.left.vis, eq.x, mode),
-        row2: buildEquationTableParts(model.total, model.right.coeff, model.right.vis, eq.x, mode),
+        row1: buildEquationTableParts(model.total, model.left.coeff, model.left.vis, eq.x, mode, varChar),
+        row2: buildEquationTableParts(model.total, model.right.coeff, model.right.vis, eq.x, mode, varChar),
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
@@ -4162,13 +4241,29 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
         minHiddenCellW: minHiddenPrintW,
-        minVisibleCellW: minVisiblePrintW
+        minVisibleCellW: minVisiblePrintW,
+        minHiddenCellWValue1: 104,
+        minVisibleCellWValue1: 118,
+        variableFontSize: 60,
+        fitLabelToCell: true
       });
+
+      if(idx === 0 && commonX > 0 && tableLayout && Array.isArray(tableLayout.rows)){
+        const shiftWidths = tableLayout.rows.map(row => {
+          const segs = Array.isArray(row && row.segments) ? row.segments : [];
+          return segs
+            .filter(seg => seg && seg.hidden)
+            .slice(0, commonX)
+            .reduce((sum, seg) => sum + Math.max(0, Number(seg.w) || 0), 0);
+        }).filter(v => v > 0);
+        const shiftWidth = shiftWidths.length ? Math.max(...shiftWidths) : (commonX * Math.max(minHiddenPrintW, unit * Math.max(1, Number(eq.x) || 1)));
+        alignedX = startX + shiftWidth;
+      }
       currentY += 250;
     });
 
     currentY += 40;
-    const lines = buildEquationSolveLines(eq);
+    const lines = buildEquationSolveLines(eq, varChar);
     const eqFontSize = (lines.length >= 4) ? 58 : 68;
     const eqGap = (lines.length >= 4) ? 74 : 88;
     drawEquationLines(gEq, lines, 800, currentY, {
@@ -4513,7 +4608,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       const hidW = (card.total > 0) ? fullW * (totalHid / card.total) : fullW;
       const unitW = (tasks > 0) ? hidW / tasks : hidW;
 
-      const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${xChar} + ${visSum}` : `${tasks}${xChar}`) : (visSum > 0 ? `${xChar} + ${visSum}` : `${xChar}`);
+      const eqLeft1 = tasks > 1 ? (visSum > 0 ? `${tasks}${varChar} + ${visSum}` : `${tasks}${varChar}`) : (visSum > 0 ? `${varChar} + ${visSum}` : `${varChar}`);
 
       // ETAPE 1 : premier tableau
       if(printMode === "worksheet"){
@@ -4529,7 +4624,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       } else {
         const parts1 = [];
         if(visSum > 0) parts1.push({value: visSum, hidden: false});
-        for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: xChar});
+        for(let i=0; i<tasks; i++) parts1.push({value: hiddenSums[0], hidden: true, text: varChar});
         
         drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
           rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
@@ -4540,7 +4635,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         if (visSum > 0 && tasks > 1) {
             // ETAPE 2 : Tableau intermédiaire parfaitement aligné
-            const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: xChar});
+            const parts2 = Array(tasks).fill({value: hiddenSums[0], hidden: true, text: varChar});
             const cxHid = startX + visW + (hidW / 2);
             drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
               rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
@@ -4552,7 +4647,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         if (tasks > 1 || (tasks === 1 && visSum > 0)) {
             // ETAPE 3 : Tableau unité
-            const parts3 = [{value: hiddenSums[0], hidden: true, text: xChar}];
+            const parts3 = [{value: hiddenSums[0], hidden: true, text: varChar}];
             const cxUnit = startX + visW + (unitW / 2);
             drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
               rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
@@ -4574,10 +4669,10 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         addEq(eqLeft1, String(card.total));
         if (visSum > 0 && tasks > 1) {
-            addEq(`${tasks}${xChar}`, String(totalHid));
+            addEq(`${tasks}${varChar}`, String(totalHid));
         }
         if (tasks > 1 || (tasks === 1 && visSum > 0)) {
-            addEq(`${xChar}`, String(hiddenSums[0]));
+            addEq(`${varChar}`, String(hiddenSums[0]));
         }
       }
 
