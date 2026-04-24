@@ -2845,7 +2845,9 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const fontTop = (api && api.fontTop) ? api.fontTop : 72;
   const fontBottom = (api && api.fontBottom) ? api.fontBottom : 72;
 
-  const dyVal = (api && api.textDy) ? api.textDy : "0";
+  const dyVal = (api && api.textDy != null) ? api.textDy : "0.08em";
+  const variableDyVal = (api && api.variableTextDy != null) ? api.variableTextDy : "0";
+  const totalTextDy = (api && api.totalTextDy != null) ? api.totalTextDy : dyVal;
   const totalTextColor = (api && api.totalTextColor) ? api.totalTextColor : ink;
 
   const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
@@ -2882,7 +2884,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
     "text-anchor":"middle",
     "dominant-baseline":"middle",
     "alignment-baseline":"middle",
-    "dy":dyVal,
+    "dy": (isVariableLabel(totalText) ? variableDyVal : totalTextDy),
     "font-size":String(fontTop),
     "fill":totalTextColor,
     "font-weight":"900"
@@ -2916,7 +2918,10 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 
       const extraXShift = isX ? Number((api && api.xTextShiftForX) || 0) : 0;
       const xOpticalShift = isX ? Math.min(3, Math.max(0, segW * 0.015)) : 0;
-      const dyForText = isX ? (((api && api.xTextDyForX) != null) ? api.xTextDyForX : "-0.02em") : dyVal;
+      const isVarLabel = isVariableLabel(textToDisplay);
+      const dyForText = isX
+        ? (((api && api.xTextDyForX) != null) ? api.xTextDyForX : "-0.02em")
+        : (isVarLabel ? variableDyVal : dyVal);
       g.appendChild(mkText(x + segW/2 + xOpticalShift + extraXShift, ySplit + hBottom/2, textToDisplay, {
         "text-anchor":"middle",
         "dominant-baseline":"middle",
@@ -3014,6 +3019,7 @@ function renderCard(card, revealState){
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
   const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+  const varChar = getCardVarChar(card);
 
   if(card.family === "EQ" || card.family === "EQPM"){
     renderCardEquation(card, revealState, useTokens);
@@ -3592,10 +3598,15 @@ function drawEquationSingaporeTable(targetGroup, opts){
   const hasVariableFontSize = Number.isFinite(variableFontSizeOpt) && variableFontSizeOpt > 0;
   const variableFontFamily = opts.variableFontFamily || "'Times New Roman', Times, serif";
   const fitLabelToCell = !!opts.fitLabelToCell;
+  const numberTextDy = (opts.numberTextDy != null) ? opts.numberTextDy : "0.08em";
+  const variableTextDy = (opts.variableTextDy != null) ? opts.variableTextDy : "0";
 
   const fixedUnitOpt = Number(opts.fixedUnit);
   const hasFixedUnit = Number.isFinite(fixedUnitOpt) && fixedUnitOpt > 0;
   const disableLabelInflation = !!opts.disableLabelInflation;
+  const explicitRow1Widths = Array.isArray(opts.row1Widths) ? opts.row1Widths.map(v => Math.max(1, Number(v) || 1)) : null;
+  const explicitRow2Widths = Array.isArray(opts.row2Widths) ? opts.row2Widths.map(v => Math.max(1, Number(v) || 1)) : null;
+  const hasExplicitWidths = !!(explicitRow1Widths && explicitRow2Widths && explicitRow1Widths.length === row1.length && explicitRow2Widths.length === row2.length);
   const minHiddenCellW = Math.max(0, Number(opts.minHiddenCellW) || 0);
   const minVisibleCellW = Math.max(0, Number(opts.minVisibleCellW) || 0);
   const minHiddenCellWValue1 = Math.max(minHiddenCellW, Number(opts.minHiddenCellWValue1) || 0);
@@ -3623,7 +3634,20 @@ function drawEquationSingaporeTable(targetGroup, opts){
   let w = total * unit;
   let rowMetrics = null;
 
-  if(compactEquation){
+  if(hasExplicitWidths){
+    function buildExplicitMetrics(parts, widths){
+      const safeWidths = parts.map((_, idx) => Math.max(1, Number(widths[idx]) || 1));
+      const totalW = safeWidths.reduce((a,b)=>a+b, 0);
+      const hiddenCount = parts.filter(part => part && part.hidden).length;
+      const visibleIndex = parts.findIndex(part => part && !part.hidden);
+      return { widths: safeWidths, totalW, visibleIndex, hiddenCount };
+    }
+
+    const m1 = buildExplicitMetrics(row1, explicitRow1Widths);
+    const m2 = buildExplicitMetrics(row2, explicitRow2Widths);
+    rowMetrics = [m1, m2];
+    w = Math.max(m1.totalW, m2.totalW);
+  } else if(compactEquation){
     const hiddenCellW = Math.max(48, Number(opts.hiddenCellW) || 66);
     const visibleMinW = Math.max(96, Number(opts.visibleMinW) || 150);
     const visibleMaxW = Math.max(visibleMinW, Number(opts.visibleMaxW) || 220);
@@ -3798,6 +3822,7 @@ function drawEquationSingaporeTable(targetGroup, opts){
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "alignment-baseline":"middle",
+          "dy": isVar ? variableTextDy : numberTextDy,
           "font-size": String(fs),
           "fill": textColor,
           "font-weight": isVar ? "normal" : "900",
@@ -4184,6 +4209,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   let currentY = 920;
   const visL = eqVisibleSum(eq.left);
   const visR = eqVisibleSum(eq.right);
+  const vl = visL;
+  const vr = visR;
 
   if(printMode === "worksheet"){
     drawEquationSingaporeTable(gEq, {
@@ -4206,32 +4233,134 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       textColor: "#000"
     });
   } else {
-    const models = buildEquationReductionModels(eq);
     const fullW = 1040;
     const maxTableW = 1040;
     const minHiddenPrintW = 76;
     const minVisiblePrintW = 94;
+    const minHiddenPrintWValue1 = 104;
+    const minVisiblePrintWValue1 = 118;
     const startX = 800 - fullW / 2;
     const unit = fullW / Math.max(1, Number(eq.total) || 1);
-    const commonX = Math.min(Math.max(0, Number(eq.left?.tasks) || 0), Math.max(0, Number(eq.right?.tasks) || 0));
 
-    let alignedX = startX;
-    models.forEach((model, idx) => {
-      const isSolvedUnitModel = (!model.unitFinal) && (((model.left.coeff === 1) && (model.right.coeff === 0) && (model.left.vis === 0) && (model.right.vis > 0)) || (((model.right.coeff === 1) && (model.left.coeff === 0) && (model.right.vis === 0) && (model.left.vis > 0))));
-      const mode = (model.unitFinal || isSolvedUnitModel) ? "symbolic" : ((idx === models.length - 1) ? "filled" : "symbolic");
-      const tableLayout = drawEquationSingaporeTable(gEq, {
-        x: (idx === 0 ? startX : alignedX),
+    function partsFor(coeff, vis){
+      return buildEquationTableParts(Math.max(1, coeff * Math.max(1, Number(eq.x) || 1) + vis), coeff, vis, eq.x, "symbolic", varChar);
+    }
+    function cloneState(state){
+      return {
+        x: state.x,
+        row1Parts: state.row1Parts.slice(),
+        row2Parts: state.row2Parts.slice(),
+        row1Widths: state.row1Widths.slice(),
+        row2Widths: state.row2Widths.slice()
+      };
+    }
+    function trimZeroSegments(parts, widths){
+      const outParts = [];
+      const outWidths = [];
+      for(let i=0;i<parts.length;i++){
+        const w = Math.max(0, Number(widths[i]) || 0);
+        if(w <= 0.01) continue;
+        outParts.push(parts[i]);
+        outWidths.push(w);
+      }
+      return { parts: outParts, widths: outWidths };
+    }
+    function hiddenPrefixWidth(widths, count){
+      return widths.slice(0, Math.max(0, count)).reduce((sum, w) => sum + Math.max(0, Number(w) || 0), 0);
+    }
+    function visibleIndex(parts){
+      return parts.findIndex(part => part && !part.hidden);
+    }
+    function subtractSharedVisible(parts, widths, sharedW){
+      const outParts = parts.slice();
+      const outWidths = widths.slice();
+      const idx = visibleIndex(outParts);
+      if(idx >= 0){
+        outWidths[idx] = Math.max(0, (Number(outWidths[idx]) || 0) - sharedW);
+        if(outWidths[idx] <= 0.01){
+          outParts.splice(idx, 1);
+          outWidths.splice(idx, 1);
+        } else if(outParts[idx]) {
+          outParts[idx] = { ...outParts[idx], value: Math.max(0, Number(outParts[idx].value) || 0) };
+        }
+      }
+      return trimZeroSegments(outParts, outWidths);
+    }
+
+    const states = [];
+    const initialRow1 = partsFor(eq.left.tasks, visL);
+    const initialRow2 = partsFor(eq.right.tasks, visR);
+    const initialLayout = drawEquationSingaporeTable(gEq, {
+      x: startX,
+      y: currentY,
+      total: eq.total,
+      row1: initialRow1,
+      row2: initialRow2,
+      rect:(a)=>tEl("rect", a),
+      line:(a)=>tEl("line", a),
+      text:(x,y,t,a)=>tText(x,y,t,a),
+      fixedUnit: unit,
+      baseW: fullW,
+      maxW: maxTableW,
+      disableLabelInflation: true,
+      rowH: 100,
+      fontSize: 86,
+      pad: 34,
+      stroke: "#000",
+      strokeWidth: 5,
+      hiddenFill: "rgba(0,0,0,0.10)",
+      visibleFill: "rgba(255,255,255,0)",
+      textColor: "#000",
+      minHiddenCellW: minHiddenPrintW,
+      minVisibleCellW: minVisiblePrintW,
+      minHiddenCellWValue1: minHiddenPrintWValue1,
+      minVisibleCellWValue1: minVisiblePrintWValue1,
+      forceCommonHiddenCellW: true,
+      variableFontSize: 60,
+      fitLabelToCell: true
+    });
+    states.push({
+      x: startX,
+      row1Parts: initialRow1,
+      row2Parts: initialRow2,
+      row1Widths: initialLayout.rows[0].segments.map(seg => Math.max(1, Number(seg.w) || 1)),
+      row2Widths: initialLayout.rows[1].segments.map(seg => Math.max(1, Number(seg.w) || 1))
+    });
+    currentY += 250;
+
+    const a = Math.max(0, Number(eq.left?.tasks) || 0);
+    const b = Math.max(0, Number(eq.right?.tasks) || 0);
+    const xVal = Math.max(1, Number(eq?.x) || 1);
+    const commonX = Math.min(a, b);
+    const a2 = a - commonX;
+    const b2 = b - commonX;
+    const commonV = Math.min(vl, vr);
+    const vl2 = vl - commonV;
+    const vr2 = vr - commonV;
+    const currentState = () => states[states.length - 1];
+
+    if(commonX > 0){
+      const prev = currentState();
+      const shiftWidth = Math.max(hiddenPrefixWidth(prev.row1Widths, commonX), hiddenPrefixWidth(prev.row2Widths, commonX));
+      const nextState = {
+        x: prev.x + shiftWidth,
+        row1Parts: partsFor(a2, vl),
+        row2Parts: partsFor(b2, vr),
+        row1Widths: prev.row1Widths.slice(commonX),
+        row2Widths: prev.row2Widths.slice(commonX)
+      };
+      states.push(nextState);
+      drawEquationSingaporeTable(gEq, {
+        x: nextState.x,
         y: currentY,
-        total: model.total,
-        row1: buildEquationTableParts(model.total, model.left.coeff, model.left.vis, eq.x, mode, varChar),
-        row2: buildEquationTableParts(model.total, model.right.coeff, model.right.vis, eq.x, mode, varChar),
+        total: Math.max(1, eq.total - commonX * xVal),
+        row1: nextState.row1Parts,
+        row2: nextState.row2Parts,
+        row1Widths: nextState.row1Widths,
+        row2Widths: nextState.row2Widths,
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        fixedUnit: unit,
-        baseW: fullW,
-        maxW: maxTableW,
-        disableLabelInflation: true,
         rowH: 100,
         fontSize: 86,
         pad: 34,
@@ -4240,27 +4369,105 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        minHiddenCellW: minHiddenPrintW,
-        minVisibleCellW: minVisiblePrintW,
-        minHiddenCellWValue1: 104,
-        minVisibleCellWValue1: 118,
         variableFontSize: 60,
         fitLabelToCell: true
       });
-
-      if(idx === 0 && commonX > 0 && tableLayout && Array.isArray(tableLayout.rows)){
-        const shiftWidths = tableLayout.rows.map(row => {
-          const segs = Array.isArray(row && row.segments) ? row.segments : [];
-          return segs
-            .filter(seg => seg && seg.hidden)
-            .slice(0, commonX)
-            .reduce((sum, seg) => sum + Math.max(0, Number(seg.w) || 0), 0);
-        }).filter(v => v > 0);
-        const shiftWidth = shiftWidths.length ? Math.max(...shiftWidths) : (commonX * Math.max(minHiddenPrintW, unit * Math.max(1, Number(eq.x) || 1)));
-        alignedX = startX + shiftWidth;
-      }
       currentY += 250;
-    });
+    }
+
+    if(commonV > 0){
+      const prev = currentState();
+      const idx1 = visibleIndex(prev.row1Parts);
+      const idx2 = visibleIndex(prev.row2Parts);
+      const w1 = idx1 >= 0 ? Math.max(0, Number(prev.row1Widths[idx1]) || 0) : 0;
+      const w2 = idx2 >= 0 ? Math.max(0, Number(prev.row2Widths[idx2]) || 0) : 0;
+      const sharedVisibleW = Math.min(w1, w2);
+      const nextRow1 = subtractSharedVisible(prev.row1Parts, prev.row1Widths, sharedVisibleW);
+      const nextRow2 = subtractSharedVisible(prev.row2Parts, prev.row2Widths, sharedVisibleW);
+      const nextState = {
+        x: prev.x,
+        row1Parts: partsFor(a2, vl2),
+        row2Parts: partsFor(b2, vr2),
+        row1Widths: nextRow1.widths,
+        row2Widths: nextRow2.widths
+      };
+      states.push(nextState);
+      drawEquationSingaporeTable(gEq, {
+        x: nextState.x,
+        y: currentY,
+        total: Math.max(1, (eq.total - commonX * xVal) - commonV),
+        row1: nextState.row1Parts,
+        row2: nextState.row2Parts,
+        row1Widths: nextState.row1Widths,
+        row2Widths: nextState.row2Widths,
+        rect:(a)=>tEl("rect", a),
+        line:(a)=>tEl("line", a),
+        text:(x,y,t,a)=>tText(x,y,t,a),
+        rowH: 100,
+        fontSize: 86,
+        pad: 34,
+        stroke: "#000",
+        strokeWidth: 5,
+        hiddenFill: "rgba(0,0,0,0.10)",
+        visibleFill: "rgba(255,255,255,0)",
+        textColor: "#000",
+        variableFontSize: 60,
+        fitLabelToCell: true
+      });
+      currentY += 250;
+    }
+
+    const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl2 === 0 && vr2 > 0) ||
+                              (b2 === 1 && a2 === 0 && vr2 === 0 && vl2 > 0);
+    const diffCoeff = Math.abs(a - b);
+    if(diffCoeff >= 1 && !alreadySolvedUnit){
+      const prev = currentState();
+      const row1HiddenCount = prev.row1Parts.filter(part => part && part.hidden).length;
+      const row2HiddenCount = prev.row2Parts.filter(part => part && part.hidden).length;
+      const hiddenSide = row1HiddenCount > 0 ? 'left' : (row2HiddenCount > 0 ? 'right' : null);
+      const coeffRemain = hiddenSide === 'left' ? row1HiddenCount : row2HiddenCount;
+      if(hiddenSide && coeffRemain > 1){
+        const hiddenWidths = hiddenSide === 'left' ? prev.row1Widths : prev.row2Widths;
+        const visibleParts = hiddenSide === 'left' ? prev.row2Parts : prev.row1Parts;
+        const visibleWidths = hiddenSide === 'left' ? prev.row2Widths : prev.row1Widths;
+        const visibleIdx = visibleIndex(visibleParts);
+        const totalHiddenW = hiddenWidths.slice(0, coeffRemain).reduce((sum, w) => sum + Math.max(0, Number(w) || 0), 0);
+        const totalVisibleW = visibleIdx >= 0 ? Math.max(0, Number(visibleWidths[visibleIdx]) || 0) : totalHiddenW;
+        const oneHiddenW = totalHiddenW / coeffRemain;
+        const oneVisibleW = totalVisibleW / coeffRemain;
+        const nextState = {
+          x: prev.x,
+          row1Parts: hiddenSide === 'left' ? partsFor(1, 0) : partsFor(0, xVal),
+          row2Parts: hiddenSide === 'left' ? partsFor(0, xVal) : partsFor(1, 0),
+          row1Widths: hiddenSide === 'left' ? [oneHiddenW] : [oneVisibleW],
+          row2Widths: hiddenSide === 'left' ? [oneVisibleW] : [oneHiddenW]
+        };
+        states.push(nextState);
+        drawEquationSingaporeTable(gEq, {
+          x: nextState.x,
+          y: currentY,
+          total: xVal,
+          row1: nextState.row1Parts,
+          row2: nextState.row2Parts,
+          row1Widths: nextState.row1Widths,
+          row2Widths: nextState.row2Widths,
+          rect:(a)=>tEl("rect", a),
+          line:(a)=>tEl("line", a),
+          text:(x,y,t,a)=>tText(x,y,t,a),
+          rowH: 100,
+          fontSize: 86,
+          pad: 34,
+          stroke: "#000",
+          strokeWidth: 5,
+          hiddenFill: "rgba(0,0,0,0.10)",
+          visibleFill: "rgba(255,255,255,0)",
+          textColor: "#000",
+          variableFontSize: 60,
+          fitLabelToCell: true
+        });
+        currentY += 250;
+      }
+    }
 
     currentY += 40;
     const lines = buildEquationSolveLines(eq, varChar);
@@ -4315,6 +4522,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     return;
   }
 
+  const varChar = getCardVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
   const trayY = 270;
@@ -4374,16 +4582,20 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)) {
     const isSigned = (card.family === "NPM");
-    const ruleText = isSigned 
-        ? "Sous chaque tache se cache le même nombre." 
-        : "Sous chaque tache, il y a le même nombre de billes.";
-    const startY = trayY + trayH + 80;
-    targetSvg.appendChild(tText(800, startY, ruleText, {
-      "text-anchor":"middle",
-      "font-size":"42",
-      "fill":"#000",
-      "font-weight":"700"
-    }));
+    const isABFamily = (card.family === "U" || card.family === "N");
+    const showRuleText = !(isABFamily && printMode === "correction");
+    if (showRuleText) {
+      const ruleText = isSigned 
+          ? "Sous chaque tache se cache le même nombre." 
+          : "Sous chaque tache, il y a le même nombre de billes.";
+      const startY = trayY + trayH + ((isABFamily && printMode === "worksheet") ? 60 : 80);
+      targetSvg.appendChild(tText(800, startY, ruleText, {
+        "text-anchor":"middle",
+        "font-size":"42",
+        "fill":"#000",
+        "font-weight":"700"
+      }));
+    }
   }
 
   const cover = "rgb(0,0,0)";
