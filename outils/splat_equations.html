@@ -338,13 +338,20 @@
           </select>
         </div>
 
-        <div id="eqUnknownModeWrap" style="flex:1; min-width:0; display:none">
+        <div id="eqUnknownModeWrap" style="flex:0 0 172px; min-width:0; display:none">
           <label>Forme<br>d’équation</label>
           <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
             <option value="MIX" selected>Mélange des deux types</option>
             <option value="ONE_SIDE">Forme ax + b = c</option>
             <option value="BOTH">Forme ax + b = cx + d</option>
           </select>
+        </div>
+
+        <div id="eqUnknownQuestionWrap" style="flex:0 0 190px; min-width:170px; display:none; align-items:flex-end; align-self:flex-end; padding-bottom:0;">
+          <label style="display:flex; gap:8px; align-items:center; min-height:38px; line-height:1.15; font-size:12px; color:var(--muted); cursor:pointer; margin:0;">
+            <input id="eqUnknownQuestion" type="checkbox" style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
+            <span>Afficher ?<br>à la place des lettres</span>
+          </label>
         </div>
 
         <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
@@ -461,12 +468,24 @@ const variableCharSet = new Set([...variableChars, "x", "a", "b", "c", "m", "n",
 function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
 }
+function shouldDisplayUnknownAsQuestion(){
+  const el = document.getElementById("eqUnknownQuestion");
+  return !!(el && el.checked);
+}
+function getRawCardVarChar(card){
+  return (card && typeof card.varChar === "string" && card.varChar.trim()) ? card.varChar : xChar;
+}
 function getCardVarChar(card){
-  if(card && typeof card.varChar === "string" && card.varChar.trim()) return card.varChar;
-  return xChar;
+  // Les équations algébriques restent toujours avec leur vraie lettre.
+  return getRawCardVarChar(card);
+}
+function getTableVarChar(card){
+  // L'option ? s'applique uniquement aux tableaux / schémas en barres.
+  return shouldDisplayUnknownAsQuestion() ? "?" : getRawCardVarChar(card);
 }
 function isVariableLabel(label){
-  return variableCharSet.has(String(label == null ? "" : label));
+  const s = String(label == null ? "" : label);
+  return s === "?" || variableCharSet.has(s);
 }
 
 
@@ -646,6 +665,8 @@ const numHiddenCountWrapEl = document.getElementById("numHiddenCountWrap");
 const numHiddenCountEl = document.getElementById("numHiddenCount");
 const eqUnknownModeWrapEl = document.getElementById("eqUnknownModeWrap");
 const eqUnknownModeEl = document.getElementById("eqUnknownMode");
+const eqUnknownQuestionWrapEl = document.getElementById("eqUnknownQuestionWrap");
+const eqUnknownQuestionEl = document.getElementById("eqUnknownQuestion");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
@@ -842,6 +863,7 @@ function syncSettingsUI(){
 
   if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "none";
   if(eqUnknownModeWrapEl) eqUnknownModeWrapEl.style.display = isEquation ? "block" : "none";
+  if(eqUnknownQuestionWrapEl) eqUnknownQuestionWrapEl.style.display = isEquation ? "flex" : "none";
   if(numberedSettingsEl) numberedSettingsEl.style.display = "block";
   numVisibleMinEl.max = "6";
   numVisibleMaxEl.max = "6";
@@ -895,6 +917,14 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
   el.addEventListener("input", scheduleAutoGenerate);
   el.addEventListener("change", scheduleAutoGenerate);
 });
+
+if(eqUnknownQuestionEl){
+  const rerenderUnknownDisplay = ()=>{
+    if(typeof updateUI === "function") updateUI();
+  };
+  eqUnknownQuestionEl.addEventListener("input", rerenderUnknownDisplay);
+  eqUnknownQuestionEl.addEventListener("change", rerenderUnknownDisplay);
+}
 
 hookNumberInputClamps();
 hookMinMaxPairs();
@@ -1759,44 +1789,6 @@ function addHatchPath(targetGroup, d){
   targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternMain)', stroke:'none'}));
 }
 
-function ensurePrintHatchDefs(svgRoot){
-  if(!svgRoot) return;
-  let defs = svgRoot.querySelector('defs[data-print-hatch-defs="1"]');
-  if(defs) return defs;
-  defs = el('defs', {'data-print-hatch-defs':'1'});
-
-  const pat = el('pattern', {
-    id:'diagHatchPatternPrint', patternUnits:'userSpaceOnUse', width:'8', height:'8', patternTransform:'rotate(45)'
-  });
-  pat.appendChild(el('rect', {x:'0', y:'0', width:'8', height:'8', fill:'rgba(255,255,255,0)'}));
-  pat.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'8', stroke:'rgba(0,0,0,0.58)', 'stroke-width':'2.4'}));
-  defs.appendChild(pat);
-
-  svgRoot.insertBefore(defs, svgRoot.firstChild);
-  return defs;
-}
-
-function addHatchRectPrint(targetGroup, x, y, width, height){
-  const svgRoot = getSvgRootForHatch(targetGroup);
-  ensurePrintHatchDefs(svgRoot);
-  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
-  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
-}
-
-function addHatchCirclePrint(targetGroup, cx, cy, r){
-  const svgRoot = getSvgRootForHatch(targetGroup);
-  ensurePrintHatchDefs(svgRoot);
-  targetGroup.appendChild(el('circle', {cx, cy, r, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
-  targetGroup.appendChild(el('circle', {cx, cy, r, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
-}
-
-function addHatchPathPrint(targetGroup, d){
-  const svgRoot = getSvgRootForHatch(targetGroup);
-  ensurePrintHatchDefs(svgRoot);
-  targetGroup.appendChild(el('path', {d, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
-  targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
-}
-
 function drawEquationSingaporeTable(targetGroup, opts){
   const total = Math.max(1, Number(opts.total) || 1);
   const row1 = Array.isArray(opts.row1) ? opts.row1 : [];
@@ -1867,6 +1859,15 @@ function drawEquationSingaporeTable(targetGroup, opts){
     const m2 = buildExplicitMetrics(row2, explicitRow2Widths);
     rowMetrics = [m1, m2];
     w = Math.max(m1.totalW, m2.totalW);
+    // Si une ligne est plus courte que l'autre, sa dernière cellule doit aller jusqu'au bord du tableau.
+    // Cela évite les cases grisées partiellement, notamment quand la lettre est remplacée par ?.
+    rowMetrics.forEach(m => {
+      const extra = w - m.totalW;
+      if(extra > 0.5 && Array.isArray(m.widths) && m.widths.length){
+        m.widths[m.widths.length - 1] += extra;
+        m.totalW = w;
+      }
+    });
   } else if(compactEquation){
     const hiddenCellW = Math.max(48, Number(opts.hiddenCellW) || 66);
     const visibleMinW = Math.max(96, Number(opts.visibleMinW) || 150);
@@ -2022,8 +2023,7 @@ function drawEquationSingaporeTable(targetGroup, opts){
       const isRemoved = !!part.removed;
       targetGroup.appendChild(mkRect({x, y, width:segW, height:rowH, fill}));
       if(isRemoved){
-        const hatchRectFn = opts.addHatchRectFn || addHatchRect;
-        hatchRectFn(targetGroup, x, y, segW, rowH);
+        addHatchRect(targetGroup, x, y, segW, rowH);
       }
       if(label){
         const isVar = isVariableLabel(label);
@@ -2439,7 +2439,7 @@ function isProgressiveRevealCard(card){
 
 function getMaxRevealState(card){
   if(!card) return 0;
-  if(card.family === "EQSTEP") return getEquationStepStates(card._eq, getCardVarChar(card)).length;
+  if(card.family === "EQSTEP") return getEquationStepStates(card._eq, getCardVarChar(card), {includeVerify:true}).length;
   if(isProgressiveRevealCard(card)) return 2;
   return 2;
 }
@@ -2514,13 +2514,14 @@ function formatEqStepDecomposedSide(coeff, splitParts, varChar = xChar){
   (splitParts||[]).forEach(p=>{ const v=Math.max(0, Number(p && p.value)||0); if(v>0) terms.push(String(v)); });
   return terms.length ? terms.join(" + ") : "0";
 }
-function getEquationStepStates(eq, varChar = xChar){
+function getEquationStepStates(eq, varChar = xChar, opts = {}){
   if(!eq) return [];
   const xVal = Math.max(1, Number(eq.x) || 1);
   const a = Math.max(0, Number(eq.left && eq.left.tasks) || 0);
   const b = Math.max(0, Number(eq.right && eq.right.tasks) || 0);
   const vl = Math.max(0, eqVisibleSum(eq.left));
   const vr = Math.max(0, eqVisibleSum(eq.right));
+  const includeVerify = !!(opts && opts.includeVerify);
   const states=[];
 
   function push(kind,leftParts,rightParts,equation,extra={}){
@@ -2609,10 +2610,18 @@ function getEquationStepStates(eq, varChar = xChar){
       {final:true, variableSide:"right", remainingCoeff, remainingValue}
     );
   }
+  if(includeVerify){
+    push("verify",
+      makeEqStepGroupedParts(a, vl, xVal, varChar),
+      makeEqStepGroupedParts(b, vr, xVal, varChar),
+      finalEq,
+      {verify:true, variableSide: varIsOnLeft ? "left" : "right"}
+    );
+  }
   return states;
 }
-function getEquationStepState(eq, revealState, varChar = xChar){
-  const states=getEquationStepStates(eq,varChar);
+function getEquationStepState(eq, revealState, varChar = xChar, opts = {}){
+  const states=getEquationStepStates(eq,varChar, opts);
   if(!states.length) return null;
   return states[clamp(Math.round(Number(revealState)||1)-1,0,states.length-1)];
 }
@@ -2658,9 +2667,11 @@ function cloneEqStepPart(part){
   return Object.assign({}, part || {});
 }
 
-function buildEqStepRepeatedVisibleParts(count, value){
+function buildEqStepRepeatedVisibleParts(count, value, opts = {}){
   const n = Math.max(1, Number(count) || 1);
   const v = Math.max(0, Number(value) || 0);
+  const startPosIndex = Math.max(0, Math.round(Number(opts.startPosIndex) || 0));
+  const alignToHidden = !!opts.alignToHidden;
   const out = [];
   for(let i=0;i<n;i++){
     out.push({
@@ -2669,7 +2680,9 @@ function buildEqStepRepeatedVisibleParts(count, value){
       measureLabel: String(v),
       hidden: false,
       kind: "v",
-      removed: false
+      removed: false,
+      posIndex: startPosIndex + i,
+      alignWithHiddenIndex: alignToHidden ? i : null
     });
   }
   return out;
@@ -2729,7 +2742,7 @@ function getEquationStepSchemaParts(eq, state, varChar = xChar){
       (variableSide === "left" ? leftHiddenCount : rightHiddenCount) ||
       1
     );
-    const repeatedValues = buildEqStepRepeatedVisibleParts(remainingCoeff, xVal);
+    const repeatedValues = buildEqStepRepeatedVisibleParts(remainingCoeff, xVal, {alignToHidden:true});
 
     if(variableSide === "left"){
       const hiddenRow = leftHiddenCount ? leftParts : makeEqStepGroupedParts(remainingCoeff, 0, xVal, varChar);
@@ -2950,30 +2963,57 @@ function buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics){
   };
 }
 
-function drawEquationStepSingaporeTable(targetGroup, card, revealState, extraOpts = {}){
+function drawEquationStepSingaporeTable(targetGroup, card, revealState){
   const eq = card && card._eq;
   if(!eq) return null;
 
-  const varChar = getCardVarChar(card);
+  const varChar = getTableVarChar(card);
   const schemaRevealState = Math.max(1, Math.round(Number(revealState) || 0));
-  const state = getEquationStepState(eq, schemaRevealState, varChar);
+  const schemaMode = getEquationStepView() === "schema";
+  const state = getEquationStepState(eq, schemaRevealState, varChar, schemaMode ? {includeVerify:true} : {});
   if(!state) return null;
 
   const metrics = getEquationStepTableMetricsFromInitial(eq, varChar);
   const gTable = el("g", {id:"eqStepSingaporeTable"});
 
-  const schemaMode = getEquationStepView() === "schema";
-  const stableLayout = schemaMode
+  const isSchemaVerifyTable = schemaMode && state.kind === "verify" && state.verify;
+  const stableLayout = (schemaMode && !isSchemaVerifyTable)
     ? buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics)
     : null;
 
-  const tableLeftParts = stableLayout ? stableLayout.row1Parts : state.leftParts;
-  const tableRightParts = stableLayout ? stableLayout.row2Parts : state.rightParts;
-  const tableTotal = Math.max(
-    1,
-    tableLeftParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0),
-    tableRightParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0)
+  const xVal = Math.max(1, Number(eq && eq.x) || 1);
+  const varPart = {hidden:true, value:xVal, label:varChar, measureLabel:varChar, kind:"x", removed:false};
+  const valPart = {hidden:false, value:xVal, label:String(xVal), measureLabel:String(xVal), kind:"v", removed:false};
+
+  const tableLeftParts = isSchemaVerifyTable
+    ? ((state.variableSide === "left") ? [varPart] : [valPart])
+    : (stableLayout ? stableLayout.row1Parts : state.leftParts);
+  const tableRightParts = isSchemaVerifyTable
+    ? ((state.variableSide === "left") ? [valPart] : [varPart])
+    : (stableLayout ? stableLayout.row2Parts : state.rightParts);
+
+  const verifyHiddenW = Math.max(
+    metrics.minHiddenCellWValue1,
+    minCellWidthForLabel(varChar, metrics.variableFontSize, metrics.pad)
   );
+  const verifyVisibleW = Math.max(
+    xVal === 1 ? metrics.minVisibleCellWValue1 : metrics.minVisibleCellW,
+    minCellWidthForLabel(String(xVal), metrics.fontSize, metrics.pad)
+  );
+  const verifyRow1Widths = isSchemaVerifyTable
+    ? ((state.variableSide === "left") ? [verifyHiddenW] : [verifyVisibleW])
+    : undefined;
+  const verifyRow2Widths = isSchemaVerifyTable
+    ? ((state.variableSide === "left") ? [verifyVisibleW] : [verifyHiddenW])
+    : undefined;
+
+  const tableTotal = isSchemaVerifyTable
+    ? 1
+    : Math.max(
+        1,
+        tableLeftParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0),
+        tableRightParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0)
+      );
 
   const tableOpts = {
     x: stableLayout ? stableLayout.x : undefined,
@@ -2986,14 +3026,14 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState, extraOpt
     line:(a)=>el("line", a),
     text:(x,y,t,a)=>text(x,y,t,a),
     compactEquation: false,
-    fixedUnit: stableLayout ? undefined : metrics.fixedUnit,
+    fixedUnit: (stableLayout || isSchemaVerifyTable) ? undefined : metrics.fixedUnit,
     disableLabelInflation: true,
     fitLabelToCell: true,
     baseW: metrics.baseW,
-    maxW: stableLayout ? undefined : (schemaMode ? 740 : undefined),
-    row1Widths: stableLayout ? stableLayout.row1Widths : undefined,
-    row2Widths: stableLayout ? stableLayout.row2Widths : undefined,
-    forceCommonHiddenCellW: schemaMode && !stableLayout,
+    maxW: stableLayout ? undefined : (isSchemaVerifyTable ? (verifyHiddenW + verifyVisibleW + 24) : (schemaMode ? 740 : undefined)),
+    row1Widths: stableLayout ? stableLayout.row1Widths : verifyRow1Widths,
+    row2Widths: stableLayout ? stableLayout.row2Widths : verifyRow2Widths,
+    forceCommonHiddenCellW: schemaMode && !stableLayout && !isSchemaVerifyTable,
     minHiddenCellW: metrics.minHiddenCellW,
     minVisibleCellW: metrics.minVisibleCellW,
     minHiddenCellWValue1: metrics.minHiddenCellWValue1,
@@ -3008,8 +3048,6 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState, extraOpt
     visibleFill: "rgba(255,255,255,0)",
     textColor: "#000"
   };
-
-  Object.assign(tableOpts, extraOpts || {});
 
   const layout = drawEquationSingaporeTable(gTable, tableOpts);
   targetGroup.appendChild(gTable);
@@ -3151,7 +3189,7 @@ function renderCardEquation(card, revealState, useTokens){
     const beadR = side.beadR ?? 26;
     const font = Math.max(18, Math.round(beadR * 0.95));
     const isEqStep = (card.family === "EQSTEP" && revealState > 0);
-    const stepState = isEqStep ? getEquationStepState(eq, revealState, varChar) : null;
+    const stepState = isEqStep ? getEquationStepState(eq, revealState, varChar, {includeVerify:true}) : null;
     const stepDisplayParts = (stepState && stepState.kind === "final" && stepState.final)
       ? getEquationStepSchemaParts(eq, stepState, varChar)
       : null;
@@ -3177,6 +3215,67 @@ function renderCardEquation(card, revealState, useTokens){
         "text-anchor":"middle", "font-size":String(font), fill: removed ? "rgba(0,0,0,0.45)" : "#000", "font-weight":"900"
       }));
     }
+
+    function fallbackVisiblePosition(idx, count){
+      const tray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      const safeCount = Math.max(1, Number(count) || 1);
+      if(tray){
+        const margin = Math.min(90, Math.max(45, tray.w * 0.12));
+        return {
+          cx: tray.x + margin + (tray.w - 2 * margin) * ((idx + 0.5) / safeCount),
+          cy: tray.y + tray.h - (activeTrays.vertical ? 56 : 96)
+        };
+      }
+      return {cx:450+idx*80, cy:580};
+    }
+
+    function splitVisiblePositionOnCurrentTray(idx, count){
+      const tray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      if(!tray) return fallbackVisiblePosition(idx, count);
+      const n = Math.max(1, Math.round(Number(count) || 1));
+      const i = clamp(Math.round(Number(idx) || 0), 0, n - 1);
+      const minGap = beadR * 2 + 18;
+      const marginX = Math.max(beadR + 28, 58);
+      const xMin = tray.x + marginX;
+      const xMax = tray.x + tray.w - marginX;
+      const usableW = Math.max(minGap, xMax - xMin);
+
+      // Pas de symétrie : on place simplement les billes sur LE BON PLATEAU,
+      // avec assez d'espace pour qu'elles ne se touchent pas.
+      let rows = 1;
+      let cols = n;
+      if(n >= 5){
+        rows = 2;
+        cols = Math.ceil(n / 2);
+      }
+      const row = rows === 1 ? 0 : Math.floor(i / cols);
+      const col = rows === 1 ? i : (i % cols);
+      const countInRow = rows === 1 ? n : Math.min(cols, n - row * cols);
+      const cx = countInRow <= 1
+        ? (tray.x + tray.w / 2)
+        : xMin + usableW * ((col + 0.5) / countInRow);
+
+      const baseY = tray.y + tray.h - Math.max(beadR + 34, activeTrays.vertical ? 56 : 96);
+      const cy = rows === 1
+        ? baseY
+        : baseY - ((rows - 1) * minGap) / 2 + row * minGap;
+
+      return {
+        cx: clamp(cx, tray.x + beadR + 12, tray.x + tray.w - beadR - 12),
+        cy: clamp(cy, tray.y + beadR + 12, tray.y + tray.h - beadR - 12)
+      };
+    }
+
+    function resolveStepVisiblePosition(part, idx, count){
+      const alignRaw = Number(part && part.alignWithHiddenIndex);
+      if(Number.isFinite(alignRaw)){
+        return splitVisiblePositionOnCurrentTray(idx, count);
+      }
+      const rawPosIndex = Number(part && part.posIndex);
+      const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
+      return side.posV?.[posIndex] || side.posV?.[idx] || fallbackVisiblePosition(idx, count);
+    }
+
 
     if(isEqStep && Array.isArray(stepParts)){
       const hiddenParts = stepParts.filter(p => p && p.hidden);
@@ -3206,6 +3305,25 @@ function renderCardEquation(card, revealState, useTokens){
             "font-weight":"900"
           }
         ));
+      }
+
+      if(currentKind === "verify"){
+        const xVal = Math.max(1, Number(eq && eq.x) || 1);
+        (side.splats || []).forEach((s, idx)=>{
+          const pHidden = side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+          drawHiddenRevealedBead(pHidden, xVal);
+          layer.appendChild(el("path",{
+            d: blobPath(s.cx, s.cy, s.r),
+            fill: revealCol,
+            stroke: "rgba(0,0,0,0.14)",
+            "stroke-width":"5"
+          }));
+        });
+        (metaSide.visible || []).forEach((val, i)=>{
+          const p = side.posV?.[i] || fallbackVisiblePosition(i, (metaSide.visible || []).length);
+          drawVisibleBead(p, val, false);
+        });
+        return;
       }
 
       hiddenParts.forEach((part, idx)=>{
@@ -3244,9 +3362,7 @@ function renderCardEquation(card, revealState, useTokens){
       });
 
       visibleParts.forEach((part, idx)=>{
-        const rawPosIndex = Number(part && part.posIndex);
-        const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const p = side.posV?.[posIndex] || side.posV?.[idx] || {cx:450+idx*80, cy:580};
+        const p = resolveStepVisiblePosition(part, idx, visibleParts.length);
         drawVisibleBead(p, part.value, !!part.removed);
       });
 
@@ -3321,8 +3437,9 @@ function renderCardEquation(card, revealState, useTokens){
     const visL = eqVisibleSum(eq.left);
     const visR = eqVisibleSum(eq.right);
     const tableMode = (revealState === 1) ? "symbolic" : "filled";
-    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode, varChar);
-    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode, varChar);
+    const tableVarChar = getTableVarChar(card);
+    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode, tableVarChar);
+    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode, tableVarChar);
     const gTable = el("g", {id:"eqSingaporeTable"});
     const projTableW = 640;
     const layout = drawEquationSingaporeTable(gTable, {
@@ -3492,7 +3609,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   function drawVisibleBead(p, val, beadR, removed=false){
     const col = beadColorForValue(val);
     targetGroup.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-    if(removed) addHatchCirclePrint(targetGroup, p.cx, p.cy, beadR);
+    if(removed) addHatchCircle(targetGroup, p.cx, p.cy, beadR);
     const font = Math.max(18, Math.round(beadR * 0.95));
     targetGroup.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
       "text-anchor":"middle", "font-size":String(font), fill: removed ? "rgba(0,0,0,0.45)" : "#000", "font-weight":"900"
@@ -3518,12 +3635,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const beadR = side.beadR || 30;
 
     if(stepState){
-      const stepDisplayParts = (stepState.kind === "final" && stepState.final)
-        ? getEquationStepSchemaParts(eq, stepState, varChar)
-        : null;
-      const stepParts = sideName === "left"
-        ? (stepDisplayParts ? stepDisplayParts.leftParts : stepState.leftParts)
-        : (stepDisplayParts ? stepDisplayParts.rightParts : stepState.rightParts);
+      const stepParts = sideName === "left" ? stepState.leftParts : stepState.rightParts;
       const hiddenParts = (stepParts || []).filter(p => p && p.hidden);
       const visibleParts = (stepParts || []).filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState.kind || "";
@@ -3545,7 +3657,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
           stroke:(isRemoved || isFinalReveal) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)",
           "stroke-width":"5"
         }));
-        if(isRemoved) addHatchPathPrint(targetGroup, d);
+        if(isRemoved) addHatchPath(targetGroup, d);
       });
 
       visibleParts.forEach((part, idx)=>{
@@ -3571,7 +3683,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
 
   if(showAid){
     if(layoutMode === "schema"){
-      if(revealState > 0) drawEquationStepSingaporeTable(targetGroup, card, revealState, {addHatchRectFn:addHatchRectPrint});
+      if(revealState > 0) drawEquationStepSingaporeTable(targetGroup, card, revealState);
     }else{
       const line = stepState && stepState.equation ? stepState.equation : (getEquationStepVisibleLines(eq, revealState, varChar).slice(-1)[0] || "");
       if(line){
@@ -3594,7 +3706,6 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
   const eq = card && card._eq;
   if(!eq) return;
   ensureHatchDefs(targetSvg);
-  ensurePrintHatchDefs(targetSvg);
   const view = getEquationStepView();
   const isSchema = view === "schema";
   const varChar = getCardVarChar(card);
@@ -3817,8 +3928,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       cx: 800,
       y: currentY,
       total: eq.total,
-      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank", varChar),
-      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank", varChar),
+      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank", getTableVarChar(card)),
+      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank", getTableVarChar(card)),
       rect:(a)=>tEl("rect", a),
       line:(a)=>tEl("line", a),
       text:(x,y,t,a)=>tText(x,y,t,a),
@@ -3843,7 +3954,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
     const unit = fullW / Math.max(1, Number(eq.total) || 1);
 
     function partsFor(coeff, vis){
-      return buildEquationTableParts(Math.max(1, coeff * Math.max(1, Number(eq.x) || 1) + vis), coeff, vis, eq.x, "symbolic", varChar);
+      return buildEquationTableParts(Math.max(1, coeff * Math.max(1, Number(eq.x) || 1) + vis), coeff, vis, eq.x, "symbolic", getTableVarChar(card));
     }
     function cloneState(state){
       return {
