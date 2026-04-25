@@ -288,11 +288,11 @@
 
 <div class="wrap">
   <section class="panel">
-    <label>Type d’activité</label>
+    <label>Mode</label>
     <select id="activity">
-      <option value="EQ" selected>E — Équation (2 plateaux)</option>
-      <option value="EQSTEP">E bis — Équation pas à pas</option>
-      <option value="EQPM">E± — Équation (2 plateaux, entiers relatifs)</option>
+      <option value="EQ" selected>Équation</option>
+      <option value="EQSTEP">Équation — résolution pas à pas</option>
+      <option value="EQPM">Équation avec entiers relatifs</option>
     </select>
 
     
@@ -339,11 +339,11 @@
         </div>
 
         <div id="eqUnknownModeWrap" style="flex:1; min-width:0; display:none">
-          <label>Inconnues<br>(lettre)</label>
-          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:13px;">
-            <option value="MIX" selected>Mélange</option>
-            <option value="ONE_SIDE">1 côté</option>
-            <option value="BOTH">2 côtés</option>
+          <label>Forme<br>d’équation</label>
+          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
+            <option value="MIX" selected>Mélange des deux types</option>
+            <option value="ONE_SIDE">Forme ax + b = c</option>
+            <option value="BOTH">Forme ax + b = cx + d</option>
           </select>
         </div>
 
@@ -1759,6 +1759,44 @@ function addHatchPath(targetGroup, d){
   targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternMain)', stroke:'none'}));
 }
 
+function ensurePrintHatchDefs(svgRoot){
+  if(!svgRoot) return;
+  let defs = svgRoot.querySelector('defs[data-print-hatch-defs="1"]');
+  if(defs) return defs;
+  defs = el('defs', {'data-print-hatch-defs':'1'});
+
+  const pat = el('pattern', {
+    id:'diagHatchPatternPrint', patternUnits:'userSpaceOnUse', width:'8', height:'8', patternTransform:'rotate(45)'
+  });
+  pat.appendChild(el('rect', {x:'0', y:'0', width:'8', height:'8', fill:'rgba(255,255,255,0)'}));
+  pat.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'8', stroke:'rgba(0,0,0,0.58)', 'stroke-width':'2.4'}));
+  defs.appendChild(pat);
+
+  svgRoot.insertBefore(defs, svgRoot.firstChild);
+  return defs;
+}
+
+function addHatchRectPrint(targetGroup, x, y, width, height){
+  const svgRoot = getSvgRootForHatch(targetGroup);
+  ensurePrintHatchDefs(svgRoot);
+  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
+  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
+}
+
+function addHatchCirclePrint(targetGroup, cx, cy, r){
+  const svgRoot = getSvgRootForHatch(targetGroup);
+  ensurePrintHatchDefs(svgRoot);
+  targetGroup.appendChild(el('circle', {cx, cy, r, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
+  targetGroup.appendChild(el('circle', {cx, cy, r, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
+}
+
+function addHatchPathPrint(targetGroup, d){
+  const svgRoot = getSvgRootForHatch(targetGroup);
+  ensurePrintHatchDefs(svgRoot);
+  targetGroup.appendChild(el('path', {d, fill:'rgba(255,255,255,0.44)', stroke:'none'}));
+  targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternPrint)', stroke:'none'}));
+}
+
 function drawEquationSingaporeTable(targetGroup, opts){
   const total = Math.max(1, Number(opts.total) || 1);
   const row1 = Array.isArray(opts.row1) ? opts.row1 : [];
@@ -1984,7 +2022,8 @@ function drawEquationSingaporeTable(targetGroup, opts){
       const isRemoved = !!part.removed;
       targetGroup.appendChild(mkRect({x, y, width:segW, height:rowH, fill}));
       if(isRemoved){
-        addHatchRect(targetGroup, x, y, segW, rowH);
+        const hatchRectFn = opts.addHatchRectFn || addHatchRect;
+        hatchRectFn(targetGroup, x, y, segW, rowH);
       }
       if(label){
         const isVar = isVariableLabel(label);
@@ -2615,6 +2654,10 @@ function getEquationStepTableMetricsFromInitial(eq, varChar = xChar){
 
 
 
+function cloneEqStepPart(part){
+  return Object.assign({}, part || {});
+}
+
 function buildEqStepRepeatedVisibleParts(count, value){
   const n = Math.max(1, Number(count) || 1);
   const v = Math.max(0, Number(value) || 0);
@@ -2907,7 +2950,7 @@ function buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics){
   };
 }
 
-function drawEquationStepSingaporeTable(targetGroup, card, revealState){
+function drawEquationStepSingaporeTable(targetGroup, card, revealState, extraOpts = {}){
   const eq = card && card._eq;
   if(!eq) return null;
 
@@ -2965,6 +3008,8 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState){
     visibleFill: "rgba(255,255,255,0)",
     textColor: "#000"
   };
+
+  Object.assign(tableOpts, extraOpts || {});
 
   const layout = drawEquationSingaporeTable(gTable, tableOpts);
   targetGroup.appendChild(gTable);
@@ -3107,7 +3152,14 @@ function renderCardEquation(card, revealState, useTokens){
     const font = Math.max(18, Math.round(beadR * 0.95));
     const isEqStep = (card.family === "EQSTEP" && revealState > 0);
     const stepState = isEqStep ? getEquationStepState(eq, revealState, varChar) : null;
-    const stepParts = stepState ? ((sideName === "left") ? stepState.leftParts : stepState.rightParts) : null;
+    const stepDisplayParts = (stepState && stepState.kind === "final" && stepState.final)
+      ? getEquationStepSchemaParts(eq, stepState, varChar)
+      : null;
+    const stepParts = stepState
+      ? ((sideName === "left")
+          ? (stepDisplayParts ? stepDisplayParts.leftParts : stepState.leftParts)
+          : (stepDisplayParts ? stepDisplayParts.rightParts : stepState.rightParts))
+      : null;
 
     function drawHatchOverlayPath(d){
       addHatchPath(layer, d);
@@ -3440,7 +3492,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   function drawVisibleBead(p, val, beadR, removed=false){
     const col = beadColorForValue(val);
     targetGroup.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-    if(removed) addHatchCircle(targetGroup, p.cx, p.cy, beadR);
+    if(removed) addHatchCirclePrint(targetGroup, p.cx, p.cy, beadR);
     const font = Math.max(18, Math.round(beadR * 0.95));
     targetGroup.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
       "text-anchor":"middle", "font-size":String(font), fill: removed ? "rgba(0,0,0,0.45)" : "#000", "font-weight":"900"
@@ -3466,7 +3518,12 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const beadR = side.beadR || 30;
 
     if(stepState){
-      const stepParts = sideName === "left" ? stepState.leftParts : stepState.rightParts;
+      const stepDisplayParts = (stepState.kind === "final" && stepState.final)
+        ? getEquationStepSchemaParts(eq, stepState, varChar)
+        : null;
+      const stepParts = sideName === "left"
+        ? (stepDisplayParts ? stepDisplayParts.leftParts : stepState.leftParts)
+        : (stepDisplayParts ? stepDisplayParts.rightParts : stepState.rightParts);
       const hiddenParts = (stepParts || []).filter(p => p && p.hidden);
       const visibleParts = (stepParts || []).filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState.kind || "";
@@ -3488,7 +3545,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
           stroke:(isRemoved || isFinalReveal) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)",
           "stroke-width":"5"
         }));
-        if(isRemoved) addHatchPath(targetGroup, d);
+        if(isRemoved) addHatchPathPrint(targetGroup, d);
       });
 
       visibleParts.forEach((part, idx)=>{
@@ -3514,7 +3571,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
 
   if(showAid){
     if(layoutMode === "schema"){
-      if(revealState > 0) drawEquationStepSingaporeTable(targetGroup, card, revealState);
+      if(revealState > 0) drawEquationStepSingaporeTable(targetGroup, card, revealState, {addHatchRectFn:addHatchRectPrint});
     }else{
       const line = stepState && stepState.equation ? stepState.equation : (getEquationStepVisibleLines(eq, revealState, varChar).slice(-1)[0] || "");
       if(line){
@@ -3537,6 +3594,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
   const eq = card && card._eq;
   if(!eq) return;
   ensureHatchDefs(targetSvg);
+  ensurePrintHatchDefs(targetSvg);
   const view = getEquationStepView();
   const isSchema = view === "schema";
   const varChar = getCardVarChar(card);
@@ -3565,12 +3623,37 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
 
   if(printMode === "statement"){
     const g = tEl("g", {id:"eqStepPrintStatement"});
-    renderCardEquationStepPrintScene(g, card, 0, {
-      layoutMode:"equation",
-      showIntroText:true,
-      showAid:false,
-      useTokens
-    });
+
+    /* En vue Schéma, les plateaux verticaux commencent très haut :
+       on réserve donc un vrai bandeau de consigne, puis on descend
+       uniquement la scène pour qu'elle ne chevauche jamais le texte. */
+    if(isSchema){
+      g.appendChild(tText(800, 82, "Même quantité en haut et en bas",{
+        "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
+      }));
+      if((eq.left.tasks + eq.right.tasks) > 1){
+        g.appendChild(tText(800, 134, "Sous chaque tache, il y a le même nombre de billes.",{
+          "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
+        }));
+      }
+
+      const gScene = tEl("g", {transform:"translate(0 150)"});
+      renderCardEquationStepPrintScene(gScene, card, 0, {
+        layoutMode:"schema",
+        showIntroText:false,
+        showAid:false,
+        useTokens
+      });
+      g.appendChild(gScene);
+    }else{
+      renderCardEquationStepPrintScene(g, card, 0, {
+        layoutMode:"equation",
+        showIntroText:true,
+        showAid:false,
+        useTokens
+      });
+    }
+
     targetSvg.appendChild(g);
     return;
   }
