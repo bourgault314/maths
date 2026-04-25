@@ -385,8 +385,6 @@
       <option value="NPM">B± — Billes numérotées (entiers relatifs)</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
-      <option value="EQ">E — Équation (2 plateaux)</option>
-      <option value="EQPM">E± — Equation (2 plateaux, entiers relatifs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
     </select>
@@ -490,15 +488,6 @@
           <select id="numHiddenCount" style="width:100%; padding:8px 4px; font-size:13px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
-          </select>
-        </div>
-
-        <div id="eqUnknownModeWrap" style="flex:1; min-width:0; display:none">
-          <label>Inconnues<br>(lettre)</label>
-          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:13px;">
-            <option value="MIX" selected>Mélange</option>
-            <option value="ONE_SIDE">1 côté</option>
-            <option value="BOTH">2 côtés</option>
           </select>
         </div>
 
@@ -811,7 +800,7 @@ function beadColorForValue(v){
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
 
-  const isSignedMode = (act === "NPM" || act === "EQPM");
+  const isSignedMode = (act === "NPM");
   const useTokens = isSignedMode && colorModeEl && colorModeEl.checked;
 
   let hue, s, lFill, lStroke, fillA, strokeA;
@@ -909,7 +898,6 @@ const numTasksMaxLabelEl = document.getElementById("numTasksMaxLabel");
 let _tasksUIKeyPrev = null;
 let _numTasksSavedNumberedMax = null;
 let _numTasksSavedNumberedMin = null;
-let _numTasksSavedEquationMax = "6";
 
 function setNumTasksRangeVisible(show){
   if(numTasksMinWrapEl) numTasksMinWrapEl.style.display = show ? "flex" : "none";
@@ -918,21 +906,10 @@ function setNumTasksRangeVisible(show){
 }
 function syncNumTasksUI(act){
   if(!numTasksEl || !labelNumTasksEl) return;
-  const key = (act === "EQ" || act === "EQPM") ? "EQ" : ((act === "N" || act === "NPM") ? "N" : "OTHER");
+  const key = (act === "N" || act === "NPM") ? "N" : "OTHER";
   if(_tasksUIKeyPrev === key) return;
 
-  if(key === "EQ"){
-    _numTasksSavedNumberedMax = numTasksEl.value;
-    if(numTasksMinEl) _numTasksSavedNumberedMin = numTasksMinEl.value;
-    if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
-    labelNumTasksEl.textContent = "Max (par plateau)";
-    setNumTasksRangeVisible(false);
-    numTasksEl.min = "2";
-    numTasksEl.max = "6";
-    const v = clamp(numberOr(numTasksEl.value, 6), 2, 6);
-    numTasksEl.value = String(v);
-  } else if(key === "N"){
-    if(_tasksUIKeyPrev === "EQ") _numTasksSavedEquationMax = numTasksEl.value;
+  if(key === "N"){
     if(_numTasksSavedNumberedMax != null) numTasksEl.value = _numTasksSavedNumberedMax;
     if(numTasksMinEl && _numTasksSavedNumberedMin != null) numTasksMinEl.value = _numTasksSavedNumberedMin;
     labelNumTasksEl.textContent = "Nombre de taches";
@@ -952,6 +929,10 @@ function syncNumTasksUI(act){
       numTasksEl.value = String(v);
     }
   } else {
+    if(_tasksUIKeyPrev === "N"){
+      _numTasksSavedNumberedMax = numTasksEl.value;
+      if(numTasksMinEl) _numTasksSavedNumberedMin = numTasksMinEl.value;
+    }
     labelNumTasksEl.textContent = "Nombre de taches";
     setNumTasksRangeVisible(false);
     numTasksEl.min = "1";
@@ -967,8 +948,6 @@ const numVisibleMinEl = document.getElementById("numVisibleMin");
 const numVisibleMaxEl = document.getElementById("numVisibleMax");
 const numHiddenCountWrapEl = document.getElementById("numHiddenCountWrap");
 const numHiddenCountEl = document.getElementById("numHiddenCount");
-const eqUnknownModeWrapEl = document.getElementById("eqUnknownModeWrap");
-const eqUnknownModeEl = document.getElementById("eqUnknownMode");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
 const seedNEl = document.getElementById("seedN");
@@ -1069,16 +1048,16 @@ let lastActivityForBounds = activityEl.value;
 const lastNumberedTotalBounds = { N: null, NPM: null };
 
 let lastActivityForSigned = activityEl.value;
-const lastSignedModeSettings = { NPM: null, EQPM: null };
+const lastSignedModeSettings = { NPM: null };
 
 function syncPrintModeUI(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   if(!sel) return;
   const worksheetOpt = sel.querySelector('option[value="worksheet"]');
   if(!worksheetOpt) return;
-  const isSignedEquationOrNumbered = activityEl && (activityEl.value === "NPM" || activityEl.value === "EQPM");
-  worksheetOpt.textContent = isSignedEquationOrNumbered ? "Énoncé + aide" : "Tableau vide";
-  sel.title = isSignedEquationOrNumbered
+  const isSignedNumbered = activityEl && activityEl.value === "NPM";
+  worksheetOpt.textContent = isSignedNumbered ? "Énoncé + aide" : "Tableau vide";
+  sel.title = isSignedNumbered
     ? "Choisir le contenu à imprimer : énoncé, aide ou correction"
     : "Choisir le contenu à imprimer";
 }
@@ -1087,7 +1066,6 @@ function getSeedForCurrentMode(){
   const act = activityEl.value;
   if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
-  if(act === "EQ" || act === "EQPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
   if(act === "C9") return (seedCEl.value||"").trim() ? Number(seedCEl.value) : "";
@@ -1098,7 +1076,6 @@ function getSeedForCurrentMode(){
 function syncSettingsUI(){
   const act = activityEl.value;
   syncPrintModeUI();
-  const prevAct = lastActivityForSigned;
 
   if(lastActivityForBounds && lastActivityForBounds !== act){
     if(lastActivityForBounds === "N" || lastActivityForBounds === "NPM"){
@@ -1131,26 +1108,7 @@ function syncSettingsUI(){
         numTotalMaxEl.value = "30";
       }
     }
-  } else if(act === "EQPM"){
-    numTotalMinEl.min = "-99"; numTotalMinEl.max = "99";
-    numTotalMaxEl.min = "-99"; numTotalMaxEl.max = "99";
-
-    if(prevAct !== "EQPM"){
-      const curMin = String(numTotalMinEl.value).trim();
-      const curMax = String(numTotalMaxEl.value).trim();
-
-      if((curMin === "20" && curMax === "50") || (curMin === "-30" && curMax === "30")){
-        numTotalMinEl.value = "-20";
-        numTotalMaxEl.value = "20";
-      } else {
-        numTotalMinEl.value = String(clamp(numberOr(curMin, -20), -99, 99));
-        numTotalMaxEl.value = String(clamp(numberOr(curMax, 20), -99, 99));
-      }
-      if(Number(numTotalMaxEl.value) < Number(numTotalMinEl.value)){
-        numTotalMaxEl.value = String(numTotalMinEl.value);
-      }
-    }
-  } else if(act === "N" || act === "EQ"){
+  } else if(act === "N"){
     numTotalMinEl.min = "1"; numTotalMinEl.max = "1000";
     numTotalMaxEl.min = "1"; numTotalMaxEl.max = "1000";
 
@@ -1159,15 +1117,15 @@ function syncSettingsUI(){
   }
 
   if(lastActivityForSigned && lastActivityForSigned !== act){
-    if(lastActivityForSigned === "NPM" || lastActivityForSigned === "EQPM"){
-      lastSignedModeSettings[lastActivityForSigned] = {
+    if(lastActivityForSigned === "NPM"){
+      lastSignedModeSettings.NPM = {
         absMax: String(numBeadAbsMaxEl.value),
         oppose: String(numOpposeModeEl.value),
         color: numColorModeEl ? numColorModeEl.checked : true
       };
     }
-    if(act === "NPM" || act === "EQPM"){
-      const saved = lastSignedModeSettings[act];
+    if(act === "NPM"){
+      const saved = lastSignedModeSettings.NPM;
       if(saved){
         numBeadAbsMaxEl.value = saved.absMax;
         numOpposeModeEl.value = saved.oppose;
@@ -1181,31 +1139,20 @@ function syncSettingsUI(){
   }
 
   const isUnit = act === "U";
-  const isEquation = (act === "EQ" || act === "EQPM");
   syncNumTasksUI(act);
-
-  if(act === "EQPM" && prevAct !== "EQPM"){
-    if(numTasksEl) numTasksEl.value = "3";
-  }
-  const isNumbered = (act === "N" || act === "NPM" || isEquation);
+  const isNumbered = (act === "N" || act === "NPM");
   const isNine = act === "C9";
   const isEight = act === "C8";
   const isInvestigate = act === "C";
   const isSystem = act === "D";
   const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
 
-  if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = isEquation ? "none" : "block";
-  if(eqUnknownModeWrapEl) eqUnknownModeWrapEl.style.display = isEquation ? "block" : "none";
+  if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "block";
 
-  if(isEquation){
-    numVisibleMinEl.max = "6";
-    numVisibleMaxEl.max = "6";
-  } else {
-    numVisibleMinEl.max = "5";
-    numVisibleMaxEl.max = "5";
-    if(Number(numVisibleMinEl.value) > 5) numVisibleMinEl.value = "5";
-    if(Number(numVisibleMaxEl.value) > 5) numVisibleMaxEl.value = "5";
-  }
+  numVisibleMinEl.max = "5";
+  numVisibleMaxEl.max = "5";
+  if(Number(numVisibleMinEl.value) > 5) numVisibleMinEl.value = "5";
+  if(Number(numVisibleMaxEl.value) > 5) numVisibleMaxEl.value = "5";
 
   classicSettingsEl.style.display = isClassic ? "block" : "none";
   unitSettingsEl.style.display = isUnit ? "block" : "none";
@@ -1215,10 +1162,10 @@ function syncSettingsUI(){
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
 
-  if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "block" : "none";
-  if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "block" : "none";
-  if(numColorModeWrapEl) numColorModeWrapEl.style.display = (act === "NPM" || act === "EQPM") ? "flex" : "none";
-  if(act === "NPM" || act === "EQPM") sanitizeBeadAbsMaxForBPM();
+  if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = (act === "NPM") ? "block" : "none";
+  if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = (act === "NPM") ? "block" : "none";
+  if(numColorModeWrapEl) numColorModeWrapEl.style.display = (act === "NPM") ? "flex" : "none";
+  if(act === "NPM") sanitizeBeadAbsMaxForBPM();
 
   if(isInvestigate){
     if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
@@ -1289,7 +1236,7 @@ function scheduleAutoGenerate(){
   autoGenTimer = setTimeout(()=>{
     if(activityEl.value === "U") syncUnitTotalBounds();
     sanitizeNumberedTotalBoundsForMode();
-    if(activityEl.value === "NPM" || activityEl.value === "EQPM") sanitizeBeadAbsMaxForBPM();
+    if(activityEl.value === "NPM") sanitizeBeadAbsMaxForBPM();
     generate();
   }, 150);
 }
@@ -1306,7 +1253,7 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 [
   countEl, diffEl, seedEl,
   unitTasksMinEl, unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, eqUnknownModeEl, seedNEl,
+  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -1545,96 +1492,11 @@ function assignPositionsNumbered(card, rng){
 function assignPositions(card, rng){
   if(card.family === "U"){
     assignPositionsUnits(card, rng);
-  }else if(card.family === "EQ" || card.family === "EQPM"){
-    assignPositionsEquation(card, rng);
   }else if(card.family === "N" || card.family === "NPM" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
   }else{
     assignPositionsClassic(card, rng);
   }
-}
-
-
-function assignPositionsEquation(card, rng){
-  const eq = card._eq;
-  if(!eq) return;
-
-  const leftTray  = { x:120, y:190, w:680, h:650 };
-  const rightTray = { x:800, y:190, w:680, h:650 };
-  const midX = 800;
-
-  const beadR = 34;         
-  const splatR = 74;        
-
-  function layoutSplats(tray, n){
-    if(n <= 0) return [];
-    const area = { x: tray.x + 70, y: tray.y + 75, w: tray.w - 140, h: 330 };
-
-    let rows = [];
-    if(n === 1) rows = [1];
-    else if(n === 2) rows = [2];
-    else if(n === 3) rows = [2,1];
-    else if(n === 4) rows = [2,2];
-    else rows = [3, n-3]; 
-
-    const out = [];
-    const rowCount = rows.length;
-
-    for(let r=0; r<rowCount; r++){
-      const cols = rows[r];
-      const cellW = area.w / cols;
-      const cy = area.y + area.h * ((r + 0.5) / rowCount);
-
-      for(let c=0; c<cols; c++){
-        const cx = area.x + cellW * (c + 0.5);
-        out.push({ cx, cy, r: splatR });
-      }
-    }
-
-    for(let i=out.length-1;i>0;i--){
-      const j = rInt(rng, 0, i);
-      [out[i], out[j]] = [out[j], out[i]];
-    }
-
-    return out;
-  }
-
-  function layoutVisible(tray, n){
-    const area = { x: tray.x + 70, y: tray.y + 450, w: tray.w - 140, h: 160 };
-    if(n <= 0) return [];
-
-    const cellW = area.w / n;
-    const baseY = area.y + area.h / 2;
-    const jitterX = Math.max(2, Math.floor(cellW * 0.18));
-    const jitterY = Math.max(2, Math.floor(area.h * 0.18));
-
-    const out = [];
-    for(let i=0;i<n;i++){
-      let cx = area.x + cellW * (i + 0.5) + rInt(rng, -jitterX, jitterX);
-      let cy = baseY + rInt(rng, -jitterY, jitterY);
-      out.push({ cx, cy });
-    }
-    return out;
-  }
-
-  const splatsL = layoutSplats(leftTray, eq.left.tasks);
-  const splatsR = layoutSplats(rightTray, eq.right.tasks);
-
-  card._eqTrays = { left:leftTray, right:rightTray, midX };
-  card._eqPos = {
-    left: {
-      beadR,
-      posV: layoutVisible(leftTray, eq.left.visible.length),
-      posH: splatsL.map(s=>({cx:s.cx, cy:s.cy})),
-      splats: splatsL
-    },
-    right: {
-      beadR,
-      posV: layoutVisible(rightTray, eq.right.visible.length),
-      posH: splatsR.map(s=>({cx:s.cx, cy:s.cy})),
-      splats: splatsR
-    }
-  };
 }
 
 
@@ -2080,341 +1942,6 @@ function genNumberedSigned(rng){
 
   return { family:"NPM", total:1, visible:[1], hidden:[-1], varChar: pickVariableChar(rng), _num:{ tasks:1, hiddenCount:1, H:-1, hiddenByTask:[[-1]] } };
 }
-
-
-
-
-function randomCompositionBounded(rng, sum, parts, maxPart=99){
-  if(parts === 0) return (sum === 0) ? [] : null;
-  if(parts === 1) return (sum <= maxPart) ? [sum] : null;
-  if(sum < parts) return null;
-  if(sum > parts*maxPart) return null;
-
-  const arr = new Array(parts).fill(1);
-  let rem = sum - parts;
-
-  for(let i=0;i<parts;i++){
-    const cap = Math.min(maxPart - arr[i], rem);
-    if(cap <= 0) continue;
-    const add = rInt(rng, 0, cap);
-    arr[i] += add;
-    rem -= add;
-  }
-
-  let safety = 2000;
-  while(rem > 0 && safety-- > 0){
-    const i = rInt(rng, 0, parts-1);
-    const cap = maxPart - arr[i];
-    if(cap <= 0) continue;
-    const add = Math.min(rem, rInt(rng, 1, cap));
-    arr[i] += add;
-    rem -= add;
-  }
-  if(rem !== 0) return null;
-
-  for(let i=arr.length-1;i>0;i--){
-    const j = rInt(rng, 0, i);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function genEquation(rng){
-  const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
-  const maxTasksEq = Math.max(2, maxTasksUser);
-
-  let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
-  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
-  if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
-
-  let userMin = numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20);
-  let userMax = numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50);
-  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
-  userMin = clamp(userMin, 1, 999);
-  userMax = clamp(userMax, 1, 999);
-
-  const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
-
-  const MAX_TRIES = 8000;
-
-  for(let tries=0; tries<MAX_TRIES; tries++){
-    let mode = unknownModeSetting;
-    if(mode === "MIX") mode = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
-
-    let a, b;
-    if(mode === "ONE_SIDE") {
-        if(rng() < 0.5) {
-            a = 0;
-            b = rInt(rng, 1, maxTasksEq);
-        } else {
-            a = rInt(rng, 1, maxTasksEq);
-            b = 0;
-        }
-    } else {
-        a = rInt(rng, 1, maxTasksEq);
-        b = rInt(rng, 1, maxTasksEq);
-        if(b === a) b = (b % maxTasksEq) + 1; 
-    }
-    
-    if(a === b) continue;
-
-    const vCountL = rInt(rng, vMin, vMax);
-    const vCountR = rInt(rng, vMin, vMax);
-    
-    if(vCountL === 0 && vCountR === 0) continue; 
-    if(a === 0 && vCountL === 0) continue;
-    if(b === 0 && vCountR === 0) continue;
-
-    const minVisAny = Math.min(vCountL > 0 ? vCountL : 1, vCountR > 0 ? vCountR : 1);
-    const denom = Math.max(1, Math.min(a, b));
-    let xMax = Math.floor((userMax - minVisAny) / denom);
-    xMax = Math.max(1, Math.min(99, xMax));
-    if(xMax < 1) continue;
-    const x = rInt(rng, 1, xMax);
-
-    let tLow = userMin;
-    let tHigh = userMax;
-
-    const lMinT = a*x + (vCountL * 1);
-    const lMaxT = a*x + (vCountL * 99);
-    const rMinT = b*x + (vCountR * 1);
-    const rMaxT = b*x + (vCountR * 99);
-
-    tLow = Math.max(tLow, lMinT, rMinT);
-    tHigh = Math.min(tHigh, lMaxT, rMaxT);
-
-    if(tHigh < tLow) continue;
-
-    const total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
-    const VL = total - a*x;
-    const VR = total - b*x;
-
-    const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
-    const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
-    if(leftVisible === null || rightVisible === null) continue;
-
-    const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
-    const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
-
-    return {
-      family: "EQ",
-      total: total,
-      visible: leftVisible.concat(rightVisible),
-      hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
-      varChar: pickVariableChar(rng),
-      _eq: {
-        total,
-        x,
-        left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
-        right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
-      }
-    };
-  }
-
-  const a = 2, b = 1, x = 2;
-  const vCountL = Math.max(1, vMin), vCountR = Math.max(1, vMin);
-  const total = Math.max(userMin, a*x + vCountL);
-  const VL = total - a*x;
-  const VR = total - b*x;
-  const leftVisible  = randomCompositionBounded(rng, VL, vCountL, 99) || Array.from({length:vCountL}, ()=>1);
-  const rightVisible = randomCompositionBounded(rng, VR, vCountR, 99) || Array.from({length:vCountR}, ()=>1);
-  const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
-  const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
-
-  return {
-    family: "EQ",
-    total: total,
-    visible: leftVisible.concat(rightVisible),
-    hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
-    varChar: pickVariableChar(rng),
-    _eq: {
-      total,
-      x,
-      left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
-      right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
-    }
-  };
-}
-
-
-
-function genEquationSigned(rng){
-  const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
-  const maxTasksEq = Math.max(2, maxTasksUser);
-
-  let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
-  let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
-  if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
-
-  let userMin = clamp(numberOr(numTotalMinEl.value, -20), -99, 99);
-  let userMax = clamp(numberOr(numTotalMaxEl.value, 20), -99, 99);
-  if(userMax < userMin) [userMax, userMin];
-
-  const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
-  const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
-  const autoPick = (opposeSetting === "auto") ? "auto" : null;
-  const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
-
-  function sumArr(a){ let s=0; for(const x of a) s+=x; return s; }
-  function hasBothSigns(arr){
-    let pos=false, neg=false;
-    for(const s of arr){ if(s>0) pos=true; else if(s<0) neg=true; if(pos && neg) return true; }
-    return false;
-  }
-
-  function chooseUniformSigns(n){
-    if(n === 0) return [];
-    const s = (rng() < 0.5) ? 1 : -1;
-    return new Array(n).fill(s);
-  }
-  function chooseMixedSignsNonZero(n){
-    if(n === 0) return [];
-    if(n < 3) return chooseUniformSigns(n);
-    const candidates = [];
-    for(let k=1; k<=n-1; k++){
-      if(n % 2 === 0 && k === (n/2)) continue; 
-      candidates.push(k);
-    }
-    if(candidates.length === 0) return new Array(n).fill(1);
-    const k = candidates[rInt(rng, 0, candidates.length-1)];
-    const out = new Array(n).fill(1);
-    for(let i=0;i<k;i++) out[i] = -1;
-    shuffleInPlace(out, rng);
-    return out;
-  }
-  function chooseSignsPair(nL, nR, mode){
-    if(mode === "off"){
-      return { L:new Array(nL).fill(1), R:new Array(nR).fill(1) };
-    }
-    if(mode === "all"){
-      return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
-    }
-    if(mode === "auto"){
-      const r = rng();
-      if(r < 0.60){
-        if(rng() < 0.5) return { L:new Array(nL).fill(1),  R:new Array(nR).fill(-1) };
-        else return { L:new Array(nL).fill(-1), R:new Array(nR).fill(1) };
-      }else if(r < 0.80){
-        return { L:new Array(nL).fill(1),  R:new Array(nR).fill(1) };
-      }else{
-        return { L:new Array(nL).fill(-1), R:new Array(nR).fill(-1) };
-      }
-    }
-
-    const canMixL = (nL >= 3);
-    const canMixR = (nR >= 3);
-    const patterns = [0];
-    if(canMixR) patterns.push(1);
-    if(canMixL) patterns.push(2);
-    if(canMixL && canMixR) patterns.push(3);
-
-    const pattern = patterns[rInt(rng, 0, patterns.length-1)];
-    let L, R;
-    if(pattern === 0){ L = chooseUniformSigns(nL); R = chooseUniformSigns(nR); }
-    else if(pattern === 1){ L = chooseUniformSigns(nL); R = chooseMixedSignsNonZero(nR); }
-    else if(pattern === 2){ L = chooseMixedSignsNonZero(nL); R = chooseUniformSigns(nR); }
-    else { L = chooseMixedSignsNonZero(nL); R = chooseMixedSignsNonZero(nR); }
-    return { L, R };
-  }
-
-  for(let tries=0; tries<6000; tries++){
-    let modeUnk = unknownModeSetting;
-    if(modeUnk === "MIX") modeUnk = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
-
-    let tasksL, tasksR;
-    if(modeUnk === "ONE_SIDE") {
-        if(rng() < 0.5) { tasksL = 0; tasksR = rInt(rng, 1, maxTasksEq); }
-        else { tasksL = rInt(rng, 1, maxTasksEq); tasksR = 0; }
-    } else {
-        tasksL = rInt(rng, 1, maxTasksEq);
-        tasksR = rInt(rng, 1, maxTasksEq);
-        if(tasksR === tasksL) tasksR = (tasksR % maxTasksEq) + 1;
-    }
-
-    let modeOpp = opposeSetting;
-    if(modeOpp === "auto") modeOpp = autoPick;
-
-    const pair = chooseSignsPair(tasksL, tasksR, modeOpp);
-    if(!pair) continue;
-    const signsL = pair.L;
-    const signsR = pair.R;
-
-    if(modeOpp === "mix"){
-      if(!(hasBothSigns(signsL) || hasBothSigns(signsR))) continue;
-    }
-
-    const a = sumArr(signsL);
-    const b = sumArr(signsR);
-
-    if(a === b) continue;
-
-    const vCountL = rInt(rng, vMin, vMax);
-    const vCountR = rInt(rng, vMin, vMax);
-
-    if(vCountL === 0 && vCountR === 0) continue;
-    if(tasksL === 0 && vCountL === 0) continue;
-    if(tasksR === 0 && vCountR === 0) continue;
-
-    const maxCoeff = Math.max(Math.abs(a), Math.abs(b), 1);
-    const maxTotalAbs = Math.max(Math.abs(userMin), Math.abs(userMax));
-    let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
-    xAbsMax = clamp(xAbsMax, 1, maxAbs);
-    const absX = rInt(rng, 1, xAbsMax);
-    const x = ((rng() < 0.5) ? -1 : 1) * absX;
-
-    let tLow = userMin;
-    let tHigh = userMax;
-
-    function applyRange(coef, vCount){
-      if(vCount === 0){
-        const t = coef * x;
-        tLow = Math.max(tLow, t);
-        tHigh = Math.min(tHigh, t);
-        return;
-      }
-      const lo = (coef * x) - (vCount * maxAbs);
-      const hi = (coef * x) + (vCount * maxAbs);
-      tLow = Math.max(tLow, Math.min(lo, hi));
-      tHigh = Math.min(tHigh, Math.max(lo, hi));
-    }
-    applyRange(a, vCountL);
-    applyRange(b, vCountR);
-
-    if(tHigh < tLow) continue;
-
-    let total;
-    if(rng() < 0.25) total = tLow;
-    else if(rng() < 0.50) total = tHigh;
-    else total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
-
-    const VL = total - a*x;
-    const VR = total - b*x;
-
-    const leftVisible  = (vCountL === 0) ? [] : randomSignedCompositionNonZero(rng, VL, vCountL, maxAbs);
-    const rightVisible = (vCountR === 0) ? [] : randomSignedCompositionNonZero(rng, VR, vCountR, maxAbs);
-    if(leftVisible === null || rightVisible === null) continue;
-
-    const leftHiddenByTask  = Array.from({length:tasksL}, ()=>[x]);
-    const rightHiddenByTask = Array.from({length:tasksR}, ()=>[x]);
-
-    return {
-      family: "EQPM",
-      total: total,
-      visible: leftVisible.concat(rightVisible),
-      hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
-      varChar: pickVariableChar(rng),
-      _eq: {
-        total,
-        x,
-        left:  { tasks:tasksL, visible:leftVisible,  hiddenByTask:leftHiddenByTask,  opposeFlags: signsL.map(s=>s<0) },
-        right: { tasks:tasksR, visible:rightVisible, hiddenByTask:rightHiddenByTask, opposeFlags: signsR.map(s=>s<0) }
-      }
-    };
-  }
-
-  return genEquation(rng);
-}
-
 
 
 function genOp9(rng){
@@ -3034,15 +2561,10 @@ function renderCard(card, revealState){
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+  const useTokens = (act === "NPM") && colorModeEl && colorModeEl.checked;
   const varChar = getCardVarChar(card);
 
-  if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquation(card, revealState, useTokens);
-    return;
-  }
-
-  const trayCfg = getTrayConfig(card.family);
+    const trayCfg = getTrayConfig(card.family);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
   const trayLayer = svg;
@@ -3278,7 +2800,7 @@ function renderCard(card, revealState){
   }
 
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
-  if(!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)){
+  if(!isModeC_or_D && taskCount > 1){
     const isSigned = (card.family === "NPM");
     const ruleText = isSigned 
         ? "Sous chaque tache se cache le même nombre." 
@@ -3484,488 +3006,6 @@ function formatEqSideFromCoeffVis(coeff, vis, varChar = xChar){
   if(v === 0) return coeffXLabel(c, varChar);
   return `${coeffXLabel(c, varChar)} + ${v}`;
 }
-function buildEquationSolveLines(eq, varChar = xChar){
-  const a = Math.max(0, Number(eq?.left?.tasks) || 0);
-  const b = Math.max(0, Number(eq?.right?.tasks) || 0);
-  const vl = Math.max(0, eqVisibleSum(eq?.left));
-  const vr = Math.max(0, eqVisibleSum(eq?.right));
-  const xVal = Number(eq?.x) || 0;
-
-  const lines = [];
-  function pushLine(leftCoeff, leftVis, rightCoeff, rightVis){
-    const line = `${formatEqSideFromCoeffVis(leftCoeff, leftVis, varChar)} = ${formatEqSideFromCoeffVis(rightCoeff, rightVis, varChar)}`;
-    if(!lines.length || lines[lines.length - 1] !== line) lines.push(line);
-  }
-
-  pushLine(a, vl, b, vr);
-
-  const commonX = Math.min(a, b);
-  const a2 = a - commonX;
-  const b2 = b - commonX;
-  if(commonX > 0){
-    pushLine(a2, vl, b2, vr);
-  }
-
-  const commonV = Math.min(vl, vr);
-  const vl2 = vl - commonV;
-  const vr2 = vr - commonV;
-  if(commonV > 0){
-    pushLine(a2, vl2, b2, vr2);
-  }
-
-  if(a2 > 1 && b2 === 0 && vl2 === 0 && vr2 > 0){
-    const finalLine = `${varChar} = ${xVal}`;
-    if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
-  } else if(b2 > 1 && a2 === 0 && vr2 === 0 && vl2 > 0){
-    const finalLine = `${xVal} = ${varChar}`;
-    if(lines[lines.length - 1] !== finalLine) lines.push(finalLine);
-  }
-
-  return lines.filter(Boolean);
-}
-function buildEquationTableParts(total, coeff, visSum, xVal, mode, varChar = xChar){
-  const totalSafe = Math.max(1, Number(total) || 1);
-  const coeffSafe = Math.max(0, Number(coeff) || 0);
-  const visSafe = Math.max(0, Number(visSum) || 0);
-  const xSafe = Math.max(1, Number(xVal) || 1);
-  const parts = [];
-
-  for(let i=0;i<coeffSafe;i++){
-    let label = "";
-    let measureLabel = "";
-    if(mode === "symbolic"){
-      label = varChar;
-      measureLabel = String(xSafe);
-    } else if(mode === "filled") {
-      label = String(xSafe);
-      measureLabel = label;
-    }
-    parts.push({ value:xSafe, label, measureLabel, hidden:true });
-  }
-  if(visSafe > 0){
-    const label = (mode === "blank") ? "" : String(visSafe);
-    parts.push({ value:visSafe, label, measureLabel: label, hidden:false });
-  }
-
-  if(parts.length === 0){
-    parts.push({ value:totalSafe, label:"", measureLabel:"", hidden:false });
-  }
-  return parts;
-}
-function buildEquationReductionModels(eq){
-  const xVal = Math.max(1, Number(eq?.x) || 1);
-  const a = Math.max(0, Number(eq?.left?.tasks) || 0);
-  const b = Math.max(0, Number(eq?.right?.tasks) || 0);
-  const vl = Math.max(0, eqVisibleSum(eq?.left));
-  const vr = Math.max(0, eqVisibleSum(eq?.right));
-
-  const models = [];
-  function pushModel(total, leftCoeff, leftVis, rightCoeff, rightVis, extras){
-    const totalSafe = Math.max(1, Number(total) || 1);
-    const sig = [totalSafe, leftCoeff, leftVis, rightCoeff, rightVis, extras && extras.unitFinal ? 1 : 0].join('|');
-    if(models.length && models[models.length-1]._sig === sig) return;
-    models.push({
-      total: totalSafe,
-      left: { coeff: Math.max(0, Number(leftCoeff) || 0), vis: Math.max(0, Number(leftVis) || 0) },
-      right:{ coeff: Math.max(0, Number(rightCoeff) || 0), vis: Math.max(0, Number(rightVis) || 0) },
-      unitFinal: !!(extras && extras.unitFinal),
-      _sig: sig
-    });
-  }
-
-  pushModel(eq.total, a, vl, b, vr);
-
-  const commonX = Math.min(a, b);
-  const a2 = a - commonX;
-  const b2 = b - commonX;
-  const total2 = Math.max(1, (Number(eq.total) || 1) - commonX * xVal);
-  pushModel(total2, a2, vl, b2, vr);
-
-  const commonV = Math.min(vl, vr);
-  const vl3 = vl - commonV;
-  const vr3 = vr - commonV;
-  const total3 = Math.max(1, total2 - commonV);
-  pushModel(total3, a2, vl3, b2, vr3);
-
-  const diffCoeff = Math.abs(a - b);
-  const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl3 === 0 && vr3 > 0) ||
-                            (b2 === 1 && a2 === 0 && vr3 === 0 && vl3 > 0);
-  if(diffCoeff >= 1 && !alreadySolvedUnit){
-    if(a2 > 1 && b2 === 0 && vl3 === 0 && vr3 > 0){
-      pushModel(xVal, 1, 0, 0, xVal, { unitFinal: true });
-    } else if(b2 > 1 && a2 === 0 && vr3 === 0 && vl3 > 0){
-      pushModel(xVal, 0, xVal, 1, 0, { unitFinal: true });
-    } else if(a2 >= b2){
-      pushModel(xVal, 1, 0, 0, xVal, { unitFinal: true });
-    } else {
-      pushModel(xVal, 0, xVal, 1, 0, { unitFinal: true });
-    }
-  }
-
-  return models.map(({_sig, ...rest}) => rest);
-}
-function drawEquationSingaporeTable(targetGroup, opts){
-  const total = Math.max(1, Number(opts.total) || 1);
-  const row1 = Array.isArray(opts.row1) ? opts.row1 : [];
-  const row2 = Array.isArray(opts.row2) ? opts.row2 : [];
-  const fontSize = Number(opts.fontSize) || 58;
-  const rowH = Number(opts.rowH) || 64;
-  const pad = (opts.pad == null) ? 28 : Number(opts.pad) || 28;
-  const baseW = Number(opts.baseW) || 620;
-  const stroke = opts.stroke || "#000";
-  const strokeWidth = Number(opts.strokeWidth) || 4;
-  const hiddenFill = opts.hiddenFill || "rgba(0,0,0,0.10)";
-  const visibleFill = opts.visibleFill || "rgba(255,255,255,0)";
-  const textColor = opts.textColor || "#000";
-  const mkRect = opts.rect;
-  const mkLine = opts.line;
-  const mkText = opts.text;
-  const compactEquation = !!opts.compactEquation;
-  const variableFontSizeOpt = Number(opts.variableFontSize);
-  const hasVariableFontSize = Number.isFinite(variableFontSizeOpt) && variableFontSizeOpt > 0;
-  const variableFontFamily = opts.variableFontFamily || "'Times New Roman', Times, serif";
-  const fitLabelToCell = !!opts.fitLabelToCell;
-  const numberTextDy = (opts.numberTextDy != null) ? opts.numberTextDy : "0.08em";
-  const variableTextDy = (opts.variableTextDy != null) ? opts.variableTextDy : "0";
-
-  const fixedUnitOpt = Number(opts.fixedUnit);
-  const hasFixedUnit = Number.isFinite(fixedUnitOpt) && fixedUnitOpt > 0;
-  const disableLabelInflation = !!opts.disableLabelInflation;
-  const explicitRow1Widths = Array.isArray(opts.row1Widths) ? opts.row1Widths.map(v => Math.max(1, Number(v) || 1)) : null;
-  const explicitRow2Widths = Array.isArray(opts.row2Widths) ? opts.row2Widths.map(v => Math.max(1, Number(v) || 1)) : null;
-  const hasExplicitWidths = !!(explicitRow1Widths && explicitRow2Widths && explicitRow1Widths.length === row1.length && explicitRow2Widths.length === row2.length);
-  const minHiddenCellW = Math.max(0, Number(opts.minHiddenCellW) || 0);
-  const minVisibleCellW = Math.max(0, Number(opts.minVisibleCellW) || 0);
-  const minHiddenCellWValue1 = Math.max(minHiddenCellW, Number(opts.minHiddenCellWValue1) || 0);
-  const minVisibleCellWValue1 = Math.max(minVisibleCellW, Number(opts.minVisibleCellWValue1) || 0);
-  const maxWOpt = Number(opts.maxW);
-
-  function minWidthForPart(part){
-    const value = Math.max(0, Number(part && part.value) || 0);
-    if(part && part.hidden){
-      return (value === 1) ? minHiddenCellWValue1 : minHiddenCellW;
-    }
-    return (value === 1) ? minVisibleCellWValue1 : minVisibleCellW;
-  }
-  const hasMaxW = Number.isFinite(maxWOpt) && maxWOpt > 0;
-  let unit = hasFixedUnit ? fixedUnitOpt : (baseW / total);
-  if(!compactEquation && !hasFixedUnit && !disableLabelInflation){
-    [...row1, ...row2].forEach(part => {
-      const val = Math.max(1, Number(part && part.value) || 1);
-      const widthLabel = (part && part.measureLabel != null) ? part.measureLabel : (part && part.label);
-      const minW = minCellWidthForLabel(widthLabel, fontSize, pad);
-      unit = Math.max(unit, minW / val);
-    });
-  }
-
-  let w = total * unit;
-  let rowMetrics = null;
-
-  if(hasExplicitWidths){
-    function buildExplicitMetrics(parts, widths){
-      const safeWidths = parts.map((_, idx) => Math.max(1, Number(widths[idx]) || 1));
-      const totalW = safeWidths.reduce((a,b)=>a+b, 0);
-      const hiddenCount = parts.filter(part => part && part.hidden).length;
-      const visibleIndex = parts.findIndex(part => part && !part.hidden);
-      return { widths: safeWidths, totalW, visibleIndex, hiddenCount };
-    }
-
-    const m1 = buildExplicitMetrics(row1, explicitRow1Widths);
-    const m2 = buildExplicitMetrics(row2, explicitRow2Widths);
-    rowMetrics = [m1, m2];
-    w = Math.max(m1.totalW, m2.totalW);
-  } else if(compactEquation){
-    const hiddenCellW = Math.max(48, Number(opts.hiddenCellW) || 66);
-    const visibleMinW = Math.max(96, Number(opts.visibleMinW) || 150);
-    const visibleMaxW = Math.max(visibleMinW, Number(opts.visibleMaxW) || 220);
-    const tableMinW = Math.max(360, Number(opts.tableMinW) || 540);
-
-    function buildRowMetrics(parts){
-      const hiddenCount = parts.filter(p => p && p.hidden).length;
-      const visiblePart = parts.find(p => p && !p.hidden) || null;
-      const visibleLabel = visiblePart ? ((visiblePart.measureLabel != null) ? visiblePart.measureLabel : visiblePart.label) : "";
-      const visibleNeed = visiblePart ? clamp(minCellWidthForLabel(visibleLabel, fontSize, pad), visibleMinW, visibleMaxW) : 0;
-      return { hiddenCount, visiblePart, visibleNeed };
-    }
-
-    const m1 = buildRowMetrics(row1);
-    const m2 = buildRowMetrics(row2);
-    rowMetrics = [m1, m2];
-    w = Math.max(
-      tableMinW,
-      m1.hiddenCount * hiddenCellW + (m1.visiblePart ? m1.visibleNeed : 0),
-      m2.hiddenCount * hiddenCellW + (m2.visiblePart ? m2.visibleNeed : 0)
-    );
-
-    rowMetrics = rowMetrics.map(m => ({
-      ...m,
-      visibleW: m.visiblePart ? Math.max(m.visibleNeed, w - m.hiddenCount * hiddenCellW) : 0,
-      hiddenCellW
-    }));
-  } else {
-    function buildLinearMetrics(parts){
-      const mins = parts.map(part => minWidthForPart(part));
-      const widths = parts.map((part, idx) => {
-        const baseSegW = Math.max(1, (Number(part && part.value) || 0) * unit);
-        return Math.max(baseSegW, mins[idx]);
-      });
-
-      let totalW = widths.reduce((a,b)=>a+b, 0);
-      if(hasMaxW && totalW > maxWOpt){
-        let surplus = totalW - maxWOpt;
-        const reducibles = widths.map((w, idx) => Math.max(0, w - mins[idx]));
-        let reducibleTotal = reducibles.reduce((a,b)=>a+b, 0);
-        if(reducibleTotal > 0){
-          for(let i=0;i<widths.length;i++){
-            const reducible = reducibles[i];
-            if(reducible <= 0) continue;
-            const cut = Math.min(reducible, surplus * (reducible / reducibleTotal));
-            widths[i] = Math.max(mins[i], widths[i] - cut);
-          }
-          totalW = widths.reduce((a,b)=>a+b, 0);
-          if(totalW > maxWOpt + 0.5){
-            for(let i=widths.length-1;i>=0 && totalW > maxWOpt + 0.5;i--){
-              const extra = Math.max(0, widths[i] - mins[i]);
-              if(extra <= 0) continue;
-              const cut = Math.min(extra, totalW - maxWOpt);
-              widths[i] -= cut;
-              totalW -= cut;
-            }
-          }
-        }
-      }
-      const hiddenCount = parts.filter(part => part && part.hidden).length;
-      const visibleIndex = parts.findIndex(part => part && !part.hidden);
-      const visiblePart = (visibleIndex >= 0) ? parts[visibleIndex] : null;
-      const visibleNeed = (visibleIndex >= 0) ? Math.max(minWidthForPart(visiblePart), Math.max(1, (Number(visiblePart && visiblePart.value) || 0) * unit)) : 0;
-      const hiddenNeed = hiddenCount > 0
-        ? Math.max(...parts.filter(part => part && part.hidden).map(part => Math.max(minWidthForPart(part), Math.max(1, (Number(part && part.value) || 0) * unit))))
-        : 0;
-      return { widths, totalW, visibleIndex, hiddenCount, visibleNeed, hiddenNeed };
-    }
-
-    const m1 = buildLinearMetrics(row1);
-    const m2 = buildLinearMetrics(row2);
-    const forceCommonHiddenCellW = !!opts.forceCommonHiddenCellW;
-
-    if(forceCommonHiddenCellW){
-      const targetW = hasMaxW ? maxWOpt : Math.max(w, m1.totalW, m2.totalW);
-      let commonHiddenCellW = Math.max(m1.hiddenNeed || 0, m2.hiddenNeed || 0, minHiddenCellW);
-      [m1, m2].forEach(m => {
-        if((m.hiddenCount || 0) > 0 && (m.visibleIndex || m.visibleIndex === 0)){
-          const fitHiddenW = (targetW - (m.visibleNeed || minVisibleCellW)) / m.hiddenCount;
-          if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
-            commonHiddenCellW = Math.min(commonHiddenCellW, fitHiddenW);
-          }
-        }
-      });
-      commonHiddenCellW = Math.max(minHiddenCellW, commonHiddenCellW);
-
-      function buildCommonMetrics(parts){
-        const hiddenCount = parts.filter(part => part && part.hidden).length;
-        const visibleIndex = parts.findIndex(part => part && !part.hidden);
-        const widths = parts.map(part => (part && part.hidden) ? commonHiddenCellW : 0);
-        let usedW = hiddenCount * commonHiddenCellW;
-        if(visibleIndex >= 0){
-          const visibleW = Math.max(minVisibleCellW, targetW - usedW);
-          widths[visibleIndex] = visibleW;
-          usedW += visibleW;
-        } else if(widths.length){
-          const equalHiddenW = targetW / Math.max(1, widths.length);
-          for(let i=0;i<widths.length;i++) widths[i] = equalHiddenW;
-          usedW = targetW;
-        }
-        return { widths, totalW: usedW, visibleIndex, hiddenCount, hiddenCellW: commonHiddenCellW };
-      }
-      rowMetrics = [buildCommonMetrics(row1), buildCommonMetrics(row2)];
-      w = targetW;
-    } else {
-      w = Math.max(w, m1.totalW, m2.totalW);
-      if(hasMaxW) w = Math.min(w, maxWOpt);
-
-      [m1, m2].forEach(m => {
-        const extra = w - m.totalW;
-        if(extra > 0){
-          const idx = (m.visibleIndex >= 0) ? m.visibleIndex : (m.widths.length - 1);
-          if(idx >= 0) m.widths[idx] += extra;
-        }
-      });
-
-      rowMetrics = [m1, m2];
-    }
-  }
-
-  const x0 = (opts.cx != null) ? (Number(opts.cx) - w / 2) : (Number(opts.x) || 160);
-  const y0 = Number(opts.y) || 36;
-  const totalH = rowH * 2;
-
-  targetGroup.appendChild(mkRect({
-    x:x0, y:y0, width:w, height:totalH,
-    fill:"rgba(255,255,255,0)", stroke, "stroke-width":strokeWidth
-  }));
-  targetGroup.appendChild(mkLine({
-    x1:x0, y1:y0 + rowH, x2:x0 + w, y2:y0 + rowH,
-    stroke, "stroke-width":strokeWidth
-  }));
-
-  function drawRow(parts, rowIndex){
-    let x = x0;
-    const y = y0 + rowIndex * rowH;
-    const metrics = rowMetrics ? rowMetrics[rowIndex] : null;
-    for(let i=0;i<parts.length;i++){
-      const part = parts[i] || {};
-      let segW;
-      if(metrics){
-        if(Array.isArray(metrics.widths)){
-          segW = Math.max(1, Number(metrics.widths[i]) || 0);
-        } else {
-          segW = part.hidden ? metrics.hiddenCellW : metrics.visibleW;
-        }
-      } else {
-        segW = Math.max(1, (Number(part.value) || 0) * unit);
-      }
-      const label = (part.label == null) ? "" : String(part.label);
-      const fill = part.hidden ? hiddenFill : visibleFill;
-      targetGroup.appendChild(mkRect({x, y, width:segW, height:rowH, fill}));
-      if(label){
-        const isVar = isVariableLabel(label);
-        let fs = fontSize;
-        if(isVar){
-          if(hasVariableFontSize){
-            fs = variableFontSizeOpt;
-          } else {
-            const varTargetFs = fontSize * 1.16;
-            const varMaxFs = Math.max(20, segW * 0.70);
-            fs = Math.min(varTargetFs, varMaxFs);
-          }
-        }
-        if(fitLabelToCell){
-          const unitLabelW = Math.max(0.56, approxTextWidthForLabel(label, 1));
-          const fitPad = Math.min(pad * 0.60, Math.max(8, segW * 0.22));
-          const fitFs = Math.max(18, (Math.max(8, segW - fitPad)) / unitLabelW);
-          fs = Math.min(fs, fitFs);
-        }
-        targetGroup.appendChild(mkText(x + segW/2, y + rowH/2, label, {
-          "text-anchor":"middle",
-          "dominant-baseline":"middle",
-          "alignment-baseline":"middle",
-          "dy": isVar ? variableTextDy : numberTextDy,
-          "font-size": String(fs),
-          "fill": textColor,
-          "font-weight": isVar ? "normal" : "900",
-          "font-family": isVar ? variableFontFamily : "inherit",
-          "font-style": isVar ? "italic" : "normal"
-        }));
-      }
-      x += segW;
-      if(i < parts.length - 1){
-        targetGroup.appendChild(mkLine({
-          x1:x, y1:y, x2:x, y2:y + rowH,
-          stroke, "stroke-width":strokeWidth
-        }));
-      }
-    }
-  }
-
-  drawRow(row1, 0);
-  drawRow(row2, 1);
-
-  function buildRowLayout(parts, rowIndex){
-    const metrics = rowMetrics ? rowMetrics[rowIndex] : null;
-    let x = x0;
-    const segments = [];
-    for(let i=0;i<parts.length;i++){
-      const part = parts[i] || {};
-      let segW;
-      if(metrics){
-        if(Array.isArray(metrics.widths)){
-          segW = Math.max(1, Number(metrics.widths[i]) || 0);
-        } else {
-          segW = part.hidden ? metrics.hiddenCellW : metrics.visibleW;
-        }
-      } else {
-        segW = Math.max(1, (Number(part.value) || 0) * unit);
-      }
-      segments.push({
-        x,
-        w: segW,
-        hidden: !!part.hidden,
-        label: (part.label == null) ? "" : String(part.label),
-        value: Math.max(0, Number(part.value) || 0)
-      });
-      x += segW;
-    }
-    return { x:x0, right:x, w:x - x0, segments };
-  }
-
-  return {
-    x:x0,
-    y:y0,
-    w,
-    h:totalH,
-    right:x0 + w,
-    rows:[buildRowLayout(row1, 0), buildRowLayout(row2, 1)]
-  };
-}
-function drawEquationLines(targetGroup, lines, x, y, api){
-  const mkText = api.text;
-  const fill = api.fill || "#000";
-  const fontSize = Number(api.fontSize) || 54;
-  const gap = Number(api.gap) || 72;
-  const anchor = api.anchor || "start";
-  const fontFamily = api.fontFamily || "'Times New Roman', Times, serif";
-  const fontStyle = api.fontStyle || "italic";
-  const alignEquals = !!api.alignEquals;
-  const eqGap = Number(api.eqGap) || 18;
-  let cy = y;
-  for(const line of lines){
-    if(alignEquals){
-      const raw = String(line == null ? "" : line);
-      const eqIndex = raw.indexOf("=");
-      if(eqIndex >= 0){
-        const lhs = raw.slice(0, eqIndex).trim();
-        const rhs = raw.slice(eqIndex + 1).trim();
-        targetGroup.appendChild(mkText(x - eqGap, cy, lhs, {
-          "text-anchor": "end",
-          "font-size": String(fontSize),
-          "fill": fill,
-          "font-weight": "normal",
-          "font-family": fontFamily,
-          "font-style": fontStyle
-        }));
-        targetGroup.appendChild(mkText(x, cy, "=", {
-          "text-anchor": "middle",
-          "font-size": String(fontSize),
-          "fill": fill,
-          "font-weight": "normal",
-          "font-family": fontFamily,
-          "font-style": fontStyle
-        }));
-        targetGroup.appendChild(mkText(x + eqGap, cy, rhs, {
-          "text-anchor": "start",
-          "font-size": String(fontSize),
-          "fill": fill,
-          "font-weight": "normal",
-          "font-family": fontFamily,
-          "font-style": fontStyle
-        }));
-        cy += gap;
-        continue;
-      }
-    }
-    targetGroup.appendChild(mkText(x, cy, line, {
-      "text-anchor": anchor,
-      "font-size": String(fontSize),
-      "fill": fill,
-      "font-weight": "normal",
-      "font-family": fontFamily,
-      "font-style": fontStyle
-    }));
-    cy += gap;
-  }
-  return cy;
-}
-
 function drawProjectionEquationLine(targetGroup, centerX, cy, lhs, rhs, opts = {}){
   const mkText = opts.text || text;
   const fill = opts.fill || "var(--ink)";
@@ -4093,54 +3133,6 @@ function eqSignedCoeff(side){
   return coeff;
 }
 
-function buildEquationSignedSolveLines(eq, varChar = xChar){
-  if(!eq) return [];
-  const a = eqSignedCoeff(eq.left);
-  const b = eqSignedCoeff(eq.right);
-  const vl = sumArray(eq.left && eq.left.visible);
-  const vr = sumArray(eq.right && eq.right.visible);
-  const xVal = Number(eq.x) || 0;
-  const lines = [];
-
-  function pushUnique(line){
-    if(line && (!lines.length || lines[lines.length - 1] !== line)) lines.push(line);
-  }
-
-  // 1) Equation de départ : on lit exactement les deux plateaux.
-  pushUnique(`${formatSignedLinearExpression(a, vl, varChar)} = ${formatSignedLinearExpression(b, vr, varChar)}`);
-
-  const diff = a - b;
-  if(diff === 0) return lines;
-
-  // 2) Lettres d'abord : on enlève les lettres du côté où il y en a le moins,
-  //    afin d'obtenir un coefficient positif pour l'inconnue.
-  if(diff > 0){
-    const d = diff;
-    const afterLetters = `${formatSignedLinearExpression(d, vl, varChar)} = ${formatSignedIntegerLabel(vr)}`;
-    pushUnique(afterLetters);
-
-    // 3) Puis seulement les constantes.
-    const isolated = vr - vl;
-    if(vl !== 0){
-      pushUnique(`${formatSignedCoeffLabel(d, varChar)} = ${formatSignedIntegerLabel(isolated)}`);
-    }
-  }else{
-    const d = -diff;
-    const afterLetters = `${formatSignedLinearExpression(d, vr, varChar)} = ${formatSignedIntegerLabel(vl)}`;
-    pushUnique(afterLetters);
-
-    // 3) Puis seulement les constantes.
-    const isolated = vl - vr;
-    if(vr !== 0){
-      pushUnique(`${formatSignedCoeffLabel(d, varChar)} = ${formatSignedIntegerLabel(isolated)}`);
-    }
-  }
-
-  // 4) Valeur de l'inconnue. pushUnique évite les doublons quand le coefficient vaut 1.
-  pushUnique(`${varChar} = ${formatSignedIntegerLabel(xVal)}`);
-  return lines;
-}
-
 function formatSignedAbsIntegerLabel(value){
   let v = Math.abs(Number(value));
   if(!Number.isFinite(v)) v = 0;
@@ -4205,53 +3197,6 @@ function buildNumberedSignedPrintCorrectionLines(card, varChar = xChar){
   const total = Number(card && card.total) || 0;
   const structuredLine = `${buildNumberedSignedStructuredExpression(card, varChar)} = ${formatSignedIntegerLabel(total)}`;
   const simplifiedLines = buildNumberedSignedEquationLines(card, varChar);
-  const lines = [];
-  function pushUnique(line){
-    if(line && (!lines.length || lines[lines.length - 1] !== line)) lines.push(line);
-  }
-  pushUnique(structuredLine);
-  simplifiedLines.forEach(pushUnique);
-  return lines;
-}
-
-function buildEquationSignedStructuredExpressionSide(side, varChar = xChar){
-  const tasks = Math.max(0, Number(side && side.tasks) || 0);
-  const flags = Array.isArray(side && side.opposeFlags) ? side.opposeFlags : [];
-
-  let positiveTasks = 0;
-  let opposedCount = 0;
-  for(let i=0; i<tasks; i++){
-    if(flags[i]) opposedCount++;
-    else positiveTasks++;
-  }
-
-  const terms = [];
-  if(positiveTasks > 0){
-    terms.push({ sign: 1, text: formatVarCoeffAbs(positiveTasks, varChar) });
-  }
-  if(opposedCount > 0){
-    terms.push({ sign: -1, text: formatVarCoeffAbs(opposedCount, varChar) });
-  }
-
-  const visible = Array.isArray(side && side.visible) ? side.visible : [];
-  visible.forEach(v=>{
-    let n = Number(v);
-    if(!Number.isFinite(n) || n === 0) return;
-    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
-    terms.push({ sign: n < 0 ? -1 : 1, text: formatSignedAbsIntegerLabel(n) });
-  });
-
-  return joinSignedTerms(terms);
-}
-
-function buildEquationSignedStructuredEquation(eq, varChar = xChar){
-  if(!eq) return "";
-  return `${buildEquationSignedStructuredExpressionSide(eq.left, varChar)} = ${buildEquationSignedStructuredExpressionSide(eq.right, varChar)}`;
-}
-
-function buildEquationSignedPrintCorrectionLines(eq, varChar = xChar){
-  const structuredLine = buildEquationSignedStructuredEquation(eq, varChar);
-  const simplifiedLines = buildEquationSignedSolveLines(eq, varChar);
   const lines = [];
   function pushUnique(line){
     if(line && (!lines.length || lines[lines.length - 1] !== line)) lines.push(line);
@@ -4348,636 +3293,6 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
   targetGroup.appendChild(eqGroup);
 }
 
-function renderCardEquation(card, revealState, useTokens){
-  const eq = card._eq;
-  const trays = card._eqTrays;
-  const pos = card._eqPos;
-  if(!eq || !trays || !pos) return;
-  const layer = svg;
-
-  const cover = "rgba(0,0,0,0.95)";
-  const revealCol = "rgba(220,220,220,0.35)";
-  const hasAidTable = (card.family === "EQ" && revealState > 0);
-  const hasEquationSignedAid = (card.family === "EQPM" && revealState > 0);
-  const varChar = getCardVarChar(card);
-
-  layer.appendChild(el("rect",{
-    x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
-    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
-  }));
-  layer.appendChild(el("rect",{
-    x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h,
-    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
-  }));
-
-  layer.appendChild(el("line",{
-    x1:trays.midX, y1:trays.left.y-10,
-    x2:trays.midX, y2:trays.left.y+trays.left.h+10,
-    stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
-  }));
-
-  if(!hasAidTable && !hasEquationSignedAid){
-    layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
-      "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
-    }));
-
-    if ((eq.left.tasks + eq.right.tasks) > 1) {
-      const isSigned = (card.family === "EQPM");
-      const ruleText = isSigned
-          ? "Sous chaque tache se cache le même nombre."
-          : "Sous chaque tache, il y a le même nombre de billes.";
-      layer.appendChild(text(800, 130, ruleText,{
-        "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
-      }));
-    }
-  }
-
-  function drawSide(side, metaSide){
-    const beadR = side.beadR ?? 26;
-    const font = Math.max(18, Math.round(beadR * 0.95));
-
-    let hIndex = 0;
-    for(const taskArr of metaSide.hiddenByTask){
-      for(const val of taskArr){
-        const p = side.posH?.[hIndex] || {cx:820, cy:610};
-        let f = "var(--beadH-fill)";
-        let s = "var(--beadH-stroke)";
-        if(useTokens){
-            const col = beadColorForValue(val);
-            f = col.fill; s = col.stroke;
-        }
-        layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
-        layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
-          "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
-        }));
-        hIndex++;
-      }
-    }
-
-    const oppFlags = Array.isArray(metaSide.opposeFlags) ? metaSide.opposeFlags : null;
-    (side.splats || []).forEach((s, idx)=>{
-      const pSplat = el("path",{
-        d: blobPath(s.cx, s.cy, s.r),
-        fill: revealState === 2 ? revealCol : cover,
-        stroke:"rgba(0,0,0,0.18)",
-        "stroke-width":"5"
-      });
-      layer.appendChild(pSplat);
-
-      if(oppFlags && oppFlags[idx]){
-        const fs = clamp(Math.round(s.r*0.28), 16, 44);
-        const yy = revealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
-        layer.appendChild(text(s.cx, yy, "opposé", {
-          "text-anchor":"middle",
-          "dominant-baseline":"middle",
-          "font-size": String(fs),
-          "font-weight":"900",
-          "fill": (revealState === 2 ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke": (revealState === 2 ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width": (revealState === 2 ? "5" : "0"),
-          "paint-order":"stroke fill"
-        }));
-      }
-
-      if(revealState === 2){
-        const pCov = el("path",{
-          d: blobPath(s.cx, s.cy, s.r),
-          fill: cover,
-          stroke: "none",
-          "class": "anim-fade-out"
-        });
-        layer.appendChild(pCov);
-      }
-    });
-
-    for(let i=0;i<metaSide.visible.length;i++){
-      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
-      const val = metaSide.visible[i];
-      const col = beadColorForValue(val);
-      layer.appendChild(el("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      layer.appendChild(text(p.cx, p.cy + Math.round(font*0.32), String(val),{
-        "text-anchor":"middle", "font-size":String(font), fill:"#000", "font-weight":"900"
-      }));
-    }
-  }
-
-  drawSide(pos.left, eq.left);
-  drawSide(pos.right, eq.right);
-
-  if(hasAidTable){
-    const visL = eqVisibleSum(eq.left);
-    const visR = eqVisibleSum(eq.right);
-    const tableMode = (revealState === 1) ? "symbolic" : "filled";
-    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode, varChar);
-    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode, varChar);
-    const gTable = el("g", {id:"eqSingaporeTable"});
-    const projTableW = 640;
-    const layout = drawEquationSingaporeTable(gTable, {
-      cx: 520,
-      y: 34,
-      total: eq.total,
-      row1: row1Parts,
-      row2: row2Parts,
-      rect:(a)=>el("rect", a),
-      line:(a)=>el("line", a),
-      text:(x,y,t,a)=>text(x,y,t,a),
-      compactEquation: false,
-      baseW: projTableW,
-      maxW: projTableW,
-      forceCommonHiddenCellW: true,
-      disableLabelInflation: true,
-      minHiddenCellW: 68,
-      minVisibleCellW: 84,
-      rowH: 56,
-      fontSize: 50,
-      pad: 24,
-      stroke: "#000",
-      strokeWidth: 4,
-      hiddenFill: "rgba(0,0,0,0.10)",
-      visibleFill: "rgba(255,255,255,0)",
-      textColor: "#000"
-    });
-    layer.appendChild(gTable);
-
-    const lines = (revealState === 1) ? [buildEquationSolveLines(eq, varChar)[0]] : buildEquationSolveLines(eq, varChar);
-    const eqFontSize = revealState === 1 ? 40 : 38;
-    const eqAlignGap = 18;
-    const longestLhs = Math.max(0, ...lines.map(line => {
-      const raw = String(line == null ? "" : line);
-      const idx = raw.indexOf("=");
-      if(idx < 0) return 0;
-      return approxTextWidthForLabel(raw.slice(0, idx).trim(), eqFontSize);
-    }));
-    const eqLeftPad = 36;
-    const eqX = Math.max(1085, Math.round(layout.right + eqLeftPad + longestLhs + eqAlignGap));
-    const eqY = (revealState === 1)
-      ? 96
-      : (lines.length >= 4 ? 58 : 82);
-    const eqGap = (revealState === 1)
-      ? 44
-      : (lines.length >= 4 ? 34 : 40);
-    drawEquationLines(layer, lines, eqX, eqY, {
-      text:(x,y,t,a)=>text(x,y,t,a),
-      fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
-      anchor:"start",
-      alignEquals: true,
-      eqGap: eqAlignGap
-    });
-  }
-
-  if(hasEquationSignedAid){
-    const allLines = buildEquationSignedSolveLines(eq, varChar);
-    const lines = (revealState === 1) ? allLines.slice(0, 1) : allLines;
-
-    let eqFontSize, eqGap, startY;
-    if(revealState === 1){
-      // Aide seule : on garde une grande equation, lisible et centrée au-dessus de la balance.
-      eqFontSize = 54;
-      eqGap = 62;
-      startY = 96;
-    }else{
-      // Correction complète : police un peu plus compacte et lignes rapprochées
-      // pour que la première ligne ne parte jamais hors de l'écran.
-      const n = Math.max(1, lines.length);
-      eqFontSize = (n >= 5) ? 38 : (n >= 4 ? 42 : 46);
-      eqGap = (n >= 5) ? 34 : (n >= 4 ? 38 : 44);
-
-      const topLimit = 48;
-      const bottomLimit = Math.max(topLimit, trays.left.y - 26);
-      const available = Math.max(0, bottomLimit - topLimit);
-      const wantedHeight = (n - 1) * eqGap;
-
-      if(wantedHeight > available && n > 1){
-        eqGap = Math.max(30, Math.floor(available / (n - 1)));
-        eqFontSize = Math.min(eqFontSize, Math.max(34, eqGap + 4));
-      }
-
-      const blockHeight = (n - 1) * eqGap;
-      startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
-    }
-
-    drawEquationLines(layer, lines, trays.midX, startY, {
-      text:(x,y,t,a)=>text(x,y,t,a),
-      fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
-      anchor:"start",
-      alignEquals: true,
-      eqGap: 22,
-      fontFamily:"'Times New Roman', Times, serif",
-      fontStyle:"italic"
-    });
-  }
-}
-
-
-
-function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens){
-  const revealAnswers = (printMode === "correction");
-  const eq = card._eq;
-  const trays = card._eqTrays;
-  const pos = card._eqPos;
-  if(!eq || !trays || !pos) return;
-
-  const cover = "rgba(0,0,0,0.95)";
-  const revealCol = "rgba(220,220,220,0.35)";
-  const usePrintTables = (card.family === "EQ" && (printMode === "worksheet" || printMode === "correction"));
-  const varChar = getCardVarChar(card);
-
-  targetSvg.appendChild(tEl("rect",{x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
-  targetSvg.appendChild(tEl("rect",{x:trays.right.x, y:trays.right.y, width:trays.right.w, height:trays.right.h, rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
-
-  targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"#000","stroke-width":"10","stroke-linecap":"round"}));
-
-  targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
-
-  if ((eq.left.tasks + eq.right.tasks) > 1) {
-    const isSigned = (card.family === "EQPM");
-    const ruleText = isSigned
-        ? "Sous chaque tache se cache le même nombre."
-        : "Sous chaque tache, il y a le même nombre de billes.";
-    targetSvg.appendChild(tText(800, 130, ruleText, {
-      "text-anchor":"middle",
-      "font-size":"32",
-      "fill":"rgba(0,0,0,0.70)",
-      "font-weight":"700"
-    }));
-  }
-
-  function drawSide(side, metaSide){
-    const beadR = side.beadR ?? 26;
-    const font = Math.max(18, Math.round(beadR * 0.95));
-
-    let hIndex = 0;
-    for(const taskArr of metaSide.hiddenByTask){
-      for(const val of taskArr){
-        const p = side.posH?.[hIndex] || {cx:820, cy:610};
-        let f = "rgba(0,0,0,0.06)";
-        let s = "rgba(0,0,0,0.22)";
-        if(useTokens){
-            const col = beadColorForValue(val);
-            f = col.fill; s = col.stroke;
-        }
-        targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:f, stroke:s, "stroke-width":"5"}));
-        targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
-        hIndex++;
-      }
-    }
-
-    const oppFlags = Array.isArray(metaSide.opposeFlags) ? metaSide.opposeFlags : null;
-    (side.splats || []).forEach((s, idx)=>{
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? revealCol : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-      if(oppFlags && oppFlags[idx]){
-        const fs = clamp(Math.round(s.r*0.28), 16, 44);
-        const yy = revealAnswers ? (s.cy - s.r*0.65) : (s.cy);
-        targetSvg.appendChild(tText(s.cx, yy, "opposé", {
-          "text-anchor":"middle",
-          "dominant-baseline":"middle",
-          "font-size": String(fs),
-          "font-weight":"900",
-          "fill": (revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke": (revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width": (revealAnswers ? "5" : "0"),
-          "paint-order":"stroke fill"
-        }));
-      }
-    });
-
-    for(let i=0;i<metaSide.visible.length;i++){
-      const p = side.posV?.[i] || {cx:450+i*40, cy:360};
-      const val = metaSide.visible[i];
-      const col = beadColorForValue(val);
-      targetSvg.appendChild(tEl("circle",{cx:p.cx, cy:p.cy, r:beadR, fill:col.fill, stroke:col.stroke, "stroke-width":"5"}));
-      targetSvg.appendChild(tText(p.cx, p.cy + Math.round(font*0.32), String(val), {"text-anchor":"middle","font-size":String(font),"fill":"#000","font-weight":"900"}));
-    }
-  }
-
-  drawSide(pos.left, eq.left);
-  drawSide(pos.right, eq.right);
-
-  if(card.family === "EQPM" && (printMode === "worksheet" || printMode === "correction")){
-    const gEqPm = tEl("g", {id:"eqSignedPrintSteps"});
-    const simplifiedLines = buildEquationSignedSolveLines(eq, varChar);
-    const lines = (printMode === "worksheet")
-      ? (simplifiedLines.length ? [simplifiedLines[0]] : [])
-      : buildEquationSignedPrintCorrectionLines(eq, varChar);
-
-    if(lines.length){
-      const longest = lines.reduce((m, line)=>Math.max(m, String(line).length), 0);
-      const isHelpOnly = printMode === "worksheet";
-      // Mise en page spéciale E± : comme pour B±, la zone basse de la carte imprimée
-      // est largement disponible. On agrandit et on descend l’aide / la correction
-      // pour éviter une trace écrite trop discrète.
-      const fontSize = isHelpOnly
-        ? (longest > 54 ? 72 : (longest > 44 ? 80 : (longest > 34 ? 88 : 96)))
-        : (longest > 68 ? 50 : (longest > 58 ? 56 : (longest > 48 ? 62 : (longest > 38 ? 68 : 74))));
-      const gap = isHelpOnly ? 0 : (fontSize + 20);
-      const centerY = isHelpOnly ? 1225 : 1280;
-
-      drawPrintEquationLinesLikeProjection(gEqPm, lines, {
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        centerX:800,
-        centerY,
-        fontSize,
-        equalFontSize:fontSize,
-        gap,
-        eqGap:isHelpOnly ? 40 : 36,
-        fill:"#000"
-      });
-      targetSvg.appendChild(gEqPm);
-    }
-    return;
-  }
-
-  if(!usePrintTables) return;
-
-  const gEq = tEl("g", {id:"eqPrintSteps"});
-  let currentY = 920;
-  const visL = eqVisibleSum(eq.left);
-  const visR = eqVisibleSum(eq.right);
-  const vl = visL;
-  const vr = visR;
-
-  if(printMode === "worksheet"){
-    drawEquationSingaporeTable(gEq, {
-      cx: 800,
-      y: currentY,
-      total: eq.total,
-      row1: buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, "blank", varChar),
-      row2: buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, "blank", varChar),
-      rect:(a)=>tEl("rect", a),
-      line:(a)=>tEl("line", a),
-      text:(x,y,t,a)=>tText(x,y,t,a),
-      baseW: 980,
-      rowH: 100,
-      fontSize: 86,
-      pad: 38,
-      stroke: "#000",
-      strokeWidth: 5,
-      hiddenFill: "rgba(0,0,0,0.10)",
-      visibleFill: "rgba(255,255,255,0)",
-      textColor: "#000"
-    });
-  } else {
-    const fullW = 1040;
-    const maxTableW = 1040;
-    const minHiddenPrintW = 76;
-    const minVisiblePrintW = 94;
-    const minHiddenPrintWValue1 = 104;
-    const minVisiblePrintWValue1 = 118;
-    const startX = 800 - fullW / 2;
-    const unit = fullW / Math.max(1, Number(eq.total) || 1);
-
-    function partsFor(coeff, vis){
-      return buildEquationTableParts(Math.max(1, coeff * Math.max(1, Number(eq.x) || 1) + vis), coeff, vis, eq.x, "symbolic", varChar);
-    }
-    function cloneState(state){
-      return {
-        x: state.x,
-        row1Parts: state.row1Parts.slice(),
-        row2Parts: state.row2Parts.slice(),
-        row1Widths: state.row1Widths.slice(),
-        row2Widths: state.row2Widths.slice()
-      };
-    }
-    function trimZeroSegments(parts, widths){
-      const outParts = [];
-      const outWidths = [];
-      for(let i=0;i<parts.length;i++){
-        const w = Math.max(0, Number(widths[i]) || 0);
-        if(w <= 0.01) continue;
-        outParts.push(parts[i]);
-        outWidths.push(w);
-      }
-      return { parts: outParts, widths: outWidths };
-    }
-    function hiddenPrefixWidth(widths, count){
-      return widths.slice(0, Math.max(0, count)).reduce((sum, w) => sum + Math.max(0, Number(w) || 0), 0);
-    }
-    function visibleIndex(parts){
-      return parts.findIndex(part => part && !part.hidden);
-    }
-    function subtractSharedVisible(parts, widths, sharedW){
-      const outParts = parts.slice();
-      const outWidths = widths.slice();
-      const idx = visibleIndex(outParts);
-      if(idx >= 0){
-        outWidths[idx] = Math.max(0, (Number(outWidths[idx]) || 0) - sharedW);
-        if(outWidths[idx] <= 0.01){
-          outParts.splice(idx, 1);
-          outWidths.splice(idx, 1);
-        } else if(outParts[idx]) {
-          outParts[idx] = { ...outParts[idx], value: Math.max(0, Number(outParts[idx].value) || 0) };
-        }
-      }
-      return trimZeroSegments(outParts, outWidths);
-    }
-
-    const states = [];
-    const initialRow1 = partsFor(eq.left.tasks, visL);
-    const initialRow2 = partsFor(eq.right.tasks, visR);
-    const initialLayout = drawEquationSingaporeTable(gEq, {
-      x: startX,
-      y: currentY,
-      total: eq.total,
-      row1: initialRow1,
-      row2: initialRow2,
-      rect:(a)=>tEl("rect", a),
-      line:(a)=>tEl("line", a),
-      text:(x,y,t,a)=>tText(x,y,t,a),
-      fixedUnit: unit,
-      baseW: fullW,
-      maxW: maxTableW,
-      disableLabelInflation: true,
-      rowH: 100,
-      fontSize: 86,
-      pad: 34,
-      stroke: "#000",
-      strokeWidth: 5,
-      hiddenFill: "rgba(0,0,0,0.10)",
-      visibleFill: "rgba(255,255,255,0)",
-      textColor: "#000",
-      minHiddenCellW: minHiddenPrintW,
-      minVisibleCellW: minVisiblePrintW,
-      minHiddenCellWValue1: minHiddenPrintWValue1,
-      minVisibleCellWValue1: minVisiblePrintWValue1,
-      forceCommonHiddenCellW: true,
-      variableFontSize: 60,
-      fitLabelToCell: true
-    });
-    states.push({
-      x: startX,
-      row1Parts: initialRow1,
-      row2Parts: initialRow2,
-      row1Widths: initialLayout.rows[0].segments.map(seg => Math.max(1, Number(seg.w) || 1)),
-      row2Widths: initialLayout.rows[1].segments.map(seg => Math.max(1, Number(seg.w) || 1))
-    });
-    currentY += 250;
-
-    const a = Math.max(0, Number(eq.left?.tasks) || 0);
-    const b = Math.max(0, Number(eq.right?.tasks) || 0);
-    const xVal = Math.max(1, Number(eq?.x) || 1);
-    const commonX = Math.min(a, b);
-    const a2 = a - commonX;
-    const b2 = b - commonX;
-    const commonV = Math.min(vl, vr);
-    const vl2 = vl - commonV;
-    const vr2 = vr - commonV;
-    const currentState = () => states[states.length - 1];
-
-    if(commonX > 0){
-      const prev = currentState();
-      const shiftWidth = Math.max(hiddenPrefixWidth(prev.row1Widths, commonX), hiddenPrefixWidth(prev.row2Widths, commonX));
-      const nextState = {
-        x: prev.x + shiftWidth,
-        row1Parts: partsFor(a2, vl),
-        row2Parts: partsFor(b2, vr),
-        row1Widths: prev.row1Widths.slice(commonX),
-        row2Widths: prev.row2Widths.slice(commonX)
-      };
-      states.push(nextState);
-      drawEquationSingaporeTable(gEq, {
-        x: nextState.x,
-        y: currentY,
-        total: Math.max(1, eq.total - commonX * xVal),
-        row1: nextState.row1Parts,
-        row2: nextState.row2Parts,
-        row1Widths: nextState.row1Widths,
-        row2Widths: nextState.row2Widths,
-        rect:(a)=>tEl("rect", a),
-        line:(a)=>tEl("line", a),
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 100,
-        fontSize: 86,
-        pad: 34,
-        stroke: "#000",
-        strokeWidth: 5,
-        hiddenFill: "rgba(0,0,0,0.10)",
-        visibleFill: "rgba(255,255,255,0)",
-        textColor: "#000",
-        variableFontSize: 60,
-        fitLabelToCell: true
-      });
-      currentY += 250;
-    }
-
-    if(commonV > 0){
-      const prev = currentState();
-      const idx1 = visibleIndex(prev.row1Parts);
-      const idx2 = visibleIndex(prev.row2Parts);
-      const w1 = idx1 >= 0 ? Math.max(0, Number(prev.row1Widths[idx1]) || 0) : 0;
-      const w2 = idx2 >= 0 ? Math.max(0, Number(prev.row2Widths[idx2]) || 0) : 0;
-      const sharedVisibleW = Math.min(w1, w2);
-      const nextRow1 = subtractSharedVisible(prev.row1Parts, prev.row1Widths, sharedVisibleW);
-      const nextRow2 = subtractSharedVisible(prev.row2Parts, prev.row2Widths, sharedVisibleW);
-      const nextState = {
-        x: prev.x,
-        row1Parts: partsFor(a2, vl2),
-        row2Parts: partsFor(b2, vr2),
-        row1Widths: nextRow1.widths,
-        row2Widths: nextRow2.widths
-      };
-      states.push(nextState);
-      drawEquationSingaporeTable(gEq, {
-        x: nextState.x,
-        y: currentY,
-        total: Math.max(1, (eq.total - commonX * xVal) - commonV),
-        row1: nextState.row1Parts,
-        row2: nextState.row2Parts,
-        row1Widths: nextState.row1Widths,
-        row2Widths: nextState.row2Widths,
-        rect:(a)=>tEl("rect", a),
-        line:(a)=>tEl("line", a),
-        text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 100,
-        fontSize: 86,
-        pad: 34,
-        stroke: "#000",
-        strokeWidth: 5,
-        hiddenFill: "rgba(0,0,0,0.10)",
-        visibleFill: "rgba(255,255,255,0)",
-        textColor: "#000",
-        variableFontSize: 60,
-        fitLabelToCell: true
-      });
-      currentY += 250;
-    }
-
-    const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl2 === 0 && vr2 > 0) ||
-                              (b2 === 1 && a2 === 0 && vr2 === 0 && vl2 > 0);
-    const diffCoeff = Math.abs(a - b);
-    if(diffCoeff >= 1 && !alreadySolvedUnit){
-      const prev = currentState();
-      const row1HiddenCount = prev.row1Parts.filter(part => part && part.hidden).length;
-      const row2HiddenCount = prev.row2Parts.filter(part => part && part.hidden).length;
-      const hiddenSide = row1HiddenCount > 0 ? 'left' : (row2HiddenCount > 0 ? 'right' : null);
-      const coeffRemain = hiddenSide === 'left' ? row1HiddenCount : row2HiddenCount;
-      if(hiddenSide && coeffRemain > 1){
-        const hiddenWidths = hiddenSide === 'left' ? prev.row1Widths : prev.row2Widths;
-        const visibleParts = hiddenSide === 'left' ? prev.row2Parts : prev.row1Parts;
-        const visibleWidths = hiddenSide === 'left' ? prev.row2Widths : prev.row1Widths;
-        const visibleIdx = visibleIndex(visibleParts);
-        const totalHiddenW = hiddenWidths.slice(0, coeffRemain).reduce((sum, w) => sum + Math.max(0, Number(w) || 0), 0);
-        const totalVisibleW = visibleIdx >= 0 ? Math.max(0, Number(visibleWidths[visibleIdx]) || 0) : totalHiddenW;
-        const oneHiddenW = totalHiddenW / coeffRemain;
-        const oneVisibleW = totalVisibleW / coeffRemain;
-        const nextState = {
-          x: prev.x,
-          row1Parts: hiddenSide === 'left' ? partsFor(1, 0) : partsFor(0, xVal),
-          row2Parts: hiddenSide === 'left' ? partsFor(0, xVal) : partsFor(1, 0),
-          row1Widths: hiddenSide === 'left' ? [oneHiddenW] : [oneVisibleW],
-          row2Widths: hiddenSide === 'left' ? [oneVisibleW] : [oneHiddenW]
-        };
-        states.push(nextState);
-        drawEquationSingaporeTable(gEq, {
-          x: nextState.x,
-          y: currentY,
-          total: xVal,
-          row1: nextState.row1Parts,
-          row2: nextState.row2Parts,
-          row1Widths: nextState.row1Widths,
-          row2Widths: nextState.row2Widths,
-          rect:(a)=>tEl("rect", a),
-          line:(a)=>tEl("line", a),
-          text:(x,y,t,a)=>tText(x,y,t,a),
-          rowH: 100,
-          fontSize: 86,
-          pad: 34,
-          stroke: "#000",
-          strokeWidth: 5,
-          hiddenFill: "rgba(0,0,0,0.10)",
-          visibleFill: "rgba(255,255,255,0)",
-          textColor: "#000",
-          variableFontSize: 60,
-          fitLabelToCell: true
-        });
-        currentY += 250;
-      }
-    }
-
-    currentY += 40;
-    const lines = buildEquationSolveLines(eq, varChar);
-    const eqFontSize = (lines.length >= 4) ? 58 : 68;
-    const eqGap = (lines.length >= 4) ? 74 : 88;
-    drawEquationLines(gEq, lines, 800, currentY, {
-      text:(x,y,t,a)=>tText(x,y,t,a),
-      fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
-      anchor:"start",
-      alignEquals: true,
-      eqGap: 24,
-      fontFamily: "'Times New Roman', Times, serif",
-      fontStyle: "italic"
-    });
-  }
-
-  targetSvg.appendChild(gEq);
-}
-
-
 /* Render impression */
 function renderCardIntoSvg(targetSvg, card, printMode){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
@@ -4989,7 +3304,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM" || act === "EQPM") && colorModeEl && colorModeEl.checked;
+  const useTokens = (act === "NPM") && colorModeEl && colorModeEl.checked;
 
   const W = 1600;
   const H = 2200;
@@ -5005,12 +3320,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
 
-  if(card.family === "EQ" || card.family === "EQPM"){
-    renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens);
-    return;
-  }
-
-  const varChar = getCardVarChar(card);
+    const varChar = getCardVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
   const trayY = 270;
@@ -5068,7 +3378,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   // Contrat didactique impression PDF
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
-  if (!isModeC_or_D && taskCount > 1 && !["EQ","EQPM"].includes(card.family)) {
+  if (!isModeC_or_D && taskCount > 1) {
     const isSigned = (card.family === "NPM");
     const isABFamily = (card.family === "U" || card.family === "N");
     const showRuleText = !(isABFamily && printMode === "correction");
@@ -5530,10 +3840,6 @@ function generate(){
       c = genNumbered(rng);
     }else if(act==="NPM"){
       c = genNumberedSigned(rng);
-    }else if(act==="EQ"){
-      c = genEquation(rng);
-    }else if(act==="EQPM"){
-      c = genEquationSigned(rng);
     }else if(act==="C"){
       c = genInvestigate(rng);
     }else if(act==="D"){
@@ -5582,7 +3888,7 @@ document.getElementById("btnPrev").addEventListener("click", ()=>{
 });
 document.getElementById("btnNext").addEventListener("click", ()=>{
   if(cards.length===0) return;
-  const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM" || cards[idx].family === "EQ" || cards[idx].family === "EQPM";
+  const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM";
   if(is3Steps && revealState < 2) {
       revealState++;
       updateUI();
@@ -5611,7 +3917,7 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="ArrowRight"){
     if(cards.length===0) return;
-    const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM" || cards[idx].family === "EQ" || cards[idx].family === "EQPM";
+    const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM";
     if(is3Steps && revealState < 2) {
         revealState++;
         updateUI();
@@ -5626,7 +3932,7 @@ window.addEventListener("keydown",(e)=>{
   if(e.key===" "){
     e.preventDefault();
     if(cards.length){ 
-        const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM" || cards[idx].family === "EQ" || cards[idx].family === "EQPM";
+        const is3Steps = cards[idx].family === "U" || cards[idx].family === "N" || cards[idx].family === "NPM";
         if (is3Steps) {
             revealState = (revealState + 1) % 3;
         } else {
