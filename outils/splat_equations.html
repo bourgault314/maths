@@ -2697,7 +2697,12 @@ function makeEquationSignedRepeatedValues(count, value){
   const v = Number(value) || 0;
   const out = [];
   for(let i=0;i<n;i++){
-    out.push({hidden:false, kind:"v", value:v, label:String(v), posIndex:i, alignWithHiddenIndex:i});
+    const part = {hidden:false, kind:"v", value:v, label:String(v), posIndex:i};
+    // S'il n'y a qu'une seule valeur à afficher, on garde l'emplacement d'origine
+    // de la bille visible : elle ne doit pas glisser au centre au moment de la révélation.
+    // La redistribution sur le plateau ne sert que pour une vraie décomposition en plusieurs parts.
+    if(n > 1) part.alignWithHiddenIndex = i;
+    out.push(part);
   }
   return out;
 }
@@ -2717,12 +2722,43 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   const b = eqSignedCoeff(eq.right);
   const vl = sumArray(eq.left && eq.left.visible);
   const vr = sumArray(eq.right && eq.right.visible);
-  const diff = a - b;
   const states = [];
+
+  function cleanNumber(v){
+    let n = Number(v);
+    if(!Number.isFinite(n)) n = 0;
+    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
+    if(Object.is(n, -0)) n = 0;
+    return n;
+  }
 
   function push(kind, leftParts, rightParts, equation, extra = {}){
     if(!equation) return;
     states.push({kind, leftParts, rightParts, equation, ...extra});
+  }
+
+  function equationFromCoeffs(lCoeff, lConst, rCoeff, rConst){
+    const lc = cleanNumber(lCoeff);
+    const rc = cleanNumber(rCoeff);
+    if(lc !== 0 && rc === 0) return `${formatSignedLinearExpression(lc, lConst, varChar)} = ${formatSignedIntegerLabel(rConst)}`;
+    if(lc === 0 && rc !== 0) return `${formatSignedIntegerLabel(lConst)} = ${formatSignedLinearExpression(rc, rConst, varChar)}`;
+    return `${formatSignedLinearExpression(lc, lConst, varChar)} = ${formatSignedLinearExpression(rc, rConst, varChar)}`;
+  }
+
+  function revealHiddenPartsWithContribution(parts, contribution){
+    return (Array.isArray(parts) ? parts : [])
+      .filter(p => p && p.hidden && !p.removed)
+      .map(p => ({...p, revealed:true, removed:false, value:contribution}));
+  }
+
+  function signedHiddenFallback(coeff, contribution, startIndex = 0){
+    const c = cleanNumber(coeff);
+    return makeEquationSignedHiddenParts(Math.abs(c), contribution, {
+      sign:c < 0 ? -1 : 1,
+      opposed:c < 0,
+      revealed:true,
+      startIndex
+    });
   }
 
   const structuredEq = buildEquationSignedStructuredEquation(eq, varChar);
@@ -2737,7 +2773,6 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   );
 
   // 2) Simplification sur chaque plateau : les billes numériques d'un même côté sont combinées.
-  // Exemple : 3N − 25 − 30 = 2 + 15 devient 3N − 55 = 17, et le plateau suit.
   const needsCombinedStep = structuredEq !== combinedEq || equationSignedSideNeedsCombining(eq.left) || equationSignedSideNeedsCombining(eq.right);
   if(needsCombinedStep){
     push(
@@ -2748,226 +2783,177 @@ function getEquationSignedStepStates(eq, varChar = xChar){
     );
   }
 
-  if(diff === 0) return states;
+  if(a === b) return states;
 
-  // Cas lisible pour les élèves : quand il ne reste qu'une inconnue négative à gauche
-  // (ex. −m + 1 = 20), on évite de « faire passer » m à droite.
-  // On isole −m, puis on conclut directement m = ...
-  if(b === 0 && a < 0){
-    const d = Math.abs(a);
-    const afterLeftParts = makeEquationSignedCombinedSideParts(a, vl, xVal);
-    const afterRightParts = makeEquationSignedCombinedSideParts(0, vr, xVal);
-    const isolated = vr - vl;
-
-    if(vl !== 0){
-      const addedOpposite = -vl;
-      const addOppositeEq = `${formatSignedExpressionFromParts(a, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
-      push(
-        "hatchV",
-        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, [vl, addedOpposite], [true, true]),
-        makeEquationSignedAddOppositeNumberSideParts(vr, addedOpposite),
-        addOppositeEq,
-        {remainingCoeff:a, isolated, removedConstant:vl, addedOpposite}
-      );
-      push(
-        "afterConstants",
-        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, []),
-        makeEquationSignedCombinedSideParts(0, isolated, xVal),
-        `${formatSignedCoeffLabel(a, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
-        {remainingCoeff:a, isolated}
-      );
-    }
-
-    const finalEquation = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
-    push(
-      "final",
-      makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true}),
-      makeEquationSignedRepeatedValues(d, xVal),
-      finalEquation,
-      {remainingCoeff:d, isolated, final:true, variableSide:"left"}
-    );
-
-    push(
-      "verify",
-      makeEquationSignedOriginalSideParts(eq.left, xVal, {revealed:true}),
-      makeEquationSignedOriginalSideParts(eq.right, xVal, {revealed:true}),
-      finalEquation,
-      {verify:true, variableSide:"left"}
-    );
-
-    return states;
-  }
+  let ar = a;
+  let br = b;
+  let afterLeftParts = makeEquationSignedCombinedSideParts(a, vl, xVal);
+  let afterRightParts = makeEquationSignedCombinedSideParts(b, vr, xVal);
+  let leftStartIndex = 0;
+  let rightStartIndex = 0;
+  let lettersChanged = false;
 
   const sameSignedVariables = (a !== 0 && b !== 0 && Math.sign(a) === Math.sign(b));
-  const commonX = sameSignedVariables ? Math.min(Math.abs(a), Math.abs(b)) : 0;
-  const leftRemainderStartIndex = (sameSignedVariables && Math.abs(a) > Math.abs(b)) ? commonX : 0;
-  const rightRemainderStartIndex = (sameSignedVariables && Math.abs(b) > Math.abs(a)) ? commonX : 0;
 
-  if(diff > 0){
-    const d = diff;
-    const afterLettersEq = `${formatSignedLinearExpression(d, vl, varChar)} = ${formatSignedIntegerLabel(vr)}`;
-    let afterLeftParts = null;
-    let afterRightParts = null;
+  if(sameSignedVariables){
+    // Règle prioritaire : si les deux côtés possèdent des taches du même signe,
+    // on enlève d'abord les taches identiques. C'est valable pour x/x et pour opposé/opposé.
+    const sign = Math.sign(a);
+    const commonX = Math.min(Math.abs(a), Math.abs(b));
 
-    // Si des taches identiques existent des deux côtés, on les hachure avant de les enlever.
-    // On garde les positions d'origine : les taches restantes ne se redessinent pas ailleurs.
     if(commonX > 0){
       push(
         "hatchX",
         makeEquationSignedCombinedSideParts(a, vl, xVal, {removeX:commonX}),
         makeEquationSignedCombinedSideParts(b, vr, xVal, {removeX:commonX}),
         combinedEq,
-        {commonX}
+        {commonX, sameSign:true}
       );
-    }
 
-    // Cas spécifique aux entiers relatifs : si la variable à éliminer est une tache opposée,
-    // on AJOUTE une tache normale des deux côtés, puis on hachure la paire opposée + normale.
-    if(b < 0){
-      const addX = -b;
-      const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
-      push(
-        "hatchOppositeX",
-        makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
-        makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
-        addOppositeXEq,
-        {addedX:addX}
-      );
-      afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
-      afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
-    }else{
-      afterLeftParts = makeEquationSignedCombinedSideParts(d, vl, xVal, {startIndex:leftRemainderStartIndex});
-      afterRightParts = makeEquationSignedCombinedSideParts(0, vr, xVal);
+      ar = a - sign * commonX;
+      br = b - sign * commonX;
+      leftStartIndex = (Math.abs(a) > Math.abs(b)) ? commonX : 0;
+      rightStartIndex = (Math.abs(b) > Math.abs(a)) ? commonX : 0;
+      afterLeftParts = makeEquationSignedCombinedSideParts(ar, vl, xVal, {startIndex:leftStartIndex});
+      afterRightParts = makeEquationSignedCombinedSideParts(br, vr, xVal, {startIndex:rightStartIndex});
+      lettersChanged = true;
     }
+  }else if(a > 0 && b < 0){
+    // Signes opposés : on ajoute une tache normale des deux côtés pour neutraliser les taches opposées de droite.
+    const addX = -b;
+    const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+    push(
+      "hatchOppositeX",
+      makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
+      makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
+      addOppositeXEq,
+      {addedX:addX}
+    );
+    ar = a + addX;
+    br = 0;
+    afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    lettersChanged = true;
+  }else if(a < 0 && b > 0){
+    // Signes opposés : on ajoute une tache normale des deux côtés pour neutraliser les taches opposées de gauche.
+    const addX = -a;
+    const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+    push(
+      "hatchOppositeX",
+      makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
+      makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
+      addOppositeXEq,
+      {addedX:addX}
+    );
+    ar = 0;
+    br = b + addX;
+    afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    lettersChanged = true;
+  }
 
+  const afterLettersEq = equationFromCoeffs(ar, vl, br, vr);
+  if(lettersChanged && afterLettersEq !== combinedEq){
     push(
       "afterLetters",
       afterLeftParts,
       afterRightParts,
       afterLettersEq,
-      {remainingCoeff:d, variableVisibleSum:vl, otherVisibleSum:vr}
+      {leftCoeff:ar, rightCoeff:br, leftVisibleSum:vl, rightVisibleSum:vr}
     );
+  }
 
-    const isolated = vr - vl;
+  // Après l'étape sur les lettres, il doit rester les inconnues d'un seul côté.
+  const variableSide = ar !== 0 ? "left" : (br !== 0 ? "right" : null);
+  if(!variableSide) return states;
+
+  if(variableSide === "left"){
+    const c = cleanNumber(ar);
+    const d = Math.abs(c);
+    const isolated = cleanNumber(vr - vl);
+    const actualX = cleanNumber(isolated / c);
+    const contribution = cleanNumber(isolated / d); // valeur portée par chaque tache restante ; négative si c < 0.
+
     if(vl !== 0){
       const addedOpposite = -vl;
-      const addOppositeEq = `${formatSignedExpressionFromParts(d, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
+      const addOppositeEq = `${formatSignedExpressionFromParts(c, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
       push(
         "hatchV",
         makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, [vl, addedOpposite], [true, true]),
         makeEquationSignedAddOppositeNumberSideParts(vr, addedOpposite),
         addOppositeEq,
-        {remainingCoeff:d, isolated, removedConstant:vl, addedOpposite}
+        {remainingCoeff:c, isolated, removedConstant:vl, addedOpposite}
       );
       push(
         "afterConstants",
         makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, []),
         makeEquationSignedCombinedSideParts(0, isolated, xVal),
-        `${formatSignedCoeffLabel(d, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
-        {remainingCoeff:d, isolated}
+        `${formatSignedCoeffLabel(c, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
+        {remainingCoeff:c, isolated}
       );
     }
 
-    const finalEquation = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
-    const finalLeftHidden = cloneEquationSignedHiddenParts(afterLeftParts, {revealed:true});
+    const finalEquation = `${varChar} = ${formatSignedIntegerLabel(actualX)}`;
+    // Sur une tache opposée, l'opposition est déjà portée par la forme de la tache.
+    // On affiche donc la valeur de la lettre, pas la contribution signée de la tache.
+    const finalLeftHidden = revealHiddenPartsWithContribution(afterLeftParts, actualX);
     push(
       "final",
-      finalLeftHidden.length ? finalLeftHidden : makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:leftRemainderStartIndex}),
-      makeEquationSignedRepeatedValues(d, xVal),
+      finalLeftHidden.length ? finalLeftHidden : signedHiddenFallback(c, actualX, leftStartIndex),
+      makeEquationSignedRepeatedValues(d, contribution),
       finalEquation,
-      {remainingCoeff:d, isolated, final:true, variableSide:"left"}
+      {remainingCoeff:c, isolated, final:true, variableSide:"left"}
     );
 
-    // Dernier clic de vérification : on revient au plateau de départ,
-    // sans simplification, mais avec les tâches éclaircies et révélées.
     push(
       "verify",
-      makeEquationSignedOriginalSideParts(eq.left, xVal, {revealed:true}),
-      makeEquationSignedOriginalSideParts(eq.right, xVal, {revealed:true}),
+      makeEquationSignedOriginalSideParts(eq.left, actualX, {revealed:true}),
+      makeEquationSignedOriginalSideParts(eq.right, actualX, {revealed:true}),
       finalEquation,
       {verify:true, variableSide:"left"}
     );
   }else{
-    const d = -diff;
-    const afterLettersEq = `${formatSignedIntegerLabel(vl)} = ${formatSignedLinearExpression(d, vr, varChar)}`;
-    let afterLeftParts = null;
-    let afterRightParts = null;
+    const c = cleanNumber(br);
+    const d = Math.abs(c);
+    const isolated = cleanNumber(vl - vr);
+    const actualX = cleanNumber(isolated / c);
+    const contribution = cleanNumber(isolated / d); // valeur portée par chaque tache restante ; négative si c < 0.
 
-    if(commonX > 0){
-      push(
-        "hatchX",
-        makeEquationSignedCombinedSideParts(a, vl, xVal, {removeX:commonX}),
-        makeEquationSignedCombinedSideParts(b, vr, xVal, {removeX:commonX}),
-        combinedEq,
-        {commonX}
-      );
-    }
-
-    // Symétrique : si la variable à éliminer à gauche est une tache opposée,
-    // on ajoute une tache normale des deux côtés, puis on neutralise la paire à gauche.
-    if(a < 0){
-      const addX = -a;
-      const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
-      push(
-        "hatchOppositeX",
-        makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
-        makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
-        addOppositeXEq,
-        {addedX:addX}
-      );
-      afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
-      afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
-    }else{
-      afterLeftParts = makeEquationSignedCombinedSideParts(0, vl, xVal);
-      afterRightParts = makeEquationSignedCombinedSideParts(d, vr, xVal, {startIndex:rightRemainderStartIndex});
-    }
-
-    push(
-      "afterLetters",
-      afterLeftParts,
-      afterRightParts,
-      afterLettersEq,
-      {remainingCoeff:d, variableVisibleSum:vr, otherVisibleSum:vl}
-    );
-
-    const isolated = vl - vr;
     if(vr !== 0){
       const addedOpposite = -vr;
-      const addOppositeEq = `${formatSignedExpressionFromParts(0, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(d, [vr, addedOpposite], varChar)}`;
+      const addOppositeEq = `${formatSignedExpressionFromParts(0, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(c, [vr, addedOpposite], varChar)}`;
       push(
         "hatchV",
         makeEquationSignedAddOppositeNumberSideParts(vl, addedOpposite),
         makeEquationSignedPartsWithConstantsFromHidden(afterRightParts, [vr, addedOpposite], [true, true]),
         addOppositeEq,
-        {remainingCoeff:d, isolated, removedConstant:vr, addedOpposite}
+        {remainingCoeff:c, isolated, removedConstant:vr, addedOpposite}
       );
       push(
         "afterConstants",
         makeEquationSignedCombinedSideParts(0, isolated, xVal),
         makeEquationSignedPartsWithConstantsFromHidden(afterRightParts, []),
-        `${formatSignedIntegerLabel(isolated)} = ${formatSignedCoeffLabel(d, varChar)}`,
-        {remainingCoeff:d, isolated}
+        `${formatSignedIntegerLabel(isolated)} = ${formatSignedCoeffLabel(c, varChar)}`,
+        {remainingCoeff:c, isolated}
       );
     }
 
-    // On garde l'inconnue du même côté : si elle est à droite dans 48 = 3x,
-    // la dernière ligne devient 16 = x, et non x = 16.
-    const finalEquation = `${formatSignedIntegerLabel(xVal)} = ${varChar}`;
-    const finalRightHidden = cloneEquationSignedHiddenParts(afterRightParts, {revealed:true});
+    const finalEquation = `${formatSignedIntegerLabel(actualX)} = ${varChar}`;
+    // Sur une tache opposée, l'opposition est déjà portée par la forme de la tache.
+    // On affiche donc la valeur de la lettre, pas la contribution signée de la tache.
+    const finalRightHidden = revealHiddenPartsWithContribution(afterRightParts, actualX);
     push(
       "final",
-      makeEquationSignedRepeatedValues(d, xVal),
-      finalRightHidden.length ? finalRightHidden : makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:rightRemainderStartIndex}),
+      makeEquationSignedRepeatedValues(d, contribution),
+      finalRightHidden.length ? finalRightHidden : signedHiddenFallback(c, actualX, rightStartIndex),
       finalEquation,
-      {remainingCoeff:d, isolated, final:true, variableSide:"right"}
+      {remainingCoeff:c, isolated, final:true, variableSide:"right"}
     );
 
-    // Dernier clic de vérification : on revient au plateau de départ,
-    // sans simplification, mais avec les tâches éclaircies et révélées.
     push(
       "verify",
-      makeEquationSignedOriginalSideParts(eq.left, xVal, {revealed:true}),
-      makeEquationSignedOriginalSideParts(eq.right, xVal, {revealed:true}),
+      makeEquationSignedOriginalSideParts(eq.left, actualX, {revealed:true}),
+      makeEquationSignedOriginalSideParts(eq.right, actualX, {revealed:true}),
       finalEquation,
       {verify:true, variableSide:"right"}
     );
