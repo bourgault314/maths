@@ -342,7 +342,8 @@
         <div id="eqUnknownModeWrap" style="flex:0 0 172px; min-width:0; display:none">
           <label>Forme<br>d’équation</label>
           <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
-            <option value="MIX" selected>Mélange des deux types</option>
+            <option value="MIX" selected>Mélange</option>
+            <option value="AX_EQ_C">Forme ax = c</option>
             <option value="ONE_SIDE">Forme ax + b = c</option>
             <option value="BOTH">Forme ax + b = cx + d</option>
           </select>
@@ -625,6 +626,34 @@ function setNumTasksRangeVisible(show){
   if(numTasksMaxLabelEl) numTasksMaxLabelEl.style.display = show ? "" : "none";
   if(numTasksArrowEl) numTasksArrowEl.style.display = "none";
 }
+
+function normalizeEquationFormMode(value){
+  const v = String(value || "MIX");
+  return (v === "AX_EQ_C" || v === "ONE_SIDE" || v === "BOTH" || v === "MIX") ? v : "MIX";
+}
+function getEquationFormMode(){
+  const el = document.getElementById("eqUnknownMode");
+  return normalizeEquationFormMode(el ? el.value : "MIX");
+}
+function getMinTaskMaxForEquationForm(act, formMode){
+  // En naturel : ax=c et ax+b=c peuvent fonctionner avec 1 tache max.
+  // En mélange et en forme générale, on garde 2 pour éviter les cas x+b=x+d.
+  const form = normalizeEquationFormMode(formMode);
+  if(form === "AX_EQ_C" || form === "ONE_SIDE") return 1;
+  return 2;
+}
+function syncEquationTaskBounds(){
+  if(!numTasksEl || !activityEl) return;
+  const act = activityEl.value;
+  const isEquation = (act === "EQ" || act === "EQSTEP" || isSignedEquationModeValue(act));
+  if(!isEquation) return;
+
+  const minTaskMax = getMinTaskMaxForEquationForm(act, getEquationFormMode());
+  numTasksEl.min = String(minTaskMax);
+  numTasksEl.max = "6";
+  const fallback = minTaskMax === 1 ? 1 : 2;
+  numTasksEl.value = String(clamp(numberOr(numTasksEl.value, fallback), minTaskMax, 6));
+}
 function syncNumTasksUI(act){
   if(!numTasksEl || !labelNumTasksEl) return;
   const key = (act === "EQ" || act === "EQSTEP" || isSignedEquationModeValue(act)) ? "EQ" : ((act === "N" || act === "NPM") ? "N" : "OTHER");
@@ -636,10 +665,9 @@ function syncNumTasksUI(act){
     if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
     labelNumTasksEl.textContent = "Max (par plateau)";
     setNumTasksRangeVisible(false);
-    numTasksEl.min = "2";
+    numTasksEl.min = "1";
     numTasksEl.max = "6";
-    const v = clamp(numberOr(numTasksEl.value, 6), 2, 6);
-    numTasksEl.value = String(v);
+    syncEquationTaskBounds();
   } else if(key === "N"){
     if(_tasksUIKeyPrev === "EQ") _numTasksSavedEquationMax = numTasksEl.value;
     if(_numTasksSavedNumberedMax != null) numTasksEl.value = _numTasksSavedNumberedMax;
@@ -832,6 +860,7 @@ function syncSettingsUI(){
   const prevAct = lastActivityForSigned;
   const isEquation = (act === "EQ" || act === "EQSTEP" || isSignedEquationModeValue(act));
   syncNumTasksUI(act);
+  if(isEquation) syncEquationTaskBounds();
 
   if(isSignedEquationModeValue(act)){
     numTotalMinEl.min = "-99"; numTotalMinEl.max = "99";
@@ -940,6 +969,9 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
 [numOpposeModeEl, eqUnknownModeEl, printModeSelectEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>{
+    if(el === eqUnknownModeEl){
+      syncEquationTaskBounds();
+    }
     setTimeout(()=>{
       try{ el.blur(); }catch(_e){}
       const _ms = document.getElementById("mainSvg");
@@ -1264,6 +1296,32 @@ function buildEquationStepSchemaColumnGeometry(card){
 
 
 
+function pickEquationGeneratorForm(setting, rng, maxTasksUser){
+  const normalized = normalizeEquationFormMode(setting);
+  if(normalized !== "MIX") return normalized;
+
+  // Mélange pédagogique équilibré : les cas ax=c et ax+b=c apparaissent vraiment,
+  // au lieu d'attendre que des zéros sortent par hasard.
+  const canBoth = Number(maxTasksUser) >= 2;
+  const r = rng();
+  if(!canBoth){
+    return r < 0.40 ? "AX_EQ_C" : "ONE_SIDE";
+  }
+  if(r < 0.25) return "AX_EQ_C";
+  if(r < 0.60) return "ONE_SIDE";
+  return "BOTH";
+}
+function pickVisibleCountAtLeastOne(rng, vMin, vMax){
+  const lo = Math.max(1, Math.round(Number(vMin) || 0));
+  const hi = Math.max(lo, Math.max(1, Math.round(Number(vMax) || 0)));
+  return rInt(rng, lo, hi);
+}
+function pickVisibleCountOptional(rng, vMin, vMax){
+  const lo = Math.max(0, Math.round(Number(vMin) || 0));
+  const hi = Math.max(lo, Math.max(0, Math.round(Number(vMax) || 0)));
+  return rInt(rng, lo, hi);
+}
+
 function randomCompositionBounded(rng, sum, parts, maxPart=99){
   if(parts === 0) return (sum === 0) ? [] : null;
   if(parts === 1) return (sum <= maxPart) ? [sum] : null;
@@ -1301,7 +1359,6 @@ function randomCompositionBounded(rng, sum, parts, maxPart=99){
 
 function genEquation(rng){
   const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
-  const maxTasksEq = Math.max(2, maxTasksUser);
 
   let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
@@ -1314,68 +1371,11 @@ function genEquation(rng){
   userMax = clamp(userMax, 1, 999);
 
   const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
+  const MAX_TRIES = 9000;
 
-  const MAX_TRIES = 8000;
-
-  for(let tries=0; tries<MAX_TRIES; tries++){
-    let mode = unknownModeSetting;
-    if(mode === "MIX") mode = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
-
-    let a, b;
-    if(mode === "ONE_SIDE") {
-        if(rng() < 0.5) {
-            a = 0;
-            b = rInt(rng, 1, maxTasksEq);
-        } else {
-            a = rInt(rng, 1, maxTasksEq);
-            b = 0;
-        }
-    } else {
-        a = rInt(rng, 1, maxTasksEq);
-        b = rInt(rng, 1, maxTasksEq);
-        if(b === a) b = (b % maxTasksEq) + 1; 
-    }
-    
-    if(a === b) continue;
-
-    const vCountL = rInt(rng, vMin, vMax);
-    const vCountR = rInt(rng, vMin, vMax);
-    
-    if(vCountL === 0 && vCountR === 0) continue; 
-    if(a === 0 && vCountL === 0) continue;
-    if(b === 0 && vCountR === 0) continue;
-
-    const minVisAny = Math.min(vCountL > 0 ? vCountL : 1, vCountR > 0 ? vCountR : 1);
-    const denom = Math.max(1, Math.min(a, b));
-    let xMax = Math.floor((userMax - minVisAny) / denom);
-    xMax = Math.max(1, Math.min(99, xMax));
-    if(xMax < 1) continue;
-    const x = rInt(rng, 1, xMax);
-
-    let tLow = userMin;
-    let tHigh = userMax;
-
-    const lMinT = a*x + (vCountL * 1);
-    const lMaxT = a*x + (vCountL * 99);
-    const rMinT = b*x + (vCountR * 1);
-    const rMaxT = b*x + (vCountR * 99);
-
-    tLow = Math.max(tLow, lMinT, rMinT);
-    tHigh = Math.min(tHigh, lMaxT, rMaxT);
-
-    if(tHigh < tLow) continue;
-
-    const total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
-    const VL = total - a*x;
-    const VR = total - b*x;
-
-    const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
-    const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
-    if(leftVisible === null || rightVisible === null) continue;
-
-    const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
-    const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
-
+  function makeEqCard(total, x, tasksL, tasksR, leftVisible, rightVisible){
+    const leftHiddenByTask  = Array.from({length:tasksL}, ()=>[x]);
+    const rightHiddenByTask = Array.from({length:tasksR}, ()=>[x]);
     return {
       family: "EQ",
       total: total,
@@ -1385,37 +1385,95 @@ function genEquation(rng){
       _eq: {
         total,
         x,
-        left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
-        right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+        left:  { tasks:tasksL, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
+        right: { tasks:tasksR, visible:rightVisible, hiddenByTask:rightHiddenByTask }
       }
     };
   }
 
-  const a = 2, b = 1, x = 2;
-  const vCountL = Math.max(1, vMin), vCountR = Math.max(1, vMin);
-  const total = Math.max(userMin, a*x + vCountL);
-  const VL = total - a*x;
-  const VR = total - b*x;
-  const leftVisible  = randomCompositionBounded(rng, VL, vCountL, 99) || Array.from({length:vCountL}, ()=>1);
-  const rightVisible = randomCompositionBounded(rng, VR, vCountR, 99) || Array.from({length:vCountR}, ()=>1);
-  const leftHiddenByTask  = Array.from({length:a}, ()=>[x]);
-  const rightHiddenByTask = Array.from({length:b}, ()=>[x]);
-
-  return {
-    family: "EQ",
-    total: total,
-    visible: leftVisible.concat(rightVisible),
-    hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
-    varChar: pickVariableChar(rng),
-    _eq: {
-      total,
-      x,
-      left:  { tasks:a, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
-      right: { tasks:b, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+  function rangeForSide(coeff, vCount, x){
+    if(vCount === 0){
+      const t = coeff * x;
+      return [t, t];
     }
-  };
-}
+    return [coeff * x + vCount, coeff * x + vCount * 99];
+  }
 
+  for(let tries=0; tries<MAX_TRIES; tries++){
+    const form = pickEquationGeneratorForm(unknownModeSetting, rng, maxTasksUser);
+
+    let tasksL = 0, tasksR = 0;
+    let vCountL = 0, vCountR = 0;
+
+    if(form === "AX_EQ_C"){
+      // Évite le cas trop trivial x=c quand le réglage permet 2x, 3x, ...
+      const coeff = maxTasksUser >= 2 ? rInt(rng, 2, maxTasksUser) : 1;
+      const cCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      if(rng() < 0.5){
+        tasksL = coeff; vCountL = 0;
+        tasksR = 0;     vCountR = cCount;
+      }else{
+        tasksL = 0;     vCountL = cCount;
+        tasksR = coeff; vCountR = 0;
+      }
+    }else if(form === "ONE_SIDE"){
+      const coeff = rInt(rng, 1, maxTasksUser);
+      const bCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      const cCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      if(rng() < 0.5){
+        tasksL = coeff; vCountL = bCount;
+        tasksR = 0;     vCountR = cCount;
+      }else{
+        tasksL = 0;     vCountL = cCount;
+        tasksR = coeff; vCountR = bCount;
+      }
+    }else{
+      const maxBoth = Math.max(2, maxTasksUser);
+      tasksL = rInt(rng, 1, maxBoth);
+      tasksR = rInt(rng, 1, maxBoth);
+      if(tasksR === tasksL) tasksR = (tasksR % maxBoth) + 1;
+
+      // Dans la forme générale, b ou d peut être absent, mais pas les deux à la fois.
+      vCountL = pickVisibleCountOptional(rng, vMin, vMax);
+      vCountR = pickVisibleCountOptional(rng, vMin, vMax);
+      if(vCountL === 0 && vCountR === 0){
+        if(rng() < 0.5) vCountL = 1;
+        else vCountR = 1;
+      }
+    }
+
+    if(tasksL === tasksR && vCountL === 0 && vCountR === 0) continue;
+
+    const maxCoeff = Math.max(tasksL, tasksR, 1);
+    let xMax = Math.floor(userMax / maxCoeff);
+    xMax = clamp(xMax, 1, 99);
+    if(xMax < 1) continue;
+    const x = rInt(rng, 1, xMax);
+
+    const [lMin, lMax] = rangeForSide(tasksL, vCountL, x);
+    const [rMin, rMax] = rangeForSide(tasksR, vCountR, x);
+    const tLow = Math.max(userMin, lMin, rMin);
+    const tHigh = Math.min(userMax, lMax, rMax);
+    if(tHigh < tLow) continue;
+
+    const total = (tLow === tHigh) ? tLow : rInt(rng, tLow, tHigh);
+    const VL = total - tasksL * x;
+    const VR = total - tasksR * x;
+
+    const leftVisible  = (vCountL === 0) ? [] : randomCompositionBounded(rng, VL, vCountL, 99);
+    const rightVisible = (vCountR === 0) ? [] : randomCompositionBounded(rng, VR, vCountR, 99);
+    if(leftVisible === null || rightVisible === null) continue;
+
+    return makeEqCard(total, x, tasksL, tasksR, leftVisible, rightVisible);
+  }
+
+  // Secours minimal : ne trahit plus la forme demandée autant que possible.
+  const coeff = maxTasksUser >= 2 ? 2 : 1;
+  let x = Math.max(1, Math.ceil(userMin / coeff));
+  if(coeff * x > userMax) x = Math.max(1, Math.floor(userMax / coeff));
+  const total = Math.max(1, coeff * x);
+  return makeEqCard(total, x, coeff, 0, [], [total]);
+}
 
 function genEquationStep(rng){
   const card = genEquation(rng);
@@ -1427,7 +1485,7 @@ function genEquationStep(rng){
 
 function genEquationSigned(rng){
   const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
-  const maxTasksEq = Math.max(2, maxTasksUser);
+  const maxTasksEq = maxTasksUser;
 
   let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
@@ -1435,7 +1493,7 @@ function genEquationSigned(rng){
 
   let userMin = clamp(numberOr(numTotalMinEl.value, -20), -99, 99);
   let userMax = clamp(numberOr(numTotalMaxEl.value, 20), -99, 99);
-  if(userMax < userMin) [userMax, userMin];
+  if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
 
   const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
   const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
@@ -1505,17 +1563,21 @@ function genEquationSigned(rng){
   }
 
   for(let tries=0; tries<6000; tries++){
-    let modeUnk = unknownModeSetting;
-    if(modeUnk === "MIX") modeUnk = (rng() < 0.5) ? "ONE_SIDE" : "BOTH";
+    let modeUnk = pickEquationGeneratorForm(unknownModeSetting, rng, maxTasksUser);
 
     let tasksL, tasksR;
-    if(modeUnk === "ONE_SIDE") {
+    if(modeUnk === "AX_EQ_C") {
+        const coeff = maxTasksEq >= 2 ? rInt(rng, 2, maxTasksEq) : 1;
+        if(rng() < 0.5) { tasksL = coeff; tasksR = 0; }
+        else { tasksL = 0; tasksR = coeff; }
+    } else if(modeUnk === "ONE_SIDE") {
         if(rng() < 0.5) { tasksL = 0; tasksR = rInt(rng, 1, maxTasksEq); }
         else { tasksL = rInt(rng, 1, maxTasksEq); tasksR = 0; }
     } else {
-        tasksL = rInt(rng, 1, maxTasksEq);
-        tasksR = rInt(rng, 1, maxTasksEq);
-        if(tasksR === tasksL) tasksR = (tasksR % maxTasksEq) + 1;
+        const maxBoth = Math.max(2, maxTasksEq);
+        tasksL = rInt(rng, 1, maxBoth);
+        tasksR = rInt(rng, 1, maxBoth);
+        if(tasksR === tasksL) tasksR = (tasksR % maxBoth) + 1;
     }
 
     let modeOpp = opposeSetting;
@@ -1535,10 +1597,20 @@ function genEquationSigned(rng){
 
     if(a === b) continue;
 
-    const vCountL = rInt(rng, vMin, vMax);
-    const vCountR = rInt(rng, vMin, vMax);
+    let vCountL = pickVisibleCountOptional(rng, vMin, vMax);
+    let vCountR = pickVisibleCountOptional(rng, vMin, vMax);
 
-    if(vCountL === 0 && vCountR === 0) continue;
+    if(modeUnk === "AX_EQ_C"){
+      if(tasksL > 0){ vCountL = 0; vCountR = pickVisibleCountAtLeastOne(rng, vMin, vMax); }
+      else { vCountL = pickVisibleCountAtLeastOne(rng, vMin, vMax); vCountR = 0; }
+    }else if(modeUnk === "ONE_SIDE"){
+      vCountL = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      vCountR = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+    }else if(vCountL === 0 && vCountR === 0){
+      if(rng() < 0.5) vCountL = 1;
+      else vCountR = 1;
+    }
+
     if(tasksL === 0 && vCountL === 0) continue;
     if(tasksR === 0 && vCountR === 0) continue;
 
@@ -1862,6 +1934,11 @@ function drawEquationSingaporeTable(targetGroup, opts){
   const fitLabelToCell = !!opts.fitLabelToCell;
   const numberTextDy = (opts.numberTextDy != null) ? opts.numberTextDy : "0.08em";
   const variableTextDy = (opts.variableTextDy != null) ? opts.variableTextDy : "0";
+  // Les points d.interrogation paraissent visuellement trop hauts dans les cellules
+  // avec la police mathematique : on les descend legerement, sans toucher aux nombres
+  // ni aux vraies lettres. Ce reglage vaut pour la projection et l.impression,
+  // car tous les tableaux passent par cette fonction.
+  const questionTextDy = (opts.questionTextDy != null) ? opts.questionTextDy : "0.16em";
 
   const fixedUnitOpt = Number(opts.fixedUnit);
   const hasFixedUnit = Number.isFinite(fixedUnitOpt) && fixedUnitOpt > 0;
@@ -2097,7 +2174,7 @@ function drawEquationSingaporeTable(targetGroup, opts){
           "text-anchor":"middle",
           "dominant-baseline":"middle",
           "alignment-baseline":"middle",
-          "dy": isVar ? variableTextDy : numberTextDy,
+          "dy": (label === "?") ? questionTextDy : (isVar ? variableTextDy : numberTextDy),
           "font-size": String(fs),
           "fill": isRemoved ? "rgba(0,0,0,0.45)" : textColor,
           "font-weight": isVar ? "normal" : "900",
@@ -3567,6 +3644,61 @@ function buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics){
   };
 }
 
+
+function collapseEquationStepSchemaVerifyLayoutToOnePart(layout, finalState, verifyState){
+  // E bis — vue Schéma uniquement, dernière étape de vérification.
+  // À l'étape précédente, le tableau a déjà été partagé en parts égales
+  // (ex. 4x = 8 devient xxxx / 2 2 2 2). Pour conclure, on ne reconstruit
+  // pas un nouveau mini-tableau recalculé : on garde la même grille et on
+  // efface simplement toutes les parts sauf une colonne x / valeur.
+  if(!layout) return layout;
+  const variableSide = (finalState && finalState.variableSide) || (verifyState && verifyState.variableSide) || "left";
+  const row1Parts = Array.isArray(layout.row1Parts) ? layout.row1Parts : [];
+  const row2Parts = Array.isArray(layout.row2Parts) ? layout.row2Parts : [];
+  const row1Widths = Array.isArray(layout.row1Widths) ? layout.row1Widths : [];
+  const row2Widths = Array.isArray(layout.row2Widths) ? layout.row2Widths : [];
+
+  function firstIndex(parts, predicate){
+    for(let i=0;i<parts.length;i++){
+      if(predicate(parts[i])) return i;
+    }
+    return parts.length ? 0 : -1;
+  }
+  function prefix(widths, idx){
+    return widths.slice(0, Math.max(0, idx)).reduce((sum, w)=>sum + Math.max(0, Number(w) || 0), 0);
+  }
+  function onePart(parts, idx){
+    const p = (idx >= 0 && parts[idx]) ? parts[idx] : (parts[0] || null);
+    return p ? [cloneEqStepPart(p)] : [];
+  }
+  function oneWidth(widths, idx){
+    const w = (idx >= 0) ? widths[idx] : widths[0];
+    return [Math.max(1, Number(w) || 1)];
+  }
+
+  let idx1, idx2;
+  if(variableSide === "right"){
+    idx1 = firstIndex(row1Parts, p => p && !p.hidden && p.kind !== "empty");
+    idx2 = firstIndex(row2Parts, p => p && !!p.hidden);
+  }else{
+    idx1 = firstIndex(row1Parts, p => p && !!p.hidden);
+    idx2 = firstIndex(row2Parts, p => p && !p.hidden && p.kind !== "empty");
+  }
+  if(idx1 < 0 || idx2 < 0) return layout;
+
+  // Normalement les deux parts choisies sont dans la même colonne. On conserve
+  // la position de cette colonne dans le tableau final précédent.
+  const offset = Math.min(prefix(row1Widths, idx1), prefix(row2Widths, idx2));
+  return {
+    x: layout.x + offset,
+    y: layout.y,
+    row1Parts: onePart(row1Parts, idx1),
+    row2Parts: onePart(row2Parts, idx2),
+    row1Widths: oneWidth(row1Widths, idx1),
+    row2Widths: oneWidth(row2Widths, idx2)
+  };
+}
+
 function drawEquationStepSingaporeTable(targetGroup, card, revealState){
   const eq = card && card._eq;
   if(!eq) return null;
@@ -3581,43 +3713,32 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState){
   const gTable = el("g", {id:"eqStepSingaporeTable"});
 
   const isSchemaVerifyTable = schemaMode && state.kind === "verify" && state.verify;
-  const stableLayout = (schemaMode && !isSchemaVerifyTable)
-    ? buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics)
-    : null;
 
-  const xVal = Math.max(1, Number(eq && eq.x) || 1);
-  const varPart = {hidden:true, value:xVal, label:varChar, measureLabel:varChar, kind:"x", removed:false};
-  const valPart = {hidden:false, value:xVal, label:String(xVal), measureLabel:String(xVal), kind:"v", removed:false};
+  // En vue Schéma, la dernière étape de vérification ne doit jamais recalculer
+  // un mini-tableau à part : sinon le tableau "n = 23" peut se rétrécir ou bouger
+  // entre l’avant-dernière et la dernière étape. On réutilise donc la mise en page
+  // stable de l’étape finale précédente, construite depuis le tableau initial.
+  let stableLayout = null;
+  if(schemaMode){
+    let layoutState = state;
+    if(isSchemaVerifyTable){
+      const statesWithoutVerify = getEquationStepStates(eq, varChar, {includeVerify:false});
+      layoutState = statesWithoutVerify.length ? statesWithoutVerify[statesWithoutVerify.length - 1] : state;
+    }
+    stableLayout = buildEquationStepSchemaLayoutForState(eq, layoutState, varChar, metrics);
+    if(isSchemaVerifyTable){
+      stableLayout = collapseEquationStepSchemaVerifyLayoutToOnePart(stableLayout, layoutState, state);
+    }
+  }
 
-  const tableLeftParts = isSchemaVerifyTable
-    ? ((state.variableSide === "left") ? [varPart] : [valPart])
-    : (stableLayout ? stableLayout.row1Parts : state.leftParts);
-  const tableRightParts = isSchemaVerifyTable
-    ? ((state.variableSide === "left") ? [valPart] : [varPart])
-    : (stableLayout ? stableLayout.row2Parts : state.rightParts);
+  const tableLeftParts = stableLayout ? stableLayout.row1Parts : state.leftParts;
+  const tableRightParts = stableLayout ? stableLayout.row2Parts : state.rightParts;
 
-  const verifyHiddenW = Math.max(
-    metrics.minHiddenCellWValue1,
-    minCellWidthForLabel(varChar, metrics.variableFontSize, metrics.pad)
+  const tableTotal = Math.max(
+    1,
+    tableLeftParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0),
+    tableRightParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0)
   );
-  const verifyVisibleW = Math.max(
-    xVal === 1 ? metrics.minVisibleCellWValue1 : metrics.minVisibleCellW,
-    minCellWidthForLabel(String(xVal), metrics.fontSize, metrics.pad)
-  );
-  const verifyRow1Widths = isSchemaVerifyTable
-    ? ((state.variableSide === "left") ? [verifyHiddenW] : [verifyVisibleW])
-    : undefined;
-  const verifyRow2Widths = isSchemaVerifyTable
-    ? ((state.variableSide === "left") ? [verifyVisibleW] : [verifyHiddenW])
-    : undefined;
-
-  const tableTotal = isSchemaVerifyTable
-    ? 1
-    : Math.max(
-        1,
-        tableLeftParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0),
-        tableRightParts.reduce((sum, p)=>sum + Math.max(0, Number(p && p.value) || 0), 0)
-      );
 
   const tableOpts = {
     x: stableLayout ? stableLayout.x : undefined,
@@ -3630,14 +3751,14 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState){
     line:(a)=>el("line", a),
     text:(x,y,t,a)=>text(x,y,t,a),
     compactEquation: false,
-    fixedUnit: (stableLayout || isSchemaVerifyTable) ? undefined : metrics.fixedUnit,
+    fixedUnit: stableLayout ? undefined : metrics.fixedUnit,
     disableLabelInflation: true,
     fitLabelToCell: true,
     baseW: metrics.baseW,
-    maxW: stableLayout ? undefined : (isSchemaVerifyTable ? (verifyHiddenW + verifyVisibleW + 24) : (schemaMode ? 740 : undefined)),
-    row1Widths: stableLayout ? stableLayout.row1Widths : verifyRow1Widths,
-    row2Widths: stableLayout ? stableLayout.row2Widths : verifyRow2Widths,
-    forceCommonHiddenCellW: schemaMode && !stableLayout && !isSchemaVerifyTable,
+    maxW: stableLayout ? undefined : (schemaMode ? 740 : undefined),
+    row1Widths: stableLayout ? stableLayout.row1Widths : undefined,
+    row2Widths: stableLayout ? stableLayout.row2Widths : undefined,
+    forceCommonHiddenCellW: schemaMode && !stableLayout,
     minHiddenCellW: metrics.minHiddenCellW,
     minVisibleCellW: metrics.minVisibleCellW,
     minHiddenCellWValue1: metrics.minHiddenCellWValue1,
@@ -3913,32 +4034,108 @@ function renderCardEquation(card, revealState, useTokens){
 
     function addedHiddenSplat(part, idx, count){
       const tray = sideName === "left" ? activeTrays.left : activeTrays.right;
-      const baseR = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
+      const baseR0 = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
       if(!tray) return fallbackHiddenSplat(idx, count);
+
       const addedCount = Math.max(1, Math.round(Number(part && part.addedCount) || 1));
       const addedIndex = clamp(Math.round(Number(part && part.addedIndex) || 0), 0, addedCount - 1);
-      const relXs = [0.18, 0.36, 0.54, 0.72, 0.86];
-      const relYs = [0.22, 0.43, 0.64];
-      const candidates = [];
-      relYs.forEach(ry=>relXs.forEach(rx=>{
-        candidates.push({cx:tray.x + tray.w * rx, cy:tray.y + tray.h * ry, r:baseR});
-      }));
-      const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR}));
+      const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR0}));
       const avoidBeads = (side.posV || []).map(p => ({cx:p.cx, cy:p.cy, r:beadR}));
-      function farEnough(c){
-        for(const o of avoidSplats){
-          if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
-        }
-        for(const o of avoidBeads){
-          if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
-        }
-        return true;
-      }
-      const safe = candidates.filter(farEnough);
-      const pool = safe.length >= addedCount ? safe : candidates;
-      return pool[addedIndex % pool.length] || fallbackHiddenSplat(idx, count);
-    }
+      const obstacles = avoidSplats.concat(avoidBeads);
 
+      function distance(a,b){ return Math.hypot(a.cx - b.cx, a.cy - b.cy); }
+      function buildCandidates(r){
+        const marginX = Math.max(r + 18, 70);
+        const marginTop = Math.max(r + 16, 62);
+        const marginBottom = Math.max(r + 28, activeTrays.vertical ? 58 : 96);
+        const xMin = tray.x + marginX;
+        const xMax = tray.x + tray.w - marginX;
+        const yMin = tray.y + marginTop;
+        const yMax = tray.y + tray.h - marginBottom;
+        const step = r * 2 + 28;
+        const cols = Math.max(1, Math.floor(Math.max(1, xMax - xMin) / step) + 1);
+        const rows = Math.max(1, Math.floor(Math.max(1, yMax - yMin) / step) + 1);
+        const candidates = [];
+
+        for(let row=0; row<rows; row++){
+          const rowCount = cols;
+          const cy = rows <= 1 ? (yMin + yMax) / 2 : yMin + (yMax - yMin) * (row / (rows - 1));
+          for(let col=0; col<rowCount; col++){
+            const cx = rowCount <= 1 ? (xMin + xMax) / 2 : xMin + (xMax - xMin) * (col / (rowCount - 1));
+            candidates.push({cx, cy, r});
+          }
+        }
+
+        // Points supplémentaires dans les zones souvent libres : bords et diagonales.
+        [0.16,0.30,0.50,0.70,0.84].forEach(rx=>{
+          [0.18,0.32,0.50,0.68,0.82].forEach(ry=>{
+            const cx = clamp(tray.x + tray.w * rx, tray.x + r + 16, tray.x + tray.w - r - 16);
+            const cy = clamp(tray.y + tray.h * ry, tray.y + r + 16, tray.y + tray.h - r - 22);
+            candidates.push({cx, cy, r});
+          });
+        });
+
+        // Suppression des doublons presque identiques.
+        const out = [];
+        for(const c of candidates){
+          if(!out.some(o => Math.abs(o.cx - c.cx) < 2 && Math.abs(o.cy - c.cy) < 2)) out.push(c);
+        }
+        return out;
+      }
+
+      function clearance(c, list, pad){
+        let best = Infinity;
+        for(const o of list){
+          best = Math.min(best, distance(c,o) - (c.r + o.r + pad));
+        }
+        return best;
+      }
+
+      function choosePositions(r){
+        const padObstacles = 24;
+        const padAdded = 26;
+        const candidates = buildCandidates(r)
+          .filter(c => clearance(c, obstacles, padObstacles) >= 0)
+          .sort((a,b)=>{
+            const ca = clearance(a, obstacles, padObstacles);
+            const cb = clearance(b, obstacles, padObstacles);
+            // On privilégie d'abord les zones vraiment libres, puis un placement assez central.
+            const centerA = Math.hypot(a.cx - (tray.x + tray.w/2), a.cy - (tray.y + tray.h/2));
+            const centerB = Math.hypot(b.cx - (tray.x + tray.w/2), b.cy - (tray.y + tray.h/2));
+            return (cb - ca) || (centerA - centerB);
+          });
+
+        const selected = [];
+        for(const c of candidates){
+          if(selected.every(o => distance(c,o) >= (c.r + o.r + padAdded))){
+            selected.push(c);
+            if(selected.length >= addedCount) break;
+          }
+        }
+        return selected;
+      }
+
+      // On essaie d'abord avec la taille normale. Si le plateau est trop chargé,
+      // on réduit légèrement les taches ajoutées plutôt que de les faire se toucher.
+      const radii = [baseR0, Math.max(62, baseR0 - 8), Math.max(54, baseR0 - 16), Math.max(48, baseR0 - 24)];
+      for(const r of radii){
+        const picked = choosePositions(r);
+        if(picked.length >= addedCount) return picked[addedIndex];
+      }
+
+      // Dernier recours : on garde les positions les moins mauvaises, mais on évite toujours
+      // que les taches ajoutées se superposent entre elles.
+      const r = Math.max(48, baseR0 - 24);
+      const loose = buildCandidates(r).sort((a,b)=> clearance(b, obstacles, 8) - clearance(a, obstacles, 8));
+      const selected = [];
+      for(const c of loose){
+        if(selected.every(o => distance(c,o) >= (c.r + o.r + 12))){
+          selected.push(c);
+          if(selected.length >= addedCount) break;
+        }
+      }
+      return selected[addedIndex % Math.max(1, selected.length)] || fallbackHiddenSplat(idx, count);
+    }
     function drawSignedHiddenPart(part, idx, count){
       const isAdded = !!(part && part.added);
       const rawPosIndex = Number(part && part.posIndex);
@@ -4552,32 +4749,100 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
 
   function fallbackPrintAddedHiddenSplat(side, sideName, part, idx, count, beadR){
     const tray = sideName === "left" ? trays.left : trays.right;
-    const baseR = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
+    const baseR0 = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
     if(!tray) return fallbackPrintHiddenSplat(side, sideName, idx, count);
+
     const addedCount = Math.max(1, Math.round(Number(part && part.addedCount) || 1));
     const addedIndex = clamp(Math.round(Number(part && part.addedIndex) || 0), 0, addedCount - 1);
-    const relXs = [0.18, 0.36, 0.54, 0.72, 0.86];
-    const relYs = [0.22, 0.43, 0.64];
-    const candidates = [];
-    relYs.forEach(ry=>relXs.forEach(rx=>{
-      candidates.push({cx:tray.x + tray.w * rx, cy:tray.y + tray.h * ry, r:baseR});
-    }));
-    const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR}));
+    const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR0}));
     const avoidBeads = (side.posV || []).map(p => ({cx:p.cx, cy:p.cy, r:beadR}));
-    function farEnough(c){
-      for(const o of avoidSplats){
-        if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
-      }
-      for(const o of avoidBeads){
-        if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
-      }
-      return true;
-    }
-    const safe = candidates.filter(farEnough);
-    const pool = safe.length >= addedCount ? safe : candidates;
-    return pool[addedIndex % pool.length] || fallbackPrintHiddenSplat(side, sideName, idx, count);
-  }
+    const obstacles = avoidSplats.concat(avoidBeads);
 
+    function distance(a,b){ return Math.hypot(a.cx - b.cx, a.cy - b.cy); }
+    function buildCandidates(r){
+      const marginX = Math.max(r + 18, 70);
+      const marginTop = Math.max(r + 16, 62);
+      const marginBottom = Math.max(r + 28, 96);
+      const xMin = tray.x + marginX;
+      const xMax = tray.x + tray.w - marginX;
+      const yMin = tray.y + marginTop;
+      const yMax = tray.y + tray.h - marginBottom;
+      const step = r * 2 + 28;
+      const cols = Math.max(1, Math.floor(Math.max(1, xMax - xMin) / step) + 1);
+      const rows = Math.max(1, Math.floor(Math.max(1, yMax - yMin) / step) + 1);
+      const candidates = [];
+
+      for(let row=0; row<rows; row++){
+        const cy = rows <= 1 ? (yMin + yMax) / 2 : yMin + (yMax - yMin) * (row / (rows - 1));
+        for(let col=0; col<cols; col++){
+          const cx = cols <= 1 ? (xMin + xMax) / 2 : xMin + (xMax - xMin) * (col / (cols - 1));
+          candidates.push({cx, cy, r});
+        }
+      }
+
+      [0.16,0.30,0.50,0.70,0.84].forEach(rx=>{
+        [0.18,0.32,0.50,0.68,0.82].forEach(ry=>{
+          const cx = clamp(tray.x + tray.w * rx, tray.x + r + 16, tray.x + tray.w - r - 16);
+          const cy = clamp(tray.y + tray.h * ry, tray.y + r + 16, tray.y + tray.h - r - 22);
+          candidates.push({cx, cy, r});
+        });
+      });
+
+      const out = [];
+      for(const c of candidates){
+        if(!out.some(o => Math.abs(o.cx - c.cx) < 2 && Math.abs(o.cy - c.cy) < 2)) out.push(c);
+      }
+      return out;
+    }
+
+    function clearance(c, list, pad){
+      let best = Infinity;
+      for(const o of list){
+        best = Math.min(best, distance(c,o) - (c.r + o.r + pad));
+      }
+      return best;
+    }
+
+    function choosePositions(r){
+      const padObstacles = 24;
+      const padAdded = 26;
+      const candidates = buildCandidates(r)
+        .filter(c => clearance(c, obstacles, padObstacles) >= 0)
+        .sort((a,b)=>{
+          const ca = clearance(a, obstacles, padObstacles);
+          const cb = clearance(b, obstacles, padObstacles);
+          const centerA = Math.hypot(a.cx - (tray.x + tray.w/2), a.cy - (tray.y + tray.h/2));
+          const centerB = Math.hypot(b.cx - (tray.x + tray.w/2), b.cy - (tray.y + tray.h/2));
+          return (cb - ca) || (centerA - centerB);
+        });
+
+      const selected = [];
+      for(const c of candidates){
+        if(selected.every(o => distance(c,o) >= (c.r + o.r + padAdded))){
+          selected.push(c);
+          if(selected.length >= addedCount) break;
+        }
+      }
+      return selected;
+    }
+
+    const radii = [baseR0, Math.max(62, baseR0 - 8), Math.max(54, baseR0 - 16), Math.max(48, baseR0 - 24)];
+    for(const r of radii){
+      const picked = choosePositions(r);
+      if(picked.length >= addedCount) return picked[addedIndex];
+    }
+
+    const r = Math.max(48, baseR0 - 24);
+    const loose = buildCandidates(r).sort((a,b)=> clearance(b, obstacles, 8) - clearance(a, obstacles, 8));
+    const selected = [];
+    for(const c of loose){
+      if(selected.every(o => distance(c,o) >= (c.r + o.r + 12))){
+        selected.push(c);
+        if(selected.length >= addedCount) break;
+      }
+    }
+    return selected[addedIndex % Math.max(1, selected.length)] || fallbackPrintHiddenSplat(side, sideName, idx, count);
+  }
   function fallbackPrintVisiblePosition(side, sideName, idx, count, beadR){
     const tray = sideName === "left" ? trays.left : trays.right;
     const n = Math.max(1, Math.round(Number(count) || 1));
