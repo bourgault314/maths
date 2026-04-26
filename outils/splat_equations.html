@@ -1794,6 +1794,13 @@ function ensureHatchDefs(svgRoot){
   pat.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'14', stroke:'rgba(0,0,0,0.38)', 'stroke-width':'3'}));
   defs.appendChild(pat);
 
+  const patWhite = el('pattern', {
+    id:'diagHatchPatternWhiteMain', patternUnits:'userSpaceOnUse', width:'14', height:'14', patternTransform:'rotate(45)'
+  });
+  patWhite.appendChild(el('rect', {x:'0', y:'0', width:'14', height:'14', fill:'rgba(255,255,255,0)'}));
+  patWhite.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'14', stroke:'rgba(255,255,255,0.88)', 'stroke-width':'3'}));
+  defs.appendChild(patWhite);
+
   svgRoot.insertBefore(defs, svgRoot.firstChild);
   return defs;
 }
@@ -1824,6 +1831,12 @@ function addHatchPath(targetGroup, d){
   ensureHatchDefs(svgRoot);
   targetGroup.appendChild(el('path', {d, fill:'rgba(255,255,255,0.48)', stroke:'none'}));
   targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternMain)', stroke:'none'}));
+}
+
+function addWhiteHatchPath(targetGroup, d){
+  const svgRoot = getSvgRootForHatch(targetGroup);
+  ensureHatchDefs(svgRoot);
+  targetGroup.appendChild(el('path', {d, fill:'url(#diagHatchPatternWhiteMain)', stroke:'none'}));
 }
 
 function drawEquationSingaporeTable(targetGroup, opts){
@@ -2445,7 +2458,10 @@ function makeEquationSignedHiddenParts(count, xVal, opts = {}){
       opposed,
       revealed,
       removed:i < removedCount,
-      posIndex:startIndex + i
+      posIndex:startIndex + i,
+      added: !!opts.added,
+      addedIndex: Number.isFinite(Number(opts.addedIndex)) ? Math.max(0, Math.round(Number(opts.addedIndex))) + i : i,
+      addedCount: Number.isFinite(Number(opts.addedCount)) ? Math.max(1, Math.round(Number(opts.addedCount))) : n
     });
   }
   return out;
@@ -2517,6 +2533,31 @@ function formatSignedExpressionFromParts(coeff, constants, varChar = xChar){
   return out;
 }
 
+function formatSignedExpressionWithAddedCoeff(baseCoeff, addedCoeff, constants, varChar = xChar){
+  function cleanInt(v){
+    let n = Number(v);
+    if(!Number.isFinite(n)) n = 0;
+    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
+    if(Object.is(n, -0)) n = 0;
+    return n;
+  }
+  const terms = [];
+  function pushCoeff(c){
+    c = cleanInt(c);
+    if(c === 0) return;
+    const abs = Math.abs(c);
+    terms.push({ sign:c < 0 ? -1 : 1, text:abs === 1 ? varChar : `${abs}${varChar}` });
+  }
+  pushCoeff(baseCoeff);
+  pushCoeff(addedCoeff);
+  (Array.isArray(constants) ? constants : []).forEach(v=>{
+    const n = cleanInt(v);
+    if(n !== 0) terms.push({ sign:n < 0 ? -1 : 1, text:String(Math.abs(n)) });
+  });
+  return joinSignedTerms(terms);
+}
+
+
 function makeEquationSignedAddOppositeVariableSideParts(coeff, constant, xVal, opts = {}){
   const opp = -Number(constant || 0);
   const out = makeEquationSignedCombinedSideParts(coeff, 0, xVal, {
@@ -2570,6 +2611,86 @@ function makeEquationSignedCombinedSideParts(coeff, visibleSum, xVal, opts = {})
   }
   return out;
 }
+
+function makeEquationSignedSideWithAddedVariables(baseCoeff, visibleSum, xVal, opts = {}){
+  const base = Math.round(Number(baseCoeff) || 0);
+  const v = Number(visibleSum) || 0;
+  const addCount = Math.max(0, Math.round(Number(opts.addCount) || 0));
+  const startIndex = Math.max(0, Math.round(Number(opts.startIndex) || 0));
+  const neutralize = !!opts.neutralize;
+  const omitRemoved = !!opts.omitRemoved;
+  const out = [];
+
+  const negCount = base < 0 ? Math.abs(base) : 0;
+  const posCount = base > 0 ? base : 0;
+  const neutralizeCount = neutralize ? Math.min(negCount, addCount) : 0;
+
+  for(let i=0;i<posCount;i++){
+    out.push({
+      hidden:true,
+      kind:"x",
+      value:Number(xVal) || 0,
+      sign:1,
+      opposed:false,
+      revealed:!!opts.revealed,
+      removed:false,
+      posIndex:startIndex + i
+    });
+  }
+
+  for(let i=0;i<negCount;i++){
+    const removed = i < neutralizeCount;
+    if(omitRemoved && removed) continue;
+    out.push({
+      hidden:true,
+      kind:"x",
+      value:Number(xVal) || 0,
+      sign:-1,
+      opposed:true,
+      revealed:!!opts.revealed,
+      removed,
+      whiteHatch: removed,
+      posIndex:startIndex + i
+    });
+  }
+
+  for(let i=0;i<addCount;i++){
+    const removed = i < neutralizeCount;
+    if(omitRemoved && removed) continue;
+    out.push({
+      hidden:true,
+      kind:"x",
+      value:Number(xVal) || 0,
+      sign:1,
+      opposed:false,
+      revealed:!!opts.revealed,
+      removed,
+      whiteHatch: removed,
+      added:true,
+      addedIndex:i,
+      addedCount:addCount,
+      // posIndex volontairement hors des taches d'origine : le rendu utilise addedIndex
+      // pour poser ces taches ajoutées dans un espace libre du plateau.
+      posIndex:1000 + i
+    });
+  }
+
+  if(v !== 0){
+    out.push(...makeEquationSignedVisibleParts([v], {removed: !!opts.removeV}));
+  }
+  return out;
+}
+
+function cloneEquationSignedHiddenParts(parts, opts = {}){
+  return (Array.isArray(parts) ? parts : [])
+    .filter(p => p && p.hidden && !p.removed)
+    .map(p => ({...p, revealed: opts.revealed != null ? !!opts.revealed : !!p.revealed, removed:false}));
+}
+
+function makeEquationSignedPartsWithConstantsFromHidden(parts, values = [], removedFlags = []){
+  return cloneEquationSignedHiddenParts(parts).concat(makeEquationSignedConstantParts(values, removedFlags));
+}
+
 
 function makeEquationSignedRepeatedValues(count, value){
   const n = Math.max(1, Math.round(Number(count) || 1));
@@ -2629,6 +2750,54 @@ function getEquationSignedStepStates(eq, varChar = xChar){
 
   if(diff === 0) return states;
 
+  // Cas lisible pour les élèves : quand il ne reste qu'une inconnue négative à gauche
+  // (ex. −m + 1 = 20), on évite de « faire passer » m à droite.
+  // On isole −m, puis on conclut directement m = ...
+  if(b === 0 && a < 0){
+    const d = Math.abs(a);
+    const afterLeftParts = makeEquationSignedCombinedSideParts(a, vl, xVal);
+    const afterRightParts = makeEquationSignedCombinedSideParts(0, vr, xVal);
+    const isolated = vr - vl;
+
+    if(vl !== 0){
+      const addedOpposite = -vl;
+      const addOppositeEq = `${formatSignedExpressionFromParts(a, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
+      push(
+        "hatchV",
+        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, [vl, addedOpposite], [true, true]),
+        makeEquationSignedAddOppositeNumberSideParts(vr, addedOpposite),
+        addOppositeEq,
+        {remainingCoeff:a, isolated, removedConstant:vl, addedOpposite}
+      );
+      push(
+        "afterConstants",
+        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, []),
+        makeEquationSignedCombinedSideParts(0, isolated, xVal),
+        `${formatSignedCoeffLabel(a, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
+        {remainingCoeff:a, isolated}
+      );
+    }
+
+    const finalEquation = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
+    push(
+      "final",
+      makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true}),
+      makeEquationSignedRepeatedValues(d, xVal),
+      finalEquation,
+      {remainingCoeff:d, isolated, final:true, variableSide:"left"}
+    );
+
+    push(
+      "verify",
+      makeEquationSignedOriginalSideParts(eq.left, xVal, {revealed:true}),
+      makeEquationSignedOriginalSideParts(eq.right, xVal, {revealed:true}),
+      finalEquation,
+      {verify:true, variableSide:"left"}
+    );
+
+    return states;
+  }
+
   const sameSignedVariables = (a !== 0 && b !== 0 && Math.sign(a) === Math.sign(b));
   const commonX = sameSignedVariables ? Math.min(Math.abs(a), Math.abs(b)) : 0;
   const leftRemainderStartIndex = (sameSignedVariables && Math.abs(a) > Math.abs(b)) ? commonX : 0;
@@ -2637,6 +2806,8 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   if(diff > 0){
     const d = diff;
     const afterLettersEq = `${formatSignedLinearExpression(d, vl, varChar)} = ${formatSignedIntegerLabel(vr)}`;
+    let afterLeftParts = null;
+    let afterRightParts = null;
 
     // Si des taches identiques existent des deux côtés, on les hachure avant de les enlever.
     // On garde les positions d'origine : les taches restantes ne se redessinent pas ailleurs.
@@ -2650,10 +2821,29 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       );
     }
 
+    // Cas spécifique aux entiers relatifs : si la variable à éliminer est une tache opposée,
+    // on AJOUTE une tache normale des deux côtés, puis on hachure la paire opposée + normale.
+    if(b < 0){
+      const addX = -b;
+      const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+      push(
+        "hatchOppositeX",
+        makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
+        makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
+        addOppositeXEq,
+        {addedX:addX}
+      );
+      afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+      afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    }else{
+      afterLeftParts = makeEquationSignedCombinedSideParts(d, vl, xVal, {startIndex:leftRemainderStartIndex});
+      afterRightParts = makeEquationSignedCombinedSideParts(0, vr, xVal);
+    }
+
     push(
       "afterLetters",
-      makeEquationSignedCombinedSideParts(d, vl, xVal, {startIndex:leftRemainderStartIndex}),
-      makeEquationSignedCombinedSideParts(0, vr, xVal),
+      afterLeftParts,
+      afterRightParts,
       afterLettersEq,
       {remainingCoeff:d, variableVisibleSum:vl, otherVisibleSum:vr}
     );
@@ -2664,14 +2854,14 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       const addOppositeEq = `${formatSignedExpressionFromParts(d, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
       push(
         "hatchV",
-        makeEquationSignedAddOppositeVariableSideParts(d, vl, xVal, {startIndex:leftRemainderStartIndex}),
+        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, [vl, addedOpposite], [true, true]),
         makeEquationSignedAddOppositeNumberSideParts(vr, addedOpposite),
         addOppositeEq,
         {remainingCoeff:d, isolated, removedConstant:vl, addedOpposite}
       );
       push(
         "afterConstants",
-        makeEquationSignedCombinedSideParts(d, 0, xVal, {startIndex:leftRemainderStartIndex}),
+        makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, []),
         makeEquationSignedCombinedSideParts(0, isolated, xVal),
         `${formatSignedCoeffLabel(d, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
         {remainingCoeff:d, isolated}
@@ -2679,9 +2869,10 @@ function getEquationSignedStepStates(eq, varChar = xChar){
     }
 
     const finalEquation = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
+    const finalLeftHidden = cloneEquationSignedHiddenParts(afterLeftParts, {revealed:true});
     push(
       "final",
-      makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:leftRemainderStartIndex}),
+      finalLeftHidden.length ? finalLeftHidden : makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:leftRemainderStartIndex}),
       makeEquationSignedRepeatedValues(d, xVal),
       finalEquation,
       {remainingCoeff:d, isolated, final:true, variableSide:"left"}
@@ -2699,6 +2890,8 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   }else{
     const d = -diff;
     const afterLettersEq = `${formatSignedIntegerLabel(vl)} = ${formatSignedLinearExpression(d, vr, varChar)}`;
+    let afterLeftParts = null;
+    let afterRightParts = null;
 
     if(commonX > 0){
       push(
@@ -2710,10 +2903,29 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       );
     }
 
+    // Symétrique : si la variable à éliminer à gauche est une tache opposée,
+    // on ajoute une tache normale des deux côtés, puis on neutralise la paire à gauche.
+    if(a < 0){
+      const addX = -a;
+      const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+      push(
+        "hatchOppositeX",
+        makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
+        makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true}),
+        addOppositeXEq,
+        {addedX:addX}
+      );
+      afterLeftParts = makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+      afterRightParts = makeEquationSignedSideWithAddedVariables(b, vr, xVal, {addCount:addX, neutralize:true, omitRemoved:true});
+    }else{
+      afterLeftParts = makeEquationSignedCombinedSideParts(0, vl, xVal);
+      afterRightParts = makeEquationSignedCombinedSideParts(d, vr, xVal, {startIndex:rightRemainderStartIndex});
+    }
+
     push(
       "afterLetters",
-      makeEquationSignedCombinedSideParts(0, vl, xVal),
-      makeEquationSignedCombinedSideParts(d, vr, xVal, {startIndex:rightRemainderStartIndex}),
+      afterLeftParts,
+      afterRightParts,
       afterLettersEq,
       {remainingCoeff:d, variableVisibleSum:vr, otherVisibleSum:vl}
     );
@@ -2725,24 +2937,27 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       push(
         "hatchV",
         makeEquationSignedAddOppositeNumberSideParts(vl, addedOpposite),
-        makeEquationSignedAddOppositeVariableSideParts(d, vr, xVal, {startIndex:rightRemainderStartIndex}),
+        makeEquationSignedPartsWithConstantsFromHidden(afterRightParts, [vr, addedOpposite], [true, true]),
         addOppositeEq,
         {remainingCoeff:d, isolated, removedConstant:vr, addedOpposite}
       );
       push(
         "afterConstants",
         makeEquationSignedCombinedSideParts(0, isolated, xVal),
-        makeEquationSignedCombinedSideParts(d, 0, xVal, {startIndex:rightRemainderStartIndex}),
+        makeEquationSignedPartsWithConstantsFromHidden(afterRightParts, []),
         `${formatSignedIntegerLabel(isolated)} = ${formatSignedCoeffLabel(d, varChar)}`,
         {remainingCoeff:d, isolated}
       );
     }
 
-    const finalEquation = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
+    // On garde l'inconnue du même côté : si elle est à droite dans 48 = 3x,
+    // la dernière ligne devient 16 = x, et non x = 16.
+    const finalEquation = `${formatSignedIntegerLabel(xVal)} = ${varChar}`;
+    const finalRightHidden = cloneEquationSignedHiddenParts(afterRightParts, {revealed:true});
     push(
       "final",
       makeEquationSignedRepeatedValues(d, xVal),
-      makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:rightRemainderStartIndex}),
+      finalRightHidden.length ? finalRightHidden : makeEquationSignedHiddenParts(d, xVal, {sign:1, revealed:true, startIndex:rightRemainderStartIndex}),
       finalEquation,
       {remainingCoeff:d, isolated, final:true, variableSide:"right"}
     );
@@ -3710,14 +3925,44 @@ function renderCardEquation(card, revealState, useTokens){
       };
     }
 
+    function addedHiddenSplat(part, idx, count){
+      const tray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      const baseR = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
+      if(!tray) return fallbackHiddenSplat(idx, count);
+      const addedCount = Math.max(1, Math.round(Number(part && part.addedCount) || 1));
+      const addedIndex = clamp(Math.round(Number(part && part.addedIndex) || 0), 0, addedCount - 1);
+      const relXs = [0.18, 0.36, 0.54, 0.72, 0.86];
+      const relYs = [0.22, 0.43, 0.64];
+      const candidates = [];
+      relYs.forEach(ry=>relXs.forEach(rx=>{
+        candidates.push({cx:tray.x + tray.w * rx, cy:tray.y + tray.h * ry, r:baseR});
+      }));
+      const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR}));
+      const avoidBeads = (side.posV || []).map(p => ({cx:p.cx, cy:p.cy, r:beadR}));
+      function farEnough(c){
+        for(const o of avoidSplats){
+          if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
+        }
+        for(const o of avoidBeads){
+          if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
+        }
+        return true;
+      }
+      const safe = candidates.filter(farEnough);
+      const pool = safe.length >= addedCount ? safe : candidates;
+      return pool[addedIndex % pool.length] || fallbackHiddenSplat(idx, count);
+    }
+
     function drawSignedHiddenPart(part, idx, count){
+      const isAdded = !!(part && part.added);
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-      const s = side.splats?.[posIndex] || fallbackHiddenSplat(idx, count);
-      const pHidden = side.posH?.[posIndex] || {cx:s.cx, cy:s.cy};
+      const s = isAdded ? addedHiddenSplat(part, idx, count) : (side.splats?.[posIndex] || fallbackHiddenSplat(idx, count));
+      const pHidden = isAdded ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || {cx:s.cx, cy:s.cy});
       const d = blobPath(s.cx, s.cy, s.r);
       const isRevealed = !!(part && part.revealed);
       const isRemoved = !!(part && part.removed);
+      const useWhiteHatch = !!(part && part.whiteHatch);
       if(isRevealed){
         let f = "var(--beadH-fill)";
         let st = "var(--beadH-stroke)";
@@ -3733,12 +3978,12 @@ function renderCardEquation(card, revealState, useTokens){
       }
       layer.appendChild(el("path",{
         d,
-        fill:(isRevealed || isRemoved) ? revealCol : cover,
-        stroke:(isRevealed || isRemoved) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)",
+        fill:(isRemoved && useWhiteHatch) ? cover : ((isRevealed || isRemoved) ? revealCol : cover),
+        stroke:(isRemoved && useWhiteHatch) ? "rgba(0,0,0,0.18)" : ((isRevealed || isRemoved) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)"),
         "stroke-width":"5"
       }));
       if(isRemoved){
-        drawHatchOverlayPath(d);
+        useWhiteHatch ? addWhiteHatchPath(layer, d) : drawHatchOverlayPath(d);
       }
       if(part && part.opposed){
         const fs = clamp(Math.round(s.r*0.28), 16, 44);
@@ -3996,20 +4241,24 @@ function renderCardEquation(card, revealState, useTokens){
   if(hasEquationSignedStepAid){
     const lines = getEquationSignedStepVisibleLines(eq, revealState, varChar);
     const n = Math.max(1, lines.length);
-    let eqFontSize = (n >= 6) ? 34 : (n >= 5 ? 36 : (n >= 4 ? 40 : 46));
-    let eqGap = (n >= 6) ? 30 : (n >= 5 ? 32 : (n >= 4 ? 36 : 44));
+    // On garde une police plus lisible et on gagne surtout de la place en montant le bloc,
+    // au lieu de réduire trop vite la taille des équations.
+    let eqFontSize = (n >= 7) ? 34 : (n >= 6 ? 38 : (n >= 5 ? 42 : (n >= 4 ? 46 : 52)));
+    let eqGap = (n >= 7) ? 28 : (n >= 6 ? 32 : (n >= 5 ? 38 : (n >= 4 ? 42 : 50)));
 
-    const topLimit = 46;
-    const bottomLimit = Math.max(topLimit, activeTrays.left.y - 26);
+    const topLimit = 18;
+    const bottomLimit = Math.max(topLimit, activeTrays.left.y - 28);
     const available = Math.max(0, bottomLimit - topLimit);
     const wantedHeight = (n - 1) * eqGap;
     if(wantedHeight > available && n > 1){
-      eqGap = Math.max(28, Math.floor(available / (n - 1)));
-      eqFontSize = Math.min(eqFontSize, Math.max(32, eqGap + 4));
+      eqGap = Math.max(24, Math.floor(available / (n - 1)));
+      eqFontSize = Math.min(eqFontSize, Math.max(32, eqGap + 8));
     }
 
     const blockHeight = (n - 1) * eqGap;
-    const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
+    const startY = (n >= 4)
+      ? Math.round(topLimit + 10)
+      : Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
 
     drawEquationLines(layer, lines, activeTrays.midX, startY, {
       text:(x,y,t,a)=>text(x,y,t,a),
@@ -4315,6 +4564,34 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     };
   }
 
+  function fallbackPrintAddedHiddenSplat(side, sideName, part, idx, count, beadR){
+    const tray = sideName === "left" ? trays.left : trays.right;
+    const baseR = (side.splats && side.splats[0] && side.splats[0].r) ? side.splats[0].r : 74;
+    if(!tray) return fallbackPrintHiddenSplat(side, sideName, idx, count);
+    const addedCount = Math.max(1, Math.round(Number(part && part.addedCount) || 1));
+    const addedIndex = clamp(Math.round(Number(part && part.addedIndex) || 0), 0, addedCount - 1);
+    const relXs = [0.18, 0.36, 0.54, 0.72, 0.86];
+    const relYs = [0.22, 0.43, 0.64];
+    const candidates = [];
+    relYs.forEach(ry=>relXs.forEach(rx=>{
+      candidates.push({cx:tray.x + tray.w * rx, cy:tray.y + tray.h * ry, r:baseR});
+    }));
+    const avoidSplats = (side.splats || []).map(s => ({cx:s.cx, cy:s.cy, r:s.r || baseR}));
+    const avoidBeads = (side.posV || []).map(p => ({cx:p.cx, cy:p.cy, r:beadR}));
+    function farEnough(c){
+      for(const o of avoidSplats){
+        if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
+      }
+      for(const o of avoidBeads){
+        if(Math.hypot(c.cx - o.cx, c.cy - o.cy) < (baseR + o.r + 24)) return false;
+      }
+      return true;
+    }
+    const safe = candidates.filter(farEnough);
+    const pool = safe.length >= addedCount ? safe : candidates;
+    return pool[addedIndex % pool.length] || fallbackPrintHiddenSplat(side, sideName, idx, count);
+  }
+
   function fallbackPrintVisiblePosition(side, sideName, idx, count, beadR){
     const tray = sideName === "left" ? trays.left : trays.right;
     const n = Math.max(1, Math.round(Number(count) || 1));
@@ -4346,21 +4623,23 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
       const visibleParts = stepParts.filter(p => p && !p.hidden && p.kind !== "empty");
 
       hiddenParts.forEach((part, idx)=>{
+        const isAdded = !!(part && part.added);
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const s = side.splats?.[posIndex] || fallbackPrintHiddenSplat(side, sideName, idx, hiddenParts.length);
-        const pHidden = side.posH?.[posIndex] || {cx:s.cx, cy:s.cy};
+        const s = isAdded ? fallbackPrintAddedHiddenSplat(side, sideName, part, idx, hiddenParts.length, beadR) : (side.splats?.[posIndex] || fallbackPrintHiddenSplat(side, sideName, idx, hiddenParts.length));
+        const pHidden = isAdded ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || {cx:s.cx, cy:s.cy});
         const isRevealed = !!part.revealed;
         const isRemoved = !!part.removed;
+        const useWhiteHatch = !!part.whiteHatch;
         const dPath = blobPath(s.cx, s.cy, s.r);
         if(isRevealed) drawHiddenRevealedBead(pHidden, part.value, beadR);
         targetGroup.appendChild(el("path",{
           d: dPath,
-          fill:(isRevealed || isRemoved) ? revealCol : cover,
-          stroke:(isRevealed || isRemoved) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)",
+          fill:(isRemoved && useWhiteHatch) ? cover : ((isRevealed || isRemoved) ? revealCol : cover),
+          stroke:(isRemoved && useWhiteHatch) ? "rgba(0,0,0,0.18)" : ((isRevealed || isRemoved) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)"),
           "stroke-width":"5"
         }));
-        if(isRemoved) addHatchPath(targetGroup, dPath);
+        if(isRemoved) (useWhiteHatch ? addWhiteHatchPath(targetGroup, dPath) : addHatchPath(targetGroup, dPath));
         if(part.opposed){
           const fs = clamp(Math.round(s.r*0.28), 16, 44);
           const yy = isRevealed ? (s.cy - s.r*0.65) : s.cy;
@@ -5145,12 +5424,12 @@ function updateUI(){
   if(btnQuestionNextEl) btnQuestionNextEl.style.display = stepMode ? "inline-flex" : "none"; btnQuestionNextEl.style.alignItems = "center"; btnQuestionNextEl.style.justifyContent = "center";
 
   if(btnPrevEl){
-    btnPrevEl.disabled = cards.length===0 || (stepMode ? revealState<=0 : (idx===0 && revealState===0));
-    btnPrevEl.title = stepMode ? "Étape précédente" : "Carte précédente / masquer la correction";
+    btnPrevEl.disabled = cards.length===0 || (stepMode ? (idx===0 && revealState<=0) : (idx===0 && revealState===0));
+    btnPrevEl.title = stepMode ? "Étape précédente / carte précédente" : "Carte précédente / masquer la correction";
   }
   if(btnNextEl){
-    btnNextEl.disabled = cards.length===0 || (stepMode ? revealState>=maxState : (idx===cards.length-1 && revealState>=maxState));
-    btnNextEl.title = stepMode ? "Étape suivante" : "Carte suivante / afficher la correction";
+    btnNextEl.disabled = cards.length===0 || (stepMode ? (idx===cards.length-1 && revealState>=maxState) : (idx===cards.length-1 && revealState>=maxState));
+    btnNextEl.title = stepMode ? "Étape suivante / carte suivante" : "Carte suivante / afficher la correction";
   }
   if(btnQuestionPrevEl) btnQuestionPrevEl.disabled = cards.length===0 || idx<=0;
   if(btnQuestionNextEl) btnQuestionNextEl.disabled = cards.length===0 || idx>=cards.length-1;
@@ -5208,7 +5487,12 @@ function goPreviousStepOrCard(){
   if(cards.length===0) return;
   const card = cards[idx];
   if(isStepByStepResolutionCard(card)){
-    if(revealState > 0){ revealState--; updateUI(); }
+    if(revealState > 0){ revealState--; updateUI(); return; }
+    if(idx > 0){
+      idx--;
+      revealState = getMaxRevealState(cards[idx]);
+      updateUI();
+    }
     return;
   }
   if(revealState > 0){ revealState = 0; updateUI(); return; }
@@ -5222,7 +5506,8 @@ function goNextStepOrCard(){
   const maxState = getMaxRevealState(card);
 
   if(isStepByStepResolutionCard(card)){
-    if(revealState < maxState){ revealState++; updateUI(); }
+    if(revealState < maxState){ revealState++; updateUI(); return; }
+    if(idx < cards.length - 1){ idx++; revealState = 0; updateUI(); }
     return;
   }
 
