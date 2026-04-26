@@ -1961,9 +1961,8 @@ function addHatchRect(targetGroup, x, y, width, height){
   targetGroup.appendChild(el('rect', {x:xx, y:yy, width:ww, height:hh, fill:'rgba(255,255,255,0.46)', stroke:'none'}));
 
   const g = el('g', {});
-  // Même rythme visuel que sur le plateau : hachures un peu moins espacées.
-  const spacing = 8;
-  const strokeW = 2.2;
+  const spacing = 11;
+  const strokeW = 2;
   const stroke = 'rgba(70,70,70,0.52)';
   const minX = xx;
   const maxX = xx + ww;
