@@ -1300,15 +1300,16 @@ function pickEquationGeneratorForm(setting, rng, maxTasksUser){
   const normalized = normalizeEquationFormMode(setting);
   if(normalized !== "MIX") return normalized;
 
-  // Mélange pédagogique équilibré : les cas ax=c et ax+b=c apparaissent vraiment,
-  // au lieu d'attendre que des zéros sortent par hasard.
+  // Mélange pédagogique simple : on vise un vrai tiers / tiers / tiers
+  // entre les trois familles. Cela évite que ax+b=c prenne trop de place
+  // dans les séries générées.
   const canBoth = Number(maxTasksUser) >= 2;
   const r = rng();
   if(!canBoth){
-    return r < 0.40 ? "AX_EQ_C" : "ONE_SIDE";
+    return r < 0.50 ? "AX_EQ_C" : "ONE_SIDE";
   }
-  if(r < 0.25) return "AX_EQ_C";
-  if(r < 0.60) return "ONE_SIDE";
+  if(r < 1/3) return "AX_EQ_C";
+  if(r < 2/3) return "ONE_SIDE";
   return "BOTH";
 }
 function pickVisibleCountAtLeastOne(rng, vMin, vMax){
@@ -3264,8 +3265,8 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
   }
 
   // 4) Dernière étape :
-  // on ne fait plus disparaître les tâches restantes.
-  // Exemple : si on arrive à 4C = 16, on garde les 4 tâches et on révèle
+  // on ne fait plus disparaître les taches restantes.
+  // Exemple : si on arrive à 4C = 16, on garde les 4 taches et on révèle
   // la valeur cachée sous chacune d'elles.
   // Important : on garde aussi le côté naturel de l'équation.
   // Si la variable restante est à gauche, on écrit C = 4 ;
@@ -3423,7 +3424,21 @@ function getEquationStepSchemaParts(eq, state, varChar = xChar){
       (variableSide === "left" ? leftHiddenCount : rightHiddenCount) ||
       1
     );
-    const repeatedValues = buildEqStepRepeatedVisibleParts(remainingCoeff, xVal, {alignToHidden:true});
+
+    // Important : quand il n'y a qu'une seule part à afficher après la division,
+    // elle doit rester exactement à la même place que la bille visible de l'étape
+    // précédente. Sinon, en projection, on a l'impression qu'elle “saute”.
+    const sourceVisibleParts = variableSide === "left"
+      ? rightParts.filter(p => p && !p.hidden && p.kind !== "empty")
+      : leftParts.filter(p => p && !p.hidden && p.kind !== "empty");
+    const sourceVisiblePosIndex = sourceVisibleParts.length
+      ? Math.max(0, Math.round(Number(sourceVisibleParts[0].posIndex) || 0))
+      : 0;
+
+    const repeatedValues = buildEqStepRepeatedVisibleParts(remainingCoeff, xVal, {
+      alignToHidden:true,
+      startPosIndex: sourceVisiblePosIndex
+    });
 
     if(variableSide === "left"){
       const hiddenRow = leftHiddenCount ? leftParts : makeEqStepGroupedParts(remainingCoeff, 0, xVal, varChar);
@@ -3699,6 +3714,120 @@ function collapseEquationStepSchemaVerifyLayoutToOnePart(layout, finalState, ver
   };
 }
 
+
+function eqStepActionText(card, revealState, opts = {}){
+  const eq = card && card._eq;
+  if(!eq || revealState <= 0) return "";
+  const useTableLabels = !!opts.useTableLabels;
+  const varLabel = useTableLabels ? getTableVarChar(card) : getCardVarChar(card);
+  const state = getEquationStepState(eq, revealState, varLabel, {includeVerify:true});
+  if(!state) return "";
+
+  function nWord(n, singular, plural){
+    const k = Math.abs(Math.round(Number(n) || 0));
+    return k + " " + (k > 1 ? plural : singular);
+  }
+  function variableAmount(n){
+    const k = Math.max(1, Math.round(Number(n) || 1));
+    if(varLabel === "?") return nWord(k, "tache", "taches");
+    return k === 1 ? String(varLabel) : String(k) + String(varLabel);
+  }
+
+  switch(state.kind){
+    case "combined":
+      return "Je simplifie chaque plateau.";
+    case "hatchX":
+      return "J’enlève " + variableAmount(state.commonX || 1) + " de chaque côté.";
+    case "afterX":
+      return "Je garde ce qui reste.";
+    case "hatchV":
+      return "J’enlève " + Math.abs(Math.round(Number(state.commonV) || 0)) + " de chaque côté.";
+    case "afterV":
+      return "Je garde ce qui reste.";
+    case "final":{
+      const coeff = Math.max(1, Math.round(Number(state.remainingCoeff) || 1));
+      return coeff > 1 ? ("Je divise par " + coeff + ".") : "Je lis la réponse.";
+    }
+    case "verify":
+      return "Je vérifie mon résultat.";
+    default:
+      return "";
+  }
+}
+
+function eqSignedStepActionText(card, revealState, opts = {}){
+  const eq = card && card._eq;
+  if(!eq || revealState <= 0) return "";
+  const useTableLabels = !!opts.useTableLabels;
+  const varLabel = useTableLabels ? getTableVarChar(card) : getCardVarChar(card);
+  const state = getEquationSignedStepState(eq, revealState, varLabel);
+  if(!state) return "";
+
+  function nWord(n, singular, plural){
+    const k = Math.abs(Math.round(Number(n) || 0));
+    return k + " " + (k > 1 ? plural : singular);
+  }
+  function removedHiddenParts(){
+    return (Array.isArray(state.leftParts) ? state.leftParts : [])
+      .concat(Array.isArray(state.rightParts) ? state.rightParts : [])
+      .filter(p => p && p.hidden && p.removed);
+  }
+  function variableAmount(n, opposed){
+    const k = Math.max(1, Math.round(Number(n) || 1));
+    if(varLabel === "?"){
+      return nWord(k, opposed ? "tache opposée" : "tache", opposed ? "taches opposées" : "taches");
+    }
+    if(opposed){
+      return k === 1 ? ("opposé de " + varLabel) : (k + " opposés de " + varLabel);
+    }
+    return k === 1 ? String(varLabel) : String(k) + String(varLabel);
+  }
+
+  switch(state.kind){
+    case "initial":
+      return "J’écris ce que je vois.";
+    case "combined":
+      return "Je simplifie chaque plateau.";
+    case "hatchX":{
+      const removed = removedHiddenParts();
+      const opposed = removed.length ? removed.every(p => !!p.opposed) : false;
+      return "J’enlève " + variableAmount(state.commonX || 1, opposed) + " de chaque côté.";
+    }
+    case "hatchOppositeX":
+      return "J’ajoute " + variableAmount(state.addedX || 1, false) + " de chaque côté.";
+    case "afterLetters":
+      return "Je garde ce qui reste.";
+    case "hatchV":
+      if(Number.isFinite(Number(state.addedOpposite))){
+        return "J’ajoute " + formatSignedIntegerLabel(state.addedOpposite) + " de chaque côté.";
+      }
+      return "J’enlève " + Math.abs(Math.round(Number(state.removedConstant) || 0)) + " de chaque côté.";
+    case "afterConstants":
+      return "Je garde ce qui reste.";
+    case "final":{
+      const coeff = Math.round(Number(state.remainingCoeff) || 1);
+      if(Math.abs(coeff) > 1) return "Je divise par " + formatSignedIntegerLabel(coeff) + ".";
+      if(coeff === -1) return "Je divise par −1.";
+      return "Je lis la réponse.";
+    }
+    case "verify":
+      return "Je vérifie mon résultat.";
+    default:
+      return "";
+  }
+}
+
+function drawEqStepActionText(targetGroup, message, x, y, opts = {}){
+  if(!message) return;
+  const fontSize = opts.fontSize || 34;
+  targetGroup.appendChild(text(x, y, message, {
+    "text-anchor": opts.anchor || "middle",
+    "font-size": String(fontSize),
+    "fill": opts.fill || "rgba(0,0,0,0.78)",
+    "font-weight": opts.weight || "900"
+  }));
+}
+
 function drawEquationStepSingaporeTable(targetGroup, card, revealState){
   const eq = card && card._eq;
   if(!eq) return null;
@@ -3786,7 +3915,7 @@ function drawEquationStepSchemaIntro(targetGroup, card){
     "fill":"rgba(0,0,0,0.92)",
     "font-weight":"900"
   }));
-  targetGroup.appendChild(text(cx, 492, "Sous chaque tâche,",{
+  targetGroup.appendChild(text(cx, 492, "Sous chaque tache,",{
     "text-anchor":"middle",
     "font-size":"32",
     "fill":"rgba(0,0,0,0.72)",
@@ -3844,6 +3973,13 @@ function drawEquationStepAid(targetGroup, card, revealState){
       drawEquationStepSchemaIntro(targetGroup, card);
       return;
     }
+    drawEqStepActionText(
+      targetGroup,
+      eqStepActionText(card, revealState, {useTableLabels:true}),
+      1190,
+      392,
+      {fontSize:32, fill:"rgba(0,0,0,0.80)", weight:"900"}
+    );
     drawEquationStepSingaporeTable(targetGroup, card, revealState);
     return;
   }
@@ -4256,9 +4392,9 @@ function renderCardEquation(card, revealState, useTokens){
         const isFinalReveal = (currentKind === "final" && !isRemoved);
 
         // E bis — pas à pas :
-        // - les tâches supprimées deviennent claires et hachurées ;
-        // - les tâches encore inconnues restent noires ;
-        // - à la dernière étape, la tâche restante devient claire et laisse apparaître sa valeur.
+        // - les taches supprimées deviennent claires et hachurées ;
+        // - les taches encore inconnues restent noires ;
+        // - à la dernière étape, la tache restante devient claire et laisse apparaître sa valeur.
         if(isFinalReveal){
           drawHiddenRevealedBead(pHidden, part.value);
         }
@@ -4419,6 +4555,15 @@ function renderCardEquation(card, revealState, useTokens){
 
   if(hasEquationStepAid){
     drawEquationStepAid(layer, card, revealState);
+    if(card.family === "EQSTEP" && revealState > 0 && getEquationStepView() !== "schema"){
+      drawEqStepActionText(
+        layer,
+        eqStepActionText(card, revealState, {useTableLabels:false}),
+        activeTrays.midX || 800,
+        activeTrays.left.y + activeTrays.left.h + 74,
+        {fontSize:36, fill:"rgba(0,0,0,0.78)", weight:"900"}
+      );
+    }
   }
 
   if(hasEquationSignedStepAid){
@@ -4454,6 +4599,16 @@ function renderCardEquation(card, revealState, useTokens){
       fontFamily:"'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
+
+    if(card.family === "EQPMSTEP" && revealState > 0){
+      drawEqStepActionText(
+        layer,
+        eqSignedStepActionText(card, revealState, {useTableLabels:false}),
+        activeTrays.midX || 800,
+        activeTrays.left.y + activeTrays.left.h + 74,
+        {fontSize:36, fill:"rgba(0,0,0,0.78)", weight:"900"}
+      );
+    }
   }
 
   if(hasEquationSignedAid){
@@ -4524,7 +4679,19 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
   const varChar = getCardVarChar(card);
-  const stepState = revealState > 0 ? getEquationStepState(eq, revealState, varChar) : null;
+  // Impression du mode E pas à pas : on inclut aussi l’état de vérification.
+  // Sinon la dernière vignette “Je vérifie mon résultat” était étiquetée comme
+  // une vérification, mais la scène était encore calculée comme l’étape finale.
+  const stepState = revealState > 0 ? getEquationStepState(eq, revealState, varChar, {includeVerify:true}) : null;
+
+  // Correction imprimée — étape “Je divise par ...”.
+  // On reprend exactement la logique de projection : quand on arrive à
+  // 3x = 33, la vignette de division montre 3 parts 11 / 11 / 11 sur le plateau,
+  // et pas une seule bille 33. La vérification reste la situation initiale
+  // avec les taches révélées.
+  const stepDisplayParts = (stepState && stepState.kind === "final" && stepState.final)
+    ? getEquationStepSchemaParts(eq, stepState, varChar)
+    : null;
 
   targetGroup.appendChild(el("rect",{
     x:trays.left.x, y:trays.left.y, width:trays.left.w, height:trays.left.h,
@@ -4589,10 +4756,89 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const beadR = side.beadR || 30;
 
     if(stepState){
-      const stepParts = sideName === "left" ? stepState.leftParts : stepState.rightParts;
+      const stepParts = sideName === "left"
+        ? (stepDisplayParts ? stepDisplayParts.leftParts : stepState.leftParts)
+        : (stepDisplayParts ? stepDisplayParts.rightParts : stepState.rightParts);
       const hiddenParts = (stepParts || []).filter(p => p && p.hidden);
       const visibleParts = (stepParts || []).filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState.kind || "";
+
+      function fallbackPrintVisiblePosition(idx, count){
+        const tray = sideName === "left" ? trays.left : trays.right;
+        const safeCount = Math.max(1, Number(count) || 1);
+        if(tray){
+          const margin = Math.min(90, Math.max(45, tray.w * 0.12));
+          return {
+            cx: tray.x + margin + (tray.w - 2 * margin) * ((idx + 0.5) / safeCount),
+            cy: tray.y + tray.h - (trays.vertical ? 56 : 96)
+          };
+        }
+        return {cx:450+idx*80, cy:580};
+      }
+
+      function splitPrintVisiblePositionOnCurrentTray(idx, count){
+        const tray = sideName === "left" ? trays.left : trays.right;
+        if(!tray) return fallbackPrintVisiblePosition(idx, count);
+        const n = Math.max(1, Math.round(Number(count) || 1));
+        const i = clamp(Math.round(Number(idx) || 0), 0, n - 1);
+        const minGap = beadR * 2 + 18;
+        const marginX = Math.max(beadR + 28, 58);
+        const xMin = tray.x + marginX;
+        const xMax = tray.x + tray.w - marginX;
+        const usableW = Math.max(minGap, xMax - xMin);
+
+        let rows = 1;
+        let cols = n;
+        if(n >= 5){
+          rows = 2;
+          cols = Math.ceil(n / 2);
+        }
+        const row = rows === 1 ? 0 : Math.floor(i / cols);
+        const col = rows === 1 ? i : (i % cols);
+        const countInRow = rows === 1 ? n : Math.min(cols, n - row * cols);
+        const cx = countInRow <= 1
+          ? (tray.x + tray.w / 2)
+          : xMin + usableW * ((col + 0.5) / countInRow);
+
+        const baseY = tray.y + tray.h - Math.max(beadR + 34, trays.vertical ? 56 : 96);
+        const cy = rows === 1
+          ? baseY
+          : baseY - ((rows - 1) * minGap) / 2 + row * minGap;
+
+        return {
+          cx: clamp(cx, tray.x + beadR + 12, tray.x + tray.w - beadR - 12),
+          cy: clamp(cy, tray.y + beadR + 12, tray.y + tray.h - beadR - 12)
+        };
+      }
+
+      function resolvePrintStepVisiblePosition(part, idx, count){
+        const alignRaw = Number(part && part.alignWithHiddenIndex);
+        if(Number.isFinite(alignRaw)){
+          return splitPrintVisiblePositionOnCurrentTray(idx, count);
+        }
+        const rawPosIndex = Number(part && part.posIndex);
+        const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
+        return side.posV?.[posIndex] || side.posV?.[idx] || fallbackPrintVisiblePosition(idx, count);
+      }
+
+      if(currentKind === "verify"){
+        const xVal = Math.max(1, Number(eq && eq.x) || 1);
+        (side.splats || []).forEach((s, idx)=>{
+          const pHidden = side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+          drawHiddenRevealedBead(pHidden, xVal, beadR);
+          targetGroup.appendChild(el("path",{
+            d: blobPath(s.cx, s.cy, s.r),
+            fill: revealCol,
+            stroke:"rgba(0,0,0,0.14)",
+            "stroke-width":"5"
+          }));
+        });
+        (metaSide.visible || []).forEach((val, i)=>{
+          const p = side.posV?.[i] || {cx:450+i*80, cy:580};
+          drawVisibleBead(p, val, beadR, false);
+        });
+        return;
+      }
 
       hiddenParts.forEach((part, idx)=>{
         const rawPosIndex = Number(part && part.posIndex);
@@ -4615,9 +4861,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       });
 
       visibleParts.forEach((part, idx)=>{
-        const rawPosIndex = Number(part && part.posIndex);
-        const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const p = side.posV?.[posIndex] || side.posV?.[idx] || {cx:450+idx*80, cy:580};
+        const p = resolvePrintStepVisiblePosition(part, idx, visibleParts.length);
         drawVisibleBead(p, part.value, beadR, !!part.removed);
       });
       return;
@@ -4977,8 +5221,10 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     const available = Math.max(0, bottomLimit - topLimit);
     const wantedHeight = (n - 1) * eqGap;
     if(wantedHeight > available && n > 1){
-      eqGap = Math.max(26, Math.floor(available / (n - 1)));
-      eqFontSize = Math.min(eqFontSize, Math.max(30, eqGap + 4));
+      // Impression en petites vignettes : avec 7 ou 8 lignes, il vaut mieux
+      // réduire davantage l'interligne que laisser l'équation descendre sur le plateau.
+      eqGap = Math.max(16, Math.floor(available / (n - 1)));
+      eqFontSize = Math.min(eqFontSize, Math.max(22, eqGap + 5));
     }
     const blockHeight = (n - 1) * eqGap;
     const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
@@ -5012,7 +5258,7 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
     }));
     if(label){
       gFrame.appendChild(tText(x+28, y+44, label, {
-        "text-anchor":"start", "font-size":"30", "fill":"rgba(0,0,0,0.62)", "font-weight":"900"
+        "text-anchor":"start", "font-size":"26", "fill":"rgba(0,0,0,0.62)", "font-weight":"900"
       }));
     }
 
@@ -5066,7 +5312,9 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
     const col = i % cols;
     const x = marginX + col * (colW + gap);
     const y = top + row * (rowH + gap);
-    drawFramedStep(i+1, x, y, colW, rowH, "Étape " + (i+1));
+    const action = eqSignedStepActionText(card, i+1, {useTableLabels:false});
+    const label = "Étape " + (i+1) + (action ? " : " + action : "");
+    drawFramedStep(i+1, x, y, colW, rowH, label);
   }
 }
 
@@ -5076,18 +5324,25 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
   ensureHatchDefs(targetSvg);
   const view = getEquationStepView();
   const isSchema = view === "schema";
-  const varChar = getCardVarChar(card);
-  const states = getEquationStepStates(eq, varChar);
+  const varChar = isSchema ? getTableVarChar(card) : getCardVarChar(card);
+  const states = getEquationStepStates(eq, varChar, {includeVerify:true});
 
-  function drawFramedStep(revealState, slotY, slotH, label){
+  function drawFramedStep(revealState, x, y, w, h, label){
     const gFrame = tEl("g", {id:"eqStepPrintFrame"});
-    gFrame.appendChild(tEl("rect",{x:28, y:slotY+8, width:1544, height:slotH-16, rx:18, fill:"rgba(0,0,0,0.00)", stroke:"rgba(0,0,0,0.10)", "stroke-width":"3"}));
+    gFrame.appendChild(tEl("rect",{
+      x:x+6, y:y+6, width:w-12, height:h-12,
+      rx:18, fill:"rgba(0,0,0,0.00)", stroke:"rgba(0,0,0,0.10)", "stroke-width":"3"
+    }));
     if(label){
-      gFrame.appendChild(tText(58, slotY+52, label, {"text-anchor":"start", "font-size":"34", "fill":"rgba(0,0,0,0.62)", "font-weight":"900"}));
+      gFrame.appendChild(tText(x+28, y+44, label, {
+        "text-anchor":"start", "font-size":"28", "fill":"rgba(0,0,0,0.64)", "font-weight":"900"
+      }));
     }
-    const scale = Math.min(0.98, (slotH - 28) / 1000);
-    const tx = (1600 - 1600 * scale) / 2;
-    const ty = slotY + (slotH - 1000 * scale) / 2 + 10;
+
+    const scale = Math.min((w - 34) / 1600, (h - 34) / 1000);
+    const tx = x + (w - 1600 * scale) / 2;
+    // On réserve un peu d'air sous le titre de l'étape, sans comprimer inutilement la scène.
+    const ty = y + (h - 1000 * scale) / 2 + 14;
     const gScene = tEl("g", {transform:"translate("+tx+" "+ty+") scale("+scale+")"});
     renderCardEquationStepPrintScene(gScene, card, revealState, {
       layoutMode: isSchema ? "schema" : "equation",
@@ -5151,13 +5406,22 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
   }
 
   const n = Math.max(1, states.length);
+  const marginX = 28;
   const top = 26;
   const bottom = 2174;
   const gap = 14;
-  const slotH = (bottom - top - gap * (n - 1)) / n;
+  const cols = n > 4 ? 2 : 1;
+  const rows = Math.ceil(n / cols);
+  const colW = (1600 - marginX * 2 - gap * (cols - 1)) / cols;
+  const rowH = (bottom - top - gap * (rows - 1)) / rows;
   for(let i=0;i<n;i++){
-    const y = top + i * (slotH + gap);
-    drawFramedStep(i+1, y, slotH, "Étape " + (i+1));
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const x = marginX + col * (colW + gap);
+    const y = top + row * (rowH + gap);
+    const action = eqStepActionText(card, i+1, {useTableLabels:isSchema});
+    const label = "Étape " + (i+1) + (action ? " : " + action : "");
+    drawFramedStep(i+1, x, y, colW, rowH, label);
   }
 }
 
