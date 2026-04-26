@@ -352,7 +352,7 @@
 
         <div id="eqUnknownQuestionWrap" style="flex:0 0 190px; min-width:170px; display:none; align-items:flex-end; align-self:flex-end; padding-bottom:0;">
           <label style="display:flex; gap:8px; align-items:center; min-height:38px; line-height:1.15; font-size:12px; color:var(--muted); cursor:pointer; margin:0;">
-            <input id="eqUnknownQuestion" type="checkbox" style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
+            <input id="eqUnknownQuestion" type="checkbox" checked style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
             <span>Afficher ?<br>à la place des lettres</span>
           </label>
         </div>
@@ -732,7 +732,7 @@ const numColorModeEl = document.getElementById("numColorMode");
 const eqStepViewToggleEl = document.getElementById("eqStepViewToggle");
 const btnEqStepViewEquationEl = document.getElementById("btnEqStepViewEquation");
 const btnEqStepViewSchemaEl = document.getElementById("btnEqStepViewSchema");
-let equationStepView = "equation"; // "equation" ou "schema" pour E bis — Équation pas à pas
+let equationStepView = "schema"; // "equation" ou "schema" pour E bis — Équation pas à pas
 const printModeSelectEl = document.getElementById("printMode");
 const btnPrevEl = document.getElementById("btnPrev");
 const btnNextEl = document.getElementById("btnNext");
@@ -866,6 +866,21 @@ function getEquationStepView(){
   return (equationStepView === "schema") ? "schema" : "equation";
 }
 
+function applyDefaultEquationStepDisplayForActivity(act){
+  // Réglage par défaut uniquement au changement de mode / à l'ouverture :
+  // - primaire pas à pas : vue Schéma + ? à la place des lettres ;
+  // - autres pas à pas : vue Équation + vraies lettres.
+  if(act === "EQUNITSTEP"){
+    equationStepView = "schema";
+    if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = true;
+  }else{
+    if(act === "EQSTEP" || act === "EQPMSTEP"){
+      equationStepView = "equation";
+    }
+    if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = false;
+  }
+}
+
 function syncSettingsUI(){
   const act = activityEl.value;
   syncPrintModeUI();
@@ -967,6 +982,7 @@ function scheduleAutoGenerate(){
 
 
 activityEl.addEventListener("change", ()=>{
+  applyDefaultEquationStepDisplayForActivity(activityEl.value);
   syncSettingsUI();
   scheduleAutoGenerate();
   try{ activityEl.blur(); }catch(_e){}
@@ -1889,17 +1905,17 @@ function ensureHatchDefs(svgRoot){
   defs = el('defs', {'data-hatch-defs':'1'});
 
   const pat = el('pattern', {
-    id:'diagHatchPatternMain', patternUnits:'userSpaceOnUse', width:'14', height:'14', patternTransform:'rotate(45)'
+    id:'diagHatchPatternMain', patternUnits:'userSpaceOnUse', width:'16', height:'16', patternTransform:'rotate(45)'
   });
-  pat.appendChild(el('rect', {x:'0', y:'0', width:'14', height:'14', fill:'rgba(255,255,255,0)'}));
-  pat.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'14', stroke:'rgba(0,0,0,0.38)', 'stroke-width':'3'}));
+  pat.appendChild(el('rect', {x:'0', y:'0', width:'16', height:'16', fill:'rgba(255,255,255,0)'}));
+  pat.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'16', stroke:'rgba(0,0,0,0.36)', 'stroke-width':'2.6'}));
   defs.appendChild(pat);
 
   const patWhite = el('pattern', {
-    id:'diagHatchPatternWhiteMain', patternUnits:'userSpaceOnUse', width:'14', height:'14', patternTransform:'rotate(45)'
+    id:'diagHatchPatternWhiteMain', patternUnits:'userSpaceOnUse', width:'16', height:'16', patternTransform:'rotate(45)'
   });
-  patWhite.appendChild(el('rect', {x:'0', y:'0', width:'14', height:'14', fill:'rgba(255,255,255,0)'}));
-  patWhite.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'14', stroke:'rgba(255,255,255,0.88)', 'stroke-width':'3'}));
+  patWhite.appendChild(el('rect', {x:'0', y:'0', width:'16', height:'16', fill:'rgba(255,255,255,0)'}));
+  patWhite.appendChild(el('line', {x1:'0', y1:'0', x2:'0', y2:'16', stroke:'rgba(255,255,255,0.88)', 'stroke-width':'2.6'}));
   defs.appendChild(patWhite);
 
   const patFine = el('pattern', {
@@ -1914,23 +1930,72 @@ function ensureHatchDefs(svgRoot){
 }
 
 function getSvgRootForHatch(targetGroup){
-  if(!targetGroup) return null;
+  if(!targetGroup) return __activePrintHatchSvgRoot || null;
   if(targetGroup.ownerSVGElement) return targetGroup.ownerSVGElement;
   const tag = String(targetGroup.tagName || "").toLowerCase();
-  return tag === "svg" ? targetGroup : null;
+  if(tag === "svg") return targetGroup;
+  return __activePrintHatchSvgRoot || null;
 }
 
 let __manualPrintHatchCounter = 0;
+/* Racine SVG active pour les hachures d'impression.
+   En correction imprimée, certaines scènes sont d'abord dessinées dans des <g>
+   encore détachés du <svg>. Dans ce cas ownerSVGElement vaut null : on garde
+   donc la racine SVG d'impression comme secours, sans toucher au rendu écran. */
+let __activePrintHatchSvgRoot = null;
 function nextManualPrintHatchId(prefix="mph"){
   __manualPrintHatchCounter += 1;
   return `${prefix}_${__manualPrintHatchCounter}`;
 }
 
 function addHatchRect(targetGroup, x, y, width, height){
-  const svgRoot = getSvgRootForHatch(targetGroup);
-  ensureHatchDefs(svgRoot);
-  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'rgba(255,255,255,0.48)', stroke:'none'}));
-  targetGroup.appendChild(el('rect', {x, y, width, height, fill:'url(#diagHatchPatternMain)', stroke:'none'}));
+  // Important : cette fonction sert aussi au tableau projeté.
+  // Dans ce cas, le <g> du tableau est parfois construit avant d'être attaché
+  // au <svg> : on ne doit donc pas dépendre d'un <defs>/<clipPath> racine.
+  const xx = Number(x) || 0;
+  const yy = Number(y) || 0;
+  const ww = Math.max(0, Number(width) || 0);
+  const hh = Math.max(0, Number(height) || 0);
+  if(!targetGroup || ww <= 0 || hh <= 0) return;
+
+  targetGroup.appendChild(el('rect', {x:xx, y:yy, width:ww, height:hh, fill:'rgba(255,255,255,0.46)', stroke:'none'}));
+
+  const g = el('g', {});
+  const spacing = 11;
+  const strokeW = 2;
+  const stroke = 'rgba(70,70,70,0.52)';
+  const minX = xx;
+  const maxX = xx + ww;
+  const minY = yy;
+  const maxY = yy + hh;
+
+  // Vraies lignes diagonales, calculées pour rester dans le rectangle.
+  // Pas de pattern SVG : cela évite l'effet "pixels" à l'impression.
+  for(let sx = minX; sx <= maxX; sx += spacing){
+    const dx = Math.min(hh, maxX - sx);
+    g.appendChild(el('line', {
+      x1:sx,
+      y1:maxY,
+      x2:sx + dx,
+      y2:maxY - dx,
+      stroke,
+      'stroke-width':String(strokeW),
+      'stroke-linecap':'round'
+    }));
+  }
+  for(let sy = maxY - spacing; sy >= minY; sy -= spacing){
+    const dx = Math.min(ww, sy - minY);
+    g.appendChild(el('line', {
+      x1:minX,
+      y1:sy,
+      x2:minX + dx,
+      y2:sy - dx,
+      stroke,
+      'stroke-width':String(strokeW),
+      'stroke-linecap':'round'
+    }));
+  }
+  targetGroup.appendChild(g);
 }
 
 function addHatchCircle(targetGroup, cx, cy, r){
@@ -6287,6 +6352,58 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       }
       return trimZeroSegments(outParts, outWidths);
     }
+    function markRemovedHiddenPrefix(parts, removedCount){
+      const count = Math.max(0, Number(removedCount) || 0);
+      return (parts || []).map((part, idx) => ({
+        ...(part || {}),
+        removed: !!(part && part.hidden && idx < count)
+      }));
+    }
+    function splitVisibleWithRemoved(parts, widths, removedW, removedValue){
+      const outParts = [];
+      const outWidths = [];
+      const remWTarget = Math.max(0, Number(removedW) || 0);
+      const remValueTarget = Math.max(0, Number(removedValue) || 0);
+      let done = false;
+      for(let i=0;i<parts.length;i++){
+        const part = parts[i] || {};
+        const w = Math.max(0, Number(widths[i]) || 0);
+        if(part.hidden || done){
+          if(w > 0.01){
+            outParts.push({ ...part, removed: !!part.removed });
+            outWidths.push(w);
+          }
+          continue;
+        }
+        const totalVal = Math.max(0, Number(part.value) || 0);
+        const remW = Math.min(w, remWTarget);
+        const remVal = Math.min(totalVal, remValueTarget);
+        const keepW = Math.max(0, w - remW);
+        const keepVal = Math.max(0, totalVal - remVal);
+        if(remW > 0.01 && remVal > 0){
+          outParts.push({
+            ...part,
+            value: remVal,
+            label: String(remVal),
+            measureLabel: String(remVal),
+            removed: true
+          });
+          outWidths.push(remW);
+        }
+        if(keepW > 0.01 && keepVal > 0){
+          outParts.push({
+            ...part,
+            value: keepVal,
+            label: String(keepVal),
+            measureLabel: String(keepVal),
+            removed: false
+          });
+          outWidths.push(keepW);
+        }
+        done = true;
+      }
+      return trimZeroSegments(outParts, outWidths);
+    }
 
     const states = [];
     const initialRow1 = partsFor(eq.left.tasks, visL);
@@ -6352,13 +6469,13 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       };
       states.push(nextState);
       drawEquationSingaporeTable(gEq, {
-        x: nextState.x,
+        x: prev.x,
         y: currentY,
-        total: Math.max(1, eq.total - commonX * xVal),
-        row1: nextState.row1Parts,
-        row2: nextState.row2Parts,
-        row1Widths: nextState.row1Widths,
-        row2Widths: nextState.row2Widths,
+        total: eq.total,
+        row1: markRemovedHiddenPrefix(prev.row1Parts, commonX),
+        row2: markRemovedHiddenPrefix(prev.row2Parts, commonX),
+        row1Widths: prev.row1Widths,
+        row2Widths: prev.row2Widths,
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
@@ -6385,6 +6502,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       const sharedVisibleW = Math.min(w1, w2);
       const nextRow1 = subtractSharedVisible(prev.row1Parts, prev.row1Widths, sharedVisibleW);
       const nextRow2 = subtractSharedVisible(prev.row2Parts, prev.row2Widths, sharedVisibleW);
+      const hatchRow1 = splitVisibleWithRemoved(prev.row1Parts, prev.row1Widths, sharedVisibleW, commonV);
+      const hatchRow2 = splitVisibleWithRemoved(prev.row2Parts, prev.row2Widths, sharedVisibleW, commonV);
       const nextState = {
         x: prev.x,
         row1Parts: partsFor(a2, vl2),
@@ -6394,13 +6513,13 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       };
       states.push(nextState);
       drawEquationSingaporeTable(gEq, {
-        x: nextState.x,
+        x: prev.x,
         y: currentY,
-        total: Math.max(1, (eq.total - commonX * xVal) - commonV),
-        row1: nextState.row1Parts,
-        row2: nextState.row2Parts,
-        row1Widths: nextState.row1Widths,
-        row2Widths: nextState.row2Widths,
+        total: Math.max(1, eq.total - commonX * xVal),
+        row1: hatchRow1.parts,
+        row2: hatchRow2.parts,
+        row1Widths: hatchRow1.widths,
+        row2Widths: hatchRow2.widths,
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
@@ -6507,8 +6626,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   function tText(x,y,txt,attrs={}){
     const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
   }
-  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:1600,height:2200,rx:26,fill:"#fff"}));
-  renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens);
+  const prevPrintHatchRoot = __activePrintHatchSvgRoot;
+  __activePrintHatchSvgRoot = targetSvg;
+  try{
+    targetSvg.appendChild(tEl("rect",{x:0,y:0,width:1600,height:2200,rx:26,fill:"#fff"}));
+    renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens);
+  } finally {
+    __activePrintHatchSvgRoot = prevPrintHatchRoot;
+  }
 }
 
 
@@ -6758,6 +6883,7 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
+applyDefaultEquationStepDisplayForActivity(activityEl.value);
 syncSettingsUI();
 syncPrintModeUI();
 generate();
