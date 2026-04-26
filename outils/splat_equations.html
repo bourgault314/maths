@@ -1961,8 +1961,8 @@ function addHatchRect(targetGroup, x, y, width, height){
   targetGroup.appendChild(el('rect', {x:xx, y:yy, width:ww, height:hh, fill:'rgba(255,255,255,0.46)', stroke:'none'}));
 
   const g = el('g', {});
-  const spacing = 11;
-  const strokeW = 2;
+  const spacing = 10;
+  const strokeW = 2.0;
   const stroke = 'rgba(70,70,70,0.52)';
   const minX = xx;
   const maxX = xx + ww;
@@ -5188,6 +5188,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   const layoutMode = opts.layoutMode === "schema" ? "schema" : "equation";
   const showIntroText = !!opts.showIntroText;
   const showAid = !!opts.showAid;
+  const showSchemaActionText = !!opts.showSchemaActionText;
   const forceStepEquationLine = !!opts.forceStepEquationLine;
   const useTokens = !!opts.useTokens;
 
@@ -5214,8 +5215,8 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     clip.appendChild(el('circle', {cx, cy, r:rr}));
     defs.appendChild(clip);
     const g = el('g', {'clip-path':`url(#${clipId})`});
-    const spacing = fine ? 4.5 : 8;
-    const strokeW = fine ? 1.5 : 2.2;
+    const spacing = fine ? 6.2 : 10;
+    const strokeW = fine ? 1.4 : 2.0;
     const stroke = fine ? 'rgba(90,90,90,0.56)' : 'rgba(70,70,70,0.56)';
     const extra = rr * 2 + 26;
     const minX = cx - rr - extra;
@@ -5246,8 +5247,8 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const minY = cy - r - extra;
     const maxY = cy + r + extra;
     const spanY = maxY - minY;
-    for(let x = minX - spanY; x <= maxX; x += 8){
-      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.2', 'stroke-linecap':'round'}));
+    for(let x = minX - spanY; x <= maxX; x += 10){
+      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.0', 'stroke-linecap':'round'}));
     }
     targetGroup.appendChild(g);
   }
@@ -5552,7 +5553,18 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
 
   if(showAid){
     if(layoutMode === "schema"){
-      if(revealState > 0) drawEquationStepSingaporeTable(targetGroup, card, revealState);
+      if(revealState > 0){
+        if(showSchemaActionText && isUnitEquationStepFamily(card)){
+          drawEqStepActionText(
+            targetGroup,
+            eqStepActionText(card, revealState, {useTableLabels:true}),
+            1190,
+            392,
+            {fontSize:32, fill:"rgba(0,0,0,0.80)", weight:"900"}
+          );
+        }
+        drawEquationStepSingaporeTable(targetGroup, card, revealState);
+      }
     }else{
       const line = stepState && stepState.equation ? stepState.equation : (getEquationStepVisibleLines(eq, revealState, varChar).slice(-1)[0] || "");
       if(line){
@@ -5606,8 +5618,8 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     const minY = cy - rr - extra;
     const maxY = cy + rr + extra;
     const spanY = maxY - minY;
-    for(let x = minX - spanY; x <= maxX; x += 8){
-      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.2', 'stroke-linecap':'round'}));
+    for(let x = minX - spanY; x <= maxX; x += 10){
+      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.0', 'stroke-linecap':'round'}));
     }
     targetGroup.appendChild(g);
   }
@@ -5629,8 +5641,8 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     const minY = cy - r - extra;
     const maxY = cy + r + extra;
     const spanY = maxY - minY;
-    for(let x = minX - spanY; x <= maxX; x += 8){
-      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.2', 'stroke-linecap':'round'}));
+    for(let x = minX - spanY; x <= maxX; x += 10){
+      g.appendChild(el('line', {x1:x, y1:maxY, x2:x + spanY, y2:minY, stroke:'rgba(70,70,70,0.56)', 'stroke-width':'2.0', 'stroke-linecap':'round'}));
     }
     targetGroup.appendChild(g);
   }
@@ -6067,6 +6079,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
       layoutMode: isSchema ? "schema" : "equation",
       showIntroText:false,
       showAid:true,
+      showSchemaActionText:true,
       forceStepEquationLine:true,
       useTokens
     });
