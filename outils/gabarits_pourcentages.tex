@@ -22,13 +22,13 @@
 % FOOTER STABLE : logo externe + adresse
 % Le logo est inclus comme un fichier PDF unique pour garder exactement le même rendu partout.
 % À conserver dans le même dossier que ce fichier .tex :
-%   mathsgo_logo_final_master.pdf
+%   mathsgo_logo_final_master_nocrop_barres_descendues.pdf
 % ==========================================
 \definecolor{brandNavy}{RGB}{11,53,112}
 \newcommand{\MathsGoPrintFooter}{%
 \begin{tikzpicture}[remember picture,overlay]
     \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.18cm]current page.south west)
-        {\includegraphics[width=4.75cm]{mathsgo_logo_final_master.pdf}};
+        {\includegraphics[width=6.20cm]{mathsgo_logo_final_master_nocrop_barres_descendues.pdf}};
     \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
         {aca.re/maths/splat};
 \end{tikzpicture}%
