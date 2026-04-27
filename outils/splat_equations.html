@@ -6820,11 +6820,12 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         removed: !!(part && part.hidden && idx < count)
       }));
     }
-    function splitVisibleWithRemoved(parts, widths, removedW, removedValue){
+    function splitVisibleWithRemoved(parts, widths, removedW, removedValue, opts = {}){
       const outParts = [];
       const outWidths = [];
       const remWTarget = Math.max(0, Number(removedW) || 0);
       const remValueTarget = Math.max(0, Number(removedValue) || 0);
+      const fromEnd = !!opts.fromEnd;
       let done = false;
       for(let i=0;i<parts.length;i++){
         const part = parts[i] || {};
@@ -6841,25 +6842,32 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         const remVal = Math.min(totalVal, remValueTarget);
         const keepW = Math.max(0, w - remW);
         const keepVal = Math.max(0, totalVal - remVal);
-        if(remW > 0.01 && remVal > 0){
-          outParts.push({
-            ...part,
-            value: remVal,
-            label: String(remVal),
-            measureLabel: String(remVal),
-            removed: true
-          });
-          outWidths.push(remW);
-        }
-        if(keepW > 0.01 && keepVal > 0){
-          outParts.push({
-            ...part,
-            value: keepVal,
-            label: String(keepVal),
-            measureLabel: String(keepVal),
-            removed: false
-          });
-          outWidths.push(keepW);
+        const removedPart = (remW > 0.01 && remVal > 0) ? {
+          ...part,
+          value: remVal,
+          label: String(remVal),
+          measureLabel: String(remVal),
+          removed: true
+        } : null;
+        const keptPart = (keepW > 0.01 && keepVal > 0) ? {
+          ...part,
+          value: keepVal,
+          label: String(keepVal),
+          measureLabel: String(keepVal),
+          removed: false
+        } : null;
+
+        // Impression > mode Équation > Correction :
+        // quand une ligne contient la lettre puis la quantité à enlever (ex. a | 14),
+        // l'autre ligne, qui n'a qu'un bloc numérique (ex. 20), doit être découpée
+        // depuis la droite pour obtenir 6 | 14, et non 14 | 6.
+        // Ainsi les deux quantités hachurées restent bien l'une au-dessus de l'autre.
+        if(fromEnd){
+          if(keptPart){ outParts.push(keptPart); outWidths.push(keepW); }
+          if(removedPart){ outParts.push(removedPart); outWidths.push(remW); }
+        }else{
+          if(removedPart){ outParts.push(removedPart); outWidths.push(remW); }
+          if(keptPart){ outParts.push(keptPart); outWidths.push(keepW); }
         }
         done = true;
       }
@@ -6963,8 +6971,14 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       const sharedVisibleW = Math.min(w1, w2);
       const nextRow1 = subtractSharedVisible(prev.row1Parts, prev.row1Widths, sharedVisibleW);
       const nextRow2 = subtractSharedVisible(prev.row2Parts, prev.row2Widths, sharedVisibleW);
-      const hatchRow1 = splitVisibleWithRemoved(prev.row1Parts, prev.row1Widths, sharedVisibleW, commonV);
-      const hatchRow2 = splitVisibleWithRemoved(prev.row2Parts, prev.row2Widths, sharedVisibleW, commonV);
+      const row1HasHidden = prev.row1Parts.some(part => part && part.hidden);
+      const row2HasHidden = prev.row2Parts.some(part => part && part.hidden);
+      const hatchRow1 = splitVisibleWithRemoved(prev.row1Parts, prev.row1Widths, sharedVisibleW, commonV, {
+        fromEnd: !row1HasHidden && row2HasHidden
+      });
+      const hatchRow2 = splitVisibleWithRemoved(prev.row2Parts, prev.row2Widths, sharedVisibleW, commonV, {
+        fromEnd: !row2HasHidden && row1HasHidden
+      });
       const nextState = {
         x: prev.x,
         row1Parts: partsFor(a2, vl2),
@@ -7061,7 +7075,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       gap: eqGap,
       anchor:"start",
       alignEquals: true,
-      eqGap: 24,
+      eqGap: 36,
       fontFamily: "'Times New Roman', Times, serif",
       fontStyle: "italic"
     });
