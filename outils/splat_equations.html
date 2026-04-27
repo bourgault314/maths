@@ -254,16 +254,50 @@
 
   /* Impression */
   @media print{
-    @page{ size: A4; margin: 8mm; }
+    @page{ size: A4 portrait; margin: 8mm; }
     body{background:#fff;color:#000}
     header,.wrap{display:none !important}
     .printArea{display:block}
     .sheet{page-break-after:always;padding:6mm}
-    /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
     .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box}
-    .pCard svg{width:100%;height:auto}
+    .pCard svg{width:100%;height:auto;display:block;margin:0 auto}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
+
+    /* 4/page : format habituel en portrait, 2 x 2. */
+    .printArea.print-4up .sheet{padding:6mm}
+    .printArea.print-4up .grid{grid-template-columns:repeat(2, 1fr);gap:5mm}
+
+    /* 2/page : format paysage, deux grandes cartes côte à côte. */
+    .printArea.print-2up .sheet{padding:3.5mm 4mm 3mm}
+    .printArea.print-2up .grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:5mm;
+      align-items:start;
+    }
+    .printArea.print-2up .pCard{
+      padding:1.6mm;
+      border-radius:4mm;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+    .printArea.print-2up .pCard svg{
+      width:auto !important;
+      max-width:100%;
+      height:168mm !important;
+      max-height:168mm;
+    }
+    .printArea.print-2up .pCard.empty{display:block}
+    .printArea.print-2up .print-footer{
+      margin-top:2.5mm;
+      min-height:10mm;
+    }
+    .printArea.print-2up .print-brand-m{width:13mm;height:9.8mm}
+    .printArea.print-2up .print-brand-name{font-size:9.2pt}
+    .printArea.print-2up .print-brand-tagline{font-size:5pt;margin-top:1.25mm}
+    .printArea.print-2up .print-page-url{font-size:5.5pt;margin-bottom:.2mm}
+
     .print-footer{
       margin-top:4mm;
       min-height:13mm;
@@ -306,7 +340,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     .print-brand-tagline{
-      margin-top:1.2mm;
+      margin-top:1.9mm;
       font-size:5.8pt;
       font-weight:750;
       letter-spacing:.05px;
@@ -492,17 +526,21 @@
       </label>
     </div>
 
-    <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
-      <button class="btn" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
-      <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
+    <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:6px;">
+      <button class="btn" id="btnPrint" style="flex:0 0 76px; width:76px; min-width:0; padding:10px 8px;">Imprimer</button>
+      <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:88px; max-width:none; height:44px; padding:8px 6px; font-size:12px;">
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Tableau vide</option>
         <option value="correction">Correction</option>
       </select>
-      <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 auto; height:44px; padding:0 10px; gap:8px; white-space:nowrap; margin-left:0;">
+      <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 48px; width:48px; height:44px; padding:0 6px; gap:5px; white-space:nowrap; margin-left:0; justify-content:center;">
         <input id="printDuplex" type="checkbox" style="margin:0; flex:0 0 auto;" />
         <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
       </label>
+      <select id="printCardsPerPage" title="Disposition d’impression" style="flex:0 0 68px; width:68px; min-width:68px; max-width:68px; height:44px; padding:8px 4px; font-size:12px;">
+        <option value="4" selected>4/page</option>
+        <option value="2">2/page</option>
+      </select>
     </div>
     <div class="hint">
       Raccourcis :<br>
@@ -800,6 +838,7 @@ const btnEqStepViewEquationEl = document.getElementById("btnEqStepViewEquation")
 const btnEqStepViewSchemaEl = document.getElementById("btnEqStepViewSchema");
 let equationStepView = "schema"; // "equation" ou "schema" pour E bis — Équation pas à pas
 const printModeSelectEl = document.getElementById("printMode");
+const printCardsPerPageEl = document.getElementById("printCardsPerPage");
 const btnPrevEl = document.getElementById("btnPrev");
 const btnNextEl = document.getElementById("btnNext");
 const btnQuestionPrevEl = document.getElementById("btnQuestionPrev");
@@ -1069,7 +1108,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
 
 // Après le choix dans un menu déroulant, on rend le focus au plateau :
 // les flèches et la barre espace servent alors à naviguer, pas à changer le menu.
-[numOpposeModeEl, eqUnknownModeEl, printModeSelectEl].forEach(el=>{
+[numOpposeModeEl, eqUnknownModeEl, printModeSelectEl, printCardsPerPageEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>{
     if(el === eqUnknownModeEl){
@@ -6723,7 +6762,7 @@ function createPrintBrandFooter(){
   footer.innerHTML = `
     <div class="print-brand" aria-label="Maths&amp;Go — Manipuler, comprendre, progresser">
       <svg class="print-brand-m" viewBox="0 0 130 106" aria-hidden="true" focusable="false">
-        <line x1="15" y1="91" x2="112" y2="91" stroke="#0b3570" stroke-width="4" stroke-linecap="round" opacity=".95"/>
+        <line x1="15" y1="94" x2="112" y2="94" stroke="#0b3570" stroke-width="4" stroke-linecap="round" opacity=".95"/>
         <rect x="11" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
         <rect x="99" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
         <line x1="32" y1="26" x2="57" y2="48" stroke="#13a8a8" stroke-width="13" stroke-linecap="round"/>
@@ -6735,9 +6774,9 @@ function createPrintBrandFooter(){
         <circle cx="96" cy="37" r="8.5" fill="#13a8a8" stroke="#ffffff" stroke-width="3"/>
         <circle cx="96" cy="56" r="8.5" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
         <circle cx="96" cy="74" r="8.5" fill="#f28a17" stroke="#ffffff" stroke-width="3"/>
-        <rect x="36" y="83" width="14" height="8" rx="3" fill="#13a8a8"/>
-        <rect x="56" y="78" width="15" height="13" rx="3" fill="#0b3570"/>
-        <rect x="76" y="74" width="13" height="17" rx="3" fill="#f28a17"/>
+        <rect x="36" y="86" width="14" height="8" rx="3" fill="#13a8a8"/>
+        <rect x="56" y="81" width="15" height="13" rx="3" fill="#0b3570"/>
+        <rect x="76" y="77" width="13" height="17" rx="3" fill="#f28a17"/>
         <circle cx="83" cy="18" r="3.2" fill="#f28a17"/>
         <circle cx="93" cy="13" r="3.2" fill="#f28a17"/>
         <path d="M88 5 L109 2 L100 17 Z" fill="#f28a17"/>
@@ -6758,6 +6797,32 @@ function createPrintBrandFooter(){
   return footer;
 }
 
+function getPrintCardsPerPage(){
+  const el = document.getElementById("printCardsPerPage");
+  const v = el ? String(el.value || "4") : "4";
+  return v === "2" ? 2 : 4;
+}
+
+function syncDynamicPrintPageStyle(perSheet){
+  let styleEl = document.getElementById("dynamicPrintPageStyle");
+  if(!styleEl){
+    styleEl = document.createElement("style");
+    styleEl.id = "dynamicPrintPageStyle";
+    document.head.appendChild(styleEl);
+  }
+  const orientation = perSheet === 2 ? "landscape" : "portrait";
+  styleEl.textContent = `@media print{ @page{ size: A4 ${orientation}; margin: 8mm; } }`;
+}
+
+function mirrorSlotsForDuplex(frontSlots){
+  const backSlots = Array(frontSlots.length).fill(null);
+  for(let i=0;i<frontSlots.length;i+=2){
+    backSlots[i] = frontSlots[i + 1] || null;
+    backSlots[i + 1] = frontSlots[i] || null;
+  }
+  return backSlots;
+}
+
 function printSheet(){
   if(cards.length===0) return;
   const printModeEl = document.getElementById("printMode");
@@ -6765,13 +6830,19 @@ function printSheet(){
   const printMode = printModeEl ? printModeEl.value : "statement";
   const printDuplex = !!(printDuplexEl && printDuplexEl.checked);
   const printArea = document.getElementById("printArea");
+  const perSheet = getPrintCardsPerPage();
+  const layoutClass = perSheet === 2 ? "print-2up" : "print-4up";
+
+  syncDynamicPrintPageStyle(perSheet);
+  printArea.classList.remove("print-2up", "print-4up");
+  printArea.classList.add(layoutClass);
   printArea.innerHTML = "";
-  const perSheet = 4;
+
   const sheets = Math.ceil(cards.length / perSheet);
 
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
-    sheet.className = "sheet";
+    sheet.className = `sheet sheet-${perSheet}up`;
     const grid = document.createElement("div");
     grid.className = "grid";
 
@@ -6808,7 +6879,7 @@ function printSheet(){
     appendSheet(frontSlots, printDuplex ? "statement" : printMode);
 
     if(printDuplex){
-      const backSlots = [frontSlots[1], frontSlots[0], frontSlots[3], frontSlots[2]];
+      const backSlots = mirrorSlotsForDuplex(frontSlots);
       appendSheet(backSlots, printMode);
     }
   }
