@@ -1447,6 +1447,54 @@ function buildEquationStepSchemaColumnGeometry(card){
     }
   };
 }
+/* Impression pas à pas — optimisation de lisibilité.
+   On ne modifie pas les données de la carte : on fabrique une géométrie
+   temporaire dont les plateaux sont descendus. Cela libère de la place
+   au-dessus pour grossir l'équation imprimée, sans toucher à l'écran. */
+function shiftedEquationPrintGeometryForStep(trays, pos, wantedDy){
+  if(!trays || !pos || !trays.left || !trays.right) return {trays, pos};
+
+  const leftBottom = Number(trays.left.y || 0) + Number(trays.left.h || 0);
+  const rightBottom = Number(trays.right.y || 0) + Number(trays.right.h || 0);
+  const currentBottom = Math.max(leftBottom, rightBottom);
+  const dy = Math.max(0, Math.min(Number(wantedDy) || 0, 952 - currentBottom));
+  if(dy <= 0) return {trays, pos};
+
+  function shiftTray(t){
+    if(!t) return t;
+    return {...t, y:(Number(t.y) || 0) + dy};
+  }
+  function shiftPoint(p){
+    if(!p) return p;
+    return {...p, cy:(Number(p.cy) || 0) + dy};
+  }
+  function shiftSide(side){
+    if(!side) return side;
+    return {
+      ...side,
+      posV: Array.isArray(side.posV) ? side.posV.map(shiftPoint) : side.posV,
+      posH: Array.isArray(side.posH) ? side.posH.map(shiftPoint) : side.posH,
+      splats: Array.isArray(side.splats) ? side.splats.map(s => ({...s, cy:(Number(s.cy) || 0) + dy})) : side.splats
+    };
+  }
+
+  const shiftedTrays = {
+    ...trays,
+    left: shiftTray(trays.left),
+    right: shiftTray(trays.right)
+  };
+  if(Number.isFinite(Number(trays.midY))) shiftedTrays.midY = Number(trays.midY) + dy;
+
+  return {
+    trays: shiftedTrays,
+    pos: {
+      ...pos,
+      left: shiftSide(pos.left),
+      right: shiftSide(pos.right)
+    }
+  };
+}
+
 
 
 /* --- GÉNÉRATION ENQUÊTE (Mode C) --- */
@@ -3306,22 +3354,197 @@ function getEquationSignedStepVisibleLines(eq, revealState, varChar = xChar){
   return out;
 }
 
+
+/* Impression — corrections pas à pas en vue Équation.
+   Sur papier, on n'affiche plus tout l'historique : chaque vignette montre
+   seulement la ligne utile de l'étape. L'étape de vérification affiche les
+   deux membres calculés séparément, pour rester lisible. */
+function formatSubstitutionFactor(value){
+  const label = formatSignedIntegerLabel(value);
+  return Number(value) < 0 ? `(${label})` : label;
+}
+function formatSubstitutionExpression(coeff, constants, xVal){
+  let c = Number(coeff);
+  if(!Number.isFinite(c)) c = 0;
+  if(Math.abs(c - Math.round(c)) < 1e-9) c = Math.round(c);
+  if(Object.is(c, -0)) c = 0;
+
+  const terms = [];
+  if(c !== 0){
+    const abs = Math.abs(c);
+    const xFactor = formatSubstitutionFactor(xVal);
+    const text = abs === 1 ? xFactor : `${abs}×${xFactor}`;
+    terms.push({sign:c < 0 ? -1 : 1, text});
+  }
+
+  (Array.isArray(constants) ? constants : []).forEach(v=>{
+    let n = Number(v);
+    if(!Number.isFinite(n) || n === 0) return;
+    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
+    if(Object.is(n, -0)) n = 0;
+    terms.push({sign:n < 0 ? -1 : 1, text:String(Math.abs(n))});
+  });
+
+  if(!terms.length) return "0";
+  let out = "";
+  terms.forEach((term, idx)=>{
+    if(idx === 0){
+      out += term.sign < 0 ? `−${term.text}` : term.text;
+    }else{
+      out += term.sign < 0 ? ` − ${term.text}` : ` + ${term.text}`;
+    }
+  });
+  return out;
+}
+function printStepVerificationLines(eq, varChar = xChar, signed=false){
+  if(!eq) return [];
+  const xVal = Number(eq.x) || 0;
+  const leftCoeff = signed ? eqSignedCoeff(eq.left) : Math.max(0, Number(eq.left && eq.left.tasks) || 0);
+  const rightCoeff = signed ? eqSignedCoeff(eq.right) : Math.max(0, Number(eq.right && eq.right.tasks) || 0);
+  const leftConstants = signed ? (Array.isArray(eq.left && eq.left.visible) ? eq.left.visible : []) : [eqVisibleSum(eq.left)].filter(v=>Number(v)!==0);
+  const rightConstants = signed ? (Array.isArray(eq.right && eq.right.visible) ? eq.right.visible : []) : [eqVisibleSum(eq.right)].filter(v=>Number(v)!==0);
+  const leftValue = leftCoeff * xVal + sumArray(leftConstants);
+  const rightValue = rightCoeff * xVal + sumArray(rightConstants);
+  return [
+    `Gauche : ${formatSubstitutionExpression(leftCoeff, leftConstants, xVal)} = ${formatSignedIntegerLabel(leftValue)}`,
+    `Droite : ${formatSubstitutionExpression(rightCoeff, rightConstants, xVal)} = ${formatSignedIntegerLabel(rightValue)}`
+  ];
+}
+function printEquationStepLinesForState(eq, stepState, varChar = xChar){
+  if(!stepState) return [];
+  if(stepState.verify) return printStepVerificationLines(eq, varChar, false);
+  return stepState.equation ? [stepState.equation] : [];
+}
+function printEquationSignedStepLinesForState(eq, stepState, varChar = xChar){
+  if(!stepState) return [];
+  if(stepState.verify) return printStepVerificationLines(eq, varChar, true);
+  return stepState.equation ? [stepState.equation] : [];
+}
+
+function printMathCharWeight(ch){
+  if(ch === " ") return 0.24;
+  if(ch === "𝑥" || ch === "𝑎" || ch === "𝑏" || ch === "𝑐" || ch === "𝑚" || ch === "𝑛" || ch === "𝑡") return 0.54;
+  if(/[0-9]/.test(ch)) return 0.50;
+  if(ch === "+" || ch === "−" || ch === "-" || ch === "=") return 0.56;
+  if(ch === "×") return 0.52;
+  if(ch === "(" || ch === ")") return 0.30;
+  if(ch === ":") return 0.24;
+  if(/[A-Za-zÀ-ÿ]/.test(ch)) return 0.48;
+  return 0.52;
+}
+function estimatePrintMathTextWidth(str, fontSize){
+  const s = String(str == null ? "" : str);
+  let units = 0;
+  for(const ch of s) units += printMathCharWeight(ch);
+  return units * (Number(fontSize) || 0);
+}
+function fitPrintEquationFont(lines, baseFontSize, opts = {}){
+  const rawLines = Array.isArray(lines) ? lines.map(v => String(v == null ? "" : v)) : [];
+  let fontSize = Number(baseFontSize) || 64;
+  const minFontSize = Number(opts.minFontSize) || 52;
+  const maxWidth = Number(opts.maxWidth) || 1420;
+  const centerFullLines = !!opts.centerFullLines;
+  const eqGapBase = Number(opts.eqGap) || 40;
+  const eqGapRatio = Number(opts.eqGapRatio) || 0.52;
+  const maxLeftWidth = Number(opts.maxLeftWidth || opts.maxSideWidth) || 0;
+  const maxRightWidth = Number(opts.maxRightWidth || opts.maxSideWidth) || 0;
+
+  function eqGapAt(fs){
+    return Math.max(eqGapBase, Math.round(fs * eqGapRatio));
+  }
+
+  function lineWidthAt(line, fs){
+    if(!centerFullLines){
+      const eqIndex = line.indexOf("=");
+      if(eqIndex >= 0){
+        const lhs = line.slice(0, eqIndex).trim();
+        const rhs = line.slice(eqIndex + 1).trim();
+        const gap = eqGapAt(fs);
+        return estimatePrintMathTextWidth(lhs, fs) + estimatePrintMathTextWidth(rhs, fs) + 2 * gap;
+      }
+    }
+    return estimatePrintMathTextWidth(line, fs);
+  }
+
+  function overflowRatioAt(fs){
+    let ratio = 1;
+    for(const line of rawLines){
+      ratio = Math.max(ratio, lineWidthAt(line, fs) / maxWidth);
+      if(!centerFullLines){
+        const eqIndex = line.indexOf("=");
+        if(eqIndex >= 0){
+          const lhs = line.slice(0, eqIndex).trim();
+          const rhs = line.slice(eqIndex + 1).trim();
+          const gap = eqGapAt(fs);
+          if(maxLeftWidth > 0) ratio = Math.max(ratio, (estimatePrintMathTextWidth(lhs, fs) + gap) / maxLeftWidth);
+          if(maxRightWidth > 0) ratio = Math.max(ratio, (estimatePrintMathTextWidth(rhs, fs) + gap) / maxRightWidth);
+        }
+      }
+    }
+    return ratio;
+  }
+
+  for(let pass=0; pass<3; pass++){
+    const ratio = overflowRatioAt(fontSize);
+    if(ratio <= 1) break;
+    fontSize = Math.max(minFontSize, Math.floor(fontSize / ratio));
+  }
+
+  return {
+    fontSize,
+    equalFontSize: fontSize,
+    eqGap: eqGapAt(fontSize)
+  };
+}
+
+function getPrintTopBandCenterY(trays, opts = {}){
+  const compactStepPrint = !!opts.compactStepPrint;
+  const isVerify = !!opts.isVerify;
+  const lineCount = Math.max(1, Math.round(Number(opts.lineCount) || 1));
+  const gap = Math.max(0, Number(opts.gap) || 0);
+  const topLimit = Number(opts.topLimit) || (compactStepPrint ? (isVerify ? 26 : 34) : 46);
+  const trayY = Number(trays && trays.left && trays.left.y);
+  const margin = compactStepPrint ? 18 : 24;
+  const bottomLimit = Number.isFinite(trayY) ? Math.max(topLimit, trayY - margin) : (compactStepPrint ? 274 : 160);
+  const available = Math.max(0, bottomLimit - topLimit);
+  const blockHeight = Math.max(0, (lineCount - 1) * gap);
+  return Math.round(topLimit + Math.max(0, (available - blockHeight) / 2) + blockHeight / 2);
+}
+
+function compactEquationOperatorsForPrint(line){
+  return String(line == null ? "" : line)
+    .replace(/\s+([+−-])\s+/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 function drawPrintEquationLinesLikeProjection(targetGroup, lines, opts = {}){
   if(!Array.isArray(lines) || !lines.length) return;
   const mkText = opts.text || text;
   const centerX = Number(opts.centerX) || 800;
-  const fontSize = Number(opts.fontSize) || 64;
-  const equalFontSize = Number(opts.equalFontSize) || fontSize;
+  const baseFontSize = Number(opts.fontSize) || 64;
+  const fitted = fitPrintEquationFont(lines, baseFontSize, {
+    minFontSize: opts.minFontSize,
+    maxWidth: opts.maxWidth,
+    maxSideWidth: opts.maxSideWidth,
+    maxLeftWidth: opts.maxLeftWidth,
+    maxRightWidth: opts.maxRightWidth,
+    eqGap: opts.eqGap,
+    eqGapRatio: opts.eqGapRatio,
+    centerFullLines: opts.centerFullLines
+  });
+  const fontSize = fitted.fontSize;
+  const equalFontSize = Number(opts.equalFontSize) ? Math.min(Number(opts.equalFontSize), fontSize) : fitted.equalFontSize;
   const gap = Number(opts.gap) || 92;
-  const eqGap = Number(opts.eqGap) || 40;
+  const eqGap = fitted.eqGap;
   const centerY = Number(opts.centerY) || 1020;
   const startY = centerY - ((lines.length - 1) * gap / 2);
+  const centerFullLines = !!opts.centerFullLines;
 
   lines.forEach((line, i)=>{
     const raw = String(line == null ? "" : line);
     const eqIndex = raw.indexOf("=");
     const cy = startY + i * gap;
-    if(eqIndex >= 0){
+    if(eqIndex >= 0 && !centerFullLines){
       const lhs = raw.slice(0, eqIndex).trim();
       const rhs = raw.slice(eqIndex + 1).trim();
       drawProjectionEquationLine(targetGroup, centerX, cy, lhs, rhs, {
@@ -5328,8 +5551,15 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   if(!baseTrays || !basePos) return;
 
   const schemaGeometry = (layoutMode === "schema") ? buildEquationStepSchemaColumnGeometry(card) : null;
-  const trays = schemaGeometry ? schemaGeometry.trays : baseTrays;
-  const pos = schemaGeometry ? schemaGeometry.pos : basePos;
+  let trays = schemaGeometry ? schemaGeometry.trays : baseTrays;
+  let pos = schemaGeometry ? schemaGeometry.pos : basePos;
+
+  const compactStepPrint = !!opts.compactStepPrint;
+  if(compactStepPrint && showAid && revealState > 0 && layoutMode === "equation"){
+    const shifted = shiftedEquationPrintGeometryForStep(trays, pos, 102);
+    trays = shifted.trays;
+    pos = shifted.pos;
+  }
 
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
@@ -5697,16 +5927,30 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
         drawEquationStepSingaporeTable(targetGroup, card, revealState);
       }
     }else{
-      const line = stepState && stepState.equation ? stepState.equation : (getEquationStepVisibleLines(eq, revealState, varChar).slice(-1)[0] || "");
-      if(line){
-        drawPrintEquationLinesLikeProjection(targetGroup, [line], {
+      const lines = printEquationStepLinesForState(eq, stepState, varChar);
+      if(lines.length){
+        const isVerify = !!(stepState && stepState.verify);
+        const compactFont = isVerify ? (compactStepPrint ? 92 : 42) : (compactStepPrint ? 142 : 60);
+        const compactGap = isVerify ? (compactStepPrint ? 102 : 48) : 0;
+        const compactCenterY = getPrintTopBandCenterY(trays, {
+          compactStepPrint,
+          isVerify,
+          lineCount: lines.length,
+          gap: compactGap
+        });
+        drawPrintEquationLinesLikeProjection(targetGroup, lines, {
           text:(x,y,t,a)=>text(x,y,t,a),
           centerX:trays.midX || 800,
-          centerY: forceStepEquationLine ? 106 : 104,
-          fontSize:54,
-          equalFontSize:54,
-          gap:0,
-          eqGap:28,
+          centerY: compactStepPrint ? compactCenterY : (forceStepEquationLine ? 106 : 104),
+          fontSize:compactFont,
+          equalFontSize:compactFont,
+          minFontSize: compactStepPrint ? (isVerify ? 54 : 66) : 34,
+          maxWidth: compactStepPrint ? 1420 : 1350,
+          maxSideWidth: compactStepPrint ? 710 : 675,
+          gap:compactGap,
+          eqGap: compactStepPrint ? (isVerify ? 42 : 54) : 28,
+          eqGapRatio: compactStepPrint ? 0.54 : 0.50,
+          centerFullLines: isVerify,
           fill:"#000"
         });
       }
@@ -5717,12 +5961,18 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
 
 function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, opts = {}){
   const eq = card && card._eq;
-  const trays = card && card._eqTrays;
-  const pos = card && card._eqPos;
+  let trays = card && card._eqTrays;
+  let pos = card && card._eqPos;
   if(!eq || !trays || !pos) return;
 
   const showIntroText = !!opts.showIntroText;
   const showAid = !!opts.showAid;
+  const compactStepPrint = !!opts.compactStepPrint;
+  if(compactStepPrint && showAid && revealState > 0){
+    const shifted = shiftedEquationPrintGeometryForStep(trays, pos, 102);
+    trays = shifted.trays;
+    pos = shifted.pos;
+  }
   const useTokens = !!opts.useTokens;
   const varChar = getCardVarChar(card);
   const maxReveal = buildEquationSignedStepLines(eq, varChar).length;
@@ -6073,34 +6323,77 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
   drawSide(pos.right, eq.right, "right");
 
   if(showAid && revealState > 0){
-    const lines = getEquationSignedStepVisibleLines(eq, revealState, varChar);
-    const n = Math.max(1, lines.length);
-    let eqFontSize = (n >= 6) ? 34 : (n >= 5 ? 36 : (n >= 4 ? 40 : 46));
-    let eqGap = (n >= 6) ? 30 : (n >= 5 ? 32 : (n >= 4 ? 36 : 44));
+    let lines = printEquationSignedStepLinesForState(eq, signedStepState, varChar);
+    const isVerify = !!(signedStepState && signedStepState.verify);
+    let eqFontSize, eqGap;
 
-    const topLimit = 46;
-    const bottomLimit = Math.max(topLimit, trays.left.y - 24);
-    const available = Math.max(0, bottomLimit - topLimit);
-    const wantedHeight = (n - 1) * eqGap;
-    if(wantedHeight > available && n > 1){
-      // Impression en petites vignettes : avec 7 ou 8 lignes, il vaut mieux
-      // réduire davantage l'interligne que laisser l'équation descendre sur le plateau.
-      eqGap = Math.max(16, Math.floor(available / (n - 1)));
-      eqFontSize = Math.min(eqFontSize, Math.max(22, eqGap + 5));
+    if(compactStepPrint){
+      // Papier : une seule ligne d'étape, très lisible. La vérification garde
+      // deux lignes seulement : membre gauche puis membre droit.
+      eqFontSize = isVerify ? 88 : 132;
+      eqGap = isVerify ? 96 : 0;
+    }else{
+      eqFontSize = isVerify ? 38 : 58;
+      eqGap = isVerify ? 44 : 0;
     }
-    const blockHeight = (n - 1) * eqGap;
-    const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
 
-    drawEquationLines(targetGroup, lines, trays.midX, startY, {
+    const minSignedFont = compactStepPrint ? (isVerify ? 50 : 42) : 30;
+    const maxSignedWidth = compactStepPrint ? 1420 : 1350;
+    const maxSignedSideWidth = compactStepPrint ? 700 : 660;
+    const signedEqGapBase = compactStepPrint ? (isVerify ? 42 : 54) : (isVerify ? 18 : 26);
+    const signedEqGapRatio = compactStepPrint ? 0.54 : 0.50;
+
+    let signedFit = fitPrintEquationFont(lines, eqFontSize, {
+      minFontSize: minSignedFont,
+      maxWidth: maxSignedWidth,
+      maxSideWidth: isVerify ? 0 : maxSignedSideWidth,
+      eqGap: signedEqGapBase,
+      eqGapRatio: signedEqGapRatio,
+      centerFullLines: isVerify
+    });
+
+    // Secours très ciblé : la première ligne en relatifs peut être beaucoup plus
+    // longue que les autres. On compacte seulement les + et les − si la réduction
+    // de police maximale ne suffit pas à garder une écriture lisible.
+    if(!isVerify && compactStepPrint && revealState === 1 && signedFit.fontSize <= minSignedFont + 1){
+      const compactLines = lines.map(compactEquationOperatorsForPrint);
+      const compactFit = fitPrintEquationFont(compactLines, eqFontSize, {
+        minFontSize: minSignedFont,
+        maxWidth: maxSignedWidth,
+        maxSideWidth: maxSignedSideWidth,
+        eqGap: signedEqGapBase,
+        eqGapRatio: signedEqGapRatio,
+        centerFullLines: false
+      });
+      if(compactLines.join("\n") !== lines.join("\n") && compactFit.fontSize >= signedFit.fontSize){
+        lines = compactLines;
+        signedFit = compactFit;
+      }
+    }
+
+    eqFontSize = signedFit.fontSize;
+    const signedEqGap = signedFit.eqGap;
+    const centerY = getPrintTopBandCenterY(trays, {
+      compactStepPrint,
+      isVerify,
+      lineCount: lines.length,
+      gap: eqGap
+    });
+
+    drawPrintEquationLinesLikeProjection(targetGroup, lines, {
       text:(x,y,t,a)=>text(x,y,t,a),
-      fill:"#000",
+      centerX:trays.midX || 800,
+      centerY,
       fontSize:eqFontSize,
+      equalFontSize:eqFontSize,
+      minFontSize:minSignedFont,
+      maxWidth:maxSignedWidth,
+      maxSideWidth: isVerify ? 0 : maxSignedSideWidth,
       gap:eqGap,
-      anchor:"start",
-      alignEquals:true,
-      eqGap:22,
-      fontFamily:"'Times New Roman', Times, serif",
-      fontStyle:"italic"
+      eqGap:signedEqGap,
+      eqGapRatio:signedEqGapRatio,
+      centerFullLines:isVerify,
+      fill:"#000"
     });
   }
 }
@@ -6126,11 +6419,23 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
 
     const scale = Math.min((w - 34) / 1600, (h - 34) / 1000);
     const tx = x + (w - 1600 * scale) / 2;
-    const ty = y + (h - 1000 * scale) / 2 + 12;
+    let ty = y + (h - 1000 * scale) / 2 + 12;
+
+    // Cas particulier des corrections à 6 étapes : la grille est en 2 colonnes x 3 lignes.
+    // La scène est alors limitée par la largeur, ce qui crée un grand vide vertical dans chaque cadre.
+    // On ancre seulement cette configuration plus haut, sans toucher aux cas 3 étapes ni 8 étapes.
+    if(printMode === "correction" && cols === 2 && rows === 3){
+      const sceneH = 1000 * scale;
+      const wantedTy = y + 64;
+      const maxTy = y + h - sceneH - 18;
+      ty = Math.min(wantedTy, maxTy);
+    }
+
     const gScene = tEl("g", {transform:"translate("+tx+" "+ty+") scale("+scale+")"});
     renderCardEquationSignedStepPrintScene(gScene, card, revealState, {
       showIntroText:false,
       showAid:true,
+      compactStepPrint:true,
       useTokens
     });
     gFrame.appendChild(gScene);
@@ -6204,7 +6509,18 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
     const scale = Math.min((w - 34) / 1600, (h - 34) / 1000);
     const tx = x + (w - 1600 * scale) / 2;
     // On réserve un peu d'air sous le titre de l'étape, sans comprimer inutilement la scène.
-    const ty = y + (h - 1000 * scale) / 2 + 14;
+    let ty = y + (h - 1000 * scale) / 2 + 14;
+
+    // Cas particulier des corrections à 6 étapes : la grille est en 2 colonnes x 3 lignes.
+    // La scène est alors limitée par la largeur, ce qui crée un grand vide vertical dans chaque cadre.
+    // On ancre seulement cette configuration plus haut, sans toucher aux cas 3 étapes ni 8 étapes.
+    if(printMode === "correction" && cols === 2 && rows === 3){
+      const sceneH = 1000 * scale;
+      const wantedTy = y + 64;
+      const maxTy = y + h - sceneH - 18;
+      ty = Math.min(wantedTy, maxTy);
+    }
+
     const gScene = tEl("g", {transform:"translate("+tx+" "+ty+") scale("+scale+")"});
     renderCardEquationStepPrintScene(gScene, card, revealState, {
       layoutMode: isSchema ? "schema" : "equation",
@@ -6212,6 +6528,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
       showAid:true,
       showSchemaActionText:true,
       forceStepEquationLine:true,
+      compactStepPrint:!isSchema,
       useTokens
     });
     gFrame.appendChild(gScene);
