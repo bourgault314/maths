@@ -90,6 +90,83 @@
   .home:active{transform:translateY(0)}
   .home svg{width:22px;height:22px;display:block}
 
+  .helpBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:52px;
+    height:52px;
+    border-radius:999px;
+    border:1px solid rgba(17,24,39,.12);
+    background:rgba(255,255,255,.75);
+    box-shadow:0 10px 24px rgba(17,24,39,.08);
+    color:var(--ink);
+    line-height:1;
+    user-select:none;
+    cursor:pointer;
+    font-weight:950;
+    font-size:22px;
+    transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .helpBtn:hover{
+    transform:translateY(-1px);
+    border-color:rgba(27,102,255,.30);
+    box-shadow:0 14px 30px rgba(17,24,39,.10);
+  }
+  .helpBtn:active{transform:translateY(0)}
+
+  .helpOverlay{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(15,23,42,.32);
+    backdrop-filter: blur(4px);
+    z-index:1000;
+  }
+  .helpOverlay.is-open{display:flex}
+  .helpDialog{
+    width:min(540px, calc(100vw - 36px));
+    border-radius:20px;
+    border:1px solid rgba(17,24,39,.14);
+    background:var(--panel);
+    color:var(--ink);
+    box-shadow:0 24px 70px rgba(0,0,0,.24);
+    padding:22px;
+  }
+  .helpDialogHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .helpDialogTitle{
+    font-size:20px;
+    font-weight:900;
+    margin:0;
+  }
+  .helpClose{
+    width:42px;
+    height:42px;
+    border-radius:999px;
+    border:1px solid var(--btn-border);
+    background:var(--btn);
+    color:var(--ink);
+    cursor:pointer;
+    font-size:26px;
+    line-height:1;
+  }
+  .helpDialogContent{
+    font-size:16px;
+    color:var(--muted);
+    line-height:1.6;
+  }
+  .helpDialogContent strong{color:var(--ink)}
+  .helpDialogContent .helpBlock{margin:14px 0 0}
+
   .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
   .wrap > .panel{flex:0 0 340px;max-width:340px}
   .wrap > .stage{flex:1 1 auto;min-width:0}
@@ -139,6 +216,39 @@
     flex-wrap:wrap;
     align-items:flex-end;
     min-width:0;
+  }
+  /* Mode A : formulaire compact et aligné ligne par ligne.
+     Les champs simples (≤) restent proches de leur libellé, avec le signe en ligne. */
+  #unitSettings #unitVisibleControls,
+  #unitSettings #unitHiddenControls{
+    justify-content:flex-start;
+    align-items:center;
+  }
+  #unitSettings .u-single{
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+  }
+  #unitSettings .u-single .u-mini-label{
+    width:18px;
+    margin:0;
+    text-align:center;
+    font-size:14px;
+    line-height:1;
+  }
+  #unitSettings .u-seed-inline{
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+  }
+  #unitSettings .u-seed-inline .u-mini-label{
+    margin:0;
+    width:auto;
+    min-width:86px;
+    text-align:right;
+    font-size:12px;
+    line-height:1;
   }
   #unitSettings .u-mini{display:flex;flex-direction:column;gap:4px;min-width:0}
   #unitSettings .u-mini-label{
@@ -333,7 +443,8 @@
     box-shadow: 0 6px 18px rgba(0,0,0,0.10);
   }
   body.light .iconbtn:hover{box-shadow: 0 10px 22px rgba(0,0,0,0.14);}
-  body.light .home{
+  body.light .home,
+  body.light .helpBtn{
     border-color:rgba(17,24,39,.12);
     background:rgba(255,255,255,.82);
     box-shadow:0 10px 24px rgba(17,24,39,.08);
@@ -346,15 +457,65 @@
   @media print{
     @page{ size: A4; margin: 8mm; }
     body{background:#fff;color:#000}
-    header,.wrap{display:none !important}
+    header,.wrap,.helpOverlay{display:none !important}
     .printArea{display:block}
-    .sheet{page-break-after:always;padding:6mm}
+    .sheet{
+      page-break-after:always;
+      height:calc(297mm - 16mm);
+      padding:5mm 6mm 3mm;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
     /* 2 colonnes (4 cartes / page : 2 x 2) */
-    .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
-    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box}
-    .pCard svg{width:100%;height:auto}
+    .grid{
+      flex:1 1 auto;
+      min-height:0;
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      grid-template-rows:repeat(2, minmax(0, 1fr));
+      gap:5mm;
+    }
+    .pCard{
+      border:1px solid #ddd;
+      border-radius:6mm;
+      padding:2mm;
+      box-sizing:border-box;
+      min-height:0;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .pCard svg{width:100%;height:100%;display:block}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
-    .print-footer { text-align: center; font-size: 10pt; color: #666; margin-top: 6mm; }
+    .print-footer {
+      flex:0 0 20mm;
+      position:relative;
+      margin-top:3mm;
+      color:#666;
+      font-size:10pt;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .print-logo{
+      position:absolute;
+      left:0;
+      top:50%;
+      transform:translateY(-50%);
+      width:82mm;
+      height:auto;
+      display:block;
+    }
+    .print-url{
+      display:block;
+      text-align:center;
+      line-height:1;
+      letter-spacing:.01em;
+    }
   }
 
   /* Plein écran */
@@ -373,16 +534,39 @@
         <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
       </svg>
     </a>
+    <button class="helpBtn" id="btnHelp" type="button" title="Aide" aria-label="Afficher l’aide">?</button>
   </div>
 </header>
+
+<div class="helpOverlay" id="helpOverlay" aria-hidden="true">
+  <div class="helpDialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="helpDialogHeader">
+      <h2 class="helpDialogTitle" id="helpTitle">Aide</h2>
+      <button class="helpClose" id="btnHelpClose" type="button" aria-label="Fermer l’aide">×</button>
+    </div>
+    <div class="helpDialogContent">
+      <div><strong>Raccourcis</strong></div>
+      <div class="helpBlock">
+        • Espace : révéler / cacher<br>
+        • ← / → : carte précédente / suivante<br>
+        • F : plein écran
+      </div>
+      <div class="helpBlock"><strong>Graine</strong></div>
+      <div>
+        Vide : série nouvelle à chaque clic.<br>
+        Remplie : série reproductible.
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
   <section class="panel">
     <label>Type d’activité</label>
     <select id="activity">
-      <option value="U">A — Billes </option>
-      <option value="N">B — Billes regroupées (une couleur)</option>
-      <option value="NPM">B± — Billes regroupées (entiers relatifs)</option>
+      <option value="U">A — Jetons simples</option>
+      <option value="N">B — Jetons-paquets</option>
+      <option value="NPM">B± — Jetons relatifs</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
@@ -403,11 +587,18 @@
     </div>
 
     <div id="unitSettings" style="display:none">
+      <label>Type d’équation</label>
+      <select id="unitEquationType">
+        <option value="X_PLUS_A_EQ_B" selected>x + a = b</option>
+        <option value="AX_EQ_B">ax = b</option>
+        <option value="AX_PLUS_C_EQ_B">ax + c = b</option>
+        <option value="ADVANCED">Réglages avancés</option>
+      </select>
       <div class="u-section-title">Contraintes</div>
 
       <div class="u-grid">
-        <label class="u-label">Taches</label>
-        <div class="u-controls">
+        <label class="u-label" id="unitTasksLabel">Taches</label>
+        <div class="u-controls" id="unitTasksControls">
           <div class="u-mini">
             <div class="u-mini-label">min</div>
             <input id="unitTasksMin" type="number" min="1" max="5" value="1" />
@@ -430,21 +621,25 @@
           </div>
         </div>
 
-        <label class="u-label">Billes</label>
-        <div class="u-controls">
-          <div class="u-mini">
-            <div class="u-mini-label">visibles ≤</div>
+        <label class="u-label" id="unitVisibleLabel">Visibles</label>
+        <div class="u-controls" id="unitVisibleControls">
+          <div class="u-mini u-single">
+            <div class="u-mini-label">≤</div>
             <input id="unitVisibleMax" type="number" min="0" max="20" value="15" />
           </div>
-          <div class="u-mini">
-            <div class="u-mini-label">cachees ≤</div>
+        </div>
+
+        <label class="u-label" id="unitHiddenLabel">Cachées</label>
+        <div class="u-controls" id="unitHiddenControls">
+          <div class="u-mini u-single">
+            <div class="u-mini-label">≤</div>
             <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
           </div>
         </div>
 
         <label class="u-label">Graine</label>
         <div class="u-controls">
-          <div class="u-mini u-seed">
+          <div class="u-mini u-seed u-seed-inline">
             <div class="u-mini-label">optionnelle</div>
             <input id="seedU" type="number" placeholder="ex: 2026" />
           </div>
@@ -454,8 +649,18 @@
 
 
     <div id="numberedSettings" style="display:none">
+      <div id="numberedEquationSettings" style="display:none">
+        <label>Type d’équation</label>
+        <select id="numberedEquationType">
+          <option value="X_PLUS_A_EQ_B" selected>x + a = b</option>
+          <option value="AX_EQ_B">ax = b</option>
+          <option value="AX_PLUS_C_EQ_B">ax + c = b</option>
+          <option value="ADVANCED">Réglages avancés</option>
+        </select>
+      </div>
+
       <div class="row">
-        <div style="flex:1">
+        <div id="numTasksFieldWrap" style="flex:1">
           <label><span id="labelNumTasks">Nombre de taches</span></label>
           <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
             <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
@@ -471,12 +676,12 @@
             <span id="numTasksArrow" style="display:none"></span>
           </div>
         </div>
-        <div style="flex:1">
-          <label>Billes visibles num (min)</label>
+        <div id="numVisibleMinWrap" style="flex:1">
+          <label>Jetons visibles (min)</label>
           <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
         </div>
-        <div style="flex:1">
-          <label>Billes visibles num (max)</label>
+        <div id="numVisibleMaxWrap" style="flex:1">
+          <label>Jetons visibles (max)</label>
           <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
         </div>
       </div>
@@ -492,7 +697,7 @@
         </div>
 
         <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
-          <label>Billes max<br>(|v|)</label>
+          <label>Valeur max<br>jeton (|v|)</label>
           <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
         </div>
 
@@ -740,13 +945,6 @@
         <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
       </label>
     </div>
-    <div class="hint">
-      Raccourcis :<br>
-      • Espace = révéler / cacher<br>
-      • ← / → = carte précédente / suivante<br>
-      • F = plein écran<br><br>
-      Graine : vide = série nouvelle à chaque clic ; remplie = série reproductible.
-    </div>
   </section>
 
   <section class="stage fsHost" id="fsHost">
@@ -764,6 +962,8 @@
 <div class="printArea" id="printArea"></div>
 
 <script>
+
+const MATHSGO_LOGO_DATA_URI = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22680%22%20height%3D%22132%22%20viewBox%3D%220%200%20680%20132%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3Cstyle%3E%0A%20%20%20%20%20%20.navy%7Bfill%3A%230b3570%7D%0A%20%20%20%20%20%20.teal%7Bfill%3A%2313a8a8%7D%0A%20%20%20%20%20%20.orange%7Bfill%3A%23f28a17%7D%0A%20%20%20%20%20%20.word%7Bfont-family%3ADejaVu%20Sans%2C%20Arial%2C%20Helvetica%2C%20sans-serif%3Bfont-weight%3A900%3Bfill%3A%230b3570%3B%7D%0A%20%20%20%20%20%20.amp%7Bfont-family%3ADejaVu%20Sans%2C%20Arial%2C%20Helvetica%2C%20sans-serif%3Bfont-weight%3A900%3Bfill%3A%230b3570%3B%7D%0A%20%20%20%20%20%20.tag%7Bfont-family%3ADejaVu%20Sans%2C%20Arial%2C%20Helvetica%2C%20sans-serif%3Bfont-weight%3A800%3B%7D%0A%20%20%20%20%3C/style%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cg%20id%3D%22logo-mark%22%3E%0A%20%20%20%20%3Cline%20x1%3D%2215%22%20y1%3D%2297%22%20x2%3D%22112%22%20y2%3D%2297%22%20stroke%3D%22%230b3570%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.95%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2211%22%20y%3D%2220%22%20width%3D%2214%22%20height%3D%2258%22%20rx%3D%227%22%20fill%3D%22%230b3570%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2299%22%20y%3D%2220%22%20width%3D%2214%22%20height%3D%2258%22%20rx%3D%227%22%20fill%3D%22%230b3570%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2226%22%20x2%3D%2257%22%20y2%3D%2248%22%20stroke%3D%22%2313a8a8%22%20stroke-width%3D%2213%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2294%22%20y1%3D%2226%22%20x2%3D%2268%22%20y2%3D%2248%22%20stroke%3D%22%2313a8a8%22%20stroke-width%3D%2213%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2263%22%20cy%3D%2250%22%20r%3D%2210%22%20fill%3D%22%230b3570%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2227%22%20cy%3D%2237%22%20r%3D%228.5%22%20fill%3D%22%2313a8a8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2227%22%20cy%3D%2256%22%20r%3D%228.5%22%20fill%3D%22%230b3570%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2227%22%20cy%3D%2274%22%20r%3D%228.5%22%20fill%3D%22%23f28a17%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2296%22%20cy%3D%2237%22%20r%3D%228.5%22%20fill%3D%22%2313a8a8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2296%22%20cy%3D%2256%22%20r%3D%228.5%22%20fill%3D%22%230b3570%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2296%22%20cy%3D%2274%22%20r%3D%228.5%22%20fill%3D%22%23f28a17%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2236%22%20y%3D%2289%22%20width%3D%2214%22%20height%3D%228%22%20rx%3D%223%22%20fill%3D%22%2313a8a8%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2256%22%20y%3D%2284%22%20width%3D%2215%22%20height%3D%2213%22%20rx%3D%223%22%20fill%3D%22%230b3570%22/%3E%0A%20%20%20%20%3Crect%20x%3D%2276%22%20y%3D%2280%22%20width%3D%2213%22%20height%3D%2217%22%20rx%3D%223%22%20fill%3D%22%23f28a17%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2283%22%20cy%3D%2218%22%20r%3D%223.2%22%20fill%3D%22%23f28a17%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2293%22%20cy%3D%2213%22%20r%3D%223.2%22%20fill%3D%22%23f28a17%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M88%205%20L109%202%20L100%2017%20Z%22%20fill%3D%22%23f28a17%22/%3E%0A%20%20%3C/g%3E%0A%20%20%3Ctext%20x%3D%22121%22%20y%3D%2267%22%20class%3D%22word%22%20font-size%3D%2248%22%3Eaths%3C/text%3E%0A%20%20%3Ctext%20x%3D%22244%22%20y%3D%2267%22%20class%3D%22amp%22%20font-size%3D%2242%22%3E%26amp%3B%3C/text%3E%0A%20%20%3Ctext%20x%3D%22285%22%20y%3D%2267%22%20class%3D%22word%22%20font-size%3D%2248%22%3Ego%3C/text%3E%0A%20%20%3Ctext%20x%3D%22123%22%20y%3D%22102%22%20class%3D%22tag%22%20font-size%3D%2220%22%3E%0A%20%20%20%20%3Ctspan%20fill%3D%22%2313a8a8%22%3EManipuler%3C/tspan%3E%0A%20%20%20%20%3Ctspan%20fill%3D%22%230b3570%22%3E%20%E2%80%A2%20Comprendre%20%E2%80%A2%20%3C/tspan%3E%0A%20%20%20%20%3Ctspan%20fill%3D%22%23f28a17%22%3EProgresser%3C/tspan%3E%0A%20%20%3C/text%3E%0A%3C/svg%3E%0A";
 
 /* Le véritable X mathématique unicode ! */
 const xChar = "𝑥"; 
@@ -835,9 +1035,19 @@ const countEl = document.getElementById("count");
 const diffEl = document.getElementById("difficulty");
 const seedEl = document.getElementById("seed");
 const seedUEl = document.getElementById("seedU");
+const btnHelpEl = document.getElementById("btnHelp");
+const helpOverlayEl = document.getElementById("helpOverlay");
+const btnHelpCloseEl = document.getElementById("btnHelpClose");
 
 const classicSettingsEl = document.getElementById("classicSettings");
 const unitSettingsEl = document.getElementById("unitSettings");
+const unitEquationTypeEl = document.getElementById("unitEquationType");
+const unitTasksLabelEl = document.getElementById("unitTasksLabel");
+const unitTasksControlsEl = document.getElementById("unitTasksControls");
+const unitVisibleLabelEl = document.getElementById("unitVisibleLabel");
+const unitVisibleControlsEl = document.getElementById("unitVisibleControls");
+const unitHiddenLabelEl = document.getElementById("unitHiddenLabel");
+const unitHiddenControlsEl = document.getElementById("unitHiddenControls");
 
 const numberedSettingsEl = document.getElementById("numberedSettings");
 const nineSettingsEl = document.getElementById("nineSettings");
@@ -944,6 +1154,12 @@ function syncNumTasksUI(act){
   _tasksUIKeyPrev = key;
 }
 
+const numberedEquationSettingsEl = document.getElementById("numberedEquationSettings");
+const numberedEquationTypeEl = document.getElementById("numberedEquationType");
+let _numberedEquationPresetLastMode = null;
+const numTasksFieldWrapEl = document.getElementById("numTasksFieldWrap");
+const numVisibleMinWrapEl = document.getElementById("numVisibleMinWrap");
+const numVisibleMaxWrapEl = document.getElementById("numVisibleMaxWrap");
 const numVisibleMinEl = document.getElementById("numVisibleMin");
 const numVisibleMaxEl = document.getElementById("numVisibleMax");
 const numHiddenCountWrapEl = document.getElementById("numHiddenCountWrap");
@@ -958,6 +1174,24 @@ const numOpposeModeEl = document.getElementById("numOpposeMode");
 const numColorModeWrapEl = document.getElementById("numColorModeWrap");
 const numColorModeEl = document.getElementById("numColorMode");
 const printModeSelectEl = document.getElementById("printMode");
+
+function setHelpOpen(open){
+  if(!helpOverlayEl) return;
+  helpOverlayEl.classList.toggle("is-open", !!open);
+  helpOverlayEl.setAttribute("aria-hidden", open ? "false" : "true");
+  if(open && btnHelpCloseEl && typeof btnHelpCloseEl.focus === "function"){
+    btnHelpCloseEl.focus();
+  }else if(!open && btnHelpEl && typeof btnHelpEl.focus === "function"){
+    btnHelpEl.focus();
+  }
+}
+if(btnHelpEl) btnHelpEl.addEventListener("click", ()=>setHelpOpen(true));
+if(btnHelpCloseEl) btnHelpCloseEl.addEventListener("click", ()=>setHelpOpen(false));
+if(helpOverlayEl){
+  helpOverlayEl.addEventListener("click", (e)=>{
+    if(e.target === helpOverlayEl) setHelpOpen(false);
+  });
+}
 
 /* Helpers */
 function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
@@ -1073,6 +1307,135 @@ function getSeedForCurrentMode(){
   return (seedEl.value||"").trim() ? Number(seedEl.value) : "";
 }
 
+
+function getUnitEquationType(){
+  if(!unitEquationTypeEl) return "ADVANCED";
+  return unitEquationTypeEl.value || "ADVANCED";
+}
+
+function isUnitEquationPresetActive(){
+  return activityEl && activityEl.value === "U" && getUnitEquationType() !== "ADVANCED";
+}
+
+function showUnitRow(labelEl, controlsEl, show){
+  const display = show ? "" : "none";
+  if(labelEl) labelEl.style.display = display;
+  if(controlsEl) controlsEl.style.display = display;
+}
+
+function syncUnitEquationUI(){
+  if(!unitEquationTypeEl) return;
+  const mode = getUnitEquationType();
+
+  const showTasks = (mode !== "X_PLUS_A_EQ_B");
+  const showVisible = (mode !== "AX_EQ_B");
+
+  showUnitRow(unitTasksLabelEl, unitTasksControlsEl, showTasks);
+  showUnitRow(unitVisibleLabelEl, unitVisibleControlsEl, showVisible);
+  showUnitRow(unitHiddenLabelEl, unitHiddenControlsEl, true);
+
+  if(mode !== "ADVANCED"){
+    if(unitHiddenMaxEl && Number(unitHiddenMaxEl.value) < 1) unitHiddenMaxEl.value = "1";
+    if(showVisible && unitVisibleMaxEl && Number(unitVisibleMaxEl.value) < 1) unitVisibleMaxEl.value = "1";
+  }
+
+  if(mode === "X_PLUS_A_EQ_B"){
+    if(unitTasksMinEl) unitTasksMinEl.value = "1";
+    if(unitTasksEl) unitTasksEl.value = "1";
+  }else if(mode === "AX_EQ_B" || mode === "AX_PLUS_C_EQ_B"){
+    if(unitTasksMinEl && Number(unitTasksMinEl.value) < 2) unitTasksMinEl.value = "2";
+    if(unitTasksEl && Number(unitTasksEl.value) < 2) unitTasksEl.value = "2";
+  }
+}
+
+function getNumberedEquationType(){
+  if(!numberedEquationTypeEl) return "ADVANCED";
+  return numberedEquationTypeEl.value || "ADVANCED";
+}
+
+function isNumberedEquationPresetActive(){
+  return activityEl && activityEl.value === "N" && getNumberedEquationType() !== "ADVANCED";
+}
+
+function isSignedNumberedEquationPresetActive(){
+  return activityEl && activityEl.value === "NPM" && getNumberedEquationType() !== "ADVANCED";
+}
+
+function syncNumberedEquationUI(){
+  if(!numberedEquationSettingsEl || !numberedEquationTypeEl) return;
+
+  const act = activityEl ? activityEl.value : "";
+  const isPositiveNumbered = act === "N";
+  const isSignedNumbered = act === "NPM";
+  const isNumberedMode = isPositiveNumbered || isSignedNumbered;
+
+  numberedEquationSettingsEl.style.display = isNumberedMode ? "block" : "none";
+
+  // Dans le menu B±, le premier preset est volontairement noté ±x + a = b.
+  // Dans le menu B positif, il reste x + a = b.
+  const firstOpt = numberedEquationTypeEl.querySelector('option[value="X_PLUS_A_EQ_B"]');
+  if(firstOpt) firstOpt.textContent = isSignedNumbered ? "±x + a = b" : "x + a = b";
+
+  if(!isNumberedMode){
+    if(numTasksFieldWrapEl) numTasksFieldWrapEl.style.display = "";
+    if(numVisibleMinWrapEl) numVisibleMinWrapEl.style.display = "";
+    if(numVisibleMaxWrapEl) numVisibleMaxWrapEl.style.display = "";
+    if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "block";
+    return;
+  }
+
+  const mode = getNumberedEquationType();
+  const advanced = mode === "ADVANCED";
+  const modeJustChanged = (_numberedEquationPresetLastMode !== (act + ":" + mode));
+  _numberedEquationPresetLastMode = act + ":" + mode;
+
+  // Réglages avancés = retour au menu complet d'origine pour B et B±.
+  // Presets = on masque/bloque seulement les paramètres incompatibles.
+  const showTasks = advanced || mode !== "X_PLUS_A_EQ_B";
+  const showVisibleCount = advanced || mode !== "AX_EQ_B";
+  const showHiddenCount = advanced;
+
+  if(numTasksFieldWrapEl) numTasksFieldWrapEl.style.display = showTasks ? "" : "none";
+  if(numVisibleMinWrapEl) numVisibleMinWrapEl.style.display = showVisibleCount ? "" : "none";
+  if(numVisibleMaxWrapEl) numVisibleMaxWrapEl.style.display = showVisibleCount ? "" : "none";
+  if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = showHiddenCount ? "block" : "none";
+
+  if(advanced) return;
+
+  // Les presets algébriques ont toujours une seule valeur cachée par tache.
+  if(numHiddenCountEl) numHiddenCountEl.value = "1";
+
+  if(mode === "X_PLUS_A_EQ_B"){
+    // ±x + a = b / x + a = b : une seule tache, visibles conservés.
+    if(numTasksMinEl) numTasksMinEl.value = "1";
+    if(numTasksEl) numTasksEl.value = "1";
+
+    if(modeJustChanged){
+      if(numVisibleMinEl) numVisibleMinEl.value = "1";
+      if(numVisibleMaxEl) numVisibleMaxEl.value = "2";
+    }else{
+      if(numVisibleMinEl && Number(numVisibleMinEl.value) < 1) numVisibleMinEl.value = "1";
+      if(numVisibleMaxEl && Number(numVisibleMaxEl.value) < Number(numVisibleMinEl ? numVisibleMinEl.value : 1)){
+        numVisibleMaxEl.value = String(numVisibleMinEl ? numVisibleMinEl.value : 1);
+      }
+    }
+  }else if(mode === "AX_EQ_B"){
+    // ax = b : nombre de taches visible, mais aucun visible.
+    if(numTasksMinEl && Number(numTasksMinEl.value) < 2) numTasksMinEl.value = "2";
+    if(numTasksEl && Number(numTasksEl.value) < 2) numTasksEl.value = "2";
+    if(numVisibleMinEl) numVisibleMinEl.value = "0";
+    if(numVisibleMaxEl) numVisibleMaxEl.value = "0";
+  }else if(mode === "AX_PLUS_C_EQ_B"){
+    // ax + c = b : nombre de taches visible + visibles conservés.
+    if(numTasksMinEl && Number(numTasksMinEl.value) < 2) numTasksMinEl.value = "2";
+    if(numTasksEl && Number(numTasksEl.value) < 2) numTasksEl.value = "2";
+    if(numVisibleMinEl && Number(numVisibleMinEl.value) < 1) numVisibleMinEl.value = "1";
+    if(numVisibleMaxEl && Number(numVisibleMaxEl.value) < Number(numVisibleMinEl ? numVisibleMinEl.value : 1)){
+      numVisibleMaxEl.value = String(numVisibleMinEl ? numVisibleMinEl.value : 1);
+    }
+  }
+}
+
 function syncSettingsUI(){
   const act = activityEl.value;
   syncPrintModeUI();
@@ -1171,7 +1534,11 @@ function syncSettingsUI(){
     if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
   }
 
-  if(isUnit) syncUnitTotalBounds();
+  if(isNumbered) syncNumberedEquationUI();
+  if(isUnit){
+    syncUnitEquationUI();
+    syncUnitTotalBounds();
+  }
   lastActivityForBounds = act;
   lastActivityForSigned = act;
 }
@@ -1234,7 +1601,11 @@ function sanitizeBeadAbsMaxForBPM(){
 function scheduleAutoGenerate(){
   if(autoGenTimer) clearTimeout(autoGenTimer);
   autoGenTimer = setTimeout(()=>{
-    if(activityEl.value === "U") syncUnitTotalBounds();
+    if(activityEl.value === "U"){
+      syncUnitEquationUI();
+      syncUnitTotalBounds();
+    }
+    if(activityEl.value === "N") syncNumberedEquationUI();
     sanitizeNumberedTotalBoundsForMode();
     if(activityEl.value === "NPM") sanitizeBeadAbsMaxForBPM();
     generate();
@@ -1252,8 +1623,9 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 
 [
   countEl, diffEl, seedEl,
+  unitEquationTypeEl,
   unitTasksMinEl, unitTasksEl, unitVisibleMaxEl, unitHiddenMaxEl, unitTotalMinEl, unitTotalMaxEl, seedUEl,
-  numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
+  numberedEquationTypeEl, numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
@@ -1802,6 +2174,111 @@ function genNumbered(rng){
   };
 }
 
+
+function genNumberedEquationPreset(rng){
+  const mode = getNumberedEquationType();
+  if(mode === "ADVANCED") return genNumbered(rng);
+
+  let tMin = clamp(numberOr(numTasksMinEl ? numTasksMinEl.value : 1, 1), 1, 6);
+  let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
+  if(tMax < tMin) [tMin, tMax] = [tMax, tMin];
+
+  let totalMin = clamp(numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20), 1, 1000);
+  let totalMax = clamp(numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50), 1, 1000);
+  if(totalMax < totalMin) [totalMin, totalMax] = [totalMax, totalMin];
+
+  let vMin = clamp(numberOr(numVisibleMinEl ? numVisibleMinEl.value : 1, 1), 0, 5);
+  let vMax = clamp(numberOr(numVisibleMaxEl ? numVisibleMaxEl.value : 1, 1), 0, 5);
+  if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
+  if(mode !== "AX_EQ_B"){
+    vMin = Math.max(1, vMin);
+    vMax = Math.max(vMin, vMax);
+  }
+
+  function makeCard(tasks, H, visible){
+    const hiddenByTask = Array.from({length: tasks}, ()=>[H]);
+    const total = tasks * H + visible.reduce((s,v)=>s+v,0);
+    return {
+      family: "N",
+      total,
+      visible,
+      hidden: hiddenByTask.flat(),
+      varChar: pickVariableChar(rng),
+      _num: {
+        tasks,
+        visibleCount: visible.length,
+        vMin: visible.length,
+        vMax: visible.length,
+        totalMin,
+        totalMax,
+        hiddenBeadsPerTask: 1,
+        H,
+        hiddenByTask
+      }
+    };
+  }
+
+  for(let tries=0; tries<4000; tries++){
+    if(mode === "X_PLUS_A_EQ_B"){
+      const tasks = 1;
+      const visibleCount = rInt(rng, vMin, vMax);
+      const minTotal = Math.max(totalMin, visibleCount + 1);
+      if(totalMax < minTotal) continue;
+      const total = rInt(rng, minTotal, totalMax);
+      const H = rInt(rng, 1, total - visibleCount);
+      const visibleSum = total - H;
+      if(visibleSum < visibleCount) continue;
+      const visible = randomComposition(rng, visibleSum, visibleCount);
+      return makeCard(tasks, H, visible);
+    }
+
+    if(mode === "AX_EQ_B"){
+      const aMin = Math.max(2, tMin);
+      const aMax = Math.max(aMin, tMax);
+      const tasks = rInt(rng, aMin, aMax);
+      const minH = Math.max(1, Math.ceil(totalMin / tasks));
+      const maxH = Math.floor(totalMax / tasks);
+      if(maxH < minH) continue;
+      const H = rInt(rng, minH, maxH);
+      return makeCard(tasks, H, []);
+    }
+
+    if(mode === "AX_PLUS_C_EQ_B"){
+      const aMin = Math.max(2, tMin);
+      const aMax = Math.max(aMin, tMax);
+      const tasks = rInt(rng, aMin, aMax);
+      const visibleCount = rInt(rng, vMin, vMax);
+      const minTotal = Math.max(totalMin, tasks + visibleCount);
+      if(totalMax < minTotal) continue;
+      const total = rInt(rng, minTotal, totalMax);
+      const maxH = Math.floor((total - visibleCount) / tasks);
+      if(maxH < 1) continue;
+      const H = rInt(rng, 1, maxH);
+      const visibleSum = total - tasks * H;
+      if(visibleSum < visibleCount) continue;
+      const visible = randomComposition(rng, visibleSum, visibleCount);
+      return makeCard(tasks, H, visible);
+    }
+  }
+
+  // Fallback sûr si les contraintes demandées sont trop serrées.
+  if(mode === "X_PLUS_A_EQ_B"){
+    const visibleCount = Math.max(1, vMin);
+    const total = Math.max(visibleCount + 1, totalMin);
+    return makeCard(1, 1, randomComposition(rng, total - 1, visibleCount));
+  }
+  if(mode === "AX_EQ_B"){
+    const tasks = Math.max(2, tMin);
+    const H = Math.max(1, Math.ceil(totalMin / tasks));
+    return makeCard(tasks, H, []);
+  }
+  const tasks = Math.max(2, tMin);
+  const visibleCount = Math.max(1, vMin);
+  const H = 1;
+  const visibleSum = Math.max(visibleCount, totalMin - tasks * H);
+  return makeCard(tasks, H, randomComposition(rng, visibleSum, visibleCount));
+}
+
 function genNumberedSigned(rng){
   let tMin = clamp(numberOr(numTasksMinEl?.value, 1), 1, 6);
   let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
@@ -2327,6 +2804,88 @@ function genUnits(rng){
     _unit: { tasks, visibleCount, visibleMax, hiddenMax, hiddenPerTask, hiddenByTask, totalMin, totalMax }
   };
 }
+
+function genUnitsEquationPreset(rng){
+  const mode = getUnitEquationType();
+  if(mode === "ADVANCED") return genUnits(rng);
+
+  let tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : unitTasksEl.value, 1), 1, 5);
+  let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
+
+  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 0, 20);
+  const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20);
+  let totalMin = clamp(numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1), 1, 50);
+  let totalMax = clamp(numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50), 1, 50);
+  if(totalMax < totalMin){ const tmp = totalMin; totalMin = totalMax; totalMax = tmp; }
+
+  const candidates = [];
+  const relaxed = [];
+
+  function addCandidate(tasks, visibleCount, hiddenPerTask){
+    const total = visibleCount + tasks * hiddenPerTask;
+    const entry = {tasks, visibleCount, hiddenPerTask, total};
+    relaxed.push(entry);
+    if(total >= totalMin && total <= totalMax) candidates.push(entry);
+  }
+
+  if(mode === "X_PLUS_A_EQ_B"){
+    const tasks = 1;
+    for(let hiddenPerTask=1; hiddenPerTask<=Math.max(1, hiddenMax); hiddenPerTask++){
+      for(let visibleCount=1; visibleCount<=Math.max(1, visibleMax); visibleCount++){
+        addCandidate(tasks, visibleCount, hiddenPerTask);
+      }
+    }
+  }else if(mode === "AX_EQ_B"){
+    const aMin = Math.max(2, tasksMin);
+    const aMax = Math.max(aMin, tasksMax);
+    for(let tasks=aMin; tasks<=aMax; tasks++){
+      for(let hiddenPerTask=1; hiddenPerTask<=Math.max(1, hiddenMax); hiddenPerTask++){
+        addCandidate(tasks, 0, hiddenPerTask);
+      }
+    }
+  }else if(mode === "AX_PLUS_C_EQ_B"){
+    const aMin = Math.max(2, tasksMin);
+    const aMax = Math.max(aMin, tasksMax);
+    for(let tasks=aMin; tasks<=aMax; tasks++){
+      for(let hiddenPerTask=1; hiddenPerTask<=Math.max(1, hiddenMax); hiddenPerTask++){
+        for(let visibleCount=1; visibleCount<=Math.max(1, visibleMax); visibleCount++){
+          addCandidate(tasks, visibleCount, hiddenPerTask);
+        }
+      }
+    }
+  }else{
+    return genUnits(rng);
+  }
+
+  const pool = candidates.length ? candidates : relaxed;
+  if(!pool.length) return genUnits(rng);
+
+  const picked = pool[rInt(rng, 0, pool.length - 1)];
+  const hiddenByTask = Array.from({length: picked.tasks}, ()=> picked.hiddenPerTask);
+  const hiddenTotal = picked.tasks * picked.hiddenPerTask;
+  const visible = Array.from({length: picked.visibleCount}, ()=> 1);
+  const hidden = Array.from({length: hiddenTotal}, ()=> 1);
+
+  return {
+    family:"U",
+    total: picked.total,
+    visible,
+    hidden,
+    _unit: {
+      tasks: picked.tasks,
+      visibleCount: picked.visibleCount,
+      visibleMax,
+      hiddenMax,
+      hiddenPerTask: picked.hiddenPerTask,
+      hiddenByTask,
+      totalMin,
+      totalMax,
+      equationType: mode
+    }
+  };
+}
+
 
 function genMinusMix(rng,diff){
   const ks=[19,29,39];
@@ -3780,7 +4339,18 @@ function printSheet(){
 
     const footer = document.createElement("div");
     footer.className = "print-footer";
-    footer.textContent = "aca.re/maths/splat";
+
+    const logo = document.createElement("img");
+    logo.className = "print-logo";
+    logo.alt = "Maths&Go";
+    logo.src = MATHSGO_LOGO_DATA_URI;
+    footer.appendChild(logo);
+
+    const url = document.createElement("span");
+    url.className = "print-url";
+    url.textContent = "aca.re/maths/splat";
+    footer.appendChild(url);
+
     sheet.appendChild(footer);
 
     printArea.appendChild(sheet);
@@ -3800,7 +4370,37 @@ function printSheet(){
       appendSheet(backSlots, printMode);
     }
   }
-  window.print();
+
+  waitForPrintAssets(printArea).then(()=>{
+    window.print();
+  });
+}
+
+function waitForPrintAssets(root){
+  const imgs = Array.from(root ? root.querySelectorAll("img") : []);
+  const waits = imgs.map(img => {
+    const decodeImg = () => {
+      if(img.decode){
+        return img.decode().catch(()=>{});
+      }
+      return Promise.resolve();
+    };
+
+    if(img.complete && img.naturalWidth > 0){
+      return decodeImg();
+    }
+
+    return new Promise(resolve => {
+      img.onload = () => { decodeImg().then(resolve); };
+      img.onerror = () => resolve();
+    });
+  });
+
+  return Promise.all(waits).then(()=> new Promise(resolve => {
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(resolve);
+    });
+  }));
 }
 
 let cards = [];
@@ -3826,7 +4426,13 @@ function generate(){
   const act = activityEl.value;
   const n = clamp(numberOr(countEl.value, 30), 1, 300);
 
-  if(act==="U") syncUnitTotalBounds();
+  if(act==="U"){
+    syncUnitEquationUI();
+    syncUnitTotalBounds();
+  }
+  if(act==="N" || act==="NPM"){
+    syncNumberedEquationUI();
+  }
 
   const seedValue = getSeedForCurrentMode();
   const rng = makeRng(seedValue);
@@ -3835,9 +4441,9 @@ function generate(){
   for(let i=0;i<n;i++){
     let c;
     if(act==="U"){
-      c = genUnits(rng);
+      c = isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
     }else if(act==="N"){
-      c = genNumbered(rng);
+      c = isNumberedEquationPresetActive() ? genNumberedEquationPreset(rng) : genNumbered(rng);
     }else if(act==="NPM"){
       c = genNumberedSigned(rng);
     }else if(act==="C"){
@@ -3903,6 +4509,11 @@ document.getElementById("btnNext").addEventListener("click", ()=>{
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
 window.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape" && helpOverlayEl && helpOverlayEl.classList.contains("is-open")){
+    e.preventDefault();
+    setHelpOpen(false);
+    return;
+  }
   const _ae = document.activeElement;
   if((_ae && _ae.id==="activity") && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
     e.preventDefault();
