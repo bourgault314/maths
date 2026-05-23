@@ -110,6 +110,18 @@
     outline:none
   }
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .equationTopSettings{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-top:10px;
+  }
+  .equationTopSettings > div{min-width:0}
+  .miniCenteredLabel{
+    text-align:center;
+    line-height:1.15;
+  }
 
   
   input[type="number"]{appearance:textfield}
@@ -396,6 +408,78 @@
   .fsHost:fullscreen{background:var(--bg)}
   .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
   .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
+
+
+  /* Aide générale : remplace le texte permanent du menu par une fenêtre centrée. */
+  .helpBtn{
+    font-size:24px;
+    font-weight:950;
+    border:none;
+    cursor:pointer;
+  }
+  .helpOverlay{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(15,23,42,.46);
+    backdrop-filter:blur(4px);
+  }
+  .helpOverlay.open{display:flex}
+  .helpModal{
+    width:min(680px, 94vw);
+    max-height:min(78vh, 720px);
+    overflow:auto;
+    border-radius:24px;
+    background:rgba(255,255,255,.98);
+    color:#0b1220;
+    border:1px solid rgba(17,24,39,.14);
+    box-shadow:0 28px 80px rgba(0,0,0,.26);
+    padding:28px 30px 30px;
+  }
+  .helpModalHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  .helpModalTitle{
+    font-size:28px;
+    line-height:1.1;
+    font-weight:950;
+    letter-spacing:-.02em;
+  }
+  .helpClose{
+    display:inline-grid;
+    place-items:center;
+    width:44px;
+    height:44px;
+    border-radius:999px;
+    border:1px solid rgba(17,24,39,.16);
+    background:#f3f4f6;
+    color:#111827;
+    cursor:pointer;
+    font-size:26px;
+    font-weight:850;
+    line-height:1;
+  }
+  .helpClose:hover{background:#e5e7eb}
+  .helpModalBody{
+    font-size:19px;
+    line-height:1.55;
+    color:#111827;
+  }
+  .helpModalBody p{margin:0 0 14px}
+  .helpModalBody ul{
+    margin:8px 0 22px;
+    padding-left:1.25em;
+  }
+  .helpModalBody li{margin:8px 0}
+  .helpModalBody strong{font-weight:900}
 </style>
 </head>
 
@@ -408,8 +492,28 @@
         <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
       </svg>
     </a>
+    <button class="home helpBtn" id="btnHelp" type="button" title="Aide et raccourcis" aria-label="Aide et raccourcis">?</button>
   </div>
 </header>
+
+<div class="helpOverlay" id="helpOverlay" aria-hidden="true">
+  <div class="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="helpModalHeader">
+      <div class="helpModalTitle" id="helpModalTitle">Aide & raccourcis</div>
+      <button class="helpClose" id="btnHelpClose" type="button" aria-label="Fermer l’aide">×</button>
+    </div>
+    <div class="helpModalBody">
+      <p><strong>Raccourcis :</strong></p>
+      <ul>
+        <li><strong>Espace</strong> = révéler / avancer</li>
+        <li><strong>← / →</strong> = carte précédente / suivante</li>
+        <li><strong>En résolution pas à pas :</strong> ← / → = étape précédente / suivante</li>
+        <li><strong>F</strong> = plein écran</li>
+      </ul>
+      <p><strong>Graine :</strong> vide = série nouvelle à chaque clic ; remplie = série reproductible.</p>
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
   <section class="panel">
@@ -422,9 +526,30 @@
       <option value="EQPMSTEP">Équation avec entiers relatifs — résolution pas à pas</option>
     </select>
 
-    
+    <div id="equationTopSettings" class="equationTopSettings">
+        <div id="eqUnknownModeWrap" style="flex:1 1 172px; min-width:0; display:none">
+          <label>Forme<br>d’équation</label>
+          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
+            <option value="MIX" selected>Mélange</option>
+            <option value="AX_EQ_C">Forme ax = c</option>
+            <option value="ONE_SIDE">Forme ax + b = c</option>
+            <option value="BOTH">Forme ax + b = cx + d</option>
+          </select>
+        </div>
 
-    
+        <div id="eqUnknownQuestionWrap" style="flex:1 1 190px; min-width:170px; display:none; align-items:flex-end; align-self:flex-end; padding-bottom:0;">
+          <label style="display:flex; gap:8px; align-items:center; min-height:38px; line-height:1.15; font-size:12px; color:var(--muted); cursor:pointer; margin:0;">
+            <input id="eqUnknownQuestion" type="checkbox" checked style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
+            <span>Afficher ?<br>à la place des lettres</span>
+          </label>
+        </div>
+
+        <div id="numBeadAbsMaxWrap" style="flex:1 1 132px; min-width:0; display:none">
+          <label>Jetons max<br>(|v|)</label>
+          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
+        </div>
+
+    </div>
 
 
     <div id="numberedSettings" style="display:none">
@@ -433,12 +558,12 @@
           <label><span id="labelNumTasks">Nombre de taches</span></label>
           <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
             <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
-              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted)">Min</div>
+              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted);text-align:center">Min</div>
               <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="Min" />
             </div>
 
             <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px">
-              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none">Max</div>
+              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none;text-align:center">Max</div>
               <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="Max" />
             </div>
 
@@ -446,11 +571,11 @@
           </div>
         </div>
         <div style="flex:1">
-          <label>Billes visibles num (min)</label>
+          <label class="miniCenteredLabel">Jetons visibles<br>min</label>
           <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles num (max)</label>
+          <label class="miniCenteredLabel">Jetons visibles<br>max</label>
           <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
         </div>
       </div>
@@ -463,28 +588,6 @@
             <option value="1" selected>1</option>
             <option value="2">2</option>
           </select>
-        </div>
-
-        <div id="eqUnknownModeWrap" style="flex:0 0 172px; min-width:0; display:none">
-          <label>Forme<br>d’équation</label>
-          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
-            <option value="MIX" selected>Mélange</option>
-            <option value="AX_EQ_C">Forme ax = c</option>
-            <option value="ONE_SIDE">Forme ax + b = c</option>
-            <option value="BOTH">Forme ax + b = cx + d</option>
-          </select>
-        </div>
-
-        <div id="eqUnknownQuestionWrap" style="flex:0 0 190px; min-width:170px; display:none; align-items:flex-end; align-self:flex-end; padding-bottom:0;">
-          <label style="display:flex; gap:8px; align-items:center; min-height:38px; line-height:1.15; font-size:12px; color:var(--muted); cursor:pointer; margin:0;">
-            <input id="eqUnknownQuestion" type="checkbox" checked style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
-            <span>Afficher ?<br>à la place des lettres</span>
-          </label>
-        </div>
-
-        <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
-          <label>Billes max<br>(|v|)</label>
-          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
         </div>
 
         <div id="numOpposeModeWrap" style="flex:1; min-width:0; display:none">
@@ -567,14 +670,6 @@
         <option value="2">2/page</option>
         <option value="1">1/page</option>
       </select>
-    </div>
-    <div class="hint">
-      Raccourcis :<br>
-      • Espace = révéler / avancer<br>
-      • ← / → = carte précédente / suivante<br>
-      • en résolution pas à pas : ← / → = étape précédente / suivante<br>
-      • F = plein écran<br><br>
-      Graine : vide = série nouvelle à chaque clic ; remplie = série reproductible.
     </div>
   </section>
 
@@ -7433,6 +7528,39 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
+
+function openHelpModal(){
+  const overlay = document.getElementById("helpOverlay");
+  const closeBtn = document.getElementById("btnHelpClose");
+  if(!overlay) return;
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  setTimeout(()=>{ if(closeBtn && typeof closeBtn.focus === "function") closeBtn.focus(); }, 0);
+}
+function closeHelpModal(){
+  const overlay = document.getElementById("helpOverlay");
+  const btnHelp = document.getElementById("btnHelp");
+  if(!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+  setTimeout(()=>{ if(btnHelp && typeof btnHelp.focus === "function") btnHelp.focus(); }, 0);
+}
+(function hookHelpModal(){
+  const btnHelp = document.getElementById("btnHelp");
+  const btnClose = document.getElementById("btnHelpClose");
+  const overlay = document.getElementById("helpOverlay");
+  if(btnHelp) btnHelp.addEventListener("click", openHelpModal);
+  if(btnClose) btnClose.addEventListener("click", closeHelpModal);
+  if(overlay){
+    overlay.addEventListener("click", (e)=>{
+      if(e.target === overlay) closeHelpModal();
+    });
+  }
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeHelpModal();
+  });
+})();
+
 applyDefaultEquationStepDisplayForActivity(activityEl.value);
 syncSettingsUI();
 syncPrintModeUI();
