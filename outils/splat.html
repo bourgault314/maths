@@ -121,51 +121,78 @@
     display:none;
     align-items:center;
     justify-content:center;
-    padding:18px;
-    background:rgba(15,23,42,.32);
+    padding:24px;
+    background:rgba(15,23,42,.42);
     backdrop-filter: blur(4px);
-    z-index:1000;
+    z-index:9999;
   }
   .helpOverlay.is-open{display:flex}
   .helpDialog{
-    width:min(540px, calc(100vw - 36px));
-    border-radius:20px;
-    border:1px solid rgba(17,24,39,.14);
-    background:var(--panel);
-    color:var(--ink);
-    box-shadow:0 24px 70px rgba(0,0,0,.24);
-    padding:22px;
+    position:relative;
+    width:min(620px, 92vw);
+    max-height:82vh;
+    overflow:auto;
+    border-radius:26px;
+    border:1px solid rgba(255,255,255,.65);
+    background:rgba(255,255,255,.97);
+    color:#0b1220;
+    box-shadow:0 30px 90px rgba(15,23,42,.35);
+    padding:34px 38px 32px;
   }
   .helpDialogHeader{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:space-between;
-    gap:12px;
-    margin-bottom:14px;
+    gap:18px;
+    margin-bottom:20px;
+    padding-right:42px;
   }
   .helpDialogTitle{
-    font-size:20px;
-    font-weight:900;
+    font-size:30px;
+    line-height:1.1;
+    font-weight:950;
+    letter-spacing:-.02em;
     margin:0;
   }
   .helpClose{
+    position:absolute;
+    top:16px;
+    right:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     width:42px;
     height:42px;
     border-radius:999px;
-    border:1px solid var(--btn-border);
-    background:var(--btn);
-    color:var(--ink);
+    border:1px solid rgba(15,23,42,.12);
+    background:rgba(15,23,42,.04);
+    color:#111827;
     cursor:pointer;
-    font-size:26px;
+    font-size:30px;
     line-height:1;
+    font-weight:700;
   }
+  .helpClose:hover{background:rgba(15,23,42,.08)}
   .helpDialogContent{
-    font-size:16px;
-    color:var(--muted);
-    line-height:1.6;
+    font-size:18px;
+    color:#111827;
+    line-height:1.55;
   }
-  .helpDialogContent strong{color:var(--ink)}
-  .helpDialogContent .helpBlock{margin:14px 0 0}
+  .helpDialogContent strong{color:#0b1220}
+  .helpDialogContent p{margin:0 0 14px}
+  .helpDialogContent ul{
+    margin:0 0 22px;
+    padding-left:24px;
+  }
+  .helpDialogContent li{margin:8px 0}
+  .helpDialogContent .helpBlock{margin:0 0 22px}
+  .helpSeed{
+    margin-top:20px !important;
+    padding:16px 18px;
+    border-radius:18px;
+    background:rgba(106,167,255,.14);
+    border:1px solid rgba(106,167,255,.28);
+  }
 
   .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
   .wrap > .panel{flex:0 0 340px;max-width:340px}
@@ -199,8 +226,8 @@
   }
   #unitSettings .u-grid{
     display:grid;
-    grid-template-columns: 84px 1fr;
-    gap:8px 10px;
+    grid-template-columns: 78px 1fr;
+    gap:8px 8px;
     align-items: center;
   }
   #unitSettings .u-grid .u-label{
@@ -209,6 +236,9 @@
     color:var(--muted);
     font-weight:700;
     line-height:1.2;
+    /* Menu A : les libellés de gauche s’alignent visuellement
+       sur le centre des champs, pas sur les petits repères min/max/≤. */
+    transform:translateY(8px);
   }
   #unitSettings .u-controls{
     display:flex;
@@ -337,6 +367,57 @@
   .iconbtn:hover{transform:translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,0.22);}
   .iconbtn:active{transform:translateY(0px); box-shadow: 0 6px 18px rgba(0,0,0,0.18);}
   .iconbtn svg{width:20px;height:20px;opacity:.95}
+
+  .varChoice{
+    display:none;
+    flex:0 0 auto;
+    height:42px;
+    padding:3px;
+    gap:3px;
+    border-radius:12px;
+    border:1px solid var(--btn-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    align-items:center;
+    justify-content:center;
+  }
+  .varChoice.is-visible{display:inline-flex;}
+  .varChoiceBtn{
+    width:34px;
+    height:34px;
+    border:0;
+    border-radius:10px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    font-size:21px;
+    font-weight:950;
+    line-height:1;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    transform:translateY(-1px);
+    transition:background .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
+  }
+  .varChoiceBtn:hover{background:rgba(255,255,255,0.12); color:var(--ink);}
+  .varChoiceBtn:active{transform:translateY(0);}
+  .varChoiceBtn.is-active{
+    background:rgba(106,167,255,0.24);
+    color:var(--ink);
+    box-shadow:inset 0 0 0 1px rgba(106,167,255,0.40);
+  }
+  body.light .varChoice{
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  }
+  body.light .varChoiceBtn:hover{background:rgba(0,0,0,0.05);}
+  body.light .varChoiceBtn.is-active{
+    background:rgba(27,102,255,0.16);
+    box-shadow:inset 0 0 0 1px rgba(27,102,255,0.36);
+  }
 
   .hint{
     font-size:12px;color:var(--muted);line-height:1.35;margin-top:10px
@@ -541,21 +622,23 @@
 <div class="helpOverlay" id="helpOverlay" aria-hidden="true">
   <div class="helpDialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="helpDialogHeader">
-      <h2 class="helpDialogTitle" id="helpTitle">Aide</h2>
+      <h2 class="helpDialogTitle" id="helpTitle">Aide & raccourcis</h2>
       <button class="helpClose" id="btnHelpClose" type="button" aria-label="Fermer l’aide">×</button>
     </div>
     <div class="helpDialogContent">
-      <div><strong>Raccourcis</strong></div>
-      <div class="helpBlock">
-        • Espace : révéler / cacher<br>
-        • ← / → : carte précédente / suivante<br>
-        • F : plein écran
-      </div>
-      <div class="helpBlock"><strong>Graine</strong></div>
-      <div>
-        Vide : série nouvelle à chaque clic.<br>
-        Remplie : série reproductible.
-      </div>
+      <p><strong>Raccourcis clavier</strong></p>
+
+      <ul class="helpBlock">
+        <li><strong>Espace</strong> : révéler / cacher</li>
+        <li><strong>← / →</strong> : carte précédente / suivante</li>
+        <li><strong>F</strong> : plein écran</li>
+      </ul>
+
+      <p class="helpSeed">
+        <strong>Graine :</strong><br>
+        vide = série nouvelle à chaque clic ;<br>
+        remplie = série reproductible.
+      </p>
     </div>
   </div>
 </div>
@@ -926,6 +1009,10 @@
           <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
         </svg>
       </button>
+      <div class="varChoice" id="numberedUnknownChoice" title="Mode B : choisir l’affichage de l’inconnue" aria-label="Mode B : choisir l’affichage de l’inconnue">
+        <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Mode B : afficher l’inconnue avec une lettre">𝑥</button>
+        <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Mode B : afficher l’inconnue avec un point d’interrogation">?</button>
+      </div>
       
       <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
         <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
@@ -1174,6 +1261,35 @@ const numOpposeModeEl = document.getElementById("numOpposeMode");
 const numColorModeWrapEl = document.getElementById("numColorModeWrap");
 const numColorModeEl = document.getElementById("numColorMode");
 const printModeSelectEl = document.getElementById("printMode");
+const numberedUnknownChoiceEl = document.getElementById("numberedUnknownChoice");
+const btnNumberedLetterEl = document.getElementById("btnNumberedLetter");
+const btnNumberedQuestionMarkEl = document.getElementById("btnNumberedQuestionMark");
+let numberedQuestionMarkMode = false;
+
+function getNumberedDisplayVarChar(card){
+  const raw = getCardVarChar(card);
+  return (card && card.family === "N" && numberedQuestionMarkMode) ? "?" : raw;
+}
+
+function syncNumberedQuestionMarkButton(){
+  if(!numberedUnknownChoiceEl || !activityEl) return;
+  const show = activityEl.value === "N";
+  numberedUnknownChoiceEl.classList.toggle("is-visible", show);
+  numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
+  if(btnNumberedLetterEl){
+    btnNumberedLetterEl.classList.toggle("is-active", !numberedQuestionMarkMode);
+    btnNumberedLetterEl.setAttribute("aria-pressed", numberedQuestionMarkMode ? "false" : "true");
+  }
+  if(btnNumberedQuestionMarkEl){
+    btnNumberedQuestionMarkEl.classList.toggle("is-active", numberedQuestionMarkMode);
+    btnNumberedQuestionMarkEl.setAttribute("aria-pressed", numberedQuestionMarkMode ? "true" : "false");
+  }
+  const label = numberedQuestionMarkMode
+    ? "Mode B : inconnue affichée avec un point d’interrogation"
+    : "Mode B : inconnue affichée avec une lettre";
+  numberedUnknownChoiceEl.title = label;
+  numberedUnknownChoiceEl.setAttribute("aria-label", label);
+}
 
 function setHelpOpen(open){
   if(!helpOverlayEl) return;
@@ -1439,6 +1555,7 @@ function syncNumberedEquationUI(){
 function syncSettingsUI(){
   const act = activityEl.value;
   syncPrintModeUI();
+  syncNumberedQuestionMarkButton();
 
   if(lastActivityForBounds && lastActivityForBounds !== act){
     if(lastActivityForBounds === "N" || lastActivityForBounds === "NPM"){
@@ -3158,7 +3275,7 @@ function renderCard(card, revealState){
       const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
       const tasks = Math.max(1, tasksFromSplats || Number(unit.tasks) || 1);
       const totalHid = sumArray(card.hidden);
-      const varChar = getCardVarChar(card);
+      const varChar = getNumberedDisplayVarChar(card);
 
       let hiddenSums = [];
       if(totalHid === 0){
@@ -3220,7 +3337,7 @@ function renderCard(card, revealState){
       const num = card._num || {};
       const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
       const totalHid = sumArray(card.hidden);
-      const varChar = getCardVarChar(card);
+      const varChar = getNumberedDisplayVarChar(card);
 
       let hiddenSums = [];
       if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
@@ -3879,7 +3996,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
 
-    const varChar = getCardVarChar(card);
+    const varChar = getNumberedDisplayVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
   const trayY = 270;
@@ -4508,6 +4625,21 @@ document.getElementById("btnNext").addEventListener("click", ()=>{
 });
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
+function setNumberedUnknownDisplay(useQuestionMark){
+  if(numberedQuestionMarkMode === !!useQuestionMark){
+    syncNumberedQuestionMarkButton();
+    return;
+  }
+  numberedQuestionMarkMode = !!useQuestionMark;
+  syncNumberedQuestionMarkButton();
+  updateUI();
+}
+if(btnNumberedLetterEl){
+  btnNumberedLetterEl.addEventListener("click", ()=>setNumberedUnknownDisplay(false));
+}
+if(btnNumberedQuestionMarkEl){
+  btnNumberedQuestionMarkEl.addEventListener("click", ()=>setNumberedUnknownDisplay(true));
+}
 window.addEventListener("keydown",(e)=>{
   if(e.key === "Escape" && helpOverlayEl && helpOverlayEl.classList.contains("is-open")){
     e.preventDefault();
