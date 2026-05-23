@@ -51,7 +51,7 @@
     .rv-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
-    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 10px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; margin-bottom: 18px; padding-top: 10px; }
     .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
@@ -94,6 +94,7 @@
 
     /* Label de page : URL en minuscules et positionné tout en bas */
     .page-label { position: absolute; bottom: -25px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; color: #64748b; text-transform: none; }
+    .print-logo { position: absolute; bottom: -34px; left: 0; width: 45mm; height: auto; display: block; }
 
     @media print { 
       @page { size: A4; margin: 0; } 
@@ -110,7 +111,7 @@
 <body>
 
 <aside>
-  <div class="sb-header"><h2 class="sb-title" data-i18n="title">Splat! Expert</h2></div>
+  <div class="sb-header"><h2 class="sb-title" data-i18n="title">Splat! primaire</h2></div>
   <div class="sb-scroll">
     
     <div class="section" style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
@@ -183,7 +184,7 @@
     </div>
 
     <div class="actions">
-      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">MÉLANGER</button>
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
       <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
     </div>
   </div>
@@ -194,20 +195,20 @@
 <script>
 const i18n = {
     fr: {
-        title: "Splat! Expert", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
+        title: "Splat! primaire", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
         opt_non_prop: "Schémas non proportionnels",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
         content: "Contenu", target: "Cible Max", splat_count: "Nombre de taches",
         exercise: "Exercice", mode_hidden: "Trouver ce qui est caché ?", mode_draw: "Dessiner les points", mode_mix: "Mélange",
-        btn_mix: "MÉLANGER", btn_print: "IMPRIMER"
+        btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
     },
     en: {
-        title: "Splat! Expert", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
+        title: "Splat! primaire", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
         opt_non_prop: "Non-proportional diagrams",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
         content: "Content", target: "Max Target", splat_count: "Number of Splats",
         exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mix",
-        btn_mix: "SHUFFLE", btn_print: "PRINT"
+        btn_mix: "GENERATE", btn_print: "PRINT"
     }
 };
 
@@ -218,6 +219,8 @@ const SPLAT_SHAPES = [
     "M120,40 C160,10 240,40 230,110 C220,180 140,170 100,160 C60,140 40,80 120,40 Z",
     "M140,50 Q190,10 230,70 Q250,120 200,160 Q150,180 100,150 Q60,100 80,60 Q100,20 140,50 Z"
 ];
+
+const MATHS_GO_LOGO_SRC = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4=";
 
 let currentLang = 'fr';
 let state = [];
@@ -567,6 +570,12 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     inner.appendChild(grid);
     
     if (!isTBI) {
+        const logo = document.createElement('img');
+        logo.className = 'print-logo';
+        logo.src = MATHS_GO_LOGO_SRC;
+        logo.alt = 'Maths&go';
+        inner.appendChild(logo);
+
         const label = document.createElement('div');
         label.className = 'page-label';
         label.innerText = isCorrectionPage ? (mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —") : "aca.re/maths/splat";
