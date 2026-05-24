@@ -271,6 +271,7 @@
     header,.wrap{display:none !important}
     .printArea{display:block}
     .sheet{page-break-after:always;padding:6mm}
+    .sheet:last-child{page-break-after:auto;break-after:auto;}
     .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
     .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box}
     .pCard svg{width:100%;height:auto;display:block;margin:0 auto}
@@ -530,10 +531,11 @@
         <div id="eqUnknownModeWrap" style="flex:1 1 172px; min-width:0; display:none">
           <label>Forme<br>d’équation</label>
           <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
-            <option value="MIX" selected>Mélange</option>
+            <option value="X_PLUS_B_EQ_C" selected>Forme x + b = c</option>
             <option value="AX_EQ_C">Forme ax = c</option>
             <option value="ONE_SIDE">Forme ax + b = c</option>
             <option value="BOTH">Forme ax + b = cx + d</option>
+            <option value="MIX">Mélange</option>
           </select>
         </div>
 
@@ -865,17 +867,18 @@ function setNumTasksRangeVisible(show){
 
 function normalizeEquationFormMode(value){
   const v = String(value || "MIX");
-  return (v === "AX_EQ_C" || v === "ONE_SIDE" || v === "BOTH" || v === "MIX") ? v : "MIX";
+  return (v === "X_PLUS_B_EQ_C" || v === "AX_EQ_C" || v === "ONE_SIDE" || v === "BOTH" || v === "MIX") ? v : "MIX";
 }
 function getEquationFormMode(){
   const el = document.getElementById("eqUnknownMode");
   return normalizeEquationFormMode(el ? el.value : "MIX");
 }
 function getMinTaskMaxForEquationForm(act, formMode){
-  // En naturel : ax=c et ax+b=c peuvent fonctionner avec 1 tache max.
-  // En mélange et en forme générale, on garde 2 pour éviter les cas x+b=x+d.
+  // x+b=c et ax=c peuvent fonctionner avec 1 tache max.
+  // ax+b=c demande maintenant a >= 2 ; mélange et forme générale gardent 2
+  // pour permettre toutes les familles prévues sans cas dégénéré.
   const form = normalizeEquationFormMode(formMode);
-  if(form === "AX_EQ_C" || form === "ONE_SIDE") return 1;
+  if(form === "X_PLUS_B_EQ_C" || form === "AX_EQ_C") return 1;
   return 2;
 }
 function syncEquationTaskBounds(){
@@ -900,7 +903,7 @@ function syncNumTasksUI(act){
     _numTasksSavedNumberedMax = numTasksEl.value;
     if(numTasksMinEl) _numTasksSavedNumberedMin = numTasksMinEl.value;
     if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
-    labelNumTasksEl.textContent = "Max (par plateau)";
+    labelNumTasksEl.innerHTML = "Nombre de taches<br>≤ par plateau";
     setNumTasksRangeVisible(false);
     numTasksEl.min = "1";
     numTasksEl.max = "6";
@@ -1611,17 +1614,13 @@ function pickEquationGeneratorForm(setting, rng, maxTasksUser){
   const normalized = normalizeEquationFormMode(setting);
   if(normalized !== "MIX") return normalized;
 
-  // Mélange pédagogique simple : on vise un vrai tiers / tiers / tiers
-  // entre les trois familles. Cela évite que ax+b=c prenne trop de place
-  // dans les séries générées.
-  const canBoth = Number(maxTasksUser) >= 2;
-  const r = rng();
-  if(!canBoth){
-    return r < 0.50 ? "AX_EQ_C" : "ONE_SIDE";
-  }
-  if(r < 1/3) return "AX_EQ_C";
-  if(r < 2/3) return "ONE_SIDE";
-  return "BOTH";
+  // Mélange pédagogique équilibré : 1/4 pour chaque famille quand le
+  // nombre de taches max permet les formes avec a >= 2.
+  const canUseCoeffAtLeastTwo = Number(maxTasksUser) >= 2;
+  const forms = canUseCoeffAtLeastTwo
+    ? ["X_PLUS_B_EQ_C", "AX_EQ_C", "ONE_SIDE", "BOTH"]
+    : ["X_PLUS_B_EQ_C", "AX_EQ_C"];
+  return forms[rInt(rng, 0, forms.length - 1)];
 }
 function pickVisibleCountAtLeastOne(rng, vMin, vMax){
   const lo = Math.max(1, Math.round(Number(vMin) || 0));
@@ -1728,8 +1727,19 @@ function genEquation(rng){
         tasksL = 0;     vCountL = cCount;
         tasksR = coeff; vCountR = 0;
       }
+    }else if(form === "X_PLUS_B_EQ_C"){
+      const coeff = 1;
+      const bCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      const cCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
+      if(rng() < 0.5){
+        tasksL = coeff; vCountL = bCount;
+        tasksR = 0;     vCountR = cCount;
+      }else{
+        tasksL = 0;     vCountL = cCount;
+        tasksR = coeff; vCountR = bCount;
+      }
     }else if(form === "ONE_SIDE"){
-      const coeff = rInt(rng, 1, maxTasksUser);
+      const coeff = rInt(rng, 2, Math.max(2, maxTasksUser));
       const bCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
       const cCount = pickVisibleCountAtLeastOne(rng, vMin, vMax);
       if(rng() < 0.5){
@@ -1889,9 +1899,13 @@ function genEquationSigned(rng){
         const coeff = maxTasksEq >= 2 ? rInt(rng, 2, maxTasksEq) : 1;
         if(rng() < 0.5) { tasksL = coeff; tasksR = 0; }
         else { tasksL = 0; tasksR = coeff; }
+    } else if(modeUnk === "X_PLUS_B_EQ_C") {
+        if(rng() < 0.5) { tasksL = 0; tasksR = 1; }
+        else { tasksL = 1; tasksR = 0; }
     } else if(modeUnk === "ONE_SIDE") {
-        if(rng() < 0.5) { tasksL = 0; tasksR = rInt(rng, 1, maxTasksEq); }
-        else { tasksL = rInt(rng, 1, maxTasksEq); tasksR = 0; }
+        const coeff = rInt(rng, 2, Math.max(2, maxTasksEq));
+        if(rng() < 0.5) { tasksL = 0; tasksR = coeff; }
+        else { tasksL = coeff; tasksR = 0; }
     } else {
         const maxBoth = Math.max(2, maxTasksEq);
         tasksL = rInt(rng, 1, maxBoth);
@@ -1922,7 +1936,7 @@ function genEquationSigned(rng){
     if(modeUnk === "AX_EQ_C"){
       if(tasksL > 0){ vCountL = 0; vCountR = pickVisibleCountAtLeastOne(rng, vMin, vMax); }
       else { vCountL = pickVisibleCountAtLeastOne(rng, vMin, vMax); vCountR = 0; }
-    }else if(modeUnk === "ONE_SIDE"){
+    }else if(modeUnk === "X_PLUS_B_EQ_C" || modeUnk === "ONE_SIDE"){
       vCountL = pickVisibleCountAtLeastOne(rng, vMin, vMax);
       vCountR = pickVisibleCountAtLeastOne(rng, vMin, vMax);
     }else if(vCountL === 0 && vCountR === 0){
@@ -4298,13 +4312,13 @@ function eqStepActionText(card, revealState, opts = {}){
 
   switch(state.kind){
     case "combined":
-      return useUnitBeads ? "Je compte les billes sur chaque plateau." : "Je simplifie chaque plateau.";
+      return useUnitBeads ? "Je compte les jetons sur chaque plateau." : "Je simplifie chaque plateau.";
     case "hatchX":
       return "J’enlève " + variableAmount(state.commonX || 1) + " de chaque côté.";
     case "afterX":
       return "Je garde ce qui reste.";
     case "hatchV":
-      return "J’enlève " + Math.abs(Math.round(Number(state.commonV) || 0)) + (useUnitBeads ? " billes de chaque côté." : " de chaque côté.");
+      return "J’enlève " + Math.abs(Math.round(Number(state.commonV) || 0)) + (useUnitBeads ? " jetons de chaque côté." : " de chaque côté.");
     case "afterV":
       return "Je garde ce qui reste.";
     case "final":{
@@ -4484,7 +4498,7 @@ function drawEquationStepSchemaIntro(targetGroup, card){
     "fill":"rgba(0,0,0,0.72)",
     "font-weight":"800"
   }));
-  targetGroup.appendChild(text(cx, 538, "il y a le même nombre de billes.",{
+  targetGroup.appendChild(text(cx, 538, "il y a le même nombre de jetons.",{
     "text-anchor":"middle",
     "font-size":"32",
     "fill":"rgba(0,0,0,0.72)",
@@ -4917,8 +4931,8 @@ function renderCardEquation(card, revealState, useTokens){
     if ((eq.left.tasks + eq.right.tasks) > 1) {
       const isSigned = isSignedEquationFamily(card);
       const ruleText = isSigned
-          ? "Sous chaque tache se cache le même nombre."
-          : "Sous chaque tache, il y a le même nombre de billes.";
+          ? "Sous chaque tache, il y a le même nombre."
+          : "Sous chaque tache, il y a le même nombre de jetons.";
       layer.appendChild(text(800, 130, ruleText,{
         "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
       }));
@@ -5764,7 +5778,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
     if((eq.left.tasks + eq.right.tasks) > 1){
-      targetGroup.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre de billes.",{
+      targetGroup.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre de jetons.",{
         "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
       }));
     }
@@ -6143,7 +6157,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
       "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
     if((eq.left.tasks + eq.right.tasks) > 1){
-      targetGroup.appendChild(text(800, 130, "Sous chaque tache se cache le même nombre.",{
+      targetGroup.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre.",{
         "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
       }));
     }
@@ -6641,7 +6655,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
         "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
       }));
       if((eq.left.tasks + eq.right.tasks) > 1){
-        g.appendChild(tText(800, 134, "Sous chaque tache, il y a le même nombre de billes.",{
+        g.appendChild(tText(800, 134, "Sous chaque tache, il y a le même nombre de jetons.",{
           "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
         }));
       }
@@ -6730,8 +6744,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   if ((eq.left.tasks + eq.right.tasks) > 1) {
     const isSigned = isSignedEquationFamily(card);
     const ruleText = isSigned
-        ? "Sous chaque tache se cache le même nombre."
-        : "Sous chaque tache, il y a le même nombre de billes.";
+        ? "Sous chaque tache, il y a le même nombre."
+        : "Sous chaque tache, il y a le même nombre de jetons.";
     targetSvg.appendChild(tText(800, 130, ruleText, {
       "text-anchor":"middle",
       "font-size":"32",
