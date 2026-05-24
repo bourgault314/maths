@@ -541,13 +541,18 @@
     header,.wrap,.helpOverlay{display:none !important}
     .printArea{display:block}
     .sheet{
-      page-break-after:always;
+      page-break-after:auto;
+      break-after:auto;
       height:calc(297mm - 16mm);
       padding:5mm 6mm 3mm;
       box-sizing:border-box;
       display:flex;
       flex-direction:column;
       overflow:hidden;
+    }
+    .sheet:not(:last-child){
+      page-break-after:always;
+      break-after:page;
     }
     /* 2 colonnes (4 cartes / page : 2 x 2) */
     .grid{
@@ -827,7 +832,7 @@
           <input id="nineTasks" type="number" min="1" max="6" value="1" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles max</label>
+          <label>Jetons visibles ≤</label>
           <input id="nineVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
@@ -862,7 +867,7 @@
           <input id="eightTasks" type="number" min="1" max="6" value="1" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles max</label>
+          <label>Jetons visibles ≤</label>
           <input id="eightVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
@@ -935,11 +940,11 @@
       <div class="c-pairs">
         <div class="c-pair">
           <div class="c-mini">
-            <div class="c-mini-label">Billes visibles (min)</div>
+            <div class="c-mini-label">Jetons visibles (min)</div>
             <input id="invVisibleMin" type="number" min="0" max="10" value="0" />
           </div>
           <div class="c-mini">
-            <div class="c-mini-label">Billes visibles (max)</div>
+            <div class="c-mini-label">Jetons visibles (max)</div>
             <input id="invVisibleMax" type="number" min="0" max="10" value="3" />
           </div>
         </div>
@@ -968,11 +973,11 @@
       </div>
       <div class="row" style="margin-top:10px">
         <div style="flex:1">
-          <label>Billes visibles (min)</label>
+          <label>Jetons visibles (min)</label>
           <input id="sysVisibleMin" type="number" min="0" max="10" value="0" />
         </div>
         <div style="flex:1">
-          <label>Billes visibles (max)</label>
+          <label>Jetons visibles (max)</label>
           <input id="sysVisibleMax" type="number" min="0" max="10" value="3" />
         </div>
       </div>
@@ -2024,7 +2029,7 @@ function genInvestigate(rng){
         check: (x) => true,
         desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
           [{type:'splat', id:tIdx}, {type:'text', val:` = ${k} × `}, {type:'splat', id:sIdx}] : 
-          `Sous ${names[tIdx]}, il y a ${k} fois plus de billes que sous ${names[sIdx]}.`
+          `Sous ${names[tIdx]}, il y a ${k} fois plus de jetons que sous ${names[sIdx]}.`
       };
     }
     if(op === 'DIV'){
@@ -2034,7 +2039,7 @@ function genInvestigate(rng){
         check: (x) => (x % k === 0),
         desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
           [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` ÷ ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} fois moins de billes que sous ${names[sIdx]}.`
+          `Sous ${names[tIdx]}, il y a ${k} fois moins de jetons que sous ${names[sIdx]}.`
       };
     }
     if(op === 'ADD'){
@@ -2044,7 +2049,7 @@ function genInvestigate(rng){
         check: (x) => true,
         desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
           [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` + ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} billes de plus que sous ${names[sIdx]}.`
+          `Sous ${names[tIdx]}, il y a ${k} jetons de plus que sous ${names[sIdx]}.`
       };
     }
     if(op === 'SUB'){
@@ -2054,7 +2059,7 @@ function genInvestigate(rng){
         check: (x) => (x - k > 0), 
         desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
           [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` − ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} billes de moins que sous ${names[sIdx]}.`
+          `Sous ${names[tIdx]}, il y a ${k} jetons de moins que sous ${names[sIdx]}.`
       };
     }
     return null;
@@ -3480,7 +3485,7 @@ function renderCard(card, revealState){
     const isSigned = (card.family === "NPM");
     const ruleText = isSigned 
         ? "Sous chaque tache se cache le même nombre." 
-        : "Sous chaque tache, il y a le même nombre de billes.";
+        : "Sous chaque tache, il y a le même nombre de jetons.";
 
     const gInd = el("g", {id: "clueGroupRule"});
     const trayBottom = trayCfg.y + trayCfg.h;
@@ -4061,7 +4066,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     if (showRuleText) {
       const ruleText = isSigned 
           ? "Sous chaque tache se cache le même nombre." 
-          : "Sous chaque tache, il y a le même nombre de billes.";
+          : "Sous chaque tache, il y a le même nombre de jetons.";
       const startY = trayY + trayH + ((isABFamily && printMode === "worksheet") ? 60 : 80);
       targetSvg.appendChild(tText(800, startY, ruleText, {
         "text-anchor":"middle",
