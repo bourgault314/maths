@@ -238,10 +238,40 @@
     
     .hidden-ctrl { display: none !important; }
 
-    /* LABEL EN BAS DE PAGE */
-    .page-label {
-        position: absolute; bottom: -22px; left: 0; right: 0; text-align: center;
-        font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;
+    /* STATUT EN HAUT + LOGO CENTRÉ EN BAS, sans toucher à la grille */
+    .page-top-status {
+        position: absolute;
+        top: 1.2mm;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 8.5px;
+        font-weight: 900;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        line-height: 1;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 5;
+    }
+    .page-footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0.2mm;
+        height: 4.6mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 5;
+    }
+    .page-footer-logo {
+        width: 25mm;
+        height: 4.6mm;
+        display: block;
+        overflow: visible;
     }
 
     @media print { 
@@ -255,7 +285,21 @@
       .card-header { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; border-bottom: 2px solid #000; }
       .given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
       .segment.given-val .seg-val, .bar-total.given-val { background-color: #eee !important; -webkit-print-color-adjust: exact; }
-      .page-label { display: none; }
+      /* À l'impression : on garde uniquement la signature Maths&Go.
+         Les mentions EXERCICES / CORRECTION restent visibles à l'écran mais disparaissent sur papier. */
+      .page-top-status { display: none !important; }
+      .page-footer {
+        display: flex !important;
+        bottom: 3mm;
+        height: 6mm;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .page-footer-logo {
+        width: 32mm;
+        height: 6mm;
+      }
+      .page-footer-logo * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -736,6 +780,43 @@ function generateDots(count, obstacles) {
     return placed;
 }
 
+function getMathsGoCompactLogoSvg() {
+    return `<svg class="page-footer-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 105" aria-label="Maths & go">
+      <defs>
+        <style>
+          .mg-navy{fill:#0b3570}
+          .mg-teal{fill:#13a8a8}
+          .mg-orange{fill:#f28a17}
+          .mg-word{font-family:DejaVu Sans, Arial, Helvetica, sans-serif;font-weight:900;fill:#0b3570;}
+          .mg-amp{font-family:DejaVu Sans, Arial, Helvetica, sans-serif;font-weight:900;fill:#0b3570;}
+        </style>
+      </defs>
+      <g>
+        <line x1="15" y1="97" x2="112" y2="97" stroke="#0b3570" stroke-width="4" stroke-linecap="round" opacity=".95"/>
+        <rect x="11" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
+        <rect x="99" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
+        <line x1="32" y1="26" x2="57" y2="48" stroke="#13a8a8" stroke-width="13" stroke-linecap="round"/>
+        <line x1="94" y1="26" x2="68" y2="48" stroke="#13a8a8" stroke-width="13" stroke-linecap="round"/>
+        <circle cx="63" cy="50" r="10" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="27" cy="37" r="8.5" fill="#13a8a8" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="27" cy="56" r="8.5" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="27" cy="74" r="8.5" fill="#f28a17" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="96" cy="37" r="8.5" fill="#13a8a8" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="96" cy="56" r="8.5" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="96" cy="74" r="8.5" fill="#f28a17" stroke="#ffffff" stroke-width="3"/>
+        <rect x="36" y="89" width="14" height="8" rx="3" fill="#13a8a8"/>
+        <rect x="56" y="84" width="15" height="13" rx="3" fill="#0b3570"/>
+        <rect x="76" y="80" width="13" height="17" rx="3" fill="#f28a17"/>
+        <circle cx="83" cy="18" r="3.2" fill="#f28a17"/>
+        <circle cx="93" cy="13" r="3.2" fill="#f28a17"/>
+        <path d="M88 5 L109 2 L100 17 Z" fill="#f28a17"/>
+      </g>
+      <text x="121" y="67" class="mg-word" font-size="48">aths</text>
+      <text x="244" y="67" class="mg-amp" font-size="42">&amp;</text>
+      <text x="285" y="67" class="mg-word" font-size="48">go</text>
+    </svg>`;
+}
+
 // Fonction pour construire une page DOM
 function createPageElement(items, isCorrectionPage, mirror) {
     const page = document.createElement('div'); page.className = 'page';
@@ -810,17 +891,27 @@ function createPageElement(items, isCorrectionPage, mirror) {
 
     inner.appendChild(grid); 
     
-    // Label bas de page
-    const label = document.createElement('div');
-    label.className = 'page-label';
-    if(isCorrectionPage) {
-        label.innerText = mirror ? "— CORRECTION (MIROIR POUR VERSO) —" : "— CORRECTION —";
-    } else {
-        label.innerText = "— EXERCICE —";
-    }
-    inner.appendChild(label);
-
     page.appendChild(inner); 
+
+    // Statut centré en haut de page : il ne touche pas à la grille.
+    const status = document.createElement('div');
+    status.className = 'page-top-status';
+    if(isCorrectionPage) {
+        status.innerText = mirror ? "CORRECTION • MIROIR VERSO" : "CORRECTION";
+    } else {
+        status.innerText = "EXERCICES";
+    }
+    page.appendChild(status);
+
+    // Logo compact centré en bas de page : il reste dans la marge basse.
+    const footer = document.createElement('div');
+    footer.className = 'page-footer';
+
+    const logo = document.createElement('div');
+    logo.innerHTML = getMathsGoCompactLogoSvg();
+    footer.appendChild(logo.firstElementChild);
+
+    page.appendChild(footer);
     return page;
 }
 
