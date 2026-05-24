@@ -279,7 +279,8 @@
       body { display: block; background: white; height: auto; overflow: visible; } 
       aside { display: none !important; } 
       main { padding: 0; margin: 0; display: block; overflow: visible; height: auto; background: white; } 
-      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
+      .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; break-after: page; } 
+      .page:last-child { page-break-after: auto; break-after: auto; }
       .page-inner { top: 0; bottom: 0; left: 0; right: 0; padding: 5mm; transform: scale(0.98); }
       .card { border: 2px solid #000; break-inside: avoid; }
       .card-header { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; border-bottom: 2px solid #000; }
