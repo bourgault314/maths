@@ -216,6 +216,97 @@
     font-weight:950;
   }
 
+  .worldGrid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin:10px 0 12px;
+  }
+
+  .worldCard{
+    position:relative;
+    width:100%;
+    text-align:left;
+    padding:12px 12px;
+    border-radius:18px;
+    border:1px solid rgba(15,23,42,.12);
+    background:linear-gradient(180deg,#ffffff,#f8fafc);
+    color:#0f172a;
+    box-shadow:0 8px 20px rgba(15,23,42,.06);
+    cursor:pointer;
+  }
+
+  .worldCard:hover{
+    filter:brightness(.99);
+    transform:translateY(-1px);
+  }
+
+  .worldCard.active{
+    border-color:rgba(59,130,246,.52);
+    box-shadow:0 12px 26px rgba(59,130,246,.14);
+    background:linear-gradient(180deg,#eff6ff,#ffffff);
+  }
+
+  .worldCard.done{
+    border-color:rgba(22,163,74,.42);
+    background:linear-gradient(180deg,#dcfce7,#ffffff);
+  }
+
+  .worldTop{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:4px;
+  }
+
+  .worldName{
+    font-size:15px;
+    font-weight:950;
+    letter-spacing:-.02em;
+  }
+
+  .worldBadge{
+    flex:0 0 auto;
+    min-width:30px;
+    height:30px;
+    padding:0 8px;
+    display:inline-grid;
+    place-items:center;
+    border-radius:999px;
+    background:#e2e8f0;
+    color:#334155;
+    font-size:13px;
+    font-weight:950;
+  }
+
+  .worldCard.done .worldBadge{
+    background:#16a34a;
+    color:#fff;
+  }
+
+  .worldExample{
+    font-size:13px;
+    color:#64748b;
+    font-weight:850;
+  }
+
+  .worldCard.done::after{
+    content:"✓";
+    position:absolute;
+    right:12px;
+    bottom:9px;
+    width:24px;
+    height:24px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:#16a34a;
+    color:white;
+    font-weight:950;
+    font-size:15px;
+  }
+
   input,select{
     width:100%;
     border:1px solid rgba(15,23,42,.14);
@@ -331,6 +422,38 @@
 
   .stageStudentHud.open{
     display:flex;
+  }
+
+  .studentWaitingStage{
+    display:none;
+    min-height:520px;
+    border-radius:24px;
+    border:1px dashed rgba(15,23,42,.18);
+    background:rgba(255,255,255,.55);
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    padding:32px;
+  }
+
+  .studentWaitingStage.open{
+    display:flex;
+  }
+
+  .waitingTitle{
+    font-size:clamp(34px,4vw,56px);
+    font-weight:950;
+    letter-spacing:-.05em;
+    color:#0f172a;
+  }
+
+  .waitingText{
+    margin-top:8px;
+    font-size:17px;
+    line-height:1.35;
+    font-weight:750;
+    color:#64748b;
   }
 
   .stageStudentHud strong{
@@ -818,14 +941,25 @@
     </div>
 
     <div class="studentPanel" id="studentPanel">
-      <label>Parcours</label>
-      <select id="studentPath">
-        <option value="axc">1. Partage simple</option>
-        <option value="xpb">2. Une quantité à enlever</option>
-        <option value="axb">3. Plusieurs lettres + quantité</option>
-        <option value="both">4. Lettres des deux côtés</option>
-        <option value="mix">5. Défi mélange</option>
-      </select>
+      <label>Choisis ton monde</label>
+      <div class="worldGrid" id="worldGrid">
+        <button class="worldCard active" type="button" data-path="axc">
+          <div class="worldTop"><span class="worldName">Monde 1 — Partage équitable</span><span class="worldBadge">1</span></div>
+        </button>
+        <button class="worldCard" type="button" data-path="xpb">
+          <div class="worldTop"><span class="worldName">Monde 2 — Une quantité à enlever</span><span class="worldBadge">2</span></div>
+        </button>
+        <button class="worldCard" type="button" data-path="mix12">
+          <div class="worldTop"><span class="worldName">Monde 3 — Mélange de 1 et 2</span><span class="worldBadge">3</span></div>
+        </button>
+        <button class="worldCard" type="button" data-path="both">
+          <div class="worldTop"><span class="worldName">Monde 4 — Lettre inconnue des deux côtés</span><span class="worldBadge">4</span></div>
+        </button>
+        <button class="worldCard" type="button" data-path="mix">
+          <div class="worldTop"><span class="worldName">Monde 5 — Défis mélange</span><span class="worldBadge">5</span></div>
+        </button>
+      </div>
+      <input id="studentPath" type="hidden" value="axc" />
 
       <label>Affichage de l’inconnue</label>
       <select id="unknownDisplayModeStudent" title="Affichage des inconnues dans le tableau">
@@ -846,7 +980,7 @@
       </div>
 
       <div class="studentProgress" id="studentProgress">
-        Choisis un parcours.
+        Choisis un monde.
       </div>
     </div>
 
@@ -923,6 +1057,11 @@
       <span id="stageStudentProgress">Exercice 1 / 5 · Réussites : 0</span>
       <button class="stageNextBtn" id="btnStageNextStudent" type="button">Suivant</button>
     </div>
+    <div class="studentWaitingStage" id="studentWaitingStage">
+      <div class="waitingTitle">Choisis un monde</div>
+      <div class="waitingText">Puis clique sur <strong>Commencer</strong> pour lancer le parcours.</div>
+    </div>
+
     <div class="topbar">
       <div class="equationText" id="equationText"></div>
       <div class="equationHistory" id="equationHistory"></div>
@@ -1020,6 +1159,7 @@
   const profPanel = document.getElementById("profPanel");
   const studentPanel = document.getElementById("studentPanel");
   const studentPathEl = document.getElementById("studentPath");
+  const worldCards = Array.from(document.querySelectorAll(".worldCard"));
   const studentTotalEl = document.getElementById("studentTotal");
   const btnStartStudent = document.getElementById("btnStartStudent");
   const btnNextStudent = document.getElementById("btnNextStudent");
@@ -1027,6 +1167,7 @@
   const stageStudentHud = document.getElementById("stageStudentHud");
   const stageStudentProgress = document.getElementById("stageStudentProgress");
   const btnStageNextStudent = document.getElementById("btnStageNextStudent");
+  const studentWaitingStage = document.getElementById("studentWaitingStage");
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
   const coefCEl = document.getElementById("coefC");
@@ -1058,12 +1199,13 @@
   let appMode = "teacher";
   let studentSession = {
     active:false,
-    path:"axb",
+    path:"axc",
     total:5,
     index:0,
     solved:0,
     currentCounted:false
   };
+  const completedWorlds = new Set();
 
   function setActionMode(mode){
     actionMode = mode;
@@ -1092,12 +1234,60 @@
     return el && el.value === "question" ? "?" : currentVar();
   }
 
+  function getWorldName(path){
+    const names = {
+      axc:"Monde 1",
+      xpb:"Monde 2",
+      mix12:"Monde 3",
+      both:"Monde 4",
+      mix:"Monde 5"
+    };
+    return names[path] || "Monde";
+  }
+
+  function setStudentPath(path){
+    if(!studentPathEl) return;
+    studentPathEl.value = path;
+    worldCards.forEach(card => {
+      const isActive = card.dataset.path === path;
+      card.classList.toggle("active", isActive);
+    });
+    if(studentSession.active){
+      studentSession.active = false;
+      if(btnNextStudent) btnNextStudent.style.display = "none";
+      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
+    }
+    syncWorldCards();
+    updateStudentProgress();
+    syncStudentStageVisibility();
+  }
+
+  function syncWorldCards(){
+    worldCards.forEach(card => {
+      const path = card.dataset.path;
+      card.classList.toggle("done", completedWorlds.has(path));
+      card.classList.toggle("active", studentPathEl && studentPathEl.value === path);
+    });
+  }
+
+  function syncStudentStageVisibility(){
+    const waiting = appMode === "student" && !studentSession.active;
+    if(studentWaitingStage) studentWaitingStage.classList.toggle("open", waiting);
+
+    const selectors = [".topbar", ".instructionZone", ".board", ".toolBar", ".actionZone", ".solution", ".footerNote"];
+    selectors.forEach(sel => {
+      const el = stageEl ? stageEl.querySelector(sel) : null;
+      if(el) el.style.display = waiting ? "none" : "";
+    });
+  }
+
   function syncAppModeUI(){
     if(btnTeacherMode) btnTeacherMode.classList.toggle("active", appMode === "teacher");
     if(btnStudentMode) btnStudentMode.classList.toggle("active", appMode === "student");
     if(profPanel) profPanel.classList.toggle("hidden", appMode !== "teacher");
     if(studentPanel) studentPanel.classList.toggle("open", appMode === "student");
     updateStudentProgress();
+    syncStudentStageVisibility();
   }
 
   function setAppMode(mode){
@@ -1122,16 +1312,16 @@
     }
 
     if(!studentSession.active){
-      if(studentProgressEl) studentProgressEl.textContent = "Choisis un parcours.";
+      if(studentProgressEl) studentProgressEl.textContent = "Choisis un monde.";
       if(stageStudentProgress) stageStudentProgress.textContent = "";
       if(btnNextStudent) btnNextStudent.style.display = "none";
       if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
       return;
     }
 
-    const text = `Exercice ${studentSession.index} / ${studentSession.total} · Réussites : ${studentSession.solved}`;
+    const text = `${getWorldName(studentSession.path)} · Exercice ${studentSession.index} / ${studentSession.total} · Réussites : ${studentSession.solved}`;
     if(studentProgressEl){
-      studentProgressEl.innerHTML = `Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} · Réussites : <strong>${studentSession.solved}</strong>`;
+      studentProgressEl.innerHTML = `<strong>${getWorldName(studentSession.path)}</strong> · Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} · Réussites : <strong>${studentSession.solved}</strong>`;
     }
     if(stageStudentProgress){
       stageStudentProgress.textContent = text;
@@ -1139,7 +1329,7 @@
   }
 
   function startStudentSession(){
-    const path = studentPathEl ? studentPathEl.value : "axb";
+    const path = studentPathEl ? studentPathEl.value : "axc";
     const total = studentTotalEl ? Number(studentTotalEl.value) || 5 : 5;
     studentSession = {
       active:true,
@@ -1150,31 +1340,40 @@
       currentCounted:false
     };
     nextStudentExercise();
+    syncStudentStageVisibility();
   }
 
   function nextStudentExercise(){
     if(!studentSession.active) return;
     if(studentSession.index >= studentSession.total){
+      completedWorlds.add(studentSession.path);
+      syncWorldCards();
       if(studentProgressEl){
-        studentProgressEl.innerHTML = `Parcours terminé · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
+        studentProgressEl.innerHTML = `<strong>${getWorldName(studentSession.path)} validé</strong> · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
       }
       if(btnNextStudent) btnNextStudent.style.display = "none";
       if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      setInstruction("Parcours terminé.");
+      setInstruction(`${getWorldName(studentSession.path)} validé.`);
       return;
     }
 
     studentSession.index += 1;
     studentSession.currentCounted = false;
 
+    let exercisePath = studentSession.path;
+    if(exercisePath === "mix12"){
+      exercisePath = Math.random() < 0.5 ? "axc" : "xpb";
+    }
+
     if(modeEl){
-      modeEl.value = studentSession.path;
+      modeEl.value = exercisePath;
     }
     randomExercise();
 
     if(btnNextStudent) btnNextStudent.style.display = "none";
     if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
     updateStudentProgress();
+    syncStudentStageVisibility();
   }
 
   function onStudentSolved(){
@@ -1234,7 +1433,7 @@
 
   function sideExpression(side){
     const pieces = activePieces(side);
-    const v = state.original.varChar || "𝑥";
+    const v = displayedUnknown();
     const terms = [];
     let i = 0;
 
@@ -1259,7 +1458,7 @@
   function currentEquationString(){
     const solved = getSolvedValue();
     if(solved !== null){
-      return `${state.original.varChar || "𝑥"} = ${solved}`;
+      return `${displayedUnknown()} = ${solved}`;
     }
     // On écrit l'équation dans le sens algébrique : ligne du bas = ligne du haut.
     return `${sideExpression("bottom")} = ${sideExpression("top")}`;
@@ -1270,6 +1469,12 @@
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
     if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+  }
+
+  function refreshStepsForUnknownDisplay(){
+    if(!state) return;
+    state.steps = [currentEquationString()];
+    render();
   }
 
   function getSelectedMode(){
@@ -1499,7 +1704,7 @@
         ok:true,
         type:"x",
         count:top.length,
-        label: top.length === 1 ? currentVar() : `${top.length}${currentVar()}`,
+        label: top.length === 1 ? displayedUnknown() : `${top.length}${displayedUnknown()}`,
         top,
         bottom
       };
@@ -1714,9 +1919,9 @@
 
     const solved = getSolvedValue();
     if(solved !== null){
-      solutionEl.textContent = `${v} = ${solved}`;
+      solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
       setStatus("Résolution terminée", true);
-      setInstruction(`Bravo :&nbsp;<strong>${v}</strong>&nbsp;est trouvé.`);
+      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
       actionZone.innerHTML = "";
       onStudentSolved();
       return;
@@ -2128,12 +2333,15 @@
   if(toolDelete) toolDelete.addEventListener("click", () => setActionMode("delete"));
   if(toolUndo) toolUndo.addEventListener("click", undo);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
-  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", render);
-  if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", render);
+  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
+  if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", refreshStepsForUnknownDisplay);
 
   if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
   if(btnTeacherMode) btnTeacherMode.addEventListener("click", () => setAppMode("teacher"));
   if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
+  worldCards.forEach(card => {
+    card.addEventListener("click", () => setStudentPath(card.dataset.path));
+  });
   if(btnStartStudent) btnStartStudent.addEventListener("click", startStudentSession);
   if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
   if(btnStageNextStudent) btnStageNextStudent.addEventListener("click", nextStudentExercise);
