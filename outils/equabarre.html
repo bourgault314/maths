@@ -165,6 +165,57 @@
     letter-spacing:.06em;
   }
 
+  .modeSwitch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin:12px 0 14px;
+  }
+
+  .modeBtn{
+    padding:10px 8px;
+    border-radius:14px;
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+    font-weight:950;
+  }
+
+  .modeBtn.active{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+    box-shadow:0 10px 24px rgba(59,130,246,.16);
+  }
+
+  .studentPanel{
+    display:none;
+  }
+
+  .studentPanel.open{
+    display:block;
+  }
+
+  .profPanel.hidden{
+    display:none;
+  }
+
+  .studentProgress{
+    margin:10px 0 0;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    color:#334155;
+    font-size:14px;
+    font-weight:850;
+    text-align:center;
+  }
+
+  .studentProgress strong{
+    font-weight:950;
+  }
+
   input,select{
     width:100%;
     border:1px solid rgba(15,23,42,.14);
@@ -241,6 +292,41 @@
   .stage{
     padding:16px;
     min-height:660px;
+  }
+
+  .stage{
+    padding:16px;
+    min-height:660px;
+    position:relative;
+  }
+
+  .stageQuickActions{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .quickBtn{
+    width:44px;
+    height:44px;
+    padding:0;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:23px;
+    line-height:1;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    backdrop-filter:blur(8px);
+  }
+
+  .quickBtn:hover{
+    background:#eef2f7;
   }
 
   .topbar{
@@ -525,6 +611,16 @@
     box-shadow:0 10px 24px rgba(59,130,246,.18);
   }
 
+  .undoToolBtn{
+    background:#fff7ed;
+    border-color:rgba(249,115,22,.28);
+    color:#9a3412;
+  }
+
+  .undoToolBtn:hover{
+    background:#ffedd5;
+  }
+
   .message{
     padding:12px 14px;
     border-radius:16px;
@@ -673,7 +769,47 @@
 <main>
   <section class="panel">
     <div class="appTitle">Équabarre</div>
-    <label>Type d’équation</label>
+    
+    <div class="modeSwitch" aria-label="Choix du mode">
+      <button class="modeBtn active" id="btnTeacherMode" type="button">Prof</button>
+      <button class="modeBtn" id="btnStudentMode" type="button">Élève</button>
+    </div>
+
+    <div class="studentPanel" id="studentPanel">
+      <label>Parcours</label>
+      <select id="studentPath">
+        <option value="axc">1. Partage simple</option>
+        <option value="xpb">2. Une quantité à enlever</option>
+        <option value="axb">3. Plusieurs lettres + quantité</option>
+        <option value="both">4. Lettres des deux côtés</option>
+        <option value="mix">5. Défi mélange</option>
+      </select>
+
+      <label>Affichage de l’inconnue</label>
+      <select id="unknownDisplayModeStudent" title="Affichage des inconnues dans le tableau">
+        <option value="letter" selected>Lettre</option>
+        <option value="question">Point d’interrogation</option>
+      </select>
+
+      <label>Nombre d’équations</label>
+      <select id="studentTotal">
+        <option value="3">3</option>
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+      </select>
+
+      <div class="btnrow">
+        <button class="primary" id="btnStartStudent" type="button">Commencer</button>
+        <button class="ghost" id="btnNextStudent" type="button" style="display:none">Exercice suivant</button>
+      </div>
+
+      <div class="studentProgress" id="studentProgress">
+        Choisis un parcours.
+      </div>
+    </div>
+
+    <div class="profPanel" id="profPanel">
+<label>Type d’équation</label>
     <select id="mode">
       <option value="xpb">x + b = c</option>
       <option value="axc">ax = c</option>
@@ -682,7 +818,13 @@
       <option value="mix">Mélange</option>
     </select>
 
-    <label>Après suppression</label>
+        <label>Affichage de l’inconnue</label>
+    <select id="unknownDisplayMode" title="Affichage des inconnues dans le tableau">
+      <option value="letter" selected>Lettre</option>
+      <option value="question">Point d’interrogation</option>
+    </select>
+
+<label>Après suppression</label>
     <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
       <option value="keep" selected>Garder hachuré</option>
       <option value="hide">Masquer</option>
@@ -713,18 +855,21 @@
     <div class="btnrow">
       <button class="primary" id="btnBuild">Créer</button>
       <button id="btnRandom">Aléatoire</button>
-      <button class="ghost" id="btnUndo">Annuler</button>
     </div>
 
     <div class="btnrow">
-      <button class="orange" id="btnHint">Indice</button>
       <button class="ghost" id="btnReset">Recommencer</button>
     </div>
 
-  </section>
+  
+    </div>
+</section>
 
   <section class="stage" id="stage">
-    <button class="ghost fullscreenBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    <div class="stageQuickActions" aria-label="Actions rapides">
+      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
+      <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
     <div class="topbar">
       <div class="equationText" id="equationText"></div>
       <div class="equationHistory" id="equationHistory"></div>
@@ -753,7 +898,8 @@
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
       <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
       <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-      <button class="toolBtn" id="toolDelete" type="button">Supprimer des deux côtés</button>
+      <button class="toolBtn" id="toolDelete" type="button">Supprimer dans chaque membre</button>
+      <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
     </div>
 
     <div class="actionZone" id="actionZone"></div>
@@ -805,12 +951,26 @@
   const statusEl = document.getElementById("status");
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
+  const btnStageUndo = document.getElementById("btnStageUndo");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolShare = document.getElementById("toolShare");
   const toolDelete = document.getElementById("toolDelete");
+  const toolUndo = document.getElementById("toolUndo");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
+  const unknownDisplayModeStudentEl = document.getElementById("unknownDisplayModeStudent");
 
   const modeEl = document.getElementById("mode");
+
+  const btnTeacherMode = document.getElementById("btnTeacherMode");
+  const btnStudentMode = document.getElementById("btnStudentMode");
+  const profPanel = document.getElementById("profPanel");
+  const studentPanel = document.getElementById("studentPanel");
+  const studentPathEl = document.getElementById("studentPath");
+  const studentTotalEl = document.getElementById("studentTotal");
+  const btnStartStudent = document.getElementById("btnStartStudent");
+  const btnNextStudent = document.getElementById("btnNextStudent");
+  const studentProgressEl = document.getElementById("studentProgress");
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
   const solXEl = document.getElementById("solX");
@@ -836,6 +996,15 @@
   let selectedShareRef = null;
   let deleteSelection = [];
   let actionMode = "decompose"; // decompose | share | delete
+  let appMode = "teacher";
+  let studentSession = {
+    active:false,
+    path:"axb",
+    total:5,
+    index:0,
+    solved:0,
+    currentCounted:false
+  };
 
   function setActionMode(mode){
     actionMode = mode;
@@ -857,6 +1026,93 @@
 
   function currentMode(){
     return state && state.original ? state.original.mode : "";
+  }
+
+  function displayedUnknown(){
+    const el = appMode === "student" ? unknownDisplayModeStudentEl : unknownDisplayModeEl;
+    return el && el.value === "question" ? "?" : currentVar();
+  }
+
+  function syncAppModeUI(){
+    if(btnTeacherMode) btnTeacherMode.classList.toggle("active", appMode === "teacher");
+    if(btnStudentMode) btnStudentMode.classList.toggle("active", appMode === "student");
+    if(profPanel) profPanel.classList.toggle("hidden", appMode !== "teacher");
+    if(studentPanel) studentPanel.classList.toggle("open", appMode === "student");
+    updateStudentProgress();
+  }
+
+  function setAppMode(mode){
+    appMode = mode === "student" ? "student" : "teacher";
+    syncAppModeUI();
+    render();
+  }
+
+  function updateStudentProgress(){
+    if(!studentProgressEl) return;
+    if(appMode !== "student"){
+      studentProgressEl.textContent = "";
+      return;
+    }
+    if(!studentSession.active){
+      studentProgressEl.textContent = "Choisis un parcours.";
+      if(btnNextStudent) btnNextStudent.style.display = "none";
+      return;
+    }
+    studentProgressEl.innerHTML = `Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} · Réussites : <strong>${studentSession.solved}</strong>`;
+  }
+
+  function startStudentSession(){
+    const path = studentPathEl ? studentPathEl.value : "axb";
+    const total = studentTotalEl ? Number(studentTotalEl.value) || 5 : 5;
+    studentSession = {
+      active:true,
+      path,
+      total,
+      index:0,
+      solved:0,
+      currentCounted:false
+    };
+    nextStudentExercise();
+  }
+
+  function nextStudentExercise(){
+    if(!studentSession.active) return;
+    if(studentSession.index >= studentSession.total){
+      if(studentProgressEl){
+        studentProgressEl.innerHTML = `Parcours terminé · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
+      }
+      if(btnNextStudent) btnNextStudent.style.display = "none";
+      setInstruction("Parcours terminé.");
+      return;
+    }
+
+    studentSession.index += 1;
+    studentSession.currentCounted = false;
+
+    if(modeEl){
+      modeEl.value = studentSession.path;
+    }
+    randomExercise();
+
+    if(btnNextStudent) btnNextStudent.style.display = "none";
+    updateStudentProgress();
+  }
+
+  function onStudentSolved(){
+    if(appMode !== "student" || !studentSession.active || studentSession.currentCounted) return;
+    studentSession.currentCounted = true;
+    studentSession.solved += 1;
+    updateStudentProgress();
+
+    if(studentSession.index >= studentSession.total){
+      if(studentProgressEl){
+        studentProgressEl.innerHTML = `Parcours terminé · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
+      }
+      setInstruction("Parcours terminé.");
+      if(btnNextStudent) btnNextStudent.style.display = "none";
+    }else{
+      if(btnNextStudent) btnNextStudent.style.display = "";
+    }
   }
 
   function uid(){
@@ -1294,7 +1550,7 @@
       if(piece.removed) el.classList.add("removed");
       if(selectedIds.has(piece.id)) el.classList.add("selectedForDelete");
 
-      const value = piece.type === "x" ? (piece.value || state.original.varChar || "𝑥") : String(piece.value);
+      const value = piece.type === "x" ? displayedUnknown() : String(piece.value);
       el.innerHTML = `
         <div class="pieceContent">
           <div class="pieceValue">${value}</div>
@@ -1346,13 +1602,14 @@
     if(solved !== null){
       solutionEl.textContent = `${v} = ${solved}`;
       setStatus("Résolution terminée", true);
-      setInstruction(`Bravo : chaque&nbsp;<strong>${v}</strong>&nbsp;correspond maintenant à la même valeur.`);
+      setInstruction(`Bravo :&nbsp;<strong>${v}</strong>&nbsp;est trouvé.`);
       actionZone.innerHTML = "";
+      onStudentSolved();
       return;
     }
 
     if(actionMode === "decompose"){
-      setInstruction("Clique sur un nombre du tableau pour le décomposer en somme.");
+      setInstruction("Décompose un nombre.");
       actionZone.innerHTML = "";
       return;
     }
@@ -1360,9 +1617,9 @@
     if(actionMode === "share"){
       const suggested = getShareOpportunity();
       if(suggested){
-        setInstruction(`Clique sur&nbsp;<strong>${suggested.numberPiece.value}</strong>&nbsp;pour le partager en&nbsp;<strong>${suggested.count}</strong>&nbsp;parts égales.`);
+        setInstruction(`Partage&nbsp;<strong>${suggested.numberPiece.value}</strong>&nbsp;en&nbsp;<strong>${suggested.count}</strong>&nbsp;parts.`);
       }else{
-        setInstruction("Clique sur un nombre, puis choisis en combien de parts égales le couper.");
+        setInstruction("Partage un nombre en parts égales.");
       }
       actionZone.innerHTML = "";
       return;
@@ -1374,16 +1631,16 @@
 
       if(top.length === 0 && bottom.length === 0){
         if(currentMode() === "both"){
-          setInstruction(`Sélectionne une même quantité en haut et en bas. Tu peux sélectionner plusieurs lettres&nbsp;<strong>${v}</strong>&nbsp;de chaque côté.`);
+          setInstruction(`Sélectionne la même quantité des deux côtés.`);
         }else{
-          setInstruction("Sélectionne une quantité en haut et la même quantité en bas.");
+          setInstruction("Sélectionne la même quantité des deux côtés.");
         }
         return;
       }
 
       if(top.length === 0 || bottom.length === 0){
         const sideName = top.length ? "haut" : "bas";
-        setInstruction(`Tu as sélectionné une quantité en ${sideName}. Sélectionne maintenant la même quantité de l’autre côté.`);
+        setInstruction(`Sélectionne maintenant l’autre côté.`);
         const btn = document.createElement("button");
         btn.className = "ghost";
         btn.textContent = "Effacer la sélection";
@@ -1396,7 +1653,7 @@
       }
 
       if(info.ok){
-        setInstruction(`Les deux côtés sélectionnés représentent&nbsp;<strong>${info.label}</strong>&nbsp;: tu peux les supprimer d’un coup.`);
+        setInstruction(`Même quantité sélectionnée :&nbsp;<strong>${info.label}</strong>.`);
         const btn = document.createElement("button");
         btn.className = "orange";
         btn.textContent = "Valider la suppression";
@@ -1414,11 +1671,11 @@
       }else{
         let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
         if(info.reason === "differentCounts"){
-          reason = `Tu as sélectionné ${top.length} lettre(s) en haut et ${bottom.length} en bas : il faut le même nombre de chaque côté.`;
+          reason = `Il faut le même nombre de lettres de chaque côté.`;
         }else if(info.reason === "differentSums"){
-          reason = `Les nombres sélectionnés ne font pas la même somme : ${info.topSum} en haut et ${info.bottomSum} en bas.`;
+          reason = `Les nombres sélectionnés ne font pas la même somme.`;
         }else if(info.reason === "mixedTypes"){
-          reason = "Ne mélange pas lettres et nombres dans la même suppression.";
+          reason = "Ne mélange pas lettres et nombres.";
         }
         setInstruction(reason);
         const btn = document.createElement("button");
@@ -1755,13 +2012,24 @@
   if(toolDecompose) toolDecompose.addEventListener("click", () => setActionMode("decompose"));
   if(toolShare) toolShare.addEventListener("click", () => setActionMode("share"));
   if(toolDelete) toolDelete.addEventListener("click", () => setActionMode("delete"));
+  if(toolUndo) toolUndo.addEventListener("click", undo);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
+  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", render);
+  if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", render);
+
+  if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
+  if(btnTeacherMode) btnTeacherMode.addEventListener("click", () => setAppMode("teacher"));
+  if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
+  if(btnStartStudent) btnStartStudent.addEventListener("click", startStudentSession);
+  if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
 
   document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
   document.getElementById("btnRandom").addEventListener("click", randomExercise);
-  document.getElementById("btnUndo").addEventListener("click", undo);
+  const btnUndoMenu = document.getElementById("btnUndo");
+  if(btnUndoMenu) btnUndoMenu.addEventListener("click", undo);
   document.getElementById("btnReset").addEventListener("click", buildFromInputs);
-  document.getElementById("btnHint").addEventListener("click", hint);
+  const btnHintMenu = document.getElementById("btnHint");
+  if(btnHintMenu) btnHintMenu.addEventListener("click", hint);
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
@@ -1802,6 +2070,7 @@
   });
 
   randomExercise();
+  syncAppModeUI();
 })();
 </script>
 </body>
