@@ -310,6 +310,48 @@
     align-items:center;
   }
 
+  .stageStudentHud{
+    position:absolute;
+    top:14px;
+    left:14px;
+    z-index:5;
+    display:none;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:16px;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.12);
+    box-shadow:0 10px 24px rgba(15,23,42,.12);
+    backdrop-filter:blur(8px);
+    font-size:15px;
+    font-weight:900;
+    color:#334155;
+  }
+
+  .stageStudentHud.open{
+    display:flex;
+  }
+
+  .stageStudentHud strong{
+    color:#0f172a;
+    font-weight:950;
+  }
+
+  .stageNextBtn{
+    padding:8px 10px;
+    border-radius:12px;
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:#fff;
+    font-size:13px;
+    font-weight:950;
+    display:none;
+  }
+
+  .stageNextBtn.show{
+    display:inline-flex;
+  }
+
   .quickBtn{
     width:44px;
     height:44px;
@@ -841,6 +883,11 @@
       </div>
     </div>
 
+    <div id="coefCWrap">
+      <label>Coefficient c</label>
+      <input id="coefC" type="number" min="1" max="7" value="1" />
+    </div>
+
     <div class="grid2">
       <div>
         <label>Solution</label>
@@ -851,6 +898,8 @@
         <input id="seed" type="number" placeholder="optionnel" />
       </div>
     </div>
+
+    <div class="studentProgress" id="profEquationInfo" style="display:none"></div>
 
     <div class="btnrow">
       <button class="primary" id="btnBuild">Créer</button>
@@ -869,6 +918,10 @@
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
+    <div class="stageStudentHud" id="stageStudentHud" aria-label="Progression élève">
+      <span id="stageStudentProgress">Exercice 1 / 5 · Réussites : 0</span>
+      <button class="stageNextBtn" id="btnStageNextStudent" type="button">Suivant</button>
     </div>
     <div class="topbar">
       <div class="equationText" id="equationText"></div>
@@ -971,10 +1024,16 @@
   const btnStartStudent = document.getElementById("btnStartStudent");
   const btnNextStudent = document.getElementById("btnNextStudent");
   const studentProgressEl = document.getElementById("studentProgress");
+  const stageStudentHud = document.getElementById("stageStudentHud");
+  const stageStudentProgress = document.getElementById("stageStudentProgress");
+  const btnStageNextStudent = document.getElementById("btnStageNextStudent");
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
+  const coefCEl = document.getElementById("coefC");
+  const coefCWrap = document.getElementById("coefCWrap");
   const solXEl = document.getElementById("solX");
   const seedEl = document.getElementById("seed");
+  const profEquationInfo = document.getElementById("profEquationInfo");
 
   const dialog = document.getElementById("decomposeDialog");
   const dialogText = document.getElementById("dialogText");
@@ -1043,22 +1102,40 @@
 
   function setAppMode(mode){
     appMode = mode === "student" ? "student" : "teacher";
+    syncTeacherEquationControls();
     syncAppModeUI();
     render();
   }
 
   function updateStudentProgress(){
-    if(!studentProgressEl) return;
-    if(appMode !== "student"){
-      studentProgressEl.textContent = "";
+    const isStudent = appMode === "student";
+
+    if(stageStudentHud){
+      stageStudentHud.classList.toggle("open", isStudent && studentSession.active);
+    }
+
+    if(!isStudent){
+      if(studentProgressEl) studentProgressEl.textContent = "";
+      if(stageStudentProgress) stageStudentProgress.textContent = "";
+      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
       return;
     }
+
     if(!studentSession.active){
-      studentProgressEl.textContent = "Choisis un parcours.";
+      if(studentProgressEl) studentProgressEl.textContent = "Choisis un parcours.";
+      if(stageStudentProgress) stageStudentProgress.textContent = "";
       if(btnNextStudent) btnNextStudent.style.display = "none";
+      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
       return;
     }
-    studentProgressEl.innerHTML = `Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} · Réussites : <strong>${studentSession.solved}</strong>`;
+
+    const text = `Exercice ${studentSession.index} / ${studentSession.total} · Réussites : ${studentSession.solved}`;
+    if(studentProgressEl){
+      studentProgressEl.innerHTML = `Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} · Réussites : <strong>${studentSession.solved}</strong>`;
+    }
+    if(stageStudentProgress){
+      stageStudentProgress.textContent = text;
+    }
   }
 
   function startStudentSession(){
@@ -1082,6 +1159,7 @@
         studentProgressEl.innerHTML = `Parcours terminé · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
       }
       if(btnNextStudent) btnNextStudent.style.display = "none";
+      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
       setInstruction("Parcours terminé.");
       return;
     }
@@ -1095,6 +1173,7 @@
     randomExercise();
 
     if(btnNextStudent) btnNextStudent.style.display = "none";
+    if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
     updateStudentProgress();
   }
 
@@ -1110,8 +1189,10 @@
       }
       setInstruction("Parcours terminé.");
       if(btnNextStudent) btnNextStudent.style.display = "none";
+      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
     }else{
       if(btnNextStudent) btnNextStudent.style.display = "";
+      if(btnStageNextStudent) btnStageNextStudent.classList.add("show");
     }
   }
 
@@ -1207,6 +1288,33 @@
     return "ax + b = c";
   }
 
+  function syncTeacherEquationControls(){
+    if(!modeEl) return;
+    const isBoth = modeEl.value === "both";
+    if(coefCWrap) coefCWrap.style.display = isBoth ? "" : "none";
+    updateProfEquationInfo();
+  }
+
+  function updateProfEquationInfo(){
+    if(!profEquationInfo || !modeEl) return;
+    if(modeEl.value !== "both"){
+      profEquationInfo.style.display = "none";
+      profEquationInfo.innerHTML = "";
+      return;
+    }
+
+    const aRaw = Math.round(numberOr(coefAEl.value, 2));
+    const cRaw = Math.round(numberOr(coefCEl ? coefCEl.value : 1, 1));
+    const b = Math.max(0, Math.round(numberOr(constBEl.value, 4)));
+    const x = Math.max(1, Math.round(numberOr(solXEl.value, 12)));
+    const a = Math.max(2, aRaw);
+    const c = Math.max(1, Math.min(cRaw, a - 1));
+    const d = (a - c) * x + b;
+
+    profEquationInfo.style.display = "";
+    profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${d}</strong>`;
+  }
+
   function buildFromInputs(){
     const selectedMode = getSelectedMode();
     const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
@@ -1220,17 +1328,21 @@
     let c = a*x + b;
 
     if(selectedMode === "both"){
-      // Première version contrôlée : ax+b = cx+d, avec a > c.
+      // Mode prof guidé : on choisit a, b, c et la solution.
+      // Le logiciel calcule d pour garantir une équation positive et résoluble :
+      // ax + b = cx + d, donc d = (a-c)x + b.
       a = Math.max(2, rawA);
-      rightA = Math.max(1, Math.min(a - 1, Math.floor(a / 2)));
+      rightA = Math.max(1, Math.min(Math.round(numberOr(coefCEl ? coefCEl.value : 1, 1)), a - 1));
       b = bInput;
       d = (a - rightA) * x + b;
       c = a*x + b;
     }
 
-    coefAEl.value = rawA;
-    constBEl.value = bInput;
+    coefAEl.value = a;
+    constBEl.value = b;
+    if(coefCEl) coefCEl.value = rightA || 1;
     solXEl.value = x;
+    updateProfEquationInfo();
 
     const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
     state = {
@@ -1304,7 +1416,9 @@
 
     coefAEl.value = Math.max(2, a);
     constBEl.value = Math.max(1, b || randomInt(rng,2,18));
+    if(coefCEl) coefCEl.value = rightA || 1;
     solXEl.value = x;
+    updateProfEquationInfo();
 
     // Construction directe pour éviter qu'un mode Mélange soit tiré une deuxième fois.
     const varChar = variableChars[Math.floor(rng() * variableChars.length)];
@@ -2022,6 +2136,14 @@
   if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
   if(btnStartStudent) btnStartStudent.addEventListener("click", startStudentSession);
   if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
+  if(btnStageNextStudent) btnStageNextStudent.addEventListener("click", nextStudentExercise);
+  if(modeEl) modeEl.addEventListener("change", syncTeacherEquationControls);
+  [coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+    if(el) {
+      el.addEventListener("input", updateProfEquationInfo);
+      el.addEventListener("change", updateProfEquationInfo);
+    }
+  });
 
   document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
   document.getElementById("btnRandom").addEventListener("click", randomExercise);
@@ -2070,6 +2192,7 @@
   });
 
   randomExercise();
+  syncTeacherEquationControls();
   syncAppModeUI();
 })();
 </script>
