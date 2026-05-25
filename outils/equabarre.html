@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Équabarre — schémas en barres</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#d8dee9;
+    --blue:#3b82f6;
+    --blue-soft:#dbeafe;
+    --green:#16a34a;
+    --green-soft:#dcfce7;
+    --orange:#f97316;
+    --orange-soft:#ffedd5;
+    --red:#ef4444;
+    --shadow:0 18px 50px rgba(15,23,42,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(59,130,246,.13), transparent 34rem),
+      radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+
+  header{
+    padding:22px clamp(16px,3vw,36px) 12px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    gap:16px;
+    flex-wrap:wrap;
+    text-align:center;
+  }
+
+  .titleBlock h1{
+    margin:0;
+    font-size:clamp(30px,4vw,52px);
+    line-height:.95;
+    letter-spacing:-.06em;
+    font-weight:950;
+  }
+
+  .titleBlock .subtitle{
+    margin-top:8px;
+    color:var(--muted);
+    font-size:16px;
+    font-weight:600;
+  }
+
+  .badge{
+    display:none;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border:1px solid rgba(59,130,246,.20);
+    background:rgba(255,255,255,.72);
+    border-radius:999px;
+    color:#1d4ed8;
+    font-size:13px;
+    font-weight:800;
+    box-shadow:0 8px 24px rgba(15,23,42,.06);
+  }
+
+  main{
+    width:min(1240px, calc(100vw - 28px));
+    margin:18px auto 32px;
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+  }
+
+  @media (max-width:900px){
+    main{grid-template-columns:1fr}
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel{
+    padding:16px;
+    position:sticky;
+    top:14px;
+  }
+
+  .appTitle{
+    text-align:center;
+    font-size:34px;
+    line-height:1;
+    letter-spacing:-.055em;
+    font-weight:950;
+    margin:2px 0 16px;
+  }
+
+  .fullscreenBtn{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:42px;
+    height:42px;
+    padding:0;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    font-size:18px;
+    z-index:5;
+  }
+
+  .stage{
+    position:relative;
+  }
+
+  .stage:fullscreen{
+    background:var(--bg);
+    border-radius:0;
+    width:100vw;
+    height:100vh;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .stage:fullscreen .board{
+    flex:1;
+    min-height:0;
+  }
+
+  .stage:fullscreen .piece{
+    height:128px;
+  }
+
+  .stage:fullscreen .barLine{
+    min-height:128px;
+  }
+
+  @media (max-width:900px){
+    .panel{position:static}
+  }
+
+  label{
+    display:block;
+    margin:12px 0 5px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+
+  input,select{
+    width:100%;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:14px;
+    padding:11px 12px;
+    background:white;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:700;
+    outline:none;
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.55);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .btnrow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:11px 13px;
+    font-size:14px;
+    font-weight:900;
+    color:var(--ink);
+    background:#eef2f7;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+  }
+
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  button.primary{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:white;
+  }
+  button.green{
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:white;
+  }
+  button.orange{
+    background:linear-gradient(180deg,#fb923c,#f97316);
+    color:white;
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(15,23,42,.12);
+  }
+  button:disabled{
+    opacity:.42;
+    cursor:not-allowed;
+    transform:none;
+  }
+
+  .mini{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+    margin-top:10px;
+  }
+
+  .stage{
+    padding:16px;
+    min-height:660px;
+  }
+
+  .topbar{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:4px 4px 18px;
+    text-align:center;
+  }
+
+  .equationText{
+    display:none;
+  }
+
+  .equationHistory{
+    width:min(760px, 100%);
+    display:grid;
+    justify-content:center;
+    gap:2px;
+    color:#64748b;
+    font-size:clamp(18px, 2vw, 26px);
+    font-weight:900;
+    line-height:1.15;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .equationHistory .stepRow{
+    display:grid;
+    grid-template-columns:minmax(80px, auto) 30px minmax(80px, auto);
+    align-items:baseline;
+    column-gap:8px;
+    padding:1px 8px;
+  }
+
+  .equationHistory .lhs{
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  .equationHistory .eq{
+    text-align:center;
+    color:#94a3b8;
+    font-weight:950;
+  }
+
+  .equationHistory .rhs{
+    text-align:left;
+    white-space:nowrap;
+  }
+
+  .equationHistory .stepRow:last-child{
+    color:#0f172a;
+  }
+
+  .equationHistory .stepRow:last-child .eq{
+    color:#3b82f6;
+  }
+
+  .status{
+    display:none;
+    padding:8px 11px;
+    border-radius:999px;
+    background:#f1f5f9;
+    color:#475569;
+    font-size:13px;
+    font-weight:850;
+  }
+
+  .status.good{
+    background:var(--green-soft);
+    color:#166534;
+  }
+
+  .board{
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36));
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    padding:34px clamp(18px,4vw,58px);
+    min-height:475px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:0;
+  }
+
+  .sideRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:0;
+    align-items:center;
+  }
+
+  .sideLabel{
+    display:none;
+    color:var(--muted);
+    font-weight:950;
+    text-align:right;
+    font-size:16px;
+  }
+
+  .barLine{
+    --table-border: rgba(15,23,42,.36);
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:var(--cols, 1fr);
+    align-items:stretch;
+    justify-content:start;
+    width:var(--lineWidth, 100%);
+    min-height:104px;
+    border-radius:0;
+    position:relative;
+    gap:0;
+    background:#fff;
+    box-sizing:border-box;
+  }
+
+  /* Construction façon vrai tableau :
+     - la ligne du haut porte le contour haut + gauche + droite + trait central ;
+     - la ligne du bas porte seulement gauche + droite + bas ;
+     - pas de marge négative, donc pas de trait qui disparaît. */
+  #topLine{
+    border-top:2px solid var(--table-border);
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+
+  #bottomLine{
+    margin-top:0;
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+
+  .piece{
+    min-width:0;
+    width:100%;
+    height:104px;
+    border-radius:0;
+    border:0;
+    border-right:2px solid var(--table-border);
+    display:grid;
+    place-items:center;
+    position:relative;
+    overflow:hidden;
+    user-select:none;
+    cursor:pointer;
+    transition:background .12s ease, filter .12s ease;
+    box-sizing:border-box;
+  }
+
+  .piece:last-child{border-right:0;}
+
+  .piece:hover{
+    filter:brightness(.985);
+  }
+
+  .piece.number{
+    background:linear-gradient(180deg,#fff,#f8fafc);
+  }
+
+  .piece.x{
+    background:linear-gradient(180deg,var(--blue-soft),#eff6ff);
+  }
+
+  .piece.match{
+    background:
+      repeating-linear-gradient(135deg, rgba(249,115,22,.20) 0 8px, rgba(255,255,255,.54) 8px 15px),
+      linear-gradient(180deg,var(--orange-soft),#fff7ed);
+  }
+
+  .piece.removed{
+    opacity:.26;
+    background:
+      repeating-linear-gradient(135deg, rgba(15,23,42,.30) 0 7px, rgba(255,255,255,.1) 7px 14px),
+      #e5e7eb;
+    pointer-events:none;
+  }
+
+  .pieceContent{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:0;
+  }
+
+  .pieceValue{
+    font-size:clamp(28px,3.2vw,42px);
+    font-weight:950;
+    letter-spacing:-.04em;
+  }
+
+  .piece.x .pieceValue{
+    font-family:Georgia, 'Times New Roman', serif;
+    font-style:italic;
+    color:#1d4ed8;
+  }
+
+  .pieceKind{
+    display:none;
+  }
+
+  .equalSep{
+    display:none;
+    grid-template-columns:76px minmax(0,1fr);
+    gap:16px;
+    align-items:center;
+    margin:-7px 0;
+  }
+
+  .equalSep .eqSign{
+    text-align:right;
+    color:#94a3b8;
+    font-size:26px;
+    font-weight:950;
+  }
+
+  .equalLine{
+    height:2px;
+    background:linear-gradient(90deg,rgba(15,23,42,.18),rgba(15,23,42,.04));
+    border-radius:999px;
+  }
+
+  .actionZone{
+    margin-top:14px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    min-height:52px;
+  }
+
+  .message{
+    padding:12px 14px;
+    border-radius:16px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    color:#334155;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.35;
+  }
+
+  .message strong{font-weight:950}
+
+  .solution{
+    text-align:center;
+    font-size:clamp(30px,4vw,54px);
+    font-weight:950;
+    letter-spacing:-.05em;
+    margin-top:4px;
+    color:#166534;
+  }
+
+  dialog{
+    width:min(560px, calc(100vw - 28px));
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:24px;
+    padding:0;
+    box-shadow:0 30px 100px rgba(15,23,42,.24);
+  }
+
+  dialog::backdrop{
+    background:rgba(15,23,42,.35);
+    backdrop-filter:blur(4px);
+  }
+
+  .dialogInner{
+    padding:30px 34px 28px;
+    text-align:center;
+  }
+
+  .dialogTitle{
+    font-size:30px;
+    font-weight:950;
+    letter-spacing:-.04em;
+    margin:0 0 10px;
+    text-align:center;
+  }
+
+  .dialogText{
+    color:var(--muted);
+    font-size:18px;
+    font-weight:700;
+    line-height:1.42;
+    margin-bottom:18px;
+    text-align:center;
+  }
+
+  dialog label{
+    text-align:center;
+    margin-top:0;
+    font-size:13px;
+  }
+
+  #decomposeInput{
+    text-align:center;
+    font-size:26px;
+    font-weight:950;
+    padding:16px 14px;
+    margin-top:8px;
+  }
+
+  .presetChips{
+    display:none;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin:12px 0 16px;
+  }
+
+  .presetChips.open{
+    display:flex;
+  }
+
+  .helpMiniBtn{
+    width:38px;
+    height:38px;
+    border-radius:999px;
+    padding:0;
+    display:inline-grid;
+    place-items:center;
+    margin:12px auto 2px;
+    font-size:20px;
+    background:#eef2f7;
+    border:1px solid rgba(15,23,42,.10);
+  }
+
+  .divideBlock{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid rgba(15,23,42,.08);
+  }
+
+  .divideTitle{
+    color:var(--muted);
+    font-size:13px;
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:8px;
+  }
+
+  .divideButtons{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  dialog .btnrow{
+    justify-content:center;
+  }
+
+  .chip{
+    padding:8px 10px;
+    border-radius:999px;
+    background:#f1f5f9;
+    border:1px solid rgba(15,23,42,.08);
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  .chip:hover{background:#e2e8f0}
+
+  .footerNote{
+    display:none;
+    color:#94a3b8;
+    font-size:12px;
+    text-align:center;
+    margin-top:14px;
+    font-weight:700;
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <div class="appTitle">Équabarre</div>
+    <label>Type d’équation</label>
+    <select id="mode">
+      <option value="xpb">x + b = c</option>
+      <option value="axc">ax = c</option>
+      <option value="axb" selected>ax + b = c</option>
+      <option value="both">ax + b = cx + d</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <div class="grid2">
+      <div>
+        <label>Coefficient a</label>
+        <input id="coefA" type="number" min="2" max="8" value="2" />
+      </div>
+      <div>
+        <label>Constante b</label>
+        <input id="constB" type="number" min="1" max="40" value="4" />
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Solution x</label>
+        <input id="solX" type="number" min="2" max="20" value="12" />
+      </div>
+      <div>
+        <label>Graine</label>
+        <input id="seed" type="number" placeholder="optionnel" />
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary" id="btnBuild">Créer</button>
+      <button id="btnRandom">Aléatoire</button>
+      <button class="ghost" id="btnUndo">Annuler</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="orange" id="btnHint">Indice</button>
+      <button class="ghost" id="btnReset">Recommencer</button>
+    </div>
+
+  </section>
+
+  <section class="stage" id="stage">
+    <button class="ghost fullscreenBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    <div class="topbar">
+      <div class="equationText" id="equationText"></div>
+      <div class="equationHistory" id="equationHistory"></div>
+      <div class="status" id="status">Prêt</div>
+    </div>
+
+    <div class="board" id="board">
+      <div class="sideRow">
+        <div class="sideLabel">Haut</div>
+        <div class="barLine" id="topLine"></div>
+      </div>
+
+      <div class="equalSep">
+        <div class="eqSign">=</div>
+        <div class="equalLine"></div>
+      </div>
+
+      <div class="sideRow">
+        <div class="sideLabel">Bas</div>
+        <div class="barLine" id="bottomLine"></div>
+      </div>
+    </div>
+
+    <div class="actionZone" id="actionZone"></div>
+    <div class="solution" id="solution"></div>
+    <div class="footerNote"></div>
+  </section>
+</main>
+
+<dialog id="decomposeDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Décomposer le nombre</h2>
+    <div class="dialogText" id="dialogText"></div>
+    <label>Écris une somme</label>
+    <input id="decomposeInput" type="text" autocomplete="off" />
+    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
+    <div class="presetChips" id="presetChips"></div>
+    <div class="divideBlock" id="divideBlock">
+      <div class="divideTitle">Ou diviser en parts égales</div>
+      <div class="divideButtons" id="divideButtons"></div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyDecompose">Décomposer</button>
+      <button class="ghost" id="btnCancelDialog">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const topLine = document.getElementById("topLine");
+  const bottomLine = document.getElementById("bottomLine");
+  const actionZone = document.getElementById("actionZone");
+  const solutionEl = document.getElementById("solution");
+  const equationText = document.getElementById("equationText");
+  const equationHistory = document.getElementById("equationHistory");
+  const statusEl = document.getElementById("status");
+  const stageEl = document.getElementById("stage");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+
+  const modeEl = document.getElementById("mode");
+  const coefAEl = document.getElementById("coefA");
+  const constBEl = document.getElementById("constB");
+  const solXEl = document.getElementById("solX");
+  const seedEl = document.getElementById("seed");
+
+  const dialog = document.getElementById("decomposeDialog");
+  const dialogText = document.getElementById("dialogText");
+  const decomposeInput = document.getElementById("decomposeInput");
+  const presetChips = document.getElementById("presetChips");
+  const btnShowSuggestions = document.getElementById("btnShowSuggestions");
+  const divideBlock = document.getElementById("divideBlock");
+  const divideButtons = document.getElementById("divideButtons");
+
+  const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
+
+  let state = null;
+  let history = [];
+  let selectedPieceRef = null;
+
+  function uid(){
+    return Math.random().toString(36).slice(2, 9);
+  }
+
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function pushHistory(){
+    history.push(clone(state));
+    if(history.length > 60) history.shift();
+  }
+
+  function setStatus(text, good=false){
+    statusEl.textContent = text;
+    statusEl.className = good ? "status good" : "status";
+  }
+
+  function numberOr(value, fallback){
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function clamp(n,a,b){
+    return Math.max(a, Math.min(b,n));
+  }
+
+  function makeNumber(value){
+    return { id:uid(), type:"number", value:Number(value), removed:false };
+  }
+
+  function makeX(){
+    const v = state && state.original && state.original.varChar ? state.original.varChar : "𝑥";
+    return { id:uid(), type:"x", value:v, removed:false };
+  }
+
+  function sideExpression(side){
+    const pieces = activePieces(side);
+    const v = state.original.varChar || "𝑥";
+    const terms = [];
+    let i = 0;
+
+    while(i < pieces.length){
+      const p = pieces[i];
+      if(p.type === "x"){
+        let count = 0;
+        while(i < pieces.length && pieces[i].type === "x"){
+          count++;
+          i++;
+        }
+        terms.push(count === 1 ? v : `${count}${v}`);
+      }else{
+        terms.push(String(p.value));
+        i++;
+      }
+    }
+
+    return terms.length ? terms.join(" + ") : "0";
+  }
+
+  function currentEquationString(){
+    const solved = getSolvedValue();
+    if(solved !== null){
+      return `${state.original.varChar || "𝑥"} = ${solved}`;
+    }
+    // On écrit l'équation dans le sens algébrique : ligne du bas = ligne du haut.
+    return `${sideExpression("bottom")} = ${sideExpression("top")}`;
+  }
+
+  function recordEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+  }
+
+  function getSelectedMode(){
+    const raw = modeEl ? modeEl.value : "axb";
+    if(raw === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      return modes[Math.floor(Math.random() * modes.length)];
+    }
+    return raw;
+  }
+
+  function getModeLabel(mode){
+    if(mode === "xpb") return "x + b = c";
+    if(mode === "axc") return "ax = c";
+    if(mode === "both") return "ax + b = cx + d";
+    return "ax + b = c";
+  }
+
+  function buildFromInputs(){
+    const selectedMode = getSelectedMode();
+    const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
+    const bInput = clamp(Math.round(numberOr(constBEl.value,4)),1,40);
+    const x = clamp(Math.round(numberOr(solXEl.value,12)),2,20);
+
+    let a = selectedMode === "xpb" ? 1 : rawA;
+    let b = selectedMode === "axc" ? 0 : bInput;
+    let rightA = 0;
+    let d = 0;
+    let c = a*x + b;
+
+    if(selectedMode === "both"){
+      // Première version contrôlée : ax+b = cx+d, avec a > c.
+      a = Math.max(2, rawA);
+      rightA = Math.max(1, Math.min(a - 1, Math.floor(a / 2)));
+      b = bInput;
+      d = (a - rightA) * x + b;
+      c = a*x + b;
+    }
+
+    coefAEl.value = rawA;
+    constBEl.value = bInput;
+    solXEl.value = x;
+
+    const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
+      top:[],
+      bottom:[],
+      hintCount:0,
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
+      state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
+    }else{
+      state.top = [makeNumber(c)];
+      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
+    }
+
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    render();
+    setStatus("");
+  }
+
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function randomInt(rng,a,b){
+    return a + Math.floor(rng()*(b-a+1));
+  }
+
+  function randomExercise(){
+    const rawSeed = String(seedEl.value || "").trim();
+    const rng = rawSeed === "" ? Math.random : mulberry32(Number(rawSeed)|0);
+
+    let selectedMode = modeEl ? modeEl.value : "axb";
+    if(selectedMode === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      selectedMode = modes[randomInt(rng,0,modes.length-1)];
+    }
+
+    let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
+    const x = randomInt(rng,3,15);
+    let b = selectedMode === "axc" ? 0 : randomInt(rng,2,18);
+    let rightA = 0;
+    let d = 0;
+    let c = a*x + b;
+
+    if(selectedMode === "both"){
+      a = randomInt(rng,3,5);
+      rightA = randomInt(rng,1,a-1);
+      b = randomInt(rng,2,14);
+      d = (a - rightA) * x + b;
+      c = a*x + b;
+    }
+
+    coefAEl.value = Math.max(2, a);
+    constBEl.value = Math.max(1, b || randomInt(rng,2,18));
+    solXEl.value = x;
+
+    // Construction directe pour éviter qu'un mode Mélange soit tiré une deuxième fois.
+    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
+      top:[],
+      bottom:[],
+      hintCount:0,
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
+      state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
+    }else{
+      state.top = [makeNumber(c)];
+      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
+    }
+
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    render();
+    setStatus("");
+  }
+
+  function activePieces(side){
+    return state[side].filter(p => !p.removed);
+  }
+
+  function detectMatches(){
+    const topPieces = activePieces("top");
+    const bottomPieces = activePieces("bottom");
+    const matchedIds = new Set();
+
+    const topNums = topPieces.filter(p => p.type === "number");
+    const bottomNums = bottomPieces.filter(p => p.type === "number");
+    for(const t of topNums){
+      const b = bottomNums.find(p => p.value === t.value && !matchedIds.has(p.id));
+      if(b){
+        matchedIds.add(t.id);
+        matchedIds.add(b.id);
+      }
+    }
+
+    // Pour ax+b = cx+d : on peut aussi supprimer une même inconnue des deux côtés.
+    const topX = topPieces.filter(p => p.type === "x");
+    const bottomX = bottomPieces.filter(p => p.type === "x");
+    const pairs = Math.min(topX.length, bottomX.length);
+    for(let i=0; i<pairs; i++){
+      matchedIds.add(topX[i].id);
+      matchedIds.add(bottomX[i].id);
+    }
+
+    return matchedIds;
+  }
+
+  function canDeleteMatchingNumbers(){
+    return detectMatches().size >= 2;
+  }
+
+  function deleteMatchingNumbers(){
+    const ids = detectMatches();
+    if(ids.size < 2) return;
+    pushHistory();
+    for(const side of ["top","bottom"]){
+      for(const p of state[side]){
+        if(ids.has(p.id)) p.removed = true;
+      }
+      state[side] = state[side].filter(p => !p.removed);
+    }
+    recordEquationStep();
+    render();
+    setStatus("Même quantité supprimée des deux côtés", true);
+  }
+
+  function getShareOpportunity(){
+    const top = activePieces("top");
+    const bottom = activePieces("bottom");
+    const topNumbers = top.filter(p => p.type === "number");
+    const bottomNumbers = bottom.filter(p => p.type === "number");
+    const topX = top.filter(p => p.type === "x");
+    const bottomX = bottom.filter(p => p.type === "x");
+
+    if(topNumbers.length === 1 && topX.length === 0 && bottomNumbers.length === 0 && bottomX.length >= 2){
+      const value = topNumbers[0].value;
+      if(value % bottomX.length === 0){
+        return { numberSide:"top", xSide:"bottom", numberPiece:topNumbers[0], count:bottomX.length, result:value / bottomX.length };
+      }
+    }
+
+    if(bottomNumbers.length === 1 && bottomX.length === 0 && topNumbers.length === 0 && topX.length >= 2){
+      const value = bottomNumbers[0].value;
+      if(value % topX.length === 0){
+        return { numberSide:"bottom", xSide:"top", numberPiece:bottomNumbers[0], count:topX.length, result:value / topX.length };
+      }
+    }
+
+    return null;
+  }
+
+  function shareNumber(){
+    const opp = getShareOpportunity();
+    if(!opp) return;
+    pushHistory();
+
+    const parts = Array.from({length:opp.count}, () => makeNumber(opp.result));
+    const sideArr = state[opp.numberSide];
+    const idx = sideArr.findIndex(p => p.id === opp.numberPiece.id);
+    sideArr.splice(idx, 1, ...parts);
+    recordEquationStep();
+
+    render();
+    setStatus(`La quantité est partagée en ${opp.count} parts égales`, true);
+  }
+
+  function getSolvedValue(){
+    const top = activePieces("top");
+    const bottom = activePieces("bottom");
+    if(top.length === 0 || bottom.length === 0) return null;
+
+    const isAllNumbers = arr => arr.every(p => p.type === "number");
+    const isAllX = arr => arr.every(p => p.type === "x");
+    const allSameNumber = arr => isAllNumbers(arr) && arr.every(p => p.value === arr[0].value);
+
+    if(allSameNumber(top) && isAllX(bottom) && top.length === bottom.length){
+      return top[0].value;
+    }
+    if(allSameNumber(bottom) && isAllX(top) && top.length === bottom.length){
+      return bottom[0].value;
+    }
+    return null;
+  }
+
+  function getPieceMeasure(piece){
+    if(piece.type === "x"){
+      return Math.max(1, state.original.x);
+    }
+    return Math.max(1, Math.abs(piece.value));
+  }
+
+  function getPieceWidthPercent(piece){
+    const total = Math.max(1, state.original.c);
+    return (getPieceMeasure(piece) / total) * 100;
+  }
+
+  function renderLine(side, host, matchedIds, commonLineWidth=null){
+    host.innerHTML = "";
+    const pieces = state[side];
+    const widths = pieces.map(piece => getPieceWidthPercent(piece));
+    const naturalLineWidth = widths.reduce((sum, w) => sum + w, 0);
+    const lineWidth = commonLineWidth == null ? naturalLineWidth : commonLineWidth;
+
+    // Important :
+    // La largeur totale de la ligne diminue quand on enlève une partie.
+    // Mais les cases restantes ne doivent pas être réduites une deuxième fois.
+    // Donc on normalise les colonnes à l'intérieur de la largeur restante.
+    const safeLineWidth = Math.max(0.0001, lineWidth);
+    const cols = widths.map(w => `${(w / safeLineWidth) * 100}%`).join(" ") || "1fr";
+
+    host.style.setProperty("--cols", cols);
+    host.style.setProperty("--lineWidth", `${Math.max(0, Math.min(100, lineWidth))}%`);
+    for(const piece of pieces){
+      const el = document.createElement("div");
+      el.className = `piece ${piece.type}`;
+      if(piece.removed) el.classList.add("removed");
+      if(matchedIds.has(piece.id)) el.classList.add("match");
+
+      const value = piece.type === "x" ? (piece.value || state.original.varChar || "𝑥") : String(piece.value);
+      el.innerHTML = `
+        <div class="pieceContent">
+          <div class="pieceValue">${value}</div>
+        </div>
+      `;
+
+      el.addEventListener("click", () => {
+        if(piece.type === "number" && !piece.removed){
+          openDecomposeDialog(side, piece.id);
+        }
+      });
+
+      host.appendChild(el);
+    }
+  }
+
+  function renderActions(){
+    actionZone.innerHTML = "";
+    solutionEl.textContent = "";
+
+    const solved = getSolvedValue();
+    if(solved !== null){
+      solutionEl.textContent = `${state.original.varChar || "𝑥"} = ${solved}`;
+      setStatus("Résolution terminée", true);
+      actionZone.appendChild(message("Bravo : chaque x correspond maintenant à la même valeur."));
+      return;
+    }
+
+    if(canDeleteMatchingNumbers()){
+      const btn = document.createElement("button");
+      btn.className = "orange";
+      btn.textContent = "Supprimer des deux côtés";
+      btn.addEventListener("click", deleteMatchingNumbers);
+      actionZone.appendChild(btn);
+      actionZone.appendChild(message("Une même quantité apparaît en haut et en bas : elle est hachurée automatiquement."));
+      return;
+    }
+
+    const shareOpp = getShareOpportunity();
+    if(shareOpp){
+      const btn = document.createElement("button");
+      btn.className = "green";
+      btn.textContent = `Partager en ${shareOpp.count} parts égales`;
+      btn.addEventListener("click", shareNumber);
+      actionZone.appendChild(btn);
+      actionZone.appendChild(message(`Il reste ${shareOpp.numberPiece.value} face à ${shareOpp.count} inconnues.`));
+      return;
+    }
+
+    actionZone.appendChild(message("Clique sur un nombre pour le décomposer."));
+  }
+
+  function message(html){
+    const div = document.createElement("div");
+    div.className = "message";
+    div.innerHTML = html;
+    return div;
+  }
+
+  function splitEquation(eq){
+    const parts = String(eq).split("=");
+    if(parts.length < 2) return {lhs:String(eq), rhs:""};
+    return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
+  }
+
+  function renderEquationHistory(){
+    if(!equationHistory) return;
+    const steps = state.steps || [];
+    equationHistory.innerHTML = "";
+    const shown = steps.slice(-6);
+    shown.forEach(eq => {
+      const {lhs, rhs} = splitEquation(eq);
+      const row = document.createElement("div");
+      row.className = "stepRow";
+      row.innerHTML = `<span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span>`;
+      equationHistory.appendChild(row);
+    });
+  }
+
+  function render(){
+    if(!state) return;
+    const matchedIds = detectMatches();
+    equationText.textContent = "";
+    renderEquationHistory();
+    const topWidth = activePieces("top").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
+    const bottomWidth = activePieces("bottom").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
+    const commonWidth = Math.max(topWidth, bottomWidth);
+    renderLine("top", topLine, matchedIds, commonWidth);
+    renderLine("bottom", bottomLine, matchedIds, commonWidth);
+    renderActions();
+  }
+
+  function openDecomposeDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "number") return;
+
+    selectedPieceRef = {side,id,value:piece.value};
+    dialogText.innerHTML = `Remplace <strong>${piece.value}</strong> par une somme équivalente.`;
+    decomposeInput.value = "";
+    presetChips.innerHTML = "";
+    presetChips.classList.remove("open");
+    if(btnShowSuggestions){ btnShowSuggestions.style.display = "inline-grid"; btnShowSuggestions.textContent = "?"; }
+
+    const suggestions = buildSuggestions(piece.value);
+    for(const s of suggestions){
+      const chip = document.createElement("button");
+      chip.className = "chip";
+      chip.type = "button";
+      chip.textContent = s;
+      chip.addEventListener("click", () => {
+        decomposeInput.value = s;
+        decomposeInput.focus();
+      });
+      presetChips.appendChild(chip);
+    }
+
+    buildDivideButtons(piece.value);
+
+    dialog.showModal();
+    setTimeout(() => decomposeInput.focus(), 80);
+  }
+
+  function splitAsSum(value, parts){
+    const each = value / parts;
+    return Array.from({length:parts}, () => String(each)).join(" + ");
+  }
+
+  function buildDivideButtons(value){
+    divideButtons.innerHTML = "";
+    const divisors = [];
+    for(let k=2; k<=8; k++){
+      if(value % k === 0) divisors.push(k);
+    }
+
+    // On met en premier le partage qui correspond au nombre d'inconnues restantes,
+    // s'il existe, parce que c'est souvent l'action utile en fin de résolution.
+    const topX = activePieces("top").filter(p => p.type === "x").length;
+    const bottomX = activePieces("bottom").filter(p => p.type === "x").length;
+    const usefulK = Math.max(topX, bottomX);
+    divisors.sort((a,b) => (a === usefulK ? -1 : b === usefulK ? 1 : a-b));
+
+    for(const k of divisors.slice(0,5)){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ghost";
+      btn.textContent = `Diviser en ${k}`;
+      btn.addEventListener("click", () => {
+        decomposeInput.value = splitAsSum(value, k);
+        applyDecompose();
+      });
+      divideButtons.appendChild(btn);
+    }
+
+    divideBlock.style.display = divisors.length ? "block" : "none";
+  }
+
+  function buildSuggestions(value){
+    const b = state.original.b;
+    const a = state.original.a;
+    const x = state.original.x;
+    const suggestions = [];
+
+    // La proposition vraiment utile : faire apparaître la constante à supprimer.
+    if(b > 0 && value > b) suggestions.push(`${value-b} + ${b}`);
+
+    // Autres propositions équivalentes, mais pas forcément optimales.
+    const candidates = [];
+    for(let left=1; left<=value-1; left++){
+      const right = value - left;
+      if(left === right) candidates.push(`${left} + ${right}`);
+      if(left === 10 || right === 10) candidates.push(`${left} + ${right}`);
+      if(left === x || right === x) candidates.push(`${left} + ${right}`);
+      if(left === a || right === a) candidates.push(`${left} + ${right}`);
+    }
+
+    // Quelques découpages simples, valides, pour garantir 4 choix si possible.
+    const simpleSplits = [
+      [1, value-1],
+      [2, value-2],
+      [Math.floor(value/2), value-Math.floor(value/2)],
+      [Math.max(1, value-5), Math.min(5, value-1)],
+      [Math.max(1, value-10), Math.min(10, value-1)]
+    ];
+    for(const [u,v] of simpleSplits){
+      if(u > 0 && v > 0 && u + v === value) candidates.push(`${u} + ${v}`);
+    }
+
+    for(const c of shuffleUnique(candidates)){
+      if(!suggestions.includes(c)) suggestions.push(c);
+      if(suggestions.length >= 4) break;
+    }
+
+    return shuffle(suggestions.slice(0,4));
+  }
+
+  function shuffleUnique(arr){
+    return shuffle([...new Set(arr)]);
+  }
+
+  function shuffle(arr){
+    const out = arr.slice();
+    for(let i=out.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  function parseSum(raw){
+    const cleaned = String(raw || "").replace(/\s+/g,"");
+    if(!cleaned) return null;
+    if(!/^\d+(\+\d+)*$/.test(cleaned)) return null;
+    const parts = cleaned.split("+").map(Number);
+    if(parts.some(n => !Number.isFinite(n) || n <= 0)) return null;
+    return parts;
+  }
+
+  function applyDecompose(){
+    if(!selectedPieceRef) return;
+    const parts = parseSum(decomposeInput.value);
+    if(!parts){
+      setStatus("Décomposition invalide");
+      return;
+    }
+
+    const total = parts.reduce((a,b)=>a+b,0);
+    if(total !== selectedPieceRef.value){
+      setStatus(`Attention : la somme doit faire ${selectedPieceRef.value}`);
+      return;
+    }
+
+    const arr = state[selectedPieceRef.side];
+    const idx = arr.findIndex(p => p.id === selectedPieceRef.id);
+    if(idx < 0) return;
+
+    pushHistory();
+    arr.splice(idx, 1, ...parts.map(makeNumber));
+    recordEquationStep();
+    selectedPieceRef = null;
+    dialog.close();
+    render();
+    setStatus("Nombre décomposé", true);
+  }
+
+  function undo(){
+    if(history.length === 0){
+      setStatus("Rien à annuler");
+      return;
+    }
+    state = history.pop();
+    selectedPieceRef = null;
+    render();
+    setStatus("Étape annulée");
+  }
+
+  function hint(){
+    if(canDeleteMatchingNumbers()){
+      setStatus("Indice : tu peux supprimer les quantités hachurées des deux côtés.");
+      return;
+    }
+    const opp = getShareOpportunity();
+    if(opp){
+      setStatus(`Indice : ${opp.numberPiece.value} peut être partagé en ${opp.count} parts égales.`);
+      return;
+    }
+
+    const topNums = activePieces("top").filter(p => p.type === "number");
+    if(topNums.length === 1){
+      const target = state.original.b;
+      if(target > 0 && topNums[0].value > target){
+        setStatus(`Indice : essaie de décomposer ${topNums[0].value} pour faire apparaître ${target}.`);
+        return;
+      }
+    }
+    setStatus("Indice : cherche si tu peux décomposer le nombre, ou le diviser en parts égales.");
+  }
+
+  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
+  document.getElementById("btnRandom").addEventListener("click", randomExercise);
+  document.getElementById("btnUndo").addEventListener("click", undo);
+  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
+  document.getElementById("btnHint").addEventListener("click", hint);
+  if(btnShowSuggestions){
+    btnShowSuggestions.addEventListener("click", () => {
+      presetChips.classList.toggle("open");
+      btnShowSuggestions.textContent = presetChips.classList.contains("open") ? "×" : "?";
+    });
+  }
+  document.getElementById("btnApplyDecompose").addEventListener("click", applyDecompose);
+  document.getElementById("btnCancelDialog").addEventListener("click", () => dialog.close());
+
+  decomposeInput.addEventListener("keydown", e => {
+    if(e.key === "Enter") applyDecompose();
+    if(e.key === "Escape") dialog.close();
+  });
+
+  if(modeEl){
+    modeEl.addEventListener("change", randomExercise);
+  }
+
+  if(btnFullscreen && stageEl){
+    btnFullscreen.addEventListener("click", () => {
+      if(document.fullscreenElement){
+        document.exitFullscreen();
+      }else{
+        stageEl.requestFullscreen();
+      }
+    });
+  }
+
+  [coefAEl,constBEl,solXEl].forEach(el => {
+    el.addEventListener("change", () => {
+      el.value = String(Math.round(numberOr(el.value, Number(el.min) || 1)));
+    });
+  });
+
+  randomExercise();
+})();
+</script>
+</body>
+</html>
