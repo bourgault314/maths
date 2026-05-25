@@ -1734,14 +1734,22 @@ function scheduleAutoGenerate(){
   }, 150);
 }
 
+function refocusMainSvgFromControl(controlEl){
+  try{ if(controlEl && typeof controlEl.blur === "function") controlEl.blur(); }catch(_e){}
+  const _ms = document.getElementById("mainSvg");
+  if(_ms && typeof _ms.focus === "function"){ _ms.focus(); }
+}
+
 activityEl.addEventListener("change", ()=>{
   syncSettingsUI();
   scheduleAutoGenerate();
-  try{ activityEl.blur(); }catch(_e){}
-  const _ms = document.getElementById("mainSvg");
-  if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
+  refocusMainSvgFromControl(activityEl);
 });
 invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+[unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
+  if(!el) return;
+  el.addEventListener("change", ()=>refocusMainSvgFromControl(el));
+});
 
 [
   countEl, diffEl, seedEl,
@@ -4652,11 +4660,9 @@ window.addEventListener("keydown",(e)=>{
     return;
   }
   const _ae = document.activeElement;
-  if((_ae && _ae.id==="activity") && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
+  if((_ae && (_ae.id==="activity" || _ae.id==="unitEquationType" || _ae.id==="numberedEquationType")) && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
     e.preventDefault();
-    try{ _ae.blur(); }catch(_e){}
-    const _ms = document.getElementById("mainSvg");
-    if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
+    refocusMainSvgFromControl(_ae);
   }
   if(e.key==="ArrowLeft"){
     if(cards.length===0) return;
