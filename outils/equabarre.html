@@ -317,6 +317,24 @@
     color:#166534;
   }
 
+  .instructionZone{
+    margin:0 auto 12px;
+    width:min(820px,100%);
+    min-height:42px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:#334155;
+    font-size:15px;
+    font-weight:750;
+    line-height:1.35;
+  }
+
+  .instructionZone strong{
+    font-weight:950;
+  }
+
   .board{
     background:
       linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36));
@@ -416,6 +434,13 @@
       linear-gradient(180deg,var(--orange-soft),#fff7ed);
   }
 
+  .piece.selectedForDelete{
+    background:
+      repeating-linear-gradient(135deg, rgba(249,115,22,.22) 0 8px, rgba(255,255,255,.52) 8px 15px),
+      linear-gradient(180deg,var(--orange-soft),#fff7ed);
+    box-shadow: inset 0 0 0 3px rgba(249,115,22,.42);
+  }
+
   .piece.removed{
     opacity:.26;
     background:
@@ -470,13 +495,34 @@
   }
 
   .actionZone{
-    margin-top:14px;
+    margin-top:8px;
     display:flex;
     gap:10px;
     align-items:center;
     justify-content:center;
     flex-wrap:wrap;
     min-height:52px;
+  }
+
+  .toolBar{
+    margin:14px 0 4px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .toolBtn{
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+  }
+
+  .toolBtn.active{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+    box-shadow:0 10px 24px rgba(59,130,246,.18);
   }
 
   .message{
@@ -636,6 +682,12 @@
       <option value="mix">Mélange</option>
     </select>
 
+    <label>Après suppression</label>
+    <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
+      <option value="keep" selected>Garder hachuré</option>
+      <option value="hide">Masquer</option>
+    </select>
+
     <div class="grid2">
       <div>
         <label>Coefficient a</label>
@@ -649,7 +701,7 @@
 
     <div class="grid2">
       <div>
-        <label>Solution x</label>
+        <label>Solution</label>
         <input id="solX" type="number" min="2" max="20" value="12" />
       </div>
       <div>
@@ -679,6 +731,8 @@
       <div class="status" id="status">Prêt</div>
     </div>
 
+    <div class="instructionZone" id="instructionZone"></div>
+
     <div class="board" id="board">
       <div class="sideRow">
         <div class="sideLabel">Haut</div>
@@ -696,11 +750,29 @@
       </div>
     </div>
 
+    <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
+      <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+      <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+      <button class="toolBtn" id="toolDelete" type="button">Supprimer des deux côtés</button>
+    </div>
+
     <div class="actionZone" id="actionZone"></div>
     <div class="solution" id="solution"></div>
     <div class="footerNote"></div>
   </section>
 </main>
+
+
+<dialog id="shareDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Partager équitablement</h2>
+    <div class="dialogText" id="shareDialogText"></div>
+    <div class="presetChips" id="shareChoices"></div>
+    <div class="btnrow" style="justify-content:center">
+      <button class="ghost" id="btnCancelShareDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="decomposeDialog">
   <div class="dialogInner">
@@ -726,12 +798,17 @@
   const topLine = document.getElementById("topLine");
   const bottomLine = document.getElementById("bottomLine");
   const actionZone = document.getElementById("actionZone");
+  const instructionZone = document.getElementById("instructionZone");
   const solutionEl = document.getElementById("solution");
   const equationText = document.getElementById("equationText");
   const equationHistory = document.getElementById("equationHistory");
   const statusEl = document.getElementById("status");
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
+  const toolDecompose = document.getElementById("toolDecompose");
+  const toolShare = document.getElementById("toolShare");
+  const toolDelete = document.getElementById("toolDelete");
+  const removedDisplayModeEl = document.getElementById("removedDisplayMode");
 
   const modeEl = document.getElementById("mode");
   const coefAEl = document.getElementById("coefA");
@@ -743,6 +820,10 @@
   const dialogText = document.getElementById("dialogText");
   const decomposeInput = document.getElementById("decomposeInput");
   const presetChips = document.getElementById("presetChips");
+
+  const shareDialog = document.getElementById("shareDialog");
+  const shareDialogText = document.getElementById("shareDialogText");
+  const shareChoices = document.getElementById("shareChoices");
   const btnShowSuggestions = document.getElementById("btnShowSuggestions");
   const divideBlock = document.getElementById("divideBlock");
   const divideButtons = document.getElementById("divideButtons");
@@ -752,6 +833,31 @@
   let state = null;
   let history = [];
   let selectedPieceRef = null;
+  let selectedShareRef = null;
+  let deleteSelection = [];
+  let actionMode = "decompose"; // decompose | share | delete
+
+  function setActionMode(mode){
+    actionMode = mode;
+    deleteSelection = [];
+    [toolDecompose, toolShare, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
+    if(mode === "share" && toolShare) toolShare.classList.add("active");
+    if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
+    render();
+  }
+
+  function currentVar(){
+    return state && state.original && state.original.varChar ? state.original.varChar : "𝑥";
+  }
+
+  function shouldKeepRemovedPieces(){
+    return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide";
+  }
+
+  function currentMode(){
+    return state && state.original ? state.original.mode : "";
+  }
 
   function uid(){
     return Math.random().toString(36).slice(2, 9);
@@ -880,6 +986,8 @@
     };
 
     if(selectedMode === "both"){
+      // Convention : le bas représente ax+b, le haut représente cx+d.
+      // L'équation affichée reste donc : bas = haut.
       state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
       state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
     }else{
@@ -890,6 +998,12 @@
     recordEquationStep();
     history = [];
     selectedPieceRef = null;
+    selectedShareRef = null;
+    deleteSelection = [];
+    actionMode = "decompose";
+    if(toolDecompose) toolDecompose.classList.add("active");
+    if(toolShare) toolShare.classList.remove("active");
+    if(toolDelete) toolDelete.classList.remove("active");
     render();
     setStatus("");
   }
@@ -947,6 +1061,8 @@
     };
 
     if(selectedMode === "both"){
+      // Convention : le bas représente ax+b, le haut représente cx+d.
+      // L'équation affichée reste donc : bas = haut.
       state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
       state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
     }else{
@@ -957,6 +1073,12 @@
     recordEquationStep();
     history = [];
     selectedPieceRef = null;
+    selectedShareRef = null;
+    deleteSelection = [];
+    actionMode = "decompose";
+    if(toolDecompose) toolDecompose.classList.add("active");
+    if(toolShare) toolShare.classList.remove("active");
+    if(toolDelete) toolDelete.classList.remove("active");
     render();
     setStatus("");
   }
@@ -965,47 +1087,115 @@
     return state[side].filter(p => !p.removed);
   }
 
-  function detectMatches(){
-    const topPieces = activePieces("top");
-    const bottomPieces = activePieces("bottom");
-    const matchedIds = new Set();
+  function getPieceBySideAndId(ref){
+    if(!ref || !state || !state[ref.side]) return null;
+    return state[ref.side].find(p => p.id === ref.id) || null;
+  }
 
-    const topNums = topPieces.filter(p => p.type === "number");
-    const bottomNums = bottomPieces.filter(p => p.type === "number");
-    for(const t of topNums){
-      const b = bottomNums.find(p => p.value === t.value && !matchedIds.has(p.id));
-      if(b){
-        matchedIds.add(t.id);
-        matchedIds.add(b.id);
+  function selectedDeleteIds(){
+    return new Set(deleteSelection.map(ref => ref.id));
+  }
+
+  function selectedDeletePiecesBySide(){
+    const top = [];
+    const bottom = [];
+    for(const ref of deleteSelection){
+      const p = getPieceBySideAndId(ref);
+      if(!p || p.removed) continue;
+      if(ref.side === "top") top.push(p);
+      if(ref.side === "bottom") bottom.push(p);
+    }
+    return {top, bottom};
+  }
+
+  function deletionGroupInfo(){
+    const {top, bottom} = selectedDeletePiecesBySide();
+    if(top.length === 0 || bottom.length === 0){
+      return {ok:false, reason:"needBoth", top, bottom};
+    }
+
+    const all = top.concat(bottom);
+    const firstType = all[0].type;
+
+    if(all.some(p => p.type !== firstType)){
+      return {ok:false, reason:"mixedTypes", top, bottom};
+    }
+
+    if(firstType === "x"){
+      if(top.length !== bottom.length){
+        return {ok:false, reason:"differentCounts", top, bottom};
       }
+      return {
+        ok:true,
+        type:"x",
+        count:top.length,
+        label: top.length === 1 ? currentVar() : `${top.length}${currentVar()}`,
+        top,
+        bottom
+      };
     }
 
-    // Pour ax+b = cx+d : on peut aussi supprimer une même inconnue des deux côtés.
-    const topX = topPieces.filter(p => p.type === "x");
-    const bottomX = bottomPieces.filter(p => p.type === "x");
-    const pairs = Math.min(topX.length, bottomX.length);
-    for(let i=0; i<pairs; i++){
-      matchedIds.add(topX[i].id);
-      matchedIds.add(bottomX[i].id);
+    if(firstType === "number"){
+      const topSum = top.reduce((s,p)=>s + Number(p.value || 0), 0);
+      const bottomSum = bottom.reduce((s,p)=>s + Number(p.value || 0), 0);
+      if(topSum !== bottomSum){
+        return {ok:false, reason:"differentSums", top, bottom, topSum, bottomSum};
+      }
+      return {
+        ok:true,
+        type:"number",
+        count:top.length + bottom.length,
+        value:topSum,
+        label:String(topSum),
+        top,
+        bottom
+      };
     }
 
-    return matchedIds;
+    return {ok:false, reason:"unknown", top, bottom};
   }
 
   function canDeleteMatchingNumbers(){
-    return detectMatches().size >= 2;
+    return deletionGroupInfo().ok;
+  }
+
+  function selectForDeletion(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+
+    const alreadyIndex = deleteSelection.findIndex(ref => ref.side === side && ref.id === id);
+    if(alreadyIndex >= 0){
+      deleteSelection.splice(alreadyIndex, 1);
+      render();
+      return;
+    }
+
+    // Suppression groupée :
+    // on autorise plusieurs cases, mais on évite les mélanges inutilisables.
+    const currentPieces = deleteSelection.map(getPieceBySideAndId).filter(Boolean);
+    if(currentPieces.length){
+      const firstType = currentPieces[0].type;
+      if(piece.type !== firstType){
+        deleteSelection = [];
+      }
+    }
+
+    deleteSelection.push({side, id});
+    render();
   }
 
   function deleteMatchingNumbers(){
-    const ids = detectMatches();
-    if(ids.size < 2) return;
+    const info = deletionGroupInfo();
+    if(!info.ok) return;
+
     pushHistory();
+    const ids = selectedDeleteIds();
     for(const side of ["top","bottom"]){
       for(const p of state[side]){
         if(ids.has(p.id)) p.removed = true;
       }
-      state[side] = state[side].filter(p => !p.removed);
     }
+    deleteSelection = [];
     recordEquationStep();
     render();
     setStatus("Même quantité supprimée des deux côtés", true);
@@ -1081,9 +1271,9 @@
     return (getPieceMeasure(piece) / total) * 100;
   }
 
-  function renderLine(side, host, matchedIds, commonLineWidth=null){
+  function renderLine(side, host, selectedIds, commonLineWidth=null){
     host.innerHTML = "";
-    const pieces = state[side];
+    const pieces = shouldKeepRemovedPieces() ? state[side] : state[side].filter(p => !p.removed);
     const widths = pieces.map(piece => getPieceWidthPercent(piece));
     const naturalLineWidth = widths.reduce((sum, w) => sum + w, 0);
     const lineWidth = commonLineWidth == null ? naturalLineWidth : commonLineWidth;
@@ -1097,11 +1287,12 @@
 
     host.style.setProperty("--cols", cols);
     host.style.setProperty("--lineWidth", `${Math.max(0, Math.min(100, lineWidth))}%`);
+    selectedIds = selectedIds || new Set();
     for(const piece of pieces){
       const el = document.createElement("div");
       el.className = `piece ${piece.type}`;
       if(piece.removed) el.classList.add("removed");
-      if(matchedIds.has(piece.id)) el.classList.add("match");
+      if(selectedIds.has(piece.id)) el.classList.add("selectedForDelete");
 
       const value = piece.type === "x" ? (piece.value || state.original.varChar || "𝑥") : String(piece.value);
       el.innerHTML = `
@@ -1111,8 +1302,29 @@
       `;
 
       el.addEventListener("click", () => {
-        if(piece.type === "number" && !piece.removed){
-          openDecomposeDialog(side, piece.id);
+        if(piece.removed) return;
+
+        if(actionMode === "decompose"){
+          if(piece.type === "number"){
+            openDecomposeDialog(side, piece.id);
+          }else{
+            setStatus(`En mode Décomposer, clique sur un nombre.`);
+          }
+          return;
+        }
+
+        if(actionMode === "share"){
+          if(piece.type !== "number"){
+            setStatus(`En mode Partager, clique sur un nombre à couper en parts égales.`);
+            return;
+          }
+          openShareDialog(side, piece.id);
+          return;
+        }
+
+        if(actionMode === "delete"){
+          selectForDeletion(side, piece.id);
+          return;
         }
       });
 
@@ -1120,40 +1332,106 @@
     }
   }
 
+  function setInstruction(htmlText){
+    if(!instructionZone) return;
+    instructionZone.innerHTML = htmlText || "";
+  }
+
   function renderActions(){
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
+    const v = currentVar();
 
     const solved = getSolvedValue();
     if(solved !== null){
-      solutionEl.textContent = `${state.original.varChar || "𝑥"} = ${solved}`;
+      solutionEl.textContent = `${v} = ${solved}`;
       setStatus("Résolution terminée", true);
-      actionZone.appendChild(message("Bravo : chaque x correspond maintenant à la même valeur."));
+      setInstruction(`Bravo : chaque&nbsp;<strong>${v}</strong>&nbsp;correspond maintenant à la même valeur.`);
+      actionZone.innerHTML = "";
       return;
     }
 
-    if(canDeleteMatchingNumbers()){
-      const btn = document.createElement("button");
-      btn.className = "orange";
-      btn.textContent = "Supprimer des deux côtés";
-      btn.addEventListener("click", deleteMatchingNumbers);
-      actionZone.appendChild(btn);
-      actionZone.appendChild(message("Une même quantité apparaît en haut et en bas : elle est hachurée automatiquement."));
+    if(actionMode === "decompose"){
+      setInstruction("Clique sur un nombre du tableau pour le décomposer en somme.");
+      actionZone.innerHTML = "";
       return;
     }
 
-    const shareOpp = getShareOpportunity();
-    if(shareOpp){
-      const btn = document.createElement("button");
-      btn.className = "green";
-      btn.textContent = `Partager en ${shareOpp.count} parts égales`;
-      btn.addEventListener("click", shareNumber);
-      actionZone.appendChild(btn);
-      actionZone.appendChild(message(`Il reste ${shareOpp.numberPiece.value} face à ${shareOpp.count} inconnues.`));
+    if(actionMode === "share"){
+      const suggested = getShareOpportunity();
+      if(suggested){
+        setInstruction(`Clique sur&nbsp;<strong>${suggested.numberPiece.value}</strong>&nbsp;pour le partager en&nbsp;<strong>${suggested.count}</strong>&nbsp;parts égales.`);
+      }else{
+        setInstruction("Clique sur un nombre, puis choisis en combien de parts égales le couper.");
+      }
+      actionZone.innerHTML = "";
       return;
     }
 
-    actionZone.appendChild(message("Clique sur un nombre pour le décomposer."));
+    if(actionMode === "delete"){
+      const info = deletionGroupInfo();
+      const {top, bottom} = selectedDeletePiecesBySide();
+
+      if(top.length === 0 && bottom.length === 0){
+        if(currentMode() === "both"){
+          setInstruction(`Sélectionne une même quantité en haut et en bas. Tu peux sélectionner plusieurs lettres&nbsp;<strong>${v}</strong>&nbsp;de chaque côté.`);
+        }else{
+          setInstruction("Sélectionne une quantité en haut et la même quantité en bas.");
+        }
+        return;
+      }
+
+      if(top.length === 0 || bottom.length === 0){
+        const sideName = top.length ? "haut" : "bas";
+        setInstruction(`Tu as sélectionné une quantité en ${sideName}. Sélectionne maintenant la même quantité de l’autre côté.`);
+        const btn = document.createElement("button");
+        btn.className = "ghost";
+        btn.textContent = "Effacer la sélection";
+        btn.addEventListener("click", () => {
+          deleteSelection = [];
+          render();
+        });
+        actionZone.appendChild(btn);
+        return;
+      }
+
+      if(info.ok){
+        setInstruction(`Les deux côtés sélectionnés représentent&nbsp;<strong>${info.label}</strong>&nbsp;: tu peux les supprimer d’un coup.`);
+        const btn = document.createElement("button");
+        btn.className = "orange";
+        btn.textContent = "Valider la suppression";
+        btn.addEventListener("click", deleteMatchingNumbers);
+        actionZone.appendChild(btn);
+
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => {
+          deleteSelection = [];
+          render();
+        });
+        actionZone.appendChild(clear);
+      }else{
+        let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
+        if(info.reason === "differentCounts"){
+          reason = `Tu as sélectionné ${top.length} lettre(s) en haut et ${bottom.length} en bas : il faut le même nombre de chaque côté.`;
+        }else if(info.reason === "differentSums"){
+          reason = `Les nombres sélectionnés ne font pas la même somme : ${info.topSum} en haut et ${info.bottomSum} en bas.`;
+        }else if(info.reason === "mixedTypes"){
+          reason = "Ne mélange pas lettres et nombres dans la même suppression.";
+        }
+        setInstruction(reason);
+        const btn = document.createElement("button");
+        btn.className = "ghost";
+        btn.textContent = "Effacer la sélection";
+        btn.addEventListener("click", () => {
+          deleteSelection = [];
+          render();
+        });
+        actionZone.appendChild(btn);
+      }
+      return;
+    }
   }
 
   function message(html){
@@ -1185,15 +1463,106 @@
 
   function render(){
     if(!state) return;
-    const matchedIds = detectMatches();
+    const selectedIds = selectedDeleteIds();
     equationText.textContent = "";
     renderEquationHistory();
-    const topWidth = activePieces("top").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
-    const bottomWidth = activePieces("bottom").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
+    const widthPieces = side => shouldKeepRemovedPieces() ? state[side] : activePieces(side);
+    const topWidth = widthPieces("top").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
+    const bottomWidth = widthPieces("bottom").reduce((sum,p)=>sum + getPieceWidthPercent(p), 0);
     const commonWidth = Math.max(topWidth, bottomWidth);
-    renderLine("top", topLine, matchedIds, commonWidth);
-    renderLine("bottom", bottomLine, matchedIds, commonWidth);
+    renderLine("top", topLine, selectedIds, commonWidth);
+    renderLine("bottom", bottomLine, selectedIds, commonWidth);
     renderActions();
+  }
+
+  function getOppositeSide(side){
+    return side === "top" ? "bottom" : "top";
+  }
+
+  function countActiveX(side){
+    return activePieces(side).filter(p => p.type === "x").length;
+  }
+
+  function shuffleArray(arr){
+    for(let i=arr.length-1; i>0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function getPossibleShareCounts(value, side){
+    const maxParts = 12;
+    const out = [];
+
+    // Choix pédagogique prioritaire : si le nombre est en face de 5 lettres,
+    // on propose d'abord 5 parts, car c'est l'action attendue.
+    const oppositeX = countActiveX(getOppositeSide(side));
+    if(oppositeX >= 2 && oppositeX <= maxParts && value % oppositeX === 0){
+      out.push(oppositeX);
+    }
+
+    // Puis on ajoute les autres diviseurs raisonnables.
+    for(let n=2; n<=maxParts; n++){
+      if(value % n === 0 && !out.includes(n)){
+        out.push(n);
+      }
+    }
+    return out;
+  }
+
+  function openShareDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "number" || piece.removed) return;
+
+    const choices = shuffleArray(getPossibleShareCounts(piece.value, side));
+    selectedShareRef = {side, id, value:piece.value};
+
+    if(shareDialogText){
+      shareDialogText.innerHTML = `Tu vas partager&nbsp;<strong>${piece.value}</strong>&nbsp;en parts égales.`;
+    }
+    if(shareChoices){
+      shareChoices.innerHTML = "";
+      shareChoices.classList.add("open");
+      if(choices.length === 0){
+        const div = document.createElement("div");
+        div.className = "message";
+        div.textContent = "Aucun partage entier n’est possible pour ce nombre.";
+        shareChoices.appendChild(div);
+      }else{
+        for(const n of choices){
+          const chip = document.createElement("button");
+          chip.className = "chip";
+          chip.type = "button";
+          chip.textContent = `${n} parts de ${piece.value / n}`;
+          chip.addEventListener("click", () => applyShareChoice(n));
+          shareChoices.appendChild(chip);
+        }
+      }
+    }
+    if(shareDialog) shareDialog.showModal();
+  }
+
+  function applyShareChoice(count){
+    if(!selectedShareRef) return;
+    const arr = state[selectedShareRef.side];
+    const idx = arr.findIndex(p => p.id === selectedShareRef.id);
+    if(idx < 0) return;
+
+    const value = selectedShareRef.value;
+    if(value % count !== 0){
+      setStatus("Ce partage ne donne pas des parts entières.");
+      return;
+    }
+
+    pushHistory();
+    const part = value / count;
+    arr.splice(idx, 1, ...Array.from({length:count}, () => makeNumber(part)));
+    selectedShareRef = null;
+    if(shareDialog) shareDialog.close();
+    recordEquationStep();
+    render();
+    setStatus("Nombre partagé en parts égales", true);
   }
 
   function openDecomposeDialog(side, id){
@@ -1220,7 +1589,7 @@
       presetChips.appendChild(chip);
     }
 
-    buildDivideButtons(piece.value);
+    if(divideBlock) divideBlock.style.display = "none";
 
     dialog.showModal();
     setTimeout(() => decomposeInput.focus(), 80);
@@ -1355,6 +1724,8 @@
     }
     state = history.pop();
     selectedPieceRef = null;
+    selectedShareRef = null;
+    deleteSelection = [];
     render();
     setStatus("Étape annulée");
   }
@@ -1381,6 +1752,11 @@
     setStatus("Indice : cherche si tu peux décomposer le nombre, ou le diviser en parts égales.");
   }
 
+  if(toolDecompose) toolDecompose.addEventListener("click", () => setActionMode("decompose"));
+  if(toolShare) toolShare.addEventListener("click", () => setActionMode("share"));
+  if(toolDelete) toolDelete.addEventListener("click", () => setActionMode("delete"));
+  if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
+
   document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
   document.getElementById("btnRandom").addEventListener("click", randomExercise);
   document.getElementById("btnUndo").addEventListener("click", undo);
@@ -1394,6 +1770,11 @@
   }
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecompose);
   document.getElementById("btnCancelDialog").addEventListener("click", () => dialog.close());
+  const btnCancelShareDialog = document.getElementById("btnCancelShareDialog");
+  if(btnCancelShareDialog) btnCancelShareDialog.addEventListener("click", () => {
+    selectedShareRef = null;
+    if(shareDialog) shareDialog.close();
+  });
 
   decomposeInput.addEventListener("keydown", e => {
     if(e.key === "Enter") applyDecompose();
