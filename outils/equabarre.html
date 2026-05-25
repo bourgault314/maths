@@ -83,7 +83,45 @@
     align-items:start;
   }
 
-  @media (max-width:900px){
+  
+  /* PATCH 34 — historique d'équations : vrais alignements communs */
+  .equationHistory{
+    width:min(880px,100%);
+    margin:8px auto 0;
+    font-size:clamp(24px,2.6vw,38px);
+    font-weight:950;
+    line-height:1.18;
+    display:grid;
+    grid-template-columns:max-content 1.5ch max-content;
+    column-gap:14px;
+    justify-content:center;
+    align-items:baseline;
+  }
+
+  .stepRow{
+    display:contents;
+  }
+
+  .lhs{
+    grid-column:1;
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  .eq{
+    grid-column:2;
+    text-align:center;
+    color:#64748b;
+    white-space:nowrap;
+  }
+
+  .rhs{
+    grid-column:3;
+    text-align:left;
+    white-space:nowrap;
+  }
+
+@media (max-width:900px){
     main{grid-template-columns:1fr}
   }
 
@@ -553,6 +591,32 @@
     color:#3b82f6;
   }
 
+
+  .equationHistory{
+    width:min(980px,100%);
+    margin:6px auto 0;
+    font-size:clamp(30px,3.2vw,46px);
+    font-weight:950;
+    line-height:1.18;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .stepRow{
+    display:grid;
+    grid-template-columns: var(--eqLeftW, 12ch) 1.4ch var(--eqRightW, 12ch);
+    column-gap:16px;
+    align-items:baseline;
+    justify-content:center;
+    width:max-content;
+    max-width:100%;
+  }
+
+  .lhs{text-align:right;white-space:nowrap}
+  .eq{text-align:center;color:#64748b;white-space:nowrap}
+  .rhs{text-align:left;white-space:nowrap}
+
   .status{
     display:none;
     padding:8px 11px;
@@ -928,6 +992,61 @@
     margin-top:14px;
     font-weight:700;
   }
+
+  /* PATCH 35 — historique d'équations en vrai tableau */
+  .equationHistory{
+    width:min(900px,100%);
+    margin:8px auto 0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .equationTable{
+    border-collapse:collapse;
+    margin:0 auto;
+    font-size:clamp(24px,2.55vw,38px);
+    font-weight:950;
+    line-height:1.18;
+  }
+
+  .equationTable td{
+    padding:0 8px;
+    white-space:nowrap;
+    vertical-align:baseline;
+  }
+
+  .equationTable .lhs{
+    text-align:right;
+  }
+
+  .equationTable .eq{
+    text-align:center;
+    color:#64748b;
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .equationTable .rhs{
+    text-align:left;
+  }
+
+
+  /* PATCH 36 — hiérarchie visuelle dans l'historique */
+  .equationTable tr.historyStep{
+    color:#64748b;
+    opacity:.86;
+  }
+
+  .equationTable tr.currentStep{
+    color:#0f172a;
+    opacity:1;
+  }
+
+  .equationTable tr.currentStep .eq{
+    color:#3b82f6;
+  }
+
 </style>
 </head>
 <body>
@@ -1936,7 +2055,7 @@
     if(actionMode === "share"){
       const suggested = getShareOpportunity();
       if(suggested){
-        setInstruction(`Partage&nbsp;<strong>${suggested.numberPiece.value}</strong>&nbsp;en&nbsp;<strong>${suggested.count}</strong>&nbsp;parts.`);
+        setInstruction(`Partage&nbsp;<strong>${suggested.numberPiece.value}</strong>&nbsp;en parts égales.`);
       }else{
         setInstruction("Partage un nombre en parts égales.");
       }
@@ -2026,15 +2145,20 @@
   function renderEquationHistory(){
     if(!equationHistory) return;
     const steps = state.steps || [];
-    equationHistory.innerHTML = "";
     const shown = steps.slice(-6);
-    shown.forEach(eq => {
+
+    if(!shown.length){
+      equationHistory.innerHTML = "";
+      return;
+    }
+
+    const rows = shown.map((eq, i) => {
       const {lhs, rhs} = splitEquation(eq);
-      const row = document.createElement("div");
-      row.className = "stepRow";
-      row.innerHTML = `<span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span>`;
-      equationHistory.appendChild(row);
-    });
+      const cls = i === shown.length - 1 ? "currentStep" : "historyStep";
+      return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
+    }).join("");
+
+    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
   }
 
   function render(){
