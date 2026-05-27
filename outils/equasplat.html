@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ÉquaSplat 0.2 — équations sur plateaux</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#d8dee9;
+    --blue:#3b82f6;
+    --blue-soft:#dbeafe;
+    --green:#16a34a;
+    --green-soft:#dcfce7;
+    --orange:#f97316;
+    --orange-soft:#ffedd5;
+    --red:#ef4444;
+    --shadow:0 18px 50px rgba(15,23,42,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(59,130,246,.13), transparent 34rem),
+      radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+
+  main{
+    width:min(1240px, calc(100vw - 28px));
+    margin:18px auto 32px;
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+  }
+
+  @media (max-width:900px){
+    main{grid-template-columns:1fr}
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel{
+    padding:16px;
+    position:sticky;
+    top:14px;
+  }
+
+  @media (max-width:900px){
+    .panel{position:static}
+  }
+
+  .appTitle{
+    text-align:center;
+    font-size:34px;
+    line-height:1;
+    letter-spacing:-.055em;
+    font-weight:950;
+    margin:2px 0 16px;
+  }
+
+  label{
+    display:block;
+    margin:12px 0 5px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+
+  label .mathLetter{
+    text-transform:none;
+    font-style:italic;
+    letter-spacing:0;
+  }
+
+  input,select{
+    width:100%;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:14px;
+    padding:11px 12px;
+    background:white;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:700;
+    outline:none;
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.55);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+
+  .btnrow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:11px 13px;
+    font-size:14px;
+    font-weight:900;
+    color:var(--ink);
+    background:#eef2f7;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+  }
+
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  button.primary{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:white;
+  }
+  button.green{
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:white;
+  }
+  button.orange{
+    background:linear-gradient(180deg,#fb923c,#f97316);
+    color:white;
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(15,23,42,.12);
+  }
+  button:disabled{
+    opacity:.42;
+    cursor:not-allowed;
+    transform:none;
+  }
+
+  .infoBox{
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    color:#334155;
+    font-size:14px;
+    font-weight:850;
+    text-align:center;
+  }
+
+  .infoBox strong{font-weight:950;color:#0f172a}
+
+  .mini{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+    margin-top:10px;
+  }
+
+  .stage{
+    padding:16px;
+    min-height:660px;
+    position:relative;
+  }
+
+  .stage:fullscreen{
+    background:var(--bg);
+    border-radius:0;
+    width:100vw;
+    height:100vh;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .stage:fullscreen .board{
+    flex:1;
+    min-height:0;
+  }
+
+  .stageQuickActions{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .quickBtn{
+    width:44px;
+    height:44px;
+    padding:0;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:22px;
+    line-height:1;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    backdrop-filter:blur(8px);
+  }
+
+  .quickBtn:hover{background:#eef2f7}
+
+  .diceBtn{
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+    font-style:normal;
+    transform:none;
+  }
+
+  .topbar{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:4px 64px 16px 4px;
+    text-align:center;
+  }
+
+  .equationHistory{
+    width:min(900px,100%);
+    margin:8px auto 0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .equationTable{
+    border-collapse:collapse;
+    margin:0 auto;
+    font-size:clamp(24px,2.55vw,38px);
+    font-weight:950;
+    line-height:1.18;
+  }
+
+  .equationTable td{
+    padding:0 8px;
+    white-space:nowrap;
+    vertical-align:baseline;
+  }
+
+  .equationTable .lhs{text-align:right}
+  .equationTable .eq{
+    text-align:center;
+    color:#64748b;
+    padding-left:14px;
+    padding-right:14px;
+  }
+  .equationTable .rhs{text-align:left}
+  .equationTable tr.historyStep{color:#64748b;opacity:.86}
+  .equationTable tr.currentStep{color:#0f172a;opacity:1}
+  .equationTable tr.currentStep .eq{color:#3b82f6}
+
+  .instructionZone{
+    margin:0 auto 12px;
+    width:min(880px,100%);
+    min-height:46px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:#334155;
+    font-size:18px;
+    font-weight:800;
+    line-height:1.35;
+  }
+
+  .instructionZone strong{font-weight:950}
+
+  .board{
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36));
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    padding:10px;
+    min-height:475px;
+    display:grid;
+    place-items:center;
+  }
+
+  #splatSvg{
+    width:100%;
+    height:100%;
+    min-height:475px;
+    display:block;
+  }
+
+  .tray{
+    fill:rgba(255,255,255,.74);
+    stroke:rgba(15,23,42,.20);
+    stroke-width:3;
+  }
+
+  .trayTitle{
+    font-size:24px;
+    fill:#64748b;
+    font-weight:950;
+    text-anchor:middle;
+  }
+
+  .eqMiddle{
+    font-size:70px;
+    fill:#94a3b8;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+
+  .tokenHitArea{
+    pointer-events:all;
+    cursor:grab;
+  }
+
+  .tokenCircle{
+    fill:#eff6ff;
+    stroke:#3b82f6;
+    stroke-width:3;
+    cursor:grab;
+  }
+
+  .tokenDragGroup{
+    cursor:grab;
+    touch-action:none;
+  }
+
+  .tokenDragGroup.dragging{
+    cursor:grabbing;
+  }
+
+  .tokenText{
+    fill:#0f172a;
+    font-size:30px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+
+  .splatShape{
+    fill:#111827;
+    stroke:rgba(0,0,0,.22);
+    stroke-width:3;
+    cursor:pointer;
+  }
+
+  .splatText{
+    fill:#ffffff;
+    font-size:34px;
+    font-weight:950;
+    font-family:Georgia,'Times New Roman',serif;
+    font-style:italic;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+
+  .selectedOutline{
+    fill:none;
+    stroke:#f97316;
+    stroke-width:7;
+    opacity:.85;
+    pointer-events:none;
+  }
+
+  .removedGroup{opacity:.28}
+  .removedOverlay{
+    fill:url(#hatch);
+    stroke:rgba(15,23,42,.45);
+    stroke-width:2;
+    pointer-events:none;
+  }
+
+  .actionZone{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    min-height:52px;
+  }
+
+  .toolBar{
+    margin:14px 0 4px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .toolBtn{
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+    font-size:16px;
+    padding:14px 18px;
+    border-radius:17px;
+  }
+
+  .toolBtn.active{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+    box-shadow:0 10px 24px rgba(59,130,246,.18);
+  }
+
+  .undoToolBtn{
+    background:#fff7ed;
+    border-color:rgba(249,115,22,.28);
+    color:#9a3412;
+  }
+
+  .solution{
+    text-align:center;
+    font-size:clamp(32px,4vw,56px);
+    font-weight:950;
+    letter-spacing:-.05em;
+    margin-top:-4px;
+    color:#166534;
+    min-height:64px;
+  }
+
+  dialog{
+    width:min(620px, calc(100vw - 28px));
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:24px;
+    padding:0;
+    box-shadow:0 30px 100px rgba(15,23,42,.24);
+  }
+
+  dialog::backdrop{
+    background:rgba(15,23,42,.35);
+    backdrop-filter:blur(4px);
+  }
+
+  .dialogInner{
+    padding:32px 36px 30px;
+    text-align:center;
+  }
+
+  .dialogTitle{
+    font-size:34px;
+    font-weight:950;
+    letter-spacing:-.04em;
+    margin:0 0 12px;
+    text-align:center;
+  }
+
+  .dialogText{
+    color:var(--muted);
+    font-size:21px;
+    font-weight:750;
+    line-height:1.42;
+    margin-bottom:18px;
+    text-align:center;
+  }
+
+  dialog label{
+    text-align:center;
+    margin-top:0;
+    font-size:13px;
+  }
+
+  #decomposeInput{
+    text-align:center;
+    font-size:28px;
+    font-weight:950;
+    padding:17px 14px;
+    margin-top:8px;
+  }
+
+  .presetChips{
+    display:none;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+    margin:14px 0 18px;
+  }
+
+  .presetChips.open{display:flex}
+
+  .chip{
+    padding:13px 17px;
+    min-height:48px;
+    border-radius:999px;
+    background:#f1f5f9;
+    border:1px solid rgba(15,23,42,.08);
+    font-size:18px;
+    font-weight:950;
+    cursor:pointer;
+  }
+
+  .chip:hover{background:#e2e8f0}
+
+  .helpMiniBtn{
+    width:48px;
+    height:48px;
+    border-radius:999px;
+    padding:0;
+    display:inline-grid;
+    place-items:center;
+    margin:14px auto 2px;
+    font-size:25px;
+    background:#eef2f7;
+    border:1px solid rgba(15,23,42,.10);
+  }
+
+  dialog .btnrow{justify-content:center}
+
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <div class="appTitle">ÉquaSplat</div>
+
+    <label>Type d’équation</label>
+    <select id="mode">
+      <option value="xpb">x + b = c</option>
+      <option value="axc">ax = c</option>
+      <option value="axb" selected>ax + b = c</option>
+      <option value="both">ax + b = cx + d</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label>Affichage de l’inconnue</label>
+    <select id="unknownDisplayMode" title="Affichage des inconnues sur les taches">
+      <option value="letter" selected>Lettre</option>
+      <option value="question">Point d’interrogation</option>
+    </select>
+
+    <label>Après suppression</label>
+    <select id="removedDisplayMode" title="Affichage des éléments supprimés">
+      <option value="keep" selected>Garder hachuré</option>
+      <option value="hide">Masquer</option>
+    </select>
+
+    <div class="grid3" id="abcGrid">
+      <div id="coefAWrap">
+        <label>Coefficient <span class="mathLetter">a</span></label>
+        <input id="coefA" type="number" min="2" max="8" value="2" />
+      </div>
+      <div id="constBWrap">
+        <label>Constante <span class="mathLetter">b</span></label>
+        <input id="constB" type="number" min="1" max="40" value="4" />
+      </div>
+      <div id="coefCWrap">
+        <label>Coefficient <span class="mathLetter">c</span></label>
+        <input id="coefC" type="number" min="1" max="7" value="1" />
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Solution</label>
+        <input id="solX" type="number" min="2" max="20" value="12" />
+      </div>
+      <div>
+        <label>Graine</label>
+        <input id="seed" type="number" placeholder="optionnel" />
+      </div>
+    </div>
+
+    <div class="infoBox" id="profEquationInfo"></div>
+
+    <div class="btnrow">
+      <button class="primary" id="btnBuild" type="button">Créer</button>
+      <button id="btnRandom" type="button">Aléatoire</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="ghost" id="btnReset" type="button">Recommencer</button>
+    </div>
+
+    <div class="mini">
+      Version 0.2 : aides de décomposition intelligentes et déplacement libre simple des jetons numériques dans leur plateau.
+    </div>
+  </section>
+
+  <section class="stage" id="stage">
+    <div class="stageQuickActions" aria-label="Actions rapides">
+      <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
+      <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
+
+    <div class="topbar">
+      <div class="equationHistory" id="equationHistory"></div>
+    </div>
+
+    <div class="instructionZone" id="instructionZone"></div>
+
+    <div class="board" id="board">
+      <svg id="splatSvg" viewBox="0 0 1600 820" aria-label="ÉquaSplat"></svg>
+    </div>
+
+    <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
+      <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+      <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+      <button class="toolBtn" id="toolDelete" type="button">Supprimer dans chaque membre</button>
+      <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+    </div>
+
+    <div class="actionZone" id="actionZone"></div>
+    <div class="solution" id="solution"></div>
+  </section>
+</main>
+
+<dialog id="decomposeDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Décomposer le jeton</h2>
+    <div class="dialogText" id="dialogText"></div>
+    <label>Écris une somme</label>
+    <input id="decomposeInput" type="text" autocomplete="off" />
+    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
+    <div class="presetChips" id="presetChips"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyDecompose" type="button">Décomposer</button>
+      <button class="ghost" id="btnCancelDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="shareDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Partager équitablement</h2>
+    <div class="dialogText" id="shareDialogText"></div>
+    <div class="presetChips open" id="shareChoices"></div>
+    <div class="btnrow" style="justify-content:center">
+      <button class="ghost" id="btnCancelShareDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const svg = document.getElementById("splatSvg");
+  const equationHistory = document.getElementById("equationHistory");
+  const instructionZone = document.getElementById("instructionZone");
+  const actionZone = document.getElementById("actionZone");
+  const solutionEl = document.getElementById("solution");
+  const stageEl = document.getElementById("stage");
+
+  const modeEl = document.getElementById("mode");
+  const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
+  const coefAEl = document.getElementById("coefA");
+  const constBEl = document.getElementById("constB");
+  const coefCEl = document.getElementById("coefC");
+  const solXEl = document.getElementById("solX");
+  const seedEl = document.getElementById("seed");
+  const profEquationInfo = document.getElementById("profEquationInfo");
+  const coefAWrap = document.getElementById("coefAWrap");
+  const constBWrap = document.getElementById("constBWrap");
+  const coefCWrap = document.getElementById("coefCWrap");
+
+  const toolDecompose = document.getElementById("toolDecompose");
+  const toolShare = document.getElementById("toolShare");
+  const toolDelete = document.getElementById("toolDelete");
+  const toolUndo = document.getElementById("toolUndo");
+  const btnStageUndo = document.getElementById("btnStageUndo");
+  const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+
+  const decomposeDialog = document.getElementById("decomposeDialog");
+  const dialogText = document.getElementById("dialogText");
+  const decomposeInput = document.getElementById("decomposeInput");
+  const presetChips = document.getElementById("presetChips");
+  const btnShowSuggestions = document.getElementById("btnShowSuggestions");
+  const shareDialog = document.getElementById("shareDialog");
+  const shareDialogText = document.getElementById("shareDialogText");
+  const shareChoices = document.getElementById("shareChoices");
+
+  const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
+
+  let state = null;
+  let history = [];
+  let actionMode = "decompose";
+  let selectedPieceRef = null;
+  let deleteSelection = [];
+
+  function uid(){ return Math.random().toString(36).slice(2, 9); }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+  function numberOr(value, fallback){ const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+  function pushHistory(){ if(state) history.push(clone(state)); if(history.length > 80) history.shift(); }
+  function currentVar(){ return state && state.original && state.original.varChar ? state.original.varChar : "𝑥"; }
+  function displayedUnknown(){ return unknownDisplayModeEl && unknownDisplayModeEl.value === "question" ? "?" : currentVar(); }
+  function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
+  function makeX(){ return { id:uid(), type:"x", value:null, removed:false }; }
+  function makeToken(value){ return { id:uid(), type:"token", value:Number(value), removed:false }; }
+
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function randomInt(rng,a,b){ return a + Math.floor(rng()*(b-a+1)); }
+
+  function setActionMode(mode){
+    actionMode = mode;
+    deleteSelection = [];
+    [toolDecompose, toolShare, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
+    if(mode === "share" && toolShare) toolShare.classList.add("active");
+    if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
+    render();
+  }
+
+  function getSelectedMode(){
+    const raw = modeEl ? modeEl.value : "axb";
+    if(raw === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      return modes[Math.floor(Math.random() * modes.length)];
+    }
+    return raw;
+  }
+
+  function getModeLabel(mode){
+    if(mode === "xpb") return "x + b = c";
+    if(mode === "axc") return "ax = c";
+    if(mode === "both") return "ax + b = cx + d";
+    return "ax + b = c";
+  }
+
+  function syncTeacherControls(){
+    const mode = modeEl ? modeEl.value : "axb";
+    const showA = !(mode === "xpb");
+    const showB = !(mode === "axc");
+    const showC = mode === "both";
+
+    if(coefAWrap) coefAWrap.style.display = showA ? "" : "none";
+    if(constBWrap) constBWrap.style.display = showB ? "" : "none";
+    if(coefCWrap) coefCWrap.style.display = showC ? "" : "none";
+    updateProfEquationInfo();
+  }
+
+  function updateProfEquationInfo(){
+    if(!profEquationInfo || !modeEl) return;
+    const rawMode = modeEl.value;
+    if(rawMode === "mix"){
+      profEquationInfo.innerHTML = "Mélange : le calcul automatique dépendra du type tiré au hasard.";
+      return;
+    }
+
+    const aRaw = Math.round(numberOr(coefAEl.value, 2));
+    const bRaw = Math.round(numberOr(constBEl.value, 4));
+    const x = Math.max(1, Math.round(numberOr(solXEl.value, 12)));
+
+    if(rawMode === "xpb"){
+      const b = Math.max(1, bRaw);
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${x + b}</strong>`;
+      return;
+    }
+    if(rawMode === "axc"){
+      const a = Math.max(2, aRaw);
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${a * x}</strong>`;
+      return;
+    }
+    if(rawMode === "both"){
+      const a = Math.max(2, aRaw);
+      const cCoef = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
+      const b = Math.max(1, bRaw);
+      const d = (a - cCoef) * x + b;
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${d}</strong>`;
+      return;
+    }
+    const a = Math.max(2, aRaw);
+    const b = Math.max(1, bRaw);
+    profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${a * x + b}</strong>`;
+  }
+
+  function buildFromInputs(){
+    const selectedMode = getSelectedMode();
+    const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
+    const bInput = clamp(Math.round(numberOr(constBEl.value,4)),1,40);
+    const x = clamp(Math.round(numberOr(solXEl.value,12)),2,20);
+
+    let a = selectedMode === "xpb" ? 1 : rawA;
+    let b = selectedMode === "axc" ? 0 : bInput;
+    let rightA = 0;
+    let d = 0;
+    let rightValue = a*x + b;
+
+    if(selectedMode === "both"){
+      a = Math.max(2, rawA);
+      rightA = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
+      b = bInput;
+      d = (a - rightA) * x + b;
+      rightValue = d;
+    }
+
+    coefAEl.value = a;
+    constBEl.value = b || bInput;
+    if(coefCEl) coefCEl.value = rightA || 1;
+    solXEl.value = x;
+    updateProfEquationInfo();
+
+    const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
+      left:[],
+      right:[],
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
+      state.right = Array.from({length:rightA}, makeX).concat(d > 0 ? [makeToken(d)] : []);
+    }else{
+      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
+      state.right = [makeToken(a*x + b)];
+    }
+
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    setActionMode("decompose");
+  }
+
+  function randomExercise(){
+    const rawSeed = String(seedEl.value || "").trim();
+    const rng = rawSeed === "" ? Math.random : mulberry32(Number(rawSeed)|0);
+
+    let selectedMode = modeEl ? modeEl.value : "axb";
+    if(selectedMode === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      selectedMode = modes[randomInt(rng,0,modes.length-1)];
+    }
+
+    let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
+    const x = randomInt(rng,3,15);
+    let b = selectedMode === "axc" ? 0 : randomInt(rng,2,18);
+    let rightA = 0;
+    let d = 0;
+
+    if(selectedMode === "both"){
+      a = randomInt(rng,3,5);
+      rightA = randomInt(rng,1,a-1);
+      b = randomInt(rng,2,14);
+      d = (a - rightA) * x + b;
+    }
+
+    coefAEl.value = Math.max(2, a);
+    constBEl.value = Math.max(1, b || randomInt(rng,2,18));
+    if(coefCEl) coefCEl.value = rightA || 1;
+    solXEl.value = x;
+    updateProfEquationInfo();
+
+    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
+      left:[],
+      right:[],
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
+      state.right = Array.from({length:rightA}, makeX).concat(d > 0 ? [makeToken(d)] : []);
+    }else{
+      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
+      state.right = [makeToken(a*x + b)];
+    }
+
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    setActionMode("decompose");
+  }
+
+  function activePieces(side){ return state[side].filter(p => !p.removed); }
+  function renderPiecesForSide(side){ return shouldKeepRemovedPieces() ? state[side] : activePieces(side); }
+
+  function sideExpression(side){
+    const pieces = activePieces(side);
+    const v = displayedUnknown();
+    const terms = [];
+    let i = 0;
+    while(i < pieces.length){
+      const p = pieces[i];
+      if(p.type === "x"){
+        let count = 0;
+        while(i < pieces.length && pieces[i].type === "x"){
+          count++;
+          i++;
+        }
+        terms.push(count === 1 ? v : `${count}${v}`);
+      }else{
+        terms.push(String(p.value));
+        i++;
+      }
+    }
+    return terms.length ? terms.join(" + ").replace(/\+ -/g,"− ") : "0";
+  }
+
+  function getSolvedValue(){
+    const left = activePieces("left");
+    const right = activePieces("right");
+    if(left.length === 0 || right.length === 0) return null;
+    const isAllTokens = arr => arr.every(p => p.type === "token");
+    const isAllX = arr => arr.every(p => p.type === "x");
+    const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
+    if(allSameToken(left) && isAllX(right) && left.length === right.length) return left[0].value;
+    if(allSameToken(right) && isAllX(left) && left.length === right.length) return right[0].value;
+    return null;
+  }
+
+  function currentEquationString(){
+    const solved = getSolvedValue();
+    if(solved !== null) return `${displayedUnknown()} = ${solved}`;
+    return `${sideExpression("left")} = ${sideExpression("right")}`;
+  }
+
+  function recordEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+  }
+
+  function splitEquation(eq){
+    const parts = String(eq).split("=");
+    if(parts.length < 2) return {lhs:String(eq), rhs:""};
+    return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
+  }
+
+  function renderEquationHistory(){
+    const steps = state.steps || [];
+    const shown = steps.slice(-6);
+    if(!shown.length){ equationHistory.innerHTML = ""; return; }
+    const rows = shown.map((eq, i) => {
+      const {lhs, rhs} = splitEquation(eq);
+      const cls = i === shown.length - 1 ? "currentStep" : "historyStep";
+      return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
+    }).join("");
+    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+  }
+
+  function setInstruction(html){ instructionZone.innerHTML = html || ""; }
+
+  function getPieceBySideAndId(ref){
+    if(!ref || !state || !state[ref.side]) return null;
+    return state[ref.side].find(p => p.id === ref.id) || null;
+  }
+
+  function selectedDeleteIds(){ return new Set(deleteSelection.map(ref => ref.id)); }
+
+  function selectedDeletePiecesBySide(){
+    const left = [], right = [];
+    for(const ref of deleteSelection){
+      const p = getPieceBySideAndId(ref);
+      if(!p || p.removed) continue;
+      if(ref.side === "left") left.push(p);
+      if(ref.side === "right") right.push(p);
+    }
+    return {left, right};
+  }
+
+  function deletionGroupInfo(){
+    const {left, right} = selectedDeletePiecesBySide();
+    if(left.length === 0 || right.length === 0) return {ok:false, reason:"needBoth", left, right};
+    const all = left.concat(right);
+    const firstType = all[0].type;
+    if(all.some(p => p.type !== firstType)) return {ok:false, reason:"mixedTypes", left, right};
+    if(firstType === "x"){
+      if(left.length !== right.length) return {ok:false, reason:"differentCounts", left, right};
+      return {ok:true, type:"x", label:left.length === 1 ? displayedUnknown() : `${left.length}${displayedUnknown()}`, left, right};
+    }
+    const leftSum = left.reduce((s,p)=>s + Number(p.value || 0), 0);
+    const rightSum = right.reduce((s,p)=>s + Number(p.value || 0), 0);
+    if(leftSum !== rightSum) return {ok:false, reason:"differentSums", left, right, leftSum, rightSum};
+    return {ok:true, type:"token", value:leftSum, label:String(leftSum), left, right};
+  }
+
+  function selectForDeletion(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+    const alreadyIndex = deleteSelection.findIndex(ref => ref.side === side && ref.id === id);
+    if(alreadyIndex >= 0){ deleteSelection.splice(alreadyIndex,1); render(); return; }
+    const currentPieces = deleteSelection.map(getPieceBySideAndId).filter(Boolean);
+    if(currentPieces.length && piece.type !== currentPieces[0].type) deleteSelection = [];
+    deleteSelection.push({side,id});
+    render();
+  }
+
+  function deleteMatching(){
+    const info = deletionGroupInfo();
+    if(!info.ok) return;
+    pushHistory();
+    const ids = selectedDeleteIds();
+    for(const side of ["left","right"]){
+      for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
+    }
+    deleteSelection = [];
+    recordEquationStep();
+    render();
+  }
+
+  function getShareOpportunity(){
+    const left = activePieces("left");
+    const right = activePieces("right");
+    const leftTokens = left.filter(p => p.type === "token");
+    const rightTokens = right.filter(p => p.type === "token");
+    const leftX = left.filter(p => p.type === "x");
+    const rightX = right.filter(p => p.type === "x");
+    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2){
+      const value = rightTokens[0].value;
+      if(value % leftX.length === 0) return {tokenSide:"right", xSide:"left", token:rightTokens[0], count:leftX.length, result:value/leftX.length};
+    }
+    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2){
+      const value = leftTokens[0].value;
+      if(value % rightX.length === 0) return {tokenSide:"left", xSide:"right", token:leftTokens[0], count:rightX.length, result:value/rightX.length};
+    }
+    return null;
+  }
+
+  function applyTokenSplit(side, id, values){
+    const arr = state[side];
+    const idx = arr.findIndex(p => p.id === id);
+    if(idx < 0) return;
+    pushHistory();
+    arr.splice(idx, 1, ...values.map(makeToken));
+    recordEquationStep();
+    selectedPieceRef = null;
+    render();
+  }
+
+  function parseSum(text){
+    const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
+    if(!raw) return null;
+    if(!/^-?\d+(?:[+]-?\d+)*$/.test(raw)) return null;
+    return raw.split("+").map(Number).filter(Number.isFinite);
+  }
+
+  function openDecomposeDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "token" || piece.removed) return;
+    selectedPieceRef = {side,id};
+    dialogText.innerHTML = `Décomposer le jeton <strong>${piece.value}</strong> en une somme.`;
+    decomposeInput.value = "";
+    presetChips.classList.remove("open");
+    presetChips.innerHTML = "";
+    if(typeof decomposeDialog.showModal === "function") decomposeDialog.showModal();
+    setTimeout(()=>decomposeInput.focus(), 80);
+  }
+
+  function getSmartDecompositionSuggestions(side, piece){
+    const value = Number(piece.value);
+    const otherSide = side === "left" ? "right" : "left";
+    const suggestions = [];
+
+    // 1) Aide prioritaire : si l'autre membre contient déjà une quantité numérique,
+    // on propose de faire apparaître cette quantité pour pouvoir la supprimer ensuite.
+    // Exemple : 14 d'un côté et 30 de l'autre -> 30 = 14 + 16.
+    const otherTokens = activePieces(otherSide).filter(p => p.type === "token");
+    const targets = [];
+    for(const t of otherTokens){
+      const v = Number(t.value);
+      if(Number.isFinite(v) && v > 0) targets.push(v);
+    }
+    const otherSum = otherTokens.reduce((sum,p)=>sum + Number(p.value || 0), 0);
+    if(otherSum > 0) targets.push(otherSum);
+
+    for(const target of targets){
+      if(target > 0 && target < value){
+        suggestions.push([target, value - target]);
+      }
+    }
+
+    // 2) Aide de partage : si on doit partager en autant de parts qu'il reste de taches.
+    const left = activePieces("left");
+    const right = activePieces("right");
+    const leftX = left.filter(p => p.type === "x").length;
+    const rightX = right.filter(p => p.type === "x").length;
+    const leftTokens = left.filter(p => p.type === "token").length;
+    const rightTokens = right.filter(p => p.type === "token").length;
+    const usefulShareCount =
+      (side === "right" && rightX === 0 && leftTokens === 0 && leftX >= 2) ? leftX :
+      (side === "left" && leftX === 0 && rightTokens === 0 && rightX >= 2) ? rightX :
+      0;
+    if(usefulShareCount >= 2 && value % usefulShareCount === 0){
+      suggestions.push(Array.from({length:usefulShareCount}, () => value / usefulShareCount));
+    }
+
+    // 3) Propositions générales, utiles mais secondaires.
+    for(let n=2;n<=6;n++){
+      if(value % n === 0){
+        const part = value / n;
+        suggestions.push(Array.from({length:n},()=>part));
+      }
+    }
+    if(value > 3){ suggestions.push([1, value-1]); }
+    if(value > 5){ suggestions.push([2, value-2]); }
+
+    const unique = [];
+    const seen = new Set();
+    for(const s of suggestions){
+      if(!Array.isArray(s) || s.length < 2) continue;
+      if(s.some(v => !Number.isFinite(Number(v)) || Number(v) <= 0)) continue;
+      const sum = s.reduce((a,b)=>a+Number(b), 0);
+      if(sum !== value) continue;
+      const key = s.join("+");
+      if(!seen.has(key)){ seen.add(key); unique.push(s); }
+    }
+    return unique.slice(0, 8);
+  }
+
+  function showDecomposeSuggestions(){
+    if(!selectedPieceRef) return;
+    const piece = getPieceBySideAndId(selectedPieceRef);
+    if(!piece) return;
+    const suggestions = getSmartDecompositionSuggestions(selectedPieceRef.side, piece);
+    presetChips.innerHTML = suggestions.map(s => `<button class="chip" type="button" data-values="${s.join(",")}">${s.join(" + ")}</button>`).join("");
+    presetChips.querySelectorAll(".chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const values = btn.dataset.values.split(",").map(Number);
+        applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
+        decomposeDialog.close();
+      });
+    });
+    presetChips.classList.add("open");
+  }
+
+  function applyDecomposeInput(){
+    if(!selectedPieceRef) return;
+    const piece = getPieceBySideAndId(selectedPieceRef);
+    if(!piece) return;
+    const values = parseSum(decomposeInput.value);
+    if(!values || values.length < 2){
+      dialogText.innerHTML = `Écris une somme avec au moins deux termes, par exemple <strong>${Math.floor(piece.value/2)} + ${piece.value - Math.floor(piece.value/2)}</strong>.`;
+      return;
+    }
+    const sum = values.reduce((a,b)=>a+b,0);
+    if(sum !== piece.value){
+      dialogText.innerHTML = `La somme doit faire <strong>${piece.value}</strong>. Ici, elle fait <strong>${sum}</strong>.`;
+      return;
+    }
+    applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
+    decomposeDialog.close();
+  }
+
+  function openShareDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "token" || piece.removed) return;
+    selectedPieceRef = {side,id};
+    const value = Number(piece.value);
+    shareDialogText.innerHTML = `Partager le jeton <strong>${value}</strong> en parts égales.`;
+    const choices = [];
+    for(let n=2;n<=8;n++){
+      if(value % n === 0) choices.push({n, part:value/n});
+    }
+    if(!choices.length){
+      shareChoices.innerHTML = `<div class="dialogText">Aucun partage entier simple proposé.</div>`;
+    }else{
+      shareChoices.innerHTML = choices.map(c => `<button class="chip" type="button" data-n="${c.n}" data-part="${c.part}">${c.n} parts de ${c.part}</button>`).join("");
+      shareChoices.querySelectorAll(".chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const n = Number(btn.dataset.n);
+          const part = Number(btn.dataset.part);
+          applyTokenSplit(side, id, Array.from({length:n},()=>part));
+          shareDialog.close();
+        });
+      });
+    }
+    if(typeof shareDialog.showModal === "function") shareDialog.showModal();
+  }
+
+  function blobPath(cx, cy, r){
+    const n = 36, lobes = 5, pts = [];
+    for(let i=0;i<n;i++){
+      const a = (Math.PI*2*i)/n;
+      const k = 0.90 + 0.16*Math.sin(lobes*a) + 0.04*Math.sin(2*lobes*a);
+      const rr = r*k;
+      pts.push([cx + Math.cos(a)*rr, cy + Math.sin(a)*rr]);
+    }
+    function cr2bz(p0,p1,p2,p3){
+      const t = 1/6;
+      return [p1[0]+(p2[0]-p0[0])*t, p1[1]+(p2[1]-p0[1])*t, p2[0]-(p3[0]-p1[0])*t, p2[1]-(p3[1]-p1[1])*t, p2[0], p2[1]];
+    }
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=0;i<n;i++){
+      const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
+      const [c1x,c1y,c2x,c2y,x,y] = cr2bz(p0,p1,p2,p3);
+      d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
+    }
+    return d + " Z";
+  }
+
+  function tokenAreaForTray(tray){
+    // Le jeton doit pouvoir circuler presque partout sur le plateau.
+    // On garde seulement une marge intérieure pour éviter qu'il colle au bord.
+    return {x:tray.x+58, y:tray.y+72, w:tray.w-116, h:tray.h-124};
+  }
+
+  function rowsForSplats(n){
+    if(n <= 1) return [n];
+    if(n === 2) return [2];
+    if(n === 3) return [2,1];
+    if(n === 4) return [2,2];
+    return [3, n-3];
+  }
+
+  function splatPositionsForItems(tray, items){
+    const xs = items.filter(p => p.type === "x");
+    const out = new Map();
+    const splatArea = {x:tray.x+70, y:tray.y+90, w:tray.w-140, h:250};
+    const rows = rowsForSplats(xs.length);
+    let k = 0;
+    for(let r=0;r<rows.length;r++){
+      const cols = rows[r];
+      const cellW = splatArea.w / Math.max(1, cols);
+      const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
+      for(let c=0;c<cols && k<xs.length;c++){
+        const cx = splatArea.x + cellW*(c+.5);
+        out.set(xs[k].id, {cx,cy,r:72});
+        k++;
+      }
+    }
+    return out;
+  }
+
+  function avoidSplatsOnDrop(tray, items, cx, cy, r=34){
+    // Si le jeton est relâché sur une tache, on le repousse doucement
+    // vers le bord libre le plus proche, plutôt que de le bloquer dans la zone basse.
+    let p = {cx, cy};
+    const splats = Array.from(splatPositionsForItems(tray, items).values());
+
+    for(let pass=0; pass<5; pass++){
+      let changed = false;
+      for(const s of splats){
+        const minDist = s.r + r + 16;
+        let dx = p.cx - s.cx;
+        let dy = p.cy - s.cy;
+        let dist = Math.hypot(dx, dy);
+        if(dist < minDist){
+          if(dist < 0.001){
+            dx = 1; dy = 0; dist = 1;
+          }
+          const push = minDist - dist;
+          p.cx += (dx / dist) * push;
+          p.cy += (dy / dist) * push;
+          p = clampTokenPosition(tray, p.cx, p.cy, r, false);
+          changed = true;
+        }
+      }
+      if(!changed) break;
+    }
+    return p;
+  }
+
+  function clampTokenPosition(tray, cx, cy, r=34, avoid=true, side=null){
+    const area = tokenAreaForTray(tray);
+    let p = {
+      cx: clamp(cx, area.x + r, area.x + area.w - r),
+      cy: clamp(cy, area.y + r, area.y + area.h - r)
+    };
+    if(avoid && side && state && state[side]){
+      p = avoidSplatsOnDrop(tray, state[side], p.cx, p.cy, r);
+    }
+    return p;
+  }
+
+  function layoutItems(tray, items){
+    const visible = items;
+    const xs = visible.filter(p => p.type === "x");
+    const tokens = visible.filter(p => p.type === "token");
+    const out = new Map();
+
+    const tokenArea = tokenAreaForTray(tray);
+
+    const splatPositions = splatPositionsForItems(tray, visible);
+    for(const [id, pos] of splatPositions.entries()) out.set(id, pos);
+
+    const n = tokens.length;
+    if(n > 0){
+      const cols = Math.min(n, 6);
+      const rowsT = Math.ceil(n / cols);
+      for(let i=0;i<n;i++){
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        const cellW = tokenArea.w / cols;
+        const cellH = tokenArea.h / rowsT;
+        const auto = {
+          cx:tokenArea.x + cellW*(col+.5),
+          cy:tokenArea.y + cellH*(row+.5),
+          r:34
+        };
+        if(Number.isFinite(tokens[i].x) && Number.isFinite(tokens[i].y)){
+          const clamped = clampTokenPosition(tray, tokens[i].x, tokens[i].y, 34, true, tray.x < 800 ? "left" : "right");
+          out.set(tokens[i].id, {cx:clamped.cx, cy:clamped.cy, r:34});
+        }else{
+          out.set(tokens[i].id, auto);
+        }
+      }
+    }
+    return out;
+  }
+
+  function drawDefs(){
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    defs.innerHTML = `
+      <pattern id="hatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">
+        <rect width="12" height="12" fill="rgba(229,231,235,.56)"></rect>
+        <line x1="0" y1="0" x2="0" y2="12" stroke="rgba(15,23,42,.50)" stroke-width="3"></line>
+      </pattern>
+    `;
+    svg.appendChild(defs);
+  }
+
+  function drawText(x,y,text,cls,parent=svg){
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.setAttribute("x", x);
+    el.setAttribute("y", y);
+    el.setAttribute("class", cls);
+    el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  }
+
+  function drawTray(tray, title){
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", tray.x);
+    rect.setAttribute("y", tray.y);
+    rect.setAttribute("width", tray.w);
+    rect.setAttribute("height", tray.h);
+    rect.setAttribute("rx", 34);
+    rect.setAttribute("class", "tray");
+    svg.appendChild(rect);
+    if(title) drawText(tray.x + tray.w/2, tray.y + 44, title, "trayTitle");
+  }
+
+  function svgPointFromEvent(e){
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  function getTrayForSide(side){
+    return side === "left"
+      ? {x:80, y:86, w:650, h:620}
+      : {x:870, y:86, w:650, h:620};
+  }
+
+  function beginTokenDrag(e, side, item, pos, group){
+    if(item.removed || item.type !== "token") return;
+    if(e.button !== undefined && e.button !== 0) return;
+    const p = svgPointFromEvent(e);
+    dragState = {
+      side,
+      id:item.id,
+      group,
+      startSvg:p,
+      startCx:pos.cx,
+      startCy:pos.cy,
+      cx:pos.cx,
+      cy:pos.cy,
+      moved:false
+    };
+    try{ group.setPointerCapture(e.pointerId); }catch(_e){}
+  }
+
+  function moveTokenDrag(e){
+    if(!dragState) return;
+    const p = svgPointFromEvent(e);
+    const tray = getTrayForSide(dragState.side);
+    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), 34, false);
+    const dx = next.cx - dragState.startCx;
+    const dy = next.cy - dragState.startCy;
+    if(Math.hypot(dx, dy) > 3) dragState.moved = true;
+    dragState.cx = next.cx;
+    dragState.cy = next.cy;
+    dragState.group.classList.toggle("dragging", dragState.moved);
+    dragState.group.setAttribute("transform", `translate(${dx} ${dy})`);
+    if(dragState.moved) e.preventDefault();
+  }
+
+  function endTokenDrag(e){
+    if(!dragState) return;
+    const ds = dragState;
+    dragState = null;
+    try{ ds.group.releasePointerCapture(e.pointerId); }catch(_e){}
+    ds.group.classList.remove("dragging");
+    ds.group.removeAttribute("transform");
+    if(ds.moved){
+      const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
+      if(piece){
+        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, 34, true, ds.side);
+        piece.x = safe.cx;
+        piece.y = safe.cy;
+      }
+      suppressNextClickFor = ds.id;
+      render();
+    }
+  }
+
+  function drawItem(side, item, pos, selectedIds){
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    if(item.type === "token") g.classList.add("tokenDragGroup");
+    if(item.removed) g.classList.add("removedGroup");
+    g.dataset.side = side;
+    g.dataset.id = item.id;
+    svg.appendChild(g);
+
+    if(item.type === "x"){
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
+      path.setAttribute("class", "splatShape");
+      g.appendChild(path);
+      drawText(pos.cx, pos.cy + 5, displayedUnknown(), "splatText", g);
+      if(item.removed){
+        const overlay = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        overlay.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
+        overlay.setAttribute("class", "removedOverlay");
+        g.appendChild(overlay);
+      }
+      if(selectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("class", "selectedOutline");
+        g.appendChild(outline);
+      }
+    }else{
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      hit.setAttribute("cx", pos.cx);
+      hit.setAttribute("cy", pos.cy);
+      hit.setAttribute("r", pos.r + 18);
+      hit.setAttribute("fill", "transparent");
+      hit.setAttribute("class", "tokenHitArea");
+      g.appendChild(hit);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", pos.cx);
+      circle.setAttribute("cy", pos.cy);
+      circle.setAttribute("r", pos.r);
+      circle.setAttribute("class", "tokenCircle");
+      g.appendChild(circle);
+      drawText(pos.cx, pos.cy + 2, String(item.value), "tokenText", g);
+      if(item.removed){
+        const overlay = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        overlay.setAttribute("cx", pos.cx);
+        overlay.setAttribute("cy", pos.cy);
+        overlay.setAttribute("r", pos.r);
+        overlay.setAttribute("class", "removedOverlay");
+        g.appendChild(overlay);
+      }
+      if(selectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outline.setAttribute("cx", pos.cx);
+        outline.setAttribute("cy", pos.cy);
+        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("class", "selectedOutline");
+        g.appendChild(outline);
+      }
+    }
+
+    if(item.type === "token"){
+      g.addEventListener("pointerdown", (e) => beginTokenDrag(e, side, item, pos, g));
+      g.addEventListener("pointermove", moveTokenDrag);
+      g.addEventListener("pointerup", endTokenDrag);
+      g.addEventListener("pointercancel", endTokenDrag);
+    }
+
+    g.addEventListener("click", (e) => {
+      if(suppressNextClickFor === item.id){
+        suppressNextClickFor = null;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if(item.removed) return;
+      if(actionMode === "decompose"){
+        if(item.type === "token") openDecomposeDialog(side, item.id);
+        else setInstruction("En mode Décomposer, clique sur un jeton numérique.");
+        return;
+      }
+      if(actionMode === "share"){
+        if(item.type === "token") openShareDialog(side, item.id);
+        else setInstruction("En mode Partager, clique sur un jeton numérique.");
+        return;
+      }
+      if(actionMode === "delete") selectForDeletion(side, item.id);
+    });
+  }
+
+  function renderSvg(){
+    svg.innerHTML = "";
+    drawDefs();
+    const leftTray = {x:80, y:86, w:650, h:620};
+    const rightTray = {x:870, y:86, w:650, h:620};
+    drawTray(leftTray, "");
+    drawTray(rightTray, "");
+    drawText(800, 396, "=", "eqMiddle");
+
+    const leftItems = renderPiecesForSide("left");
+    const rightItems = renderPiecesForSide("right");
+    const leftPos = layoutItems(leftTray, leftItems);
+    const rightPos = layoutItems(rightTray, rightItems);
+    const selectedIds = selectedDeleteIds();
+    leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds));
+    rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds));
+  }
+
+  function renderActions(){
+    actionZone.innerHTML = "";
+    solutionEl.textContent = "";
+
+    const solved = getSolvedValue();
+    if(solved !== null){
+      solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
+      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
+      return;
+    }
+
+    if(actionMode === "decompose"){
+      setInstruction("Décompose un jeton numérique.");
+      return;
+    }
+
+    if(actionMode === "share"){
+      const suggested = getShareOpportunity();
+      if(suggested){
+        setInstruction(`Partage&nbsp;<strong>${suggested.token.value}</strong>&nbsp;en <strong>${suggested.count}</strong> parts égales.`);
+      }else{
+        setInstruction("Partage un jeton en parts égales.");
+      }
+      return;
+    }
+
+    if(actionMode === "delete"){
+      const info = deletionGroupInfo();
+      const {left, right} = selectedDeletePiecesBySide();
+      if(left.length === 0 && right.length === 0){
+        setInstruction("Sélectionne la même quantité dans les deux membres.");
+        return;
+      }
+      if(left.length === 0 || right.length === 0){
+        setInstruction("Sélectionne maintenant l’autre membre.");
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+        return;
+      }
+      if(info.ok){
+        setInstruction(`Même quantité sélectionnée :&nbsp;<strong>${info.label}</strong>.`);
+        const btn = document.createElement("button");
+        btn.className = "orange";
+        btn.textContent = "Valider la suppression";
+        btn.addEventListener("click", deleteMatching);
+        actionZone.appendChild(btn);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+      }else{
+        let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
+        if(info.reason === "differentCounts") reason = "Il faut le même nombre de taches de chaque côté.";
+        else if(info.reason === "differentSums") reason = "Les jetons sélectionnés ne font pas la même somme.";
+        else if(info.reason === "mixedTypes") reason = "Ne mélange pas taches et jetons numériques.";
+        setInstruction(reason);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+      }
+    }
+  }
+
+  function render(){
+    if(!state) return;
+    renderEquationHistory();
+    renderSvg();
+    renderActions();
+  }
+
+  function undo(){
+    if(!history.length) return;
+    state = history.pop();
+    selectedPieceRef = null;
+    deleteSelection = [];
+    render();
+  }
+
+  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
+  document.getElementById("btnRandom").addEventListener("click", randomExercise);
+  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
+  btnStageRandom.addEventListener("click", randomExercise);
+  toolDecompose.addEventListener("click", () => setActionMode("decompose"));
+  toolShare.addEventListener("click", () => setActionMode("share"));
+  toolDelete.addEventListener("click", () => setActionMode("delete"));
+  toolUndo.addEventListener("click", undo);
+  btnStageUndo.addEventListener("click", undo);
+  btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
+  document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
+  document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
+  document.getElementById("btnCancelShareDialog").addEventListener("click", () => shareDialog.close());
+  btnFullscreen.addEventListener("click", () => {
+    if(document.fullscreenElement) document.exitFullscreen();
+    else if(stageEl.requestFullscreen) stageEl.requestFullscreen();
+  });
+
+  [modeEl, coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+    if(!el) return;
+    el.addEventListener("input", () => { syncTeacherControls(); });
+    el.addEventListener("change", () => { syncTeacherControls(); });
+  });
+  unknownDisplayModeEl.addEventListener("change", () => {
+    if(state){ state.steps = [currentEquationString()]; render(); }
+  });
+  removedDisplayModeEl.addEventListener("change", render);
+
+  document.addEventListener("keydown", (e) => {
+    if(e.key === "Escape") return;
+    if(e.key === "z" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); undo(); }
+    if(e.key.toLowerCase() === "f" && !decomposeDialog.open && !shareDialog.open){
+      e.preventDefault(); btnFullscreen.click();
+    }
+  });
+
+  syncTeacherControls();
+  buildFromInputs();
+})();
+</script>
+</body>
+</html>
