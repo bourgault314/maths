@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaSplat 0.2 — équations sur plateaux</title>
+<title>ÉquaSplat 0.9 — relatifs simples</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -251,18 +251,22 @@
 
   .equationHistory{
     width:min(900px,100%);
-    margin:8px auto 0;
+    margin:4px auto 0;
     display:flex;
     justify-content:center;
-    align-items:center;
+    align-items:flex-start;
+    max-height:150px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding-right:4px;
   }
 
   .equationTable{
     border-collapse:collapse;
     margin:0 auto;
-    font-size:clamp(24px,2.55vw,38px);
+    font-size:clamp(22px,2.35vw,36px);
     font-weight:950;
-    line-height:1.18;
+    line-height:1.12;
   }
 
   .equationTable td{
@@ -282,6 +286,8 @@
   .equationTable tr.historyStep{color:#64748b;opacity:.86}
   .equationTable tr.currentStep{color:#0f172a;opacity:1}
   .equationTable tr.currentStep .eq{color:#3b82f6}
+  .equationTable tr.solvedStep{color:#166534;opacity:1}
+  .equationTable tr.solvedStep .eq{color:#16a34a}
 
   .instructionZone{
     margin:0 auto 12px;
@@ -312,7 +318,7 @@
   #splatSvg{
     width:100%;
     height:100%;
-    min-height:475px;
+    min-height:500px;
     display:block;
   }
 
@@ -349,6 +355,26 @@
     cursor:grab;
   }
 
+  .tokenCircle.positive{
+    fill:#eff6ff;
+    stroke:#3b82f6;
+  }
+
+  .tokenCircle.relativePositive{
+    fill:#ecfdf5;
+    stroke:#16a34a;
+  }
+
+  .tokenCircle.negative{
+    fill:#fff1f2;
+    stroke:#e11d48;
+  }
+
+  .tokenCircle.zero{
+    fill:#f1f5f9;
+    stroke:#64748b;
+  }
+
   .tokenDragGroup{
     cursor:grab;
     touch-action:none;
@@ -358,9 +384,19 @@
     cursor:grabbing;
   }
 
+  .tokenDragGroup.transientZero{
+    animation: zeroPulseFade .95s ease-in-out forwards;
+  }
+
+  @keyframes zeroPulseFade{
+    0%{opacity:1; transform:scale(1);}
+    45%{opacity:1; transform:scale(1.08);}
+    100%{opacity:0; transform:scale(.82);}
+  }
+
   .tokenText{
     fill:#0f172a;
-    font-size:30px;
+    font-size:50px;
     font-weight:950;
     text-anchor:middle;
     dominant-baseline:middle;
@@ -376,7 +412,7 @@
 
   .splatText{
     fill:#ffffff;
-    font-size:34px;
+    font-size:38px;
     font-weight:950;
     font-family:Georgia,'Times New Roman',serif;
     font-style:italic;
@@ -435,6 +471,16 @@
     box-shadow:0 10px 24px rgba(59,130,246,.18);
   }
 
+  .addBothToolBtn{
+    background:#ecfdf5;
+    border-color:rgba(22,163,74,.24);
+    color:#166534;
+  }
+
+  .addBothToolBtn:hover{
+    background:#dcfce7;
+  }
+
   .undoToolBtn{
     background:#fff7ed;
     border-color:rgba(249,115,22,.28);
@@ -442,13 +488,7 @@
   }
 
   .solution{
-    text-align:center;
-    font-size:clamp(32px,4vw,56px);
-    font-weight:950;
-    letter-spacing:-.05em;
-    margin-top:-4px;
-    color:#166534;
-    min-height:64px;
+    display:none;
   }
 
   dialog{
@@ -536,6 +576,115 @@
     border:1px solid rgba(15,23,42,.10);
   }
 
+
+  /* PATCH 1.2.1 — fenêtre de fusion plus lisible / tablette */
+  #fusionDialog{
+    width:min(640px, calc(100vw - 28px));
+  }
+
+  #fusionDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #fusionDialog .dialogTitle{
+    display:none;
+  }
+
+  #fusionDialog .dialogText{
+    margin:2px 0 22px;
+    color:#0f172a;
+    font-size:clamp(38px,5vw,62px);
+    font-weight:950;
+    line-height:1.05;
+    letter-spacing:-.05em;
+  }
+
+  #fusionDialog label{
+    font-size:15px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #fusionInput{
+    text-align:center;
+    font-size:clamp(34px,4.8vw,58px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:78px;
+  }
+
+  #fusionDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #fusionDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
+
+  /* PATCH 1.2.4 — fenêtre Ajouter aux deux membres plus lisible / tablette */
+  #addBothDialog{
+    width:min(600px, calc(100vw - 28px));
+  }
+
+  #addBothDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #addBothDialog .dialogTitle{
+    font-size:clamp(30px,4vw,44px);
+    margin-bottom:14px;
+  }
+
+  #addBothDialog .dialogText{
+    font-size:clamp(21px,2.5vw,28px);
+    font-weight:850;
+    line-height:1.28;
+    margin-bottom:18px;
+  }
+
+  #addBothDialog label{
+    font-size:16px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #addBothInput{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:76px;
+  }
+
+  #addBothDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #addBothDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
   dialog .btnrow{justify-content:center}
 
 </style>
@@ -544,6 +693,12 @@
 <main>
   <section class="panel">
     <div class="appTitle">ÉquaSplat</div>
+
+    <label>Univers de travail</label>
+    <select id="workUniverse" title="Choisir le monde de manipulation">
+      <option value="positive" selected>Splat positif</option>
+      <option value="relative">Splat relatif</option>
+    </select>
 
     <label>Type d’équation</label>
     <select id="mode">
@@ -564,6 +719,14 @@
     <select id="removedDisplayMode" title="Affichage des éléments supprimés">
       <option value="keep" selected>Garder hachuré</option>
       <option value="hide">Masquer</option>
+    </select>
+
+    <label>Jetons numériques au départ</label>
+    <select id="initialTokenCount" title="Nombre de jetons visibles pour représenter chaque constante">
+      <option value="1" selected>1 jeton</option>
+      <option value="2">2 jetons</option>
+      <option value="3">3 jetons</option>
+      <option value="mix">Mélange</option>
     </select>
 
     <div class="grid3" id="abcGrid">
@@ -604,7 +767,7 @@
     </div>
 
     <div class="mini">
-      Version 0.2 : aides de décomposition intelligentes et déplacement libre simple des jetons numériques dans leur plateau.
+      Version 1.1 : Splat positif / relatif — génération relative simple et couleurs différenciées.
     </div>
   </section>
 
@@ -628,7 +791,8 @@
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
       <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
       <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-      <button class="toolBtn" id="toolDelete" type="button">Supprimer dans chaque membre</button>
+      <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+      <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
       <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
     </div>
 
@@ -663,7 +827,36 @@
   </div>
 </dialog>
 
+<dialog id="addBothDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Ajouter aux deux membres</h2>
+    <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique dans chaque membre.</div>
+    <label>Valeur du jeton</label>
+    <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="addBothFeedback"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyAddBoth" type="button">Ajouter</button>
+      <button class="ghost" id="btnCancelAddBoth" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="fusionDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Fusionner deux jetons</h2>
+    <div class="dialogText" id="fusionDialogText"></div>
+    <label>Résultat</label>
+    <input id="fusionInput" type="number" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="fusionFeedback"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyFusion" type="button">Fusionner</button>
+      <button class="ghost" id="btnCancelFusion" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
 <script>
+
 (() => {
   const svg = document.getElementById("splatSvg");
   const equationHistory = document.getElementById("equationHistory");
@@ -674,6 +867,8 @@
 
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const workUniverseEl = document.getElementById("workUniverse");
+  const initialTokenCountEl = document.getElementById("initialTokenCount");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
@@ -688,6 +883,7 @@
   const toolDecompose = document.getElementById("toolDecompose");
   const toolShare = document.getElementById("toolShare");
   const toolDelete = document.getElementById("toolDelete");
+  const toolAddBoth = document.getElementById("toolAddBoth");
   const toolUndo = document.getElementById("toolUndo");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
@@ -701,14 +897,28 @@
   const shareDialog = document.getElementById("shareDialog");
   const shareDialogText = document.getElementById("shareDialogText");
   const shareChoices = document.getElementById("shareChoices");
+  const addBothDialog = document.getElementById("addBothDialog");
+  const addBothDialogText = document.getElementById("addBothDialogText");
+  const addBothInput = document.getElementById("addBothInput");
+  const addBothFeedback = document.getElementById("addBothFeedback");
+  const fusionDialog = document.getElementById("fusionDialog");
+  const fusionDialogText = document.getElementById("fusionDialogText");
+  const fusionInput = document.getElementById("fusionInput");
+  const fusionFeedback = document.getElementById("fusionFeedback");
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
+  // ÉquaSplat 0.5 : jetons un peu plus grands et rayon centralisé.
+  const TOKEN_R = 54;
+  const TOKEN_HIT_EXTRA = 32;
 
   let state = null;
   let history = [];
   let actionMode = "decompose";
   let selectedPieceRef = null;
   let deleteSelection = [];
+  let dragState = null;
+  let suppressNextClickFor = null;
+  let pendingFusion = null;
 
   function uid(){ return Math.random().toString(36).slice(2, 9); }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -720,6 +930,126 @@
   function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
   function makeX(){ return { id:uid(), type:"x", value:null, removed:false }; }
   function makeToken(value){ return { id:uid(), type:"token", value:Number(value), removed:false }; }
+  function formatSignedNumber(n){
+    const v = Number(n) || 0;
+    if(v < 0) return `−${Math.abs(v)}`;
+    return String(v);
+  }
+
+  function isRelativeUniverse(){
+    return workUniverseEl && workUniverseEl.value === "relative";
+  }
+
+  function randomNonZeroInt(rng, a, b){
+    let v = 0;
+    for(let i=0; i<80 && v === 0; i++) v = randomInt(rng, a, b);
+    return v === 0 ? (Math.abs(a) >= Math.abs(b) ? a : b) : v;
+  }
+
+  function positiveTokenColorForValue(value){
+    // Inspiration Splat d'origine : en positif, les jetons numériques
+    // reçoivent des couleurs variées selon leur valeur.
+    const mag = Math.abs(Math.round(Number(value) || 0));
+    const hue = ((mag * 37) % 360 + 360) % 360;
+    return {
+      fill:`hsla(${hue}, 78%, 54%, .20)`,
+      stroke:`hsla(${hue}, 78%, 45%, .62)`
+    };
+  }
+
+  function formatFusionTerm(n){
+    const v = Number(n) || 0;
+    return v < 0 ? `(−${Math.abs(v)})` : String(v);
+  }
+
+  function formatEquationTerm(n){
+    const v = Number(n) || 0;
+    return v < 0 ? `(−${Math.abs(v)})` : String(v);
+  }
+
+  function getInitialTokenCount(rng=Math.random){
+    const raw = initialTokenCountEl ? initialTokenCountEl.value : "1";
+    if(raw === "mix") return randomInt(rng, 1, 3);
+    return clamp(Math.round(numberOr(raw, 1)), 1, 3);
+  }
+
+  function shuffleCopy(arr, rng=Math.random){
+    const out = arr.slice();
+    for(let i=out.length-1; i>0; i--){
+      const j = Math.floor(rng() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  function splitRelativeValueForInitialTokens(value, count, rng=Math.random){
+    value = Math.round(Number(value) || 0);
+    count = clamp(Math.round(Number(count) || 1), 1, 3);
+    if(count <= 1) return [value];
+
+    // En relatif, quand le professeur demande plusieurs jetons, on cherche à
+    // créer un vrai petit calcul relatif : des jetons verts ET rouges sur le
+    // même plateau, tout en conservant exactement la bonne somme.
+    const extra = randomInt(rng, 2, 9);
+
+    if(count === 2){
+      if(value === 0) return shuffleCopy([extra, -extra], rng);
+      if(value > 0) return shuffleCopy([value + extra, -extra], rng);
+      return shuffleCopy([value - extra, extra], rng);
+    }
+
+    if(value === 0){
+      const a = randomInt(rng, 2, 8);
+      const b = randomInt(rng, 2, 8);
+      return shuffleCopy([a, b, -(a + b)], rng);
+    }
+
+    if(value > 0){
+      const negative = -extra;
+      const positiveTotal = value + extra;
+      const cut = randomInt(rng, 1, Math.max(1, positiveTotal - 1));
+      return shuffleCopy([cut, positiveTotal - cut, negative], rng).filter(v => v !== 0);
+    }
+
+    const positive = extra;
+    const negativeTotalAbs = Math.abs(value - extra);
+    const cut = randomInt(rng, 1, Math.max(1, negativeTotalAbs - 1));
+    return shuffleCopy([-cut, -(negativeTotalAbs - cut), positive], rng).filter(v => v !== 0);
+  }
+
+  function splitValueForInitialTokens(value, count, rng=Math.random){
+    value = Math.round(Number(value) || 0);
+    count = clamp(Math.round(Number(count) || 1), 1, 3);
+
+    if(isRelativeUniverse() && count > 1){
+      const mixed = splitRelativeValueForInitialTokens(value, count, rng);
+      if(mixed.length === count && mixed.reduce((s,v)=>s+v,0) === value) return mixed;
+    }
+
+    if(value === 0) return [0];
+
+    // En positif, les constantes sont positives. En relatif avec 1 seul jeton,
+    // on garde simplement le signe de la constante.
+    const sign = value < 0 ? -1 : 1;
+    const absValue = Math.abs(value);
+    if(count <= 1 || absValue < count) return [value];
+
+    const cuts = [];
+    for(let i=0; i<count-1; i++) cuts.push(randomInt(rng, 1, absValue-1));
+    cuts.sort((a,b)=>a-b);
+    const points = [0, ...cuts, absValue];
+    const parts = [];
+    for(let i=0; i<points.length-1; i++){
+      const part = points[i+1] - points[i];
+      if(part > 0) parts.push(part * sign);
+    }
+    if(parts.length !== count) return splitValueForInitialTokens(value, count, rng);
+    return parts;
+  }
+
+  function makeInitialTokens(value, rng=Math.random){
+    return splitValueForInitialTokens(value, getInitialTokenCount(rng), rng).map(makeToken);
+  }
 
   function mulberry32(a){
     return function(){
@@ -734,10 +1064,11 @@
   function setActionMode(mode){
     actionMode = mode;
     deleteSelection = [];
-    [toolDecompose, toolShare, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    [toolDecompose, toolShare, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
     if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
     if(mode === "share" && toolShare) toolShare.classList.add("active");
     if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
+    if(mode === "addBoth" && toolAddBoth) toolAddBoth.classList.add("active");
     render();
   }
 
@@ -773,59 +1104,67 @@
     if(!profEquationInfo || !modeEl) return;
     const rawMode = modeEl.value;
     if(rawMode === "mix"){
-      profEquationInfo.innerHTML = "Mélange : le calcul automatique dépendra du type tiré au hasard.";
+      profEquationInfo.innerHTML = isRelativeUniverse()
+        ? "Mélange relatif : les constantes et la solution peuvent être positives ou négatives."
+        : "Mélange : le calcul automatique dépendra du type tiré au hasard.";
       return;
     }
 
+    const relative = isRelativeUniverse();
     const aRaw = Math.round(numberOr(coefAEl.value, 2));
-    const bRaw = Math.round(numberOr(constBEl.value, 4));
-    const x = Math.max(1, Math.round(numberOr(solXEl.value, 12)));
+    const bRaw = Math.round(numberOr(constBEl.value, relative ? 0 : 4));
+    const xRaw = Math.round(numberOr(solXEl.value, relative ? 3 : 12));
+    const x = relative ? (xRaw === 0 ? 1 : clamp(xRaw, -20, 20)) : Math.max(1, xRaw);
 
     if(rawMode === "xpb"){
-      const b = Math.max(1, bRaw);
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${x + b}</strong>`;
+      const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(x + b)}</strong>`;
       return;
     }
     if(rawMode === "axc"){
       const a = Math.max(2, aRaw);
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${a * x}</strong>`;
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(a * x)}</strong>`;
       return;
     }
     if(rawMode === "both"){
       const a = Math.max(2, aRaw);
       const cCoef = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
-      const b = Math.max(1, bRaw);
+      const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
       const d = (a - cCoef) * x + b;
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${d}</strong>`;
+      profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${formatSignedNumber(d)}</strong>`;
       return;
     }
     const a = Math.max(2, aRaw);
-    const b = Math.max(1, bRaw);
-    profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${a * x + b}</strong>`;
+    const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
+    profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(a * x + b)}</strong>`;
   }
 
   function buildFromInputs(){
     const selectedMode = getSelectedMode();
+    const relative = isRelativeUniverse();
     const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
-    const bInput = clamp(Math.round(numberOr(constBEl.value,4)),1,40);
-    const x = clamp(Math.round(numberOr(solXEl.value,12)),2,20);
+    const bInput = relative
+      ? clamp(Math.round(numberOr(constBEl.value,0)), -40, 40)
+      : clamp(Math.round(numberOr(constBEl.value,4)),1,40);
+    let x = relative
+      ? clamp(Math.round(numberOr(solXEl.value,3)), -20, 20)
+      : clamp(Math.round(numberOr(solXEl.value,12)),2,20);
+    if(relative && x === 0) x = 1;
 
     let a = selectedMode === "xpb" ? 1 : rawA;
     let b = selectedMode === "axc" ? 0 : bInput;
     let rightA = 0;
     let d = 0;
-    let rightValue = a*x + b;
 
     if(selectedMode === "both"){
       a = Math.max(2, rawA);
       rightA = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
       b = bInput;
       d = (a - rightA) * x + b;
-      rightValue = d;
     }
 
     coefAEl.value = a;
-    constBEl.value = b || bInput;
+    constBEl.value = b;
     if(coefCEl) coefCEl.value = rightA || 1;
     solXEl.value = x;
     updateProfEquationInfo();
@@ -839,11 +1178,12 @@
     };
 
     if(selectedMode === "both"){
-      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
-      state.right = Array.from({length:rightA}, makeX).concat(d > 0 ? [makeToken(d)] : []);
+      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b) : []);
+      state.right = Array.from({length:rightA}, makeX).concat(d !== 0 ? makeInitialTokens(d) : []);
     }else{
-      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
-      state.right = [makeToken(a*x + b)];
+      const rightValue = a*x + b;
+      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b) : []);
+      state.right = rightValue !== 0 ? makeInitialTokens(rightValue) : [];
     }
 
     recordEquationStep();
@@ -856,6 +1196,7 @@
   function randomExercise(){
     const rawSeed = String(seedEl.value || "").trim();
     const rng = rawSeed === "" ? Math.random : mulberry32(Number(rawSeed)|0);
+    const relative = isRelativeUniverse();
 
     let selectedMode = modeEl ? modeEl.value : "axb";
     if(selectedMode === "mix"){
@@ -864,20 +1205,24 @@
     }
 
     let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
-    const x = randomInt(rng,3,15);
-    let b = selectedMode === "axc" ? 0 : randomInt(rng,2,18);
+    const x = relative ? randomNonZeroInt(rng,-12,12) : randomInt(rng,3,15);
+    let b = selectedMode === "axc" ? 0 : (relative ? randomNonZeroInt(rng,-18,18) : randomInt(rng,2,18));
     let rightA = 0;
     let d = 0;
 
     if(selectedMode === "both"){
       a = randomInt(rng,3,5);
       rightA = randomInt(rng,1,a-1);
-      b = randomInt(rng,2,14);
+      b = relative ? randomNonZeroInt(rng,-14,14) : randomInt(rng,2,14);
       d = (a - rightA) * x + b;
+      if(relative && d === 0){
+        b += x > 0 ? -1 : 1;
+        d = (a - rightA) * x + b;
+      }
     }
 
     coefAEl.value = Math.max(2, a);
-    constBEl.value = Math.max(1, b || randomInt(rng,2,18));
+    constBEl.value = b;
     if(coefCEl) coefCEl.value = rightA || 1;
     solXEl.value = x;
     updateProfEquationInfo();
@@ -891,11 +1236,12 @@
     };
 
     if(selectedMode === "both"){
-      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
-      state.right = Array.from({length:rightA}, makeX).concat(d > 0 ? [makeToken(d)] : []);
+      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.right = Array.from({length:rightA}, makeX).concat(d !== 0 ? makeInitialTokens(d, rng) : []);
     }else{
-      state.left = Array.from({length:a}, makeX).concat(b > 0 ? [makeToken(b)] : []);
-      state.right = [makeToken(a*x + b)];
+      const rightValue = a*x + b;
+      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.right = rightValue !== 0 ? makeInitialTokens(rightValue, rng) : [];
     }
 
     recordEquationStep();
@@ -909,7 +1255,7 @@
   function renderPiecesForSide(side){ return shouldKeepRemovedPieces() ? state[side] : activePieces(side); }
 
   function sideExpression(side){
-    const pieces = activePieces(side);
+    const pieces = activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0));
     const v = displayedUnknown();
     const terms = [];
     let i = 0;
@@ -923,16 +1269,16 @@
         }
         terms.push(count === 1 ? v : `${count}${v}`);
       }else{
-        terms.push(String(p.value));
+        terms.push(formatEquationTerm(p.value));
         i++;
       }
     }
-    return terms.length ? terms.join(" + ").replace(/\+ -/g,"− ") : "0";
+    return terms.length ? terms.join(" + ") : "0";
   }
 
   function getSolvedValue(){
-    const left = activePieces("left");
-    const right = activePieces("right");
+    const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
     if(left.length === 0 || right.length === 0) return null;
     const isAllTokens = arr => arr.every(p => p.type === "token");
     const isAllX = arr => arr.every(p => p.type === "x");
@@ -955,6 +1301,23 @@
     if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
   }
 
+  function updateCurrentEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps.length === 0){
+      state.steps.push(eq);
+      return;
+    }
+    state.steps[state.steps.length - 1] = eq;
+  }
+
+  function isSolvedEquationString(eq){
+    const {lhs, rhs} = splitEquation(eq);
+    const v = displayedUnknown();
+    return lhs === v && /^−?\d+$/.test(rhs);
+  }
+
   function splitEquation(eq){
     const parts = String(eq).split("=");
     if(parts.length < 2) return {lhs:String(eq), rhs:""};
@@ -963,14 +1326,16 @@
 
   function renderEquationHistory(){
     const steps = state.steps || [];
-    const shown = steps.slice(-6);
-    if(!shown.length){ equationHistory.innerHTML = ""; return; }
-    const rows = shown.map((eq, i) => {
+    if(!steps.length){ equationHistory.innerHTML = ""; return; }
+    const rows = steps.map((eq, i) => {
       const {lhs, rhs} = splitEquation(eq);
-      const cls = i === shown.length - 1 ? "currentStep" : "historyStep";
+      const isCurrent = i === steps.length - 1;
+      const solved = isSolvedEquationString(eq);
+      const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
       return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
     }).join("");
     equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+    equationHistory.scrollTop = equationHistory.scrollHeight;
   }
 
   function setInstruction(html){ instructionZone.innerHTML = html || ""; }
@@ -1051,13 +1416,14 @@
     return null;
   }
 
-  function applyTokenSplit(side, id, values){
+  function applyTokenSplit(side, id, values, historyMode="update"){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
     pushHistory();
     arr.splice(idx, 1, ...values.map(makeToken));
-    recordEquationStep();
+    if(historyMode === "record") recordEquationStep();
+    else updateCurrentEquationStep();
     selectedPieceRef = null;
     render();
   }
@@ -1073,7 +1439,7 @@
     const piece = state[side].find(p => p.id === id);
     if(!piece || piece.type !== "token" || piece.removed) return;
     selectedPieceRef = {side,id};
-    dialogText.innerHTML = `Décomposer le jeton <strong>${piece.value}</strong> en une somme.`;
+    dialogText.innerHTML = `Décomposer le jeton <strong>${formatSignedNumber(piece.value)}</strong> en une somme.`;
     decomposeInput.value = "";
     presetChips.classList.remove("open");
     presetChips.innerHTML = "";
@@ -1194,7 +1560,7 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part));
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record");
           shareDialog.close();
         });
       });
@@ -1224,9 +1590,10 @@
   }
 
   function tokenAreaForTray(tray){
+    // PATCH 0.4 : zone de manipulation plus grande et plus proche des bords.
     // Le jeton doit pouvoir circuler presque partout sur le plateau.
     // On garde seulement une marge intérieure pour éviter qu'il colle au bord.
-    return {x:tray.x+58, y:tray.y+72, w:tray.w-116, h:tray.h-124};
+    return {x:tray.x+42, y:tray.y+54, w:tray.w-84, h:tray.h-96};
   }
 
   function rowsForSplats(n){
@@ -1240,7 +1607,10 @@
   function splatPositionsForItems(tray, items){
     const xs = items.filter(p => p.type === "x");
     const out = new Map();
-    const splatArea = {x:tray.x+70, y:tray.y+90, w:tray.w-140, h:250};
+    // PATCH 0.7.2 : taches légèrement plus grandes et mieux espacées.
+    // Elles doivent pouvoir cacher visuellement un jeton numéroté,
+    // sans se toucher lorsque plusieurs inconnues sont présentes.
+    const splatArea = {x:tray.x+70, y:tray.y+80, w:tray.w-140, h:400};
     const rows = rowsForSplats(xs.length);
     let k = 0;
     for(let r=0;r<rows.length;r++){
@@ -1249,14 +1619,14 @@
       const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
       for(let c=0;c<cols && k<xs.length;c++){
         const cx = splatArea.x + cellW*(c+.5);
-        out.set(xs[k].id, {cx,cy,r:72});
+        out.set(xs[k].id, {cx,cy,r:84});
         k++;
       }
     }
     return out;
   }
 
-  function avoidSplatsOnDrop(tray, items, cx, cy, r=34){
+  function avoidSplatsOnDrop(tray, items, cx, cy, r=40){
     // Si le jeton est relâché sur une tache, on le repousse doucement
     // vers le bord libre le plus proche, plutôt que de le bloquer dans la zone basse.
     let p = {cx, cy};
@@ -1285,7 +1655,7 @@
     return p;
   }
 
-  function clampTokenPosition(tray, cx, cy, r=34, avoid=true, side=null){
+  function clampTokenPosition(tray, cx, cy, r=40, avoid=true, side=null){
     const area = tokenAreaForTray(tray);
     let p = {
       cx: clamp(cx, area.x + r, area.x + area.w - r),
@@ -1297,39 +1667,142 @@
     return p;
   }
 
+  function tokenOverlapsExisting(candidate, placed, minDist){
+    for(const p of placed){
+      if(Math.hypot(candidate.cx - p.cx, candidate.cy - p.cy) < minDist) return true;
+    }
+    return false;
+  }
+
+  function tokenOverlapsSplats(candidate, splats, tokenR){
+    for(const s of splats){
+      if(Math.hypot(candidate.cx - s.cx, candidate.cy - s.cy) < s.r + tokenR + 18) return true;
+    }
+    return false;
+  }
+
+  function randomTokenPositionInTray(tray, sideName, visible, placed){
+    const area = tokenAreaForTray(tray);
+    const splats = Array.from(splatPositionsForItems(tray, visible).values());
+    const minTokenDist = TOKEN_R * 2.12;
+
+    // Placement naturel : on tire des positions dans tout le plateau,
+    // mais on refuse les positions sur les taches et, si possible, les
+    // positions qui collent trop les jetons entre eux.
+    for(let attempt=0; attempt<140; attempt++){
+      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
+      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
+      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
+      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
+      if(tokenOverlapsExisting(p, placed, minTokenDist)) continue;
+      return p;
+    }
+
+    // Deuxième passe : on accepte que les jetons soient plus proches,
+    // mais toujours pas sur une tache.
+    for(let attempt=0; attempt<100; attempt++){
+      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
+      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
+      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
+      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
+      if(tokenOverlapsExisting(p, placed, TOKEN_R * 1.82)) continue;
+      return p;
+    }
+
+    // Secours déterministe : si le plateau est très chargé, on reprend
+    // une position corrigée par l'évitement des taches.
+    const fallback = {
+      cx: area.x + area.w * (0.28 + Math.random()*0.44),
+      cy: area.y + area.h * (0.56 + Math.random()*0.34)
+    };
+    return clampTokenPosition(tray, fallback.cx, fallback.cy, TOKEN_R, true, sideName);
+  }
+
+  function separateTokenPositions(tray, visible, tokens, sideName){
+    // PATCH 0.7.3 : après le placement naturel, on effectue une petite
+    // relaxation géométrique pour supprimer les derniers chevauchements
+    // entre jetons, tout en continuant à éviter les taches.
+    const minDist = TOKEN_R * 2.10;
+    if(tokens.length < 2) return;
+
+    for(let pass=0; pass<18; pass++){
+      let moved = false;
+
+      for(let i=0; i<tokens.length; i++){
+        for(let j=i+1; j<tokens.length; j++){
+          const a = tokens[i];
+          const b = tokens[j];
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let dist = Math.hypot(dx, dy);
+
+          if(dist < 0.001){
+            dx = 1;
+            dy = 0;
+            dist = 1;
+          }
+
+          if(dist < minDist){
+            const push = (minDist - dist) / 2;
+            const ux = dx / dist;
+            const uy = dy / dist;
+
+            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, TOKEN_R, true, sideName);
+            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, TOKEN_R, true, sideName);
+
+            a.x = pa.cx;
+            a.y = pa.cy;
+            b.x = pb.cx;
+            b.y = pb.cy;
+            moved = true;
+          }
+        }
+      }
+
+      // Une passe de sécurité contre les taches après les déplacements entre jetons.
+      for(const t of tokens){
+        const safe = clampTokenPosition(tray, t.x, t.y, TOKEN_R, true, sideName);
+        if(Math.abs(safe.cx - t.x) > 0.5 || Math.abs(safe.cy - t.y) > 0.5){
+          t.x = safe.cx;
+          t.y = safe.cy;
+          moved = true;
+        }
+      }
+
+      if(!moved) break;
+    }
+  }
+
   function layoutItems(tray, items){
     const visible = items;
-    const xs = visible.filter(p => p.type === "x");
     const tokens = visible.filter(p => p.type === "token");
     const out = new Map();
-
-    const tokenArea = tokenAreaForTray(tray);
 
     const splatPositions = splatPositionsForItems(tray, visible);
     for(const [id, pos] of splatPositions.entries()) out.set(id, pos);
 
-    const n = tokens.length;
-    if(n > 0){
-      const cols = Math.min(n, 6);
-      const rowsT = Math.ceil(n / cols);
-      for(let i=0;i<n;i++){
-        const row = Math.floor(i / cols);
-        const col = i % cols;
-        const cellW = tokenArea.w / cols;
-        const cellH = tokenArea.h / rowsT;
-        const auto = {
-          cx:tokenArea.x + cellW*(col+.5),
-          cy:tokenArea.y + cellH*(row+.5),
-          r:34
-        };
-        if(Number.isFinite(tokens[i].x) && Number.isFinite(tokens[i].y)){
-          const clamped = clampTokenPosition(tray, tokens[i].x, tokens[i].y, 34, true, tray.x < 800 ? "left" : "right");
-          out.set(tokens[i].id, {cx:clamped.cx, cy:clamped.cy, r:34});
-        }else{
-          out.set(tokens[i].id, auto);
-        }
+    const sideName = tray.x < 800 ? "left" : "right";
+    const placedTokens = [];
+
+    for(const token of tokens){
+      if(Number.isFinite(token.x) && Number.isFinite(token.y)){
+        const clamped = clampTokenPosition(tray, token.x, token.y, TOKEN_R, true, sideName);
+        token.x = clamped.cx;
+        token.y = clamped.cy;
+        placedTokens.push({cx:clamped.cx, cy:clamped.cy});
+      }else{
+        const p = randomTokenPositionInTray(tray, sideName, visible, placedTokens);
+        token.x = p.cx;
+        token.y = p.cy;
+        placedTokens.push({cx:p.cx, cy:p.cy});
       }
     }
+
+    separateTokenPositions(tray, visible, tokens, sideName);
+    for(const token of tokens){
+      out.set(token.id, {cx:token.x, cy:token.y, r:TOKEN_R});
+    }
+
     return out;
   }
 
@@ -1375,8 +1848,110 @@
 
   function getTrayForSide(side){
     return side === "left"
-      ? {x:80, y:86, w:650, h:620}
-      : {x:870, y:86, w:650, h:620};
+      ? {x:40, y:74, w:720, h:650}
+      : {x:840, y:74, w:720, h:650};
+  }
+
+  function findFusionCandidate(side, draggedId, cx, cy){
+    if(!state || !state[side]) return null;
+    const dragged = state[side].find(p => p.id === draggedId);
+    if(!dragged || dragged.removed || dragged.type !== "token") return null;
+
+    const tray = getTrayForSide(side);
+    const items = renderPiecesForSide(side);
+    const positions = layoutItems(tray, items);
+    let best = null;
+    let bestDist = Infinity;
+
+    for(const other of activePieces(side)){
+      if(other.id === draggedId || other.type !== "token" || other.removed) continue;
+      const pos = positions.get(other.id);
+      if(!pos) continue;
+      const dist = Math.hypot(cx - pos.cx, cy - pos.cy);
+      // Fusion seulement si on dépose vraiment le jeton sur l'autre :
+      // seuil assoupli : il faut déposer franchement sur l’autre jeton,
+      // mais sans devoir viser parfaitement le centre.
+      if(dist < TOKEN_R * 1.55 && dist < bestDist){
+        best = other;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  function openFusionDialog(side, sourceId, targetId){
+    const source = state && state[side] ? state[side].find(p => p.id === sourceId) : null;
+    const target = state && state[side] ? state[side].find(p => p.id === targetId) : null;
+    if(!source || !target || source.removed || target.removed) return;
+    if(source.type !== "token" || target.type !== "token") return;
+
+    const a = Number(target.value);
+    const b = Number(source.value);
+    if(!isRelativeUniverse() && (a < 0 || b < 0)) return;
+    const expected = a + b;
+    pendingFusion = {side, sourceId, targetId, a, b, expected};
+    fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
+    fusionInput.value = "";
+    fusionFeedback.textContent = "";
+    if(typeof fusionDialog.showModal === "function") fusionDialog.showModal();
+    setTimeout(()=>fusionInput.focus(), 80);
+  }
+
+  function removeTransientZero(side, id){
+    if(!state || !state[side]) return;
+    const idx = state[side].findIndex(p => p.id === id && p.type === "token" && Number(p.value) === 0);
+    if(idx < 0) return;
+    state[side].splice(idx, 1);
+    updateCurrentEquationStep();
+    render();
+    setInstruction("La paire nulle vaut 0 : elle disparaît du plateau.");
+  }
+
+  function applyFusion(){
+    if(!pendingFusion) return;
+    const answer = Number(fusionInput.value);
+    if(!Number.isFinite(answer)){
+      fusionFeedback.textContent = "Écris un nombre.";
+      return;
+    }
+    if(answer !== pendingFusion.expected){
+      fusionFeedback.textContent = "Ce n’est pas encore le bon résultat.";
+      fusionInput.select();
+      return;
+    }
+
+    const {side, sourceId, targetId, expected} = pendingFusion;
+    const arr = state && state[side] ? state[side] : null;
+    if(!arr) return;
+    const source = arr.find(p => p.id === sourceId);
+    const target = arr.find(p => p.id === targetId);
+    if(!source || !target || source.removed || target.removed) return;
+
+    pushHistory();
+    const merged = makeToken(expected);
+    const sx = Number.isFinite(source.x) ? source.x : null;
+    const sy = Number.isFinite(source.y) ? source.y : null;
+    const tx = Number.isFinite(target.x) ? target.x : null;
+    const ty = Number.isFinite(target.y) ? target.y : null;
+    merged.x = Number.isFinite(sx) && Number.isFinite(tx) ? (sx + tx) / 2 : (Number.isFinite(sx) ? sx : tx);
+    merged.y = Number.isFinite(sy) && Number.isFinite(ty) ? (sy + ty) / 2 : (Number.isFinite(sy) ? sy : ty);
+    if(expected === 0) merged.transientZero = true;
+
+    const firstIndex = Math.min(arr.findIndex(p => p.id === sourceId), arr.findIndex(p => p.id === targetId));
+    const filtered = arr.filter(p => p.id !== sourceId && p.id !== targetId);
+    filtered.splice(firstIndex, 0, merged);
+    state[side] = filtered;
+
+    pendingFusion = null;
+    fusionDialog.close();
+    updateCurrentEquationStep();
+    render();
+    if(expected === 0){
+      setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
+      setTimeout(() => removeTransientZero(side, merged.id), 950);
+    }else{
+      setInstruction(`Jetons fusionnés : <strong>${formatSignedNumber(expected)}</strong>.`);
+    }
   }
 
   function beginTokenDrag(e, side, item, pos, group){
@@ -1401,7 +1976,7 @@
     if(!dragState) return;
     const p = svgPointFromEvent(e);
     const tray = getTrayForSide(dragState.side);
-    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), 34, false);
+    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), TOKEN_R, false);
     const dx = next.cx - dragState.startCx;
     const dy = next.cy - dragState.startCy;
     if(Math.hypot(dx, dy) > 3) dragState.moved = true;
@@ -1421,19 +1996,25 @@
     ds.group.removeAttribute("transform");
     if(ds.moved){
       const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
+      let fusionTarget = null;
       if(piece){
-        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, 34, true, ds.side);
+        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, TOKEN_R, true, ds.side);
         piece.x = safe.cx;
         piece.y = safe.cy;
+        fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
       }
       suppressNextClickFor = ds.id;
       render();
+      if(fusionTarget){
+        setTimeout(()=>openFusionDialog(ds.side, ds.id, fusionTarget.id), 40);
+      }
     }
   }
 
   function drawItem(side, item, pos, selectedIds){
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     if(item.type === "token") g.classList.add("tokenDragGroup");
+    if(item.type === "token" && item.transientZero) g.classList.add("transientZero");
     if(item.removed) g.classList.add("removedGroup");
     g.dataset.side = side;
     g.dataset.id = item.id;
@@ -1461,7 +2042,7 @@
       const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       hit.setAttribute("cx", pos.cx);
       hit.setAttribute("cy", pos.cy);
-      hit.setAttribute("r", pos.r + 18);
+      hit.setAttribute("r", pos.r + TOKEN_HIT_EXTRA);
       hit.setAttribute("fill", "transparent");
       hit.setAttribute("class", "tokenHitArea");
       g.appendChild(hit);
@@ -1470,9 +2051,19 @@
       circle.setAttribute("cx", pos.cx);
       circle.setAttribute("cy", pos.cy);
       circle.setAttribute("r", pos.r);
-      circle.setAttribute("class", "tokenCircle");
+      const tokenClass = Number(item.value) < 0
+        ? "tokenCircle negative"
+        : (Number(item.value) === 0 ? "tokenCircle zero" : (isRelativeUniverse() ? "tokenCircle positive relativePositive" : "tokenCircle positive"));
+      circle.setAttribute("class", tokenClass);
+      if(!isRelativeUniverse() && Number(item.value) > 0){
+        const col = positiveTokenColorForValue(item.value);
+        // Style inline pour éviter que la classe .tokenCircle.positive écrase
+        // les couleurs variées du Splat positif.
+        circle.style.fill = col.fill;
+        circle.style.stroke = col.stroke;
+      }
       g.appendChild(circle);
-      drawText(pos.cx, pos.cy + 2, String(item.value), "tokenText", g);
+      drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g);
       if(item.removed){
         const overlay = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         overlay.setAttribute("cx", pos.cx);
@@ -1523,11 +2114,11 @@
   function renderSvg(){
     svg.innerHTML = "";
     drawDefs();
-    const leftTray = {x:80, y:86, w:650, h:620};
-    const rightTray = {x:870, y:86, w:650, h:620};
+    const leftTray = getTrayForSide("left");
+    const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, 396, "=", "eqMiddle");
+    drawText(800, 400, "=", "eqMiddle");
 
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
@@ -1538,13 +2129,56 @@
     rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds));
   }
 
+
+  function openAddBothDialog(){
+    if(!state) return;
+    addBothInput.value = "";
+    addBothFeedback.textContent = "";
+    if(isRelativeUniverse()){
+      addBothDialogText.textContent = "Ajoute le même jeton dans chaque membre. Tu peux écrire une valeur positive ou négative.";
+      addBothInput.min = "-99";
+    }else{
+      addBothDialogText.textContent = "Ajoute le même jeton positif dans chaque membre.";
+      addBothInput.min = "1";
+    }
+    addBothInput.max = "99";
+    if(typeof addBothDialog.showModal === "function") addBothDialog.showModal();
+    setTimeout(()=>addBothInput.focus(), 80);
+  }
+
+  function applyAddBoth(){
+    if(!state) return;
+    const raw = Number(addBothInput.value);
+    if(!Number.isFinite(raw) || Math.round(raw) !== raw || raw === 0){
+      addBothFeedback.textContent = isRelativeUniverse() ? "Écris un entier non nul, positif ou négatif." : "Écris un entier positif non nul.";
+      addBothInput.select();
+      return;
+    }
+
+    const value = Math.round(raw);
+    if(!isRelativeUniverse() && value < 0){
+      addBothFeedback.textContent = "Dans Splat positif, on n’ajoute que des jetons positifs.";
+      addBothInput.select();
+      return;
+    }
+    pushHistory();
+    const leftToken = makeToken(value);
+    const rightToken = makeToken(value);
+    state.left.push(leftToken);
+    state.right.push(rightToken);
+    deleteSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    addBothDialog.close();
+    render();
+  }
+
   function renderActions(){
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
 
     const solved = getSolvedValue();
     if(solved !== null){
-      solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
       setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
       return;
     }
@@ -1557,7 +2191,7 @@
     if(actionMode === "share"){
       const suggested = getShareOpportunity();
       if(suggested){
-        setInstruction(`Partage&nbsp;<strong>${suggested.token.value}</strong>&nbsp;en <strong>${suggested.count}</strong> parts égales.`);
+        setInstruction(`Partage&nbsp;<strong>${formatSignedNumber(suggested.token.value)}</strong>&nbsp;en <strong>${suggested.count}</strong> parts égales.`);
       }else{
         setInstruction("Partage un jeton en parts égales.");
       }
@@ -1609,6 +2243,7 @@
 
   function render(){
     if(!state) return;
+    if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
     renderSvg();
     renderActions();
@@ -1622,6 +2257,29 @@
     render();
   }
 
+  function syncUniverseUI(){
+    if(!workUniverseEl) return;
+    const relative = isRelativeUniverse();
+
+    if(toolAddBoth){
+      toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
+    }
+
+    if(constBEl){
+      constBEl.min = relative ? "-40" : "1";
+      constBEl.max = "40";
+      if(!relative && Number(constBEl.value) < 1) constBEl.value = "4";
+      if(relative && Number(constBEl.value) === 0) constBEl.value = "-4";
+    }
+    if(solXEl){
+      solXEl.min = relative ? "-20" : "2";
+      solXEl.max = relative ? "20" : "20";
+      if(!relative && Number(solXEl.value) < 2) solXEl.value = "12";
+      if(relative && Number(solXEl.value) === 0) solXEl.value = "-3";
+    }
+    updateProfEquationInfo();
+  }
+
   document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
   document.getElementById("btnRandom").addEventListener("click", randomExercise);
   document.getElementById("btnReset").addEventListener("click", buildFromInputs);
@@ -1629,22 +2287,61 @@
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
   toolShare.addEventListener("click", () => setActionMode("share"));
   toolDelete.addEventListener("click", () => setActionMode("delete"));
+  toolAddBoth.addEventListener("click", openAddBothDialog);
   toolUndo.addEventListener("click", undo);
   btnStageUndo.addEventListener("click", undo);
   btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
   document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
   document.getElementById("btnCancelShareDialog").addEventListener("click", () => shareDialog.close());
+  document.getElementById("btnApplyAddBoth").addEventListener("click", applyAddBoth);
+  document.getElementById("btnCancelAddBoth").addEventListener("click", () => addBothDialog.close());
+  addBothInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyAddBoth(); }
+  });
+  document.getElementById("btnApplyFusion").addEventListener("click", applyFusion);
+  document.getElementById("btnCancelFusion").addEventListener("click", () => { pendingFusion = null; fusionDialog.close(); });
+  fusionInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyFusion(); }
+  });
   btnFullscreen.addEventListener("click", () => {
     if(document.fullscreenElement) document.exitFullscreen();
     else if(stageEl.requestFullscreen) stageEl.requestFullscreen();
   });
 
-  [modeEl, coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+  // PATCH 1.2.2 — auto-mise à jour seulement pour les menus.
+  // Les champs numériques (a, b, c, solution) redeviennent manuels :
+  // on peut les effacer/taper tranquillement, puis cliquer sur Créer ou 🎲.
+  function rebuildFromCurrentSettings(){
+    syncUniverseUI();
+    syncTeacherControls();
+    buildFromInputs();
+  }
+
+  [modeEl, initialTokenCountEl].forEach(el => {
     if(!el) return;
-    el.addEventListener("input", () => { syncTeacherControls(); });
-    el.addEventListener("change", () => { syncTeacherControls(); });
+    el.addEventListener("change", rebuildFromCurrentSettings);
   });
+
+  [coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+    if(!el) return;
+    el.addEventListener("input", () => {
+      syncUniverseUI();
+      syncTeacherControls();
+    });
+    el.addEventListener("change", () => {
+      syncUniverseUI();
+      syncTeacherControls();
+    });
+  });
+
+  if(workUniverseEl){
+    workUniverseEl.addEventListener("change", () => {
+      syncUniverseUI();
+      syncTeacherControls();
+      randomExercise();
+    });
+  }
   unknownDisplayModeEl.addEventListener("change", () => {
     if(state){ state.steps = [currentEquationString()]; render(); }
   });
@@ -1653,14 +2350,16 @@
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape") return;
     if(e.key === "z" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); undo(); }
-    if(e.key.toLowerCase() === "f" && !decomposeDialog.open && !shareDialog.open){
+    if(e.key.toLowerCase() === "f" && !decomposeDialog.open && !shareDialog.open && !addBothDialog.open && !fusionDialog.open){
       e.preventDefault(); btnFullscreen.click();
     }
   });
 
+  syncUniverseUI();
   syncTeacherControls();
   buildFromInputs();
 })();
+
 </script>
 </body>
 </html>
