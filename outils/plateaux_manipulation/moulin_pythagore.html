@@ -134,7 +134,7 @@
       <select id="puzzleSelect">
       <option value="perigal" selected>1. Périgal (5 pièces)</option>
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
-      <option value="leitzmann">3. Leitzmann (8 triangles)</option>
+      <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. 4 pièces identiques + 1 carré</option>
     </select>
     </div>
@@ -189,8 +189,8 @@
   const COLORS = {
     green: "#009900", magenta: "#cc0066", yellow: "#ffcc66", blue: "#0099ff",
     gray: "#808080", red: "#e74c3c", purple: "#9b59b6", orange: "#e67e22",
-    teal: "#1abc9c", lightblue: "#90caf9", darkblue: "#1565c0", brown: "#795548",
-    softGray: "#bdc3c7",
+    teal: "#1abc9c", lightblue: "#90caf9", lightBlue: "#90caf9", darkblue: "#1565c0", brown: "#795548",
+    lightRed: "#fca5a5", softGray: "#bdc3c7",
     black: "#111827"
   };
 
@@ -392,10 +392,10 @@
     // 1 droite passant par TL perpendiculaire à BC
     // => découpe du carré b² en 4 pièces + le carré a² entier
     leitzmann: {
-      name: "Leitzmann",
+      name: "Liu Hui — 8 triangles",
       generate: (Ax, Ay, b, ratio) => {
         const a = b * ratio;
-        const t = b / (a + b); // position du point sur la diagonale (construction Leitzmann)
+        const t = b / (a + b); // position du point sur la diagonale (construction Liu Hui)
 
         // Carré b² (sur AB, au-dessus)
         const A  = {x:Ax,   y:Ay};
@@ -563,7 +563,7 @@
       `
     },
     leitzmann: {
-      title: "Puzzle 4 — Leitzmann",
+      title: "Puzzle 3 — Liu Hui",
       html: `
         <p><strong>Objectif :</strong> reconstituer <em>c²</em> avec <strong>8 triangles</strong> (4 venant de <em>a²</em> et 4 de <em>b²</em>).</p>
         <p class="muted">Indice : commence par placer 4 triangles pour dessiner le contour de <em>c²</em>, puis remplis.</p>
@@ -571,7 +571,7 @@
     }
 ,
     quatreIdentiques: {
-      title: "5. 4 pièces identiques + 1 carré",
+      title: "Puzzle 4 — 4 pièces identiques + 1 carré",
       html: `
         <p>Le <strong>petit carré</strong> reste <strong>entier</strong>. L’autre carré est découpé en <strong>4 pièces identiques</strong>.</p>
         <p>Objectif : déplacer ces <strong>5 pièces</strong> pour reconstituer le carré incliné <em>c²</em>.</p>
@@ -606,11 +606,20 @@
       bbox:bboxOfPoints([B,C,Cw,Bw])
     };
 
-    // points d'aimantation dans le carré incliné (coins + quelques points utiles)
-    const snapsUV = [
-      {u:0,v:0},{u:c,v:0},{u:0,v:c},{u:c,v:c},
-      {u:a,v:0},{u:0,v:a},{u:a,v:a},{u:a,v:c},{u:c,v:a},{u:c/2,v:c/2}
-    ];
+    // Points d'aimantation dans le carré incliné.
+    // On ajoute les repères liés à a ET à b : certains puzzles (notamment Bhaskara)
+    // ont besoin de sommets situés à une distance b du bord, pas seulement a.
+    const snapValues = Array.from(new Set([0, a, b, c, c / 2]))
+      .filter(v => v >= -1e-9 && v <= c + 1e-9)
+      .sort((x, y) => x - y);
+
+    const snapsUV = [];
+    for (const u of snapValues) {
+      for (const v of snapValues) {
+        snapsUV.push({ u, v });
+      }
+    }
+
     const snapPoints = snapsUV.map(s => ({
       x:C.x + s.u*mold.uvec.x + s.v*mold.vvec.x,
       y:C.y + s.u*mold.uvec.y + s.v*mold.vvec.y,
@@ -735,18 +744,274 @@
         poly.addEventListener("pointerdown", onPiecePointerDown);
         gh.addEventListener("pointerdown", onHandlePointerDown);
 
-        // Double-clic natif si le navigateur le laisse passer
-        poly.addEventListener("dblclick", (e)=>{
-          e.preventDefault(); e.stopPropagation();
-          setSelected(id);
-          flipPiece(id);
-        });
       });
       }
     });
 
     fitWorldToViewport();
   }
+
+
+  // ---------- Aide de rotation spécifique Bhaskara ----------
+  // Problème ciblé : pour Bhaskara, il ne suffit pas de coller un coin.
+  // Il faut aussi que l'hypoténuse d'un triangle devienne exactement parallèle
+  // à un côté du carré incliné c². On ajoute donc des angles d'aimantation
+  // basés sur les directions du carré c², et non seulement 0°/90°/180°/270°.
+  function edgeAnglesLocal(piece){
+    const sx = piece.flipX ? -1 : 1;
+    const pts = piece.verticesLocal.map(v => ({x: sx * v.x, y: v.y}));
+    const angles = [];
+    for(let i=0; i<pts.length; i++){
+      const p = pts[i];
+      const q = pts[(i+1) % pts.length];
+      const dx = q.x - p.x;
+      const dy = q.y - p.y;
+      if(Math.hypot(dx, dy) > 1e-9){
+        angles.push(deg(Math.atan2(dy, dx)));
+      }
+    }
+    return angles;
+  }
+
+  function bhaskaraTargetAngles(){
+    const R = state.moulins?.R;
+    if(!R) return [];
+    const u = R.mold.uvec;
+    const v = R.mold.vvec;
+
+    const au = deg(Math.atan2(u.y, u.x));
+    const av = deg(Math.atan2(v.y, v.x));
+
+    // On ajoute aussi les directions opposées : une arête peut être parcourue
+    // dans un sens ou dans l'autre.
+    return [au, au + 180, av, av + 180];
+  }
+
+  function isNearRightMoulin(piece, extra = 170){
+    const R = state.moulins?.R;
+    if(!R) return false;
+    const bb = R.mold.bbox;
+    return (
+      piece.pos.x >= bb.minX - extra &&
+      piece.pos.x <= bb.maxX + extra &&
+      piece.pos.y >= bb.minY - extra &&
+      piece.pos.y <= bb.maxY + extra
+    );
+  }
+
+  function applyBhaskaraAngleSnap(piece, thresholdDeg = 14){
+    if(state.puzzle !== "bhaskara" || !piece) return false;
+
+    // On n'applique cette aide que près du moulin cible, pour éviter
+    // de perturber les pièces encore posées sur le moulin de gauche.
+    if(!isNearRightMoulin(piece)) return false;
+
+    const localEdges = edgeAnglesLocal(piece);
+    const targetAngles = bhaskaraTargetAngles();
+    if(!localEdges.length || !targetAngles.length) return false;
+
+    let bestRot = null;
+    let bestD = Infinity;
+
+    for(const localA of localEdges){
+      for(const targetA of targetAngles){
+        const candidateRot = normAngleDeg(targetA - localA);
+        const d = Math.abs(normAngleDeg(piece.rot - candidateRot));
+        if(d < bestD){
+          bestD = d;
+          bestRot = candidateRot;
+        }
+      }
+    }
+
+    if(bestRot !== null && bestD < thresholdDeg){
+      piece.rot = bestRot;
+      applyPieceTransform(piece);
+      return true;
+    }
+
+    return false;
+  }
+
+  function longestLocalEdge(piece){
+    const sx = piece.flipX ? -1 : 1;
+    const pts = piece.verticesLocal.map(v => ({x: sx * v.x, y: v.y}));
+    let best = null;
+
+    for(let i=0; i<pts.length; i++){
+      const j = (i + 1) % pts.length;
+      const p = pts[i], q = pts[j];
+      const len = Math.hypot(q.x - p.x, q.y - p.y);
+      if(!best || len > best.len){
+        best = {i, j, p, q, len};
+      }
+    }
+
+    return best;
+  }
+
+  function rotatePointLocal(p, rotDeg){
+    const t = rad(rotDeg), c = Math.cos(t), s = Math.sin(t);
+    return {
+      x: p.x * c - p.y * s,
+      y: p.x * s + p.y * c
+    };
+  }
+
+  function bhaskaraTargetEdges(){
+    const R = state.moulins?.R;
+    if(!R) return [];
+
+    // Carré de l'hypoténuse : ordre des sommets [B, C, Cw, Bw]
+    const B = R.B, C = R.C, Cw = R.Cw, Bw = R.Bw;
+    return [
+      {a:B,  b:C},
+      {a:C,  b:Cw},
+      {a:Cw, b:Bw},
+      {a:Bw, b:B}
+    ];
+  }
+
+  function pointInConvexPolygon(pt, poly, tol = 6){
+    // Accepte les points à l'intérieur ou très proches du bord.
+    // Fonction robuste pour polygone convexe, quel que soit le sens des sommets.
+    if(!poly || poly.length < 3) return false;
+
+    let sign = 0;
+    for(let i=0; i<poly.length; i++){
+      const a = poly[i];
+      const b = poly[(i+1) % poly.length];
+      const cross = (b.x - a.x) * (pt.y - a.y) - (b.y - a.y) * (pt.x - a.x);
+
+      if(Math.abs(cross) <= tol) continue;
+      const s = Math.sign(cross);
+      if(sign === 0) sign = s;
+      else if(s !== sign) return false;
+    }
+    return true;
+  }
+
+  function transformedVerticesForEdgeSnap(piece, pos, rotDeg){
+    const t = rad(rotDeg), c = Math.cos(t), s = Math.sin(t);
+    const sx = piece.flipX ? -1 : 1;
+
+    return piece.verticesLocal.map(v => {
+      const x0 = sx * v.x;
+      const y0 = v.y;
+      return {
+        x: pos.x + (x0*c - y0*s),
+        y: pos.y + (x0*s + y0*c)
+      };
+    });
+  }
+
+  function tryBhaskaraEdgeSnap(piece){
+    if(state.puzzle !== "bhaskara" || !piece) return false;
+    if(piece.id.endsWith("-sq")) return false;
+    if(!isNearRightMoulin(piece, 260)) return false;
+
+    // V13 : on ne colle plus l'hypoténuse sur "n'importe quel côté possible".
+    // On utilise les poses exactes déjà calculées pour le puzzle Bhaskara.
+    // Puis on capture la pièce si SON hypoténuse actuelle est proche de
+    // l'hypoténuse de l'une de ces poses exactes.
+    const candidates = state.bhaskaraPoseTargets.get(piece.id) || [];
+    if(!candidates.length) return false;
+
+    const hyp = longestLocalEdge(piece);
+    if(!hyp) return false;
+
+    const current = pieceWorldVertices(piece);
+    const curA = current[hyp.i];
+    const curB = current[hyp.j];
+
+    let best = null;
+
+    for(const cand of candidates){
+      // Aucun retournement automatique.
+      if(cand.flipX !== piece.flipX) continue;
+
+      const targetA = cand.expectedVertices[hyp.i];
+      const targetB = cand.expectedVertices[hyp.j];
+      if(!targetA || !targetB) continue;
+
+      const dA = Math.hypot(curA.x - targetA.x, curA.y - targetA.y);
+      const dB = Math.hypot(curB.x - targetB.x, curB.y - targetB.y);
+      const avgEndD = (dA + dB) / 2;
+      const maxEndD = Math.max(dA, dB);
+
+      const centerD = Math.hypot(piece.pos.x - cand.pos.x, piece.pos.y - cand.pos.y);
+      const rotD = Math.abs(normAngleDeg(piece.rot - cand.rot));
+
+      // Score : priorité aux deux bouts de l'hypoténuse, puis centre/rotation.
+      const score = avgEndD * 1.35 + maxEndD * 0.55 + centerD * 0.18 + rotD * 1.2;
+
+      if(!best || score < best.score){
+        best = {cand, avgEndD, maxEndD, centerD, rotD, score};
+      }
+    }
+
+    if(!best) return false;
+
+    // Capture pratique : si l'élève met l'hypoténuse à peu près au bon endroit,
+    // on pose le triangle exactement sur LA pose de pavage correspondante.
+    const shouldSnap =
+      best.maxEndD < 125 ||
+      (best.avgEndD < 92 && best.centerD < 250) ||
+      (best.centerD < 165 && best.rotD < 28);
+
+    if(shouldSnap){
+      piece.pos = {...best.cand.pos};
+      piece.rot = best.cand.rot;
+      piece.flipX = best.cand.flipX; // identique à l'état actuel
+      applyPieceTransform(piece);
+      return true;
+    }
+
+    return false;
+  }
+
+  function tryBhaskaraSquareSnap(piece){
+    if(state.puzzle !== "bhaskara" || !piece) return false;
+    if(!piece.id.endsWith("-sq")) return false;
+    if(!isNearRightMoulin(piece, 240)) return false;
+
+    const candidates = state.bhaskaraPoseTargets.get(piece.id) || [];
+    if(!candidates.length) return false;
+
+    let best = null;
+
+    for(const cand of candidates){
+      // Aucun retournement automatique, même pour le carré.
+      if(cand.flipX !== piece.flipX) continue;
+
+      const centerD = Math.hypot(piece.pos.x - cand.pos.x, piece.pos.y - cand.pos.y);
+      const angleD = Math.abs(normAngleDeg(piece.rot - cand.rot));
+
+      // Le carré peut être visuellement équivalent avec plusieurs rotations,
+      // mais ici on garde la pose calculée par le puzzle pour que ses arêtes
+      // coïncident exactement avec celles des triangles.
+      const score = centerD + angleD * 1.8;
+
+      if(!best || score < best.score){
+        best = {cand, centerD, angleD, score};
+      }
+    }
+
+    if(!best) return false;
+
+    // Capture assez généreuse : l'élève amène le carré au centre,
+    // puis le programme le pose exactement pour supprimer les micro-décalages.
+    if(best.centerD < 180 || (best.centerD < 230 && best.angleD < 28)){
+      piece.pos = {...best.cand.pos};
+      piece.rot = best.cand.rot;
+      piece.flipX = best.cand.flipX;
+      applyPieceTransform(piece);
+      return true;
+    }
+
+    return false;
+  }
+
 
   // ---------- Interactions ----------
   function onPiecePointerDown(evt){
@@ -795,12 +1060,28 @@
       piece.rot=state.dragging.startRot+deg(a-state.dragging.startAngleRad);
       if(state.angleSnapEnabled && !evt.shiftKey){
         const candidates=[0,90,180,270];
+
+        // Bhaskara : on ajoute des rotations qui alignent une arête de la pièce
+        // avec les côtés du carré incliné c². C'est ce qui aide l'hypoténuse
+        // à devenir vraiment parallèle au bord cible.
+        if(state.puzzle === "bhaskara" && isNearRightMoulin(piece, 260)){
+          const localEdges = edgeAnglesLocal(piece);
+          const targetAngles = bhaskaraTargetAngles();
+          for(const localA of localEdges){
+            for(const targetA of targetAngles){
+              candidates.push(normAngleDeg(targetA - localA));
+            }
+          }
+        }
+
         let best=null, bestD=Infinity;
         candidates.forEach(c=>{
           const d=Math.abs(normAngleDeg(piece.rot-c));
           if(d<bestD){bestD=d;best=c;}
         });
-        if(bestD<SNAP.rot) piece.rot=best;
+
+        const threshold = (state.puzzle === "bhaskara" && isNearRightMoulin(piece, 260)) ? 12 : SNAP.rot;
+        if(bestD<threshold) piece.rot=best;
       }
     }
     applyPieceTransform(piece);
@@ -811,25 +1092,22 @@
     const id = state.dragging.pieceId;
     const piece = state.pieces.get(id);
 
-    // Détection double-clic/ double-tap "maison" (robuste SVG)
-    const endP = state.lastPointerWorld || clientToWorld(evt);
-    const moveDist = Math.hypot(endP.x - state.dragging.startPointer.x, endP.y - state.dragging.startPointer.y);
-    const isTap = moveDist <= TAP_MOVE_TOL;
-
-    const now = performance.now();
-    if(isTap){
-      if(state.lastTap && state.lastTap.pieceId===id && (now - state.lastTap.time) <= DOUBLE_TAP_MS){
-        flipPiece(id);
-        state.lastTap = null;
-      } else {
-        state.lastTap = {pieceId:id, time:now};
-      }
-    }
-
+    // Le retournement par double-clic / double-tap est désactivé :
+    // une pièce se retourne uniquement avec le bouton "Retourner".
     state.dragging=null;
 
-    // Snap : vers le carré c² + vers les sommets des autres pièces (pour aider à fermer le pavage)
+    // Bhaskara : au lâcher, on corrige d'abord l'angle si une arête est presque
+    // parallèle à un côté du carré incliné. Ensuite seulement, le snap par coin
+    // existant peut placer la pièce proprement.
+    let snappedByBhaskaraExact = false;
     if(piece && state.snapEnabled){
+      applyBhaskaraAngleSnap(piece, 18);
+      snappedByBhaskaraExact = tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
+    }
+
+    // Snap : vers le carré c² + vers les sommets des autres pièces (pour aider à fermer le pavage)
+    // Si Bhaskara a verrouillé une hypoténuse ou le carré central, on ne relance pas le snap générique.
+    if(piece && state.snapEnabled && !snappedByBhaskaraExact){
       const verts = pieceWorldVertices(piece);
       const targets = [...state.snapPoints];
 
@@ -953,7 +1231,7 @@
 
   // Énoncé (impression) — reprise fidèle de l’énoncé d’origine, mais adaptable au puzzle sélectionné
   function buildEnonceHTML() {
-  const puzzleLabel = state.puzzleLabel || "Puzzle";
+  const puzzleLabel = PUZZLES[state.puzzle]?.name || "Puzzle";
   const svgPage1 = buildPage1SVG();
   const svgEmptyDouble = buildEmptyDoubleSVG();
   const svgApplication = buildApplicationMoulinSVG(5, 12);
