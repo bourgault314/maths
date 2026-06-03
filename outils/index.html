@@ -14,6 +14,7 @@
 
   /* Couleurs pour les accents */
   --c-red: #e11d48;    /* Fabrication */
+  --c-fractions: #8b5cf6; /* Fractions */
   --c-cyan: #06b6d4;   /* Plateaux */
   --c-blue: #3b82f6;   /* Glisse-nombres */
   --c-orange: #ea580c; /* Conversions */
@@ -106,6 +107,7 @@ a.card.working{
 }
 
 a.card[data-color="fabrication"]:hover { border-top-color: var(--c-red); }
+a.card[data-color="fractions"]:hover   { border-top-color: var(--c-fractions); }
 a.card[data-color="plateaux"]:hover    { border-top-color: var(--c-cyan); }
 a.card[data-color="glisse"]:hover      { border-top-color: var(--c-blue); }
 a.card[data-color="conversions"]:hover { border-top-color: var(--c-orange); }
@@ -307,6 +309,11 @@ footer{
     <a class="card" href="fabrication_materiel/" data-color="fabrication">
       <div class="card-title"><span>✂️ Fabrication de matériel</span></div>
       <p class="card-desc">Générateurs de matériel à imprimer, découper et plastifier.</p>
+    </a>
+
+    <a class="card" href="fractions/index_fractions.html" data-color="fractions">
+      <div class="card-title"><span>½ Fractions</span></div>
+      <p class="card-desc">Manipuler, représenter, comprendre et imprimer des fractions.</p>
     </a>
 
     <a class="card" href="plateaux_manipulation/" data-color="plateaux">
