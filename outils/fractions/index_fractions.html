@@ -6,20 +6,20 @@
 <title>Menu - Fractions</title>
 <style>
     :root{
-      --bg: #fcfcf8;
-      --ink: #0f172a;
-      --muted: #64748b;
-      --card: rgba(255, 255, 255, 0.84);
-      --line: rgba(15, 23, 42, 0.08);
-      --shadow: 0 10px 40px -10px rgba(0,0,0,0.07);
+      --bg: #f7efe2;
+      --ink: #172033;
+      --muted: #6b7280;
+      --card: rgba(255, 252, 246, 0.78);
+      --line: rgba(74, 59, 37, 0.12);
+      --shadow: 0 22px 60px -34px rgba(60, 42, 20, 0.42);
 
-      --c-blue: #2563eb; --c-blue-soft: rgba(37, 99, 235, 0.08);
-      --c-green: #14b8a6; --c-green-soft: rgba(20, 184, 166, 0.075);
-      --c-orange: #f59e0b; --c-orange-soft: rgba(245, 158, 11, 0.075);
-      --c-purple: #7c3aed; --c-purple-soft: rgba(124, 58, 237, 0.065);
-      --c-rose: #ec4899; --c-rose-soft: rgba(236, 72, 153, 0.06);
+      --c-blue: #2563eb; --c-blue-soft: rgba(37, 99, 235, 0.105);
+      --c-green: #0f9f8f; --c-green-soft: rgba(15, 159, 143, 0.105);
+      --c-orange: #d97706; --c-orange-soft: rgba(217, 119, 6, 0.12);
+      --c-purple: #7c3aed; --c-purple-soft: rgba(124, 58, 237, 0.095);
+      --c-rose: #db2777; --c-rose-soft: rgba(219, 39, 119, 0.09);
 
-      --radius: 20px;
+      --radius: 22px;
     }
 
     * { box-sizing: border-box; }
@@ -32,68 +32,172 @@
       overflow-x: hidden;
     }
 
-    .bg { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
-    .bg::before {
-      content: ""; position: absolute; inset: 0;
+    .bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
       background:
-        radial-gradient(circle at 18% 20%, rgba(245,158,11,0.045), transparent 33%),
-        radial-gradient(circle at 83% 22%, rgba(20,184,166,0.04), transparent 31%),
-        radial-gradient(circle at 50% 82%, rgba(124,58,237,0.032), transparent 38%),
-        linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.25));
-    }
-    .bg::after {
-      content: ""; position: absolute; inset: 0;
-      opacity: 0.18;
-      background-image:
-        linear-gradient(rgba(15,23,42,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(15,23,42,0.035) 1px, transparent 1px);
-      background-size: 96px 96px;
-      mask-image: radial-gradient(circle at 50% 42%, black, transparent 74%);
-      -webkit-mask-image: radial-gradient(circle at 50% 42%, black, transparent 74%);
+        radial-gradient(circle at 18% 18%, rgba(255, 211, 134, 0.52), transparent 31%),
+        radial-gradient(circle at 78% 20%, rgba(172, 219, 255, 0.42), transparent 34%),
+        radial-gradient(circle at 50% 86%, rgba(199, 179, 255, 0.36), transparent 40%),
+        linear-gradient(135deg, #fff7e8 0%, #f6efe2 36%, #eef7fb 70%, #f5efff 100%);
     }
 
-    .shape {
+    .bg::before {
+      content: "";
       position: absolute;
-      opacity: 0.32;
-      animation: float 14s ease-in-out infinite alternate;
+      inset: -10%;
+      background:
+        radial-gradient(circle at 24% 64%, rgba(255,255,255,0.42), transparent 24%),
+        radial-gradient(circle at 72% 34%, rgba(255,255,255,0.24), transparent 18%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12), transparent 42%);
+      opacity: 0.95;
     }
+
+    .bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.38;
+      background-image:
+        linear-gradient(rgba(92, 73, 45, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(92, 73, 45, 0.05) 1px, transparent 1px),
+        radial-gradient(rgba(92, 73, 45, 0.08) 0.7px, transparent 0.7px);
+      background-size: 88px 88px, 88px 88px, 18px 18px;
+      mask-image: radial-gradient(circle at 50% 42%, black 0 46%, transparent 78%);
+      -webkit-mask-image: radial-gradient(circle at 50% 42%, black 0 46%, transparent 78%);
+    }
+
+    .shape, .fraction-disc, .fraction-rect {
+      position: absolute;
+      animation: float 15s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
     .shape-1 {
-      width: 320px; height: 120px;
-      background: linear-gradient(90deg, rgba(37,99,235,0.09), rgba(37,99,235,0.02));
-      top: 56px; left: -70px;
+      width: 460px; height: 150px;
+      background: linear-gradient(90deg, rgba(37,99,235,0.15), rgba(20,184,166,0.06), transparent);
+      top: 54px; left: -145px;
       border-radius: 999px;
-      filter: blur(48px);
-      transform: rotate(-6deg);
+      filter: blur(42px);
+      transform: rotate(-7deg);
+      opacity: 0.72;
     }
+
     .shape-2 {
-      width: 280px; height: 280px;
-      background: conic-gradient(from -8deg,
-        rgba(245,158,11,0.08) 0 25%,
-        transparent 25% 34%,
-        rgba(20,184,166,0.065) 34% 60%,
-        transparent 60% 69%,
-        rgba(124,58,237,0.055) 69% 100%);
-      top: 20%; right: -70px;
+      width: 340px; height: 340px;
+      background: conic-gradient(from -18deg,
+        rgba(245,158,11,0.22) 0 24%,
+        rgba(255,255,255,0.15) 24% 30%,
+        rgba(20,184,166,0.18) 30% 55%,
+        rgba(255,255,255,0.12) 55% 63%,
+        rgba(124,58,237,0.15) 63% 100%);
+      top: 18%; right: -95px;
       border-radius: 50%;
-      filter: blur(44px);
+      filter: blur(28px);
+      opacity: 0.55;
       animation-delay: -4s;
     }
+
     .shape-3 {
-      width: 360px; height: 96px;
-      background: linear-gradient(90deg, rgba(236,72,153,0.055), rgba(236,72,153,0.02));
-      bottom: 52px; left: 31%;
+      width: 470px; height: 122px;
+      background: linear-gradient(90deg, rgba(236,72,153,0.12), rgba(245,158,11,0.08), transparent);
+      bottom: 46px; left: 27%;
       border-radius: 999px;
-      filter: blur(48px);
+      filter: blur(44px);
       transform: rotate(5deg);
+      opacity: 0.58;
       animation-delay: -8s;
     }
 
-    @keyframes float {
-      0% { transform: translateY(0px) rotate(0deg) scale(1); }
-      100% { transform: translateY(18px) rotate(2.2deg) scale(1.02); }
+
+
+
+    .fraction-rect {
+      width: 188px;
+      height: 42px;
+      border-radius: 0;
+      border: 1px solid rgba(86, 69, 42, 0.10);
+      background:
+        linear-gradient(90deg,
+          rgba(37,99,235,0.14) 0 24.4%,
+          rgba(255,255,255,0.90) 24.4% 25.6%,
+          rgba(245,158,11,0.15) 25.6% 49.4%,
+          rgba(255,255,255,0.90) 49.4% 50.6%,
+          rgba(20,184,166,0.14) 50.6% 74.4%,
+          rgba(255,255,255,0.90) 74.4% 75.6%,
+          rgba(124,58,237,0.12) 75.6% 100%);
+      box-shadow: 0 14px 34px rgba(80, 60, 28, 0.08);
+      opacity: 0.68;
+      top: 32%;
+      left: 6%;
+      transform: rotate(-7deg);
     }
 
-    .wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+    .fraction-disc {
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      border: 1px solid rgba(86, 69, 42, 0.08);
+      box-shadow: inset 0 0 0 15px rgba(255,255,255,0.18), 0 20px 55px rgba(80, 60, 28, 0.08);
+      opacity: 0.72;
+    }
+
+    .disc-1 {
+      top: 10%;
+      right: 18%;
+      background:
+        conic-gradient(from -90deg,
+          rgba(245,158,11,0.18) 0 25%,
+          rgba(20,184,166,0.17) 25% 50%,
+          rgba(37,99,235,0.16) 50% 75%,
+          rgba(124,58,237,0.15) 75% 100%);
+      animation-delay: -7s;
+    }
+
+    .disc-2 {
+      bottom: 9%;
+      left: 26%;
+      width: 104px;
+      height: 104px;
+      opacity: 0.56;
+      background:
+        repeating-conic-gradient(from -90deg,
+          rgba(245,158,11,0.15) 0 36deg,
+          rgba(20,184,166,0.14) 36deg 72deg,
+          rgba(37,99,235,0.14) 72deg 108deg,
+          rgba(124,58,237,0.13) 108deg 144deg,
+          rgba(245,158,11,0.15) 144deg 180deg,
+          rgba(20,184,166,0.14) 180deg 216deg,
+          rgba(37,99,235,0.14) 216deg 252deg,
+          rgba(124,58,237,0.13) 252deg 288deg,
+          rgba(245,158,11,0.15) 288deg 324deg,
+          rgba(20,184,166,0.14) 324deg 360deg);
+      animation-delay: -2s;
+    }
+
+    .disc-3 {
+      top: 43%;
+      left: 7%;
+      width: 84px;
+      height: 84px;
+      opacity: 0.42;
+      background:
+        conic-gradient(from -90deg,
+          rgba(37,99,235,0.13) 0 33.333%,
+          rgba(20,184,166,0.13) 33.333% 66.666%,
+          rgba(245,158,11,0.13) 66.666% 100%);
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% { translate: 0 0; rotate: 0deg; scale: 1; }
+      100% { translate: 0 18px; rotate: 2deg; scale: 1.018; }
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; padding: 34px 20px 60px; }
 
     header {
       position: relative;
@@ -103,21 +207,35 @@
 
     .header-center {
       text-align: center;
-      padding: 0 72px;
+      padding: 4px 72px 0;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(30px, 5vw, 44px);
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      font-size: clamp(34px, 5.5vw, 52px);
+      font-weight: 900;
+      letter-spacing: -1.2px;
+      line-height: 1;
+      color: #172033;
+      text-shadow: 0 2px 0 rgba(255,255,255,0.64);
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      width: 92px;
+      height: 7px;
+      margin: 16px auto 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(37,99,235,0.74), rgba(20,184,166,0.72), rgba(245,158,11,0.72));
+      box-shadow: 0 8px 24px rgba(37,99,235,0.14);
     }
 
     .subtitle {
-      margin: 10px 0 0;
-      color: var(--muted);
+      margin: 14px 0 0;
+      color: #667085;
       font-size: 16px;
-      font-weight: 500;
+      font-weight: 700;
     }
 
     .btn-back {
@@ -125,17 +243,22 @@
       top: 0;
       left: 0;
       display: inline-flex; align-items: center; justify-content: center;
-      width: 48px; height: 48px; border-radius: 50%;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(10px); color: var(--ink); text-decoration: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.2s;
+      width: 50px; height: 50px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.72);
+      background: rgba(255, 252, 246, 0.70);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: var(--ink); text-decoration: none;
+      box-shadow: 0 12px 28px -18px rgba(65, 48, 24, 0.55);
+      transition: all 0.22s;
     }
 
     .btn-back:hover {
       transform: translateY(-3px);
-      border-color: var(--c-blue);
+      border-color: rgba(37,99,235,0.35);
       color: var(--c-blue);
-      background: white;
+      background: rgba(255,255,255,0.86);
+      box-shadow: 0 18px 30px -18px rgba(37,99,235,0.38);
     }
 
     .grid {
@@ -145,17 +268,17 @@
     }
 
     .card {
-      display: flex; align-items: center; gap: 16px;
+      display: flex; align-items: center; gap: 17px;
       padding: 24px;
       border-radius: var(--radius);
       background: var(--card);
-      border: 1px solid rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.72);
       box-shadow: var(--shadow);
       text-decoration: none;
       color: inherit;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(18px) saturate(1.12);
+      -webkit-backdrop-filter: blur(18px) saturate(1.12);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s, border-color 0.28s, background 0.28s;
       position: relative;
       overflow: hidden;
     }
@@ -165,47 +288,71 @@
       position: absolute;
       inset: 0;
       border-radius: var(--radius);
-      padding: 2px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.18), rgba(255,255,255,0.58));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       pointer-events: none;
     }
 
-    .card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px -16px rgba(0,0,0,0.10); }
-
-    .icon {
-      width: 56px; height: 56px; border-radius: 16px;
-      display: grid; place-items: center; flex: 0 0 auto;
-      border: 1px solid rgba(0,0,0,0.05);
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      right: -72px;
+      top: -82px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.62), transparent 68%);
+      opacity: 0;
+      transition: opacity 0.28s;
     }
 
-    .icon svg { width: 28px; height: 28px; }
+    .card:hover {
+      transform: translateY(-4px);
+      background: rgba(255, 253, 249, 0.88);
+      box-shadow: 0 28px 56px -34px rgba(52, 42, 26, 0.48);
+    }
 
-    .card-blue:hover { border-color: rgba(59, 130, 246, 0.3); }
-    .card-blue .icon { background: linear-gradient(135deg, var(--c-blue-soft), transparent); }
+    .card:hover::after { opacity: 1; }
+
+    .icon {
+      width: 58px; height: 58px; border-radius: 18px;
+      display: grid; place-items: center; flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,0.78);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 14px 26px -20px rgba(38, 28, 12, 0.42);
+    }
+
+    .icon svg { width: 29px; height: 29px; }
+
+    .card-blue:hover { border-color: rgba(59, 130, 246, 0.34); }
+    .card-blue .icon { background: linear-gradient(135deg, var(--c-blue-soft), rgba(255,255,255,0.54)); }
     .card-blue .icon svg { stroke: var(--c-blue); }
 
-    .card-green:hover { border-color: rgba(16, 185, 129, 0.3); }
-    .card-green .icon { background: linear-gradient(135deg, var(--c-green-soft), transparent); }
+    .card-green:hover { border-color: rgba(16, 185, 129, 0.34); }
+    .card-green .icon { background: linear-gradient(135deg, var(--c-green-soft), rgba(255,255,255,0.54)); }
     .card-green .icon svg { stroke: var(--c-green); }
 
-    .card-orange:hover { border-color: rgba(245, 158, 11, 0.3); }
-    .card-orange .icon { background: linear-gradient(135deg, var(--c-orange-soft), transparent); }
+    .card-orange:hover { border-color: rgba(245, 158, 11, 0.34); }
+    .card-orange .icon { background: linear-gradient(135deg, var(--c-orange-soft), rgba(255,255,255,0.54)); }
     .card-orange .icon svg { stroke: var(--c-orange); }
 
-    .card-purple:hover { border-color: rgba(139, 92, 246, 0.3); }
-    .card-purple .icon { background: linear-gradient(135deg, var(--c-purple-soft), transparent); }
+    .card-purple:hover { border-color: rgba(139, 92, 246, 0.34); }
+    .card-purple .icon { background: linear-gradient(135deg, var(--c-purple-soft), rgba(255,255,255,0.54)); }
     .card-purple .icon svg { stroke: var(--c-purple); }
 
-    .card-rose:hover { border-color: rgba(244, 63, 94, 0.3); }
-    .card-rose .icon { background: linear-gradient(135deg, var(--c-rose-soft), transparent); }
+    .card-rose:hover { border-color: rgba(244, 63, 94, 0.34); }
+    .card-rose .icon { background: linear-gradient(135deg, var(--c-rose-soft), rgba(255,255,255,0.54)); }
     .card-rose .icon svg { stroke: var(--c-rose); }
 
-    .txt { min-width: 0; }
-    .card h2 { margin: 0 0 6px 0; font-size: 18px; font-weight: 800; line-height: 1.2; }
-    .card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; font-weight: 500; }
+    .txt { min-width: 0; position: relative; z-index: 1; }
+    .card h2 { margin: 0 0 6px 0; font-size: 18px; font-weight: 900; line-height: 1.2; letter-spacing: -0.12px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.42; font-weight: 650; }
+
+    @media (max-width: 760px) {
+      .fraction-disc, .fraction-rect { opacity: 0.46; }
+    }
 
     @media (max-width: 560px) {
       header { padding-top: 62px; }
@@ -213,6 +360,8 @@
       .btn-back { left: 50%; transform: translateX(-50%); }
       .btn-back:hover { transform: translateX(-50%) translateY(-3px); }
       .grid { grid-template-columns: 1fr; }
+      .wrap { padding-inline: 16px; }
+      .fraction-disc, .fraction-rect { display: none; }
     }
 </style>
 </head>
@@ -222,6 +371,10 @@
   <div class="shape shape-1"></div>
   <div class="shape shape-2"></div>
   <div class="shape shape-3"></div>
+  <div class="fraction-rect rect-1"></div>
+  <div class="fraction-disc disc-1"></div>
+  <div class="fraction-disc disc-2"></div>
+  <div class="fraction-disc disc-3"></div>
 </div>
 
 <div class="wrap">
