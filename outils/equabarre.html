@@ -189,6 +189,51 @@
     min-height:128px;
   }
 
+  /* PATCH 4 — option plein écran compact : ne modifie que le rendu en plein écran. */
+  .stage.fullscreenCompact:fullscreen{
+    align-items:center;
+  }
+
+  .stage.fullscreenCompact:fullscreen .topbar,
+  .stage.fullscreenCompact:fullscreen .instructionZone,
+  .stage.fullscreenCompact:fullscreen .board,
+  .stage.fullscreenCompact:fullscreen .toolBar,
+  .stage.fullscreenCompact:fullscreen .actionZone,
+  .stage.fullscreenCompact:fullscreen .solution{
+    width:min(1180px, calc(100vw - 44px));
+  }
+
+  .stage.fullscreenCompact:fullscreen .board{
+    flex:0 0 auto;
+    width:min(1280px, calc(100vw - 44px));
+    min-height:430px;
+    max-height:58vh;
+    padding:34px clamp(42px,5vw,86px);
+    background:rgba(255,255,255,.34);
+    border:1px solid rgba(15,23,42,.045);
+    box-shadow:0 3px 10px rgba(15,23,42,.025);
+  }
+
+  .stage.fullscreenCompact:fullscreen .barLine{
+    background:rgba(255,255,255,.96);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.number{
+    background:#ffffff;
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.x{
+    background:#eff6ff;
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece{
+    height:108px;
+  }
+
+  .stage.fullscreenCompact:fullscreen .barLine{
+    min-height:108px;
+  }
+
   @media (max-width:900px){
     .panel{position:static}
   }
@@ -368,6 +413,17 @@
     text-transform:uppercase;
   }
 
+  .teacherParamGrid .mathParamLabel{
+    text-align:center;
+  }
+
+  .teacherParamGrid .mathParamLabel .mathLetter{
+    display:block;
+    margin-top:2px;
+    text-align:center;
+    font-size:18px;
+  }
+
   .mathParamLabel .mathLetter{
     text-transform:none;
     letter-spacing:0;
@@ -408,6 +464,8 @@
   .teacherParamGrid input{
     padding-left:10px;
     padding-right:10px;
+    text-align:center;
+    font-weight:850;
   }
 
   .teacherParamGrid .hiddenParam{
@@ -437,6 +495,12 @@
   button:active{transform:translateY(1px)}
   button.primary{
     background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:white;
+  }
+
+  /* PATCH 1 — bouton Construire : bleu principal adouci sans modifier les autres boutons */
+  #btnBuild.primary{
+    background:linear-gradient(180deg,#93c5fd,#60a5fa);
     color:white;
   }
   button.green{
@@ -574,8 +638,28 @@
     backdrop-filter:blur(8px);
   }
 
+  .equationEyeBtn svg{
+    width:23px;
+    height:23px;
+    display:block;
+    opacity:.78;
+  }
+
+  .equationEyeBtn:hover svg{
+    opacity:.95;
+  }
+
   .quickBtn:hover{
     background:#eef2f7;
+  }
+
+  .equationEyeBtn{
+    font-size:22px;
+  }
+
+  .equationEyeBtn.is-hidden{
+    opacity:.72;
+    background:#f8fafc;
   }
 
   .topbar{
@@ -830,6 +914,29 @@
     color:#1d4ed8;
   }
 
+  .piece.x .pieceValue.splatValue{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-style:normal;
+    color:inherit;
+  }
+
+  .splatIcon{
+    width:clamp(52px,5.6vw,78px);
+    height:clamp(52px,5.6vw,78px);
+    display:block;
+    filter:drop-shadow(0 4px 7px rgba(15,23,42,.16));
+  }
+
+  .splatIcon svg{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+
+  .piece.removed .splatIcon{
+    filter:grayscale(1) opacity(.65);
+  }
+
   .pieceKind{
     display:none;
   }
@@ -980,14 +1087,17 @@
   }
 
   .helpMiniBtn{
-    width:38px;
+    min-width:84px;
+    width:auto;
     height:38px;
     border-radius:999px;
     padding:0;
     display:inline-grid;
     place-items:center;
     margin:12px auto 2px;
-    font-size:20px;
+    font-size:16px;
+    font-weight:950;
+    padding:0 16px;
     background:#eef2f7;
     border:1px solid rgba(15,23,42,.10);
   }
@@ -1143,10 +1253,11 @@
   }
 
   .helpMiniBtn{
-    width:54px;
+    min-width:116px;
+    width:auto;
     height:54px;
     margin:16px auto 4px;
-    font-size:28px;
+    font-size:20px;
     border-radius:999px;
   }
 
@@ -1500,6 +1611,40 @@
     background:linear-gradient(180deg,#dbeafe,#eff6ff 55%,#ffffff);
   }
 
+
+  /* PATCH 2D — retour menu prof sobre + signes + plus lisibles */
+  .teacherParamGrid .mathParamLabel{
+    text-align:left;
+  }
+
+  .teacherParamGrid .mathParamLabel .mathLetter{
+    display:inline;
+    margin-top:0;
+    text-align:inherit;
+    font-size:inherit;
+  }
+
+  .teacherParamGrid input{
+    text-align:left;
+    font-weight:700;
+  }
+
+  .chip.mathChip{
+    font-family:Arial, Helvetica, sans-serif;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.01em;
+    line-height:1;
+  }
+
+  .chip.mathChip .mathPlus{
+    display:inline-block;
+    padding:0 .24em;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:950;
+    line-height:1;
+    transform:translateY(-.02em);
+  }
+
 </style>
 </head>
 <body>
@@ -1537,6 +1682,19 @@
       <select id="unknownDisplayModeStudent" title="Affichage des inconnues dans le tableau">
         <option value="letter" selected>Lettre</option>
         <option value="question">Point d’interrogation</option>
+        <option value="splat">Splat</option>
+      </select>
+
+      <label>Affichage de l’équation</label>
+      <select id="equationDisplayModeStudent" title="Afficher ou masquer l’équation au-dessus du tableau">
+        <option value="show" selected>Oui</option>
+        <option value="hide">Non</option>
+      </select>
+
+      <label>Taille en plein écran</label>
+      <select id="fullscreenSizeModeStudent" title="Taille du tableau en mode plein écran">
+        <option value="large" selected>Grande</option>
+        <option value="compact">Compacte</option>
       </select>
 
       <label>Nombre d’équations</label>
@@ -1570,6 +1728,19 @@
     <select id="unknownDisplayMode" title="Affichage des inconnues dans le tableau">
       <option value="letter" selected>Lettre</option>
       <option value="question">Point d’interrogation</option>
+      <option value="splat">Splat</option>
+    </select>
+
+<label>Affichage de l’équation</label>
+    <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
+      <option value="show" selected>Oui</option>
+      <option value="hide">Non</option>
+    </select>
+
+<label>Taille en plein écran</label>
+    <select id="fullscreenSizeMode" title="Taille du tableau en mode plein écran">
+      <option value="large" selected>Grande</option>
+      <option value="compact">Compacte</option>
     </select>
 
 <label>Après suppression</label>
@@ -1581,33 +1752,30 @@
     <div class="teacherParamGrid" id="teacherParamGrid">
       <div id="coefAWrap">
         <label class="mathParamLabel">Coefficient <span class="mathLetter">a</span></label>
-        <input id="coefA" type="number" min="2" max="8" value="2" />
+        <input id="coefA" type="number" min="1" max="20" value="2" />
       </div>
       <div id="constBWrap">
         <label class="mathParamLabel">Constante <span class="mathLetter">b</span></label>
-        <input id="constB" type="number" min="1" max="40" value="4" />
+        <input id="constB" type="number" min="0" max="999" value="4" />
       </div>
       <div id="coefCWrap">
         <label class="mathParamLabel">Coefficient <span class="mathLetter">c</span></label>
-        <input id="coefC" type="number" min="1" max="7" value="1" />
+        <input id="coefC" type="number" min="1" max="20" value="1" />
       </div>
-    </div>
-
-    <div class="grid2">
-      <div>
-        <label>Solution</label>
-        <input id="solX" type="number" min="2" max="20" value="12" />
+      <div id="constCWrap">
+        <label class="mathParamLabel">Constante <span class="mathLetter">c</span></label>
+        <input id="constC" type="number" min="0" max="999" value="28" />
       </div>
-      <div>
-        <label>Graine</label>
-        <input id="seed" type="number" placeholder="optionnel" />
+      <div id="constDWrap">
+        <label class="mathParamLabel">Constante <span class="mathLetter">d</span></label>
+        <input id="constD" type="number" min="0" max="999" value="28" />
       </div>
     </div>
 
     <div class="studentProgress" id="profEquationInfo" style="display:none"></div>
 
     <div class="btnrow">
-      <button class="primary" id="btnBuild">Créer</button>
+      <button class="primary" id="btnBuild">Construire</button>
       <button id="btnRandom">Aléatoire</button>
     </div>
 
@@ -1622,6 +1790,7 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn randomQuickBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
@@ -1690,7 +1859,7 @@
     <div class="dialogText" id="dialogText"></div>
     <label>Écris une somme</label>
     <input id="decomposeInput" type="text" autocomplete="off" />
-    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
+    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">Aide&nbsp;?</button>
     <div class="presetChips" id="presetChips"></div>
     <div class="divideBlock" id="divideBlock">
       <div class="divideTitle">Ou diviser en parts égales</div>
@@ -1716,6 +1885,7 @@
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
   const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnToggleEquation = document.getElementById("btnToggleEquation");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolShare = document.getElementById("toolShare");
@@ -1724,6 +1894,10 @@
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
   const unknownDisplayModeStudentEl = document.getElementById("unknownDisplayModeStudent");
+  const equationDisplayModeEl = document.getElementById("equationDisplayMode");
+  const equationDisplayModeStudentEl = document.getElementById("equationDisplayModeStudent");
+  const fullscreenSizeModeEl = document.getElementById("fullscreenSizeMode");
+  const fullscreenSizeModeStudentEl = document.getElementById("fullscreenSizeModeStudent");
 
   const modeEl = document.getElementById("mode");
 
@@ -1744,12 +1918,14 @@
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
   const coefCEl = document.getElementById("coefC");
+  const constCEl = document.getElementById("constC");
+  const constDEl = document.getElementById("constD");
   const coefAWrap = document.getElementById("coefAWrap");
   const constBWrap = document.getElementById("constBWrap");
   const coefCWrap = document.getElementById("coefCWrap");
+  const constCWrap = document.getElementById("constCWrap");
+  const constDWrap = document.getElementById("constDWrap");
   const teacherParamGrid = document.getElementById("teacherParamGrid");
-  const solXEl = document.getElementById("solX");
-  const seedEl = document.getElementById("seed");
   const profEquationInfo = document.getElementById("profEquationInfo");
 
   const dialog = document.getElementById("decomposeDialog");
@@ -1805,9 +1981,98 @@
     return state && state.original ? state.original.mode : "";
   }
 
-  function displayedUnknown(){
+  function unknownDisplayKind(){
     const el = appMode === "student" ? unknownDisplayModeStudentEl : unknownDisplayModeEl;
-    return el && el.value === "question" ? "?" : currentVar();
+    return el ? el.value : "letter";
+  }
+
+  function displayedUnknown(){
+    const kind = unknownDisplayKind();
+    return (kind === "question" || kind === "splat") ? "?" : currentVar();
+  }
+
+  function unknownTerm(count){
+    const v = displayedUnknown();
+    if(v === "?"){
+      return count === 1 ? "?" : `${count} × ?`;
+    }
+    return count === 1 ? v : `${count}${v}`;
+  }
+
+  /* Splat : même logique de dessin que l’outil Splat!
+     (forme générée par lobes sinusoïdaux + lissage Catmull-Rom -> Bézier). */
+  function blobPath(cx, cy, r){
+    const n = 40;
+    const lobes = 5;
+    const pts = [];
+    for(let i=0;i<n;i++){
+      const a = (Math.PI * 2 * i) / n;
+      const k = 0.90 + 0.16 * Math.sin(lobes*a) + 0.04 * Math.sin(2*lobes*a);
+      const rr = r * k;
+      pts.push([cx + Math.cos(a)*rr, cy + Math.sin(a)*rr]);
+    }
+    function cr2bz(p0,p1,p2,p3){
+      const t = 1/6;
+      const c1x = p1[0] + (p2[0]-p0[0]) * t;
+      const c1y = p1[1] + (p2[1]-p0[1]) * t;
+      const c2x = p2[0] - (p3[0]-p1[0]) * t;
+      const c2y = p2[1] - (p3[1]-p1[1]) * t;
+      return [c1x,c1y,c2x,c2y,p2[0],p2[1]];
+    }
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=0;i<n;i++){
+      const p0 = pts[(i-1+n)%n];
+      const p1 = pts[i];
+      const p2 = pts[(i+1)%n];
+      const p3 = pts[(i+2)%n];
+      const [c1x,c1y,c2x,c2y,x,y] = cr2bz(p0,p1,p2,p3);
+      d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
+    }
+    d += " Z";
+    return d;
+  }
+
+  function splatSvg(){
+    const d = blobPath(60, 60, 44);
+    return `<span class="splatIcon" aria-label="Splat" role="img"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <path d="${d}" fill="#050505" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
+    </svg></span>`;
+  }
+
+  function equationDisplayEnabled(){
+    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
+    return !el || el.value !== "hide";
+  }
+
+
+  function eyeIconSvg(hidden=false){
+    if(hidden){
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10.7 5.2A9.4 9.4 0 0 1 12 5c5.2 0 8.7 4.5 9.7 6.1.2.3.2.7 0 1.1a16 16 0 0 1-2.6 3.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6.5 6.7A15.8 15.8 0 0 0 2.3 11c-.2.3-.2.7 0 1.1C3.3 13.7 6.8 18 12 18c1.3 0 2.5-.3 3.6-.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9.8 9.8a3.1 3.1 0 0 0 4.4 4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2.3 11.1C3.3 9.5 6.8 5 12 5s8.7 4.5 9.7 6.1c.2.3.2.7 0 1.1C20.7 13.8 17.2 18 12 18S3.3 13.8 2.3 12.2c-.2-.3-.2-.7 0-1.1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="11.7" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </svg>`;
+  }
+
+  function syncEquationToggleButton(){
+    if(!btnToggleEquation) return;
+    const visible = equationDisplayEnabled();
+    btnToggleEquation.innerHTML = eyeIconSvg(!visible);
+    btnToggleEquation.title = visible ? "Masquer l’équation" : "Afficher l’équation";
+    btnToggleEquation.classList.toggle("is-hidden", !visible);
+  }
+
+  function toggleEquationDisplay(){
+    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
+    if(!el) return;
+    el.value = el.value === "hide" ? "show" : "hide";
+    render();
   }
 
   function getWorldName(path){
@@ -1857,6 +2122,7 @@
     syncWorldCards();
     updateStudentProgress();
     syncStudentStageVisibility();
+    syncEquationToggleButton();
   }
 
   function syncWorldCards(){
@@ -2049,7 +2315,7 @@
           count++;
           i++;
         }
-        terms.push(count === 1 ? v : `${count}${v}`);
+        terms.push(unknownTerm(count));
       }else{
         terms.push(String(p.value));
         i++;
@@ -2101,101 +2367,54 @@
     if(!modeEl) return;
     const mode = modeEl.value;
 
-    if(coefAWrap) coefAWrap.classList.toggle("hiddenParam", mode === "xpb");
-    if(constBWrap) constBWrap.classList.toggle("hiddenParam", mode === "axc");
-    if(coefCWrap) coefCWrap.classList.toggle("hiddenParam", mode !== "both");
+    const show = (wrap, visible) => { if(wrap) wrap.classList.toggle("hiddenParam", !visible); };
+
+    show(coefAWrap, mode === "axc" || mode === "axb" || mode === "both");
+    show(constBWrap, mode === "xpb" || mode === "axb" || mode === "both");
+    show(coefCWrap, mode === "both");
+    show(constCWrap, mode === "xpb" || mode === "axc" || mode === "axb");
+    show(constDWrap, mode === "both");
 
     if(teacherParamGrid){
-      teacherParamGrid.classList.toggle("three", mode === "both");
+      teacherParamGrid.classList.toggle("three", mode === "axb");
     }
 
     updateProfEquationInfo();
   }
 
   function updateProfEquationInfo(){
-    if(!profEquationInfo || !modeEl) return;
-
-    const mode = modeEl.value;
-    const aRaw = Math.round(numberOr(coefAEl.value, 2));
-    const cRaw = Math.round(numberOr(coefCEl ? coefCEl.value : 1, 1));
-    const bRaw = Math.round(numberOr(constBEl.value, 4));
-    const x = Math.max(1, Math.round(numberOr(solXEl.value, 12)));
-
-    if(mode === "mix"){
-      profEquationInfo.style.display = "";
-      profEquationInfo.innerHTML = `Mélange : le calcul automatique dépendra du type tiré au hasard.`;
-      return;
-    }
-
-    if(mode === "xpb"){
-      const b = Math.max(1, bRaw);
-      const c = x + b;
-      profEquationInfo.style.display = "";
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${c}</strong>`;
-      return;
-    }
-
-    if(mode === "axc"){
-      const a = Math.max(2, aRaw);
-      const c = a * x;
-      profEquationInfo.style.display = "";
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${c}</strong>`;
-      return;
-    }
-
-    if(mode === "axb"){
-      const a = Math.max(2, aRaw);
-      const b = Math.max(1, bRaw);
-      const c = a * x + b;
-      profEquationInfo.style.display = "";
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${c}</strong>`;
-      return;
-    }
-
-    if(mode === "both"){
-      const a = Math.max(2, aRaw);
-      const c = Math.max(1, Math.min(cRaw, a - 1));
-      const b = Math.max(1, bRaw);
-      const d = (a - c) * x + b;
-      profEquationInfo.style.display = "";
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${d}</strong>`;
-      return;
-    }
-
+    if(!profEquationInfo) return;
     profEquationInfo.style.display = "none";
     profEquationInfo.innerHTML = "";
   }
 
-  function buildFromInputs(){
-    const selectedMode = getSelectedMode();
-    const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
-    const bInput = clamp(Math.round(numberOr(constBEl.value,4)),1,40);
-    const x = clamp(Math.round(numberOr(solXEl.value,12)),2,20);
+  function readRounded(el, fallback, min=0, max=999){
+    const n = Math.round(numberOr(el && el.value, fallback));
+    return clamp(n, min, max);
+  }
 
-    let a = selectedMode === "xpb" ? 1 : rawA;
-    let b = selectedMode === "axc" ? 0 : bInput;
-    let rightA = 0;
-    let d = 0;
-    let c = a*x + b;
+  function showBuildError(extra=""){
+    const text = extra || "Impossible avec ce schéma : la solution doit être un entier positif.";
+    setInstruction(`<strong>${text}</strong>`);
+    setStatus(text);
+  }
 
-    if(selectedMode === "both"){
-      // Mode prof guidé : on choisit a, b, c et la solution.
-      // Le logiciel calcule d pour garantir une équation positive et résoluble :
-      // ax + b = cx + d, donc d = (a-c)x + b.
-      a = Math.max(2, rawA);
-      rightA = Math.max(1, Math.min(Math.round(numberOr(coefCEl ? coefCEl.value : 1, 1)), a - 1));
-      b = bInput;
-      d = (a - rightA) * x + b;
-      c = a*x + b;
-    }
+  function resetAfterNewEquation(){
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    selectedShareRef = null;
+    deleteSelection = [];
+    actionMode = "decompose";
+    if(toolDecompose) toolDecompose.classList.add("active");
+    if(toolShare) toolShare.classList.remove("active");
+    if(toolDelete) toolDelete.classList.remove("active");
+    render();
+    setStatus("");
+  }
 
-    coefAEl.value = a;
-    constBEl.value = b;
-    if(coefCEl) coefCEl.value = rightA || 1;
-    solXEl.value = x;
-    updateProfEquationInfo();
-
-    const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
+  function createEquationState(selectedMode, a, b, rightA, d, x, c, rng=Math.random){
+    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
     state = {
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
       top:[],
@@ -2214,17 +2433,73 @@
       state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
     }
 
-    recordEquationStep();
-    history = [];
-    selectedPieceRef = null;
-    selectedShareRef = null;
-    deleteSelection = [];
-    actionMode = "decompose";
-    if(toolDecompose) toolDecompose.classList.add("active");
-    if(toolShare) toolShare.classList.remove("active");
-    if(toolDelete) toolDelete.classList.remove("active");
-    render();
-    setStatus("");
+    resetAfterNewEquation();
+  }
+
+  function buildFromInputs(){
+    if(modeEl && modeEl.value === "mix"){
+      randomExercise();
+      return;
+    }
+
+    const selectedMode = getSelectedMode();
+    let a = 1;
+    let b = 0;
+    let rightA = 0;
+    let d = 0;
+    let c = 0;
+    let x = null;
+
+    if(selectedMode === "xpb"){
+      b = readRounded(constBEl, 4, 0, 999);
+      c = readRounded(constCEl, 28, 0, 999);
+      x = c - b;
+    }else if(selectedMode === "axc"){
+      a = readRounded(coefAEl, 2, 1, 20);
+      b = 0;
+      c = readRounded(constCEl, 24, 0, 999);
+      if(a === 0) return showBuildError();
+      x = c / a;
+    }else if(selectedMode === "axb"){
+      a = readRounded(coefAEl, 2, 1, 20);
+      b = readRounded(constBEl, 4, 0, 999);
+      c = readRounded(constCEl, 28, 0, 999);
+      x = (c - b) / a;
+    }else if(selectedMode === "both"){
+      a = readRounded(coefAEl, 3, 1, 20);
+      b = readRounded(constBEl, 4, 0, 999);
+      rightA = readRounded(coefCEl, 1, 1, 20);
+      d = readRounded(constDEl, 28, 0, 999);
+      const denom = a - rightA;
+      if(denom === 0){
+        return showBuildError("Impossible avec ce schéma : les coefficients des inconnues ne doivent pas être égaux.");
+      }
+      x = (d - b) / denom;
+      c = a * x + b;
+    }
+
+    if(!Number.isInteger(x) || x <= 0 || !Number.isFinite(x)){
+      return showBuildError();
+    }
+
+    if(selectedMode !== "both"){
+      c = Math.round(c);
+    }else{
+      c = Math.round(c);
+    }
+
+    if(c <= 0){
+      return showBuildError();
+    }
+
+    if(coefAEl) coefAEl.value = a;
+    if(constBEl) constBEl.value = b;
+    if(coefCEl) coefCEl.value = rightA || 1;
+    if(constCEl && selectedMode !== "both") constCEl.value = c;
+    if(constDEl) constDEl.value = d;
+    updateProfEquationInfo();
+
+    createEquationState(selectedMode, a, b, rightA, d, x, c);
   }
 
   function mulberry32(a){
@@ -2241,8 +2516,7 @@
   }
 
   function randomExercise(){
-    const rawSeed = String(seedEl.value || "").trim();
-    const rng = rawSeed === "" ? Math.random : mulberry32(Number(rawSeed)|0);
+    const rng = Math.random;
 
     let selectedMode = modeEl ? modeEl.value : "axb";
     if(selectedMode === "mix"){
@@ -2265,43 +2539,15 @@
       c = a*x + b;
     }
 
-    coefAEl.value = Math.max(2, a);
-    constBEl.value = Math.max(1, b || randomInt(rng,2,18));
+    if(coefAEl) coefAEl.value = Math.max(1, a);
+    if(constBEl) constBEl.value = Math.max(0, b);
     if(coefCEl) coefCEl.value = rightA || 1;
-    solXEl.value = x;
+    if(constCEl) constCEl.value = selectedMode === "both" ? c : c;
+    if(constDEl) constDEl.value = d || Math.max(0, c);
     updateProfEquationInfo();
 
     // Construction directe pour éviter qu'un mode Mélange soit tiré une deuxième fois.
-    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
-    state = {
-      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
-      top:[],
-      bottom:[],
-      hintCount:0,
-      steps:[]
-    };
-
-    if(selectedMode === "both"){
-      // Convention : le bas représente ax+b, le haut représente cx+d.
-      // L'équation affichée reste donc : bas = haut.
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-      state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
-    }else{
-      state.top = [makeNumber(c)];
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-    }
-
-    recordEquationStep();
-    history = [];
-    selectedPieceRef = null;
-    selectedShareRef = null;
-    deleteSelection = [];
-    actionMode = "decompose";
-    if(toolDecompose) toolDecompose.classList.add("active");
-    if(toolShare) toolShare.classList.remove("active");
-    if(toolDelete) toolDelete.classList.remove("active");
-    render();
-    setStatus("");
+    createEquationState(selectedMode, a, b, rightA, d, x, c, rng);
   }
 
   function activePieces(side){
@@ -2350,7 +2596,7 @@
         ok:true,
         type:"x",
         count:top.length,
-        label: top.length === 1 ? displayedUnknown() : `${top.length}${displayedUnknown()}`,
+        label: unknownTerm(top.length),
         top,
         bottom
       };
@@ -2515,10 +2761,11 @@
       if(piece.removed) el.classList.add("removed");
       if(selectedIds.has(piece.id)) el.classList.add("selectedForDelete");
 
+      const isSplatUnknown = piece.type === "x" && unknownDisplayKind() === "splat";
       const value = piece.type === "x" ? displayedUnknown() : String(piece.value);
       el.innerHTML = `
         <div class="pieceContent">
-          <div class="pieceValue">${value}</div>
+          <div class="pieceValue${isSplatUnknown ? ' splatValue' : ''}">${isSplatUnknown ? splatSvg() : value}</div>
         </div>
       `;
 
@@ -2676,11 +2923,17 @@
 
   function renderEquationHistory(){
     if(!equationHistory) return;
+    if(!equationDisplayEnabled()){
+      equationHistory.innerHTML = "";
+      syncEquationToggleButton();
+      return;
+    }
     const steps = state.steps || [];
     const shown = steps.slice(-6);
 
     if(!shown.length){
       equationHistory.innerHTML = "";
+      syncEquationToggleButton();
       return;
     }
 
@@ -2691,9 +2944,18 @@
     }).join("");
 
     equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+    syncEquationToggleButton();
+  }
+
+  function syncFullscreenSizeMode(){
+    if(!stageEl) return;
+    const el = appMode === "student" ? fullscreenSizeModeStudentEl : fullscreenSizeModeEl;
+    const compact = el && el.value === "compact";
+    stageEl.classList.toggle("fullscreenCompact", compact);
   }
 
   function render(){
+    syncFullscreenSizeMode();
     if(!state) return;
     const selectedIds = selectedDeleteIds();
     equationText.textContent = "";
@@ -2806,16 +3068,17 @@
     decomposeInput.value = "";
     presetChips.innerHTML = "";
     presetChips.classList.remove("open");
-    if(btnShowSuggestions){ btnShowSuggestions.style.display = "inline-grid"; btnShowSuggestions.textContent = "?"; }
+    if(btnShowSuggestions){ btnShowSuggestions.style.display = "inline-flex"; btnShowSuggestions.innerHTML = "Aide&nbsp;?"; }
 
     const suggestions = buildSuggestions(piece.value);
     for(const s of suggestions){
       const chip = document.createElement("button");
-      chip.className = "chip";
+      chip.className = "chip mathChip";
       chip.type = "button";
-      chip.textContent = s;
+      chip.dataset.value = s;
+      chip.innerHTML = formatSuggestionLabel(s);
       chip.addEventListener("click", () => {
-        decomposeInput.value = s;
+        decomposeInput.value = chip.dataset.value || s;
         decomposeInput.focus();
       });
       presetChips.appendChild(chip);
@@ -2825,6 +3088,11 @@
 
     dialog.showModal();
     setTimeout(() => decomposeInput.focus(), 80);
+  }
+
+  function formatSuggestionLabel(raw){
+    const safe = String(raw || "").replace(/[^0-9+\s]/g, "");
+    return safe.replace(/\s*\+\s*/g, '<span class="mathPlus">+</span>');
   }
 
   function splitAsSum(value, parts){
@@ -2867,8 +3135,13 @@
     const x = state.original.x;
     const suggestions = [];
 
-    // La proposition vraiment utile : faire apparaître la constante à supprimer.
-    if(b > 0 && value > b) suggestions.push(`${value-b} + ${b}`);
+    // Proposition vraiment utile : faire apparaître la constante à supprimer.
+    // Toutes les propositions affichées doivent rester des décompositions valides
+    // du nombre choisi : aucun bouton ne doit sembler « cassé ».
+    if(b > 0 && value > b){
+      const useful = value - b;
+      suggestions.push(`${useful} + ${b}`);
+    }
 
     // Autres propositions équivalentes, mais pas forcément optimales.
     const candidates = [];
@@ -2880,13 +3153,13 @@
       if(left === a || right === a) candidates.push(`${left} + ${right}`);
     }
 
-    // Quelques découpages simples, valides, pour garantir 4 choix si possible.
+    // Quelques découpages simples, toujours valides, pour garantir plusieurs choix si possible.
     const simpleSplits = [
       [1, value-1],
       [2, value-2],
       [Math.floor(value/2), value-Math.floor(value/2)],
-      [Math.max(1, value-5), Math.min(5, value-1)],
-      [Math.max(1, value-10), Math.min(10, value-1)]
+      [Math.max(1, value-5), value-Math.max(1, value-5)],
+      [Math.max(1, value-10), value-Math.max(1, value-10)]
     ];
     for(const [u,v] of simpleSplits){
       if(u > 0 && v > 0 && u + v === value) candidates.push(`${u} + ${v}`);
@@ -2991,8 +3264,13 @@
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
   if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
   if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", refreshStepsForUnknownDisplay);
+  if(equationDisplayModeEl) equationDisplayModeEl.addEventListener("change", render);
+  if(equationDisplayModeStudentEl) equationDisplayModeStudentEl.addEventListener("change", render);
+  if(fullscreenSizeModeEl) fullscreenSizeModeEl.addEventListener("change", syncFullscreenSizeMode);
+  if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.addEventListener("change", syncFullscreenSizeMode);
 
   if(btnStageRandom) btnStageRandom.addEventListener("click", randomExercise);
+  if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
   if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
   if(btnTeacherMode) btnTeacherMode.addEventListener("click", () => setAppMode("teacher"));
   if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
@@ -3003,7 +3281,7 @@
   if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
   if(btnStageNextStudent) btnStageNextStudent.addEventListener("click", nextStudentExercise);
   if(modeEl) modeEl.addEventListener("change", syncTeacherEquationControls);
-  [coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+  [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
     if(el) {
       el.addEventListener("input", updateProfEquationInfo);
       el.addEventListener("change", updateProfEquationInfo);
@@ -3020,7 +3298,7 @@
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
-      btnShowSuggestions.textContent = presetChips.classList.contains("open") ? "×" : "?";
+      btnShowSuggestions.innerHTML = presetChips.classList.contains("open") ? "Fermer" : "Aide&nbsp;?";
     });
   }
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecompose);
@@ -3050,9 +3328,10 @@
     });
   }
 
-  [coefAEl,constBEl,solXEl].forEach(el => {
+  [coefAEl,constBEl,coefCEl,constCEl,constDEl].forEach(el => {
+    if(!el) return;
     el.addEventListener("change", () => {
-      el.value = String(Math.round(numberOr(el.value, Number(el.min) || 1)));
+      el.value = String(Math.round(numberOr(el.value, Number(el.min) || 0)));
     });
   });
 
