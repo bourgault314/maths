@@ -2632,12 +2632,6 @@ body.printOnlyWorksheet .worksheetSheet{
 }
 
 
-/* Phase 7A — menu didactique en deux niveaux */
-#problemFamily{
-  border-color:rgba(37,99,235,.25);
-  background:linear-gradient(180deg,#ffffff,#f8fafc);
-}
-
 </style>
 </head>
 <body>
@@ -2646,21 +2640,14 @@ body.printOnlyWorksheet .worksheetSheet{
     <div class="title">Problèmes en barres</div>
     
 
-    <label>Grande famille</label>
-    <select id="problemFamily">
-      <option value="one_step" selected>Problèmes en une étape</option>
-      <option value="multi_step">Problèmes en plusieurs étapes</option>
-      <option value="custom_mix">Mélange personnalisé</option>
-    </select>
-
-    <label id="categoryLabel">Type de problème</label>
+    <label>Type de problème</label>
     <select id="category">
       <option value="part_whole" selected>Partie-tout simple</option>
       <option value="transformation">Transformation</option>
       <option value="comparison">Comparer</option>
       <option value="equal_groups">Groupes égaux</option>
+      <option value="ratio">Ratios / partages proportionnels</option>
       <option value="unequal_total">Partages inégaux</option>
-      <option value="ratio">Ratios</option>
       <option value="multi_linked">Relations entre plusieurs quantités</option>
       <option value="custom_mix">Mélange personnalisé</option>
     </select>
@@ -3043,9 +3030,7 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   const el = {
-    problemFamily: document.getElementById("problemFamily"),
     category: document.getElementById("category"),
-    categoryLabel: document.getElementById("categoryLabel"),
     customMixBox: document.getElementById("customMixBox"),
     mixChecks: Array.from(document.querySelectorAll(".mixCheck")),
     btnMixAll: document.getElementById("btnMixAll"),
@@ -6949,14 +6934,6 @@ body.printOnlyWorksheet .worksheetSheet{
   [el.worksheetCount, el.worksheetStudentMode, el.worksheetCorrectionMode].forEach(select => {
     if(select) select.addEventListener("change", buildWorksheet);
   });
-  if(el.problemFamily){
-    el.problemFamily.addEventListener("change", () => {
-      updateCategoryOptionsForFamily(false);
-      updateOptionMenuVisibility();
-      newProblem();
-    });
-  }
-
   el.category.addEventListener("change", () => {
     updateOptionMenuVisibility();
     newProblem();
@@ -7039,43 +7016,7 @@ body.printOnlyWorksheet .worksheetSheet{
     }
   });
 
-  const categoryOptionsByFamily = {
-    one_step: [
-      ["part_whole", "Partie-tout simple"],
-      ["transformation", "Transformation"],
-      ["comparison", "Comparer"],
-      ["equal_groups", "Groupes égaux"],
-      ["ratio", "Ratios / partages proportionnels"]
-    ],
-    multi_step: [
-      ["unequal_total", "Partages inégaux"],
-      ["multi_linked", "Relations entre plusieurs quantités"]
-    ],
-    custom_mix: [
-      ["custom_mix", "Mélange personnalisé"]
-    ]
-  };
-
-  function updateCategoryOptionsForFamily(keepCurrent=true){
-    if(!el.problemFamily || !el.category) return;
-    const family = el.problemFamily.value || "one_step";
-    const options = categoryOptionsByFamily[family] || categoryOptionsByFamily.one_step;
-    const previous = keepCurrent ? el.category.value : null;
-
-    el.category.innerHTML = options.map(([value, label]) =>
-      "<option value='" + value + "'>" + label + "</option>"
-    ).join("");
-
-    const values = options.map(([value]) => value);
-    el.category.value = values.includes(previous) ? previous : options[0][0];
-
-    if(el.categoryLabel){
-      el.categoryLabel.textContent = family === "custom_mix" ? "Type de mélange" : "Type de problème";
-    }
-  }
-
   function updateOptionMenuVisibility(){
-    updateCategoryOptionsForFamily(true);
     const custom = el.category.value === "custom_mix";
     el.customMixBox.style.display = custom ? "" : "none";
 
@@ -7162,7 +7103,6 @@ body.printOnlyWorksheet .worksheetSheet{
     }
   }
 
-  updateCategoryOptionsForFamily(false);
   updateOptionMenuVisibility();
 
   try{ newProblem(); }
