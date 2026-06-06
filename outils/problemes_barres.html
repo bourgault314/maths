@@ -172,6 +172,80 @@ button:disabled{opacity:.45;cursor:not-allowed}
   margin:8px auto;
   padding:14px 18px;
 }
+/* Étape Comprendre : vraies questions de structure + phrase réponse incomplète. */
+.understandBox{
+  width:min(980px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:12px;
+}
+.understandGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+@media(max-width:900px){.understandGrid{grid-template-columns:1fr}}
+.understandCard{
+  border:1px solid rgba(15,23,42,.10);
+  background:rgba(255,255,255,.88);
+  border-radius:18px;
+  padding:14px 16px;
+  text-align:left;
+}
+.understandQuestion{
+  color:#475569;
+  font-size:clamp(19px,1.45vw,25px);
+  font-weight:950;
+  text-transform:none;
+  letter-spacing:-.01em;
+  line-height:1.18;
+  margin-bottom:8px;
+}
+.understandAnswer{
+  color:#0f172a;
+  font-size:clamp(23px,1.9vw,34px);
+  font-weight:950;
+  line-height:1.22;
+}
+.responseFrame{
+  border:2px dashed rgba(34,197,94,.32);
+  background:linear-gradient(180deg,#f0fdf4,#ffffff);
+  border-radius:18px;
+  padding:14px 16px;
+  text-align:center;
+}
+.responseFrame .understandQuestion{text-align:center;color:#15803d}
+.responseSentence{
+  font-size:clamp(25px,2.15vw,40px);
+  font-weight:950;
+  color:#0f172a;
+  line-height:1.22;
+}
+.stage:fullscreen .understandBox{width:min(1120px,100%)}
+.stage:fullscreen .understandCard{padding:16px 18px}
+.stage:fullscreen .understandQuestion{font-size:clamp(23px,1.75vw,31px)}
+.stage:fullscreen .understandAnswer{font-size:clamp(27px,2.15vw,39px)}
+.stage:fullscreen .responseSentence{font-size:clamp(30px,2.55vw,46px)}
+
+.understandBox.answersHidden .understandAnswer,
+.understandBox.answersHidden .responseSentence{
+  visibility:hidden;
+}
+.understandActions{
+  display:flex;
+  justify-content:center;
+  margin:2px 0 0;
+}
+.understandToggleBtn{
+  background:linear-gradient(180deg,#60a5fa,#2563eb);
+  color:white;
+  border-radius:999px;
+  padding:11px 20px;
+  font-size:16px;
+  font-weight:950;
+}
+
+
 .stage:fullscreen .barArea{
   width:min(1120px, calc(100vw - 150px));
   padding:18px 18px;
@@ -344,19 +418,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
   font-size:clamp(24px,2.35vw,38px);
   font-weight:920;
   letter-spacing:-.035em;
-  line-height:1.2;
+  line-height:1.32;
   text-align:center;
 }
 mark{
-  padding:.03em .16em;
+  padding:.02em .18em;
   border-radius:.28em;
-  background:linear-gradient(180deg,#fef3c7,#fde68a);
-  color:#78350f;
+  background:linear-gradient(180deg,rgba(254,243,199,.92),rgba(253,230,138,.92));
+  color:#0f172a;
+  -webkit-box-decoration-break:clone;
+  box-decoration-break:clone;
+  position:relative;
 }
-mark.relation{background:linear-gradient(180deg,#fed7aa,#fdba74);color:#7c2d12}
+mark.relation{
+  background:linear-gradient(180deg,rgba(254,215,170,.90),rgba(253,186,116,.90));
+  color:#0f172a;
+}
 mark.question{
-  background:linear-gradient(180deg,#dbeafe,#bfdbfe);
-  color:#1d4ed8;
+  background:linear-gradient(180deg,rgba(220,252,231,.96),rgba(187,247,208,.96));
+  color:#0f172a;
 }
 .section{
   max-width:1020px;
@@ -444,6 +524,35 @@ mark.question{
     repeating-linear-gradient(135deg, rgba(249,115,22,.20) 0 8px, rgba(255,255,255,.52) 8px 15px),
     linear-gradient(180deg,var(--orange-soft),#fff7ed);
 }
+.part.selectedAdd{
+  box-shadow:inset 0 0 0 4px rgba(22,163,74,.50);
+  background:
+    repeating-linear-gradient(135deg, rgba(22,163,74,.16) 0 8px, rgba(255,255,255,.62) 8px 15px),
+    linear-gradient(180deg,#dcfce7,#f0fdf4);
+}
+.part.selectedAdd.plusAfter{
+  overflow:visible;
+}
+.part.selectedAdd.plusAfter::after{
+  content:"+";
+  position:absolute;
+  right:-14px;
+  top:50%;
+  transform:translate(50%,-50%);
+  z-index:6;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:#ffffff;
+  border:2px solid rgba(22,163,74,.55);
+  color:#166534;
+  font-size:20px;
+  font-weight:950;
+  line-height:1;
+  box-shadow:0 4px 10px rgba(15,23,42,.16);
+}
 .part.removed{
   opacity:.23;
   background:
@@ -478,7 +587,7 @@ mark.question{
 .compareBrace::after{
   content:"";
   position:absolute;
-  left:0;
+  left:-10px;
   right:0;
   bottom:0;
   height:10px;
@@ -548,7 +657,7 @@ mark.question{
   content:"";
   position:absolute;
   top:0;
-  left:0;
+  left:4px;
   right:0;
   height:11px;
   border-bottom:3px solid rgba(15,23,42,.52);
@@ -626,8 +735,8 @@ mark.question{
   color:#0f172a;
   font-size:clamp(25px,2.4vw,40px);
   font-weight:950;
-  padding-left:28px;
-  margin-left:6px;
+  padding-left:20px;
+  margin-left:2px;
 }
 .unequalTotal::before{
   content:"";
@@ -839,6 +948,172 @@ mark.question{
 .groupedPreview .part{
   min-height:76px;
 }
+
+
+/* Total + écart / Total + rapport — regroupement dans le même gabarit que le schéma de situation.
+   Le schéma de situation garde exactement son composant ; le schéma regroupé est dessiné
+   dans la même zone de barres, sans prendre toute la largeur du cadre. */
+.sameFrameGroupedStack{
+  grid-row:3;
+  align-self:start;
+  width:100%;
+  margin-top:18px;
+}
+.sameFrameGroupedStack .barLine{
+  width:100%;
+  min-height:76px;
+}
+.sameFrameGroupedStack .part{
+  min-height:76px;
+}
+.stage:fullscreen .sameFrameGroupedStack{
+  margin-top:22px;
+}
+.stage:fullscreen .sameFrameGroupedStack .barLine,
+.stage:fullscreen .sameFrameGroupedStack .part{
+  /* Même épaisseur que le schéma de situation en plein écran :
+     ne pas appliquer l'agrandissement général des tableaux manipulables. */
+  min-height:76px;
+}
+
+
+/* Total + écart / Total + rapport — cadre vraiment commun en étape Regrouper.
+   On réserve la largeur totale du regroupement (toutes les parts), puis le schéma
+   de situation utilise les mêmes colonnes d'unités. Ainsi un x garde la même longueur
+   dans le schéma du haut et dans le schéma regroupé du bas. */
+.groupAlignedBoard{
+  width:min(980px,100%);
+  margin:0 auto;
+}
+.groupAlignedGrid{
+  display:grid;
+  grid-template-rows:auto auto;
+  gap:10px 0;
+  align-items:stretch;
+}
+.groupAlignedLabel{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  font-size:20px;
+  font-weight:950;
+  color:#334155;
+  padding-right:12px;
+}
+.groupAlignedPart{
+  min-height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(26px,2.4vw,40px);
+  font-weight:950;
+  letter-spacing:-.04em;
+  background:#fff;
+  border:2px solid var(--line);
+  border-right-width:1px;
+  border-left-width:1px;
+}
+.groupAlignedPart.first{border-left-width:2px;}
+.groupAlignedPart.last{border-right-width:2px;}
+.groupAlignedPart.unknown{
+  background:linear-gradient(180deg,var(--blue-soft),#eff6ff);
+  color:#1d4ed8;
+  font-family:Georgia,"Times New Roman",serif;
+  font-style:italic;
+}
+.groupAlignedPart.diff{
+  background:linear-gradient(180deg,var(--orange-soft),#fff7ed);
+  color:#9a3412;
+  font-family:inherit;
+  font-style:normal;
+}
+.groupAlignedPart.empty{
+  background:#fff;
+  color:transparent;
+  font-family:inherit;
+  font-style:normal;
+}
+.groupAlignedTotal{
+  grid-column:var(--totalCol);
+  grid-row:1 / 3;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  position:relative;
+  color:#0f172a;
+  font-size:clamp(25px,2.4vw,40px);
+  font-weight:950;
+  padding-left:16px;
+  margin-left:6px;
+}
+.groupAlignedTotal::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:9px;
+  border-right:3px solid rgba(15,23,42,.52);
+  border-top:3px solid rgba(15,23,42,.52);
+  border-bottom:3px solid rgba(15,23,42,.52);
+  border-radius:0 14px 14px 0;
+}
+.groupAlignedBlank{min-height:76px;}
+.groupAlignedRegroup{
+  width:100%;
+  margin-top:22px;
+}
+.groupAlignedRegroup .barLine,
+.groupAlignedRegroup .part{
+  min-height:76px;
+}
+.stage:fullscreen .groupAlignedBoard{
+  width:min(980px,96vw);
+}
+.stage:fullscreen .groupAlignedPart,
+.stage:fullscreen .groupAlignedBlank,
+.stage:fullscreen .groupAlignedRegroup .barLine,
+.stage:fullscreen .groupAlignedRegroup .part{
+  min-height:76px;
+}
+
+
+/* Total + écart — schéma regroupé : accolades d'identification sous les parts. */
+.unequalOwnerBraces{
+  display:grid;
+  grid-template-columns:var(--cols, 1fr);
+  width:var(--lineWidth, 100%);
+  margin:10px auto 0;
+  min-height:54px;
+  color:#334155;
+  font-size:clamp(15px,1.35vw,22px);
+  font-weight:950;
+  position:relative;
+  z-index:2;
+}
+.ownerBrace{
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding-top:18px;
+}
+.ownerBrace::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:6px;
+  right:6px;
+  height:12px;
+  border-bottom:3px solid rgba(15,23,42,.50);
+  border-left:3px solid rgba(15,23,42,.50);
+  border-right:3px solid rgba(15,23,42,.50);
+  border-radius:0 0 12px 12px;
+}
+.stage:fullscreen .unequalOwnerBraces{
+  min-height:54px;
+  margin-top:10px;
+}
 .groupStage{
   width:min(980px,100%);
   margin:0 auto;
@@ -865,7 +1140,7 @@ mark.question{
   min-height:86px;
 }
 .stage:fullscreen .groupStage{
-  width:min(1040px,96vw);
+  width:min(980px,96vw);
 }
 .stage:fullscreen .groupStage .equabarPreview{
   width:100%;
@@ -1009,6 +1284,7 @@ mark.question{
   left:10px;
   right:10px;
   top:50%;
+  transform:translateY(-50%);
   border-top:3px solid currentColor;
   opacity:.75;
 }
@@ -1017,8 +1293,9 @@ mark.question{
   position:absolute;
   left:10px;
   right:10px;
-  top:calc(50% - 5px);
-  height:10px;
+  top:50%;
+  transform:translateY(-50%);
+  height:12px;
   border-left:3px solid currentColor;
   border-right:3px solid currentColor;
   opacity:.75;
@@ -1029,6 +1306,14 @@ mark.question{
   padding:0 10px;
   background:#fff;
   border-radius:999px;
+}
+.compareSituationDiff.empty{
+  color:rgba(15,23,42,.45);
+}
+.compareSituationDiff.empty span{
+  background:transparent;
+  padding:0;
+  min-width:0;
 }
 .compareSituationDiff.unknown{
   color:#1d4ed8;
@@ -1099,6 +1384,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 .dialogTitle{font-size:30px;font-weight:950;letter-spacing:-.04em;margin:0 0 10px}
 .dialogText{color:var(--muted);font-size:18px;font-weight:700;line-height:1.42;margin-bottom:14px}
 #decomposeInput{text-align:center;font-size:28px;font-weight:950;padding:16px;margin:8px 0 10px}
+#addDialogText{display:none}
+#addInput{text-align:center;font-size:clamp(28px,3.2vw,40px);font-weight:950;padding:16px;margin:8px 0 8px}
 .suggestions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0 14px}
 .suggestions.hidden{display:none}
 .suggestion{background:#f8fafc;border:1px solid rgba(15,23,42,.12)}
@@ -1200,6 +1487,77 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   min-height:112px;
 }
 
+
+.countSolveBoard .countTop{
+  display:grid;
+}
+.countSolveBoard .countTop .part{
+  min-height:76px;
+}
+
+/* Groupes égaux — chercher le nombre de groupes :
+   on garde un schéma elliptique en bas (une part, …, une part)
+   et on ajoute une accolade au-dessus quand le total a été partagé. */
+.countLine.unknownCount{
+  display:grid;
+  align-items:stretch;
+  justify-content:stretch;
+}
+.countLine.unknownCount .countCell{
+  width:auto;
+}
+.countTopBrace{
+  width:100%;
+  min-height:48px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  position:relative;
+  color:#0f172a;
+  font-size:clamp(22px,2vw,34px);
+  font-weight:950;
+  padding-bottom:12px;
+}
+.countTopBrace::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  right:4px;
+  bottom:0;
+  height:11px;
+  border-top:3px solid rgba(15,23,42,.52);
+  border-left:3px solid rgba(15,23,42,.52);
+  border-right:3px solid rgba(15,23,42,.52);
+  border-radius:12px 12px 0 0;
+}
+.countTopBrace.empty{
+  visibility:hidden;
+}
+.countSolveBoard .countTop{
+  display:flex;
+  align-items:stretch;
+}
+.countSolveBoard .countTop .countCell{
+  width:auto;
+  flex:1 1 0;
+  border-bottom:0;
+}
+.countSolveBoard .countTop .countCell.clickable{
+  cursor:pointer;
+}
+.countBrace{
+  gap:.18em;
+}
+
+
+.countSolveBoard .countTop.unknownCount{
+  display:grid;
+  align-items:stretch;
+}
+.countSolveBoard .countTop.unknownCount .countCell{
+  width:auto;
+}
+
 </style>
 </head>
 <body>
@@ -1295,10 +1653,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="hard">Grandes parties : environ 30 à 120</option>
     </select>
 
-    <label>Affichage de l’inconnue</label>
+    <label>Écriture de l’inconnue</label>
     <select id="unknownMode">
-      <option value="letter" selected>Lettre</option>
-      <option value="question">Point d’interrogation</option>
+      <option value="letter" selected>Lettre compacte : x, 4x</option>
+      <option value="explicit">Lettre explicite : x, 4 × x</option>
+      <option value="question">Point d’interrogation : ?, 4 × ?</option>
     </select>
 
     <label>Afficher l’équation</label>
@@ -1343,6 +1702,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
         <div class="toolBar" id="toolBar" style="display:none">
           <button class="toolBtn active" id="toolDecompose">Décomposer</button>
+          <button class="toolBtn" id="toolAdd">Regrouper</button>
           <button class="toolBtn" id="toolDelete">Supprimer dans chaque membre</button>
           <button class="toolBtn" id="toolShare">Partager équitablement</button>
           <button class="toolBtn" id="toolUndo">↶ Annuler</button>
@@ -1382,6 +1742,19 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     </div>
   </div>
 </dialog>
+<dialog id="addDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Regrouper des nombres</h2>
+    <div class="dialogText" id="addDialogText"></div>
+    <input id="addInput" type="text" autocomplete="off" placeholder="">
+    <button class="helpMiniBtn" id="btnShowAddSuggestions" type="button">Aide</button>
+    <div class="suggestions hidden" id="addSuggestions"></div>
+    <div class="btnrow" style="justify-content:center">
+      <button class="primary" id="btnApplyAdd">Regrouper</button>
+      <button class="ghost" id="btnCancelAddDialog">Annuler</button>
+    </div>
+  </div>
+</dialog>
 
 <script>
 (function(){
@@ -1389,6 +1762,42 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   const names = ["Lina","Noé","Sami","Jade","Maya","Tom","Nora","Eden","Anna","Basile"];
   const objects = ["billes","cartes","coquillages","jetons","images","mangues","letchis","tickets"];
+
+
+  const objectGrammar = {
+    billes:{gender:"f"},
+    cartes:{gender:"f"},
+    images:{gender:"f"},
+    mangues:{gender:"f"},
+    coquillages:{gender:"m"},
+    jetons:{gender:"m"},
+    letchis:{gender:"m"},
+    tickets:{gender:"m"}
+  };
+
+  function isFeminineObject(obj){
+    return objectGrammar[obj] && objectGrammar[obj].gender === "f";
+  }
+
+  function colorLabel(base, obj){
+    const feminine = isFeminineObject(obj);
+    if(base === "bleu") return feminine ? "bleues" : "bleus";
+    if(base === "vert") return feminine ? "vertes" : "verts";
+    if(base === "rouge") return "rouges";
+    if(base === "jaune") return "jaunes";
+    return base;
+  }
+
+  function colorLabelsFor(obj){
+    return [colorLabel("rouge", obj), colorLabel("bleu", obj), colorLabel("vert", obj)];
+  }
+
+  function pastParticiplePlural(verb, obj){
+    const feminine = isFeminineObject(obj);
+    if(verb === "perdre") return feminine ? "perdues" : "perdus";
+    if(verb === "gagner") return feminine ? "gagnées" : "gagnés";
+    return feminine ? "faites" : "faits";
+  }
 
   const el = {
     category: document.getElementById("category"),
@@ -1432,6 +1841,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     stepBtns: Array.from(document.querySelectorAll(".stepBtn")),
     toolBtns: Array.from(document.querySelectorAll(".toolBtn")),
     toolDecompose: document.getElementById("toolDecompose"),
+    toolAdd: document.getElementById("toolAdd"),
     toolDelete: document.getElementById("toolDelete"),
     toolShare: document.getElementById("toolShare"),
     toolUndo: document.getElementById("toolUndo"),
@@ -1445,7 +1855,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     shareDialog: document.getElementById("shareDialog"),
     shareDialogText: document.getElementById("shareDialogText"),
     shareChoices: document.getElementById("shareChoices"),
-    btnCancelShareDialog: document.getElementById("btnCancelShareDialog")
+    btnCancelShareDialog: document.getElementById("btnCancelShareDialog"),
+    addDialog: document.getElementById("addDialog"),
+    addDialogText: document.getElementById("addDialogText"),
+    addInput: document.getElementById("addInput"),
+    addSuggestions: document.getElementById("addSuggestions"),
+    btnShowAddSuggestions: document.getElementById("btnShowAddSuggestions"),
+    btnApplyAdd: document.getElementById("btnApplyAdd"),
+    btnCancelAddDialog: document.getElementById("btnCancelAddDialog")
   };
 
   let problem = null;
@@ -1456,18 +1873,58 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   let selected = [];
   let decomposeTarget = null;
   let selectedShareRef = null;
+  let pendingAddInfo = null;
+  let understandAnswersVisible = false;
 
   function rint(a,b){ return a + Math.floor(Math.random() * (b - a + 1)); }
   function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
   function uid(){ return Math.random().toString(36).slice(2,10); }
   function clone(x){ return JSON.parse(JSON.stringify(x)); }
-  function unknown(){ return el.unknownMode.value === "question" ? "?" : "𝑥"; }
+  function chooseUnknownSymbol(){
+    if(!el.unknownMode || el.unknownMode.value === "question") return "?";
+    return "𝑥";
+  }
+
+  function unknown(){
+    if(problem && problem.unknownSymbol) return problem.unknownSymbol;
+    return chooseUnknownSymbol();
+  }
 
   function xTerm(count){
-    if(el.unknownMode.value === "question"){
+    const u = unknown();
+    if(u === "?"){
       return count === 1 ? "?" : count + " × ?";
     }
-    return count === 1 ? "𝑥" : count + "𝑥";
+    if(el.unknownMode && el.unknownMode.value === "explicit"){
+      return count === 1 ? u : count + " × " + u;
+    }
+    return count === 1 ? u : count + u;
+  }
+
+  function countGroupsUnknownTerm(){
+    return unknown() + " × " + problem.perGroup;
+  }
+
+  function countGroupsBraceLabel(){
+    return unknown() + "&nbsp;fois&nbsp;" + problem.perGroup;
+  }
+
+  function countUnknownStackStyle(columns){
+    const safeColumns = Math.max(3, Number(columns) || 3);
+    return countStackStyle(safeColumns, false);
+  }
+
+  function countUnknownGridColumns(columns){
+    const safeColumns = Math.max(3, Number(columns) || 3);
+    return "repeat(" + safeColumns + ", 1fr)";
+  }
+
+  function countUnknownCells(cellLabel, columns=3){
+    const safeColumns = Math.max(3, Number(columns) || 3);
+    const dotEnd = Math.max(3, safeColumns);
+    return "<div class='countCell' style='grid-column:1'>" + cellLabel + "</div>" +
+      "<div class='countCell countDots' style='grid-column:2 / " + dotEnd + "'>…</div>" +
+      "<div class='countCell last' style='grid-column:" + safeColumns + "'>" + cellLabel + "</div>";
   }
 
   function range(){
@@ -1561,7 +2018,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien y a-t-il de " + obj + " en tout ?</mark>",
         emptyText:"On prépare plusieurs parties qui formeront un tout.",
         fillText:"Toutes les parties sont connues. On cherche le tout.",
-        context:contextParts + " ; tout = ?",
+        context:contextParts,
         answer:"Il y a " + total + " " + obj + " en tout.",
         check: checkExpr + " = " + total + "."
       };
@@ -1572,8 +2029,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       const known = rint(rg.known[0], rg.known[1]);
       const x = rint(rg.x[0], rg.x[1]);
       const total = known + equalCount * x;
-      const equalText = equalCount === 2 ? "autant de rouges que de bleus" : "autant de rouges, de bleus et de verts";
-      const unknownQuestion = equalCount === 2 ? "Combien y a-t-il de rouges ?" : "Combien y a-t-il de rouges ?";
+      const eqColors = colorLabelsFor(obj);
+      const yellowLabel = colorLabel("jaune", obj);
+      const equalText = equalCount === 2
+        ? "autant de " + obj + " " + eqColors[0] + " que de " + obj + " " + eqColors[1]
+        : "autant de " + obj + " " + eqColors[0] + ", de " + obj + " " + eqColors[1] + " et de " + obj + " " + eqColors[2];
+      const unknownQuestion = "Combien y a-t-il de " + obj + " " + eqColors[0] + " ?";
       const pieces = [{type:"number", value:known}];
       for(let i = 0; i < equalCount; i++) pieces.push({type:"x", value:"x"});
       const checkExpr = [known].concat(Array(equalCount).fill(x)).join(" + ");
@@ -1587,15 +2048,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         total,
         pieces,
         emptyPartCount:equalCount + 1,
-        rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". Il y a " + known + " " + obj + " jaunes. Il y a " + equalText + ". " + unknownQuestion,
+        rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". Il y a " + known + " " + obj + " " + yellowLabel + ". Il y a " + equalText + ". " + unknownQuestion,
         highlightedStatement:
           "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
-          "Il y a <mark>" + known + " " + obj + " jaunes</mark>. " +
+          "Il y a <mark>" + known + " " + obj + " " + yellowLabel + "</mark>. " +
           "Il y a <mark class='relation'>" + equalText + "</mark>. " +
           "<mark class='question'>" + unknownQuestion + "</mark>",
         emptyText:"On prépare une barre du tout, avec une partie connue et plusieurs parties égales inconnues.",
         fillText:"Le tout est connu. Une partie est connue. Les autres parties sont égales.",
-        context:"Tout = " + total + " ; partie connue = " + known + " ; " + equalCount + " parties égales = " + unknown(),
+        context:"Tout = " + total + " ; partie connue = " + known + " ; les autres parties sont égales",
         answer:"Il y a " + x + " " + obj + " rouges.",
         check: checkExpr + " = " + total + "."
       };
@@ -1606,7 +2067,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const knownValues = Array.from({length:knownCount}, () => rint(rg.x[0], rg.known[1]));
     const missing = rint(rg.x[0], rg.x[1]);
     const total = knownValues.reduce((sum,v) => sum + v, 0) + missing;
-    const colors = ["rouges", "bleus"];
+    const colors = colorLabelsFor(obj);
+    const missingColor = colors[knownCount] || colorLabel("vert", obj);
     const knownSentence = knownValues.map((v,i) => "Il y a " + v + " " + obj + " " + colors[i] + ".").join(" ");
     const highlightedKnown = knownValues.map((v,i) => "Il y a <mark>" + v + " " + obj + " " + colors[i] + "</mark>.").join(" ");
     const pieces = knownValues.map(v => ({type:"number", value:v}));
@@ -1622,15 +2084,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       total,
       pieces,
       emptyPartCount:knownCount + 1,
-      rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". " + knownSentence + " Les autres sont verts. Combien y a-t-il de " + obj + " verts ?",
+      rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". " + knownSentence + " Les autres sont " + missingColor + ". Combien y a-t-il de " + obj + " " + missingColor + " ?",
       highlightedStatement:
         "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
-        highlightedKnown + " Les autres sont verts. " +
-        "<mark class='question'>Combien y a-t-il de " + obj + " verts ?</mark>",
+        highlightedKnown + " Les autres sont " + missingColor + ". " +
+        "<mark class='question'>Combien y a-t-il de " + obj + " " + missingColor + " ?</mark>",
       emptyText:"On prépare une barre du tout et une barre découpée en plusieurs parties.",
-      fillText:"Le tout est connu. Une ou deux parties sont connues. La partie restante est cherchée.",
-      context:"Tout = " + total + " ; parties connues = " + knownValues.join(" + ") + " ; partie cherchée = " + unknown(),
-      answer:"Il y a " + missing + " " + obj + " verts.",
+      fillText: knownValues.length === 1
+        ? "Le tout est connu. Une partie est connue. La partie restante est cherchée."
+        : "Le tout est connu. Deux parties sont connues. La partie restante est cherchée.",
+      context:"Tout = " + total + " ; " + (knownValues.length === 1 ? "partie connue = " : "parties connues = ") + knownValues.join(" + "),
+      answer:"Il y a " + missing + " " + obj + " " + missingColor + ".",
       check: checkExpr + " = " + total + "."
     };
   }
@@ -1661,7 +2125,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const actionVerb = isGain ? "gagne" : "perd";
     const actionNoun = isGain ? "gain" : "perte";
     const changeLabel = isGain ? "changement" : "perte";
-    const changeQuestion = isGain ? "Combien de " + obj + " ont été gagnées ?" : "Combien de " + obj + " ont été perdues ?";
+    const changeQuestion = isGain ? "Combien de " + obj + " ont été " + pastParticiplePlural("gagner", obj) + " ?" : "Combien de " + obj + " ont été " + pastParticiplePlural("perdre", obj) + " ?";
     const changeAnswer = isGain ? person + " a gagné " + change + " " + obj + "." : person + " a perdu " + change + " " + obj + ".";
     const decomp = isGain ? (before + " + " + change) : (after + " + " + change);
 
@@ -1694,7 +2158,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
             "<mark class='question'>Combien de " + obj + " possède " + person + " maintenant ?</mark>",
           emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
           fillText:"L’avant et le changement sont connus. On cherche l’après.",
-          context:"Avant = " + before + " ; changement = " + change + " ; après = ?",
+          context:"Avant = " + before + " ; changement = " + change,
           answer: person + " possède " + after + " " + obj + " maintenant.",
           check: before + " + " + change + " = " + after + "."
         });
@@ -1712,7 +2176,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien de " + obj + " reste-t-il à " + person + " maintenant ?</mark>",
         emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui est retiré.",
         fillText:"L’avant et la perte sont connus. On cherche l’après, c’est-à-dire ce qui reste.",
-        context:"Avant = " + before + " ; perte = " + change + " ; après = " + unknown(),
+        context:"Avant = " + before + " ; perte = " + change,
         answer:"Il reste " + after + " " + obj + " à " + person + ".",
         check: after + " + " + change + " = " + before + "."
       });
@@ -1733,7 +2197,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
             "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
           emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
           fillText:"L’après et le changement sont connus. On cherche l’avant.",
-          context:"Après = " + after + " ; changement = " + change + " ; avant = " + unknown(),
+          context:"Après = " + after + " ; changement = " + change,
           answer: person + " possédait " + before + " " + obj + " au départ.",
           check: before + " + " + change + " = " + after + "."
         });
@@ -1752,7 +2216,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
         emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui a été retiré.",
         fillText:"L’après et la perte sont connus. On cherche l’avant.",
-        context:"Après = " + after + " ; perte = " + change + " ; avant = ?",
+        context:"Après = " + after + " ; perte = " + change,
         answer: person + " possédait " + before + " " + obj + " au départ.",
         check: after + " + " + change + " = " + before + "."
       });
@@ -1772,7 +2236,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>" + changeQuestion + "</mark>",
         emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
         fillText:"L’avant et l’après sont connus. On cherche le changement.",
-        context:"Après = " + after + " ; avant = " + before + " ; changement = " + unknown(),
+        context:"Après = " + after + " ; avant = " + before,
         answer:changeAnswer,
         check: before + " + " + change + " = " + after + "."
       });
@@ -1791,7 +2255,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<mark class='question'>" + changeQuestion + "</mark>",
       emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui a été retiré.",
       fillText:"L’avant et l’après sont connus. On cherche la perte.",
-      context:"Avant = " + before + " ; après = " + after + " ; perte = " + unknown(),
+      context:"Avant = " + before + " ; après = " + after,
       answer:changeAnswer,
       check: after + " + " + change + " = " + before + "."
     });
@@ -1838,7 +2302,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien de " + obj + " possède " + bigName + " ?</mark>",
         emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
         fillText:"La petite quantité et l’écart sont connus. On cherche la grande quantité.",
-        context:smallName + " = " + small + " ; écart = " + diff + " ; " + bigName + " = " + unknown(),
+        context:smallName + " = " + small + " ; écart = " + diff,
         answer: bigName + " a " + big + " " + obj + ".",
         check: small + " + " + diff + " = " + big + "."
       };
@@ -1871,7 +2335,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>" + question + "</mark>",
         emptyText:"On prépare deux barres alignées. L’écart est la partie en plus sur la grande quantité.",
         fillText:"Les deux quantités sont connues. On cherche l’écart entre les deux.",
-        context:bigName + " = " + big + " ; " + smallName + " = " + small + " ; écart = " + unknown(),
+        context:bigName + " = " + big + " ; " + smallName + " = " + small,
         answer,
         check: small + " + " + diff + " = " + big + "."
       };
@@ -1897,7 +2361,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<mark class='question'>Combien de " + obj + " possède " + smallName + " ?</mark>",
       emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
       fillText:"La grande quantité est connue. L’écart est connu. On cherche la petite quantité.",
-      context:bigName + " = " + big + " ; écart = " + diff + " ; " + smallName + " = " + unknown(),
+      context:bigName + " = " + big + " ; écart = " + diff,
       answer: smallName + " a " + small + " " + obj + ".",
       check: small + " + " + diff + " = " + big + "."
     };
@@ -1936,7 +2400,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien faut-il de " + containerPlural + " ?</mark>",
         emptyText:"On connaît la taille d’un groupe, mais on ne connaît pas encore le nombre de groupes.",
         fillText:"On représente une première part, des parts cachées par les points de suspension, puis une dernière part. L’accolade représente le nombre de groupes.",
-        context:"Total = " + total + " ; une part = " + perGroup + " ; nombre de parts = " + unknown(),
+        context:"Total = " + total + " ; une part = " + perGroup,
         answer:"Il faut " + groupCount + " " + containerPlural + ".",
         check: groupCount + " × " + perGroup + " = " + total + "."
       };
@@ -1960,7 +2424,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<mark class='question'>Combien y a-t-il de " + obj + " en tout ?</mark>",
         emptyText:"On prépare une barre du total, découpée en parts égales.",
         fillText:"Le nombre de parts et la valeur de chaque part sont connus. On cherche le total.",
-        context:"" + groupCount + " parts égales ; une part = " + perGroup + " ; total = ?",
+        context:"" + groupCount + " parts égales ; une part = " + perGroup,
         answer:"Il y a " + total + " " + obj + " en tout.",
         check: groupCount + " × " + perGroup + " = " + total + "."
       };
@@ -1982,7 +2446,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<mark class='question'>Combien de " + obj + " y a-t-il dans chaque " + containerSingular + " ?</mark>",
       emptyText:"On prépare une barre du total, découpée en parts égales.",
       fillText:"Le total est connu. Toutes les parts sont identiques. On cherche la valeur d’une part.",
-      context:"Total = " + total + " ; " + groupCount + " parts égales ; une part = " + unknown(),
+      context:"Total = " + total + " ; " + groupCount + " parts égales",
       answer:"Il y a " + perGroup + " " + obj + " dans chaque " + containerSingular + ".",
       check: groupCount + " × " + perGroup + " = " + total + "."
     };
@@ -2018,7 +2482,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
       emptyText:"On prépare deux barres comparées, puis on les regroupera pour utiliser le total.",
       fillText:"La petite quantité est commune. La grande quantité contient la petite quantité et l’écart. Les deux barres ensemble valent le total.",
-      context:"Total = " + total + " ; écart = " + diff + " ; petite quantité = " + unknown(),
+      context:"Total = " + total + " ; écart = " + diff,
       answer: smallName + " a " + small + " " + obj + " et " + bigName + " a " + big + " " + obj + ".",
       check: small + " + " + big + " = " + total + " et " + big + " - " + small + " = " + diff + "."
     };
@@ -2053,7 +2517,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
       emptyText:"On prépare deux barres comparées : la grande quantité contient plusieurs fois la petite quantité.",
       fillText:"La petite quantité est la part de référence. La grande quantité contient " + ratio + " parts identiques. Les deux barres ensemble valent le total.",
-      context:"Total = " + total + " ; rapport = " + ratio + " fois ; petite quantité = " + unknown(),
+      context:"Total = " + total + " ; rapport = " + ratio + " fois",
       answer: smallName + " a " + small + " " + obj + " et " + bigName + " a " + big + " " + obj + ".",
       check: small + " + " + big + " = " + total + " et " + big + " = " + ratio + " × " + small + "."
     };
@@ -2065,12 +2529,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const diff = rint(rg.diff[0], rg.diff[1]);
     const total = ref + (2 * ref) + (ref + diff);
     const obj = pick(["jetons","billes","cartes","coquillages","images"]);
-    const labels = pick([
-      ["rouges","bleus","verts"],
-      ["ronds","carrés","triangles"],
-      ["petits","moyens","grands"],
-      ["A","B","C"]
-    ]);
+    const labels = Math.random() < 0.75 ? colorLabelsFor(obj) : ["A","B","C"];
 
     return {
       type:"multi_linked",
@@ -2093,12 +2552,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       rawStatement: "Il y a " + total + " " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " en tout. Il y a deux fois plus de " + obj + " " + labels[1] + " que de " + obj + " " + labels[0] + ". Il y a " + diff + " " + obj + " " + labels[2] + " de plus que de " + obj + " " + labels[0] + ". Combien y a-t-il de " + obj + " " + labels[0] + " ?",
       highlightedStatement:
         "Il y a <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
-        "Il y a <mark>deux fois plus</mark> de " + obj + " " + labels[1] + " que de " + obj + " " + labels[0] + ". " +
-        "Il y a <mark>" + diff + " de plus</mark> de " + obj + " " + labels[2] + " que de " + obj + " " + labels[0] + ". " +
+        "Il y a <mark>deux fois plus de " + obj + " " + labels[1] + "</mark> que de " + obj + " " + labels[0] + ". " +
+        "Il y a <mark>" + diff + " " + obj + " " + labels[2] + " de plus</mark> que de " + obj + " " + labels[0] + ". " +
         "<mark class='question'>Combien y a-t-il de " + obj + " " + labels[0] + " ?</mark>",
       emptyText:"On choisit une quantité de référence. Les autres quantités sont construites à partir de cette référence.",
       fillText:"La référence est inconnue. Une quantité vaut deux références, et une autre vaut une référence plus un écart.",
-      context:"Total = " + total + " ; référence = " + unknown() + " ; écart = " + diff,
+      context:"Total = " + total + " ; écart = " + diff,
       answer:"Il y a " + ref + " " + obj + " " + labels[0] + ".",
       check: ref + " + " + (2 * ref) + " + " + (ref + diff) + " = " + total + "."
     };
@@ -2141,6 +2600,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const pieces = active(side);
     if(!pieces.length) return "0";
 
+    if(pieces.length >= 2 && pieces.every(p => p.type === "x")){
+      return xTerm(pieces.length);
+    }
+
+    if(pieces.length >= 2 && pieces.every(p => p.type === "number")){
+      const sameValue = pieces.every(p => Number(p.value) === Number(pieces[0].value));
+      if(sameValue) return pieces.length + " × " + pieces[0].value;
+    }
+
     // On respecte l'ordre visuel des briques dans le tableau.
     // Exemple : si la ligne du bas montre 37 puis x, l'équation affiche 37 + x,
     // et non x + 37. On regroupe seulement les inconnues consécutives.
@@ -2182,15 +2650,41 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function currentEquation(){
-    const solved = solvedValue();
-    if(solved !== null) return unknown() + " = " + solved;
-    return sideExpr("bottom") + " = " + sideExpr("top");
+    // L'équation suit toujours la lecture du schéma :
+    // la barre du haut est égale à la barre du bas.
+    if(problem && problem.type === "equal_groups" && problem.subType === "count"){
+      return sideExpr("top") + " = " + countGroupsUnknownTerm();
+    }
+    return sideExpr("top") + " = " + sideExpr("bottom");
   }
 
   function recordStep(){
     const eq = currentEquation();
     if(!state.steps.length || state.steps[state.steps.length - 1] !== eq){
       state.steps.push(eq);
+    }
+
+    if(problem && problem.type === "equal_groups" && problem.subType === "count"){
+      const top = active("top");
+      const solvedCount = top.length >= 2 &&
+        top.every(p => p.type === "number" && Number(p.value) === Number(problem.perGroup))
+          ? top.length
+          : null;
+      if(solvedCount !== null){
+        const solvedEq = unknown() + " = " + solvedCount;
+        if(state.steps[state.steps.length - 1] !== solvedEq){
+          state.steps.push(solvedEq);
+        }
+      }
+      return;
+    }
+
+    const value = solvedValue();
+    if(value !== null && value !== undefined){
+      const solvedEq = unknown() + " = " + value;
+      if(state.steps[state.steps.length - 1] !== solvedEq){
+        state.steps.push(solvedEq);
+      }
     }
   }
 
@@ -2201,6 +2695,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   function newProblem(){
     problem = makeProblem();
+    problem.unknownSymbol = chooseUnknownSymbol();
+    understandAnswersVisible = false;
     initEquabar();
     setAction("decompose");
     setStep("read");
@@ -2246,9 +2742,115 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     });
   }
 
+
+  function stripTags(html){
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html || "";
+    return tmp.textContent || tmp.innerText || "";
+  }
+
+  function blankNumbers(sentence){
+    return String(sentence || "")
+      .replace(/\b\d+\b/g, "___")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function answerTemplate(){
+    return blankNumbers(stripTags(problem.answer || ""));
+  }
+
+  function withCurrentUnknown(text){
+    let out = String(text || "");
+    if(problem && problem.unknownSymbol && problem.unknownSymbol !== unknown()){
+      out = out.split(problem.unknownSymbol).join(unknown());
+    }
+    return out;
+  }
+
+  function contextHtml(){
+    return withCurrentUnknown(problem.context || "").replace(/;\s*/g,"<br>");
+  }
+
+  function searched(label){
+    return label + " (" + unknown() + ")";
+  }
+
+  function understandCard(question, answer){
+    return "<div class='understandCard'>" +
+      "<div class='understandQuestion'>" + question + "</div>" +
+      "<div class='understandAnswer'>" + answer + "</div>" +
+    "</div>";
+  }
+
+  function renderUnderstanding(){
+    const cards = [];
+
+    if(problem.type === "part_whole"){
+      const search = problem.subType === "whole" ? searched("le tout") : searched("une partie");
+      const equality = problem.subType === "equal_unknowns" ? "Les parties inconnues sont égales." : "Les parties ne sont pas forcément égales.";
+      cards.push(understandCard("Que cherche-t-on ?", search));
+      cards.push(understandCard("Les parties sont-elles égales ou inégales ?", equality));
+      cards.push(understandCard("Quelles informations sont connues ?", contextHtml()));
+    }else if(problem.type === "transformation"){
+      const search = problem.subType === "before" ? searched("l’avant") : (problem.subType === "after" ? searched("l’après") : searched("le changement"));
+      const beforeAfter = problem.kind === "loss" ? "Il y en avait plus avant qu’après." : "Il y en a plus après qu’avant.";
+      cards.push(understandCard("Que cherche-t-on ?", search));
+      cards.push(understandCard("Avait-on plus avant ou après ?", beforeAfter));
+      cards.push(understandCard("Quelles informations sont connues ?", contextHtml()));
+    }else if(problem.type === "comparison_additive"){
+      const search = problem.subType === "difference" ? searched("l’écart") : (problem.subType === "big" ? searched("la grande quantité") : searched("la petite quantité"));
+      const bigger = problem.bigName ? (problem.bigName + " a la plus grande quantité.") : "On repère la plus grande quantité.";
+      const diffKnown = problem.subType === "difference" ? "L’écart est inconnu." : "L’écart est connu.";
+      cards.push(understandCard("Que cherche-t-on ?", search));
+      cards.push(understandCard("Qui en a le plus ?", bigger));
+      cards.push(understandCard("L’écart est-il connu ?", diffKnown));
+    }else if(problem.type === "equal_groups"){
+      const search = problem.subType === "total" ? searched("le total") : (problem.subType === "count" ? searched("le nombre de groupes") : searched("la valeur d’un groupe"));
+      cards.push(understandCard("Que cherche-t-on ?", search));
+      cards.push(understandCard("Que sait-on des groupes ?", "Les groupes sont égaux."));
+      cards.push(understandCard("Quelles informations sont connues ?", contextHtml()));
+    }else if(problem.type === "unequal_total_diff"){
+      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chacun"));
+      cards.push(understandCard("Les deux parts sont-elles égales ?", "Non : elles sont inégales, avec un écart connu."));
+      cards.push(understandCard("Qui a la plus grande quantité ?", problem.bigName + " a la plus grande quantité."));
+    }else if(problem.type === "unequal_total_ratio"){
+      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chacun"));
+      cards.push(understandCard("Les deux parts sont-elles égales ?", "Non : une quantité vaut plusieurs fois l’autre."));
+      cards.push(understandCard("Quelle est la part de référence ?", problem.smallName + " correspond à une part."));
+    }else if(problem.type === "multi_linked"){
+      cards.push(understandCard("Que cherche-t-on ?", "la quantité de référence"));
+      cards.push(understandCard("Les quantités sont-elles indépendantes ?", "Non : elles sont toutes liées à la même quantité de référence."));
+      cards.push(understandCard("Quelle est la référence ?", problem.refLabel + " correspond à la quantité cherchée."));
+    }
+
+    if(!cards.length){
+      cards.push(understandCard("Que cherche-t-on ?", "l’inconnue du problème (" + unknown() + ")"));
+    }
+
+    const response = answerTemplate();
+    el.explainSection.style.display = "";
+    el.explainTitle.textContent = "Comprendre le problème";
+    const boxClass = understandAnswersVisible ? "understandBox" : "understandBox answersHidden";
+    const buttonLabel = understandAnswersVisible ? "Masquer les réponses" : "Afficher les réponses";
+    el.explainText.innerHTML =
+      "<div class='" + boxClass + "'>" +
+        "<div class='understandGrid'>" + cards.join("") + "</div>" +
+        "<div class='responseFrame'>" +
+          "<div class='understandQuestion'>À quoi doit ressembler la phrase réponse ?</div>" +
+          "<div class='responseSentence'>" + response + "</div>" +
+        "</div>" +
+        "<div class='understandActions'>" +
+          "<button type='button' class='understandToggleBtn' id='btnToggleUnderstandAnswers'>" + buttonLabel + "</button>" +
+        "</div>" +
+      "</div>";
+  }
+
   function setStep(next){
     updateStepVisibility();
     if(next === "group" && !needsGrouping()) next = "solve";
+    const previousStep = step;
+    if(next === "understand" && previousStep !== "understand") understandAnswersVisible = false;
     step = next;
     el.stepBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.step === step));
     el.statement.classList.toggle("compact", ["empty","fill","group","solve","answer"].includes(step));
@@ -2265,6 +2867,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     if(step === "understand"){
       el.statement.innerHTML = problem.highlightedStatement;
+      renderUnderstanding();
     }
 
     if(step === "empty"){
@@ -2295,7 +2898,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       el.statement.innerHTML = problem.highlightedStatement;
       el.schemaSection.style.display = "";
       el.schemaTitle.textContent = "Schéma en barre manipulable";
-      el.toolBar.style.display = (problem.type === "equal_groups" && problem.subType === "count") ? "none" : "";
+      el.toolBar.style.display = "";
       renderEquabar();
     }
 
@@ -2357,6 +2960,114 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<div class='ratioLabel' style='grid-column:1;grid-row:2'>" + bottomLabel + "</div>" +
         "<div class='ratioPart first last' style='grid-column:2;grid-row:2'>" + xLabel + "</div>" +
         "<div class='ratioTotal'>" + totalLabel + "</div>" +
+      "</div>" +
+    "</div>";
+  }
+
+
+  function renderGroupedPreviewInSituationFrame(){
+    // Utilisé seulement pour Total + écart et Total + rapport dans l'étape Regrouper.
+    // On utilise exactement les mêmes colonnes d'unités que le schéma de situation aligné :
+    // un x, l'écart ou les parts supplémentaires, puis l'autre x quand on regroupe.
+    const totalLabel = problem.total;
+
+    if(problem.type === "unequal_total_diff"){
+      const xFlex = Math.max(1, problem.small || problem.x || 1);
+      const diffFlex = Math.max(1, problem.diff || problem.known || 1);
+      const columns = "110px minmax(110px," + xFlex + "fr) minmax(110px," + xFlex + "fr) minmax(72px," + diffFlex + "fr) 72px";
+      const xPiece = {type:"x", value:"x"};
+      const diffPiece = {type:"number", value:problem.diff, role:"diff"};
+      return "<div class='groupAlignedBoard'>" +
+        "<div class='groupAlignedGrid' style='grid-template-columns:" + columns + ";--totalCol:5'>" +
+          "<div class='groupAlignedRegroup' style='grid-column:2 / 5'>" +
+            "<div class='barLine top'><div class='part' style='flex:1'>" + totalLabel + "</div></div>" +
+            "<div class='barLine bottom'>" +
+              partHtml(xPiece, xFlex) + partHtml(xPiece, xFlex) + partHtml(diffPiece, diffFlex) +
+            "</div>" +
+            "<div class='unequalOwnerBraces' style='--cols:" + xFlex + "fr " + xFlex + "fr " + diffFlex + "fr;--lineWidth:100%'>" +
+              "<div class='ownerBrace' style='grid-column:1'>" + problem.smallName + "</div>" +
+              "<div class='ownerBrace' style='grid-column:2 / 4'>" + problem.bigName + "</div>" +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "unequal_total_ratio"){
+      const ratio = problem.ratio;
+      let columns = "110px ";
+      for(let i = 0; i < ratio; i++) columns += "minmax(76px,1fr) ";
+      columns += "minmax(76px,1fr) 72px";
+      let bottomPiecesHtml = "";
+      let braceCols = "";
+      for(let i = 0; i < ratio + 1; i++){
+        bottomPiecesHtml += partHtml({type:"x", value:"x"}, 1);
+        braceCols += "1fr ";
+      }
+      return "<div class='groupAlignedBoard'>" +
+        "<div class='groupAlignedGrid' style='grid-template-columns:" + columns + ";--totalCol:" + (ratio + 3) + "'>" +
+          "<div class='groupAlignedRegroup' style='grid-column:2 / " + (ratio + 3) + "'>" +
+            "<div class='barLine top'><div class='part' style='flex:1'>" + totalLabel + "</div></div>" +
+            "<div class='barLine bottom'>" + bottomPiecesHtml + "</div>" +
+            "<div class='unequalOwnerBraces' style='--cols:" + braceCols.trim() + ";--lineWidth:100%'>" +
+              "<div class='ownerBrace' style='grid-column:1 / " + (ratio + 1) + "'>" + problem.bigName + "</div>" +
+              "<div class='ownerBrace' style='grid-column:" + (ratio + 1) + "'>" + problem.smallName + "</div>" +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    }
+
+    return renderEquabarPreview();
+  }
+
+  function renderUnequalSchemaForGroupingFrame(filled=true){
+    const xLabel = filled ? unknown() : "&nbsp;";
+    const diffLabel = filled ? problem.diff : "&nbsp;";
+    const totalLabel = filled ? problem.total : "total";
+    const xFlex = Math.max(1, problem.small || problem.x || 1);
+    const diffFlex = Math.max(1, problem.diff || problem.known || 1);
+
+    // Même largeur totale que le schéma regroupé : x + écart + x.
+    // Dans le schéma de situation, les barres restent alignées à gauche :
+    // grande quantité = x + écart ; petite quantité = x.
+    const columns = "110px minmax(110px," + xFlex + "fr) minmax(72px," + diffFlex + "fr) minmax(110px," + xFlex + "fr) 72px";
+
+    return "<div class='groupAlignedBoard'>" +
+      "<div class='groupAlignedGrid' style='grid-template-columns:" + columns + ";--totalCol:5'>" +
+        "<div class='groupAlignedLabel' style='grid-column:1;grid-row:1'>" + problem.bigName + "</div>" +
+        "<div class='groupAlignedPart " + (filled ? "unknown" : "empty") + " first' style='grid-column:2;grid-row:1'>" + xLabel + "</div>" +
+        "<div class='groupAlignedPart " + (filled ? "diff" : "empty") + " last' style='grid-column:3;grid-row:1'>" + diffLabel + "</div>" +
+        "<div class='groupAlignedBlank' style='grid-column:4;grid-row:1'></div>" +
+        "<div class='groupAlignedLabel' style='grid-column:1;grid-row:2'>" + problem.smallName + "</div>" +
+        "<div class='groupAlignedPart " + (filled ? "unknown" : "empty") + " first last' style='grid-column:2;grid-row:2'>" + xLabel + "</div>" +
+        "<div class='groupAlignedBlank' style='grid-column:3 / 5;grid-row:2'></div>" +
+        "<div class='groupAlignedTotal' style='grid-column:4 / 6'>" + totalLabel + "</div>" +
+      "</div>" +
+    "</div>";
+  }
+
+  function renderRatioSchemaForGroupingFrame(filled=true){
+    const xLabel = filled ? unknown() : "&nbsp;";
+    const totalLabel = filled ? problem.total : "total";
+    const ratio = problem.ratio;
+    let columns = "110px ";
+    for(let i = 0; i < ratio; i++) columns += "minmax(76px,1fr) ";
+    columns += "minmax(76px,1fr) 72px";
+    const totalCol = ratio + 3;
+    let topParts = "";
+    for(let i = 0; i < ratio; i++){
+      const cls = "groupAlignedPart " + (filled ? "unknown" : "empty") + " " + (i === 0 ? "first " : "") + (i === ratio - 1 ? "last" : "");
+      topParts += "<div class='" + cls + "' style='grid-column:" + (2 + i) + ";grid-row:1'>" + xLabel + "</div>";
+    }
+    return "<div class='groupAlignedBoard'>" +
+      "<div class='groupAlignedGrid' style='grid-template-columns:" + columns + ";--totalCol:" + totalCol + "'>" +
+        "<div class='groupAlignedLabel' style='grid-column:1;grid-row:1'>" + problem.bigName + "</div>" +
+        topParts +
+        "<div class='groupAlignedLabel' style='grid-column:1;grid-row:2'>" + problem.smallName + "</div>" +
+        "<div class='groupAlignedPart " + (filled ? "unknown" : "empty") + " first last' style='grid-column:2;grid-row:2'>" + xLabel + "</div>" +
+        "<div class='groupAlignedBlank' style='grid-column:3 / " + (ratio + 2) + ";grid-row:2'></div>" +
+        "<div class='groupAlignedTotal' style='grid-column:" + (ratio + 2) + " / " + (totalCol + 1) + "'>" + totalLabel + "</div>" +
       "</div>" +
     "</div>";
   }
@@ -2436,27 +3147,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
 
     if(problem.type === "unequal_total_ratio"){
-      el.barArea.innerHTML = renderRatioSchema(false);
+      el.barArea.innerHTML = "<div class='groupStage'><div class='situationMini'>" + renderRatioSchemaForGroupingFrame(false) + "</div></div>";
       return;
     }
 
     if(problem.type === "unequal_total_diff"){
-      el.barArea.innerHTML = renderUnequalSchema(false);
+      el.barArea.innerHTML = "<div class='groupStage'><div class='situationMini'>" + renderUnequalSchemaForGroupingFrame(false) + "</div></div>";
       return;
     }
 
     if(problem.type === "comparison_additive"){
-      el.barArea.innerHTML = renderCompareGrid({
-        context:"",
-        topLabel:"Grande",
-        bottomLabel:"Petite",
-        xLabel:"",
-        diffLabel:"",
-        totalLabel:"",
-        xFlex:problem.small || problem.x,
-        diffFlex:problem.diff || problem.known,
-        empty:true
-      });
+      el.barArea.innerHTML = renderComparisonSituationSchema(false);
       return;
     }
 
@@ -2522,7 +3223,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     "</div>";
   }
 
-  function renderComparisonFilledSchema(){
+  function renderComparisonSituationSchema(filled=true){
     // Schéma de situation : on représente d'abord les deux quantités comparées.
     // La transformation en "petite quantité + écart" est réservée au schéma regroupé.
     const smallFlex = Math.max(1, problem.small || problem.x || 4);
@@ -2532,13 +3233,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const smallIsUnknown = problem.subType === "small";
     const diffIsUnknown = problem.subType === "difference";
 
-    const bigLabel = bigIsUnknown ? unknown() : problem.big;
-    const smallLabel = smallIsUnknown ? unknown() : problem.small;
-    const diffLabel = diffIsUnknown ? unknown() : problem.diff;
+    const bigLabel = filled ? (bigIsUnknown ? unknown() : problem.big) : "&nbsp;";
+    const smallLabel = filled ? (smallIsUnknown ? unknown() : problem.small) : "&nbsp;";
+    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "&nbsp;";
 
-    const bigClass = bigIsUnknown ? " unknown" : "";
-    const smallClass = smallIsUnknown ? " unknown" : "";
-    const diffClass = diffIsUnknown ? " unknown" : "";
+    const bigClass = filled && bigIsUnknown ? " unknown" : (filled ? "" : " empty");
+    const smallClass = filled && smallIsUnknown ? " unknown" : (filled ? "" : " empty");
+    const diffClass = filled && diffIsUnknown ? " unknown" : (filled ? "" : " empty");
 
     return "<div class='compareSituationBoard'>" +
       "<div class='compareSituationGrid' style='--smallFr:" + smallFlex + "fr;--diffFr:" + diffFlex + "fr'>" +
@@ -2549,6 +3250,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<div class='compareSituationDiff" + diffClass + "' style='grid-column:3;grid-row:2'><span>" + diffLabel + "</span></div>" +
       "</div>" +
     "</div>";
+  }
+
+  function renderComparisonFilledSchema(){
+    return renderComparisonSituationSchema(true);
   }
 
   function renderFilled(){
@@ -2563,12 +3268,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
 
     if(problem.type === "unequal_total_ratio"){
-      el.barArea.innerHTML = renderRatioSchema(true);
+      // Remplir reprend exactement le même gabarit que le schéma de situation affiché dans Regrouper.
+      el.barArea.innerHTML = "<div class='groupStage'><div class='situationMini'>" + renderRatioSchemaForGroupingFrame() + "</div></div>";
       return;
     }
 
     if(problem.type === "unequal_total_diff"){
-      el.barArea.innerHTML = renderUnequalSchema(true);
+      // Remplir reprend exactement le même gabarit que le schéma de situation affiché dans Regrouper.
+      el.barArea.innerHTML = "<div class='groupStage'><div class='situationMini'>" + renderUnequalSchemaForGroupingFrame() + "</div></div>";
       return;
     }
 
@@ -2584,6 +3291,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     let cls = "part";
     if(p.type === "x") cls += " unknown";
     if(problem.type === "comparison_additive" && problem.subType !== "difference" && p.type === "number") cls += " diff";
+    if(problem.type === "unequal_total_diff" && p.type === "number" && p.role === "diff") cls += " diff";
     const label = p.type === "x" ? unknown() : p.value;
     return "<div class='" + cls + "' style='flex:" + flex + "'>" + label + "</div>";
   }
@@ -2607,47 +3315,50 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function renderCountGroups(filled){
     const topLabel = filled ? problem.total : "total";
     const cellLabel = filled ? problem.perGroup : "&nbsp;";
-
-    let cells = "";
-    let stackStyle = "";
-    if(problem.groupCount <= 3){
-      for(let i = 0; i < problem.groupCount; i++){
-        const cls = i === problem.groupCount - 1 ? "countCell last" : "countCell";
-        cells += "<div class='" + cls + "'>" + cellLabel + "</div>";
-      }
-      stackStyle = countStackStyle(problem.groupCount, false);
-    }else{
-      cells =
-        "<div class='countCell'>" + cellLabel + "</div>" +
-        "<div class='countCell'>" + cellLabel + "</div>" +
-        "<div class='countCell countDots'>…</div>" +
-        "<div class='countCell last'>" + cellLabel + "</div>";
-      stackStyle = countStackStyle(4, true);
-    }
+    const braceLabel = filled ? countGroupsBraceLabel() : (unknown() + "&nbsp;fois&nbsp;…");
+    const columns = Math.max(3, problem.groupCount || 3);
+    const stackStyle = countUnknownStackStyle(columns);
+    const cells = countUnknownCells(cellLabel, columns);
 
     return "<div class='countBoard'>" +
-      "<div class='contextTag'>" + (filled ? problem.context : "Groupes égaux — nombre de groupes inconnu") + "</div>" +
+      "<div class='contextTag'>Groupes égaux</div>" +
       "<div class='countStack' style='" + stackStyle + "'>" +
         "<div class='countTop'><div class='part' style='flex:1'>" + topLabel + "</div></div>" +
-        "<div class='countLine'>" + cells + "</div>" +
-        "<div class='countBrace'>" + unknown() + "</div>" +
+        "<div class='countLine unknownCount' style='grid-template-columns:" + countUnknownGridColumns(columns) + "'>" + cells + "</div>" +
+        "<div class='countBrace'>" + braceLabel + "</div>" +
       "</div>" +
     "</div>";
   }
 
   function renderCountGroupsSolved(){
-    let cells = "";
-    for(let i = 0; i < problem.groupCount; i++){
-      const cls = i === problem.groupCount - 1 ? "countCell last" : "countCell";
-      cells += "<div class='" + cls + "'>" + problem.perGroup + "</div>";
+    const top = active("top");
+    const topIsSplit = top.length >= 2 && top.every(p => p.type === "number" && Number(p.value) === Number(problem.perGroup));
+    const displayColumns = Math.max(3, topIsSplit ? top.length : (problem.groupCount || 3));
+    const stackStyle = countStackStyle(displayColumns, false);
+
+    let topBrace = "<div class='countTopBrace empty'>&nbsp;</div>";
+    let topHtml = "";
+
+    if(topIsSplit){
+      topBrace = "<div class='countTopBrace'>" + top.length + " fois " + problem.perGroup + "</div>";
+      topHtml = top.map((p,i) => {
+        const cls = "countCell clickable" + (i === top.length - 1 ? " last" : "");
+        return "<div class='" + cls + "' data-ref='top:" + p.id + "'>" + p.value + "</div>";
+      }).join("");
+    }else{
+      const p = top[0];
+      topHtml = "<div class='countCell clickable last' style='grid-column:1 / " + (displayColumns + 1) + "' data-ref='top:" + p.id + "'>" + p.value + "</div>";
     }
-    const stackStyle = countSolvedStackStyle(problem.groupCount);
-    return "<div class='countBoard'>" +
-      "<div class='contextTag'>On affiche les parts nécessaires pour atteindre le total.</div>" +
+
+    const bottomCells = countUnknownCells(problem.perGroup, displayColumns);
+    const cols = countUnknownGridColumns(displayColumns);
+
+    return "<div class='countBoard countSolveBoard'>" +
       "<div class='countStack' style='" + stackStyle + "'>" +
-        "<div class='countTop'><div class='part' style='flex:1'>" + problem.total + "</div></div>" +
-        "<div class='countLine countComplete'>" + cells + "</div>" +
-        "<div class='countBrace'>" + problem.groupCount + "</div>" +
+        topBrace +
+        "<div class='countTop unknownCount' style='grid-template-columns:" + cols + "'>" + topHtml + "</div>" +
+        "<div class='countLine unknownCount' style='grid-template-columns:" + cols + "'>" + bottomCells + "</div>" +
+        "<div class='countBrace'>" + countGroupsBraceLabel() + "</div>" +
       "</div>" +
     "</div>";
   }
@@ -2698,6 +3409,20 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {cols, lineWidth: Math.max(0, Math.min(100, lineWidth))};
   }
 
+  function hasSelectedAddAfter(side, id){
+    if(actionMode !== "add") return false;
+    const arr = state[side] || [];
+    const selectedIds = new Set(selected.filter(s => s.side === side).map(s => s.id));
+    const idx = arr.findIndex(p => p.id === id);
+    if(idx < 0 || !selectedIds.has(id)) return false;
+    for(let i = idx + 1; i < arr.length; i++){
+      if(selectedIds.has(arr[i].id)) return true;
+      // Si les cases sélectionnées ne sont pas voisines, on ne dessine pas de + dans l'espace.
+      if(!arr[i].removed) return false;
+    }
+    return false;
+  }
+
   function pieceHtmlForGrid(p, side, clickable){
     let cls = "part";
     if(clickable) cls += " clickable";
@@ -2706,7 +3431,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     // Les aperçus non manipulables peuvent conserver la couleur pédagogique de l'écart.
     if(!clickable && ((problem.type === "comparison_additive" && problem.subType !== "difference") || problem.type === "unequal_total_diff" || problem.type === "multi_linked") && p.type === "number" && side === "bottom") cls += " diff";
     if(p.removed) cls += " removed";
-    if(clickable && selected.some(s => s.side === side && s.id === p.id)) cls += " selected";
+    if(clickable && selected.some(s => s.side === side && s.id === p.id)){
+      cls += actionMode === "add" ? " selectedAdd" : " selected";
+      if(actionMode === "add" && hasSelectedAddAfter(side, p.id)) cls += " plusAfter";
+    }
     const label = p.type === "x" ? unknown() : p.value;
     const ref = clickable ? " data-ref='" + side + ":" + p.id + "'" : "";
     return "<div class='" + cls + "'" + ref + ">" + label + "</div>";
@@ -2751,10 +3479,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const topLine = renderGridLine("top", topPieces, commonW, false);
     const bottomLine = renderGridLine("bottom", bottomPieces, commonW, false);
 
+    const ownerBraces = problem.type === "unequal_total_diff"
+      ? "<div class='unequalOwnerBraces' style='" + bottomLine.style + "'>" +
+          "<div class='ownerBrace' style='grid-column:1'>" + problem.smallName + "</div>" +
+          "<div class='ownerBrace' style='grid-column:2 / 4'>" + problem.bigName + "</div>" +
+        "</div>"
+      : "";
+
     return "<div class='equabarPreview'>" +
       "<div class='schemaBoard'>" +
         "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
         "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
+        ownerBraces +
       "</div>" +
     "</div>";
   }
@@ -2778,9 +3514,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
 
     if(problem.type === "unequal_total_diff"){
-      situation = renderUnequalSchema(true);
+      situation = renderUnequalSchemaForGroupingFrame();
     }else if(problem.type === "unequal_total_ratio"){
-      situation = renderRatioSchema(true);
+      situation = renderRatioSchemaForGroupingFrame();
     }else{
       renderEquabar();
       return;
@@ -2789,18 +3525,23 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     el.barArea.innerHTML =
       "<div class='groupStage'>" +
         "<div class='situationMini'>" + situation + "</div>" +
-        renderEquabarPreview() +
+        renderGroupedPreviewInSituationFrame() +
       "</div>";
   }
 
   function renderEquabar(){
     if(problem.type === "equal_groups" && problem.subType === "count"){
-      const eq = problem.groupCount + " × " + problem.perGroup + " = " + problem.total;
+      const equation = state.steps.map((s,i) => "<div class='" + (i < state.steps.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
       const equationBlock = el.equationDisplay.value === "yes"
-        ? "<div class='equationHistory'><div>" + eq + "</div></div>"
+        ? "<div class='equationHistory'>" + equation + "</div>"
         : "";
       el.barArea.innerHTML = "<div class='equabarSolve'>" + renderCountGroupsSolved() + "</div>";
       if(el.equationBelowTools) el.equationBelowTools.innerHTML = equationBlock;
+
+      el.barArea.querySelectorAll("[data-ref]").forEach(node => {
+        node.addEventListener("click", () => onPieceClick(node.dataset.ref));
+      });
+      updateActionMessage();
       return;
     }
 
@@ -2841,7 +3582,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       if(p.type === "x") cls += " unknown";
       if(((problem.type === "comparison_additive" && problem.subType !== "difference") || problem.type === "unequal_total_diff") && p.type === "number" && side === "bottom") cls += " diff";
       if(p.removed) cls += " removed";
-      if(selected.some(s => s.side === side && s.id === p.id)) cls += " selected";
+      if(selected.some(s => s.side === side && s.id === p.id)){
+        cls += actionMode === "add" ? " selectedAdd" : " selected";
+        if(actionMode === "add" && hasSelectedAddAfter(side, p.id)) cls += " plusAfter";
+      }
       const label = p.type === "x" ? unknown() : p.value;
       const flex = p.type === "number" ? Math.max(1, Number(p.value)||1) : Math.max(1, problem.x);
       return "<div class='" + cls + "' style='flex:" + flex + "' data-ref='" + side + ":" + p.id + "'>" + label + "</div>";
@@ -2852,8 +3596,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     actionMode = mode;
     selected = [];
     selectedShareRef = null;
+    pendingAddInfo = null;
     el.toolBtns.forEach(b => b.classList.remove("active"));
     if(mode === "decompose") el.toolDecompose.classList.add("active");
+    if(mode === "add" && el.toolAdd) el.toolAdd.classList.add("active");
     if(mode === "delete") el.toolDelete.classList.add("active");
     if(mode === "share") el.toolShare.classList.add("active");
     el.message.textContent = "";
@@ -2877,6 +3623,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         return;
       }
       openDecompose(item);
+      return;
+    }
+
+    if(actionMode === "add"){
+      if(item.piece.type !== "number"){
+        el.message.textContent = "On regroupe des nombres, pas une inconnue.";
+        return;
+      }
+      toggleSelectForAdd(item);
+      renderEquabar();
       return;
     }
 
@@ -2934,7 +3690,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function buildSuggestions(value){
     const suggestions = [];
     const good = usefulDecomposition(value);
-    if(good && good.includes("+")) suggestions.push(good);
+    if(good && good.includes("+")){
+      const goodNums = good.split("+").map(x => Number(String(x).trim())).filter(Number.isFinite);
+      const goodTotal = goodNums.reduce((a,b)=>a+b,0);
+      if(goodNums.length >= 2 && goodTotal === value) suggestions.push(good);
+    }
 
     const x = Math.max(1, Number(problem.x) || Math.floor(value/2));
     const knowns = [
@@ -3008,6 +3768,120 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     renderEquabar();
   }
 
+
+  function additionGroupInfo(){
+    const {top, bottom} = selectedPiecesBySide();
+    const side = top.length ? "top" : (bottom.length ? "bottom" : null);
+    const pieces = side === "top" ? top : bottom;
+    if(!side || pieces.length < 2) return {ok:false, reason:"needMore", side, pieces};
+    if(top.length && bottom.length) return {ok:false, reason:"oneSide", side:null, pieces:top.concat(bottom)};
+    if(pieces.some(p => p.type !== "number")) return {ok:false, reason:"numbersOnly", side, pieces};
+    const sum = pieces.reduce((total,p) => total + Number(p.value || 0), 0);
+    const expr = pieces.map(p => p.value).join(" + ");
+    return {ok:true, side, pieces, sum, expr};
+  }
+
+  function toggleSelectForAdd(item){
+    const exists = selected.some(s => s.side === item.side && s.id === item.id);
+    if(exists){
+      selected = selected.filter(s => !(s.side === item.side && s.id === item.id));
+      return;
+    }
+
+    if(item.piece.type !== "number"){
+      selected = [];
+      return;
+    }
+
+    if(selected.length && selected[0].side !== item.side){
+      selected = [];
+    }
+
+    selected.push({side:item.side, id:item.id});
+  }
+
+  function additionMessageHtml(){
+    if(actionMode !== "add" || step !== "solve") return "";
+    if(!selected.length) return "Sélectionne plusieurs nombres du même côté pour les regrouper.";
+
+    const info = additionGroupInfo();
+    if(info.ok){
+      return "<button class='orange' id='btnOpenAddDialog' type='button'>Regrouper</button> " +
+        "<button class='ghost' id='btnClearSelection' type='button'>Effacer</button>";
+    }
+
+    let reason = "Sélectionne au moins deux nombres du même côté.";
+    if(info.reason === "oneSide") reason = "Pour regrouper, les nombres doivent être dans le même membre.";
+    if(info.reason === "numbersOnly") reason = "On regroupe seulement des nombres connus.";
+    return reason + " <button class='ghost' id='btnClearSelection' type='button'>Effacer la sélection</button>";
+  }
+
+  function buildAddSuggestions(info){
+    const correct = info.sum;
+    const wrongCandidates = [
+      correct + 1,
+      Math.max(0, correct - 1),
+      correct + 10,
+      Math.max(0, correct - 10)
+    ].filter(n => Number.isFinite(n) && n !== correct && n > 0);
+    const wrong = wrongCandidates.length ? wrongCandidates[Math.floor(Math.random() * wrongCandidates.length)] : correct + 1;
+    return shuffle([correct, wrong]);
+  }
+
+  function renderAddSuggestions(info){
+    if(!el.addSuggestions) return;
+    const suggestions = buildAddSuggestions(info);
+    el.addSuggestions.innerHTML = suggestions.map(v =>
+      "<button class='suggestion' data-add-sug='" + v + "'>" + v + "</button>"
+    ).join("");
+    el.addSuggestions.classList.add("hidden");
+    el.addSuggestions.querySelectorAll("[data-add-sug]").forEach(btn => {
+      btn.addEventListener("click", () => { el.addInput.value = btn.dataset.addSug; });
+    });
+  }
+
+  function openAddDialog(){
+    const info = additionGroupInfo();
+    if(!info.ok){
+      renderEquabar();
+      return;
+    }
+    pendingAddInfo = info;
+    el.addDialogText.innerHTML = "";
+    el.addInput.value = "";
+    renderAddSuggestions(info);
+    el.addDialog.showModal();
+    setTimeout(() => el.addInput.focus(), 60);
+  }
+
+  function applyAdd(){
+    if(!pendingAddInfo) return;
+    const value = Number(String(el.addInput.value).trim().replace(/,/g,"."));
+    if(!Number.isFinite(value) || value !== pendingAddInfo.sum){
+      el.message.textContent = "La somme proposée ne correspond pas aux nombres sélectionnés.";
+      return;
+    }
+
+    pushHistory();
+    const arr = state[pendingAddInfo.side];
+    const ids = new Set(pendingAddInfo.pieces.map(p => p.id));
+    const indexes = arr.map((p,i) => ids.has(p.id) ? i : -1).filter(i => i >= 0);
+    const firstIndex = Math.min(...indexes);
+    const replacement = makePiece("number", pendingAddInfo.sum);
+    const next = [];
+    for(let i=0; i<arr.length; i++){
+      if(i === firstIndex) next.push(replacement);
+      if(!ids.has(arr[i].id)) next.push(arr[i]);
+    }
+    state[pendingAddInfo.side] = next;
+    selected = [];
+    pendingAddInfo = null;
+    el.addDialog.close();
+    recordStep();
+    renderEquabar();
+    el.message.textContent = "Nombres regroupés.";
+  }
+
   function selectedPiecesBySide(){
     const top = [];
     const bottom = [];
@@ -3075,10 +3949,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     if(clear) clear.addEventListener("click", clearSelection);
     const validate = document.getElementById("btnValidateDelete");
     if(validate) validate.addEventListener("click", deleteMatchingSelection);
+    const add = document.getElementById("btnOpenAddDialog");
+    if(add) add.addEventListener("click", openAddDialog);
   }
 
   function updateActionMessage(defaultText){
-    const html = deletionMessageHtml();
+    const addHtml = additionMessageHtml();
+    const html = addHtml || deletionMessageHtml();
     if(html){
       el.message.innerHTML = html;
       attachMessageActions();
@@ -3224,26 +4101,35 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     if(el.category.value === "custom_mix") newProblem();
   });
   el.level.addEventListener("change", newProblem);
-  el.unknownMode.addEventListener("change", () => {
-    refreshEquationHistory();
-    setStep(step);
-  });
+  el.unknownMode.addEventListener("change", newProblem);
   el.equationDisplay.addEventListener("change", () => {
     if(step === "solve" || step === "answer") renderEquabar();
   });
   el.stepBtns.forEach(btn => btn.addEventListener("click", () => setStep(btn.dataset.step)));
   el.toolDecompose.addEventListener("click", () => setAction("decompose"));
+  if(el.toolAdd) el.toolAdd.addEventListener("click", () => setAction("add"));
   el.toolDelete.addEventListener("click", () => setAction("delete"));
   el.toolShare.addEventListener("click", () => setAction("share"));
   el.toolUndo.addEventListener("click", undo);
   el.btnCancelDialog.addEventListener("click", () => el.dialog.close());
   if(el.btnCancelShareDialog) el.btnCancelShareDialog.addEventListener("click", () => el.shareDialog.close());
+  if(el.btnCancelAddDialog) el.btnCancelAddDialog.addEventListener("click", () => el.addDialog.close());
+  if(el.btnApplyAdd) el.btnApplyAdd.addEventListener("click", applyAdd);
+  if(el.btnShowAddSuggestions && el.addSuggestions) el.btnShowAddSuggestions.addEventListener("click", () => el.addSuggestions.classList.toggle("hidden"));
   el.btnApplyDecompose.addEventListener("click", applyDecompose);
   if(el.btnShowSuggestions) el.btnShowSuggestions.addEventListener("click", () => el.suggestions.classList.toggle("hidden"));
   el.decomposeInput.addEventListener("keydown", ev => { if(ev.key === "Enter") applyDecompose(); });
+  if(el.addInput) el.addInput.addEventListener("keydown", ev => { if(ev.key === "Enter") applyAdd(); });
   el.btnFullscreen.addEventListener("click", () => {
     if(!document.fullscreenElement && el.stage.requestFullscreen) el.stage.requestFullscreen();
     else if(document.exitFullscreen) document.exitFullscreen();
+  });
+
+  el.explainText.addEventListener("click", ev => {
+    if(ev.target && ev.target.id === "btnToggleUnderstandAnswers"){
+      understandAnswersVisible = !understandAnswersVisible;
+      renderUnderstanding();
+    }
   });
 
   document.addEventListener("keydown", ev => {
