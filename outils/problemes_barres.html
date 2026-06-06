@@ -1129,7 +1129,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       </div>
     </div>
 
-    <label id="partWholeModeLabel">Dans “Tout et parties”</label>
+    <label id="partWholeStructureLabel">Structure dans “Tout et parties”</label>
+    <select id="partWholeStructure">
+      <option value="two" selected>2 parties</option>
+      <option value="three">3 parties</option>
+      <option value="equal_unknowns">Parties égales inconnues</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="partWholeModeLabel">Question dans “Tout et parties”</label>
     <select id="partWholeMode">
       <option value="missing_part" selected>Chercher une partie</option>
       <option value="whole">Chercher le tout</option>
@@ -1159,11 +1167,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label>Niveau</label>
+    <label>Taille des nombres</label>
     <select id="level">
-      <option value="easy">Facile</option>
-      <option value="medium" selected>Moyen</option>
-      <option value="hard">Difficile</option>
+      <option value="easy">Petits nombres</option>
+      <option value="medium" selected>Nombres moyens</option>
+      <option value="hard">Grands nombres</option>
     </select>
 
     <label>Affichage de l’inconnue</label>
@@ -1184,7 +1192,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     </div>
 
     <div class="mini">
-      Choisis une famille de problèmes, puis avance étape par étape avec la classe.
+      Choisis une famille de problèmes, puis avance étape par étape avec la classe. Dans “Tout et parties”, la structure est explicite : 2 parties, 3 parties, parties égales inconnues ou mélange.
     </div>
   </section>
 
@@ -1270,6 +1278,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     mixChecks: Array.from(document.querySelectorAll(".mixCheck")),
     btnMixAll: document.getElementById("btnMixAll"),
     btnMixNone: document.getElementById("btnMixNone"),
+    partWholeStructure: document.getElementById("partWholeStructure"),
+    partWholeStructureLabel: document.getElementById("partWholeStructureLabel"),
     partWholeMode: document.getElementById("partWholeMode"),
     partWholeModeLabel: document.getElementById("partWholeModeLabel"),
     comparisonMode: document.getElementById("comparisonMode"),
@@ -1344,6 +1354,39 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {known:[10,38], x:[7,24], diff:[4,18], groups:[3,6]};
   }
 
+  function currentLevel(){
+    return el.level.value || "medium";
+  }
+
+  function currentPartWholeStructure(){
+    let structure = el.partWholeStructure ? el.partWholeStructure.value : "two";
+    if(structure === "mix"){
+      structure = pick(["two", "three", "equal_unknowns"]);
+    }
+    return structure;
+  }
+
+  function partWholeModeForStructure(structure, modeOverride){
+    let mode = modeOverride || el.partWholeMode.value;
+    if(structure === "equal_unknowns") return "equal_unknowns";
+    if(mode === "mix") return pick(["missing_part", "whole"]);
+    return mode;
+  }
+
+  function partWholeKnownCountForStructure(structure){
+    return structure === "three" ? 2 : 1;
+  }
+
+  function partWholeWholeCountForStructure(structure){
+    return structure === "three" ? 3 : 2;
+  }
+
+  function partWholeEqualUnknownCount(){
+    // Pour l’instant, on garde majoritairement deux parties égales inconnues.
+    // Trois parties égales apparaissent parfois pour varier, sans passer par un niveau flou.
+    return Math.random() < 0.75 ? 2 : 3;
+  }
+
   function makeProblem(){
     let cat = el.category.value;
 
@@ -1364,54 +1407,109 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   function generatePartWhole(modeOverride){
     const rg = range();
-    let mode = modeOverride || el.partWholeMode.value;
-    if(mode === "mix") mode = Math.random() < 0.5 ? "missing_part" : "whole";
+    const structure = currentPartWholeStructure();
+    let mode = partWholeModeForStructure(structure, modeOverride);
 
-    const a = rint(rg.known[0], rg.known[1]);
-    const b = rint(rg.x[0], rg.x[1]);
-    const total = a + b;
     const obj = pick(objects);
     const person = pick(names);
 
     if(mode === "whole"){
+      const partCount = partWholeWholeCountForStructure(structure);
+      const values = Array.from({length:partCount}, () => rint(rg.x[0], rg.known[1]));
+      const total = values.reduce((sum,v) => sum + v, 0);
+      const places = ["une boîte", "un sac", "une trousse"];
+      const pieces = values.map(v => ({type:"number", value:v}));
+      const rawParts = values.map((v,i) => v + " " + obj + " dans " + places[i]);
+      const highlightedParts = values.map((v,i) => "<mark>" + v + " " + obj + "</mark> dans " + places[i]);
+      const contextParts = values.map((v,i) => "partie " + (i + 1) + " = " + v).join(" ; ");
+      const checkExpr = values.join(" + ");
+
       return {
         type:"part_whole",
         subType:"whole",
         family:"Tout et parties",
-        known:a,
+        known:values[0],
         x:total,
         total,
-        pieces:[{type:"number",value:a},{type:"number",value:b}],
-        rawStatement: person + " a " + a + " " + obj + " dans une boîte et " + b + " " + obj + " dans un sac. Combien de " + obj + " " + person + " a-t-il en tout ?",
+        pieces,
+        emptyPartCount:partCount,
+        rawStatement: person + " a " + rawParts.join(", ") + ". Combien y a-t-il de " + obj + " en tout ?",
         highlightedStatement:
-          person + " a <mark>" + a + " " + obj + "</mark> dans une boîte et <mark>" + b + " " + obj + "</mark> dans un sac. " +
-          "<mark class='question'>Combien de " + obj + " " + person + " a-t-il en tout ?</mark>",
-        emptyText:"On prépare deux parties qui formeront un tout.",
-        fillText:"Les deux parties sont connues. On cherche le tout.",
-        context:"Partie 1 = " + a + " ; partie 2 = " + b + " ; tout = ?",
-        answer: person + " a " + total + " " + obj + " en tout.",
-        check: a + " + " + b + " = " + total + "."
+          person + " a " + highlightedParts.join(", ") + ". " +
+          "<mark class='question'>Combien y a-t-il de " + obj + " en tout ?</mark>",
+        emptyText:"On prépare plusieurs parties qui formeront un tout.",
+        fillText:"Toutes les parties sont connues. On cherche le tout.",
+        context:contextParts + " ; tout = ?",
+        answer:"Il y a " + total + " " + obj + " en tout.",
+        check: checkExpr + " = " + total + "."
       };
     }
+
+    if(mode === "equal_unknowns"){
+      const equalCount = partWholeEqualUnknownCount();
+      const known = rint(rg.known[0], rg.known[1]);
+      const x = rint(rg.x[0], rg.x[1]);
+      const total = known + equalCount * x;
+      const equalText = equalCount === 2 ? "autant de rouges que de bleus" : "autant de rouges, de bleus et de verts";
+      const unknownQuestion = equalCount === 2 ? "Combien y a-t-il de rouges ?" : "Combien y a-t-il de rouges ?";
+      const pieces = [{type:"number", value:known}];
+      for(let i = 0; i < equalCount; i++) pieces.push({type:"x", value:"x"});
+      const checkExpr = [known].concat(Array(equalCount).fill(x)).join(" + ");
+
+      return {
+        type:"part_whole",
+        subType:"equal_unknowns",
+        family:"Tout et parties",
+        known,
+        x,
+        total,
+        pieces,
+        emptyPartCount:equalCount + 1,
+        rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". Il y a " + known + " " + obj + " jaunes. Il y a " + equalText + ". " + unknownQuestion,
+        highlightedStatement:
+          "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
+          "Il y a <mark>" + known + " " + obj + " jaunes</mark>. " +
+          "Il y a <mark class='relation'>" + equalText + "</mark>. " +
+          "<mark class='question'>" + unknownQuestion + "</mark>",
+        emptyText:"On prépare une barre du tout, avec une partie connue et plusieurs parties égales inconnues.",
+        fillText:"Le tout est connu. Une partie est connue. Les autres parties sont égales.",
+        context:"Tout = " + total + " ; partie connue = " + known + " ; " + equalCount + " parties égales = " + unknown(),
+        answer:"Il y a " + x + " " + obj + " rouges.",
+        check: checkExpr + " = " + total + "."
+      };
+    }
+
+    // Chercher une partie : la structure règle directement le nombre de parties.
+    const knownCount = partWholeKnownCountForStructure(structure);
+    const knownValues = Array.from({length:knownCount}, () => rint(rg.x[0], rg.known[1]));
+    const missing = rint(rg.x[0], rg.x[1]);
+    const total = knownValues.reduce((sum,v) => sum + v, 0) + missing;
+    const colors = ["rouges", "bleus"];
+    const knownSentence = knownValues.map((v,i) => "Il y a " + v + " " + obj + " " + colors[i] + ".").join(" ");
+    const highlightedKnown = knownValues.map((v,i) => "Il y a <mark>" + v + " " + obj + " " + colors[i] + "</mark>.").join(" ");
+    const pieces = knownValues.map(v => ({type:"number", value:v}));
+    pieces.push({type:"x", value:"x"});
+    const checkExpr = knownValues.concat([missing]).join(" + ");
 
     return {
       type:"part_whole",
       subType:"missing_part",
       family:"Tout et parties",
-      known:a,
-      x:b,
+      known:knownValues[0],
+      x:missing,
       total,
-      pieces:[{type:"number",value:a},{type:"x",value:"x"}],
-      rawStatement: person + " possède " + total + " " + obj + ". " + a + " " + obj + " sont dans une boîte. Les autres sont dans un sac. Combien de " + obj + " sont dans le sac ?",
+      pieces,
+      emptyPartCount:knownCount + 1,
+      rawStatement: "Dans une boîte, il y a " + total + " " + obj + " en tout. " + knownSentence + " Les autres sont verts. Combien y a-t-il de " + obj + " verts ?",
       highlightedStatement:
-        person + " possède <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
-        a + " " + obj + " sont dans une boîte. Les autres sont dans un sac. " +
-        "<mark class='question'>Combien de " + obj + " sont dans le sac ?</mark>",
-      emptyText:"On prépare une barre du tout et une barre découpée en deux parties.",
-      fillText:"Le tout est connu. Une partie est connue. L’autre partie est cherchée.",
-      context:"Tout = " + total + " ; partie connue = " + a + " ; partie cherchée = " + unknown(),
-      answer: "Il y a " + b + " " + obj + " dans le sac.",
-      check: a + " + " + b + " = " + total + "."
+        "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
+        highlightedKnown + " Les autres sont verts. " +
+        "<mark class='question'>Combien y a-t-il de " + obj + " verts ?</mark>",
+      emptyText:"On prépare une barre du tout et une barre découpée en plusieurs parties.",
+      fillText:"Le tout est connu. Une ou deux parties sont connues. La partie restante est cherchée.",
+      context:"Tout = " + total + " ; parties connues = " + knownValues.join(" + ") + " ; partie cherchée = " + unknown(),
+      answer:"Il y a " + missing + " " + obj + " verts.",
+      check: checkExpr + " = " + total + "."
     };
   }
 
@@ -2145,15 +2243,26 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
 
     const topWord = problem.type === "transformation" ? (problem.subType === "after" ? "après ?" : "après") : (problem.subType === "whole" ? "tout ?" : "tout");
-    const bottomA = problem.type === "transformation" ? "avant" : "partie";
-    const bottomB = problem.type === "transformation" ? "changement" : "partie";
+
+    if(problem.type === "part_whole"){
+      const n = Math.max(2, problem.emptyPartCount || (problem.pieces ? problem.pieces.length : 2));
+      const bottomParts = Array.from({length:n}, (_,i) =>
+        "<div class='part empty' style='flex:1'>partie " + (i + 1) + "</div>"
+      ).join("");
+      el.barArea.innerHTML =
+        "<div class='schemaBoard'>" +
+          "<div class='barLine top'><div class='part empty' style='flex:1'>" + topWord + "</div></div>" +
+          "<div class='barLine bottom'>" + bottomParts + "</div>" +
+        "</div>";
+      return;
+    }
 
     el.barArea.innerHTML =
       "<div class='schemaBoard'>" +
         "<div class='barLine top'><div class='part empty' style='flex:1'>" + topWord + "</div></div>" +
         "<div class='barLine bottom'>" +
-          "<div class='part empty' style='flex:1'>" + bottomA + "</div>" +
-          "<div class='part empty' style='flex:1'>" + bottomB + "</div>" +
+          "<div class='part empty' style='flex:1'>avant</div>" +
+          "<div class='part empty' style='flex:1'>changement</div>" +
         "</div>" +
       "</div>";
   }
@@ -2844,6 +2953,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     updateOptionMenuVisibility();
     newProblem();
   });
+  if(el.partWholeStructure) el.partWholeStructure.addEventListener("change", newProblem);
   el.partWholeMode.addEventListener("change", newProblem);
   el.comparisonMode.addEventListener("change", newProblem);
   el.transformationMode.addEventListener("change", newProblem);
@@ -2901,6 +3011,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     el.customMixBox.style.display = custom ? "" : "none";
 
     const showPartWhole = el.category.value === "part_whole";
+    if(el.partWholeStructure){
+      el.partWholeStructure.style.display = showPartWhole ? "" : "none";
+      el.partWholeStructureLabel.style.display = showPartWhole ? "" : "none";
+    }
     el.partWholeMode.style.display = showPartWhole ? "" : "none";
     el.partWholeModeLabel.style.display = showPartWhole ? "" : "none";
 
