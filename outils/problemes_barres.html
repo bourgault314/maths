@@ -2613,6 +2613,24 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 }
 
+
+/* Phase 6H — Partie-tout simple : libellés sous accolades plus lisibles */
+.partWholeOwnerBraces .ownerBrace{
+  font-size:clamp(18px,1.55vw,25px);
+  font-weight:950;
+  color:#334155;
+}
+.worksheetSchema .partWholeOwnerBraces .ownerBrace{
+  font-size:20px !important;
+  font-weight:950 !important;
+}
+@media print{
+  body.printWorksheet .worksheetSchema .partWholeOwnerBraces .ownerBrace,
+  body.printOnlyWorksheet .worksheetSchema .partWholeOwnerBraces .ownerBrace{
+    font-size:21px !important;
+  }
+}
+
 </style>
 </head>
 <body>
