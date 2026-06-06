@@ -1224,7 +1224,7 @@ mark.question{
 }
 
 /* Comparer — écart : schéma de situation.
-   On montre deux barres alignées à gauche et l'écart comme une différence,
+   On montre deux barres alignées à gauche et l'écart comme une écart,
    sans transformer trop tôt la grande barre en "petite + écart". */
 .compareSituationBoard{
   width:min(980px,100%);
@@ -1656,6 +1656,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 .worksheetDialogInner{
   text-align:left;
 }
+.worksheetPrintHint{
+  text-align:center;
+  color:#64748b;
+  font-size:13px;
+  font-weight:850;
+  margin:-4px 0 12px;
+}
 .worksheetControls{
   background:#f8fafc;
   border:1px solid rgba(15,23,42,.10);
@@ -1671,7 +1678,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   border:1px solid rgba(15,23,42,.12);
   border-radius:18px;
   padding:18px;
-  max-height:58vh;
+  max-height:68vh;
   overflow:auto;
 }
 .worksheetEmpty{
@@ -1703,25 +1710,178 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   font-size:13px;
   text-align:right;
 }
+.worksheetFixedInfo{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#eef2ff;
+  color:#3730a3;
+  font-size:13px;
+  font-weight:900;
+  text-align:center;
+}
 .worksheetList{
   display:grid;
-  gap:12px;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
 }
 .worksheetProblem{
   break-inside:avoid;
   page-break-inside:avoid;
   border:1px solid rgba(15,23,42,.12);
   border-radius:14px;
-  padding:12px 14px;
+  padding:10px 12px;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
 }
 .worksheetProblemTitle{
   font-weight:950;
-  margin-bottom:6px;
+  margin-bottom:5px;
 }
 .worksheetStatement{
-  font-size:15px;
-  line-height:1.42;
+  font-size:14px;
+  line-height:1.34;
 }
+.worksheetSchemaBlock{
+  margin-top:10px;
+}
+.worksheetSchemaTitle{
+  color:#64748b;
+  font-size:12px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin:8px 0 4px;
+}
+.worksheetSchema{
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:12px;
+  padding:8px 8px 14px;
+  overflow:visible;
+  background:#fff;
+}
+.worksheetSchema .contextTag,
+.worksheetSchema .compareSituationLabel,
+.worksheetSchema .multiLabel,
+.worksheetSchema .compareLabel{
+  font-size:12px;
+}
+.worksheetSchema .barLine,
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell,
+.worksheetSchema .countTop .part,
+.worksheetSchema .countLine{
+  min-height:42px !important;
+}
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell{
+  font-size:18px !important;
+}
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .multiPart,
+.worksheetSchema .multiGroupPart{
+  font-size:17px !important;
+}
+.worksheetSchema .schemaBoard,
+.worksheetSchema .compareSituationBoard,
+.worksheetSchema .compareRegroupPreview,
+.worksheetSchema .countBoard,
+.worksheetSchema .multiBoard,
+.worksheetSchema .ratioBoard,
+.worksheetSchema .unequalBoard{
+  width:100% !important;
+  max-width:100% !important;
+}
+.worksheetSchema .ownerBrace,
+.worksheetSchema .countBrace,
+.worksheetSchema .transformRegroupBraceLabel{
+  font-size:11px !important;
+}
+
+.worksheetSchema .unequalOwnerBraces{
+  min-height:34px !important;
+  margin-top:5px !important;
+}
+.worksheetSchema .ownerBrace{
+  min-height:30px !important;
+  padding-top:14px !important;
+  line-height:1.05 !important;
+  white-space:normal !important;
+}
+.worksheetSchema .ownerBrace::before{
+  left:3px !important;
+  right:3px !important;
+  height:9px !important;
+  border-bottom-width:2px !important;
+  border-left-width:2px !important;
+  border-right-width:2px !important;
+}
+.worksheetSchema .partWholeOwnerBraces{
+  min-height:34px !important;
+}
+.worksheetSchema .partWholeOwnerBraces .ownerBrace{
+  font-size:10px !important;
+}
+
+.worksheetWorkZone{
+  margin-top:auto;
+  min-height:34mm;
+  border-top:1px dashed rgba(15,23,42,.25);
+  padding-top:8px;
+}
+.worksheetWorkZoneTitle{
+  color:#64748b;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.worksheetWorkLines{
+  display:grid;
+  gap:7px;
+}
+.worksheetWorkLine{
+  border-bottom:1px solid rgba(15,23,42,.30);
+  height:15px;
+}
+.worksheetSchemaBlock{
+  margin-top:7px;
+}
+.worksheetSchemaTitle{
+  margin:5px 0 3px;
+}
+.worksheetSchema{
+  padding:6px 6px 10px;
+}
+.worksheetSchema .barLine,
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell,
+.worksheetSchema .countTop .part,
+.worksheetSchema .countLine{
+  min-height:34px !important;
+}
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell{
+  font-size:15px !important;
+}
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .multiPart,
+.worksheetSchema .multiGroupPart{
+  font-size:14px !important;
+}
+
 .answerLines{
   margin-top:10px;
   display:grid;
@@ -1736,6 +1896,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   padding-top:14px;
   border-top:2px dashed rgba(15,23,42,.25);
 }
+.worksheetCorrection.separateCorrection{
+  page-break-before:always;
+  break-before:page;
+}
 .worksheetCorrection h3{
   margin:0 0 10px;
   font-size:22px;
@@ -1745,7 +1909,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   font-size:14px;
   line-height:1.35;
 }
+.worksheetPageBreak{
+  break-after:page;
+  page-break-after:always;
+  height:0;
+}
 @media print{
+  html, body{
+    width:auto !important;
+    height:auto !important;
+    overflow:visible !important;
+    background:white !important;
+  }
   body.printWorksheet main,
   body.printWorksheet dialog:not(#worksheetDialog){
     display:none !important;
@@ -1756,13 +1931,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     inset:auto !important;
     width:auto !important;
     max-width:none !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
     border:0 !important;
     box-shadow:none !important;
     padding:0 !important;
+    margin:0 !important;
   }
   body.printWorksheet #worksheetDialog::backdrop{display:none !important}
   body.printWorksheet .worksheetControls,
   body.printWorksheet .dialogTitle,
+  body.printWorksheet .worksheetPrintHint,
   body.printWorksheet #btnCloseWorksheet,
   body.printWorksheet #btnBuildWorksheet,
   body.printWorksheet #btnPrintWorksheet{
@@ -1770,6 +1950,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
   body.printWorksheet .dialogInner{
     padding:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
   }
   body.printWorksheet .worksheetPreview{
     border:0 !important;
@@ -1778,7 +1960,35 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     overflow:visible !important;
     padding:0 !important;
   }
-  @page{margin:14mm}
+  body.printWorksheet .worksheetProblem{
+    border-color:rgba(15,23,42,.22) !important;
+    overflow:visible !important;
+  }
+  body.printWorksheet .worksheetHeader{
+    margin-bottom:8px !important;
+    padding-bottom:6px !important;
+  }
+  body.printWorksheet .worksheetHeader h2{
+    font-size:20px !important;
+  }
+  body.printWorksheet .worksheetList{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:8mm !important;
+  }
+  body.printWorksheet .worksheetProblem{
+    min-height:176mm !important;
+  }
+  body.printWorksheet .worksheetWorkZone{
+    min-height:48mm !important;
+  }
+  body.printWorksheet .worksheetCorrection{
+    page-break-inside:auto !important;
+    break-inside:auto !important;
+  }
+  @page{
+    size:A4 landscape;
+    margin:10mm;
+  }
 }
 
 
@@ -1818,6 +2028,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 }
 .stage:fullscreen .transformationRegroupPreview .compareSegment{
   min-height:112px;
+}
+
+
+.compareSituationBoard:not(.transformationSituationBoard) .compareSituationDiff.empty span{
+  background:#fff;
+  padding:0 10px;
+  transform:translateY(28px);
+  font-size:clamp(16px,1.5vw,22px);
+  font-weight:800;
+  color:#64748b;
 }
 
 </style>
@@ -2080,6 +2300,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 <dialog id="worksheetDialog" class="wideDialog">
   <div class="dialogInner worksheetDialogInner">
     <h2 class="dialogTitle">Créer une fiche</h2>
+    <div class="worksheetPrintHint">Optimisé pour impression A4 paysage.</div>
 
     <div class="worksheetControls">
       <label>Nombre de problèmes</label>
@@ -2094,6 +2315,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <select id="worksheetStudentMode">
         <option value="statements" selected>Énoncés seuls</option>
         <option value="with_answer_lines">Énoncés + lignes de réponse</option>
+        <option value="empty_schema">Énoncé + schéma vide</option>
+        <option value="filled_schema">Énoncé + schéma rempli</option>
+        <option value="empty_and_filled">Énoncé + schéma vide + schéma rempli</option>
+      </select>
+
+      <div class="worksheetFixedInfo">Mise en page : 2 problèmes par page, en paysage.</div>
+
+      <label>Correction</label>
+      <select id="worksheetCorrectionMode">
+        <option value="none">Sans correction</option>
+        <option value="after" selected>Correction à la suite</option>
+        <option value="separate">Correction sur page séparée</option>
       </select>
 
       <div class="btnrow" style="justify-content:center;margin-top:14px">
@@ -2120,8 +2353,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   const objects = [
     "billes","cartes","jetons","images","autocollants","gommettes",
-    "perles","figurines","coquillages","tickets","crayons","feutres",
-    "mangues","letchis"
+    "perles","figurines","coquillages","tickets","crayons","feutres"
   ];
 
   const objectGrammar = {
@@ -2131,11 +2363,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     gommettes:{gender:"f"},
     perles:{gender:"f"},
     figurines:{gender:"f"},
-    mangues:{gender:"f"},
     autocollants:{gender:"m"},
     coquillages:{gender:"m"},
     jetons:{gender:"m"},
-    letchis:{gender:"m"},
     tickets:{gender:"m"},
     crayons:{gender:"m"},
     feutres:{gender:"m"}
@@ -2171,6 +2401,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return labels;
   }
 
+  function coloredObject(obj, color){
+    return obj + " " + color;
+  }
+
+  function coloredObjectList(obj, colors){
+    const items = colors.map(color => "des " + coloredObject(obj, color));
+    if(items.length <= 1) return items[0] || "";
+    return items.slice(0, -1).join(", ") + " et " + items[items.length - 1];
+  }
+
   function pastParticiplePlural(verb, obj){
     const feminine = isFeminineObject(obj);
     if(verb === "perdre") return feminine ? "perdues" : "perdus";
@@ -2185,18 +2425,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function totalIntroTwo(a, b, total, obj){
     return pick([
       a + " et " + b + " ont " + total + " " + obj + " en tout.",
-      "À eux deux, " + a + " et " + b + " ont " + total + " " + obj + ".",
-      "Ensemble, " + a + " et " + b + " possèdent " + total + " " + obj + ".",
-      "La collection de " + a + " et celle de " + b + " réunies contiennent " + total + " " + obj + "."
+      "Ensemble, " + a + " et " + b + " ont " + total + " " + obj + ".",
+      "Les collections de " + a + " et de " + b + " réunies contiennent " + total + " " + obj + ".",
+      "Au total, " + a + " et " + b + " possèdent " + total + " " + obj + "."
     ]);
   }
 
   function totalIntroThree(a, b, c, total, obj){
     return pick([
       a + ", " + b + " et " + c + " ont " + total + " " + obj + " en tout.",
-      "À eux trois, " + a + ", " + b + " et " + c + " ont " + total + " " + obj + ".",
-      "Ensemble, " + a + ", " + b + " et " + c + " possèdent " + total + " " + obj + ".",
-      "Les collections de " + a + ", " + b + " et " + c + " réunies contiennent " + total + " " + obj + "."
+      "Ensemble, " + a + ", " + b + " et " + c + " ont " + total + " " + obj + ".",
+      "Les collections de " + a + ", " + b + " et " + c + " réunies contiennent " + total + " " + obj + ".",
+      "Au total, " + a + ", " + b + " et " + c + " possèdent " + total + " " + obj + "."
     ]);
   }
 
@@ -2245,6 +2485,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     worksheetDialog: document.getElementById("worksheetDialog"),
     worksheetCount: document.getElementById("worksheetCount"),
     worksheetStudentMode: document.getElementById("worksheetStudentMode"),
+    worksheetCorrectionMode: document.getElementById("worksheetCorrectionMode"),
     btnBuildWorksheet: document.getElementById("btnBuildWorksheet"),
     btnPrintWorksheet: document.getElementById("btnPrintWorksheet"),
     btnCloseWorksheet: document.getElementById("btnCloseWorksheet"),
@@ -2533,13 +2774,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         colorLabel("vert", obj)
       ].slice(0, equalCount);
       const allColors = [knownColor].concat(eqColors);
-      const colorListText = allColors.length === 3
-        ? "des " + allColors[0] + ", des " + allColors[1] + " et des " + allColors[2]
-        : "des " + allColors.slice(0,-1).join(", des ") + " et des " + allColors[allColors.length - 1];
+      const colorListText = coloredObjectList(obj, allColors);
 
       const equalText = equalCount === 2
-        ? "Il y a autant de " + obj + " " + eqColors[0] + " que de " + obj + " " + eqColors[1] + "."
-        : "Il y a autant de " + obj + " " + eqColors[0] + ", de " + obj + " " + eqColors[1] + " et de " + obj + " " + eqColors[2] + ".";
+        ? "Il y a autant de " + coloredObject(obj, eqColors[0]) + " que de " + coloredObject(obj, eqColors[1]) + "."
+        : "Il y a autant de " + coloredObject(obj, eqColors[0]) + ", de " + coloredObject(obj, eqColors[1]) + " et de " + coloredObject(obj, eqColors[2]) + ".";
       const unknownQuestion = "Combien y a-t-il de " + obj + " " + eqColors[0] + " ?";
       const pieces = [{type:"number", value:known}];
       for(let i = 0; i < equalCount; i++) pieces.push({type:"x", value:"x"});
@@ -2594,17 +2833,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       pieces,
       partLabels,
       emptyPartCount:knownCount + 1,
-      rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". " + knownSentence + " Les autres sont " + missingColor + ". Combien y a-t-il de " + obj + " " + missingColor + " ?",
+      rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". " + knownSentence + " Les autres sont des " + coloredObject(obj, missingColor) + ". Combien y a-t-il de " + coloredObject(obj, missingColor) + " ?",
       highlightedStatement:
         "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
-        highlightedKnown + " Les autres sont " + missingColor + ". " +
-        "<mark class='question'>Combien y a-t-il de " + obj + " " + missingColor + " ?</mark>",
+        highlightedKnown + " Les autres sont des " + coloredObject(obj, missingColor) + ". " +
+        "<mark class='question'>Combien y a-t-il de " + coloredObject(obj, missingColor) + " ?</mark>",
       emptyText:"On prépare une barre du tout et une barre découpée en plusieurs parties.",
       fillText: knownValues.length === 1
         ? "Le tout est connu. Une partie est connue. La partie restante est cherchée."
         : "Le tout est connu. Deux parties sont connues. La partie restante est cherchée.",
       context:"Tout = " + total + " ; " + (knownValues.length === 1 ? "partie connue = " : "parties connues = ") + knownValues.join(" + "),
-      answer:"Il y a " + missing + " " + obj + " " + missingColor + ".",
+      answer:"Il y a " + missing + " " + coloredObject(obj, missingColor) + ".",
       check: checkExpr + " = " + total + "."
     };
   }
@@ -3127,11 +3366,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       x: small,
       total,
       pieces:[{type:"x",value:"x"},{type:"x",value:"x"},{type:"number",value:diff}],
-      rawStatement: totalIntro + " " + relationRaw + " Combien de " + obj + " chacun a-t-il ?",
+      rawStatement: totalIntro + " " + relationRaw + " Combien de " + obj + " chaque personne a-t-elle ?",
       highlightedStatement:
         totalHighlighted + " " +
         relationHighlighted + " " +
-        "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
+        "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare deux barres comparées, puis on les regroupera pour utiliser le total.",
       fillText:"La petite quantité est commune. La grande quantité contient la petite quantité et l’écart. Les deux barres ensemble valent le total.",
       context:"Total = " + total + " ; écart = " + diff,
@@ -3183,11 +3422,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       x: small,
       total,
       pieces: Array.from({length:ratio + 1}, () => ({type:"x",value:"x"})),
-      rawStatement: totalIntro + " " + relationRaw + " Combien de " + obj + " chacun a-t-il ?",
+      rawStatement: totalIntro + " " + relationRaw + " Combien de " + obj + " chaque personne a-t-elle ?",
       highlightedStatement:
         totalHighlighted + " " +
         relationHighlighted + " " +
-        "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
+        "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare deux barres comparées : la grande quantité contient plusieurs fois la petite quantité.",
       fillText:"La petite quantité est la part de référence. La grande quantité contient " + ratio + " parts identiques. Les deux barres ensemble valent le total.",
       context:"Total = " + total + " ; rapport = " + ratio + " fois",
@@ -3245,11 +3484,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       x: unit,
       total,
       pieces:Array.from({length:a + b}, () => ({type:"x",value:"x"})),
-      rawStatement: intro + " " + ratioSentence + " Combien de " + obj + " chacun a-t-il ?",
+      rawStatement: intro + " " + ratioSentence + " Combien de " + obj + " chaque personne a-t-elle ?",
       highlightedStatement:
         intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
         "Le rapport entre la quantité de " + firstName + " et celle de " + secondName + " est <mark>" + a + ":" + b + "</mark>. " +
-        "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
+        "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio : chaque part du ratio correspond à une même unité inconnue.",
       fillText:firstName + " reçoit " + a + " part(s) de ratio et " + secondName + " reçoit " + b + " part(s) de ratio.",
       context:"Total = " + total + " ; ratio = " + a + ":" + b,
@@ -3296,11 +3535,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       x:unit,
       total,
       pieces:Array.from({length:a + b + c}, () => ({type:"x",value:"x"})),
-      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien de " + obj + " chacun a-t-il ?",
+      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien de " + obj + " chaque personne a-t-elle ?",
       highlightedStatement:
         intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
         "Le ratio " + namesText + " est <mark>" + ratioText + "</mark>. " +
-        "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
+        "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio à trois termes. Chaque part du ratio correspond à une même unité inconnue.",
       fillText:people[0] + " reçoit " + a + " part(s), " + people[1] + " reçoit " + b + " part(s), et " + people[2] + " reçoit " + c + " part(s).",
       context:"Total = " + total + " ; ratio = " + ratioText,
@@ -3999,11 +4238,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       cards.push(understandCard("Que sait-on des groupes ?", "Les groupes sont égaux."));
       cards.push(understandCard("Quelles informations sont connues ?", contextHtml()));
     }else if(problem.type === "unequal_total_diff"){
-      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chacun"));
+      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chaque personne"));
       cards.push(understandCard("Les deux parts sont-elles égales ?", "Non : elles sont inégales, avec un écart connu."));
       cards.push(understandCard("Qui a la plus grande quantité ?", problem.bigName + " a la plus grande quantité."));
     }else if(problem.type === "unequal_total_ratio"){
-      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chacun"));
+      cards.push(understandCard("Que cherche-t-on ?", "la quantité de chaque personne"));
       cards.push(understandCard("Les deux parts sont-elles égales ?", "Non : une quantité vaut plusieurs fois l’autre."));
       cards.push(understandCard("Quelle est la part de référence ?", problem.smallName + " correspond à une part."));
     }else if(problem.type === "ratio_total"){
@@ -4735,7 +4974,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     const bigLabel = filled ? (bigIsUnknown ? unknown() : problem.big) : "&nbsp;";
     const smallLabel = filled ? (smallIsUnknown ? unknown() : problem.small) : "&nbsp;";
-    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "&nbsp;";
+    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "différence";
 
     const bigClass = filled && bigIsUnknown ? " unknown" : (filled ? "" : " empty");
     const smallClass = filled && smallIsUnknown ? " unknown" : (filled ? "" : " empty");
@@ -4773,7 +5012,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     const topText = filled ? (topIsUnknown ? unknown() : wholeValue) : "&nbsp;";
     const bottomText = filled ? (bottomIsUnknown ? unknown() : baseValue) : "&nbsp;";
-    const diffText = filled ? (diffIsUnknown ? unknown() : diffValue) : "différence";
+    const diffText = filled ? (diffIsUnknown ? unknown() : diffValue) : "changement";
 
     const topClass = "compareSituationBar" + (filled && topIsUnknown ? " unknown" : "");
     const bottomClass = "compareSituationBar" + (filled && bottomIsUnknown ? " unknown" : "");
@@ -4807,7 +5046,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     const topLabel = isGain ? "après" : "avant";
     const bottomLabel = isGain ? "avant" : "après";
-    const diffLabel = "différence";
+    const diffLabel = isGain ? "gain" : "perte";
 
     const topText = topIsUnknown ? unknown() : wholeValue;
     const bottomText = bottomIsUnknown ? unknown() : baseValue;
@@ -5852,15 +6091,87 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return selected ? selected.textContent : "Mélange";
   }
 
+  function captureWorksheetSchema(p, kind){
+    if(!el.barArea) return "";
+    const savedProblem = problem;
+    const savedState = clone(state);
+    const savedHistory = clone(history);
+    const savedSelected = clone(selected);
+    const savedStep = step;
+    const savedUnderstand = understandAnswersVisible;
+    const savedBar = el.barArea.innerHTML;
+    const savedEquation = el.equationBelowTools ? el.equationBelowTools.innerHTML : "";
+
+    problem = p;
+    problem.unknownSymbol = p.unknownSymbol || chooseUnknownSymbol();
+    try{
+      initEquabar();
+      if(kind === "empty"){
+        renderEmpty();
+      }else{
+        renderFilled();
+      }
+      const html = el.barArea.innerHTML;
+      problem = savedProblem;
+      state = savedState;
+      history = savedHistory;
+      selected = savedSelected;
+      step = savedStep;
+      understandAnswersVisible = savedUnderstand;
+      el.barArea.innerHTML = savedBar;
+      if(el.equationBelowTools) el.equationBelowTools.innerHTML = savedEquation;
+      return html;
+    }catch(err){
+      problem = savedProblem;
+      state = savedState;
+      history = savedHistory;
+      selected = savedSelected;
+      step = savedStep;
+      understandAnswersVisible = savedUnderstand;
+      el.barArea.innerHTML = savedBar;
+      if(el.equationBelowTools) el.equationBelowTools.innerHTML = savedEquation;
+      return "<div class='worksheetEmpty'>Schéma non disponible pour ce problème.</div>";
+    }
+  }
+
+  function worksheetSchemaBlock(p, kind, title){
+    return "<div class='worksheetSchemaBlock'>" +
+      "<div class='worksheetSchemaTitle'>" + title + "</div>" +
+      "<div class='worksheetSchema'>" + captureWorksheetSchema(p, kind) + "</div>" +
+    "</div>";
+  }
+
   function worksheetProblemHtml(p, index, mode){
     const statement = stripTags(p.rawStatement || p.highlightedStatement || "");
-    const lines = mode === "with_answer_lines"
-      ? "<div class='answerLines'><div class='answerLine'></div><div class='answerLine'></div></div>"
-      : "";
+    let extra = "";
+
+    if(mode === "with_answer_lines"){
+      extra += "<div class='answerLines'><div class='answerLine'></div><div class='answerLine'></div></div>";
+    }else if(mode === "empty_schema"){
+      extra += worksheetSchemaBlock(p, "empty", "Schéma vide");
+    }else if(mode === "filled_schema"){
+      extra += worksheetSchemaBlock(p, "filled", "Schéma rempli");
+    }else if(mode === "empty_and_filled"){
+      extra += worksheetSchemaBlock(p, "empty", "Schéma vide");
+      extra += worksheetSchemaBlock(p, "filled", "Schéma rempli");
+    }
+
+    const workZone =
+      "<div class='worksheetWorkZone'>" +
+        "<div class='worksheetWorkZoneTitle'>Recherche / calculs / réponse</div>" +
+        "<div class='worksheetWorkLines'>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+        "</div>" +
+      "</div>";
+
     return "<div class='worksheetProblem'>" +
       "<div class='worksheetProblemTitle'>Problème " + index + "</div>" +
       "<div class='worksheetStatement'>" + statement + "</div>" +
-      lines +
+      extra +
+      workZone +
     "</div>";
   }
 
@@ -5872,10 +6183,20 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     "</div>";
   }
 
+  function withPageBreaks(items, perPage){
+    const n = Math.max(1, Number(perPage) || 2);
+    return items.map((html, i) => {
+      const isBreak = (i + 1) % n === 0 && i < items.length - 1;
+      return html + (isBreak ? "<div class='worksheetPageBreak'></div>" : "");
+    }).join("");
+  }
+
   function buildWorksheet(){
     if(!el.worksheetPreview) return;
     const count = Number(el.worksheetCount ? el.worksheetCount.value : 10) || 10;
     const mode = el.worksheetStudentMode ? el.worksheetStudentMode.value : "statements";
+    const perPage = 2;
+    const correctionMode = el.worksheetCorrectionMode ? el.worksheetCorrectionMode.value : "after";
 
     const savedProblem = problem;
     const savedState = clone(state);
@@ -5891,6 +6212,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       problems.push(p);
     }
 
+    const today = new Date();
+    const dateText = today.toLocaleDateString("fr-FR");
+
+    const problemItems = problems.map((p,i) => worksheetProblemHtml(p, i + 1, mode));
+    const studentProblems = withPageBreaks(problemItems, perPage);
+    const corrections = problems.map((p,i) => worksheetCorrectionHtml(p, i + 1)).join("");
+    const correctionClass = correctionMode === "separate" ? "worksheetCorrection separateCorrection" : "worksheetCorrection";
+    const correctionHtml = correctionMode === "none"
+      ? ""
+      : "<div class='" + correctionClass + "'><h3>Correction</h3>" + corrections + "</div>";
+
     problem = savedProblem;
     state = savedState;
     history = savedHistory;
@@ -5898,20 +6230,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     step = savedStep;
     understandAnswersVisible = savedUnderstand;
 
-    const today = new Date();
-    const dateText = today.toLocaleDateString("fr-FR");
-
-    const studentProblems = problems.map((p,i) => worksheetProblemHtml(p, i + 1, mode)).join("");
-    const corrections = problems.map((p,i) => worksheetCorrectionHtml(p, i + 1)).join("");
-
     el.worksheetPreview.innerHTML =
       "<div class='worksheetSheet'>" +
         "<div class='worksheetHeader'>" +
           "<div><h2>Fiche — Problèmes en barres</h2><div class='worksheetMeta' style='text-align:left'>Nom : ____________________ &nbsp;&nbsp; Date : __________</div></div>" +
           "<div class='worksheetMeta'>" + count + " problèmes<br>" + categoryDisplayNameForWorksheet() + "<br>" + dateText + "</div>" +
         "</div>" +
-        "<div class='worksheetList'>" + studentProblems + "</div>" +
-        "<div class='worksheetCorrection'><h3>Correction</h3>" + corrections + "</div>" +
+        "<div class='worksheetList perPage2'>" + studentProblems + "</div>" +
+        correctionHtml +
       "</div>";
   }
 
@@ -5947,6 +6273,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   if(el.btnPrintWorksheet){
     el.btnPrintWorksheet.addEventListener("click", printWorksheet);
   }
+  [el.worksheetCount, el.worksheetStudentMode, el.worksheetCorrectionMode].forEach(select => {
+    if(select) select.addEventListener("change", buildWorksheet);
+  });
   el.category.addEventListener("change", () => {
     updateOptionMenuVisibility();
     newProblem();
