@@ -950,7 +950,7 @@ mark.question{
 }
 
 
-/* Total + écart / Total + rapport — regroupement dans le même gabarit que le schéma de situation.
+/* Avec un écart connu / Avec un rapport connu — regroupement dans le même gabarit que le schéma de situation.
    Le schéma de situation garde exactement son composant ; le schéma regroupé est dessiné
    dans la même zone de barres, sans prendre toute la largeur du cadre. */
 .sameFrameGroupedStack{
@@ -977,7 +977,7 @@ mark.question{
 }
 
 
-/* Total + écart / Total + rapport — cadre vraiment commun en étape Regrouper.
+/* Avec un écart connu / Avec un rapport connu — cadre vraiment commun en étape Regrouper.
    On réserve la largeur totale du regroupement (toutes les parts), puis le schéma
    de situation utilise les mêmes colonnes d'unités. Ainsi un x garde la même longueur
    dans le schéma du haut et dans le schéma regroupé du bas. */
@@ -1078,7 +1078,7 @@ mark.question{
 }
 
 
-/* Total + écart — schéma regroupé : accolades d'identification sous les parts. */
+/* Avec un écart connu — schéma regroupé : accolades d'identification sous les parts. */
 .unequalOwnerBraces{
   display:grid;
   grid-template-columns:var(--cols, 1fr);
@@ -1644,32 +1644,32 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     <label>Type de problème</label>
     <select id="category">
-      <option value="part_whole" selected>Tout-parties simple</option>
+      <option value="part_whole" selected>Partie-tout simple</option>
       <option value="transformation">Transformation</option>
       <option value="comparison">Comparer</option>
       <option value="equal_groups">Groupes égaux</option>
       <option value="unequal_total">Partages inégaux</option>
       <option value="ratio">Ratios</option>
-      <option value="multi_linked">Plusieurs quantités liées</option>
+      <option value="multi_linked">Relations entre plusieurs quantités</option>
       <option value="custom_mix">Mélange personnalisé</option>
     </select>
 
     <div id="customMixBox" class="mixBox" style="display:none">
       <div class="mixTitle">Catégories à mélanger</div>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="part_whole" checked> Tout-parties simple</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="part_whole" checked> Partie-tout simple</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="transformation" checked> Transformation</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison" checked> Comparer</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="equal_groups" checked> Groupes égaux</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total" checked> Partages inégaux</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="ratio" checked> Ratios</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="multi_linked" checked> Plusieurs quantités liées</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="multi_linked" checked> Relations entre plusieurs quantités</label>
       <div class="btnrow" style="margin-top:8px">
         <button class="ghost" id="btnMixAll" type="button">Tout cocher</button>
         <button class="ghost" id="btnMixNone" type="button">Tout décocher</button>
       </div>
     </div>
 
-    <label id="partWholeStructureLabel">Structure dans “Tout et parties”</label>
+    <label id="partWholeStructureLabel">Structure</label>
     <select id="partWholeStructure">
       <option value="two" selected>2 parties</option>
       <option value="three">3 parties</option>
@@ -1677,28 +1677,28 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="partWholeModeLabel">Question dans “Tout et parties”</label>
+    <label id="partWholeModeLabel">Question</label>
     <select id="partWholeMode">
       <option value="missing_part" selected>Chercher une partie</option>
       <option value="whole">Chercher le tout</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="comparisonTypeLabel">Type dans “Comparer”</label>
+    <label id="comparisonTypeLabel">Type</label>
     <select id="comparisonType">
-      <option value="additive" selected>Comparer par écart</option>
-      <option value="multiplicative">Comparer par rapport</option>
+      <option value="additive" selected>Par écart : de plus / de moins</option>
+      <option value="multiplicative">Par rapport : fois plus / fois moins</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="comparisonRelationLabel">Relation dans “Comparer — écart”</label>
+    <label id="comparisonRelationLabel">Relation</label>
     <select id="comparisonRelation">
       <option value="more" selected>De plus</option>
       <option value="less">De moins</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="comparisonModeLabel">Question dans “Comparer — écart”</label>
+    <label id="comparisonModeLabel">Question</label>
     <select id="comparisonMode">
       <option value="big" selected>Chercher la grande quantité</option>
       <option value="small">Chercher la petite quantité</option>
@@ -1706,14 +1706,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="transformationKindLabel">Changement dans “Transformation”</label>
+    <label id="transformationKindLabel">Changement</label>
     <select id="transformationKind">
       <option value="gain" selected>Gain / ajout</option>
       <option value="loss">Perte / retrait</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="transformationModeLabel">Question dans “Transformation”</label>
+    <label id="transformationModeLabel">Question</label>
     <select id="transformationMode">
       <option value="change" selected>Chercher le changement</option>
       <option value="after">Chercher l’après</option>
@@ -1721,7 +1721,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="equalGroupsModeLabel">Dans “Groupes égaux”</label>
+    <label id="equalGroupsModeLabel">Question</label>
     <select id="equalGroupsMode">
       <option value="part" selected>Chercher la valeur d’une part</option>
       <option value="total">Chercher le total</option>
@@ -1729,21 +1729,21 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="unequalTotalModeLabel">Type dans “Partages inégaux”</label>
+    <label id="unequalTotalModeLabel">Type</label>
     <select id="unequalTotalMode">
-      <option value="diff" selected>Total + écart</option>
-      <option value="rapport">Total + rapport</option>
+      <option value="diff" selected>Avec un écart connu</option>
+      <option value="rapport">Avec un rapport connu</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="unequalRelationModeLabel">Formulation dans “Partages inégaux”</label>
+    <label id="unequalRelationModeLabel">Formulation</label>
     <select id="unequalRelationMode">
       <option value="direct" selected>Directe : de plus / fois plus</option>
       <option value="inverse">Inversée : de moins / fois moins</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="ratioModeLabel">Type de problème dans “Ratios”</label>
+    <label id="ratioModeLabel">Type</label>
     <select id="ratioMode">
       <option value="total2" selected>Partager un total — 2 quantités</option>
       <option value="total3">Partager un total — 3 quantités</option>
@@ -1759,21 +1759,21 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="multiLinkedStructureLabel">Structure dans “Plusieurs quantités liées”</label>
+    <label id="multiLinkedStructureLabel">Structure dans “Relations entre plusieurs quantités”</label>
     <select id="multiLinkedStructure">
       <option value="common" selected>Référent commun</option>
       <option value="chain">Chaîne de relations</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="multiRatioRelationLabel">Relation multiplicative</label>
+    <label id="multiRatioRelationLabel">Multiplicatif</label>
     <select id="multiRatioRelation">
       <option value="more" selected>Fois plus</option>
       <option value="less">Fois moins</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="multiDiffRelationLabel">Relation additive</label>
+    <label id="multiDiffRelationLabel">Additif</label>
     <select id="multiDiffRelation">
       <option value="more" selected>De plus</option>
       <option value="less">De moins</option>
@@ -2270,7 +2270,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return {
         type:"part_whole",
         subType:"whole",
-        family:"Tout et parties",
+        family:"Partie-tout simple",
         known:values[0],
         x:total,
         total,
@@ -2306,7 +2306,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return {
         type:"part_whole",
         subType:"equal_unknowns",
-        family:"Tout et parties",
+        family:"Partie-tout simple",
         known,
         x,
         total,
@@ -2342,7 +2342,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {
       type:"part_whole",
       subType:"missing_part",
-      family:"Tout et parties",
+      family:"Partie-tout simple",
       known:knownValues[0],
       x:missing,
       total,
@@ -2928,7 +2928,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {
       type:"unequal_total_ratio",
       subType:"total_ratio",
-      family:"Total + rapport",
+      family:"Avec un rapport connu",
       bigName,
       smallName,
       small,
@@ -3261,7 +3261,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         type:"multi_linked",
         subType:isMultChain ? "two_multiplicative_chain" : "two_multiplicative_common",
         relationType:"two_mult",
-        family:"Plusieurs quantités liées",
+        family:"Relations entre plusieurs quantités",
         refLabel: labels[0],
         doubleLabel: labels[1],
         plusLabel: labels[2],
@@ -3338,7 +3338,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       type:"multi_linked",
       subType:isChain ? "chain_mixed" : "common_reference",
       relationType:"mult_add",
-      family:"Plusieurs quantités liées",
+      family:"Relations entre plusieurs quantités",
       refLabel: labels[0],
       doubleLabel: labels[1],
       plusLabel: labels[2],
@@ -3913,7 +3913,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
 
   function renderGroupedPreviewInSituationFrame(){
-    // Utilisé seulement pour Total + écart et Total + rapport dans l'étape Regrouper.
+    // Utilisé seulement pour Avec un écart connu et Avec un rapport connu dans l'étape Regrouper.
     // On utilise exactement les mêmes colonnes d'unités que le schéma de situation aligné :
     // un x, l'écart ou les parts supplémentaires, puis l'autre x quand on regroupe.
     const totalLabel = problem.total;
@@ -5018,13 +5018,88 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return problem.known + " + " + problem.x;
   }
 
+  function numericAnchorsForDecomposition(value){
+    // Aide contextuelle : on privilégie ce qui est réellement utile pour
+    // s'aligner avec l'autre membre.
+    // Exemple :
+    // - si l'autre membre est 44 + x, on propose 44 + reste ;
+    // - si l'autre membre est 13 + 10 + x, on propose d'abord 23 + reste,
+    //   puis 13 + reste.
+    if(!decomposeTarget || !state) return [];
+    const otherSide = decomposeTarget.side === "top" ? "bottom" : "top";
+    const anchors = [];
+
+    function addAnchor(n){
+      n = Number(n);
+      if(Number.isFinite(n) && n > 0 && n < value && !anchors.includes(n)){
+        anchors.push(n);
+      }
+    }
+
+    const activeOther = active(otherSide);
+
+    // 1) Priorité aux sommes préfixes du bloc numérique de gauche :
+    //    13, puis 13+10=23 ; ensuite on inverse l'ordre pour proposer d'abord 23.
+    const leftPrefixSums = [];
+    let prefix = 0;
+    for(const piece of activeOther){
+      if(piece.type !== "number") break;
+      prefix += Number(piece.value);
+      if(Number.isFinite(prefix) && prefix > 0 && prefix < value){
+        leftPrefixSums.push(prefix);
+      }
+    }
+    leftPrefixSums.reverse().forEach(addAnchor);
+
+    // 2) Priorité secondaire : tout nombre déjà regroupé ailleurs dans le membre.
+    for(const piece of activeOther){
+      if(piece.type === "number"){
+        addAnchor(Number(piece.value));
+      }
+    }
+
+    // 3) Sécurité : toutes les sommes de sous-ensembles numériques, au cas où
+    //    l'utilisateur veut s'aligner autrement.
+    const nums = activeOther.filter(p => p.type === "number").map(p => Number(p.value)).filter(Number.isFinite);
+    const subsetSums = new Set();
+    const n = Math.min(nums.length, 8);
+    for(let mask = 1; mask < (1 << n); mask++){
+      let sum = 0;
+      for(let i = 0; i < n; i++){
+        if(mask & (1 << i)) sum += nums[i];
+      }
+      if(sum > 0 && sum < value) subsetSums.add(sum);
+    }
+    Array.from(subsetSums).sort((a,b) => b - a).forEach(addAnchor);
+
+    return anchors;
+  }
+
   function buildSuggestions(value){
     const suggestions = [];
+    const candidates = [];
+
+    function addCandidateFromAnchor(n, priority=false){
+      n = Number(n);
+      if(!Number.isFinite(n) || n <= 0 || n >= value) return;
+      const a = n + " + " + (value - n);
+      const b = (value - n) + " + " + n;
+      if(priority){
+        if(!suggestions.includes(a)) suggestions.push(a);
+        if(!suggestions.includes(b) && suggestions.length < 4) suggestions.push(b);
+      }else{
+        candidates.push(a, b);
+      }
+    }
+
+    // Priorité : ce qui correspond à l'état actuel du schéma manipulable.
+    numericAnchorsForDecomposition(value).forEach(n => addCandidateFromAnchor(n, true));
+
     const good = usefulDecomposition(value);
     if(good && good.includes("+")){
       const goodNums = good.split("+").map(x => Number(String(x).trim())).filter(Number.isFinite);
       const goodTotal = goodNums.reduce((a,b)=>a+b,0);
-      if(goodNums.length >= 2 && goodTotal === value) suggestions.push(good);
+      if(goodNums.length >= 2 && goodTotal === value && !suggestions.includes(good)) suggestions.push(good);
     }
 
     const x = Math.max(1, Number(problem.x) || Math.floor(value/2));
@@ -5033,10 +5108,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       Number(problem.change), Number(problem.small), Number(problem.ref), 10, x
     ].filter(n => Number.isFinite(n) && n > 0 && n < value);
 
-    const candidates = [];
     for(const n of knowns){
-      candidates.push((value - n) + " + " + n);
-      candidates.push(n + " + " + (value - n));
+      addCandidateFromAnchor(n);
     }
 
     for(let left=1; left<=value-1; left++){
@@ -5061,7 +5134,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       if(!suggestions.includes(c)) suggestions.push(c);
       if(suggestions.length >= 4) break;
     }
-    return shuffle(suggestions.slice(0,4));
+    return suggestions.slice(0,4);
   }
 
   function openDecompose(item){
@@ -5521,7 +5594,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       el.comparisonRelation.style.display = showComparison ? "" : "none";
       el.comparisonRelationLabel.style.display = showComparison ? "" : "none";
       if(showComparison){
-        el.comparisonRelationLabel.textContent = isMixedComparison ? "Relation dans “Comparer”" : (isMultiplicativeComparison ? "Relation dans “Comparer — rapport”" : "Relation dans “Comparer — écart”");
+        el.comparisonRelationLabel.textContent = isMixedComparison ? "Relation" : (isMultiplicativeComparison ? "Relation" : "Relation");
         el.comparisonRelation.options[0].textContent = isMultiplicativeComparison ? "Fois plus" : (isMixedComparison ? "De plus / fois plus" : "De plus");
         el.comparisonRelation.options[1].textContent = isMultiplicativeComparison ? "Fois moins" : (isMixedComparison ? "De moins / fois moins" : "De moins");
       }
@@ -5530,7 +5603,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     el.comparisonMode.style.display = showComparison ? "" : "none";
     el.comparisonModeLabel.style.display = showComparison ? "" : "none";
     if(showComparison){
-      el.comparisonModeLabel.textContent = isMixedComparison ? "Question dans “Comparer”" : (isMultiplicativeComparison ? "Question dans “Comparer — rapport”" : "Question dans “Comparer — écart”");
+      el.comparisonModeLabel.textContent = isMixedComparison ? "Question" : (isMultiplicativeComparison ? "Question" : "Question");
       el.comparisonMode.options[2].style.display = "";
       el.comparisonMode.options[2].textContent = isMultiplicativeComparison ? "Chercher le rapport" : (isMixedComparison ? "Chercher l’écart / le rapport" : "Chercher l’écart");
     }
