@@ -1615,6 +1615,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   color:#334155;
 }
 
+
+.multiLinkedOwnerBraces{
+  margin-top:8px;
+}
+.multiGroupedPreview .ownerBrace{
+  min-height:34px;
+  font-size:16px;
+}
+
 </style>
 </head>
 <body>
@@ -3833,16 +3842,34 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function renderGroupedPreview(){
     if(problem.type === "multi_linked"){
       const xLabel = unknown();
-      const xCount = 1 + (problem.multiplier || 2) + (problem.plusMultiplier || 1);
+      const multiplier = problem.multiplier || 2;
+      const plusMultiplier = problem.plusMultiplier || 1;
+      const xCount = 1 + multiplier + plusMultiplier;
+      const diffCol = xCount + 2;
+      const endCol = xCount + 3;
+
       let xParts = "";
       for(let i = 0; i < xCount; i++){
         const cls = "multiGroupPart unknown " + (i === 0 ? "first " : "");
         xParts += "<div class='" + cls + "' style='grid-column:" + (2 + i) + ";grid-row:2'>" + xLabel + "</div>";
       }
+
+      const firstStart = 2;
+      const firstEnd = 3;
+      const secondStart = 3;
+      const secondEnd = 3 + multiplier;
+      const thirdStart = secondEnd;
+      const thirdEnd = endCol;
+
       return "<div class='multiGroupedPreview' style='grid-template-columns:110px repeat(" + xCount + ", minmax(64px,1fr)) minmax(64px,.8fr) 72px'>" +
         "<div class='multiTopTotal' style='grid-column:2 / " + (xCount + 3) + "'>" + problem.total + "</div>" +
         xParts +
-        "<div class='multiGroupPart diff last' style='grid-column:" + (xCount + 2) + ";grid-row:2;background:linear-gradient(180deg,var(--orange-soft),#fff7ed);color:#9a3412'>" + problem.diff + "</div>" +
+        "<div class='multiGroupPart diff last' style='grid-column:" + diffCol + ";grid-row:2;background:linear-gradient(180deg,var(--orange-soft),#fff7ed);color:#9a3412'>" + problem.diff + "</div>" +
+        "<div class='unequalOwnerBraces multiLinkedOwnerBraces' style='grid-column:2 / " + endCol + ";grid-row:3;grid-template-columns:repeat(" + xCount + ", 1fr) minmax(64px,.8fr);width:100%'>" +
+          "<div class='ownerBrace' style='grid-column:" + (firstStart - 1) + " / " + (firstEnd - 1) + "'>" + problem.refLabel + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (secondStart - 1) + " / " + (secondEnd - 1) + "'>" + problem.doubleLabel + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (thirdStart - 1) + " / " + (thirdEnd - 1) + "'>" + problem.plusLabel + "</div>" +
+        "</div>" +
       "</div>";
     }
 
