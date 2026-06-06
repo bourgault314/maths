@@ -255,6 +255,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 }
 .compareRegroupPreview .compareGrid{
   margin:0 auto;
+  row-gap:0;
 }
 .compareRegroupTop{
   grid-column:2 / 4;
@@ -1004,6 +1005,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 }
 .compareRegroupPreview .compareSegment{
   margin-top:0;
+  border-top:0; /* un seul trait central : celui du bas de la barre du haut */
 }
 .equabarPreview .schemaBoard .barLine.top{
   border-bottom:2px solid var(--line);
@@ -2035,7 +2037,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         "<div class='multiGroupPart unknown' style='grid-column:3;grid-row:2'>" + xLabel + "</div>" +
         "<div class='multiGroupPart unknown' style='grid-column:4;grid-row:2'>" + xLabel + "</div>" +
         "<div class='multiGroupPart unknown' style='grid-column:5;grid-row:2'>" + xLabel + "</div>" +
-        "<div class='multiGroupPart diff last' style='grid-column:6;grid-row:2'>" + problem.diff + "</div>" +
+        "<div class='multiGroupPart diff last' style='grid-column:6;grid-row:2;background:linear-gradient(180deg,var(--orange-soft),#fff7ed);color:#9a3412'>" + problem.diff + "</div>" +
       "</div>";
     }
 
@@ -2339,7 +2341,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     let cls = "part";
     if(clickable) cls += " clickable";
     if(p.type === "x") cls += " unknown";
-    if(((problem.type === "comparison_additive" && problem.subType !== "difference") || problem.type === "unequal_total_diff") && p.type === "number" && side === "bottom") cls += " diff";
+    // En résolution manipulable, seules les inconnues restent colorées : les nombres connus restent neutres.
+    // Les aperçus non manipulables peuvent conserver la couleur pédagogique de l'écart.
+    if(!clickable && ((problem.type === "comparison_additive" && problem.subType !== "difference") || problem.type === "unequal_total_diff" || problem.type === "multi_linked") && p.type === "number" && side === "bottom") cls += " diff";
     if(p.removed) cls += " removed";
     if(clickable && selected.some(s => s.side === side && s.id === p.id)) cls += " selected";
     const label = p.type === "x" ? unknown() : p.value;
