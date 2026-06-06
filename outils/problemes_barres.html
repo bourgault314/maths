@@ -1831,7 +1831,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
 .worksheetWorkZone{
   margin-top:auto;
-  min-height:34mm;
+  min-height:48mm;
   border-top:1px dashed rgba(15,23,42,.25);
   padding-top:8px;
 }
@@ -1910,9 +1910,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   line-height:1.35;
 }
 .worksheetPageBreak{
-  break-after:page;
-  page-break-after:always;
-  height:0;
+  display:none;
 }
 @media print{
   html, body{
@@ -1979,7 +1977,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     min-height:176mm !important;
   }
   body.printWorksheet .worksheetWorkZone{
-    min-height:48mm !important;
+    min-height:58mm !important;
   }
   body.printWorksheet .worksheetCorrection{
     page-break-inside:auto !important;
@@ -2044,6 +2042,575 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 .multiLinkedOwnerBraces .ownerBrace::before{
   left:2px;
   right:2px;
+}
+
+
+.worksheetPrintRoot{
+  display:none;
+}
+.worksheetHelpBlock{
+  margin-top:7px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:12px;
+  background:#f8fafc;
+  padding:7px 8px;
+}
+.worksheetHelpTitle{
+  color:#64748b;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.worksheetHelpGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:4px;
+}
+.worksheetHelpItem{
+  font-size:12px;
+  line-height:1.22;
+}
+.worksheetHelpItem strong{
+  color:#0f172a;
+}
+.worksheetHelpItem span{
+  color:#334155;
+}
+.worksheetSchemaInner{
+  zoom:.52;
+}
+.worksheetSchema .schemaBoard,
+.worksheetSchema .compareSituationBoard,
+.worksheetSchema .compareRegroupPreview,
+.worksheetSchema .countBoard,
+.worksheetSchema .multiBoard,
+.worksheetSchema .ratioBoard,
+.worksheetSchema .unequalBoard,
+.worksheetSchema .groupStage,
+.worksheetSchema .groupAlignedBoard{
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+body.printWorksheet > *:not(#worksheetPrintRoot){
+  display:none !important;
+}
+body.printWorksheet #worksheetPrintRoot{
+  display:block !important;
+}
+body.printWorksheet #worksheetPrintRoot .worksheetSheet{
+  display:block !important;
+}
+@media print{
+  body.printWorksheet > *:not(#worksheetPrintRoot){
+    display:none !important;
+  }
+  body.printWorksheet #worksheetPrintRoot{
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    overflow:visible !important;
+  }
+}
+
+
+@media print{
+  body.printWorksheet #worksheetDialog{
+    display:none !important;
+  }
+  body.printWorksheet .worksheetPageBreak:last-child{
+    display:none !important;
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+}
+
+
+.worksheetPages{
+  display:grid;
+  gap:10px;
+}
+.worksheetPage{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:8mm;
+  break-after:page;
+  page-break-after:always;
+}
+.worksheetPage:last-child{
+  break-after:auto;
+  page-break-after:auto;
+}
+.worksheetPage .worksheetProblem{
+  min-height:0;
+}
+.worksheetSchema{
+  max-width:82mm;
+  margin-left:auto;
+  margin-right:auto;
+  padding:5px 5px 8px;
+}
+.worksheetSchemaInner{
+  zoom:.38;
+  width:100%;
+}
+.worksheetSchema .schemaBoard,
+.worksheetSchema .compareSituationBoard,
+.worksheetSchema .compareRegroupPreview,
+.worksheetSchema .countBoard,
+.worksheetSchema .multiBoard,
+.worksheetSchema .ratioBoard,
+.worksheetSchema .unequalBoard,
+.worksheetSchema .groupStage,
+.worksheetSchema .groupAlignedBoard{
+  width:760px !important;
+  max-width:760px !important;
+}
+.worksheetSchema .multiBoard{
+  --refW:520px;
+}
+.worksheetFillable .part,
+.worksheetFillable .compareSituationBar,
+.worksheetFillable .compareSegment,
+.worksheetFillable .ratioPart,
+.worksheetFillable .countCell,
+.worksheetFillable .multiPart,
+.worksheetFillable .multiGroupPart,
+.worksheetFillable .groupAlignedPart,
+.worksheetFillable .groupAlignedTotal{
+  color:transparent !important;
+  text-shadow:none !important;
+}
+.worksheetFillable .part.unknown,
+.worksheetFillable .compareSituationBar.unknown,
+.worksheetFillable .compareSegment.unknown,
+.worksheetFillable .ratioPart.unknown,
+.worksheetFillable .countCell.unknown,
+.worksheetFillable .multiPart.unknown,
+.worksheetFillable .multiGroupPart.unknown,
+.worksheetFillable .groupAlignedPart.unknown{
+  color:transparent !important;
+}
+.worksheetFillable .compareSituationDiff span,
+.worksheetFillable .countBrace,
+.worksheetFillable .countTopBrace,
+.worksheetFillable .ratioSimplified,
+.worksheetFillable .ratioResult,
+.worksheetFillable .ratioArrow{
+  visibility:hidden !important;
+}
+@media print{
+  body.printWorksheet .worksheetPages{
+    gap:0 !important;
+  }
+  body.printWorksheet .worksheetPage{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:8mm !important;
+    min-height:176mm !important;
+    break-after:page !important;
+    page-break-after:always !important;
+  }
+  body.printWorksheet .worksheetPage:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+  body.printWorksheet .worksheetProblem{
+    min-height:176mm !important;
+  }
+  body.printWorksheet .worksheetSchema{
+    max-width:78mm !important;
+  }
+  body.printWorksheet .worksheetSchemaInner{
+    zoom:.36 !important;
+  }
+}
+
+
+@media print{
+  body.printWorksheet #worksheetDialog,
+  body.printWorksheet main,
+  body.printWorksheet dialog{
+    display:none !important;
+  }
+  body.printWorksheet #worksheetPrintRoot{
+    display:block !important;
+    position:static !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  body.printWorksheet #worksheetPrintRoot .worksheetSheet{
+    margin:0 !important;
+    padding:0 !important;
+  }
+}
+
+
+/* Phase 6C — fiches : cases plus hautes pour écrire, schémas toujours compacts. */
+.worksheetSchema{
+  max-width:92mm;
+  padding:6px 6px 10px;
+}
+.worksheetSchemaInner{
+  zoom:.46;
+}
+.worksheetSchema .schemaBoard,
+.worksheetSchema .compareSituationBoard,
+.worksheetSchema .compareRegroupPreview,
+.worksheetSchema .countBoard,
+.worksheetSchema .multiBoard,
+.worksheetSchema .ratioBoard,
+.worksheetSchema .unequalBoard,
+.worksheetSchema .groupStage,
+.worksheetSchema .groupAlignedBoard{
+  width:680px !important;
+  max-width:680px !important;
+}
+.worksheetSchema .barLine,
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell,
+.worksheetSchema .countTop .part,
+.worksheetSchema .countLine,
+.worksheetSchema .ratioPart,
+.worksheetSchema .multiPart,
+.worksheetSchema .multiGroupPart,
+.worksheetSchema .groupAlignedPart,
+.worksheetSchema .groupAlignedTotal{
+  min-height:64px !important;
+}
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell,
+.worksheetSchema .ratioPart,
+.worksheetSchema .multiPart,
+.worksheetSchema .multiGroupPart,
+.worksheetSchema .groupAlignedPart,
+.worksheetSchema .groupAlignedTotal{
+  font-size:24px !important;
+}
+
+/* Schéma vide imprimé : les cases sont à remplir par l'élève. */
+.worksheetBlankSchema .part,
+.worksheetBlankSchema .compareSituationBar,
+.worksheetBlankSchema .compareSegment,
+.worksheetBlankSchema .ratioPart,
+.worksheetBlankSchema .countCell,
+.worksheetBlankSchema .multiPart,
+.worksheetBlankSchema .multiGroupPart,
+.worksheetBlankSchema .groupAlignedPart,
+.worksheetBlankSchema .groupAlignedTotal{
+  color:transparent !important;
+  text-shadow:none !important;
+}
+.worksheetBlankSchema .part.empty,
+.worksheetBlankSchema .compareSituationDiff.empty span,
+.worksheetBlankSchema .countBrace,
+.worksheetBlankSchema .countTopBrace{
+  visibility:hidden !important;
+}
+
+/* Schéma à compléter : même idée, mais à partir du schéma rempli. */
+.worksheetFillable .barLine,
+.worksheetFillable .part,
+.worksheetFillable .compareSituationBar,
+.worksheetFillable .compareSegment,
+.worksheetFillable .countCell,
+.worksheetFillable .countTop .part,
+.worksheetFillable .countLine,
+.worksheetFillable .ratioPart,
+.worksheetFillable .multiPart,
+.worksheetFillable .multiGroupPart,
+.worksheetFillable .groupAlignedPart,
+.worksheetFillable .groupAlignedTotal{
+  min-height:70px !important;
+}
+@media print{
+  body.printWorksheet .worksheetSchema{
+    max-width:90mm !important;
+  }
+  body.printWorksheet .worksheetSchemaInner{
+    zoom:.44 !important;
+  }
+  body.printWorksheet .worksheetSchema .barLine,
+  body.printWorksheet .worksheetSchema .part,
+  body.printWorksheet .worksheetSchema .compareSituationBar,
+  body.printWorksheet .worksheetSchema .compareSituationDiff,
+  body.printWorksheet .worksheetSchema .compareSegment,
+  body.printWorksheet .worksheetSchema .countCell,
+  body.printWorksheet .worksheetSchema .countTop .part,
+  body.printWorksheet .worksheetSchema .countLine,
+  body.printWorksheet .worksheetSchema .ratioPart,
+  body.printWorksheet .worksheetSchema .multiPart,
+  body.printWorksheet .worksheetSchema .multiGroupPart,
+  body.printWorksheet .worksheetSchema .groupAlignedPart,
+  body.printWorksheet .worksheetSchema .groupAlignedTotal{
+    min-height:66px !important;
+  }
+}
+
+
+html:has(body.printOnlyWorksheet),
+body.printOnlyWorksheet{
+  margin:0 !important;
+  padding:0 !important;
+  background:white !important;
+  overflow:visible !important;
+}
+body.printOnlyWorksheet #worksheetPrintRoot{
+  display:block !important;
+  margin:0 !important;
+  padding:0 !important;
+  width:100% !important;
+}
+body.printOnlyWorksheet .worksheetSheet{
+  margin:0 !important;
+  padding:0 !important;
+}
+@media print{
+  html:has(body.printOnlyWorksheet),
+  body.printOnlyWorksheet{
+    margin:0 !important;
+    padding:0 !important;
+    background:white !important;
+    overflow:visible !important;
+  }
+  body.printOnlyWorksheet #worksheetPrintRoot{
+    display:block !important;
+    margin:0 !important;
+    padding:0 !important;
+    width:100% !important;
+  }
+  body.printOnlyWorksheet .worksheetSheet{
+    margin:0 !important;
+    padding:0 !important;
+  }
+}
+
+
+/* Phase 6E — anti page blanche en impression */
+@media print{
+  body.printOnlyWorksheet .worksheetHeader,
+  body.printWorksheet .worksheetHeader{
+    display:none !important;
+  }
+
+  body.printOnlyWorksheet .worksheetPages,
+  body.printWorksheet .worksheetPages{
+    margin:0 !important;
+    padding:0 !important;
+    gap:0 !important;
+    break-before:auto !important;
+    page-break-before:auto !important;
+  }
+
+  body.printOnlyWorksheet .worksheetPage,
+  body.printWorksheet .worksheetPage{
+    margin:0 !important;
+    padding:0 !important;
+    min-height:160mm !important;
+    break-before:auto !important;
+    page-break-before:auto !important;
+  }
+
+  body.printOnlyWorksheet .worksheetPage:first-child,
+  body.printWorksheet .worksheetPage:first-child{
+    break-before:auto !important;
+    page-break-before:auto !important;
+  }
+
+  body.printOnlyWorksheet .worksheetProblem,
+  body.printWorksheet .worksheetProblem{
+    min-height:158mm !important;
+  }
+
+  body.printOnlyWorksheet .worksheetWorkZone,
+  body.printWorksheet .worksheetWorkZone{
+    min-height:44mm !important;
+  }
+}
+
+
+/* Phase 6F — quand il n'y a que l'énoncé, la zone de recherche devient la partie principale. */
+.worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+  min-height:92mm;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkLines{
+  gap:10px;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkLine{
+  height:18px;
+}
+@media print{
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+    min-height:108mm !important;
+  }
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkLines,
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkLines{
+    gap:11px !important;
+  }
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkLine,
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkLine{
+    height:19px !important;
+  }
+
+  /* Les autres modes gardent une zone de recherche raisonnable en bas. */
+  body.printOnlyWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+    min-height:42mm !important;
+  }
+}
+
+
+/* Phase 6G — fiches simplifiées et logo imprimé uniquement */
+.worksheetPrintRoot{display:none}
+.worksheetPages{display:grid;gap:10px}
+.worksheetPage{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8mm;
+  break-after:page;
+  page-break-after:always;
+}
+.worksheetPage:last-child{break-after:auto;page-break-after:auto}
+.worksheetHelpBlock{
+  margin-top:7px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:12px;
+  background:#f8fafc;
+  padding:7px 8px;
+}
+.worksheetHelpTitle{
+  color:#64748b;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:4px;
+}
+.worksheetHelpItem{font-size:12px;line-height:1.22}
+.worksheetHelpItem strong{color:#0f172a}
+.worksheetHelpItem span{color:#334155}
+.worksheetSchema{
+  max-width:90mm;
+  margin-left:auto;
+  margin-right:auto;
+  padding:6px 6px 10px;
+  overflow:visible;
+}
+.worksheetSchemaInner{zoom:.44}
+.worksheetSchema .schemaBoard,
+.worksheetSchema .compareSituationBoard,
+.worksheetSchema .compareRegroupPreview,
+.worksheetSchema .countBoard,
+.worksheetSchema .multiBoard,
+.worksheetSchema .ratioBoard,
+.worksheetSchema .unequalBoard,
+.worksheetSchema .groupStage,
+.worksheetSchema .groupAlignedBoard{
+  width:680px !important;
+  max-width:680px !important;
+}
+.worksheetSchema .barLine,
+.worksheetSchema .part,
+.worksheetSchema .compareSituationBar,
+.worksheetSchema .compareSituationDiff,
+.worksheetSchema .compareSegment,
+.worksheetSchema .countCell,
+.worksheetSchema .countTop .part,
+.worksheetSchema .countLine,
+.worksheetSchema .ratioPart,
+.worksheetSchema .multiPart,
+.worksheetSchema .multiGroupPart,
+.worksheetSchema .groupAlignedPart,
+.worksheetSchema .groupAlignedTotal{
+  min-height:66px !important;
+}
+.worksheetFillable .part,
+.worksheetFillable .compareSituationBar,
+.worksheetFillable .compareSegment,
+.worksheetFillable .ratioPart,
+.worksheetFillable .countCell,
+.worksheetFillable .multiPart,
+.worksheetFillable .multiGroupPart,
+.worksheetFillable .groupAlignedPart,
+.worksheetFillable .groupAlignedTotal{
+  color:transparent !important;
+  text-shadow:none !important;
+}
+.worksheetFillable .compareSituationDiff span,
+.worksheetFillable .countBrace,
+.worksheetFillable .countTopBrace,
+.worksheetFillable .ratioSimplified,
+.worksheetFillable .ratioResult,
+.worksheetFillable .ratioArrow{
+  visibility:hidden !important;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkZone{min-height:92mm}
+.worksheetProblem.worksheetMode-statements .worksheetWorkLine{height:18px}
+.worksheetPrintLogo{display:none}
+.worksheetPrintLogo img{width:42mm;height:auto}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{margin:0!important;padding:0!important;background:white!important;overflow:visible!important}
+  body.printWorksheet #worksheetDialog,
+  body.printWorksheet main,
+  body.printWorksheet dialog,
+  body.printOnlyWorksheet #worksheetDialog,
+  body.printOnlyWorksheet main,
+  body.printOnlyWorksheet dialog{display:none!important}
+  body.printWorksheet #worksheetPrintRoot,
+  body.printOnlyWorksheet #worksheetPrintRoot{
+    display:block!important;
+    position:static!important;
+    margin:0!important;
+    padding:0!important;
+    width:100%!important;
+  }
+  body.printWorksheet .worksheetSheet,
+  body.printOnlyWorksheet .worksheetSheet{
+    margin:0!important;
+    padding:0!important;
+    position:relative!important;
+  }
+  body.printWorksheet .worksheetHeader,
+  body.printOnlyWorksheet .worksheetHeader{display:none!important}
+  body.printWorksheet .worksheetPage,
+  body.printOnlyWorksheet .worksheetPage{
+    min-height:160mm!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8mm!important;
+    break-after:page!important;
+    page-break-after:always!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  body.printWorksheet .worksheetPage:last-child,
+  body.printOnlyWorksheet .worksheetPage:last-child{break-after:auto!important;page-break-after:auto!important}
+  body.printWorksheet .worksheetProblem,
+  body.printOnlyWorksheet .worksheetProblem{min-height:158mm!important}
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone{min-height:108mm!important}
+  body.printWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{min-height:42mm!important}
+  body.printWorksheet .worksheetSchema,
+  body.printOnlyWorksheet .worksheetSchema{max-width:90mm!important}
+  body.printWorksheet .worksheetSchemaInner,
+  body.printOnlyWorksheet .worksheetSchemaInner{zoom:.44!important}
+  body.printWorksheet .worksheetPrintLogo,
+  body.printOnlyWorksheet .worksheetPrintLogo{
+    display:block!important;
+    position:fixed!important;
+    left:10mm!important;
+    bottom:6mm!important;
+    z-index:9999!important;
+  }
 }
 
 </style>
@@ -2316,23 +2883,19 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         <option value="8">8 problèmes</option>
         <option value="10" selected>10 problèmes</option>
       </select>
-
-      <label>Contenu élève</label>
+      <label>Type de fiche</label>
       <select id="worksheetStudentMode">
-        <option value="statements" selected>Énoncés seuls</option>
-        <option value="with_answer_lines">Énoncés + lignes de réponse</option>
-        <option value="empty_schema">Énoncé + schéma vide</option>
-        <option value="filled_schema">Énoncé + schéma rempli</option>
-        <option value="empty_and_filled">Énoncé + schéma vide + schéma rempli</option>
+        <option value="statements" selected>Énoncé seul</option>
+        <option value="help">Avec aide</option>
+        <option value="fillable_schema">Avec schéma à compléter</option>
+        <option value="filled_schema">Avec schéma rempli</option>
       </select>
 
       <div class="worksheetFixedInfo">Mise en page : 2 problèmes par page, en paysage.</div>
-
       <label>Correction</label>
       <select id="worksheetCorrectionMode">
-        <option value="none">Sans correction</option>
-        <option value="after" selected>Correction à la suite</option>
-        <option value="separate">Correction sur page séparée</option>
+        <option value="none" selected>Sans correction</option>
+        <option value="separate">Correction à part</option>
       </select>
 
       <div class="btnrow" style="justify-content:center;margin-top:14px">
@@ -2347,6 +2910,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     </div>
   </div>
 </dialog>
+<div id="worksheetPrintRoot" class="worksheetPrintRoot"></div>
 
 <script>
 (function(){
@@ -2496,6 +3060,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     btnPrintWorksheet: document.getElementById("btnPrintWorksheet"),
     btnCloseWorksheet: document.getElementById("btnCloseWorksheet"),
     worksheetPreview: document.getElementById("worksheetPreview"),
+    worksheetPrintRoot: document.getElementById("worksheetPrintRoot"),
     btnFullscreen: document.getElementById("btnFullscreen"),
     stage: document.getElementById("stage"),
     statement: document.getElementById("statement"),
@@ -6144,10 +6709,53 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
   }
 
+  function captureWorksheetHelp(p){
+    const savedProblem = problem;
+    const savedExplain = el.explainText ? el.explainText.innerHTML : "";
+    const savedTitle = el.explainTitle ? el.explainTitle.textContent : "";
+    const savedDisplay = el.explainSection ? el.explainSection.style.display : "";
+    const savedUnderstand = understandAnswersVisible;
+
+    problem = p;
+    problem.unknownSymbol = p.unknownSymbol || chooseUnknownSymbol();
+    understandAnswersVisible = true;
+
+    try{
+      renderUnderstanding();
+      const tmp = document.createElement("div");
+      tmp.innerHTML = el.explainText ? el.explainText.innerHTML : "";
+      const items = Array.from(tmp.querySelectorAll(".understandCard")).slice(0,3).map(card => {
+        const q = (card.querySelector(".understandQuestion") || {}).textContent || "";
+        const a = (card.querySelector(".understandAnswer") || {}).textContent || "";
+        return "<div class='worksheetHelpItem'><strong>" + q + "</strong> <span>" + a + "</span></div>";
+      }).join("");
+
+      problem = savedProblem;
+      understandAnswersVisible = savedUnderstand;
+      if(el.explainText) el.explainText.innerHTML = savedExplain;
+      if(el.explainTitle) el.explainTitle.textContent = savedTitle;
+      if(el.explainSection) el.explainSection.style.display = savedDisplay;
+
+      return "<div class='worksheetHelpBlock'>" +
+        "<div class='worksheetHelpTitle'>Aide pour comprendre</div>" +
+        "<div class='worksheetHelpGrid'>" + items + "</div>" +
+      "</div>";
+    }catch(err){
+      problem = savedProblem;
+      understandAnswersVisible = savedUnderstand;
+      if(el.explainText) el.explainText.innerHTML = savedExplain;
+      if(el.explainTitle) el.explainTitle.textContent = savedTitle;
+      if(el.explainSection) el.explainSection.style.display = savedDisplay;
+      return "";
+    }
+  }
+
   function worksheetSchemaBlock(p, kind, title){
+    const captureKind = kind === "fillable" ? "filled" : kind;
+    const fillableClass = kind === "fillable" ? " worksheetFillable" : "";
     return "<div class='worksheetSchemaBlock'>" +
       "<div class='worksheetSchemaTitle'>" + title + "</div>" +
-      "<div class='worksheetSchema'>" + captureWorksheetSchema(p, kind) + "</div>" +
+      "<div class='worksheetSchema" + fillableClass + "'><div class='worksheetSchemaInner'>" + captureWorksheetSchema(p, captureKind) + "</div></div>" +
     "</div>";
   }
 
@@ -6155,14 +6763,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const statement = stripTags(p.rawStatement || p.highlightedStatement || "");
     let extra = "";
 
-    if(mode === "with_answer_lines"){
-      extra += "<div class='answerLines'><div class='answerLine'></div><div class='answerLine'></div></div>";
-    }else if(mode === "empty_schema"){
-      extra += worksheetSchemaBlock(p, "empty", "Schéma vide");
+    if(mode === "help"){
+      extra += captureWorksheetHelp(p);
+    }else if(mode === "fillable_schema"){
+      extra += worksheetSchemaBlock(p, "fillable", "Schéma à compléter");
     }else if(mode === "filled_schema"){
-      extra += worksheetSchemaBlock(p, "filled", "Schéma rempli");
-    }else if(mode === "empty_and_filled"){
-      extra += worksheetSchemaBlock(p, "empty", "Schéma vide");
       extra += worksheetSchemaBlock(p, "filled", "Schéma rempli");
     }
 
@@ -6174,10 +6779,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<div class='worksheetWorkLine'></div>" +
           "<div class='worksheetWorkLine'></div>" +
           "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
         "</div>" +
       "</div>";
 
-    return "<div class='worksheetProblem'>" +
+    const modeClass = " worksheetMode-" + mode;
+
+    return "<div class='worksheetProblem" + modeClass + "'>" +
       "<div class='worksheetProblemTitle'>Problème " + index + "</div>" +
       "<div class='worksheetStatement'>" + statement + "</div>" +
       extra +
@@ -6193,12 +6804,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     "</div>";
   }
 
-  function withPageBreaks(items, perPage){
+  function worksheetPagesHtml(items, perPage=2){
     const n = Math.max(1, Number(perPage) || 2);
-    return items.map((html, i) => {
-      const isBreak = (i + 1) % n === 0 && i < items.length - 1;
-      return html + (isBreak ? "<div class='worksheetPageBreak'></div>" : "");
-    }).join("");
+    const pages = [];
+    for(let i = 0; i < items.length; i += n){
+      pages.push("<div class='worksheetPage'>" + items.slice(i, i + n).join("") + "</div>");
+    }
+    return "<div class='worksheetPages'>" + pages.join("") + "</div>";
   }
 
   function buildWorksheet(){
@@ -6206,7 +6818,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const count = Number(el.worksheetCount ? el.worksheetCount.value : 10) || 10;
     const mode = el.worksheetStudentMode ? el.worksheetStudentMode.value : "statements";
     const perPage = 2;
-    const correctionMode = el.worksheetCorrectionMode ? el.worksheetCorrectionMode.value : "after";
+    const correctionMode = el.worksheetCorrectionMode ? el.worksheetCorrectionMode.value : "none";
 
     const savedProblem = problem;
     const savedState = clone(state);
@@ -6226,9 +6838,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const dateText = today.toLocaleDateString("fr-FR");
 
     const problemItems = problems.map((p,i) => worksheetProblemHtml(p, i + 1, mode));
-    const studentProblems = withPageBreaks(problemItems, perPage);
+    const studentProblems = worksheetPagesHtml(problemItems, perPage);
     const corrections = problems.map((p,i) => worksheetCorrectionHtml(p, i + 1)).join("");
-    const correctionClass = correctionMode === "separate" ? "worksheetCorrection separateCorrection" : "worksheetCorrection";
+    const correctionClass = "worksheetCorrection separateCorrection";
     const correctionHtml = correctionMode === "none"
       ? ""
       : "<div class='" + correctionClass + "'><h3>Correction</h3>" + corrections + "</div>";
@@ -6240,14 +6852,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     step = savedStep;
     understandAnswersVisible = savedUnderstand;
 
+    if(el.worksheetPrintRoot) el.worksheetPrintRoot.innerHTML = "";
+
     el.worksheetPreview.innerHTML =
       "<div class='worksheetSheet'>" +
         "<div class='worksheetHeader'>" +
           "<div><h2>Fiche — Problèmes en barres</h2><div class='worksheetMeta' style='text-align:left'>Nom : ____________________ &nbsp;&nbsp; Date : __________</div></div>" +
           "<div class='worksheetMeta'>" + count + " problèmes<br>" + categoryDisplayNameForWorksheet() + "<br>" + dateText + "</div>" +
         "</div>" +
-        "<div class='worksheetList perPage2'>" + studentProblems + "</div>" +
+        studentProblems +
         correctionHtml +
+        "<div class='worksheetPrintLogo'><img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K' alt='Maths&go'></div>" +
       "</div>";
   }
 
@@ -6255,9 +6870,23 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     if(el.worksheetPreview && el.worksheetPreview.querySelector(".worksheetEmpty")){
       buildWorksheet();
     }
-    document.body.classList.add("printWorksheet");
-    window.print();
-    setTimeout(() => document.body.classList.remove("printWorksheet"), 300);
+    if(!el.worksheetPreview) return;
+
+    const printHtml = el.worksheetPreview.innerHTML;
+    const originalBody = document.body.innerHTML;
+    const originalClass = document.body.className;
+
+    document.body.className = "printWorksheet printOnlyWorksheet";
+    document.body.innerHTML = "<div id='worksheetPrintRoot' class='worksheetPrintRoot'>" + printHtml + "</div>";
+
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.body.innerHTML = originalBody;
+        document.body.className = originalClass;
+        window.location.reload();
+      }, 300);
+    }, 50);
   }
 
   function refreshEquationHistory(){
