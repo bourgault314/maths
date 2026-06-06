@@ -950,7 +950,7 @@ mark.question{
 }
 
 
-/* Avec un écart connu / Avec un rapport connu — regroupement dans le même gabarit que le schéma de situation.
+/* Total + écart / Total + rapport — regroupement dans le même gabarit que le schéma de situation.
    Le schéma de situation garde exactement son composant ; le schéma regroupé est dessiné
    dans la même zone de barres, sans prendre toute la largeur du cadre. */
 .sameFrameGroupedStack{
@@ -977,7 +977,7 @@ mark.question{
 }
 
 
-/* Avec un écart connu / Avec un rapport connu — cadre vraiment commun en étape Regrouper.
+/* Total + écart / Total + rapport — cadre vraiment commun en étape Regrouper.
    On réserve la largeur totale du regroupement (toutes les parts), puis le schéma
    de situation utilise les mêmes colonnes d'unités. Ainsi un x garde la même longueur
    dans le schéma du haut et dans le schéma regroupé du bas. */
@@ -1078,7 +1078,7 @@ mark.question{
 }
 
 
-/* Avec un écart connu — schéma regroupé : accolades d'identification sous les parts. */
+/* Total + écart — schéma regroupé : accolades d'identification sous les parts. */
 .unequalOwnerBraces{
   display:grid;
   grid-template-columns:var(--cols, 1fr);
@@ -1634,6 +1634,42 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   font-size:16px;
 }
 
+
+.wideDialog{
+  width:min(920px, calc(100vw - 28px));
+}
+.helpDialogInner{
+  text-align:left;
+}
+.categoryHelpContent{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px;
+  margin:14px 0 18px;
+}
+@media(max-width:760px){
+  .categoryHelpContent{grid-template-columns:1fr}
+}
+.helpCat{
+  background:#f8fafc;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.helpCat h3{
+  margin:0 0 6px;
+  font-size:19px;
+  letter-spacing:-.02em;
+}
+.helpCat p{
+  margin:6px 0 0;
+  color:#475569;
+  font-size:15px;
+  font-weight:650;
+  line-height:1.35;
+}
+.helpCat strong{color:#0f172a}
+
 </style>
 </head>
 <body>
@@ -1686,8 +1722,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     <label id="comparisonTypeLabel">Type</label>
     <select id="comparisonType">
-      <option value="additive" selected>Par écart : de plus / de moins</option>
-      <option value="multiplicative">Par rapport : fois plus / fois moins</option>
+      <option value="additive" selected>Comparer par écart</option>
+      <option value="multiplicative">Comparer par rapport</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -1731,8 +1767,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     <label id="unequalTotalModeLabel">Type</label>
     <select id="unequalTotalMode">
-      <option value="diff" selected>Avec un écart connu</option>
-      <option value="rapport">Avec un rapport connu</option>
+      <option value="diff" selected>Total + écart</option>
+      <option value="rapport">Total + rapport</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -1759,7 +1795,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="multiLinkedStructureLabel">Structure dans “Relations entre plusieurs quantités”</label>
+    <label id="multiLinkedStructureLabel">Structure</label>
     <select id="multiLinkedStructure">
       <option value="common" selected>Référent commun</option>
       <option value="chain">Chaîne de relations</option>
@@ -1803,6 +1839,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     <div class="btnrow">
       <button class="primary" id="btnGenerate">Générer</button>
       <button class="ghost" id="btnReset">Recommencer</button>
+      <button class="ghost" id="btnCategoryHelp" type="button">Aide catégories</button>
     </div>
 
   </section>
@@ -1886,6 +1923,56 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     <div class="btnrow" style="justify-content:center">
       <button class="primary" id="btnApplyAdd">Regrouper</button>
       <button class="ghost" id="btnCancelAddDialog">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="categoryHelpDialog" class="wideDialog">
+  <div class="dialogInner helpDialogInner">
+    <h2 class="dialogTitle">Aide — catégories de problèmes</h2>
+    <div class="categoryHelpContent">
+      <div class="helpCat">
+        <h3>Partie-tout simple</h3>
+        <p>Un tout composé de plusieurs parties. On cherche le tout ou une partie manquante.</p>
+        <p><strong>Exemple :</strong> 13 cartes rouges, 10 cartes bleues, 8 cartes vertes. Combien en tout ?</p>
+      </div>
+      <div class="helpCat">
+        <h3>Transformation</h3>
+        <p>Une quantité change : avant, changement, après. On peut chercher l’un des trois.</p>
+        <p><strong>Exemple :</strong> Lina avait 25 jetons, elle en gagne 8. Combien en a-t-elle maintenant ?</p>
+      </div>
+      <div class="helpCat">
+        <h3>Comparer</h3>
+        <p>Deux quantités sont comparées par un écart ou par un rapport.</p>
+        <p><strong>Écart :</strong> 7 de plus / de moins. <strong>Rapport :</strong> 3 fois plus / 3 fois moins.</p>
+      </div>
+      <div class="helpCat">
+        <h3>Groupes égaux</h3>
+        <p>Des parts identiques se répètent. On peut chercher le total, la valeur d’une part ou le nombre de parts.</p>
+        <p><strong>Exemple :</strong> 6 boîtes contiennent chacune 8 billes.</p>
+      </div>
+      <div class="helpCat">
+        <h3>Partages inégaux</h3>
+        <p>Deux quantités ont un total connu, mais ne sont pas égales. Elles sont liées par un écart ou un rapport.</p>
+        <p><strong>Exemple :</strong> Deux élèves ont 43 cartes en tout. L’un en a 9 de plus que l’autre.</p>
+      </div>
+      <div class="helpCat">
+        <h3>Ratios</h3>
+        <p>Des quantités sont partagées selon des parts proportionnelles : 2:3, 2:3:4, etc.</p>
+        <p><strong>Exemple :</strong> Un total de 60 est partagé dans le ratio 2:3.</p>
+      </div>
+      <div class="helpCat">
+        <h3>Relations entre plusieurs quantités</h3>
+        <p>Problèmes en plusieurs étapes : plusieurs quantités sont liées par des relations additives ou multiplicatives.</p>
+        <p><strong>Exemple :</strong> B vaut 3 fois A, C vaut 5 de plus que B, et on connaît le total.</p>
+      </div>
+      <div class="helpCat">
+        <h3>Mélange personnalisé</h3>
+        <p>Permet de choisir plusieurs familles et de générer des problèmes variés pour l’entraînement ou l’évaluation.</p>
+      </div>
+    </div>
+    <div class="btnrow" style="justify-content:center">
+      <button class="primary" id="btnCloseCategoryHelp" type="button">Fermer</button>
     </div>
   </div>
 </dialog>
@@ -2022,6 +2109,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     equationDisplay: document.getElementById("equationDisplay"),
     btnGenerate: document.getElementById("btnGenerate"),
     btnReset: document.getElementById("btnReset"),
+    btnCategoryHelp: document.getElementById("btnCategoryHelp"),
+    categoryHelpDialog: document.getElementById("categoryHelpDialog"),
+    btnCloseCategoryHelp: document.getElementById("btnCloseCategoryHelp"),
     btnFullscreen: document.getElementById("btnFullscreen"),
     stage: document.getElementById("stage"),
     statement: document.getElementById("statement"),
@@ -2928,7 +3018,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {
       type:"unequal_total_ratio",
       subType:"total_ratio",
-      family:"Avec un rapport connu",
+      family:"Total + rapport",
       bigName,
       smallName,
       small,
@@ -3537,6 +3627,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function solvedValue(){
+    const solved = solvedEquation();
+    return solved ? solved.value : null;
+  }
+
+  function solvedEquation(){
     const top = active("top");
     const bottom = active("bottom");
     if(!top.length || !bottom.length) return null;
@@ -3545,8 +3640,20 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const isAllX = arr => arr.every(p => p.type === "x");
     const allSameNumber = arr => isAllNumbers(arr) && arr.every(p => Number(p.value) === Number(arr[0].value));
 
-    if(allSameNumber(top) && isAllX(bottom) && top.length === bottom.length) return top[0].value;
-    if(allSameNumber(bottom) && isAllX(top) && top.length === bottom.length) return bottom[0].value;
+    if(allSameNumber(top) && isAllX(bottom) && top.length === bottom.length){
+      return {
+        value: top[0].value,
+        equation: top[0].value + " = " + unknown()
+      };
+    }
+
+    if(allSameNumber(bottom) && isAllX(top) && top.length === bottom.length){
+      return {
+        value: bottom[0].value,
+        equation: unknown() + " = " + bottom[0].value
+      };
+    }
+
     return null;
   }
 
@@ -3575,7 +3682,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           ? top.length
           : null;
       if(solvedCount !== null){
-        const solvedEq = unknown() + " = " + solvedCount;
+        const solvedEq = solvedCount + " = " + unknown();
         if(state.steps[state.steps.length - 1] !== solvedEq){
           state.steps.push(solvedEq);
         }
@@ -3590,7 +3697,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           ? top.length
           : null;
       if(solvedRatio !== null){
-        const solvedEq = unknown() + " = " + solvedRatio;
+        const solvedEq = solvedRatio + " = " + unknown();
         if(state.steps[state.steps.length - 1] !== solvedEq){
           state.steps.push(solvedEq);
         }
@@ -3598,9 +3705,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return;
     }
 
-    const value = solvedValue();
-    if(value !== null && value !== undefined){
-      const solvedEq = unknown() + " = " + value;
+    const solved = solvedEquation();
+    if(solved){
+      const solvedEq = solved.equation;
       if(state.steps[state.steps.length - 1] !== solvedEq){
         state.steps.push(solvedEq);
       }
@@ -3913,7 +4020,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
 
   function renderGroupedPreviewInSituationFrame(){
-    // Utilisé seulement pour Avec un écart connu et Avec un rapport connu dans l'étape Regrouper.
+    // Utilisé seulement pour Total + écart et Total + rapport dans l'étape Regrouper.
     // On utilise exactement les mêmes colonnes d'unités que le schéma de situation aligné :
     // un x, l'écart ou les parts supplémentaires, puis l'autre x quand on regroupe.
     const totalLabel = problem.total;
@@ -5038,8 +5145,6 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     const activeOther = active(otherSide);
 
-    // 1) Priorité aux sommes préfixes du bloc numérique de gauche :
-    //    13, puis 13+10=23 ; ensuite on inverse l'ordre pour proposer d'abord 23.
     const leftPrefixSums = [];
     let prefix = 0;
     for(const piece of activeOther){
@@ -5051,15 +5156,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
     leftPrefixSums.reverse().forEach(addAnchor);
 
-    // 2) Priorité secondaire : tout nombre déjà regroupé ailleurs dans le membre.
     for(const piece of activeOther){
       if(piece.type === "number"){
         addAnchor(Number(piece.value));
       }
     }
 
-    // 3) Sécurité : toutes les sommes de sous-ensembles numériques, au cas où
-    //    l'utilisateur veut s'aligner autrement.
     const nums = activeOther.filter(p => p.type === "number").map(p => Number(p.value)).filter(Number.isFinite);
     const subsetSums = new Set();
     const n = Math.min(nums.length, 8);
@@ -5092,7 +5194,6 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       }
     }
 
-    // Priorité : ce qui correspond à l'état actuel du schéma manipulable.
     numericAnchorsForDecomposition(value).forEach(n => addCandidateFromAnchor(n, true));
 
     const good = usefulDecomposition(value);
@@ -5482,6 +5583,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   el.btnGenerate.addEventListener("click", newProblem);
   el.btnReset.addEventListener("click", resetSameProblem);
+  if(el.btnCategoryHelp && el.categoryHelpDialog){
+    el.btnCategoryHelp.addEventListener("click", () => el.categoryHelpDialog.showModal());
+  }
+  if(el.btnCloseCategoryHelp && el.categoryHelpDialog){
+    el.btnCloseCategoryHelp.addEventListener("click", () => el.categoryHelpDialog.close());
+  }
   el.category.addEventListener("change", () => {
     updateOptionMenuVisibility();
     newProblem();
