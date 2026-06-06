@@ -1558,6 +1558,63 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   width:auto;
 }
 
+
+.ratioFindBoard{
+  width:min(960px,100%);
+  margin:0 auto;
+}
+.ratioSimplified{
+  margin:16px auto 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  font-size:clamp(24px,2.4vw,38px);
+  font-weight:950;
+  color:#0f172a;
+}
+.ratioArrow{
+  padding:8px 14px;
+  border-radius:999px;
+  background:#f8fafc;
+  border:2px solid rgba(15,23,42,.16);
+  color:#475569;
+}
+.ratioResult{
+  padding:10px 18px;
+  border-radius:18px;
+  background:linear-gradient(180deg,#f0fdf4,#ffffff);
+  border:2px solid rgba(34,197,94,.28);
+}
+
+
+.ratioFindGrid{
+  width:min(880px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:10px 0;
+  align-items:stretch;
+}
+.ratioFindGrid .part{
+  min-height:76px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(26px,2.4vw,40px);
+  font-weight:950;
+  border:2px solid var(--line);
+  background:#fff;
+}
+.ratioFindLabel{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:12px;
+  font-size:20px;
+  font-weight:950;
+  color:#334155;
+}
+
 </style>
 </head>
 <body>
@@ -1568,31 +1625,25 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     <label>Type de problème</label>
     <select id="category">
-      <option value="part_whole" selected>Tout et parties</option>
+      <option value="part_whole" selected>Tout-parties simple</option>
       <option value="transformation">Transformation</option>
-      <option value="comparison_additive">Comparer — écart</option>
-      <option value="comparison_multiplicative">Comparer — rapport</option>
+      <option value="comparison">Comparer</option>
       <option value="equal_groups">Groupes égaux</option>
-      <option value="unequal_total_diff">Total + écart</option>
-      <option value="unequal_total_ratio">Total + rapport</option>
-      <option value="ratio_total">Total + ratio</option>
+      <option value="unequal_total">Partages inégaux</option>
+      <option value="ratio">Ratios</option>
       <option value="multi_linked">Plusieurs quantités liées</option>
-      <option value="two_sided_linear">Équation composée</option>
       <option value="custom_mix">Mélange personnalisé</option>
     </select>
 
     <div id="customMixBox" class="mixBox" style="display:none">
       <div class="mixTitle">Catégories à mélanger</div>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="part_whole" checked> Tout et parties</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="part_whole" checked> Tout-parties simple</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="transformation" checked> Transformation</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison_additive" checked> Comparer — écart</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison_multiplicative" checked> Comparer — rapport</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison" checked> Comparer</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="equal_groups" checked> Groupes égaux</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total_diff" checked> Total + écart</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total_ratio" checked> Total + rapport</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="ratio_total" checked> Total + ratio</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total" checked> Partages inégaux</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="ratio" checked> Ratios</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="multi_linked" checked> Plusieurs quantités liées</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="two_sided_linear" checked> Équation composée</label>
       <div class="btnrow" style="margin-top:8px">
         <button class="ghost" id="btnMixAll" type="button">Tout cocher</button>
         <button class="ghost" id="btnMixNone" type="button">Tout décocher</button>
@@ -1611,6 +1662,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     <select id="partWholeMode">
       <option value="missing_part" selected>Chercher une partie</option>
       <option value="whole">Chercher le tout</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="comparisonTypeLabel">Type dans “Comparer”</label>
+    <select id="comparisonType">
+      <option value="additive" selected>Comparer par écart</option>
+      <option value="multiplicative">Comparer par rapport</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -1649,6 +1707,22 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="part" selected>Chercher la valeur d’une part</option>
       <option value="total">Chercher le total</option>
       <option value="count">Chercher le nombre de groupes</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="unequalTotalModeLabel">Type dans “Partages inégaux”</label>
+    <select id="unequalTotalMode">
+      <option value="diff" selected>Total + écart</option>
+      <option value="rapport">Total + rapport</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="ratioModeLabel">Type de problème dans “Ratios”</label>
+    <select id="ratioMode">
+      <option value="total2" selected>Partager un total — 2 quantités</option>
+      <option value="total3">Partager un total — 3 quantités</option>
+      <option value="find">Trouver le ratio</option>
+      <option value="missing">Quantité manquante</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -1766,20 +1840,35 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 (function(){
   "use strict";
 
-  const names = ["Lina","Noé","Sami","Jade","Maya","Tom","Nora","Eden","Anna","Basile"];
-  const objects = ["billes","cartes","coquillages","jetons","images","mangues","letchis","tickets"];
+  const names = [
+    "Lina","Noé","Sami","Jade","Maya","Tom","Nora","Eden","Anna","Basile",
+    "Inaya","Léo","Nina","Maël","Zoé","Ilyan","Sarah","Adam","Lou","Naël"
+  ];
 
+  const objects = [
+    "billes","cartes","jetons","images","autocollants","gommettes",
+    "perles","figurines","coquillages","tickets","crayons","feutres",
+    "mangues","letchis"
+  ];
 
   const objectGrammar = {
     billes:{gender:"f"},
     cartes:{gender:"f"},
     images:{gender:"f"},
+    gommettes:{gender:"f"},
+    perles:{gender:"f"},
+    figurines:{gender:"f"},
     mangues:{gender:"f"},
+    autocollants:{gender:"m"},
     coquillages:{gender:"m"},
     jetons:{gender:"m"},
     letchis:{gender:"m"},
-    tickets:{gender:"m"}
+    tickets:{gender:"m"},
+    crayons:{gender:"m"},
+    feutres:{gender:"m"}
   };
+
+  const colorBases = ["rouge","bleu","vert","jaune","violet","noir","blanc","rose","orange"];
 
   function isFeminineObject(obj){
     return objectGrammar[obj] && objectGrammar[obj].gender === "f";
@@ -1789,13 +1878,24 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const feminine = isFeminineObject(obj);
     if(base === "bleu") return feminine ? "bleues" : "bleus";
     if(base === "vert") return feminine ? "vertes" : "verts";
+    if(base === "violet") return feminine ? "violettes" : "violets";
+    if(base === "noir") return feminine ? "noires" : "noirs";
+    if(base === "blanc") return feminine ? "blanches" : "blancs";
+    if(base === "orange") return "orange";
     if(base === "rouge") return "rouges";
     if(base === "jaune") return "jaunes";
+    if(base === "rose") return "roses";
     return base;
   }
 
   function colorLabelsFor(obj){
-    return [colorLabel("rouge", obj), colorLabel("bleu", obj), colorLabel("vert", obj)];
+    const bases = [...colorBases];
+    const labels = [];
+    while(labels.length < 3 && bases.length){
+      const base = bases.splice(Math.floor(Math.random() * bases.length), 1)[0];
+      labels.push(colorLabel(base, obj));
+    }
+    return labels;
   }
 
   function pastParticiplePlural(verb, obj){
@@ -1803,6 +1903,28 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     if(verb === "perdre") return feminine ? "perdues" : "perdus";
     if(verb === "gagner") return feminine ? "gagnées" : "gagnés";
     return feminine ? "faites" : "faits";
+  }
+
+  function possessVerb(){
+    return pick(["a", "possède"]);
+  }
+
+  function totalIntroTwo(a, b, total, obj){
+    return pick([
+      a + " et " + b + " ont " + total + " " + obj + " en tout.",
+      "À eux deux, " + a + " et " + b + " ont " + total + " " + obj + ".",
+      "Ensemble, " + a + " et " + b + " possèdent " + total + " " + obj + ".",
+      "La collection de " + a + " et celle de " + b + " réunies contiennent " + total + " " + obj + "."
+    ]);
+  }
+
+  function totalIntroThree(a, b, c, total, obj){
+    return pick([
+      a + ", " + b + " et " + c + " ont " + total + " " + obj + " en tout.",
+      "À eux trois, " + a + ", " + b + " et " + c + " ont " + total + " " + obj + ".",
+      "Ensemble, " + a + ", " + b + " et " + c + " possèdent " + total + " " + obj + ".",
+      "Les collections de " + a + ", " + b + " et " + c + " réunies contiennent " + total + " " + obj + "."
+    ]);
   }
 
   const el = {
@@ -1815,6 +1937,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     partWholeStructureLabel: document.getElementById("partWholeStructureLabel"),
     partWholeMode: document.getElementById("partWholeMode"),
     partWholeModeLabel: document.getElementById("partWholeModeLabel"),
+    comparisonType: document.getElementById("comparisonType"),
+    comparisonTypeLabel: document.getElementById("comparisonTypeLabel"),
     comparisonRelation: document.getElementById("comparisonRelation"),
     comparisonRelationLabel: document.getElementById("comparisonRelationLabel"),
     comparisonMode: document.getElementById("comparisonMode"),
@@ -1825,6 +1949,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     transformationModeLabel: document.getElementById("transformationModeLabel"),
     equalGroupsMode: document.getElementById("equalGroupsMode"),
     equalGroupsModeLabel: document.getElementById("equalGroupsModeLabel"),
+    unequalTotalMode: document.getElementById("unequalTotalMode"),
+    unequalTotalModeLabel: document.getElementById("unequalTotalModeLabel"),
+    ratioMode: document.getElementById("ratioMode"),
+    ratioModeLabel: document.getElementById("ratioModeLabel"),
     level: document.getElementById("level"),
     unknownMode: document.getElementById("unknownMode"),
     equationDisplay: document.getElementById("equationDisplay"),
@@ -1991,15 +2119,36 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
 
     if(cat === "transformation") return generateTransformation(el.category.value === "custom_mix" ? "mix" : undefined);
+    if(cat === "comparison") return generateComparison(el.category.value === "custom_mix" ? "mix" : undefined);
     if(cat === "comparison_additive") return generateComparisonAdditive(el.category.value === "custom_mix" ? "mix" : undefined);
     if(cat === "comparison_multiplicative") return generateComparisonMultiplicative(el.category.value === "custom_mix" ? "mix" : undefined);
     if(cat === "equal_groups") return generateEqualGroups(el.category.value === "custom_mix" ? "mix" : undefined);
+    if(cat === "unequal_total") return generateUnequalTotal(el.category.value === "custom_mix" ? "mix" : undefined);
     if(cat === "unequal_total_diff") return generateUnequalTotalDiff();
     if(cat === "unequal_total_ratio") return generateUnequalTotalRatio();
+    if(cat === "ratio") return generateRatio(el.category.value === "custom_mix" ? "mix" : undefined);
+    // Compatibilité avec d'anciennes versions / liens éventuels.
     if(cat === "ratio_total") return generateRatioTotal();
+    if(cat === "ratio_total_three") return generateRatioTotalThree();
+    if(cat === "ratio_find") return generateRatioFind();
+    if(cat === "ratio_missing") return generateRatioMissing();
     if(cat === "multi_linked") return generateMultiLinked();
     if(cat === "two_sided_linear") return generateTwoSidedLinear();
     return generatePartWhole(el.category.value === "custom_mix" ? "mix" : undefined);
+  }
+
+  function generateComparison(modeOverride){
+    let type = modeOverride || (el.comparisonType ? el.comparisonType.value : "additive");
+    if(type === "mix") type = pick(["additive", "multiplicative"]);
+    if(type === "multiplicative") return generateComparisonMultiplicative(el.category.value === "custom_mix" ? "mix" : undefined);
+    return generateComparisonAdditive(el.category.value === "custom_mix" ? "mix" : undefined);
+  }
+
+  function generateUnequalTotal(modeOverride){
+    let type = modeOverride || (el.unequalTotalMode ? el.unequalTotalMode.value : "diff");
+    if(type === "mix") type = pick(["diff", "rapport"]);
+    if(type === "rapport") return generateUnequalTotalRatio();
+    return generateUnequalTotalDiff();
   }
 
   function generatePartWhole(modeOverride){
@@ -2516,8 +2665,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const perGroup = rint(rg.x[0], rg.x[1]);
     const total = groupCount * perGroup;
     const obj = pick(objects);
-    const containerPlural = pick(["boîtes","sachets","paniers","paquets","rangées"]);
-    const containerSingular = containerPlural.slice(0,-1);
+    const container = pick([
+      {singular:"boîte", plural:"boîtes"},
+      {singular:"sachet", plural:"sachets"},
+      {singular:"panier", plural:"paniers"},
+      {singular:"paquet", plural:"paquets"},
+      {singular:"rangée", plural:"rangées"}
+    ]);
+    const containerPlural = container.plural;
+    const containerSingular = container.singular;
 
     if(mode === "count"){
       return {
@@ -2603,12 +2759,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     // grande quantité = petite quantité + écart.
     const relationKind = Math.random() < 0.45 ? "less" : "more";
 
-    const totalIntro = pick([
-      bigName + " et " + smallName + " ont " + total + " " + obj + " en tout.",
-      "À eux deux, " + bigName + " et " + smallName + " ont " + total + " " + obj + ".",
-      "Ensemble, " + bigName + " et " + smallName + " ont " + total + " " + obj + ".",
-      bigName + " et " + smallName + " possèdent " + total + " " + obj + " au total."
-    ]);
+    const totalIntro = totalIntroTwo(bigName, smallName, total, obj);
 
     const relationRaw = relationKind === "less"
       ? smallName + " a " + diff + " " + obj + " de moins que " + bigName + "."
@@ -2665,11 +2816,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     // Les formulations “fois moins” sont ramenées au même schéma :
     // la grande quantité vaut ratio fois la petite quantité.
     const relationKind = Math.random() < 0.35 ? "less" : "more";
-    const totalIntro = pick([
-      bigName + " et " + smallName + " ont " + total + " " + obj + " en tout.",
-      "À eux deux, " + bigName + " et " + smallName + " ont " + total + " " + obj + ".",
-      "Ensemble, " + bigName + " et " + smallName + " ont " + total + " " + obj + "."
-    ]);
+    const totalIntro = totalIntroTwo(bigName, smallName, total, obj);
 
     const relationRaw = relationKind === "less"
       ? smallName + " en a " + ratio + " fois moins que " + bigName + "."
@@ -2713,6 +2860,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return pick([[1,2],[2,3],[3,4],[2,5]]);
   }
 
+  function generateRatio(modeOverride){
+    let mode = modeOverride || (el.ratioMode ? el.ratioMode.value : "mix");
+    if(mode === "mix"){
+      mode = pick(["total2", "total3", "find", "missing"]);
+    }
+    if(mode === "total2") return generateRatioTotal();
+    if(mode === "total3") return generateRatioTotalThree();
+    if(mode === "find") return generateRatioFind();
+    if(mode === "missing") return generateRatioMissing();
+    return generateRatioTotal();
+  }
+
   function generateRatioTotal(){
     const rg = range();
     const pair = ratioPairForLevel();
@@ -2725,11 +2884,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     let firstName = pick(names), secondName = pick(names);
     while(secondName === firstName) secondName = pick(names);
 
-    const intro = pick([
-      firstName + " et " + secondName + " ont " + total + " " + obj + " en tout.",
-      "À eux deux, " + firstName + " et " + secondName + " ont " + total + " " + obj + ".",
-      "Ensemble, " + firstName + " et " + secondName + " possèdent " + total + " " + obj + "."
-    ]);
+    const intro = totalIntroTwo(firstName, secondName, total, obj);
 
     const ratioSentence = "Le rapport entre la quantité de " + firstName + " et celle de " + secondName + " est " + a + ":" + b + ".";
 
@@ -2760,6 +2915,187 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     };
   }
 
+
+
+  function ratioTripleForLevel(){
+    if(el.level.value === "easy") return pick([[1,2,3],[1,1,2],[2,2,3]]);
+    if(el.level.value === "hard") return pick([[2,3,4],[2,3,5],[3,4,5],[1,3,5],[2,4,5]]);
+    return pick([[1,2,3],[2,3,4],[1,3,4],[2,2,3]]);
+  }
+
+  function generateRatioTotalThree(){
+    const rg = range();
+    const triple = ratioTripleForLevel();
+    const a = triple[0], b = triple[1], c = triple[2];
+    const unit = rint(rg.x[0], rg.x[1]);
+    const values = [a * unit, b * unit, c * unit];
+    const total = values.reduce((s,v)=>s+v,0);
+    const obj = pick(objects);
+    const people = [];
+    while(people.length < 3){
+      const n = pick(names);
+      if(!people.includes(n)) people.push(n);
+    }
+
+    const ratioText = a + ":" + b + ":" + c;
+    const namesText = people[0] + ":" + people[1] + ":" + people[2];
+
+    const intro = totalIntroThree(people[0], people[1], people[2], total, obj);
+
+    return {
+      type:"ratio_total_three",
+      subType:"total_ratio_three",
+      family:"Total + ratio à 3",
+      people,
+      ratioParts:[a,b,c],
+      values,
+      unit,
+      x:unit,
+      total,
+      pieces:Array.from({length:a + b + c}, () => ({type:"x",value:"x"})),
+      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien de " + obj + " chacun a-t-il ?",
+      highlightedStatement:
+        intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
+        "Le ratio " + namesText + " est <mark>" + ratioText + "</mark>. " +
+        "<mark class='question'>Combien de " + obj + " chacun a-t-il ?</mark>",
+      emptyText:"On prépare un partage selon un ratio à trois termes. Chaque part du ratio correspond à une même unité inconnue.",
+      fillText:people[0] + " reçoit " + a + " part(s), " + people[1] + " reçoit " + b + " part(s), et " + people[2] + " reçoit " + c + " part(s).",
+      context:"Total = " + total + " ; ratio = " + ratioText,
+      answer:people[0] + " a " + values[0] + " " + obj + ", " + people[1] + " a " + values[1] + " " + obj + " et " + people[2] + " a " + values[2] + " " + obj + ".",
+      check:(a + b + c) + " parts valent " + total + ", donc 1 part vaut " + unit + "."
+    };
+  }
+
+  function gcd(a,b){
+    a = Math.abs(Number(a));
+    b = Math.abs(Number(b));
+    while(b){
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function ratioFindPairForLevel(){
+    if(el.level.value === "easy") return pick([[1,2],[2,3],[1,3],[3,4]]);
+    if(el.level.value === "hard") return pick([[2,3],[3,4],[2,5],[3,5],[4,5],[5,6]]);
+    return pick([[1,2],[2,3],[3,4],[2,5],[4,5]]);
+  }
+
+  function generateRatioFind(){
+    const rg = range();
+    const pair = ratioFindPairForLevel();
+    const a = pair[0], b = pair[1];
+    const factor = rint(el.level.value === "easy" ? 3 : 5, el.level.value === "hard" ? 18 : 12);
+    const first = a * factor;
+    const second = b * factor;
+    const obj = pick(objects);
+    let firstName = pick(names), secondName = pick(names);
+    while(secondName === firstName) secondName = pick(names);
+
+    const rawStatement = firstName + " a " + first + " " + obj + ". " +
+      secondName + " a " + second + " " + obj + ". " +
+      "Quel est le ratio entre la quantité de " + firstName + " et celle de " + secondName + " ?";
+
+    const highlightedStatement =
+      firstName + " a <mark>" + first + " " + obj + "</mark>. " +
+      secondName + " a <mark>" + second + " " + obj + "</mark>. " +
+      "<mark class='question'>Quel est le ratio entre la quantité de " + firstName + " et celle de " + secondName + " ?</mark>";
+
+    return {
+      type:"ratio_find",
+      subType:"find_ratio",
+      family:"Trouver le ratio",
+      firstName,
+      secondName,
+      first,
+      second,
+      a,
+      b,
+      factor,
+      x:factor,
+      total:first + second,
+      pieces:[
+        {type:"number",value:first},
+        {type:"number",value:second}
+      ],
+      topPieces:[
+        {type:"number",value:first}
+      ],
+      bottomPieces:[
+        {type:"number",value:second}
+      ],
+      rawStatement,
+      highlightedStatement,
+      emptyText:"On prépare deux barres : une pour chaque quantité. Le ratio compare ces deux quantités dans le même ordre que la question.",
+      fillText:"On écrit d’abord le ratio avec les quantités données, puis on le simplifie.",
+      context:firstName + " = " + first + " ; " + secondName + " = " + second,
+      answer:"Le ratio " + firstName + " : " + secondName + " est " + a + ":" + b + ".",
+      check:first + ":" + second + " = " + a + ":" + b + " car on divise les deux nombres par " + factor + "."
+    };
+  }
+
+
+  function generateRatioMissing(){
+    const rg = range();
+    const pair = ratioFindPairForLevel();
+    const a = pair[0], b = pair[1];
+    const unit = rint(rg.x[0], rg.x[1]);
+    const first = a * unit;
+    const second = b * unit;
+    const obj = pick(objects);
+    let firstName = pick(names), secondName = pick(names);
+    while(secondName === firstName) secondName = pick(names);
+
+    const knownSide = Math.random() < 0.5 ? "first" : "second";
+    const knownName = knownSide === "first" ? firstName : secondName;
+    const missingName = knownSide === "first" ? secondName : firstName;
+    const knownValue = knownSide === "first" ? first : second;
+    const missingValue = knownSide === "first" ? second : first;
+    const knownParts = knownSide === "first" ? a : b;
+    const missingParts = knownSide === "first" ? b : a;
+
+    const rawStatement =
+      "Le ratio " + firstName + ":" + secondName + " est " + a + ":" + b + ". " +
+      knownName + " a " + knownValue + " " + obj + ". " +
+      "Combien de " + obj + " possède " + missingName + " ?";
+
+    const highlightedStatement =
+      "Le ratio " + firstName + ":" + secondName + " est <mark>" + a + ":" + b + "</mark>. " +
+      knownName + " a <mark>" + knownValue + " " + obj + "</mark>. " +
+      "<mark class='question'>Combien de " + obj + " possède " + missingName + " ?</mark>";
+
+    return {
+      type:"ratio_missing",
+      subType:knownSide === "first" ? "find_second" : "find_first",
+      family:"Ratio — quantité manquante",
+      firstName,
+      secondName,
+      knownName,
+      missingName,
+      a,
+      b,
+      unit,
+      first,
+      second,
+      knownValue,
+      missingValue,
+      knownParts,
+      missingParts,
+      x: unit,
+      total: missingValue,
+      pieces:Array.from({length:knownParts}, () => ({type:"x",value:"x"})),
+      rawStatement,
+      highlightedStatement,
+      emptyText:"On représente le ratio par des parts égales. La quantité connue permet de trouver la valeur d’une part.",
+      fillText:knownName + " correspond à " + knownParts + " part(s). " + missingName + " correspond à " + missingParts + " part(s).",
+      context:"Ratio = " + a + ":" + b + " ; " + knownName + " = " + knownValue,
+      answer:missingName + " possède " + missingValue + " " + obj + ".",
+      check:knownParts + " part(s) = " + knownValue + ", donc 1 part = " + unit + " et " + missingParts + " part(s) = " + missingValue + "."
+    };
+  }
+
   function multiLinkedMultiplierForLevel(){
     if(el.level.value === "easy") return 2;
     if(el.level.value === "hard") return pick([2, 3, 4]);
@@ -2771,8 +3107,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const ref = rint(rg.x[0], rg.x[1]);
     const diff = rint(rg.diff[0], rg.diff[1]);
     const multiplier = multiLinkedMultiplierForLevel();
+    const isChain = Math.random() < 0.45;
+
+    // Référent commun : C = A + écart.
+    // Chaîne simple : C = B + écart, avec B = kA.
+    const plusMultiplier = isChain ? multiplier : 1;
     const relationValue = multiplier * ref;
-    const plusValue = ref + diff;
+    const plusValue = plusMultiplier * ref + diff;
     const total = ref + relationValue + plusValue;
     const obj = pick(["jetons","billes","cartes","coquillages","images"]);
     const labels = Math.random() < 0.75 ? colorLabelsFor(obj) : ["A","B","C"];
@@ -2783,7 +3124,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const totalIntro = pick([
       "Il y a " + total + " " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " en tout.",
       "Ensemble, les " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " sont au nombre de " + total + ".",
-      "Au total, il y a " + total + " " + obj + " répartis entre les " + labels[0] + ", les " + labels[1] + " et les " + labels[2] + "."
+      "Au total, il y a " + total + " " + obj + " répartis entre les " + labels[0] + ", les " + labels[1] + " et les " + labels[2] + ".",
+      "Les trois collections de " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " contiennent ensemble " + total + " " + obj + "."
     ]);
 
     const ratioRaw = relationKind === "less"
@@ -2793,18 +3135,20 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       ? "Il y a <mark>" + multiplier + " fois moins de " + obj + " " + labels[0] + "</mark> que de " + obj + " " + labels[1] + "."
       : "Il y a <mark>" + multiplier + " fois plus de " + obj + " " + labels[1] + "</mark> que de " + obj + " " + labels[0] + ".";
 
+    const diffBaseLabel = isChain ? labels[1] : labels[0];
     const diffRaw = diffKind === "less"
-      ? "Il y a " + diff + " " + obj + " " + labels[0] + " de moins que de " + obj + " " + labels[2] + "."
-      : "Il y a " + diff + " " + obj + " " + labels[2] + " de plus que de " + obj + " " + labels[0] + ".";
+      ? "Il y a " + diff + " " + obj + " " + diffBaseLabel + " de moins que de " + obj + " " + labels[2] + "."
+      : "Il y a " + diff + " " + obj + " " + labels[2] + " de plus que de " + obj + " " + diffBaseLabel + ".";
     const diffHighlighted = diffKind === "less"
-      ? "Il y a <mark>" + diff + " " + obj + " " + labels[0] + " de moins</mark> que de " + obj + " " + labels[2] + "."
-      : "Il y a <mark>" + diff + " " + obj + " " + labels[2] + " de plus</mark> que de " + obj + " " + labels[0] + ".";
+      ? "Il y a <mark>" + diff + " " + obj + " " + diffBaseLabel + " de moins</mark> que de " + obj + " " + labels[2] + "."
+      : "Il y a <mark>" + diff + " " + obj + " " + labels[2] + " de plus</mark> que de " + obj + " " + diffBaseLabel + ".";
 
     const totalHighlighted = totalIntro.replace(String(total), "<mark class='relation'>" + total + "</mark>");
+    const xCount = 1 + multiplier + plusMultiplier;
 
     return {
       type:"multi_linked",
-      subType:"canonical",
+      subType:isChain ? "chain_mixed" : "common_reference",
       family:"Plusieurs quantités liées",
       refLabel: labels[0],
       doubleLabel: labels[1],
@@ -2812,12 +3156,13 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       ref,
       diff,
       multiplier,
+      plusMultiplier,
       relationValue,
       plusValue,
       total,
       x: ref,
       pieces:[
-        ...Array.from({length:multiplier + 2}, () => ({type:"x",value:"x"})),
+        ...Array.from({length:xCount}, () => ({type:"x",value:"x"})),
         {type:"number",value:diff}
       ],
       rawStatement: totalIntro + " " + ratioRaw + " " + diffRaw + " Combien y a-t-il de " + obj + " " + labels[0] + " ?",
@@ -2826,8 +3171,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         ratioHighlighted + " " +
         diffHighlighted + " " +
         "<mark class='question'>Combien y a-t-il de " + obj + " " + labels[0] + " ?</mark>",
-      emptyText:"On choisit une quantité de référence. Les autres quantités sont construites à partir de cette référence.",
-      fillText:"La référence est inconnue. Une quantité vaut plusieurs références, et une autre vaut une référence plus un écart.",
+      emptyText:isChain
+        ? "On suit une chaîne : une quantité dépend de la référence, puis une autre dépend de cette quantité."
+        : "On choisit une quantité de référence. Les autres quantités sont construites à partir de cette référence.",
+      fillText:isChain
+        ? "La référence est inconnue. Une quantité vaut plusieurs références, puis la troisième vaut cette quantité plus un écart."
+        : "La référence est inconnue. Une quantité vaut plusieurs références, et une autre vaut une référence plus un écart.",
       context:"Total = " + total + " ; rapport = " + multiplier + " fois ; écart = " + diff,
       answer:"Il y a " + ref + " " + obj + " " + labels[0] + ".",
       check: ref + " + " + relationValue + " + " + plusValue + " = " + total + "."
@@ -3208,9 +3557,24 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       cards.push(understandCard("Que cherche-t-on ?", "les deux quantités"));
       cards.push(understandCard("Que signifie le ratio ?", problem.firstName + " a " + problem.a + " part(s) et " + problem.secondName + " a " + problem.b + " part(s)."));
       cards.push(understandCard("Quelle idée utiliser ?", "Partager le total en " + (problem.a + problem.b) + " parts égales."));
+    }else if(problem.type === "ratio_total_three"){
+      cards.push(understandCard("Que cherche-t-on ?", "les trois quantités"));
+      cards.push(understandCard("Que signifie le ratio ?", problem.people[0] + " a " + problem.ratioParts[0] + " part(s), " + problem.people[1] + " a " + problem.ratioParts[1] + " part(s), " + problem.people[2] + " a " + problem.ratioParts[2] + " part(s)."));
+      cards.push(understandCard("Quelle idée utiliser ?", "Partager le total en " + problem.ratioParts.reduce((s,v)=>s+v,0) + " parts égales."));
+    }else if(problem.type === "ratio_find"){
+      cards.push(understandCard("Que cherche-t-on ?", "un ratio simplifié"));
+      cards.push(understandCard("Dans quel ordre écrire le ratio ?", problem.firstName + " : " + problem.secondName));
+      cards.push(understandCard("Quelle idée utiliser ?", "Diviser les deux quantités par le même nombre."));
+    }else if(problem.type === "ratio_missing"){
+      cards.push(understandCard("Que cherche-t-on ?", "une quantité manquante"));
+      cards.push(understandCard("Que signifie le ratio ?", problem.firstName + " a " + problem.a + " part(s) et " + problem.secondName + " a " + problem.b + " part(s)."));
+      cards.push(understandCard("Quelle idée utiliser ?", "Trouver d’abord la valeur d’une part."));
     }else if(problem.type === "multi_linked"){
       cards.push(understandCard("Que cherche-t-on ?", "la quantité de référence"));
-      cards.push(understandCard("Les quantités sont-elles indépendantes ?", "Non : elles sont toutes liées à la même quantité de référence."));
+      const dependency = problem.subType === "chain_mixed"
+        ? "Non : on suit une chaîne de relations entre les quantités."
+        : "Non : elles sont toutes liées à la même quantité de référence.";
+      cards.push(understandCard("Les quantités sont-elles indépendantes ?", dependency));
       cards.push(understandCard("Quelle est la référence ?", problem.refLabel + " correspond à la quantité cherchée."));
     }else if(problem.type === "two_sided_linear"){
       cards.push(understandCard("Que cherche-t-on ?", "la valeur d’un paquet identique"));
@@ -3292,7 +3656,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       el.statement.innerHTML = problem.highlightedStatement;
       el.schemaSection.style.display = "";
       el.schemaTitle.textContent = "Schéma en barre manipulable";
-      el.toolBar.style.display = "";
+      el.toolBar.style.display = (problem.type === "ratio_find" || problem.type === "ratio_missing") ? "none" : "";
       renderEquabar();
     }
 
@@ -3469,8 +3833,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function renderGroupedPreview(){
     if(problem.type === "multi_linked"){
       const xLabel = unknown();
-      const xCount = (problem.multiplier || 2) + 2;
-      const totalCols = xCount + 3;
+      const xCount = 1 + (problem.multiplier || 2) + (problem.plusMultiplier || 1);
       let xParts = "";
       for(let i = 0; i < xCount; i++){
         const cls = "multiGroupPart unknown " + (i === 0 ? "first " : "");
@@ -3499,11 +3862,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const diffLabel = filled ? problem.diff : "&nbsp;";
     const totalLabel = filled ? problem.total : "total";
     const multiplier = problem.multiplier || 2;
+    const plusMultiplier = problem.plusMultiplier || 1;
 
-    const totalUnits = ((multiplier + 2) * problem.ref) + problem.diff;
+    const totalUnits = ((1 + multiplier + plusMultiplier) * problem.ref) + problem.diff;
     const refUnits = problem.ref;
     const relationUnits = multiplier * problem.ref;
-    const plusUnits = problem.ref + problem.diff;
+    const plusUnits = plusMultiplier * problem.ref + problem.diff;
     const maxUnits = Math.max(refUnits, relationUnits, plusUnits);
 
     const rowsCoef = (maxUnits / totalUnits).toFixed(6);
@@ -3516,12 +3880,22 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       relationParts += "<div class='multiPart unknown " + (i === 0 ? "joinRight" : "joinLeft") + "' style='flex:" + problem.ref + "'>" + xLabel + "</div>";
     }
 
+    let plusParts = "";
+    for(let i = 0; i < plusMultiplier; i++){
+      plusParts += "<div class='multiPart unknown " + (i === 0 ? "joinRight" : "joinLeft") + "' style='flex:" + problem.ref + "'>" + xLabel + "</div>";
+    }
+    plusParts += "<div class='multiPart diff joinLeft' style='flex:" + problem.diff + "'>" + diffLabel + "</div>";
+
+    const thirdLabel = problem.subType === "chain_mixed"
+      ? ((filled ? problem.plusLabel : "Chaîne") + " = " + (filled ? problem.doubleLabel : "précédent") + " + écart")
+      : (filled ? problem.plusLabel : "Réf. + écart");
+
     return "<div class='multiBoard' style='--rowsW:calc(var(--refW) * " + rowsCoef + ")'>" +
       "<div class='multiSituation'>" +
         "<div class='multiLabels'>" +
           "<div class='multiLabel'>" + (filled ? problem.refLabel : "Référence") + "</div>" +
           "<div class='multiLabel'>" + (filled ? problem.doubleLabel : multiplier + " fois") + "</div>" +
-          "<div class='multiLabel'>" + (filled ? problem.plusLabel : "Réf. + écart") + "</div>" +
+          "<div class='multiLabel'>" + thirdLabel + "</div>" +
         "</div>" +
         "<div class='multiRowsArea'>" +
           "<div class='multiRows'>" +
@@ -3529,10 +3903,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
               "<div class='multiPart unknown' style='flex:" + problem.ref + "'>" + xLabel + "</div>" +
             "</div>" +
             "<div class='multiRow' style='width:" + relationPct + "%'>" + relationParts + "</div>" +
-            "<div class='multiRow' style='width:" + plusPct + "%'>" +
-              "<div class='multiPart unknown joinRight' style='flex:" + problem.ref + "'>" + xLabel + "</div>" +
-              "<div class='multiPart diff joinLeft' style='flex:" + problem.diff + "'>" + diffLabel + "</div>" +
-            "</div>" +
+            "<div class='multiRow' style='width:" + plusPct + "%'>" + plusParts + "</div>" +
           "</div>" +
         "</div>" +
         "<div class='multiTotal'>" + totalLabel + "</div>" +
@@ -3543,6 +3914,113 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
 
 
+
+
+
+  function renderRatioMissingSchema(filled=true, solved=false){
+    const n = problem.a + problem.b;
+    const knownStart = problem.subType === "find_second" ? 1 : problem.a + 1;
+    const knownEnd = problem.subType === "find_second" ? problem.a + 1 : n + 1;
+    const missingStart = problem.subType === "find_second" ? problem.a + 1 : 1;
+    const missingEnd = problem.subType === "find_second" ? n + 1 : problem.a + 1;
+
+    let bottomParts = "";
+    for(let i = 0; i < n; i++){
+      const cls = "part unknown " + (i === 0 ? "first " : "") + (i === n - 1 ? "last" : "");
+      const label = solved ? problem.unit : (filled ? unknown() : "&nbsp;");
+      bottomParts += "<div class='" + cls + "' style='grid-column:" + (i + 1) + "'>" + label + "</div>";
+    }
+
+    const knownTop = filled ? problem.knownValue : "quantité connue";
+    const missingTop = solved ? problem.missingValue : (filled ? xTerm(problem.missingParts) : "quantité cherchée");
+
+    let solutionBlock = "";
+    if(solved){
+      solutionBlock =
+        "<div class='ratioSimplified'>" +
+          "<div class='ratioArrow'>" + problem.knownParts + " part(s) = " + problem.knownValue + "</div>" +
+          "<div class='ratioResult'>1 part = " + problem.unit + " ; " + problem.missingParts + " part(s) = " + problem.missingValue + "</div>" +
+        "</div>";
+    }
+
+    return "<div class='equabarPreview ratioTotalBoard'>" +
+      "<div class='schemaBoard'>" +
+        "<div class='barLine top' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" +
+          "<div class='part' style='grid-column:" + knownStart + " / " + knownEnd + "'>" + knownTop + "</div>" +
+          "<div class='part unknown' style='grid-column:" + missingStart + " / " + missingEnd + "'>" + missingTop + "</div>" +
+        "</div>" +
+        "<div class='barLine bottom' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" + bottomParts + "</div>" +
+        "<div class='unequalOwnerBraces' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" +
+          "<div class='ownerBrace' style='grid-column:1 / " + (problem.a + 1) + "'>" + (filled ? problem.firstName : "1re quantité") + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (problem.a + 1) + " / " + (n + 1) + "'>" + (filled ? problem.secondName : "2e quantité") + "</div>" +
+        "</div>" +
+      "</div>" +
+      solutionBlock +
+    "</div>";
+  }
+
+
+  function renderRatioTotalThreeSchema(filled=true){
+    const xLabel = filled ? unknown() : "&nbsp;";
+    const totalLabel = filled ? problem.total : "total";
+    const n = problem.ratioParts.reduce((s,v)=>s+v,0);
+    const p0 = problem.ratioParts[0];
+    const p1 = problem.ratioParts[1];
+    const p2 = problem.ratioParts[2];
+
+    let parts = "";
+    for(let i = 0; i < n; i++){
+      const cls = "part unknown " + (i === 0 ? "first " : "") + (i === n - 1 ? "last" : "");
+      parts += "<div class='" + cls + "' style='grid-column:" + (i + 1) + "'>" + xLabel + "</div>";
+    }
+
+    const name0 = filled ? problem.people[0] : "1re quantité";
+    const name1 = filled ? problem.people[1] : "2e quantité";
+    const name2 = filled ? problem.people[2] : "3e quantité";
+
+    return "<div class='equabarPreview ratioTotalBoard'>" +
+      "<div class='schemaBoard'>" +
+        "<div class='barLine top' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" +
+          "<div class='part' style='grid-column:1 / " + (n + 1) + "'>" + totalLabel + "</div>" +
+        "</div>" +
+        "<div class='barLine bottom' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" + parts + "</div>" +
+        "<div class='unequalOwnerBraces' style='grid-template-columns:repeat(" + n + ", 1fr);width:100%'>" +
+          "<div class='ownerBrace' style='grid-column:1 / " + (p0 + 1) + "'>" + name0 + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (p0 + 1) + " / " + (p0 + p1 + 1) + "'>" + name1 + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (p0 + p1 + 1) + " / " + (n + 1) + "'>" + name2 + "</div>" +
+        "</div>" +
+      "</div>" +
+    "</div>";
+  }
+
+  function renderRatioFindSchema(filled=true, simplified=false){
+    const firstLabel = filled ? problem.first : "&nbsp;";
+    const secondLabel = filled ? problem.second : "&nbsp;";
+    const maxParts = Math.max(problem.a, problem.b);
+    const firstEnd = problem.a + 1;
+    const secondEnd = problem.b + 1;
+
+    let simplifiedBlock = "";
+    if(simplified){
+      simplifiedBlock =
+        "<div class='ratioSimplified'>" +
+          "<div class='ratioArrow'>÷ " + problem.factor + "</div>" +
+          "<div class='ratioResult'>" + problem.firstName + " : " + problem.secondName + " = " + problem.a + ":" + problem.b + "</div>" +
+        "</div>";
+    }
+
+    return "<div class='equabarPreview ratioFindBoard'>" +
+      "<div class='schemaBoard'>" +
+        "<div class='ratioFindGrid' style='grid-template-columns:120px repeat(" + maxParts + ", 1fr)'>" +
+          "<div class='ratioFindLabel' style='grid-column:1;grid-row:1'>" + (filled ? problem.firstName : "1re quantité") + "</div>" +
+          "<div class='part' style='grid-column:2 / " + (firstEnd + 1) + ";grid-row:1'>" + firstLabel + "</div>" +
+          "<div class='ratioFindLabel' style='grid-column:1;grid-row:2'>" + (filled ? problem.secondName : "2e quantité") + "</div>" +
+          "<div class='part' style='grid-column:2 / " + (secondEnd + 1) + ";grid-row:2'>" + secondLabel + "</div>" +
+        "</div>" +
+      "</div>" +
+      simplifiedBlock +
+    "</div>";
+  }
 
   function renderRatioTotalSchema(filled=true){
     const xLabel = filled ? unknown() : "&nbsp;";
@@ -3656,6 +4134,21 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     if(problem.type === "ratio_total"){
       el.barArea.innerHTML = renderRatioTotalSchema(false);
+      return;
+    }
+
+    if(problem.type === "ratio_total_three"){
+      el.barArea.innerHTML = renderRatioTotalThreeSchema(false);
+      return;
+    }
+
+    if(problem.type === "ratio_find"){
+      el.barArea.innerHTML = renderRatioFindSchema(false);
+      return;
+    }
+
+    if(problem.type === "ratio_missing"){
+      el.barArea.innerHTML = renderRatioMissingSchema(false);
       return;
     }
 
@@ -3806,6 +4299,21 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     if(problem.type === "ratio_total"){
       el.barArea.innerHTML = renderRatioTotalSchema(true);
+      return;
+    }
+
+    if(problem.type === "ratio_total_three"){
+      el.barArea.innerHTML = renderRatioTotalThreeSchema(true);
+      return;
+    }
+
+    if(problem.type === "ratio_find"){
+      el.barArea.innerHTML = renderRatioFindSchema(true);
+      return;
+    }
+
+    if(problem.type === "ratio_missing"){
+      el.barArea.innerHTML = renderRatioMissingSchema(true);
       return;
     }
 
@@ -4036,6 +4544,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<div class='ownerBrace' style='grid-column:1 / " + (problem.a + 1) + "'>" + problem.firstName + "</div>" +
           "<div class='ownerBrace' style='grid-column:" + (problem.a + 1) + " / " + (n + 1) + "'>" + problem.secondName + "</div>" +
         "</div>";
+    }else if(problem.type === "ratio_total_three"){
+      const n = problem.ratioParts.reduce((s,v)=>s+v,0);
+      const p0 = problem.ratioParts[0], p1 = problem.ratioParts[1];
+      ownerBraces = "<div class='unequalOwnerBraces' style='" + bottomLine.style + "'>" +
+          "<div class='ownerBrace' style='grid-column:1 / " + (p0 + 1) + "'>" + problem.people[0] + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (p0 + 1) + " / " + (p0 + p1 + 1) + "'>" + problem.people[1] + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (p0 + p1 + 1) + " / " + (n + 1) + "'>" + problem.people[2] + "</div>" +
+        "</div>";
     }
 
     return "<div class='equabarPreview'>" +
@@ -4082,6 +4598,26 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function renderEquabar(){
+    if(problem.type === "ratio_find"){
+      el.barArea.innerHTML = renderRatioFindSchema(true, true);
+      if(el.equationBelowTools){
+        el.equationBelowTools.innerHTML = el.equationDisplay.value === "yes"
+          ? "<div class='equationHistory'><div>" + problem.first + ":" + problem.second + " = " + problem.a + ":" + problem.b + "</div></div>"
+          : "";
+      }
+      return;
+    }
+
+    if(problem.type === "ratio_missing"){
+      el.barArea.innerHTML = renderRatioMissingSchema(true, true);
+      if(el.equationBelowTools){
+        el.equationBelowTools.innerHTML = el.equationDisplay.value === "yes"
+          ? "<div class='equationHistory'><div>" + problem.knownParts + " parts = " + problem.knownValue + "</div><div>1 part = " + problem.unit + "</div><div>" + problem.missingParts + " parts = " + problem.missingValue + "</div></div>"
+          : "";
+      }
+      return;
+    }
+
     if(problem.type === "comparison_multiplicative" && problem.subType === "ratio"){
       const equation = state.steps.map((s,i) => "<div class='" + (i < state.steps.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
       const equationBlock = el.equationDisplay.value === "yes"
@@ -4249,7 +4785,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return Array.from({length:problem.ratio + 1}, () => problem.small).join(" + ");
     }
     if(problem.type === "multi_linked"){
-      return (4 * problem.ref) + " + " + problem.diff;
+      const xCount = 1 + (problem.multiplier || 2) + (problem.plusMultiplier || 1);
+      return (xCount * problem.ref) + " + " + problem.diff;
     }
     return problem.known + " + " + problem.x;
   }
@@ -4651,11 +5188,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   });
   if(el.partWholeStructure) el.partWholeStructure.addEventListener("change", newProblem);
   el.partWholeMode.addEventListener("change", newProblem);
+  if(el.comparisonType) el.comparisonType.addEventListener("change", () => {
+    updateOptionMenuVisibility();
+    newProblem();
+  });
   if(el.comparisonRelation) el.comparisonRelation.addEventListener("change", newProblem);
   el.comparisonMode.addEventListener("change", newProblem);
   if(el.transformationKind) el.transformationKind.addEventListener("change", newProblem);
   el.transformationMode.addEventListener("change", newProblem);
   el.equalGroupsMode.addEventListener("change", newProblem);
+  if(el.unequalTotalMode) el.unequalTotalMode.addEventListener("change", newProblem);
+  if(el.ratioMode) el.ratioMode.addEventListener("change", newProblem);
   el.mixChecks.forEach(cb => cb.addEventListener("change", () => {
     if(el.category.value === "custom_mix") newProblem();
   }));
@@ -4725,23 +5268,36 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     el.partWholeMode.style.display = showPartWhole ? "" : "none";
     el.partWholeModeLabel.style.display = showPartWhole ? "" : "none";
 
-    const showComparison = el.category.value === "comparison_additive" || el.category.value === "comparison_multiplicative";
-    const isMultiplicativeComparison = el.category.value === "comparison_multiplicative";
+    const showComparison = el.category.value === "comparison" ||
+      el.category.value === "comparison_additive" ||
+      el.category.value === "comparison_multiplicative";
+    const selectedComparisonType = el.category.value === "comparison_multiplicative"
+      ? "multiplicative"
+      : (el.category.value === "comparison_additive" ? "additive" : (el.comparisonType ? el.comparisonType.value : "additive"));
+    const isMultiplicativeComparison = selectedComparisonType === "multiplicative";
+    const isMixedComparison = selectedComparisonType === "mix";
+
+    if(el.comparisonType){
+      el.comparisonType.style.display = el.category.value === "comparison" ? "" : "none";
+      el.comparisonTypeLabel.style.display = el.category.value === "comparison" ? "" : "none";
+    }
+
     if(el.comparisonRelation){
       el.comparisonRelation.style.display = showComparison ? "" : "none";
       el.comparisonRelationLabel.style.display = showComparison ? "" : "none";
       if(showComparison){
-        el.comparisonRelationLabel.textContent = isMultiplicativeComparison ? "Relation dans “Comparer — rapport”" : "Relation dans “Comparer — écart”";
-        el.comparisonRelation.options[0].textContent = isMultiplicativeComparison ? "Fois plus" : "De plus";
-        el.comparisonRelation.options[1].textContent = isMultiplicativeComparison ? "Fois moins" : "De moins";
+        el.comparisonRelationLabel.textContent = isMixedComparison ? "Relation dans “Comparer”" : (isMultiplicativeComparison ? "Relation dans “Comparer — rapport”" : "Relation dans “Comparer — écart”");
+        el.comparisonRelation.options[0].textContent = isMultiplicativeComparison ? "Fois plus" : (isMixedComparison ? "De plus / fois plus" : "De plus");
+        el.comparisonRelation.options[1].textContent = isMultiplicativeComparison ? "Fois moins" : (isMixedComparison ? "De moins / fois moins" : "De moins");
       }
     }
+
     el.comparisonMode.style.display = showComparison ? "" : "none";
     el.comparisonModeLabel.style.display = showComparison ? "" : "none";
     if(showComparison){
-      el.comparisonModeLabel.textContent = isMultiplicativeComparison ? "Question dans “Comparer — rapport”" : "Question dans “Comparer — écart”";
+      el.comparisonModeLabel.textContent = isMixedComparison ? "Question dans “Comparer”" : (isMultiplicativeComparison ? "Question dans “Comparer — rapport”" : "Question dans “Comparer — écart”");
       el.comparisonMode.options[2].style.display = "";
-      el.comparisonMode.options[2].textContent = isMultiplicativeComparison ? "Chercher le rapport" : "Chercher l’écart";
+      el.comparisonMode.options[2].textContent = isMultiplicativeComparison ? "Chercher le rapport" : (isMixedComparison ? "Chercher l’écart / le rapport" : "Chercher l’écart");
     }
 
     const showTransformation = el.category.value === "transformation";
@@ -4755,6 +5311,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const showEqualGroups = el.category.value === "equal_groups";
     el.equalGroupsMode.style.display = showEqualGroups ? "" : "none";
     el.equalGroupsModeLabel.style.display = showEqualGroups ? "" : "none";
+
+    const showUnequalTotal = el.category.value === "unequal_total";
+    if(el.unequalTotalMode){
+      el.unequalTotalMode.style.display = showUnequalTotal ? "" : "none";
+      el.unequalTotalModeLabel.style.display = showUnequalTotal ? "" : "none";
+    }
+
+    const showRatios = el.category.value === "ratio";
+    if(el.ratioMode){
+      el.ratioMode.style.display = showRatios ? "" : "none";
+      el.ratioModeLabel.style.display = showRatios ? "" : "none";
+    }
   }
 
   updateOptionMenuVisibility();
