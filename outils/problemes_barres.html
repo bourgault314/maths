@@ -196,32 +196,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
 /* Regrouper — comparer deux quantités :
    l'aperçu Équabarre utilise le même gabarit visuel que le schéma de situation. */
 .compareGroupStage{
-  width:min(940px,100%);
+  width:min(980px,100%);
   margin:0 auto;
 }
 .compareGroupStage .situationMini{
   margin-bottom:0;
 }
-.compareGroupStage .equabarPreview{
-  width:min(760px,100%);
-  margin:34px auto 0;
-}
-.compareGroupStage .equabarPreview .schemaBoard{
+/* Quand le schéma de situation et le schéma regroupé sont affichés ensemble,
+   ils partagent le même cadre visuel. La résolution manipulable garde son format propre. */
+.compareGroupStage .compareSituationBoard,
+.compareGroupStage .compareRegroupPreview{
   width:100%;
+  margin-left:auto;
+  margin-right:auto;
 }
-.compareGroupStage .equabarPreview .barLine,
-.compareGroupStage .equabarPreview .part{
-  min-height:86px;
+.compareGroupStage .compareRegroupPreview{
+  margin-top:34px;
 }
 .stage:fullscreen .compareGroupStage{
-  width:min(1120px,96vw);
-}
-.stage:fullscreen .compareGroupStage .equabarPreview{
-  width:min(900px,86vw);
-}
-.stage:fullscreen .compareGroupStage .equabarPreview .barLine,
-.stage:fullscreen .compareGroupStage .equabarPreview .part{
-  min-height:112px;
+  width:min(1040px,96vw);
 }
 
 
@@ -250,12 +243,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 /* Regrouper — comparer deux quantités :
    le schéma regroupé reprend exactement la même grille que le schéma de situation. */
 .compareRegroupPreview{
-  width:min(1040px,100%);
+  width:min(980px,100%);
   margin:34px auto 0;
 }
 .compareRegroupPreview .compareGrid{
   margin:0 auto;
   row-gap:0;
+  /* Même grille que le schéma de situation : étiquette + quantité commune + écart. */
+  grid-template-columns:120px minmax(260px,var(--xFr)) minmax(90px,var(--dFr));
 }
 .compareRegroupTop{
   grid-column:2 / 4;
@@ -284,7 +279,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   font-size:clamp(32px,3.1vw,56px);
 }
 .stage:fullscreen .compareRegroupPreview{
-  width:min(1040px,100%);
+  width:100%;
   margin-top:42px;
 }
 
@@ -845,15 +840,22 @@ mark.question{
   min-height:76px;
 }
 .groupStage{
-  width:min(1120px,100%);
+  width:min(980px,100%);
   margin:0 auto;
 }
 .groupStage .situationMini{
   margin-bottom:0;
 }
+/* Même cadre pour les deux schémas affichés ensemble : situation + regroupement. */
+.groupStage .unequalBoard,
+.groupStage .ratioBoard,
 .groupStage .equabarPreview{
-  width:min(980px,100%);
-  margin:34px auto 0;
+  width:100%;
+  margin-left:auto;
+  margin-right:auto;
+}
+.groupStage .equabarPreview{
+  margin-top:34px;
 }
 .groupStage .equabarPreview .schemaBoard{
   width:100%;
@@ -862,8 +864,11 @@ mark.question{
 .groupStage .equabarPreview .part{
   min-height:86px;
 }
+.stage:fullscreen .groupStage{
+  width:min(1040px,96vw);
+}
 .stage:fullscreen .groupStage .equabarPreview{
-  width:min(1040px,100%);
+  width:100%;
   margin-top:42px;
 }
 .stage:fullscreen .groupStage .equabarPreview .barLine,
@@ -941,6 +946,107 @@ mark.question{
   font-size:14px;
   font-weight:800;
   margin-top:-4px;
+}
+
+/* Comparer — écart : schéma de situation.
+   On montre deux barres alignées à gauche et l'écart comme une différence,
+   sans transformer trop tôt la grande barre en "petite + écart". */
+.compareSituationBoard{
+  width:min(980px,100%);
+  margin:0 auto;
+}
+.compareSituationGrid{
+  display:grid;
+  grid-template-columns:120px minmax(260px,var(--smallFr)) minmax(90px,var(--diffFr));
+  grid-template-rows:auto auto;
+  gap:14px 0;
+  align-items:center;
+}
+.compareSituationLabel{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:14px;
+  text-align:right;
+  font-size:20px;
+  font-weight:950;
+  color:#334155;
+}
+.compareSituationBar{
+  min-height:86px;
+  display:grid;
+  place-items:center;
+  border:2px solid var(--line);
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  font-size:clamp(24px,2.4vw,37px);
+  font-weight:950;
+  letter-spacing:-.035em;
+  padding:0 8px;
+  text-align:center;
+}
+.compareSituationBar.unknown{
+  background:linear-gradient(180deg,var(--blue-soft),#eff6ff);
+  color:#1d4ed8;
+  font-family:Georgia,"Times New Roman",serif;
+  font-style:italic;
+}
+.compareSituationDiff{
+  min-height:86px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9a3412;
+  font-size:clamp(22px,2.2vw,34px);
+  font-weight:950;
+  letter-spacing:-.035em;
+  padding:0 12px;
+  text-align:center;
+}
+.compareSituationDiff::before{
+  content:"";
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:50%;
+  border-top:3px solid currentColor;
+  opacity:.75;
+}
+.compareSituationDiff::after{
+  content:"";
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:calc(50% - 5px);
+  height:10px;
+  border-left:3px solid currentColor;
+  border-right:3px solid currentColor;
+  opacity:.75;
+}
+.compareSituationDiff span{
+  position:relative;
+  z-index:1;
+  padding:0 10px;
+  background:#fff;
+  border-radius:999px;
+}
+.compareSituationDiff.unknown{
+  color:#1d4ed8;
+  font-family:Georgia,"Times New Roman",serif;
+  font-style:italic;
+}
+.stage:fullscreen .compareSituationBoard{
+  width:min(1040px,100%);
+}
+.stage:fullscreen .compareSituationBar,
+.stage:fullscreen .compareSituationDiff{
+  min-height:112px;
+}
+.stage:fullscreen .compareSituationBar{
+  font-size:clamp(30px,2.9vw,52px);
+}
+.stage:fullscreen .compareSituationDiff{
+  font-size:clamp(28px,2.6vw,46px);
 }
 .equationHistory{
   min-height:52px;
@@ -1105,8 +1211,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     <label>Type de problème</label>
     <select id="category">
       <option value="part_whole" selected>Tout et parties</option>
-      <option value="transformation">Avant / changement / après</option>
-      <option value="comparison_additive">Comparer deux quantités</option>
+      <option value="transformation">Transformation</option>
+      <option value="comparison_additive">Comparer — écart</option>
       <option value="equal_groups">Groupes égaux</option>
       <option value="unequal_total_diff">Total + écart</option>
       <option value="unequal_total_ratio">Total + rapport</option>
@@ -1117,8 +1223,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     <div id="customMixBox" class="mixBox" style="display:none">
       <div class="mixTitle">Catégories à mélanger</div>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="part_whole" checked> Tout et parties</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="transformation" checked> Avant / changement / après</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison_additive" checked> Comparer deux quantités</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="transformation" checked> Transformation</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="comparison_additive" checked> Comparer — écart</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="equal_groups" checked> Groupes égaux</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total_diff" checked> Total + écart</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total_ratio" checked> Total + rapport</label>
@@ -1144,14 +1250,29 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="comparisonModeLabel">Dans “Comparer deux quantités”</label>
+    <label id="comparisonRelationLabel">Relation dans “Comparer — écart”</label>
+    <select id="comparisonRelation">
+      <option value="more" selected>De plus</option>
+      <option value="less">De moins</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="comparisonModeLabel">Question dans “Comparer — écart”</label>
     <select id="comparisonMode">
-      <option value="small" selected>Chercher la petite quantité</option>
+      <option value="big" selected>Chercher la grande quantité</option>
+      <option value="small">Chercher la petite quantité</option>
       <option value="difference">Chercher l’écart</option>
       <option value="mix">Mélange</option>
     </select>
 
-    <label id="transformationModeLabel">Dans “Avant / changement / après”</label>
+    <label id="transformationKindLabel">Changement dans “Transformation”</label>
+    <select id="transformationKind">
+      <option value="gain" selected>Gain / ajout</option>
+      <option value="loss">Perte / retrait</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="transformationModeLabel">Question dans “Transformation”</label>
     <select id="transformationMode">
       <option value="change" selected>Chercher le changement</option>
       <option value="after">Chercher l’après</option>
@@ -1167,11 +1288,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
-    <label>Taille des nombres</label>
+    <label>Taille des parties connues</label>
     <select id="level">
-      <option value="easy">Petits nombres</option>
-      <option value="medium" selected>Nombres moyens</option>
-      <option value="hard">Grands nombres</option>
+      <option value="easy">Petites parties : environ 5 à 18</option>
+      <option value="medium" selected>Parties moyennes : environ 10 à 38</option>
+      <option value="hard">Grandes parties : environ 30 à 120</option>
     </select>
 
     <label>Affichage de l’inconnue</label>
@@ -1191,9 +1312,6 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <button class="ghost" id="btnReset">Recommencer</button>
     </div>
 
-    <div class="mini">
-      Choisis une famille de problèmes, puis avance étape par étape avec la classe. Dans “Tout et parties”, la structure est explicite : 2 parties, 3 parties, parties égales inconnues ou mélange.
-    </div>
   </section>
 
   <section class="stage" id="stage">
@@ -1282,8 +1400,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     partWholeStructureLabel: document.getElementById("partWholeStructureLabel"),
     partWholeMode: document.getElementById("partWholeMode"),
     partWholeModeLabel: document.getElementById("partWholeModeLabel"),
+    comparisonRelation: document.getElementById("comparisonRelation"),
+    comparisonRelationLabel: document.getElementById("comparisonRelationLabel"),
     comparisonMode: document.getElementById("comparisonMode"),
     comparisonModeLabel: document.getElementById("comparisonModeLabel"),
+    transformationKind: document.getElementById("transformationKind"),
+    transformationKindLabel: document.getElementById("transformationKindLabel"),
     transformationMode: document.getElementById("transformationMode"),
     transformationModeLabel: document.getElementById("transformationModeLabel"),
     equalGroupsMode: document.getElementById("equalGroupsMode"),
@@ -1350,7 +1472,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
   function range(){
     if(el.level.value === "easy") return {known:[5,18], x:[4,12], diff:[2,8], groups:[2,4]};
-    if(el.level.value === "hard") return {known:[22,70], x:[12,35], diff:[8,30], groups:[4,8]};
+    if(el.level.value === "hard") return {known:[30,120], x:[18,70], diff:[10,45], groups:[4,9]};
     return {known:[10,38], x:[7,24], diff:[4,18], groups:[3,6]};
   }
 
@@ -1467,7 +1589,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         emptyPartCount:equalCount + 1,
         rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". Il y a " + known + " " + obj + " jaunes. Il y a " + equalText + ". " + unknownQuestion,
         highlightedStatement:
-          "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
+          "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
           "Il y a <mark>" + known + " " + obj + " jaunes</mark>. " +
           "Il y a <mark class='relation'>" + equalText + "</mark>. " +
           "<mark class='question'>" + unknownQuestion + "</mark>",
@@ -1500,9 +1622,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       total,
       pieces,
       emptyPartCount:knownCount + 1,
-      rawStatement: "Dans une boîte, il y a " + total + " " + obj + " en tout. " + knownSentence + " Les autres sont verts. Combien y a-t-il de " + obj + " verts ?",
+      rawStatement: "Dans une boîte, il y a " + total + " " + obj + ". " + knownSentence + " Les autres sont verts. Combien y a-t-il de " + obj + " verts ?",
       highlightedStatement:
-        "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
+        "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
         highlightedKnown + " Les autres sont verts. " +
         "<mark class='question'>Combien y a-t-il de " + obj + " verts ?</mark>",
       emptyText:"On prépare une barre du tout et une barre découpée en plusieurs parties.",
@@ -1517,94 +1639,171 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const rg = range();
     let mode = modeOverride || el.transformationMode.value;
     if(mode === "mix"){
-      const modes = ["change", "after", "before"];
-      mode = modes[Math.floor(Math.random() * modes.length)];
+      mode = pick(["change", "after", "before"]);
     }
 
-    const before = rint(rg.known[0], rg.known[1]);
+    let kind = el.transformationKind ? el.transformationKind.value : "gain";
+    if(kind === "mix") kind = pick(["gain", "loss"]);
+
     const change = rint(rg.x[0], rg.x[1]);
-    const after = before + change;
+    let before, after;
+    if(kind === "gain"){
+      before = rint(rg.known[0], rg.known[1]);
+      after = before + change;
+    }else{
+      after = rint(rg.known[0], rg.known[1]);
+      before = after + change;
+    }
+
     const obj = pick(objects);
     const person = pick(names);
+    const isGain = kind === "gain";
+    const actionVerb = isGain ? "gagne" : "perd";
+    const actionNoun = isGain ? "gain" : "perte";
+    const changeLabel = isGain ? "changement" : "perte";
+    const changeQuestion = isGain ? "Combien de " + obj + " ont été gagnées ?" : "Combien de " + obj + " ont été perdues ?";
+    const changeAnswer = isGain ? person + " a gagné " + change + " " + obj + "." : person + " a perdu " + change + " " + obj + ".";
+    const decomp = isGain ? (before + " + " + change) : (after + " + " + change);
 
-    if(mode === "after"){
-      return {
+    function base(extra){
+      return Object.assign({
         type:"transformation",
-        subType:"after",
-        family:"Avant / changement / après",
-        known: before,
-        x: after,
-        total: after,
+        subType:mode,
+        changeKind:kind,
+        family:"Transformation",
         before,
         change,
         after,
-        pieces:[{type:"number",value:before},{type:"number",value:change}],
-        rawStatement: person + " avait " + before + " " + obj + " avant la récréation. Pendant la récréation, " + person + " gagne " + change + " " + obj + ". Combien de " + obj + " " + person + " a-t-il à la fin de la récréation ?",
+        decomposition:decomp
+      }, extra);
+    }
+
+    if(mode === "after"){
+      if(isGain){
+        return base({
+          known: before,
+          x: after,
+          total: after,
+          unknownOnTop:true,
+          topEmptyLabel:"après ?",
+          pieces:[{type:"number",value:before},{type:"number",value:change}],
+          rawStatement: person + " avait " + before + " " + obj + " au départ. Ensuite, " + person + " en " + actionVerb + " " + change + ". Combien de " + obj + " possède " + person + " maintenant ?",
+          highlightedStatement:
+            person + " avait <mark>" + before + " " + obj + "</mark> au départ. " +
+            "Ensuite, " + person + " en " + actionVerb + " <mark>" + change + "</mark>. " +
+            "<mark class='question'>Combien de " + obj + " possède " + person + " maintenant ?</mark>",
+          emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
+          fillText:"L’avant et le changement sont connus. On cherche l’après.",
+          context:"Avant = " + before + " ; changement = " + change + " ; après = ?",
+          answer: person + " possède " + after + " " + obj + " maintenant.",
+          check: before + " + " + change + " = " + after + "."
+        });
+      }
+      return base({
+        known: before,
+        x: after,
+        total: before,
+        topEmptyLabel:"avant",
+        pieces:[{type:"x",value:"x"},{type:"number",value:change}],
+        rawStatement: person + " avait " + before + " " + obj + " au départ. Ensuite, " + person + " en " + actionVerb + " " + change + ". Combien de " + obj + " reste-t-il à " + person + " maintenant ?",
         highlightedStatement:
-          person + " avait <mark>" + before + " " + obj + "</mark> avant la récréation. " +
-          "Pendant la récréation, " + person + " gagne <mark>" + change + " " + obj + "</mark>. " +
-          "<mark class='question'>Combien de " + obj + " " + person + " a-t-il à la fin ?</mark>",
-        emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
-        fillText:"L’avant et le changement sont connus. On cherche l’après.",
-        context:"Avant = " + before + " ; changement = " + change + " ; après = ?",
-        answer: person + " a " + after + " " + obj + " à la fin de la récréation.",
-        check: before + " + " + change + " = " + after + "."
-      };
+          person + " avait <mark class='relation'>" + before + " " + obj + "</mark> au départ. " +
+          "Ensuite, " + person + " en " + actionVerb + " <mark>" + change + "</mark>. " +
+          "<mark class='question'>Combien de " + obj + " reste-t-il à " + person + " maintenant ?</mark>",
+        emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui est retiré.",
+        fillText:"L’avant et la perte sont connus. On cherche l’après, c’est-à-dire ce qui reste.",
+        context:"Avant = " + before + " ; perte = " + change + " ; après = " + unknown(),
+        answer:"Il reste " + after + " " + obj + " à " + person + ".",
+        check: after + " + " + change + " = " + before + "."
+      });
     }
 
     if(mode === "before"){
-      return {
-        type:"transformation",
-        subType:"before",
-        family:"Avant / changement / après",
+      if(isGain){
+        return base({
+          known: change,
+          x: before,
+          total: after,
+          topEmptyLabel:"après",
+          pieces:[{type:"x",value:"x"},{type:"number",value:change}],
+          rawStatement: person + " gagne " + change + " " + obj + ". Maintenant, " + person + " en possède " + after + ". Combien de " + obj + " possédait " + person + " au départ ?",
+          highlightedStatement:
+            person + " gagne <mark>" + change + " " + obj + "</mark>. " +
+            "Maintenant, " + person + " en possède <mark class='relation'>" + after + "</mark>. " +
+            "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
+          emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
+          fillText:"L’après et le changement sont connus. On cherche l’avant.",
+          context:"Après = " + after + " ; changement = " + change + " ; avant = " + unknown(),
+          answer: person + " possédait " + before + " " + obj + " au départ.",
+          check: before + " + " + change + " = " + after + "."
+        });
+      }
+      return base({
         known: change,
         x: before,
-        total: after,
-        before,
-        change,
-        after,
-        pieces:[{type:"x",value:"x"},{type:"number",value:change}],
-        rawStatement: "Pendant la récréation, " + person + " gagne " + change + " " + obj + ". À la fin de la récréation, " + person + " en a " + after + ". Combien de " + obj + " " + person + " avait-il avant la récréation ?",
+        total: before,
+        unknownOnTop:true,
+        topEmptyLabel:"avant ?",
+        pieces:[{type:"number",value:after},{type:"number",value:change}],
+        rawStatement: person + " perd " + change + " " + obj + ". Maintenant, il reste " + after + " " + obj + ". Combien de " + obj + " possédait " + person + " au départ ?",
         highlightedStatement:
-          "Pendant la récréation, " + person + " gagne <mark>" + change + " " + obj + "</mark>. " +
-          "À la fin de la récréation, " + person + " en a <mark class='relation'>" + after + "</mark>. " +
-          "<mark class='question'>Combien de " + obj + " " + person + " avait-il avant ?</mark>",
-        emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
-        fillText:"L’après et le changement sont connus. On cherche l’avant.",
-        context:"Après = " + after + " ; changement = " + change + " ; avant = " + unknown(),
-        answer: person + " avait " + before + " " + obj + " avant la récréation.",
-        check: before + " + " + change + " = " + after + "."
-      };
+          person + " perd <mark>" + change + " " + obj + "</mark>. " +
+          "Maintenant, il reste <mark class='relation'>" + after + " " + obj + "</mark>. " +
+          "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
+        emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui a été retiré.",
+        fillText:"L’après et la perte sont connus. On cherche l’avant.",
+        context:"Après = " + after + " ; perte = " + change + " ; avant = ?",
+        answer: person + " possédait " + before + " " + obj + " au départ.",
+        check: after + " + " + change + " = " + before + "."
+      });
     }
 
-    return {
-      type:"transformation",
-      subType:"change",
-      family:"Avant / changement / après",
-      known: before,
+    if(isGain){
+      return base({
+        known: before,
+        x: change,
+        total: after,
+        topEmptyLabel:"après",
+        pieces:[{type:"number",value:before},{type:"x",value:"x"}],
+        rawStatement: person + " avait " + before + " " + obj + " au départ. Maintenant, " + person + " en possède " + after + ". " + changeQuestion,
+        highlightedStatement:
+          person + " avait <mark>" + before + " " + obj + "</mark> au départ. " +
+          "Maintenant, " + person + " en possède <mark class='relation'>" + after + "</mark>. " +
+          "<mark class='question'>" + changeQuestion + "</mark>",
+        emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
+        fillText:"L’avant et l’après sont connus. On cherche le changement.",
+        context:"Après = " + after + " ; avant = " + before + " ; changement = " + unknown(),
+        answer:changeAnswer,
+        check: before + " + " + change + " = " + after + "."
+      });
+    }
+
+    return base({
+      known: after,
       x: change,
-      total: after,
-      before,
-      change,
-      after,
-      pieces:[{type:"number",value:before},{type:"x",value:"x"}],
-      rawStatement: person + " avait " + before + " " + obj + " avant la récréation. À la fin de la récréation, " + person + " en a " + after + ". Combien de " + obj + " " + person + " a-t-il gagné pendant la récréation ?",
+      total: before,
+      topEmptyLabel:"avant",
+      pieces:[{type:"number",value:after},{type:"x",value:"x"}],
+      rawStatement: person + " avait " + before + " " + obj + " au départ. Maintenant, il reste " + after + " " + obj + ". " + changeQuestion,
       highlightedStatement:
-        person + " avait " + before + " " + obj + " avant la récréation. " +
-        "À la fin de la récréation, " + person + " en a <mark class='relation'>" + after + "</mark>. " +
-        "<mark class='question'>Combien de " + obj + " " + person + " a-t-il gagné ?</mark>",
-      emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
-      fillText:"L’avant et l’après sont connus. On cherche le changement.",
-      context:"Après = " + after + " ; avant = " + before + " ; changement = " + unknown(),
-      answer: person + " a gagné " + change + " " + obj + ".",
-      check: before + " + " + change + " = " + after + "."
-    };
+        person + " avait <mark class='relation'>" + before + " " + obj + "</mark> au départ. " +
+        "Maintenant, il reste <mark>" + after + " " + obj + "</mark>. " +
+        "<mark class='question'>" + changeQuestion + "</mark>",
+      emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui a été retiré.",
+      fillText:"L’avant et l’après sont connus. On cherche la perte.",
+      context:"Avant = " + before + " ; après = " + after + " ; perte = " + unknown(),
+      answer:changeAnswer,
+      check: after + " + " + change + " = " + before + "."
+    });
   }
 
   function generateComparisonAdditive(modeOverride){
     const rg = range();
     let mode = modeOverride || el.comparisonMode.value;
-    if(mode === "mix") mode = Math.random() < 0.5 ? "small" : "difference";
+    if(mode === "mix") mode = pick(["big", "small", "difference"]);
+
+    let relation = el.comparisonRelation ? el.comparisonRelation.value : "more";
+    if(relation === "mix") relation = pick(["more", "less"]);
 
     const small = rint(rg.x[0], rg.x[1]);
     const diff = rint(rg.diff[0], rg.diff[1]);
@@ -1613,16 +1812,49 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     let bigName = pick(names), smallName = pick(names);
     while(smallName === bigName) smallName = pick(names);
 
-    const wording = Math.random() < 0.5 ? "more" : "less";
+    const plusSentence = bigName + " a " + diff + " " + obj + " de plus que " + smallName + ".";
+    const lessSentence = smallName + " a " + diff + " " + obj + " de moins que " + bigName + ".";
+    const relationSentence = relation === "more" ? plusSentence : lessSentence;
+
+    if(mode === "big"){
+      return {
+        type:"comparison_additive",
+        subType:"big",
+        family:"Comparer — écart",
+        bigName,
+        smallName,
+        known: diff,
+        x: big,
+        total: big,
+        diff,
+        small,
+        big,
+        unknownOnTop:true,
+        pieces:[{type:"number",value:small},{type:"number",value:diff}],
+        rawStatement: smallName + " a " + small + " " + obj + ". " + relationSentence + " Combien de " + obj + " possède " + bigName + " ?",
+        highlightedStatement:
+          smallName + " a <mark>" + small + " " + obj + "</mark>. " +
+          "<mark class='relation'>" + relationSentence + "</mark> " +
+          "<mark class='question'>Combien de " + obj + " possède " + bigName + " ?</mark>",
+        emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
+        fillText:"La petite quantité et l’écart sont connus. On cherche la grande quantité.",
+        context:smallName + " = " + small + " ; écart = " + diff + " ; " + bigName + " = " + unknown(),
+        answer: bigName + " a " + big + " " + obj + ".",
+        check: small + " + " + diff + " = " + big + "."
+      };
+    }
 
     if(mode === "difference"){
-      const relationSentence = wording === "more"
-        ? bigName + " a plus de " + obj + " que " + smallName + "."
-        : smallName + " a moins de " + obj + " que " + bigName + ".";
+      const question = relation === "more"
+        ? "Combien de " + obj + " de plus possède " + bigName + " ?"
+        : "Combien de " + obj + " de moins possède " + smallName + " ?";
+      const answer = relation === "more"
+        ? bigName + " a " + diff + " " + obj + " de plus que " + smallName + "."
+        : smallName + " a " + diff + " " + obj + " de moins que " + bigName + ".";
       return {
         type:"comparison_additive",
         subType:"difference",
-        family:"Comparer deux quantités",
+        family:"Comparer — écart",
         bigName,
         smallName,
         known: small,
@@ -1632,26 +1864,23 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
         small,
         big,
         pieces:[{type:"number",value:small},{type:"x",value:"x"}],
-        rawStatement: bigName + " a " + big + " " + obj + ". " + smallName + " a " + small + " " + obj + ". " + relationSentence + " Combien de " + obj + " " + bigName + " a-t-il de plus que " + smallName + " ?",
+        rawStatement: bigName + " a " + big + " " + obj + ". " + smallName + " a " + small + " " + obj + ". " + question,
         highlightedStatement:
           bigName + " a <mark class='relation'>" + big + " " + obj + "</mark>. " +
           smallName + " a <mark>" + small + " " + obj + "</mark>. " +
-          "<mark class='question'>Combien de " + obj + " " + bigName + " a-t-il de plus ?</mark>",
+          "<mark class='question'>" + question + "</mark>",
         emptyText:"On prépare deux barres alignées. L’écart est la partie en plus sur la grande quantité.",
         fillText:"Les deux quantités sont connues. On cherche l’écart entre les deux.",
         context:bigName + " = " + big + " ; " + smallName + " = " + small + " ; écart = " + unknown(),
-        answer: bigName + " a " + diff + " " + obj + " de plus que " + smallName + ".",
+        answer,
         check: small + " + " + diff + " = " + big + "."
       };
     }
 
-    const relationSentence = wording === "more"
-      ? bigName + " a " + diff + " " + obj + " de plus que " + smallName + "."
-      : smallName + " a " + diff + " " + obj + " de moins que " + bigName + ".";
     return {
       type:"comparison_additive",
       subType:"small",
-      family:"Comparer deux quantités",
+      family:"Comparer — écart",
       bigName,
       smallName,
       known: diff,
@@ -1661,11 +1890,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       small,
       big,
       pieces:[{type:"x",value:"x"},{type:"number",value:diff}],
-      rawStatement: bigName + " a " + big + " " + obj + ". " + relationSentence + " Combien de " + obj + " " + smallName + " a-t-il ?",
+      rawStatement: bigName + " a " + big + " " + obj + ". " + relationSentence + " Combien de " + obj + " possède " + smallName + " ?",
       highlightedStatement:
         bigName + " a <mark class='relation'>" + big + " " + obj + "</mark>. " +
         "<mark>" + relationSentence + "</mark> " +
-        "<mark class='question'>Combien de " + obj + " " + smallName + " a-t-il ?</mark>",
+        "<mark class='question'>Combien de " + obj + " possède " + smallName + " ?</mark>",
       emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
       fillText:"La grande quantité est connue. L’écart est connu. On cherche la petite quantité.",
       context:bigName + " = " + big + " ; écart = " + diff + " ; " + smallName + " = " + unknown(),
@@ -1879,8 +2108,14 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {id:uid(), type, value, removed:false};
   }
 
+  function shouldShowUnknownOnTop(){
+    return problem.unknownOnTop ||
+      (problem.type === "part_whole" && problem.subType === "whole") ||
+      (problem.type === "equal_groups" && problem.subType === "total");
+  }
+
   function initEquabar(){
-    if((problem.type === "part_whole" && problem.subType === "whole") || (problem.type === "transformation" && problem.subType === "after") || (problem.type === "equal_groups" && problem.subType === "total")){
+    if(shouldShowUnknownOnTop()){
       state = {
         top: [makePiece("x", "x")],
         bottom: problem.pieces.map(p => makePiece(p.type, p.value)),
@@ -2242,7 +2477,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return;
     }
 
-    const topWord = problem.type === "transformation" ? (problem.subType === "after" ? "après ?" : "après") : (problem.subType === "whole" ? "tout ?" : "tout");
+    const topWord = problem.type === "transformation" ? (problem.topEmptyLabel || (problem.unknownOnTop ? "?" : "après")) : (problem.subType === "whole" ? "tout ?" : "tout");
 
     if(problem.type === "part_whole"){
       const n = Math.max(2, problem.emptyPartCount || (problem.pieces ? problem.pieces.length : 2));
@@ -2288,18 +2523,32 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function renderComparisonFilledSchema(){
-    return renderCompareGrid({
-      context:"",
-      topLabel: problem.bigName,
-      bottomLabel: problem.smallName,
-      xLabel: problem.subType === "difference" ? problem.small : unknown(),
-      diffLabel: problem.subType === "difference" ? unknown() : problem.diff,
-      totalLabel: String(problem.total),
-      xFlex: problem.small || problem.x,
-      diffFlex: problem.diff || problem.known,
-      xClass: problem.subType === "difference" ? "" : "unknown",
-      diffClass: problem.subType === "difference" ? "unknown" : "diff"
-    });
+    // Schéma de situation : on représente d'abord les deux quantités comparées.
+    // La transformation en "petite quantité + écart" est réservée au schéma regroupé.
+    const smallFlex = Math.max(1, problem.small || problem.x || 4);
+    const diffFlex = Math.max(1, problem.diff || problem.known || 1);
+
+    const bigIsUnknown = problem.subType === "big";
+    const smallIsUnknown = problem.subType === "small";
+    const diffIsUnknown = problem.subType === "difference";
+
+    const bigLabel = bigIsUnknown ? unknown() : problem.big;
+    const smallLabel = smallIsUnknown ? unknown() : problem.small;
+    const diffLabel = diffIsUnknown ? unknown() : problem.diff;
+
+    const bigClass = bigIsUnknown ? " unknown" : "";
+    const smallClass = smallIsUnknown ? " unknown" : "";
+    const diffClass = diffIsUnknown ? " unknown" : "";
+
+    return "<div class='compareSituationBoard'>" +
+      "<div class='compareSituationGrid' style='--smallFr:" + smallFlex + "fr;--diffFr:" + diffFlex + "fr'>" +
+        "<div class='compareSituationLabel' style='grid-column:1;grid-row:1'>" + problem.bigName + "</div>" +
+        "<div class='compareSituationBar" + bigClass + "' style='grid-column:2 / 4;grid-row:1'>" + bigLabel + "</div>" +
+        "<div class='compareSituationLabel' style='grid-column:1;grid-row:2'>" + problem.smallName + "</div>" +
+        "<div class='compareSituationBar" + smallClass + "' style='grid-column:2;grid-row:2'>" + smallLabel + "</div>" +
+        "<div class='compareSituationDiff" + diffClass + "' style='grid-column:3;grid-row:2'><span>" + diffLabel + "</span></div>" +
+      "</div>" +
+    "</div>";
   }
 
   function renderFilled(){
@@ -2413,14 +2662,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   function renderCompareRegroupPreview(){
     const xFlex = Math.max(1, problem.small || problem.x || 4);
     const diffFlex = Math.max(1, problem.diff || problem.known || 1);
-    const xLabel = problem.subType === "difference" ? problem.small : unknown();
-    const diffLabel = problem.subType === "difference" ? unknown() : problem.diff;
-    const xClass = problem.subType === "difference" ? "" : "unknown";
-    const diffClass = problem.subType === "difference" ? "unknown" : "diff";
+    const xKnown = problem.subType === "difference" || problem.subType === "big";
+    const diffKnown = problem.subType !== "difference";
+    const xLabel = xKnown ? problem.small : unknown();
+    const diffLabel = diffKnown ? problem.diff : unknown();
+    const xClass = xKnown ? "" : "unknown";
+    const diffClass = diffKnown ? "diff" : "unknown";
+    const topLabel = problem.subType === "big" ? unknown() : problem.total;
 
     return "<div class='compareRegroupPreview'>" +
       "<div class='compareGrid' style='--xFr:" + xFlex + "fr;--dFr:" + diffFlex + "fr'>" +
-        "<div class='compareRegroupTop'>" + problem.total + "</div>" +
+        "<div class='compareRegroupTop'>" + topLabel + "</div>" +
         "<div class='compareSegment compareRegroupX " + xClass + "'>" + xLabel + "</div>" +
         "<div class='compareSegment compareRegroupD " + diffClass + " end'>" + diffLabel + "</div>" +
       "</div>" +
@@ -2474,7 +2726,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function renderFilledEquabarPreview(){
-    const topPieces = [makePiece("number", problem.total)];
+    const topPieces = shouldShowUnknownOnTop() ? [makePiece("x", "x")] : [makePiece("number", problem.total)];
     const bottomPieces = problem.pieces.map(p => makePiece(p.type, p.value));
     const topW = topPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
     const bottomW = bottomPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
@@ -2491,7 +2743,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   }
 
   function renderEquabarPreview(){
-    const topPieces = [makePiece("number", problem.total)];
+    const topPieces = shouldShowUnknownOnTop() ? [makePiece("x", "x")] : [makePiece("number", problem.total)];
     const bottomPieces = problem.pieces.map(p => makePiece(p.type, p.value));
     const topW = topPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
     const bottomW = bottomPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
@@ -2665,7 +2917,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       return problem.small + " + " + problem.diff;
     }
     if(problem.type === "transformation"){
-      return problem.before + " + " + problem.change;
+      return problem.decomposition || (problem.before + " + " + problem.change);
     }
     if(problem.type === "unequal_total_diff"){
       return (2 * problem.small) + " + " + problem.diff;
@@ -2955,7 +3207,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   });
   if(el.partWholeStructure) el.partWholeStructure.addEventListener("change", newProblem);
   el.partWholeMode.addEventListener("change", newProblem);
+  if(el.comparisonRelation) el.comparisonRelation.addEventListener("change", newProblem);
   el.comparisonMode.addEventListener("change", newProblem);
+  if(el.transformationKind) el.transformationKind.addEventListener("change", newProblem);
   el.transformationMode.addEventListener("change", newProblem);
   el.equalGroupsMode.addEventListener("change", newProblem);
   el.mixChecks.forEach(cb => cb.addEventListener("change", () => {
@@ -3019,10 +3273,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     el.partWholeModeLabel.style.display = showPartWhole ? "" : "none";
 
     const showComparison = el.category.value === "comparison_additive";
+    if(el.comparisonRelation){
+      el.comparisonRelation.style.display = showComparison ? "" : "none";
+      el.comparisonRelationLabel.style.display = showComparison ? "" : "none";
+    }
     el.comparisonMode.style.display = showComparison ? "" : "none";
     el.comparisonModeLabel.style.display = showComparison ? "" : "none";
 
     const showTransformation = el.category.value === "transformation";
+    if(el.transformationKind){
+      el.transformationKind.style.display = showTransformation ? "" : "none";
+      el.transformationKindLabel.style.display = showTransformation ? "" : "none";
+    }
     el.transformationMode.style.display = showTransformation ? "" : "none";
     el.transformationModeLabel.style.display = showTransformation ? "" : "none";
 
