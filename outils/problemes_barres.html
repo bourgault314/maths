@@ -1624,6 +1624,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   font-size:16px;
 }
 
+
+.multiBoard .multiLinkedOwnerBraces{
+  width:var(--refW);
+  margin:8px auto 0;
+}
+.multiBoard .multiLinkedOwnerBraces .ownerBrace{
+  min-height:34px;
+  font-size:16px;
+}
+
 </style>
 </head>
 <body>
@@ -1726,12 +1736,47 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       <option value="mix">Mélange</option>
     </select>
 
+    <label id="unequalRelationModeLabel">Formulation dans “Partages inégaux”</label>
+    <select id="unequalRelationMode">
+      <option value="direct" selected>Directe : de plus / fois plus</option>
+      <option value="inverse">Inversée : de moins / fois moins</option>
+      <option value="mix">Mélange</option>
+    </select>
+
     <label id="ratioModeLabel">Type de problème dans “Ratios”</label>
     <select id="ratioMode">
       <option value="total2" selected>Partager un total — 2 quantités</option>
       <option value="total3">Partager un total — 3 quantités</option>
       <option value="find">Trouver le ratio</option>
       <option value="missing">Quantité manquante</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="multiLinkedRelationTypeLabel">Type de relations</label>
+    <select id="multiLinkedRelationType">
+      <option value="mult_add" selected>Multiplicative + additive</option>
+      <option value="two_mult">Deux relations multiplicatives</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="multiLinkedStructureLabel">Structure dans “Plusieurs quantités liées”</label>
+    <select id="multiLinkedStructure">
+      <option value="common" selected>Référent commun</option>
+      <option value="chain">Chaîne de relations</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="multiRatioRelationLabel">Relation multiplicative</label>
+    <select id="multiRatioRelation">
+      <option value="more" selected>Fois plus</option>
+      <option value="less">Fois moins</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label id="multiDiffRelationLabel">Relation additive</label>
+    <select id="multiDiffRelation">
+      <option value="more" selected>De plus</option>
+      <option value="less">De moins</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -1877,7 +1922,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     feutres:{gender:"m"}
   };
 
-  const colorBases = ["rouge","bleu","vert","jaune","violet","noir","blanc","rose","orange"];
+  const colorBases = ["rouge","bleu","vert","jaune","violet","noir","rose","orange"];
 
   function isFeminineObject(obj){
     return objectGrammar[obj] && objectGrammar[obj].gender === "f";
@@ -1960,8 +2005,18 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     equalGroupsModeLabel: document.getElementById("equalGroupsModeLabel"),
     unequalTotalMode: document.getElementById("unequalTotalMode"),
     unequalTotalModeLabel: document.getElementById("unequalTotalModeLabel"),
+    unequalRelationMode: document.getElementById("unequalRelationMode"),
+    unequalRelationModeLabel: document.getElementById("unequalRelationModeLabel"),
     ratioMode: document.getElementById("ratioMode"),
     ratioModeLabel: document.getElementById("ratioModeLabel"),
+    multiLinkedRelationType: document.getElementById("multiLinkedRelationType"),
+    multiLinkedRelationTypeLabel: document.getElementById("multiLinkedRelationTypeLabel"),
+    multiLinkedStructure: document.getElementById("multiLinkedStructure"),
+    multiLinkedStructureLabel: document.getElementById("multiLinkedStructureLabel"),
+    multiRatioRelation: document.getElementById("multiRatioRelation"),
+    multiRatioRelationLabel: document.getElementById("multiRatioRelationLabel"),
+    multiDiffRelation: document.getElementById("multiDiffRelation"),
+    multiDiffRelationLabel: document.getElementById("multiDiffRelationLabel"),
     level: document.getElementById("level"),
     unknownMode: document.getElementById("unknownMode"),
     equationDisplay: document.getElementById("equationDisplay"),
@@ -2144,6 +2199,39 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     if(cat === "multi_linked") return generateMultiLinked();
     if(cat === "two_sided_linear") return generateTwoSidedLinear();
     return generatePartWhole(el.category.value === "custom_mix" ? "mix" : undefined);
+  }
+
+  function relationFromSelect(selectEl, fallback="more"){
+    const value = selectEl ? selectEl.value : fallback;
+    if(value === "mix") return pick(["more", "less"]);
+    if(value === "inverse") return "less";
+    if(value === "direct") return "more";
+    if(value === "less") return "less";
+    return "more";
+  }
+
+  function multiStructureChoice(){
+    const value = el.multiLinkedStructure ? el.multiLinkedStructure.value : "mix";
+    if(value === "mix") return Math.random() < 0.45 ? "chain" : "common";
+    return value;
+  }
+
+  function multiRelationTypeChoice(){
+    const value = el.multiLinkedRelationType ? el.multiLinkedRelationType.value : "mult_add";
+    if(value === "mix") return Math.random() < 0.25 ? "two_mult" : "mult_add";
+    return value;
+  }
+
+  function cautiousSecondMultiplier(firstMultiplier, structureChoice){
+    // On évite les schémas trop larges.
+    // En chaîne, C = secondMultiplier × B, donc le coefficient final vaut firstMultiplier × secondMultiplier.
+    if(structureChoice === "chain"){
+      if(firstMultiplier >= 4) return 2;
+      return pick([2, 3]);
+    }
+    const candidates = el.level.value === "hard" ? [2, 3, 4] : [2, 3];
+    const filtered = candidates.filter(v => v !== firstMultiplier);
+    return pick(filtered.length ? filtered : candidates);
   }
 
   function generateComparison(modeOverride){
@@ -2766,7 +2854,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     // Les formulations “de moins” sont ramenées au même schéma :
     // grande quantité = petite quantité + écart.
-    const relationKind = Math.random() < 0.45 ? "less" : "more";
+    const relationKind = relationFromSelect(el.unequalRelationMode, "mix");
 
     const totalIntro = totalIntroTwo(bigName, smallName, total, obj);
 
@@ -2824,7 +2912,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
     // Les formulations “fois moins” sont ramenées au même schéma :
     // la grande quantité vaut ratio fois la petite quantité.
-    const relationKind = Math.random() < 0.35 ? "less" : "more";
+    const relationKind = relationFromSelect(el.unequalRelationMode, "mix");
     const totalIntro = totalIntroTwo(bigName, smallName, total, obj);
 
     const relationRaw = relationKind === "less"
@@ -3116,7 +3204,98 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const ref = rint(rg.x[0], rg.x[1]);
     const diff = rint(rg.diff[0], rg.diff[1]);
     const multiplier = multiLinkedMultiplierForLevel();
-    const isChain = Math.random() < 0.45;
+    const relationType = multiRelationTypeChoice();
+
+    // Deux relations multiplicatives.
+    // Référent commun : A = x ; B = kx ; C = mx.
+    // Chaîne : A = x ; B = kx ; C = mB = (k×m)x.
+    if(relationType === "two_mult"){
+      const structureChoice = multiStructureChoice();
+      const isMultChain = structureChoice === "chain";
+      const secondMultiplier = cautiousSecondMultiplier(multiplier, structureChoice);
+      const plusMultiplier = isMultChain ? multiplier * secondMultiplier : secondMultiplier;
+
+      const valueB = multiplier * ref;
+      const valueC = plusMultiplier * ref;
+      const total = ref + valueB + valueC;
+      const obj = pick(["jetons","billes","cartes","coquillages","images","autocollants","gommettes"]);
+      const labels = Math.random() < 0.75 ? colorLabelsFor(obj) : ["A","B","C"];
+      const relationKind1 = relationFromSelect(el.multiRatioRelation, "more");
+      const relationKind2 = relationFromSelect(el.multiRatioRelation, "more");
+
+      const totalIntro = pick([
+        "Il y a " + total + " " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " en tout.",
+        "Ensemble, les " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " sont au nombre de " + total + ".",
+        "Les trois collections de " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " contiennent ensemble " + total + " " + obj + "."
+      ]);
+
+      const relationRaw1 = relationKind1 === "less"
+        ? "Il y a " + multiplier + " fois moins de " + obj + " " + labels[0] + " que de " + obj + " " + labels[1] + "."
+        : "Il y a " + multiplier + " fois plus de " + obj + " " + labels[1] + " que de " + obj + " " + labels[0] + ".";
+
+      const relationHighlighted1 = relationKind1 === "less"
+        ? "Il y a <mark>" + multiplier + " fois moins de " + obj + " " + labels[0] + "</mark> que de " + obj + " " + labels[1] + "."
+        : "Il y a <mark>" + multiplier + " fois plus de " + obj + " " + labels[1] + "</mark> que de " + obj + " " + labels[0] + ".";
+
+      let relationRaw2, relationHighlighted2;
+      if(isMultChain){
+        relationRaw2 = relationKind2 === "less"
+          ? "Il y a " + secondMultiplier + " fois moins de " + obj + " " + labels[1] + " que de " + obj + " " + labels[2] + "."
+          : "Il y a " + secondMultiplier + " fois plus de " + obj + " " + labels[2] + " que de " + obj + " " + labels[1] + ".";
+        relationHighlighted2 = relationKind2 === "less"
+          ? "Il y a <mark>" + secondMultiplier + " fois moins de " + obj + " " + labels[1] + "</mark> que de " + obj + " " + labels[2] + "."
+          : "Il y a <mark>" + secondMultiplier + " fois plus de " + obj + " " + labels[2] + "</mark> que de " + obj + " " + labels[1] + ".";
+      }else{
+        relationRaw2 = relationKind2 === "less"
+          ? "Il y a " + secondMultiplier + " fois moins de " + obj + " " + labels[0] + " que de " + obj + " " + labels[2] + "."
+          : "Il y a " + secondMultiplier + " fois plus de " + obj + " " + labels[2] + " que de " + obj + " " + labels[0] + ".";
+        relationHighlighted2 = relationKind2 === "less"
+          ? "Il y a <mark>" + secondMultiplier + " fois moins de " + obj + " " + labels[0] + "</mark> que de " + obj + " " + labels[2] + "."
+          : "Il y a <mark>" + secondMultiplier + " fois plus de " + obj + " " + labels[2] + "</mark> que de " + obj + " " + labels[0] + ".";
+      }
+
+      const totalHighlighted = totalIntro.replace(String(total), "<mark class='relation'>" + total + "</mark>");
+      const xCount = 1 + multiplier + plusMultiplier;
+
+      return {
+        type:"multi_linked",
+        subType:isMultChain ? "two_multiplicative_chain" : "two_multiplicative_common",
+        relationType:"two_mult",
+        family:"Plusieurs quantités liées",
+        refLabel: labels[0],
+        doubleLabel: labels[1],
+        plusLabel: labels[2],
+        ref,
+        diff:0,
+        multiplier,
+        secondMultiplier,
+        plusMultiplier,
+        relationValue:valueB,
+        plusValue:valueC,
+        total,
+        x: ref,
+        pieces:Array.from({length:xCount}, () => ({type:"x",value:"x"})),
+        rawStatement: totalIntro + " " + relationRaw1 + " " + relationRaw2 + " Combien y a-t-il de " + obj + " " + labels[0] + " ?",
+        highlightedStatement:
+          totalHighlighted + " " +
+          relationHighlighted1 + " " +
+          relationHighlighted2 + " " +
+          "<mark class='question'>Combien y a-t-il de " + obj + " " + labels[0] + " ?</mark>",
+        emptyText:isMultChain
+          ? "On suit une chaîne multiplicative : une quantité dépend de la référence, puis une autre dépend de cette quantité."
+          : "On choisit une quantité de référence. Les deux autres quantités valent plusieurs fois cette référence.",
+        fillText:isMultChain
+          ? labels[1] + " vaut " + multiplier + " fois la référence. " + labels[2] + " vaut " + secondMultiplier + " fois " + labels[1] + ", donc " + plusMultiplier + " fois la référence."
+          : "La référence est inconnue. Les deux autres lignes sont des multiples de cette référence.",
+        context:isMultChain
+          ? "Total = " + total + " ; chaîne = " + multiplier + " puis " + secondMultiplier + " fois"
+          : "Total = " + total + " ; rapports = " + multiplier + " fois et " + secondMultiplier + " fois",
+        answer:"Il y a " + ref + " " + obj + " " + labels[0] + ".",
+        check: ref + " + " + valueB + " + " + valueC + " = " + total + "."
+      };
+    }
+
+    const isChain = multiStructureChoice() === "chain";
 
     // Référent commun : C = A + écart.
     // Chaîne simple : C = B + écart, avec B = kA.
@@ -3124,11 +3303,11 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const relationValue = multiplier * ref;
     const plusValue = plusMultiplier * ref + diff;
     const total = ref + relationValue + plusValue;
-    const obj = pick(["jetons","billes","cartes","coquillages","images"]);
+    const obj = pick(["jetons","billes","cartes","coquillages","images","autocollants","gommettes"]);
     const labels = Math.random() < 0.75 ? colorLabelsFor(obj) : ["A","B","C"];
 
-    const relationKind = Math.random() < 0.35 ? "less" : "more";
-    const diffKind = Math.random() < 0.45 ? "less" : "more";
+    const relationKind = relationFromSelect(el.multiRatioRelation, "more");
+    const diffKind = relationFromSelect(el.multiDiffRelation, "more");
 
     const totalIntro = pick([
       "Il y a " + total + " " + obj + " " + labels[0] + ", " + labels[1] + " et " + labels[2] + " en tout.",
@@ -3158,6 +3337,7 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     return {
       type:"multi_linked",
       subType:isChain ? "chain_mixed" : "common_reference",
+      relationType:"mult_add",
       family:"Plusieurs quantités liées",
       refLabel: labels[0],
       doubleLabel: labels[1],
@@ -3890,11 +4070,12 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     const totalLabel = filled ? problem.total : "total";
     const multiplier = problem.multiplier || 2;
     const plusMultiplier = problem.plusMultiplier || 1;
+    const twoMult = problem.relationType === "two_mult" || problem.subType === "two_multiplicative";
 
-    const totalUnits = ((1 + multiplier + plusMultiplier) * problem.ref) + problem.diff;
+    const totalUnits = ((1 + multiplier + plusMultiplier) * problem.ref) + (twoMult ? 0 : problem.diff);
     const refUnits = problem.ref;
     const relationUnits = multiplier * problem.ref;
-    const plusUnits = plusMultiplier * problem.ref + problem.diff;
+    const plusUnits = plusMultiplier * problem.ref + (twoMult ? 0 : problem.diff);
     const maxUnits = Math.max(refUnits, relationUnits, plusUnits);
 
     const rowsCoef = (maxUnits / totalUnits).toFixed(6);
@@ -3911,11 +4092,17 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     for(let i = 0; i < plusMultiplier; i++){
       plusParts += "<div class='multiPart unknown " + (i === 0 ? "joinRight" : "joinLeft") + "' style='flex:" + problem.ref + "'>" + xLabel + "</div>";
     }
-    plusParts += "<div class='multiPart diff joinLeft' style='flex:" + problem.diff + "'>" + diffLabel + "</div>";
+    if(!twoMult){
+      plusParts += "<div class='multiPart diff joinLeft' style='flex:" + problem.diff + "'>" + diffLabel + "</div>";
+    }
 
-    const thirdLabel = problem.subType === "chain_mixed"
-      ? ((filled ? problem.plusLabel : "Chaîne") + " = " + (filled ? problem.doubleLabel : "précédent") + " + écart")
-      : (filled ? problem.plusLabel : "Réf. + écart");
+    const thirdLabel = twoMult
+      ? (problem.subType === "two_multiplicative_chain"
+        ? ((filled ? problem.plusLabel : "Chaîne") + " = " + (filled ? problem.secondMultiplier : "m") + " × " + (filled ? problem.doubleLabel : "précédent"))
+        : (filled ? problem.plusLabel : plusMultiplier + " fois"))
+      : (problem.subType === "chain_mixed"
+        ? ((filled ? problem.plusLabel : "Chaîne") + " = " + (filled ? problem.doubleLabel : "précédent") + " + écart")
+        : (filled ? problem.plusLabel : "Réf. + écart"));
 
     return "<div class='multiBoard' style='--rowsW:calc(var(--refW) * " + rowsCoef + ")'>" +
       "<div class='multiSituation'>" +
@@ -4579,6 +4766,16 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
           "<div class='ownerBrace' style='grid-column:" + (p0 + 1) + " / " + (p0 + p1 + 1) + "'>" + problem.people[1] + "</div>" +
           "<div class='ownerBrace' style='grid-column:" + (p0 + p1 + 1) + " / " + (n + 1) + "'>" + problem.people[2] + "</div>" +
         "</div>";
+    }else if(problem.type === "multi_linked"){
+      const multiplier = problem.multiplier || 2;
+      const plusMultiplier = problem.plusMultiplier || 1;
+      const xCount = 1 + multiplier + plusMultiplier;
+      const cols = Array.from({length:xCount}, () => "1fr").join(" ") + " minmax(64px,.8fr)";
+      ownerBraces = "<div class='unequalOwnerBraces multiLinkedOwnerBraces' style='--cols:" + cols + ";--lineWidth:100%'>" +
+          "<div class='ownerBrace' style='grid-column:1 / 2'>" + problem.refLabel + "</div>" +
+          "<div class='ownerBrace' style='grid-column:2 / " + (2 + multiplier) + "'>" + problem.doubleLabel + "</div>" +
+          "<div class='ownerBrace' style='grid-column:" + (2 + multiplier) + " / " + (xCount + 2) + "'>" + problem.plusLabel + "</div>" +
+        "</div>";
     }
 
     return "<div class='equabarPreview'>" +
@@ -4813,6 +5010,9 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
     }
     if(problem.type === "multi_linked"){
       const xCount = 1 + (problem.multiplier || 2) + (problem.plusMultiplier || 1);
+      if(problem.relationType === "two_mult" || problem.subType === "two_multiplicative"){
+        return String(xCount * problem.ref);
+      }
       return (xCount * problem.ref) + " + " + problem.diff;
     }
     return problem.known + " + " + problem.x;
@@ -5225,7 +5425,15 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   el.transformationMode.addEventListener("change", newProblem);
   el.equalGroupsMode.addEventListener("change", newProblem);
   if(el.unequalTotalMode) el.unequalTotalMode.addEventListener("change", newProblem);
+  if(el.unequalRelationMode) el.unequalRelationMode.addEventListener("change", newProblem);
   if(el.ratioMode) el.ratioMode.addEventListener("change", newProblem);
+  if(el.multiLinkedRelationType) el.multiLinkedRelationType.addEventListener("change", () => {
+    updateOptionMenuVisibility();
+    newProblem();
+  });
+  if(el.multiLinkedStructure) el.multiLinkedStructure.addEventListener("change", newProblem);
+  if(el.multiRatioRelation) el.multiRatioRelation.addEventListener("change", newProblem);
+  if(el.multiDiffRelation) el.multiDiffRelation.addEventListener("change", newProblem);
   el.mixChecks.forEach(cb => cb.addEventListener("change", () => {
     if(el.category.value === "custom_mix") newProblem();
   }));
@@ -5344,11 +5552,29 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
       el.unequalTotalMode.style.display = showUnequalTotal ? "" : "none";
       el.unequalTotalModeLabel.style.display = showUnequalTotal ? "" : "none";
     }
+    if(el.unequalRelationMode){
+      el.unequalRelationMode.style.display = showUnequalTotal ? "" : "none";
+      el.unequalRelationModeLabel.style.display = showUnequalTotal ? "" : "none";
+    }
 
     const showRatios = el.category.value === "ratio";
     if(el.ratioMode){
       el.ratioMode.style.display = showRatios ? "" : "none";
       el.ratioModeLabel.style.display = showRatios ? "" : "none";
+    }
+
+    const showMultiLinked = el.category.value === "multi_linked";
+    if(el.multiLinkedStructure){
+      const relationType = el.multiLinkedRelationType ? el.multiLinkedRelationType.value : "mult_add";
+      const showAdditiveControls = showMultiLinked && relationType !== "two_mult";
+      el.multiLinkedRelationType.style.display = showMultiLinked ? "" : "none";
+      el.multiLinkedRelationTypeLabel.style.display = showMultiLinked ? "" : "none";
+      el.multiLinkedStructure.style.display = showMultiLinked ? "" : "none";
+      el.multiLinkedStructureLabel.style.display = showMultiLinked ? "" : "none";
+      el.multiRatioRelation.style.display = showMultiLinked ? "" : "none";
+      el.multiRatioRelationLabel.style.display = showMultiLinked ? "" : "none";
+      el.multiDiffRelation.style.display = showAdditiveControls ? "" : "none";
+      el.multiDiffRelationLabel.style.display = showAdditiveControls ? "" : "none";
     }
   }
 
