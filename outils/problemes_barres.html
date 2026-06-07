@@ -4192,6 +4192,23 @@ body.printOnlyWorksheet .worksheetSheet{
     return (startsWithVowelSound(clean) ? "d’" : "de ") + clean;
   }
 
+  function partLabel(n){
+    return n + " " + (Number(n) > 1 ? "parts" : "part");
+  }
+
+  function ratioNameText(names){
+    return names.join(" : ");
+  }
+
+  function ratioValueText(parts){
+    return parts.join(" : ");
+  }
+
+  function ratioMeaningText(names, parts){
+    return "Le ratio " + ratioNameText(names) + " = " + ratioValueText(parts) + " signifie que " +
+      names.map((name, i) => name + " a " + partLabel(parts[i])).join(", ").replace(/, ([^,]*)$/, " et $1") + ".";
+  }
+
   function coloredObjectList(obj, colors){
     const items = colors.map(color => "des " + coloredObject(obj, color));
     if(items.length <= 1) return items[0] || "";
@@ -5268,7 +5285,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
     const intro = totalIntroTwo(firstName, secondName, total, obj);
 
-    const ratioSentence = "Le rapport entre la quantité de " + firstName + " et celle de " + secondName + " est " + a + ":" + b + ".";
+    const ratioSentence = "Le ratio " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ".";
 
     return {
       type:"ratio_total",
@@ -5287,11 +5304,11 @@ body.printOnlyWorksheet .worksheetSheet{
       rawStatement: intro + " " + ratioSentence + " Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
       highlightedStatement:
         intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
-        "Le rapport entre la quantité de " + firstName + " et celle de " + secondName + " est <mark>" + a + ":" + b + "</mark>. " +
+        "Le ratio " + ratioNameText([firstName, secondName]) + " est <mark>" + ratioValueText([a, b]) + "</mark>. " +
         "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio : chaque part du ratio correspond à une même unité inconnue.",
-      fillText:firstName + " reçoit " + a + " part(s) de ratio et " + secondName + " reçoit " + b + " part(s) de ratio.",
-      context:"Total = " + total + " ; ratio = " + a + ":" + b,
+      fillText:ratioMeaningText([firstName, secondName], [a, b]),
+      context:"Total = " + total + " ; ratio " + ratioNameText([firstName, secondName]) + " = " + ratioValueText([a, b]),
       answer:firstName + " a " + first + " " + obj + " et " + secondName + " a " + second + " " + obj + ".",
       check:a + " parts + " + b + " parts = " + (a + b) + " parts ; une part vaut " + unit + "."
     };
@@ -5319,8 +5336,8 @@ body.printOnlyWorksheet .worksheetSheet{
       if(!people.includes(n)) people.push(n);
     }
 
-    const ratioText = a + ":" + b + ":" + c;
-    const namesText = people[0] + ":" + people[1] + ":" + people[2];
+    const ratioText = ratioValueText([a, b, c]);
+    const namesText = ratioNameText([people[0], people[1], people[2]]);
 
     const intro = totalIntroThree(people[0], people[1], people[2], total, obj);
 
@@ -5335,14 +5352,14 @@ body.printOnlyWorksheet .worksheetSheet{
       x:unit,
       total,
       pieces:Array.from({length:a + b + c}, () => ({type:"x",value:"x"})),
-      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien de " + obj + " chaque personne a-t-elle ?",
+      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
       highlightedStatement:
         intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
         "Le ratio " + namesText + " est <mark>" + ratioText + "</mark>. " +
         "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio à trois termes. Chaque part du ratio correspond à une même unité inconnue.",
-      fillText:people[0] + " reçoit " + a + " part(s), " + people[1] + " reçoit " + b + " part(s), et " + people[2] + " reçoit " + c + " part(s).",
-      context:"Total = " + total + " ; ratio = " + ratioText,
+      fillText:ratioMeaningText(people, [a, b, c]),
+      context:"Total = " + total + " ; ratio " + namesText + " = " + ratioText,
       answer:people[0] + " a " + values[0] + " " + obj + ", " + people[1] + " a " + values[1] + " " + obj + " et " + people[2] + " a " + values[2] + " " + obj + ".",
       check:(a + b + c) + " parts valent " + total + ", donc 1 part vaut " + unit + "."
     };
@@ -5378,12 +5395,12 @@ body.printOnlyWorksheet .worksheetSheet{
 
     const rawStatement = firstName + " a " + first + " " + obj + ". " +
       secondName + " a " + second + " " + obj + ". " +
-      "Quel est le ratio entre la quantité de " + firstName + " et celle de " + secondName + " ?";
+      "Quel est le ratio " + ratioNameText([firstName, secondName]) + " ?";
 
     const highlightedStatement =
       firstName + " a <mark>" + first + " " + obj + "</mark>. " +
       secondName + " a <mark>" + second + " " + obj + "</mark>. " +
-      "<mark class='question'>Quel est le ratio entre la quantité de " + firstName + " et celle de " + secondName + " ?</mark>";
+      "<mark class='question'>Quel est le ratio " + ratioNameText([firstName, secondName]) + " ?</mark>";
 
     return {
       type:"ratio_find",
@@ -5413,8 +5430,8 @@ body.printOnlyWorksheet .worksheetSheet{
       emptyText:"On prépare deux barres : une pour chaque quantité. Le ratio compare ces deux quantités dans le même ordre que la question.",
       fillText:"On écrit d’abord le ratio avec les quantités données, puis on le simplifie.",
       context:firstName + " = " + first + " ; " + secondName + " = " + second,
-      answer:"Le ratio " + firstName + " : " + secondName + " est " + a + ":" + b + ".",
-      check:first + ":" + second + " = " + a + ":" + b + " car on divise les deux nombres par " + factor + "."
+      answer:"Le ratio " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ".",
+      check:ratioValueText([first, second]) + " = " + ratioValueText([a, b]) + " car on divise les deux nombres par " + factor + "."
     };
   }
 
@@ -5439,14 +5456,14 @@ body.printOnlyWorksheet .worksheetSheet{
     const missingParts = knownSide === "first" ? b : a;
 
     const rawStatement =
-      "Le ratio " + firstName + ":" + secondName + " est " + a + ":" + b + ". " +
+      "Le ratio " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ". " +
       knownName + " a " + knownValue + " " + obj + ". " +
       "Combien " + dePhrase(obj) + " possède " + missingName + " ?";
 
     const highlightedStatement =
-      "Le ratio " + firstName + ":" + secondName + " est <mark>" + a + ":" + b + "</mark>. " +
+      "Le ratio " + ratioNameText([firstName, secondName]) + " est <mark>" + ratioValueText([a, b]) + "</mark>. " +
       knownName + " a <mark>" + knownValue + " " + obj + "</mark>. " +
-      "<mark class='question'>Combien de " + obj + " possède " + missingName + " ?</mark>";
+      "<mark class='question'>Combien " + dePhrase(obj) + " possède " + missingName + " ?</mark>";
 
     return {
       type:"ratio_missing",
@@ -5471,10 +5488,10 @@ body.printOnlyWorksheet .worksheetSheet{
       rawStatement,
       highlightedStatement,
       emptyText:"On représente le ratio par des parts égales. La quantité connue permet de trouver la valeur d’une part.",
-      fillText:knownName + " correspond à " + knownParts + " part(s). " + missingName + " correspond à " + missingParts + " part(s).",
-      context:"Ratio = " + a + ":" + b + " ; " + knownName + " = " + knownValue,
+      fillText:ratioMeaningText([firstName, secondName], [a, b]) + " " + knownName + " correspond à " + partLabel(knownParts) + ".",
+      context:"Ratio " + ratioNameText([firstName, secondName]) + " = " + ratioValueText([a, b]) + " ; " + knownName + " = " + knownValue,
       answer:missingName + " possède " + missingValue + " " + obj + ".",
-      check:knownParts + " part(s) = " + knownValue + ", donc 1 part = " + unit + " et " + missingParts + " part(s) = " + missingValue + "."
+      check:partLabel(knownParts) + " = " + knownValue + ", donc 1 part = " + unit + " et " + partLabel(missingParts) + " = " + missingValue + "."
     };
   }
 
@@ -6194,11 +6211,11 @@ body.printOnlyWorksheet .worksheetSheet{
       cards.push(understandCard("Quelle est la part de référence ?", problem.smallName + " correspond à une part."));
     }else if(problem.type === "ratio_total"){
       cards.push(understandCard("Que cherche-t-on ?", "les deux quantités"));
-      cards.push(understandCard("Que signifie le ratio ?", problem.firstName + " a " + problem.a + " part(s) et " + problem.secondName + " a " + problem.b + " part(s)."));
+      cards.push(understandCard("Que signifie le ratio ?", ratioMeaningText([problem.firstName, problem.secondName], [problem.a, problem.b])));
       cards.push(understandCard("Quelle idée utiliser ?", "Partager le total en " + (problem.a + problem.b) + " parts égales."));
     }else if(problem.type === "ratio_total_three"){
       cards.push(understandCard("Que cherche-t-on ?", "les trois quantités"));
-      cards.push(understandCard("Que signifie le ratio ?", problem.people[0] + " a " + problem.ratioParts[0] + " part(s), " + problem.people[1] + " a " + problem.ratioParts[1] + " part(s), " + problem.people[2] + " a " + problem.ratioParts[2] + " part(s)."));
+      cards.push(understandCard("Que signifie le ratio ?", ratioMeaningText(problem.people, problem.ratioParts)));
       cards.push(understandCard("Quelle idée utiliser ?", "Partager le total en " + problem.ratioParts.reduce((s,v)=>s+v,0) + " parts égales."));
     }else if(problem.type === "ratio_find"){
       cards.push(understandCard("Que cherche-t-on ?", "un ratio simplifié"));
@@ -6206,7 +6223,7 @@ body.printOnlyWorksheet .worksheetSheet{
       cards.push(understandCard("Quelle idée utiliser ?", "Diviser les deux quantités par le même nombre."));
     }else if(problem.type === "ratio_missing"){
       cards.push(understandCard("Que cherche-t-on ?", "une quantité manquante"));
-      cards.push(understandCard("Que signifie le ratio ?", problem.firstName + " a " + problem.a + " part(s) et " + problem.secondName + " a " + problem.b + " part(s)."));
+      cards.push(understandCard("Que signifie le ratio ?", ratioMeaningText([problem.firstName, problem.secondName], [problem.a, problem.b])));
       cards.push(understandCard("Quelle idée utiliser ?", "Trouver d’abord la valeur d’une part."));
     }else if(problem.type === "multi_linked"){
       cards.push(understandCard("Que cherche-t-on ?", "la quantité de référence"));
