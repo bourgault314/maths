@@ -8838,12 +8838,12 @@ body.printOnlyWorksheet .worksheetSheet{
       const emptyParts = Array.from({length:problem.groupCount}, () =>
         "<div class='part empty' style='flex:1'>&nbsp;</div>"
       ).join("");
-      const lineStyle = "--lineWidth:100%";
+      const lineStyle = styleWithOwnerColumns("--lineWidth:100%", problem.groupCount);
       el.barArea.innerHTML =
         "<div class='schemaBoard'>" +
           "<div class='contextTag'>" + problem.family + " — " + problem.groupCount + " parts égales</div>" +
           totalBraceHtml(lineStyle) +
-          "<div class='barLine top' style='" + lineStyle + "'><div class='part empty' style='flex:1'>" + (problem.subType === "total" ? "total ?" : "total") + "</div></div>" +
+          "<div class='barLine top' style='" + lineStyle + "'><div class='part empty'>" + (problem.subType === "total" ? "total ?" : "total") + "</div></div>" +
           "<div class='barLine bottom' style='" + lineStyle + "'>" + emptyParts + "</div>" +
           equalGroupsOwnerBraces(lineStyle) +
         "</div>";
@@ -8857,7 +8857,7 @@ body.printOnlyWorksheet .worksheetSheet{
       const bottomParts = Array.from({length:n}, (_,i) =>
         "<div class='part empty' style='flex:1'>partie " + (i + 1) + "</div>"
       ).join("");
-      const lineStyle = "--lineWidth:100%";
+      const lineStyle = styleWithOwnerColumns("--lineWidth:100%", n);
       const savedLabels = problem.partLabels;
       if(!Array.isArray(problem.partLabels) || !problem.partLabels.length){
         problem.partLabels = Array.from({length:n}, (_,i) => "partie " + (i + 1));
@@ -9522,13 +9522,10 @@ body.printOnlyWorksheet .worksheetSheet{
 
 
   function equationLinesWithIntermediates(lines){
-    const base = Array.isArray(lines) ? lines : [];
-    const extras = (problem && Array.isArray(problem.intermediateLines)) ? problem.intermediateLines : [];
-    if(problem && problem.type === "equal_groups"){
-      const groupEq = buildEqualGroupsEquationSteps(problem);
-      if(groupEq.length) return extras.concat(groupEq).filter(Boolean);
-    }
-    return extras.concat(base).filter(Boolean);
+    // Affichage projeté : l'équation doit suivre strictement l'état du schéma manipulable.
+    // Les calculs intermédiaires RDP (ex. 12 + 15 = 27) restent réservés à la correction imprimée,
+    // sinon ils apparaissent comme une ancienne ligne d'équation alors qu'ils ne viennent pas du schéma.
+    return (Array.isArray(lines) ? lines : []).filter(Boolean);
   }
 
   function renderEquationLines(lines){
