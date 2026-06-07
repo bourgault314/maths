@@ -2632,6 +2632,22 @@ body.printOnlyWorksheet .worksheetSheet{
 }
 
 
+
+/* Phase 7D — Comparer par écart : segment plus long et libellé "écart" */
+.compareSituationBoard:not(.transformationSituationBoard) .compareSituationDiff::before,
+.compareSituationBoard:not(.transformationSituationBoard) .compareSituationDiff::after{
+  left:5px !important;
+  right:5px !important;
+}
+.compareSituationBoard:not(.transformationSituationBoard) .compareSituationDiff.empty span{
+  background:#fff;
+  padding:0 10px;
+  transform:translateY(28px);
+  font-size:clamp(16px,1.5vw,22px);
+  font-weight:800;
+  color:#64748b;
+}
+
 </style>
 </head>
 <body>
@@ -5564,7 +5580,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
     const bigLabel = filled ? (bigIsUnknown ? unknown() : problem.big) : "&nbsp;";
     const smallLabel = filled ? (smallIsUnknown ? unknown() : problem.small) : "&nbsp;";
-    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "différence";
+    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "écart";
 
     const bigClass = filled && bigIsUnknown ? " unknown" : (filled ? "" : " empty");
     const smallClass = filled && smallIsUnknown ? " unknown" : (filled ? "" : " empty");
