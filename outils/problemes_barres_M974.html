@@ -1754,6 +1754,82 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 
 
 
+
+
+/* RDP mixte additif/multiplicatif — schéma multi-étapes. */
+.mixedBoard{
+  width:min(1040px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:16px;
+}
+.mixedRows{
+  display:grid;
+  gap:12px;
+}
+.mixedRow{
+  display:grid;
+  grid-template-columns:118px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+}
+.mixedRowLabel{
+  text-align:right;
+  color:#334155;
+  font-size:18px;
+  font-weight:950;
+}
+.mixedRowBody .barLine{
+  min-height:70px;
+}
+.mixedRowBody .part{
+  min-height:70px;
+  font-size:clamp(21px,2vw,33px);
+}
+.mixedRowBrace{
+  min-height:36px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  position:relative;
+  color:#334155;
+  font-size:clamp(14px,1.2vw,20px);
+  font-weight:950;
+  padding-bottom:10px;
+}
+.mixedRowBrace::after{
+  content:"";
+  position:absolute;
+  left:4px; right:4px; bottom:0; height:9px;
+  border-top:3px solid rgba(15,23,42,.50);
+  border-left:3px solid rgba(15,23,42,.50);
+  border-right:3px solid rgba(15,23,42,.50);
+  border-radius:12px 12px 0 0;
+}
+.mixedArrow{
+  text-align:center;
+  font-size:24px;
+  color:#64748b;
+  font-weight:950;
+  margin:-6px 0;
+}
+.mixedSummary{
+  margin-top:0;
+}
+.mixedSummary .schemaBoard{width:min(920px,100%);}
+.stage:fullscreen .mixedBoard{width:min(1120px,96vw);gap:18px;}
+.stage:fullscreen .mixedRowBody .barLine,
+.stage:fullscreen .mixedRowBody .part{min-height:86px;}
+.stage:fullscreen .mixedRowBody .part{font-size:clamp(28px,2.55vw,44px);}
+.worksheetSchema .mixedBoard{gap:8px !important;}
+.worksheetSchema .mixedRows{gap:6px !important;}
+.worksheetSchema .mixedRow{grid-template-columns:70px minmax(0,1fr) !important;gap:6px !important;}
+.worksheetSchema .mixedRowLabel{font-size:10px !important;}
+.worksheetSchema .mixedRowBrace{min-height:24px !important;font-size:9px !important;padding-bottom:7px !important;}
+.worksheetSchema .mixedRowBody .barLine,
+.worksheetSchema .mixedRowBody .part{min-height:28px !important;}
+.worksheetSchema .mixedArrow{font-size:14px !important;margin:-4px 0 !important;}
+
 .worksheetDialogInner{
   text-align:left;
 }
@@ -5913,7 +5989,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"Au marché forain de Saint-Paul, Louna achète un t-shirt à 12 € et un chapeau à 15 €. Elle donne un billet de 50 € au vendeur. 2. Quelle somme d'argent le vendeur va-t-il lui rendre ?",
-            total:50, known:[12,15], labels:["t-shirt","chapeau","monnaie rendue"], unit:"€", answer:"Le vendeur va lui rendre 23 €."
+            total:50, known:[27], labels:["achats","monnaie rendue"], unit:"€", answer:"Le vendeur va lui rendre 23 €."
           })
         ]},
         {n:3, title:"Vacances en voiture", questions:[
@@ -5923,7 +5999,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"Pour aller en vacances, la famille de Tom doit parcourir 850 km en voiture. Ils ont roulé 320 km le matin et 210 km l'après-midi. 2. Combien de kilomètres leur reste-t-il à faire demain ?",
-            total:850, known:[320,210], labels:["matin","après-midi","reste"], unit:"km", answer:"Il leur reste 320 km à faire demain."
+            total:850, known:[530], labels:["déjà parcouru","reste"], unit:"km", answer:"Il leur reste 320 km à faire demain."
           })
         ]},
         {n:4, title:"Boulangerie", questions:[
@@ -5933,7 +6009,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"À la boulangerie, Noah achète un pain au chocolat à 1,20 € et une baguette à 1,10 €. Il paie avec un billet de 5 €. 2. Combien la boulangère doit-elle lui rendre ?",
-            total:5, known:[1.2,1.1], labels:["pain au chocolat","baguette","monnaie rendue"], unit:"€", answer:"La boulangère doit lui rendre 2,70 €."
+            total:5, known:[2.3], labels:["achats","monnaie rendue"], unit:"€", answer:"La boulangère doit lui rendre 2,70 €."
           })
         ]},
         {n:5, title:"Librairie", questions:[
@@ -5943,7 +6019,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"Camille a 50 € dans son porte-monnaie. Dans une librairie à Paris, elle choisit un manga à 7,50 €, un roman à 12,90 € et un joli marque-page à 2,50 €. 2. Quelle somme lui restera-t-il après avoir payé ?",
-            total:50, known:[7.5,12.9,2.5], labels:["manga","roman","marque-page","reste"], unit:"€", answer:"Il lui restera 27,10 €."
+            total:50, known:[22.9], labels:["achats","reste"], unit:"€", answer:"Il lui restera 27,10 €."
           })
         ]},
         {n:6, title:"Sac de randonnée", questions:[
@@ -5953,7 +6029,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"Le sac à dos de randonnée de Yacine pèse 6,5 kg au total. À l'intérieur, sa gourde d'eau pèse 1,2 kg et ses vêtements de rechange pèsent 2,4 kg. Le reste du poids correspond à sa tente. 2. Quel est le poids de sa tente ?",
-            total:6.5, known:[1.2,2.4], labels:["gourde","vêtements","tente"], unit:"kg", answer:"Sa tente pèse 2,9 kg."
+            total:6.5, known:[3.6], labels:["gourde et vêtements","tente"], unit:"kg", answer:"Sa tente pèse 2,9 kg."
           })
         ]},
         {n:8, title:"Grand Raid", questions:[
@@ -5963,7 +6039,7 @@ body.printOnlyWorksheet .worksheetSheet{
           }),
           rdpPartWholeMissing({
             raw:"Lors du Grand Raid à La Réunion, une coureuse participe à une course d'une distance totale de 65 km. Elle parcourt 24,5 km lors de la première étape, puis 18,25 km lors de la deuxième étape. 2. Combien de kilomètres lui reste-t-il pour franchir la ligne d'arrivée ?",
-            total:65, known:[24.5,18.25], labels:["étape 1","étape 2","reste"], unit:"km", answer:"Il lui reste 22,25 km pour franchir la ligne d'arrivée."
+            total:65, known:[42.75], labels:["déjà parcouru","reste"], unit:"km", answer:"Il lui reste 22,25 km pour franchir la ligne d'arrivée."
           })
         ]},
         {n:9, title:"Rentrée au collège", questions:[
@@ -6232,6 +6308,97 @@ body.printOnlyWorksheet .worksheetSheet{
         ]}
       ]
     }
+    ,{
+      id:"m5", title:"Mixte additif / multiplicatif", status:"prototype",
+      problems:[
+        {n:1, title:"Camion-bar", questions:[
+          rdpMixedProductTotal({
+            raw:"Au camion-bar, le papa de Maëlys achète 4 sandwichs à 3 € l'unité et 2 barquettes de frites à 4 € l'unité. Quel est le prix total de sa commande ?",
+            unit:"€",
+            groups:[{count:4,value:3,label:"sandwichs",totalLabel:"sandwichs"},{count:2,value:4,label:"frites",totalLabel:"frites"}],
+            answer:"Le prix total de sa commande est 20 €."
+          })
+        ]},
+        {n:2, title:"Lancer d’anneaux", questions:[
+          rdpMixedProductTotal({
+            raw:"À la fête de l'école, Enzo participe au jeu de lancer d'anneaux. Il a réussi à mettre 3 anneaux autour des quilles qui valent 50 points, et 4 anneaux autour des quilles qui valent 10 points. Quel est son score total ?",
+            unit:"points",
+            groups:[{count:3,value:50,label:"quilles à 50",totalLabel:"50 points"},{count:4,value:10,label:"quilles à 10",totalLabel:"10 points"}],
+            answer:"Son score total est 190 points."
+          })
+        ]},
+        {n:3, title:"Craies", questions:[
+          rdpMixedProductMissing({
+            raw:"La maîtresse avait une boîte de 100 craies au début de l'année. Elle a utilisé 4 paquets de 12 craies depuis la rentrée. Combien de craies lui reste-t-il dans sa boîte ?",
+            unit:"craies", total:100,
+            groups:[{count:4,value:12,label:"paquets utilisés",totalLabel:"utilisées"}],
+            missingLabel:"reste",
+            answer:"Il lui reste 52 craies dans sa boîte."
+          })
+        ]},
+        {n:4, title:"Goyaviers et ananas", questions:[
+          rdpMixedProductTotal({
+            raw:"Au marché forain de Saint-Paul, maman achète 3 barquettes de goyaviers vendues 2,50 € l'unité, et 2 beaux ananas à 3,50 € l'unité. Quel est le montant total de ses achats ?",
+            unit:"€",
+            groups:[{count:3,value:2.5,label:"goyaviers",totalLabel:"goyaviers"},{count:2,value:3.5,label:"ananas",totalLabel:"ananas"}],
+            answer:"Le montant total de ses achats est 14,50 €."
+          })
+        ]},
+        {n:5, title:"Colis pour la métropole", questions:[
+          rdpMixedProductTotal({
+            raw:"Pour envoyer un colis à sa famille en métropole, un Réunionnais prépare un carton contenant 5 pots de confiture pesant 350 g chacun, et 3 sachets d'épices pesant 120 g chacun. Quelle est la masse totale des produits à l'intérieur du colis ?",
+            unit:"g",
+            groups:[{count:5,value:350,label:"confiture",totalLabel:"confiture"},{count:3,value:120,label:"épices",totalLabel:"épices"}],
+            answer:"La masse totale des produits est 2 110 g."
+          })
+        ]},
+        {n:6, title:"Matériel de sport", questions:[
+          rdpEqualGroupsTotal({
+            raw:"Le directeur de l'école a un budget de 200 € pour acheter du matériel de sport. Il achète 6 ballons de basket à 15 € l'unité. 1. Combien ont coûté les ballons au total ?",
+            groupCount:6, perGroup:15, groupLabel:"ballons", oneGroupLabel:"ballon", unit:"€",
+            answer:"Les ballons ont coûté 90 € au total."
+          }),
+          rdpPartWholeMissing({
+            raw:"Le directeur de l'école a un budget de 200 € pour acheter du matériel de sport. Il achète 6 ballons de basket à 15 € l'unité. Avec l'argent qu'il lui reste, il veut acheter des cerceaux. 2. Quelle somme lui reste-t-il pour acheter les cerceaux ?",
+            total:200, known:[90], labels:["ballons","cerceaux"], unit:"€",
+            answer:"Il lui reste 110 € pour acheter les cerceaux."
+          })
+        ]},
+        {n:7, title:"Course en relais", questions:[
+          rdpMixedProductTotal({
+            raw:"Lors d'une course en relais, une équipe est composée de 4 coureurs. Les 3 premiers relayeurs parcourent chacun 2,5 km. Le dernier relayeur parcourt 1,75 km pour franchir la ligne d'arrivée. Quelle est la distance totale de cette course en relais ?",
+            unit:"km",
+            groups:[{count:3,value:2.5,label:"3 premiers relayeurs",totalLabel:"3 relayeurs"}],
+            singles:[{value:1.75,label:"dernier relayeur"}],
+            answer:"La distance totale de cette course est 9,25 km."
+          })
+        ]},
+        {n:8, title:"Fournitures scolaires", questions:[
+          rdpMixedProductTotal({
+            raw:"Pour la rentrée au collège, les parents de Lucas achètent 4 cahiers grand format à 3,25 € l'unité, 2 classeurs à 4,90 € l'unité et un agenda à 8,50 €. Quel est le montant total des fournitures scolaires ?",
+            unit:"€",
+            groups:[{count:4,value:3.25,label:"cahiers",totalLabel:"cahiers"},{count:2,value:4.9,label:"classeurs",totalLabel:"classeurs"}],
+            singles:[{value:8.5,label:"agenda"}],
+            answer:"Le montant total des fournitures scolaires est 31,30 €."
+          })
+        ]},
+        {n:9, title:"Billets d’avion et valises", questions:[
+          rdpMixedProductMissing({
+            raw:"La famille Payet a acheté 3 billets d'avion pour Paris à 850 € l'unité, ainsi que 2 grandes valises identiques. En tout, pour les billets et les valises, la famille a payé 2 830 €. 1. Quel est le prix total des deux valises ?",
+            unit:"€", total:2830,
+            groups:[{count:3,value:850,label:"billets",totalLabel:"billets"}],
+            missingLabel:"valises",
+            answer:"Les deux valises coûtent 280 € au total."
+          }),
+          rdpEqualGroupsValue({
+            raw:"La famille Payet a acheté 3 billets d'avion pour Paris à 850 € l'unité, ainsi que 2 grandes valises identiques. En tout, pour les billets et les valises, la famille a payé 2 830 €. 2. Quel est le prix d'une seule valise ?",
+            total:280, groupCount:2, groupLabel:"valises", oneGroupLabel:"valise", unit:"€",
+            answer:"Une seule valise coûte 140 €."
+          })
+        ]}
+      ]
+    }
+
   ];
 
   function frNumber(value, forcedDecimals=null){
@@ -6421,6 +6588,96 @@ body.printOnlyWorksheet .worksheetSheet{
     };
   }
 
+  function rdpEqualGroupsValue(cfg){
+    const total = Number(cfg.total);
+    const groupCount = Number(cfg.groupCount);
+    const perGroup = cleanDecimal(total / groupCount);
+    const unit = cfg.unit || "";
+    const groupLabel = cfg.groupLabel || "groupes";
+    const oneGroupLabel = cfg.oneGroupLabel || "groupe";
+    return {
+      type:"equal_groups",
+      subType:"value",
+      family:"RDP — Partie / tout multiplicatif",
+      rdpUnit:unit,
+      known: groupCount,
+      x: perGroup,
+      total,
+      groupCount,
+      perGroup,
+      groupLabel,
+      oneGroupLabel,
+      pieces: Array.from({length:Math.max(1, Math.round(groupCount))}, () => ({type:"x", value:"x"})),
+      rawStatement:cfg.raw,
+      highlightedStatement:rdpHighlightNumbers(cfg.raw),
+      emptyText:"On connaît le total et le nombre de groupes égaux. On cherche la valeur d’un groupe.",
+      fillText:"Le total est partagé en " + groupCount + " groupes égaux. Une part correspond à la valeur cherchée.",
+      context:"Total : " + rdpFormat(total, unit) + " ; nombre de groupes : " + groupCount,
+      answer:cfg.answer || ("Chaque " + oneGroupLabel + " vaut " + rdpFormat(perGroup, unit) + "."),
+      check:groupCount + " × " + rdpCalcFormat(perGroup, unit) + " = " + rdpCalcFormat(total, unit) + "."
+    };
+  }
+
+  function rdpMixedProductTotal(cfg){
+    const unit = cfg.unit || "";
+    const groups = cfg.groups || [];
+    const singles = cfg.singles || [];
+    const productValues = groups.map(g => cleanDecimal(Number(g.count) * Number(g.value)));
+    const singleValues = singles.map(s => cleanDecimal(Number(s.value)));
+    const values = productValues.concat(singleValues);
+    const labels = groups.map(g => g.totalLabel || g.label || g.groupLabel || "groupe").concat(singles.map(s => s.label || "partie"));
+    const total = cleanDecimal(values.reduce((sum,v)=>sum + Number(v), 0));
+    const p = rdpPartWholeWhole({
+      raw:cfg.raw,
+      values,
+      labels,
+      unit,
+      answer:cfg.answer || ("Le total vaut " + rdpFormat(total, unit) + ".")
+    });
+    p.family = "RDP — Mixte additif / multiplicatif";
+    p.rdpMixedMode = "product_total";
+    p.rdpMixedGroups = groups.map((g,i) => Object.assign({}, g, {productValue:productValues[i]}));
+    p.rdpMixedSingles = singles.map((s,i) => Object.assign({}, s, {singleValue:singleValues[i]}));
+    p.emptyText = "On repère d’abord les groupes égaux. Chaque ligne multiplicative donnera une partie du total.";
+    p.fillText = "On calcule chaque groupe répété, puis on regroupe les résultats pour obtenir le total.";
+    const productsText = groups.map((g,i) => g.count + " × " + rdpCalcFormat(Number(g.value), unit) + " = " + rdpCalcFormat(productValues[i], unit));
+    const singlesText = singles.map((sing,i) => (sing.label || "partie") + " : " + rdpFormat(singleValues[i], unit));
+    p.context = productsText.concat(singlesText).join(" ; ");
+    p.check = productsText.concat([values.map(v => rdpCalcFormat(v, unit)).join(" + ") + " = " + rdpCalcFormat(total, unit) + "."]).join("<br>");
+    p.rdpIntermediateLines = productsText;
+    return p;
+  }
+
+  function rdpMixedProductMissing(cfg){
+    const unit = cfg.unit || "";
+    const groups = cfg.groups || [];
+    const knownExtra = cfg.knownExtra || [];
+    const productValues = groups.map(g => cleanDecimal(Number(g.count) * Number(g.value)));
+    const known = productValues.concat(knownExtra.map(v => cleanDecimal(Number(v))));
+    const labels = groups.map(g => g.totalLabel || g.label || g.groupLabel || "partie connue").concat((cfg.extraLabels || []).slice(0, knownExtra.length));
+    labels.push(cfg.missingLabel || "reste");
+    const p = rdpPartWholeMissing({
+      raw:cfg.raw,
+      total:cfg.total,
+      known,
+      labels,
+      unit,
+      answer:cfg.answer
+    });
+    p.family = "RDP — Mixte additif / multiplicatif";
+    p.rdpMixedMode = "product_missing";
+    p.rdpMixedGroups = groups.map((g,i) => Object.assign({}, g, {productValue:productValues[i]}));
+    p.rdpMixedSingles = (cfg.knownExtra || []).map((v,i) => ({value:v, label:(cfg.extraLabels || [])[i] || "partie connue", singleValue:cleanDecimal(Number(v))}));
+    p.emptyText = "On calcule d’abord la partie formée par les groupes égaux, puis on cherche la partie restante.";
+    p.fillText = "Le total est connu. Une partie est obtenue par multiplication, puis la partie restante est cherchée.";
+    const productsText = groups.map((g,i) => g.count + " × " + rdpCalcFormat(Number(g.value), unit) + " = " + rdpCalcFormat(productValues[i], unit));
+    p.context = ("Le tout : " + rdpFormat(cfg.total, unit) + " ; partie(s) connue(s) : " + known.map(v => rdpFormat(v, unit)).join(" + "));
+    p.check = productsText.concat([rdpCheckSum(known.concat([p.x]), cfg.total, unit)]).join("<br>");
+    p.rdpIntermediateLines = productsText;
+    return p;
+  }
+
+
 
   function rdpComparisonAdditive(cfg){
     const unit = cfg.unit || "";
@@ -6599,7 +6856,7 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function rdpEntryIsSeparated(mission, entry){
-    return !!(mission && entry && Array.isArray(entry.questions) && entry.questions.length > 1 && (mission.id === "m2" || mission.id === "m4" || entry.separate));
+    return !!(mission && entry && Array.isArray(entry.questions) && entry.questions.length > 1 && (mission.id === "m1" || mission.id === "m2" || mission.id === "m4" || entry.separate));
   }
 
   function rdpCurrentQuestion(){
@@ -9165,7 +9422,58 @@ body.printOnlyWorksheet .worksheetSheet{
     "</div>";
   }
 
+
+  function renderMixedProductRow(g, filled){
+    const count = Math.max(1, Number(g.count) || 1);
+    const value = Number(g.value);
+    const unit = problem.rdpUnit || "";
+    const lineStyle = styleWithOwnerColumns("--lineWidth:100%", count);
+    const cells = Array.from({length:count}, () => {
+      const txt = filled ? displayValue(value) : "&nbsp;";
+      const cls = filled ? "part" : "part empty";
+      return "<div class='" + cls + "' style='flex:1'><span class='partLabel'>" + txt + "</span></div>";
+    }).join("");
+    const braceText = filled
+      ? (count + " × " + rdpCalcFormat(value, unit) + " = " + rdpCalcFormat(g.productValue, unit))
+      : (count + " parts égales");
+    const label = g.label || g.totalLabel || "groupe";
+    return "<div class='mixedRow'>" +
+      "<div class='mixedRowLabel'>" + label + "</div>" +
+      "<div class='mixedRowBody'>" +
+        "<div class='mixedRowBrace'>" + braceText + "</div>" +
+        "<div class='barLine bottom' style='" + lineStyle + "'>" + cells + "</div>" +
+      "</div>" +
+    "</div>";
+  }
+
+  function renderMixedDetailedSchema(filled=true, showSummary=true, solution=false){
+    const groups = Array.isArray(problem.rdpMixedGroups) ? problem.rdpMixedGroups : [];
+    const rows = groups.map(g => renderMixedProductRow(g, filled)).join("");
+    let summary = "";
+    if(showSummary){
+      const savedType = problem.type;
+      const savedPartLabels = problem.partLabels;
+      problem.type = "part_whole";
+      try{
+        summary = "<div class='mixedArrow'>↓</div><div class='mixedSummary'>" + renderEquabarPreview() + "</div>";
+      }finally{
+        problem.type = savedType;
+        problem.partLabels = savedPartLabels;
+      }
+    }
+    return "<div class='mixedBoard'>" +
+      "<div class='contextTag'>Mixte : groupes égaux puis regroupement</div>" +
+      "<div class='mixedRows'>" + rows + "</div>" +
+      summary +
+    "</div>";
+  }
+
   function renderEmpty(){
+    if(problem.rdpMixedMode){
+      el.barArea.innerHTML = renderMixedDetailedSchema(false, true);
+      return;
+    }
+
     if(problem.type === "multi_linked"){
       el.barArea.innerHTML = renderMultiLinkedSchema(false);
       return;
@@ -9414,6 +9722,11 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function renderFilled(){
+    if(problem.rdpMixedMode){
+      el.barArea.innerHTML = renderMixedDetailedSchema(true, true);
+      return;
+    }
+
     if(problem.type === "comparison_additive"){
       el.barArea.innerHTML = renderComparisonFilledSchema();
       return;
@@ -9810,7 +10123,7 @@ body.printOnlyWorksheet .worksheetSheet{
     const bottomLine = renderGridLine("bottom", bottomPieces, commonW, false);
 
     let ownerBraces = "";
-    if(problem.type === "part_whole"){
+    if(problem.type === "part_whole" || problem.rdpMixedMode){
       ownerBraces = partWholeOwnerBraces(bottomLine.style);
     }else if(problem.type === "unequal_total_diff"){
       ownerBraces = "<div class='unequalOwnerBraces' style='" + bottomLine.style + "'>" +
@@ -9878,6 +10191,11 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function renderGroupingStep(){
     let situation = "";
+
+    if(problem.rdpMixedMode){
+      el.barArea.innerHTML = renderMixedDetailedSchema(true, true);
+      return;
+    }
 
     if(problem.type === "comparison_additive"){
       situation = renderComparisonFilledSchema();
@@ -10777,15 +11095,15 @@ body.printOnlyWorksheet .worksheetSheet{
     try{
       initEquabar();
       if(kind === "bar_empty"){
-        el.barArea.innerHTML = renderWorksheetBarSchema(false);
+        el.barArea.innerHTML = problem.rdpMixedMode ? renderMixedDetailedSchema(false, true) : renderWorksheetBarSchema(false);
       }else if(kind === "bar_empty_braced"){
-        el.barArea.innerHTML = renderWorksheetBarSchema(false, false, true);
+        el.barArea.innerHTML = problem.rdpMixedMode ? renderMixedDetailedSchema(false, true) : renderWorksheetBarSchema(false, false, true);
       }else if(kind === "bar_filled"){
-        el.barArea.innerHTML = renderWorksheetBarSchema(true);
+        el.barArea.innerHTML = problem.rdpMixedMode ? renderMixedDetailedSchema(true, true) : renderWorksheetBarSchema(true);
       }else if(kind === "bar_filled_braced"){
-        el.barArea.innerHTML = renderWorksheetBarSchema(true, false, true);
+        el.barArea.innerHTML = problem.rdpMixedMode ? renderMixedDetailedSchema(true, true) : renderWorksheetBarSchema(true, false, true);
       }else if(kind === "bar_solution"){
-        el.barArea.innerHTML = renderWorksheetBarSchema(true, true, true);
+        el.barArea.innerHTML = problem.rdpMixedMode ? renderMixedDetailedSchema(true, true) : renderWorksheetBarSchema(true, true, true);
       }else if(kind === "empty"){
         renderEmpty();
       }else{
