@@ -2037,13 +2037,224 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 }
 
 
+/* Balances — petite balance visuelle. */
+.balanceScale{
+  width:min(760px,100%);
+  margin:0 auto 18px;
+  padding:10px 12px 4px;
+}
+.balanceScaleBeam{
+  position:relative;
+  height:78px;
+  display:grid;
+  grid-template-columns:1fr 110px 1fr;
+  align-items:end;
+  gap:18px;
+}
+/* Le grand trait supérieur a été retiré : on garde seulement le pivot central et les plateaux. */
+.balanceScaleBeam::before{
+  content:none;
+}
+.balanceScalePost{
+  grid-column:2;
+  justify-self:center;
+  width:8px;
+  height:68px;
+  background:rgba(15,23,42,.48);
+  border-radius:999px;
+  position:relative;
+}
+.balanceScalePost::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-14px;
+  transform:translateX(-50%);
+  width:0;
+  height:0;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  border-bottom:16px solid rgba(15,23,42,.48);
+}
+.balanceScalePost::after{
+  content:none;
+}
+.balancePan{
+  position:relative;
+  min-height:92px;
+  border-bottom:6px solid rgba(15,23,42,.48);
+  border-radius:0 0 28px 28px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:6px;
+  padding:0 8px 10px;
+}
+.balancePan::before{
+  content:none;
+}
+.balancePanLabel{
+  position:absolute;
+  bottom:-28px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:14px;
+  color:#64748b;
+  font-weight:900;
+}
+.balanceToken{
+  min-width:30px;
+  height:30px;
+  border-radius:8px;
+  border:2px solid rgba(37,99,235,.45);
+  background:linear-gradient(180deg,#dbeafe,#eff6ff);
+  color:#1d4ed8;
+  display:grid;
+  place-items:center;
+  font-family:Georgia,"Times New Roman",serif;
+  font-style:italic;
+  font-weight:950;
+}
+.balanceWeight{
+  min-width:52px;
+  height:34px;
+  border-radius:10px;
+  border:2px solid rgba(15,23,42,.28);
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  color:#0f172a;
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  font-weight:950;
+  padding:0 6px;
+}
+.balanceScale.empty .balanceToken,
+.balanceScale.empty .balanceWeight{
+  color:transparent;
+}
+
+.balanceScale + .schemaBoard,
+.balancePreview .balanceScale + .schemaBoard{
+  margin-top:36px;
+}
+.stage:fullscreen .balanceScale + .schemaBoard,
+.stage:fullscreen .balancePreview .balanceScale + .schemaBoard{
+  margin-top:44px;
+}
+.worksheetSchema .balanceScale + .schemaBoard,
+.worksheetSchema .balancePreview .balanceScale + .schemaBoard{
+  margin-top:16px !important;
+}
+.balanceScale + .balanceSchemaBoard,
+.balancePreview .balanceScale + .balanceSchemaBoard{
+  margin-top:58px;
+}
+.stage:fullscreen .balanceScale + .balanceSchemaBoard,
+.stage:fullscreen .balancePreview .balanceScale + .balanceSchemaBoard{
+  margin-top:66px;
+}
+.balanceSchemaBoard{
+  width:min(720px,96%);
+  margin-left:auto;
+  margin-right:auto;
+}
+.balanceSchemaBoard .barLine{
+  min-height:68px;
+}
+.balanceSchemaBoard .part{
+  min-height:68px;
+  font-size:clamp(20px,2vw,31px);
+}
+
+/* Balances — en plein écran, la zone manipulable peut reprendre de l'ampleur.
+   On garde les schémas compacts dans les étapes Schéma vide / Remplir,
+   mais en Résoudre le tableau manipulable mérite davantage de place. */
+.stage:fullscreen .equabarSolve.balanceSolve .balanceSchemaBoard{
+  width:min(960px,86vw);
+}
+.stage:fullscreen .equabarSolve.balanceSolve .barLine,
+.stage:fullscreen .equabarSolve.balanceSolve .part{
+  min-height:88px;
+}
+.stage:fullscreen .equabarSolve.balanceSolve .part{
+  font-size:clamp(28px,2.65vw,46px);
+}
+
+.balanceLabeledBoard{
+  display:grid;
+  grid-template-columns:max-content minmax(0,1fr);
+  column-gap:12px;
+  row-gap:0;
+  align-items:stretch;
+}
+.balanceRowLabel{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  color:#334155;
+  font-weight:950;
+  font-size:clamp(16px,1.45vw,22px);
+  white-space:nowrap;
+  padding-right:2px;
+}
+.balanceLabeledBoard .balanceExpressionBraces{
+  grid-column:2;
+}
+.balanceLabeledBoard .barLine{
+  grid-column:2;
+}
+.balanceLabeledBoard .balanceRowLabel.topLabel{grid-column:1;grid-row:2;}
+.balanceLabeledBoard .barLine.top{grid-column:2;grid-row:2;}
+.balanceLabeledBoard .balanceRowLabel.bottomLabel{grid-column:1;grid-row:4;}
+.balanceLabeledBoard .barLine.bottom{grid-column:2;grid-row:4;}
+.stage:fullscreen .balanceSchemaBoard{
+  width:min(820px,88vw);
+}
+.stage:fullscreen .balanceSchemaBoard .barLine,
+.stage:fullscreen .balanceSchemaBoard .part{
+  min-height:82px;
+}
+.stage:fullscreen .balanceSchemaBoard .part{
+  font-size:clamp(25px,2.4vw,42px);
+}
+.worksheetSchema .balanceScale + .balanceSchemaBoard,
+.worksheetSchema .balancePreview .balanceScale + .balanceSchemaBoard{
+  margin-top:18px !important;
+}
+.worksheetSchema .balanceSchemaBoard{
+  width:640px !important;
+  max-width:640px !important;
+}
+.worksheetSchema .balanceSchemaBoard .barLine,
+.worksheetSchema .balanceSchemaBoard .part{
+  min-height:58px !important;
+}
+.worksheetSchema .balanceRowLabel{
+  font-size:16px !important;
+}
+.stage:fullscreen .balanceScale{
+  width:min(860px,100%);
+  margin-bottom:22px;
+}
+.stage:fullscreen .balanceToken{
+  min-width:38px;
+  height:38px;
+  font-size:20px;
+}
+.stage:fullscreen .balanceWeight{
+  min-width:68px;
+  height:42px;
+  font-size:16px;
+}
+
 /* Balances — étape Remplir : accolades d'expression au-dessus de chaque plateau. */
 .balanceExpressionBraces{
   display:grid;
   grid-template-columns:var(--cols, 1fr);
   width:var(--lineWidth, 100%);
-  margin:0 auto 7px;
-  min-height:48px;
+  margin:0 auto 5px;
+  min-height:40px;
   color:#334155;
   font-size:clamp(15px,1.3vw,22px);
   font-weight:950;
@@ -2056,10 +2267,10 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 .balanceExpressionBrace{
   position:relative;
   display:flex;
-  align-items:flex-start;
+  align-items:flex-end;
   justify-content:center;
   text-align:center;
-  padding:0 4px 17px;
+  padding:0 4px 15px;
   line-height:1.1;
 }
 .balanceExpressionBrace::after{
@@ -2078,8 +2289,8 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   border-top:2px solid var(--line);
 }
 .stage:fullscreen .balanceExpressionBraces{
-  min-height:54px;
-  margin-bottom:9px;
+  min-height:46px;
+  margin-bottom:6px;
   font-size:clamp(18px,1.55vw,27px);
 }
 .worksheetSchema .balanceExpressionBraces{
@@ -2752,6 +2963,844 @@ body.printOnlyWorksheet .worksheetSheet{
   color:#64748b;
 }
 
+
+
+/* Phase 7S — ajustements fiches : Balance + zone de recherche + logo Matégo. */
+.worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+  min-height:48mm;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+  min-height:98mm;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkLines{
+  gap:11px;
+}
+.worksheetPrintLogo img{
+  width:48mm;
+  height:auto;
+}
+
+/* En fiche, la petite balance doit respirer au-dessus du schéma en barres. */
+.worksheetSchema .balanceScale + .balanceSchemaBoard,
+.worksheetSchema .balancePreview .balanceScale + .balanceSchemaBoard{
+  margin-top:34px !important;
+}
+.worksheetSchema .balanceScale{
+  padding-bottom:8px !important;
+}
+.worksheetSchema .balanceScalePost{
+  display:block !important;
+  width:8px !important;
+  height:68px !important;
+  min-height:68px !important;
+  background:rgba(15,23,42,.48) !important;
+  border-radius:999px !important;
+  opacity:1 !important;
+}
+.worksheetSchema .balanceScalePost::before{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  top:-14px !important;
+  transform:translateX(-50%) !important;
+  width:0 !important;
+  height:0 !important;
+  border-left:10px solid transparent !important;
+  border-right:10px solid transparent !important;
+  border-bottom:16px solid rgba(15,23,42,.48) !important;
+}
+
+@media print{
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+    min-height:112mm !important;
+  }
+  body.printWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+    min-height:48mm !important;
+  }
+  body.printWorksheet .worksheetPrintLogo,
+  body.printOnlyWorksheet .worksheetPrintLogo{
+    bottom:2mm !important;
+  }
+  body.printWorksheet .worksheetPrintLogo img,
+  body.printOnlyWorksheet .worksheetPrintLogo img{
+    width:48mm !important;
+  }
+  body.printWorksheet .worksheetSchema .balanceScale + .balanceSchemaBoard,
+  body.printWorksheet .worksheetSchema .balancePreview .balanceScale + .balanceSchemaBoard,
+  body.printOnlyWorksheet .worksheetSchema .balanceScale + .balanceSchemaBoard,
+  body.printOnlyWorksheet .worksheetSchema .balancePreview .balanceScale + .balanceSchemaBoard{
+    margin-top:34px !important;
+  }
+}
+
+
+
+/* Phase 7T — fiches : retour après annulation, zone de recherche et options schéma vide/rempli. */
+.worksheetWorkZone{
+  border:1px solid rgba(15,23,42,.16) !important;
+  border-radius:16px !important;
+  background:linear-gradient(180deg,#f8fafc,#ffffff) !important;
+  padding:9px 12px 14px !important;
+  min-height:56mm !important;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+  min-height:116mm !important;
+}
+.worksheetWorkLines{
+  gap:8px !important;
+}
+.worksheetWorkLine{
+  height:16px !important;
+}
+/* La zone descend davantage ; le logo redevient un vrai logo de bas de page. */
+.worksheetPrintLogo img{
+  width:54mm !important;
+}
+@media print{
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+    min-height:116mm !important;
+  }
+  body.printWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+    min-height:56mm !important;
+  }
+  body.printWorksheet .worksheetWorkLine,
+  body.printOnlyWorksheet .worksheetWorkLine{
+    height:16px !important;
+  }
+  body.printWorksheet .worksheetWorkLines,
+  body.printOnlyWorksheet .worksheetWorkLines{
+    gap:8px !important;
+  }
+  body.printWorksheet .worksheetPrintLogo,
+  body.printOnlyWorksheet .worksheetPrintLogo{
+    left:11mm !important;
+    bottom:1mm !important;
+  }
+  body.printWorksheet .worksheetPrintLogo img,
+  body.printOnlyWorksheet .worksheetPrintLogo img{
+    width:54mm !important;
+  }
+}
+
+
+
+/* Phase 7U — impression : restaurer les anciens schémas, ajouter les schémas en barres et corriger la fiche. */
+.worksheetDialogInner{position:relative;}
+.worksheetCloseX{
+  position:absolute;
+  top:14px;
+  right:16px;
+  width:38px;
+  height:38px;
+  padding:0;
+  border-radius:999px;
+  border:1px solid rgba(220,38,38,.22);
+  background:#fee2e2;
+  color:#991b1b;
+  font-size:25px;
+  font-weight:950;
+  line-height:1;
+  display:grid;
+  place-items:center;
+}
+#btnCloseWorksheet{
+  background:#fee2e2 !important;
+  color:#991b1b !important;
+  border:1px solid rgba(220,38,38,.25) !important;
+}
+.worksheetBarOnlyPreview .balanceScale{display:none !important;}
+.worksheetBarOnlyPreview{margin-top:4px;}
+.worksheetSchema .worksheetBarOnlyPreview .schemaBoard{margin-top:0 !important;}
+.worksheetSchema .worksheetBarOnlyPreview .part.empty{color:transparent !important;}
+.worksheetSchema .worksheetBarOnlyPreview .balanceSchemaBoard{width:640px !important;max-width:640px !important;}
+.worksheetProblem .worksheetWorkZone{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  margin-top:10px !important;
+}
+.worksheetProblem .worksheetWorkLines{
+  flex:1 1 auto !important;
+  display:grid !important;
+  align-content:stretch !important;
+}
+.worksheetProblem .worksheetWorkLine{height:auto !important;min-height:11px !important;}
+.worksheetProblem{position:relative;}
+.worksheetPrintLogo{
+  position:absolute !important;
+  left:12mm !important;
+  bottom:6mm !important;
+  display:block !important;
+  z-index:2 !important;
+}
+.worksheetPrintLogo img{width:50mm !important;height:auto !important;}
+.worksheetProblem .worksheetWorkZone{padding-bottom:19mm !important;}
+@media print{
+  body.printWorksheet .worksheetProblem,
+  body.printOnlyWorksheet .worksheetProblem{
+    display:flex !important;
+    flex-direction:column !important;
+    position:relative !important;
+    min-height:158mm !important;
+  }
+  body.printWorksheet .worksheetProblem .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem .worksheetWorkZone{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    padding-bottom:19mm !important;
+  }
+  body.printWorksheet .worksheetProblem .worksheetWorkLines,
+  body.printOnlyWorksheet .worksheetProblem .worksheetWorkLines{
+    flex:1 1 auto !important;
+    display:grid !important;
+    align-content:stretch !important;
+  }
+  body.printWorksheet .worksheetProblem .worksheetWorkLine,
+  body.printOnlyWorksheet .worksheetProblem .worksheetWorkLine{
+    height:auto !important;
+    min-height:11px !important;
+  }
+  body.printWorksheet .worksheetPrintLogo,
+  body.printOnlyWorksheet .worksheetPrintLogo{
+    position:absolute !important;
+    left:12mm !important;
+    bottom:6mm !important;
+    display:block !important;
+  }
+  body.printWorksheet .worksheetPrintLogo img,
+  body.printOnlyWorksheet .worksheetPrintLogo img{
+    width:50mm !important;
+  }
+}
+
+
+
+/* Phase 7V — impression : zone de recherche étendue, logo dans la zone, boutons imprimante. */
+#btnWorksheet{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+#btnPrintWorksheet{
+  min-width:46px;
+  font-size:20px;
+  padding:10px 13px;
+}
+.worksheetPrintLogo{
+  display:none !important;
+}
+.worksheetProblem{
+  display:flex !important;
+  flex-direction:column !important;
+  position:relative !important;
+}
+.worksheetProblem .worksheetWorkZone{
+  flex:1 1 auto !important;
+  display:flex !important;
+  flex-direction:column !important;
+  min-height:0 !important;
+  margin-top:10px !important;
+  padding:10px 12px 8px !important;
+}
+.worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+  min-height:128mm !important;
+}
+.worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+  min-height:70mm !important;
+}
+.worksheetWorkLines{
+  flex:1 1 auto !important;
+  display:grid !important;
+  align-content:stretch !important;
+  gap:8px !important;
+}
+.worksheetWorkLine{
+  height:auto !important;
+  min-height:11px !important;
+}
+.worksheetInlineLogo{
+  margin-top:7mm;
+  align-self:flex-start;
+  line-height:0;
+}
+.worksheetInlineLogo img{
+  width:45mm;
+  height:auto;
+}
+.worksheetProblem.worksheetMode-statements .worksheetInlineLogo{
+  margin-top:9mm;
+}
+@media print{
+  body.printWorksheet .worksheetPage,
+  body.printOnlyWorksheet .worksheetPage{
+    min-height:190mm !important;
+  }
+  body.printWorksheet .worksheetProblem,
+  body.printOnlyWorksheet .worksheetProblem{
+    min-height:190mm !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  body.printWorksheet .worksheetProblem .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem .worksheetWorkZone{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    padding:10px 12px 8px !important;
+  }
+  body.printWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+    min-height:128mm !important;
+  }
+  body.printWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+    min-height:70mm !important;
+  }
+  body.printWorksheet .worksheetInlineLogo,
+  body.printOnlyWorksheet .worksheetInlineLogo{
+    display:block !important;
+    margin-top:7mm !important;
+  }
+  body.printWorksheet .worksheetInlineLogo img,
+  body.printOnlyWorksheet .worksheetInlineLogo img{
+    width:45mm !important;
+  }
+}
+
+
+/* Phase 7W — corrections impression : logo absent de la page correction + vrai schéma en barres. */
+.worksheetCorrection + .worksheetPrintLogo,
+.worksheetCorrection .worksheetPrintLogo{
+  display:none !important;
+}
+.worksheetSchema .worksheetBarOnlyPreview .balanceScale,
+.worksheetSchema .worksheetBarOnlyPreview .balanceScaleBeam,
+.worksheetSchema .worksheetBarOnlyPreview .balanceScalePost{
+  display:none !important;
+  height:0 !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.worksheetSchema .worksheetBarOnlyPreview{
+  margin-top:0 !important;
+}
+.worksheetSchema .worksheetBarOnlyPreview .balanceSchemaBoard{
+  margin-top:0 !important;
+}
+@media print{
+  body.printWorksheet .worksheetCorrection + .worksheetPrintLogo,
+  body.printOnlyWorksheet .worksheetCorrection + .worksheetPrintLogo{
+    display:none !important;
+  }
+}
+
+
+
+/* Phase 7X — impression : logo élève restauré dans la zone, logo correction uniquement en bas de page. */
+.worksheetPrintLogo{display:none !important;}
+.worksheetProblem .worksheetWorkZone{
+  position:relative !important;
+}
+.worksheetInlineLogo{
+  margin-top:7mm !important;
+  align-self:flex-start !important;
+  line-height:0 !important;
+  display:block !important;
+}
+.worksheetInlineLogo img{
+  width:45mm !important;
+  height:auto !important;
+}
+.worksheetCorrection.separateCorrection{
+  position:relative !important;
+  min-height:160mm !important;
+  padding-bottom:24mm !important;
+}
+.correctionPrintLogo{
+  position:absolute !important;
+  left:12mm !important;
+  bottom:6mm !important;
+  line-height:0 !important;
+  display:block !important;
+}
+.correctionPrintLogo img{
+  width:45mm !important;
+  height:auto !important;
+}
+@media print{
+  body.printWorksheet .worksheetInlineLogo,
+  body.printOnlyWorksheet .worksheetInlineLogo{
+    display:block !important;
+    margin-top:7mm !important;
+  }
+  body.printWorksheet .correctionPrintLogo,
+  body.printOnlyWorksheet .correctionPrintLogo{
+    position:absolute !important;
+    left:12mm !important;
+    bottom:6mm !important;
+    display:block !important;
+  }
+  body.printWorksheet .worksheetCorrection.separateCorrection,
+  body.printOnlyWorksheet .worksheetCorrection.separateCorrection{
+    position:relative !important;
+    min-height:160mm !important;
+    padding-bottom:24mm !important;
+  }
+}
+
+
+
+/* Phase 7Z — correction imprimée détaillée : schéma en barres rempli + vérification + phrase réponse. */
+.worksheetCorrection.separateCorrection{
+  border-top:0 !important;
+  padding-top:0 !important;
+  margin-top:0 !important;
+  page-break-before:always;
+  break-before:page;
+}
+.worksheetCorrectionPages{
+  display:block;
+}
+.worksheetCorrectionPage{
+  position:relative;
+  min-height:176mm;
+  break-after:page;
+  page-break-after:always;
+  padding:0 0 22mm 0;
+}
+.worksheetCorrectionPage:last-child{
+  break-after:auto;
+  page-break-after:auto;
+}
+.worksheetCorrectionPageTitle{
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:-.03em;
+  color:#0f172a;
+  border-bottom:2px solid rgba(15,23,42,.18);
+  padding-bottom:5px;
+  margin-bottom:8mm;
+}
+.worksheetCorrectionGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8mm;
+  align-items:start;
+}
+.worksheetCorrectionCard{
+  break-inside:avoid;
+  page-break-inside:avoid;
+  border:1px solid rgba(15,23,42,.16);
+  border-radius:14px;
+  padding:8px 10px;
+  background:#fff;
+}
+.worksheetCorrectionCardTitle{
+  font-weight:950;
+  margin-bottom:5px;
+  color:#0f172a;
+}
+.worksheetCorrectionCard .worksheetSchemaBlock{
+  margin-top:5px;
+}
+.worksheetCorrectionCard .worksheetSchemaTitle{
+  margin:3px 0 3px;
+  font-size:11px;
+}
+.worksheetCorrectionCard .worksheetSchemaBlock + .worksheetSchemaBlock{
+  margin-top:4px;
+}
+.worksheetCorrectionCard .worksheetSchema{
+  padding-top:4px;
+  padding-bottom:6px;
+}
+.correctionEquation,
+.correctionAnswer{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.28;
+}
+.correctionEquation strong,
+.correctionAnswer strong{
+  color:#0f172a;
+}
+.correctionEquation span,
+.correctionAnswer span{
+  color:#334155;
+}
+.worksheetCorrectionPage .correctionPrintLogo{
+  position:absolute !important;
+  left:0 !important;
+  bottom:4mm !important;
+  display:block !important;
+  line-height:0 !important;
+}
+.worksheetCorrectionPage .correctionPrintLogo img{
+  width:45mm !important;
+  height:auto !important;
+}
+@media print{
+  body.printWorksheet .worksheetCorrectionPage,
+  body.printOnlyWorksheet .worksheetCorrectionPage{
+    min-height:176mm !important;
+    break-after:page !important;
+    page-break-after:always !important;
+  }
+  body.printWorksheet .worksheetCorrectionPage:last-child,
+  body.printOnlyWorksheet .worksheetCorrectionPage:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+  body.printWorksheet .worksheetCorrectionGrid,
+  body.printOnlyWorksheet .worksheetCorrectionGrid{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8mm !important;
+  }
+  body.printWorksheet .worksheetCorrectionPage .correctionPrintLogo,
+  body.printOnlyWorksheet .worksheetCorrectionPage .correctionPrintLogo{
+    position:absolute !important;
+    left:0 !important;
+    bottom:4mm !important;
+    display:block !important;
+  }
+}
+
+
+
+/* Phase 7ZD — impression : option 4 problèmes par page (format compact, un seul support). */
+.worksheetPage.perPage4{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-auto-rows:minmax(0,1fr) !important;
+  gap:5mm !important;
+  min-height:190mm !important;
+}
+.worksheetPage.perPage4 .worksheetProblem{
+  min-height:0 !important;
+  padding:8px 9px !important;
+}
+.worksheetPage.perPage4 .worksheetProblemTitle{
+  margin-bottom:3px !important;
+  font-size:13px !important;
+}
+.worksheetPage.perPage4 .worksheetStatement{
+  font-size:12px !important;
+  line-height:1.22 !important;
+}
+.worksheetPage.perPage4 .worksheetHelpBlock{
+  padding:5px 6px !important;
+  margin-top:5px !important;
+}
+.worksheetPage.perPage4 .worksheetHelpItem{
+  font-size:10.5px !important;
+  line-height:1.14 !important;
+}
+.worksheetPage.perPage4 .worksheetSchemaBlock{
+  margin-top:5px !important;
+}
+.worksheetPage.perPage4 .worksheetSchemaTitle{
+  font-size:10px !important;
+  margin:3px 0 2px !important;
+}
+.worksheetPage.perPage4 .worksheetSchema{
+  max-width:68mm !important;
+  padding:4px 4px 6px !important;
+}
+.worksheetPage.perPage4 .worksheetSchemaInner{
+  zoom:.34 !important;
+}
+.worksheetPage.perPage4 .worksheetSchema .schemaBoard,
+.worksheetPage.perPage4 .worksheetSchema .compareSituationBoard,
+.worksheetPage.perPage4 .worksheetSchema .compareRegroupPreview,
+.worksheetPage.perPage4 .worksheetSchema .countBoard,
+.worksheetPage.perPage4 .worksheetSchema .multiBoard,
+.worksheetPage.perPage4 .worksheetSchema .ratioBoard,
+.worksheetPage.perPage4 .worksheetSchema .unequalBoard,
+.worksheetPage.perPage4 .worksheetSchema .groupStage,
+.worksheetPage.perPage4 .worksheetSchema .groupAlignedBoard{
+  width:640px !important;
+  max-width:640px !important;
+}
+.worksheetPage.perPage4 .worksheetWorkZone{
+  margin-top:6px !important;
+  padding:7px 9px 6px !important;
+  min-height:0 !important;
+}
+.worksheetPage.perPage4 .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+  min-height:38mm !important;
+}
+.worksheetPage.perPage4 .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+  min-height:20mm !important;
+}
+.worksheetPage.perPage4 .worksheetWorkZoneTitle{
+  font-size:9.5px !important;
+  margin-bottom:3px !important;
+}
+.worksheetPage.perPage4 .worksheetWorkLines{
+  gap:4px !important;
+}
+.worksheetPage.perPage4 .worksheetWorkLine{
+  min-height:7px !important;
+}
+.worksheetPage.perPage4 .worksheetInlineLogo{
+  margin-top:3mm !important;
+}
+.worksheetPage.perPage4 .worksheetInlineLogo img{
+  width:28mm !important;
+}
+.worksheetCorrectionPage.perPage4{
+  min-height:176mm !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:5mm !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionCard{
+  padding:6px 8px !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionCardTitle{
+  font-size:13px !important;
+  margin-bottom:3px !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetSchema{
+  max-width:68mm !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetSchemaInner{
+  zoom:.34 !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionCard .worksheetSchemaBlock{
+  margin-top:3px !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionCard .worksheetSchemaBlock + .worksheetSchemaBlock{
+  margin-top:2px !important;
+}
+.worksheetCorrectionPage.perPage4 .correctionEquation,
+.worksheetCorrectionPage.perPage4 .correctionAnswer{
+  font-size:11px !important;
+  line-height:1.18 !important;
+  margin-top:4px !important;
+}
+@media print{
+  body.printWorksheet .worksheetPage.perPage4,
+  body.printOnlyWorksheet .worksheetPage.perPage4{
+    min-height:190mm !important;
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-auto-rows:minmax(0,1fr) !important;
+    gap:5mm !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetProblem,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetProblem{
+    min-height:0 !important;
+    padding:8px 9px !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetProblem.worksheetMode-statements .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetProblem.worksheetMode-statements .worksheetWorkZone{
+    min-height:38mm !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetProblem:not(.worksheetMode-statements) .worksheetWorkZone{
+    min-height:20mm !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetSchema,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetSchema{
+    max-width:68mm !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetSchemaInner,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetSchemaInner{
+    zoom:.34 !important;
+  }
+  body.printWorksheet .worksheetCorrectionPage.perPage4 .worksheetCorrectionGrid,
+  body.printOnlyWorksheet .worksheetCorrectionPage.perPage4 .worksheetCorrectionGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:5mm !important;
+  }
+}
+
+
+
+/* Phase 7ZE — impression : 4 fiches réellement par page + verso aligné. */
+.worksheetPage.perPage4{
+  height:190mm !important;
+  min-height:190mm !important;
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  grid-auto-rows:auto !important;
+  gap:5mm !important;
+  overflow:hidden !important;
+}
+.worksheetPage.perPage4 .worksheetProblem{
+  height:calc((190mm - 5mm) / 2) !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+.worksheetCorrectionVersoPage{
+  height:190mm !important;
+  min-height:190mm !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+.worksheetCorrectionVersoPage .worksheetCorrectionPageTitle{
+  display:none !important;
+}
+.worksheetCorrectionVersoPage .correctionPrintLogo{
+  display:none !important;
+}
+.worksheetCorrectionVersoPage .worksheetCorrectionGrid{
+  height:190mm !important;
+  display:grid !important;
+  align-items:stretch !important;
+}
+.worksheetCorrectionVersoPage:not(.perPage4) .worksheetCorrectionGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-template-rows:1fr !important;
+  gap:8mm !important;
+}
+.worksheetCorrectionVersoPage.perPage4 .worksheetCorrectionGrid{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  gap:5mm !important;
+}
+.worksheetCorrectionVersoPage .worksheetCorrectionCard{
+  min-height:0 !important;
+  height:100% !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+.correctionEquationSteps{
+  margin-top:6px;
+  padding:5px 7px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid rgba(15,23,42,.10);
+  font-weight:900;
+  color:#0f172a;
+}
+.correctionEquationStepsTitle{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:#64748b;
+  margin-bottom:4px;
+}
+.correctionEquationSteps .eqRow{
+  display:grid;
+  grid-template-columns:max-content 18px max-content;
+  justify-content:center;
+  align-items:baseline;
+  font-size:13px;
+  line-height:1.16;
+  white-space:nowrap;
+}
+.correctionEquationSteps .eqLeft{text-align:right;}
+.correctionEquationSteps .eqEqual{text-align:center;}
+.correctionEquationSteps .eqRight{text-align:left;}
+.correctionEquationSteps .old{color:#475569;}
+.worksheetCorrectionPage.perPage4 .correctionEquationSteps{
+  padding:4px 5px;
+  margin-top:4px;
+}
+.worksheetCorrectionPage.perPage4 .correctionEquationStepsTitle{
+  font-size:9.5px;
+  margin-bottom:2px;
+}
+.worksheetCorrectionPage.perPage4 .correctionEquationSteps .eqRow{
+  font-size:10.5px;
+  line-height:1.08;
+}
+@media print{
+  body.printWorksheet .worksheetPage.perPage4,
+  body.printOnlyWorksheet .worksheetPage.perPage4{
+    height:190mm !important;
+    min-height:190mm !important;
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+    overflow:hidden !important;
+  }
+  body.printWorksheet .worksheetPage.perPage4 .worksheetProblem,
+  body.printOnlyWorksheet .worksheetPage.perPage4 .worksheetProblem{
+    height:calc((190mm - 5mm) / 2) !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+  }
+  body.printWorksheet .worksheetCorrectionVersoPage,
+  body.printOnlyWorksheet .worksheetCorrectionVersoPage{
+    height:190mm !important;
+    min-height:190mm !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+  body.printWorksheet .worksheetCorrectionVersoPage .worksheetCorrectionGrid,
+  body.printOnlyWorksheet .worksheetCorrectionVersoPage .worksheetCorrectionGrid{
+    height:190mm !important;
+    align-items:stretch !important;
+  }
+  body.printWorksheet .worksheetCorrectionVersoPage.perPage4 .worksheetCorrectionGrid,
+  body.printOnlyWorksheet .worksheetCorrectionVersoPage.perPage4 .worksheetCorrectionGrid{
+    grid-template-rows:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+
+
+/* Phase 7ZF — corrections verso : bloc légèrement remonté + résolution complète issue du schéma. */
+.worksheetCorrectionVersoPage .worksheetCorrectionGrid{
+  transform:translateY(-3mm);
+}
+.worksheetCorrectionCard .correctionEquationSteps{
+  flex:0 0 auto;
+}
+.worksheetCorrectionCard .correctionAnswer{
+  flex:0 0 auto;
+}
+@media print{
+  body.printWorksheet .worksheetCorrectionVersoPage .worksheetCorrectionGrid,
+  body.printOnlyWorksheet .worksheetCorrectionVersoPage .worksheetCorrectionGrid{
+    transform:translateY(-3mm) !important;
+  }
+}
+
+
+
+/* Phase 7ZI — correction imprimée : le premier schéma garde explicitement les accolades explicatives. */
+.worksheetCorrectionCard .correctionUnknownBarSchema .worksheetSchema{
+  padding-top:6px !important;
+  padding-bottom:9px !important;
+}
+.worksheetCorrectionCard .correctionUnknownBarSchema .unequalOwnerBraces,
+.worksheetCorrectionCard .correctionUnknownBarSchema .partWholeOwnerBraces,
+.worksheetCorrectionCard .correctionUnknownBarSchema .balanceExpressionBraces{
+  display:grid !important;
+  visibility:visible !important;
+}
+.worksheetCorrectionPage.perPage4 .worksheetCorrectionCard .correctionUnknownBarSchema .worksheetSchema{
+  padding-top:5px !important;
+  padding-bottom:7px !important;
+}
+
+/* Phase 7ZJ — correction : accolades forcées sur le premier schéma de correction. */
+.worksheetCorrectionCard .correctionUnknownBarSchema .balanceExpressionBraces,
+.worksheetCorrectionCard .correctionUnknownBarSchema .unequalOwnerBraces,
+.worksheetCorrectionCard .correctionUnknownBarSchema .partWholeOwnerBraces{
+  display:grid !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+.worksheetCorrectionCard .correctionUnknownBarSchema .balanceExpressionBrace::after,
+.worksheetCorrectionCard .correctionUnknownBarSchema .ownerBrace::before{
+  display:block !important;
+}
+
 </style>
 </head>
 <body>
@@ -2769,8 +3818,15 @@ body.printOnlyWorksheet .worksheetSheet{
       <option value="ratio">Ratios / partages proportionnels</option>
       <option value="unequal_total">Partages inégaux</option>
       <option value="multi_linked">Relations entre plusieurs quantités</option>
-      <option value="two_sided_linear">Balances — ax + b = cx + d</option>
+      <option value="two_sided_linear">Balances</option>
       <option value="custom_mix">Mélange personnalisé</option>
+    </select>
+
+    <label id="balanceModeLabel">Type de balance</label>
+    <select id="balanceMode">
+      <option value="simple" selected>Balance simple</option>
+      <option value="two_sides">Balance à deux plateaux</option>
+      <option value="mix">Mélange</option>
     </select>
 
     <div id="customMixBox" class="mixBox" style="display:none">
@@ -2782,7 +3838,7 @@ body.printOnlyWorksheet .worksheetSheet{
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total" checked> Partages inégaux</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="ratio" checked> Ratios</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="multi_linked" checked> Relations entre plusieurs quantités</label>
-      <label class="checkLine"><input type="checkbox" class="mixCheck" value="two_sided_linear"> Balances — ax + b = cx + d</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="two_sided_linear"> Balances</label>
       <div class="btnrow" style="margin-top:8px">
         <button class="ghost" id="btnMixAll" type="button">Tout cocher</button>
         <button class="ghost" id="btnMixNone" type="button">Tout décocher</button>
@@ -2923,7 +3979,7 @@ body.printOnlyWorksheet .worksheetSheet{
     <div class="btnrow">
       <button class="primary" id="btnGenerate">Générer</button>
       <button class="ghost" id="btnReset">Recommencer</button>
-      <button class="ghost" id="btnWorksheet" type="button">Créer une fiche</button>
+      <button class="ghost" id="btnWorksheet" type="button">🖨️ Créer une fiche</button>
     </div>
 
   </section>
@@ -3013,6 +4069,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
 <dialog id="worksheetDialog" class="wideDialog">
   <div class="dialogInner worksheetDialogInner">
+    <button class="worksheetCloseX" id="btnCloseWorksheetX" type="button" aria-label="Fermer">×</button>
     <h2 class="dialogTitle">Créer une fiche</h2>
     <div class="worksheetPrintHint">Optimisé pour impression A4 paysage.</div>
 
@@ -3030,18 +4087,27 @@ body.printOnlyWorksheet .worksheetSheet{
         <option value="help">Avec aide</option>
         <option value="fillable_schema">Avec schéma à compléter</option>
         <option value="filled_schema">Avec schéma rempli</option>
+        <option value="bar_empty_schema">Avec schéma en barres vide</option>
+        <option value="bar_empty_braced_schema">Avec schéma en barres vide + accolades</option>
+        <option value="bar_filled_schema">Avec schéma en barres rempli</option>
       </select>
 
-      <div class="worksheetFixedInfo">Mise en page : 2 problèmes par page, en paysage.</div>
+      <label>Mise en page</label>
+      <select id="worksheetPerPage">
+        <option value="2" selected>2 problèmes par page</option>
+        <option value="4">4 problèmes par page</option>
+      </select>
+      <div class="worksheetFixedInfo">Le mode 4 par page est compact : il convient aux fiches avec un seul support.</div>
       <label>Correction</label>
       <select id="worksheetCorrectionMode">
         <option value="none" selected>Sans correction</option>
         <option value="separate">Correction à part</option>
+        <option value="verso">Correction recto-verso</option>
       </select>
 
       <div class="btnrow" style="justify-content:center;margin-top:14px">
         <button class="primary" id="btnBuildWorksheet" type="button">Générer la fiche</button>
-        <button class="ghost" id="btnPrintWorksheet" type="button">Imprimer</button>
+        <button class="ghost" id="btnPrintWorksheet" type="button" title="Imprimer">🖨️</button>
         <button class="ghost" id="btnCloseWorksheet" type="button">Fermer</button>
       </div>
     </div>
@@ -3187,6 +4253,8 @@ body.printOnlyWorksheet .worksheetSheet{
     multiRatioRelationLabel: document.getElementById("multiRatioRelationLabel"),
     multiDiffRelation: document.getElementById("multiDiffRelation"),
     multiDiffRelationLabel: document.getElementById("multiDiffRelationLabel"),
+    balanceMode: document.getElementById("balanceMode"),
+    balanceModeLabel: document.getElementById("balanceModeLabel"),
     level: document.getElementById("level"),
     unknownMode: document.getElementById("unknownMode"),
     equationDisplay: document.getElementById("equationDisplay"),
@@ -3195,11 +4263,13 @@ body.printOnlyWorksheet .worksheetSheet{
     btnWorksheet: document.getElementById("btnWorksheet"),
     worksheetDialog: document.getElementById("worksheetDialog"),
     worksheetCount: document.getElementById("worksheetCount"),
+    worksheetPerPage: document.getElementById("worksheetPerPage"),
     worksheetStudentMode: document.getElementById("worksheetStudentMode"),
     worksheetCorrectionMode: document.getElementById("worksheetCorrectionMode"),
     btnBuildWorksheet: document.getElementById("btnBuildWorksheet"),
     btnPrintWorksheet: document.getElementById("btnPrintWorksheet"),
     btnCloseWorksheet: document.getElementById("btnCloseWorksheet"),
+    btnCloseWorksheetX: document.getElementById("btnCloseWorksheetX"),
     worksheetPreview: document.getElementById("worksheetPreview"),
     worksheetPrintRoot: document.getElementById("worksheetPrintRoot"),
     btnFullscreen: document.getElementById("btnFullscreen"),
@@ -4593,66 +5663,71 @@ body.printOnlyWorksheet .worksheetSheet{
   function generateTwoSidedLinear(){
     const rg = range();
     const sol = rint(rg.x[0], rg.x[1]);
+    const requestedMode = el.balanceMode ? el.balanceMode.value : "two_sides";
+    const mode = requestedMode === "mix" ? pick(["simple", "two_sides"]) : requestedMode;
 
-    // Module Balance : on garde volontairement des équations du type ax + b = cx + d,
-    // avec plus d'objets inconnus sur le plateau gauche et plus d'unités connues à droite.
-    // Cela donne une situation très lisible : on retire d'abord les mêmes objets des deux plateaux,
-    // puis on isole la valeur d'un objet.
     const maxCoeff = el.level.value === "hard" ? 7 : (el.level.value === "easy" ? 4 : 5);
-    let c = rint(1, Math.max(1, maxCoeff - 2));
-    let a = rint(c + 1, maxCoeff);
-    if(a === c) a = c + 1;
-
+    const a = rint(2, maxCoeff);
+    const isSimple = mode === "simple";
+    const c = isSimple ? 0 : rint(1, Math.max(1, a - 1));
     const gap = a - c;
 
     const balanceContexts = [
       {
-        container:"boîte de thé",
-        obj:"g",
-        knownMin:20,
-        knownMax:180,
-        step:10,
-        intro:"Sur une balance en équilibre",
-        leftVerb:"on place",
-        rightIntro:"À droite, il y a",
-        question:"Quelle est la masse d’une boîte de thé ?",
-        answerPrefix:"La masse d’une boîte de thé est de "
-      },
-      {
-        container:"sachet de vanille",
-        obj:"g",
-        knownMin:10,
-        knownMax:120,
-        step:5,
-        intro:"Sur une balance en équilibre",
-        leftVerb:"on pose",
-        rightIntro:"Sur le plateau droit, on pose",
-        question:"Quelle est la masse d’un sachet de vanille ?",
-        answerPrefix:"La masse d’un sachet de vanille est de "
-      },
-      {
-        container:"paquet d’épices",
+        container:"boîte de biscuits",
         obj:"g",
         knownMin:20,
         knownMax:160,
         step:10,
-        intro:"Une balance est parfaitement équilibrée",
-        leftVerb:"on trouve",
-        rightIntro:"Sur le plateau droit, il y a",
-        question:"Quelle est la masse d’un paquet d’épices ?",
-        answerPrefix:"La masse d’un paquet d’épices est de "
+        intro:"Une balance est en équilibre",
+        leftVerb:"on pose",
+        rightIntro:"Sur le plateau droit, on pose",
+        simpleRightIntro:"Sur le plateau droit, on pose seulement",
+        question:"Quelle est la masse d’une boîte de biscuits ?",
+        answerPrefix:"La masse d’une boîte de biscuits est de ",
+        scene:"plateau"
       },
       {
-        container:"boîte",
+        container:"sachet de graines",
+        obj:"g",
+        knownMin:10,
+        knownMax:120,
+        step:5,
+        intro:"La balance reste parfaitement horizontale",
+        leftVerb:"on place",
+        rightIntro:"Sur le plateau droit, on place",
+        simpleRightIntro:"Sur le plateau droit, on place seulement",
+        question:"Quelle est la masse d’un sachet de graines ?",
+        answerPrefix:"La masse d’un sachet de graines est de ",
+        scene:"plateau"
+      },
+      {
+        container:"paquet de gâteaux",
+        obj:"g",
+        knownMin:20,
+        knownMax:180,
+        step:10,
+        intro:"Deux plateaux sont en équilibre",
+        leftVerb:"on dépose",
+        rightIntro:"Sur le plateau droit, on dépose",
+        simpleRightIntro:"Sur le plateau droit, on dépose seulement",
+        question:"Quelle est la masse d’un paquet de gâteaux ?",
+        answerPrefix:"La masse d’un paquet de gâteaux est de ",
+        scene:"plateau"
+      },
+      {
+        container:"petite boîte",
         obj:"crayons",
         knownMin:2,
         knownMax:30,
         step:1,
-        intro:"Deux plateaux sont en équilibre",
-        leftVerb:"on place",
-        rightIntro:"Sur le plateau droit, on place",
-        question:"Combien de crayons contient une boîte ?",
-        answerPrefix:"Une boîte contient "
+        intro:"Deux collections ont la même quantité",
+        leftVerb:"on regroupe",
+        rightIntro:"Dans la deuxième collection, il y a",
+        simpleRightIntro:"Dans la deuxième collection, il y a",
+        question:"Combien de crayons contient une petite boîte ?",
+        answerPrefix:"Une petite boîte contient ",
+        scene:"lot"
       },
       {
         container:"sachet",
@@ -4660,35 +5735,27 @@ body.printOnlyWorksheet .worksheetSheet{
         knownMin:2,
         knownMax:40,
         step:1,
-        intro:"Sur une balance en équilibre",
-        leftVerb:"on dépose",
-        rightIntro:"À droite, il y a",
+        intro:"Deux lots contiennent le même nombre de billes",
+        leftVerb:"on met",
+        rightIntro:"Dans le deuxième lot, il y a",
+        simpleRightIntro:"Dans le deuxième lot, il y a",
         question:"Combien de billes contient un sachet ?",
-        answerPrefix:"Un sachet contient "
+        answerPrefix:"Un sachet contient ",
+        scene:"lot"
       },
       {
         container:"pochette",
-        obj:"cartes",
+        obj:"autocollants",
         knownMin:2,
         knownMax:50,
         step:1,
-        intro:"Deux compositions ont le même nombre de cartes",
+        intro:"Deux lots contiennent exactement le même nombre d’autocollants",
         leftVerb:"on regroupe",
-        rightIntro:"Dans la deuxième composition, il y a",
-        question:"Combien de cartes contient une pochette ?",
-        answerPrefix:"Une pochette contient "
-      },
-      {
-        container:"enveloppe",
-        obj:"images",
-        knownMin:2,
-        knownMax:50,
-        step:1,
-        intro:"Deux collections contiennent exactement le même nombre d’images",
-        leftVerb:"on regroupe",
-        rightIntro:"Dans la deuxième collection, il y a",
-        question:"Combien d’images contient une enveloppe ?",
-        answerPrefix:"Une enveloppe contient "
+        rightIntro:"Dans le deuxième lot, il y a",
+        simpleRightIntro:"Dans le deuxième lot, il y a",
+        question:"Combien d’autocollants contient une pochette ?",
+        answerPrefix:"Une pochette contient ",
+        scene:"lot"
       }
     ];
 
@@ -4697,62 +5764,104 @@ body.printOnlyWorksheet .worksheetSheet{
     const unitMax = Math.max(unitMin, Math.min(ctx.knownMax, rg.known[1] * 4));
     let b = rint(unitMin, unitMax);
     b = Math.max(ctx.step, Math.round(b / ctx.step) * ctx.step);
-    const d = b + gap * sol;
+    const d = isSimple ? (a * sol + b) : (b + gap * sol);
     const leftValue = a * sol + b;
-    const rightValue = c * sol + d;
+    const rightValue = isSimple ? d : c * sol + d;
     const obj = ctx.obj;
     const container = ctx.container;
 
     const leftContainers = pluralizeContainerLabel(container, a);
-    const rightContainers = pluralizeContainerLabel(container, c);
+    const rightContainers = c > 0 ? pluralizeContainerLabel(container, c) : "";
     const bLabel = quantityLabelForObject(b, obj);
     const dLabel = quantityLabelForObject(d, obj);
 
-    const rawStatement = ctx.intro + ", " + ctx.leftVerb + " " + leftContainers + " et " + bLabel + " sur le plateau gauche. " +
-      ctx.rightIntro + " " + rightContainers + " et " + dLabel + ". " +
-      ctx.question;
+    const isLotScene = ctx.scene === "lot";
+    const leftScaleLabel = isLotScene ? "premier lot" : "plateau gauche";
+    const rightScaleLabel = isLotScene ? "deuxième lot" : "plateau droit";
 
-    const highlightedStatement =
-      ctx.intro.replace("équilibre", "<mark class='relation'>équilibre</mark>").replace("équilibrée", "<mark class='relation'>équilibrée</mark>").replace("même nombre", "<mark class='relation'>même nombre</mark>") + ", " +
-      ctx.leftVerb + " <mark>" + leftContainers + " et " + bLabel + "</mark> sur le plateau gauche. " +
-      ctx.rightIntro + " <mark>" + rightContainers + " et " + dLabel + "</mark>. " +
-      "<mark class='question'>" + ctx.question + "</mark>";
+    const balanceRelationSentence = isLotScene ? "Les deux lots ont la même valeur." : "La balance est en équilibre.";
+    const highlightedRelationSentence = isLotScene
+      ? "Les deux lots ont la <mark class='relation'>même valeur</mark>."
+      : "La balance est en <mark class='relation'>équilibre</mark>.";
 
-    const emptyText = "On prépare deux barres de même longueur : les deux plateaux représentent la même valeur.";
-    const fillText = "Chaque " + singularContainerForSentence(container) + " identique correspond à la même inconnue. Les deux plateaux sont en équilibre.";
+    const rawStatement = isLotScene
+      ? "Dans le premier lot, il y a " + leftContainers + " et " + bLabel + ". " +
+        (isSimple
+          ? "Dans le deuxième lot, il y a " + dLabel + ". "
+          : "Dans le deuxième lot, il y a " + rightContainers + " et " + dLabel + ". ") +
+        balanceRelationSentence + " " + ctx.question
+      : "Sur le plateau gauche, " + ctx.leftVerb + " " + leftContainers + " et " + bLabel + ". " +
+        (isSimple
+          ? ctx.simpleRightIntro + " " + dLabel + ". "
+          : ctx.rightIntro + " " + rightContainers + " et " + dLabel + ". ") +
+        balanceRelationSentence + " " + ctx.question;
+
+    const highlightedStatement = isLotScene
+      ? "Dans le premier lot, il y a <mark>" + leftContainers + " et " + bLabel + "</mark>. " +
+        (isSimple
+          ? "Dans le deuxième lot, il y a <mark>" + dLabel + "</mark>. "
+          : "Dans le deuxième lot, il y a <mark>" + rightContainers + " et " + dLabel + "</mark>. ") +
+        highlightedRelationSentence + " " +
+        "<mark class='question'>" + ctx.question + "</mark>"
+      : "Sur le plateau gauche, " + ctx.leftVerb + " <mark>" + leftContainers + " et " + bLabel + "</mark>. " +
+        (isSimple
+          ? ctx.simpleRightIntro + " <mark>" + dLabel + "</mark>. "
+          : ctx.rightIntro + " <mark>" + rightContainers + " et " + dLabel + "</mark>. ") +
+        highlightedRelationSentence + " " +
+        "<mark class='question'>" + ctx.question + "</mark>";
+
+    const emptyText = isLotScene
+      ? (isSimple
+          ? "On prépare deux lots de même valeur : le premier lot contient des objets identiques et une quantité connue ; le deuxième lot donne le total."
+          : "On prépare deux lots de même valeur : chaque lot contient des objets identiques et une quantité connue.")
+      : (isSimple
+          ? "On prépare une balance : le plateau gauche contient des objets identiques et une quantité connue ; le plateau droit donne le total."
+          : "On prépare deux plateaux de même valeur : chaque plateau contient des objets identiques et une quantité connue.");
+    const fillText = "Chaque " + singularContainerForSentence(container) + " identique correspond à la même inconnue. " +
+      (isLotScene ? "Les deux lots ont la même valeur." : "Les deux plateaux sont en équilibre.");
     const answer = ctx.answerPrefix + quantityLabelForObject(sol, obj) + ".";
-    const check = a + " × " + sol + " + " + b + " = " + leftValue +
-      " et " + c + " × " + sol + " + " + d + " = " + rightValue + ".";
+    const check = isSimple
+      ? a + " × " + sol + " + " + b + " = " + d + "."
+      : a + " × " + sol + " + " + b + " = " + leftValue +
+        " et " + c + " × " + sol + " + " + d + " = " + rightValue + ".";
 
     return {
       type:"two_sided_linear",
-      subType:"ax_b_cx_d",
-      family:"Équation composée",
+      subType:isSimple ? "ax_b_c" : "ax_b_cx_d",
+      family:isSimple ? "Balance simple" : "Balance à deux plateaux",
       a,
       b,
       c,
       d,
       obj,
       container,
+      leftScaleLabel,
+      rightScaleLabel,
       x: sol,
       total:leftValue,
       topPieces:[
         ...Array.from({length:a}, () => ({type:"x",value:"x"})),
         {type:"number",value:b}
       ],
-      bottomPieces:[
-        ...Array.from({length:c}, () => ({type:"x",value:"x"})),
-        {type:"number",value:d}
-      ],
-      pieces:[
-        ...Array.from({length:c}, () => ({type:"x",value:"x"})),
-        {type:"number",value:d}
-      ],
+      bottomPieces:isSimple
+        ? [{type:"number",value:d}]
+        : [
+            ...Array.from({length:c}, () => ({type:"x",value:"x"})),
+            {type:"number",value:d}
+          ],
+      pieces:isSimple
+        ? [{type:"number",value:d}]
+        : [
+            ...Array.from({length:c}, () => ({type:"x",value:"x"})),
+            {type:"number",value:d}
+          ],
       rawStatement,
       highlightedStatement,
       emptyText,
       fillText,
-      context:"Plateau gauche : " + a + unknown() + " + " + b + " ; plateau droit : " + c + unknown() + " + " + d,
+      context:isSimple
+        ? leftScaleLabel + " : " + a + unknown() + " + " + b + " ; " + rightScaleLabel + " : " + d
+        : leftScaleLabel + " : " + a + unknown() + " + " + b + " ; " + rightScaleLabel + " : " + c + unknown() + " + " + d,
       answer,
       check
     };
@@ -5097,9 +6206,9 @@ body.printOnlyWorksheet .worksheetSheet{
       cards.push(understandCard("Les quantités sont-elles indépendantes ?", dependency));
       cards.push(understandCard("Quelle est la référence ?", problem.refLabel + " correspond à la quantité cherchée."));
     }else if(problem.type === "two_sided_linear"){
-      cards.push(understandCard("Que cherche-t-on ?", "la valeur d’un paquet identique"));
-      cards.push(understandCard("Que sait-on des deux barres ?", "Elles représentent la même quantité."));
-      cards.push(understandCard("Quelle idée utiliser ?", "Supprimer les mêmes éléments dans chaque membre, puis partager."));
+      cards.push(understandCard("Que cherche-t-on ?", "la valeur d’un objet identique"));
+      cards.push(understandCard("Que sait-on des deux plateaux ?", "Ils représentent la même quantité."));
+      cards.push(understandCard("Quelle idée utiliser ?", problem.subType === "ax_b_c" ? "Retirer la quantité connue, puis partager." : "Supprimer les mêmes éléments dans chaque membre, puis partager."));
     }
 
     addReformulationCard(cards);
@@ -5123,6 +6232,8 @@ body.printOnlyWorksheet .worksheetSheet{
         "<div class='understandActions'>" +
           "<button type='button' class='understandToggleBtn' id='btnToggleUnderstandAnswers'>" + buttonLabel + "</button>" +
         "</div>" +
+        "<div class='worksheetInlineLogo'><img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K' alt='Maths&go'></div>" +
+        correctionHtml +
       "</div>";
   }
 
@@ -5722,10 +6833,13 @@ body.printOnlyWorksheet .worksheetSheet{
     }
 
     if(problem.type === "two_sided_linear"){
+      const leftLabel = problem.leftScaleLabel || "plateau gauche";
+      const rightLabel = problem.rightScaleLabel || "plateau droit";
       el.barArea.innerHTML =
-        "<div class='schemaBoard'>" +
-          "<div class='barLine top'><div class='part empty' style='flex:1'>plateau gauche</div></div>" +
-          "<div class='barLine bottom'><div class='part empty' style='flex:1'>plateau droit</div></div>" +
+        renderBalanceScale(false) +
+        "<div class='schemaBoard balanceSchemaBoard'>" +
+          "<div class='barLine top'><div class='part empty' style='flex:1'>" + leftLabel + "</div></div>" +
+          "<div class='barLine bottom'><div class='part empty' style='flex:1'>" + rightLabel + "</div></div>" +
         "</div>";
       return;
     }
@@ -6105,7 +7219,15 @@ body.printOnlyWorksheet .worksheetSheet{
     return false;
   }
 
-  function pieceHtmlForGrid(p, side, clickable){
+  function solutionLabelForUnknown(){
+    const v = problem && problem.x != null ? problem.x : "";
+    // Dans le schéma de correction, on ouvre l'inconnue avec sa valeur seule.
+    // Les unités restent dans l'énoncé, l'équation / vérification et la phrase réponse.
+    if(v === "") return unknown();
+    return String(v);
+  }
+
+  function pieceHtmlForGrid(p, side, clickable, showSolution=false){
     let cls = "part";
     if(clickable) cls += " clickable";
     if(p.type === "x") cls += " unknown";
@@ -6117,14 +7239,14 @@ body.printOnlyWorksheet .worksheetSheet{
       cls += actionMode === "add" ? " selectedAdd" : " selected";
       if(actionMode === "add" && hasSelectedAddAfter(side, p.id)) cls += " plusAfter";
     }
-    const label = p.type === "x" ? unknown() : p.value;
+    const label = p.type === "x" ? (showSolution ? solutionLabelForUnknown() : unknown()) : p.value;
     const ref = clickable ? " data-ref='" + side + ":" + p.id + "'" : "";
     return "<div class='" + cls + "'" + ref + ">" + label + "</div>";
   }
 
-  function renderGridLine(side, pieces, commonLineWidth, clickable){
+  function renderGridLine(side, pieces, commonLineWidth, clickable, showSolution=false){
     const meta = gridLineData(pieces, commonLineWidth);
-    const html = pieces.map(p => pieceHtmlForGrid(p, side, clickable)).join("");
+    const html = pieces.map(p => pieceHtmlForGrid(p, side, clickable, showSolution)).join("");
     return {
       style:"--cols:" + meta.cols + ";--lineWidth:" + meta.lineWidth.toFixed(6) + "%",
       html
@@ -6158,6 +7280,11 @@ body.printOnlyWorksheet .worksheetSheet{
     return String(word || "objet").replace(/s$/, "");
   }
 
+  function capFirst(text){
+    const s = String(text || "");
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+
   function pluralizeContainerLabel(container, n){
     const base = String(container || "sachet");
     if(n === 1) return "1 " + base;
@@ -6179,6 +7306,30 @@ body.printOnlyWorksheet .worksheetSheet{
     return value + " " + noun;
   }
 
+  function balanceScaleItems(count, value, filled){
+    const tokens = Array.from({length:Math.max(0, count)}, () =>
+      "<div class='balanceToken'>" + (filled ? unknown() : "x") + "</div>"
+    ).join("");
+    const weight = value > 0 ? "<div class='balanceWeight'>" + (filled ? quantityLabelForObject(value, problem.obj) : "—") + "</div>" : "";
+    return tokens + weight;
+  }
+
+  function renderBalanceScale(filled){
+    if(!problem || problem.type !== "two_sided_linear") return "";
+    const cls = "balanceScale" + (filled ? "" : " empty");
+    const left = balanceScaleItems(problem.a || 0, problem.b || 0, filled);
+    const right = balanceScaleItems(problem.c || 0, problem.d || 0, filled);
+    const leftLabel = problem.leftScaleLabel || "plateau gauche";
+    const rightLabel = problem.rightScaleLabel || "plateau droit";
+    return "<div class='" + cls + "'>" +
+      "<div class='balanceScaleBeam'>" +
+        "<div class='balancePan'>" + left + "<div class='balancePanLabel'>" + leftLabel + "</div></div>" +
+        "<div class='balanceScalePost'></div>" +
+        "<div class='balancePan'>" + right + "<div class='balancePanLabel'>" + rightLabel + "</div></div>" +
+      "</div>" +
+    "</div>";
+  }
+
   function balanceExpressionLabel(coef, value){
     return {
       xPart: pluralizeContainerLabel(problem && problem.container, coef),
@@ -6188,6 +7339,11 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function renderBalanceExpressionBraces(lineStyle, coef, value, extraClass=""){
     const labels = balanceExpressionLabel(coef, value);
+    if(!coef || coef <= 0){
+      return "<div class='balanceExpressionBraces " + extraClass + "' style='" + lineStyle + "'>" +
+        "<div class='balanceExpressionBrace' style='grid-column:1'>" + labels.numberPart + "</div>" +
+      "</div>";
+    }
     return "<div class='balanceExpressionBraces " + extraClass + "' style='" + lineStyle + "'>" +
       "<div class='balanceExpressionBrace' style='grid-column:1 / " + (coef + 1) + "'>" + labels.xPart + "</div>" +
       "<div class='balanceExpressionBrace' style='grid-column:" + (coef + 1) + " / " + (coef + 2) + "'>" + labels.numberPart + "</div>" +
@@ -6266,11 +7422,16 @@ body.printOnlyWorksheet .worksheetSheet{
     if(problem.type === "two_sided_linear"){
       const topBraces = renderBalanceExpressionBraces(topLine.style, problem.a, problem.b);
       const bottomBraces = renderBalanceExpressionBraces(bottomLine.style, problem.c, problem.d, "beforeBottom");
+      const leftLabel = problem.leftScaleLabel || "plateau gauche";
+      const rightLabel = problem.rightScaleLabel || "plateau droit";
       return "<div class='equabarPreview balancePreview'>" +
-        "<div class='schemaBoard'>" +
+        renderBalanceScale(true) +
+        "<div class='schemaBoard balanceSchemaBoard balanceLabeledBoard'>" +
           topBraces +
+          "<div class='balanceRowLabel topLabel'>" + capFirst(leftLabel) + " :</div>" +
           "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
           bottomBraces +
+          "<div class='balanceRowLabel bottomLabel'>" + capFirst(rightLabel) + " :</div>" +
           "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
         "</div>" +
       "</div>";
@@ -6410,7 +7571,9 @@ body.printOnlyWorksheet .worksheetSheet{
     const equationBlock = el.equationDisplay.value === "yes"
       ? renderEquationLines(state.steps)
       : "";
-    const solveClass = problem.type === "comparison_additive" ? "equabarSolve compareSolve" : "equabarSolve";
+    const solveClass = problem.type === "comparison_additive"
+      ? "equabarSolve compareSolve"
+      : (problem.type === "two_sided_linear" ? "equabarSolve balanceSolve" : "equabarSolve");
     const topPieces = visiblePiecesForGrid("top");
     const bottomPieces = visiblePiecesForGrid("bottom");
     const topW = topPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
@@ -6421,7 +7584,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
     el.barArea.innerHTML =
       "<div class='" + solveClass + "'>" +
-        "<div class='schemaBoard'>" +
+        "<div class='schemaBoard" + (problem.type === "two_sided_linear" ? " balanceSchemaBoard" : "") + "'>" +
           "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
           "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
         "</div>" +
@@ -7014,6 +8177,139 @@ body.printOnlyWorksheet .worksheetSheet{
     return selected ? selected.textContent : "Mélange";
   }
 
+
+  function piecesForSchemaPreview(){
+    const topPieces = problem.topPieces
+      ? problem.topPieces.map(p => makePiece(p.type, p.value))
+      : (shouldShowUnknownOnTop() ? [makePiece("x", "x")] : [makePiece("number", problem.total)]);
+    const bottomPieces = problem.bottomPieces
+      ? problem.bottomPieces.map(p => makePiece(p.type, p.value))
+      : problem.pieces.map(p => makePiece(p.type, p.value));
+    return {topPieces, bottomPieces};
+  }
+
+  function blankGridLineHtml(pieces, side, commonLineWidth){
+    const meta = gridLineData(pieces, commonLineWidth);
+    const html = pieces.map(p => "<div class='part empty'>&nbsp;</div>").join("");
+    return {
+      style:"--cols:" + meta.cols + ";--lineWidth:" + meta.lineWidth.toFixed(6) + "%",
+      html
+    };
+  }
+
+  function worksheetOwnerBracesForBarSchema(lineStyle){
+    if(!problem) return "";
+
+    if(problem.type === "part_whole") return partWholeOwnerBraces(lineStyle);
+
+    if(problem.type === "comparison_additive"){
+      const smallLabel = problem.smallName || "petite quantité";
+      const diffLabel = problem.subType === "difference" ? "écart" : "écart connu";
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1'>" + smallLabel + "</div>" +
+        "<div class='ownerBrace' style='grid-column:2'>" + diffLabel + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "comparison_multiplicative" && problem.subType !== "ratio"){
+      const ratio = Math.max(1, Number(problem.ratio) || 1);
+      const label = ratio + " × " + (problem.smallName || "petite quantité");
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1 / " + (ratio + 1) + "'>" + label + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "unequal_total_diff"){
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1'>" + problem.smallName + "</div>" +
+        "<div class='ownerBrace' style='grid-column:2 / 4'>" + problem.bigName + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "unequal_total_ratio"){
+      const ratio = Math.max(1, Number(problem.ratio) || 1);
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1'>" + problem.smallName + "</div>" +
+        "<div class='ownerBrace' style='grid-column:2 / " + (ratio + 2) + "'>" + problem.bigName + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "ratio_total"){
+      const n = problem.a + problem.b;
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1 / " + (problem.a + 1) + "'>" + problem.firstName + "</div>" +
+        "<div class='ownerBrace' style='grid-column:" + (problem.a + 1) + " / " + (n + 1) + "'>" + problem.secondName + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "ratio_total_three"){
+      const n = problem.ratioParts.reduce((s,v)=>s+v,0);
+      const p0 = problem.ratioParts[0], p1 = problem.ratioParts[1];
+      return "<div class='unequalOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:1 / " + (p0 + 1) + "'>" + problem.people[0] + "</div>" +
+        "<div class='ownerBrace' style='grid-column:" + (p0 + 1) + " / " + (p0 + p1 + 1) + "'>" + problem.people[1] + "</div>" +
+        "<div class='ownerBrace' style='grid-column:" + (p0 + p1 + 1) + " / " + (n + 1) + "'>" + problem.people[2] + "</div>" +
+      "</div>";
+    }
+
+    if(problem.type === "multi_linked"){
+      const multiplier = problem.multiplier || 2;
+      const plusMultiplier = problem.plusMultiplier || 1;
+      const xCount = 1 + multiplier + plusMultiplier;
+      const pieceCount = Array.isArray(problem.pieces) ? problem.pieces.length : xCount;
+      const firstStart = 1;
+      const secondStart = 2;
+      const secondEnd = 2 + multiplier;
+      const thirdStart = secondEnd;
+      // Si la dernière quantité contient un écart connu en plus des parts x,
+      // l'accolade de cette quantité doit couvrir aussi cette case connue.
+      const thirdEnd = pieceCount + 1;
+      return "<div class='unequalOwnerBraces multiLinkedOwnerBraces' style='" + lineStyle + "'>" +
+        "<div class='ownerBrace' style='grid-column:" + firstStart + " / " + secondStart + "'>" + problem.refLabel + "</div>" +
+        "<div class='ownerBrace' style='grid-column:" + secondStart + " / " + secondEnd + "'>" + problem.doubleLabel + "</div>" +
+        "<div class='ownerBrace' style='grid-column:" + thirdStart + " / " + thirdEnd + "'>" + problem.plusLabel + "</div>" +
+      "</div>";
+    }
+
+    return "";
+  }
+
+  function renderWorksheetBarSchema(filled, showSolution=false, forceBraces=false){
+    const data = piecesForSchemaPreview();
+    const topW = data.topPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
+    const bottomW = data.bottomPieces.reduce((sum,p)=>sum + pieceWidthPercentForGrid(p), 0);
+    const commonW = Math.max(topW, bottomW);
+    const topLine = filled ? renderGridLine("top", data.topPieces, commonW, false, showSolution) : blankGridLineHtml(data.topPieces, "top", commonW);
+    const bottomLine = filled ? renderGridLine("bottom", data.bottomPieces, commonW, false, showSolution) : blankGridLineHtml(data.bottomPieces, "bottom", commonW);
+
+    if(problem.type === "two_sided_linear"){
+      const leftLabel = problem.leftScaleLabel || "plateau gauche";
+      const rightLabel = problem.rightScaleLabel || "plateau droit";
+      const topBraces = (filled || forceBraces) ? renderBalanceExpressionBraces(topLine.style, problem.a, problem.b) : "";
+      const bottomBraces = (filled || forceBraces) ? renderBalanceExpressionBraces(bottomLine.style, problem.c, problem.d, "beforeBottom") : "";
+      return "<div class='equabarPreview worksheetBarOnlyPreview'>" +
+        "<div class='schemaBoard balanceSchemaBoard balanceLabeledBoard'>" +
+          topBraces +
+          "<div class='balanceRowLabel topLabel'>" + capFirst(leftLabel) + " :</div>" +
+          "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
+          bottomBraces +
+          "<div class='balanceRowLabel bottomLabel'>" + capFirst(rightLabel) + " :</div>" +
+          "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
+        "</div>" +
+      "</div>";
+    }
+
+    const ownerBraces = (filled || forceBraces) ? worksheetOwnerBracesForBarSchema(bottomLine.style) : "";
+
+    return "<div class='equabarPreview worksheetBarOnlyPreview'>" +
+      "<div class='schemaBoard'>" +
+        "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
+        "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
+        ownerBraces +
+      "</div>" +
+    "</div>";
+  }
+
   function captureWorksheetSchema(p, kind){
     if(!el.barArea) return "";
     const savedProblem = problem;
@@ -7029,7 +8325,17 @@ body.printOnlyWorksheet .worksheetSheet{
     problem.unknownSymbol = p.unknownSymbol || chooseUnknownSymbol();
     try{
       initEquabar();
-      if(kind === "empty"){
+      if(kind === "bar_empty"){
+        el.barArea.innerHTML = renderWorksheetBarSchema(false);
+      }else if(kind === "bar_empty_braced"){
+        el.barArea.innerHTML = renderWorksheetBarSchema(false, false, true);
+      }else if(kind === "bar_filled"){
+        el.barArea.innerHTML = renderWorksheetBarSchema(true);
+      }else if(kind === "bar_filled_braced"){
+        el.barArea.innerHTML = renderWorksheetBarSchema(true, false, true);
+      }else if(kind === "bar_solution"){
+        el.barArea.innerHTML = renderWorksheetBarSchema(true, true);
+      }else if(kind === "empty"){
         renderEmpty();
       }else{
         renderFilled();
@@ -7098,13 +8404,21 @@ body.printOnlyWorksheet .worksheetSheet{
     }
   }
 
-  function worksheetSchemaBlock(p, kind, title){
+  function worksheetSchemaBlock(p, kind, title, extraBlockClass=""){
     const captureKind = kind === "fillable" ? "filled" : kind;
     const fillableClass = kind === "fillable" ? " worksheetFillable" : "";
-    return "<div class='worksheetSchemaBlock'>" +
+    const blockClass = "worksheetSchemaBlock" + (extraBlockClass ? " " + extraBlockClass : "");
+    return "<div class='" + blockClass + "'>" +
       "<div class='worksheetSchemaTitle'>" + title + "</div>" +
       "<div class='worksheetSchema" + fillableClass + "'><div class='worksheetSchemaInner'>" + captureWorksheetSchema(p, captureKind) + "</div></div>" +
     "</div>";
+  }
+
+
+  const WORKSHEET_LOGO_IMG_HTML = "<img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K' alt='Maths&go'>";
+
+  function worksheetLogoHtml(className){
+    return "<div class='" + className + "'>" + WORKSHEET_LOGO_IMG_HTML + "</div>";
   }
 
   function worksheetProblemHtml(p, index, mode){
@@ -7117,6 +8431,12 @@ body.printOnlyWorksheet .worksheetSheet{
       extra += worksheetSchemaBlock(p, "fillable", "Schéma à compléter");
     }else if(mode === "filled_schema"){
       extra += worksheetSchemaBlock(p, "filled", "Schéma rempli");
+    }else if(mode === "bar_empty_schema"){
+      extra += worksheetSchemaBlock(p, "bar_empty", "Schéma en barres vide");
+    }else if(mode === "bar_empty_braced_schema"){
+      extra += worksheetSchemaBlock(p, "bar_empty_braced", "Schéma en barres vide + accolades");
+    }else if(mode === "bar_filled_schema"){
+      extra += worksheetSchemaBlock(p, "bar_filled", "Schéma en barres rempli");
     }
 
     const workZone =
@@ -7131,7 +8451,10 @@ body.printOnlyWorksheet .worksheetSheet{
           "<div class='worksheetWorkLine'></div>" +
           "<div class='worksheetWorkLine'></div>" +
           "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
+          "<div class='worksheetWorkLine'></div>" +
         "</div>" +
+        worksheetLogoHtml("worksheetInlineLogo") +
       "</div>";
 
     const modeClass = " worksheetMode-" + mode;
@@ -7144,28 +8467,232 @@ body.printOnlyWorksheet .worksheetSheet{
     "</div>";
   }
 
+  function formatNumberForEquation(n){
+    const num = Number(n);
+    if(Number.isFinite(num)){
+      const rounded = Math.round(num * 1000) / 1000;
+      return String(rounded).replace('.', ',');
+    }
+    return String(n);
+  }
+
+  function compactTerm(coef, symbol){
+    const n = Number(coef);
+    if(n === 0) return "0";
+    if(n === 1) return symbol;
+    return formatNumberForEquation(n) + symbol;
+  }
+
+  function linearDataFromPieces(pieces){
+    let xCoef = 0;
+    let constant = 0;
+    (pieces || []).forEach(piece => {
+      if(piece.type === "x") xCoef += Number(piece.value) && piece.value !== "x" ? Number(piece.value) : 1;
+      else constant += Number(piece.value) || 0;
+    });
+    return {xCoef, constant};
+  }
+
+  function expressionFromLinear(xCoef, constant, symbol){
+    const parts = [];
+    if(Number(xCoef)) parts.push(compactTerm(xCoef, symbol));
+    if(Number(constant)) parts.push(formatNumberForEquation(constant));
+    if(!parts.length) return "0";
+    return parts.join(" + ");
+  }
+
+  function equationRowHtml(line, cls=""){
+    const parts = String(line).split(/\s*=\s*/);
+    const left = parts[0] || "";
+    const right = parts.slice(1).join(" = ") || "";
+    return "<div class='eqRow" + cls + "'><span class='eqLeft'>" + left + "</span><span class='eqEqual'>=</span><span class='eqRight'>" + right + "</span></div>";
+  }
+
+  function buildLinearEquationStepsFromSchema(p){
+    const savedProblem = problem;
+    const savedState = clone(state);
+    const savedHistory = clone(history);
+    const savedSelected = clone(selected);
+    const savedStep = step;
+    const savedUnderstand = understandAnswersVisible;
+    let data;
+    try{
+      problem = p;
+      problem.unknownSymbol = p.unknownSymbol || "x";
+      initEquabar();
+      data = piecesForSchemaPreview();
+    }catch(e){
+      data = null;
+    }
+    problem = savedProblem;
+    state = savedState;
+    history = savedHistory;
+    selected = savedSelected;
+    step = savedStep;
+    understandAnswersVisible = savedUnderstand;
+    if(!data) return [];
+
+    const symbol = p.unknownSymbol || "x";
+    const left = linearDataFromPieces(data.topPieces);
+    const right = linearDataFromPieces(data.bottomPieces);
+    const a = left.xCoef, b = left.constant, c = right.xCoef, d = right.constant;
+    const lines = [];
+    const addExpr = (terms) => {
+      const filtered = terms.filter(t => t !== null && t !== undefined && String(t).trim() !== "" && String(t).trim() !== "0");
+      return filtered.length ? filtered.join(" + ") : "0";
+    };
+    const xTerm = (coef) => Number(coef) ? compactTerm(coef, symbol) : "";
+    const cTerm = (value) => Number(value) ? formatNumberForEquation(value) : "";
+
+    lines.push(expressionFromLinear(a, b, symbol) + " = " + expressionFromLinear(c, d, symbol));
+
+    if(a === c){
+      const check = stripTags(p.check || "");
+      if(check) lines.push(check.replace(/\.$/, ""));
+      return lines;
+    }
+
+    if(a > c){
+      const coef = a - c;
+      const remaining = d - b;
+
+      // On privilégie la décomposition additive, comme dans le schéma en barres.
+      // Exemple : x + 5 = 11 devient x + 5 = 6 + 5, puis x = 6.
+      if(b !== 0){
+        lines.push(expressionFromLinear(a, b, symbol) + " = " + addExpr([xTerm(c), cTerm(remaining), cTerm(b)]));
+      }
+      if(c > 0){
+        lines.push(addExpr([xTerm(coef), xTerm(c), cTerm(b)]) + " = " + addExpr([xTerm(c), cTerm(remaining), cTerm(b)]));
+      }
+
+      lines.push(compactTerm(coef, symbol) + " = " + formatNumberForEquation(remaining));
+      if(coef !== 1) lines.push(symbol + " = " + formatNumberForEquation(remaining / coef));
+      return lines;
+    }
+
+    // L'inconnue est davantage sur le membre du bas : on garde l'ordre du schéma jusqu'au bout.
+    // Exemple : 50 = 2x + 25 devient 25 + 25 = 2x + 25, puis 25 = 2x, puis 12,5 = x.
+    const coef = c - a;
+    const remaining = b - d;
+
+    if(d !== 0){
+      lines.push(addExpr([xTerm(a), cTerm(remaining), cTerm(d)]) + " = " + expressionFromLinear(c, d, symbol));
+    }
+    if(a > 0){
+      lines.push(addExpr([xTerm(a), cTerm(remaining), cTerm(d)]) + " = " + addExpr([xTerm(a), xTerm(coef), cTerm(d)]));
+    }
+
+    lines.push(formatNumberForEquation(remaining) + " = " + compactTerm(coef, symbol));
+    const value = remaining / coef;
+    if(coef !== 1) lines.push(formatNumberForEquation(value) + " = " + symbol);
+    lines.push(symbol + " = " + formatNumberForEquation(value));
+    return lines;
+  }
+
+  function correctionEquationStepsHtml(p){
+    let lines = buildLinearEquationStepsFromSchema(p);
+
+    if(!lines.length){
+      const check = stripTags(p.check || "").replace(/\.$/, "");
+      if(check) lines = [check];
+    }
+
+    if(lines.length){
+      const rows = lines.map((line, i) => equationRowHtml(line, i < lines.length - 1 ? " old" : "")).join("");
+      return "<div class='correctionEquationSteps'><div class='correctionEquationStepsTitle'>Résolution</div>" + rows + "</div>";
+    }
+
+    return "";
+  }
+
+  function worksheetCorrectionUnknownSchemaBlock(p){
+    const title = "Schéma en barres avec l’inconnue";
+    let html = captureWorksheetSchema(p, "bar_filled_braced");
+
+    // Sécurité : certains types de problèmes portent leurs accolades dans le rendu
+    // du schéma rempli classique. Si le rendu en barres ne contient aucune accolade,
+    // on récupère ce rendu déjà validé pour éviter une correction sans repères.
+    const hasBraces = /ownerBrace|unequalOwnerBraces|partWholeOwnerBraces|balanceExpressionBraces|balanceExpressionBrace|countBrace|countTopBrace/.test(html || "");
+    if(!hasBraces){
+      html = captureWorksheetSchema(p, "filled");
+    }
+
+    return "<div class='worksheetSchemaBlock correctionUnknownBarSchema'>" +
+      "<div class='worksheetSchemaTitle'>" + title + "</div>" +
+      "<div class='worksheetSchema'><div class='worksheetSchemaInner'>" + html + "</div></div>" +
+    "</div>";
+  }
+
   function worksheetCorrectionHtml(p, index){
     const answer = stripTags(p.answer || "");
-    const check = stripTags(p.check || "");
-    return "<div class='correctionItem'><strong>" + index + ".</strong> " +
-      answer + (check ? " <span style='color:#64748b'>(" + check + ")</span>" : "") +
+    const schemaWithUnknown = worksheetCorrectionUnknownSchemaBlock(p);
+    const schemaSolution = worksheetSchemaBlock(p, "bar_solution", "Schéma en barres de solution");
+    return "<div class='worksheetCorrectionCard'>" +
+      "<div class='worksheetCorrectionCardTitle'>Correction " + index + "</div>" +
+      schemaWithUnknown +
+      schemaSolution +
+      correctionEquationStepsHtml(p) +
+      (answer ? "<div class='correctionAnswer'><strong>Phrase réponse :</strong> <span>" + answer + "</span></div>" : "") +
     "</div>";
+  }
+
+  function worksheetCorrectionPagesHtml(items, perPage=2){
+    const n = Math.max(1, Number(perPage) || 2);
+    const compactClass = n >= 4 ? " perPage4" : "";
+    const pages = [];
+    for(let i = 0; i < items.length; i += n){
+      pages.push(
+        "<div class='worksheetCorrectionPage" + compactClass + "'>" +
+          "<div class='worksheetCorrectionPageTitle'>Correction</div>" +
+          "<div class='worksheetCorrectionGrid'>" + items.slice(i, i + n).join("") + "</div>" +
+          worksheetLogoHtml("correctionPrintLogo") +
+        "</div>"
+      );
+    }
+    return "<div class='worksheetCorrection separateCorrection'><div class='worksheetCorrectionPages'>" + pages.join("") + "</div></div>";
   }
 
   function worksheetPagesHtml(items, perPage=2){
     const n = Math.max(1, Number(perPage) || 2);
+    const compactClass = n >= 4 ? " perPage4" : "";
     const pages = [];
     for(let i = 0; i < items.length; i += n){
-      pages.push("<div class='worksheetPage'>" + items.slice(i, i + n).join("") + "</div>");
+      const html = n >= 4 ? fillGridItems(items, i, n, "worksheetProblem worksheetBlankCell") : items.slice(i, i + n).join("");
+      pages.push("<div class='worksheetPage" + compactClass + "'>" + html + "</div>");
     }
     return "<div class='worksheetPages'>" + pages.join("") + "</div>";
+  }
+
+  function fillGridItems(items, start, n, fillerClass){
+    const slice = items.slice(start, start + n);
+    while(slice.length < n){
+      slice.push("<div class='" + fillerClass + "'></div>");
+    }
+    return slice.join("");
+  }
+
+  function worksheetRectoVersoPagesHtml(problemItems, correctionItems, perPage=2){
+    const n = Math.max(1, Number(perPage) || 2);
+    const compactClass = n >= 4 ? " perPage4" : "";
+    const pages = [];
+    for(let i = 0; i < problemItems.length; i += n){
+      pages.push("<div class='worksheetPage" + compactClass + "'>" + fillGridItems(problemItems, i, n, "worksheetProblem worksheetBlankCell") + "</div>");
+      pages.push(
+        "<div class='worksheetCorrectionPage worksheetCorrectionVersoPage" + compactClass + "'>" +
+          "<div class='worksheetCorrectionPageTitle'>Correction</div>" +
+          "<div class='worksheetCorrectionGrid'>" + fillGridItems(correctionItems, i, n, "worksheetCorrectionCard worksheetBlankCell") + "</div>" +
+          worksheetLogoHtml("correctionPrintLogo") +
+        "</div>"
+      );
+    }
+    return "<div class='worksheetPages worksheetRectoVersoPages'>" + pages.join("") + "</div>";
   }
 
   function buildWorksheet(){
     if(!el.worksheetPreview) return;
     const count = Number(el.worksheetCount ? el.worksheetCount.value : 10) || 10;
     const mode = el.worksheetStudentMode ? el.worksheetStudentMode.value : "statements";
-    const perPage = 2;
+    const perPage = Number(el.worksheetPerPage ? el.worksheetPerPage.value : 2) || 2;
     const correctionMode = el.worksheetCorrectionMode ? el.worksheetCorrectionMode.value : "none";
 
     const savedProblem = problem;
@@ -7186,12 +8713,13 @@ body.printOnlyWorksheet .worksheetSheet{
     const dateText = today.toLocaleDateString("fr-FR");
 
     const problemItems = problems.map((p,i) => worksheetProblemHtml(p, i + 1, mode));
-    const studentProblems = worksheetPagesHtml(problemItems, perPage);
-    const corrections = problems.map((p,i) => worksheetCorrectionHtml(p, i + 1)).join("");
-    const correctionClass = "worksheetCorrection separateCorrection";
-    const correctionHtml = correctionMode === "none"
-      ? ""
-      : "<div class='" + correctionClass + "'><h3>Correction</h3>" + corrections + "</div>";
+    const corrections = problems.map((p,i) => worksheetCorrectionHtml(p, i + 1));
+    const studentProblems = correctionMode === "verso"
+      ? worksheetRectoVersoPagesHtml(problemItems, corrections, perPage)
+      : worksheetPagesHtml(problemItems, perPage);
+    const correctionHtml = correctionMode === "separate"
+      ? worksheetCorrectionPagesHtml(corrections, perPage)
+      : "";
 
     problem = savedProblem;
     state = savedState;
@@ -7210,7 +8738,6 @@ body.printOnlyWorksheet .worksheetSheet{
         "</div>" +
         studentProblems +
         correctionHtml +
-        "<div class='worksheetPrintLogo'><img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K' alt='Maths&go'></div>" +
       "</div>";
   }
 
@@ -7218,23 +8745,29 @@ body.printOnlyWorksheet .worksheetSheet{
     if(el.worksheetPreview && el.worksheetPreview.querySelector(".worksheetEmpty")){
       buildWorksheet();
     }
-    if(!el.worksheetPreview) return;
+    if(!el.worksheetPreview || !el.worksheetPrintRoot) return;
 
-    const printHtml = el.worksheetPreview.innerHTML;
-    const originalBody = document.body.innerHTML;
-    const originalClass = document.body.className;
+    el.worksheetPrintRoot.innerHTML = el.worksheetPreview.innerHTML;
 
-    document.body.className = "printWorksheet printOnlyWorksheet";
-    document.body.innerHTML = "<div id='worksheetPrintRoot' class='worksheetPrintRoot'>" + printHtml + "</div>";
+    const cleanup = () => {
+      document.body.classList.remove("printWorksheet");
+      document.body.classList.remove("printOnlyWorksheet");
+      window.removeEventListener("afterprint", cleanup);
+      // On garde la fenêtre de fiche ouverte : l'utilisateur revient exactement à ses réglages.
+      if(el.worksheetDialog && !el.worksheetDialog.open){
+        try{ el.worksheetDialog.showModal(); }catch(e){}
+      }
+    };
 
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.body.innerHTML = originalBody;
-        document.body.className = originalClass;
-        window.location.reload();
-      }, 300);
-    }, 50);
+    window.addEventListener("afterprint", cleanup);
+    document.body.classList.add("printWorksheet");
+    document.body.classList.add("printOnlyWorksheet");
+
+    // Impression déclenchée directement depuis le clic : certains navigateurs bloquent
+    // window.print() quand il est appelé après un délai. Le reflow force seulement
+    // l'application des styles d'impression avant l'ouverture de la boîte système.
+    void el.worksheetPrintRoot.offsetHeight;
+    window.print();
   }
 
   function refreshEquationHistory(){
@@ -7254,13 +8787,16 @@ body.printOnlyWorksheet .worksheetSheet{
   if(el.btnCloseWorksheet && el.worksheetDialog){
     el.btnCloseWorksheet.addEventListener("click", () => el.worksheetDialog.close());
   }
+  if(el.btnCloseWorksheetX && el.worksheetDialog){
+    el.btnCloseWorksheetX.addEventListener("click", () => el.worksheetDialog.close());
+  }
   if(el.btnBuildWorksheet){
     el.btnBuildWorksheet.addEventListener("click", buildWorksheet);
   }
   if(el.btnPrintWorksheet){
     el.btnPrintWorksheet.addEventListener("click", printWorksheet);
   }
-  [el.worksheetCount, el.worksheetStudentMode, el.worksheetCorrectionMode].forEach(select => {
+  [el.worksheetCount, el.worksheetPerPage, el.worksheetStudentMode, el.worksheetCorrectionMode].forEach(select => {
     if(select) select.addEventListener("change", buildWorksheet);
   });
   el.category.addEventListener("change", () => {
@@ -7268,6 +8804,7 @@ body.printOnlyWorksheet .worksheetSheet{
     newProblem();
   });
   if(el.partWholeStructure) el.partWholeStructure.addEventListener("change", newProblem);
+  if(el.balanceMode) el.balanceMode.addEventListener("change", newProblem);
   el.partWholeMode.addEventListener("change", newProblem);
   if(el.comparisonType) el.comparisonType.addEventListener("change", () => {
     updateOptionMenuVisibility();
@@ -7348,6 +8885,12 @@ body.printOnlyWorksheet .worksheetSheet{
   function updateOptionMenuVisibility(){
     const custom = el.category.value === "custom_mix";
     el.customMixBox.style.display = custom ? "" : "none";
+
+    const showBalance = el.category.value === "two_sided_linear";
+    if(el.balanceMode){
+      el.balanceMode.style.display = showBalance ? "" : "none";
+      el.balanceModeLabel.style.display = showBalance ? "" : "none";
+    }
 
     const showPartWhole = el.category.value === "part_whole";
     if(el.partWholeStructure){
