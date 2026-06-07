@@ -1669,6 +1669,92 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
   color:#334155;
 }
 
+.ratioFindManip{
+  width:min(880px,100%);
+  margin:0 auto;
+  display:grid;
+  gap:12px;
+}
+.ratioFindLine{
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr);
+  align-items:center;
+  gap:0;
+}
+.ratioFindTrackWrap{
+  min-height:76px;
+  display:flex;
+  align-items:stretch;
+}
+.ratioFindTrack{
+  display:flex;
+  align-items:stretch;
+  min-height:76px;
+}
+.ratioFindPiece{
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid var(--line);
+  border-right-width:1px;
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  font-size:clamp(22px,2.2vw,36px);
+  font-weight:950;
+  letter-spacing:-.035em;
+  border-radius:0;
+}
+.ratioFindPiece:first-child{border-left-width:2px;border-radius:0}
+.ratioFindPiece:last-child{border-right-width:2px;border-radius:0}
+.ratioFindControls{
+  margin:12px auto 0;
+  width:min(900px,100%);
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.ratioFindControlBox{
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:16px;
+  background:#f8fafc;
+  padding:10px;
+}
+.ratioFindControlTitle{
+  font-size:13px;
+  font-weight:950;
+  color:#475569;
+  margin-bottom:8px;
+}
+.ratioFindChoiceRow{display:flex;gap:6px;flex-wrap:wrap}
+.ratioFindChoice{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(15,23,42,.12);
+  background:white;
+  font-size:13px;
+  font-weight:900;
+}
+.ratioFindChoice.active{
+  background:linear-gradient(180deg,#60a5fa,#2563eb);
+  color:white;
+}
+.ratioFindFeedback{
+  grid-column:1 / -1;
+  text-align:center;
+  color:#334155;
+  font-size:15px;
+  font-weight:850;
+  min-height:24px;
+}
+.ratioFindFeedback.ok{color:#166534}
+.ratioFindFeedback.warn{color:#9a3412}
+@media(max-width:700px){.ratioFindControls{grid-template-columns:1fr}}
+.stage:fullscreen .ratioFindManip{width:min(980px,100%)}
+.stage:fullscreen .ratioFindLine{grid-template-columns:150px minmax(0,1fr)}
+.stage:fullscreen .ratioFindTrack,.stage:fullscreen .ratioFindTrackWrap{min-height:104px}
+.stage:fullscreen .ratioFindPiece{font-size:clamp(30px,2.9vw,52px)}
+
 
 .multiLinkedOwnerBraces{
   margin-top:8px;
@@ -4244,6 +4330,16 @@ body.printOnlyWorksheet .worksheetSheet{
     ]);
   }
 
+  function sharedTotalRatioSentence(names, total, obj, parts){
+    return names.slice(0, -1).join(", ") + (names.length > 2 ? " et " : "") + names[names.length - 1] +
+      " se partagent " + total + " " + obj + ", dans le ratio " + ratioValueText(parts) + ".";
+  }
+
+  function highlightedSharedTotalRatioSentence(names, total, obj, parts){
+    return names.slice(0, -1).join(", ") + (names.length > 2 ? " et " : "") + names[names.length - 1] +
+      " se partagent <mark class='relation'>" + total + " " + obj + "</mark>, dans le ratio <mark>" + ratioValueText(parts) + "</mark>.";
+  }
+
   const el = {
     category: document.getElementById("category"),
     customMixBox: document.getElementById("customMixBox"),
@@ -4350,11 +4446,19 @@ body.printOnlyWorksheet .worksheetSheet{
   let selectedShareRef = null;
   let pendingAddInfo = null;
   let understandAnswersVisible = false;
+  let ratioFindState = {topParts:null, bottomParts:null};
 
   function rint(a,b){ return a + Math.floor(Math.random() * (b - a + 1)); }
   function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
   function uid(){ return Math.random().toString(36).slice(2,10); }
   function clone(x){ return JSON.parse(JSON.stringify(x)); }
+  function divisorsOf(n){
+    const out = [];
+    for(let i = 1; i <= n; i++){
+      if(n % i === 0) out.push(i);
+    }
+    return out;
+  }
   function chooseUnknownSymbol(){
     if(!el.unknownMode || el.unknownMode.value === "question") return "?";
     return "𝑥";
@@ -5283,9 +5387,8 @@ body.printOnlyWorksheet .worksheetSheet{
     let firstName = pick(names), secondName = pick(names);
     while(secondName === firstName) secondName = pick(names);
 
-    const intro = totalIntroTwo(firstName, secondName, total, obj);
-
-    const ratioSentence = "Le ratio " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ".";
+    const intro = sharedTotalRatioSentence([firstName, secondName], total, obj, [a, b]);
+    const highlightedIntro = highlightedSharedTotalRatioSentence([firstName, secondName], total, obj, [a, b]);
 
     return {
       type:"ratio_total",
@@ -5301,10 +5404,9 @@ body.printOnlyWorksheet .worksheetSheet{
       x: unit,
       total,
       pieces:Array.from({length:a + b}, () => ({type:"x",value:"x"})),
-      rawStatement: intro + " " + ratioSentence + " Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
+      rawStatement: intro + " Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
       highlightedStatement:
-        intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
-        "Le ratio " + ratioNameText([firstName, secondName]) + " est <mark>" + ratioValueText([a, b]) + "</mark>. " +
+        highlightedIntro + " " +
         "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio : chaque part du ratio correspond à une même unité inconnue.",
       fillText:ratioMeaningText([firstName, secondName], [a, b]),
@@ -5339,7 +5441,8 @@ body.printOnlyWorksheet .worksheetSheet{
     const ratioText = ratioValueText([a, b, c]);
     const namesText = ratioNameText([people[0], people[1], people[2]]);
 
-    const intro = totalIntroThree(people[0], people[1], people[2], total, obj);
+    const intro = sharedTotalRatioSentence(people, total, obj, [a, b, c]);
+    const highlightedIntro = highlightedSharedTotalRatioSentence(people, total, obj, [a, b, c]);
 
     return {
       type:"ratio_total_three",
@@ -5352,10 +5455,9 @@ body.printOnlyWorksheet .worksheetSheet{
       x:unit,
       total,
       pieces:Array.from({length:a + b + c}, () => ({type:"x",value:"x"})),
-      rawStatement: intro + " Le ratio " + namesText + " est " + ratioText + ". Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
+      rawStatement: intro + " Combien " + dePhrase(obj) + " chaque personne a-t-elle ?",
       highlightedStatement:
-        intro.replace(String(total) + " " + obj, "<mark class='relation'>" + total + " " + obj + "</mark>") + " " +
-        "Le ratio " + namesText + " est <mark>" + ratioText + "</mark>. " +
+        highlightedIntro + " " +
         "<mark class='question'>Quelle quantité de " + obj + " possède chaque personne ?</mark>",
       emptyText:"On prépare un partage selon un ratio à trois termes. Chaque part du ratio correspond à une même unité inconnue.",
       fillText:ratioMeaningText(people, [a, b, c]),
@@ -5395,17 +5497,17 @@ body.printOnlyWorksheet .worksheetSheet{
 
     const rawStatement = firstName + " a " + first + " " + obj + ". " +
       secondName + " a " + second + " " + obj + ". " +
-      "Quel est le ratio " + ratioNameText([firstName, secondName]) + " ?";
+      "Quel est le ratio irréductible " + ratioNameText([firstName, secondName]) + " ?";
 
     const highlightedStatement =
       firstName + " a <mark>" + first + " " + obj + "</mark>. " +
       secondName + " a <mark>" + second + " " + obj + "</mark>. " +
-      "<mark class='question'>Quel est le ratio " + ratioNameText([firstName, secondName]) + " ?</mark>";
+      "<mark class='question'>Quel est le ratio irréductible " + ratioNameText([firstName, secondName]) + " ?</mark>";
 
     return {
       type:"ratio_find",
       subType:"find_ratio",
-      family:"Trouver le ratio",
+      family:"Trouver le ratio irréductible",
       firstName,
       secondName,
       first,
@@ -5428,9 +5530,9 @@ body.printOnlyWorksheet .worksheetSheet{
       rawStatement,
       highlightedStatement,
       emptyText:"On prépare deux barres : une pour chaque quantité. Le ratio compare ces deux quantités dans le même ordre que la question.",
-      fillText:"On écrit d’abord le ratio avec les quantités données, puis on le simplifie.",
+      fillText:"On cherche à découper les deux quantités en parts égales de même taille, les plus grandes possible.",
       context:firstName + " = " + first + " ; " + secondName + " = " + second,
-      answer:"Le ratio " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ".",
+      answer:"Le ratio irréductible " + ratioNameText([firstName, secondName]) + " est " + ratioValueText([a, b]) + ".",
       check:ratioValueText([first, second]) + " = " + ratioValueText([a, b]) + " car on divise les deux nombres par " + factor + "."
     };
   }
@@ -6069,12 +6171,14 @@ body.printOnlyWorksheet .worksheetSheet{
     problem = makeProblem();
     problem.unknownSymbol = chooseUnknownSymbol();
     understandAnswersVisible = false;
+    ratioFindState = {topParts:null, bottomParts:null};
     initEquabar();
     setAction("decompose");
     setStep("read");
   }
 
   function resetSameProblem(){
+    ratioFindState = {topParts:null, bottomParts:null};
     initEquabar();
     setAction("decompose");
     setStep("read");
@@ -6218,9 +6322,9 @@ body.printOnlyWorksheet .worksheetSheet{
       cards.push(understandCard("Que signifie le ratio ?", ratioMeaningText(problem.people, problem.ratioParts)));
       cards.push(understandCard("Quelle idée utiliser ?", "Partager le total en " + problem.ratioParts.reduce((s,v)=>s+v,0) + " parts égales."));
     }else if(problem.type === "ratio_find"){
-      cards.push(understandCard("Que cherche-t-on ?", "un ratio simplifié"));
+      cards.push(understandCard("Que cherche-t-on ?", "le ratio irréductible"));
       cards.push(understandCard("Dans quel ordre écrire le ratio ?", problem.firstName + " : " + problem.secondName));
-      cards.push(understandCard("Quelle idée utiliser ?", "Diviser les deux quantités par le même nombre."));
+      cards.push(understandCard("Quelle idée utiliser ?", "Découper les deux quantités en parts égales de même taille, les plus grandes possible."));
     }else if(problem.type === "ratio_missing"){
       cards.push(understandCard("Que cherche-t-on ?", "une quantité manquante"));
       cards.push(understandCard("Que signifie le ratio ?", ratioMeaningText([problem.firstName, problem.secondName], [problem.a, problem.b])));
@@ -6676,33 +6780,107 @@ body.printOnlyWorksheet .worksheetSheet{
     "</div>";
   }
 
-  function renderRatioFindSchema(filled=true, simplified=false){
-    const firstLabel = filled ? problem.first : "&nbsp;";
-    const secondLabel = filled ? problem.second : "&nbsp;";
-    const maxParts = Math.max(problem.a, problem.b);
-    const firstEnd = problem.a + 1;
-    const secondEnd = problem.b + 1;
+  function renderRatioFindSchema(filled=true, simplified=false, interactive=false){
+    const maxVal = Math.max(problem.first, problem.second);
+    const topParts = (interactive || simplified) ? (ratioFindState.topParts || (simplified ? problem.a : null)) : null;
+    const bottomParts = (interactive || simplified) ? (ratioFindState.bottomParts || (simplified ? problem.b : null)) : null;
+    const topPieceVal = topParts ? problem.first / topParts : problem.first;
+    const bottomPieceVal = bottomParts ? problem.second / bottomParts : problem.second;
+    const topWidth = Math.max(18, 100 * problem.first / maxVal).toFixed(3);
+    const bottomWidth = Math.max(18, 100 * problem.second / maxVal).toFixed(3);
+
+    function piecesHtml(count, value, visible){
+      let html = "";
+      for(let i = 0; i < count; i++){
+        html += "<div class='ratioFindPiece'>" + (visible ? value : "&nbsp;") + "</div>";
+      }
+      return html;
+    }
+
+    const topCount = topParts || 1;
+    const bottomCount = bottomParts || 1;
+    const topVisible = filled;
+    const bottomVisible = filled;
 
     let simplifiedBlock = "";
-    if(simplified){
+    let feedback = "";
+    let feedbackCls = "";
+    const bothChosen = !!(topParts && bottomParts);
+    const sameSize = bothChosen && topPieceVal === bottomPieceVal;
+    const irreducible = sameSize && topPieceVal === problem.factor;
+
+    if(simplified || irreducible){
       simplifiedBlock =
         "<div class='ratioSimplified'>" +
-          "<div class='ratioArrow'>÷ " + problem.factor + "</div>" +
-          "<div class='ratioResult'>" + problem.firstName + " : " + problem.secondName + " = " + problem.a + ":" + problem.b + "</div>" +
+          "<div class='ratioArrow'>1 part = " + problem.factor + "</div>" +
+          "<div class='ratioResult'>" + problem.firstName + " : " + problem.secondName + " = " + problem.a + " : " + problem.b + "</div>" +
         "</div>";
     }
 
+    if(interactive){
+      if(!bothChosen){
+        feedback = "Choisis un découpage pour chaque barre.";
+      }else if(!sameSize){
+        feedback = "Les parts n’ont pas la même valeur : essaie un autre découpage.";
+        feedbackCls = "warn";
+      }else if(!irreducible){
+        feedback = "Les parts ont la même valeur, mais on peut encore prendre des parts plus grandes.";
+        feedbackCls = "warn";
+      }else{
+        feedback = "Les parts ont la même valeur et sont les plus grandes possible : le ratio est irréductible.";
+        feedbackCls = "ok";
+      }
+    }
+
+    function choiceButtons(which, total, current){
+      return divisorsOf(total).map(function(d){
+        const cls = "ratioFindChoice" + (current === d ? " active" : "");
+        return "<button class='" + cls + "' data-ratio-find='" + which + "' data-parts='" + d + "'>" + d + (d > 1 ? " parts" : " part") + "</button>";
+      }).join("");
+    }
+
+    const controls = interactive ?
+      "<div class='ratioFindControls'>" +
+        "<div class='ratioFindControlBox'>" +
+          "<div class='ratioFindControlTitle'>Partager la barre de " + problem.firstName + "</div>" +
+          "<div class='ratioFindChoiceRow'>" + choiceButtons("top", problem.first, topParts) + "</div>" +
+        "</div>" +
+        "<div class='ratioFindControlBox'>" +
+          "<div class='ratioFindControlTitle'>Partager la barre de " + problem.secondName + "</div>" +
+          "<div class='ratioFindChoiceRow'>" + choiceButtons("bottom", problem.second, bottomParts) + "</div>" +
+        "</div>" +
+        "<div class='ratioFindFeedback " + feedbackCls + "'>" + feedback + "</div>" +
+      "</div>" : "";
+
     return "<div class='equabarPreview ratioFindBoard'>" +
       "<div class='schemaBoard'>" +
-        "<div class='ratioFindGrid' style='grid-template-columns:120px repeat(" + maxParts + ", 1fr)'>" +
-          "<div class='ratioFindLabel' style='grid-column:1;grid-row:1'>" + (filled ? problem.firstName : "1re quantité") + "</div>" +
-          "<div class='part' style='grid-column:2 / " + (firstEnd + 1) + ";grid-row:1'>" + firstLabel + "</div>" +
-          "<div class='ratioFindLabel' style='grid-column:1;grid-row:2'>" + (filled ? problem.secondName : "2e quantité") + "</div>" +
-          "<div class='part' style='grid-column:2 / " + (secondEnd + 1) + ";grid-row:2'>" + secondLabel + "</div>" +
+        "<div class='ratioFindManip'>" +
+          "<div class='ratioFindLine'>" +
+            "<div class='ratioFindLabel'>" + (filled ? problem.firstName : "1re quantité") + "</div>" +
+            "<div class='ratioFindTrackWrap'><div class='ratioFindTrack' style='width:" + topWidth + "%'>" + piecesHtml(topCount, topPieceVal, topVisible) + "</div></div>" +
+          "</div>" +
+          "<div class='ratioFindLine'>" +
+            "<div class='ratioFindLabel'>" + (filled ? problem.secondName : "2e quantité") + "</div>" +
+            "<div class='ratioFindTrackWrap'><div class='ratioFindTrack' style='width:" + bottomWidth + "%'>" + piecesHtml(bottomCount, bottomPieceVal, bottomVisible) + "</div></div>" +
+          "</div>" +
         "</div>" +
       "</div>" +
+      controls +
       simplifiedBlock +
     "</div>";
+  }
+
+  function wireRatioFindButtons(){
+    if(!el.barArea) return;
+    el.barArea.querySelectorAll("[data-ratio-find]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        const which = btn.getAttribute("data-ratio-find");
+        const parts = Number(btn.getAttribute("data-parts"));
+        if(which === "top") ratioFindState.topParts = parts;
+        if(which === "bottom") ratioFindState.bottomParts = parts;
+        renderEquabar();
+      });
+    });
   }
 
   function renderRatioTotalSchema(filled=true){
@@ -7546,10 +7724,18 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function renderEquabar(){
     if(problem.type === "ratio_find"){
-      el.barArea.innerHTML = renderRatioFindSchema(true, true);
+      el.barArea.innerHTML = renderRatioFindSchema(true, false, true);
+      wireRatioFindButtons();
+      const topParts = ratioFindState.topParts;
+      const bottomParts = ratioFindState.bottomParts;
+      const solved = topParts && bottomParts && (problem.first / topParts === problem.second / bottomParts) && (problem.first / topParts === problem.factor);
       if(el.equationBelowTools){
-        el.equationBelowTools.innerHTML = el.equationDisplay.value === "yes"
-          ? renderEquationLines([problem.first + ":" + problem.second + " = " + problem.a + ":" + problem.b])
+        el.equationBelowTools.innerHTML = (el.equationDisplay.value === "yes" && solved)
+          ? renderEquationLines([
+              problem.first + ":" + problem.second,
+              topParts + ":" + bottomParts,
+              problem.a + ":" + problem.b
+            ])
           : "";
       }
       return;
