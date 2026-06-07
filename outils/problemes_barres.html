@@ -4278,6 +4278,45 @@ body.printOnlyWorksheet .worksheetSheet{
     return (startsWithVowelSound(clean) ? "d’" : "de ") + clean;
   }
 
+  function cleanFrenchText(text){
+    let s = String(text || "");
+    // Filet de sécurité linguistique : toutes les phrases générées ne passent pas
+    // forcément par dePhrase(). On corrige donc les élisions de/d’ avant affichage
+    // et impression, y compris dans les énoncés surlignés contenant du HTML.
+    const vowel = "[aeiouyAEIOUYàâäÀÂÄéèêëÉÈÊËîïÎÏôöÔÖùûüÙÛÜœŒhH]";
+    s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])de\\s+(" + vowel + ")", "g"), "$1d’$2");
+    s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])De\\s+(" + vowel + ")", "g"), "$1D’$2");
+    return s;
+  }
+
+  function normalizeProblemText(problem){
+    if(!problem) return problem;
+    [
+      "rawStatement", "highlightedStatement", "question", "answerText",
+      "relationSentence", "relationRaw", "relationshipText"
+    ].forEach(key => {
+      if(typeof problem[key] === "string") problem[key] = cleanFrenchText(problem[key]);
+    });
+    if(Array.isArray(problem.understandingCards)){
+      problem.understandingCards.forEach(card => {
+        if(card){
+          if(typeof card.q === "string") card.q = cleanFrenchText(card.q);
+          if(typeof card.a === "string") card.a = cleanFrenchText(card.a);
+          if(typeof card.question === "string") card.question = cleanFrenchText(card.question);
+          if(typeof card.answer === "string") card.answer = cleanFrenchText(card.answer);
+        }
+      });
+    }
+    return problem;
+  }
+
+  function listNamesForSentence(items){
+    const arr = (items || []).filter(Boolean);
+    if(arr.length <= 1) return arr[0] || "";
+    if(arr.length === 2) return arr[0] + " et " + arr[1];
+    return arr.slice(0, -1).join(", ") + " et " + arr[arr.length - 1];
+  }
+
   function partLabel(n){
     return n + " " + (Number(n) > 1 ? "parts" : "part");
   }
@@ -4292,7 +4331,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function ratioMeaningText(names, parts){
     return "Le ratio " + ratioNameText(names) + " = " + ratioValueText(parts) + " signifie que " +
-      names.map((name, i) => name + " a " + partLabel(parts[i])).join(", ").replace(/, ([^,]*)$/, " et $1") + ".";
+      listNamesForSentence(names.map((name, i) => name + " a " + partLabel(parts[i]))) + ".";
   }
 
   function coloredObjectList(obj, colors){
@@ -4331,12 +4370,12 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function sharedTotalRatioSentence(names, total, obj, parts){
-    return names.slice(0, -1).join(", ") + (names.length > 2 ? " et " : "") + names[names.length - 1] +
+    return listNamesForSentence(names) +
       " se partagent " + total + " " + obj + ", dans le ratio " + ratioValueText(parts) + ".";
   }
 
   function highlightedSharedTotalRatioSentence(names, total, obj, parts){
-    return names.slice(0, -1).join(", ") + (names.length > 2 ? " et " : "") + names[names.length - 1] +
+    return listNamesForSentence(names) +
       " se partagent <mark class='relation'>" + total + " " + obj + "</mark>, dans le ratio <mark>" + ratioValueText(parts) + "</mark>.";
   }
 
@@ -4556,6 +4595,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function makeProblem(){
     let cat = el.category.value;
+    const finish = problem => normalizeProblemText(problem);
 
     if(cat === "custom_mix"){
       const checked = el.mixChecks.filter(cb => cb.checked).map(cb => cb.value);
@@ -4563,23 +4603,23 @@ body.printOnlyWorksheet .worksheetSheet{
       cat = pool[Math.floor(Math.random() * pool.length)];
     }
 
-    if(cat === "transformation") return generateTransformation(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "comparison") return generateComparison(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "comparison_additive") return generateComparisonAdditive(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "comparison_multiplicative") return generateComparisonMultiplicative(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "equal_groups") return generateEqualGroups(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "unequal_total") return generateUnequalTotal(el.category.value === "custom_mix" ? "mix" : undefined);
-    if(cat === "unequal_total_diff") return generateUnequalTotalDiff();
-    if(cat === "unequal_total_ratio") return generateUnequalTotalRatio();
-    if(cat === "ratio") return generateRatio(el.category.value === "custom_mix" ? "mix" : undefined);
+    if(cat === "transformation") return finish(generateTransformation(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "comparison") return finish(generateComparison(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "comparison_additive") return finish(generateComparisonAdditive(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "comparison_multiplicative") return finish(generateComparisonMultiplicative(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "equal_groups") return finish(generateEqualGroups(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "unequal_total") return finish(generateUnequalTotal(el.category.value === "custom_mix" ? "mix" : undefined));
+    if(cat === "unequal_total_diff") return finish(generateUnequalTotalDiff());
+    if(cat === "unequal_total_ratio") return finish(generateUnequalTotalRatio());
+    if(cat === "ratio") return finish(generateRatio(el.category.value === "custom_mix" ? "mix" : undefined));
     // Compatibilité avec d'anciennes versions / liens éventuels.
-    if(cat === "ratio_total") return generateRatioTotal();
-    if(cat === "ratio_total_three") return generateRatioTotalThree();
-    if(cat === "ratio_find") return generateRatioFind();
-    if(cat === "ratio_missing") return generateRatioMissing();
-    if(cat === "multi_linked") return generateMultiLinked();
-    if(cat === "two_sided_linear") return generateTwoSidedLinear();
-    return generatePartWhole(el.category.value === "custom_mix" ? "mix" : undefined);
+    if(cat === "ratio_total") return finish(generateRatioTotal());
+    if(cat === "ratio_total_three") return finish(generateRatioTotalThree());
+    if(cat === "ratio_find") return finish(generateRatioFind());
+    if(cat === "ratio_missing") return finish(generateRatioMissing());
+    if(cat === "multi_linked") return finish(generateMultiLinked());
+    if(cat === "two_sided_linear") return finish(generateTwoSidedLinear());
+    return finish(generatePartWhole(el.category.value === "custom_mix" ? "mix" : undefined));
   }
 
   function relationFromSelect(selectEl, fallback="more"){
