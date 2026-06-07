@@ -4541,7 +4541,7 @@ body.printOnlyWorksheet .worksheetSheet{
         rawStatement: person + " a " + rawParts.join(", ") + ". Combien y a-t-il de " + obj + " en tout ?",
         highlightedStatement:
           person + " a " + highlightedParts.join(", ") + ". " +
-          "<mark class='question'>Combien y a-t-il " + dePhrase(obj) + " en tout ?</mark>",
+          "<mark class='question'>Combien y a-t-il de " + obj + " en tout ?</mark>",
         emptyText:"On prépare plusieurs parties qui formeront un tout.",
         fillText:"Toutes les parties sont connues. On cherche le tout.",
         context:contextParts,
@@ -4629,7 +4629,7 @@ body.printOnlyWorksheet .worksheetSheet{
       highlightedStatement:
         "Dans une boîte, il y a <mark class='relation'>" + total + " " + obj + "</mark>. " +
         highlightedKnown + " Les autres sont des " + coloredObject(obj, missingColor) + ". " +
-        "<mark class='question'>Combien y a-t-il " + dePhrase(coloredObject(obj, missingColor)) + " ?</mark>",
+        "<mark class='question'>Combien y a-t-il de " + coloredObject(obj, missingColor) + " ?</mark>",
       emptyText:"On prépare une barre du tout et une barre découpée en plusieurs parties.",
       fillText: knownValues.length === 1
         ? "Le tout est connu. Une partie est connue. La partie restante est cherchée."
@@ -4696,7 +4696,7 @@ body.printOnlyWorksheet .worksheetSheet{
           highlightedStatement:
             person + " avait <mark>" + before + " " + obj + "</mark> au départ. " +
             "Ensuite, " + person + " en " + actionVerb + " <mark>" + change + "</mark>. " +
-            "<mark class='question'>Combien " + dePhrase(obj) + " possède " + person + " maintenant ?</mark>",
+            "<mark class='question'>Combien de " + obj + " possède " + person + " maintenant ?</mark>",
           emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
           fillText:"L’avant et le changement sont connus. On cherche l’après.",
           context:"Avant = " + before + " ; changement = " + change,
@@ -4714,7 +4714,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           person + " avait <mark class='relation'>" + before + " " + obj + "</mark> au départ. " +
           "Ensuite, " + person + " en " + actionVerb + " <mark>" + change + "</mark>. " +
-          "<mark class='question'>Combien " + dePhrase(obj) + " reste-t-il à " + person + " maintenant ?</mark>",
+          "<mark class='question'>Combien de " + obj + " reste-t-il à " + person + " maintenant ?</mark>",
         emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui est retiré.",
         fillText:"L’avant et la perte sont connus. On cherche l’après, c’est-à-dire ce qui reste.",
         context:"Avant = " + before + " ; perte = " + change,
@@ -4735,7 +4735,7 @@ body.printOnlyWorksheet .worksheetSheet{
           highlightedStatement:
             person + " gagne <mark>" + change + " " + obj + "</mark>. " +
             "Maintenant, " + person + " en possède <mark class='relation'>" + after + "</mark>. " +
-            "<mark class='question'>Combien " + dePhrase(obj) + " possédait " + person + " au départ ?</mark>",
+            "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
           emptyText:"On prépare une barre de l’après, composée de l’avant et du changement.",
           fillText:"L’après et le changement sont connus. On cherche l’avant.",
           context:"Après = " + after + " ; changement = " + change,
@@ -4754,7 +4754,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           person + " perd <mark>" + change + " " + obj + "</mark>. " +
           "Maintenant, il reste <mark class='relation'>" + after + " " + obj + "</mark>. " +
-          "<mark class='question'>Combien " + dePhrase(obj) + " possédait " + person + " au départ ?</mark>",
+          "<mark class='question'>Combien de " + obj + " possédait " + person + " au départ ?</mark>",
         emptyText:"On prépare une barre de l’avant, composée de ce qui reste et de ce qui a été retiré.",
         fillText:"L’après et la perte sont connus. On cherche l’avant.",
         context:"Après = " + after + " ; perte = " + change,
@@ -4841,7 +4841,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           smallName + " a <mark>" + small + " " + obj + "</mark>. " +
           "<mark class='relation'>" + relationSentence + "</mark> " +
-          "<mark class='question'>Combien " + dePhrase(obj) + " possède " + bigName + " ?</mark>",
+          "<mark class='question'>Combien de " + obj + " possède " + bigName + " ?</mark>",
         emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
         fillText:"La petite quantité et l’écart sont connus. On cherche la grande quantité.",
         context:smallName + " = " + small + " ; écart = " + diff,
@@ -4902,7 +4902,7 @@ body.printOnlyWorksheet .worksheetSheet{
       highlightedStatement:
         bigName + " a <mark class='relation'>" + big + " " + obj + "</mark>. " +
         "<mark>" + relationSentence + "</mark> " +
-        "<mark class='question'>Combien " + dePhrase(obj) + " possède " + smallName + " ?</mark>",
+        "<mark class='question'>Combien de " + obj + " possède " + smallName + " ?</mark>",
       emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
       fillText:"La grande quantité est connue. L’écart est connu. On cherche la petite quantité.",
       context:bigName + " = " + big + " ; écart = " + diff,
@@ -4996,7 +4996,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           smallName + " a <mark>" + small + " " + obj + "</mark>. " +
           highlightedRelation + " " +
-          "<mark class='question'>Combien " + dePhrase(obj) + " possède " + bigName + " ?</mark>",
+          "<mark class='question'>Combien de " + obj + " possède " + bigName + " ?</mark>",
         emptyText:"On prépare deux barres comparées. La grande quantité contient plusieurs fois la petite quantité.",
         fillText:"La petite quantité est connue. La grande quantité contient " + ratio + " parts identiques.",
         context:smallName + " = " + small + " ; rapport = " + ratio + " fois",
@@ -5024,7 +5024,7 @@ body.printOnlyWorksheet .worksheetSheet{
       highlightedStatement:
         bigName + " a <mark>" + big + " " + obj + "</mark>. " +
         highlightedRelation + " " +
-        "<mark class='question'>Combien " + dePhrase(obj) + " possède " + smallName + " ?</mark>",
+        "<mark class='question'>Combien de " + obj + " possède " + smallName + " ?</mark>",
       emptyText:"On prépare deux barres comparées. La grande quantité contient plusieurs fois la petite quantité.",
       fillText:"La grande quantité est connue. On cherche la valeur d’une part.",
       context:bigName + " = " + big + " ; rapport = " + ratio + " fois",
@@ -5070,7 +5070,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           "On range <mark class='relation'>" + total + " " + obj + " en tout</mark> dans des " + containerPlural + " identiques. " +
           "Chaque " + containerSingular + " contient <mark>" + perGroup + " " + obj + "</mark>. " +
-          "<mark class='question'>Combien faut-il " + dePhrase(containerPlural) + " ?</mark>",
+          "<mark class='question'>Combien faut-il de " + containerPlural + " ?</mark>",
         emptyText:"On connaît la taille d’un groupe, mais on ne connaît pas encore le nombre de groupes.",
         fillText:"On représente une première part, des parts cachées par les points de suspension, puis une dernière part. L’accolade représente le nombre de groupes.",
         context:"Total = " + total + " ; une part = " + perGroup,
@@ -5094,7 +5094,7 @@ body.printOnlyWorksheet .worksheetSheet{
         highlightedStatement:
           "Il y a <mark>" + groupCount + " " + containerPlural + " identiques</mark>. " +
           "Chaque " + containerSingular + " contient <mark>" + perGroup + " " + obj + "</mark>. " +
-          "<mark class='question'>Combien y a-t-il " + dePhrase(obj) + " en tout ?</mark>",
+          "<mark class='question'>Combien y a-t-il de " + obj + " en tout ?</mark>",
         emptyText:"On prépare une barre du total, découpée en parts égales.",
         fillText:"Le nombre de parts et la valeur de chaque part sont connus. On cherche le total.",
         context:"" + groupCount + " parts égales ; une part = " + perGroup,
@@ -5116,7 +5116,7 @@ body.printOnlyWorksheet .worksheetSheet{
       rawStatement: groupCount + " " + containerPlural + " identiques contiennent " + total + " " + obj + " en tout. Combien de " + obj + " y a-t-il dans chaque " + containerSingular + " ?",
       highlightedStatement:
         "<mark>" + groupCount + " " + containerPlural + " identiques</mark> contiennent <mark class='relation'>" + total + " " + obj + " en tout</mark>. " +
-        "<mark class='question'>Combien " + dePhrase(obj) + " y a-t-il dans chaque " + containerSingular + " ?</mark>",
+        "<mark class='question'>Combien de " + obj + " y a-t-il dans chaque " + containerSingular + " ?</mark>",
       emptyText:"On prépare une barre du total, découpée en parts égales.",
       fillText:"Le total est connu. Toutes les parts sont identiques. On cherche la valeur d’une part.",
       context:"Total = " + total + " ; " + groupCount + " parts égales",
@@ -5446,7 +5446,7 @@ body.printOnlyWorksheet .worksheetSheet{
     const highlightedStatement =
       "Le ratio " + firstName + ":" + secondName + " est <mark>" + a + ":" + b + "</mark>. " +
       knownName + " a <mark>" + knownValue + " " + obj + "</mark>. " +
-      "<mark class='question'>Combien " + dePhrase(obj) + " possède " + missingName + " ?</mark>";
+      "<mark class='question'>Combien de " + obj + " possède " + missingName + " ?</mark>";
 
     return {
       type:"ratio_missing",
@@ -5573,7 +5573,7 @@ body.printOnlyWorksheet .worksheetSheet{
           totalHighlighted + " " +
           relationHighlighted1 + " " +
           relationHighlighted2 + " " +
-          "<mark class='question'>Combien y a-t-il " + dePhrase(obj + " " + labels[0]) + " ?</mark>",
+          "<mark class='question'>Combien y a-t-il de " + obj + " " + labels[0] + " ?</mark>",
         emptyText:isMultChain
           ? "On suit une chaîne multiplicative : une quantité dépend de la référence, puis une autre dépend de cette quantité."
           : "On choisit une quantité de référence. Les deux autres quantités valent plusieurs fois cette référence.",
@@ -5656,7 +5656,7 @@ body.printOnlyWorksheet .worksheetSheet{
         totalHighlighted + " " +
         ratioHighlighted + " " +
         diffHighlighted + " " +
-        "<mark class='question'>Combien y a-t-il " + dePhrase(obj + " " + labels[0]) + " ?</mark>",
+        "<mark class='question'>Combien y a-t-il de " + obj + " " + labels[0] + " ?</mark>",
       emptyText:isChain
         ? "On suit une chaîne : une quantité dépend de la référence, puis une autre dépend de cette quantité."
         : "On choisit une quantité de référence. Les autres quantités sont construites à partir de cette référence.",
@@ -6242,8 +6242,6 @@ body.printOnlyWorksheet .worksheetSheet{
         "<div class='understandActions'>" +
           "<button type='button' class='understandToggleBtn' id='btnToggleUnderstandAnswers'>" + buttonLabel + "</button>" +
         "</div>" +
-        "<div class='worksheetInlineLogo'><img src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2ODAiIGhlaWdodD0iMTMyIiB2aWV3Qm94PSIwIDAgNjgwIDEzMiI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5uYXZ5e2ZpbGw6IzBiMzU3MH0KICAgICAgLnRlYWx7ZmlsbDojMTNhOGE4fQogICAgICAub3Jhbmdle2ZpbGw6I2YyOGExN30KICAgICAgLndvcmR7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC5hbXB7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6OTAwO2ZpbGw6IzBiMzU3MDt9CiAgICAgIC50YWd7Zm9udC1mYW1pbHk6RGVqYVZ1IFNhbnMsIEFyaWFsLCBIZWx2ZXRpY2EsIHNhbnMtc2VyaWY7Zm9udC13ZWlnaHQ6ODAwO30KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJsb2dvLW1hcmsiPgogICAgPGxpbmUgeDE9IjE1IiB5MT0iOTciIHgyPSIxMTIiIHkyPSI5NyIgc3Ryb2tlPSIjMGIzNTcwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjk1Ii8+CiAgICA8cmVjdCB4PSIxMSIgeT0iMjAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1OCIgcng9IjciIGZpbGw9IiMwYjM1NzAiLz4KICAgIDxyZWN0IHg9Ijk5IiB5PSIyMCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjU4IiByeD0iNyIgZmlsbD0iIzBiMzU3MCIvPgogICAgPGxpbmUgeDE9IjMyIiB5MT0iMjYiIHgyPSI1NyIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9Ijk0IiB5MT0iMjYiIHgyPSI2OCIgeTI9IjQ4IiBzdHJva2U9IiMxM2E4YTgiIHN0cm9rZS13aWR0aD0iMTMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSI1MCIgcj0iMTAiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSIyNyIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjM3IiByPSI4LjUiIGZpbGw9IiMxM2E4YTgiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9IjU2IiByPSI4LjUiIGZpbGw9IiMwYjM1NzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8Y2lyY2xlIGN4PSI5NiIgY3k9Ijc0IiByPSI4LjUiIGZpbGw9IiNmMjhhMTciIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICA8cmVjdCB4PSIzNiIgeT0iODkiIHdpZHRoPSIxNCIgaGVpZ2h0PSI4IiByeD0iMyIgZmlsbD0iIzEzYThhOCIvPgogICAgPHJlY3QgeD0iNTYiIHk9Ijg0IiB3aWR0aD0iMTUiIGhlaWdodD0iMTMiIHJ4PSIzIiBmaWxsPSIjMGIzNTcwIi8+CiAgICA8cmVjdCB4PSI3NiIgeT0iODAiIHdpZHRoPSIxMyIgaGVpZ2h0PSIxNyIgcng9IjMiIGZpbGw9IiNmMjhhMTciLz4KICAgIDxjaXJjbGUgY3g9IjgzIiBjeT0iMTgiIHI9IjMuMiIgZmlsbD0iI2YyOGExNyIvPgogICAgPGNpcmNsZSBjeD0iOTMiIGN5PSIxMyIgcj0iMy4yIiBmaWxsPSIjZjI4YTE3Ii8+CiAgICA8cGF0aCBkPSJNODggNSBMMTA5IDIgTDEwMCAxNyBaIiBmaWxsPSIjZjI4YTE3Ii8+CiAgPC9nPgogIDx0ZXh0IHg9IjEyMSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5hdGhzPC90ZXh0PgogIDx0ZXh0IHg9IjI0NCIgeT0iNjciIGNsYXNzPSJhbXAiIGZvbnQtc2l6ZT0iNDIiPiZhbXA7PC90ZXh0PgogIDx0ZXh0IHg9IjI4NSIgeT0iNjciIGNsYXNzPSJ3b3JkIiBmb250LXNpemU9IjQ4Ij5nbzwvdGV4dD4KICA8dGV4dCB4PSIxMjMiIHk9IjEwMiIgY2xhc3M9InRhZyIgZm9udC1zaXplPSIyMCI+CiAgICA8dHNwYW4gZmlsbD0iIzEzYThhOCI+TWFuaXB1bGVyPC90c3Bhbj4KICAgIDx0c3BhbiBmaWxsPSIjMGIzNTcwIj4g4oCiIENvbXByZW5kcmUg4oCiIDwvdHNwYW4+CiAgICA8dHNwYW4gZmlsbD0iI2YyOGExNyI+UHJvZ3Jlc3NlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K' alt='Maths&go'></div>" +
-        correctionHtml +
       "</div>";
   }
 
