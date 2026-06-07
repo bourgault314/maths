@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Problèmes en barres</title>
+<title>Problèmes et schémas en barres</title>
 <style>
 :root{
   --bg:#f5f7fb;
@@ -1450,6 +1450,44 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 .equationBelowTools .equationHistory{
   margin:0 auto;
 }
+
+
+/* Historique d'équations : signes = alignés, mais écriture compacte.
+   La partie gauche est alignée à droite : le blanc éventuel se place avant elle,
+   pas entre l'expression et le signe égal. */
+.equationHistory.alignedEquationHistory,
+.equationHistory.balanceEquationHistory{
+  display:inline-grid;
+  grid-template-columns:max-content auto max-content;
+  column-gap:.34em;
+  align-items:baseline;
+  justify-content:center;
+}
+.equationHistory.alignedEquationHistory .eqRow,
+.equationHistory.balanceEquationHistory .eqRow{
+  display:contents;
+}
+.equationHistory.alignedEquationHistory .eqLeft,
+.equationHistory.balanceEquationHistory .eqLeft{
+  text-align:right;
+}
+.equationHistory.alignedEquationHistory .eqEqual,
+.equationHistory.balanceEquationHistory .eqEqual{
+  text-align:center;
+}
+.equationHistory.alignedEquationHistory .eqRight,
+.equationHistory.balanceEquationHistory .eqRight{
+  text-align:left;
+}
+.equationHistory.alignedEquationHistory .old .eqLeft,
+.equationHistory.alignedEquationHistory .old .eqEqual,
+.equationHistory.alignedEquationHistory .old .eqRight,
+.equationHistory.balanceEquationHistory .old .eqLeft,
+.equationHistory.balanceEquationHistory .old .eqEqual,
+.equationHistory.balanceEquationHistory .old .eqRight{
+  font-size:.70em;
+  color:#64748b;
+}
 .stage:fullscreen .equationBelowTools{
   margin-top:14px;
 }
@@ -1996,6 +2034,72 @@ dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
 }
 .partWholeOwnerBraces .ownerBrace{
   font-size:clamp(14px,1.2vw,19px);
+}
+
+
+/* Balances — étape Remplir : accolades d'expression au-dessus de chaque plateau. */
+.balanceExpressionBraces{
+  display:grid;
+  grid-template-columns:var(--cols, 1fr);
+  width:var(--lineWidth, 100%);
+  margin:0 auto 7px;
+  min-height:48px;
+  color:#334155;
+  font-size:clamp(15px,1.3vw,22px);
+  font-weight:950;
+  position:relative;
+  z-index:2;
+}
+.balanceExpressionBraces.beforeBottom{
+  margin-top:14px;
+}
+.balanceExpressionBrace{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  text-align:center;
+  padding:0 4px 17px;
+  line-height:1.1;
+}
+.balanceExpressionBrace::after{
+  content:"";
+  position:absolute;
+  left:5px;
+  right:5px;
+  bottom:0;
+  height:11px;
+  border-top:3px solid rgba(15,23,42,.50);
+  border-left:3px solid rgba(15,23,42,.50);
+  border-right:3px solid rgba(15,23,42,.50);
+  border-radius:12px 12px 0 0;
+}
+.balancePreview .barLine.bottom{
+  border-top:2px solid var(--line);
+}
+.stage:fullscreen .balanceExpressionBraces{
+  min-height:54px;
+  margin-bottom:9px;
+  font-size:clamp(18px,1.55vw,27px);
+}
+.worksheetSchema .balanceExpressionBraces{
+  min-height:34px !important;
+  margin-bottom:4px !important;
+  font-size:11px !important;
+}
+.worksheetSchema .balanceExpressionBraces.beforeBottom{
+  margin-top:7px !important;
+}
+.worksheetSchema .balanceExpressionBrace{
+  padding-bottom:12px !important;
+}
+.worksheetSchema .balanceExpressionBrace::after{
+  left:3px !important;
+  right:3px !important;
+  height:8px !important;
+  border-top-width:2px !important;
+  border-left-width:2px !important;
+  border-right-width:2px !important;
 }
 
 
@@ -2653,7 +2757,7 @@ body.printOnlyWorksheet .worksheetSheet{
 <body>
 <main>
   <section class="panel">
-    <div class="title">Problèmes en barres</div>
+    <div class="title">Problèmes et schémas en barres</div>
     
 
     <label>Type de problème</label>
@@ -2665,6 +2769,7 @@ body.printOnlyWorksheet .worksheetSheet{
       <option value="ratio">Ratios / partages proportionnels</option>
       <option value="unequal_total">Partages inégaux</option>
       <option value="multi_linked">Relations entre plusieurs quantités</option>
+      <option value="two_sided_linear">Balances — ax + b = cx + d</option>
       <option value="custom_mix">Mélange personnalisé</option>
     </select>
 
@@ -2677,6 +2782,7 @@ body.printOnlyWorksheet .worksheetSheet{
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="unequal_total" checked> Partages inégaux</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="ratio" checked> Ratios</label>
       <label class="checkLine"><input type="checkbox" class="mixCheck" value="multi_linked" checked> Relations entre plusieurs quantités</label>
+      <label class="checkLine"><input type="checkbox" class="mixCheck" value="two_sided_linear"> Balances — ax + b = cx + d</label>
       <div class="btnrow" style="margin-top:8px">
         <button class="ghost" id="btnMixAll" type="button">Tout cocher</button>
         <button class="ghost" id="btnMixNone" type="button">Tout décocher</button>
@@ -3640,6 +3746,7 @@ body.printOnlyWorksheet .worksheetSheet{
         type:"comparison_additive",
         subType:"big",
         family:"Comparer — écart",
+        reformulation: relation === "less" ? plusSentence : "",
         bigName,
         smallName,
         known: diff,
@@ -3674,6 +3781,7 @@ body.printOnlyWorksheet .worksheetSheet{
         type:"comparison_additive",
         subType:"difference",
         family:"Comparer — écart",
+        reformulation: "",
         bigName,
         smallName,
         known: small,
@@ -3700,6 +3808,7 @@ body.printOnlyWorksheet .worksheetSheet{
       type:"comparison_additive",
       subType:"small",
       family:"Comparer — écart",
+      reformulation: relation === "less" ? plusSentence : "",
       bigName,
       smallName,
       known: diff,
@@ -3760,6 +3869,7 @@ body.printOnlyWorksheet .worksheetSheet{
         type:"comparison_multiplicative",
         subType:"ratio",
         family:"Comparer — rapport",
+        reformulation: "",
         bigName,
         smallName,
         ratio,
@@ -3790,6 +3900,7 @@ body.printOnlyWorksheet .worksheetSheet{
         type:"comparison_multiplicative",
         subType:"big",
         family:"Comparer — rapport",
+        reformulation: relation === "less" ? moreSentence : "",
         bigName,
         smallName,
         ratio,
@@ -3818,6 +3929,7 @@ body.printOnlyWorksheet .worksheetSheet{
       type:"comparison_multiplicative",
       subType:"small",
       family:"Comparer — rapport",
+      reformulation: relation === "less" ? moreSentence : "",
       bigName,
       smallName,
       ratio,
@@ -3963,6 +4075,7 @@ body.printOnlyWorksheet .worksheetSheet{
       type:"unequal_total_diff",
       subType:"total_diff",
       family:"Partager inégalement",
+      reformulation: relationKind === "less" ? bigName + " a " + diff + " " + obj + " de plus que " + smallName + "." : "",
       bigName,
       smallName,
       small,
@@ -4020,6 +4133,7 @@ body.printOnlyWorksheet .worksheetSheet{
       type:"unequal_total_ratio",
       subType:"total_ratio",
       family:"Total + rapport",
+      reformulation: relationKind === "less" ? bigName + " en a " + ratio + " fois plus que " + smallName + "." : "",
       bigName,
       smallName,
       small,
@@ -4353,6 +4467,14 @@ body.printOnlyWorksheet .worksheetSheet{
         subType:isMultChain ? "two_multiplicative_chain" : "two_multiplicative_common",
         relationType:"two_mult",
         family:"Relations entre plusieurs quantités",
+        reformulation:[
+          relationKind1 === "less" ? "Il y a " + multiplier + " fois plus de " + obj + " " + labels[1] + " que de " + obj + " " + labels[0] + "." : "",
+          relationKind2 === "less"
+            ? (isMultChain
+              ? "Il y a " + secondMultiplier + " fois plus de " + obj + " " + labels[2] + " que de " + obj + " " + labels[1] + "."
+              : "Il y a " + secondMultiplier + " fois plus de " + obj + " " + labels[2] + " que de " + obj + " " + labels[0] + ".")
+            : ""
+        ].filter(Boolean).join("; "),
         refLabel: labels[0],
         doubleLabel: labels[1],
         plusLabel: labels[2],
@@ -4430,6 +4552,10 @@ body.printOnlyWorksheet .worksheetSheet{
       subType:isChain ? "chain_mixed" : "common_reference",
       relationType:"mult_add",
       family:"Relations entre plusieurs quantités",
+      reformulation:[
+        relationKind === "less" ? "Il y a " + multiplier + " fois plus de " + obj + " " + labels[1] + " que de " + obj + " " + labels[0] + "." : "",
+        diffKind === "less" ? "Il y a " + diff + " " + obj + " " + labels[2] + " de plus que de " + obj + " " + diffBaseLabel + "." : ""
+      ].filter(Boolean).join("; "),
       refLabel: labels[0],
       doubleLabel: labels[1],
       plusLabel: labels[2],
@@ -4468,53 +4594,134 @@ body.printOnlyWorksheet .worksheetSheet{
     const rg = range();
     const sol = rint(rg.x[0], rg.x[1]);
 
-    // On construit une équation du type ax + b = cx + d,
-    // avec une solution entière et positive.
+    // Module Balance : on garde volontairement des équations du type ax + b = cx + d,
+    // avec plus d'objets inconnus sur le plateau gauche et plus d'unités connues à droite.
+    // Cela donne une situation très lisible : on retire d'abord les mêmes objets des deux plateaux,
+    // puis on isole la valeur d'un objet.
     const maxCoeff = el.level.value === "hard" ? 7 : (el.level.value === "easy" ? 4 : 5);
-    let a = rint(2, Math.max(2, maxCoeff - 1));
-    let c = rint(a + 1, maxCoeff);
-    if(c === a) c = a + 1;
+    let c = rint(1, Math.max(1, maxCoeff - 2));
+    let a = rint(c + 1, maxCoeff);
+    if(a === c) a = c + 1;
 
-    const gap = c - a;
-    const d = rint(rg.diff[0], rg.diff[1]);
-    const b = d + gap * sol;
+    const gap = a - c;
+
+    const balanceContexts = [
+      {
+        container:"boîte de thé",
+        obj:"g",
+        knownMin:20,
+        knownMax:180,
+        step:10,
+        intro:"Sur une balance en équilibre",
+        leftVerb:"on place",
+        rightIntro:"À droite, il y a",
+        question:"Quelle est la masse d’une boîte de thé ?",
+        answerPrefix:"La masse d’une boîte de thé est de "
+      },
+      {
+        container:"sachet de vanille",
+        obj:"g",
+        knownMin:10,
+        knownMax:120,
+        step:5,
+        intro:"Sur une balance en équilibre",
+        leftVerb:"on pose",
+        rightIntro:"Sur le plateau droit, on pose",
+        question:"Quelle est la masse d’un sachet de vanille ?",
+        answerPrefix:"La masse d’un sachet de vanille est de "
+      },
+      {
+        container:"paquet d’épices",
+        obj:"g",
+        knownMin:20,
+        knownMax:160,
+        step:10,
+        intro:"Une balance est parfaitement équilibrée",
+        leftVerb:"on trouve",
+        rightIntro:"Sur le plateau droit, il y a",
+        question:"Quelle est la masse d’un paquet d’épices ?",
+        answerPrefix:"La masse d’un paquet d’épices est de "
+      },
+      {
+        container:"boîte",
+        obj:"crayons",
+        knownMin:2,
+        knownMax:30,
+        step:1,
+        intro:"Deux plateaux sont en équilibre",
+        leftVerb:"on place",
+        rightIntro:"Sur le plateau droit, on place",
+        question:"Combien de crayons contient une boîte ?",
+        answerPrefix:"Une boîte contient "
+      },
+      {
+        container:"sachet",
+        obj:"billes",
+        knownMin:2,
+        knownMax:40,
+        step:1,
+        intro:"Sur une balance en équilibre",
+        leftVerb:"on dépose",
+        rightIntro:"À droite, il y a",
+        question:"Combien de billes contient un sachet ?",
+        answerPrefix:"Un sachet contient "
+      },
+      {
+        container:"pochette",
+        obj:"cartes",
+        knownMin:2,
+        knownMax:50,
+        step:1,
+        intro:"Deux compositions ont le même nombre de cartes",
+        leftVerb:"on regroupe",
+        rightIntro:"Dans la deuxième composition, il y a",
+        question:"Combien de cartes contient une pochette ?",
+        answerPrefix:"Une pochette contient "
+      },
+      {
+        container:"enveloppe",
+        obj:"images",
+        knownMin:2,
+        knownMax:50,
+        step:1,
+        intro:"Deux collections contiennent exactement le même nombre d’images",
+        leftVerb:"on regroupe",
+        rightIntro:"Dans la deuxième collection, il y a",
+        question:"Combien d’images contient une enveloppe ?",
+        answerPrefix:"Une enveloppe contient "
+      }
+    ];
+
+    const ctx = pick(balanceContexts);
+    const unitMin = Math.max(ctx.knownMin, rg.diff[0]);
+    const unitMax = Math.max(unitMin, Math.min(ctx.knownMax, rg.known[1] * 4));
+    let b = rint(unitMin, unitMax);
+    b = Math.max(ctx.step, Math.round(b / ctx.step) * ctx.step);
+    const d = b + gap * sol;
     const leftValue = a * sol + b;
     const rightValue = c * sol + d;
-    const obj = pick(objects);
-    const container = pick(["boîte", "sachet", "paquet", "enveloppe", "petite boîte"]);
-    const contextKind = pick(["balance", "lots"]);
+    const obj = ctx.obj;
+    const container = ctx.container;
 
-    let rawStatement, highlightedStatement, emptyText, fillText, answer, check;
+    const leftContainers = pluralizeContainerLabel(container, a);
+    const rightContainers = pluralizeContainerLabel(container, c);
+    const bLabel = quantityLabelForObject(b, obj);
+    const dLabel = quantityLabelForObject(d, obj);
 
-    if(contextKind === "balance"){
-      rawStatement = "Une balance est équilibrée. Sur le plateau du haut, il y a " +
-        a + " " + container + "s identiques et " + b + " " + obj + ". " +
-        "Sur le plateau du bas, il y a " + c + " " + container + "s identiques et " + d + " " + obj + ". " +
-        "Combien y a-t-il de " + obj + " dans une " + container + " ?";
-      highlightedStatement =
-        "Une balance est <mark class='relation'>équilibrée</mark>. " +
-        "Sur le plateau du haut, il y a <mark>" + a + " " + container + "s identiques et " + b + " " + obj + "</mark>. " +
-        "Sur le plateau du bas, il y a <mark>" + c + " " + container + "s identiques et " + d + " " + obj + "</mark>. " +
-        "<mark class='question'>Combien y a-t-il de " + obj + " dans une " + container + " ?</mark>";
-      emptyText = "On prépare deux barres de même longueur : les deux plateaux de la balance sont équilibrés.";
-      fillText = "Chaque boîte identique correspond à la même inconnue. Comme la balance est équilibrée, les deux barres ont la même valeur.";
-      answer = "Il y a " + sol + " " + obj + " dans une " + container + ".";
-    }else{
-      rawStatement = "Deux lots ont la même valeur. Le premier lot contient " +
-        a + " " + container + "s identiques et " + b + " " + obj + ". " +
-        "Le second lot contient " + c + " " + container + "s identiques et " + d + " " + obj + ". " +
-        "Combien y a-t-il de " + obj + " dans une " + container + " ?";
-      highlightedStatement =
-        "Deux lots ont <mark class='relation'>la même valeur</mark>. " +
-        "Le premier lot contient <mark>" + a + " " + container + "s identiques et " + b + " " + obj + "</mark>. " +
-        "Le second lot contient <mark>" + c + " " + container + "s identiques et " + d + " " + obj + "</mark>. " +
-        "<mark class='question'>Combien y a-t-il de " + obj + " dans une " + container + " ?</mark>";
-      emptyText = "On prépare deux barres de même longueur : les deux lots ont la même valeur.";
-      fillText = "Chaque paquet identique correspond à la même inconnue. Les deux expressions représentent la même quantité.";
-      answer = "Il y a " + sol + " " + obj + " dans une " + container + ".";
-    }
+    const rawStatement = ctx.intro + ", " + ctx.leftVerb + " " + leftContainers + " et " + bLabel + " sur le plateau gauche. " +
+      ctx.rightIntro + " " + rightContainers + " et " + dLabel + ". " +
+      ctx.question;
 
-    check = a + " × " + sol + " + " + b + " = " + leftValue +
+    const highlightedStatement =
+      ctx.intro.replace("équilibre", "<mark class='relation'>équilibre</mark>").replace("équilibrée", "<mark class='relation'>équilibrée</mark>").replace("même nombre", "<mark class='relation'>même nombre</mark>") + ", " +
+      ctx.leftVerb + " <mark>" + leftContainers + " et " + bLabel + "</mark> sur le plateau gauche. " +
+      ctx.rightIntro + " <mark>" + rightContainers + " et " + dLabel + "</mark>. " +
+      "<mark class='question'>" + ctx.question + "</mark>";
+
+    const emptyText = "On prépare deux barres de même longueur : les deux plateaux représentent la même valeur.";
+    const fillText = "Chaque " + singularContainerForSentence(container) + " identique correspond à la même inconnue. Les deux plateaux sont en équilibre.";
+    const answer = ctx.answerPrefix + quantityLabelForObject(sol, obj) + ".";
+    const check = a + " × " + sol + " + " + b + " = " + leftValue +
       " et " + c + " × " + sol + " + " + d + " = " + rightValue + ".";
 
     return {
@@ -4525,6 +4732,8 @@ body.printOnlyWorksheet .worksheetSheet{
       b,
       c,
       d,
+      obj,
+      container,
       x: sol,
       total:leftValue,
       topPieces:[
@@ -4543,7 +4752,7 @@ body.printOnlyWorksheet .worksheetSheet{
       highlightedStatement,
       emptyText,
       fillText,
-      context:"Haut : " + a + unknown() + " + " + b + " ; bas : " + c + unknown() + " + " + d,
+      context:"Plateau gauche : " + a + unknown() + " + " + b + " ; plateau droit : " + c + unknown() + " + " + d,
       answer,
       check
     };
@@ -4800,6 +5009,19 @@ body.printOnlyWorksheet .worksheetSheet{
     return withCurrentUnknown(problem.context || "").replace(/;\s*/g,"<br>");
   }
 
+  function reformulationHtml(){
+    const reformulation = withCurrentUnknown(problem && problem.reformulation ? problem.reformulation : "");
+    if(!reformulation) return "";
+    return reformulation.replace(/;\s*/g,"<br>");
+  }
+
+  function addReformulationCard(cards){
+    const reformulation = reformulationHtml();
+    if(reformulation){
+      cards.push(understandCard("Comment reformuler la relation ?", reformulation));
+    }
+  }
+
   function searched(label){
     return label + " (" + unknown() + ")";
   }
@@ -4879,6 +5101,8 @@ body.printOnlyWorksheet .worksheetSheet{
       cards.push(understandCard("Que sait-on des deux barres ?", "Elles représentent la même quantité."));
       cards.push(understandCard("Quelle idée utiliser ?", "Supprimer les mêmes éléments dans chaque membre, puis partager."));
     }
+
+    addReformulationCard(cards);
 
     if(!cards.length){
       cards.push(understandCard("Que cherche-t-on ?", "l’inconnue du problème (" + unknown() + ")"));
@@ -5500,8 +5724,8 @@ body.printOnlyWorksheet .worksheetSheet{
     if(problem.type === "two_sided_linear"){
       el.barArea.innerHTML =
         "<div class='schemaBoard'>" +
-          "<div class='barLine top'><div class='part empty' style='flex:1'>membre du haut</div></div>" +
-          "<div class='barLine bottom'><div class='part empty' style='flex:1'>membre du bas</div></div>" +
+          "<div class='barLine top'><div class='part empty' style='flex:1'>plateau gauche</div></div>" +
+          "<div class='barLine bottom'><div class='part empty' style='flex:1'>plateau droit</div></div>" +
         "</div>";
       return;
     }
@@ -5920,6 +6144,56 @@ body.printOnlyWorksheet .worksheetSheet{
     "</div>";
   }
 
+  function quantityLabelForObject(value, obj){
+    if(obj === "g" || obj === "kg" || obj === "€") return value + " " + obj;
+    const noun = value === 1 ? singularizeFrenchPlural(obj) : obj;
+    return value + " " + noun;
+  }
+
+  function singularContainerForSentence(container){
+    return String(container || "sachet");
+  }
+
+  function singularizeFrenchPlural(word){
+    return String(word || "objet").replace(/s$/, "");
+  }
+
+  function pluralizeContainerLabel(container, n){
+    const base = String(container || "sachet");
+    if(n === 1) return "1 " + base;
+    const deMatch = base.match(/^(boîte|sachet|paquet|pochette|enveloppe) (d[’']|de |du |des )(.*)$/);
+    if(deMatch){
+      let head = deMatch[1];
+      if(head === "boîte") head = "boîtes";
+      else head = head + "s";
+      return n + " " + head + " " + deMatch[2] + deMatch[3];
+    }
+    if(base === "petite boîte") return n + " petites boîtes";
+    if(base.endsWith("e")) return n + " " + base + "s";
+    return n + " " + base + "s";
+  }
+
+  function quantityObjectLabel(value){
+    const obj = problem && problem.obj ? problem.obj : "objets";
+    const noun = value === 1 ? singularizeFrenchPlural(obj) : obj;
+    return value + " " + noun;
+  }
+
+  function balanceExpressionLabel(coef, value){
+    return {
+      xPart: pluralizeContainerLabel(problem && problem.container, coef),
+      numberPart: quantityObjectLabel(value)
+    };
+  }
+
+  function renderBalanceExpressionBraces(lineStyle, coef, value, extraClass=""){
+    const labels = balanceExpressionLabel(coef, value);
+    return "<div class='balanceExpressionBraces " + extraClass + "' style='" + lineStyle + "'>" +
+      "<div class='balanceExpressionBrace' style='grid-column:1 / " + (coef + 1) + "'>" + labels.xPart + "</div>" +
+      "<div class='balanceExpressionBrace' style='grid-column:" + (coef + 1) + " / " + (coef + 2) + "'>" + labels.numberPart + "</div>" +
+    "</div>";
+  }
+
   function renderFilledEquabarPreview(){
     const topPieces = shouldShowUnknownOnTop() ? [makePiece("x", "x")] : [makePiece("number", problem.total)];
     const bottomPieces = problem.pieces.map(p => makePiece(p.type, p.value));
@@ -5989,6 +6263,19 @@ body.printOnlyWorksheet .worksheetSheet{
         "</div>";
     }
 
+    if(problem.type === "two_sided_linear"){
+      const topBraces = renderBalanceExpressionBraces(topLine.style, problem.a, problem.b);
+      const bottomBraces = renderBalanceExpressionBraces(bottomLine.style, problem.c, problem.d, "beforeBottom");
+      return "<div class='equabarPreview balancePreview'>" +
+        "<div class='schemaBoard'>" +
+          topBraces +
+          "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
+          bottomBraces +
+          "<div class='barLine bottom' style='" + bottomLine.style + "'>" + bottomLine.html + "</div>" +
+        "</div>" +
+      "</div>";
+    }
+
     return "<div class='equabarPreview'>" +
       "<div class='schemaBoard'>" +
         "<div class='barLine top' style='" + topLine.style + "'>" + topLine.html + "</div>" +
@@ -6042,12 +6329,41 @@ body.printOnlyWorksheet .worksheetSheet{
       "</div>";
   }
 
+
+  function renderEquationLines(lines){
+    const allEquations = lines.length > 0 && lines.every(line => String(line).includes("="));
+
+    if(allEquations){
+      const rows = lines.map((stepText,i) => {
+        const txt = String(stepText);
+        const parts = txt.split(/\s*=\s*/);
+        const left = parts[0] || "";
+        const right = parts.slice(1).join(" = ") || "";
+        const oldCls = i < lines.length - 1 ? " old" : "";
+        return "<div class='eqRow" + oldCls + "'>" +
+          "<span class='eqLeft'>" + left + "</span>" +
+          "<span class='eqEqual'>=</span>" +
+          "<span class='eqRight'>" + right + "</span>" +
+        "</div>";
+      }).join("");
+      return "<div class='equationHistory alignedEquationHistory'>" + rows + "</div>";
+    }
+
+    const equation = lines.map((s,i) => "<div class='" + (i < lines.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
+    return "<div class='equationHistory'>" + equation + "</div>";
+  }
+
+  function renderEquationHistoryBlock(){
+    if(el.equationDisplay.value !== "yes") return "";
+    return renderEquationLines(state.steps);
+  }
+
   function renderEquabar(){
     if(problem.type === "ratio_find"){
       el.barArea.innerHTML = renderRatioFindSchema(true, true);
       if(el.equationBelowTools){
         el.equationBelowTools.innerHTML = el.equationDisplay.value === "yes"
-          ? "<div class='equationHistory'><div>" + problem.first + ":" + problem.second + " = " + problem.a + ":" + problem.b + "</div></div>"
+          ? renderEquationLines([problem.first + ":" + problem.second + " = " + problem.a + ":" + problem.b])
           : "";
       }
       return;
@@ -6057,17 +6373,18 @@ body.printOnlyWorksheet .worksheetSheet{
       el.barArea.innerHTML = renderRatioMissingSchema(true, true);
       if(el.equationBelowTools){
         el.equationBelowTools.innerHTML = el.equationDisplay.value === "yes"
-          ? "<div class='equationHistory'><div>" + problem.knownParts + " parts = " + problem.knownValue + "</div><div>1 part = " + problem.unit + "</div><div>" + problem.missingParts + " parts = " + problem.missingValue + "</div></div>"
+          ? renderEquationLines([
+              problem.knownParts + " parts = " + problem.knownValue,
+              "1 part = " + problem.unit,
+              problem.missingParts + " parts = " + problem.missingValue
+            ])
           : "";
       }
       return;
     }
 
     if(problem.type === "comparison_multiplicative" && problem.subType === "ratio"){
-      const equation = state.steps.map((s,i) => "<div class='" + (i < state.steps.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
-      const equationBlock = el.equationDisplay.value === "yes"
-        ? "<div class='equationHistory'>" + equation + "</div>"
-        : "";
+      const equationBlock = renderEquationHistoryBlock();
       el.barArea.innerHTML = "<div class='equabarSolve'>" + renderComparisonRatioSolve() + "</div>";
       if(el.equationBelowTools) el.equationBelowTools.innerHTML = equationBlock;
 
@@ -6079,10 +6396,7 @@ body.printOnlyWorksheet .worksheetSheet{
     }
 
     if(problem.type === "equal_groups" && problem.subType === "count"){
-      const equation = state.steps.map((s,i) => "<div class='" + (i < state.steps.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
-      const equationBlock = el.equationDisplay.value === "yes"
-        ? "<div class='equationHistory'>" + equation + "</div>"
-        : "";
+      const equationBlock = renderEquationHistoryBlock();
       el.barArea.innerHTML = "<div class='equabarSolve'>" + renderCountGroupsSolved() + "</div>";
       if(el.equationBelowTools) el.equationBelowTools.innerHTML = equationBlock;
 
@@ -6093,9 +6407,8 @@ body.printOnlyWorksheet .worksheetSheet{
       return;
     }
 
-    const equation = state.steps.map((s,i) => "<div class='" + (i < state.steps.length - 1 ? "old" : "") + "'>" + s + "</div>").join("");
     const equationBlock = el.equationDisplay.value === "yes"
-      ? "<div class='equationHistory'>" + equation + "</div>"
+      ? renderEquationLines(state.steps)
       : "";
     const solveClass = problem.type === "comparison_additive" ? "equabarSolve compareSolve" : "equabarSolve";
     const topPieces = visiblePiecesForGrid("top");
@@ -6892,7 +7205,7 @@ body.printOnlyWorksheet .worksheetSheet{
     el.worksheetPreview.innerHTML =
       "<div class='worksheetSheet'>" +
         "<div class='worksheetHeader'>" +
-          "<div><h2>Fiche — Problèmes en barres</h2><div class='worksheetMeta' style='text-align:left'>Nom : ____________________ &nbsp;&nbsp; Date : __________</div></div>" +
+          "<div><h2>Fiche — Problèmes et schémas en barres</h2><div class='worksheetMeta' style='text-align:left'>Nom : ____________________ &nbsp;&nbsp; Date : __________</div></div>" +
           "<div class='worksheetMeta'>" + count + " problèmes<br>" + categoryDisplayNameForWorksheet() + "<br>" + dateText + "</div>" +
         "</div>" +
         studentProblems +
