@@ -5898,7 +5898,7 @@ body.printOnlyWorksheet .worksheetSheet{
   // ---------------------------------------------------------------------------
   const RDP_BANK = [
     {
-      id:"m1", title:"Mission 1 — Partie / tout additif", status:"ready",
+      id:"m1", title:"Additif partie / tout", status:"ready",
       problems:[
         {n:1, title:"Bus scolaire", questions:[
           rdpPartWholeMissing({
@@ -5975,7 +5975,7 @@ body.printOnlyWorksheet .worksheetSheet{
       ]
     },
     {
-      id:"m2", title:"Mission 2 — Partie / tout multiplicatif", status:"ready",
+      id:"m2", title:"Multiplicatif partie / tout", status:"ready",
       problems:[
         {n:1, title:"Barquettes d’ananas", questions:[
           rdpEqualGroupsTotal({
@@ -6071,7 +6071,7 @@ body.printOnlyWorksheet .worksheetSheet{
       ]
     },
     {
-      id:"m3", title:"Mission 3 — Comparaison additive", status:"prototype",
+      id:"m3", title:"Comparaison additive", status:"prototype",
       problems:[
         {n:1, title:"Letchis", questions:[
           rdpComparisonAdditive({
@@ -6143,6 +6143,91 @@ body.printOnlyWorksheet .worksheetSheet{
           rdpPartWholeWhole({
             raw:"Pour décorer la cour de l'école, le maître achète une première guirlande lumineuse de 4,75 mètres de long. La deuxième guirlande qu'il a choisie mesure 1,5 mètre de moins que la première. S'il attache les deux guirlandes bout à bout, quelle longueur totale obtiendra-t-il ?",
             values:[4.75,3.25], labels:["1re guirlande","2e guirlande"], unit:"m", answer:"Il obtiendra une longueur totale de 8 m."
+          })
+        ]}
+      ]
+    },
+    {
+      id:"m4", title:"Comparaison multiplicative", status:"prototype",
+      problems:[
+        {n:1, title:"Manguiers", questions:[
+          rdpComparisonMultiplicative({
+            raw:"Dans le verger, le petit manguier a donné 15 mangues cette année. Le grand manguier en a donné 4 fois plus. Combien de mangues le grand manguier a-t-il données ?",
+            smallName:"petit manguier", bigName:"grand manguier", small:15, ratio:4, unit:"mangues",
+            answer:"Le grand manguier a donné 60 mangues."
+          })
+        ]},
+        {n:2, title:"Perles", questions:[
+          rdpComparisonMultiplicative({
+            raw:"Pour son anniversaire, Inès a reçu une boîte contenant 60 perles pour faire des bracelets. Son petit frère n'a eu qu'un sachet qui en contient 3 fois moins. Combien de perles le petit frère d'Inès a-t-il reçues ?",
+            bigName:"Inès", smallName:"petit frère", big:60, ratio:3, unit:"perles",
+            reformulation:"Si le sachet du petit frère en contient 3 fois moins, alors la boîte d’Inès en contient 3 fois plus.",
+            answer:"Le petit frère d'Inès a reçu 20 perles."
+          })
+        ]},
+        {n:3, title:"Cartes de collection", questions:[
+          rdpComparisonMultiplicative({
+            raw:"À la récréation, Jules compte ses cartes de collection : il en a 48. C'est 2 fois plus que son copain Rayan. Combien de cartes possède Rayan ?",
+            bigName:"Jules", smallName:"Rayan", big:48, ratio:2, unit:"cartes",
+            answer:"Rayan possède 24 cartes."
+          })
+        ]},
+        {n:4, title:"Billets d'avion", questions:[
+          rdpComparisonMultiplicative({
+            raw:"Un billet d'avion aller-retour Paris-Saint-Denis coûte 960 € en haute saison. C'est 3 fois plus cher qu'un billet pour aller en Espagne. Quel est le prix du billet pour l'Espagne ?",
+            bigName:"Paris-Saint-Denis", smallName:"Espagne", big:960, ratio:3, unit:"€",
+            answer:"Le billet pour l'Espagne coûte 320 €."
+          })
+        ]},
+        {n:5, title:"Vanille et épices", questions:[
+          rdpComparisonMultiplicative({
+            raw:"Au marché forain, une belle gousse de vanille est vendue 3,50 €. Un coffret cadeau contenant un assortiment d'épices coûte 5 fois plus cher. Quel est le prix du coffret d'épices ?",
+            smallName:"gousse de vanille", bigName:"coffret d'épices", small:3.5, ratio:5, unit:"€",
+            answer:"Le coffret d'épices coûte 17,50 €."
+          })
+        ]},
+        {n:6, title:"Médiathèque", separate:true, questions:[
+          rdpComparisonMultiplicative({
+            raw:"La médiathèque du quartier possède 1 200 documentaires. Le bibliothécaire indique qu'il y a 4 fois plus de romans que de documentaires. 1. Combien y a-t-il de romans dans la médiathèque ?",
+            smallName:"documentaires", bigName:"romans", small:1200, ratio:4, unit:"livres",
+            answer:"Il y a 4 800 romans dans la médiathèque."
+          }),
+          rdpPartWholeWhole({
+            raw:"La médiathèque du quartier possède 1 200 documentaires. Le bibliothécaire indique qu'il y a 4 fois plus de romans que de documentaires. 2. Combien de livres (romans et documentaires) cela fait-il au total ?",
+            values:[1200,4800], labels:["documentaires","romans"], unit:"livres",
+            answer:"Cela fait 6 000 livres au total."
+          })
+        ]},
+        {n:7, title:"Smartphone", questions:[
+          rdpComparisonMultiplicative({
+            raw:"Un smartphone de dernière génération coûte 450,60 €. Sur l'étiquette, il est écrit que ce téléphone est 3 fois plus cher qu'une montre connectée de la même marque. Quel est le prix de la montre connectée ?",
+            bigName:"smartphone", smallName:"montre connectée", big:450.6, ratio:3, unit:"€",
+            answer:"La montre connectée coûte 150,20 €."
+          })
+        ]},
+        {n:8, title:"Randonnée à Mafate", separate:true, questions:[
+          rdpComparisonMultiplicative({
+            raw:"Lors d'une randonnée dans le cirque de Mafate, la première étape mesure 12,4 km. La deuxième étape est 2 fois moins longue que la première. 1. Quelle est la longueur de la deuxième étape ?",
+            bigName:"1re étape", smallName:"2e étape", big:12.4, ratio:2, unit:"km",
+            reformulation:"Si la deuxième étape est 2 fois moins longue, alors la première étape est 2 fois plus longue.",
+            answer:"La deuxième étape mesure 6,2 km."
+          }),
+          rdpComparisonMultiplicative({
+            raw:"Lors d'une randonnée dans le cirque de Mafate, la première étape mesure 12,4 km. La deuxième étape est 2 fois moins longue que la première. La troisième étape est 3 fois plus longue que la deuxième. 2. Quelle est la longueur de la troisième étape ?",
+            smallName:"2e étape", bigName:"3e étape", small:6.2, ratio:3, unit:"km",
+            answer:"La troisième étape mesure 18,6 km."
+          })
+        ]},
+        {n:9, title:"Coopérative scolaire", separate:true, questions:[
+          rdpComparisonMultiplicative({
+            raw:"Pour la coopérative scolaire, la classe de CM2 a récolté 135,50 € grâce à une vente de gâteaux. La classe de 6ème du collège voisin a organisé une grande tombola et a récolté 4 fois plus d'argent. 1. Quelle somme d'argent la classe de 6ème a-t-elle récoltée ?",
+            smallName:"CM2", bigName:"6ème", small:135.5, ratio:4, unit:"€",
+            answer:"La classe de 6ème a récolté 542 €."
+          }),
+          rdpComparisonAdditive({
+            raw:"Pour la coopérative scolaire, la classe de CM2 a récolté 135,50 € grâce à une vente de gâteaux. La classe de 6ème du collège voisin a organisé une grande tombola et a récolté 4 fois plus d'argent. 2. De combien d'euros la classe de 6ème a-t-elle dépassé la classe de CM2 ?",
+            bigName:"6ème", smallName:"CM2", big:542, small:135.5, diff:406.5, subType:"difference", unit:"€",
+            answer:"La classe de 6ème a dépassé la classe de CM2 de 406,50 €."
           })
         ]}
       ]
@@ -6386,6 +6471,75 @@ body.printOnlyWorksheet .worksheetSheet{
     };
   }
 
+
+  function rdpComparisonMultiplicative(cfg){
+    const unit = cfg.unit || "";
+    const ratio = Number(cfg.ratio);
+    let big = (cfg.big !== undefined) ? cleanDecimal(Number(cfg.big)) : null;
+    let small = (cfg.small !== undefined) ? cleanDecimal(Number(cfg.small)) : null;
+    let subType = cfg.subType || "";
+    if(big === null && small !== null){
+      big = cleanDecimal(small * ratio);
+      subType = subType || "big";
+    }
+    if(small === null && big !== null){
+      small = cleanDecimal(big / ratio);
+      subType = subType || "small";
+    }
+    if(!subType) subType = "ratio";
+    const bigName = cfg.bigName || "grande quantité";
+    const smallName = cfg.smallName || "petite quantité";
+    const pieces = subType === "big"
+      ? Array.from({length:ratio}, () => ({type:"number", value:small}))
+      : (subType === "small"
+        ? Array.from({length:ratio}, () => ({type:"x", value:"x"}))
+        : []);
+    const topPieces = subType === "big"
+      ? [{type:"x", value:"x"}]
+      : [{type:"number", value:big}];
+    const bottomPieces = subType === "big"
+      ? Array.from({length:ratio}, () => ({type:"number", value:small}))
+      : (subType === "small"
+        ? Array.from({length:ratio}, () => ({type:"x", value:"x"}))
+        : []);
+    const xValue = subType === "big" ? big : (subType === "small" ? small : ratio);
+    const searchedText = subType === "big" ? bigName : (subType === "small" ? smallName : "le rapport");
+    const moreText = bigName + " vaut " + ratio + " fois " + smallName + ".";
+    return {
+      type:"comparison_multiplicative",
+      subType,
+      family:"RDP — Comparaison multiplicative",
+      rdpUnit:unit,
+      reformulation: cfg.reformulation || "",
+      bigName,
+      smallName,
+      ratio,
+      small,
+      big,
+      x:xValue,
+      total:big,
+      unknownOnTop: subType === "big",
+      topPieces,
+      bottomPieces,
+      pieces,
+      rawStatement:cfg.raw,
+      highlightedStatement:rdpHighlightNumbers(cfg.raw),
+      emptyText:"On prépare deux barres comparées. La grande quantité contient plusieurs fois la petite quantité.",
+      fillText: subType === "big"
+        ? "La petite quantité est connue. On cherche la grande quantité."
+        : (subType === "small"
+          ? "La grande quantité est connue. Elle est partagée en " + ratio + " parts égales. On cherche une part."
+          : "Les deux quantités sont connues. On cherche le rapport."),
+      context:bigName + " : " + (subType === "big" ? "inconnu" : rdpFormat(big, unit)) + " ; " + smallName + " : " + (subType === "small" ? "inconnu" : rdpFormat(small, unit)) + " ; rapport : " + ratio + " fois",
+      answer:cfg.answer || (searchedText + " vaut " + rdpFormat(xValue, unit) + "."),
+      check: subType === "big"
+        ? ratio + " × " + rdpCalcFormat(small, unit) + " = " + rdpCalcFormat(big, unit) + "."
+        : (subType === "small"
+          ? rdpCalcFormat(big, unit) + " = " + ratio + " × " + rdpCalcFormat(small, unit) + "."
+          : rdpCalcFormat(big, unit) + " = " + ratio + " × " + rdpCalcFormat(small, unit) + ".")
+    };
+  }
+
   function rdpCurrentMission(){
     const id = el.rdpMission ? el.rdpMission.value : "m1";
     return RDP_BANK.find(m => m.id === id) || RDP_BANK[0];
@@ -6422,6 +6576,12 @@ body.printOnlyWorksheet .worksheetSheet{
       if(q.subType === "big") return rdpCalcFormat(q.small, unit) + " + " + rdpCalcFormat(q.diff, unit) + " = " + rdpCalcFormat(q.big, unit);
       if(q.subType === "difference") return rdpCalcFormat(q.big, unit) + " − " + rdpCalcFormat(q.small, unit) + " = " + rdpCalcFormat(q.diff, unit);
     }
+    if(q.type === "comparison_multiplicative"){
+      const unit = q.rdpUnit || "";
+      if(q.subType === "big") return q.ratio + " × " + rdpCalcFormat(q.small, unit) + " = " + rdpCalcFormat(q.big, unit);
+      if(q.subType === "small") return rdpCalcFormat(q.big, unit) + " = " + q.ratio + " × " + rdpCalcFormat(q.small, unit);
+      if(q.subType === "ratio") return rdpCalcFormat(q.big, unit) + " = " + q.ratio + " × " + rdpCalcFormat(q.small, unit);
+    }
     return null;
   }
 
@@ -6439,7 +6599,7 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function rdpEntryIsSeparated(mission, entry){
-    return !!(mission && entry && Array.isArray(entry.questions) && entry.questions.length > 1 && (mission.id === "m2" || entry.separate));
+    return !!(mission && entry && Array.isArray(entry.questions) && entry.questions.length > 1 && (mission.id === "m2" || mission.id === "m4" || entry.separate));
   }
 
   function rdpCurrentQuestion(){
