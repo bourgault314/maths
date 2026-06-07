@@ -3589,6 +3589,75 @@ body.printOnlyWorksheet .worksheetSheet{
   font-size:.50em !important;
 }
 
+
+
+/* v27 — rotation vraiment centrée dans les petites cases.
+   La rotation précédente pivotait le texte, mais gardait parfois une boîte de mise en page
+   trop large : le nombre pouvait sortir de la case. Ici la cellule devient le repère,
+   et le libellé pivoté est centré au milieu de sa propre case seulement. */
+.part.narrowValue,
+.countCell.narrowValue,
+.compareSegment.narrowValue,
+.compareSituationBar.narrowValue,
+.ratioPart.narrowValue,
+.multiPart.narrowValue,
+.multiGroupPart.narrowValue,
+.groupAlignedPart.narrowValue,
+.unequalPart.narrowValue{
+  position:relative !important;
+  overflow:hidden !important;
+}
+.part.narrowValue .partLabel,
+.countCell.narrowValue .partLabel,
+.compareSegment.narrowValue .partLabel,
+.compareSituationBar.narrowValue .partLabel,
+.ratioPart.narrowValue .partLabel,
+.multiPart.narrowValue .partLabel,
+.multiGroupPart.narrowValue .partLabel,
+.groupAlignedPart.narrowValue .partLabel,
+.unequalPart.narrowValue .partLabel{
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  max-width:none !important;
+  white-space:nowrap !important;
+  transform:translate(-50%,-50%) rotate(-90deg) !important;
+  transform-origin:center center !important;
+  line-height:1 !important;
+  text-align:center !important;
+  font-size:.66em !important;
+}
+.part.tinyValue .partLabel,
+.countCell.tinyValue .partLabel,
+.compareSegment.tinyValue .partLabel,
+.compareSituationBar.tinyValue .partLabel,
+.ratioPart.tinyValue .partLabel,
+.multiPart.tinyValue .partLabel,
+.multiGroupPart.tinyValue .partLabel,
+.groupAlignedPart.tinyValue .partLabel,
+.unequalPart.tinyValue .partLabel{
+  font-size:.54em !important;
+}
+.stage:fullscreen .part.narrowValue .partLabel,
+.stage:fullscreen .countCell.narrowValue .partLabel,
+.stage:fullscreen .compareSegment.narrowValue .partLabel,
+.stage:fullscreen .compareSituationBar.narrowValue .partLabel,
+.stage:fullscreen .ratioPart.narrowValue .partLabel,
+.stage:fullscreen .multiPart.narrowValue .partLabel,
+.stage:fullscreen .multiGroupPart.narrowValue .partLabel,
+.stage:fullscreen .groupAlignedPart.narrowValue .partLabel,
+.stage:fullscreen .unequalPart.narrowValue .partLabel{
+  font-size:.62em !important;
+}
+.worksheetSchema .narrowValue .partLabel,
+.worksheetFillable .narrowValue .partLabel{
+  font-size:.58em !important;
+}
+.worksheetSchema .tinyValue .partLabel,
+.worksheetFillable .tinyValue .partLabel{
+  font-size:.48em !important;
+}
+
 /* Impression avancée importée du module validé. */
 .worksheetPrintRoot{
   display:none;
@@ -5859,11 +5928,11 @@ body.printOnlyWorksheet .worksheetSheet{
         ]},
         {n:4, title:"Boulangerie", questions:[
           rdpPartWholeWhole({
-            raw:"À la boulangerie, Noah achète un pain au chocolat à 1,20 € et une baguette à 1,10 €. Il paie avec une pièce de 5 €. 1. Combien coûtent ses achats au total ?",
+            raw:"À la boulangerie, Noah achète un pain au chocolat à 1,20 € et une baguette à 1,10 €. Il paie avec un billet de 5 €. 1. Combien coûtent ses achats au total ?",
             values:[1.2,1.1], labels:["pain au chocolat","baguette"], unit:"€", answer:"Ses achats coûtent 2,30 € au total."
           }),
           rdpPartWholeMissing({
-            raw:"À la boulangerie, Noah achète un pain au chocolat à 1,20 € et une baguette à 1,10 €. Il paie avec une pièce de 5 €. 2. Combien la boulangère doit-elle lui rendre ?",
+            raw:"À la boulangerie, Noah achète un pain au chocolat à 1,20 € et une baguette à 1,10 €. Il paie avec un billet de 5 €. 2. Combien la boulangère doit-elle lui rendre ?",
             total:5, known:[1.2,1.1], labels:["pain au chocolat","baguette","monnaie rendue"], unit:"€", answer:"La boulangère doit lui rendre 2,70 €."
           })
         ]},
@@ -6000,6 +6069,83 @@ body.printOnlyWorksheet .worksheetSheet{
           })
         ]}
       ]
+    },
+    {
+      id:"m3", title:"Mission 3 — Comparaison additive", status:"prototype",
+      problems:[
+        {n:1, title:"Letchis", questions:[
+          rdpComparisonAdditive({
+            raw:"Léo a ramassé 45 letchis dans le jardin. Sa petite sœur Mia en a ramassé 12 de moins que lui. Combien de letchis Mia a-t-elle ramassés ?",
+            bigName:"Léo", smallName:"Mia", big:45, diff:12, unit:"letchis",
+            answer:"Mia a ramassé 33 letchis."
+          })
+        ]},
+        {n:2, title:"Bibliothèque", questions:[
+          rdpComparisonAdditive({
+            raw:"À la bibliothèque de l'école, il y a 120 bandes dessinées. Le documentaliste annonce qu'il y a 35 mangas de plus que de bandes dessinées. Combien y a-t-il de mangas en tout ?",
+            smallName:"bandes dessinées", bigName:"mangas", small:120, diff:35, unit:"mangas",
+            answer:"Il y a 155 mangas en tout."
+          })
+        ]},
+        {n:3, title:"Tournoi de jeux vidéo", questions:[
+          rdpComparisonAdditive({
+            raw:"Lors d'un tournoi de jeux vidéo, Enzo a marqué 850 points. C'est 120 points de moins que son amie Sarah. Combien de points Sarah a-t-elle marqués ?",
+            smallName:"Enzo", bigName:"Sarah", small:850, diff:120, unit:"points",
+            answer:"Sarah a marqué 970 points."
+          })
+        ]},
+        {n:4, title:"Piton de la Fournaise", questions:[
+          rdpComparisonAdditive({
+            raw:"Le Piton de la Fournaise culmine à 2 632 mètres d'altitude. C'est 438 mètres de plus que le sommet du Maïdo. Quelle est l'altitude exacte du Maïdo ?",
+            bigName:"Piton", smallName:"Maïdo", big:2632, diff:438, unit:"m",
+            answer:"L'altitude du Maïdo est 2 194 m."
+          })
+        ]},
+        {n:5, title:"Jeu de société", questions:[
+          rdpComparisonAdditive({
+            raw:"Un nouveau jeu de société coûte 34,50 € dans le magasin de jouets du centre-ville. Sur internet, il coûte 4,20 € de moins. Quel est le prix du jeu sur internet ?",
+            bigName:"magasin", smallName:"internet", big:34.5, diff:4.2, unit:"€",
+            answer:"Sur internet, le jeu coûte 30,30 €."
+          })
+        ]},
+        {n:6, title:"Ananas et papaye", questions:[
+          rdpComparisonAdditive({
+            raw:"Au marché de Saint-Pierre, un bel ananas pèse 1,2 kg. C'est 0,4 kg de moins qu'une grosse papaye vendue sur le même stand. Quel est le poids de la papaye ?",
+            smallName:"ananas", bigName:"papaye", small:1.2, diff:0.4, unit:"kg",
+            answer:"La papaye pèse 1,6 kg."
+          })
+        ]},
+        {n:7, title:"Cross du collège", questions:[
+          rdpComparisonAdditive({
+            raw:"Lors du cross du collège, le parcours des classes de 6ème mesure 2,5 km. Le parcours des élèves de 3ème mesure 1,25 km de plus. Quelle est la longueur du parcours des 3ème ?",
+            smallName:"6e", bigName:"3e", small:2.5, diff:1.25, unit:"km",
+            answer:"Le parcours des 3ème mesure 3,75 km."
+          })
+        ]},
+        {n:8, title:"Tirelires", separate:true, questions:[
+          rdpComparisonAdditive({
+            raw:"Noah a 15,50 € dans sa tirelire. Il a 3,20 € de plus que son petit frère Lucas. Combien d'argent possède Lucas ?",
+            bigName:"Noah", smallName:"Lucas", big:15.5, diff:3.2, unit:"€",
+            answer:"Lucas possède 12,30 €."
+          }),
+          rdpComparisonAdditive({
+            raw:"Noah a 15,50 € dans sa tirelire. Il a 5 € de moins que sa grande sœur Chloé. Combien d'argent possède Chloé ?",
+            smallName:"Noah", bigName:"Chloé", small:15.5, diff:5, unit:"€",
+            answer:"Chloé possède 20,50 €."
+          })
+        ]},
+        {n:9, title:"Guirlandes", questions:[
+          rdpComparisonAdditive({
+            raw:"Pour décorer la cour de l'école, le maître achète une première guirlande lumineuse de 4,75 mètres de long. La deuxième guirlande qu'il a choisie mesure 1,5 mètre de moins que la première.",
+            bigName:"1re guirlande", smallName:"2e guirlande", big:4.75, diff:1.5, unit:"m",
+            answer:"La deuxième guirlande mesure 3,25 m."
+          }),
+          rdpPartWholeWhole({
+            raw:"Pour décorer la cour de l'école, le maître achète une première guirlande lumineuse de 4,75 mètres de long. La deuxième guirlande qu'il a choisie mesure 1,5 mètre de moins que la première. S'il attache les deux guirlandes bout à bout, quelle longueur totale obtiendra-t-il ?",
+            values:[4.75,3.25], labels:["1re guirlande","2e guirlande"], unit:"m", answer:"Il obtiendra une longueur totale de 8 m."
+          })
+        ]}
+      ]
     }
   ];
 
@@ -6045,6 +6191,24 @@ body.printOnlyWorksheet .worksheetSheet{
     // Calculs et équations : nombres seuls. Pour les euros, on garde les centimes uniquement quand ils existent.
     const decimals = decimalsForUnitValue(value, unit);
     return frNumber(value, decimals);
+  }
+
+  function cleanDecimal(n){
+    n = Number(n);
+    if(!Number.isFinite(n)) return n;
+    // Les problèmes RDP utilisent au plus des centièmes. On neutralise les
+    // erreurs flottantes du type 3.599999999999 avant toute proposition.
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+
+  function sameDecimal(a, b){
+    a = Number(a); b = Number(b);
+    if(!Number.isFinite(a) || !Number.isFinite(b)) return false;
+    return Math.abs(cleanDecimal(a) - cleanDecimal(b)) < 1e-9;
+  }
+
+  function suggestionExpr(a, b){
+    return displayTermValue(cleanDecimal(a)) + " + " + displayTermValue(cleanDecimal(b));
   }
 
   function rdpCheckSum(values, total, unit){
@@ -6172,6 +6336,56 @@ body.printOnlyWorksheet .worksheetSheet{
     };
   }
 
+
+  function rdpComparisonAdditive(cfg){
+    const unit = cfg.unit || "";
+    const diff = cleanDecimal(Number(cfg.diff));
+    let big = (cfg.big !== undefined) ? cleanDecimal(Number(cfg.big)) : null;
+    let small = (cfg.small !== undefined) ? cleanDecimal(Number(cfg.small)) : null;
+    let subType = cfg.subType || "";
+    if(big === null && small !== null){
+      big = cleanDecimal(small + diff);
+      subType = subType || "big";
+    }
+    if(small === null && big !== null){
+      small = cleanDecimal(big - diff);
+      subType = subType || "small";
+    }
+    if(!subType) subType = "difference";
+    const bigName = cfg.bigName || "grande quantité";
+    const smallName = cfg.smallName || "petite quantité";
+    const pieces = subType === "big"
+      ? [{type:"number", value:small}, {type:"number", value:diff}]
+      : (subType === "small"
+        ? [{type:"x", value:"x"}, {type:"number", value:diff}]
+        : [{type:"number", value:small}, {type:"x", value:"x"}]);
+    const xValue = subType === "big" ? big : (subType === "small" ? small : diff);
+    const searchedText = subType === "big" ? bigName : (subType === "small" ? smallName : "l'écart");
+    return {
+      type:"comparison_additive",
+      subType,
+      family:"RDP — Comparaison additive",
+      rdpUnit:unit,
+      bigName,
+      smallName,
+      known:diff,
+      x:xValue,
+      total:big,
+      diff,
+      small,
+      big,
+      unknownOnTop: subType === "big",
+      pieces,
+      rawStatement:cfg.raw,
+      highlightedStatement:rdpHighlightNumbers(cfg.raw),
+      emptyText:"On prépare deux barres alignées. La grande quantité contient la petite quantité et l’écart.",
+      fillText:"On place la petite quantité et l’écart pour retrouver la quantité cherchée.",
+      context:bigName + " : " + (subType === "big" ? "inconnu" : rdpFormat(big, unit)) + " ; " + smallName + " : " + (subType === "small" ? "inconnu" : rdpFormat(small, unit)) + " ; écart : " + rdpFormat(diff, unit),
+      answer:cfg.answer || (searchedText + " vaut " + rdpFormat(xValue, unit) + "."),
+      check:rdpCalcFormat(small, unit) + " + " + rdpCalcFormat(diff, unit) + " = " + rdpCalcFormat(big, unit) + "."
+    };
+  }
+
   function rdpCurrentMission(){
     const id = el.rdpMission ? el.rdpMission.value : "m1";
     return RDP_BANK.find(m => m.id === id) || RDP_BANK[0];
@@ -6202,6 +6416,12 @@ body.printOnlyWorksheet .worksheetSheet{
     if(q.type === "equal_groups" && q.subType === "total"){
       return q.groupCount + " × " + rdpCalcFormat(q.perGroup, q.rdpUnit || "") + " = " + rdpCalcFormat(q.total, q.rdpUnit || "");
     }
+    if(q.type === "comparison_additive"){
+      const unit = q.rdpUnit || "";
+      if(q.subType === "small") return rdpCalcFormat(q.big, unit) + " − " + rdpCalcFormat(q.diff, unit) + " = " + rdpCalcFormat(q.small, unit);
+      if(q.subType === "big") return rdpCalcFormat(q.small, unit) + " + " + rdpCalcFormat(q.diff, unit) + " = " + rdpCalcFormat(q.big, unit);
+      if(q.subType === "difference") return rdpCalcFormat(q.big, unit) + " − " + rdpCalcFormat(q.small, unit) + " = " + rdpCalcFormat(q.diff, unit);
+    }
     return null;
   }
 
@@ -6218,10 +6438,14 @@ body.printOnlyWorksheet .worksheetSheet{
     return finalProblem;
   }
 
+  function rdpEntryIsSeparated(mission, entry){
+    return !!(mission && entry && Array.isArray(entry.questions) && entry.questions.length > 1 && (mission.id === "m2" || entry.separate));
+  }
+
   function rdpCurrentQuestion(){
     const mission = rdpCurrentMission();
     const entry = rdpCurrentProblemEntry();
-    if(mission && mission.id === "m2" && entry && Array.isArray(entry.questions)){
+    if(rdpEntryIsSeparated(mission, entry)){
       const idx = Math.max(0, Math.min(entry.questions.length - 1, Number(el.rdpQuestion ? el.rdpQuestion.value : 0) || 0));
       return clone(entry.questions[idx]);
     }
@@ -6240,7 +6464,7 @@ body.printOnlyWorksheet .worksheetSheet{
     }
     const mission = rdpCurrentMission();
     const entry = rdpCurrentProblemEntry();
-    const isSeparated = mission && mission.id === "m2" && entry && Array.isArray(entry.questions) && entry.questions.length > 1;
+    const isSeparated = rdpEntryIsSeparated(mission, entry);
     el.questionFlow.style.display = "";
     if(isSeparated){
       const idx = rdpQuestionIndex();
@@ -6287,7 +6511,7 @@ body.printOnlyWorksheet .worksheetSheet{
   function goToNextRdpQuestion(){
     const mission = rdpCurrentMission();
     const entry = rdpCurrentProblemEntry();
-    if(mission && mission.id === "m2" && entry && Array.isArray(entry.questions)){
+    if(rdpEntryIsSeparated(mission, entry)){
       const idx = rdpQuestionIndex();
       if(idx < entry.questions.length - 1 && el.rdpQuestion){
         el.rdpQuestion.value = String(idx + 1);
@@ -6302,7 +6526,7 @@ body.printOnlyWorksheet .worksheetSheet{
   function goToPreviousRdpQuestion(){
     const mission = rdpCurrentMission();
     const entry = rdpCurrentProblemEntry();
-    if(mission && mission.id === "m2" && entry && Array.isArray(entry.questions)){
+    if(rdpEntryIsSeparated(mission, entry)){
       const idx = rdpQuestionIndex();
       if(idx > 0 && el.rdpQuestion){
         el.rdpQuestion.value = String(idx - 1);
@@ -6334,7 +6558,7 @@ body.printOnlyWorksheet .worksheetSheet{
     const mission = rdpCurrentMission();
     const entry = rdpCurrentProblemEntry();
     const old = el.rdpQuestion.value;
-    const isSeparated = mission && mission.id === "m2" && entry && Array.isArray(entry.questions) && entry.questions.length > 1;
+    const isSeparated = rdpEntryIsSeparated(mission, entry);
     if(isSeparated){
       el.rdpQuestion.style.display = "";
       el.rdpQuestion.innerHTML = entry.questions.map((q, i) => "<option value='" + i + "'>Question " + (i + 1) + "</option>").join("");
@@ -8043,8 +8267,24 @@ body.printOnlyWorksheet .worksheetSheet{
     return out;
   }
 
+  function understandContextText(raw){
+    let out = withCurrentUnknown(raw || "");
+    // Dans les aides de compréhension, on décrit les données :
+    // on utilise des deux-points, pas le signe égal qui est réservé aux équations.
+    out = out
+      .replace(/\bTout\s*=\s*/g, "Le tout : ")
+      .replace(/\bparties connues\s*=\s*/g, "parties connues : ")
+      .replace(/\bpartie connue\s*=\s*/g, "une partie connue : ")
+      .replace(/\btotal\s*=\s*/gi, "total : ")
+      .replace(/\bgroupes\s*=\s*/gi, "groupes : ")
+      .replace(/\bvaleur d’un groupe\s*=\s*/gi, "valeur d’un groupe : ")
+      .replace(/\bvaleur d'un groupe\s*=\s*/gi, "valeur d’un groupe : ")
+      .replace(/\s+=\s+/g, " : ");
+    return out;
+  }
+
   function contextHtml(){
-    return withCurrentUnknown(problem.context || "").replace(/;\s*/g,"<br>");
+    return understandContextText(problem.context || "").replace(/;\s*/g,"<br>");
   }
 
   function reformulationHtml(){
@@ -8914,9 +9154,9 @@ body.printOnlyWorksheet .worksheetSheet{
     const smallIsUnknown = problem.subType === "small";
     const diffIsUnknown = problem.subType === "difference";
 
-    const bigLabel = filled ? (bigIsUnknown ? unknown() : problem.big) : "&nbsp;";
-    const smallLabel = filled ? (smallIsUnknown ? unknown() : problem.small) : "&nbsp;";
-    const diffLabel = filled ? (diffIsUnknown ? unknown() : problem.diff) : "écart";
+    const bigLabel = filled ? (bigIsUnknown ? unknown() : displayValue(problem.big)) : "&nbsp;";
+    const smallLabel = filled ? (smallIsUnknown ? unknown() : displayValue(problem.small)) : "&nbsp;";
+    const diffLabel = filled ? (diffIsUnknown ? unknown() : displayValue(problem.diff)) : "écart";
 
     const bigClass = filled && bigIsUnknown ? " unknown" : (filled ? "" : " empty");
     const smallClass = filled && smallIsUnknown ? " unknown" : (filled ? "" : " empty");
@@ -9809,10 +10049,13 @@ body.printOnlyWorksheet .worksheetSheet{
     const candidates = [];
 
     function addCandidateFromAnchor(n, priority=false){
-      n = Number(n);
-      if(!Number.isFinite(n) || n <= 0 || n >= value) return;
-      const a = n + " + " + (value - n);
-      const b = (value - n) + " + " + n;
+      const totalValue = cleanDecimal(value);
+      n = cleanDecimal(n);
+      if(!Number.isFinite(n) || n <= 0 || n >= totalValue) return;
+      const rest = cleanDecimal(totalValue - n);
+      if(rest <= 0) return;
+      const a = suggestionExpr(n, rest);
+      const b = suggestionExpr(rest, n);
       if(priority){
         if(!suggestions.includes(a)) suggestions.push(a);
         if(!suggestions.includes(b) && suggestions.length < 4) suggestions.push(b);
@@ -9827,7 +10070,8 @@ body.printOnlyWorksheet .worksheetSheet{
     if(good && good.includes("+")){
       const goodNums = good.split("+").map(x => Number(String(x).trim())).filter(Number.isFinite);
       const goodTotal = goodNums.reduce((a,b)=>a+b,0);
-      if(goodNums.length >= 2 && goodTotal === value && !suggestions.includes(good)) suggestions.push(good);
+      const cleanGood = goodNums.map(n => displayTermValue(cleanDecimal(n))).join(" + ");
+      if(goodNums.length >= 2 && sameDecimal(goodTotal, value) && !suggestions.includes(cleanGood)) suggestions.push(cleanGood);
     }
 
     const x = Math.max(1, Number(problem.x) || Math.floor(value/2));
@@ -9842,9 +10086,9 @@ body.printOnlyWorksheet .worksheetSheet{
 
     for(let left=1; left<=value-1; left++){
       const right = value - left;
-      if(left === right) candidates.push(left + " + " + right);
-      if(left === 10 || right === 10) candidates.push(left + " + " + right);
-      if(left === x || right === x) candidates.push(left + " + " + right);
+      if(sameDecimal(left, right)) candidates.push(suggestionExpr(left, right));
+      if(sameDecimal(left, 10) || sameDecimal(right, 10)) candidates.push(suggestionExpr(left, right));
+      if(sameDecimal(left, x) || sameDecimal(right, x)) candidates.push(suggestionExpr(left, right));
     }
 
     const simpleSplits = [
@@ -9855,7 +10099,7 @@ body.printOnlyWorksheet .worksheetSheet{
       [Math.max(1, value-10), value-Math.max(1, value-10)]
     ];
     for(const [u,v] of simpleSplits){
-      if(u > 0 && v > 0 && u + v === value) candidates.push(u + " + " + v);
+      if(u > 0 && v > 0 && sameDecimal(u + v, value)) candidates.push(suggestionExpr(u, v));
     }
 
     for(const c of shuffleUnique(candidates)){
@@ -9885,7 +10129,7 @@ body.printOnlyWorksheet .worksheetSheet{
     const txt = el.decomposeInput.value.trim().replace(/,/g,".");
     const nums = txt.split("+").map(x => Number(x.trim())).filter(Number.isFinite);
     const total = nums.reduce((a,b)=>a+b,0);
-    if(nums.length < 2 || total !== Number(decomposeTarget.piece.value)){
+    if(nums.length < 2 || !sameDecimal(total, Number(decomposeTarget.piece.value))){
       el.message.textContent = "La somme proposée ne correspond pas au nombre.";
       return;
     }
@@ -9949,23 +10193,24 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function buildAddSuggestions(info){
-    const correct = info.sum;
+    const correct = cleanDecimal(info.sum);
     const wrongCandidates = [
-      correct + 1,
-      Math.max(0, correct - 1),
-      correct + 10,
-      Math.max(0, correct - 10)
-    ].filter(n => Number.isFinite(n) && n !== correct && n > 0);
-    const wrong = wrongCandidates.length ? wrongCandidates[Math.floor(Math.random() * wrongCandidates.length)] : correct + 1;
+      cleanDecimal(correct + 1),
+      cleanDecimal(Math.max(0, correct - 1)),
+      cleanDecimal(correct + 10),
+      cleanDecimal(Math.max(0, correct - 10))
+    ].filter(n => Number.isFinite(n) && !sameDecimal(n, correct) && n > 0);
+    const wrong = wrongCandidates.length ? wrongCandidates[Math.floor(Math.random() * wrongCandidates.length)] : cleanDecimal(correct + 1);
     return shuffle([correct, wrong]);
   }
 
   function renderAddSuggestions(info){
     if(!el.addSuggestions) return;
     const suggestions = buildAddSuggestions(info);
-    el.addSuggestions.innerHTML = suggestions.map(v =>
-      "<button class='suggestion' data-add-sug='" + v + "'>" + v + "</button>"
-    ).join("");
+    el.addSuggestions.innerHTML = suggestions.map(v => {
+      const shown = displayTermValue(cleanDecimal(v));
+      return "<button class='suggestion' data-add-sug='" + shown + "'>" + shown + "</button>";
+    }).join("");
     el.addSuggestions.classList.add("hidden");
     el.addSuggestions.querySelectorAll("[data-add-sug]").forEach(btn => {
       btn.addEventListener("click", () => { el.addInput.value = btn.dataset.addSug; });
@@ -9989,7 +10234,7 @@ body.printOnlyWorksheet .worksheetSheet{
   function applyAdd(){
     if(!pendingAddInfo) return;
     const value = Number(String(el.addInput.value).trim().replace(/,/g,"."));
-    if(!Number.isFinite(value) || value !== pendingAddInfo.sum){
+    if(!Number.isFinite(value) || !sameDecimal(value, pendingAddInfo.sum)){
       el.message.textContent = "La somme proposée ne correspond pas aux nombres sélectionnés.";
       return;
     }
@@ -10145,9 +10390,9 @@ body.printOnlyWorksheet .worksheetSheet{
     const maxParts = 12;
     const out = [];
     const oppositeX = countActiveX(getOppositeSide(side));
-    if(oppositeX >= 2 && oppositeX <= maxParts && value % oppositeX === 0) out.push(oppositeX);
+    if(oppositeX >= 2 && oppositeX <= maxParts && sameDecimal(value / oppositeX, Math.round(value / oppositeX))) out.push(oppositeX);
     for(let n = 2; n <= maxParts; n++){
-      if(value % n === 0 && !out.includes(n)) out.push(n);
+      if(sameDecimal(value / n, Math.round(value / n)) && !out.includes(n)) out.push(n);
     }
     return shuffle(out);
   }
@@ -10162,7 +10407,7 @@ body.printOnlyWorksheet .worksheetSheet{
       el.shareChoices.innerHTML = "<div class='message'>Aucun partage entier raisonnable n’est possible pour ce nombre.</div>";
     }else{
       el.shareChoices.innerHTML = choices.map(n =>
-        "<button class='suggestion' type='button' data-share='" + n + "'>" + n + " parts de " + (value / n) + "</button>"
+        "<button class='suggestion' type='button' data-share='" + n + "'>" + n + " parts de " + displayTermValue(cleanDecimal(value / n)) + "</button>"
       ).join("");
       el.shareChoices.querySelectorAll("[data-share]").forEach(btn => {
         btn.addEventListener("click", () => applyShareChoice(Number(btn.dataset.share)));
@@ -10173,7 +10418,7 @@ body.printOnlyWorksheet .worksheetSheet{
 
   function applyShareChoice(count){
     if(!selectedShareRef) return;
-    if(selectedShareRef.value % count !== 0){
+    if(!sameDecimal(selectedShareRef.value / count, Math.round(selectedShareRef.value / count))){
       el.message.textContent = "Ce partage ne donne pas des parts entières.";
       return;
     }
@@ -10183,7 +10428,7 @@ body.printOnlyWorksheet .worksheetSheet{
     if(idx < 0) return;
 
     pushHistory();
-    const part = selectedShareRef.value / count;
+    const part = cleanDecimal(selectedShareRef.value / count);
     arr.splice(idx, 1, ...Array.from({length:count}, () => makePiece("number", part)));
     selectedShareRef = null;
     el.shareDialog.close();
@@ -10817,7 +11062,7 @@ body.printOnlyWorksheet .worksheetSheet{
     const entries = (mission && Array.isArray(mission.problems)) ? mission.problems : [];
     const problems = [];
     entries.forEach(entry => {
-      if(mission && mission.id === "m2" && entry && Array.isArray(entry.questions)){
+      if(rdpEntryIsSeparated(mission, entry)){
         entry.questions.forEach((q, qi) => {
           const p = clone(q);
           p.unknownSymbol = chooseUnknownSymbol();
