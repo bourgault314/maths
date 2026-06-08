@@ -429,6 +429,14 @@
     pointer-events:none;
   }
 
+  .groupSelectedOutline{
+    fill:none;
+    stroke:#16a34a;
+    stroke-width:7;
+    opacity:.90;
+    pointer-events:none;
+  }
+
   .removedGroup{opacity:.28}
   .removedOverlay{
     fill:url(#hatch);
@@ -685,6 +693,60 @@
     border-radius:18px;
   }
 
+  /* PATCH 1.3C — outil Regrouper : dialogue lisible / sélection verte */
+  #groupDialog{
+    width:min(600px, calc(100vw - 28px));
+  }
+
+  #groupDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #groupDialog .dialogTitle{
+    font-size:clamp(30px,4vw,44px);
+    margin-bottom:14px;
+  }
+
+  #groupDialog .dialogText{
+    font-size:clamp(23px,3vw,34px);
+    font-weight:900;
+    line-height:1.22;
+    margin-bottom:18px;
+    color:#0f172a;
+  }
+
+  #groupDialog label{
+    font-size:16px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #groupInput{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:76px;
+  }
+
+  #groupDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #groupDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
   dialog .btnrow{justify-content:center}
 
 </style>
@@ -790,6 +852,7 @@
 
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
       <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+      <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
       <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
       <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
       <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
@@ -823,6 +886,20 @@
     <div class="presetChips open" id="shareChoices"></div>
     <div class="btnrow" style="justify-content:center">
       <button class="ghost" id="btnCancelShareDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="groupDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Regrouper des jetons</h2>
+    <div class="dialogText" id="groupDialogText"></div>
+    <label>Somme des jetons sélectionnés</label>
+    <input id="groupInput" type="number" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="groupFeedback"></div>
+    <div class="btnrow">
+      <button class="green" id="btnApplyGroup" type="button">Regrouper</button>
+      <button class="ghost" id="btnCancelGroup" type="button">Annuler</button>
     </div>
   </div>
 </dialog>
@@ -881,6 +958,7 @@
   const coefCWrap = document.getElementById("coefCWrap");
 
   const toolDecompose = document.getElementById("toolDecompose");
+  const toolGroup = document.getElementById("toolGroup");
   const toolShare = document.getElementById("toolShare");
   const toolDelete = document.getElementById("toolDelete");
   const toolAddBoth = document.getElementById("toolAddBoth");
@@ -897,6 +975,10 @@
   const shareDialog = document.getElementById("shareDialog");
   const shareDialogText = document.getElementById("shareDialogText");
   const shareChoices = document.getElementById("shareChoices");
+  const groupDialog = document.getElementById("groupDialog");
+  const groupDialogText = document.getElementById("groupDialogText");
+  const groupInput = document.getElementById("groupInput");
+  const groupFeedback = document.getElementById("groupFeedback");
   const addBothDialog = document.getElementById("addBothDialog");
   const addBothDialogText = document.getElementById("addBothDialogText");
   const addBothInput = document.getElementById("addBothInput");
@@ -916,6 +998,7 @@
   let actionMode = "decompose";
   let selectedPieceRef = null;
   let deleteSelection = [];
+  let groupSelection = [];
   let dragState = null;
   let suppressNextClickFor = null;
   let pendingFusion = null;
@@ -1064,8 +1147,10 @@
   function setActionMode(mode){
     actionMode = mode;
     deleteSelection = [];
-    [toolDecompose, toolShare, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
+    groupSelection = [];
+    [toolDecompose, toolGroup, toolShare, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
     if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
+    if(mode === "group" && toolGroup) toolGroup.classList.add("active");
     if(mode === "share" && toolShare) toolShare.classList.add("active");
     if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
     if(mode === "addBoth" && toolAddBoth) toolAddBoth.classList.add("active");
@@ -1190,6 +1275,7 @@
     history = [];
     selectedPieceRef = null;
     deleteSelection = [];
+    groupSelection = [];
     setActionMode("decompose");
   }
 
@@ -1248,6 +1334,7 @@
     history = [];
     selectedPieceRef = null;
     deleteSelection = [];
+    groupSelection = [];
     setActionMode("decompose");
   }
 
@@ -1396,6 +1483,105 @@
     deleteSelection = [];
     recordEquationStep();
     render();
+  }
+
+  function selectedGroupIds(){ return new Set(groupSelection.map(ref => ref.id)); }
+
+  function selectedGroupPieces(){
+    const pieces = [];
+    for(const ref of groupSelection){
+      const p = getPieceBySideAndId(ref);
+      if(!p || p.removed || p.type !== "token") continue;
+      pieces.push({ref, piece:p});
+    }
+    return pieces;
+  }
+
+  function groupSelectionInfo(){
+    const selected = selectedGroupPieces();
+    if(selected.length < 2) return {ok:false, reason:"notEnough", selected};
+    const side = selected[0].ref.side;
+    if(selected.some(x => x.ref.side !== side)) return {ok:false, reason:"differentSides", selected};
+    const sum = selected.reduce((total, x) => total + Number(x.piece.value || 0), 0);
+    return {ok:true, side, sum, selected};
+  }
+
+  function selectForGrouping(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+    if(piece.type !== "token"){
+      setInstruction("En mode Regrouper, sélectionne seulement des jetons numériques.");
+      return;
+    }
+
+    const alreadyIndex = groupSelection.findIndex(ref => ref.side === side && ref.id === id);
+    if(alreadyIndex >= 0){
+      groupSelection.splice(alreadyIndex, 1);
+      render();
+      return;
+    }
+
+    // On regroupe uniquement dans un même membre : si l’élève change de côté,
+    // on repart proprement avec le nouveau jeton sélectionné.
+    if(groupSelection.length && groupSelection[0].side !== side) groupSelection = [];
+    groupSelection.push({side, id});
+    render();
+  }
+
+  function openGroupDialog(){
+    const info = groupSelectionInfo();
+    if(!info.ok) return;
+    const values = info.selected.map(x => formatSignedNumber(x.piece.value));
+    groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
+    groupInput.value = "";
+    groupFeedback.textContent = "";
+    if(typeof groupDialog.showModal === "function") groupDialog.showModal();
+    setTimeout(()=>groupInput.focus(), 80);
+  }
+
+  function applyGroup(){
+    const info = groupSelectionInfo();
+    if(!info.ok){
+      groupFeedback.textContent = "Sélectionne au moins deux jetons du même membre.";
+      return;
+    }
+
+    const answer = Number(String(groupInput.value || "").replace(/−/g, "-"));
+    if(!Number.isFinite(answer) || Math.round(answer) !== answer){
+      groupFeedback.textContent = "Écris un nombre entier.";
+      groupInput.select();
+      return;
+    }
+
+    if(answer !== info.sum){
+      groupFeedback.textContent = "Ce n’est pas encore la bonne somme.";
+      groupInput.select();
+      return;
+    }
+
+    pushHistory();
+    const arr = state[info.side];
+    const ids = new Set(info.selected.map(x => x.ref.id));
+    const indexes = info.selected.map(x => arr.findIndex(p => p.id === x.ref.id)).filter(i => i >= 0);
+    const firstIndex = Math.min(...indexes);
+    const merged = makeToken(info.sum);
+    const coords = info.selected
+      .map(x => x.piece)
+      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if(coords.length){
+      merged.x = coords.reduce((sum,p)=>sum + p.x, 0) / coords.length;
+      merged.y = coords.reduce((sum,p)=>sum + p.y, 0) / coords.length;
+    }
+
+    state[info.side] = arr.filter(p => !ids.has(p.id));
+    state[info.side].splice(firstIndex, 0, merged);
+    groupSelection = [];
+    deleteSelection = [];
+    selectedPieceRef = null;
+    updateCurrentEquationStep();
+    groupDialog.close();
+    render();
+    setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
   }
 
   function getShareOpportunity(){
@@ -2011,7 +2197,7 @@
     }
   }
 
-  function drawItem(side, item, pos, selectedIds){
+  function drawItem(side, item, pos, selectedIds, groupSelectedIds){
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     if(item.type === "token") g.classList.add("tokenDragGroup");
     if(item.type === "token" && item.transientZero) g.classList.add("transientZero");
@@ -2080,6 +2266,14 @@
         outline.setAttribute("class", "selectedOutline");
         g.appendChild(outline);
       }
+      if(groupSelectedIds && groupSelectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outline.setAttribute("cx", pos.cx);
+        outline.setAttribute("cy", pos.cy);
+        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("class", "groupSelectedOutline");
+        g.appendChild(outline);
+      }
     }
 
     if(item.type === "token"){
@@ -2102,7 +2296,12 @@
         else setInstruction("En mode Décomposer, clique sur un jeton numérique.");
         return;
       }
-      if(actionMode === "share"){
+      if(actionMode === "group"){
+        if(item.type === "token") selectForGrouping(side, item.id);
+        else setInstruction("En mode Regrouper, clique sur des jetons numériques.");
+        return;
+      }
+    if(actionMode === "share"){
         if(item.type === "token") openShareDialog(side, item.id);
         else setInstruction("En mode Partager, clique sur un jeton numérique.");
         return;
@@ -2125,8 +2324,9 @@
     const leftPos = layoutItems(leftTray, leftItems);
     const rightPos = layoutItems(rightTray, rightItems);
     const selectedIds = selectedDeleteIds();
-    leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds));
-    rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds));
+    const groupSelectedIds = selectedGroupIds();
+    leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds, groupSelectedIds));
+    rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds, groupSelectedIds));
   }
 
 
@@ -2167,6 +2367,7 @@
     state.left.push(leftToken);
     state.right.push(rightToken);
     deleteSelection = [];
+    groupSelection = [];
     selectedPieceRef = null;
     recordEquationStep();
     addBothDialog.close();
@@ -2185,6 +2386,38 @@
 
     if(actionMode === "decompose"){
       setInstruction("Décompose un jeton numérique.");
+      return;
+    }
+
+    if(actionMode === "group"){
+      const info = groupSelectionInfo();
+      const selected = selectedGroupPieces();
+      if(selected.length === 0){
+        setInstruction("Sélectionne plusieurs jetons numériques d’un même membre.");
+        return;
+      }
+
+      const btn = document.createElement("button");
+      btn.className = "green";
+      btn.textContent = "Regrouper";
+      btn.addEventListener("click", openGroupDialog);
+
+      const clear = document.createElement("button");
+      clear.className = "ghost";
+      clear.textContent = "Effacer";
+      clear.addEventListener("click", () => { groupSelection = []; render(); });
+
+      if(!info.ok){
+        setInstruction(info.reason === "differentSides"
+          ? "Regroupe seulement des jetons du même membre."
+          : "Sélectionne au moins deux jetons numériques.");
+        actionZone.appendChild(clear);
+        return;
+      }
+
+      setInstruction(`<strong>${selected.length}</strong>&nbsp;jetons sélectionnés. Calcule leur somme pour les regrouper.`);
+      actionZone.appendChild(btn);
+      actionZone.appendChild(clear);
       return;
     }
 
@@ -2254,6 +2487,7 @@
     state = history.pop();
     selectedPieceRef = null;
     deleteSelection = [];
+    groupSelection = [];
     render();
   }
 
@@ -2285,6 +2519,7 @@
   document.getElementById("btnReset").addEventListener("click", buildFromInputs);
   btnStageRandom.addEventListener("click", randomExercise);
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
+  toolGroup.addEventListener("click", () => setActionMode("group"));
   toolShare.addEventListener("click", () => setActionMode("share"));
   toolDelete.addEventListener("click", () => setActionMode("delete"));
   toolAddBoth.addEventListener("click", openAddBothDialog);
@@ -2294,6 +2529,11 @@
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
   document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
   document.getElementById("btnCancelShareDialog").addEventListener("click", () => shareDialog.close());
+  document.getElementById("btnApplyGroup").addEventListener("click", applyGroup);
+  document.getElementById("btnCancelGroup").addEventListener("click", () => groupDialog.close());
+  groupInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyGroup(); }
+  });
   document.getElementById("btnApplyAddBoth").addEventListener("click", applyAddBoth);
   document.getElementById("btnCancelAddBoth").addEventListener("click", () => addBothDialog.close());
   addBothInput.addEventListener("keydown", (e) => {
