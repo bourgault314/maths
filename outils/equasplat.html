@@ -410,6 +410,11 @@
     cursor:pointer;
   }
 
+  .splatShape.oppositeX{
+    fill:#4c1d95;
+    stroke:rgba(76,29,149,.42);
+  }
+
   .splatText{
     fill:#ffffff;
     font-size:38px;
@@ -487,6 +492,16 @@
 
   .addBothToolBtn:hover{
     background:#dcfce7;
+  }
+
+  .oppositeBothToolBtn{
+    background:#f5f3ff;
+    border-color:rgba(109,40,217,.24);
+    color:#4c1d95;
+  }
+
+  .oppositeBothToolBtn:hover{
+    background:#ede9fe;
   }
 
   .undoToolBtn{
@@ -693,6 +708,102 @@
     border-radius:18px;
   }
 
+
+  .addBothXChoices{
+    display:none;
+    margin:10px 0 2px;
+    padding-top:10px;
+    border-top:1px solid rgba(15,23,42,.08);
+  }
+
+  .addBothXChoices.open{
+    display:block;
+  }
+
+  .addBothXTitle{
+    margin-bottom:8px;
+    color:#64748b;
+    font-size:17px;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .addBothXCountRow{
+    width:min(260px,100%);
+    margin:0 auto 12px;
+  }
+
+  .addBothXCountRow label{
+    margin:0 0 6px;
+    text-align:center;
+    font-size:13px;
+  }
+
+  #addBothXCount{
+    text-align:center;
+    font-size:26px;
+    font-weight:950;
+    padding:12px 14px;
+    min-height:56px;
+  }
+
+  .addBothXButtons{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .addBothXBtn{
+    min-width:170px;
+    min-height:70px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    background:#f5f3ff;
+    border:1px solid rgba(91,33,182,.18);
+    color:#3b0764;
+  }
+
+  .addBothXBtn.positiveX{
+    background:#eff6ff;
+    border-color:rgba(59,130,246,.20);
+    color:#1d4ed8;
+  }
+
+  .addBothXBtn.oppositeX{
+    background:#f5f3ff;
+    border-color:rgba(91,33,182,.22);
+    color:#3b0764;
+  }
+
+  .miniSplatWrap{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-weight:950;
+  }
+
+  .miniSplatSvg{
+    width:50px;
+    height:50px;
+    flex:0 0 50px;
+    display:block;
+    filter:drop-shadow(0 5px 9px rgba(15,23,42,.18));
+  }
+
+  .miniSplatSvg text{
+    font-family:Georgia,'Times New Roman',serif;
+    font-style:italic;
+    font-size:24px;
+    font-weight:950;
+    fill:#fff;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+
   /* PATCH 1.3C — outil Regrouper : dialogue lisible / sélection verte */
   #groupDialog{
     width:min(600px, calc(100vw - 28px));
@@ -762,12 +873,18 @@
       <option value="relative">Splat relatif</option>
     </select>
 
+    <label id="oppositeXModeLabel">Taches opposées</label>
+    <select id="oppositeXMode" title="Autoriser les taches −x en Splat relatif">
+      <option value="off" selected>Non</option>
+      <option value="on">Oui, niveau avancé</option>
+    </select>
+
     <label>Type d’équation</label>
     <select id="mode">
       <option value="xpb">x + b = c</option>
       <option value="axc">ax = c</option>
       <option value="axb" selected>ax + b = c</option>
-      <option value="both">ax + b = cx + d</option>
+      <option value="both">ax + b = mx + d</option>
       <option value="mix">Mélange</option>
     </select>
 
@@ -798,19 +915,23 @@
       </div>
       <div id="constBWrap">
         <label>Constante <span class="mathLetter">b</span></label>
-        <input id="constB" type="number" min="1" max="40" value="4" />
+        <input id="constB" type="number" min="0" max="40" value="4" />
       </div>
       <div id="coefCWrap">
-        <label>Coefficient <span class="mathLetter">c</span></label>
-        <input id="coefC" type="number" min="1" max="7" value="1" />
+        <label>Coefficient <span class="mathLetter">m</span></label>
+        <input id="coefC" type="number" min="1" max="8" value="1" />
+      </div>
+      <div id="constCWrap">
+        <label>Constante <span class="mathLetter">c</span></label>
+        <input id="constC" type="number" min="1" max="200" value="28" />
+      </div>
+      <div id="constDWrap">
+        <label>Constante <span class="mathLetter">d</span></label>
+        <input id="constD" type="number" min="1" max="200" value="28" />
       </div>
     </div>
 
     <div class="grid2">
-      <div>
-        <label>Solution</label>
-        <input id="solX" type="number" min="2" max="20" value="12" />
-      </div>
       <div>
         <label>Graine</label>
         <input id="seed" type="number" placeholder="optionnel" />
@@ -856,6 +977,7 @@
       <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
       <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
       <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
+      <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
       <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
     </div>
 
@@ -892,7 +1014,7 @@
 
 <dialog id="groupDialog">
   <div class="dialogInner">
-    <h2 class="dialogTitle">Regrouper des jetons</h2>
+    <h2 class="dialogTitle">Regrouper</h2>
     <div class="dialogText" id="groupDialogText"></div>
     <label>Somme des jetons sélectionnés</label>
     <input id="groupInput" type="number" inputmode="numeric" autocomplete="off" />
@@ -911,6 +1033,17 @@
     <label>Valeur du jeton</label>
     <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
     <div class="fusionFeedback" id="addBothFeedback"></div>
+    <div class="addBothXChoices" id="addBothXChoices">
+      <div class="addBothXTitle">Ou ajouter une tache</div>
+      <div class="addBothXCountRow">
+        <label>Nombre de taches</label>
+        <input id="addBothXCount" type="number" min="1" max="8" value="1" inputmode="numeric" />
+      </div>
+      <div class="addBothXButtons">
+        <button class="addBothXBtn positiveX" id="btnAddBothPositiveX" type="button">Ajouter x</button>
+        <button class="addBothXBtn oppositeX" id="btnAddBothNegativeX" type="button">Ajouter −x</button>
+      </div>
+    </div>
     <div class="btnrow">
       <button class="primary" id="btnApplyAddBoth" type="button">Ajouter</button>
       <button class="ghost" id="btnCancelAddBoth" type="button">Annuler</button>
@@ -945,23 +1078,29 @@
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const workUniverseEl = document.getElementById("workUniverse");
+  const oppositeXModeEl = document.getElementById("oppositeXMode");
+  const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
   const initialTokenCountEl = document.getElementById("initialTokenCount");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
   const coefAEl = document.getElementById("coefA");
   const constBEl = document.getElementById("constB");
   const coefCEl = document.getElementById("coefC");
-  const solXEl = document.getElementById("solX");
+  const constCEl = document.getElementById("constC");
+  const constDEl = document.getElementById("constD");
   const seedEl = document.getElementById("seed");
   const profEquationInfo = document.getElementById("profEquationInfo");
   const coefAWrap = document.getElementById("coefAWrap");
   const constBWrap = document.getElementById("constBWrap");
   const coefCWrap = document.getElementById("coefCWrap");
+  const constCWrap = document.getElementById("constCWrap");
+  const constDWrap = document.getElementById("constDWrap");
 
   const toolDecompose = document.getElementById("toolDecompose");
   const toolGroup = document.getElementById("toolGroup");
   const toolShare = document.getElementById("toolShare");
   const toolDelete = document.getElementById("toolDelete");
   const toolAddBoth = document.getElementById("toolAddBoth");
+  const toolOppositeBoth = document.getElementById("toolOppositeBoth");
   const toolUndo = document.getElementById("toolUndo");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
@@ -983,6 +1122,10 @@
   const addBothDialogText = document.getElementById("addBothDialogText");
   const addBothInput = document.getElementById("addBothInput");
   const addBothFeedback = document.getElementById("addBothFeedback");
+  const addBothXChoices = document.getElementById("addBothXChoices");
+  const btnAddBothPositiveX = document.getElementById("btnAddBothPositiveX");
+  const btnAddBothNegativeX = document.getElementById("btnAddBothNegativeX");
+  const addBothXCount = document.getElementById("addBothXCount");
   const fusionDialog = document.getElementById("fusionDialog");
   const fusionDialogText = document.getElementById("fusionDialogText");
   const fusionInput = document.getElementById("fusionInput");
@@ -1011,7 +1154,29 @@
   function currentVar(){ return state && state.original && state.original.varChar ? state.original.varChar : "𝑥"; }
   function displayedUnknown(){ return unknownDisplayModeEl && unknownDisplayModeEl.value === "question" ? "?" : currentVar(); }
   function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
-  function makeX(){ return { id:uid(), type:"x", value:null, removed:false }; }
+  function oppositeXEnabled(){
+    return isRelativeUniverse() && oppositeXModeEl && oppositeXModeEl.value === "on";
+  }
+
+  function makeX(sign=1){ return { id:uid(), type:"x", sign: sign < 0 ? -1 : 1, value:null, removed:false }; }
+  function makeXPieces(coef){
+    const sign = coef < 0 ? -1 : 1;
+    const count = Math.abs(Math.round(Number(coef) || 0));
+    return Array.from({length:count}, () => makeX(sign));
+  }
+  function xSign(piece){ return piece && piece.sign === -1 ? -1 : 1; }
+  function xPieceLabel(piece){
+    const base = displayedUnknown();
+    return xSign(piece) < 0 ? `−${base}` : base;
+  }
+  function formatXTerm(coef){
+    const n = Number(coef) || 0;
+    const v = displayedUnknown();
+    if(n === 1) return v;
+    if(n === -1) return `−${v}`;
+    if(n < 0) return `−${Math.abs(n)}${v}`;
+    return `${n}${v}`;
+  }
   function makeToken(value){ return { id:uid(), type:"token", value:Number(value), removed:false }; }
   function formatSignedNumber(n){
     const v = Number(n) || 0;
@@ -1169,7 +1334,7 @@
   function getModeLabel(mode){
     if(mode === "xpb") return "x + b = c";
     if(mode === "axc") return "ax = c";
-    if(mode === "both") return "ax + b = cx + d";
+    if(mode === "both") return "ax + b = mx + d";
     return "ax + b = c";
   }
 
@@ -1177,97 +1342,149 @@
     const mode = modeEl ? modeEl.value : "axb";
     const showA = !(mode === "xpb");
     const showB = !(mode === "axc");
-    const showC = mode === "both";
+    const showRightCoef = mode === "both" || mode === "mix";
+    const showRightConstC = mode !== "both";
+    const showRightConstD = mode === "both" || mode === "mix";
 
     if(coefAWrap) coefAWrap.style.display = showA ? "" : "none";
     if(constBWrap) constBWrap.style.display = showB ? "" : "none";
-    if(coefCWrap) coefCWrap.style.display = showC ? "" : "none";
+    if(coefCWrap) coefCWrap.style.display = showRightCoef ? "" : "none";
+    if(constCWrap) constCWrap.style.display = showRightConstC ? "" : "none";
+    if(constDWrap) constDWrap.style.display = showRightConstD ? "" : "none";
     updateProfEquationInfo();
+  }
+
+  function integerField(el, fallback){
+    return Math.round(numberOr(el && el.value, fallback));
+  }
+
+  function setTeacherInfo(ok, html){
+    if(!profEquationInfo) return;
+    profEquationInfo.innerHTML = html;
+    profEquationInfo.style.background = ok ? "#f0fdf4" : "#fff7ed";
+    profEquationInfo.style.borderColor = ok ? "rgba(22,163,74,.22)" : "rgba(249,115,22,.28)";
+    profEquationInfo.style.color = ok ? "#166534" : "#9a3412";
+  }
+
+  function computeTeacherEquation(modeOverride=null){
+    const selectedMode = modeOverride || getSelectedMode();
+    const relative = isRelativeUniverse();
+    const maxConst = 200;
+    const allowOppositeX = oppositeXEnabled();
+    function clampNonZeroCoef(value, fallback){
+      const raw = Math.round(numberOr(value, fallback));
+      if(allowOppositeX){
+        const v = clamp(raw, -8, 8);
+        return v === 0 ? fallback : v;
+      }
+      return clamp(raw, 1, 8);
+    }
+    let a = selectedMode === "xpb" ? 1 : clampNonZeroCoef(coefAEl && coefAEl.value, 2);
+    if(!allowOppositeX && selectedMode !== "xpb") a = Math.max(2, a);
+    const b = selectedMode === "axc" ? 0 : (relative ? clamp(integerField(constBEl, 0), -maxConst, maxConst) : clamp(integerField(constBEl, 0), 0, maxConst));
+    const rightA = selectedMode === "both" ? clampNonZeroCoef(coefCEl && coefCEl.value, 1) : 0;
+    const rightValue = selectedMode === "both"
+      ? (relative ? clamp(integerField(constDEl, 0), -maxConst, maxConst) : clamp(integerField(constDEl, 1), 0, maxConst))
+      : (relative ? clamp(integerField(constCEl, 1), -maxConst, maxConst) : clamp(integerField(constCEl, 1), 1, maxConst));
+
+    let numerator = 0;
+    let denominator = 1;
+
+    if(selectedMode === "xpb"){
+      numerator = rightValue - b;
+      denominator = 1;
+    }else if(selectedMode === "axc"){
+      numerator = rightValue;
+      denominator = a;
+    }else if(selectedMode === "both"){
+      numerator = rightValue - b;
+      denominator = a - rightA;
+      if(denominator === 0){
+        return {ok:false, message:"Équation refusée : les coefficients des deux membres sont identiques, donc on n’a pas une solution unique utilisable ici."};
+      }
+    }else{
+      numerator = rightValue - b;
+      denominator = a;
+    }
+
+    if(numerator % denominator !== 0){
+      return {ok:false, message:"Équation refusée : la solution n’est pas un nombre entier."};
+    }
+
+    const x = numerator / denominator;
+    if(x === 0){
+      return {ok:false, message:"Équation refusée : la solution 0 n’est pas prise en charge dans cette version."};
+    }
+    if(!relative && x < 0){
+      return {ok:false, message:"Équation refusée : en Splat positif, la solution doit être positive."};
+    }
+
+    return {
+      ok:true,
+      mode:selectedMode,
+      modeLabel:getModeLabel(selectedMode),
+      a,
+      b,
+      rightA,
+      d:selectedMode === "both" ? rightValue : 0,
+      c:selectedMode === "both" ? a * x + b : rightValue,
+      x
+    };
   }
 
   function updateProfEquationInfo(){
     if(!profEquationInfo || !modeEl) return;
     const rawMode = modeEl.value;
     if(rawMode === "mix"){
-      profEquationInfo.innerHTML = isRelativeUniverse()
-        ? "Mélange relatif : les constantes et la solution peuvent être positives ou négatives."
-        : "Mélange : le calcul automatique dépendra du type tiré au hasard.";
+      setTeacherInfo(true, isRelativeUniverse()
+        ? "Mélange relatif : les constantes peuvent être positives ou négatives. Le tirage refuse les équations non entières."
+        : "Mélange : le tirage refuse les équations qui ne donnent pas une solution entière positive.");
       return;
     }
 
-    const relative = isRelativeUniverse();
-    const aRaw = Math.round(numberOr(coefAEl.value, 2));
-    const bRaw = Math.round(numberOr(constBEl.value, relative ? 0 : 4));
-    const xRaw = Math.round(numberOr(solXEl.value, relative ? 3 : 12));
-    const x = relative ? (xRaw === 0 ? 1 : clamp(xRaw, -20, 20)) : Math.max(1, xRaw);
-
-    if(rawMode === "xpb"){
-      const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(x + b)}</strong>`;
+    const result = computeTeacherEquation(rawMode);
+    if(!result.ok){
+      setTeacherInfo(false, result.message);
       return;
     }
-    if(rawMode === "axc"){
-      const a = Math.max(2, aRaw);
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(a * x)}</strong>`;
-      return;
-    }
-    if(rawMode === "both"){
-      const a = Math.max(2, aRaw);
-      const cCoef = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
-      const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
-      const d = (a - cCoef) * x + b;
-      profEquationInfo.innerHTML = `Calcul automatique : <strong>d = ${formatSignedNumber(d)}</strong>`;
-      return;
-    }
-    const a = Math.max(2, aRaw);
-    const b = relative ? clamp(bRaw, -40, 40) : Math.max(1, bRaw);
-    profEquationInfo.innerHTML = `Calcul automatique : <strong>c = ${formatSignedNumber(a * x + b)}</strong>`;
+    setTeacherInfo(true, "Équation valide : elle est résoluble avec des jetons entiers.");
   }
 
   function buildFromInputs(){
-    const selectedMode = getSelectedMode();
-    const relative = isRelativeUniverse();
-    const rawA = clamp(Math.round(numberOr(coefAEl.value,2)),2,8);
-    const bInput = relative
-      ? clamp(Math.round(numberOr(constBEl.value,0)), -40, 40)
-      : clamp(Math.round(numberOr(constBEl.value,4)),1,40);
-    let x = relative
-      ? clamp(Math.round(numberOr(solXEl.value,3)), -20, 20)
-      : clamp(Math.round(numberOr(solXEl.value,12)),2,20);
-    if(relative && x === 0) x = 1;
-
-    let a = selectedMode === "xpb" ? 1 : rawA;
-    let b = selectedMode === "axc" ? 0 : bInput;
-    let rightA = 0;
-    let d = 0;
-
-    if(selectedMode === "both"){
-      a = Math.max(2, rawA);
-      rightA = Math.max(1, Math.min(Math.round(numberOr(coefCEl.value, 1)), a - 1));
-      b = bInput;
-      d = (a - rightA) * x + b;
+    const eq = computeTeacherEquation();
+    if(!eq.ok){
+      setTeacherInfo(false, eq.message);
+      return;
     }
+
+    const selectedMode = eq.mode;
+    const a = eq.a;
+    const b = eq.b;
+    const rightA = eq.rightA;
+    const d = eq.d;
+    const x = eq.x;
 
     coefAEl.value = a;
     constBEl.value = b;
     if(coefCEl) coefCEl.value = rightA || 1;
-    solXEl.value = x;
+    if(constCEl && selectedMode !== "both") constCEl.value = eq.c;
+    if(constDEl && selectedMode === "both") constDEl.value = d;
     updateProfEquationInfo();
 
     const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
     state = {
-      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:eq.c,varChar},
       left:[],
       right:[],
       steps:[]
     };
 
     if(selectedMode === "both"){
-      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b) : []);
-      state.right = Array.from({length:rightA}, makeX).concat(d !== 0 ? makeInitialTokens(d) : []);
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b) : []);
+      state.right = makeXPieces(rightA).concat(d !== 0 ? makeInitialTokens(d) : []);
     }else{
-      const rightValue = a*x + b;
-      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b) : []);
+      const rightValue = eq.c;
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b) : []);
       state.right = rightValue !== 0 ? makeInitialTokens(rightValue) : [];
     }
 
@@ -1290,15 +1507,20 @@
       selectedMode = modes[randomInt(rng,0,modes.length-1)];
     }
 
-    let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
+    const allowOppositeX = oppositeXEnabled();
+    const randomCoef = (minAbs=2, maxAbs=5) => {
+      const v = randomInt(rng, minAbs, maxAbs);
+      return allowOppositeX && rng() < 0.45 ? -v : v;
+    };
+    let a = selectedMode === "xpb" ? 1 : randomCoef(2,5);
     const x = relative ? randomNonZeroInt(rng,-12,12) : randomInt(rng,3,15);
     let b = selectedMode === "axc" ? 0 : (relative ? randomNonZeroInt(rng,-18,18) : randomInt(rng,2,18));
     let rightA = 0;
     let d = 0;
 
     if(selectedMode === "both"){
-      a = randomInt(rng,3,5);
-      rightA = randomInt(rng,1,a-1);
+      a = randomCoef(3,5);
+      do{ rightA = randomCoef(1,4); }while(rightA === a);
       b = relative ? randomNonZeroInt(rng,-14,14) : randomInt(rng,2,14);
       d = (a - rightA) * x + b;
       if(relative && d === 0){
@@ -1307,10 +1529,14 @@
       }
     }
 
-    coefAEl.value = Math.max(2, a);
+    coefAEl.value = a;
     constBEl.value = b;
     if(coefCEl) coefCEl.value = rightA || 1;
-    solXEl.value = x;
+    if(selectedMode === "both"){
+      if(constDEl) constDEl.value = d;
+    }else{
+      if(constCEl) constCEl.value = a * x + b;
+    }
     updateProfEquationInfo();
 
     const varChar = variableChars[Math.floor(rng() * variableChars.length)];
@@ -1322,11 +1548,11 @@
     };
 
     if(selectedMode === "both"){
-      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
-      state.right = Array.from({length:rightA}, makeX).concat(d !== 0 ? makeInitialTokens(d, rng) : []);
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.right = makeXPieces(rightA).concat(d !== 0 ? makeInitialTokens(d, rng) : []);
     }else{
       const rightValue = a*x + b;
-      state.left = Array.from({length:a}, makeX).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
       state.right = rightValue !== 0 ? makeInitialTokens(rightValue, rng) : [];
     }
 
@@ -1343,18 +1569,44 @@
 
   function sideExpression(side){
     const pieces = activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0));
-    const v = displayedUnknown();
     const terms = [];
+    const xPieces = pieces.filter(p => p.type === "x");
+    const xSigns = Array.from(new Set(xPieces.map(p => xSign(p))));
+    const canCombineAllXOfSameSign = xSigns.length <= 1;
+
+    if(canCombineAllXOfSameSign){
+      let xDone = false;
+      for(const p of pieces){
+        if(p.type === "x"){
+          if(!xDone){
+            const coef = xPieces.reduce((total, item) => total + xSign(item), 0);
+            if(coef !== 0) terms.push(formatXTerm(coef));
+            xDone = true;
+          }
+        }else{
+          terms.push(formatEquationTerm(p.value));
+        }
+      }
+      return terms.length ? terms.join(" + ") : "0";
+    }
+
     let i = 0;
     while(i < pieces.length){
       const p = pieces[i];
       if(p.type === "x"){
+        // Dès qu'il y a des taches opposées dans le même membre, on ne les
+        // simplifie pas automatiquement dans l'équation : il faut que l'élève
+        // fasse le regroupement de la paire nulle sur le plateau. On regroupe
+        // seulement les séries consécutives de même signe pour garder une
+        // écriture lisible sans masquer le geste x + (−x) = 0.
+        const sign = xSign(p);
         let count = 0;
-        while(i < pieces.length && pieces[i].type === "x"){
+        while(i < pieces.length && pieces[i].type === "x" && xSign(pieces[i]) === sign){
           count++;
           i++;
         }
-        terms.push(count === 1 ? v : `${count}${v}`);
+        const coef = sign * count;
+        if(coef !== 0) terms.push(formatXTerm(coef));
       }else{
         terms.push(formatEquationTerm(p.value));
         i++;
@@ -1369,9 +1621,12 @@
     if(left.length === 0 || right.length === 0) return null;
     const isAllTokens = arr => arr.every(p => p.type === "token");
     const isAllX = arr => arr.every(p => p.type === "x");
+    const allSameXSign = arr => isAllX(arr) && arr.length > 0 && arr.every(p => xSign(p) === xSign(arr[0]));
     const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
-    if(allSameToken(left) && isAllX(right) && left.length === right.length) return left[0].value;
-    if(allSameToken(right) && isAllX(left) && left.length === right.length) return right[0].value;
+    // Avec les taches opposées, on évite le raccourci magique −x = n → x = −n.
+    // L'élève devra d'abord utiliser l'action "opposé des deux membres" dans une étape suivante.
+    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0) return left[0].value;
+    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0) return right[0].value;
     return null;
   }
 
@@ -1445,6 +1700,32 @@
     return {left, right};
   }
 
+  function zeroXPairSelectionInfo(){
+    const {left, right} = selectedDeletePiecesBySide();
+    const selected = left.length ? left : right;
+    const side = left.length ? "left" : (right.length ? "right" : null);
+    if(!oppositeXEnabled()) return {ok:false, reason:"disabled", left, right};
+    if(!side || (left.length && right.length)) return {ok:false, reason:"oneSideOnly", left, right};
+    if(selected.length < 2) return {ok:false, reason:"notEnough", left, right};
+    if(selected.some(p => p.type !== "x")) return {ok:false, reason:"notOnlyX", left, right};
+    const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
+    if(coef !== 0) return {ok:false, reason:"notZero", left, right, coef};
+    return {ok:true, side, selected, left, right};
+  }
+
+  function cancelZeroXPair(){
+    const info = zeroXPairSelectionInfo();
+    if(!info.ok) return;
+    pushHistory();
+    const ids = new Set(deleteSelection.map(ref => ref.id));
+    for(const p of state[info.side]){
+      if(ids.has(p.id)) p.removed = true;
+    }
+    deleteSelection = [];
+    recordEquationStep();
+    render();
+  }
+
   function deletionGroupInfo(){
     const {left, right} = selectedDeletePiecesBySide();
     if(left.length === 0 || right.length === 0) return {ok:false, reason:"needBoth", left, right};
@@ -1452,8 +1733,11 @@
     const firstType = all[0].type;
     if(all.some(p => p.type !== firstType)) return {ok:false, reason:"mixedTypes", left, right};
     if(firstType === "x"){
-      if(left.length !== right.length) return {ok:false, reason:"differentCounts", left, right};
-      return {ok:true, type:"x", label:left.length === 1 ? displayedUnknown() : `${left.length}${displayedUnknown()}`, left, right};
+      const leftCoef = left.reduce((sum,p)=>sum + xSign(p), 0);
+      const rightCoef = right.reduce((sum,p)=>sum + xSign(p), 0);
+      if(leftCoef !== rightCoef) return {ok:false, reason:"differentXCoef", left, right, leftCoef, rightCoef};
+      if(leftCoef === 0) return {ok:false, reason:"zeroXSelection", left, right, leftCoef, rightCoef};
+      return {ok:true, type:"x", label:formatXTerm(leftCoef), left, right};
     }
     const leftSum = left.reduce((s,p)=>s + Number(p.value || 0), 0);
     const rightSum = right.reduce((s,p)=>s + Number(p.value || 0), 0);
@@ -1491,7 +1775,7 @@
     const pieces = [];
     for(const ref of groupSelection){
       const p = getPieceBySideAndId(ref);
-      if(!p || p.removed || p.type !== "token") continue;
+      if(!p || p.removed) continue;
       pieces.push({ref, piece:p});
     }
     return pieces;
@@ -1502,15 +1786,34 @@
     if(selected.length < 2) return {ok:false, reason:"notEnough", selected};
     const side = selected[0].ref.side;
     if(selected.some(x => x.ref.side !== side)) return {ok:false, reason:"differentSides", selected};
-    const sum = selected.reduce((total, x) => total + Number(x.piece.value || 0), 0);
-    return {ok:true, side, sum, selected};
+
+    const firstType = selected[0].piece.type;
+    if(selected.some(x => x.piece.type !== firstType)) return {ok:false, reason:"mixedTypes", selected};
+
+    if(firstType === "token"){
+      const sum = selected.reduce((total, x) => total + Number(x.piece.value || 0), 0);
+      return {ok:true, kind:"tokens", side, sum, selected};
+    }
+
+    if(firstType === "x"){
+      if(!oppositeXEnabled()) return {ok:false, reason:"oppositeDisabled", selected};
+      const coef = selected.reduce((total, x) => total + xSign(x.piece), 0);
+      if(coef !== 0) return {ok:false, reason:"notZeroX", side, coef, selected};
+      return {ok:true, kind:"zeroX", side, coef, selected};
+    }
+
+    return {ok:false, reason:"unsupported", selected};
   }
 
   function selectForGrouping(side, id){
     const piece = state[side].find(p => p.id === id);
     if(!piece || piece.removed) return;
-    if(piece.type !== "token"){
-      setInstruction("En mode Regrouper, sélectionne seulement des jetons numériques.");
+
+    const canSelect = piece.type === "token" || (piece.type === "x" && oppositeXEnabled());
+    if(!canSelect){
+      setInstruction(oppositeXEnabled()
+        ? "En mode Regrouper, sélectionne des jetons numériques ou des taches opposées."
+        : "En mode Regrouper, sélectionne seulement des jetons numériques.");
       return;
     }
 
@@ -1521,16 +1824,20 @@
       return;
     }
 
-    // On regroupe uniquement dans un même membre : si l’élève change de côté,
-    // on repart proprement avec le nouveau jeton sélectionné.
-    if(groupSelection.length && groupSelection[0].side !== side) groupSelection = [];
+    // On regroupe uniquement dans un même membre et avec une même nature d’objet.
+    if(groupSelection.length){
+      const currentPieces = selectedGroupPieces();
+      const currentType = currentPieces.length ? currentPieces[0].piece.type : null;
+      if(groupSelection[0].side !== side || currentType !== piece.type) groupSelection = [];
+    }
+
     groupSelection.push({side, id});
     render();
   }
 
   function openGroupDialog(){
     const info = groupSelectionInfo();
-    if(!info.ok) return;
+    if(!info.ok || info.kind !== "tokens") return;
     const values = info.selected.map(x => formatSignedNumber(x.piece.value));
     groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
     groupInput.value = "";
@@ -1539,12 +1846,52 @@
     setTimeout(()=>groupInput.focus(), 80);
   }
 
+  function applyZeroXGroup(info){
+    if(!info || !info.ok || info.kind !== "zeroX") return;
+    pushHistory();
+    const arr = state[info.side];
+    const ids = new Set(info.selected.map(x => x.ref.id));
+    const indexes = info.selected.map(x => arr.findIndex(p => p.id === x.ref.id)).filter(i => i >= 0);
+    const firstIndex = Math.min(...indexes);
+
+    // Même logique visuelle que 1 + (−1) : on remplace la paire par un
+    // jeton 0 temporaire, puis il disparaît progressivement.
+    const zero = makeToken(0);
+    zero.transientZero = true;
+    const positions = info.selected
+      .map(x => x.piece)
+      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if(positions.length){
+      zero.x = positions.reduce((sum,p)=>sum + p.x, 0) / positions.length;
+      zero.y = positions.reduce((sum,p)=>sum + p.y, 0) / positions.length;
+    }
+
+    const filtered = arr.filter(p => !ids.has(p.id));
+    filtered.splice(firstIndex, 0, zero);
+    state[info.side] = filtered;
+
+    groupSelection = [];
+    deleteSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    render();
+    setInstruction("Paire nulle : <strong>x + (−x) = 0</strong>, puis le 0 disparaît.");
+    setTimeout(() => removeTransientZero(info.side, zero.id), 950);
+  }
+
   function applyGroup(){
     const info = groupSelectionInfo();
     if(!info.ok){
-      groupFeedback.textContent = "Sélectionne au moins deux jetons du même membre.";
+      if(groupFeedback) groupFeedback.textContent = "Sélectionne au moins deux jetons du même membre.";
       return;
     }
+
+    if(info.kind === "zeroX"){
+      applyZeroXGroup(info);
+      return;
+    }
+
+    if(info.kind !== "tokens") return;
 
     const answer = Number(String(groupInput.value || "").replace(/−/g, "-"));
     if(!Number.isFinite(answer) || Math.round(answer) !== answer){
@@ -1591,11 +1938,11 @@
     const rightTokens = right.filter(p => p.type === "token");
     const leftX = left.filter(p => p.type === "x");
     const rightX = right.filter(p => p.type === "x");
-    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2){
+    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2 && leftX.every(p => xSign(p) === xSign(leftX[0]))){
       const value = rightTokens[0].value;
       if(value % leftX.length === 0) return {tokenSide:"right", xSide:"left", token:rightTokens[0], count:leftX.length, result:value/leftX.length};
     }
-    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2){
+    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2 && rightX.every(p => xSign(p) === xSign(rightX[0]))){
       const value = leftTokens[0].value;
       if(value % rightX.length === 0) return {tokenSide:"left", xSide:"right", token:leftTokens[0], count:rightX.length, result:value/rightX.length};
     }
@@ -2209,9 +2556,9 @@
     if(item.type === "x"){
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
-      path.setAttribute("class", "splatShape");
+      path.setAttribute("class", xSign(item) < 0 ? "splatShape oppositeX" : "splatShape");
       g.appendChild(path);
-      drawText(pos.cx, pos.cy + 5, displayedUnknown(), "splatText", g);
+      drawText(pos.cx, pos.cy + 5, xPieceLabel(item), "splatText", g);
       if(item.removed){
         const overlay = document.createElementNS("http://www.w3.org/2000/svg", "path");
         overlay.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
@@ -2222,6 +2569,12 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
         outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
         outline.setAttribute("class", "selectedOutline");
+        g.appendChild(outline);
+      }
+      if(groupSelectedIds && groupSelectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("class", "groupSelectedOutline");
         g.appendChild(outline);
       }
     }else{
@@ -2297,8 +2650,10 @@
         return;
       }
       if(actionMode === "group"){
-        if(item.type === "token") selectForGrouping(side, item.id);
-        else setInstruction("En mode Regrouper, clique sur des jetons numériques.");
+        if(item.type === "token" || (item.type === "x" && oppositeXEnabled())) selectForGrouping(side, item.id);
+        else setInstruction(oppositeXEnabled()
+          ? "En mode Regrouper, clique sur des jetons numériques ou des taches opposées."
+          : "En mode Regrouper, clique sur des jetons numériques.");
         return;
       }
     if(actionMode === "share"){
@@ -2330,20 +2685,44 @@
   }
 
 
+  function miniSplatButtonHtml(sign){
+    const v = currentVar();
+    const label = sign < 0 ? `−${v}` : v;
+    const fill = sign < 0 ? "#4c1d95" : "#111827";
+    return `<span class="miniSplatWrap"><span>Ajouter</span><svg class="miniSplatSvg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path d="${blobPath(60, 60, 43)}" fill="${fill}" stroke="rgba(0,0,0,.22)" stroke-width="3"></path><text x="60" y="64">${label}</text></svg></span>`;
+  }
+
   function openAddBothDialog(){
     if(!state) return;
     addBothInput.value = "";
     addBothFeedback.textContent = "";
+    const canAddX = oppositeXEnabled();
+    const v = currentVar();
     if(isRelativeUniverse()){
-      addBothDialogText.textContent = "Ajoute le même jeton dans chaque membre. Tu peux écrire une valeur positive ou négative.";
+      addBothDialogText.textContent = canAddX
+        ? "Ajoute le même jeton numérique, ou la même tache, dans chaque membre."
+        : "Ajoute le même jeton dans chaque membre. Tu peux écrire une valeur positive ou négative.";
       addBothInput.min = "-99";
     }else{
       addBothDialogText.textContent = "Ajoute le même jeton positif dans chaque membre.";
       addBothInput.min = "1";
     }
     addBothInput.max = "99";
+    if(addBothXChoices) addBothXChoices.classList.toggle("open", canAddX);
+    if(addBothXCount) addBothXCount.value = "1";
+    if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatButtonHtml(1);
+    if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatButtonHtml(-1);
     if(typeof addBothDialog.showModal === "function") addBothDialog.showModal();
     setTimeout(()=>addBothInput.focus(), 80);
+  }
+
+  function finishAddBothAction(){
+    deleteSelection = [];
+    groupSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    addBothDialog.close();
+    render();
   }
 
   function applyAddBoth(){
@@ -2362,15 +2741,42 @@
       return;
     }
     pushHistory();
-    const leftToken = makeToken(value);
-    const rightToken = makeToken(value);
-    state.left.push(leftToken);
-    state.right.push(rightToken);
+    state.left.push(makeToken(value));
+    state.right.push(makeToken(value));
+    finishAddBothAction();
+  }
+
+  function applyAddBothX(sign){
+    if(!state || !oppositeXEnabled()) return;
+    const rawCount = addBothXCount ? Number(addBothXCount.value) : 1;
+    const count = Math.round(rawCount);
+    if(!Number.isFinite(rawCount) || count < 1 || count > 8){
+      addBothFeedback.textContent = "Choisis un nombre de taches entre 1 et 8.";
+      if(addBothXCount) addBothXCount.select();
+      return;
+    }
+    pushHistory();
+    for(let i=0; i<count; i++){
+      state.left.push(makeX(sign));
+      state.right.push(makeX(sign));
+    }
+    finishAddBothAction();
+  }
+
+  function takeOppositeOfBothMembers(){
+    if(!state || !oppositeXEnabled()) return;
+    pushHistory();
+    for(const side of ["left", "right"]){
+      for(const piece of state[side]){
+        if(piece.removed) continue;
+        if(piece.type === "token") piece.value = -Number(piece.value || 0);
+        if(piece.type === "x") piece.sign = -xSign(piece);
+      }
+    }
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
     recordEquationStep();
-    addBothDialog.close();
     render();
   }
 
@@ -2393,14 +2799,20 @@
       const info = groupSelectionInfo();
       const selected = selectedGroupPieces();
       if(selected.length === 0){
-        setInstruction("Sélectionne plusieurs jetons numériques d’un même membre.");
+        setInstruction(oppositeXEnabled()
+          ? "Sélectionne plusieurs jetons numériques d’un même membre, ou une paire de taches opposées."
+          : "Sélectionne plusieurs jetons numériques d’un même membre.");
         return;
       }
 
       const btn = document.createElement("button");
       btn.className = "green";
       btn.textContent = "Regrouper";
-      btn.addEventListener("click", openGroupDialog);
+      btn.addEventListener("click", () => {
+        const freshInfo = groupSelectionInfo();
+        if(freshInfo.ok && freshInfo.kind === "zeroX") applyZeroXGroup(freshInfo);
+        else openGroupDialog();
+      });
 
       const clear = document.createElement("button");
       clear.className = "ghost";
@@ -2408,9 +2820,19 @@
       clear.addEventListener("click", () => { groupSelection = []; render(); });
 
       if(!info.ok){
-        setInstruction(info.reason === "differentSides"
-          ? "Regroupe seulement des jetons du même membre."
-          : "Sélectionne au moins deux jetons numériques.");
+        let message = "Sélectionne au moins deux éléments compatibles.";
+        if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même membre.";
+        else if(info.reason === "mixedTypes") message = "Ne mélange pas jetons numériques et taches.";
+        else if(info.reason === "notZeroX") message = "Pour regrouper des taches, sélectionne autant de taches positives que de taches opposées.";
+        else if(info.reason === "oppositeDisabled") message = "Les taches opposées doivent être activées pour regrouper x et −x.";
+        setInstruction(message);
+        actionZone.appendChild(clear);
+        return;
+      }
+
+      if(info.kind === "zeroX"){
+        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        actionZone.appendChild(btn);
         actionZone.appendChild(clear);
         return;
       }
@@ -2433,16 +2855,41 @@
 
     if(actionMode === "delete"){
       const info = deletionGroupInfo();
+      const zeroInfo = zeroXPairSelectionInfo();
       const {left, right} = selectedDeletePiecesBySide();
       if(left.length === 0 && right.length === 0){
-        setInstruction("Sélectionne la même quantité dans les deux membres.");
+        setInstruction(oppositeXEnabled()
+          ? "Sélectionne la même quantité dans les deux membres, ou une paire x / −x dans un même membre."
+          : "Sélectionne la même quantité dans les deux membres.");
+        return;
+      }
+      if(zeroInfo.ok){
+        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        const btn = document.createElement("button");
+        btn.className = "green";
+        btn.textContent = "Annuler la paire";
+        btn.addEventListener("click", cancelZeroXPair);
+        actionZone.appendChild(btn);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
         return;
       }
       if(left.length === 0 || right.length === 0){
-        setInstruction("Sélectionne maintenant l’autre membre.");
+        let message = "Sélectionne maintenant l’autre membre.";
+        if(oppositeXEnabled() && (left.length || right.length)){
+          const selected = left.length ? left : right;
+          if(selected.every(p => p.type === "x")){
+            const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
+            if(coef !== 0) message = "Pour annuler dans un même membre, sélectionne autant de taches x que de taches −x.";
+          }
+        }
+        setInstruction(message);
         const clear = document.createElement("button");
         clear.className = "ghost";
-        clear.textContent = "Effacer la sélection";
+        clear.textContent = "Effacer";
         clear.addEventListener("click", () => { deleteSelection = []; render(); });
         actionZone.appendChild(clear);
         return;
@@ -2462,6 +2909,8 @@
       }else{
         let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
         if(info.reason === "differentCounts") reason = "Il faut le même nombre de taches de chaque côté.";
+        else if(info.reason === "differentXCoef") reason = "Les taches sélectionnées ne représentent pas la même quantité d’inconnues.";
+        else if(info.reason === "zeroXSelection") reason = "Pour annuler une paire nulle, sélectionne les taches x et −x dans un seul même membre.";
         else if(info.reason === "differentSums") reason = "Les jetons sélectionnés ne font pas la même somme.";
         else if(info.reason === "mixedTypes") reason = "Ne mélange pas taches et jetons numériques.";
         setInstruction(reason);
@@ -2494,23 +2943,38 @@
   function syncUniverseUI(){
     if(!workUniverseEl) return;
     const relative = isRelativeUniverse();
+    const allowOppositeX = oppositeXEnabled();
+
+    if(oppositeXModeEl){
+      oppositeXModeEl.disabled = !relative;
+      if(!relative) oppositeXModeEl.value = "off";
+    }
+    if(oppositeXModeLabel) oppositeXModeLabel.style.opacity = relative ? "1" : ".45";
 
     if(toolAddBoth){
       toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
     }
+    if(toolOppositeBoth){
+      toolOppositeBoth.style.display = allowOppositeX ? "" : "none";
+    }
 
-    if(constBEl){
-      constBEl.min = relative ? "-40" : "1";
-      constBEl.max = "40";
-      if(!relative && Number(constBEl.value) < 1) constBEl.value = "4";
-      if(relative && Number(constBEl.value) === 0) constBEl.value = "-4";
-    }
-    if(solXEl){
-      solXEl.min = relative ? "-20" : "2";
-      solXEl.max = relative ? "20" : "20";
-      if(!relative && Number(solXEl.value) < 2) solXEl.value = "12";
-      if(relative && Number(solXEl.value) === 0) solXEl.value = "-3";
-    }
+    [constBEl, constCEl, constDEl].forEach(el => {
+      if(!el) return;
+      el.min = relative ? "-200" : "0";
+      el.max = "200";
+      if(!relative && Number(el.value) < 0) el.value = "0";
+    });
+    if(constCEl && !relative && Number(constCEl.value) < 1) constCEl.value = "1";
+
+    [coefAEl, coefCEl].forEach(el => {
+      if(!el) return;
+      el.min = allowOppositeX ? "-8" : "1";
+      el.max = "8";
+      if(!allowOppositeX && Number(el.value) < 1) el.value = "1";
+      if(allowOppositeX && Number(el.value) === 0) el.value = "1";
+    });
+    if(!allowOppositeX && coefAEl && Number(coefAEl.value) < 2) coefAEl.value = "2";
+
     updateProfEquationInfo();
   }
 
@@ -2523,6 +2987,7 @@
   toolShare.addEventListener("click", () => setActionMode("share"));
   toolDelete.addEventListener("click", () => setActionMode("delete"));
   toolAddBoth.addEventListener("click", openAddBothDialog);
+  if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
   btnStageUndo.addEventListener("click", undo);
   btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
@@ -2536,6 +3001,8 @@
   });
   document.getElementById("btnApplyAddBoth").addEventListener("click", applyAddBoth);
   document.getElementById("btnCancelAddBoth").addEventListener("click", () => addBothDialog.close());
+  if(btnAddBothPositiveX) btnAddBothPositiveX.addEventListener("click", () => applyAddBothX(1));
+  if(btnAddBothNegativeX) btnAddBothNegativeX.addEventListener("click", () => applyAddBothX(-1));
   addBothInput.addEventListener("keydown", (e) => {
     if(e.key === "Enter"){ e.preventDefault(); applyAddBoth(); }
   });
@@ -2550,7 +3017,7 @@
   });
 
   // PATCH 1.2.2 — auto-mise à jour seulement pour les menus.
-  // Les champs numériques (a, b, c, solution) redeviennent manuels :
+  // Les champs numériques (coefficients et constantes) redeviennent manuels :
   // on peut les effacer/taper tranquillement, puis cliquer sur Créer ou 🎲.
   function rebuildFromCurrentSettings(){
     syncUniverseUI();
@@ -2558,12 +3025,12 @@
     buildFromInputs();
   }
 
-  [modeEl, initialTokenCountEl].forEach(el => {
+  [modeEl, initialTokenCountEl, oppositeXModeEl].forEach(el => {
     if(!el) return;
     el.addEventListener("change", rebuildFromCurrentSettings);
   });
 
-  [coefAEl, constBEl, coefCEl, solXEl].forEach(el => {
+  [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
     if(!el) return;
     el.addEventListener("input", () => {
       syncUniverseUI();
