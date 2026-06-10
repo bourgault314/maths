@@ -1136,6 +1136,61 @@
     }
   }
 
+
+  /* PATCH — alignement rigoureux du signe égal de l'historique avec le signe égal du plateau */
+  .topbar{
+    padding:2px 72px 10px;
+  }
+
+  .equationHistory{
+    width:min(960px,100%);
+    display:block;
+    margin:0 auto;
+  }
+
+  .equationList{
+    width:100%;
+    margin:0 auto;
+    font-size:clamp(24px,2.45vw,37px);
+    font-weight:950;
+    line-height:1.08;
+  }
+
+  .equationRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:baseline;
+    column-gap:20px;
+    width:100%;
+    white-space:nowrap;
+  }
+
+  .equationRow .lhs{
+    text-align:right;
+    min-width:0;
+  }
+
+  .equationRow .eq{
+    text-align:center;
+    color:#64748b;
+    min-width:1.1em;
+    /* Correction visuelle : le centre géométrique était correct,
+       mais le signe égal du haut paraissait légèrement trop à gauche
+       par rapport au signe égal SVG du plateau. */
+    transform:translateX(10px);
+  }
+
+  .equationRow .rhs{
+    text-align:left;
+    min-width:0;
+  }
+
+  .equationRow.historyStep{color:#64748b;opacity:.86}
+  .equationRow.currentStep{color:#0f172a;opacity:1}
+  .equationRow.currentStep .eq{color:#3b82f6}
+  .equationRow.solvedStep{color:#166534;opacity:1}
+  .equationRow.solvedStep .eq{color:#16a34a}
+
 </style>
 </head>
 <body>
@@ -1976,9 +2031,9 @@
       const isCurrent = i === steps.length - 1;
       const solved = isSolvedEquationString(eq);
       const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
-      return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
+      return `<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
     }).join("");
-    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
   }
 
