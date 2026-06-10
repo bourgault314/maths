@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaSplat 0.9 — relatifs simples</title>
+<title>ÉquaSplat</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -931,12 +931,6 @@
       </div>
     </div>
 
-    <div class="grid2">
-      <div>
-        <label>Graine</label>
-        <input id="seed" type="number" placeholder="optionnel" />
-      </div>
-    </div>
 
     <div class="infoBox" id="profEquationInfo"></div>
 
@@ -949,9 +943,6 @@
       <button class="ghost" id="btnReset" type="button">Recommencer</button>
     </div>
 
-    <div class="mini">
-      Version 1.1 : Splat positif / relatif — génération relative simple et couleurs différenciées.
-    </div>
   </section>
 
   <section class="stage" id="stage">
@@ -1087,7 +1078,6 @@
   const coefCEl = document.getElementById("coefC");
   const constCEl = document.getElementById("constC");
   const constDEl = document.getElementById("constD");
-  const seedEl = document.getElementById("seed");
   const profEquationInfo = document.getElementById("profEquationInfo");
   const coefAWrap = document.getElementById("coefAWrap");
   const constBWrap = document.getElementById("constBWrap");
@@ -1338,7 +1328,7 @@
     return "ax + b = c";
   }
 
-  function syncTeacherControls(){
+  function syncTeacherControls(options={}){
     const mode = modeEl ? modeEl.value : "axb";
     const showA = !(mode === "xpb");
     const showB = !(mode === "axc");
@@ -1351,7 +1341,7 @@
     if(coefCWrap) coefCWrap.style.display = showRightCoef ? "" : "none";
     if(constCWrap) constCWrap.style.display = showRightConstC ? "" : "none";
     if(constDWrap) constDWrap.style.display = showRightConstD ? "" : "none";
-    updateProfEquationInfo();
+    if(options.validate !== false) updateProfEquationInfo();
   }
 
   function integerField(el, fallback){
@@ -1364,6 +1354,18 @@
     profEquationInfo.style.background = ok ? "#f0fdf4" : "#fff7ed";
     profEquationInfo.style.borderColor = ok ? "rgba(22,163,74,.22)" : "rgba(249,115,22,.28)";
     profEquationInfo.style.color = ok ? "#166534" : "#9a3412";
+  }
+
+  function setTeacherNeutralInfo(html){
+    if(!profEquationInfo) return;
+    profEquationInfo.innerHTML = html;
+    profEquationInfo.style.background = "#f8fafc";
+    profEquationInfo.style.borderColor = "rgba(15,23,42,.08)";
+    profEquationInfo.style.color = "#334155";
+  }
+
+  function markManualEquationDirty(){
+    setTeacherNeutralInfo("Valeurs modifiées : clique sur <strong>Créer</strong> pour vérifier et construire l’équation.");
   }
 
   function computeTeacherEquation(modeOverride=null){
@@ -1497,8 +1499,7 @@
   }
 
   function randomExercise(){
-    const rawSeed = String(seedEl.value || "").trim();
-    const rng = rawSeed === "" ? Math.random : mulberry32(Number(rawSeed)|0);
+    const rng = Math.random;
     const relative = isRelativeUniverse();
 
     let selectedMode = modeEl ? modeEl.value : "axb";
@@ -2940,7 +2941,7 @@
     render();
   }
 
-  function syncUniverseUI(){
+  function syncUniverseUI(options={}){
     if(!workUniverseEl) return;
     const relative = isRelativeUniverse();
     const allowOppositeX = oppositeXEnabled();
@@ -2975,7 +2976,7 @@
     });
     if(!allowOppositeX && coefAEl && Number(coefAEl.value) < 2) coefAEl.value = "2";
 
-    updateProfEquationInfo();
+    if(options.validate !== false) updateProfEquationInfo();
   }
 
   document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
@@ -3032,14 +3033,8 @@
 
   [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
     if(!el) return;
-    el.addEventListener("input", () => {
-      syncUniverseUI();
-      syncTeacherControls();
-    });
-    el.addEventListener("change", () => {
-      syncUniverseUI();
-      syncTeacherControls();
-    });
+    el.addEventListener("input", markManualEquationDirty);
+    el.addEventListener("change", markManualEquationDirty);
   });
 
   if(workUniverseEl){
