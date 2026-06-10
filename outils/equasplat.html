@@ -881,9 +881,9 @@
 
     <label>Type d’équation</label>
     <select id="mode">
-      <option value="xpb">x + b = c</option>
+      <option value="xpb" selected>x + b = c</option>
       <option value="axc">ax = c</option>
-      <option value="axb" selected>ax + b = c</option>
+      <option value="axb">ax + b = c</option>
       <option value="both">ax + b = mx + d</option>
       <option value="mix">Mélange</option>
     </select>
@@ -1328,7 +1328,7 @@
     return "ax + b = c";
   }
 
-  function syncTeacherControls(options={}){
+  function syncTeacherControls(options={validate:false}){
     const mode = modeEl ? modeEl.value : "axb";
     const showA = !(mode === "xpb");
     const showB = !(mode === "axc");
@@ -1350,14 +1350,22 @@
 
   function setTeacherInfo(ok, html){
     if(!profEquationInfo) return;
+    profEquationInfo.style.display = "block";
     profEquationInfo.innerHTML = html;
     profEquationInfo.style.background = ok ? "#f0fdf4" : "#fff7ed";
     profEquationInfo.style.borderColor = ok ? "rgba(22,163,74,.22)" : "rgba(249,115,22,.28)";
     profEquationInfo.style.color = ok ? "#166534" : "#9a3412";
   }
 
+  function clearTeacherInfo(){
+    if(!profEquationInfo) return;
+    profEquationInfo.innerHTML = "";
+    profEquationInfo.style.display = "none";
+  }
+
   function setTeacherNeutralInfo(html){
     if(!profEquationInfo) return;
+    profEquationInfo.style.display = "block";
     profEquationInfo.innerHTML = html;
     profEquationInfo.style.background = "#f8fafc";
     profEquationInfo.style.borderColor = "rgba(15,23,42,.08)";
@@ -1365,7 +1373,8 @@
   }
 
   function markManualEquationDirty(){
-    setTeacherNeutralInfo("Valeurs modifiées : clique sur <strong>Créer</strong> pour vérifier et construire l’équation.");
+    // Pas de message permanent pendant la saisie : on signale seulement les erreurs au moment de Créer.
+    clearTeacherInfo();
   }
 
   function computeTeacherEquation(modeOverride=null){
@@ -1434,13 +1443,22 @@
     };
   }
 
+  function maybeSwapEquationSides(rng=Math.random){
+    // Variation pédagogique : une équation peut être présentée dans les deux sens.
+    // On échange uniquement les deux membres entiers, sans modifier la logique mathématique.
+    if(!state) return;
+    if(rng() < 0.5){
+      const temp = state.left;
+      state.left = state.right;
+      state.right = temp;
+    }
+  }
+
   function updateProfEquationInfo(){
     if(!profEquationInfo || !modeEl) return;
     const rawMode = modeEl.value;
     if(rawMode === "mix"){
-      setTeacherInfo(true, isRelativeUniverse()
-        ? "Mélange relatif : les constantes peuvent être positives ou négatives. Le tirage refuse les équations non entières."
-        : "Mélange : le tirage refuse les équations qui ne donnent pas une solution entière positive.");
+      clearTeacherInfo();
       return;
     }
 
@@ -1449,7 +1467,7 @@
       setTeacherInfo(false, result.message);
       return;
     }
-    setTeacherInfo(true, "Équation valide : elle est résoluble avec des jetons entiers.");
+    clearTeacherInfo();
   }
 
   function buildFromInputs(){
@@ -1471,7 +1489,7 @@
     if(coefCEl) coefCEl.value = rightA || 1;
     if(constCEl && selectedMode !== "both") constCEl.value = eq.c;
     if(constDEl && selectedMode === "both") constDEl.value = d;
-    updateProfEquationInfo();
+    clearTeacherInfo();
 
     const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
     state = {
@@ -1490,6 +1508,7 @@
       state.right = rightValue !== 0 ? makeInitialTokens(rightValue) : [];
     }
 
+    maybeSwapEquationSides(Math.random);
     recordEquationStep();
     history = [];
     selectedPieceRef = null;
@@ -1538,7 +1557,7 @@
     }else{
       if(constCEl) constCEl.value = a * x + b;
     }
-    updateProfEquationInfo();
+    clearTeacherInfo();
 
     const varChar = variableChars[Math.floor(rng() * variableChars.length)];
     state = {
@@ -1557,6 +1576,7 @@
       state.right = rightValue !== 0 ? makeInitialTokens(rightValue, rng) : [];
     }
 
+    maybeSwapEquationSides(rng);
     recordEquationStep();
     history = [];
     selectedPieceRef = null;
@@ -2941,7 +2961,7 @@
     render();
   }
 
-  function syncUniverseUI(options={}){
+  function syncUniverseUI(options={validate:false}){
     if(!workUniverseEl) return;
     const relative = isRelativeUniverse();
     const allowOppositeX = oppositeXEnabled();
@@ -3021,9 +3041,13 @@
   // Les champs numériques (coefficients et constantes) redeviennent manuels :
   // on peut les effacer/taper tranquillement, puis cliquer sur Créer ou 🎲.
   function rebuildFromCurrentSettings(){
+    // Les menus pédagogiques ne recyclent pas l’équation courante :
+    // ils déclenchent une nouvelle équation aléatoire, toujours valide
+    // pour le nouvel univers / type / réglage choisi.
+    clearTeacherInfo();
     syncUniverseUI();
     syncTeacherControls();
-    buildFromInputs();
+    randomExercise();
   }
 
   [modeEl, initialTokenCountEl, oppositeXModeEl].forEach(el => {
@@ -3038,11 +3062,7 @@
   });
 
   if(workUniverseEl){
-    workUniverseEl.addEventListener("change", () => {
-      syncUniverseUI();
-      syncTeacherControls();
-      randomExercise();
-    });
+    workUniverseEl.addEventListener("change", rebuildFromCurrentSettings);
   }
   unknownDisplayModeEl.addEventListener("change", () => {
     if(state){ state.steps = [currentEquationString()]; render(); }
