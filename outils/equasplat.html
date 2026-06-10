@@ -460,21 +460,46 @@
     min-height:52px;
   }
 
+  /* PATCH UI — barre d’outils en deux lignes, sans titres ajoutés */
   .toolBar{
-    margin:14px 0 4px;
+    margin:14px auto 4px;
+    width:min(1040px,100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+
+  .toolRow{
     display:flex;
     justify-content:center;
+    align-items:center;
     gap:10px;
     flex-wrap:wrap;
+    width:100%;
+  }
+
+  .toolRowEquation{
+    padding-top:2px;
   }
 
   .toolBtn{
     border:1px solid rgba(15,23,42,.12);
     background:#f8fafc;
     color:#334155;
-    font-size:16px;
-    padding:14px 18px;
-    border-radius:17px;
+    font-size:15px;
+    padding:12px 15px;
+    border-radius:16px;
+  }
+
+  .toolBtn.undoToolBtn{
+    margin-left:14px;
+  }
+
+  @media (max-width:760px){
+    .toolBtn.undoToolBtn{
+      margin-left:0;
+    }
   }
 
   .toolBtn.active{
@@ -860,6 +885,257 @@
 
   dialog .btnrow{justify-content:center}
 
+
+
+  /* PATCH UI — polish visuel sans changer la structure ni ajouter de texte */
+  :root{
+    --bg:#f6f8fc;
+    --panel:#ffffff;
+    --line:#d9e1ee;
+    --shadow:0 14px 36px rgba(15,23,42,.085);
+    --radius:20px;
+  }
+
+  body{
+    background:
+      radial-gradient(circle at 0% 0%, rgba(59,130,246,.10), transparent 30rem),
+      radial-gradient(circle at 100% 100%, rgba(22,163,74,.08), transparent 32rem),
+      var(--bg);
+  }
+
+  main{
+    width:min(1280px, calc(100vw - 24px));
+    margin:14px auto 26px;
+    grid-template-columns:300px minmax(0,1fr);
+    gap:14px;
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.075);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);
+  }
+
+  .panel{
+    padding:14px;
+    top:12px;
+  }
+
+  .appTitle{
+    font-size:31px;
+    letter-spacing:-.05em;
+    margin:1px 0 14px;
+  }
+
+  label{
+    margin:10px 0 4px;
+    font-size:11px;
+    letter-spacing:.055em;
+    color:#6b7586;
+  }
+
+  input,select{
+    border-radius:12px;
+    padding:10px 11px;
+    font-size:14px;
+    font-weight:750;
+    border-color:rgba(15,23,42,.13);
+    box-shadow:0 1px 0 rgba(15,23,42,.025);
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.50);
+    box-shadow:0 0 0 3px rgba(59,130,246,.11);
+  }
+
+  .grid3{
+    gap:7px;
+  }
+
+  .btnrow{
+    gap:7px;
+    margin-top:10px;
+  }
+
+  button{
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:13.5px;
+    box-shadow:none;
+  }
+
+  button.primary{
+    background:linear-gradient(180deg,#4f9df7,#2563eb);
+  }
+
+  button.green{
+    background:linear-gradient(180deg,#20bd63,#159447);
+  }
+
+  button.orange{
+    background:linear-gradient(180deg,#fb923c,#ea580c);
+  }
+
+  button.ghost{
+    background:#ffffff;
+    border:1px solid rgba(15,23,42,.11);
+  }
+
+  .infoBox{
+    margin-top:10px;
+    padding:9px 10px;
+    border-radius:12px;
+    font-size:13.5px;
+  }
+
+  .stage{
+    padding:14px;
+    min-height:665px;
+  }
+
+  .stageQuickActions{
+    top:12px;
+    right:12px;
+    gap:7px;
+  }
+
+  .quickBtn{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    font-size:20px;
+    box-shadow:0 8px 20px rgba(15,23,42,.11);
+  }
+
+  .topbar{
+    padding:2px 58px 10px 4px;
+  }
+
+  .equationHistory{
+    margin-top:0;
+    max-height:132px;
+  }
+
+  .equationTable{
+    font-size:clamp(24px,2.45vw,37px);
+    line-height:1.08;
+  }
+
+  .equationTable td{
+    padding:0 7px;
+  }
+
+  .equationTable .eq{
+    padding-left:13px;
+    padding-right:13px;
+  }
+
+  .instructionZone{
+    width:min(900px,100%);
+    min-height:40px;
+    margin:0 auto 10px;
+    font-size:17px;
+    color:#334155;
+  }
+
+  .board{
+    background:linear-gradient(180deg,#fbfdff,#f4f8fd);
+    border:1px solid rgba(15,23,42,.075);
+    border-radius:22px;
+    padding:8px;
+    min-height:490px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+  }
+
+  #splatSvg{
+    min-height:510px;
+  }
+
+  .tray{
+    fill:rgba(255,255,255,.82);
+    stroke:rgba(15,23,42,.18);
+  }
+
+  .actionZone{
+    margin-top:8px;
+    min-height:48px;
+  }
+
+  .toolBar{
+    margin:12px auto 2px;
+    gap:7px;
+  }
+
+  .toolRow{
+    gap:8px;
+  }
+
+  .toolRowEquation{
+    padding-top:1px;
+  }
+
+  .toolBtn{
+    background:#ffffff;
+    border:1px solid rgba(15,23,42,.11);
+    color:#334155;
+    font-size:15px;
+    padding:11px 15px;
+    border-radius:14px;
+    box-shadow:0 3px 10px rgba(15,23,42,.045);
+  }
+
+  .toolBtn:hover{
+    background:#f8fafc;
+  }
+
+  .toolBtn.active{
+    background:linear-gradient(180deg,#4f9df7,#2563eb);
+    border-color:rgba(37,99,235,.38);
+    box-shadow:0 9px 22px rgba(37,99,235,.20);
+  }
+
+  .addBothToolBtn{
+    background:#f6fef9;
+    border-color:rgba(22,163,74,.18);
+    color:#166534;
+  }
+
+  .oppositeBothToolBtn{
+    background:#faf7ff;
+    border-color:rgba(109,40,217,.18);
+    color:#4c1d95;
+  }
+
+  .undoToolBtn{
+    background:#fffaf4;
+    border-color:rgba(249,115,22,.20);
+    color:#9a3412;
+  }
+
+  .toolBtn.undoToolBtn{
+    margin-left:12px;
+  }
+
+  @media (max-width:900px){
+    main{
+      width:min(1000px, calc(100vw - 18px));
+      margin:10px auto 22px;
+      grid-template-columns:1fr;
+    }
+    .panel{position:static}
+  }
+
+  @media (max-width:760px){
+    .toolBtn{
+      font-size:14px;
+      padding:10px 12px;
+    }
+    .toolBtn.undoToolBtn{
+      margin-left:0;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -963,13 +1239,18 @@
     </div>
 
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
-      <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
-      <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
-      <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-      <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
-      <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
-      <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
-      <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+      <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
+        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+        <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
+        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+      </div>
+
+      <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
+        <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+        <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
+        <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+      </div>
     </div>
 
     <div class="actionZone" id="actionZone"></div>
@@ -2807,7 +3088,7 @@
 
     const solved = getSolvedValue();
     if(solved !== null){
-      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
+      setInstruction("");
       return;
     }
 
