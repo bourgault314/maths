@@ -1306,12 +1306,12 @@ let numberedQuestionMarkMode = false;
 
 function getNumberedDisplayVarChar(card){
   const raw = getCardVarChar(card);
-  return (card && card.family === "N" && numberedQuestionMarkMode) ? "?" : raw;
+  return (card && (card.family === "N" || card.family === "C") && numberedQuestionMarkMode) ? "?" : raw;
 }
 
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "N";
+  const show = activityEl.value === "N" || activityEl.value === "C";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -1323,8 +1323,8 @@ function syncNumberedQuestionMarkButton(){
     btnNumberedQuestionMarkEl.setAttribute("aria-pressed", numberedQuestionMarkMode ? "true" : "false");
   }
   const label = numberedQuestionMarkMode
-    ? "Mode B : inconnue affichée avec un point d’interrogation"
-    : "Mode B : inconnue affichée avec une lettre";
+    ? "Mode B/C : inconnue affichée avec un point d’interrogation"
+    : "Mode B/C : inconnue affichée avec une lettre";
   numberedUnknownChoiceEl.title = label;
   numberedUnknownChoiceEl.setAttribute("aria-label", label);
 }
@@ -2061,54 +2061,173 @@ function genInvestigate(rng){
 
   const names = ["la tache noire", "la tache violette", "la tache orange"];
 
-  function pickRelation(){
-    const op = ops[rInt(rng, 0, ops.length-1)];
+
+  function relationTextParts(op, k, tIdx, sIdx){
     if(op === 'MUL'){
-      const k = rInt(rng, 2, 4);
-      return {
-        apply: (x) => x * k,
-        check: (x) => true,
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
-          [{type:'splat', id:tIdx}, {type:'text', val:` = ${k} × `}, {type:'splat', id:sIdx}] : 
-          `Sous ${names[tIdx]}, il y a ${k} fois plus de jetons que sous ${names[sIdx]}.`
-      };
+      return (clueType === "SYMBOL") ?
+        [{type:'splat', id:tIdx}, {type:'text', val:` = ${k} × `}, {type:'splat', id:sIdx}] :
+        `Sous ${names[tIdx]}, il y a ${k} fois plus de jetons que sous ${names[sIdx]}.`;
     }
     if(op === 'DIV'){
-      const k = rInt(rng, 2, 4);
-      return {
-        apply: (x) => x / k,
-        check: (x) => (x % k === 0),
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
-          [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` ÷ ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} fois moins de jetons que sous ${names[sIdx]}.`
-      };
+      return (clueType === "SYMBOL") ?
+        [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` ÷ ${k}`}] :
+        `Sous ${names[tIdx]}, il y a ${k} fois moins de jetons que sous ${names[sIdx]}.`;
     }
     if(op === 'ADD'){
-      const k = rInt(rng, 1, maxAddVal);
-      return {
-        apply: (x) => x + k,
-        check: (x) => true,
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
-          [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` + ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} jetons de plus que sous ${names[sIdx]}.`
-      };
+      return (clueType === "SYMBOL") ?
+        [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` + ${k}`}] :
+        `Sous ${names[tIdx]}, il y a ${k} jetons de plus que sous ${names[sIdx]}.`;
     }
     if(op === 'SUB'){
-      const k = rInt(rng, 1, maxAddVal);
-      return {
-        apply: (x) => x - k,
-        check: (x) => (x - k > 0), 
-        desc: (tIdx, sIdx) => (clueType === "SYMBOL") ? 
-          [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` − ${k}`}] : 
-          `Sous ${names[tIdx]}, il y a ${k} jetons de moins que sous ${names[sIdx]}.`
-      };
+      return (clueType === "SYMBOL") ?
+        [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` − ${k}`}] :
+        `Sous ${names[tIdx]}, il y a ${k} jetons de moins que sous ${names[sIdx]}.`;
     }
+    return "";
+  }
+
+  function normalizeRelationForSchema(rel){
+    /*
+      Modèle pédagogique interne pour les prochains patches :
+      - on garde la relation d'origine pour les indices ;
+      - on ajoute une lecture positive pour les schémas :
+        "fois moins" devient "l'autre est k fois plus" ;
+        "de moins" devient "l'autre a k de plus".
+    */
+    if(rel.op === 'MUL'){
+      return { kind:'ratio', small:rel.source, large:rel.target, k:rel.k, from:rel };
+    }
+    if(rel.op === 'DIV'){
+      return { kind:'ratio', small:rel.target, large:rel.source, k:rel.k, from:rel };
+    }
+    if(rel.op === 'ADD'){
+      return { kind:'diff', small:rel.source, large:rel.target, d:rel.k, from:rel };
+    }
+    if(rel.op === 'SUB'){
+      return { kind:'diff', small:rel.target, large:rel.source, d:rel.k, from:rel };
+    }
+    return { kind:'unknown', from:rel };
+  }
+
+  function relationToAffine(rel, sourceExpr){
+    /* target = coef*x + diff, à partir de source = coef*x + diff.
+       Ce modèle ne modifie pas l'affichage actuel ; il prépare les étapes
+       "schéma regroupé" et "résolution". */
+    if(!sourceExpr) return null;
+    if(rel.op === 'MUL') return { coef: sourceExpr.coef * rel.k, diff: sourceExpr.diff * rel.k };
+    if(rel.op === 'DIV') return { coef: sourceExpr.coef / rel.k, diff: sourceExpr.diff / rel.k };
+    if(rel.op === 'ADD') return { coef: sourceExpr.coef, diff: sourceExpr.diff + rel.k };
+    if(rel.op === 'SUB') return { coef: sourceExpr.coef, diff: sourceExpr.diff - rel.k };
     return null;
+  }
+
+  function buildAffineItems(taskCount, relations, refIndex){
+    const items = new Array(taskCount).fill(null);
+    items[refIndex] = { coef:1, diff:0 };
+
+    let changed = true;
+    let guard = 0;
+    while(changed && guard++ < 20){
+      changed = false;
+      for(const rel of relations){
+        if(items[rel.source] && !items[rel.target]){
+          items[rel.target] = relationToAffine(rel, items[rel.source]);
+          changed = true;
+        }
+        if(items[rel.target] && !items[rel.source]){
+          const inv = inverseRelation(rel);
+          if(inv){
+            items[rel.source] = relationToAffine(inv, items[rel.target]);
+            changed = true;
+          }
+        }
+      }
+    }
+    return items.every(Boolean) ? items : null;
+  }
+
+  function inverseRelation(rel){
+    if(rel.op === 'MUL') return { op:'DIV', k:rel.k, source:rel.target, target:rel.source };
+    if(rel.op === 'DIV') return { op:'MUL', k:rel.k, source:rel.target, target:rel.source };
+    if(rel.op === 'ADD') return { op:'SUB', k:rel.k, source:rel.target, target:rel.source };
+    if(rel.op === 'SUB') return { op:'ADD', k:rel.k, source:rel.target, target:rel.source };
+    return null;
+  }
+
+  function buildRelationModel({ taskCount, hiddenVals, relations, structure, visibleSum }){
+    const normalized = relations.map(normalizeRelationForSchema);
+    const refIndex = relations.length ? relations[0].source : 0;
+    const affineItems = buildAffineItems(taskCount, relations, refIndex);
+    let sumCoef = null;
+    let sumDiff = null;
+    let unitValue = null;
+
+    if(affineItems){
+      sumCoef = affineItems.reduce((s,it)=>s + it.coef, 0);
+      sumDiff = affineItems.reduce((s,it)=>s + it.diff, 0);
+      if(sumCoef !== 0) unitValue = (hiddenVals.reduce((a,b)=>a+b,0) - sumDiff) / sumCoef;
+    }
+
+    const kinds = new Set(normalized.map(r=>r.kind));
+    const schemaKind = kinds.size === 1 ? [...kinds][0] : 'mixed';
+
+    return {
+      version: 1,
+      schemaKind,
+      taskCount,
+      clueType,
+      structure,
+      refIndex,
+      names: names.slice(0, taskCount),
+      hiddenValues: hiddenVals.slice(),
+      hiddenTotal: hiddenVals.reduce((a,b)=>a+b,0),
+      visibleSum,
+      relations: relations.map(rel => ({
+        op: rel.op,
+        k: rel.k,
+        source: rel.source,
+        target: rel.target,
+        clue: relationTextParts(rel.op, rel.k, rel.target, rel.source)
+      })),
+      normalizedRelations: normalized,
+      affineItems,
+      equation: affineItems ? { sumCoef, sumDiff, unitValue } : null
+    };
+  }
+
+  function pickRelation(){
+    const op = ops[rInt(rng, 0, ops.length-1)];
+    let k = 1;
+    if(op === 'MUL' || op === 'DIV') k = rInt(rng, 2, 4);
+    if(op === 'ADD' || op === 'SUB') k = rInt(rng, 1, maxAddVal);
+
+    const rel = {
+      op,
+      k,
+      source: null,
+      target: null,
+      apply: (x) => {
+        if(op === 'MUL') return x * k;
+        if(op === 'DIV') return x / k;
+        if(op === 'ADD') return x + k;
+        if(op === 'SUB') return x - k;
+        return x;
+      },
+      check: (x) => {
+        if(op === 'DIV') return (x % k === 0);
+        if(op === 'SUB') return (x - k > 0);
+        return true;
+      },
+      desc: (tIdx, sIdx) => relationTextParts(op, k, tIdx, sIdx),
+      asRecord: (target, source) => ({ op, k, target, source })
+    };
+    return rel;
   }
 
   for(let tries=0; tries<5000; tries++){
     const hiddenVals = new Array(taskCount).fill(0);
     const indices = [];
+    const relations = [];
 
     if(taskCount === 2){
       const dir = rInt(rng, 0, 1);
@@ -2123,6 +2242,7 @@ function genInvestigate(rng){
       hiddenVals[source] = valSource;
       hiddenVals[target] = valTarget;
       indices.push(rel.desc(target, source));
+      relations.push(rel.asRecord(target, source));
     } else {
       let mode = structureMode;
       if(mode === "MIX") mode = (rng() > 0.5) ? "CHAIN" : "PIVOT";
@@ -2146,6 +2266,8 @@ function genInvestigate(rng){
       hiddenVals[p[2]] = val2;
       indices.push(rel1.desc(p[1], p[0]));
       indices.push(rel2.desc(p[2], source2));
+      relations.push(rel1.asRecord(p[1], p[0]));
+      relations.push(rel2.asRecord(p[2], source2));
     }
 
     const hiddenSum = hiddenVals.reduce((a,b)=>a+b, 0);
@@ -2166,11 +2288,33 @@ function genInvestigate(rng){
         visible: visBeads, 
         hidden: hiddenVals, 
         _num: { tasks: taskCount, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
-        _inv: { indices } 
+        _inv: { indices },
+        _rel: buildRelationModel({ taskCount, hiddenVals, relations, structure: taskCount === 2 ? "PAIR" : structureMode, visibleSum: visSum })
       };
     }
   }
-  return { family: "C", total: 10, visible: [], hidden: [3,3], _num: { tasks: taskCount, hiddenByTask: [[3],[3]], hiddenBeadsPerTask:1 }, _inv: { indices: ["Erreur"] } };
+  return {
+    family: "C",
+    total: 10,
+    visible: [],
+    hidden: [3,3],
+    _num: { tasks: taskCount, hiddenByTask: [[3],[3]], hiddenBeadsPerTask:1 },
+    _inv: { indices: ["Erreur"] },
+    _rel: {
+      version: 1,
+      schemaKind: "error",
+      taskCount,
+      clueType,
+      structure: "ERROR",
+      hiddenValues: [3,3],
+      hiddenTotal: 6,
+      visibleSum: 0,
+      relations: [],
+      normalizedRelations: [],
+      affineItems: null,
+      equation: null
+    }
+  };
 }
 
 /* --- GÉNÉRATION SYSTÈME (Mode D) --- */
@@ -3098,6 +3242,501 @@ function minCellWidthForNumber(num, fontSize, pad){
 }
 
 
+
+
+
+/* PATCH 4 — Mode C : schémas en barres stabilisés.
+   Objectif : mêmes largeurs de parts dans les schémas de situation et regroupé,
+   écarts positifs sans signe +, total compact, puis équation seule / solution finale. */
+function formatRelationNumber(n){
+  const v = Number(n);
+  if(!Number.isFinite(v)) return String(n ?? "");
+  if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return String(Math.round(v * 100) / 100).replace('.', ',');
+}
+function taskShortName(idx){
+  return ["Noire", "Violette", "Orange"][idx] || `Tache ${idx+1}`;
+}
+function taskSplatColor(idx){
+  return ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"][idx % 3];
+}
+function relationModelKind(card){
+  const rel = card && card._rel;
+  if(!rel) return "diff";
+  if(rel.schemaKind === "ratio") return "ratio";
+  if(rel.schemaKind === "diff") return "diff";
+  const ops = Array.isArray(rel.relations) ? rel.relations.map(r=>r.op) : [];
+  if(ops.length && ops.every(op => op === "MUL" || op === "DIV")) return "ratio";
+  return "diff";
+}
+function positiveBarItemsForRelation(card){
+  const rel = card && card._rel;
+  const values = rel && Array.isArray(rel.hiddenValues) ? rel.hiddenValues.slice(0, rel.taskCount) : [];
+  const taskCount = Math.max(1, Number(rel && rel.taskCount) || values.length || 1);
+  while(values.length < taskCount) values.push(1);
+  const positiveValues = values.map(v => Math.max(1, Number(v) || 1));
+  const minVal = Math.min(...positiveValues);
+  const kind = relationModelKind(card);
+
+  if(kind === "ratio"){
+    return positiveValues.map(v => {
+      let c = v / minVal;
+      if(!(c > 0)) c = 1;
+      const intC = Math.round(c);
+      if(Math.abs(c - intC) < 1e-9 && intC <= 8){
+        return { coef:intC, diff:0, parts:Array.from({length:intC}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1})) };
+      }
+      return { coef:c, diff:0, parts:[{kind:"x", label:`${formatRelationNumber(c)}${getNumberedDisplayVarChar(card)}`, weight:Math.max(1, Math.min(5, c))}] };
+    });
+  }
+
+  return positiveValues.map(v => {
+    const d = Math.max(0, v - minVal);
+    const unit = Math.max(1, minVal);
+    const parts = [{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}];
+    if(d > 0) parts.push({kind:"diff", label:formatRelationNumber(d), weight:Math.max(0.35, d / unit)});
+    return { coef:1, diff:d, parts };
+  });
+}
+function relationTotalsForBarModel(card){
+  const items = positiveBarItemsForRelation(card);
+  const sumCoef = items.reduce((s,it)=>s + (Number(it.coef)||0), 0);
+  const sumDiff = items.reduce((s,it)=>s + (Number(it.diff)||0), 0);
+  const hiddenTotal = Number(card && card._rel && card._rel.hiddenTotal) || sumArray(card.hidden);
+  const visibleSum = Number(card && card._rel && card._rel.visibleSum) || sumArray(card.visible);
+  const trueTotal = Number(card && card.total);
+  return {
+    items,
+    sumCoef,
+    sumDiff,
+    hiddenTotal,
+    visibleSum,
+    trueTotal: Number.isFinite(trueTotal) ? trueTotal : hiddenTotal + visibleSum
+  };
+}
+function drawRightTotalBrace(g, x, y, h, label, opts={}){
+  const stroke = opts.stroke || "#000";
+  const fontSize = opts.fontSize || 28;
+  const labelGap = opts.labelGap == null ? 32 : opts.labelGap;
+  g.appendChild(el("path",{
+    d:`M ${x} ${y} H ${x+18} V ${y+h} H ${x}`,
+    fill:"none", stroke, "stroke-width":4, "stroke-linecap":"round", "stroke-linejoin":"round"
+  }));
+  // Le mot/numéro du total est placé à droite de l'accolade, jamais traversé par elle.
+  g.appendChild(text(x+18+labelGap, y+h/2+1, label, {
+    "text-anchor":"start", "dominant-baseline":"middle",
+    "font-size":fontSize, "font-weight":950, fill:"var(--ink)"
+  }));
+}
+function getRelationSchemaLayout(){
+  const boxX = 120;
+  const boxW = 1360;
+  const labelW = 150;
+  const equationW = 365;
+  const barX = boxX + labelW;
+  const barW = boxW - labelW - equationW - 34;
+  return { boxX, boxW, labelW, equationW, barX, barW };
+}
+function getRelationGroupedParts(card){
+  const totals = relationTotalsForBarModel(card);
+  const parts = [];
+  const xParts = Math.max(1, Math.round(totals.sumCoef));
+  for(let i=0;i<xParts;i++) parts.push({kind:"x", label:getNumberedDisplayVarChar(card), weight:1});
+
+  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+
+  if(totals.sumDiff > 0){
+    parts.push({kind:"diff", label:formatRelationNumber(totals.sumDiff), weight:Math.max(0.35, totals.sumDiff / unitValue)});
+  }
+  if(totals.visibleSum > 0){
+    // Jetons visibles sur le plateau : on les garde dans le schéma regroupé.
+    // On ne simplifie donc pas directement avec le total caché.
+    parts.push({kind:"visible", label:formatRelationNumber(totals.visibleSum), weight:Math.max(0.35, totals.visibleSum / unitValue)});
+  }
+  return { totals, parts, xParts };
+}
+function drawBarCell(g, x, y, w, h, part, filled, opts={}){
+  const isDiff = part && (part.kind === "diff" || part.kind === "visible");
+  const fill = filled ? (isDiff ? "rgba(249,115,22,0.16)" : "rgba(15,23,42,0.09)") : "#ffffff";
+  const color = isDiff ? "#9a3412" : "#334155";
+  g.appendChild(el("rect",{
+    x, y, width:w, height:h, rx:0,
+    fill, stroke:"#000", "stroke-width":3
+  }));
+  if(filled && part && part.label){
+    g.appendChild(text(x+w/2, y+h/2+1, part.label, {
+      "text-anchor":"middle", "dominant-baseline":"middle",
+      "font-size": opts.fontSize || (isDiff ? 28 : 32),
+      "font-weight":950, fill:color
+    }));
+  }
+}
+function drawRelationSituationSchema(targetGroup, card, opts = {}){
+  const rel = card && card._rel;
+  if(!rel) return;
+
+  const filled = !!opts.filled;
+  const totals = relationTotalsForBarModel(card);
+
+  // Le schéma de situation ne doit pas travailler avec le total déjà simplifié.
+  // On ajoute donc, si besoin, une ligne pour les jetons visibles du plateau.
+  const baseRows = totals.items;
+  const visibleSum = Math.max(0, Number(totals.visibleSum) || 0);
+  const taskCount = baseRows.length;
+  const hasVisibleRow = visibleSum > 0;
+
+  const layout = getRelationSchemaLayout();
+  const boxX = layout.boxX;
+  const boxY = 620;
+  const boxW = layout.boxW;
+  const displayRowCount = taskCount + (hasVisibleRow ? 1 : 0);
+  const rowH = displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72);
+  const gap = displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17);
+  const titleH = 56; // espace clair sous le titre avant les barres
+  const labelW = layout.labelW;
+  const barX = layout.barX;
+  const barW = layout.barW;
+  const boxH = titleH + displayRowCount * rowH + (displayRowCount - 1) * gap + 24;
+
+  const grouped = getRelationGroupedParts(card);
+  const groupedWeight = Math.max(1, grouped.parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
+  const unitW = barW / groupedWeight;
+  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+
+  const visibleRow = hasVisibleRow
+    ? { coef:0, diff:visibleSum, parts:[{kind:"visible", label:formatRelationNumber(visibleSum), weight:Math.max(0.35, visibleSum / unitValue)}] }
+    : null;
+  const rows = hasVisibleRow ? baseRows.concat([visibleRow]) : baseRows;
+
+  const g = el("g", { id:"relationSituationSchema" });
+  g.appendChild(el("rect",{
+    x:boxX, y:boxY, width:boxW, height:boxH, rx:22,
+    fill:"rgba(255,255,255,0.94)", stroke:"#000", "stroke-width":3
+  }));
+  g.appendChild(text(boxX+boxW/2, boxY+29, filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
+    "text-anchor":"middle", "font-size":25, "font-weight":950, fill:"var(--ink)"
+  }));
+
+  const rowsTop = boxY + titleH;
+  let maxRowEnd = barX;
+  for(let i=0;i<rows.length;i++){
+    const y = rowsTop + i*(rowH+gap);
+    const isVisible = hasVisibleRow && i === rows.length - 1;
+
+    if(isVisible){
+      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:10, fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
+      g.appendChild(text(boxX+54, y+rowH/2+1, "visibles",{
+        "dominant-baseline":"middle", "font-size":20, "font-weight":950, fill:"var(--ink)"
+      }));
+    } else {
+      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:12, fill:taskSplatColor(i), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
+      g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i),{
+        "dominant-baseline":"middle", "font-size":21, "font-weight":950, fill:"var(--ink)"
+      }));
+    }
+
+    let x = barX;
+    for(const part of rows[i].parts){
+      const w = Math.max(part.kind === "diff" || part.kind === "visible" ? 52 : 52, unitW * Math.max(0.35, Number(part.weight)||1));
+      // Pour le schéma vide, les barres existent mais les valeurs ne sont pas encore écrites.
+      drawBarCell(g, x, y, w, rowH, part, filled, {fontSize: displayRowCount >= 4 ? 23 : 28});
+      x += w;
+    }
+    maxRowEnd = Math.max(maxRowEnd, x);
+  }
+
+  // L'accolade reste collée au schéma réel, pas au bord théorique du cadre.
+  drawRightTotalBrace(
+    g,
+    maxRowEnd + 22,
+    rowsTop,
+    displayRowCount*rowH + (displayRowCount-1)*gap,
+    filled ? formatRelationNumber(totals.trueTotal) : "total",
+    {fontSize: filled ? 28 : 25, labelGap: 28}
+  );
+  targetGroup.appendChild(g);
+}
+
+function drawRelationOwnerBrace(g, x1, x2, y, label){
+  const w = Math.max(18, x2 - x1);
+  const mid = x1 + w / 2;
+  g.appendChild(el("path",{
+    d:`M ${x1+5} ${y} V ${y+12} H ${x2-5} V ${y}`,
+    fill:"none", stroke:"#000", "stroke-width":2.5,
+    "stroke-linecap":"round", "stroke-linejoin":"round"
+  }));
+  g.appendChild(text(mid, y+33, label, {
+    "text-anchor":"middle", "dominant-baseline":"middle",
+    "font-size":17, "font-weight":950, fill:"#334155"
+  }));
+}
+
+function getRelationGroupedDisplayGroups(card){
+  const totals = relationTotalsForBarModel(card);
+  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+  const groups = [];
+
+  for(let i=0;i<totals.items.length;i++){
+    const item = totals.items[i];
+    groups.push({ label: taskShortName(i), parts: item.parts.map(p => ({...p})) });
+  }
+
+  if(totals.visibleSum > 0){
+    groups.push({
+      label: "visibles",
+      parts: [{kind:"visible", label:formatRelationNumber(totals.visibleSum), weight:Math.max(0.35, totals.visibleSum / unitValue)}]
+    });
+  }
+
+  const parts = groups.flatMap(gr => gr.parts);
+  return { totals, groups, parts, xParts: Math.max(1, Math.round(Number(totals.sumCoef) || 1)) };
+}
+
+
+const EQUABAR_IMPORT_URL = "./equabarre_import_splat.html";
+
+function encodeEquabarPayload(payload){
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function buildRelationEquabarPayload(card){
+  const grouped = getRelationGroupedDisplayGroups(card);
+  const totals = grouped.totals;
+  const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
+  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
+  const trueTotal = Number(totals.trueTotal);
+  const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
+
+  const bottom = [];
+  for(let i=0;i<coefficient;i++) bottom.push({type:"x"});
+  if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
+
+  return {
+    source:"splat",
+    family:"C",
+    variable:getCardVarChar(card),
+    unknownDisplay:numberedQuestionMarkMode ? "question" : "letter",
+    fullscreenSize:"compact",
+    x:Number.isFinite(unitValue) ? unitValue : undefined,
+    top:[{type:"number", value:Number.isFinite(trueTotal) ? trueTotal : totals.hiddenTotal + totals.visibleSum}],
+    bottom
+  };
+}
+
+function openRelationInEquabar(card){
+  try{
+    const payload = buildRelationEquabarPayload(card);
+    const url = `${EQUABAR_IMPORT_URL}#data=${encodeEquabarPayload(payload)}`;
+    window.open(url, "_blank", "noopener");
+  }catch(err){
+    console.error("Impossible d'ouvrir Équabarre import", err);
+  }
+}
+
+function buildABEquabarPayload(card){
+  if(!card || !(card.family === "U" || card.family === "N")) return null;
+
+  let tasks = 1;
+  let constantTotal = 0;
+  let unitValue = undefined;
+
+  if(card.family === "U"){
+    const unit = card._unit || {};
+    const tasksFromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
+    tasks = Math.max(1, Number(unit.tasks) || tasksFromSplats || 1);
+    constantTotal = Math.max(0, sumArray(card.visible));
+    unitValue = Number(unit.hiddenPerTask);
+  }else{
+    const num = card._num || {};
+    tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+    constantTotal = Math.max(0, sumArray(card.visible));
+    unitValue = Number(num.H);
+    if(!Number.isFinite(unitValue) && Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
+      unitValue = sumArray(num.hiddenByTask[0]);
+    }
+  }
+
+  const bottom = [];
+  for(let i=0;i<tasks;i++) bottom.push({type:"x"});
+  if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
+
+  return {
+    source:"splat",
+    family:card.family,
+    variable:getCardVarChar(card),
+    unknownDisplay:card.family === "N" ? (numberedQuestionMarkMode ? "question" : "letter") : "question",
+    fullscreenSize:"compact",
+    x:Number.isFinite(unitValue) ? unitValue : undefined,
+    top:[{type:"number", value:Number(card.total)}],
+    bottom
+  };
+}
+
+function openABInEquabar(card){
+  try{
+    const payload = buildABEquabarPayload(card);
+    if(!payload) return;
+    const url = `${EQUABAR_IMPORT_URL}#data=${encodeEquabarPayload(payload)}`;
+    window.open(url, "_blank", "noopener");
+  }catch(err){
+    console.error("Impossible d'ouvrir Équabarre import", err);
+  }
+}
+
+function drawABEquabarSolveButton(g, card, x, y){
+  const btn = el("g", { id:"btnEquabarSolveAB", transform:`translate(${x} ${y})`, style:"cursor:pointer" });
+  btn.setAttribute("role", "button");
+  btn.setAttribute("tabindex", "0");
+  btn.appendChild(el("rect",{
+    x:0, y:0, width:112, height:44, rx:16,
+    fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
+  }));
+  btn.appendChild(text(56, 23, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"middle",
+    "font-size":20, "font-weight":950, fill:"#166534"
+  }));
+  btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    openABInEquabar(card);
+  });
+  btn.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" || ev.key === " "){
+      ev.preventDefault();
+      ev.stopPropagation();
+      openABInEquabar(card);
+    }
+  });
+  g.appendChild(btn);
+}
+
+function drawEquabarSolveButton(g, card, x, y){
+  const btn = el("g", { id:"btnEquabarSolve", transform:`translate(${x} ${y})`, style:"cursor:pointer" });
+  btn.setAttribute("role", "button");
+  btn.setAttribute("tabindex", "0");
+  btn.appendChild(el("rect",{
+    x:0, y:0, width:112, height:44, rx:16,
+    fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
+  }));
+  btn.appendChild(text(56, 23, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"middle",
+    "font-size":20, "font-weight":950, fill:"#166534"
+  }));
+  btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    openRelationInEquabar(card);
+  });
+  btn.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" || ev.key === " "){
+      ev.preventDefault();
+      ev.stopPropagation();
+      openRelationInEquabar(card);
+    }
+  });
+  g.appendChild(btn);
+}
+
+function drawRelationGroupedSchema(targetGroup, card, opts = {}){
+  const solved = !!opts.solved;
+  const grouped = getRelationGroupedDisplayGroups(card);
+  const totals = grouped.totals;
+  const parts = grouped.parts;
+  const groups = grouped.groups;
+  const xParts = grouped.xParts;
+  const layout = getRelationSchemaLayout();
+  const boxX = layout.boxX;
+  const isFullscreenProjection = !!document.fullscreenElement;
+  const boxY = 620;
+  const boxW = layout.boxW;
+  const equationW = layout.equationW;
+  const barX = layout.barX;
+  const barW = layout.barW;
+  const topH = 68;
+  const botH = 72;
+  const boxH = 274;
+  const g = el("g", { id: solved ? "relationGroupedSchemaSolved" : "relationGroupedSchema" });
+
+  const totalWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
+  const unitW = barW / totalWeight;
+
+  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+
+  const yTop = boxY + 68;
+  if(!solved){
+    drawEquabarSolveButton(g, card, boxX + 22, yTop + topH - 22);
+  }
+  // Le mot Total est au-dessus du tableau, pas en bas à gauche.
+  g.appendChild(text(barX+barW/2, yTop-13, "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":22, "font-weight":950, fill:"#334155"}));
+  g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
+
+  let x = barX;
+  const groupSpans = [];
+  for(const group of groups){
+    const groupStart = x;
+    for(let j=0;j<group.parts.length;j++){
+      const part = group.parts[j];
+      const isLastOverall = (x >= barX + barW - 1) || (group === groups[groups.length-1] && j === group.parts.length-1);
+      const rawW = unitW * Math.max(0.35, Number(part.weight)||1);
+      const w = isLastOverall ? (barX+barW-x) : Math.max(56, rawW);
+      drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
+      x += w;
+    }
+    groupSpans.push({x1:groupStart, x2:x, label:group.label});
+  }
+
+  // Accolades sous le schéma regroupé : elles identifient les morceaux qui viennent
+  // de chaque tache, puis les jetons visibles s'il y en a.
+  const braceY = yTop + topH + botH + 8;
+  for(const span of groupSpans){
+    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label);
+  }
+
+  // L'équation doit rester clairement séparée du tableau.
+  const eqCenter = barX + barW + (isFullscreenProjection ? 185 : 260);
+  let eqY = solved ? yTop + 43 : yTop + 79;
+  function eqLine(left, right, size=34){
+    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
+    });
+    eqY += 48;
+  }
+  const relVarChar = getNumberedDisplayVarChar(card);
+  const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || xParts || 1));
+  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
+  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const equationLeft = constantTotal > 0
+    ? `${variableTerm} + ${formatRelationNumber(constantTotal)}`
+    : variableTerm;
+  const equationRight = formatRelationNumber(totals.trueTotal);
+
+  // Cohérence avec les autres Splat ax + b = c : l'équation affichée est déjà réduite.
+  eqLine(equationLeft, equationRight, 34);
+
+  if(solved){
+    const reducedRight = Number(totals.trueTotal) - constantTotal;
+    const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
+    const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
+
+    // À la révélation finale, toute la résolution apparaît d'un coup : soustraction puis division/réponse.
+    if(constantTotal > 0){
+      eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
+    }
+    if(coefficient !== 1 || constantTotal === 0){
+      eqLine(relVarChar, formatRelationNumber(solution), 34);
+    } else if(constantTotal > 0){
+      // Cas x + b = c : la ligne de soustraction donne déjà directement x = ...
+      // On ne duplique pas la même ligne.
+    }
+  }
+
+  targetGroup.appendChild(g);
+}
+
 function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const baseW = (api && api.w) ? api.w : 300;
   const hTop = (api && api.hTop) ? api.hTop : 56;
@@ -3298,21 +3937,31 @@ function renderCard(card, revealState){
   const isEmptyTableStepAB = (isABProjectionLayout && revealState === 1);
   const abHasModelStep = (isABProjectionLayout && revealState >= 2);
   const abRevealPhase = abHasModelStep ? (revealState - 1) : revealState;
+  const isCRelationLayout = (card.family === "C" && card._rel && revealState > 0 && revealState <= 4);
   const introTrayShiftY = isABProjectionLayout ? (isFullscreenProjection ? -54 : -34) : 0;
   const introTotalShiftY = isIntroLayoutAB ? (isFullscreenProjection ? -38 : -22) : 0;
+  const relationTotalCompact = isCRelationLayout;
   const bottomAidTyAB = 865;
 
-  const trayLayer = introTrayShiftY
-    ? el("g", { id:"introTrayShift", transform:`translate(0 ${introTrayShiftY})` })
+  const trayTransform = isCRelationLayout
+    ? (isFullscreenProjection ? "translate(210 -52) scale(0.74)" : "translate(240 -46) scale(0.70)")
+    : (introTrayShiftY ? `translate(0 ${introTrayShiftY})` : "");
+  const trayLayer = trayTransform
+    ? el("g", { id:isCRelationLayout ? "relationTrayScale" : "introTrayShift", transform:trayTransform })
     : svg;
-  if(introTrayShiftY) svg.appendChild(trayLayer);
+  if(trayTransform) svg.appendChild(trayLayer);
 
   trayLayer.appendChild(el("rect",{
     x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
     rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
   }));
 
-  let tx = 800, ty = 92 + introTotalShiftY; 
+  // Mode C avec schéma : le total du haut reste au-dessus du plateau compact
+  // et suit légèrement la remontée du plateau, sans toucher aux autres modes.
+  // En mode C avec schéma, le plein écran validé reste inchangé.
+  // En mode normal, on remonte moins la bulle TOTAL pour éviter qu'elle soit coupée en haut.
+  const relationLayoutShiftY = isCRelationLayout ? (isFullscreenProjection ? -58 : -42) : 0;
+  let tx = 800, ty = 92 + introTotalShiftY + relationLayoutShiftY; 
 
   let totalColor = "var(--ink)";
   let totalLabelColor = "var(--total-label)";
@@ -3330,6 +3979,8 @@ function renderCard(card, revealState){
   const isBarModelTotalU = false;
   const isBarModelTotalN = false;
   const isBarModelTotal = isBarModelTotalU || isBarModelTotalN;
+
+  const introTotalCompact = isIntroLayoutAB || relationTotalCompact;
 
   if(isBarModelTotal){
     if(isBarModelTotalU){
@@ -3472,13 +4123,15 @@ function renderCard(card, revealState){
       }
     }
   }else{
-    const introTotalCompact = isIntroLayoutAB;
+    const totalLabelFs = relationTotalCompact ? "30" : (introTotalCompact ? "38" : "42");
+    const totalNumFs = relationTotalCompact ? "68" : (introTotalCompact ? "84" : "96");
+    const totalNumDy = relationTotalCompact ? 58 : (introTotalCompact ? 74 : 83);
     const tLabel = text(tx, ty, "TOTAL", {
-      "text-anchor":"middle","font-size": introTotalCompact ? "38" : "42",
+      "text-anchor":"middle","font-size": totalLabelFs,
       "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
-    const tNum = text(tx, ty + (introTotalCompact ? 74 : 83), String(card.total), {
-      "text-anchor":"middle","font-size": introTotalCompact ? "84" : "96",
+    const tNum = text(tx, ty + totalNumDy, String(card.total), {
+      "text-anchor":"middle","font-size": totalNumFs,
       "fill":totalColor,"font-weight":"900"
     });
     gTotal.appendChild(tLabel);
@@ -3487,7 +4140,7 @@ function renderCard(card, revealState){
   svg.appendChild(gTotal);
 
   const bbTotal = gTotal.getBBox();
-  const padX = isIntroLayoutAB ? 34 : 40, padY = isIntroLayoutAB ? 22 : 26;
+  const padX = relationTotalCompact ? 24 : (introTotalCompact ? 30 : 40), padY = relationTotalCompact ? 14 : (introTotalCompact ? 18 : 26);
   
   if(!isBarModelTotal){
     let boxX = bbTotal.x - padX;
@@ -3496,7 +4149,7 @@ function renderCard(card, revealState){
       y: bbTotal.y - padY,
       width: bbTotal.width + padX*2,
       height: bbTotal.height + padY*2,
-      rx: 22,
+        rx: relationTotalCompact ? 16 : (introTotalCompact ? 18 : 22),
       fill: totalBoxFill,
       stroke: totalBoxStroke,
       "stroke-width":"4"
@@ -3525,7 +4178,7 @@ function renderCard(card, revealState){
       const parts = [];
       if (vis > 0) parts.push({value: vis, hidden: false, text: revealState === 1 ? "" : String(vis)});
       parts.push(...hiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? "?" : String(v)) })));
-      drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
+      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -3535,6 +4188,9 @@ function renderCard(card, revealState){
         textDy:"0.10em", fontTop:70, fontBottom:70,
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
+      if(revealState >= 2){
+        drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
+      }
     }else if(card.family === "N"){
       const visSum = sumArray(card.visible);
       const num = card._num || {};
@@ -3551,7 +4207,7 @@ function renderCard(card, revealState){
       const parts = [];
       if (visSum > 0) parts.push({value: visSum, hidden: false, text: revealState === 1 ? "" : String(visSum)});
       parts.push(...hiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
-      drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
+      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -3563,6 +4219,9 @@ function renderCard(card, revealState){
         xTextDyForX:"-0.05em",
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
+      if(revealState >= 2){
+        drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
+      }
     }
 
     if(revealState >= 2){
@@ -3649,7 +4308,7 @@ function renderCard(card, revealState){
     });
   }
 
-  if(isModeC_or_D && card._inv && card._inv.indices){
+  if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && revealState > 0)){
     const indices = card._inv.indices;
     const gInd = el("g", {id: "clueGroup"});
     const trayBottom = trayCfg.y + trayCfg.h;
@@ -3674,12 +4333,22 @@ function renderCard(card, revealState){
           "font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
-        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, revealState === 2);
+        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, card.family === "C" ? revealState >= 4 : revealState === 2);
       }
     });
     svg.appendChild(gInd);
   }
 
+
+  if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
+    drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
+  }
+  if(card.family === "C" && card._rel && revealState === 3){
+    drawRelationGroupedSchema(svg, card);
+  }
+  if(card.family === "C" && card._rel && revealState === 4){
+    drawRelationGroupedSchema(svg, card, { solved:true });
+  }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if(!isModeC_or_D && taskCount > 1 && !(isABProjectionLayout && revealState > 0)){
     const isSigned = (card.family === "NPM");
@@ -3700,7 +4369,7 @@ function renderCard(card, revealState){
   }
 
   const layer = trayLayer;
-  const visualRevealState = isABProjectionLayout ? abRevealPhase : revealState;
+  const visualRevealState = (card.family === "C") ? (revealState >= 4 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
 
   if(card.family === "U"){
     const beadR = card._beadR ?? 26;
@@ -4241,7 +4910,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }), g);
 
   /* Indices impression Mode C/D */
-  if(isModeC_or_D && card._inv && card._inv.indices){
+  if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && revealState > 0)){
     const indices = card._inv.indices;
     const lineH = 84;
     const startY = trayY + trayH + 80;
@@ -4259,6 +4928,16 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }
 
   // Contrat didactique impression PDF
+
+  if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
+    drawRelationSituationSchema(targetSvg, card, { filled: revealState === 2 });
+  }
+  if(card.family === "C" && card._rel && revealState === 3){
+    drawRelationGroupedSchema(targetSvg, card);
+  }
+  if(card.family === "C" && card._rel && revealState === 4){
+    drawRelationGroupedSchema(targetSvg, card, { solved:true });
+  }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1) {
     const isSigned = (card.family === "NPM");
@@ -4734,12 +5413,13 @@ const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function isRevealSequenceCard(card){
-  return !!card && (card.family === "U" || card.family === "N" || card.family === "NPM");
+  return !!card && (card.family === "U" || card.family === "N" || card.family === "NPM" || card.family === "C");
 }
 function getMaxRevealState(card){
   if(!card) return 0;
   if(card.family === "U" || card.family === "N") return 3;
   if(card.family === "NPM") return 2;
+  if(card.family === "C") return 4;
   return 2;
 }
 
@@ -4835,7 +5515,7 @@ document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", ()=>{
   if(cards.length===0) return;
-  if(revealState > 0){ revealState = 0; updateUI(); return; }
+  if(revealState > 0){ revealState--; updateUI(); return; }
   if(idx>0){ idx--; revealState=0; updateUI(); }
 });
 document.getElementById("btnNext").addEventListener("click", ()=>{
@@ -4886,7 +5566,7 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="ArrowLeft"){
     if(cards.length===0) return;
-    if(revealState > 0){ revealState=0; updateUI(); return; }
+    if(revealState > 0){ revealState--; updateUI(); return; }
     if(idx>0){ idx--; revealState=0; updateUI(); }
   }
   if(e.key==="ArrowRight"){
