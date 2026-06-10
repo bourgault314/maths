@@ -3639,6 +3639,93 @@ function drawEquabarSolveButton(g, card, x, y){
   g.appendChild(btn);
 }
 
+
+function drawRelationOrderedSchema(targetGroup, card, opts = {}){
+  const solved = !!opts.solved;
+  const grouped = getRelationGroupedDisplayGroups(card);
+  const totals = grouped.totals;
+  const layout = getRelationSchemaLayout();
+  const boxX = layout.boxX;
+  const isFullscreenProjection = !!document.fullscreenElement;
+  const boxY = 620;
+  const boxW = layout.boxW;
+  const barX = layout.barX;
+  const barW = layout.barW;
+  const topH = 68;
+  const botH = 72;
+  const boxH = 274;
+  const g = el("g", { id: solved ? "relationOrderedSchemaSolved" : "relationOrderedSchema" });
+
+  const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
+  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
+  const totalWeight = coefficient + (constantTotal > 0 ? Math.max(0.35, constantTotal / Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || 1)) : 0);
+  const unitW = barW / Math.max(1, totalWeight);
+
+  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : "Schéma ordonné", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+
+  const yTop = boxY + 68;
+  if(!solved){
+    drawEquabarSolveButton(g, card, boxX + 22, yTop + topH - 22);
+  }
+
+  g.appendChild(text(barX+barW/2, yTop-13, "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":22, "font-weight":950, fill:"#334155"}));
+  g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
+
+  let x = barX;
+  const spans = [];
+  const xStart = x;
+  for(let i=0;i<coefficient;i++){
+    const isLastX = (i === coefficient - 1 && constantTotal <= 0);
+    const w = isLastX ? (barX + barW - x) : Math.max(56, unitW);
+    drawBarCell(g, x, yTop+topH, w, botH, {kind:"x", label:getNumberedDisplayVarChar(card), weight:1}, true, {fontSize:30});
+    x += w;
+  }
+  spans.push({x1:xStart, x2:x, label:"inconnues"});
+
+  if(constantTotal > 0){
+    const cStart = x;
+    const w = barX + barW - x;
+    drawBarCell(g, x, yTop+topH, w, botH, {kind:"visible", label:formatRelationNumber(constantTotal), weight:Math.max(0.35, constantTotal / Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || 1))}, true, {fontSize:30});
+    x += w;
+    spans.push({x1:cStart, x2:x, label:"constantes"});
+  }
+
+  const braceY = yTop + topH + botH + 8;
+  for(const span of spans){
+    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label);
+  }
+
+  const eqCenter = barX + barW + (isFullscreenProjection ? 185 : 260);
+  let eqY = solved ? yTop + 43 : yTop + 79;
+  function eqLine(left, right, size=34){
+    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
+    });
+    eqY += 48;
+  }
+  const relVarChar = getNumberedDisplayVarChar(card);
+  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const equationLeft = constantTotal > 0 ? `${variableTerm} + ${formatRelationNumber(constantTotal)}` : variableTerm;
+  const equationRight = formatRelationNumber(totals.trueTotal);
+  eqLine(equationLeft, equationRight, 34);
+
+  if(solved){
+    const reducedRight = Number(totals.trueTotal) - constantTotal;
+    const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
+    const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
+    if(constantTotal > 0){
+      eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
+    }
+    if(coefficient !== 1 || constantTotal === 0){
+      eqLine(relVarChar, formatRelationNumber(solution), 34);
+    }
+  }
+
+  targetGroup.appendChild(g);
+}
+
 function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const solved = !!opts.solved;
   const grouped = getRelationGroupedDisplayGroups(card);
@@ -3666,9 +3753,8 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
 
   const yTop = boxY + 68;
-  if(!solved){
-    drawEquabarSolveButton(g, card, boxX + 22, yTop + topH - 22);
-  }
+  // Le bouton Résoudre n’apparaît pas ici : cette étape montre encore le regroupement par origine.
+  // Il apparaît à l’étape suivante, quand le tableau est ordonné/réduit.
   // Le mot Total est au-dessus du tableau, pas en bas à gauche.
   g.appendChild(text(barX+barW/2, yTop-13, "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":22, "font-weight":950, fill:"#334155"}));
   g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
@@ -3937,7 +4023,7 @@ function renderCard(card, revealState){
   const isEmptyTableStepAB = (isABProjectionLayout && revealState === 1);
   const abHasModelStep = (isABProjectionLayout && revealState >= 2);
   const abRevealPhase = abHasModelStep ? (revealState - 1) : revealState;
-  const isCRelationLayout = (card.family === "C" && card._rel && revealState > 0 && revealState <= 4);
+  const isCRelationLayout = (card.family === "C" && card._rel && revealState > 0 && revealState <= 5);
   const introTrayShiftY = isABProjectionLayout ? (isFullscreenProjection ? -54 : -34) : 0;
   const introTotalShiftY = isIntroLayoutAB ? (isFullscreenProjection ? -38 : -22) : 0;
   const relationTotalCompact = isCRelationLayout;
@@ -4188,7 +4274,7 @@ function renderCard(card, revealState){
         textDy:"0.10em", fontTop:70, fontBottom:70,
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
-      if(revealState >= 2){
+      if(revealState === 2){
         drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
       }
     }else if(card.family === "N"){
@@ -4219,7 +4305,7 @@ function renderCard(card, revealState){
         xTextDyForX:"-0.05em",
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
-      if(revealState >= 2){
+      if(revealState === 2){
         drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
       }
     }
@@ -4333,7 +4419,7 @@ function renderCard(card, revealState){
           "font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
-        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, card.family === "C" ? revealState >= 4 : revealState === 2);
+        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, card.family === "C" ? revealState >= 5 : revealState === 2);
       }
     });
     svg.appendChild(gInd);
@@ -4347,7 +4433,10 @@ function renderCard(card, revealState){
     drawRelationGroupedSchema(svg, card);
   }
   if(card.family === "C" && card._rel && revealState === 4){
-    drawRelationGroupedSchema(svg, card, { solved:true });
+    drawRelationOrderedSchema(svg, card);
+  }
+  if(card.family === "C" && card._rel && revealState === 5){
+    drawRelationOrderedSchema(svg, card, { solved:true });
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if(!isModeC_or_D && taskCount > 1 && !(isABProjectionLayout && revealState > 0)){
@@ -4369,7 +4458,7 @@ function renderCard(card, revealState){
   }
 
   const layer = trayLayer;
-  const visualRevealState = (card.family === "C") ? (revealState >= 4 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
+  const visualRevealState = (card.family === "C") ? (revealState >= 5 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
 
   if(card.family === "U"){
     const beadR = card._beadR ?? 26;
@@ -4936,7 +5025,10 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     drawRelationGroupedSchema(targetSvg, card);
   }
   if(card.family === "C" && card._rel && revealState === 4){
-    drawRelationGroupedSchema(targetSvg, card, { solved:true });
+    drawRelationOrderedSchema(targetSvg, card);
+  }
+  if(card.family === "C" && card._rel && revealState === 5){
+    drawRelationOrderedSchema(targetSvg, card, { solved:true });
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1) {
@@ -5419,7 +5511,7 @@ function getMaxRevealState(card){
   if(!card) return 0;
   if(card.family === "U" || card.family === "N") return 3;
   if(card.family === "NPM") return 2;
-  if(card.family === "C") return 4;
+  if(card.family === "C") return 5;
   return 2;
 }
 
