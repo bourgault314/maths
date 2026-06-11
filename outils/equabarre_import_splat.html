@@ -234,6 +234,32 @@
     min-height:108px;
   }
 
+
+  /* PATCH v5b — plein écran : conserver les hachures et sélections.
+     Les règles .piece.number / .piece.x du mode compact écrasaient les backgrounds
+     des états selectedForDelete / selectedForAdd / removed. */
+  .stage.fullscreenCompact:fullscreen .piece.selectedForDelete{
+    background:
+      repeating-linear-gradient(135deg, rgba(249,115,22,.22) 0 8px, rgba(255,255,255,.52) 8px 15px),
+      linear-gradient(180deg,var(--orange-soft),#fff7ed);
+    box-shadow: inset 0 0 0 3px rgba(249,115,22,.42);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.selectedForAdd{
+    background:
+      repeating-linear-gradient(135deg, rgba(22,163,74,.16) 0 8px, rgba(255,255,255,.62) 8px 15px),
+      linear-gradient(180deg,#dcfce7,#f0fdf4);
+    box-shadow: inset 0 0 0 3px rgba(22,163,74,.42);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.removed{
+    opacity:.26;
+    background:
+      repeating-linear-gradient(135deg, rgba(15,23,42,.30) 0 7px, rgba(255,255,255,.1) 7px 14px),
+      #e5e7eb;
+    pointer-events:none;
+  }
+
   @media (max-width:900px){
     .panel{position:static}
   }
@@ -248,6 +274,12 @@
     letter-spacing:.06em;
   }
 
+  .modeSwitch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin:12px 0 14px;
+  }
 
   .modeBtn{
     padding:10px 8px;
@@ -265,24 +297,124 @@
     box-shadow:0 10px 24px rgba(59,130,246,.16);
   }
 
+  .studentPanel{
+    display:none;
+  }
 
+  .studentPanel.open{
+    display:block;
+  }
 
   .profPanel.hidden{
     display:none;
   }
 
+  .studentProgress{
+    margin:10px 0 0;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    color:#334155;
+    font-size:14px;
+    font-weight:850;
+    text-align:center;
+  }
 
+  .studentProgress strong{
+    font-weight:950;
+  }
 
+  .worldGrid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin:10px 0 12px;
+  }
 
+  .worldCard{
+    position:relative;
+    width:100%;
+    text-align:left;
+    padding:12px 12px;
+    border-radius:18px;
+    border:1px solid rgba(15,23,42,.12);
+    background:linear-gradient(180deg,#ffffff,#f8fafc);
+    color:#0f172a;
+    box-shadow:0 8px 20px rgba(15,23,42,.06);
+    cursor:pointer;
+  }
 
+  .worldCard:hover{
+    filter:brightness(.99);
+    transform:translateY(-1px);
+  }
 
+  .worldCard.active{
+    border-color:rgba(59,130,246,.52);
+    box-shadow:0 12px 26px rgba(59,130,246,.14);
+    background:linear-gradient(180deg,#eff6ff,#ffffff);
+  }
 
+  .worldCard.done{
+    border-color:rgba(22,163,74,.42);
+    background:linear-gradient(180deg,#dcfce7,#ffffff);
+  }
 
+  .worldTop{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:4px;
+  }
 
+  .worldName{
+    font-size:15px;
+    font-weight:950;
+    letter-spacing:-.02em;
+  }
 
+  .worldBadge{
+    flex:0 0 auto;
+    min-width:30px;
+    height:30px;
+    padding:0 8px;
+    display:inline-grid;
+    place-items:center;
+    border-radius:999px;
+    background:#e2e8f0;
+    color:#334155;
+    font-size:13px;
+    font-weight:950;
+  }
 
+  .worldCard.done .worldBadge{
+    background:#16a34a;
+    color:#fff;
+  }
 
+  .worldExample{
+    font-size:13px;
+    color:#64748b;
+    font-weight:850;
+  }
 
+  .worldCard.done::after{
+    content:"✓";
+    position:absolute;
+    right:12px;
+    bottom:9px;
+    width:24px;
+    height:24px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    background:#16a34a;
+    color:white;
+    font-weight:950;
+    font-size:15px;
+  }
 
   input,select{
     width:100%;
@@ -307,7 +439,16 @@
     text-transform:uppercase;
   }
 
+  .teacherParamGrid .mathParamLabel{
+    text-align:center;
+  }
 
+  .teacherParamGrid .mathParamLabel .mathLetter{
+    display:block;
+    margin-top:2px;
+    text-align:center;
+    font-size:18px;
+  }
 
   .mathParamLabel .mathLetter{
     text-transform:none;
@@ -315,7 +456,19 @@
     font-weight:950;
   }
 
+  .randomQuickBtn{
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+    font-style:normal;
+    font-weight:400;
+    color:#1d4ed8;
+    line-height:1;
+    transform:none;
+  }
 
+  .randomQuickBtn{
+    display:grid;
+    place-items:center;
+  }
 
   .grid2{
     display:grid;
@@ -323,9 +476,27 @@
     gap:10px;
   }
 
+  .teacherParamGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    align-items:end;
+  }
 
+  .teacherParamGrid.three{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
 
+  .teacherParamGrid input{
+    padding-left:10px;
+    padding-right:10px;
+    text-align:center;
+    font-weight:850;
+  }
 
+  .teacherParamGrid .hiddenParam{
+    display:none;
+  }
 
   .btnrow{
     display:flex;
@@ -354,6 +525,10 @@
   }
 
   /* PATCH 1 — bouton Construire : bleu principal adouci sans modifier les autres boutons */
+  #btnBuild.primary{
+    background:linear-gradient(180deg,#93c5fd,#60a5fa);
+    color:white;
+  }
   button.green{
     background:linear-gradient(180deg,#22c55e,#16a34a);
     color:white;
@@ -1195,15 +1370,78 @@
 
 
   /* PATCH ÉLÈVE 01 — choix des mondes compact + progression plus visible */
+  .studentPanel label:first-child{
+    margin-top:6px;
+  }
 
+  .worldGrid{
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:7px;
+    margin:8px 0 12px;
+  }
 
+  .worldCard{
+    min-height:76px;
+    padding:8px 5px 7px;
+    text-align:center;
+    border-radius:16px;
+    box-shadow:0 6px 16px rgba(15,23,42,.055);
+  }
 
+  .worldTop{
+    height:100%;
+    flex-direction:column-reverse;
+    justify-content:center;
+    gap:6px;
+    margin-bottom:0;
+  }
 
+  .worldName{
+    font-size:11px;
+    line-height:1.05;
+    letter-spacing:-.025em;
+  }
 
+  .worldBadge{
+    min-width:34px;
+    height:34px;
+    padding:0;
+    font-size:16px;
+    box-shadow:inset 0 -1px 0 rgba(15,23,42,.08);
+  }
 
+  .worldCard.done::after{
+    right:4px;
+    top:4px;
+    bottom:auto;
+    width:22px;
+    height:22px;
+    font-size:14px;
+    box-shadow:0 4px 10px rgba(22,163,74,.18);
+  }
 
+  .studentProgress{
+    padding:12px 12px;
+    border-radius:18px;
+    font-size:15px;
+    line-height:1.25;
+  }
 
+  .studentProgress .progressTitle{
+    display:block;
+    font-size:16px;
+    color:#0f172a;
+    font-weight:950;
+    margin-bottom:7px;
+  }
 
+  .studentProgress .progressLine{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
 
   .miniDots{
     display:inline-flex;
@@ -1306,7 +1544,13 @@
   }
 
   @media (max-width:520px){
+    .worldGrid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
 
+    .worldCard{
+      min-height:74px;
+    }
 
     .stageStudentHud{
       right:70px;
@@ -1320,14 +1564,46 @@
 
 
   /* PATCH ÉLÈVE 02 — monde sélectionné plus lisible + contraste tablette */
+  .worldCard.active{
+    border-color:rgba(37,99,235,.88);
+    background:linear-gradient(180deg,#dbeafe,#eff6ff 58%,#ffffff);
+    box-shadow:0 12px 28px rgba(37,99,235,.24), inset 0 0 0 2px rgba(37,99,235,.16);
+    transform:translateY(-1px);
+  }
 
+  .worldCard.active .worldBadge{
+    background:linear-gradient(180deg,#3b82f6,#1d4ed8);
+    color:#ffffff;
+    box-shadow:0 8px 18px rgba(37,99,235,.28);
+  }
 
+  .worldCard.active .worldName{
+    color:#1e3a8a;
+    font-weight:950;
+  }
 
+  .worldCard.done.active{
+    border-color:rgba(37,99,235,.88);
+    background:linear-gradient(180deg,#dbeafe,#eff6ff 55%,#ffffff);
+  }
 
 
   /* PATCH 2D — retour menu prof sobre + signes + plus lisibles */
+  .teacherParamGrid .mathParamLabel{
+    text-align:left;
+  }
 
+  .teacherParamGrid .mathParamLabel .mathLetter{
+    display:inline;
+    margin-top:0;
+    text-align:inherit;
+    font-size:inherit;
+  }
 
+  .teacherParamGrid input{
+    text-align:left;
+    font-weight:700;
+  }
 
   .chip.mathChip{
     font-family:Arial, Helvetica, sans-serif;
@@ -1537,7 +1813,9 @@
   const statusEl = document.getElementById("status");
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
+  const btnStageRandom = document.getElementById("btnStageRandom");
   const btnToggleEquation = document.getElementById("btnToggleEquation");
+  const btnStageUndo = document.getElementById("btnStageUndo");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolAdd = document.getElementById("toolAdd");
   const toolShare = document.getElementById("toolShare");
@@ -1545,7 +1823,24 @@
   const toolUndo = document.getElementById("toolUndo");
   const toolRestart = document.getElementById("toolRestart");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
   const equationDisplayModeEl = document.getElementById("equationDisplayMode");
+  const fullscreenSizeModeEl = document.getElementById("fullscreenSizeMode");
+
+  const modeEl = document.getElementById("mode");
+  const profPanel = document.getElementById("profPanel");
+  const coefAEl = document.getElementById("coefA");
+  const constBEl = document.getElementById("constB");
+  const coefCEl = document.getElementById("coefC");
+  const constCEl = document.getElementById("constC");
+  const constDEl = document.getElementById("constD");
+  const coefAWrap = document.getElementById("coefAWrap");
+  const constBWrap = document.getElementById("constBWrap");
+  const coefCWrap = document.getElementById("coefCWrap");
+  const constCWrap = document.getElementById("constCWrap");
+  const constDWrap = document.getElementById("constDWrap");
+  const teacherParamGrid = document.getElementById("teacherParamGrid");
+  const profEquationInfo = document.getElementById("profEquationInfo");
 
   const dialog = document.getElementById("decomposeDialog");
   const dialogText = document.getElementById("dialogText");
@@ -1575,7 +1870,6 @@
   let deleteSelection = [];
   let addSelection = [];
   let actionMode = "decompose"; // decompose | add | share | delete
-  let importedUnknownDisplayMode = "letter";
 
   function setActionMode(mode){
     actionMode = mode;
@@ -1603,7 +1897,7 @@
   }
 
   function unknownDisplayKind(){
-    return importedUnknownDisplayMode || "letter";
+    return unknownDisplayModeEl ? unknownDisplayModeEl.value : "letter";
   }
 
   function displayedUnknown(){
@@ -2707,6 +3001,7 @@
   if(toolUndo) toolUndo.addEventListener("click", undo);
   if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
+  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
   if(equationDisplayModeEl) equationDisplayModeEl.addEventListener("change", render);
   // Les contrôles de génération autonome ont été supprimés : seuls les contrôles utiles à l'import restent branchés.
   if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
@@ -2917,8 +3212,9 @@
     state.top = topPieces;
     state.bottom = bottomPieces;
 
-    importedUnknownDisplayMode = wantedDisplay;
+    if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
     if(equationDisplayModeEl) equationDisplayModeEl.value = "show";
+    if(fullscreenSizeModeEl) fullscreenSizeModeEl.value = "compact";
 
     recordEquationStep();
     history = [];
