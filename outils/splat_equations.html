@@ -1196,6 +1196,9 @@ function buildEquationStepEquabarPayload(card){
     variable:getRawCardVarChar(card),
     unknownDisplay:shouldDisplayUnknownAsQuestion() ? "question" : "letter",
     fullscreenSize:"compact",
+    // Splat garde ici le sens naturel de l’équation : leftParts = membre gauche.
+    // Comme Équabarre reçoit leftParts dans la ligne du haut, il doit écrire haut = bas.
+    lhsSide:"top",
     x:Number(eq.x),
     top:eqStepPartsToEquabarRow(state.leftParts),
     bottom:eqStepPartsToEquabarRow(state.rightParts)
