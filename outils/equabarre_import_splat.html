@@ -1824,6 +1824,9 @@
   const toolRestart = document.getElementById("toolRestart");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
+  // Après épuration du menu, le choix lettre / ? n'est plus porté par un select visible.
+  // On conserve donc une mémoire interne alimentée par le payload Splat.
+  let importedUnknownDisplayMode = "letter";
   const equationDisplayModeEl = document.getElementById("equationDisplayMode");
   const fullscreenSizeModeEl = document.getElementById("fullscreenSizeMode");
 
@@ -1897,7 +1900,7 @@
   }
 
   function unknownDisplayKind(){
-    return unknownDisplayModeEl ? unknownDisplayModeEl.value : "letter";
+    return unknownDisplayModeEl ? unknownDisplayModeEl.value : importedUnknownDisplayMode;
   }
 
   function displayedUnknown(){
@@ -3212,6 +3215,7 @@
     state.top = topPieces;
     state.bottom = bottomPieces;
 
+    importedUnknownDisplayMode = wantedDisplay;
     if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
     if(equationDisplayModeEl) equationDisplayModeEl.value = "show";
     if(fullscreenSizeModeEl) fullscreenSizeModeEl.value = "compact";
