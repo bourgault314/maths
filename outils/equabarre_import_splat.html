@@ -1654,6 +1654,80 @@
     transform:translateY(-.02em);
   }
 
+
+  /* PATCH IMPORT ÉPURÉ — interface compacte pour l'appel depuis Splat.
+     Les anciens contrôles restent dans le DOM pour ne pas casser la logique existante,
+     mais seuls les réglages utiles à la résolution importée sont affichés. */
+  main{
+    grid-template-columns:240px minmax(0,1fr);
+  }
+
+  .appTitle{
+    font-size:26px;
+    margin-bottom:12px;
+  }
+
+  .modeSwitch,
+  .studentPanel{
+    display:none !important;
+  }
+
+  #profPanel > :not(.importOnlyControl){
+    display:none !important;
+  }
+
+  .importOnlyControl{
+    display:block;
+  }
+
+  #btnStageRandom,
+  #btnStageUndo{
+    display:none !important;
+  }
+
+  /* PATCH IMPORT ÉPURÉ 2 — deux étages d’outils :
+     actions sur morceaux au premier rang, action globale et utilitaires au second. */
+  .toolBar{
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  .toolBarRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .toolBarRowGlobal{
+    margin-top:2px;
+  }
+
+  .globalToolBtn{
+    background:#fff7ed;
+    border-color:rgba(249,115,22,.30);
+    color:#9a3412;
+  }
+
+  .globalToolBtn:hover{
+    background:#ffedd5;
+  }
+
+  .restartToolBtn{
+    background:#eef2ff;
+    border-color:rgba(99,102,241,.22);
+    color:#3730a3;
+  }
+
+  .restartToolBtn:hover{
+    background:#e0e7ff;
+  }
+
+  @media (max-width:900px){
+    main{grid-template-columns:1fr}
+  }
+
 </style>
 </head>
 <body>
@@ -1740,11 +1814,13 @@
       <option value="splat">Splat</option>
     </select>
 
+<div class="importOnlyControl">
 <label>Affichage de l’équation</label>
     <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
       <option value="show" selected>Oui</option>
       <option value="hide">Non</option>
     </select>
+</div>
 
 <label>Taille en plein écran</label>
     <select id="fullscreenSizeMode" title="Taille du tableau en mode plein écran">
@@ -1752,11 +1828,13 @@
       <option value="compact">Compacte</option>
     </select>
 
+<div class="importOnlyControl">
 <label>Après suppression</label>
     <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
       <option value="keep" selected>Garder hachuré</option>
       <option value="hide">Masquer</option>
     </select>
+</div>
 
     <div class="teacherParamGrid" id="teacherParamGrid">
       <div id="coefAWrap">
@@ -1838,11 +1916,16 @@
     </div>
 
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
-      <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
-      <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
-      <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-      <button class="toolBtn" id="toolDelete" type="button">Supprimer dans chaque membre</button>
-      <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+      <div class="toolBarRow toolBarRowMain">
+        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+        <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
+        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+      </div>
+      <div class="toolBarRow toolBarRowGlobal">
+        <button class="toolBtn globalToolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au tableau importé de départ">↺ Recommencer</button>
+      </div>
     </div>
 
     <div class="actionZone" id="actionZone"></div>
@@ -1917,6 +2000,7 @@
   const toolShare = document.getElementById("toolShare");
   const toolDelete = document.getElementById("toolDelete");
   const toolUndo = document.getElementById("toolUndo");
+  const toolRestart = document.getElementById("toolRestart");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
   const unknownDisplayModeStudentEl = document.getElementById("unknownDisplayModeStudent");
@@ -1975,6 +2059,7 @@
 
   let state = null;
   let history = [];
+  let initialImportState = null;
   let selectedPieceRef = null;
   let selectedShareRef = null;
   let pendingAddInfo = null;
@@ -2366,7 +2451,14 @@
     if(solved !== null){
       return `${displayedUnknown()} = ${solved}`;
     }
-    // On écrit l'équation dans le sens algébrique : ligne du bas = ligne du haut.
+
+    // Pour un tableau importé, on affiche de préférence le membre qui contient
+    // l'inconnue à gauche : N + 4 = 7 plutôt que 7 = N + 4.
+    const topHasUnknown = activePieces("top").some(p => p.type === "x");
+    const bottomHasUnknown = activePieces("bottom").some(p => p.type === "x");
+    if(topHasUnknown && !bottomHasUnknown){
+      return `${sideExpression("top")} = ${sideExpression("bottom")}`;
+    }
     return `${sideExpression("bottom")} = ${sideExpression("top")}`;
   }
 
@@ -2437,6 +2529,7 @@
 
   function resetAfterNewEquation(){
     recordEquationStep();
+    initialImportState = clone(state);
     history = [];
     selectedPieceRef = null;
     selectedShareRef = null;
@@ -3098,9 +3191,8 @@
 
   function syncFullscreenSizeMode(){
     if(!stageEl) return;
-    const el = appMode === "student" ? fullscreenSizeModeStudentEl : fullscreenSizeModeEl;
-    const compact = el && el.value === "compact";
-    stageEl.classList.toggle("fullscreenCompact", compact);
+    // Version import : le plein écran est toujours compact.
+    stageEl.classList.add("fullscreenCompact");
   }
 
   function render(){
@@ -3468,6 +3560,26 @@
     setStatus("Étape annulée");
   }
 
+  function restartImportedEquation(){
+    if(!initialImportState){
+      setStatus("Aucun tableau importé à recommencer");
+      return;
+    }
+    state = clone(initialImportState);
+    history = [];
+    selectedPieceRef = null;
+    selectedShareRef = null;
+    pendingAddInfo = null;
+    deleteSelection = [];
+    addSelection = [];
+    actionMode = "decompose";
+    [toolDecompose, toolAdd, toolShare, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    if(toolDecompose) toolDecompose.classList.add("active");
+    render();
+    setInstruction("");
+    setStatus("Tableau recommencé", true);
+  }
+
   function hint(){
     if(canDeleteMatchingNumbers()){
       setStatus("Indice : tu peux supprimer les quantités hachurées des deux côtés.");
@@ -3495,6 +3607,7 @@
   if(toolShare) toolShare.addEventListener("click", () => setActionMode("share"));
   if(toolDelete) toolDelete.addEventListener("click", () => setActionMode("delete"));
   if(toolUndo) toolUndo.addEventListener("click", undo);
+  if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
   if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
   if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", refreshStepsForUnknownDisplay);
@@ -3745,9 +3858,8 @@
     if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.value = wantedDisplay;
     if(equationDisplayModeEl) equationDisplayModeEl.value = "show";
     if(equationDisplayModeStudentEl) equationDisplayModeStudentEl.value = "show";
-    const wantedFullscreenSize = payload.fullscreenSize === "large" ? "large" : "compact";
-    if(fullscreenSizeModeEl) fullscreenSizeModeEl.value = wantedFullscreenSize;
-    if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.value = wantedFullscreenSize;
+    if(fullscreenSizeModeEl) fullscreenSizeModeEl.value = "compact";
+    if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.value = "compact";
 
     recordEquationStep();
     history = [];
@@ -3765,8 +3877,8 @@
     syncTeacherEquationControls();
     syncAppModeUI();
     render();
-    setInstruction(`<strong>Tableau importé depuis Splat.</strong> Tu peux maintenant le résoudre dans Équabarre.`);
-    setStatus("Import Splat prêt", true);
+    setInstruction("");
+    setStatus("Tableau prêt", true);
     return true;
   }
 
