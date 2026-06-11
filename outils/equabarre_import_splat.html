@@ -2452,13 +2452,17 @@
       return `${displayedUnknown()} = ${solved}`;
     }
 
-    // Pour un tableau importé, on affiche de préférence le membre qui contient
-    // l'inconnue à gauche : N + 4 = 7 plutôt que 7 = N + 4.
-    const topHasUnknown = activePieces("top").some(p => p.type === "x");
-    const bottomHasUnknown = activePieces("bottom").some(p => p.type === "x");
-    if(topHasUnknown && !bottomHasUnknown){
+    // En import Splat, le sens de lecture doit venir de Splat lui-même.
+    // lhsSide indique quel plateau doit être écrit à gauche du signe égal.
+    const lhsSide = state && state.original ? state.original.lhsSide : "";
+    if(lhsSide === "top"){
       return `${sideExpression("top")} = ${sideExpression("bottom")}`;
     }
+    if(lhsSide === "bottom"){
+      return `${sideExpression("bottom")} = ${sideExpression("top")}`;
+    }
+
+    // Fallback si un ancien lien ne fournit pas lhsSide.
     return `${sideExpression("bottom")} = ${sideExpression("top")}`;
   }
 
@@ -3820,13 +3824,19 @@
         d:0,
         x:1,
         c:1,
-        varChar:wantedVar
+        varChar:wantedVar,
+        lhsSide:"bottom"
       },
       top:[],
       bottom:[],
       hintCount:0,
       steps:[]
     };
+
+    const rawLhsSide = String(payload.lhsSide || payload.equationLhsSide || "").toLowerCase();
+    const wantedLhsSide = (rawLhsSide === "top" || rawLhsSide === "haut")
+      ? "top"
+      : ((rawLhsSide === "bottom" || rawLhsSide === "bas") ? "bottom" : "bottom");
 
     const topPieces = normalizeImportedSide(payload.top || payload.haut || []);
     const bottomPieces = normalizeImportedSide(payload.bottom || payload.bas || []);
@@ -3846,6 +3856,7 @@
     );
 
     state.original.x = xValue;
+    state.original.lhsSide = wantedLhsSide;
     state.original.c = totalMeasure;
     state.original.a = bottomPieces.filter(p => p.type === "x").length;
     state.original.b = bottomPieces.filter(p => p.type === "number").reduce((s,p)=>s + Number(p.value || 0), 0);
