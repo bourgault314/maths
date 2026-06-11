@@ -248,12 +248,6 @@
     letter-spacing:.06em;
   }
 
-  .modeSwitch{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin:12px 0 14px;
-  }
 
   .modeBtn{
     padding:10px 8px;
@@ -271,124 +265,24 @@
     box-shadow:0 10px 24px rgba(59,130,246,.16);
   }
 
-  .studentPanel{
-    display:none;
-  }
 
-  .studentPanel.open{
-    display:block;
-  }
 
   .profPanel.hidden{
     display:none;
   }
 
-  .studentProgress{
-    margin:10px 0 0;
-    padding:10px 12px;
-    border-radius:14px;
-    background:#f8fafc;
-    border:1px solid rgba(15,23,42,.08);
-    color:#334155;
-    font-size:14px;
-    font-weight:850;
-    text-align:center;
-  }
 
-  .studentProgress strong{
-    font-weight:950;
-  }
 
-  .worldGrid{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:10px;
-    margin:10px 0 12px;
-  }
 
-  .worldCard{
-    position:relative;
-    width:100%;
-    text-align:left;
-    padding:12px 12px;
-    border-radius:18px;
-    border:1px solid rgba(15,23,42,.12);
-    background:linear-gradient(180deg,#ffffff,#f8fafc);
-    color:#0f172a;
-    box-shadow:0 8px 20px rgba(15,23,42,.06);
-    cursor:pointer;
-  }
 
-  .worldCard:hover{
-    filter:brightness(.99);
-    transform:translateY(-1px);
-  }
 
-  .worldCard.active{
-    border-color:rgba(59,130,246,.52);
-    box-shadow:0 12px 26px rgba(59,130,246,.14);
-    background:linear-gradient(180deg,#eff6ff,#ffffff);
-  }
 
-  .worldCard.done{
-    border-color:rgba(22,163,74,.42);
-    background:linear-gradient(180deg,#dcfce7,#ffffff);
-  }
 
-  .worldTop{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-    margin-bottom:4px;
-  }
 
-  .worldName{
-    font-size:15px;
-    font-weight:950;
-    letter-spacing:-.02em;
-  }
 
-  .worldBadge{
-    flex:0 0 auto;
-    min-width:30px;
-    height:30px;
-    padding:0 8px;
-    display:inline-grid;
-    place-items:center;
-    border-radius:999px;
-    background:#e2e8f0;
-    color:#334155;
-    font-size:13px;
-    font-weight:950;
-  }
 
-  .worldCard.done .worldBadge{
-    background:#16a34a;
-    color:#fff;
-  }
 
-  .worldExample{
-    font-size:13px;
-    color:#64748b;
-    font-weight:850;
-  }
 
-  .worldCard.done::after{
-    content:"✓";
-    position:absolute;
-    right:12px;
-    bottom:9px;
-    width:24px;
-    height:24px;
-    border-radius:999px;
-    display:grid;
-    place-items:center;
-    background:#16a34a;
-    color:white;
-    font-weight:950;
-    font-size:15px;
-  }
 
   input,select{
     width:100%;
@@ -413,16 +307,7 @@
     text-transform:uppercase;
   }
 
-  .teacherParamGrid .mathParamLabel{
-    text-align:center;
-  }
 
-  .teacherParamGrid .mathParamLabel .mathLetter{
-    display:block;
-    margin-top:2px;
-    text-align:center;
-    font-size:18px;
-  }
 
   .mathParamLabel .mathLetter{
     text-transform:none;
@@ -430,19 +315,7 @@
     font-weight:950;
   }
 
-  .randomQuickBtn{
-    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
-    font-style:normal;
-    font-weight:400;
-    color:#1d4ed8;
-    line-height:1;
-    transform:none;
-  }
 
-  .randomQuickBtn{
-    display:grid;
-    place-items:center;
-  }
 
   .grid2{
     display:grid;
@@ -450,27 +323,9 @@
     gap:10px;
   }
 
-  .teacherParamGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    align-items:end;
-  }
 
-  .teacherParamGrid.three{
-    grid-template-columns:repeat(3,minmax(0,1fr));
-  }
 
-  .teacherParamGrid input{
-    padding-left:10px;
-    padding-right:10px;
-    text-align:center;
-    font-weight:850;
-  }
 
-  .teacherParamGrid .hiddenParam{
-    display:none;
-  }
 
   .btnrow{
     display:flex;
@@ -499,10 +354,6 @@
   }
 
   /* PATCH 1 — bouton Construire : bleu principal adouci sans modifier les autres boutons */
-  #btnBuild.primary{
-    background:linear-gradient(180deg,#93c5fd,#60a5fa);
-    color:white;
-  }
   button.green{
     background:linear-gradient(180deg,#22c55e,#16a34a);
     color:white;
@@ -549,65 +400,6 @@
     align-items:center;
   }
 
-  .stageStudentHud{
-    position:absolute;
-    top:14px;
-    left:14px;
-    z-index:5;
-    display:none;
-    align-items:center;
-    gap:10px;
-    padding:8px 10px;
-    border-radius:16px;
-    background:rgba(255,255,255,.94);
-    border:1px solid rgba(15,23,42,.12);
-    box-shadow:0 10px 24px rgba(15,23,42,.12);
-    backdrop-filter:blur(8px);
-    font-size:15px;
-    font-weight:900;
-    color:#334155;
-  }
-
-  .stageStudentHud.open{
-    display:flex;
-  }
-
-  .studentWaitingStage{
-    display:none;
-    min-height:520px;
-    border-radius:24px;
-    border:1px dashed rgba(15,23,42,.18);
-    background:rgba(255,255,255,.55);
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    text-align:center;
-    padding:32px;
-  }
-
-  .studentWaitingStage.open{
-    display:flex;
-  }
-
-  .waitingTitle{
-    font-size:clamp(34px,4vw,56px);
-    font-weight:950;
-    letter-spacing:-.05em;
-    color:#0f172a;
-  }
-
-  .waitingText{
-    margin-top:8px;
-    font-size:17px;
-    line-height:1.35;
-    font-weight:750;
-    color:#64748b;
-  }
-
-  .stageStudentHud strong{
-    color:#0f172a;
-    font-weight:950;
-  }
 
   .stageNextBtn{
     padding:8px 10px;
@@ -1403,78 +1195,15 @@
 
 
   /* PATCH ÉLÈVE 01 — choix des mondes compact + progression plus visible */
-  .studentPanel label:first-child{
-    margin-top:6px;
-  }
 
-  .worldGrid{
-    grid-template-columns:repeat(5, minmax(0, 1fr));
-    gap:7px;
-    margin:8px 0 12px;
-  }
 
-  .worldCard{
-    min-height:76px;
-    padding:8px 5px 7px;
-    text-align:center;
-    border-radius:16px;
-    box-shadow:0 6px 16px rgba(15,23,42,.055);
-  }
 
-  .worldTop{
-    height:100%;
-    flex-direction:column-reverse;
-    justify-content:center;
-    gap:6px;
-    margin-bottom:0;
-  }
 
-  .worldName{
-    font-size:11px;
-    line-height:1.05;
-    letter-spacing:-.025em;
-  }
 
-  .worldBadge{
-    min-width:34px;
-    height:34px;
-    padding:0;
-    font-size:16px;
-    box-shadow:inset 0 -1px 0 rgba(15,23,42,.08);
-  }
 
-  .worldCard.done::after{
-    right:4px;
-    top:4px;
-    bottom:auto;
-    width:22px;
-    height:22px;
-    font-size:14px;
-    box-shadow:0 4px 10px rgba(22,163,74,.18);
-  }
 
-  .studentProgress{
-    padding:12px 12px;
-    border-radius:18px;
-    font-size:15px;
-    line-height:1.25;
-  }
 
-  .studentProgress .progressTitle{
-    display:block;
-    font-size:16px;
-    color:#0f172a;
-    font-weight:950;
-    margin-bottom:7px;
-  }
 
-  .studentProgress .progressLine{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
 
   .miniDots{
     display:inline-flex;
@@ -1577,13 +1306,7 @@
   }
 
   @media (max-width:520px){
-    .worldGrid{
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-    }
 
-    .worldCard{
-      min-height:74px;
-    }
 
     .stageStudentHud{
       right:70px;
@@ -1597,46 +1320,14 @@
 
 
   /* PATCH ÉLÈVE 02 — monde sélectionné plus lisible + contraste tablette */
-  .worldCard.active{
-    border-color:rgba(37,99,235,.88);
-    background:linear-gradient(180deg,#dbeafe,#eff6ff 58%,#ffffff);
-    box-shadow:0 12px 28px rgba(37,99,235,.24), inset 0 0 0 2px rgba(37,99,235,.16);
-    transform:translateY(-1px);
-  }
 
-  .worldCard.active .worldBadge{
-    background:linear-gradient(180deg,#3b82f6,#1d4ed8);
-    color:#ffffff;
-    box-shadow:0 8px 18px rgba(37,99,235,.28);
-  }
 
-  .worldCard.active .worldName{
-    color:#1e3a8a;
-    font-weight:950;
-  }
 
-  .worldCard.done.active{
-    border-color:rgba(37,99,235,.88);
-    background:linear-gradient(180deg,#dbeafe,#eff6ff 55%,#ffffff);
-  }
 
 
   /* PATCH 2D — retour menu prof sobre + signes + plus lisibles */
-  .teacherParamGrid .mathParamLabel{
-    text-align:left;
-  }
 
-  .teacherParamGrid .mathParamLabel .mathLetter{
-    display:inline;
-    margin-top:0;
-    text-align:inherit;
-    font-size:inherit;
-  }
 
-  .teacherParamGrid input{
-    text-align:left;
-    font-weight:700;
-  }
 
   .chip.mathChip{
     font-family:Arial, Helvetica, sans-serif;
@@ -1655,9 +1346,8 @@
   }
 
 
-  /* PATCH IMPORT ÉPURÉ — interface compacte pour l'appel depuis Splat.
-     Les anciens contrôles restent dans le DOM pour ne pas casser la logique existante,
-     mais seuls les réglages utiles à la résolution importée sont affichés. */
+  /* PATCH IMPORT SEUL — interface compacte pour l'appel depuis Splat.
+     Les contrôles de génération autonome ont été supprimés : il ne reste que les réglages utiles. */
   main{
     grid-template-columns:240px minmax(0,1fr);
   }
@@ -1667,22 +1357,8 @@
     margin-bottom:12px;
   }
 
-  .modeSwitch,
-  .studentPanel{
-    display:none !important;
-  }
-
-  #profPanel > :not(.importOnlyControl){
-    display:none !important;
-  }
-
   .importOnlyControl{
     display:block;
-  }
-
-  #btnStageRandom,
-  #btnStageUndo{
-    display:none !important;
   }
 
   /* PATCH IMPORT ÉPURÉ 2 — deux étages d’outils :
@@ -1734,163 +1410,32 @@
 <main>
   <section class="panel">
     <div class="appTitle">Équabarre import</div>
-    
-    <div class="modeSwitch" aria-label="Choix du mode">
-      <button class="modeBtn active" id="btnTeacherMode" type="button">Prof</button>
-      <button class="modeBtn" id="btnStudentMode" type="button">Élève</button>
-    </div>
-
-    <div class="studentPanel" id="studentPanel">
-      <label>Choisis ton monde</label>
-      <div class="worldGrid" id="worldGrid">
-        <button class="worldCard active" type="button" data-path="axc" title="Monde 1 — Partage équitable">
-          <div class="worldTop"><span class="worldName">Partage</span><span class="worldBadge">1</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="xpb" title="Monde 2 — Une quantité à enlever">
-          <div class="worldTop"><span class="worldName">Enlever</span><span class="worldBadge">2</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="mix12" title="Monde 3 — Mélange de 1 et 2">
-          <div class="worldTop"><span class="worldName">Mix 1-2</span><span class="worldBadge">3</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="both" title="Monde 4 — Lettre inconnue des deux côtés">
-          <div class="worldTop"><span class="worldName">Deux côtés</span><span class="worldBadge">4</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="mix" title="Monde 5 — Défis mélange">
-          <div class="worldTop"><span class="worldName">Défis</span><span class="worldBadge">5</span></div>
-        </button>
-      </div>
-      <input id="studentPath" type="hidden" value="axc" />
-
-      <label>Affichage de l’inconnue</label>
-      <select id="unknownDisplayModeStudent" title="Affichage des inconnues dans le tableau">
-        <option value="letter" selected>Lettre</option>
-        <option value="question">Point d’interrogation</option>
-        <option value="splat">Splat</option>
-      </select>
-
-      <label>Affichage de l’équation</label>
-      <select id="equationDisplayModeStudent" title="Afficher ou masquer l’équation au-dessus du tableau">
-        <option value="show" selected>Oui</option>
-        <option value="hide">Non</option>
-      </select>
-
-      <label>Taille en plein écran</label>
-      <select id="fullscreenSizeModeStudent" title="Taille du tableau en mode plein écran">
-        <option value="large">Grande</option>
-        <option value="compact" selected>Compacte</option>
-      </select>
-
-      <label>Nombre d’équations</label>
-      <select id="studentTotal">
-        <option value="3">3</option>
-        <option value="5" selected>5</option>
-        <option value="10">10</option>
-      </select>
-
-      <div class="btnrow">
-        <button class="primary" id="btnStartStudent" type="button">Commencer</button>
-        <button class="ghost" id="btnNextStudent" type="button" style="display:none">Exercice suivant</button>
-      </div>
-
-      <div class="studentProgress" id="studentProgress">
-        Choisis un monde.
-      </div>
-    </div>
 
     <div class="profPanel" id="profPanel">
-<label>Type d’équation</label>
-    <select id="mode">
-      <option value="xpb">x + b = c</option>
-      <option value="axc">ax = c</option>
-      <option value="axb" selected>ax + b = c</option>
-      <option value="both">ax + b = cx + d</option>
-      <option value="mix">Mélange</option>
-    </select>
-
-        <label>Affichage de l’inconnue</label>
-    <select id="unknownDisplayMode" title="Affichage des inconnues dans le tableau">
-      <option value="letter" selected>Lettre</option>
-      <option value="question">Point d’interrogation</option>
-      <option value="splat">Splat</option>
-    </select>
-
-<div class="importOnlyControl">
-<label>Affichage de l’équation</label>
-    <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
-      <option value="show" selected>Oui</option>
-      <option value="hide">Non</option>
-    </select>
-</div>
-
-<label>Taille en plein écran</label>
-    <select id="fullscreenSizeMode" title="Taille du tableau en mode plein écran">
-      <option value="large" selected>Grande</option>
-      <option value="compact">Compacte</option>
-    </select>
-
-<div class="importOnlyControl">
-<label>Après suppression</label>
-    <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
-      <option value="keep" selected>Garder hachuré</option>
-      <option value="hide">Masquer</option>
-    </select>
-</div>
-
-    <div class="teacherParamGrid" id="teacherParamGrid">
-      <div id="coefAWrap">
-        <label class="mathParamLabel">Coefficient <span class="mathLetter">a</span></label>
-        <input id="coefA" type="number" min="1" max="20" value="2" />
+      <div class="importOnlyControl">
+        <label>Affichage de l’équation</label>
+        <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
+          <option value="show" selected>Oui</option>
+          <option value="hide">Non</option>
+        </select>
       </div>
-      <div id="constBWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">b</span></label>
-        <input id="constB" type="number" min="0" max="999" value="4" />
-      </div>
-      <div id="coefCWrap">
-        <label class="mathParamLabel">Coefficient <span class="mathLetter">c</span></label>
-        <input id="coefC" type="number" min="1" max="20" value="1" />
-      </div>
-      <div id="constCWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">c</span></label>
-        <input id="constC" type="number" min="0" max="999" value="28" />
-      </div>
-      <div id="constDWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">d</span></label>
-        <input id="constD" type="number" min="0" max="999" value="28" />
+
+      <div class="importOnlyControl">
+        <label>Après suppression</label>
+        <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
+          <option value="keep" selected>Garder hachuré</option>
+          <option value="hide">Masquer</option>
+        </select>
       </div>
     </div>
-
-    <div class="studentProgress" id="profEquationInfo" style="display:none"></div>
-
-    <div class="btnrow">
-      <button class="primary" id="btnBuild">Construire</button>
-      <button id="btnRandom">Aléatoire</button>
-    </div>
-
-    <div class="btnrow">
-      <button class="ghost" id="btnReset">Recommencer</button>
-    </div>
-
-  
-    </div>
-</section>
+  </section>
 
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
-      <button class="ghost quickBtn randomQuickBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
       <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
-      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
-    <div class="stageStudentHud" id="stageStudentHud" aria-label="Progression élève">
-      <span id="stageStudentProgress">Exercice 1 / 5 · Réussites : 0</span>
-      <button class="stageNextBtn" id="btnStageNextStudent" type="button">Suivant</button>
-    </div>
-    <div class="studentWaitingStage" id="studentWaitingStage">
-      <div class="waitingTitle">Choisis un monde</div>
-      <div class="waitingText">Choisis un monde, sélectionne le nombre d’équations, puis clique sur <strong>Commencer</strong>.</div>
-    </div>
-
-    <div class="topbar">
+<div class="topbar">
       <div class="equationText" id="equationText"></div>
       <div class="equationHistory" id="equationHistory"></div>
       <div class="status" id="status">Prêt</div>
@@ -1992,9 +1537,7 @@
   const statusEl = document.getElementById("status");
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
-  const btnStageRandom = document.getElementById("btnStageRandom");
   const btnToggleEquation = document.getElementById("btnToggleEquation");
-  const btnStageUndo = document.getElementById("btnStageUndo");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolAdd = document.getElementById("toolAdd");
   const toolShare = document.getElementById("toolShare");
@@ -2002,41 +1545,7 @@
   const toolUndo = document.getElementById("toolUndo");
   const toolRestart = document.getElementById("toolRestart");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
-  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
-  const unknownDisplayModeStudentEl = document.getElementById("unknownDisplayModeStudent");
   const equationDisplayModeEl = document.getElementById("equationDisplayMode");
-  const equationDisplayModeStudentEl = document.getElementById("equationDisplayModeStudent");
-  const fullscreenSizeModeEl = document.getElementById("fullscreenSizeMode");
-  const fullscreenSizeModeStudentEl = document.getElementById("fullscreenSizeModeStudent");
-
-  const modeEl = document.getElementById("mode");
-
-  const btnTeacherMode = document.getElementById("btnTeacherMode");
-  const btnStudentMode = document.getElementById("btnStudentMode");
-  const profPanel = document.getElementById("profPanel");
-  const studentPanel = document.getElementById("studentPanel");
-  const studentPathEl = document.getElementById("studentPath");
-  const worldCards = Array.from(document.querySelectorAll(".worldCard"));
-  const studentTotalEl = document.getElementById("studentTotal");
-  const btnStartStudent = document.getElementById("btnStartStudent");
-  const btnNextStudent = document.getElementById("btnNextStudent");
-  const studentProgressEl = document.getElementById("studentProgress");
-  const stageStudentHud = document.getElementById("stageStudentHud");
-  const stageStudentProgress = document.getElementById("stageStudentProgress");
-  const btnStageNextStudent = document.getElementById("btnStageNextStudent");
-  const studentWaitingStage = document.getElementById("studentWaitingStage");
-  const coefAEl = document.getElementById("coefA");
-  const constBEl = document.getElementById("constB");
-  const coefCEl = document.getElementById("coefC");
-  const constCEl = document.getElementById("constC");
-  const constDEl = document.getElementById("constD");
-  const coefAWrap = document.getElementById("coefAWrap");
-  const constBWrap = document.getElementById("constBWrap");
-  const coefCWrap = document.getElementById("coefCWrap");
-  const constCWrap = document.getElementById("constCWrap");
-  const constDWrap = document.getElementById("constDWrap");
-  const teacherParamGrid = document.getElementById("teacherParamGrid");
-  const profEquationInfo = document.getElementById("profEquationInfo");
 
   const dialog = document.getElementById("decomposeDialog");
   const dialogText = document.getElementById("dialogText");
@@ -2066,16 +1575,7 @@
   let deleteSelection = [];
   let addSelection = [];
   let actionMode = "decompose"; // decompose | add | share | delete
-  let appMode = "teacher";
-  let studentSession = {
-    active:false,
-    path:"axc",
-    total:5,
-    index:0,
-    solved:0,
-    currentCounted:false
-  };
-  const completedWorlds = new Set();
+  let importedUnknownDisplayMode = "letter";
 
   function setActionMode(mode){
     actionMode = mode;
@@ -2103,8 +1603,7 @@
   }
 
   function unknownDisplayKind(){
-    const el = appMode === "student" ? unknownDisplayModeStudentEl : unknownDisplayModeEl;
-    return el ? el.value : "letter";
+    return importedUnknownDisplayMode || "letter";
   }
 
   function displayedUnknown(){
@@ -2161,8 +1660,7 @@
   }
 
   function equationDisplayEnabled(){
-    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
-    return !el || el.value !== "hide";
+    return !equationDisplayModeEl || equationDisplayModeEl.value !== "hide";
   }
 
 
@@ -2190,200 +1688,9 @@
   }
 
   function toggleEquationDisplay(){
-    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
-    if(!el) return;
-    el.value = el.value === "hide" ? "show" : "hide";
+    if(!equationDisplayModeEl) return;
+    equationDisplayModeEl.value = equationDisplayModeEl.value === "hide" ? "show" : "hide";
     render();
-  }
-
-  function getWorldName(path){
-    const names = {
-      axc:"Monde 1",
-      xpb:"Monde 2",
-      mix12:"Monde 3",
-      both:"Monde 4",
-      mix:"Monde 5"
-    };
-    return names[path] || "Monde";
-  }
-
-  function getWorldFullName(path){
-    const names = {
-      axc:"Monde 1 — Partage équitable",
-      xpb:"Monde 2 — Une quantité à enlever",
-      mix12:"Monde 3 — Mélange de 1 et 2",
-      both:"Monde 4 — Lettre inconnue des deux côtés",
-      mix:"Monde 5 — Défis mélange"
-    };
-    return names[path] || "Monde";
-  }
-
-  function renderProgressDots(index, total){
-    const safeTotal = Math.max(1, Number(total) || 1);
-    const safeIndex = Math.max(0, Number(index) || 0);
-    return `<span class="miniDots" aria-label="Progression">${Array.from({length:safeTotal}, (_, i) => {
-      const rank = i + 1;
-      const cls = rank < safeIndex ? "done" : (rank === safeIndex ? "current" : "");
-      return `<span class="miniDot ${cls}"></span>`;
-    }).join("")}</span>`;
-  }
-
-  function setStudentPath(path){
-    if(!studentPathEl) return;
-    studentPathEl.value = path;
-    worldCards.forEach(card => {
-      const isActive = card.dataset.path === path;
-      card.classList.toggle("active", isActive);
-    });
-    if(studentSession.active){
-      studentSession.active = false;
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    }
-    syncWorldCards();
-    updateStudentProgress();
-    syncStudentStageVisibility();
-    syncEquationToggleButton();
-  }
-
-  function syncWorldCards(){
-    worldCards.forEach(card => {
-      const path = card.dataset.path;
-      card.classList.toggle("done", completedWorlds.has(path));
-      card.classList.toggle("active", studentPathEl && studentPathEl.value === path);
-    });
-  }
-
-  function syncStudentStageVisibility(){
-    const waiting = appMode === "student" && !studentSession.active;
-    if(studentWaitingStage) studentWaitingStage.classList.toggle("open", waiting);
-
-    const selectors = [".topbar", ".instructionZone", ".board", ".toolBar", ".actionZone", ".solution", ".footerNote"];
-    selectors.forEach(sel => {
-      const el = stageEl ? stageEl.querySelector(sel) : null;
-      if(el) el.style.display = waiting ? "none" : "";
-    });
-  }
-
-  function syncAppModeUI(){
-    if(btnTeacherMode) btnTeacherMode.classList.toggle("active", appMode === "teacher");
-    if(btnStudentMode) btnStudentMode.classList.toggle("active", appMode === "student");
-    if(profPanel) profPanel.classList.toggle("hidden", appMode !== "teacher");
-    if(studentPanel) studentPanel.classList.toggle("open", appMode === "student");
-    if(btnStageRandom) btnStageRandom.style.display = appMode === "teacher" ? "grid" : "none";
-    updateStudentProgress();
-    syncStudentStageVisibility();
-  }
-
-  function setAppMode(mode){
-    appMode = mode === "student" ? "student" : "teacher";
-    syncTeacherEquationControls();
-    syncAppModeUI();
-    render();
-  }
-
-  function updateStudentProgress(){
-    const isStudent = appMode === "student";
-
-    if(stageStudentHud){
-      stageStudentHud.classList.toggle("open", isStudent && studentSession.active);
-    }
-
-    if(!isStudent){
-      if(studentProgressEl) studentProgressEl.textContent = "";
-      if(stageStudentProgress) stageStudentProgress.textContent = "";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      return;
-    }
-
-    if(!studentSession.active){
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<span class="progressTitle">Choisis un monde</span><span class="progressLine">Sélectionne un niveau puis clique sur <strong>Commencer</strong>.</span>`;
-      }
-      if(stageStudentProgress) stageStudentProgress.textContent = "";
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      return;
-    }
-
-    const dots = renderProgressDots(studentSession.index, studentSession.total);
-    const world = getWorldFullName(studentSession.path);
-
-    if(studentProgressEl){
-      studentProgressEl.innerHTML = `<span class="progressTitle">${world}</span><span class="progressLine">Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} ${dots} <span>✓ <strong>${studentSession.solved}</strong></span></span>`;
-    }
-    if(stageStudentProgress){
-      stageStudentProgress.innerHTML = `<span class="stageStudentProgressContent"><span class="hudWorld">${getWorldName(studentSession.path)}</span><span class="hudPill">Exercice ${studentSession.index} / ${studentSession.total}</span><span class="hudPill hudSuccess">✓ ${studentSession.solved}</span>${dots}</span>`;
-    }
-  }
-
-  function startStudentSession(){
-    const path = studentPathEl ? studentPathEl.value : "axc";
-    const total = studentTotalEl ? Number(studentTotalEl.value) || 5 : 5;
-    studentSession = {
-      active:true,
-      path,
-      total,
-      index:0,
-      solved:0,
-      currentCounted:false
-    };
-    nextStudentExercise();
-    syncStudentStageVisibility();
-  }
-
-  function nextStudentExercise(){
-    if(!studentSession.active) return;
-    if(studentSession.index >= studentSession.total){
-      completedWorlds.add(studentSession.path);
-      syncWorldCards();
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<strong>${getWorldName(studentSession.path)} validé</strong> · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
-      }
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      setInstruction(`${getWorldName(studentSession.path)} validé.`);
-      return;
-    }
-
-    studentSession.index += 1;
-    studentSession.currentCounted = false;
-
-    let exercisePath = studentSession.path;
-    if(exercisePath === "mix12"){
-      exercisePath = Math.random() < 0.5 ? "axc" : "xpb";
-    }
-
-    if(modeEl){
-      modeEl.value = exercisePath;
-    }
-    randomExercise();
-
-    if(btnNextStudent) btnNextStudent.style.display = "none";
-    if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    updateStudentProgress();
-    syncStudentStageVisibility();
-  }
-
-  function onStudentSolved(){
-    if(appMode !== "student" || !studentSession.active || studentSession.currentCounted) return;
-    studentSession.currentCounted = true;
-    studentSession.solved += 1;
-    updateStudentProgress();
-
-    if(studentSession.index >= studentSession.total){
-      completedWorlds.add(studentSession.path);
-      syncWorldCards();
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<span class="progressTitle">${getWorldName(studentSession.path)} validé</span><span class="progressLine">Parcours terminé · ✓ <strong>${studentSession.solved}</strong> / ${studentSession.total}</span>`;
-      }
-      setInstruction(`<strong>✓ Parcours terminé !</strong>`);
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    }else{
-      if(btnNextStudent) btnNextStudent.style.display = "";
-      if(btnStageNextStudent) btnStageNextStudent.classList.add("show");
-    }
   }
 
   function uid(){
@@ -2477,213 +1784,6 @@
     if(!state) return;
     state.steps = [currentEquationString()];
     render();
-  }
-
-  function getSelectedMode(){
-    const raw = modeEl ? modeEl.value : "axb";
-    if(raw === "mix"){
-      const modes = ["xpb", "axc", "axb", "both"];
-      return modes[Math.floor(Math.random() * modes.length)];
-    }
-    return raw;
-  }
-
-  function getModeLabel(mode){
-    if(mode === "xpb") return "x + b = c";
-    if(mode === "axc") return "ax = c";
-    if(mode === "both") return "ax + b = cx + d";
-    return "ax + b = c";
-  }
-
-  function syncTeacherEquationControls(){
-    if(!modeEl) return;
-    const mode = modeEl.value;
-
-    const show = (wrap, visible) => { if(wrap) wrap.classList.toggle("hiddenParam", !visible); };
-
-    show(coefAWrap, mode === "axc" || mode === "axb" || mode === "both");
-    show(constBWrap, mode === "xpb" || mode === "axb" || mode === "both");
-    show(coefCWrap, mode === "both");
-    show(constCWrap, mode === "xpb" || mode === "axc" || mode === "axb");
-    show(constDWrap, mode === "both");
-
-    if(teacherParamGrid){
-      teacherParamGrid.classList.toggle("three", mode === "axb");
-    }
-
-    updateProfEquationInfo();
-  }
-
-  function updateProfEquationInfo(){
-    if(!profEquationInfo) return;
-    profEquationInfo.style.display = "none";
-    profEquationInfo.innerHTML = "";
-  }
-
-  function readRounded(el, fallback, min=0, max=999){
-    const n = Math.round(numberOr(el && el.value, fallback));
-    return clamp(n, min, max);
-  }
-
-  function showBuildError(extra=""){
-    const text = extra || "Impossible avec ce schéma : la solution doit être un entier positif.";
-    setInstruction(`<strong>${text}</strong>`);
-    setStatus(text);
-  }
-
-  function resetAfterNewEquation(){
-    recordEquationStep();
-    initialImportState = clone(state);
-    history = [];
-    selectedPieceRef = null;
-    selectedShareRef = null;
-    pendingAddInfo = null;
-    deleteSelection = [];
-    addSelection = [];
-    actionMode = "decompose";
-    if(toolDecompose) toolDecompose.classList.add("active");
-    if(toolAdd) toolAdd.classList.remove("active");
-    if(toolShare) toolShare.classList.remove("active");
-    if(toolDelete) toolDelete.classList.remove("active");
-    render();
-    setStatus("");
-  }
-
-  function createEquationState(selectedMode, a, b, rightA, d, x, c, rng=Math.random){
-    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
-    state = {
-      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
-      top:[],
-      bottom:[],
-      hintCount:0,
-      steps:[]
-    };
-
-    if(selectedMode === "both"){
-      // Convention : le bas représente ax+b, le haut représente cx+d.
-      // L'équation affichée reste donc : bas = haut.
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-      state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
-    }else{
-      state.top = [makeNumber(c)];
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-    }
-
-    resetAfterNewEquation();
-  }
-
-  function buildFromInputs(){
-    if(modeEl && modeEl.value === "mix"){
-      randomExercise();
-      return;
-    }
-
-    const selectedMode = getSelectedMode();
-    let a = 1;
-    let b = 0;
-    let rightA = 0;
-    let d = 0;
-    let c = 0;
-    let x = null;
-
-    if(selectedMode === "xpb"){
-      b = readRounded(constBEl, 4, 0, 999);
-      c = readRounded(constCEl, 28, 0, 999);
-      x = c - b;
-    }else if(selectedMode === "axc"){
-      a = readRounded(coefAEl, 2, 1, 20);
-      b = 0;
-      c = readRounded(constCEl, 24, 0, 999);
-      if(a === 0) return showBuildError();
-      x = c / a;
-    }else if(selectedMode === "axb"){
-      a = readRounded(coefAEl, 2, 1, 20);
-      b = readRounded(constBEl, 4, 0, 999);
-      c = readRounded(constCEl, 28, 0, 999);
-      x = (c - b) / a;
-    }else if(selectedMode === "both"){
-      a = readRounded(coefAEl, 3, 1, 20);
-      b = readRounded(constBEl, 4, 0, 999);
-      rightA = readRounded(coefCEl, 1, 1, 20);
-      d = readRounded(constDEl, 28, 0, 999);
-      const denom = a - rightA;
-      if(denom === 0){
-        return showBuildError("Impossible avec ce schéma : les coefficients des inconnues ne doivent pas être égaux.");
-      }
-      x = (d - b) / denom;
-      c = a * x + b;
-    }
-
-    if(!Number.isInteger(x) || x <= 0 || !Number.isFinite(x)){
-      return showBuildError();
-    }
-
-    if(selectedMode !== "both"){
-      c = Math.round(c);
-    }else{
-      c = Math.round(c);
-    }
-
-    if(c <= 0){
-      return showBuildError();
-    }
-
-    if(coefAEl) coefAEl.value = a;
-    if(constBEl) constBEl.value = b;
-    if(coefCEl) coefCEl.value = rightA || 1;
-    if(constCEl && selectedMode !== "both") constCEl.value = c;
-    if(constDEl) constDEl.value = d;
-    updateProfEquationInfo();
-
-    createEquationState(selectedMode, a, b, rightA, d, x, c);
-  }
-
-  function mulberry32(a){
-    return function(){
-      let t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-  }
-
-  function randomInt(rng,a,b){
-    return a + Math.floor(rng()*(b-a+1));
-  }
-
-  function randomExercise(){
-    const rng = Math.random;
-
-    let selectedMode = modeEl ? modeEl.value : "axb";
-    if(selectedMode === "mix"){
-      const modes = ["xpb", "axc", "axb", "both"];
-      selectedMode = modes[randomInt(rng,0,modes.length-1)];
-    }
-
-    let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
-    const x = randomInt(rng,3,15);
-    let b = selectedMode === "axc" ? 0 : randomInt(rng,2,18);
-    let rightA = 0;
-    let d = 0;
-    let c = a*x + b;
-
-    if(selectedMode === "both"){
-      a = randomInt(rng,3,5);
-      rightA = randomInt(rng,1,a-1);
-      b = randomInt(rng,2,14);
-      d = (a - rightA) * x + b;
-      c = a*x + b;
-    }
-
-    if(coefAEl) coefAEl.value = Math.max(1, a);
-    if(constBEl) constBEl.value = Math.max(0, b);
-    if(coefCEl) coefCEl.value = rightA || 1;
-    if(constCEl) constCEl.value = selectedMode === "both" ? c : c;
-    if(constDEl) constDEl.value = d || Math.max(0, c);
-    updateProfEquationInfo();
-
-    // Construction directe pour éviter qu'un mode Mélange soit tiré une deuxième fois.
-    createEquationState(selectedMode, a, b, rightA, d, x, c, rng);
   }
 
   function activePieces(side){
@@ -3016,14 +2116,8 @@
     if(solved !== null){
       solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
       setStatus("Résolution terminée", true);
-      if(appMode === "student" && studentSession.active){
-        setInstruction(`<strong>✓ Réussi !</strong>`);
-        actionZone.innerHTML = `<div class="successCard"><span class="successCheck">✓</span><span>Réussi !</span></div>`;
-      }else{
-        setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
-        actionZone.innerHTML = "";
-      }
-      onStudentSolved();
+      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
+      actionZone.innerHTML = "";
       return;
     }
 
@@ -3613,39 +2707,9 @@
   if(toolUndo) toolUndo.addEventListener("click", undo);
   if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
-  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
-  if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", refreshStepsForUnknownDisplay);
   if(equationDisplayModeEl) equationDisplayModeEl.addEventListener("change", render);
-  if(equationDisplayModeStudentEl) equationDisplayModeStudentEl.addEventListener("change", render);
-  if(fullscreenSizeModeEl) fullscreenSizeModeEl.addEventListener("change", syncFullscreenSizeMode);
-  if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.addEventListener("change", syncFullscreenSizeMode);
-
-  if(btnStageRandom) btnStageRandom.addEventListener("click", randomExercise);
+  // Les contrôles de génération autonome ont été supprimés : seuls les contrôles utiles à l'import restent branchés.
   if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
-  if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
-  if(btnTeacherMode) btnTeacherMode.addEventListener("click", () => setAppMode("teacher"));
-  if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
-  worldCards.forEach(card => {
-    card.addEventListener("click", () => setStudentPath(card.dataset.path));
-  });
-  if(btnStartStudent) btnStartStudent.addEventListener("click", startStudentSession);
-  if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
-  if(btnStageNextStudent) btnStageNextStudent.addEventListener("click", nextStudentExercise);
-  if(modeEl) modeEl.addEventListener("change", syncTeacherEquationControls);
-  [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
-    if(el) {
-      el.addEventListener("input", updateProfEquationInfo);
-      el.addEventListener("change", updateProfEquationInfo);
-    }
-  });
-
-  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
-  document.getElementById("btnRandom").addEventListener("click", randomExercise);
-  const btnUndoMenu = document.getElementById("btnUndo");
-  if(btnUndoMenu) btnUndoMenu.addEventListener("click", undo);
-  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
-  const btnHintMenu = document.getElementById("btnHint");
-  if(btnHintMenu) btnHintMenu.addEventListener("click", hint);
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
@@ -3685,10 +2749,6 @@
     if(e.key === "Escape") dialog.close();
   });
 
-  if(modeEl){
-    modeEl.addEventListener("change", randomExercise);
-  }
-
   if(btnFullscreen && stageEl){
     btnFullscreen.addEventListener("click", () => {
       if(document.fullscreenElement){
@@ -3698,14 +2758,6 @@
       }
     });
   }
-
-  [coefAEl,constBEl,coefCEl,constCEl,constDEl].forEach(el => {
-    if(!el) return;
-    el.addEventListener("change", () => {
-      el.value = String(Math.round(numberOr(el.value, Number(el.min) || 0)));
-    });
-  });
-
 
 
   /* IMPORT SPLAT -> ÉQUABARRE
@@ -3865,12 +2917,8 @@
     state.top = topPieces;
     state.bottom = bottomPieces;
 
-    if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
-    if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.value = wantedDisplay;
+    importedUnknownDisplayMode = wantedDisplay;
     if(equationDisplayModeEl) equationDisplayModeEl.value = "show";
-    if(equationDisplayModeStudentEl) equationDisplayModeStudentEl.value = "show";
-    if(fullscreenSizeModeEl) fullscreenSizeModeEl.value = "compact";
-    if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.value = "compact";
 
     recordEquationStep();
     history = [];
@@ -3885,8 +2933,6 @@
     if(toolShare) toolShare.classList.remove("active");
     if(toolDelete) toolDelete.classList.remove("active");
 
-    syncTeacherEquationControls();
-    syncAppModeUI();
     render();
     setInstruction("");
     setStatus("Tableau prêt", true);
@@ -3906,9 +2952,9 @@
 
 
   if(!tryImportFromUrl()){
-    randomExercise();
-    syncTeacherEquationControls();
-    syncAppModeUI();
+    setInstruction("<strong>Aucun tableau importé.</strong>");
+    setStatus("En attente d’un import");
+    syncFullscreenSizeMode();
   }
 })();
 </script>
