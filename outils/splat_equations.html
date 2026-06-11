@@ -150,6 +150,57 @@
   .iconbtn:active{transform:translateY(0px); box-shadow: 0 6px 18px rgba(0,0,0,0.18);}
   .iconbtn svg{width:20px;height:20px;opacity:.95}
 
+  .varChoice{
+    display:none;
+    flex:0 0 auto;
+    height:42px;
+    padding:3px;
+    gap:3px;
+    border-radius:12px;
+    border:1px solid var(--btn-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    align-items:center;
+    justify-content:center;
+  }
+  .varChoice.is-visible{display:inline-flex;}
+  .varChoiceBtn{
+    width:34px;
+    height:34px;
+    border:0;
+    border-radius:10px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    font-size:21px;
+    font-weight:950;
+    line-height:1;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    transform:translateY(-1px);
+    transition:background .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
+  }
+  .varChoiceBtn:hover{background:rgba(255,255,255,0.12); color:var(--ink);}
+  .varChoiceBtn:active{transform:translateY(0);}
+  .varChoiceBtn.is-active{
+    background:rgba(106,167,255,0.24);
+    color:var(--ink);
+    box-shadow:inset 0 0 0 1px rgba(106,167,255,0.40);
+  }
+  body.light .varChoice{
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  }
+  body.light .varChoiceBtn:hover{background:rgba(0,0,0,0.05);}
+  body.light .varChoiceBtn.is-active{
+    background:rgba(27,102,255,0.16);
+    box-shadow:inset 0 0 0 1px rgba(27,102,255,0.36);
+  }
+
   .hint{
     font-size:12px;color:var(--muted);line-height:1.35;margin-top:10px
   }
@@ -539,11 +590,12 @@
           </select>
         </div>
 
-        <div id="eqUnknownQuestionWrap" style="flex:1 1 190px; min-width:170px; display:none; align-items:flex-end; align-self:flex-end; padding-bottom:0;">
-          <label style="display:flex; gap:8px; align-items:center; min-height:38px; line-height:1.15; font-size:12px; color:var(--muted); cursor:pointer; margin:0;">
-            <input id="eqUnknownQuestion" type="checkbox" checked style="width:18px; height:18px; margin:0; accent-color:#6aa7ff; flex:0 0 auto;" />
-            <span>Afficher ?<br>à la place des lettres</span>
-          </label>
+        <!-- Sélecteur conservé comme état interne/fallback : l’affichage visible se fait avec les deux boutons 𝑥 / ? plus bas. -->
+        <div id="eqUnknownQuestionWrap" style="display:none">
+          <select id="eqUnknownDisplayMode" aria-hidden="true" tabindex="-1">
+            <option value="letter">Lettre 𝑥</option>
+            <option value="question" selected>Point d’interrogation ?</option>
+          </select>
         </div>
 
         <div id="numBeadAbsMaxWrap" style="flex:1 1 132px; min-width:0; display:none">
@@ -572,13 +624,17 @@
             <span id="numTasksArrow" style="display:none"></span>
           </div>
         </div>
-        <div style="flex:1">
-          <label class="miniCenteredLabel">Jetons visibles<br>min</label>
-          <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
+        <div id="numVisibleMinWrap" style="flex:1">
+          <label class="miniCenteredLabel" id="numVisibleMinLabel">Visibles / plateau<br>min</label>
+          <input id="numVisibleMin" type="number" min="0" max="20" value="2" />
         </div>
-        <div style="flex:1">
-          <label class="miniCenteredLabel">Jetons visibles<br>max</label>
-          <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
+        <div id="numVisibleMaxWrap" style="flex:1">
+          <label class="miniCenteredLabel" id="numVisibleMaxLabel">Visibles / plateau<br>max</label>
+          <input id="numVisibleMax" type="number" min="0" max="6" value="3" />
+        </div>
+        <div id="numUnitVisibleMaxWrap" style="flex:1; display:none">
+          <label class="miniCenteredLabel" id="numUnitVisibleMaxLabel">Visibles max<br>/ plateau</label>
+          <input id="numUnitVisibleMax" type="number" min="1" max="20" value="10" />
         </div>
       </div>
       
@@ -605,11 +661,11 @@
       </div>
 
       <div class="row" style="margin-top:10px">
-        <div style="flex:1">
+        <div id="numTotalMinWrap" style="flex:1">
           <label>Total (min)</label>
           <input id="numTotalMin" type="number" min="1" max="1000" value="20" />
         </div>
-        <div style="flex:1">
+        <div id="numTotalMaxWrap" style="flex:1">
           <label>Total (max)</label>
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
@@ -628,6 +684,21 @@
 
     
 
+    <div class="row" id="displayChoiceRow" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:8px;">
+      <div class="varChoice" id="eqUnknownChoice" title="Choisir l’affichage de l’inconnue" aria-label="Choisir l’affichage de l’inconnue">
+        <button class="varChoiceBtn" id="btnEqUnknownLetter" type="button" aria-label="Afficher l’inconnue avec une lettre">𝑥</button>
+        <button class="varChoiceBtn" id="btnEqUnknownQuestionMark" type="button" aria-label="Afficher l’inconnue avec un point d’interrogation">?</button>
+      </div>
+      <div id="eqStepViewToggle" title="Choisir la vue : équation ou schéma" style="display:none; flex:0 0 auto; height:42px; gap:4px; align-items:center; padding:3px; border:1px solid var(--btn-border); border-radius:12px; background:rgba(255,255,255,0.04);">
+        <button type="button" class="btn" id="btnEqStepViewEquation" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Équation</button>
+        <button type="button" class="btn" id="btnEqStepViewSchema" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Schéma</button>
+      </div>
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
+        <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
+        <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
+      </label>
+    </div>
+
     <div class="row" style="margin-top:10px; align-items:flex-end">
       <div style="flex:0 0 auto">
         <label>Nombre de cartes</label>
@@ -645,15 +716,6 @@
           <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
         </svg>
       </button>
-      <div id="eqStepViewToggle" title="Choisir la vue du mode E pas à pas" style="display:none; flex:0 0 auto; height:42px; gap:4px; align-items:center; padding:3px; border:1px solid var(--btn-border); border-radius:12px; background:rgba(255,255,255,0.04);">
-        <button type="button" class="btn" id="btnEqStepViewEquation" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Équation</button>
-        <button type="button" class="btn" id="btnEqStepViewSchema" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Schéma</button>
-      </div>
-      
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
-        <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
-        <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
-      </label>
     </div>
 
     <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:6px;">
@@ -704,19 +766,30 @@ function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
 }
 function shouldDisplayUnknownAsQuestion(){
-  const el = document.getElementById("eqUnknownQuestion");
-  return !!(el && el.checked);
+  // En modes avec entiers relatifs, on garde toujours la vraie lettre :
+  // le point d’interrogation n’apporte rien et peut brouiller les signes.
+  const actEl = document.getElementById("activity");
+  const act = actEl ? actEl.value : "";
+  if(isSignedEquationModeValue(act)) return false;
+
+  const selectEl = document.getElementById("eqUnknownDisplayMode");
+  if(selectEl) return selectEl.value === "question";
+
+  // Ancien fallback conservé au cas où une version précédente du HTML serait réutilisée.
+  const checkboxEl = document.getElementById("eqUnknownQuestion");
+  return !!(checkboxEl && checkboxEl.checked);
 }
 function getRawCardVarChar(card){
   return (card && typeof card.varChar === "string" && card.varChar.trim()) ? card.varChar : xChar;
 }
 function getCardVarChar(card){
-  // Les équations algébriques restent toujours avec leur vraie lettre.
-  return getRawCardVarChar(card);
+  // Dans les modes non relatifs, le choix ? s'applique aussi aux équations écrites.
+  // Les modes avec entiers relatifs sont déjà forcés sur la vraie lettre par shouldDisplayUnknownAsQuestion().
+  return shouldDisplayUnknownAsQuestion() ? "?" : getRawCardVarChar(card);
 }
 function getTableVarChar(card){
-  // L'option ? s'applique uniquement aux tableaux / schémas en barres.
-  return shouldDisplayUnknownAsQuestion() ? "?" : getRawCardVarChar(card);
+  // Même affichage pour les schémas / tableaux et les équations écrites.
+  return getCardVarChar(card);
 }
 function isVariableLabel(label){
   const s = String(label == null ? "" : label);
@@ -942,14 +1015,26 @@ function syncNumTasksUI(act){
 
 const numVisibleMinEl = document.getElementById("numVisibleMin");
 const numVisibleMaxEl = document.getElementById("numVisibleMax");
+const numVisibleMinWrapEl = document.getElementById("numVisibleMinWrap");
+const numVisibleMaxWrapEl = document.getElementById("numVisibleMaxWrap");
+const numUnitVisibleMaxWrapEl = document.getElementById("numUnitVisibleMaxWrap");
+const numUnitVisibleMaxEl = document.getElementById("numUnitVisibleMax");
+const numVisibleMinLabelEl = document.getElementById("numVisibleMinLabel");
+const numVisibleMaxLabelEl = document.getElementById("numVisibleMaxLabel");
 const numHiddenCountWrapEl = document.getElementById("numHiddenCountWrap");
 const numHiddenCountEl = document.getElementById("numHiddenCount");
 const eqUnknownModeWrapEl = document.getElementById("eqUnknownModeWrap");
 const eqUnknownModeEl = document.getElementById("eqUnknownMode");
 const eqUnknownQuestionWrapEl = document.getElementById("eqUnknownQuestionWrap");
-const eqUnknownQuestionEl = document.getElementById("eqUnknownQuestion");
+const eqUnknownDisplayModeEl = document.getElementById("eqUnknownDisplayMode");
+const eqUnknownQuestionEl = document.getElementById("eqUnknownQuestion"); // ancien fallback éventuel
+const eqUnknownChoiceEl = document.getElementById("eqUnknownChoice");
+const btnEqUnknownLetterEl = document.getElementById("btnEqUnknownLetter");
+const btnEqUnknownQuestionMarkEl = document.getElementById("btnEqUnknownQuestionMark");
 const numTotalMinEl = document.getElementById("numTotalMin");
 const numTotalMaxEl = document.getElementById("numTotalMax");
+const numTotalMinWrapEl = document.getElementById("numTotalMinWrap");
+const numTotalMaxWrapEl = document.getElementById("numTotalMaxWrap");
 const seedNEl = document.getElementById("seedN");
 const numBeadAbsMaxWrapEl = document.getElementById("numBeadAbsMaxWrap");
 const numBeadAbsMaxEl = document.getElementById("numBeadAbsMax");
@@ -1074,11 +1159,135 @@ function getSeedForCurrentMode(){
   return (seedNEl && (seedNEl.value||"").trim()) ? Number(seedNEl.value) : "";
 }
 
+const EQUABAR_IMPORT_URL = "./equabarre_import_splat.html";
 
+function encodeEquabarPayload(payload){
+  const json = JSON.stringify(payload);
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function eqStepPartsToEquabarRow(parts){
+  const row = [];
+  (Array.isArray(parts) ? parts : []).forEach(part => {
+    if(!part || part.kind === "empty" || part.removed) return;
+    if(part.hidden || part.kind === "x"){
+      row.push({type:"x"});
+      return;
+    }
+    const value = Number(part.value);
+    if(Number.isFinite(value) && value !== 0){
+      row.push({type:"number", value});
+    }
+  });
+  return row.length ? row : [{type:"number", value:0}];
+}
+
+function buildEquationStepEquabarPayload(card){
+  const eq = card && card._eq;
+  const canExportToEquabar = !!card && (isEquationStepFamily(card) || card.family === "EQ");
+  if(!eq || !canExportToEquabar) return null;
+  const varLabel = getTableVarChar(card);
+  const state = getEquationStepState(eq, 1, varLabel, {includeVerify:false});
+  if(!state || state.kind !== "combined") return null;
+  return {
+    source:"splat_equations",
+    family:card.family,
+    variable:getRawCardVarChar(card),
+    unknownDisplay:shouldDisplayUnknownAsQuestion() ? "question" : "letter",
+    fullscreenSize:"compact",
+    x:Number(eq.x),
+    top:eqStepPartsToEquabarRow(state.leftParts),
+    bottom:eqStepPartsToEquabarRow(state.rightParts)
+  };
+}
+
+function openEquationStepInEquabar(card){
+  try{
+    const payload = buildEquationStepEquabarPayload(card);
+    if(!payload) return;
+    const url = `${EQUABAR_IMPORT_URL}#data=${encodeEquabarPayload(payload)}`;
+    window.open(url, "_blank", "noopener");
+  }catch(err){
+    console.error("Impossible d'ouvrir Équabarre import", err);
+  }
+}
+
+function drawEquationStepEquabarSolveButton(targetGroup, card, x, y){
+  const btn = el("g", { id:"btnEqStepEquabarSolve", transform:`translate(${x} ${y})`, style:"cursor:pointer" });
+  btn.setAttribute("role", "button");
+  btn.setAttribute("tabindex", "0");
+  btn.appendChild(el("rect",{
+    x:0, y:0, width:122, height:46, rx:16,
+    fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
+  }));
+  btn.appendChild(text(61, 24, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"middle",
+    "font-size":21, "font-weight":950, fill:"#166534"
+  }));
+  btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    openEquationStepInEquabar(card);
+  });
+  btn.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" || ev.key === " "){
+      ev.preventDefault();
+      ev.stopPropagation();
+      openEquationStepInEquabar(card);
+    }
+  });
+  targetGroup.appendChild(btn);
+}
+
+function shouldShowEquationStepEquabarButton(card, revealState){
+  return !!(
+    card &&
+    (card.family === "EQUNITSTEP" || card.family === "EQSTEP" || card.family === "EQ") &&
+    getEquationStepView() === "schema" &&
+    Math.round(Number(revealState) || 0) === 1
+  );
+}
+
+function syncEquationUnknownChoiceButton(){
+  if(!eqUnknownChoiceEl || !activityEl) return;
+  const act = activityEl.value;
+  const show = (act === "EQ" || act === "EQSTEP" || act === "EQUNITSTEP");
+  eqUnknownChoiceEl.classList.toggle("is-visible", show);
+  eqUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
+
+  if(isSignedEquationModeValue(act)){
+    if(eqUnknownDisplayModeEl) eqUnknownDisplayModeEl.value = "letter";
+    if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = false;
+  }
+
+  const question = shouldDisplayUnknownAsQuestion();
+  if(btnEqUnknownLetterEl){
+    btnEqUnknownLetterEl.classList.toggle("is-active", !question);
+    btnEqUnknownLetterEl.setAttribute("aria-pressed", question ? "false" : "true");
+  }
+  if(btnEqUnknownQuestionMarkEl){
+    btnEqUnknownQuestionMarkEl.classList.toggle("is-active", question);
+    btnEqUnknownQuestionMarkEl.setAttribute("aria-pressed", question ? "true" : "false");
+  }
+
+  const label = question
+    ? "Inconnue affichée avec un point d’interrogation"
+    : "Inconnue affichée avec une lettre";
+  eqUnknownChoiceEl.title = label;
+  eqUnknownChoiceEl.setAttribute("aria-label", label);
+}
+
+function setEquationUnknownDisplay(question){
+  if(eqUnknownDisplayModeEl) eqUnknownDisplayModeEl.value = question ? "question" : "letter";
+  if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = !!question;
+  syncEquationUnknownChoiceButton();
+  if(typeof updateUI === "function") updateUI();
+}
 
 function syncEquationStepViewButton(){
-  const isStep = activityEl && (activityEl.value === "EQSTEP" || activityEl.value === "EQUNITSTEP");
-  if(eqStepViewToggleEl) eqStepViewToggleEl.style.display = isStep ? "inline-flex" : "none";
+  const showChoice = activityEl && (activityEl.value === "EQ" || activityEl.value === "EQSTEP" || activityEl.value === "EQUNITSTEP");
+  if(eqStepViewToggleEl) eqStepViewToggleEl.style.display = showChoice ? "inline-flex" : "none";
   const active = getEquationStepView();
   function styleSeg(btn, isActive){
     if(!btn) return;
@@ -1101,11 +1310,15 @@ function applyDefaultEquationStepDisplayForActivity(act){
   // - autres pas à pas : vue Équation + vraies lettres.
   if(act === "EQUNITSTEP"){
     equationStepView = "schema";
+    if(eqUnknownDisplayModeEl) eqUnknownDisplayModeEl.value = "question";
     if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = true;
   }else{
-    if(act === "EQSTEP" || act === "EQPMSTEP"){
+    if(act === "EQ"){
+      equationStepView = "schema";
+    }else if(act === "EQSTEP" || act === "EQPMSTEP"){
       equationStepView = "equation";
     }
+    if(eqUnknownDisplayModeEl) eqUnknownDisplayModeEl.value = "letter";
     if(eqUnknownQuestionEl) eqUnknownQuestionEl.checked = false;
   }
 }
@@ -1174,10 +1387,44 @@ function syncSettingsUI(){
 
   if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "none";
   if(eqUnknownModeWrapEl) eqUnknownModeWrapEl.style.display = isEquation ? "block" : "none";
-  if(eqUnknownQuestionWrapEl) eqUnknownQuestionWrapEl.style.display = ((act === "EQSTEP") || (act === "EQUNITSTEP")) ? "flex" : "none";
+  // Le vrai choix visible est maintenant le petit sélecteur 𝑥 / ? dans la barre de navigation.
+  if(eqUnknownQuestionWrapEl) eqUnknownQuestionWrapEl.style.display = "none";
+  syncEquationUnknownChoiceButton();
   if(numberedSettingsEl) numberedSettingsEl.style.display = "block";
-  numVisibleMinEl.max = "6";
-  numVisibleMaxEl.max = "6";
+
+  // Équation primaire : paramètres séparés.
+  // On n'utilise plus le même champ que les autres modes :
+  // - EQUNITSTEP utilise numUnitVisibleMax (petits jetons unitaires, max 20, valeur 10) ;
+  // - les autres modes utilisent numVisibleMin/numVisibleMax (jetons numérotés, max 6, petits réglages historiques).
+  const isUnitStepAct = isUnitEquationStepModeValue(act);
+  if(numVisibleMinWrapEl) numVisibleMinWrapEl.style.display = isUnitStepAct ? "none" : "";
+  if(numVisibleMaxWrapEl) numVisibleMaxWrapEl.style.display = isUnitStepAct ? "none" : "";
+  if(numUnitVisibleMaxWrapEl) numUnitVisibleMaxWrapEl.style.display = isUnitStepAct ? "" : "none";
+  if(numTotalMinWrapEl) numTotalMinWrapEl.style.display = isUnitStepAct ? "none" : "";
+  if(numTotalMaxWrapEl) numTotalMaxWrapEl.style.display = isUnitStepAct ? "none" : "";
+
+  if(isUnitStepAct){
+    if(numUnitVisibleMaxEl){
+      numUnitVisibleMaxEl.min = "1";
+      numUnitVisibleMaxEl.max = "20";
+      numUnitVisibleMaxEl.value = String(clamp(numberOr(numUnitVisibleMaxEl.value, 10), 1, 20));
+    }
+    if(numVisibleMinEl) numVisibleMinEl.value = "0";
+  }else{
+    if(numVisibleMinLabelEl) numVisibleMinLabelEl.innerHTML = "Visibles / plateau<br>min";
+    if(numVisibleMaxLabelEl) numVisibleMaxLabelEl.innerHTML = "Visibles / plateau<br>max";
+    if(numVisibleMinEl){
+      numVisibleMinEl.min = "0";
+      numVisibleMinEl.max = "6";
+      numVisibleMinEl.value = String(clamp(numberOr(numVisibleMinEl.value, 2), 0, 6));
+    }
+    if(numVisibleMaxEl){
+      numVisibleMaxEl.min = "0";
+      numVisibleMaxEl.max = "6";
+      numVisibleMaxEl.value = String(clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6));
+      if(numVisibleMinEl && Number(numVisibleMaxEl.value) < Number(numVisibleMinEl.value)) numVisibleMaxEl.value = numVisibleMinEl.value;
+    }
+  }
   if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(numColorModeWrapEl) numColorModeWrapEl.style.display = isSignedEquationModeValue(act) ? "flex" : "none";
@@ -1222,7 +1469,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
 
 [
   countEl,
-  numTasksEl, numVisibleMinEl, numVisibleMaxEl, numTotalMinEl, numTotalMaxEl,
+  numTasksEl, numVisibleMinEl, numVisibleMaxEl, numUnitVisibleMaxEl, numTotalMinEl, numTotalMaxEl,
   numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, eqUnknownModeEl, seedNEl
 ].forEach(el=>{
   if(!el) return;
@@ -1246,12 +1493,26 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
   });
 });
 
-if(eqUnknownQuestionEl){
+if(btnEqUnknownLetterEl){
+  btnEqUnknownLetterEl.addEventListener("click", ()=> setEquationUnknownDisplay(false));
+}
+if(btnEqUnknownQuestionMarkEl){
+  btnEqUnknownQuestionMarkEl.addEventListener("click", ()=> setEquationUnknownDisplay(true));
+}
+
+{
   const rerenderUnknownDisplay = ()=>{
+    syncEquationUnknownChoiceButton();
     if(typeof updateUI === "function") updateUI();
   };
-  eqUnknownQuestionEl.addEventListener("input", rerenderUnknownDisplay);
-  eqUnknownQuestionEl.addEventListener("change", rerenderUnknownDisplay);
+  if(eqUnknownDisplayModeEl){
+    eqUnknownDisplayModeEl.addEventListener("input", rerenderUnknownDisplay);
+    eqUnknownDisplayModeEl.addEventListener("change", rerenderUnknownDisplay);
+  }
+  if(eqUnknownQuestionEl){
+    eqUnknownQuestionEl.addEventListener("input", rerenderUnknownDisplay);
+    eqUnknownQuestionEl.addEventListener("change", rerenderUnknownDisplay);
+  }
 }
 
 hookNumberInputClamps();
@@ -1668,9 +1929,148 @@ function randomCompositionBounded(rng, sum, parts, maxPart=99){
   return arr;
 }
 
+
+function genEquationUnitBounded(rng){
+  const maxTasksUser = clamp(numberOr(numTasksEl.value, 5), 1, 5);
+
+  // En Équation primaire, on ne garde qu'un réglage lisible :
+  // le nombre maximum de petits jetons visibles sur chaque plateau.
+  const vMin = 0;
+  let vMax = clamp(numberOr(numUnitVisibleMaxEl ? numUnitVisibleMaxEl.value : 10, 10), 1, 20);
+  const requiredMin = 1;
+
+  // Les champs Total min/max sont masqués dans ce mode : on ne les utilise pas pour générer.
+  // Cela évite les réglages contradictoires entre total et visibles par plateau.
+  const totalOk = (_t) => true;
+
+  const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
+  const MAX_TRIES = 9000;
+
+  function visibleRequiredOk(v){ return v >= requiredMin && v <= vMax; }
+  function visibleOptionalOk(v){ return v === 0 || (v >= requiredMin && v <= vMax); }
+  function visibleArray(v){ return v > 0 ? [v] : []; }
+
+  function makeEqCard(total, x, tasksL, tasksR, visibleTotalL, visibleTotalR){
+    const leftVisible = visibleArray(visibleTotalL);
+    const rightVisible = visibleArray(visibleTotalR);
+    const leftHiddenByTask  = Array.from({length:tasksL}, ()=>[x]);
+    const rightHiddenByTask = Array.from({length:tasksR}, ()=>[x]);
+    return {
+      family: "EQ",
+      total: total,
+      visible: leftVisible.concat(rightVisible),
+      hidden: leftHiddenByTask.flat().concat(rightHiddenByTask.flat()),
+      varChar: pickVariableChar(rng),
+      _eq: {
+        total,
+        x,
+        left:  { tasks:tasksL, visible:leftVisible,  hiddenByTask:leftHiddenByTask },
+        right: { tasks:tasksR, visible:rightVisible, hiddenByTask:rightHiddenByTask }
+      }
+    };
+  }
+
+  function pickRequiredVisible(){
+    if(vMax < requiredMin) return null;
+    return rInt(rng, requiredMin, vMax);
+  }
+  function pickOptionalVisible(){
+    if(vMax <= 0) return 0;
+    if(rng() < 0.35) return 0;
+    return pickRequiredVisible();
+  }
+
+  for(let tries=0; tries<MAX_TRIES; tries++){
+    const form = pickEquationGeneratorForm(unknownModeSetting, rng, maxTasksUser);
+
+    if(form === "AX_EQ_C"){
+      const coeff = maxTasksUser >= 2 ? rInt(rng, 2, maxTasksUser) : 1;
+      const candidates = [];
+      for(let c=requiredMin; c<=vMax; c++){
+        if(c % coeff !== 0) continue;
+        if(!totalOk(c)) continue;
+        const x = c / coeff;
+        if(x <= 0) continue;
+        candidates.push({c,x});
+      }
+      if(!candidates.length) continue;
+      const pick = candidates[rInt(rng, 0, candidates.length - 1)];
+      if(rng() < 0.5) return makeEqCard(pick.c, pick.x, coeff, 0, 0, pick.c);
+      return makeEqCard(pick.c, pick.x, 0, coeff, pick.c, 0);
+    }
+
+    if(form === "X_PLUS_B_EQ_C"){
+      const pairs = [];
+      for(let b=requiredMin; b<=vMax; b++){
+        for(let c=requiredMin; c<=vMax; c++){
+          const x = c - b;
+          if(x <= 0) continue;
+          if(!totalOk(c)) continue;
+          pairs.push({b,c,x});
+        }
+      }
+      if(!pairs.length) continue;
+      const pick = pairs[rInt(rng, 0, pairs.length - 1)];
+      if(rng() < 0.5) return makeEqCard(pick.c, pick.x, 1, 0, pick.b, pick.c);
+      return makeEqCard(pick.c, pick.x, 0, 1, pick.c, pick.b);
+    }
+
+    if(form === "ONE_SIDE"){
+      const coeff = rInt(rng, 2, Math.max(2, maxTasksUser));
+      const pairs = [];
+      for(let b=requiredMin; b<=vMax; b++){
+        for(let c=requiredMin; c<=vMax; c++){
+          const diff = c - b;
+          if(diff <= 0) continue;
+          if(diff % coeff !== 0) continue;
+          const x = diff / coeff;
+          if(x <= 0) continue;
+          if(!totalOk(c)) continue;
+          pairs.push({b,c,x});
+        }
+      }
+      if(!pairs.length) continue;
+      const pick = pairs[rInt(rng, 0, pairs.length - 1)];
+      if(rng() < 0.5) return makeEqCard(pick.c, pick.x, coeff, 0, pick.b, pick.c);
+      return makeEqCard(pick.c, pick.x, 0, coeff, pick.c, pick.b);
+    }
+
+    // Forme générale : ax + b = cx + d, avec constantes éventuellement absentes,
+    // mais toujours bornées par le réglage visibles / plateau.
+    const maxBoth = Math.max(2, maxTasksUser);
+    const a = rInt(rng, 1, maxBoth);
+    let c = rInt(rng, 1, maxBoth);
+    if(c === a) c = (c % maxBoth) + 1;
+
+    for(let inner=0; inner<40; inner++){
+      const x = rInt(rng, 1, 30);
+      const b = pickOptionalVisible();
+      if(b === null) continue;
+      const d = (a - c) * x + b;
+      if(!visibleOptionalOk(d)) continue;
+      if(b === 0 && d === 0) continue;
+      const total = a * x + b;
+      if(total <= 0 || !totalOk(total)) continue;
+      if(total !== c * x + d) continue;
+      return makeEqCard(total, x, a, c, b, d);
+    }
+  }
+
+  // Secours : on privilégie le respect de la borne visible, quitte à ignorer un total min incompatible.
+  const c = Math.max(2, Math.min(vMax || 2, Math.max(requiredMin + 1, 2)));
+  const b = Math.max(1, Math.min(c - 1, requiredMin));
+  const x = c - b;
+  return makeEqCard(c, x, 1, 0, b, c);
+}
+
 function genEquation(rng){
+  if(activityEl && activityEl.value === "EQUNITSTEP") return genEquationUnitBounded(rng);
+
   const maxTasksUser = clamp(numberOr(numTasksEl.value, 6), 1, 6);
 
+  // Dans les modes équation ordinaires, les champs règlent le NOMBRE de jetons visibles
+  // numérotés par plateau : on garde donc la limite historique à 6.
+  // Seul EQUNITSTEP utilise la valeur totale des visibles et passe par genEquationUnitBounded().
   let vMin = clamp(numberOr(numVisibleMinEl.value, 1), 0, 6);
   let vMax = clamp(numberOr(numVisibleMaxEl.value, 3), 0, 6);
   if(vMax < vMin) [vMin, vMax] = [vMax, vMin];
@@ -2090,7 +2490,9 @@ function eqVisibleSum(side){
 function coeffXLabel(n, varChar = xChar){
   const c = Math.abs(Number(n) || 0);
   if(c <= 0) return "0";
-  return c === 1 ? varChar : `${c}${varChar}`;
+  if(c === 1) return varChar;
+  // Si l'inconnue est affichée par ?, on écrit 2 × ? et non 2? ni ??.
+  return varChar === "?" ? `${c} × ?` : `${c}${varChar}`;
 }
 function formatEqSideFromCoeffVis(coeff, vis, varChar = xChar){
   const c = Math.abs(Number(coeff) || 0);
@@ -4557,7 +4959,12 @@ function drawEquationStepAid(targetGroup, card, revealState){
       392,
       {fontSize:32, fill:"rgba(0,0,0,0.80)", weight:"900"}
     );
-    drawEquationStepSingaporeTable(targetGroup, card, revealState);
+    const tableLayout = drawEquationStepSingaporeTable(targetGroup, card, revealState);
+    if(shouldShowEquationStepEquabarButton(card, revealState) && tableLayout){
+      const btnX = tableLayout.x + tableLayout.w / 2 - 61;
+      const btnY = tableLayout.y + tableLayout.h + 26;
+      drawEquationStepEquabarSolveButton(targetGroup, card, btnX, btnY);
+    }
     return;
   }
 
@@ -4880,6 +5287,24 @@ function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, bea
   return pts;
 }
 
+
+function getEquationSimpleMappedRevealState(card, revealState){
+  const eq = card && card._eq;
+  const r = Math.max(0, Math.round(Number(revealState) || 0));
+  if(!eq || r <= 1) return r;
+  const varChar = getEquationStepView() === "schema" ? getTableVarChar(card) : getCardVarChar(card);
+  const states = getEquationStepStates(eq, varChar, {includeVerify:false});
+  return Math.max(1, states.length);
+}
+
+function getEquationSimpleVisibleLines(card, revealState){
+  const eq = card && card._eq;
+  if(!eq || revealState <= 0) return [];
+  const varChar = getCardVarChar(card);
+  const mapped = getEquationSimpleMappedRevealState(card, revealState);
+  return getEquationStepVisibleLines(eq, mapped, varChar);
+}
+
 function renderCardEquation(card, revealState, useTokens){
   const eq = card._eq;
   const trays = card._eqTrays;
@@ -4889,8 +5314,13 @@ function renderCardEquation(card, revealState, useTokens){
 
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
-  const hasAidTable = (card.family === "EQ" && revealState > 0);
-  const useEqStepSchemaLayout = (isEquationStepFamily(card) && getEquationStepView() === "schema");
+  const isSimpleEquationSchemaView = (card.family === "EQ" && getEquationStepView() === "schema");
+  const hasAidTable = (isSimpleEquationSchemaView && revealState > 0);
+  const hasSimpleEquationLine = (card.family === "EQ" && revealState > 0 && getEquationStepView() !== "schema");
+  // En mode Équation simple + vue Équation, on garde toujours les plateaux :
+  // l'équation apparaît au-dessus, mais le support visuel ne disparaît pas à la fin.
+  const hasSimpleEquationOnly = false;
+  const useEqStepSchemaLayout = ((isEquationStepFamily(card) || isSimpleEquationSchemaView) && getEquationStepView() === "schema");
   const schemaGeometry = useEqStepSchemaLayout ? buildEquationStepSchemaColumnGeometry(card) : null;
   const activeTrays = schemaGeometry ? schemaGeometry.trays : trays;
   const activePos = schemaGeometry ? schemaGeometry.pos : pos;
@@ -4900,30 +5330,32 @@ function renderCardEquation(card, revealState, useTokens){
   const varChar = getCardVarChar(card);
   const revealAnswers = shouldRevealEquationAnswers(card, revealState);
 
-  layer.appendChild(el("rect",{
-    x:activeTrays.left.x, y:activeTrays.left.y, width:activeTrays.left.w, height:activeTrays.left.h,
-    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
-  }));
-  layer.appendChild(el("rect",{
-    x:activeTrays.right.x, y:activeTrays.right.y, width:activeTrays.right.w, height:activeTrays.right.h,
-    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
-  }));
+  if(!hasSimpleEquationOnly){
+    layer.appendChild(el("rect",{
+      x:activeTrays.left.x, y:activeTrays.left.y, width:activeTrays.left.w, height:activeTrays.left.h,
+      rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
+    }));
+    layer.appendChild(el("rect",{
+      x:activeTrays.right.x, y:activeTrays.right.y, width:activeTrays.right.w, height:activeTrays.right.h,
+      rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.20)", "stroke-width":"5"
+    }));
 
-  if(activeTrays.vertical){
-    layer.appendChild(el("line",{
-      x1:activeTrays.left.x-10, y1:activeTrays.midY,
-      x2:activeTrays.left.x+activeTrays.left.w+10, y2:activeTrays.midY,
-      stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
-    }));
-  }else{
-    layer.appendChild(el("line",{
-      x1:activeTrays.midX, y1:activeTrays.left.y-10,
-      x2:activeTrays.midX, y2:activeTrays.left.y+activeTrays.left.h+10,
-      stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
-    }));
+    if(activeTrays.vertical){
+      layer.appendChild(el("line",{
+        x1:activeTrays.left.x-10, y1:activeTrays.midY,
+        x2:activeTrays.left.x+activeTrays.left.w+10, y2:activeTrays.midY,
+        stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
+      }));
+    }else{
+      layer.appendChild(el("line",{
+        x1:activeTrays.midX, y1:activeTrays.left.y-10,
+        x2:activeTrays.midX, y2:activeTrays.left.y+activeTrays.left.h+10,
+        stroke:"#000", "stroke-width":"10", "stroke-linecap":"round"
+      }));
+    }
   }
 
-  if(!hasAidTable && !hasEquationStepAid && !hasEquationSignedAid && !hasEquationSignedStepAid){
+  if(!isSimpleEquationSchemaView && !hasSimpleEquationLine && !hasAidTable && !hasEquationStepAid && !hasEquationSignedAid && !hasEquationSignedStepAid){
     layer.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
       "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
@@ -5471,70 +5903,50 @@ function renderCardEquation(card, revealState, useTokens){
     }
   }
 
-  drawSide(activePos.left, eq.left, "left");
-  drawSide(activePos.right, eq.right, "right");
+  if(!hasSimpleEquationOnly){
+    drawSide(activePos.left, eq.left, "left");
+    drawSide(activePos.right, eq.right, "right");
+  }
 
-  if(hasAidTable){
-    const visL = eqVisibleSum(eq.left);
-    const visR = eqVisibleSum(eq.right);
-    const tableMode = (revealState === 1) ? "symbolic" : "filled";
-    const tableVarChar = getTableVarChar(card);
-    const row1Parts = buildEquationTableParts(eq.total, eq.left.tasks, visL, eq.x, tableMode, tableVarChar);
-    const row2Parts = buildEquationTableParts(eq.total, eq.right.tasks, visR, eq.x, tableMode, tableVarChar);
-    const gTable = el("g", {id:"eqSingaporeTable"});
-    const projTableW = 640;
-    const layout = drawEquationSingaporeTable(gTable, {
-      cx: 520,
-      y: 34,
-      total: eq.total,
-      row1: row1Parts,
-      row2: row2Parts,
-      rect:(a)=>el("rect", a),
-      line:(a)=>el("line", a),
-      text:(x,y,t,a)=>text(x,y,t,a),
-      compactEquation: false,
-      baseW: projTableW,
-      maxW: projTableW,
-      forceCommonHiddenCellW: true,
-      disableLabelInflation: true,
-      minHiddenCellW: 68,
-      minVisibleCellW: 84,
-      rowH: 56,
-      fontSize: 50,
-      pad: 24,
-      stroke: "#000",
-      strokeWidth: 4,
-      hiddenFill: "rgba(0,0,0,0.10)",
-      visibleFill: "rgba(255,255,255,0)",
-      textColor: "#000"
-    });
-    layer.appendChild(gTable);
+  if(isSimpleEquationSchemaView){
+    if(revealState <= 0){
+      drawEquationStepSchemaIntro(layer, card);
+    }else{
+      const mappedRevealState = getEquationSimpleMappedRevealState(card, revealState);
+      drawEquationStepAid(layer, card, mappedRevealState);
+    }
+  }
 
-    const lines = (revealState === 1) ? [buildEquationSolveLines(eq, varChar)[0]] : buildEquationSolveLines(eq, varChar);
-    const eqFontSize = revealState === 1 ? 40 : 38;
-    const eqAlignGap = 18;
-    const longestLhs = Math.max(0, ...lines.map(line => {
-      const raw = String(line == null ? "" : line);
-      const idx = raw.indexOf("=");
-      if(idx < 0) return 0;
-      return approxTextWidthForLabel(raw.slice(0, idx).trim(), eqFontSize);
-    }));
-    const eqLeftPad = 36;
-    const eqX = Math.max(1085, Math.round(layout.right + eqLeftPad + longestLhs + eqAlignGap));
-    const eqY = (revealState === 1)
-      ? 96
-      : (lines.length >= 4 ? 58 : 82);
-    const eqGap = (revealState === 1)
-      ? 44
-      : (lines.length >= 4 ? 34 : 40);
-    drawEquationLines(layer, lines, eqX, eqY, {
+
+  if(hasSimpleEquationLine){
+    const lines = getEquationSimpleVisibleLines(card, revealState);
+    const n = Math.max(1, lines.length);
+    let eqFontSize = (n >= 4) ? 38 : (n >= 3 ? 42 : 46);
+    let eqGap = (n >= 4) ? 36 : (n >= 3 ? 40 : 46);
+
+    // Même placement que le mode "Équation — résolution pas à pas" :
+    // le bloc reste dans la bande haute et ne descend pas sur les plateaux.
+    const topLimit = 44;
+    const bottomLimit = 164;
+    const available = Math.max(0, bottomLimit - topLimit);
+    const wantedHeight = (n - 1) * eqGap;
+    if(wantedHeight > available && n > 1){
+      eqGap = Math.max(30, Math.floor(available / (n - 1)));
+      eqFontSize = Math.min(eqFontSize, Math.max(34, eqGap + 4));
+    }
+    const blockHeight = (n - 1) * eqGap;
+    const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
+
+    drawEquationLines(layer, lines, 800, startY, {
       text:(x,y,t,a)=>text(x,y,t,a),
       fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
+      fontSize:eqFontSize,
+      gap:eqGap,
       anchor:"start",
-      alignEquals: true,
-      eqGap: eqAlignGap
+      alignEquals:true,
+      eqGap:22,
+      fontFamily:"'Times New Roman', Times, serif",
+      fontStyle:"italic"
     });
   }
 
@@ -7495,17 +7907,21 @@ if(btnQuestionPrevEl) btnQuestionPrevEl.addEventListener("click", goPreviousQues
 if(btnQuestionNextEl) btnQuestionNextEl.addEventListener("click", goNextQuestion);
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 if(btnEqStepViewEquationEl){
-  btnEqStepViewEquationEl.addEventListener("click", ()=>{
+  btnEqStepViewEquationEl.addEventListener("click", (e)=>{
+    if(e) e.preventDefault();
     equationStepView = "equation";
     syncEquationStepViewButton();
     updateUI();
+    setTimeout(()=>{ const _ms = document.getElementById("mainSvg"); if(_ms && typeof _ms.focus === "function") _ms.focus(); }, 0);
   });
 }
 if(btnEqStepViewSchemaEl){
-  btnEqStepViewSchemaEl.addEventListener("click", ()=>{
+  btnEqStepViewSchemaEl.addEventListener("click", (e)=>{
+    if(e) e.preventDefault();
     equationStepView = "schema";
     syncEquationStepViewButton();
     updateUI();
+    setTimeout(()=>{ const _ms = document.getElementById("mainSvg"); if(_ms && typeof _ms.focus === "function") _ms.focus(); }, 0);
   });
 }
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
