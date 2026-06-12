@@ -729,9 +729,10 @@
 
     <label>Type d’activité</label>
     <select id="activity">
-      <option value="U">A — Jetons simples</option>
-      <option value="N">B — Jetons-paquets</option>
-      <option value="NPM">B± — Jetons relatifs</option>
+      <option value="U">A — Jetons</option>
+      <option value="UPM">A± — Jetons relatifs</option>
+      <option value="N">B — Paquets de jetons</option>
+      <option value="NPM">B± — Paquets de jetons relatifs</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
@@ -1091,9 +1092,9 @@
           <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
         </svg>
       </button>
-      <div class="varChoice" id="numberedUnknownChoice" title="Mode B : choisir l’affichage de l’inconnue" aria-label="Mode B : choisir l’affichage de l’inconnue">
-        <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Mode B : afficher l’inconnue avec une lettre">𝑥</button>
-        <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Mode B : afficher l’inconnue avec un point d’interrogation">?</button>
+      <div class="varChoice" id="numberedUnknownChoice" title="Modes A/A±/B/C : choisir l’affichage de l’inconnue" aria-label="Modes A/A±/B/C : choisir l’affichage de l’inconnue">
+        <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec une lettre">𝑥</button>
+        <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec un point d’interrogation">?</button>
       </div>
       
       <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
@@ -1178,8 +1179,10 @@ function beadColorForValue(v){
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
 
-  const isSignedMode = (act === "NPM");
-  const useTokens = isSignedMode && colorModeEl && colorModeEl.checked;
+  const isSignedMode = (act === "NPM" || act === "UPM");
+  // En A±, les jetons sont toujours codés vert/rouge.
+  // En B±, on conserve l’option utilisateur « Jetons Vert/Rouge ».
+  const useTokens = (act === "UPM") || (act === "NPM" && colorModeEl && colorModeEl.checked);
 
   let hue, s, lFill, lStroke, fillA, strokeA;
 
@@ -1355,16 +1358,24 @@ const printModeSelectEl = document.getElementById("printMode");
 const numberedUnknownChoiceEl = document.getElementById("numberedUnknownChoice");
 const btnNumberedLetterEl = document.getElementById("btnNumberedLetter");
 const btnNumberedQuestionMarkEl = document.getElementById("btnNumberedQuestionMark");
-let numberedQuestionMarkMode = false;
+// Par défaut : A — Jetons est pensé pour le primaire, donc inconnue en ?.
+// Les autres modes restent par défaut avec une lettre.
+let numberedQuestionMarkMode = activityEl && activityEl.value === "U";
+
+function applyDefaultUnknownDisplayForActivity(){
+  if(!activityEl) return;
+  if(activityEl.value === "U" || activityEl.value === "UPM") numberedQuestionMarkMode = true;
+  else if(activityEl.value === "N" || activityEl.value === "C") numberedQuestionMarkMode = false;
+}
 
 function getNumberedDisplayVarChar(card){
   const raw = getCardVarChar(card);
-  return (card && (card.family === "N" || card.family === "C") && numberedQuestionMarkMode) ? "?" : raw;
+  return (card && (card.family === "U" || card.family === "UPM" || card.family === "N" || card.family === "C") && numberedQuestionMarkMode) ? "?" : raw;
 }
 
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "N" || activityEl.value === "C";
+  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -1376,8 +1387,8 @@ function syncNumberedQuestionMarkButton(){
     btnNumberedQuestionMarkEl.setAttribute("aria-pressed", numberedQuestionMarkMode ? "true" : "false");
   }
   const label = numberedQuestionMarkMode
-    ? "Mode B/C : inconnue affichée avec un point d’interrogation"
-    : "Mode B/C : inconnue affichée avec une lettre";
+    ? "Modes A/A±/B/C : inconnue affichée avec un point d’interrogation"
+    : "Modes A/A±/B/C : inconnue affichée avec une lettre";
   numberedUnknownChoiceEl.title = label;
   numberedUnknownChoiceEl.setAttribute("aria-label", label);
 }
@@ -1505,7 +1516,7 @@ function syncPrintModeUI(){
 
 function getSeedForCurrentMode(){
   const act = activityEl.value;
-  if(act === "U") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
+  if(act === "U" || act === "UPM") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
@@ -1532,6 +1543,31 @@ function showUnitRow(labelEl, controlsEl, show){
 
 function syncUnitEquationUI(){
   if(!unitEquationTypeEl) return;
+  const act = activityEl ? activityEl.value : "";
+
+  if(act === "UPM"){
+    unitEquationTypeEl.style.display = "none";
+    if(unitEquationTypeEl.previousElementSibling) unitEquationTypeEl.previousElementSibling.style.display = "none";
+    showUnitRow(unitTasksLabelEl, unitTasksControlsEl, true);
+    showUnitRow(unitVisibleLabelEl, unitVisibleControlsEl, true);
+    showUnitRow(unitHiddenLabelEl, unitHiddenControlsEl, true);
+    if(unitTasksLabelEl) unitTasksLabelEl.textContent = "Taches";
+    if(unitVisibleLabelEl) unitVisibleLabelEl.textContent = "Jetons visibles";
+    if(unitHiddenLabelEl) unitHiddenLabelEl.textContent = "Jetons cachés par tache";
+    if(unitVisibleMaxEl){ unitVisibleMaxEl.max = "10"; if(Number(unitVisibleMaxEl.value) > 10) unitVisibleMaxEl.value = "10"; }
+    if(unitHiddenMaxEl){ unitHiddenMaxEl.max = "10"; if(Number(unitHiddenMaxEl.value) > 10) unitHiddenMaxEl.value = "10"; if(Number(unitHiddenMaxEl.value) < 1) unitHiddenMaxEl.value = "1"; }
+    return;
+  }else{
+    unitEquationTypeEl.style.display = "";
+    if(unitEquationTypeEl.previousElementSibling) unitEquationTypeEl.previousElementSibling.style.display = "";
+  }
+
+  if(unitTasksLabelEl) unitTasksLabelEl.textContent = "Taches";
+  if(unitVisibleLabelEl) unitVisibleLabelEl.textContent = "Visibles";
+  if(unitHiddenLabelEl) unitHiddenLabelEl.textContent = "Cachées";
+  if(unitVisibleMaxEl) unitVisibleMaxEl.max = "20";
+  if(unitHiddenMaxEl) unitHiddenMaxEl.max = "20";
+
   const mode = getUnitEquationType();
 
   const showTasks = (mode !== "X_PLUS_A_EQ_B");
@@ -1645,6 +1681,23 @@ function syncNumberedEquationUI(){
 
 function syncSettingsUI(){
   const act = activityEl.value;
+  const prevAct = syncSettingsUI._lastAct || "";
+  if(prevAct !== act && act === "UPM"){
+    if(unitTotalMinEl && unitTotalMaxEl){
+      const curMin = String(unitTotalMinEl.value).trim();
+      const curMax = String(unitTotalMaxEl.value).trim();
+      if((curMin === "1" && curMax === "50") || Number(curMax) > 20){
+        unitTotalMinEl.value = "-15";
+        unitTotalMaxEl.value = "15";
+      }
+    }
+    if(unitVisibleMaxEl && Number(unitVisibleMaxEl.value) > 10) unitVisibleMaxEl.value = "10";
+    if(unitHiddenMaxEl && Number(unitHiddenMaxEl.value) > 10) unitHiddenMaxEl.value = "10";
+  }else if(prevAct !== act && prevAct === "UPM" && act === "U"){
+    if(unitTotalMinEl && Number(unitTotalMinEl.value) < 1) unitTotalMinEl.value = "1";
+    if(unitTotalMaxEl && Number(unitTotalMaxEl.value) < 1) unitTotalMaxEl.value = "50";
+  }
+  syncSettingsUI._lastAct = act;
   syncPrintModeUI();
   syncNumberedQuestionMarkButton();
 
@@ -1709,7 +1762,7 @@ function syncSettingsUI(){
     }
   }
 
-  const isUnit = act === "U";
+  const isUnit = (act === "U" || act === "UPM");
   syncNumTasksUI(act);
   const isNumbered = (act === "N" || act === "NPM");
   const isNine = act === "C9";
@@ -1745,7 +1798,7 @@ function syncSettingsUI(){
   if(isNumbered) syncNumberedEquationUI();
   if(isUnit){
     syncUnitEquationUI();
-    syncUnitTotalBounds();
+    if(act === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
   }
   lastActivityForBounds = act;
   lastActivityForSigned = act;
@@ -1787,6 +1840,34 @@ function syncUnitTotalBounds(){
   unitTotalMaxEl.value = String(tMax);
 }
 
+function syncUnitSignedTotalBounds(){
+  const tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  const tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : tasksMax, 1), 1, 5);
+  if(unitTasksMinEl){
+    const a = Math.min(tasksMin, tasksMax);
+    const b = Math.max(tasksMin, tasksMax);
+    unitTasksMinEl.value = String(a);
+    unitTasksEl.value = String(b);
+  }
+
+  let vMax = clamp(numberOr(unitVisibleMaxEl.value, 10), 0, 10);
+  let hMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 1, 10);
+  unitVisibleMaxEl.min = "0"; unitVisibleMaxEl.max = "10"; unitVisibleMaxEl.value = String(vMax);
+  unitHiddenMaxEl.min = "1"; unitHiddenMaxEl.max = "10"; unitHiddenMaxEl.value = String(hMax);
+
+  const maxMagnitude = Math.min(50, vMax + Math.max(tasksMin, tasksMax) * hMax);
+  unitTotalMinEl.min = String(-maxMagnitude);
+  unitTotalMinEl.max = String(maxMagnitude);
+  unitTotalMaxEl.min = String(-maxMagnitude);
+  unitTotalMaxEl.max = String(maxMagnitude);
+
+  let tMin = clamp(Math.round(numberOr(unitTotalMinEl.value, -15)), -maxMagnitude, maxMagnitude);
+  let tMax = clamp(Math.round(numberOr(unitTotalMaxEl.value, 15)), -maxMagnitude, maxMagnitude);
+  if(tMax < tMin){ const tmp = tMin; tMin = tMax; tMax = tmp; }
+  unitTotalMinEl.value = String(tMin);
+  unitTotalMaxEl.value = String(tMax);
+}
+
 let autoGenTimer = null;
 function sanitizeNumberedTotalBoundsForMode(){
   const act = activityEl.value;
@@ -1809,9 +1890,9 @@ function sanitizeBeadAbsMaxForBPM(){
 function scheduleAutoGenerate(){
   if(autoGenTimer) clearTimeout(autoGenTimer);
   autoGenTimer = setTimeout(()=>{
-    if(activityEl.value === "U"){
+    if(activityEl.value === "U" || activityEl.value === "UPM"){
       syncUnitEquationUI();
-      syncUnitTotalBounds();
+      if(activityEl.value === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
     }
     if(activityEl.value === "N") syncNumberedEquationUI();
     sanitizeNumberedTotalBoundsForMode();
@@ -1827,6 +1908,7 @@ function refocusMainSvgFromControl(controlEl){
 }
 
 activityEl.addEventListener("change", ()=>{
+  applyDefaultUnknownDisplayForActivity();
   syncSettingsUI();
   scheduleAutoGenerate();
   refocusMainSvgFromControl(activityEl);
@@ -2027,7 +2109,10 @@ function assignPositionsNumbered(card, rng){
   const posH = [];
   for(let t=0; t<meta.tasks; t++){
     const s = splats[t];
-    const arr = meta.hiddenByTask[t];
+    const arr = meta.hiddenByTask[t] || [];
+    if(arr.length === 0){
+      continue;
+    }
     if(arr.length === 1){
       const maxD = Math.max(0, s.r - beadR - 30);
       const a = rFloat(rng, 0, Math.PI*2);
@@ -2086,7 +2171,7 @@ function assignPositionsNumbered(card, rng){
 }
 
 function assignPositions(card, rng){
-  if(card.family === "U"){
+  if(card.family === "U" || card.family === "UPM"){
     assignPositionsUnits(card, rng);
   }else if(card.family === "N" || card.family === "NPM" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
@@ -2461,6 +2546,10 @@ function genNumbered(rng){
   let tMin = clamp(numberOr(numTasksMinEl ? numTasksMinEl.value : 1, 1), 1, 6);
   let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
   if(tMax < tMin) [tMin, tMax] = [tMax, tMin];
+  if(tMin <= 1 && shouldGenerateEmptyTaskCase(rng)){
+    const emptyCard = genNumberedEmptyTaskCase(rng);
+    if(emptyCard) return emptyCard;
+  }
   const tasks = rInt(rng, tMin, tMax);
   
   let vMin = clamp(numberOr(numVisibleMinEl.value, 2), 0, 5);
@@ -2588,6 +2677,10 @@ function genNumberedEquationPreset(rng){
 
   for(let tries=0; tries<4000; tries++){
     if(mode === "X_PLUS_A_EQ_B"){
+      if(shouldGenerateEmptyTaskCase(rng)){
+        const emptyCard = genNumberedEmptyTaskCase(rng);
+        if(emptyCard) return emptyCard;
+      }
       const tasks = 1;
       const visibleCount = rInt(rng, vMin, vMax);
       const minTotal = Math.max(totalMin, visibleCount + 1);
@@ -2968,7 +3061,8 @@ function assignPositionsUnits(card, rng){
   const tray = { x:120, y:270, w:1360, h:550 };
   const margin = 8;
   const tasks = card._unit?.tasks ?? 1;
-  const hiddenByTask = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
+  const hiddenByTaskRaw = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
+  const hiddenByTask = hiddenByTaskRaw.map(v => Array.isArray(v) ? v.length : Number(v) || 0);
   const splats = getUnitSplats(tasks);
   card._splats = splats;
   const ctx = (function(){
@@ -3106,10 +3200,167 @@ function assignPositionsUnits(card, rng){
   card._posH = placedRes.posH;
 }
 
+function shouldGenerateEmptyTaskCase(rng){
+  // Cas rare : une tache peut cacher 0.
+  // Pas de réglage supplémentaire : si le cas ne convient pas, on passe à la carte suivante.
+  return rng() < 0.08;
+}
+
+function genUnitEmptyTaskCase(rng){
+  let tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : unitTasksEl.value, 1), 1, 5);
+  let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
+  if(tasksMin > 1) return null;
+
+  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 1, 20);
+  let totalMin = clamp(numberOr(unitTotalMinEl ? unitTotalMinEl.value : 1, 1), 1, 80);
+  let totalMax = clamp(numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 50, 50), 1, 80);
+  if(totalMax < totalMin){ const tmp = totalMin; totalMin = totalMax; totalMax = tmp; }
+
+  const maxTotal = Math.min(visibleMax, totalMax);
+  const minTotal = Math.max(1, totalMin);
+  if(maxTotal < minTotal) return null;
+
+  const total = rInt(rng, minTotal, maxTotal);
+  return {
+    family:"U",
+    total,
+    visible:Array.from({length:total}, ()=>1),
+    hidden:[],
+    _unit:{
+      tasks:1,
+      visibleCount:total,
+      visibleMax,
+      hiddenMax:clamp(numberOr(unitHiddenMaxEl.value, 10), 0, 20),
+      hiddenPerTask:0,
+      hiddenByTask:[0],
+      totalMin,
+      totalMax,
+      emptyTask:true
+    }
+  };
+}
+
+function genNumberedEmptyTaskCase(rng){
+  let totalMin = clamp(numberOr(numTotalMinEl ? numTotalMinEl.value : 20, 20), 1, 1000);
+  let totalMax = clamp(numberOr(numTotalMaxEl ? numTotalMaxEl.value : 50, 50), 1, 1000);
+  if(totalMax < totalMin){ const tmp = totalMin; totalMin = totalMax; totalMax = tmp; }
+
+  let vMin = clamp(numberOr(numVisibleMinEl ? numVisibleMinEl.value : 1, 1), 0, 5);
+  let vMax = clamp(numberOr(numVisibleMaxEl ? numVisibleMaxEl.value : 1, 1), 0, 5);
+  if(vMax < vMin){ const tmp = vMin; vMin = vMax; vMax = tmp; }
+  vMin = Math.max(1, vMin);
+  if(vMax < vMin) return null;
+
+  const total = rInt(rng, totalMin, totalMax);
+  const visibleCount = rInt(rng, vMin, vMax);
+  const visible = randomComposition(rng, total, visibleCount);
+  return {
+    family:"N",
+    total,
+    visible,
+    hidden:[],
+    varChar:pickVariableChar(rng),
+    _num:{
+      tasks:1,
+      visibleCount,
+      vMin,
+      vMax,
+      totalMin,
+      totalMax,
+      hiddenBeadsPerTask:0,
+      H:0,
+      hiddenByTask:[[]],
+      emptyTask:true
+    }
+  };
+}
+
+function makeSignedUnitArray(posCount, negCount){
+  const arr = [];
+  for(let i=0;i<posCount;i++) arr.push(1);
+  for(let i=0;i<negCount;i++) arr.push(-1);
+  return arr;
+}
+
+function genUnitsSigned(rng){
+  let tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : unitTasksEl.value, 1), 1, 5);
+  let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
+  if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
+
+  const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 10), 0, 10);
+  const hiddenMax = clamp(numberOr(unitHiddenMaxEl.value, 10), 1, 10);
+  let totalMin = clamp(Math.round(numberOr(unitTotalMinEl ? unitTotalMinEl.value : -15, -15)), -50, 50);
+  let totalMax = clamp(Math.round(numberOr(unitTotalMaxEl ? unitTotalMaxEl.value : 15, 15)), -50, 50);
+  if(totalMax < totalMin){ const tmp = totalMin; totalMin = totalMax; totalMax = tmp; }
+
+  const candidates = [];
+  const relaxed = [];
+
+  for(let tasks=tasksMin; tasks<=tasksMax; tasks++){
+    for(let visibleCount=0; visibleCount<=visibleMax; visibleCount++){
+      for(let visiblePos=0; visiblePos<=visibleCount; visiblePos++){
+        const visibleNeg = visibleCount - visiblePos;
+        const visibleSum = visiblePos - visibleNeg;
+
+        // A± — Jetons relatifs : une même tache cache une quantité homogène.
+        // Donc sous chaque tache : soit uniquement des +1, soit uniquement des −1.
+        // On évite pour l’instant le cas ? = 0, qui sera traité plus tard comme option dédiée.
+        for(let hiddenCount=1; hiddenCount<=hiddenMax; hiddenCount++){
+          for(const hiddenSign of [-1, 1]){
+            const hiddenPos = hiddenSign > 0 ? hiddenCount : 0;
+            const hiddenNeg = hiddenSign < 0 ? hiddenCount : 0;
+            const hiddenSum = hiddenSign * hiddenCount;
+            const total = visibleSum + tasks * hiddenSum;
+            const entry = {tasks, visibleCount, visiblePos, visibleNeg, hiddenCount, hiddenPos, hiddenNeg, hiddenSum, total};
+            relaxed.push(entry);
+            if(total >= totalMin && total <= totalMax) candidates.push(entry);
+          }
+        }
+      }
+    }
+  }
+
+  const pool = candidates.length ? candidates : relaxed;
+  const picked = pool.length ? pool[rInt(rng, 0, pool.length - 1)] : {tasks:1, visibleCount:2, visiblePos:1, visibleNeg:1, hiddenCount:1, hiddenPos:1, hiddenNeg:0, hiddenSum:1, total:1};
+
+  const visible = makeSignedUnitArray(picked.visiblePos, picked.visibleNeg);
+  shuffleInPlace(visible, rng);
+
+  const hiddenPattern = makeSignedUnitArray(picked.hiddenPos, picked.hiddenNeg);
+  shuffleInPlace(hiddenPattern, rng);
+
+  const hiddenByTask = Array.from({length:picked.tasks}, ()=> hiddenPattern.slice());
+  const hidden = [];
+  hiddenByTask.forEach(arr => hidden.push(...arr));
+
+  return {
+    family:"UPM",
+    total:picked.total,
+    visible,
+    hidden,
+    _unit:{
+      tasks:picked.tasks,
+      visibleCount:picked.visibleCount,
+      visibleMax,
+      hiddenMax,
+      hiddenPerTask:picked.hiddenSum,
+      hiddenByTask,
+      totalMin,
+      totalMax,
+      signed:true
+    }
+  };
+}
+
 function genUnits(rng){
   let tasksMin = clamp(numberOr(unitTasksMinEl ? unitTasksMinEl.value : unitTasksEl.value, 1), 1, 5);
   let tasksMax = clamp(numberOr(unitTasksEl.value, 1), 1, 5);
   if(tasksMax < tasksMin){ const tmp = tasksMin; tasksMin = tasksMax; tasksMax = tmp; }
+  if(shouldGenerateEmptyTaskCase(rng)){
+    const emptyCard = genUnitEmptyTaskCase(rng);
+    if(emptyCard) return emptyCard;
+  }
   const tasks = rInt(rng, tasksMin, tasksMax);
   
   const visibleMax = clamp(numberOr(unitVisibleMaxEl.value, 15), 0, 20);
@@ -3198,6 +3449,10 @@ function genUnitsEquationPreset(rng){
   }
 
   if(mode === "X_PLUS_A_EQ_B"){
+    if(shouldGenerateEmptyTaskCase(rng)){
+      const emptyCard = genUnitEmptyTaskCase(rng);
+      if(emptyCard) return emptyCard;
+    }
     const tasks = 1;
     for(let hiddenPerTask=1; hiddenPerTask<=Math.max(1, hiddenMax); hiddenPerTask++){
       for(let visibleCount=1; visibleCount<=Math.max(1, visibleMax); visibleCount++){
@@ -3320,6 +3575,44 @@ function taskShortName(idx){
 }
 function taskSplatColor(idx){
   return ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"][idx % 3];
+}
+
+function relationGraphicClueParts(rel){
+  if(!rel) return [];
+  const k = formatRelationNumber(rel.k);
+  if(rel.op === "MUL"){
+    return [{type:'splat', id:rel.target}, {type:'text', val:` = ${k} × `}, {type:'splat', id:rel.source}];
+  }
+  if(rel.op === "DIV"){
+    return [{type:'splat', id:rel.target}, {type:'text', val:` = `}, {type:'splat', id:rel.source}, {type:'text', val:` ÷ ${k}`}];
+  }
+  if(rel.op === "ADD"){
+    return [{type:'splat', id:rel.target}, {type:'text', val:` = `}, {type:'splat', id:rel.source}, {type:'text', val:` + ${k}`}];
+  }
+  if(rel.op === "SUB"){
+    return [{type:'splat', id:rel.target}, {type:'text', val:` = `}, {type:'splat', id:rel.source}, {type:'text', val:` − ${k}`}];
+  }
+  return [];
+}
+function drawRelationGraphicClues(targetGroup, card, opts = {}){
+  const rels = card && card._rel && Array.isArray(card._rel.relations) ? card._rel.relations : [];
+  if(!rels.length) return;
+
+  const isPrint = !!opts.isPrint;
+  const mkEl = opts.mkEl || el;
+  const mkText = opts.mkText || text;
+  const cx = opts.cx ?? 1155;
+  const cy = opts.cy ?? (rels.length > 1 ? 72 : 96);
+  const lineH = opts.lineH ?? 58;
+
+  const g = mkEl("g", { id:"relationGraphicClues" });
+  rels.forEach((rel, i) => {
+    const seq = relationGraphicClueParts(rel);
+    if(seq.length){
+      renderMixedClue(g, cx, cy + i*lineH, seq, mkEl, mkText, isPrint, false);
+    }
+  });
+  targetGroup.appendChild(g);
 }
 function relationModelKind(card){
   const rel = card && card._rel;
@@ -3665,7 +3958,7 @@ function buildABEquabarPayload(card){
     source:"splat",
     family:card.family,
     variable:getCardVarChar(card),
-    unknownDisplay:card.family === "N" ? (numberedQuestionMarkMode ? "question" : "letter") : "question",
+    unknownDisplay:(card.family === "U" || card.family === "N") ? (numberedQuestionMarkMode ? "question" : "letter") : "question",
     fullscreenSize:"compact",
     // Convention validée : dans Équabarre import, l'équation s'écrit bas = haut.
     lhsSide:"bottom",
@@ -4121,7 +4414,7 @@ function renderCard(card, revealState){
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM") && colorModeEl && colorModeEl.checked;
+  const useTokens = (act === "UPM") || ((act === "NPM") && colorModeEl && colorModeEl.checked);
   const varChar = getCardVarChar(card);
 
     const trayCfg = getTrayConfig(card.family);
@@ -4207,7 +4500,7 @@ function renderCard(card, revealState){
       parts.push(...hiddenSums.map(v => ({
         value: v, 
         hidden: true,
-        text: abRevealPhase === 1 ? "?" : String(v)
+        text: abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)
       })));
 
       const barW = drawBarModelPartsInGroup(gTotal, tx, ty-56, card.total, parts, {
@@ -4374,9 +4667,10 @@ function renderCard(card, revealState){
         hiddenSums = Array.from({length: tasks}, (_, i)=> base + (i < rem ? 1 : 0));
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+      const drawingHiddenSums = (unit && unit.emptyTask && totalHid === 0) ? [] : hiddenSums;
       const parts = [];
       if (vis > 0) parts.push({value: vis, hidden: false, text: revealState === 1 ? "" : String(vis)});
-      parts.push(...hiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? "?" : String(v)) })));
+      parts.push(...drawingHiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
       const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
@@ -4403,9 +4697,10 @@ function renderCard(card, revealState){
         hiddenSums = Array.from({length: tasks}, ()=> each);
       }
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+      const drawingHiddenSums = (num && num.emptyTask && totalHid === 0) ? [] : hiddenSums;
       const parts = [];
       if (visSum > 0) parts.push({value: visSum, hidden: false, text: revealState === 1 ? "" : String(visSum)});
-      parts.push(...hiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
+      parts.push(...drawingHiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
       const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
@@ -4507,6 +4802,12 @@ function renderCard(card, revealState){
     });
   }
 
+  if(card.family === "UPM" && revealState > 0){
+    drawUnitSignedEquationAid(svg, card, revealState, {
+      centerY: bbTotal.y + bbTotal.height / 2
+    });
+  }
+
   if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && revealState > 0)){
     const indices = card._inv.indices;
     const gInd = el("g", {id: "clueGroup"});
@@ -4538,6 +4839,10 @@ function renderCard(card, revealState){
     svg.appendChild(gInd);
   }
 
+
+  if(card.family === "C" && card._rel && revealState > 0 && revealState <= 5){
+    drawRelationGraphicClues(svg, card);
+  }
 
   if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
     drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
@@ -4573,12 +4878,30 @@ function renderCard(card, revealState){
   const layer = trayLayer;
   const visualRevealState = (card.family === "C") ? (revealState >= 5 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
 
-  if(card.family === "U"){
-    const beadR = card._beadR ?? 26;
+  if(card.family === "U" || card.family === "UPM"){
+    const beadR = card._beadR ?? (card.family === "UPM" ? 30 : 26);
+    const signedUnit = card.family === "UPM";
+    const drawUnitToken = (cx, cy, value, hidden)=>{
+      if(signedUnit){
+        const c = beadColorForValue(value);
+        layer.appendChild(el("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke, "stroke-width":"3.5"}));
+        layer.appendChild(text(cx, cy, value > 0 ? "+1" : "−1", {
+          "text-anchor":"middle",
+          "dominant-baseline":"middle",
+          "alignment-baseline":"middle",
+          "dy":"0.06em",
+          "font-size":String(Math.round(beadR*0.72)),
+          "fill":"var(--ink)",
+          "font-weight":"900"
+        }));
+      }else{
+        layer.appendChild(el("circle",{cx, cy, r:beadR, fill:hidden ? "var(--beadH-fill)" : "var(--unit-fill)", stroke:hidden ? "var(--beadH-stroke)" : "var(--unit-stroke)", "stroke-width":"3"}));
+      }
+    };
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
-      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--beadH-fill)", stroke:"var(--beadH-stroke)", "stroke-width":"3"}));
+      drawUnitToken(cx, cy, card.hidden[i], true);
     }
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
@@ -4600,10 +4923,16 @@ function renderCard(card, revealState){
         layer.appendChild(pCov);
       }
     }
+    if(visualRevealState === 2 && card._unit && card._unit.emptyTask){
+      const s0 = splats[0] || {cx:820, cy:610, r:220};
+      const w = 210, h = 68;
+      layer.appendChild(el("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)", "stroke-width":"4"}));
+      layer.appendChild(text(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", "dy":"0.04em", "font-size":"38", "fill":"var(--ink)", "font-weight":"900"}));
+    }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
-      layer.appendChild(el("circle",{cx, cy, r:beadR, fill:"var(--unit-fill)", stroke:"var(--unit-stroke)", "stroke-width":"3"}));
+      drawUnitToken(cx, cy, card.visible[i], false);
     }
     return;
   }
@@ -4629,6 +4958,7 @@ function renderCard(card, revealState){
     }
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
+    const isEmptyNumberedTask = !!(card._num && card._num.emptyTask);
     const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
     const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
     const opp = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
@@ -4684,6 +5014,12 @@ function renderCard(card, revealState){
         layer.appendChild(pCov);
       }
     });
+    if(visualRevealState === 2 && isEmptyNumberedTask){
+      const s0 = splats[0] || {cx:820, cy:610, r:220};
+      const w = 220, h = 74;
+      layer.appendChild(el("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:26, ry:26, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)", "stroke-width":"4"}));
+      layer.appendChild(text(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", "dy":"0.04em", "font-size":"40", "fill":"var(--ink)", "font-weight":"900"}));
+    }
 
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
@@ -5046,6 +5382,80 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
   targetGroup.appendChild(eqGroup);
 }
 
+function buildUnitSignedEquationLines(card, varChar = xChar){
+  const unit = card && card._unit ? card._unit : {};
+  const tasks = Math.max(1, Number(unit.tasks) || (Array.isArray(card && card._splats) ? card._splats.length : 1));
+  const visibleSum = sumArray(card && card.visible);
+  const total = Number(card && card.total) || 0;
+  const isolated = total - visibleSum;
+  let xVal = Number(unit.hiddenPerTask);
+  if(!Number.isFinite(xVal)) xVal = isolated / tasks;
+
+  const lines = [];
+  function pushUnique(line){
+    if(line && (!lines.length || lines[lines.length - 1] !== line)) lines.push(line);
+  }
+
+  pushUnique(`${formatSignedLinearExpression(tasks, visibleSum, varChar)} = ${formatSignedIntegerLabel(total)}`);
+
+  if(visibleSum !== 0){
+    pushUnique(`${formatSignedCoeffLabel(tasks, varChar)} = ${formatSignedIntegerLabel(isolated)}`);
+  }
+
+  if(tasks !== 1){
+    pushUnique(`${varChar} = ${formatSignedIntegerLabel(xVal)}`);
+  }
+
+  return lines;
+}
+
+function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
+  const varChar = getNumberedDisplayVarChar(card);
+  const allLines = buildUnitSignedEquationLines(card, varChar);
+  if(!allLines.length) return;
+
+  const shownLines = revealState === 1 ? [allLines[0]] : allLines;
+  const eqGroup = el("g", { id:"unitSignedEquationAid" });
+
+  const fontSize = 46;
+  const equalFontSize = 42;
+  const gap = 56;
+  const centerY = Number.isFinite(Number(opts.centerY)) ? Number(opts.centerY) : 138;
+  const startY = centerY - ((shownLines.length - 1) * gap / 2);
+  const centerX = 1220;
+  const eqGap = 22;
+  let cy = startY;
+
+  shownLines.forEach(line => {
+    const raw = String(line == null ? "" : line);
+    const eqIndex = raw.indexOf("=");
+    if(eqIndex >= 0){
+      const lhs = raw.slice(0, eqIndex).trim();
+      const rhs = raw.slice(eqIndex + 1).trim();
+      drawProjectionEquationLine(eqGroup, centerX, cy, lhs, rhs, {
+        text:(x,y,t,a)=>text(x,y,t,a),
+        fill:"var(--ink)",
+        fontSize,
+        equalFontSize,
+        eqGap
+      });
+    }else{
+      eqGroup.appendChild(text(centerX, cy, raw, {
+        "text-anchor":"middle",
+        "font-size":String(fontSize),
+        "fill":"var(--ink)",
+        "font-weight":"normal",
+        "font-family":"'Times New Roman', Times, serif",
+        "font-style":"italic",
+        "dominant-baseline":"middle"
+      }));
+    }
+    cy += gap;
+  });
+
+  targetGroup.appendChild(eqGroup);
+}
+
 /* Render impression */
 function renderCardIntoSvg(targetSvg, card, printMode){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
@@ -5057,7 +5467,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
-  const useTokens = (act === "NPM") && colorModeEl && colorModeEl.checked;
+  const useTokens = (act === "UPM") || ((act === "NPM") && colorModeEl && colorModeEl.checked);
 
   const W = 1600;
   const H = 2200;
@@ -5131,6 +5541,10 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   // Contrat didactique impression PDF
 
+  if(card.family === "C" && card._rel && revealState > 0 && revealState <= 5){
+    drawRelationGraphicClues(targetSvg, card, { mkEl:tEl, mkText:tText, isPrint:true });
+  }
+
   if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
     drawRelationSituationSchema(targetSvg, card, { filled: revealState === 2 });
   }
@@ -5167,22 +5581,41 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
   const colorsERev = ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"];
 
-  if(card.family === "U"){
-    const beadR = card._beadR ?? 26;
+  if(card.family === "U" || card.family === "UPM"){
+    const beadR = card._beadR ?? (card.family === "UPM" ? 30 : 26);
+    const signedUnitPrint = card.family === "UPM";
+    const printSignedColors = (v)=> v >= 0 ? {fill:"rgba(34,197,94,0.30)", stroke:"rgba(22,163,74,0.80)"} : {fill:"rgba(244,63,94,0.30)", stroke:"rgba(225,29,72,0.80)"};
+    const drawPrintUnitToken = (cx, cy, value, hidden)=>{
+      if(signedUnitPrint){
+        const c = printSignedColors(value);
+        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke,"stroke-width":"3.5"}));
+        targetSvg.appendChild(tText(cx, cy, value > 0 ? "+1" : "−1", {"text-anchor":"middle","dominant-baseline":"middle","font-size":String(Math.round(beadR*0.72)),"fill":"#000","font-weight":"900"}));
+      }else{
+        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "rgba(106,167,255,0.20)", stroke:hidden ? "rgba(0,0,0,0.18)" : "rgba(106,167,255,0.55)","stroke-width":"3"}));
+      }
+    };
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
       const cy = card._posH?.[i]?.cy ?? 610;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.05)", stroke:"rgba(0,0,0,0.18)","stroke-width":"3"}));
+      drawPrintUnitToken(cx, cy, card.hidden[i], true);
     }
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     }
+    if(revealAnswers && card._unit && card._unit.emptyTask){
+      const s0 = splats[0] || {cx:820, cy:610, r:220};
+      const w = 210, h = 68;
+      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
+      targetSvg.appendChild(tText(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"38","fill":"#000","font-weight":"900"}));
+    }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(106,167,255,0.20)", stroke:"rgba(106,167,255,0.55)","stroke-width":"3"}));
+      drawPrintUnitToken(cx, cy, card.visible[i], false);
     }
+
+    if(card.family === "UPM") return;
 
     if(printMode === "worksheet" || printMode === "correction"){      const vis = sumArray(card.visible);
       const unit = card._unit || {};
@@ -5350,6 +5783,12 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       }
 
     });
+    if(revealAnswers && card._num && card._num.emptyTask){
+      const s0 = splats[0] || {cx:820, cy:610, r:220};
+      const w = 220, h = 74;
+      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy+printOffsetY-h/2, width:w, height:h, rx:26, ry:26, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
+      targetSvg.appendChild(tText(s0.cx, s0.cy+printOffsetY, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"40","fill":"#000","font-weight":"900"}));
+    }
 
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
@@ -5618,12 +6057,12 @@ const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function isRevealSequenceCard(card){
-  return !!card && (card.family === "U" || card.family === "N" || card.family === "NPM" || card.family === "C");
+  return !!card && (card.family === "U" || card.family === "UPM" || card.family === "N" || card.family === "NPM" || card.family === "C");
 }
 function getMaxRevealState(card){
   if(!card) return 0;
   if(card.family === "U" || card.family === "N") return 3;
-  if(card.family === "NPM") return 2;
+  if(card.family === "UPM" || card.family === "NPM") return 2;
   if(card.family === "C") return 5;
   return 2;
 }
@@ -5652,9 +6091,9 @@ function generate(){
   const act = activityEl.value;
   const n = clamp(numberOr(countEl.value, 30), 1, 300);
 
-  if(act==="U"){
+  if(act==="U" || act==="UPM"){
     syncUnitEquationUI();
-    syncUnitTotalBounds();
+    if(act==="UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
   }
   if(act==="N" || act==="NPM"){
     syncNumberedEquationUI();
@@ -5668,6 +6107,8 @@ function generate(){
     let c;
     if(act==="U"){
       c = isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
+    }else if(act==="UPM"){
+      c = genUnitsSigned(rng);
     }else if(act==="N"){
       c = isNumberedEquationPresetActive() ? genNumberedEquationPreset(rng) : genNumbered(rng);
     }else if(act==="NPM"){
