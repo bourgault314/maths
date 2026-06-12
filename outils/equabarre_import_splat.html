@@ -1910,7 +1910,11 @@
     // Mais les cases restantes ne doivent pas être réduites une deuxième fois.
     // Donc on normalise les colonnes à l'intérieur de la largeur restante.
     const safeLineWidth = Math.max(0.0001, lineWidth);
-    const cols = widths.map(w => `${(w / safeLineWidth) * 100}%`).join(" ") || "1fr";
+    const safeNaturalWidth = Math.max(0.0001, naturalLineWidth);
+    // Les colonnes doivent être normalisées sur la largeur naturelle de la ligne,
+    // pas sur la largeur commune. Sinon, une ligne avec une seule case (ex. 92)
+    // n'occupe qu'une partie de la largeur commune et laisse une zone blanche vide.
+    const cols = widths.map(w => `${(w / safeNaturalWidth) * 100}%`).join(" ") || "1fr";
 
     host.style.setProperty("--cols", cols);
     host.style.setProperty("--lineWidth", `${Math.max(0, Math.min(100, lineWidth))}%`);
