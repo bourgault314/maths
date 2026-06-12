@@ -3492,6 +3492,33 @@ function getRelationGroupedDisplayGroups(card){
   return { totals, groups, parts, xParts: Math.max(1, Math.round(Number(totals.sumCoef) || 1)) };
 }
 
+function relationPartNumberValue(part){
+  if(!part) return 0;
+  const direct = Number(part.value);
+  if(Number.isFinite(direct)) return direct;
+  const fromLabel = Number(String(part.label ?? "").replace(/\s+/g, "").replace(",", "."));
+  return Number.isFinite(fromLabel) ? fromLabel : 0;
+}
+
+function getRelationOrderedConstantParts(card, grouped=null){
+  const source = grouped || getRelationGroupedDisplayGroups(card);
+  return (Array.isArray(source.parts) ? source.parts : [])
+    .filter(part => part && part.kind !== "x")
+    .map(part => ({...part, value:relationPartNumberValue(part)}))
+    .filter(part => Number.isFinite(Number(part.value)) && Number(part.value) !== 0);
+}
+
+function relationEquationLeftFromPieces(card, coefficient, constantParts){
+  const relVarChar = getNumberedDisplayVarChar(card);
+  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const terms = [variableTerm];
+  (Array.isArray(constantParts) ? constantParts : []).forEach(part => {
+    const value = Number(part.value);
+    if(Number.isFinite(value) && value !== 0) terms.push(formatRelationNumber(value));
+  });
+  return terms.join(" + ");
+}
+
 
 const EQUABAR_IMPORT_URL = "./equabarre_import_splat.html";
 
@@ -3505,13 +3532,13 @@ function buildRelationEquabarPayload(card){
   const grouped = getRelationGroupedDisplayGroups(card);
   const totals = grouped.totals;
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
-  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
+  const constantParts = getRelationOrderedConstantParts(card, grouped);
   const trueTotal = Number(totals.trueTotal);
   const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
 
   const bottom = [];
   for(let i=0;i<coefficient;i++) bottom.push({type:"x"});
-  if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
+  constantParts.forEach(part => bottom.push({type:"number", value:Number(part.value)}));
 
   return {
     source:"splat",
@@ -3519,6 +3546,8 @@ function buildRelationEquabarPayload(card){
     variable:getCardVarChar(card),
     unknownDisplay:numberedQuestionMarkMode ? "question" : "letter",
     fullscreenSize:"compact",
+    // Convention validée : dans Équabarre import, l'équation s'écrit bas = haut.
+    lhsSide:"bottom",
     x:Number.isFinite(unitValue) ? unitValue : undefined,
     top:[{type:"number", value:Number.isFinite(trueTotal) ? trueTotal : totals.hiddenTotal + totals.visibleSum}],
     bottom
@@ -3560,7 +3589,12 @@ function buildABEquabarPayload(card){
 
   const bottom = [];
   for(let i=0;i<tasks;i++) bottom.push({type:"x"});
-  if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
+  const visibleValues = Array.isArray(card.visible) ? card.visible.map(Number).filter(v => Number.isFinite(v) && v !== 0) : [];
+  if(visibleValues.length){
+    visibleValues.forEach(value => bottom.push({type:"number", value}));
+  }else if(constantTotal > 0){
+    bottom.push({type:"number", value:constantTotal});
+  }
 
   return {
     source:"splat",
@@ -3568,6 +3602,8 @@ function buildABEquabarPayload(card){
     variable:getCardVarChar(card),
     unknownDisplay:card.family === "N" ? (numberedQuestionMarkMode ? "question" : "letter") : "question",
     fullscreenSize:"compact",
+    // Convention validée : dans Équabarre import, l'équation s'écrit bas = haut.
+    lhsSide:"bottom",
     x:Number.isFinite(unitValue) ? unitValue : undefined,
     top:[{type:"number", value:Number(card.total)}],
     bottom
@@ -3583,6 +3619,14 @@ function openABInEquabar(card){
   }catch(err){
     console.error("Impossible d'ouvrir Équabarre import", err);
   }
+}
+
+function releaseEquabarSolveButtonFocus(btn){
+  try{
+    if(btn && typeof btn.blur === "function") btn.blur();
+    const main = document.getElementById("mainSvg");
+    if(main && typeof main.focus === "function") main.focus({preventScroll:true});
+  }catch(_err){}
 }
 
 function drawABEquabarSolveButton(g, card, x, y){
@@ -3601,12 +3645,14 @@ function drawABEquabarSolveButton(g, card, x, y){
     ev.preventDefault();
     ev.stopPropagation();
     openABInEquabar(card);
+    releaseEquabarSolveButtonFocus(btn);
   });
   btn.addEventListener("keydown", ev => {
     if(ev.key === "Enter" || ev.key === " "){
       ev.preventDefault();
       ev.stopPropagation();
       openABInEquabar(card);
+      releaseEquabarSolveButtonFocus(btn);
     }
   });
   g.appendChild(btn);
@@ -3628,12 +3674,14 @@ function drawEquabarSolveButton(g, card, x, y){
     ev.preventDefault();
     ev.stopPropagation();
     openRelationInEquabar(card);
+    releaseEquabarSolveButtonFocus(btn);
   });
   btn.addEventListener("keydown", ev => {
     if(ev.key === "Enter" || ev.key === " "){
       ev.preventDefault();
       ev.stopPropagation();
       openRelationInEquabar(card);
+      releaseEquabarSolveButtonFocus(btn);
     }
   });
   g.appendChild(btn);
@@ -3657,8 +3705,9 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const g = el("g", { id: solved ? "relationOrderedSchemaSolved" : "relationOrderedSchema" });
 
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
-  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
-  const totalWeight = coefficient + (constantTotal > 0 ? Math.max(0.35, constantTotal / Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || 1)) : 0);
+  const constantParts = getRelationOrderedConstantParts(card, grouped);
+  const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
+  const totalWeight = coefficient + constantParts.reduce((sum, part) => sum + Math.max(0.35, Number(part.weight) || 1), 0);
   const unitW = barW / Math.max(1, totalWeight);
 
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
@@ -3674,27 +3723,17 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
 
   let x = barX;
-  const spans = [];
-  const xStart = x;
-  for(let i=0;i<coefficient;i++){
-    const isLastX = (i === coefficient - 1 && constantTotal <= 0);
-    const w = isLastX ? (barX + barW - x) : Math.max(56, unitW);
-    drawBarCell(g, x, yTop+topH, w, botH, {kind:"x", label:getNumberedDisplayVarChar(card), weight:1}, true, {fontSize:30});
+  const orderedParts = [
+    ...Array.from({length:coefficient}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1})),
+    ...constantParts
+  ];
+  for(let i=0;i<orderedParts.length;i++){
+    const part = orderedParts[i];
+    const isLast = i === orderedParts.length - 1;
+    const rawW = unitW * Math.max(0.35, Number(part.weight) || 1);
+    const w = isLast ? (barX + barW - x) : Math.max(56, rawW);
+    drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
     x += w;
-  }
-  spans.push({x1:xStart, x2:x, label:"inconnues"});
-
-  if(constantTotal > 0){
-    const cStart = x;
-    const w = barX + barW - x;
-    drawBarCell(g, x, yTop+topH, w, botH, {kind:"visible", label:formatRelationNumber(constantTotal), weight:Math.max(0.35, constantTotal / Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || 1))}, true, {fontSize:30});
-    x += w;
-    spans.push({x1:cStart, x2:x, label:"constantes"});
-  }
-
-  const braceY = yTop + topH + botH + 8;
-  for(const span of spans){
-    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label);
   }
 
   const eqCenter = barX + barW + (isFullscreenProjection ? 185 : 260);
@@ -3707,7 +3746,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   }
   const relVarChar = getNumberedDisplayVarChar(card);
   const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
-  const equationLeft = constantTotal > 0 ? `${variableTerm} + ${formatRelationNumber(constantTotal)}` : variableTerm;
+  const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
   const equationRight = formatRelationNumber(totals.trueTotal);
   eqLine(equationLeft, equationRight, 34);
 
@@ -3793,14 +3832,13 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   }
   const relVarChar = getNumberedDisplayVarChar(card);
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || xParts || 1));
-  const constantTotal = Math.max(0, Number(totals.sumDiff || 0) + Number(totals.visibleSum || 0));
+  const constantParts = getRelationOrderedConstantParts(card, grouped);
+  const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
   const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
-  const equationLeft = constantTotal > 0
-    ? `${variableTerm} + ${formatRelationNumber(constantTotal)}`
-    : variableTerm;
+  const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
   const equationRight = formatRelationNumber(totals.trueTotal);
 
-  // Cohérence avec les autres Splat ax + b = c : l'équation affichée est déjà réduite.
+  // L'équation décrit exactement les cases visibles du schéma : les constantes ne sont pas encore regroupées.
   eqLine(equationLeft, equationRight, 34);
 
   if(solved){
