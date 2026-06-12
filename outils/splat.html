@@ -3519,8 +3519,6 @@ function buildRelationEquabarPayload(card){
     variable:getCardVarChar(card),
     unknownDisplay:numberedQuestionMarkMode ? "question" : "letter",
     fullscreenSize:"compact",
-    // Équabarre doit conserver le sens visuel du tableau : haut = bas.
-    lhsSide:"top",
     x:Number.isFinite(unitValue) ? unitValue : undefined,
     top:[{type:"number", value:Number.isFinite(trueTotal) ? trueTotal : totals.hiddenTotal + totals.visibleSum}],
     bottom
@@ -3570,8 +3568,6 @@ function buildABEquabarPayload(card){
     variable:getCardVarChar(card),
     unknownDisplay:card.family === "N" ? (numberedQuestionMarkMode ? "question" : "letter") : "question",
     fullscreenSize:"compact",
-    // Équabarre doit conserver le sens visuel du tableau : haut = bas.
-    lhsSide:"top",
     x:Number.isFinite(unitValue) ? unitValue : undefined,
     top:[{type:"number", value:Number(card.total)}],
     bottom
@@ -3587,14 +3583,6 @@ function openABInEquabar(card){
   }catch(err){
     console.error("Impossible d'ouvrir Équabarre import", err);
   }
-}
-
-function releaseEquabarSolveButtonFocus(btn){
-  try{
-    if(btn && typeof btn.blur === "function") btn.blur();
-    const main = document.getElementById("mainSvg");
-    if(main && typeof main.focus === "function") main.focus({preventScroll:true});
-  }catch(_err){}
 }
 
 function drawABEquabarSolveButton(g, card, x, y){
@@ -3613,14 +3601,12 @@ function drawABEquabarSolveButton(g, card, x, y){
     ev.preventDefault();
     ev.stopPropagation();
     openABInEquabar(card);
-    releaseEquabarSolveButtonFocus(btn);
   });
   btn.addEventListener("keydown", ev => {
     if(ev.key === "Enter" || ev.key === " "){
       ev.preventDefault();
       ev.stopPropagation();
       openABInEquabar(card);
-      releaseEquabarSolveButtonFocus(btn);
     }
   });
   g.appendChild(btn);
@@ -3642,14 +3628,12 @@ function drawEquabarSolveButton(g, card, x, y){
     ev.preventDefault();
     ev.stopPropagation();
     openRelationInEquabar(card);
-    releaseEquabarSolveButtonFocus(btn);
   });
   btn.addEventListener("keydown", ev => {
     if(ev.key === "Enter" || ev.key === " "){
       ev.preventDefault();
       ev.stopPropagation();
       openRelationInEquabar(card);
-      releaseEquabarSolveButtonFocus(btn);
     }
   });
   g.appendChild(btn);
