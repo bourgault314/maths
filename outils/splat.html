@@ -3649,22 +3649,17 @@ function buildABEquabarPayload(card){
   }
 
   const bottom = [];
-  for(let i=0;i<tasks;i++) bottom.push({type:"x"});
 
-  // Mode A — jetons simples : le petit tableau Splat affiche déjà les visibles
-  // comme une seule constante (ex. 14), pas comme 1 + 1 + ... + 1.
-  // On exporte donc une constante unique vers Équabarre pour garder la cohérence
-  // entre le schéma résumé et l'équation importée.
-  if(card.family === "U"){
-    if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
-  }else{
-    const visibleValues = Array.isArray(card.visible) ? card.visible.map(Number).filter(v => Number.isFinite(v) && v !== 0) : [];
-    if(visibleValues.length){
-      visibleValues.forEach(value => bottom.push({type:"number", value}));
-    }else if(constantTotal > 0){
-      bottom.push({type:"number", value:constantTotal});
-    }
+  // Convention d'export validée pour Splat A/B : Équabarre doit recevoir
+  // exactement le tableau affiché dans Splat, de gauche à droite.
+  // Dans le tableau résumé A/B, les visibles sont regroupés dans une seule case
+  // à gauche, puis viennent les taches inconnues. On exporte donc :
+  //   visible regroupé, puis x / ? / b...
+  // et non l'inconnue d'abord, ni les paquets visibles redécomposés.
+  if(constantTotal > 0){
+    bottom.push({type:"number", value:constantTotal});
   }
+  for(let i=0;i<tasks;i++) bottom.push({type:"x"});
 
   return {
     source:"splat",
