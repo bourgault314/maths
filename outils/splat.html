@@ -476,6 +476,7 @@
 
   .stage{display:flex;flex-direction:column;gap:12px}
   .cardbox{
+    position:relative;
     background:var(--card);
     border:1px solid rgba(255,255,255,0.08);
     border-radius:14px;padding:10px
@@ -486,6 +487,49 @@
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
   #mainSvg:focus{outline:none}
+
+  /* Navigation directe sur le plateau : utile en projection et en tactile. */
+  .stageNavOverlay{
+    position:absolute;
+    top:12px;
+    right:12px;
+    z-index:20;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .stageNavBtn{
+    display:inline-grid;
+    place-items:center;
+    width:42px;
+    height:42px;
+    padding:0;
+    border-radius:14px;
+    border:1px solid var(--btn-border);
+    background:rgba(255,255,255,.88);
+    color:var(--ink);
+    box-shadow:0 8px 22px rgba(17,24,39,.10);
+    cursor:pointer;
+    font-weight:900;
+    font-size:18px;
+    line-height:1;
+    backdrop-filter:blur(6px);
+  }
+  .stageNavBtn:hover{background:var(--btn2)}
+  .stageNavBtn:active{transform:translateY(1px)}
+  .stageNavBtn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+  .stageNavBtn svg{width:20px;height:20px;display:block}
+  .fsHost:fullscreen .stageNavOverlay{
+    top:18px;
+    right:18px;
+  }
+  .fsHost:fullscreen .stageNavBtn{
+    width:54px;
+    height:54px;
+    border-radius:18px;
+    font-size:22px;
+    box-shadow:0 10px 28px rgba(17,24,39,.18);
+  }
 
   .printArea{display:none}
 
@@ -1076,6 +1120,15 @@
     <div class="cardbox">
       <div class="nav">
         <div class="counter" id="counter">0 carte</div>
+      </div>
+      <div class="stageNavOverlay" aria-label="Navigation du plateau">
+        <button class="stageNavBtn" id="btnStagePrev" type="button" title="Carte ou étape précédente" aria-label="Carte ou étape précédente">◀</button>
+        <button class="stageNavBtn" id="btnStageNext" type="button" title="Carte ou étape suivante" aria-label="Carte ou étape suivante">▶</button>
+        <button class="stageNavBtn" id="btnStageFullscreen" type="button" title="Plein écran" aria-label="Plein écran">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
+          </svg>
+        </button>
       </div>
       <div id="svgWrap">
         <svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
@@ -1801,6 +1854,14 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
 
 hookNumberInputClamps();
 hookMinMaxPairs();
+
+// Les menus et cases à cocher ne doivent pas garder le focus :
+// sinon ←/→ modifie le réglage au lieu de naviguer dans les cartes.
+document.querySelectorAll("select, input[type='checkbox']").forEach(control => {
+  control.addEventListener("change", () => {
+    setTimeout(() => refocusMainSvgFromControl(control), 0);
+  });
+});
 
 /* Positions + splat */
 function blobPath(cx, cy, r){
@@ -3589,11 +3650,20 @@ function buildABEquabarPayload(card){
 
   const bottom = [];
   for(let i=0;i<tasks;i++) bottom.push({type:"x"});
-  const visibleValues = Array.isArray(card.visible) ? card.visible.map(Number).filter(v => Number.isFinite(v) && v !== 0) : [];
-  if(visibleValues.length){
-    visibleValues.forEach(value => bottom.push({type:"number", value}));
-  }else if(constantTotal > 0){
-    bottom.push({type:"number", value:constantTotal});
+
+  // Mode A — jetons simples : le petit tableau Splat affiche déjà les visibles
+  // comme une seule constante (ex. 14), pas comme 1 + 1 + ... + 1.
+  // On exporte donc une constante unique vers Équabarre pour garder la cohérence
+  // entre le schéma résumé et l'équation importée.
+  if(card.family === "U"){
+    if(constantTotal > 0) bottom.push({type:"number", value:constantTotal});
+  }else{
+    const visibleValues = Array.isArray(card.visible) ? card.visible.map(Number).filter(v => Number.isFinite(v) && v !== 0) : [];
+    if(visibleValues.length){
+      visibleValues.forEach(value => bottom.push({type:"number", value}));
+    }else if(constantTotal > 0){
+      bottom.push({type:"number", value:constantTotal});
+    }
   }
 
   return {
@@ -3736,8 +3806,8 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     x += w;
   }
 
-  const eqCenter = barX + barW + (isFullscreenProjection ? 185 : 260);
-  let eqY = solved ? yTop + 43 : yTop + 79;
+  const eqCenter = barX + barW + (isFullscreenProjection ? 225 : 305);
+  let eqY = solved ? yTop + 20 : yTop + 79;
   function eqLine(left, right, size=34){
     drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
       text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
@@ -3754,6 +3824,12 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     const reducedRight = Number(totals.trueTotal) - constantTotal;
     const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
     const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
+
+    // Étape ajoutée : on réduit d'abord l'équation en regroupant les constantes,
+    // sans sauter directement à la soustraction.
+    if(constantTotal > 0 && constantParts.length > 1){
+      eqLine(`${variableTerm} + ${formatRelationNumber(constantTotal)}`, equationRight, 34);
+    }
     if(constantTotal > 0){
       eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
     }
@@ -3822,8 +3898,8 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   }
 
   // L'équation doit rester clairement séparée du tableau.
-  const eqCenter = barX + barW + (isFullscreenProjection ? 185 : 260);
-  let eqY = solved ? yTop + 43 : yTop + 79;
+  const eqCenter = barX + barW + (isFullscreenProjection ? 225 : 305);
+  let eqY = solved ? yTop + 20 : yTop + 79;
   function eqLine(left, right, size=34){
     drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
       text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
@@ -3846,7 +3922,11 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
     const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
     const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
 
-    // À la révélation finale, toute la résolution apparaît d'un coup : soustraction puis division/réponse.
+    // Étape ajoutée : on réduit d'abord l'équation en regroupant les constantes,
+    // sans sauter directement à la soustraction.
+    if(constantTotal > 0 && constantParts.length > 1){
+      eqLine(`${variableTerm} + ${formatRelationNumber(constantTotal)}`, equationRight, 34);
+    }
     if(constantTotal > 0){
       eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
     }
@@ -5555,9 +5635,15 @@ function getMaxRevealState(card){
 
 function updateUI(){
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
-  document.getElementById("btnPrev").disabled = (cards.length===0 || (idx===0 && revealState===0));
+  const prevDisabled = (cards.length===0 || (idx===0 && revealState===0));
+  document.getElementById("btnPrev").disabled = prevDisabled;
+  const stagePrevBtn = document.getElementById("btnStagePrev");
+  if(stagePrevBtn) stagePrevBtn.disabled = prevDisabled;
   const maxReveal = cards.length ? getMaxRevealState(cards[idx]) : 0;
-  document.getElementById("btnNext").disabled = (cards.length===0 || (idx===cards.length-1 && revealState===maxReveal));
+  const nextDisabled = (cards.length===0 || (idx===cards.length-1 && revealState===maxReveal));
+  document.getElementById("btnNext").disabled = nextDisabled;
+  const stageNextBtn = document.getElementById("btnStageNext");
+  if(stageNextBtn) stageNextBtn.disabled = nextDisabled;
   if(cards.length===0){ renderEmpty(); }
   else { renderCard(cards[idx], revealState); }
 }
@@ -5641,14 +5727,12 @@ document.addEventListener("fullscreenchange", ()=>{
   });
 });
 
-document.getElementById("btnGen").addEventListener("click", generate);
-document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
-document.getElementById("btnPrev").addEventListener("click", ()=>{
+function goPreviousCardOrStep(){
   if(cards.length===0) return;
   if(revealState > 0){ revealState--; updateUI(); return; }
   if(idx>0){ idx--; revealState=0; updateUI(); }
-});
-document.getElementById("btnNext").addEventListener("click", ()=>{
+}
+function goNextCardOrStep(){
   if(cards.length===0) return;
   const card = cards[idx];
   const isSequence = isRevealSequenceCard(card);
@@ -5665,9 +5749,20 @@ document.getElementById("btnNext").addEventListener("click", ()=>{
       return;
   }
   if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
-});
+}
+
+document.getElementById("btnGen").addEventListener("click", generate);
+document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
+document.getElementById("btnPrev").addEventListener("click", goPreviousCardOrStep);
+document.getElementById("btnNext").addEventListener("click", goNextCardOrStep);
+const btnStagePrevEl = document.getElementById("btnStagePrev");
+const btnStageNextEl = document.getElementById("btnStageNext");
+const btnStageFullscreenEl = document.getElementById("btnStageFullscreen");
+if(btnStagePrevEl) btnStagePrevEl.addEventListener("click", goPreviousCardOrStep);
+if(btnStageNextEl) btnStageNextEl.addEventListener("click", goNextCardOrStep);
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
+if(btnStageFullscreenEl) btnStageFullscreenEl.addEventListener("click", toggleFullscreen);
 function setNumberedUnknownDisplay(useQuestionMark){
   if(numberedQuestionMarkMode === !!useQuestionMark){
     syncNumberedQuestionMarkButton();
@@ -5695,27 +5790,10 @@ window.addEventListener("keydown",(e)=>{
     refocusMainSvgFromControl(_ae);
   }
   if(e.key==="ArrowLeft"){
-    if(cards.length===0) return;
-    if(revealState > 0){ revealState--; updateUI(); return; }
-    if(idx>0){ idx--; revealState=0; updateUI(); }
+    goPreviousCardOrStep();
   }
   if(e.key==="ArrowRight"){
-    if(cards.length===0) return;
-    const card = cards[idx];
-    const isSequence = isRevealSequenceCard(card);
-    if(isSequence){
-        const maxReveal = getMaxRevealState(card);
-        if(revealState < maxReveal) {
-            revealState++;
-            updateUI();
-            return;
-        }
-    } else if (revealState === 0) {
-        revealState = 2;
-        updateUI();
-        return;
-    }
-    if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
+    goNextCardOrStep();
   }
   if(e.key===" "){
     e.preventDefault();
