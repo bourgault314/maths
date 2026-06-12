@@ -734,6 +734,7 @@
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
+      <option value="CD">C direct — Substitution (prototype)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
@@ -1365,7 +1366,7 @@ let numberedQuestionMarkMode = activityEl && activityEl.value === "U";
 function applyDefaultUnknownDisplayForActivity(){
   if(!activityEl) return;
   if(activityEl.value === "U" || activityEl.value === "UPM") numberedQuestionMarkMode = true;
-  else if(activityEl.value === "N" || activityEl.value === "C") numberedQuestionMarkMode = false;
+  else if(activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD") numberedQuestionMarkMode = false;
 }
 
 function getNumberedDisplayVarChar(card){
@@ -1373,9 +1374,21 @@ function getNumberedDisplayVarChar(card){
   return (card && (card.family === "U" || card.family === "UPM" || card.family === "N" || card.family === "C") && numberedQuestionMarkMode) ? "?" : raw;
 }
 
+function formatCoeffUnknownTerm(coeff, varChar){
+  let c = Number(coeff);
+  if(!Number.isFinite(c)) c = 0;
+  if(Math.abs(c - Math.round(c)) < 1e-9) c = Math.round(c);
+  if(Object.is(c, -0)) c = 0;
+  const abs = Math.abs(c);
+  if(abs === 0) return "0";
+  const unknown = String(varChar || xChar);
+  const core = abs === 1 ? unknown : (unknown === "?" ? `${abs} × ?` : `${abs}${unknown}`);
+  return c < 0 ? `−${core}` : core;
+}
+
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C";
+  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -1518,7 +1531,7 @@ function getSeedForCurrentMode(){
   const act = activityEl.value;
   if(act === "U" || act === "UPM") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
-  if(act === "C") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
+  if(act === "C" || act === "CD") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
   if(act === "C9") return (seedCEl.value||"").trim() ? Number(seedCEl.value) : "";
   if(act === "C8") return (seedDEl.value||"").trim() ? Number(seedDEl.value) : "";
@@ -1767,7 +1780,7 @@ function syncSettingsUI(){
   const isNumbered = (act === "N" || act === "NPM");
   const isNine = act === "C9";
   const isEight = act === "C8";
-  const isInvestigate = act === "C";
+  const isInvestigate = (act === "C" || act === "CD");
   const isSystem = act === "D";
   const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
 
@@ -3640,7 +3653,7 @@ function positiveBarItemsForRelation(card){
       if(Math.abs(c - intC) < 1e-9 && intC <= 8){
         return { coef:intC, diff:0, parts:Array.from({length:intC}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1})) };
       }
-      return { coef:c, diff:0, parts:[{kind:"x", label:`${formatRelationNumber(c)}${getNumberedDisplayVarChar(card)}`, weight:Math.max(1, Math.min(5, c))}] };
+      return { coef:c, diff:0, parts:[{kind:"x", label:formatCoeffUnknownTerm(c, getNumberedDisplayVarChar(card)), weight:Math.max(1, Math.min(5, c))}] };
     });
   }
 
@@ -3864,7 +3877,7 @@ function getRelationOrderedConstantParts(card, grouped=null){
 
 function relationEquationLeftFromPieces(card, coefficient, constantParts){
   const relVarChar = getNumberedDisplayVarChar(card);
-  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
   const terms = [variableTerm];
   (Array.isArray(constantParts) ? constantParts : []).forEach(part => {
     const value = Number(part.value);
@@ -4046,6 +4059,58 @@ function drawEquabarSolveButton(g, card, x, y){
 }
 
 
+
+function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
+  const rel = card && card._rel;
+  if(!rel) return;
+  const totals = relationTotalsForBarModel(card);
+  const items = totals.items || [];
+  const layout = getRelationSchemaLayout();
+  const boxX = layout.boxX;
+  const boxY = 620;
+  const boxW = layout.boxW;
+  const rows = Math.max(1, items.length);
+  const rowH = rows >= 3 ? 58 : 72;
+  const gap = rows >= 3 ? 12 : 18;
+  const titleH = 60;
+  const boxH = titleH + rows * rowH + (rows - 1) * gap + 40;
+  const g = el("g", { id:"relationDirectSubstitutionStep" });
+
+  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(boxX+boxW/2, boxY+34, "Substitution", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+
+  const leftX = boxX + 110;
+  const exprX = boxX + 280;
+  const exprW = boxW - 420;
+  const startY = boxY + titleH + 14;
+
+  const allParts = [];
+  items.forEach(it => (it.parts || []).forEach(p => allParts.push(p)));
+  const totalWeight = Math.max(1, allParts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
+  const unitWGlobal = Math.max(54, Math.min(140, exprW / totalWeight));
+
+  for(let i=0;i<rows;i++){
+    const item = items[i] || {parts:[{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}]};
+    const cy = startY + i * (rowH + gap) + rowH/2;
+    const splatR = 30;
+    g.appendChild(el("path",{d:blobPath(leftX, cy, splatR), fill:taskSplatColor(i), stroke:"rgba(0,0,0,0.20)", "stroke-width":2}));
+    g.appendChild(text(leftX + 66, cy + 1, "=", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":36, "font-weight":900, fill:"var(--ink)"}));
+
+    const parts = item.parts && item.parts.length ? item.parts : [{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}];
+    const rowWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
+    const rowUnitW = Math.min(unitWGlobal, exprW / rowWeight);
+    let x = exprX;
+    for(let j=0;j<parts.length;j++){
+      const part = parts[j];
+      const w = Math.max(56, rowUnitW * Math.max(0.35, Number(part.weight)||1));
+      drawBarCell(g, x, cy-rowH/2, w, rowH, part, true, {fontSize:28});
+      x += w;
+    }
+  }
+
+  targetGroup.appendChild(g);
+}
+
 function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const solved = !!opts.solved;
   const grouped = getRelationGroupedDisplayGroups(card);
@@ -4069,7 +4134,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const unitW = barW / Math.max(1, totalWeight);
 
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : "Schéma ordonné", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : (opts.direct ? "Schéma en barres" : "Schéma ordonné"), {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
 
   const yTop = boxY + 68;
   if(!solved){
@@ -4103,7 +4168,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     eqY += 48;
   }
   const relVarChar = getNumberedDisplayVarChar(card);
-  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
   const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
   const equationRight = formatRelationNumber(totals.trueTotal);
   eqLine(equationLeft, equationRight, 34);
@@ -4198,7 +4263,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || xParts || 1));
   const constantParts = getRelationOrderedConstantParts(card, grouped);
   const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
-  const variableTerm = `${coefficient === 1 ? "" : coefficient}${relVarChar}`;
+  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
   const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
   const equationRight = formatRelationNumber(totals.trueTotal);
 
@@ -4589,7 +4654,7 @@ function renderCard(card, revealState){
         const centerX = tx + (barW / 2) + 240;
         const eqGap = 22;
         
-        const unknownTerm = tasks > 1 ? `${tasks}${varChar}` : `${varChar}`;
+        const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
 
         const addEq = (l, r) => {
@@ -4608,7 +4673,7 @@ function renderCard(card, revealState){
 
         // Lignes 2 et 3 : Au 2ème clic (Résolution)
         if (abRevealPhase === 2) {
-            if (visSum > 0 && tasks > 1) addEq(`${tasks}${varChar}`, String(totalHid));
+            if (visSum > 0 && tasks > 1) addEq(formatCoeffUnknownTerm(tasks, varChar), String(totalHid));
             if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${varChar}`, String(hiddenSums[0]));
         }
         gTotal.appendChild(calcGroup);
@@ -4774,7 +4839,7 @@ function renderCard(card, revealState){
         let calcY = (bottomAidTyAB + 30) - ((calcLines - 1) * (calcGap / 2));
         const centerX = 800 + 190 + 240;
         const eqGap = 22;
-        const unknownTerm = tasks > 1 ? `${tasks}${varChar}` : `${varChar}`;
+        const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
         const addEq = (l, r) => {
           drawProjectionEquationLine(emptyGroup, centerX, calcY, l, r, {
@@ -4788,7 +4853,7 @@ function renderCard(card, revealState){
         };
         addEq(eqLeft1, String(card.total));
         if (revealState >= 3) {
-          if (visSum > 0 && tasks > 1) addEq(`${tasks}${varChar}`, String(totalHid));
+          if (visSum > 0 && tasks > 1) addEq(formatCoeffUnknownTerm(tasks, varChar), String(totalHid));
           if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${varChar}`, String(hiddenSums[0]));
         }
       }
@@ -4844,17 +4909,29 @@ function renderCard(card, revealState){
     drawRelationGraphicClues(svg, card);
   }
 
-  if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
-    drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
-  }
-  if(card.family === "C" && card._rel && revealState === 3){
-    drawRelationGroupedSchema(svg, card);
-  }
-  if(card.family === "C" && card._rel && revealState === 4){
-    drawRelationOrderedSchema(svg, card);
-  }
-  if(card.family === "C" && card._rel && revealState === 5){
-    drawRelationOrderedSchema(svg, card, { solved:true });
+  if(card.family === "C" && card._rel && card._directSubstitution){
+    if(revealState === 1){
+      drawRelationSubstitutionStep(svg, card);
+    }
+    if(revealState === 2){
+      drawRelationOrderedSchema(svg, card, { direct:true });
+    }
+    if(revealState === 3){
+      drawRelationOrderedSchema(svg, card, { solved:true, direct:true });
+    }
+  }else{
+    if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
+      drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
+    }
+    if(card.family === "C" && card._rel && revealState === 3){
+      drawRelationGroupedSchema(svg, card);
+    }
+    if(card.family === "C" && card._rel && revealState === 4){
+      drawRelationOrderedSchema(svg, card);
+    }
+    if(card.family === "C" && card._rel && revealState === 5){
+      drawRelationOrderedSchema(svg, card, { solved:true });
+    }
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if(!isModeC_or_D && taskCount > 1 && !(isABProjectionLayout && revealState > 0)){
@@ -5085,7 +5162,7 @@ function eqVisibleSum(side){
 function coeffXLabel(n, varChar = xChar){
   const c = Math.abs(Number(n) || 0);
   if(c <= 0) return "0";
-  return c === 1 ? varChar : `${c}${varChar}`;
+  return formatCoeffUnknownTerm(c, varChar);
 }
 function formatEqSideFromCoeffVis(coeff, vis, varChar = xChar){
   const c = Math.abs(Number(coeff) || 0);
@@ -5145,7 +5222,7 @@ function formatSignedCoeffLabel(coeff, varChar = xChar){
   if(Object.is(c, -0)) c = 0;
   if(c === 0) return "0";
   const abs = Math.abs(c);
-  const label = abs === 1 ? varChar : `${abs}${varChar}`;
+  const label = formatCoeffUnknownTerm(abs, varChar);
   return c < 0 ? `−${label}` : label;
 }
 
@@ -5162,7 +5239,7 @@ function formatSignedLinearExpression(coeff, constant, varChar = xChar){
   const terms = [];
   if(c !== 0){
     const abs = Math.abs(c);
-    terms.push({ sign: c < 0 ? -1 : 1, text: abs === 1 ? varChar : `${abs}${varChar}` });
+    terms.push({ sign: c < 0 ? -1 : 1, text: formatCoeffUnknownTerm(abs, varChar) });
   }
   if(k !== 0){
     terms.push({ sign: k < 0 ? -1 : 1, text: String(Math.abs(k)) });
@@ -5248,7 +5325,7 @@ function joinSignedTerms(terms){
 function formatVarCoeffAbs(coeff, varChar = xChar){
   const c = Math.abs(Math.round(Number(coeff) || 0));
   if(c <= 0) return "";
-  return c === 1 ? varChar : `${c}${varChar}`;
+  return formatCoeffUnknownTerm(c, varChar);
 }
 
 function buildNumberedSignedStructuredExpression(card, varChar = xChar){
@@ -5545,17 +5622,29 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     drawRelationGraphicClues(targetSvg, card, { mkEl:tEl, mkText:tText, isPrint:true });
   }
 
-  if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
-    drawRelationSituationSchema(targetSvg, card, { filled: revealState === 2 });
-  }
-  if(card.family === "C" && card._rel && revealState === 3){
-    drawRelationGroupedSchema(targetSvg, card);
-  }
-  if(card.family === "C" && card._rel && revealState === 4){
-    drawRelationOrderedSchema(targetSvg, card);
-  }
-  if(card.family === "C" && card._rel && revealState === 5){
-    drawRelationOrderedSchema(targetSvg, card, { solved:true });
+  if(card.family === "C" && card._rel && card._directSubstitution){
+    if(revealState === 1){
+      drawRelationSubstitutionStep(targetSvg, card);
+    }
+    if(revealState === 2){
+      drawRelationOrderedSchema(targetSvg, card, { direct:true });
+    }
+    if(revealState === 3){
+      drawRelationOrderedSchema(targetSvg, card, { solved:true, direct:true });
+    }
+  }else{
+    if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
+      drawRelationSituationSchema(targetSvg, card, { filled: revealState === 2 });
+    }
+    if(card.family === "C" && card._rel && revealState === 3){
+      drawRelationGroupedSchema(targetSvg, card);
+    }
+    if(card.family === "C" && card._rel && revealState === 4){
+      drawRelationOrderedSchema(targetSvg, card);
+    }
+    if(card.family === "C" && card._rel && revealState === 5){
+      drawRelationOrderedSchema(targetSvg, card, { solved:true });
+    }
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
   if (!isModeC_or_D && taskCount > 1) {
@@ -5856,7 +5945,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       const hidW = (card.total > 0) ? fullW * (totalHid / card.total) : fullW;
       const unitW = (tasks > 0) ? hidW / tasks : hidW;
 
-      const unknownTerm = tasks > 1 ? `${tasks}${varChar}` : `${varChar}`;
+      const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
 
       // ETAPE 1 : premier tableau
@@ -5918,7 +6007,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         addEq(eqLeft1, String(card.total));
         if (visSum > 0 && tasks > 1) {
-            addEq(`${tasks}${varChar}`, String(totalHid));
+            addEq(formatCoeffUnknownTerm(tasks, varChar), String(totalHid));
         }
         if (tasks > 1 || (tasks === 1 && visSum > 0)) {
             addEq(`${varChar}`, String(hiddenSums[0]));
@@ -6063,6 +6152,7 @@ function getMaxRevealState(card){
   if(!card) return 0;
   if(card.family === "U" || card.family === "N") return 3;
   if(card.family === "UPM" || card.family === "NPM") return 2;
+  if(card.family === "C" && card._directSubstitution) return 3;
   if(card.family === "C") return 5;
   return 2;
 }
@@ -6115,6 +6205,10 @@ function generate(){
       c = genNumberedSigned(rng);
     }else if(act==="C"){
       c = genInvestigate(rng);
+    }else if(act==="CD"){
+      c = genInvestigate(rng);
+      c._directSubstitution = true;
+      c._directSubstitutionLabel = "C direct — Substitution";
     }else if(act==="D"){
       c = genSystem(rng);
     }else if(act==="C9"){
