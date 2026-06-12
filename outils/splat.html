@@ -5729,8 +5729,21 @@ document.addEventListener("fullscreenchange", ()=>{
 
 function goPreviousCardOrStep(){
   if(cards.length===0) return;
-  if(revealState > 0){ revealState--; updateUI(); return; }
-  if(idx>0){ idx--; revealState=0; updateUI(); }
+
+  // Si la carte actuelle a des étapes internes, on revient d'abord à l'étape précédente.
+  if(revealState > 0){
+    revealState--;
+    updateUI();
+    return;
+  }
+
+  // Si on est au début d'une carte, la vraie « diapo précédente » est
+  // la dernière étape de la carte précédente, pas son énoncé de départ.
+  if(idx > 0){
+    idx--;
+    revealState = getMaxRevealState(cards[idx]);
+    updateUI();
+  }
 }
 function goNextCardOrStep(){
   if(cards.length===0) return;
