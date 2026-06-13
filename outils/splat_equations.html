@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Splat! Équations</title>
+<title>Splat! Équations V11</title>
 <style>
   :root{
     /* THEME (light default) */
@@ -1160,6 +1160,7 @@ function getSeedForCurrentMode(){
 }
 
 const EQUABAR_IMPORT_URL = "./equabarre_import_splat.html";
+const EQUASPLAT_IMPORT_URL = "./equasplat_import_splat.html";
 
 function encodeEquabarPayload(payload){
   const json = JSON.stringify(payload);
@@ -1205,6 +1206,182 @@ function buildEquationStepEquabarPayload(card){
   };
 }
 
+
+function makeEquaSplatNumberPieces(value, opts = {}){
+  const n = Number(value);
+  if(!Number.isFinite(n) || n === 0) return [];
+
+  // En mode primaire, on veut retrouver les petits jetons unitaires de Splat
+  // au lieu d'un seul gros jeton numéroté. On ne le fait que pour les entiers
+  // positifs raisonnables ; sinon, on garde un jeton groupé classique.
+  const asUnits = !!opts.unitConstants && n > 0 && Number.isInteger(n) && n <= 80;
+  if(asUnits){
+    return Array.from({length:n}, () => ({type:"number", value:1, unit:true}));
+  }
+  return [{type:"number", value:n}];
+}
+
+function eqSideToEquaSplatRow(side, opts = {}){
+  const row = [];
+  const tasks = Math.max(0, Math.round(Number(side && side.tasks) || 0));
+  const flags = Array.isArray(side && side.opposeFlags) ? side.opposeFlags : [];
+  for(let i=0; i<tasks; i++){
+    row.push({type:"x", sign: flags[i] ? -1 : 1});
+  }
+  (Array.isArray(side && side.visible) ? side.visible : []).forEach(value => {
+    row.push(...makeEquaSplatNumberPieces(value, opts));
+  });
+  return row.length ? row : [{type:"number", value:0}];
+}
+
+function eqSideToEquaSplatCombinedRow(side, opts = {}){
+  const row = [];
+  const tasks = Math.max(0, Math.round(Number(side && side.tasks) || 0));
+  const flags = Array.isArray(side && side.opposeFlags) ? side.opposeFlags : [];
+  let xCoeff = 0;
+  for(let i=0; i<tasks; i++) xCoeff += flags[i] ? -1 : 1;
+  const sign = xCoeff < 0 ? -1 : 1;
+  for(let i=0; i<Math.abs(xCoeff); i++){
+    row.push({type:"x", sign});
+  }
+  const visibleSum = (Array.isArray(side && side.visible) ? side.visible : [])
+    .reduce((sum, value) => sum + (Number(value) || 0), 0);
+  if(visibleSum !== 0){
+    row.push(...makeEquaSplatNumberPieces(visibleSum, opts));
+  }
+  return row.length ? row : [{type:"number", value:0}];
+}
+
+function eqVisiblePartsToEquaSplatRow(parts, opts = {}){
+  const row = [];
+  (Array.isArray(parts) ? parts : []).forEach(part => {
+    if(!part || part.kind === "empty" || part.removed) return;
+    if(part.hidden || part.kind === "x" || part.type === "x"){
+      const sign = (part.sign === -1 || part.opposed === true || part.negative === true) ? -1 : 1;
+      row.push({type:"x", sign});
+      return;
+    }
+    const value = Number(part.value);
+    if(Number.isFinite(value) && value !== 0){
+      row.push(...makeEquaSplatNumberPieces(value, opts));
+    }
+  });
+  return row.length ? row : [{type:"number", value:0}];
+}
+
+function buildEquationEquaSplatPayload(card, revealState = 0){
+  const eq = card && card._eq;
+  if(!eq || !(card.family === "EQ" || card.family === "EQSTEP" || card.family === "EQUNITSTEP" || card.family === "EQPM" || card.family === "EQPMSTEP")) return null;
+
+  const reveal = Math.max(0, Math.round(Number(revealState) || 0));
+  const unitConstants = !!(card.family === "EQUNITSTEP" || card.unitBeads);
+  const opts = {unitConstants};
+  let leftRow = null;
+  let rightRow = null;
+
+  if(card.family === "EQSTEP" || card.family === "EQUNITSTEP"){
+    if(reveal <= 0){
+      leftRow = eqSideToEquaSplatRow(eq.left, opts);
+      rightRow = eqSideToEquaSplatRow(eq.right, opts);
+    }else{
+      const state = getEquationStepState(eq, reveal, getCardVarChar(card), {includeVerify:false});
+      const exportableKinds = new Set(["combined", "afterX", "afterV"]);
+      if(!state || !exportableKinds.has(state.kind)) return null;
+      leftRow = eqVisiblePartsToEquaSplatRow(state.leftParts, opts);
+      rightRow = eqVisiblePartsToEquaSplatRow(state.rightParts, opts);
+    }
+  }else if(card.family === "EQPMSTEP"){
+    if(reveal <= 0){
+      leftRow = eqSideToEquaSplatRow(eq.left, opts);
+      rightRow = eqSideToEquaSplatRow(eq.right, opts);
+    }else{
+      const state = getEquationSignedStepState(eq, reveal, getCardVarChar(card));
+      const exportableKinds = new Set(["initial", "combined", "afterLetters", "afterConstants"]);
+      if(!state || !exportableKinds.has(state.kind)) return null;
+      leftRow = eqVisiblePartsToEquaSplatRow(state.leftParts, opts);
+      rightRow = eqVisiblePartsToEquaSplatRow(state.rightParts, opts);
+    }
+  }else{
+    // Modes non pas à pas :
+    // - avant la première aide, on envoie la situation visible complète du plateau ;
+    // - dès que l'équation réduite apparaît en haut, on envoie cette version réduite
+    //   (constantes regroupées, taches de même signe regroupées), même si le plateau
+    //   graphique, lui, n'a pas encore changé ;
+    // - après, le bouton disparaît pour ne pas mélanger deux démarches.
+    if(reveal > 1) return null;
+    if(reveal <= 0){
+      leftRow = eqSideToEquaSplatRow(eq.left, opts);
+      rightRow = eqSideToEquaSplatRow(eq.right, opts);
+    }else{
+      leftRow = eqSideToEquaSplatCombinedRow(eq.left, opts);
+      rightRow = eqSideToEquaSplatCombinedRow(eq.right, opts);
+    }
+  }
+
+  return {
+    source:"splat_equations",
+    target:"equasplat_import",
+    family:card.family,
+    variable:getRawCardVarChar(card),
+    unknownDisplay:shouldDisplayUnknownAsQuestion() ? "question" : "letter",
+    universe:isSignedEquationFamily(card) ? "relative" : "positive",
+    numberMode:unitConstants ? "unit" : "grouped",
+    x:Number(eq.x),
+    left:leftRow,
+    right:rightRow,
+    top:leftRow,
+    bottom:rightRow
+  };
+}
+
+function openEquationInEquaSplat(card, revealState = 0){
+  try{
+    const payload = buildEquationEquaSplatPayload(card, revealState);
+    if(!payload) return;
+    const url = `${EQUASPLAT_IMPORT_URL}#data=${encodeEquabarPayload(payload)}`;
+    window.open(url, "_blank", "noopener");
+  }catch(err){
+    console.error("Impossible d'ouvrir ÉquaSplat import", err);
+  }
+}
+
+function drawEquationEquaSplatSolveButton(targetGroup, card, x, y, revealState = 0){
+  const btn = el("g", { id:"btnEquationEquaSplatSolve", transform:`translate(${x} ${y})`, style:"cursor:pointer" });
+  btn.setAttribute("role", "button");
+  btn.setAttribute("tabindex", "-1");
+  btn.appendChild(el("rect",{
+    x:0, y:0, width:126, height:44, rx:16,
+    fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
+  }));
+  btn.appendChild(text(63, 22, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle",
+    "font-size":20, "font-weight":950, fill:"#166534"
+  }));
+  btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if(typeof ev.currentTarget.blur === "function") ev.currentTarget.blur();
+    openEquationInEquaSplat(card, revealState);
+  });
+  btn.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" || ev.key === " "){
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(typeof ev.currentTarget.blur === "function") ev.currentTarget.blur();
+      openEquationInEquaSplat(card, revealState);
+    }
+  });
+  targetGroup.appendChild(btn);
+}
+
+function shouldShowEquationModeEquaSplatButton(card, revealState){
+  return !!(
+    card &&
+    getEquationStepView() !== "schema" &&
+    buildEquationEquaSplatPayload(card, revealState)
+  );
+}
+
 function openEquationStepInEquabar(card){
   try{
     const payload = buildEquationStepEquabarPayload(card);
@@ -1224,8 +1401,8 @@ function drawEquationStepEquabarSolveButton(targetGroup, card, x, y){
     x:0, y:0, width:122, height:46, rx:16,
     fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
   }));
-  btn.appendChild(text(61, 24, "Résoudre", {
-    "text-anchor":"middle", "dominant-baseline":"middle",
+  btn.appendChild(text(61, 25, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"central", "alignment-baseline":"central",
     "font-size":21, "font-weight":950, fill:"#166534"
   }));
   btn.addEventListener("click", ev => {
@@ -5332,6 +5509,7 @@ function renderCardEquation(card, revealState, useTokens){
   const hasEquationSignedAid = (card.family === "EQPM" && revealState > 0);
   const varChar = getCardVarChar(card);
   const revealAnswers = shouldRevealEquationAnswers(card, revealState);
+  const showEquaSplatBtn = shouldShowEquationModeEquaSplatButton(card, revealState);
 
   if(!hasSimpleEquationOnly){
     layer.appendChild(el("rect",{
@@ -6054,6 +6232,16 @@ function renderCardEquation(card, revealState, useTokens){
       fontFamily:"'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
+  }
+
+
+  if(showEquaSplatBtn){
+    // Placement : le bouton reste à gauche du texte/de l'équation, dans le bloc blanc.
+    // Cas particulier de la première diapo : le texte SVG est posé sur sa ligne de base ;
+    // on remonte donc le bouton pour que son centre visuel s'aligne avec la phrase.
+    const isIntroBalanceText = !isSimpleEquationSchemaView && !hasSimpleEquationLine && !hasAidTable && !hasEquationStepAid && !hasEquationSignedAid && !hasEquationSignedStepAid;
+    const solveBtnY = isIntroBalanceText ? 43 : 58;
+    drawEquationEquaSplatSolveButton(layer, card, 260, solveBtnY, revealState);
   }
 }
 
