@@ -381,6 +381,26 @@
     /* Projection : masque la palette pour maximiser le plateau (idéal vidéoprojecteur) */
     body.projection-mode aside { display: none !important; }
 
+    /* Sélecteur compact de graduation de la demi-droite */
+    .nl-grad-select{
+      height: 38px;
+      max-width: 92px;
+      padding: 0 7px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1f2937;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      cursor: pointer;
+      outline: none;
+    }
+    .nl-grad-select:focus{
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+    }
+
     /* Boutons état */
     .is-off { opacity: 0.55; }
 
@@ -422,6 +442,19 @@
           <path d="M4 10v8" />
         </svg>
       </button>
+
+      <select id="numberline-grad" class="nl-grad-select" title="Graduation de la demi-droite" aria-label="Graduation de la demi-droite">
+        <option value="0">Grad. —</option>
+        <option value="1">Grad. 1</option>
+        <option value="2">Grad. 1/2</option>
+        <option value="3">Grad. 1/3</option>
+        <option value="4">Grad. 1/4</option>
+        <option value="5">Grad. 1/5</option>
+        <option value="6">Grad. 1/6</option>
+        <option value="8">Grad. 1/8</option>
+        <option value="10">Grad. 1/10</option>
+        <option value="12">Grad. 1/12</option>
+      </select>
 
       <div class="h-8 w-px bg-slate-200 mx-1"></div>
 
@@ -646,34 +679,47 @@
           <ul class="list-disc pl-5 space-y-1">
             <li><b>Main</b> : cliquer une bande pour la sélectionner, puis <b>glisser</b> pour déplacer.</li>
             <li><b>Double-clic</b> sur une bande : la <b>retourner</b> (recto/verso).</li>
+            <li><b>Ctrl/Cmd + clic</b> ou <b>Shift + clic</b> : sélectionner plusieurs bandes.</li>
             <li><b>Ctrl/Cmd + glisser sur le vide</b> : sélectionner plusieurs bandes via un rectangle.</li>
-            <li><b>Glisser sur le vide</b> : déplace le plateau (panoramique).</li>
-            <li><b>Molette</b> : zoom autour du pointeur (plus précis en projection).</li>
-            <li><b>Crayon</b> : cliquer-glisser pour dessiner (stylet OK) ; <b>clic droit</b> pour déplacer le plateau / les bandes.</li>
-            <li><b>Demi-droite</b> (si affichée) : glisser la flèche pour changer la longueur, <b>double-clic</b> pour revenir au réglage par défaut.</li>
+            <li><b>Glisser sur le vide</b> : déplacer le plateau.</li>
+            <li><b>Molette</b> : zoomer autour du pointeur.</li>
+            <li><b>Crayon</b> : cliquer-glisser pour annoter ; <b>clic droit</b> pour déplacer le plateau / les bandes.</li>
+          </ul>
+        </div>
+
+        <div class="grid gap-2">
+          <div class="font-extrabold text-slate-800">Demi-droite graduée</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Bouton <b>demi-droite</b> : afficher / masquer la droite graduée.</li>
+            <li>Menu <b>Grad.</b> : choisir le pas des graduations : unité, demis, tiers, quarts, cinquièmes, sixièmes, huitièmes, dixièmes ou douzièmes.</li>
+            <li>La distance <b>0 → 1</b> correspond à la largeur d’une bande unité.</li>
+            <li>Glisser la <b>flèche</b> de la demi-droite : changer sa longueur ; <b>double-clic</b> sur la flèche : revenir au réglage par défaut.</li>
+            <li>Quand la demi-droite est affichée, les bandes et pièces proches se calent horizontalement sur les graduations.</li>
+            <li><b>Alt + glisser</b> : poser librement sans aimantation à la demi-droite.</li>
+          </ul>
+        </div>
+
+        <div class="grid gap-2">
+          <div class="font-extrabold text-slate-800">Actions sur les bandes</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>Masquer</b> : cacher / afficher le contenu d’une bande ou d’une pièce.</li>
+            <li><b>Retourner</b> : passer du recto au verso.</li>
+            <li><b>Séparer</b> : découper une bande en pièces.</li>
+            <li><b>Couper</b> : couper en deux quand le double existe, par exemple sixième → douzièmes.</li>
+            <li><b>Fusionner</b> : regrouper des pièces compatibles, y compris certaines fusions mixtes.</li>
+            <li><b>Dupliquer</b> et <b>Supprimer</b> : copier ou retirer la sélection.</li>
           </ul>
         </div>
 
         <div class="grid gap-2">
           <div class="font-extrabold text-slate-800">Raccourcis essentiels</div>
           <ul class="list-disc pl-5 space-y-1">
-            <li><b>Ctrl+Z</b> (ou ⌘Z) : annuler la dernière action (en mode crayon : annule le dernier trait).</li>
-            <li><b>Ctrl/Cmd + clic</b> (ou <b>Shift + clic</b>) : sélectionner plusieurs bandes (re-clic pour enlever).</li>
+            <li><b>Ctrl+Z</b> (ou ⌘Z) : annuler la dernière action (en mode crayon : annuler le dernier trait).</li>
             <li><b>Suppr</b> (Delete / Backspace) : supprimer la/les bandes sélectionnées.</li>
             <li><b>Échap</b> : désélectionner.</li>
-          </ul>
-        </div>
-
-        <div class="grid gap-2">
-          <div class="font-extrabold text-slate-800">Raccourcis “prof”</div>
-          <ul class="list-disc pl-5 space-y-1">
-            <li><b>D</b> : dupliquer la/les bandes sélectionnées.</li>
-            <li><b>T</b> : retourner (recto/verso) la/les bandes sélectionnées.</li>
-            <li><b>S</b> : séparer (si bande découpée en parts).</li>
-            <li><b>C</b> : couper (si possible).</li>
-            <li><b>F</b> : fusionner (sur pièces compatibles).</li>
-            <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande (0 = dixième) au centre du plateau.</li>
-            <li><b>?</b> ou <b>F1</b> : ouvrir/fermer cette aide.</li>
+            <li><b>D</b> : dupliquer ; <b>T</b> : retourner ; <b>S</b> : séparer ; <b>C</b> : couper ; <b>F</b> : fusionner.</li>
+            <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande au centre du plateau (0 = dixième). Le douzième se prend dans la palette.</li>
+            <li><b>?</b> ou <b>F1</b> : ouvrir / fermer cette aide.</li>
           </ul>
         </div>
       </div>
@@ -692,10 +738,11 @@
     { denom: 2,  name: 'Demi',      color: '#facc15', border: '#a16207', text: '#111827' },
     { denom: 3,  name: 'Tiers',     color: '#e9d5ff', border: '#7c3aed', text: '#111827' },
     { denom: 4,  name: 'Quart',     color: '#84cc16', border: '#3f6212', text: '#111827' },
-    { denom: 5,  name: 'Cinquième', color: '#38bdf8', border: '#075985', text: '#0b1220' },
+    { denom: 5,  name: 'Cinquième', color: '#0ea5e9', border: '#075985', text: '#0b1220' },
     { denom: 6,  name: 'Sixième',   color: '#f97316', border: '#9a3412', text: '#111827' },
     { denom: 8,  name: 'Huitième',  color: '#f472b6', border: '#be185d', text: '#111827' },
     { denom: 10, name: 'Dixième',   color: '#b91c1c', border: '#7f1d1d', text: '#111827' },
+    { denom: 12, name: 'Douzième',  color: '#7dd3fc', border: '#0369a1', text: '#0b1220' },
   ];
 
   let audioCtx = null;
@@ -787,7 +834,7 @@
 
         // Mise en page projection : palette compacte en 2 lignes (blocs horizontaux)
 // Ligne 1 : unité, 1/2, 1/3, 1/4, 1/5
-// Ligne 2 : 1/6, 1/8, 1/10
+// Ligne 2 : 1/6, 1/8, 1/10, 1/12
 // En projection on réduit la largeur des bandes du menu pour que tout rentre sans prendre trop de hauteur.
 if(window.app){
   const desired = 140;
@@ -819,7 +866,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
   const denom = parseInt(item.dataset.denom || '', 10);
   const map = {
     1:{r:1,c:1}, 2:{r:1,c:2}, 3:{r:1,c:3}, 4:{r:1,c:4}, 5:{r:1,c:5},
-    6:{r:2,c:2}, 8:{r:2,c:3}, 10:{r:2,c:4},
+    6:{r:2,c:2}, 8:{r:2,c:3}, 10:{r:2,c:4}, 12:{r:2,c:5},
   };
   if(map[denom]){
     item.style.gridRowStart = map[denom].r;
@@ -923,7 +970,18 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       selectedId: app.selectedId,
       pan: {...app.pan},
       scale: app.scale,
-      labelMode: app.labelMode
+      labelMode: app.labelMode,
+      numberLine: app.numberLine ? {
+        active: !!app.numberLine.active,
+        initialized: !!app.numberLine.initialized,
+        x: app.numberLine.x,
+        y: app.numberLine.y,
+        len: app.numberLine.len,
+        defaultLen: app.numberLine.defaultLen,
+        baselineOffset: app.numberLine.baselineOffset,
+        height: app.numberLine.height,
+        gradDenom: app.numberLine.gradDenom || 0
+      } : null
     };
   }
 
@@ -938,7 +996,17 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     app.pan = snap.pan || {x:0,y:0};
     app.scale = snap.scale || 1;
     app.labelMode = snap.labelMode || 'numeric';
+    if(snap.numberLine && app.numberLine){
+      app.numberLine = {
+        ...app.numberLine,
+        ...snap.numberLine,
+        gradDenom: Number(snap.numberLine.gradDenom || 0)
+      };
+      if(app.numberLine.len == null) app.numberLine.len = app.numberLine.defaultLen || 900;
+      if(app.numberLine.defaultLen == null) app.numberLine.defaultLen = app.numberLine.len || 900;
+    }
     app.updateModeUI();
+    app.updateNumberLineGradUI?.();
     app.buildPalette();
     app.tokens.forEach(t => app.mountToken(t));
     app.updateTransform();
@@ -1183,7 +1251,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         len: 900,
         defaultLen: 900,
         baselineOffset: 18,
-        height: 46
+        height: 46,
+        gradDenom: 0
       };
 
       this._nlRAF = null;
@@ -1233,7 +1302,18 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         selectedIds: this.selectedIds ? Array.from(this.selectedIds) : null,
         pan: {...this.pan},
         scale: this.scale,
-        labelMode: this.labelMode
+        labelMode: this.labelMode,
+        numberLine: this.numberLine ? {
+          active: !!this.numberLine.active,
+          initialized: !!this.numberLine.initialized,
+          x: this.numberLine.x,
+          y: this.numberLine.y,
+          len: this.numberLine.len,
+          defaultLen: this.numberLine.defaultLen,
+          baselineOffset: this.numberLine.baselineOffset,
+          height: this.numberLine.height,
+          gradDenom: this.numberLine.gradDenom || 0
+        } : null
       };
       this.history.push(snapshot);
       if(this.history.length > 30) this.history.shift();
@@ -1263,7 +1343,15 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       this.pan = snap.pan;
       this.scale = snap.scale;
       this.labelMode = snap.labelMode || 'numeric';
+      if(snap.numberLine && this.numberLine){
+        this.numberLine = {
+          ...this.numberLine,
+          ...snap.numberLine,
+          gradDenom: Number(snap.numberLine.gradDenom || 0)
+        };
+      }
       this.updateModeUI();
+      this.updateNumberLineGradUI();
       
       this.buildPalette();
       
@@ -1277,7 +1365,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     getTextLabel(denom){
       const map = {
         1: 'une unité', 2: 'un demi', 3: 'un tiers', 4: 'un quart',
-        5: 'un cinquième', 6: 'un sixième', 8: 'un huitième', 10: 'un dixième'
+        5: 'un cinquième', 6: 'un sixième', 8: 'un huitième', 10: 'un dixième',
+        12: 'un douzième'
       };
       return map[denom] || '';
     }
@@ -1304,9 +1393,11 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         const rotated = this.isRotatedText(denom);
         let fs;
         if(rotated){
-           if(denom === 6) fs = '11px';      
-           else if(denom === 8) fs = '10px'; 
-           else fs = '10px';                 
+           if(denom >= 12) fs = '9px';
+           else if(denom >= 10) fs = '10px';
+           else if(denom === 8) fs = '10px';
+           else if(denom === 6) fs = '11px';
+           else fs = '10px';
         } else {
            fs = (denom >= 5) ? '13px' : '15px';
         }
@@ -1317,7 +1408,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         const val = (100 / denom);
         const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %';
         let fs = '14px';
-        if(denom >= 10) fs = '10px';
+        if(denom >= 12) fs = '9px';
+        else if(denom >= 10) fs = '10px';
         else if(denom >= 8) fs = '10px';
         else if(denom >= 6) fs = '11px';
         else if(denom === 5) fs = '12px';
@@ -1327,7 +1419,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         const val = (1 / denom);
         const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 3 });
         let fs = '15px';
-        if(denom >= 10) fs = '10px';
+        if(denom >= 12) fs = '9px';
+        else if(denom >= 10) fs = '10px';
         else if(denom >= 8) fs = '10px';
         else if(denom >= 6) fs = '11px';
         else if(denom === 5) fs = '12px';
@@ -1343,11 +1436,13 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       if(this.labelMode === 'empty') return 0;
       if(this.labelMode !== 'numeric') return 16;
       if(kind === 'piece'){
+        if(denom >= 12) return 13;
         if(denom >= 10) return 14;
         if(denom >= 8) return 15;
         if(denom >= 6) return 16;
         return 17;
       }
+      if(denom >= 12) return 14;
       if(denom >= 10) return 15;
       if(denom >= 8) return 16;
       if(denom >= 6) return 17;
@@ -1400,7 +1495,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         if(this.labelMode === 'empty'){
            seg.innerHTML = '';
         } else {
-           const fsMenu = (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
+           const fsMenu = (denom >= 12) ? 8 : (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
            seg.style.fontSize = fsMenu + 'px';
            if(denom === 1){
              seg.innerHTML = `<span class="back-one" style="font-size:${Math.max(fsMenu,12)}px;color:${cfg.text}">1</span>`;
@@ -1584,12 +1679,91 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       this.updateNumberLineEl();
     }
 
+    setNumberLineGraduation(denom){
+      const d = Number(denom || 0);
+      const allowed = new Set([0, 1, ...FRACTIONS.map(f => f.denom)]);
+      this.numberLine.gradDenom = allowed.has(d) ? d : 0;
+      this.updateNumberLineGradUI();
+      this.updateNumberLineEl();
+    }
+
+    updateNumberLineGradUI(){
+      const sel = document.getElementById('numberline-grad');
+      if(!sel || !this.numberLine) return;
+      sel.value = String(this.numberLine.gradDenom || 0);
+      const d = this.numberLine.gradDenom || 0;
+      if(d === 0) sel.title = 'Graduation : aucune';
+      else if(d === 1) sel.title = 'Graduation : unités';
+      else sel.title = `Graduation : ${d} parts par unité`;
+    }
+
+    formatNumberLineTickLabel(k, denom){
+      if(k === 0) return '0';
+      if(denom <= 1) return String(k);
+      if(k % denom === 0) return String(k / denom);
+      // Choix volontaire : on garde le dénominateur choisi sur la droite.
+      // Exemple en douzièmes : 13/12, 14/12, etc. au lieu de nombres mixtes.
+      return `${k}/${denom}`;
+    }
+
+    buildNumberLineGraduationSVG({len, lineEnd, y}){
+      const denom = Number(this.numberLine?.gradDenom || 0);
+      if(!denom) return '';
+
+      const unitW = this.unitW;
+      const step = unitW / denom;
+      if(!Number.isFinite(step) || step <= 0) return '';
+
+      const maxK = Math.max(0, Math.floor(lineEnd / step + 1e-6));
+      const maxTicks = 620;
+      const tickEvery = Math.max(1, Math.ceil((maxK + 1) / maxTicks));
+
+      // Les graduations peuvent être nombreuses : les traits restent réguliers,
+      // mais les étiquettes s'espacent automatiquement si le zoom rend tout trop serré.
+      const pxStep = step * this.scale;
+      let labelEvery = 1;
+      const minLabelPx = (denom >= 10) ? 31 : (denom >= 6 ? 36 : 42);
+      if(pxStep < minLabelPx){
+        labelEvery = Math.ceil(minLabelPx / Math.max(1, pxStep));
+      }
+
+      const fontSize = denom >= 10 ? 10 : (denom >= 6 ? 11 : 13);
+      const smallTick = 8;
+      const midTick = 11;
+      const majorTick = 17;
+      // Patch D : toutes les étiquettes restent sur une seule ligne, sous la droite.
+      // Les entiers descendent davantage pour ne plus toucher les grandes graduations.
+      const labelY = y + 43;
+
+      const parts = [];
+      for(let k=0; k<=maxK; k+=tickEvery){
+        const x = +(k * step).toFixed(3);
+        const isInteger = (denom === 1) || (k % denom === 0);
+        const isHalfUnit = denom > 1 && (denom % 2 === 0) && (k % (denom / 2) === 0);
+        const h = isInteger ? majorTick : (isHalfUnit ? midTick : smallTick);
+        const sw = isInteger ? 1.65 : 1.05;
+        parts.push(`<line x1="${x}" y1="${y-h}" x2="${x}" y2="${y+h}" stroke="rgba(17,24,39,0.9)" stroke-width="${sw}" stroke-linecap="round" />`);
+
+        const shouldLabel = isInteger || k === 0 || (k % labelEvery === 0);
+        if(shouldLabel){
+          const lab = this.formatNumberLineTickLabel(k, denom);
+          const ly = labelY;
+          const weight = isInteger ? 900 : 800;
+          // Le 0 reste centré exactement sous sa graduation :
+          // la marge visible à gauche est gérée par le SVG, pas par un décalage du texte.
+          parts.push(`<text x="${x}" y="${ly}" text-anchor="middle" font-size="${isInteger ? Math.max(fontSize+2, 13) : fontSize}" font-family="Fredoka, sans-serif" font-weight="${weight}" fill="#111827">${lab}</text>`);
+        }
+      }
+      return parts.join('\n');
+    }
+
     updateNumberLineEl(){
       if(!this.numberLineEl) return;
       if(!this.numberLine.active){
         this.numberLineEl.classList.add('hidden');
         this.numberLineEl.innerHTML = '';
         this.updateNumberLineHandles();
+        this.updateNumberLineGradUI();
         return;
       }
       const nl = this.numberLine;
@@ -1598,25 +1772,32 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       nl.len = Math.max(80, Math.min(20000, (nl.len || nl.defaultLen || 900)));
 
       const len = Math.round(nl.len);
-      const base = nl.baselineOffset;
-      const H = nl.height;
-      this.numberLineEl.style.left = `${nl.x}px`;
+      const hasGrad = !!Number(nl.gradDenom || 0);
+      const base = hasGrad ? 24 : nl.baselineOffset;
+      const H = hasGrad ? 92 : nl.height;
+      // Marge SVG à gauche : elle permet au texte "0", centré sur x=0,
+      // d'être visible en entier sans déplacer la graduation d'origine.
+      const svgPadL = 18;
+      this.numberLineEl.style.left = `${nl.x - svgPadL}px`;
       this.numberLineEl.style.top  = `${nl.y - base}px`;
       const arrowX = len;
       const a = 12;           // longueur de la flèche (en coordonnées monde)
       const ah = 7;           // demi-hauteur de la flèche
       const lineEnd = Math.max(0, len - a);
       const y = base;
+      const gradSvg = this.buildNumberLineGraduationSVG({len, lineEnd, y});
+      const zeroOnly = hasGrad ? '' : `<line x1="0" y1="${y-10}" x2="0" y2="${y+10}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />\n<text x="0" y="${y+20}" text-anchor="middle" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>`;
+
       this.numberLineEl.classList.remove('hidden');
       this.numberLineEl.innerHTML = `
-        <svg width="${len+1}" height="${H}" viewBox="0 0 ${len+1} ${H}" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="${y}" x2="${lineEnd}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
+        <svg width="${len+1+svgPadL}" height="${H}" viewBox="${-svgPadL} 0 ${len+1+svgPadL} ${H}" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="${y}" x2="${lineEnd}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />
           <polygon points="${len},${y} ${lineEnd},${y-ah} ${lineEnd},${y+ah}" fill="rgba(17,24,39,0.9)" />
-          <line x1="0" y1="${y-10}" x2="0" y2="${y+10}" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
-<text x="2" y="${y+20}" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>
+          ${hasGrad ? gradSvg : zeroOnly}
         </svg>
       `;
       this.updateNumberLineHandles();
+      this.updateNumberLineGradUI();
     }
 
 
@@ -1775,6 +1956,11 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       });
 
       this._bind('btn-numberline','click', () => this.toggleNumberLine());
+      const gradSelect = document.getElementById('numberline-grad');
+      if(gradSelect){
+        gradSelect.addEventListener('change', (e) => this.setNumberLineGraduation(e.currentTarget.value));
+        this.updateNumberLineGradUI();
+      }
       this._bind('btn-zoom-in','click', () => this.setZoom(this.scale + 0.15));
       this._bind('btn-zoom-out','click', () => this.setZoom(this.scale - 0.15));
       this._bind('btn-reset-view','click', () => this.resetView());
@@ -2459,8 +2645,11 @@ window.addEventListener('resize', () => {
       //  - Même dénominateur :
       //      * si on a denom pièces (ex: 6 sixièmes) => une bande denom (réversible via "Séparer")
       //      * sinon, si denom % n == 0 et (denom/n) existe => une pièce de denom/n (ex: 2 huitièmes => 1 quart)
-      //  - Fusion mixte (ultra conservative) :
-      //      * uniquement si la somme vaut exactement 1/2 => une pièce 1/2
+      //  - Fusion mixte (prudente mais généralisée) :
+      //      * si la somme vaut exactement 1/d et que d existe dans FRACTIONS => une pièce 1/d
+      //      * si la somme vaut exactement 1 => une bande unité
+      //      Exemples utiles avec les douzièmes :
+      //        1/6 + 1/12 => 1/4 ; 1/4 + 1/12 => 1/3 ; 1/4 + 1/6 + 1/12 => 1/2
       const out = { ok:false };
       if(!Array.isArray(list) || list.length < 2) return out;
 
@@ -2512,9 +2701,18 @@ window.addEventListener('resize', () => {
         return out;
       }
 
-      // Cas 2 : fusion mixte vers 1/2 uniquement (version conservative)
-      // Somme = Σ 1/denom  (pièces unitaires) ; on accepte uniquement si somme == 1/2.
-      const gcd = (a,b) => { a = Math.abs(a); b = Math.abs(b); while(b){ const t = a % b; a = b; b = t; } return a || 1; };
+      // Cas 2 : fusion mixte généralisée vers une fraction unitaire disponible.
+      // Somme = Σ 1/denom (pièces unitaires).
+      // On accepte uniquement si la somme est exactement :
+      //   - 1, ce qui donne une bande unité ;
+      //   - 1/d, avec d présent dans FRACTIONS, ce qui donne une pièce 1/d.
+      // On refuse donc volontairement les résultats non unitaires comme 2/3 ou 3/10.
+      const gcd = (a,b) => {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while(b){ const t = a % b; a = b; b = t; }
+        return a || 1;
+      };
       const lcm = (a,b) => Math.abs((a / gcd(a,b)) * b);
 
       let L = 1;
@@ -2528,10 +2726,22 @@ window.addEventListener('resize', () => {
         num += (L / t.denom);
       }
 
-      if(num * 2 !== L) return out;
-      if(!this.DENOM_SET.has(2)) return out;
+      // Réduction de la fraction num/L.
+      const g = gcd(num, L);
+      num = num / g;
+      L = L / g;
 
-      return { ok:true, resultKind:'piece', resultDenom:2, baseX, baseY, side, anyHidden };
+      // Somme exactement égale à une unité.
+      if(num === L){
+        return { ok:true, resultKind:'band', resultDenom:1, baseX, baseY, side, anyHidden };
+      }
+
+      // Somme exactement égale à 1/d.
+      if(num === 1 && this.DENOM_SET.has(L)){
+        return { ok:true, resultKind:'piece', resultDenom:L, baseX, baseY, side, anyHidden };
+      }
+
+      return out;
 
     }
 
@@ -2667,6 +2877,7 @@ window.addEventListener('resize', () => {
       const startMain = {x: token.x, y: token.y};
       const startPos = new Map(group.map(t => [t.id, {x: t.x, y: t.y}]));
       let lastMain = {x: token.x, y: token.y};
+      let lastAltSnapOff = false;
 
       // Détection de déplacement : pour éviter que l'événement 'click' ne casse une multi-sélection après un drag
       const startClient = {x: clientX, y: clientY};
@@ -2684,9 +2895,10 @@ window.addEventListener('resize', () => {
         const br = this.boardContainer.getBoundingClientRect();
         const wx = (cx - br.left - this.pan.x - offset.x) / this.scale;
         let wy = (cy - br.top - this.pan.y - offset.y) / this.scale;
+        lastAltSnapOff = !!ev.altKey;
 
         const {h} = this.tokenDims(token);
-        if(this.numberLine && this.numberLine.active){
+        if(this.numberLine && this.numberLine.active && !lastAltSnapOff){
           const lockThresh = 18 / this.scale;
           const dAbove = Math.abs((wy + h) - this.numberLine.y);
           const dBelow = Math.abs(wy - this.numberLine.y);
@@ -2727,12 +2939,14 @@ window.addEventListener('resize', () => {
           if(t._el) t._el.classList.remove('dragging');
         }
 
-        // Snap : on snap uniquement la pièce "principale", puis on ré-applique le delta au groupe
+        // Snap : on snap uniquement la pièce "principale", puis on ré-applique le delta au groupe.
+        // Alt pendant le déplacement désactive uniquement l'aimantation à la demi-droite.
+        const snapOpts = { disableNumberLineSnap: lastAltSnapOff };
         if(group.length === 1){
-          this.snapToken(token);
+          this.snapToken(token, snapOpts);
         } else {
           const before = {x: token.x, y: token.y};
-          this.snapToken(token, {ignoreIds: groupIds});
+          this.snapToken(token, {...snapOpts, ignoreIds: groupIds});
           const dxSnap = token.x - before.x;
           const dySnap = token.y - before.y;
 
@@ -2764,22 +2978,23 @@ window.addEventListener('resize', () => {
       const thresh = threshPx / this.scale;
 
       const ignoreIds = (opts && opts.ignoreIds && typeof opts.ignoreIds.has === 'function') ? opts.ignoreIds : null;
+      const disableNumberLineSnap = !!(opts && opts.disableNumberLineSnap);
 
       let bestX = null, bestDx = Infinity, bestXPrio = 9;
       let bestY = null, bestDy = Infinity, bestYPrio = 9;
 
-      const considerX = (nx, prio=1) => {
+      const considerX = (nx, prio=1, localThresh=thresh) => {
         const adx = Math.abs(nx - t.x);
-        if(adx <= thresh && (prio < bestXPrio || (prio === bestXPrio && adx < bestDx))){
+        if(adx <= localThresh && (prio < bestXPrio || (prio === bestXPrio && adx < bestDx))){
           bestXPrio = prio;
           bestDx = adx;
           bestX = nx;
         }
       };
 
-      const considerY = (ny, prio=1) => {
+      const considerY = (ny, prio=1, localThresh=thresh) => {
         const ady = Math.abs(ny - t.y);
-        if(ady <= thresh && (prio < bestYPrio || (prio === bestYPrio && ady < bestDy))){
+        if(ady <= localThresh && (prio < bestYPrio || (prio === bestYPrio && ady < bestDy))){
           bestYPrio = prio;
           bestDy = ady;
           bestY = ny;
@@ -2801,10 +3016,34 @@ window.addEventListener('resize', () => {
         return lines;
       };
 
-      if(this.numberLine && this.numberLine.active){
-        considerY(this.numberLine.y - h, 0);
-        considerY(this.numberLine.y, 0);
-        considerX(this.numberLine.x, 0);
+      if(this.numberLine && this.numberLine.active && !disableNumberLineSnap){
+        // Aimantation douce à la demi-droite :
+        // - verticalement, on garde l'ancien comportement (poser au-dessus ou au-dessous),
+        // - horizontalement, le bord gauche peut se caler sur chaque graduation visible.
+        const nlSnapThresh = 14 / this.scale;
+        const nlYSnapThresh = 18 / this.scale;
+        const nl = this.numberLine;
+        considerY(nl.y - h, 0, nlYSnapThresh);
+        considerY(nl.y, 0, nlYSnapThresh);
+
+        const len = Math.max(80, Math.min(20000, (nl.len || nl.defaultLen || 900)));
+        const arrow = 12;
+        const lineEnd = Math.max(0, len - arrow);
+        const gradDenom = Number(nl.gradDenom || 0);
+        const step = gradDenom ? (this.unitW / gradDenom) : this.unitW;
+
+        if(Number.isFinite(step) && step > 0){
+          const rawK = Math.round((t.x - nl.x) / step);
+          for(let dk=-2; dk<=2; dk++){
+            const k = rawK + dk;
+            const offset = k * step;
+            if(k < 0 || offset < -0.001 || offset > lineEnd + 0.001) continue;
+            considerX(nl.x + offset, 0, nlSnapThresh);
+          }
+        }
+
+        // L'origine reste toujours un repère d'aimantation, même sans graduation choisie.
+        considerX(nl.x, 0, nlSnapThresh);
       }
 
       for(const o of this.tokens){
@@ -3470,7 +3709,7 @@ for(let i=0;i<this.tokens.length;i++){
 
   function runSelfTests(){
     const required = [
-      'btn-undo','btn-clear','mode-selector','btn-numberline','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','mode-selector','btn-numberline','numberline-grad','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-undo-drawing','btn-clear-drawing',
       'board-container','board-world','palette','drawing-canvas','number-line'
@@ -3482,12 +3721,18 @@ for(let i=0;i<this.tokens.length;i++){
     }
 
     try{
-      const tmp = new FractionStripsApp();
-      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine'].every(m => typeof tmp[m] === 'function');
+      // Test non destructif : on vérifie les méthodes sur le prototype,
+      // sans instancier une première application qui ajouterait déjà des écouteurs d'événements.
+      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine','setNumberLineGraduation','buildNumberLineGraduationSVG']
+        .every(m => typeof FractionStripsApp.prototype[m] === 'function');
       if(!okMethods) throw new Error('Méthodes clés manquantes');
-      tmp.resetAll();
+
+      const denoms = FRACTIONS.map(f => f.denom);
+      const hasDuplicate = denoms.some((d, i) => denoms.indexOf(d) !== i);
+      if(hasDuplicate) throw new Error('Dénominateur dupliqué dans FRACTIONS');
+      if(!denoms.includes(12)) throw new Error('Douzièmes absents de FRACTIONS');
     }catch(err){
-      console.error('[SelfTest] Erreur instanciation/app:', err);
+      console.error('[SelfTest] Erreur vérifications:', err);
       return { ok:false, missing:[], err };
     }
 
