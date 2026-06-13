@@ -1,0 +1,3632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ÉquaSplat import — réception Splat Équations</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#d8dee9;
+    --blue:#3b82f6;
+    --blue-soft:#dbeafe;
+    --green:#16a34a;
+    --green-soft:#dcfce7;
+    --orange:#f97316;
+    --orange-soft:#ffedd5;
+    --red:#ef4444;
+    --shadow:0 18px 50px rgba(15,23,42,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(59,130,246,.13), transparent 34rem),
+      radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+
+  main{
+    width:min(1240px, calc(100vw - 28px));
+    margin:18px auto 32px;
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+  }
+
+  @media (max-width:900px){
+    main{grid-template-columns:1fr}
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel{
+    padding:16px;
+    position:sticky;
+    top:14px;
+  }
+
+  @media (max-width:900px){
+    .panel{position:static}
+  }
+
+  .appTitle{
+    text-align:center;
+    font-size:34px;
+    line-height:1;
+    letter-spacing:-.055em;
+    font-weight:950;
+    margin:2px 0 16px;
+  }
+
+  label{
+    display:block;
+    margin:12px 0 5px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+
+  label .mathLetter{
+    text-transform:none;
+    font-style:italic;
+    letter-spacing:0;
+  }
+
+  input,select{
+    width:100%;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:14px;
+    padding:11px 12px;
+    background:white;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:700;
+    outline:none;
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.55);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+  }
+
+  .btnrow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:11px 13px;
+    font-size:14px;
+    font-weight:900;
+    color:var(--ink);
+    background:#eef2f7;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+  }
+
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  button.primary{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:white;
+  }
+  button.green{
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:white;
+  }
+  button.orange{
+    background:linear-gradient(180deg,#fb923c,#f97316);
+    color:white;
+  }
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(15,23,42,.12);
+  }
+  button:disabled{
+    opacity:.42;
+    cursor:not-allowed;
+    transform:none;
+  }
+
+  .infoBox{
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);
+    color:#334155;
+    font-size:14px;
+    font-weight:850;
+    text-align:center;
+  }
+
+  .infoBox strong{font-weight:950;color:#0f172a}
+
+  .mini{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+    margin-top:10px;
+  }
+
+  .stage{
+    padding:16px;
+    min-height:660px;
+    position:relative;
+  }
+
+  .stage:fullscreen{
+    background:var(--bg);
+    border-radius:0;
+    width:100vw;
+    height:100vh;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .stage:fullscreen .board{
+    flex:1;
+    min-height:0;
+  }
+
+  .stageQuickActions{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .quickBtn{
+    width:44px;
+    height:44px;
+    padding:0;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:22px;
+    line-height:1;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    backdrop-filter:blur(8px);
+  }
+
+  .quickBtn:hover{background:#eef2f7}
+
+  .diceBtn{
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+    font-style:normal;
+    transform:none;
+  }
+
+  .topbar{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:4px 64px 16px 4px;
+    text-align:center;
+  }
+
+  .equationHistory{
+    width:min(900px,100%);
+    margin:4px auto 0;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    max-height:150px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding-right:4px;
+  }
+
+  .equationTable{
+    border-collapse:collapse;
+    margin:0 auto;
+    font-size:clamp(22px,2.35vw,36px);
+    font-weight:950;
+    line-height:1.12;
+  }
+
+  .equationTable td{
+    padding:0 8px;
+    white-space:nowrap;
+    vertical-align:baseline;
+  }
+
+  .equationTable .lhs{text-align:right}
+  .equationTable .eq{
+    text-align:center;
+    color:#64748b;
+    padding-left:14px;
+    padding-right:14px;
+  }
+  .equationTable .rhs{text-align:left}
+  .equationTable tr.historyStep{color:#64748b;opacity:.86}
+  .equationTable tr.currentStep{color:#0f172a;opacity:1}
+  .equationTable tr.currentStep .eq{color:#3b82f6}
+  .equationTable tr.solvedStep{color:#166534;opacity:1}
+  .equationTable tr.solvedStep .eq{color:#16a34a}
+
+  .instructionZone{
+    margin:0 auto 12px;
+    width:min(880px,100%);
+    min-height:46px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:#334155;
+    font-size:18px;
+    font-weight:800;
+    line-height:1.35;
+  }
+
+  .instructionZone strong{font-weight:950}
+
+  .board{
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36));
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    padding:10px;
+    min-height:475px;
+    display:grid;
+    place-items:center;
+  }
+
+  #splatSvg{
+    width:100%;
+    height:100%;
+    min-height:500px;
+    display:block;
+  }
+
+  .tray{
+    fill:rgba(255,255,255,.74);
+    stroke:rgba(15,23,42,.20);
+    stroke-width:3;
+  }
+
+  .trayTitle{
+    font-size:24px;
+    fill:#64748b;
+    font-weight:950;
+    text-anchor:middle;
+  }
+
+  .eqMiddle{
+    font-size:70px;
+    fill:#94a3b8;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+
+  .tokenHitArea{
+    pointer-events:all;
+    cursor:grab;
+  }
+
+  .tokenCircle{
+    fill:#eff6ff;
+    stroke:#3b82f6;
+    stroke-width:3;
+    cursor:grab;
+  }
+
+  .tokenCircle.positive{
+    fill:#eff6ff;
+    stroke:#3b82f6;
+  }
+
+  .tokenCircle.relativePositive{
+    fill:#ecfdf5;
+    stroke:#16a34a;
+  }
+
+  .tokenCircle.negative{
+    fill:#fff1f2;
+    stroke:#e11d48;
+  }
+
+  .tokenCircle.zero{
+    fill:#f1f5f9;
+    stroke:#64748b;
+  }
+
+  .tokenDragGroup{
+    cursor:grab;
+    touch-action:none;
+  }
+
+  .tokenDragGroup.dragging{
+    cursor:grabbing;
+  }
+
+  .tokenDragGroup.transientZero{
+    animation: zeroPulseFade .95s ease-in-out forwards;
+  }
+
+  @keyframes zeroPulseFade{
+    0%{opacity:1; transform:scale(1);}
+    45%{opacity:1; transform:scale(1.08);}
+    100%{opacity:0; transform:scale(.82);}
+  }
+
+  .tokenText{
+    fill:#0f172a;
+    font-size:50px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+
+  .splatShape{
+    fill:#111827;
+    stroke:rgba(0,0,0,.22);
+    stroke-width:3;
+    cursor:pointer;
+  }
+
+  .splatShape.oppositeX{
+    fill:#4c1d95;
+    stroke:rgba(76,29,149,.42);
+  }
+
+  .splatText{
+    fill:#ffffff;
+    font-size:38px;
+    font-weight:950;
+    font-family:Georgia,'Times New Roman',serif;
+    font-style:italic;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+
+  .selectedOutline{
+    fill:none;
+    stroke:#f97316;
+    stroke-width:7;
+    opacity:.85;
+    pointer-events:none;
+  }
+
+  .groupSelectedOutline{
+    fill:none;
+    stroke:#16a34a;
+    stroke-width:7;
+    opacity:.90;
+    pointer-events:none;
+  }
+
+  .removedGroup{opacity:.28}
+  .removedOverlay{
+    fill:url(#hatch);
+    stroke:rgba(15,23,42,.45);
+    stroke-width:2;
+    pointer-events:none;
+  }
+
+  .actionZone{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    min-height:52px;
+  }
+
+  /* PATCH UI — barre d’outils en deux lignes, sans titres ajoutés */
+  .toolBar{
+    margin:14px auto 4px;
+    width:min(1040px,100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+
+  .toolRow{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    width:100%;
+  }
+
+  .toolRowEquation{
+    padding-top:2px;
+  }
+
+  .toolBtn{
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+    font-size:15px;
+    padding:12px 15px;
+    border-radius:16px;
+  }
+
+  .toolBtn.undoToolBtn{
+    margin-left:14px;
+  }
+
+  @media (max-width:760px){
+    .toolBtn.undoToolBtn{
+      margin-left:0;
+    }
+  }
+
+  .toolBtn.active{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+    box-shadow:0 10px 24px rgba(59,130,246,.18);
+  }
+
+  .addBothToolBtn{
+    background:#ecfdf5;
+    border-color:rgba(22,163,74,.24);
+    color:#166534;
+  }
+
+  .addBothToolBtn:hover{
+    background:#dcfce7;
+  }
+
+  .oppositeBothToolBtn{
+    background:#f5f3ff;
+    border-color:rgba(109,40,217,.24);
+    color:#4c1d95;
+  }
+
+  .oppositeBothToolBtn:hover{
+    background:#ede9fe;
+  }
+
+  .undoToolBtn{
+    background:#fff7ed;
+    border-color:rgba(249,115,22,.28);
+    color:#9a3412;
+  }
+
+  .solution{
+    display:none;
+  }
+
+  dialog{
+    width:min(620px, calc(100vw - 28px));
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:24px;
+    padding:0;
+    box-shadow:0 30px 100px rgba(15,23,42,.24);
+  }
+
+  dialog::backdrop{
+    background:rgba(15,23,42,.35);
+    backdrop-filter:blur(4px);
+  }
+
+  .dialogInner{
+    padding:32px 36px 30px;
+    text-align:center;
+  }
+
+  .dialogTitle{
+    font-size:34px;
+    font-weight:950;
+    letter-spacing:-.04em;
+    margin:0 0 12px;
+    text-align:center;
+  }
+
+  .dialogText{
+    color:var(--muted);
+    font-size:21px;
+    font-weight:750;
+    line-height:1.42;
+    margin-bottom:18px;
+    text-align:center;
+  }
+
+  dialog label{
+    text-align:center;
+    margin-top:0;
+    font-size:13px;
+  }
+
+  #decomposeInput{
+    text-align:center;
+    font-size:28px;
+    font-weight:950;
+    padding:17px 14px;
+    margin-top:8px;
+  }
+
+  .presetChips{
+    display:none;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+    margin:14px 0 18px;
+  }
+
+  .presetChips.open{display:flex}
+
+  .chip{
+    padding:13px 17px;
+    min-height:48px;
+    border-radius:999px;
+    background:#f1f5f9;
+    border:1px solid rgba(15,23,42,.08);
+    font-size:18px;
+    font-weight:950;
+    cursor:pointer;
+  }
+
+  .chip:hover{background:#e2e8f0}
+
+  .helpMiniBtn{
+    width:48px;
+    height:48px;
+    border-radius:999px;
+    padding:0;
+    display:inline-grid;
+    place-items:center;
+    margin:14px auto 2px;
+    font-size:25px;
+    background:#eef2f7;
+    border:1px solid rgba(15,23,42,.10);
+  }
+
+
+  /* PATCH 1.2.1 — fenêtre de fusion plus lisible / tablette */
+  #fusionDialog{
+    width:min(640px, calc(100vw - 28px));
+  }
+
+  #fusionDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #fusionDialog .dialogTitle{
+    display:none;
+  }
+
+  #fusionDialog .dialogText{
+    margin:2px 0 22px;
+    color:#0f172a;
+    font-size:clamp(38px,5vw,62px);
+    font-weight:950;
+    line-height:1.05;
+    letter-spacing:-.05em;
+  }
+
+  #fusionDialog label{
+    font-size:15px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #fusionInput{
+    text-align:center;
+    font-size:clamp(34px,4.8vw,58px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:78px;
+  }
+
+  #fusionDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #fusionDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
+
+  /* PATCH 1.2.4 — fenêtre Ajouter aux deux membres plus lisible / tablette */
+  #addBothDialog{
+    width:min(600px, calc(100vw - 28px));
+  }
+
+  #addBothDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #addBothDialog .dialogTitle{
+    font-size:clamp(30px,4vw,44px);
+    margin-bottom:14px;
+  }
+
+  #addBothDialog .dialogText{
+    font-size:clamp(21px,2.5vw,28px);
+    font-weight:850;
+    line-height:1.28;
+    margin-bottom:18px;
+  }
+
+  #addBothDialog label{
+    font-size:16px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #addBothInput{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:76px;
+  }
+
+  #addBothDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #addBothDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
+
+  .addBothXChoices{
+    display:none;
+    margin:10px 0 2px;
+    padding-top:10px;
+    border-top:1px solid rgba(15,23,42,.08);
+  }
+
+  .addBothXChoices.open{
+    display:block;
+  }
+
+  .addBothXTitle{
+    margin-bottom:8px;
+    color:#64748b;
+    font-size:17px;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .addBothXCountRow{
+    width:min(260px,100%);
+    margin:0 auto 12px;
+  }
+
+  .addBothXCountRow label{
+    margin:0 0 6px;
+    text-align:center;
+    font-size:13px;
+  }
+
+  #addBothXCount{
+    text-align:center;
+    font-size:26px;
+    font-weight:950;
+    padding:12px 14px;
+    min-height:56px;
+  }
+
+  .addBothXButtons{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .addBothXBtn{
+    min-width:170px;
+    min-height:70px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    background:#f5f3ff;
+    border:1px solid rgba(91,33,182,.18);
+    color:#3b0764;
+  }
+
+  .addBothXBtn.positiveX{
+    background:#eff6ff;
+    border-color:rgba(59,130,246,.20);
+    color:#1d4ed8;
+  }
+
+  .addBothXBtn.oppositeX{
+    background:#f5f3ff;
+    border-color:rgba(91,33,182,.22);
+    color:#3b0764;
+  }
+
+  .miniSplatWrap{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-weight:950;
+  }
+
+  .miniSplatSvg{
+    width:50px;
+    height:50px;
+    flex:0 0 50px;
+    display:block;
+    filter:drop-shadow(0 5px 9px rgba(15,23,42,.18));
+  }
+
+  .miniSplatSvg text{
+    font-family:Georgia,'Times New Roman',serif;
+    font-style:italic;
+    font-size:24px;
+    font-weight:950;
+    fill:#fff;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+
+  /* PATCH 1.3C — outil Regrouper : dialogue lisible / sélection verte */
+  #groupDialog{
+    width:min(600px, calc(100vw - 28px));
+  }
+
+  #groupDialog .dialogInner{
+    padding:34px 38px 32px;
+  }
+
+  #groupDialog .dialogTitle{
+    font-size:clamp(30px,4vw,44px);
+    margin-bottom:14px;
+  }
+
+  #groupDialog .dialogText{
+    font-size:clamp(23px,3vw,34px);
+    font-weight:900;
+    line-height:1.22;
+    margin-bottom:18px;
+    color:#0f172a;
+  }
+
+  #groupDialog label{
+    font-size:16px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #groupInput{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:76px;
+  }
+
+  #groupDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
+  }
+
+  #groupDialog .btnrow button{
+    font-size:18px;
+    padding:15px 22px;
+    border-radius:18px;
+  }
+
+  dialog .btnrow{justify-content:center}
+
+
+
+  /* PATCH UI — polish visuel sans changer la structure ni ajouter de texte */
+  :root{
+    --bg:#f6f8fc;
+    --panel:#ffffff;
+    --line:#d9e1ee;
+    --shadow:0 14px 36px rgba(15,23,42,.085);
+    --radius:20px;
+  }
+
+  body{
+    background:
+      radial-gradient(circle at 0% 0%, rgba(59,130,246,.10), transparent 30rem),
+      radial-gradient(circle at 100% 100%, rgba(22,163,74,.08), transparent 32rem),
+      var(--bg);
+  }
+
+  main{
+    width:min(1280px, calc(100vw - 24px));
+    margin:14px auto 26px;
+    grid-template-columns:300px minmax(0,1fr);
+    gap:14px;
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.075);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(8px);
+  }
+
+  .panel{
+    padding:14px;
+    top:12px;
+  }
+
+  .appTitle{
+    font-size:31px;
+    letter-spacing:-.05em;
+    margin:1px 0 14px;
+  }
+
+  label{
+    margin:10px 0 4px;
+    font-size:11px;
+    letter-spacing:.055em;
+    color:#6b7586;
+  }
+
+  input,select{
+    border-radius:12px;
+    padding:10px 11px;
+    font-size:14px;
+    font-weight:750;
+    border-color:rgba(15,23,42,.13);
+    box-shadow:0 1px 0 rgba(15,23,42,.025);
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.50);
+    box-shadow:0 0 0 3px rgba(59,130,246,.11);
+  }
+
+  .grid3{
+    gap:7px;
+  }
+
+  .btnrow{
+    gap:7px;
+    margin-top:10px;
+  }
+
+  button{
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:13.5px;
+    box-shadow:none;
+  }
+
+  button.primary{
+    background:linear-gradient(180deg,#4f9df7,#2563eb);
+  }
+
+  button.green{
+    background:linear-gradient(180deg,#20bd63,#159447);
+  }
+
+  button.orange{
+    background:linear-gradient(180deg,#fb923c,#ea580c);
+  }
+
+  button.ghost{
+    background:#ffffff;
+    border:1px solid rgba(15,23,42,.11);
+  }
+
+  .infoBox{
+    margin-top:10px;
+    padding:9px 10px;
+    border-radius:12px;
+    font-size:13.5px;
+  }
+
+  .stage{
+    padding:14px;
+    min-height:665px;
+  }
+
+  .stageQuickActions{
+    top:12px;
+    right:12px;
+    gap:7px;
+  }
+
+  .quickBtn{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    font-size:20px;
+    box-shadow:0 8px 20px rgba(15,23,42,.11);
+  }
+
+  .topbar{
+    padding:2px 58px 10px 4px;
+  }
+
+  .equationHistory{
+    margin-top:0;
+    max-height:132px;
+  }
+
+  .equationTable{
+    font-size:clamp(24px,2.45vw,37px);
+    line-height:1.08;
+  }
+
+  .equationTable td{
+    padding:0 7px;
+  }
+
+  .equationTable .eq{
+    padding-left:13px;
+    padding-right:13px;
+  }
+
+  .instructionZone{
+    width:min(900px,100%);
+    min-height:40px;
+    margin:0 auto 10px;
+    font-size:17px;
+    color:#334155;
+  }
+
+  .board{
+    background:linear-gradient(180deg,#fbfdff,#f4f8fd);
+    border:1px solid rgba(15,23,42,.075);
+    border-radius:22px;
+    padding:8px;
+    min-height:490px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+  }
+
+  #splatSvg{
+    min-height:510px;
+  }
+
+  .tray{
+    fill:rgba(255,255,255,.82);
+    stroke:rgba(15,23,42,.18);
+  }
+
+  .actionZone{
+    margin-top:8px;
+    min-height:48px;
+  }
+
+  .toolBar{
+    margin:12px auto 2px;
+    gap:7px;
+  }
+
+  .toolRow{
+    gap:8px;
+  }
+
+  .toolRowEquation{
+    padding-top:1px;
+  }
+
+  .toolBtn{
+    background:#ffffff;
+    border:1px solid rgba(15,23,42,.11);
+    color:#334155;
+    font-size:15px;
+    padding:11px 15px;
+    border-radius:14px;
+    box-shadow:0 3px 10px rgba(15,23,42,.045);
+  }
+
+  .toolBtn:hover{
+    background:#f8fafc;
+  }
+
+  .toolBtn.active{
+    background:linear-gradient(180deg,#4f9df7,#2563eb);
+    border-color:rgba(37,99,235,.38);
+    box-shadow:0 9px 22px rgba(37,99,235,.20);
+  }
+
+  .addBothToolBtn{
+    background:#f6fef9;
+    border-color:rgba(22,163,74,.18);
+    color:#166534;
+  }
+
+  .oppositeBothToolBtn{
+    background:#faf7ff;
+    border-color:rgba(109,40,217,.18);
+    color:#4c1d95;
+  }
+
+  .undoToolBtn{
+    background:#fffaf4;
+    border-color:rgba(249,115,22,.20);
+    color:#9a3412;
+  }
+
+  .toolBtn.undoToolBtn{
+    margin-left:12px;
+  }
+
+  @media (max-width:900px){
+    main{
+      width:min(1000px, calc(100vw - 18px));
+      margin:10px auto 22px;
+      grid-template-columns:1fr;
+    }
+    .panel{position:static}
+  }
+
+  @media (max-width:760px){
+    .toolBtn{
+      font-size:14px;
+      padding:10px 12px;
+    }
+    .toolBtn.undoToolBtn{
+      margin-left:0;
+    }
+  }
+
+
+  /* PATCH — alignement rigoureux du signe égal de l'historique avec le signe égal du plateau */
+  .topbar{
+    padding:2px 72px 10px;
+  }
+
+  .equationHistory{
+    width:min(960px,100%);
+    display:block;
+    margin:0 auto;
+  }
+
+  .equationList{
+    width:100%;
+    margin:0 auto;
+    font-size:clamp(24px,2.45vw,37px);
+    font-weight:950;
+    line-height:1.08;
+  }
+
+  .equationRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:baseline;
+    column-gap:20px;
+    width:100%;
+    white-space:nowrap;
+  }
+
+  .equationRow .lhs{
+    text-align:right;
+    min-width:0;
+  }
+
+  .equationRow .eq{
+    text-align:center;
+    color:#64748b;
+    min-width:1.1em;
+    /* Correction visuelle : le centre géométrique était correct,
+       mais le signe égal du haut paraissait légèrement trop à gauche
+       par rapport au signe égal SVG du plateau. */
+    transform:translateX(10px);
+  }
+
+  .equationRow .rhs{
+    text-align:left;
+    min-width:0;
+  }
+
+  .equationRow.historyStep{color:#64748b;opacity:.86}
+  .equationRow.currentStep{color:#0f172a;opacity:1}
+  .equationRow.currentStep .eq{color:#3b82f6}
+  .equationRow.solvedStep{color:#166534;opacity:1}
+  .equationRow.solvedStep .eq{color:#16a34a}
+
+
+  /* Mode import : l'équation vient de Splat Équations.
+     On masque les réglages de génération, sans supprimer le moteur. */
+  body.importMode main{
+    grid-template-columns:1fr;
+    width:min(1240px, calc(100vw - 28px));
+  }
+
+  body.importMode .panel{
+    display:none;
+  }
+
+  body.importMode #btnStageRandom{
+    display:none;
+  }
+
+  body.importMode .stage{
+    min-height:720px;
+  }
+
+  body.importMode .instructionZone{
+    min-height:28px;
+    margin-bottom:8px;
+  }
+
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <div class="appTitle">ÉquaSplat import</div>
+
+    <label>Univers de travail</label>
+    <select id="workUniverse" title="Choisir le monde de manipulation">
+      <option value="positive" selected>Splat positif</option>
+      <option value="relative">Splat relatif</option>
+    </select>
+
+    <label id="oppositeXModeLabel">Taches opposées</label>
+    <select id="oppositeXMode" title="Autoriser les taches −x en Splat relatif">
+      <option value="off" selected>Non</option>
+      <option value="on">Oui, niveau avancé</option>
+    </select>
+
+    <label>Type d’équation</label>
+    <select id="mode">
+      <option value="xpb" selected>x + b = c</option>
+      <option value="axc">ax = c</option>
+      <option value="axb">ax + b = c</option>
+      <option value="both">ax + b = mx + d</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <label>Affichage de l’inconnue</label>
+    <select id="unknownDisplayMode" title="Affichage des inconnues sur les taches">
+      <option value="letter" selected>Lettre</option>
+      <option value="question">Point d’interrogation</option>
+    </select>
+
+    <label>Après suppression</label>
+    <select id="removedDisplayMode" title="Affichage des éléments supprimés">
+      <option value="keep" selected>Garder hachuré</option>
+      <option value="hide">Masquer</option>
+    </select>
+
+    <label>Jetons numériques au départ</label>
+    <select id="initialTokenCount" title="Nombre de jetons visibles pour représenter chaque constante">
+      <option value="1" selected>1 jeton</option>
+      <option value="2">2 jetons</option>
+      <option value="3">3 jetons</option>
+      <option value="mix">Mélange</option>
+    </select>
+
+    <div class="grid3" id="abcGrid">
+      <div id="coefAWrap">
+        <label>Coefficient <span class="mathLetter">a</span></label>
+        <input id="coefA" type="number" min="2" max="8" value="2" />
+      </div>
+      <div id="constBWrap">
+        <label>Constante <span class="mathLetter">b</span></label>
+        <input id="constB" type="number" min="0" max="40" value="4" />
+      </div>
+      <div id="coefCWrap">
+        <label>Coefficient <span class="mathLetter">m</span></label>
+        <input id="coefC" type="number" min="1" max="8" value="1" />
+      </div>
+      <div id="constCWrap">
+        <label>Constante <span class="mathLetter">c</span></label>
+        <input id="constC" type="number" min="1" max="200" value="28" />
+      </div>
+      <div id="constDWrap">
+        <label>Constante <span class="mathLetter">d</span></label>
+        <input id="constD" type="number" min="1" max="200" value="28" />
+      </div>
+    </div>
+
+
+    <div class="infoBox" id="profEquationInfo"></div>
+
+    <div class="btnrow">
+      <button class="primary" id="btnBuild" type="button">Créer</button>
+      <button id="btnRandom" type="button">Aléatoire</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="ghost" id="btnReset" type="button">Recommencer</button>
+    </div>
+
+  </section>
+
+  <section class="stage" id="stage">
+    <div class="stageQuickActions" aria-label="Actions rapides">
+      <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
+      <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
+
+    <div class="topbar">
+      <div class="equationHistory" id="equationHistory"></div>
+    </div>
+
+    <div class="instructionZone" id="instructionZone"></div>
+
+    <div class="board" id="board">
+      <svg id="splatSvg" viewBox="0 0 1600 820" aria-label="ÉquaSplat"></svg>
+    </div>
+
+    <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
+      <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
+        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+        <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
+        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+      </div>
+
+      <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
+        <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+        <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
+        <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+      </div>
+    </div>
+
+    <div class="actionZone" id="actionZone"></div>
+    <div class="solution" id="solution"></div>
+  </section>
+</main>
+
+<dialog id="decomposeDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Décomposer le jeton</h2>
+    <div class="dialogText" id="dialogText"></div>
+    <label>Écris une somme</label>
+    <input id="decomposeInput" type="text" autocomplete="off" />
+    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
+    <div class="presetChips" id="presetChips"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyDecompose" type="button">Décomposer</button>
+      <button class="ghost" id="btnCancelDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="shareDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Partager équitablement</h2>
+    <div class="dialogText" id="shareDialogText"></div>
+    <div class="presetChips open" id="shareChoices"></div>
+    <div class="btnrow" style="justify-content:center">
+      <button class="ghost" id="btnCancelShareDialog" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="groupDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Regrouper</h2>
+    <div class="dialogText" id="groupDialogText"></div>
+    <label>Somme des jetons sélectionnés</label>
+    <input id="groupInput" type="number" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="groupFeedback"></div>
+    <div class="btnrow">
+      <button class="green" id="btnApplyGroup" type="button">Regrouper</button>
+      <button class="ghost" id="btnCancelGroup" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="addBothDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Ajouter aux deux membres</h2>
+    <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique dans chaque membre.</div>
+    <label>Valeur du jeton</label>
+    <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="addBothFeedback"></div>
+    <div class="addBothXChoices" id="addBothXChoices">
+      <div class="addBothXTitle">Ou ajouter une tache</div>
+      <div class="addBothXCountRow">
+        <label>Nombre de taches</label>
+        <input id="addBothXCount" type="number" min="1" max="8" value="1" inputmode="numeric" />
+      </div>
+      <div class="addBothXButtons">
+        <button class="addBothXBtn positiveX" id="btnAddBothPositiveX" type="button">Ajouter x</button>
+        <button class="addBothXBtn oppositeX" id="btnAddBothNegativeX" type="button">Ajouter −x</button>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyAddBoth" type="button">Ajouter</button>
+      <button class="ghost" id="btnCancelAddBoth" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="fusionDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle">Fusionner deux jetons</h2>
+    <div class="dialogText" id="fusionDialogText"></div>
+    <label>Résultat</label>
+    <input id="fusionInput" type="number" inputmode="numeric" autocomplete="off" />
+    <div class="fusionFeedback" id="fusionFeedback"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnApplyFusion" type="button">Fusionner</button>
+      <button class="ghost" id="btnCancelFusion" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+
+(() => {
+  const svg = document.getElementById("splatSvg");
+  const equationHistory = document.getElementById("equationHistory");
+  const instructionZone = document.getElementById("instructionZone");
+  const actionZone = document.getElementById("actionZone");
+  const solutionEl = document.getElementById("solution");
+  const stageEl = document.getElementById("stage");
+
+  const modeEl = document.getElementById("mode");
+  const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const workUniverseEl = document.getElementById("workUniverse");
+  const oppositeXModeEl = document.getElementById("oppositeXMode");
+  const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
+  const initialTokenCountEl = document.getElementById("initialTokenCount");
+  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
+  const coefAEl = document.getElementById("coefA");
+  const constBEl = document.getElementById("constB");
+  const coefCEl = document.getElementById("coefC");
+  const constCEl = document.getElementById("constC");
+  const constDEl = document.getElementById("constD");
+  const profEquationInfo = document.getElementById("profEquationInfo");
+  const coefAWrap = document.getElementById("coefAWrap");
+  const constBWrap = document.getElementById("constBWrap");
+  const coefCWrap = document.getElementById("coefCWrap");
+  const constCWrap = document.getElementById("constCWrap");
+  const constDWrap = document.getElementById("constDWrap");
+
+  const toolDecompose = document.getElementById("toolDecompose");
+  const toolGroup = document.getElementById("toolGroup");
+  const toolShare = document.getElementById("toolShare");
+  const toolDelete = document.getElementById("toolDelete");
+  const toolAddBoth = document.getElementById("toolAddBoth");
+  const toolOppositeBoth = document.getElementById("toolOppositeBoth");
+  const toolUndo = document.getElementById("toolUndo");
+  const btnStageUndo = document.getElementById("btnStageUndo");
+  const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+
+  const decomposeDialog = document.getElementById("decomposeDialog");
+  const dialogText = document.getElementById("dialogText");
+  const decomposeInput = document.getElementById("decomposeInput");
+  const presetChips = document.getElementById("presetChips");
+  const btnShowSuggestions = document.getElementById("btnShowSuggestions");
+  const shareDialog = document.getElementById("shareDialog");
+  const shareDialogText = document.getElementById("shareDialogText");
+  const shareChoices = document.getElementById("shareChoices");
+  const groupDialog = document.getElementById("groupDialog");
+  const groupDialogText = document.getElementById("groupDialogText");
+  const groupInput = document.getElementById("groupInput");
+  const groupFeedback = document.getElementById("groupFeedback");
+  const addBothDialog = document.getElementById("addBothDialog");
+  const addBothDialogText = document.getElementById("addBothDialogText");
+  const addBothInput = document.getElementById("addBothInput");
+  const addBothFeedback = document.getElementById("addBothFeedback");
+  const addBothXChoices = document.getElementById("addBothXChoices");
+  const btnAddBothPositiveX = document.getElementById("btnAddBothPositiveX");
+  const btnAddBothNegativeX = document.getElementById("btnAddBothNegativeX");
+  const addBothXCount = document.getElementById("addBothXCount");
+  const fusionDialog = document.getElementById("fusionDialog");
+  const fusionDialogText = document.getElementById("fusionDialogText");
+  const fusionInput = document.getElementById("fusionInput");
+  const fusionFeedback = document.getElementById("fusionFeedback");
+
+  const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
+  // ÉquaSplat 0.5 : jetons un peu plus grands et rayon centralisé.
+  const TOKEN_R = 54;
+  const TOKEN_HIT_EXTRA = 32;
+
+  let state = null;
+  let history = [];
+  let actionMode = "decompose";
+  let selectedPieceRef = null;
+  let deleteSelection = [];
+  let groupSelection = [];
+  let dragState = null;
+  let suppressNextClickFor = null;
+  let pendingFusion = null;
+  let initialImportState = null;
+  let importedUnknownDisplayMode = null;
+
+  function uid(){ return Math.random().toString(36).slice(2, 9); }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+  function numberOr(value, fallback){ const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+  function pushHistory(){ if(state) history.push(clone(state)); if(history.length > 80) history.shift(); }
+  function currentVar(){ return state && state.original && state.original.varChar ? state.original.varChar : "𝑥"; }
+  function displayedUnknown(){
+    const displayMode = importedUnknownDisplayMode || (unknownDisplayModeEl ? unknownDisplayModeEl.value : "letter");
+    return displayMode === "question" ? "?" : currentVar();
+  }
+  function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
+  function oppositeXEnabled(){
+    return isRelativeUniverse() && oppositeXModeEl && oppositeXModeEl.value === "on";
+  }
+
+  function makeX(sign=1){ return { id:uid(), type:"x", sign: sign < 0 ? -1 : 1, value:null, removed:false }; }
+  function makeXPieces(coef){
+    const sign = coef < 0 ? -1 : 1;
+    const count = Math.abs(Math.round(Number(coef) || 0));
+    return Array.from({length:count}, () => makeX(sign));
+  }
+  function xSign(piece){ return piece && piece.sign === -1 ? -1 : 1; }
+  function xPieceLabel(piece){
+    const base = displayedUnknown();
+    return xSign(piece) < 0 ? `−${base}` : base;
+  }
+  function formatXTerm(coef){
+    const n = Number(coef) || 0;
+    const v = displayedUnknown();
+    if(n === 1) return v;
+    if(n === -1) return `−${v}`;
+    if(n < 0) return `−${Math.abs(n)}${v}`;
+    return `${n}${v}`;
+  }
+  function makeToken(value){ return { id:uid(), type:"token", value:Number(value), removed:false }; }
+  function formatSignedNumber(n){
+    const v = Number(n) || 0;
+    if(v < 0) return `−${Math.abs(v)}`;
+    return String(v);
+  }
+
+  function isRelativeUniverse(){
+    return workUniverseEl && workUniverseEl.value === "relative";
+  }
+
+  function randomNonZeroInt(rng, a, b){
+    let v = 0;
+    for(let i=0; i<80 && v === 0; i++) v = randomInt(rng, a, b);
+    return v === 0 ? (Math.abs(a) >= Math.abs(b) ? a : b) : v;
+  }
+
+  function positiveTokenColorForValue(value){
+    // Inspiration Splat d'origine : en positif, les jetons numériques
+    // reçoivent des couleurs variées selon leur valeur.
+    const mag = Math.abs(Math.round(Number(value) || 0));
+    const hue = ((mag * 37) % 360 + 360) % 360;
+    return {
+      fill:`hsla(${hue}, 78%, 54%, .20)`,
+      stroke:`hsla(${hue}, 78%, 45%, .62)`
+    };
+  }
+
+  function formatFusionTerm(n){
+    const v = Number(n) || 0;
+    return v < 0 ? `(−${Math.abs(v)})` : String(v);
+  }
+
+  function formatEquationTerm(n){
+    const v = Number(n) || 0;
+    return v < 0 ? `(−${Math.abs(v)})` : String(v);
+  }
+
+  function getInitialTokenCount(rng=Math.random){
+    const raw = initialTokenCountEl ? initialTokenCountEl.value : "1";
+    if(raw === "mix") return randomInt(rng, 1, 3);
+    return clamp(Math.round(numberOr(raw, 1)), 1, 3);
+  }
+
+  function shuffleCopy(arr, rng=Math.random){
+    const out = arr.slice();
+    for(let i=out.length-1; i>0; i--){
+      const j = Math.floor(rng() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  function splitRelativeValueForInitialTokens(value, count, rng=Math.random){
+    value = Math.round(Number(value) || 0);
+    count = clamp(Math.round(Number(count) || 1), 1, 3);
+    if(count <= 1) return [value];
+
+    // En relatif, quand le professeur demande plusieurs jetons, on cherche à
+    // créer un vrai petit calcul relatif : des jetons verts ET rouges sur le
+    // même plateau, tout en conservant exactement la bonne somme.
+    const extra = randomInt(rng, 2, 9);
+
+    if(count === 2){
+      if(value === 0) return shuffleCopy([extra, -extra], rng);
+      if(value > 0) return shuffleCopy([value + extra, -extra], rng);
+      return shuffleCopy([value - extra, extra], rng);
+    }
+
+    if(value === 0){
+      const a = randomInt(rng, 2, 8);
+      const b = randomInt(rng, 2, 8);
+      return shuffleCopy([a, b, -(a + b)], rng);
+    }
+
+    if(value > 0){
+      const negative = -extra;
+      const positiveTotal = value + extra;
+      const cut = randomInt(rng, 1, Math.max(1, positiveTotal - 1));
+      return shuffleCopy([cut, positiveTotal - cut, negative], rng).filter(v => v !== 0);
+    }
+
+    const positive = extra;
+    const negativeTotalAbs = Math.abs(value - extra);
+    const cut = randomInt(rng, 1, Math.max(1, negativeTotalAbs - 1));
+    return shuffleCopy([-cut, -(negativeTotalAbs - cut), positive], rng).filter(v => v !== 0);
+  }
+
+  function splitValueForInitialTokens(value, count, rng=Math.random){
+    value = Math.round(Number(value) || 0);
+    count = clamp(Math.round(Number(count) || 1), 1, 3);
+
+    if(isRelativeUniverse() && count > 1){
+      const mixed = splitRelativeValueForInitialTokens(value, count, rng);
+      if(mixed.length === count && mixed.reduce((s,v)=>s+v,0) === value) return mixed;
+    }
+
+    if(value === 0) return [0];
+
+    // En positif, les constantes sont positives. En relatif avec 1 seul jeton,
+    // on garde simplement le signe de la constante.
+    const sign = value < 0 ? -1 : 1;
+    const absValue = Math.abs(value);
+    if(count <= 1 || absValue < count) return [value];
+
+    const cuts = [];
+    for(let i=0; i<count-1; i++) cuts.push(randomInt(rng, 1, absValue-1));
+    cuts.sort((a,b)=>a-b);
+    const points = [0, ...cuts, absValue];
+    const parts = [];
+    for(let i=0; i<points.length-1; i++){
+      const part = points[i+1] - points[i];
+      if(part > 0) parts.push(part * sign);
+    }
+    if(parts.length !== count) return splitValueForInitialTokens(value, count, rng);
+    return parts;
+  }
+
+  function makeInitialTokens(value, rng=Math.random){
+    return splitValueForInitialTokens(value, getInitialTokenCount(rng), rng).map(makeToken);
+  }
+
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function randomInt(rng,a,b){ return a + Math.floor(rng()*(b-a+1)); }
+
+  function setActionMode(mode){
+    actionMode = mode;
+    deleteSelection = [];
+    groupSelection = [];
+    [toolDecompose, toolGroup, toolShare, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
+    if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
+    if(mode === "group" && toolGroup) toolGroup.classList.add("active");
+    if(mode === "share" && toolShare) toolShare.classList.add("active");
+    if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
+    if(mode === "addBoth" && toolAddBoth) toolAddBoth.classList.add("active");
+    render();
+  }
+
+  function getSelectedMode(){
+    const raw = modeEl ? modeEl.value : "axb";
+    if(raw === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      return modes[Math.floor(Math.random() * modes.length)];
+    }
+    return raw;
+  }
+
+  function getModeLabel(mode){
+    if(mode === "xpb") return "x + b = c";
+    if(mode === "axc") return "ax = c";
+    if(mode === "both") return "ax + b = mx + d";
+    return "ax + b = c";
+  }
+
+  function syncTeacherControls(options={validate:false}){
+    const mode = modeEl ? modeEl.value : "axb";
+    const showA = !(mode === "xpb");
+    const showB = !(mode === "axc");
+    const showRightCoef = mode === "both" || mode === "mix";
+    const showRightConstC = mode !== "both";
+    const showRightConstD = mode === "both" || mode === "mix";
+
+    if(coefAWrap) coefAWrap.style.display = showA ? "" : "none";
+    if(constBWrap) constBWrap.style.display = showB ? "" : "none";
+    if(coefCWrap) coefCWrap.style.display = showRightCoef ? "" : "none";
+    if(constCWrap) constCWrap.style.display = showRightConstC ? "" : "none";
+    if(constDWrap) constDWrap.style.display = showRightConstD ? "" : "none";
+    if(options.validate !== false) updateProfEquationInfo();
+  }
+
+  function integerField(el, fallback){
+    return Math.round(numberOr(el && el.value, fallback));
+  }
+
+  function setTeacherInfo(ok, html){
+    if(!profEquationInfo) return;
+    profEquationInfo.style.display = "block";
+    profEquationInfo.innerHTML = html;
+    profEquationInfo.style.background = ok ? "#f0fdf4" : "#fff7ed";
+    profEquationInfo.style.borderColor = ok ? "rgba(22,163,74,.22)" : "rgba(249,115,22,.28)";
+    profEquationInfo.style.color = ok ? "#166534" : "#9a3412";
+  }
+
+  function clearTeacherInfo(){
+    if(!profEquationInfo) return;
+    profEquationInfo.innerHTML = "";
+    profEquationInfo.style.display = "none";
+  }
+
+  function setTeacherNeutralInfo(html){
+    if(!profEquationInfo) return;
+    profEquationInfo.style.display = "block";
+    profEquationInfo.innerHTML = html;
+    profEquationInfo.style.background = "#f8fafc";
+    profEquationInfo.style.borderColor = "rgba(15,23,42,.08)";
+    profEquationInfo.style.color = "#334155";
+  }
+
+  function markManualEquationDirty(){
+    // Pas de message permanent pendant la saisie : on signale seulement les erreurs au moment de Créer.
+    clearTeacherInfo();
+  }
+
+  function computeTeacherEquation(modeOverride=null){
+    const selectedMode = modeOverride || getSelectedMode();
+    const relative = isRelativeUniverse();
+    const maxConst = 200;
+    const allowOppositeX = oppositeXEnabled();
+    function clampNonZeroCoef(value, fallback){
+      const raw = Math.round(numberOr(value, fallback));
+      if(allowOppositeX){
+        const v = clamp(raw, -8, 8);
+        return v === 0 ? fallback : v;
+      }
+      return clamp(raw, 1, 8);
+    }
+    let a = selectedMode === "xpb" ? 1 : clampNonZeroCoef(coefAEl && coefAEl.value, 2);
+    if(!allowOppositeX && selectedMode !== "xpb") a = Math.max(2, a);
+    const b = selectedMode === "axc" ? 0 : (relative ? clamp(integerField(constBEl, 0), -maxConst, maxConst) : clamp(integerField(constBEl, 0), 0, maxConst));
+    const rightA = selectedMode === "both" ? clampNonZeroCoef(coefCEl && coefCEl.value, 1) : 0;
+    const rightValue = selectedMode === "both"
+      ? (relative ? clamp(integerField(constDEl, 0), -maxConst, maxConst) : clamp(integerField(constDEl, 1), 0, maxConst))
+      : (relative ? clamp(integerField(constCEl, 1), -maxConst, maxConst) : clamp(integerField(constCEl, 1), 1, maxConst));
+
+    let numerator = 0;
+    let denominator = 1;
+
+    if(selectedMode === "xpb"){
+      numerator = rightValue - b;
+      denominator = 1;
+    }else if(selectedMode === "axc"){
+      numerator = rightValue;
+      denominator = a;
+    }else if(selectedMode === "both"){
+      numerator = rightValue - b;
+      denominator = a - rightA;
+      if(denominator === 0){
+        return {ok:false, message:"Équation refusée : les coefficients des deux membres sont identiques, donc on n’a pas une solution unique utilisable ici."};
+      }
+    }else{
+      numerator = rightValue - b;
+      denominator = a;
+    }
+
+    if(numerator % denominator !== 0){
+      return {ok:false, message:"Équation refusée : la solution n’est pas un nombre entier."};
+    }
+
+    const x = numerator / denominator;
+    if(x === 0){
+      return {ok:false, message:"Équation refusée : la solution 0 n’est pas prise en charge dans cette version."};
+    }
+    if(!relative && x < 0){
+      return {ok:false, message:"Équation refusée : en Splat positif, la solution doit être positive."};
+    }
+
+    return {
+      ok:true,
+      mode:selectedMode,
+      modeLabel:getModeLabel(selectedMode),
+      a,
+      b,
+      rightA,
+      d:selectedMode === "both" ? rightValue : 0,
+      c:selectedMode === "both" ? a * x + b : rightValue,
+      x
+    };
+  }
+
+  function maybeSwapEquationSides(rng=Math.random){
+    // Variation pédagogique : une équation peut être présentée dans les deux sens.
+    // On échange uniquement les deux membres entiers, sans modifier la logique mathématique.
+    if(!state) return;
+    if(rng() < 0.5){
+      const temp = state.left;
+      state.left = state.right;
+      state.right = temp;
+    }
+  }
+
+  function updateProfEquationInfo(){
+    if(!profEquationInfo || !modeEl) return;
+    const rawMode = modeEl.value;
+    if(rawMode === "mix"){
+      clearTeacherInfo();
+      return;
+    }
+
+    const result = computeTeacherEquation(rawMode);
+    if(!result.ok){
+      setTeacherInfo(false, result.message);
+      return;
+    }
+    clearTeacherInfo();
+  }
+
+  function buildFromInputs(){
+    const eq = computeTeacherEquation();
+    if(!eq.ok){
+      setTeacherInfo(false, eq.message);
+      return;
+    }
+
+    const selectedMode = eq.mode;
+    const a = eq.a;
+    const b = eq.b;
+    const rightA = eq.rightA;
+    const d = eq.d;
+    const x = eq.x;
+
+    coefAEl.value = a;
+    constBEl.value = b;
+    if(coefCEl) coefCEl.value = rightA || 1;
+    if(constCEl && selectedMode !== "both") constCEl.value = eq.c;
+    if(constDEl && selectedMode === "both") constDEl.value = d;
+    clearTeacherInfo();
+
+    const varChar = variableChars[Math.floor(Math.random() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:eq.c,varChar},
+      left:[],
+      right:[],
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b) : []);
+      state.right = makeXPieces(rightA).concat(d !== 0 ? makeInitialTokens(d) : []);
+    }else{
+      const rightValue = eq.c;
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b) : []);
+      state.right = rightValue !== 0 ? makeInitialTokens(rightValue) : [];
+    }
+
+    maybeSwapEquationSides(Math.random);
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    setActionMode("decompose");
+  }
+
+  function randomExercise(){
+    const rng = Math.random;
+    const relative = isRelativeUniverse();
+
+    let selectedMode = modeEl ? modeEl.value : "axb";
+    if(selectedMode === "mix"){
+      const modes = ["xpb", "axc", "axb", "both"];
+      selectedMode = modes[randomInt(rng,0,modes.length-1)];
+    }
+
+    const allowOppositeX = oppositeXEnabled();
+    const randomCoef = (minAbs=2, maxAbs=5) => {
+      const v = randomInt(rng, minAbs, maxAbs);
+      return allowOppositeX && rng() < 0.45 ? -v : v;
+    };
+    let a = selectedMode === "xpb" ? 1 : randomCoef(2,5);
+    const x = relative ? randomNonZeroInt(rng,-12,12) : randomInt(rng,3,15);
+    let b = selectedMode === "axc" ? 0 : (relative ? randomNonZeroInt(rng,-18,18) : randomInt(rng,2,18));
+    let rightA = 0;
+    let d = 0;
+
+    if(selectedMode === "both"){
+      a = randomCoef(3,5);
+      do{ rightA = randomCoef(1,4); }while(rightA === a);
+      b = relative ? randomNonZeroInt(rng,-14,14) : randomInt(rng,2,14);
+      d = (a - rightA) * x + b;
+      if(relative && d === 0){
+        b += x > 0 ? -1 : 1;
+        d = (a - rightA) * x + b;
+      }
+    }
+
+    coefAEl.value = a;
+    constBEl.value = b;
+    if(coefCEl) coefCEl.value = rightA || 1;
+    if(selectedMode === "both"){
+      if(constDEl) constDEl.value = d;
+    }else{
+      if(constCEl) constCEl.value = a * x + b;
+    }
+    clearTeacherInfo();
+
+    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
+    state = {
+      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
+      left:[],
+      right:[],
+      steps:[]
+    };
+
+    if(selectedMode === "both"){
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.right = makeXPieces(rightA).concat(d !== 0 ? makeInitialTokens(d, rng) : []);
+    }else{
+      const rightValue = a*x + b;
+      state.left = makeXPieces(a).concat(b !== 0 ? makeInitialTokens(b, rng) : []);
+      state.right = rightValue !== 0 ? makeInitialTokens(rightValue, rng) : [];
+    }
+
+    maybeSwapEquationSides(rng);
+    recordEquationStep();
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    setActionMode("decompose");
+  }
+
+  function activePieces(side){ return state[side].filter(p => !p.removed); }
+  function renderPiecesForSide(side){ return shouldKeepRemovedPieces() ? state[side] : activePieces(side); }
+
+  function sideExpression(side){
+    const pieces = activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const terms = [];
+    const xPieces = pieces.filter(p => p.type === "x");
+    const xSigns = Array.from(new Set(xPieces.map(p => xSign(p))));
+    const canCombineAllXOfSameSign = xSigns.length <= 1;
+
+    if(canCombineAllXOfSameSign){
+      let xDone = false;
+      for(const p of pieces){
+        if(p.type === "x"){
+          if(!xDone){
+            const coef = xPieces.reduce((total, item) => total + xSign(item), 0);
+            if(coef !== 0) terms.push(formatXTerm(coef));
+            xDone = true;
+          }
+        }else{
+          terms.push(formatEquationTerm(p.value));
+        }
+      }
+      return terms.length ? terms.join(" + ") : "0";
+    }
+
+    let i = 0;
+    while(i < pieces.length){
+      const p = pieces[i];
+      if(p.type === "x"){
+        // Dès qu'il y a des taches opposées dans le même membre, on ne les
+        // simplifie pas automatiquement dans l'équation : il faut que l'élève
+        // fasse le regroupement de la paire nulle sur le plateau. On regroupe
+        // seulement les séries consécutives de même signe pour garder une
+        // écriture lisible sans masquer le geste x + (−x) = 0.
+        const sign = xSign(p);
+        let count = 0;
+        while(i < pieces.length && pieces[i].type === "x" && xSign(pieces[i]) === sign){
+          count++;
+          i++;
+        }
+        const coef = sign * count;
+        if(coef !== 0) terms.push(formatXTerm(coef));
+      }else{
+        terms.push(formatEquationTerm(p.value));
+        i++;
+      }
+    }
+    return terms.length ? terms.join(" + ") : "0";
+  }
+
+  function getSolvedValue(){
+    const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
+    if(left.length === 0 || right.length === 0) return null;
+    const isAllTokens = arr => arr.every(p => p.type === "token");
+    const isAllX = arr => arr.every(p => p.type === "x");
+    const allSameXSign = arr => isAllX(arr) && arr.length > 0 && arr.every(p => xSign(p) === xSign(arr[0]));
+    const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
+    // Avec les taches opposées, on évite le raccourci magique −x = n → x = −n.
+    // L'élève devra d'abord utiliser l'action "opposé des deux membres" dans une étape suivante.
+    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0) return left[0].value;
+    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0) return right[0].value;
+    return null;
+  }
+
+  function currentEquationString(){
+    const solved = getSolvedValue();
+    if(solved !== null) return `${displayedUnknown()} = ${solved}`;
+    return `${sideExpression("left")} = ${sideExpression("right")}`;
+  }
+
+  function recordEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+  }
+
+  function updateCurrentEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps.length === 0){
+      state.steps.push(eq);
+      return;
+    }
+    state.steps[state.steps.length - 1] = eq;
+  }
+
+  function isSolvedEquationString(eq){
+    const {lhs, rhs} = splitEquation(eq);
+    const v = displayedUnknown();
+    return lhs === v && /^−?\d+$/.test(rhs);
+  }
+
+  function splitEquation(eq){
+    const parts = String(eq).split("=");
+    if(parts.length < 2) return {lhs:String(eq), rhs:""};
+    return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
+  }
+
+  function renderEquationHistory(){
+    const steps = state.steps || [];
+    if(!steps.length){ equationHistory.innerHTML = ""; return; }
+    const rows = steps.map((eq, i) => {
+      const {lhs, rhs} = splitEquation(eq);
+      const isCurrent = i === steps.length - 1;
+      const solved = isSolvedEquationString(eq);
+      const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
+      return `<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
+    }).join("");
+    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
+    equationHistory.scrollTop = equationHistory.scrollHeight;
+  }
+
+  function setInstruction(html){ instructionZone.innerHTML = html || ""; }
+
+  function getPieceBySideAndId(ref){
+    if(!ref || !state || !state[ref.side]) return null;
+    return state[ref.side].find(p => p.id === ref.id) || null;
+  }
+
+  function selectedDeleteIds(){ return new Set(deleteSelection.map(ref => ref.id)); }
+
+  function selectedDeletePiecesBySide(){
+    const left = [], right = [];
+    for(const ref of deleteSelection){
+      const p = getPieceBySideAndId(ref);
+      if(!p || p.removed) continue;
+      if(ref.side === "left") left.push(p);
+      if(ref.side === "right") right.push(p);
+    }
+    return {left, right};
+  }
+
+  function zeroXPairSelectionInfo(){
+    const {left, right} = selectedDeletePiecesBySide();
+    const selected = left.length ? left : right;
+    const side = left.length ? "left" : (right.length ? "right" : null);
+    if(!oppositeXEnabled()) return {ok:false, reason:"disabled", left, right};
+    if(!side || (left.length && right.length)) return {ok:false, reason:"oneSideOnly", left, right};
+    if(selected.length < 2) return {ok:false, reason:"notEnough", left, right};
+    if(selected.some(p => p.type !== "x")) return {ok:false, reason:"notOnlyX", left, right};
+    const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
+    if(coef !== 0) return {ok:false, reason:"notZero", left, right, coef};
+    return {ok:true, side, selected, left, right};
+  }
+
+  function cancelZeroXPair(){
+    const info = zeroXPairSelectionInfo();
+    if(!info.ok) return;
+    pushHistory();
+    const ids = new Set(deleteSelection.map(ref => ref.id));
+    for(const p of state[info.side]){
+      if(ids.has(p.id)) p.removed = true;
+    }
+    deleteSelection = [];
+    recordEquationStep();
+    render();
+  }
+
+  function deletionGroupInfo(){
+    const {left, right} = selectedDeletePiecesBySide();
+    if(left.length === 0 || right.length === 0) return {ok:false, reason:"needBoth", left, right};
+    const all = left.concat(right);
+    const firstType = all[0].type;
+    if(all.some(p => p.type !== firstType)) return {ok:false, reason:"mixedTypes", left, right};
+    if(firstType === "x"){
+      const leftCoef = left.reduce((sum,p)=>sum + xSign(p), 0);
+      const rightCoef = right.reduce((sum,p)=>sum + xSign(p), 0);
+      if(leftCoef !== rightCoef) return {ok:false, reason:"differentXCoef", left, right, leftCoef, rightCoef};
+      if(leftCoef === 0) return {ok:false, reason:"zeroXSelection", left, right, leftCoef, rightCoef};
+      return {ok:true, type:"x", label:formatXTerm(leftCoef), left, right};
+    }
+    const leftSum = left.reduce((s,p)=>s + Number(p.value || 0), 0);
+    const rightSum = right.reduce((s,p)=>s + Number(p.value || 0), 0);
+    if(leftSum !== rightSum) return {ok:false, reason:"differentSums", left, right, leftSum, rightSum};
+    return {ok:true, type:"token", value:leftSum, label:String(leftSum), left, right};
+  }
+
+  function selectForDeletion(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+    const alreadyIndex = deleteSelection.findIndex(ref => ref.side === side && ref.id === id);
+    if(alreadyIndex >= 0){ deleteSelection.splice(alreadyIndex,1); render(); return; }
+    const currentPieces = deleteSelection.map(getPieceBySideAndId).filter(Boolean);
+    if(currentPieces.length && piece.type !== currentPieces[0].type) deleteSelection = [];
+    deleteSelection.push({side,id});
+    render();
+  }
+
+  function deleteMatching(){
+    const info = deletionGroupInfo();
+    if(!info.ok) return;
+    pushHistory();
+    const ids = selectedDeleteIds();
+    for(const side of ["left","right"]){
+      for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
+    }
+    deleteSelection = [];
+    recordEquationStep();
+    render();
+  }
+
+  function selectedGroupIds(){ return new Set(groupSelection.map(ref => ref.id)); }
+
+  function selectedGroupPieces(){
+    const pieces = [];
+    for(const ref of groupSelection){
+      const p = getPieceBySideAndId(ref);
+      if(!p || p.removed) continue;
+      pieces.push({ref, piece:p});
+    }
+    return pieces;
+  }
+
+  function groupSelectionInfo(){
+    const selected = selectedGroupPieces();
+    if(selected.length < 2) return {ok:false, reason:"notEnough", selected};
+    const side = selected[0].ref.side;
+    if(selected.some(x => x.ref.side !== side)) return {ok:false, reason:"differentSides", selected};
+
+    const firstType = selected[0].piece.type;
+    if(selected.some(x => x.piece.type !== firstType)) return {ok:false, reason:"mixedTypes", selected};
+
+    if(firstType === "token"){
+      const sum = selected.reduce((total, x) => total + Number(x.piece.value || 0), 0);
+      return {ok:true, kind:"tokens", side, sum, selected};
+    }
+
+    if(firstType === "x"){
+      if(!oppositeXEnabled()) return {ok:false, reason:"oppositeDisabled", selected};
+      const coef = selected.reduce((total, x) => total + xSign(x.piece), 0);
+      if(coef !== 0) return {ok:false, reason:"notZeroX", side, coef, selected};
+      return {ok:true, kind:"zeroX", side, coef, selected};
+    }
+
+    return {ok:false, reason:"unsupported", selected};
+  }
+
+  function selectForGrouping(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+
+    const canSelect = piece.type === "token" || (piece.type === "x" && oppositeXEnabled());
+    if(!canSelect){
+      setInstruction(oppositeXEnabled()
+        ? "En mode Regrouper, sélectionne des jetons numériques ou des taches opposées."
+        : "En mode Regrouper, sélectionne seulement des jetons numériques.");
+      return;
+    }
+
+    const alreadyIndex = groupSelection.findIndex(ref => ref.side === side && ref.id === id);
+    if(alreadyIndex >= 0){
+      groupSelection.splice(alreadyIndex, 1);
+      render();
+      return;
+    }
+
+    // On regroupe uniquement dans un même membre et avec une même nature d’objet.
+    if(groupSelection.length){
+      const currentPieces = selectedGroupPieces();
+      const currentType = currentPieces.length ? currentPieces[0].piece.type : null;
+      if(groupSelection[0].side !== side || currentType !== piece.type) groupSelection = [];
+    }
+
+    groupSelection.push({side, id});
+    render();
+  }
+
+  function openGroupDialog(){
+    const info = groupSelectionInfo();
+    if(!info.ok || info.kind !== "tokens") return;
+    const values = info.selected.map(x => formatSignedNumber(x.piece.value));
+    groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
+    groupInput.value = "";
+    groupFeedback.textContent = "";
+    if(typeof groupDialog.showModal === "function") groupDialog.showModal();
+    setTimeout(()=>groupInput.focus(), 80);
+  }
+
+  function applyZeroXGroup(info){
+    if(!info || !info.ok || info.kind !== "zeroX") return;
+    pushHistory();
+    const arr = state[info.side];
+    const ids = new Set(info.selected.map(x => x.ref.id));
+    const indexes = info.selected.map(x => arr.findIndex(p => p.id === x.ref.id)).filter(i => i >= 0);
+    const firstIndex = Math.min(...indexes);
+
+    // Même logique visuelle que 1 + (−1) : on remplace la paire par un
+    // jeton 0 temporaire, puis il disparaît progressivement.
+    const zero = makeToken(0);
+    zero.transientZero = true;
+    const positions = info.selected
+      .map(x => x.piece)
+      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if(positions.length){
+      zero.x = positions.reduce((sum,p)=>sum + p.x, 0) / positions.length;
+      zero.y = positions.reduce((sum,p)=>sum + p.y, 0) / positions.length;
+    }
+
+    const filtered = arr.filter(p => !ids.has(p.id));
+    filtered.splice(firstIndex, 0, zero);
+    state[info.side] = filtered;
+
+    groupSelection = [];
+    deleteSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    render();
+    setInstruction("Paire nulle : <strong>x + (−x) = 0</strong>, puis le 0 disparaît.");
+    setTimeout(() => removeTransientZero(info.side, zero.id), 950);
+  }
+
+  function applyGroup(){
+    const info = groupSelectionInfo();
+    if(!info.ok){
+      if(groupFeedback) groupFeedback.textContent = "Sélectionne au moins deux jetons du même membre.";
+      return;
+    }
+
+    if(info.kind === "zeroX"){
+      applyZeroXGroup(info);
+      return;
+    }
+
+    if(info.kind !== "tokens") return;
+
+    const answer = Number(String(groupInput.value || "").replace(/−/g, "-"));
+    if(!Number.isFinite(answer) || Math.round(answer) !== answer){
+      groupFeedback.textContent = "Écris un nombre entier.";
+      groupInput.select();
+      return;
+    }
+
+    if(answer !== info.sum){
+      groupFeedback.textContent = "Ce n’est pas encore la bonne somme.";
+      groupInput.select();
+      return;
+    }
+
+    pushHistory();
+    const arr = state[info.side];
+    const ids = new Set(info.selected.map(x => x.ref.id));
+    const indexes = info.selected.map(x => arr.findIndex(p => p.id === x.ref.id)).filter(i => i >= 0);
+    const firstIndex = Math.min(...indexes);
+    const merged = makeToken(info.sum);
+    const coords = info.selected
+      .map(x => x.piece)
+      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+    if(coords.length){
+      merged.x = coords.reduce((sum,p)=>sum + p.x, 0) / coords.length;
+      merged.y = coords.reduce((sum,p)=>sum + p.y, 0) / coords.length;
+    }
+
+    state[info.side] = arr.filter(p => !ids.has(p.id));
+    state[info.side].splice(firstIndex, 0, merged);
+    groupSelection = [];
+    deleteSelection = [];
+    selectedPieceRef = null;
+    updateCurrentEquationStep();
+    groupDialog.close();
+    render();
+    setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
+  }
+
+  function getShareOpportunity(){
+    const left = activePieces("left");
+    const right = activePieces("right");
+    const leftTokens = left.filter(p => p.type === "token");
+    const rightTokens = right.filter(p => p.type === "token");
+    const leftX = left.filter(p => p.type === "x");
+    const rightX = right.filter(p => p.type === "x");
+    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2 && leftX.every(p => xSign(p) === xSign(leftX[0]))){
+      const value = rightTokens[0].value;
+      if(value % leftX.length === 0) return {tokenSide:"right", xSide:"left", token:rightTokens[0], count:leftX.length, result:value/leftX.length};
+    }
+    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2 && rightX.every(p => xSign(p) === xSign(rightX[0]))){
+      const value = leftTokens[0].value;
+      if(value % rightX.length === 0) return {tokenSide:"left", xSide:"right", token:leftTokens[0], count:rightX.length, result:value/rightX.length};
+    }
+    return null;
+  }
+
+  function applyTokenSplit(side, id, values, historyMode="update"){
+    const arr = state[side];
+    const idx = arr.findIndex(p => p.id === id);
+    if(idx < 0) return;
+    pushHistory();
+    arr.splice(idx, 1, ...values.map(makeToken));
+    if(historyMode === "record") recordEquationStep();
+    else updateCurrentEquationStep();
+    selectedPieceRef = null;
+    render();
+  }
+
+  function parseSum(text){
+    const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
+    if(!raw) return null;
+    if(!/^-?\d+(?:[+]-?\d+)*$/.test(raw)) return null;
+    return raw.split("+").map(Number).filter(Number.isFinite);
+  }
+
+  function openDecomposeDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "token" || piece.removed) return;
+    selectedPieceRef = {side,id};
+    dialogText.innerHTML = `Décomposer le jeton <strong>${formatSignedNumber(piece.value)}</strong> en une somme.`;
+    decomposeInput.value = "";
+    presetChips.classList.remove("open");
+    presetChips.innerHTML = "";
+    if(typeof decomposeDialog.showModal === "function") decomposeDialog.showModal();
+    setTimeout(()=>decomposeInput.focus(), 80);
+  }
+
+  function getSmartDecompositionSuggestions(side, piece){
+    const value = Number(piece.value);
+    const otherSide = side === "left" ? "right" : "left";
+    const suggestions = [];
+
+    // 1) Aide prioritaire : si l'autre membre contient déjà une quantité numérique,
+    // on propose de faire apparaître cette quantité pour pouvoir la supprimer ensuite.
+    // Exemple : 14 d'un côté et 30 de l'autre -> 30 = 14 + 16.
+    const otherTokens = activePieces(otherSide).filter(p => p.type === "token");
+    const targets = [];
+    for(const t of otherTokens){
+      const v = Number(t.value);
+      if(Number.isFinite(v) && v > 0) targets.push(v);
+    }
+    const otherSum = otherTokens.reduce((sum,p)=>sum + Number(p.value || 0), 0);
+    if(otherSum > 0) targets.push(otherSum);
+
+    for(const target of targets){
+      if(target > 0 && target < value){
+        suggestions.push([target, value - target]);
+      }
+    }
+
+    // 2) Aide de partage : si on doit partager en autant de parts qu'il reste de taches.
+    const left = activePieces("left");
+    const right = activePieces("right");
+    const leftX = left.filter(p => p.type === "x").length;
+    const rightX = right.filter(p => p.type === "x").length;
+    const leftTokens = left.filter(p => p.type === "token").length;
+    const rightTokens = right.filter(p => p.type === "token").length;
+    const usefulShareCount =
+      (side === "right" && rightX === 0 && leftTokens === 0 && leftX >= 2) ? leftX :
+      (side === "left" && leftX === 0 && rightTokens === 0 && rightX >= 2) ? rightX :
+      0;
+    if(usefulShareCount >= 2 && value % usefulShareCount === 0){
+      suggestions.push(Array.from({length:usefulShareCount}, () => value / usefulShareCount));
+    }
+
+    // 3) Propositions générales, utiles mais secondaires.
+    for(let n=2;n<=6;n++){
+      if(value % n === 0){
+        const part = value / n;
+        suggestions.push(Array.from({length:n},()=>part));
+      }
+    }
+    if(value > 3){ suggestions.push([1, value-1]); }
+    if(value > 5){ suggestions.push([2, value-2]); }
+
+    const unique = [];
+    const seen = new Set();
+    for(const s of suggestions){
+      if(!Array.isArray(s) || s.length < 2) continue;
+      if(s.some(v => !Number.isFinite(Number(v)) || Number(v) <= 0)) continue;
+      const sum = s.reduce((a,b)=>a+Number(b), 0);
+      if(sum !== value) continue;
+      const key = s.join("+");
+      if(!seen.has(key)){ seen.add(key); unique.push(s); }
+    }
+    return unique.slice(0, 8);
+  }
+
+  function showDecomposeSuggestions(){
+    if(!selectedPieceRef) return;
+    const piece = getPieceBySideAndId(selectedPieceRef);
+    if(!piece) return;
+    const suggestions = getSmartDecompositionSuggestions(selectedPieceRef.side, piece);
+    presetChips.innerHTML = suggestions.map(s => `<button class="chip" type="button" data-values="${s.join(",")}">${s.join(" + ")}</button>`).join("");
+    presetChips.querySelectorAll(".chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const values = btn.dataset.values.split(",").map(Number);
+        applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
+        decomposeDialog.close();
+      });
+    });
+    presetChips.classList.add("open");
+  }
+
+  function applyDecomposeInput(){
+    if(!selectedPieceRef) return;
+    const piece = getPieceBySideAndId(selectedPieceRef);
+    if(!piece) return;
+    const values = parseSum(decomposeInput.value);
+    if(!values || values.length < 2){
+      dialogText.innerHTML = `Écris une somme avec au moins deux termes, par exemple <strong>${Math.floor(piece.value/2)} + ${piece.value - Math.floor(piece.value/2)}</strong>.`;
+      return;
+    }
+    const sum = values.reduce((a,b)=>a+b,0);
+    if(sum !== piece.value){
+      dialogText.innerHTML = `La somme doit faire <strong>${piece.value}</strong>. Ici, elle fait <strong>${sum}</strong>.`;
+      return;
+    }
+    applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
+    decomposeDialog.close();
+  }
+
+  function openShareDialog(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.type !== "token" || piece.removed) return;
+    selectedPieceRef = {side,id};
+    const value = Number(piece.value);
+    shareDialogText.innerHTML = `Partager le jeton <strong>${value}</strong> en parts égales.`;
+    const choices = [];
+    for(let n=2;n<=8;n++){
+      if(value % n === 0) choices.push({n, part:value/n});
+    }
+    if(!choices.length){
+      shareChoices.innerHTML = `<div class="dialogText">Aucun partage entier simple proposé.</div>`;
+    }else{
+      shareChoices.innerHTML = choices.map(c => `<button class="chip" type="button" data-n="${c.n}" data-part="${c.part}">${c.n} parts de ${c.part}</button>`).join("");
+      shareChoices.querySelectorAll(".chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const n = Number(btn.dataset.n);
+          const part = Number(btn.dataset.part);
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record");
+          shareDialog.close();
+        });
+      });
+    }
+    if(typeof shareDialog.showModal === "function") shareDialog.showModal();
+  }
+
+  function blobPath(cx, cy, r){
+    const n = 36, lobes = 5, pts = [];
+    for(let i=0;i<n;i++){
+      const a = (Math.PI*2*i)/n;
+      const k = 0.90 + 0.16*Math.sin(lobes*a) + 0.04*Math.sin(2*lobes*a);
+      const rr = r*k;
+      pts.push([cx + Math.cos(a)*rr, cy + Math.sin(a)*rr]);
+    }
+    function cr2bz(p0,p1,p2,p3){
+      const t = 1/6;
+      return [p1[0]+(p2[0]-p0[0])*t, p1[1]+(p2[1]-p0[1])*t, p2[0]-(p3[0]-p1[0])*t, p2[1]-(p3[1]-p1[1])*t, p2[0], p2[1]];
+    }
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=0;i<n;i++){
+      const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
+      const [c1x,c1y,c2x,c2y,x,y] = cr2bz(p0,p1,p2,p3);
+      d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x} ${y}`;
+    }
+    return d + " Z";
+  }
+
+  function tokenAreaForTray(tray){
+    // PATCH 0.4 : zone de manipulation plus grande et plus proche des bords.
+    // Le jeton doit pouvoir circuler presque partout sur le plateau.
+    // On garde seulement une marge intérieure pour éviter qu'il colle au bord.
+    return {x:tray.x+42, y:tray.y+54, w:tray.w-84, h:tray.h-96};
+  }
+
+  function rowsForSplats(n){
+    if(n <= 1) return [n];
+    if(n === 2) return [2];
+    if(n === 3) return [2,1];
+    if(n === 4) return [2,2];
+    return [3, n-3];
+  }
+
+  function splatPositionsForItems(tray, items){
+    const xs = items.filter(p => p.type === "x");
+    const out = new Map();
+    // PATCH 0.7.2 : taches légèrement plus grandes et mieux espacées.
+    // Elles doivent pouvoir cacher visuellement un jeton numéroté,
+    // sans se toucher lorsque plusieurs inconnues sont présentes.
+    const splatArea = {x:tray.x+70, y:tray.y+80, w:tray.w-140, h:400};
+    const rows = rowsForSplats(xs.length);
+    let k = 0;
+    for(let r=0;r<rows.length;r++){
+      const cols = rows[r];
+      const cellW = splatArea.w / Math.max(1, cols);
+      const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
+      for(let c=0;c<cols && k<xs.length;c++){
+        const cx = splatArea.x + cellW*(c+.5);
+        out.set(xs[k].id, {cx,cy,r:84});
+        k++;
+      }
+    }
+    return out;
+  }
+
+  function avoidSplatsOnDrop(tray, items, cx, cy, r=40){
+    // Si le jeton est relâché sur une tache, on le repousse doucement
+    // vers le bord libre le plus proche, plutôt que de le bloquer dans la zone basse.
+    let p = {cx, cy};
+    const splats = Array.from(splatPositionsForItems(tray, items).values());
+
+    for(let pass=0; pass<5; pass++){
+      let changed = false;
+      for(const s of splats){
+        const minDist = s.r + r + 16;
+        let dx = p.cx - s.cx;
+        let dy = p.cy - s.cy;
+        let dist = Math.hypot(dx, dy);
+        if(dist < minDist){
+          if(dist < 0.001){
+            dx = 1; dy = 0; dist = 1;
+          }
+          const push = minDist - dist;
+          p.cx += (dx / dist) * push;
+          p.cy += (dy / dist) * push;
+          p = clampTokenPosition(tray, p.cx, p.cy, r, false);
+          changed = true;
+        }
+      }
+      if(!changed) break;
+    }
+    return p;
+  }
+
+  function clampTokenPosition(tray, cx, cy, r=40, avoid=true, side=null){
+    const area = tokenAreaForTray(tray);
+    let p = {
+      cx: clamp(cx, area.x + r, area.x + area.w - r),
+      cy: clamp(cy, area.y + r, area.y + area.h - r)
+    };
+    if(avoid && side && state && state[side]){
+      p = avoidSplatsOnDrop(tray, state[side], p.cx, p.cy, r);
+    }
+    return p;
+  }
+
+  function tokenOverlapsExisting(candidate, placed, minDist){
+    for(const p of placed){
+      if(Math.hypot(candidate.cx - p.cx, candidate.cy - p.cy) < minDist) return true;
+    }
+    return false;
+  }
+
+  function tokenOverlapsSplats(candidate, splats, tokenR){
+    for(const s of splats){
+      if(Math.hypot(candidate.cx - s.cx, candidate.cy - s.cy) < s.r + tokenR + 18) return true;
+    }
+    return false;
+  }
+
+  function randomTokenPositionInTray(tray, sideName, visible, placed){
+    const area = tokenAreaForTray(tray);
+    const splats = Array.from(splatPositionsForItems(tray, visible).values());
+    const minTokenDist = TOKEN_R * 2.12;
+
+    // Placement naturel : on tire des positions dans tout le plateau,
+    // mais on refuse les positions sur les taches et, si possible, les
+    // positions qui collent trop les jetons entre eux.
+    for(let attempt=0; attempt<140; attempt++){
+      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
+      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
+      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
+      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
+      if(tokenOverlapsExisting(p, placed, minTokenDist)) continue;
+      return p;
+    }
+
+    // Deuxième passe : on accepte que les jetons soient plus proches,
+    // mais toujours pas sur une tache.
+    for(let attempt=0; attempt<100; attempt++){
+      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
+      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
+      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
+      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
+      if(tokenOverlapsExisting(p, placed, TOKEN_R * 1.82)) continue;
+      return p;
+    }
+
+    // Secours déterministe : si le plateau est très chargé, on reprend
+    // une position corrigée par l'évitement des taches.
+    const fallback = {
+      cx: area.x + area.w * (0.28 + Math.random()*0.44),
+      cy: area.y + area.h * (0.56 + Math.random()*0.34)
+    };
+    return clampTokenPosition(tray, fallback.cx, fallback.cy, TOKEN_R, true, sideName);
+  }
+
+  function separateTokenPositions(tray, visible, tokens, sideName){
+    // PATCH 0.7.3 : après le placement naturel, on effectue une petite
+    // relaxation géométrique pour supprimer les derniers chevauchements
+    // entre jetons, tout en continuant à éviter les taches.
+    const minDist = TOKEN_R * 2.10;
+    if(tokens.length < 2) return;
+
+    for(let pass=0; pass<18; pass++){
+      let moved = false;
+
+      for(let i=0; i<tokens.length; i++){
+        for(let j=i+1; j<tokens.length; j++){
+          const a = tokens[i];
+          const b = tokens[j];
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let dist = Math.hypot(dx, dy);
+
+          if(dist < 0.001){
+            dx = 1;
+            dy = 0;
+            dist = 1;
+          }
+
+          if(dist < minDist){
+            const push = (minDist - dist) / 2;
+            const ux = dx / dist;
+            const uy = dy / dist;
+
+            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, TOKEN_R, true, sideName);
+            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, TOKEN_R, true, sideName);
+
+            a.x = pa.cx;
+            a.y = pa.cy;
+            b.x = pb.cx;
+            b.y = pb.cy;
+            moved = true;
+          }
+        }
+      }
+
+      // Une passe de sécurité contre les taches après les déplacements entre jetons.
+      for(const t of tokens){
+        const safe = clampTokenPosition(tray, t.x, t.y, TOKEN_R, true, sideName);
+        if(Math.abs(safe.cx - t.x) > 0.5 || Math.abs(safe.cy - t.y) > 0.5){
+          t.x = safe.cx;
+          t.y = safe.cy;
+          moved = true;
+        }
+      }
+
+      if(!moved) break;
+    }
+  }
+
+  function layoutItems(tray, items){
+    const visible = items;
+    const tokens = visible.filter(p => p.type === "token");
+    const out = new Map();
+
+    const splatPositions = splatPositionsForItems(tray, visible);
+    for(const [id, pos] of splatPositions.entries()) out.set(id, pos);
+
+    const sideName = tray.x < 800 ? "left" : "right";
+    const placedTokens = [];
+
+    for(const token of tokens){
+      if(Number.isFinite(token.x) && Number.isFinite(token.y)){
+        const clamped = clampTokenPosition(tray, token.x, token.y, TOKEN_R, true, sideName);
+        token.x = clamped.cx;
+        token.y = clamped.cy;
+        placedTokens.push({cx:clamped.cx, cy:clamped.cy});
+      }else{
+        const p = randomTokenPositionInTray(tray, sideName, visible, placedTokens);
+        token.x = p.cx;
+        token.y = p.cy;
+        placedTokens.push({cx:p.cx, cy:p.cy});
+      }
+    }
+
+    separateTokenPositions(tray, visible, tokens, sideName);
+    for(const token of tokens){
+      out.set(token.id, {cx:token.x, cy:token.y, r:TOKEN_R});
+    }
+
+    return out;
+  }
+
+  function drawDefs(){
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    defs.innerHTML = `
+      <pattern id="hatch" patternUnits="userSpaceOnUse" width="12" height="12" patternTransform="rotate(45)">
+        <rect width="12" height="12" fill="rgba(229,231,235,.56)"></rect>
+        <line x1="0" y1="0" x2="0" y2="12" stroke="rgba(15,23,42,.50)" stroke-width="3"></line>
+      </pattern>
+    `;
+    svg.appendChild(defs);
+  }
+
+  function drawText(x,y,text,cls,parent=svg){
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.setAttribute("x", x);
+    el.setAttribute("y", y);
+    el.setAttribute("class", cls);
+    el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  }
+
+  function drawTray(tray, title){
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", tray.x);
+    rect.setAttribute("y", tray.y);
+    rect.setAttribute("width", tray.w);
+    rect.setAttribute("height", tray.h);
+    rect.setAttribute("rx", 34);
+    rect.setAttribute("class", "tray");
+    svg.appendChild(rect);
+    if(title) drawText(tray.x + tray.w/2, tray.y + 44, title, "trayTitle");
+  }
+
+  function svgPointFromEvent(e){
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  function getTrayForSide(side){
+    return side === "left"
+      ? {x:40, y:74, w:720, h:650}
+      : {x:840, y:74, w:720, h:650};
+  }
+
+  function findFusionCandidate(side, draggedId, cx, cy){
+    if(!state || !state[side]) return null;
+    const dragged = state[side].find(p => p.id === draggedId);
+    if(!dragged || dragged.removed || dragged.type !== "token") return null;
+
+    const tray = getTrayForSide(side);
+    const items = renderPiecesForSide(side);
+    const positions = layoutItems(tray, items);
+    let best = null;
+    let bestDist = Infinity;
+
+    for(const other of activePieces(side)){
+      if(other.id === draggedId || other.type !== "token" || other.removed) continue;
+      const pos = positions.get(other.id);
+      if(!pos) continue;
+      const dist = Math.hypot(cx - pos.cx, cy - pos.cy);
+      // Fusion seulement si on dépose vraiment le jeton sur l'autre :
+      // seuil assoupli : il faut déposer franchement sur l’autre jeton,
+      // mais sans devoir viser parfaitement le centre.
+      if(dist < TOKEN_R * 1.55 && dist < bestDist){
+        best = other;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  function openFusionDialog(side, sourceId, targetId){
+    const source = state && state[side] ? state[side].find(p => p.id === sourceId) : null;
+    const target = state && state[side] ? state[side].find(p => p.id === targetId) : null;
+    if(!source || !target || source.removed || target.removed) return;
+    if(source.type !== "token" || target.type !== "token") return;
+
+    const a = Number(target.value);
+    const b = Number(source.value);
+    if(!isRelativeUniverse() && (a < 0 || b < 0)) return;
+    const expected = a + b;
+    pendingFusion = {side, sourceId, targetId, a, b, expected};
+    fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
+    fusionInput.value = "";
+    fusionFeedback.textContent = "";
+    if(typeof fusionDialog.showModal === "function") fusionDialog.showModal();
+    setTimeout(()=>fusionInput.focus(), 80);
+  }
+
+  function removeTransientZero(side, id){
+    if(!state || !state[side]) return;
+    const idx = state[side].findIndex(p => p.id === id && p.type === "token" && Number(p.value) === 0);
+    if(idx < 0) return;
+    state[side].splice(idx, 1);
+    updateCurrentEquationStep();
+    render();
+    setInstruction("La paire nulle vaut 0 : elle disparaît du plateau.");
+  }
+
+  function applyFusion(){
+    if(!pendingFusion) return;
+    const answer = Number(fusionInput.value);
+    if(!Number.isFinite(answer)){
+      fusionFeedback.textContent = "Écris un nombre.";
+      return;
+    }
+    if(answer !== pendingFusion.expected){
+      fusionFeedback.textContent = "Ce n’est pas encore le bon résultat.";
+      fusionInput.select();
+      return;
+    }
+
+    const {side, sourceId, targetId, expected} = pendingFusion;
+    const arr = state && state[side] ? state[side] : null;
+    if(!arr) return;
+    const source = arr.find(p => p.id === sourceId);
+    const target = arr.find(p => p.id === targetId);
+    if(!source || !target || source.removed || target.removed) return;
+
+    pushHistory();
+    const merged = makeToken(expected);
+    const sx = Number.isFinite(source.x) ? source.x : null;
+    const sy = Number.isFinite(source.y) ? source.y : null;
+    const tx = Number.isFinite(target.x) ? target.x : null;
+    const ty = Number.isFinite(target.y) ? target.y : null;
+    merged.x = Number.isFinite(sx) && Number.isFinite(tx) ? (sx + tx) / 2 : (Number.isFinite(sx) ? sx : tx);
+    merged.y = Number.isFinite(sy) && Number.isFinite(ty) ? (sy + ty) / 2 : (Number.isFinite(sy) ? sy : ty);
+    if(expected === 0) merged.transientZero = true;
+
+    const firstIndex = Math.min(arr.findIndex(p => p.id === sourceId), arr.findIndex(p => p.id === targetId));
+    const filtered = arr.filter(p => p.id !== sourceId && p.id !== targetId);
+    filtered.splice(firstIndex, 0, merged);
+    state[side] = filtered;
+
+    pendingFusion = null;
+    fusionDialog.close();
+    updateCurrentEquationStep();
+    render();
+    if(expected === 0){
+      setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
+      setTimeout(() => removeTransientZero(side, merged.id), 950);
+    }else{
+      setInstruction(`Jetons fusionnés : <strong>${formatSignedNumber(expected)}</strong>.`);
+    }
+  }
+
+  function beginTokenDrag(e, side, item, pos, group){
+    if(item.removed || item.type !== "token") return;
+    if(e.button !== undefined && e.button !== 0) return;
+    const p = svgPointFromEvent(e);
+    dragState = {
+      side,
+      id:item.id,
+      group,
+      startSvg:p,
+      startCx:pos.cx,
+      startCy:pos.cy,
+      cx:pos.cx,
+      cy:pos.cy,
+      moved:false
+    };
+    try{ group.setPointerCapture(e.pointerId); }catch(_e){}
+  }
+
+  function moveTokenDrag(e){
+    if(!dragState) return;
+    const p = svgPointFromEvent(e);
+    const tray = getTrayForSide(dragState.side);
+    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), TOKEN_R, false);
+    const dx = next.cx - dragState.startCx;
+    const dy = next.cy - dragState.startCy;
+    if(Math.hypot(dx, dy) > 3) dragState.moved = true;
+    dragState.cx = next.cx;
+    dragState.cy = next.cy;
+    dragState.group.classList.toggle("dragging", dragState.moved);
+    dragState.group.setAttribute("transform", `translate(${dx} ${dy})`);
+    if(dragState.moved) e.preventDefault();
+  }
+
+  function endTokenDrag(e){
+    if(!dragState) return;
+    const ds = dragState;
+    dragState = null;
+    try{ ds.group.releasePointerCapture(e.pointerId); }catch(_e){}
+    ds.group.classList.remove("dragging");
+    ds.group.removeAttribute("transform");
+    if(ds.moved){
+      const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
+      let fusionTarget = null;
+      if(piece){
+        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, TOKEN_R, true, ds.side);
+        piece.x = safe.cx;
+        piece.y = safe.cy;
+        fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
+      }
+      suppressNextClickFor = ds.id;
+      render();
+      if(fusionTarget){
+        setTimeout(()=>openFusionDialog(ds.side, ds.id, fusionTarget.id), 40);
+      }
+    }
+  }
+
+  function drawItem(side, item, pos, selectedIds, groupSelectedIds){
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    if(item.type === "token") g.classList.add("tokenDragGroup");
+    if(item.type === "token" && item.transientZero) g.classList.add("transientZero");
+    if(item.removed) g.classList.add("removedGroup");
+    g.dataset.side = side;
+    g.dataset.id = item.id;
+    svg.appendChild(g);
+
+    if(item.type === "x"){
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
+      path.setAttribute("class", xSign(item) < 0 ? "splatShape oppositeX" : "splatShape");
+      g.appendChild(path);
+      drawText(pos.cx, pos.cy + 5, xPieceLabel(item), "splatText", g);
+      if(item.removed){
+        const overlay = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        overlay.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
+        overlay.setAttribute("class", "removedOverlay");
+        g.appendChild(overlay);
+      }
+      if(selectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("class", "selectedOutline");
+        g.appendChild(outline);
+      }
+      if(groupSelectedIds && groupSelectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("class", "groupSelectedOutline");
+        g.appendChild(outline);
+      }
+    }else{
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      hit.setAttribute("cx", pos.cx);
+      hit.setAttribute("cy", pos.cy);
+      hit.setAttribute("r", pos.r + TOKEN_HIT_EXTRA);
+      hit.setAttribute("fill", "transparent");
+      hit.setAttribute("class", "tokenHitArea");
+      g.appendChild(hit);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", pos.cx);
+      circle.setAttribute("cy", pos.cy);
+      circle.setAttribute("r", pos.r);
+      const tokenClass = Number(item.value) < 0
+        ? "tokenCircle negative"
+        : (Number(item.value) === 0 ? "tokenCircle zero" : (isRelativeUniverse() ? "tokenCircle positive relativePositive" : "tokenCircle positive"));
+      circle.setAttribute("class", tokenClass);
+      if(!isRelativeUniverse() && Number(item.value) > 0){
+        const col = positiveTokenColorForValue(item.value);
+        // Style inline pour éviter que la classe .tokenCircle.positive écrase
+        // les couleurs variées du Splat positif.
+        circle.style.fill = col.fill;
+        circle.style.stroke = col.stroke;
+      }
+      g.appendChild(circle);
+      drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g);
+      if(item.removed){
+        const overlay = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        overlay.setAttribute("cx", pos.cx);
+        overlay.setAttribute("cy", pos.cy);
+        overlay.setAttribute("r", pos.r);
+        overlay.setAttribute("class", "removedOverlay");
+        g.appendChild(overlay);
+      }
+      if(selectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outline.setAttribute("cx", pos.cx);
+        outline.setAttribute("cy", pos.cy);
+        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("class", "selectedOutline");
+        g.appendChild(outline);
+      }
+      if(groupSelectedIds && groupSelectedIds.has(item.id)){
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outline.setAttribute("cx", pos.cx);
+        outline.setAttribute("cy", pos.cy);
+        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("class", "groupSelectedOutline");
+        g.appendChild(outline);
+      }
+    }
+
+    if(item.type === "token"){
+      g.addEventListener("pointerdown", (e) => beginTokenDrag(e, side, item, pos, g));
+      g.addEventListener("pointermove", moveTokenDrag);
+      g.addEventListener("pointerup", endTokenDrag);
+      g.addEventListener("pointercancel", endTokenDrag);
+    }
+
+    g.addEventListener("click", (e) => {
+      if(suppressNextClickFor === item.id){
+        suppressNextClickFor = null;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if(item.removed) return;
+      if(actionMode === "decompose"){
+        if(item.type === "token") openDecomposeDialog(side, item.id);
+        else setInstruction("En mode Décomposer, clique sur un jeton numérique.");
+        return;
+      }
+      if(actionMode === "group"){
+        if(item.type === "token" || (item.type === "x" && oppositeXEnabled())) selectForGrouping(side, item.id);
+        else setInstruction(oppositeXEnabled()
+          ? "En mode Regrouper, clique sur des jetons numériques ou des taches opposées."
+          : "En mode Regrouper, clique sur des jetons numériques.");
+        return;
+      }
+    if(actionMode === "share"){
+        if(item.type === "token") openShareDialog(side, item.id);
+        else setInstruction("En mode Partager, clique sur un jeton numérique.");
+        return;
+      }
+      if(actionMode === "delete") selectForDeletion(side, item.id);
+    });
+  }
+
+  function renderSvg(){
+    svg.innerHTML = "";
+    drawDefs();
+    const leftTray = getTrayForSide("left");
+    const rightTray = getTrayForSide("right");
+    drawTray(leftTray, "");
+    drawTray(rightTray, "");
+    drawText(800, 400, "=", "eqMiddle");
+
+    const leftItems = renderPiecesForSide("left");
+    const rightItems = renderPiecesForSide("right");
+    const leftPos = layoutItems(leftTray, leftItems);
+    const rightPos = layoutItems(rightTray, rightItems);
+    const selectedIds = selectedDeleteIds();
+    const groupSelectedIds = selectedGroupIds();
+    leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds, groupSelectedIds));
+    rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds, groupSelectedIds));
+  }
+
+
+  function miniSplatButtonHtml(sign){
+    const v = currentVar();
+    const label = sign < 0 ? `−${v}` : v;
+    const fill = sign < 0 ? "#4c1d95" : "#111827";
+    return `<span class="miniSplatWrap"><span>Ajouter</span><svg class="miniSplatSvg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path d="${blobPath(60, 60, 43)}" fill="${fill}" stroke="rgba(0,0,0,.22)" stroke-width="3"></path><text x="60" y="64">${label}</text></svg></span>`;
+  }
+
+  function openAddBothDialog(){
+    if(!state) return;
+    addBothInput.value = "";
+    addBothFeedback.textContent = "";
+    const canAddX = oppositeXEnabled();
+    const v = currentVar();
+    if(isRelativeUniverse()){
+      addBothDialogText.textContent = canAddX
+        ? "Ajoute le même jeton numérique, ou la même tache, dans chaque membre."
+        : "Ajoute le même jeton dans chaque membre. Tu peux écrire une valeur positive ou négative.";
+      addBothInput.min = "-99";
+    }else{
+      addBothDialogText.textContent = "Ajoute le même jeton positif dans chaque membre.";
+      addBothInput.min = "1";
+    }
+    addBothInput.max = "99";
+    if(addBothXChoices) addBothXChoices.classList.toggle("open", canAddX);
+    if(addBothXCount) addBothXCount.value = "1";
+    if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatButtonHtml(1);
+    if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatButtonHtml(-1);
+    if(typeof addBothDialog.showModal === "function") addBothDialog.showModal();
+    setTimeout(()=>addBothInput.focus(), 80);
+  }
+
+  function finishAddBothAction(){
+    deleteSelection = [];
+    groupSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    addBothDialog.close();
+    render();
+  }
+
+  function applyAddBoth(){
+    if(!state) return;
+    const raw = Number(addBothInput.value);
+    if(!Number.isFinite(raw) || Math.round(raw) !== raw || raw === 0){
+      addBothFeedback.textContent = isRelativeUniverse() ? "Écris un entier non nul, positif ou négatif." : "Écris un entier positif non nul.";
+      addBothInput.select();
+      return;
+    }
+
+    const value = Math.round(raw);
+    if(!isRelativeUniverse() && value < 0){
+      addBothFeedback.textContent = "Dans Splat positif, on n’ajoute que des jetons positifs.";
+      addBothInput.select();
+      return;
+    }
+    pushHistory();
+    state.left.push(makeToken(value));
+    state.right.push(makeToken(value));
+    finishAddBothAction();
+  }
+
+  function applyAddBothX(sign){
+    if(!state || !oppositeXEnabled()) return;
+    const rawCount = addBothXCount ? Number(addBothXCount.value) : 1;
+    const count = Math.round(rawCount);
+    if(!Number.isFinite(rawCount) || count < 1 || count > 8){
+      addBothFeedback.textContent = "Choisis un nombre de taches entre 1 et 8.";
+      if(addBothXCount) addBothXCount.select();
+      return;
+    }
+    pushHistory();
+    for(let i=0; i<count; i++){
+      state.left.push(makeX(sign));
+      state.right.push(makeX(sign));
+    }
+    finishAddBothAction();
+  }
+
+  function takeOppositeOfBothMembers(){
+    if(!state || !oppositeXEnabled()) return;
+    pushHistory();
+    for(const side of ["left", "right"]){
+      for(const piece of state[side]){
+        if(piece.removed) continue;
+        if(piece.type === "token") piece.value = -Number(piece.value || 0);
+        if(piece.type === "x") piece.sign = -xSign(piece);
+      }
+    }
+    deleteSelection = [];
+    groupSelection = [];
+    selectedPieceRef = null;
+    recordEquationStep();
+    render();
+  }
+
+  function renderActions(){
+    actionZone.innerHTML = "";
+    solutionEl.textContent = "";
+
+    const solved = getSolvedValue();
+    if(solved !== null){
+      setInstruction("");
+      return;
+    }
+
+    if(actionMode === "decompose"){
+      setInstruction("Décompose un jeton numérique.");
+      return;
+    }
+
+    if(actionMode === "group"){
+      const info = groupSelectionInfo();
+      const selected = selectedGroupPieces();
+      if(selected.length === 0){
+        setInstruction(oppositeXEnabled()
+          ? "Sélectionne plusieurs jetons numériques d’un même membre, ou une paire de taches opposées."
+          : "Sélectionne plusieurs jetons numériques d’un même membre.");
+        return;
+      }
+
+      const btn = document.createElement("button");
+      btn.className = "green";
+      btn.textContent = "Regrouper";
+      btn.addEventListener("click", () => {
+        const freshInfo = groupSelectionInfo();
+        if(freshInfo.ok && freshInfo.kind === "zeroX") applyZeroXGroup(freshInfo);
+        else openGroupDialog();
+      });
+
+      const clear = document.createElement("button");
+      clear.className = "ghost";
+      clear.textContent = "Effacer";
+      clear.addEventListener("click", () => { groupSelection = []; render(); });
+
+      if(!info.ok){
+        let message = "Sélectionne au moins deux éléments compatibles.";
+        if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même membre.";
+        else if(info.reason === "mixedTypes") message = "Ne mélange pas jetons numériques et taches.";
+        else if(info.reason === "notZeroX") message = "Pour regrouper des taches, sélectionne autant de taches positives que de taches opposées.";
+        else if(info.reason === "oppositeDisabled") message = "Les taches opposées doivent être activées pour regrouper x et −x.";
+        setInstruction(message);
+        actionZone.appendChild(clear);
+        return;
+      }
+
+      if(info.kind === "zeroX"){
+        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        actionZone.appendChild(btn);
+        actionZone.appendChild(clear);
+        return;
+      }
+
+      setInstruction(`<strong>${selected.length}</strong>&nbsp;jetons sélectionnés. Calcule leur somme pour les regrouper.`);
+      actionZone.appendChild(btn);
+      actionZone.appendChild(clear);
+      return;
+    }
+
+    if(actionMode === "share"){
+      const suggested = getShareOpportunity();
+      if(suggested){
+        setInstruction(`Partage&nbsp;<strong>${formatSignedNumber(suggested.token.value)}</strong>&nbsp;en <strong>${suggested.count}</strong> parts égales.`);
+      }else{
+        setInstruction("Partage un jeton en parts égales.");
+      }
+      return;
+    }
+
+    if(actionMode === "delete"){
+      const info = deletionGroupInfo();
+      const zeroInfo = zeroXPairSelectionInfo();
+      const {left, right} = selectedDeletePiecesBySide();
+      if(left.length === 0 && right.length === 0){
+        setInstruction(oppositeXEnabled()
+          ? "Sélectionne la même quantité dans les deux membres, ou une paire x / −x dans un même membre."
+          : "Sélectionne la même quantité dans les deux membres.");
+        return;
+      }
+      if(zeroInfo.ok){
+        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        const btn = document.createElement("button");
+        btn.className = "green";
+        btn.textContent = "Annuler la paire";
+        btn.addEventListener("click", cancelZeroXPair);
+        actionZone.appendChild(btn);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+        return;
+      }
+      if(left.length === 0 || right.length === 0){
+        let message = "Sélectionne maintenant l’autre membre.";
+        if(oppositeXEnabled() && (left.length || right.length)){
+          const selected = left.length ? left : right;
+          if(selected.every(p => p.type === "x")){
+            const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
+            if(coef !== 0) message = "Pour annuler dans un même membre, sélectionne autant de taches x que de taches −x.";
+          }
+        }
+        setInstruction(message);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+        return;
+      }
+      if(info.ok){
+        setInstruction(`Même quantité sélectionnée :&nbsp;<strong>${info.label}</strong>.`);
+        const btn = document.createElement("button");
+        btn.className = "orange";
+        btn.textContent = "Valider la suppression";
+        btn.addEventListener("click", deleteMatching);
+        actionZone.appendChild(btn);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+      }else{
+        let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
+        if(info.reason === "differentCounts") reason = "Il faut le même nombre de taches de chaque côté.";
+        else if(info.reason === "differentXCoef") reason = "Les taches sélectionnées ne représentent pas la même quantité d’inconnues.";
+        else if(info.reason === "zeroXSelection") reason = "Pour annuler une paire nulle, sélectionne les taches x et −x dans un seul même membre.";
+        else if(info.reason === "differentSums") reason = "Les jetons sélectionnés ne font pas la même somme.";
+        else if(info.reason === "mixedTypes") reason = "Ne mélange pas taches et jetons numériques.";
+        setInstruction(reason);
+        const clear = document.createElement("button");
+        clear.className = "ghost";
+        clear.textContent = "Effacer la sélection";
+        clear.addEventListener("click", () => { deleteSelection = []; render(); });
+        actionZone.appendChild(clear);
+      }
+    }
+  }
+
+  function render(){
+    if(!state) return;
+    if(getSolvedValue() !== null) updateCurrentEquationStep();
+    renderEquationHistory();
+    renderSvg();
+    renderActions();
+  }
+
+  function undo(){
+    if(!history.length) return;
+    state = history.pop();
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    render();
+  }
+
+  function syncUniverseUI(options={validate:false}){
+    if(!workUniverseEl) return;
+    const relative = isRelativeUniverse();
+    const allowOppositeX = oppositeXEnabled();
+
+    if(oppositeXModeEl){
+      oppositeXModeEl.disabled = !relative;
+      if(!relative) oppositeXModeEl.value = "off";
+    }
+    if(oppositeXModeLabel) oppositeXModeLabel.style.opacity = relative ? "1" : ".45";
+
+    if(toolAddBoth){
+      toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
+    }
+    if(toolOppositeBoth){
+      toolOppositeBoth.style.display = allowOppositeX ? "" : "none";
+    }
+
+    [constBEl, constCEl, constDEl].forEach(el => {
+      if(!el) return;
+      el.min = relative ? "-200" : "0";
+      el.max = "200";
+      if(!relative && Number(el.value) < 0) el.value = "0";
+    });
+    if(constCEl && !relative && Number(constCEl.value) < 1) constCEl.value = "1";
+
+    [coefAEl, coefCEl].forEach(el => {
+      if(!el) return;
+      el.min = allowOppositeX ? "-8" : "1";
+      el.max = "8";
+      if(!allowOppositeX && Number(el.value) < 1) el.value = "1";
+      if(allowOppositeX && Number(el.value) === 0) el.value = "1";
+    });
+    if(!allowOppositeX && coefAEl && Number(coefAEl.value) < 2) coefAEl.value = "2";
+
+    if(options.validate !== false) updateProfEquationInfo();
+  }
+
+  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
+  document.getElementById("btnRandom").addEventListener("click", randomExercise);
+  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
+  btnStageRandom.addEventListener("click", randomExercise);
+  toolDecompose.addEventListener("click", () => setActionMode("decompose"));
+  toolGroup.addEventListener("click", () => setActionMode("group"));
+  toolShare.addEventListener("click", () => setActionMode("share"));
+  toolDelete.addEventListener("click", () => setActionMode("delete"));
+  toolAddBoth.addEventListener("click", openAddBothDialog);
+  if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
+  toolUndo.addEventListener("click", undo);
+  btnStageUndo.addEventListener("click", undo);
+  btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
+  document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
+  document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
+  document.getElementById("btnCancelShareDialog").addEventListener("click", () => shareDialog.close());
+  document.getElementById("btnApplyGroup").addEventListener("click", applyGroup);
+  document.getElementById("btnCancelGroup").addEventListener("click", () => groupDialog.close());
+  groupInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyGroup(); }
+  });
+  document.getElementById("btnApplyAddBoth").addEventListener("click", applyAddBoth);
+  document.getElementById("btnCancelAddBoth").addEventListener("click", () => addBothDialog.close());
+  if(btnAddBothPositiveX) btnAddBothPositiveX.addEventListener("click", () => applyAddBothX(1));
+  if(btnAddBothNegativeX) btnAddBothNegativeX.addEventListener("click", () => applyAddBothX(-1));
+  addBothInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyAddBoth(); }
+  });
+  document.getElementById("btnApplyFusion").addEventListener("click", applyFusion);
+  document.getElementById("btnCancelFusion").addEventListener("click", () => { pendingFusion = null; fusionDialog.close(); });
+  fusionInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyFusion(); }
+  });
+  btnFullscreen.addEventListener("click", () => {
+    if(document.fullscreenElement) document.exitFullscreen();
+    else if(stageEl.requestFullscreen) stageEl.requestFullscreen();
+  });
+
+  // PATCH 1.2.2 — auto-mise à jour seulement pour les menus.
+  // Les champs numériques (coefficients et constantes) redeviennent manuels :
+  // on peut les effacer/taper tranquillement, puis cliquer sur Créer ou 🎲.
+  function rebuildFromCurrentSettings(){
+    // Les menus pédagogiques ne recyclent pas l’équation courante :
+    // ils déclenchent une nouvelle équation aléatoire, toujours valide
+    // pour le nouvel univers / type / réglage choisi.
+    clearTeacherInfo();
+    syncUniverseUI();
+    syncTeacherControls();
+    randomExercise();
+  }
+
+  [modeEl, initialTokenCountEl, oppositeXModeEl].forEach(el => {
+    if(!el) return;
+    el.addEventListener("change", rebuildFromCurrentSettings);
+  });
+
+  [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
+    if(!el) return;
+    el.addEventListener("input", markManualEquationDirty);
+    el.addEventListener("change", markManualEquationDirty);
+  });
+
+  if(workUniverseEl){
+    workUniverseEl.addEventListener("change", rebuildFromCurrentSettings);
+  }
+  unknownDisplayModeEl.addEventListener("change", () => {
+    if(state){ state.steps = [currentEquationString()]; render(); }
+  });
+  removedDisplayModeEl.addEventListener("change", render);
+
+  document.addEventListener("keydown", (e) => {
+    if(e.key === "Escape") return;
+    if(e.key === "z" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); undo(); }
+    if(e.key.toLowerCase() === "f" && !decomposeDialog.open && !shareDialog.open && !addBothDialog.open && !fusionDialog.open){
+      e.preventDefault(); btnFullscreen.click();
+    }
+  });
+
+
+  /* IMPORT SPLAT ÉQUATIONS -> ÉQUASPLAT
+     Cette version peut recevoir une équation dans l'URL, encodée en base64url dans ?data=... ou #data=...
+     Format attendu : { source:"splat_equations", variable:"𝑥", unknownDisplay:"letter", universe:"positive|relative", x:..., top:[...], bottom:[...] }
+  */
+  function decodeBase64Url(str){
+    const clean = String(str || "").trim().replace(/-/g, "+").replace(/_/g, "/");
+    const pad = clean.length % 4 ? "=".repeat(4 - (clean.length % 4)) : "";
+    return decodeURIComponent(escape(atob(clean + pad)));
+  }
+
+  function readImportRawPayload(){
+    const search = new URLSearchParams(window.location.search || "");
+    if(search.has("data")) return search.get("data");
+    if(search.has("eqs")) return search.get("eqs");
+
+    const hash = String(window.location.hash || "").replace(/^#/, "");
+    if(!hash) return "";
+    const hashParams = new URLSearchParams(hash);
+    if(hashParams.has("data")) return hashParams.get("data");
+    if(hashParams.has("eqs")) return hashParams.get("eqs");
+    return hash;
+  }
+
+  function parseImportedPayload(){
+    const raw = readImportRawPayload();
+    if(!raw) return null;
+
+    const candidates = [];
+    try{ candidates.push(decodeURIComponent(raw)); }catch(e){}
+    try{ candidates.push(decodeBase64Url(raw)); }catch(e){}
+    candidates.push(raw);
+
+    for(const candidate of candidates){
+      try{
+        const parsed = JSON.parse(candidate);
+        if(parsed && typeof parsed === "object") return parsed;
+      }catch(e){}
+    }
+    return null;
+  }
+
+  function normalizeImportedPiece(piece){
+    if(piece == null) return null;
+    if(typeof piece === "number") return makeToken(piece);
+    if(typeof piece === "string"){
+      const s = piece.trim().toLowerCase();
+      if(s === "x" || s === "𝑥" || s === "?") return makeX(1);
+      if(s === "-x" || s === "−x" || s === "-𝑥" || s === "−𝑥") return makeX(-1);
+      const n = Number(s.replace(",", ".").replace("−", "-"));
+      return Number.isFinite(n) ? makeToken(n) : null;
+    }
+    if(typeof piece === "object"){
+      const type = String(piece.type || piece.kind || "").toLowerCase();
+      const rawSign = Number(piece.sign);
+      const sign = rawSign < 0 || piece.opposed === true || piece.negative === true ? -1 : 1;
+      if(type === "x" || type === "unknown" || type === "variable") return makeX(sign);
+      if(type === "number" || type === "token" || type === "const" || type === "constant" || type === "v"){
+        const n = Number(piece.value);
+        return Number.isFinite(n) ? makeToken(n) : null;
+      }
+    }
+    return null;
+  }
+
+  function normalizeImportedSide(arr){
+    if(!Array.isArray(arr)) return [];
+    return arr.map(normalizeImportedPiece).filter(Boolean);
+  }
+
+  function importedSideStats(pieces){
+    return pieces.reduce((acc, p) => {
+      if(p.type === "x") acc.x += xSign(p);
+      else acc.n += Number(p.value) || 0;
+      return acc;
+    }, {x:0,n:0});
+  }
+
+  function inferImportedX(leftPieces, rightPieces){
+    const l = importedSideStats(leftPieces);
+    const r = importedSideStats(rightPieces);
+    const denom = l.x - r.x;
+    if(denom !== 0){
+      const x = (r.n - l.n) / denom;
+      if(Number.isFinite(x) && x !== 0) return x;
+    }
+    return 1;
+  }
+
+  function restartImportedEquation(){
+    if(!initialImportState) return;
+    state = clone(initialImportState);
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    pendingFusion = null;
+    setActionMode("decompose");
+  }
+
+  function createImportedEquationState(payload){
+    if(!payload || typeof payload !== "object") return false;
+
+    const wantedVar = typeof payload.variable === "string" && payload.variable.trim() ? payload.variable.trim() : "𝑥";
+    const rawDisplay = String(payload.unknownDisplay || payload.display || "letter").toLowerCase();
+    const wantedDisplay = (rawDisplay === "question" || rawDisplay === "?" || rawDisplay === "interrogation") ? "question" : "letter";
+
+    const leftPieces = normalizeImportedSide(payload.left || payload.top || payload.haut || []);
+    const rightPieces = normalizeImportedSide(payload.right || payload.bottom || payload.bas || []);
+    if(!leftPieces.length || !rightPieces.length) return false;
+
+    const containsRelative = leftPieces.concat(rightPieces).some(p =>
+      (p.type === "token" && Number(p.value) < 0) || (p.type === "x" && xSign(p) < 0)
+    );
+    const universe = String(payload.universe || payload.workUniverse || "").toLowerCase() === "relative" || containsRelative ? "relative" : "positive";
+    if(workUniverseEl) workUniverseEl.value = universe;
+    if(oppositeXModeEl) oppositeXModeEl.value = leftPieces.concat(rightPieces).some(p => p.type === "x" && xSign(p) < 0) ? "on" : "off";
+    if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
+    importedUnknownDisplayMode = wantedDisplay;
+
+    const importedX = Number(payload.x);
+    const xValue = Number.isFinite(importedX) && importedX !== 0 ? importedX : inferImportedX(leftPieces, rightPieces);
+    const statsLeft = importedSideStats(leftPieces);
+    const statsRight = importedSideStats(rightPieces);
+
+    state = {
+      original:{
+        mode:"import",
+        modeLabel:"Import Splat Équations",
+        a:statsLeft.x,
+        b:statsLeft.n,
+        rightA:statsRight.x,
+        d:statsRight.n,
+        x:xValue,
+        c:statsRight.x * xValue + statsRight.n,
+        varChar:wantedVar
+      },
+      left:leftPieces,
+      right:rightPieces,
+      steps:[]
+    };
+
+    recordEquationStep();
+    initialImportState = clone(state);
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    pendingFusion = null;
+    syncUniverseUI({validate:false});
+    syncTeacherControls({validate:false});
+    document.body.classList.add("importMode");
+    setActionMode("decompose");
+    setInstruction("");
+    return true;
+  }
+
+  function tryImportFromUrl(){
+    const payload = parseImportedPayload();
+    if(!payload) return false;
+    const ok = createImportedEquationState(payload);
+    if(!ok){
+      document.body.classList.add("importMode");
+      state = null;
+      equationHistory.innerHTML = "";
+      svg.innerHTML = "";
+      setInstruction("<strong>Impossible de lire l’équation importée.</strong>");
+    }
+    return ok;
+  }
+
+  const resetBtn = document.getElementById("btnReset");
+  if(resetBtn){
+    resetBtn.textContent = "Recommencer";
+    resetBtn.addEventListener("click", restartImportedEquation);
+  }
+
+  syncUniverseUI({validate:false});
+  syncTeacherControls({validate:false});
+  if(!tryImportFromUrl()){
+    buildFromInputs();
+  }
+})();
+
+</script>
+</body>
+</html>
