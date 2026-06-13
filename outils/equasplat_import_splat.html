@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaSplat import — réception Splat Équations</title>
+<title>ÉquaSplat import — réception Splat Équations V11</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -1207,13 +1207,321 @@
     display:none;
   }
 
+  body.importMode main{
+    margin-top:10px;
+    margin-bottom:18px;
+  }
+
   body.importMode .stage{
-    min-height:720px;
+    min-height:610px;
+    padding:12px;
+  }
+
+  body.importMode .topbar{
+    padding-bottom:8px;
   }
 
   body.importMode .instructionZone{
-    min-height:28px;
+    min-height:22px;
+    margin-bottom:6px;
+    font-size:16px;
+  }
+
+  body.importMode .board{
+    min-height:395px;
+    padding:6px;
+  }
+
+  body.importMode #splatSvg{
+    min-height:410px;
+  }
+
+  body.importMode .toolBar{
+    margin-top:10px;
+  }
+
+  body.importMode .actionZone{
+    margin-top:6px;
+    min-height:42px;
+  }
+
+  .quickRemovedMode{
+    height:44px;
+    max-width:150px;
+    padding:0 10px;
+    border-radius:14px;
+    border:1px solid rgba(15,23,42,.14);
+    background:rgba(255,255,255,.94);
+    color:#334155;
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    font-size:12px;
+    font-weight:900;
+    backdrop-filter:blur(8px);
+  }
+
+  .stage:fullscreen .quickRemovedMode{
+    height:48px;
+  }
+
+
+  #toolShareUnits{
+    display:none;
+  }
+
+  body.importUnitMode #toolDecompose,
+  body.importUnitMode #toolGroup,
+  body.importUnitMode #toolShare{
+    display:none;
+  }
+
+  body.importUnitMode #toolShareUnits{
+    display:inline-flex;
+  }
+
+  body.importMode:not(:fullscreen) .board{
+    min-height:360px;
+  }
+
+  body.importMode:not(:fullscreen) #splatSvg{
+    min-height:372px;
+  }
+
+  body.importMode:not(:fullscreen) .stage{
+    min-height:560px;
+  }
+
+  .stage:fullscreen .board{
+    min-height:0;
+  }
+
+  .stage:fullscreen #splatSvg{
+    min-height:0;
+  }
+
+
+  /* PATCH V4 — import compact hors plein écran : équation + plateaux + boutons visibles */
+  body.importMode main{
+    margin-top:6px;
     margin-bottom:8px;
+    width:min(1180px, calc(100vw - 18px));
+  }
+
+  body.importMode .stage{
+    min-height:0;
+    padding:8px 10px 8px;
+  }
+
+  body.importMode .stageQuickActions{
+    top:8px;
+    right:8px;
+    gap:6px;
+  }
+
+  body.importMode .quickBtn{
+    width:36px;
+    height:36px;
+    border-radius:11px;
+    font-size:18px;
+  }
+
+  body.importMode .quickRemovedMode{
+    height:36px;
+    max-width:124px;
+    border-radius:11px;
+    font-size:11px;
+    padding:0 7px;
+  }
+
+  body.importMode .topbar{
+    padding:0 156px 4px 56px;
+  }
+
+  body.importMode .equationHistory{
+    max-height:72px;
+  }
+
+  body.importMode .equationList{
+    font-size:clamp(20px,2.05vw,31px);
+    line-height:1.03;
+  }
+
+  body.importMode .equationRow{
+    column-gap:14px;
+  }
+
+  body.importMode .instructionZone{
+    min-height:18px;
+    margin:0 auto 4px;
+    font-size:14px;
+    line-height:1.2;
+  }
+
+  body.importMode .board{
+    min-height:315px;
+    padding:4px;
+    border-radius:18px;
+  }
+
+  body.importMode #splatSvg{
+    min-height:325px;
+  }
+
+  body.importMode .toolBar{
+    margin:6px auto 0;
+    gap:5px;
+  }
+
+  body.importMode .toolRow{
+    gap:6px;
+  }
+
+  body.importMode .toolBtn{
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:12px;
+  }
+
+  body.importMode .actionZone{
+    margin-top:4px;
+    min-height:34px;
+    gap:6px;
+  }
+
+  body.importMode .actionZone button{
+    padding:8px 10px;
+    border-radius:12px;
+    font-size:13px;
+  }
+
+  body.importMode .solution{
+    margin-top:4px;
+  }
+
+  body.importMode .stage:fullscreen{
+    min-height:100vh;
+    padding:22px;
+  }
+
+  body.importMode .stage:fullscreen .topbar{
+    padding:4px 72px 10px;
+  }
+
+  body.importMode .stage:fullscreen .equationHistory{
+    max-height:150px;
+  }
+
+  body.importMode .stage:fullscreen .equationList{
+    font-size:clamp(24px,2.45vw,37px);
+    line-height:1.08;
+  }
+
+  body.importMode .stage:fullscreen .instructionZone{
+    min-height:40px;
+    margin:0 auto 10px;
+    font-size:17px;
+    line-height:1.35;
+  }
+
+  body.importMode .stage:fullscreen .board{
+    min-height:0;
+    padding:8px;
+    border-radius:22px;
+  }
+
+  body.importMode .stage:fullscreen #splatSvg{
+    min-height:0;
+  }
+
+  .unitPacketChoice{
+    background:#ffffff;
+    border:1px solid rgba(15,23,42,.13);
+  }
+
+  .unitPacketChoice.matchXCount{
+    background:#ffffff;
+    color:var(--ink);
+  }
+
+  .packetBox{
+    fill:rgba(255,255,255,.42);
+    stroke:rgba(59,130,246,.42);
+    stroke-width:2.4;
+    stroke-dasharray:8 7;
+  }
+
+  .packetBox.matchXCount{
+    stroke:rgba(22,163,74,.82);
+    fill:rgba(22,163,74,.12);
+    stroke-dasharray:none;
+    stroke-width:3.2;
+  }
+
+  .packetLabel{
+    fill:#1e3a8a;
+    font-size:18px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+
+
+
+  /* PATCH V11 — conserver le mode petites billes + reprendre les finitions V10 */
+  body.importMode .stageQuickActions{
+    top:12px;
+    right:14px;
+    gap:10px;
+  }
+
+  body.importMode .quickBtn{
+    width:48px;
+    height:48px;
+    border-radius:15px;
+    font-size:24px;
+  }
+
+  body.importMode .quickRemovedMode{
+    height:48px;
+    width:132px;
+    max-width:132px;
+    padding:0 10px;
+    border-radius:15px;
+    font-size:13px;
+    text-align:center;
+    text-align-last:center;
+  }
+
+  body.importMode .stage:not(:fullscreen) .topbar{
+    padding-left:245px;
+    padding-right:245px;
+  }
+
+  body.importMode .stage:not(:fullscreen) .equationHistory{
+    width:100%;
+    max-width:960px;
+  }
+
+  @media (max-width:980px){
+    body.importMode .stage:not(:fullscreen) .topbar{
+      padding-left:190px;
+      padding-right:190px;
+    }
+    body.importMode .quickRemovedMode{
+      width:118px;
+      max-width:118px;
+      font-size:12px;
+    }
+  }
+
+  body.importMode .stage:fullscreen .quickBtn{
+    width:48px;
+    height:48px;
+    border-radius:15px;
+    font-size:22px;
+  }
+
+  body.importMode .stage:fullscreen .quickRemovedMode{
+    height:48px;
   }
 
 </style>
@@ -1304,6 +1612,10 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <select id="stageRemovedDisplayMode" class="quickRemovedMode" title="Affichage des éléments supprimés" aria-label="Affichage des éléments supprimés">
+        <option value="keep" selected>Hachuré</option>
+        <option value="hide">Caché</option>
+      </select>
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
@@ -1323,6 +1635,7 @@
         <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
         <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
         <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+        <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
       </div>
 
       <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
@@ -1429,6 +1742,7 @@
 
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
+  const stageRemovedDisplayModeEl = document.getElementById("stageRemovedDisplayMode");
   const workUniverseEl = document.getElementById("workUniverse");
   const oppositeXModeEl = document.getElementById("oppositeXMode");
   const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
@@ -1449,6 +1763,7 @@
   const toolDecompose = document.getElementById("toolDecompose");
   const toolGroup = document.getElementById("toolGroup");
   const toolShare = document.getElementById("toolShare");
+  const toolShareUnits = document.getElementById("toolShareUnits");
   const toolDelete = document.getElementById("toolDelete");
   const toolAddBoth = document.getElementById("toolAddBoth");
   const toolOppositeBoth = document.getElementById("toolOppositeBoth");
@@ -1483,9 +1798,12 @@
   const fusionFeedback = document.getElementById("fusionFeedback");
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
-  // ÉquaSplat 0.5 : jetons un peu plus grands et rayon centralisé.
+  // ÉquaSplat import : jetons groupés classiques + petites billes unitaires rapprochées de Splat Équations.
   const TOKEN_R = 54;
+  const TOKEN_UNIT_R = 18;
   const TOKEN_HIT_EXTRA = 32;
+  function tokenRadius(piece){ return piece && piece.unit ? TOKEN_UNIT_R : TOKEN_R; }
+  function tokenHitExtra(piece){ return piece && piece.unit ? 14 : TOKEN_HIT_EXTRA; }
 
   let state = null;
   let history = [];
@@ -1498,6 +1816,8 @@
   let pendingFusion = null;
   let initialImportState = null;
   let importedUnknownDisplayMode = null;
+  let importedNumberMode = "grouped";
+  let unitPacketChoice = null;
 
   function uid(){ return Math.random().toString(36).slice(2, 9); }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1509,7 +1829,16 @@
     const displayMode = importedUnknownDisplayMode || (unknownDisplayModeEl ? unknownDisplayModeEl.value : "letter");
     return displayMode === "question" ? "?" : currentVar();
   }
-  function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
+  function currentRemovedDisplayMode(){
+    if(stageRemovedDisplayModeEl) return stageRemovedDisplayModeEl.value;
+    return removedDisplayModeEl ? removedDisplayModeEl.value : "keep";
+  }
+  function syncRemovedDisplayControls(value){
+    const mode = value === "hide" ? "hide" : "keep";
+    if(removedDisplayModeEl) removedDisplayModeEl.value = mode;
+    if(stageRemovedDisplayModeEl) stageRemovedDisplayModeEl.value = mode;
+  }
+  function shouldKeepRemovedPieces(){ return currentRemovedDisplayMode() !== "hide"; }
   function oppositeXEnabled(){
     return isRelativeUniverse() && oppositeXModeEl && oppositeXModeEl.value === "on";
   }
@@ -1528,12 +1857,17 @@
   function formatXTerm(coef){
     const n = Number(coef) || 0;
     const v = displayedUnknown();
+    const question = v === "?";
     if(n === 1) return v;
     if(n === -1) return `−${v}`;
+    if(question){
+      if(n < 0) return `−${Math.abs(n)} × ${v}`;
+      return `${n} × ${v}`;
+    }
     if(n < 0) return `−${Math.abs(n)}${v}`;
     return `${n}${v}`;
   }
-  function makeToken(value){ return { id:uid(), type:"token", value:Number(value), removed:false }; }
+  function makeToken(value, opts = {}){ return { id:uid(), type:"token", value:Number(value), removed:false, unit:!!opts.unit }; }
   function formatSignedNumber(n){
     const v = Number(n) || 0;
     if(v < 0) return `−${Math.abs(v)}`;
@@ -1669,10 +2003,11 @@
     actionMode = mode;
     deleteSelection = [];
     groupSelection = [];
-    [toolDecompose, toolGroup, toolShare, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
+    [toolDecompose, toolGroup, toolShare, toolShareUnits, toolDelete, toolAddBoth].forEach(btn => btn && btn.classList.remove("active"));
     if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
     if(mode === "group" && toolGroup) toolGroup.classList.add("active");
     if(mode === "share" && toolShare) toolShare.classList.add("active");
+    if(mode === "unitShare" && toolShareUnits) toolShareUnits.classList.add("active");
     if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
     if(mode === "addBoth" && toolAddBoth) toolAddBoth.classList.add("active");
     render();
@@ -1960,15 +2295,24 @@
     const xPieces = pieces.filter(p => p.type === "x");
     const xSigns = Array.from(new Set(xPieces.map(p => xSign(p))));
     const canCombineAllXOfSameSign = xSigns.length <= 1;
+    const unitSum = pieces
+      .filter(p => p.type === "token" && p.unit)
+      .reduce((sum,p)=>sum + Number(p.value || 0), 0);
 
     if(canCombineAllXOfSameSign){
       let xDone = false;
+      let unitDone = false;
       for(const p of pieces){
         if(p.type === "x"){
           if(!xDone){
             const coef = xPieces.reduce((total, item) => total + xSign(item), 0);
             if(coef !== 0) terms.push(formatXTerm(coef));
             xDone = true;
+          }
+        }else if(p.unit){
+          if(!unitDone){
+            if(unitSum !== 0) terms.push(formatEquationTerm(unitSum));
+            unitDone = true;
           }
         }else{
           terms.push(formatEquationTerm(p.value));
@@ -1978,6 +2322,7 @@
     }
 
     let i = 0;
+    let unitDone = false;
     while(i < pieces.length){
       const p = pieces[i];
       if(p.type === "x"){
@@ -1994,6 +2339,12 @@
         }
         const coef = sign * count;
         if(coef !== 0) terms.push(formatXTerm(coef));
+      }else if(p.unit){
+        if(!unitDone){
+          if(unitSum !== 0) terms.push(formatEquationTerm(unitSum));
+          unitDone = true;
+        }
+        i++;
       }else{
         terms.push(formatEquationTerm(p.value));
         i++;
@@ -2589,7 +2940,8 @@
 
   function tokenOverlapsExisting(candidate, placed, minDist){
     for(const p of placed){
-      if(Math.hypot(candidate.cx - p.cx, candidate.cy - p.cy) < minDist) return true;
+      const required = Number.isFinite(minDist) ? minDist : ((candidate.r || TOKEN_R) + (p.r || TOKEN_R) + 10);
+      if(Math.hypot(candidate.cx - p.cx, candidate.cy - p.cy) < required) return true;
     }
     return false;
   }
@@ -2601,31 +2953,33 @@
     return false;
   }
 
-  function randomTokenPositionInTray(tray, sideName, visible, placed){
+  function randomTokenPositionInTray(tray, sideName, visible, placed, token){
     const area = tokenAreaForTray(tray);
     const splats = Array.from(splatPositionsForItems(tray, visible).values());
-    const minTokenDist = TOKEN_R * 2.12;
+    const r = tokenRadius(token);
 
     // Placement naturel : on tire des positions dans tout le plateau,
     // mais on refuse les positions sur les taches et, si possible, les
     // positions qui collent trop les jetons entre eux.
-    for(let attempt=0; attempt<140; attempt++){
-      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
-      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
-      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
-      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
-      if(tokenOverlapsExisting(p, placed, minTokenDist)) continue;
+    for(let attempt=0; attempt<180; attempt++){
+      const cx = area.x + r + Math.random() * Math.max(1, area.w - 2*r);
+      const cy = area.y + r + Math.random() * Math.max(1, area.h - 2*r);
+      const p = clampTokenPosition(tray, cx, cy, r, true, sideName);
+      p.r = r;
+      if(tokenOverlapsSplats(p, splats, r)) continue;
+      if(tokenOverlapsExisting(p, placed)) continue;
       return p;
     }
 
     // Deuxième passe : on accepte que les jetons soient plus proches,
     // mais toujours pas sur une tache.
-    for(let attempt=0; attempt<100; attempt++){
-      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
-      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
-      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
-      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
-      if(tokenOverlapsExisting(p, placed, TOKEN_R * 1.82)) continue;
+    for(let attempt=0; attempt<130; attempt++){
+      const cx = area.x + r + Math.random() * Math.max(1, area.w - 2*r);
+      const cy = area.y + r + Math.random() * Math.max(1, area.h - 2*r);
+      const p = clampTokenPosition(tray, cx, cy, r, true, sideName);
+      p.r = r;
+      if(tokenOverlapsSplats(p, splats, r)) continue;
+      if(tokenOverlapsExisting(p, placed, r * 1.55)) continue;
       return p;
     }
 
@@ -2635,14 +2989,15 @@
       cx: area.x + area.w * (0.28 + Math.random()*0.44),
       cy: area.y + area.h * (0.56 + Math.random()*0.34)
     };
-    return clampTokenPosition(tray, fallback.cx, fallback.cy, TOKEN_R, true, sideName);
+    const p = clampTokenPosition(tray, fallback.cx, fallback.cy, r, true, sideName);
+    p.r = r;
+    return p;
   }
 
   function separateTokenPositions(tray, visible, tokens, sideName){
     // PATCH 0.7.3 : après le placement naturel, on effectue une petite
     // relaxation géométrique pour supprimer les derniers chevauchements
     // entre jetons, tout en continuant à éviter les taches.
-    const minDist = TOKEN_R * 2.10;
     if(tokens.length < 2) return;
 
     for(let pass=0; pass<18; pass++){
@@ -2662,13 +3017,14 @@
             dist = 1;
           }
 
+          const minDist = tokenRadius(a) + tokenRadius(b) + 12;
           if(dist < minDist){
             const push = (minDist - dist) / 2;
             const ux = dx / dist;
             const uy = dy / dist;
 
-            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, TOKEN_R, true, sideName);
-            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, TOKEN_R, true, sideName);
+            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, tokenRadius(a), true, sideName);
+            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, tokenRadius(b), true, sideName);
 
             a.x = pa.cx;
             a.y = pa.cy;
@@ -2681,7 +3037,7 @@
 
       // Une passe de sécurité contre les taches après les déplacements entre jetons.
       for(const t of tokens){
-        const safe = clampTokenPosition(tray, t.x, t.y, TOKEN_R, true, sideName);
+        const safe = clampTokenPosition(tray, t.x, t.y, tokenRadius(t), true, sideName);
         if(Math.abs(safe.cx - t.x) > 0.5 || Math.abs(safe.cy - t.y) > 0.5){
           t.x = safe.cx;
           t.y = safe.cy;
@@ -2706,21 +3062,22 @@
 
     for(const token of tokens){
       if(Number.isFinite(token.x) && Number.isFinite(token.y)){
-        const clamped = clampTokenPosition(tray, token.x, token.y, TOKEN_R, true, sideName);
+        const r = tokenRadius(token);
+        const clamped = clampTokenPosition(tray, token.x, token.y, r, true, sideName);
         token.x = clamped.cx;
         token.y = clamped.cy;
-        placedTokens.push({cx:clamped.cx, cy:clamped.cy});
+        placedTokens.push({cx:clamped.cx, cy:clamped.cy, r});
       }else{
-        const p = randomTokenPositionInTray(tray, sideName, visible, placedTokens);
+        const p = randomTokenPositionInTray(tray, sideName, visible, placedTokens, token);
         token.x = p.cx;
         token.y = p.cy;
-        placedTokens.push({cx:p.cx, cy:p.cy});
+        placedTokens.push({cx:p.cx, cy:p.cy, r:tokenRadius(token)});
       }
     }
 
     separateTokenPositions(tray, visible, tokens, sideName);
     for(const token of tokens){
-      out.set(token.id, {cx:token.x, cy:token.y, r:TOKEN_R});
+      out.set(token.id, {cx:token.x, cy:token.y, r:tokenRadius(token)});
     }
 
     return out;
@@ -2791,7 +3148,7 @@
       // Fusion seulement si on dépose vraiment le jeton sur l'autre :
       // seuil assoupli : il faut déposer franchement sur l’autre jeton,
       // mais sans devoir viser parfaitement le centre.
-      if(dist < TOKEN_R * 1.55 && dist < bestDist){
+      if(dist < (tokenRadius(dragged) + tokenRadius(other)) * 0.95 && dist < bestDist){
         best = other;
         bestDist = dist;
       }
@@ -2896,7 +3253,8 @@
     if(!dragState) return;
     const p = svgPointFromEvent(e);
     const tray = getTrayForSide(dragState.side);
-    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), TOKEN_R, false);
+    const draggedPiece = state && state[dragState.side] ? state[dragState.side].find(p => p.id === dragState.id) : null;
+    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), tokenRadius(draggedPiece), false);
     const dx = next.cx - dragState.startCx;
     const dy = next.cy - dragState.startCy;
     if(Math.hypot(dx, dy) > 3) dragState.moved = true;
@@ -2918,7 +3276,7 @@
       const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
       let fusionTarget = null;
       if(piece){
-        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, TOKEN_R, true, ds.side);
+        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, tokenRadius(piece), true, ds.side);
         piece.x = safe.cx;
         piece.y = safe.cy;
         fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
@@ -2968,7 +3326,7 @@
       const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       hit.setAttribute("cx", pos.cx);
       hit.setAttribute("cy", pos.cy);
-      hit.setAttribute("r", pos.r + TOKEN_HIT_EXTRA);
+      hit.setAttribute("r", pos.r + tokenHitExtra(item));
       hit.setAttribute("fill", "transparent");
       hit.setAttribute("class", "tokenHitArea");
       g.appendChild(hit);
@@ -2989,7 +3347,14 @@
         circle.style.stroke = col.stroke;
       }
       g.appendChild(circle);
-      drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g);
+      if(item.unit){
+        // Les jetons unitaires importés du mode primaire restent de petites billes bleues,
+        // sans chiffre apparent, comme dans Splat Équations.
+        circle.style.fill = "rgba(27,102,255,0.18)";
+        circle.style.stroke = "rgba(27,102,255,0.58)";
+      }else{
+        drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g);
+      }
       if(item.removed){
         const overlay = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         overlay.setAttribute("cx", pos.cx);
@@ -3052,6 +3417,123 @@
     });
   }
 
+  function clearUnitPacketChoiceIfInvalid(){
+    if(!unitPacketChoice || !state) return;
+    const pieces = activePieces(unitPacketChoice.side || "right");
+    const tokenCount = pieces.filter(p => p.type === "token" && p.unit && Number(p.value) === 1).length;
+    if(tokenCount !== unitPacketChoice.tokenCount){
+      unitPacketChoice = null;
+      clearUnitPacketConclusion();
+    }
+  }
+
+  function packetGridForTray(tray, packetCount){
+    packetCount = Math.max(1, Math.round(Number(packetCount) || 1));
+    const cols = Math.ceil(Math.sqrt(packetCount));
+    const rows = Math.ceil(packetCount / cols);
+    const pad = 34;
+    const gap = 14;
+    const boxW = (tray.w - pad*2 - gap*(cols-1)) / cols;
+    const boxH = (tray.h - 96 - pad - gap*(rows-1)) / rows;
+    const boxes = [];
+    for(let i=0; i<packetCount; i++){
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      boxes.push({
+        x:tray.x + pad + col*(boxW + gap),
+        y:tray.y + 78 + row*(boxH + gap),
+        w:boxW,
+        h:boxH,
+        index:i
+      });
+    }
+    return boxes;
+  }
+
+  function positionsInPacketBox(box, count){
+    const r = TOKEN_UNIT_R;
+    const pad = 24;
+    const cols = Math.max(1, Math.floor((box.w - pad*2) / (r*2 + 8)));
+    const rows = Math.max(1, Math.ceil(count / cols));
+    const stepX = count === 1 ? 0 : Math.min(r*2 + 12, (box.w - pad*2) / Math.max(1, Math.min(cols, count) - 1 || 1));
+    const stepY = rows <= 1 ? 0 : Math.min(r*2 + 10, (box.h - pad*2 - 18) / Math.max(1, rows - 1));
+    const startY = box.y + box.h/2 - ((rows - 1) * stepY)/2 + 8;
+    const positions = [];
+    for(let i=0; i<count; i++){
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      const usedCols = Math.min(cols, count - row*cols);
+      const startX = box.x + box.w/2 - ((usedCols - 1) * stepX)/2;
+      positions.push({cx:startX + col*stepX, cy:startY + row*stepY, r});
+    }
+    return positions;
+  }
+
+  function applyUnitPacketPositions(){
+    if(!unitPacketChoice || !state) return null;
+    const side = unitPacketChoice.side;
+    const activeUnits = activePieces(side).filter(p => p.type === "token" && p.unit && Number(p.value) === 1);
+    if(activeUnits.length !== unitPacketChoice.tokenCount){
+      unitPacketChoice = null;
+      return null;
+    }
+    const tray = getTrayForSide(side);
+    const boxes = packetGridForTray(tray, unitPacketChoice.packetCount);
+    let cursor = 0;
+    boxes.forEach((box, packetIndex) => {
+      const positions = positionsInPacketBox(box, unitPacketChoice.each);
+      for(let i=0; i<unitPacketChoice.each && cursor < activeUnits.length; i++, cursor++){
+        activeUnits[cursor].x = positions[i].cx;
+        activeUnits[cursor].y = positions[i].cy;
+        activeUnits[cursor].packetIndex = packetIndex;
+      }
+    });
+    return {side, boxes};
+  }
+
+  function drawUnitPacketBoxes(packetLayout){
+    if(!packetLayout || !unitPacketChoice || !state) return;
+    const side = unitPacketChoice.side;
+    const units = activePieces(side).filter(p => p.type === "token" && p.unit && Number(p.value) === 1 && Number.isFinite(Number(p.packetIndex)));
+    const groups = new Map();
+    for(const p of units){
+      const idx = Math.round(Number(p.packetIndex) || 0);
+      if(!groups.has(idx)) groups.set(idx, []);
+      groups.get(idx).push(p);
+    }
+    const tray = getTrayForSide(side);
+    for(let i=0; i<unitPacketChoice.packetCount; i++){
+      const group = groups.get(i) || [];
+      if(!group.length) continue;
+      const r = TOKEN_UNIT_R;
+      const pad = 12;
+      const minX = Math.min(...group.map(p => Number(p.x) || 0));
+      const maxX = Math.max(...group.map(p => Number(p.x) || 0));
+      const minY = Math.min(...group.map(p => Number(p.y) || 0));
+      const maxY = Math.max(...group.map(p => Number(p.y) || 0));
+      let x = minX - r - pad;
+      let y = minY - r - pad;
+      let w = (maxX - minX) + 2*r + 2*pad;
+      let h = (maxY - minY) + 2*r + 2*pad;
+      const minW = r*2 + 2*pad + 4;
+      const minH = r*2 + 2*pad + 4;
+      if(w < minW){ x -= (minW - w)/2; w = minW; }
+      if(h < minH){ y -= (minH - h)/2; h = minH; }
+      if(tray){
+        x = clamp(x, tray.x + 12, tray.x + tray.w - w - 12);
+        y = clamp(y, tray.y + 56, tray.y + tray.h - h - 12);
+      }
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x);
+      rect.setAttribute("y", y);
+      rect.setAttribute("width", w);
+      rect.setAttribute("height", h);
+      rect.setAttribute("rx", 16);
+      rect.setAttribute("class", `packetBox${unitPacketChoice.isCorrect ? " matchXCount" : ""}`);
+      svg.appendChild(rect);
+    }
+  }
+
   function renderSvg(){
     svg.innerHTML = "";
     drawDefs();
@@ -3061,10 +3543,13 @@
     drawTray(rightTray, "");
     drawText(800, 400, "=", "eqMiddle");
 
+    clearUnitPacketChoiceIfInvalid();
+    const packetLayout = applyUnitPacketPositions();
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
     const leftPos = layoutItems(leftTray, leftItems);
     const rightPos = layoutItems(rightTray, rightItems);
+    drawUnitPacketBoxes(packetLayout);
     const selectedIds = selectedDeleteIds();
     const groupSelectedIds = selectedGroupIds();
     leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds, groupSelectedIds));
@@ -3167,13 +3652,158 @@
     render();
   }
 
+  function isImportedUnitMode(){
+    return importedNumberMode === "unit" || document.body.classList.contains("importUnitMode");
+  }
+
+  function sideOnlyPositiveX(pieces){
+    return pieces.length > 0 && pieces.every(p => p.type === "x" && xSign(p) > 0);
+  }
+
+  function sideOnlyUnitTokens(pieces){
+    return pieces.length > 0 && pieces.every(p => p.type === "token" && p.unit && Number(p.value) === 1);
+  }
+
+  function divisorsOf(n){
+    n = Math.max(1, Math.round(Number(n) || 1));
+    const out = [];
+    for(let d=1; d<=n; d++){
+      if(n % d === 0) out.push(d);
+    }
+    return out;
+  }
+
+  function getUnitShareSituation(){
+    if(!state || !isImportedUnitMode()) return null;
+    const left = activePieces("left");
+    const right = activePieces("right");
+
+    function build(varSide, tokenSide, xPieces, tokenPieces){
+      const xCount = xPieces.length;
+      const tokenCount = tokenPieces.length;
+      if(xCount <= 1 || tokenCount <= 0) return null;
+      return {
+        varSide,
+        tokenSide,
+        xCount,
+        tokenCount,
+        choices:divisorsOf(tokenCount).map(packetCount => ({packetCount, each: tokenCount / packetCount}))
+      };
+    }
+
+    if(sideOnlyPositiveX(left) && sideOnlyUnitTokens(right)){
+      return build("left", "right", left, right);
+    }
+    if(sideOnlyUnitTokens(left) && sideOnlyPositiveX(right)){
+      return build("right", "left", right, left);
+    }
+    return null;
+  }
+
+  function getUnitShareOpportunity(){
+    const situation = getUnitShareSituation();
+    if(!situation || situation.tokenCount % situation.xCount !== 0) return null;
+    return {...situation, each:situation.tokenCount / situation.xCount};
+  }
+
+  function clearUnitPacketConclusion(){
+    if(!state) return;
+    if(state._unitPacketConclusion && Array.isArray(state.steps) && state.steps.length){
+      state.steps.pop();
+    }
+    delete state._unitPacketConclusion;
+  }
+
+  function addUnitPacketConclusion(value){
+    if(!state) return;
+    const n = Math.round(Number(value) || 0);
+    const eq = `${displayedUnknown()} = ${n}`;
+    if(!Array.isArray(state.steps)) state.steps = [];
+    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    state._unitPacketConclusion = true;
+  }
+
+  function applyUnitPacketChoice(packetCount){
+    const situation = getUnitShareSituation();
+    packetCount = Math.round(Number(packetCount) || 0);
+    if(!situation || packetCount <= 0 || situation.tokenCount % packetCount !== 0){
+      setInstruction("Choisis un partage possible des jetons.");
+      return;
+    }
+
+    pushHistory();
+    clearUnitPacketConclusion();
+
+    const each = situation.tokenCount / packetCount;
+    const isCorrectShare = packetCount === situation.xCount;
+    unitPacketChoice = {
+      side:situation.tokenSide,
+      packetCount,
+      each,
+      xCount:situation.xCount,
+      tokenCount:situation.tokenCount,
+      isCorrect:!!isCorrectShare
+    };
+
+    if(isCorrectShare){
+      addUnitPacketConclusion(each);
+    }
+
+    deleteSelection = [];
+    groupSelection = [];
+    selectedPieceRef = null;
+    pendingFusion = null;
+    actionMode = "delete";
+    render();
+    setInstruction("");
+  }
+
+  function applyUnitShareTokens(){
+    const situation = getUnitShareSituation();
+    if(!situation){
+      setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
+      return;
+    }
+    actionMode = "unitShare";
+    render();
+  }
+
   function renderActions(){
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
 
+    if(isImportedUnitMode()){
+      const situation = getUnitShareSituation();
+      if(situation){
+        setInstruction(`Il reste <strong>${situation.xCount}</strong> taches et <strong>${situation.tokenCount}</strong> jetons : on peut faire des paquets.`);
+      }else if(actionMode !== "delete"){
+        setInstruction("Avec les petites billes, utilise surtout <strong>Enlever dans chaque membre</strong>, puis <strong>Faire des paquets</strong> quand il ne reste que des taches d’un côté.");
+      }
+    }
+
     const solved = getSolvedValue();
     if(solved !== null){
       setInstruction("");
+      return;
+    }
+
+    if(actionMode === "unitShare"){
+      const situation = getUnitShareSituation();
+      if(!situation){
+        setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
+        return;
+      }
+      setInstruction(`Choisis comment ranger les <strong>${situation.tokenCount}</strong> jetons en paquets.`);
+      const row = document.createElement("div");
+      row.className = "btnrow";
+      for(const choice of situation.choices){
+        const btn = document.createElement("button");
+        btn.className = "unitPacketChoice";
+        btn.textContent = `${choice.packetCount} paquet${choice.packetCount > 1 ? "s" : ""} de ${choice.each}`;
+        btn.addEventListener("click", () => applyUnitPacketChoice(choice.packetCount));
+        row.appendChild(btn);
+      }
+      actionZone.appendChild(row);
       return;
     }
 
@@ -3321,6 +3951,7 @@
   function undo(){
     if(!history.length) return;
     state = history.pop();
+    unitPacketChoice = null;
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
@@ -3372,6 +4003,7 @@
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
   toolGroup.addEventListener("click", () => setActionMode("group"));
   toolShare.addEventListener("click", () => setActionMode("share"));
+  if(toolShareUnits) toolShareUnits.addEventListener("click", applyUnitShareTokens);
   toolDelete.addEventListener("click", () => setActionMode("delete"));
   toolAddBoth.addEventListener("click", openAddBothDialog);
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
@@ -3433,7 +4065,18 @@
   unknownDisplayModeEl.addEventListener("change", () => {
     if(state){ state.steps = [currentEquationString()]; render(); }
   });
-  removedDisplayModeEl.addEventListener("change", render);
+  if(removedDisplayModeEl){
+    removedDisplayModeEl.addEventListener("change", () => {
+      syncRemovedDisplayControls(removedDisplayModeEl.value);
+      render();
+    });
+  }
+  if(stageRemovedDisplayModeEl){
+    stageRemovedDisplayModeEl.addEventListener("change", () => {
+      syncRemovedDisplayControls(stageRemovedDisplayModeEl.value);
+      render();
+    });
+  }
 
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape") return;
@@ -3502,15 +4145,30 @@
       if(type === "x" || type === "unknown" || type === "variable") return makeX(sign);
       if(type === "number" || type === "token" || type === "const" || type === "constant" || type === "v"){
         const n = Number(piece.value);
-        return Number.isFinite(n) ? makeToken(n) : null;
+        return Number.isFinite(n) ? makeToken(n, {unit: piece.unit === true || piece.unit === "true"}) : null;
       }
     }
     return null;
   }
 
-  function normalizeImportedSide(arr){
+  function normalizeImportedSide(arr, opts = {}){
     if(!Array.isArray(arr)) return [];
-    return arr.map(normalizeImportedPiece).filter(Boolean);
+    const useUnits = !!opts.unitMode;
+    const out = [];
+    arr.forEach(raw => {
+      const piece = normalizeImportedPiece(raw);
+      if(!piece) return;
+      if(piece.type === "token" && Number(piece.value) === 0) return;
+      if(useUnits && piece.type === "token" && !piece.unit){
+        const n = Number(piece.value);
+        if(n > 0 && Number.isInteger(n) && n <= 80){
+          for(let i=0;i<n;i++) out.push(makeToken(1, {unit:true}));
+          return;
+        }
+      }
+      out.push(piece);
+    });
+    return out;
   }
 
   function importedSideStats(pieces){
@@ -3540,7 +4198,7 @@
     deleteSelection = [];
     groupSelection = [];
     pendingFusion = null;
-    setActionMode("decompose");
+    setActionMode(isImportedUnitMode() ? "delete" : "decompose");
   }
 
   function createImportedEquationState(payload){
@@ -3550,8 +4208,11 @@
     const rawDisplay = String(payload.unknownDisplay || payload.display || "letter").toLowerCase();
     const wantedDisplay = (rawDisplay === "question" || rawDisplay === "?" || rawDisplay === "interrogation") ? "question" : "letter";
 
-    const leftPieces = normalizeImportedSide(payload.left || payload.top || payload.haut || []);
-    const rightPieces = normalizeImportedSide(payload.right || payload.bottom || payload.bas || []);
+    const unitMode = String(payload.numberMode || payload.tokenMode || "").toLowerCase() === "unit";
+    importedNumberMode = unitMode ? "unit" : "grouped";
+    unitPacketChoice = null;
+    const leftPieces = normalizeImportedSide(payload.left || payload.top || payload.haut || [], {unitMode});
+    const rightPieces = normalizeImportedSide(payload.right || payload.bottom || payload.bas || [], {unitMode});
     if(!leftPieces.length || !rightPieces.length) return false;
 
     const containsRelative = leftPieces.concat(rightPieces).some(p =>
@@ -3562,6 +4223,7 @@
     if(oppositeXModeEl) oppositeXModeEl.value = leftPieces.concat(rightPieces).some(p => p.type === "x" && xSign(p) < 0) ? "on" : "off";
     if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
     importedUnknownDisplayMode = wantedDisplay;
+    syncRemovedDisplayControls("keep");
 
     const importedX = Number(payload.x);
     const xValue = Number.isFinite(importedX) && importedX !== 0 ? importedX : inferImportedX(leftPieces, rightPieces);
@@ -3595,7 +4257,8 @@
     syncUniverseUI({validate:false});
     syncTeacherControls({validate:false});
     document.body.classList.add("importMode");
-    setActionMode("decompose");
+    document.body.classList.toggle("importUnitMode", unitMode);
+    setActionMode(unitMode ? "delete" : "decompose");
     setInstruction("");
     return true;
   }
@@ -3606,6 +4269,7 @@
     const ok = createImportedEquationState(payload);
     if(!ok){
       document.body.classList.add("importMode");
+      document.body.classList.remove("importUnitMode");
       state = null;
       equationHistory.innerHTML = "";
       svg.innerHTML = "";
