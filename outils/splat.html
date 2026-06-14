@@ -734,7 +734,7 @@
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
-      <option value="CD">C direct — Substitution (prototype)</option>
+      <option value="CD">C direct — Substitution</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
@@ -4094,7 +4094,7 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
     const cy = startY + i * (rowH + gap) + rowH/2;
     const splatR = 30;
     g.appendChild(el("path",{d:blobPath(leftX, cy, splatR), fill:taskSplatColor(i), stroke:"rgba(0,0,0,0.20)", "stroke-width":2}));
-    g.appendChild(text(leftX + 66, cy + 1, "=", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":36, "font-weight":900, fill:"var(--ink)"}));
+    g.appendChild(text(leftX + 66, cy + 1, ":", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":36, "font-weight":900, fill:"var(--ink)"}));
 
     const parts = item.parts && item.parts.length ? item.parts : [{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}];
     const rowWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
