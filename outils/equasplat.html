@@ -1204,6 +1204,14 @@
       <option value="relative">Splat relatif</option>
     </select>
 
+    <div id="equationWritingModeWrap">
+      <label>Écriture de l’équation</label>
+      <select id="equationWritingMode" title="Choisir l’écriture des nombres relatifs dans l’équation">
+        <option value="detailed" selected>Détaillée : x + (−4)</option>
+        <option value="simplified">Simplifiée : x − 4</option>
+      </select>
+    </div>
+
     <label id="oppositeXModeLabel">Taches opposées</label>
     <select id="oppositeXMode" title="Autoriser les taches −x en Splat relatif">
       <option value="off" selected>Non</option>
@@ -1405,6 +1413,8 @@
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const workUniverseEl = document.getElementById("workUniverse");
+  const equationWritingModeWrap = document.getElementById("equationWritingModeWrap");
+  const equationWritingModeEl = document.getElementById("equationWritingMode");
   const oppositeXModeEl = document.getElementById("oppositeXMode");
   const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
   const initialTokenCountEl = document.getElementById("initialTokenCount");
@@ -1536,9 +1546,70 @@
     return v < 0 ? `(−${Math.abs(v)})` : String(v);
   }
 
+  function simplifiedRelativeEquationWriting(){
+    return isRelativeUniverse() && equationWritingModeEl && equationWritingModeEl.value === "simplified";
+  }
+
   function formatEquationTerm(n){
     const v = Number(n) || 0;
-    return v < 0 ? `(−${Math.abs(v)})` : String(v);
+    if(v < 0){
+      return simplifiedRelativeEquationWriting() ? `−${Math.abs(v)}` : `(−${Math.abs(v)})`;
+    }
+    return String(v);
+  }
+
+  function joinEquationTerms(terms){
+    if(!terms.length) return "0";
+    if(!simplifiedRelativeEquationWriting()) return terms.join(" + ");
+
+    let expression = "";
+    for(const rawTerm of terms){
+      const term = String(rawTerm);
+      if(!term) continue;
+      if(!expression){
+        expression = term;
+      }else if(term.startsWith("−")){
+        expression += ` − ${term.slice(1)}`;
+      }else{
+        expression += ` + ${term}`;
+      }
+    }
+    return expression || "0";
+  }
+
+  function equationDisplayTargetConstantFor(side){
+    if(!state) return null;
+    const otherSide = side === "left" ? "right" : "left";
+    const sidePieces = activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const otherPieces = activePieces(otherSide).filter(p => !(p.type === "token" && Number(p.value) === 0));
+
+    const sideHasX = sidePieces.some(p => p.type === "x");
+    const otherHasX = otherPieces.some(p => p.type === "x");
+    if(sideHasX || !otherHasX) return null;
+
+    const sideTokens = sidePieces.filter(p => p.type === "token");
+    const otherTokens = otherPieces.filter(p => p.type === "token");
+    if(sideTokens.length < 2 || otherTokens.length === 0) return null;
+
+    const target = otherTokens.reduce((sum, p) => sum + Number(p.value || 0), 0);
+    if(target === 0) return null;
+    return target;
+  }
+
+  function piecesForEquationDisplay(side, pieces){
+    const target = equationDisplayTargetConstantFor(side);
+    if(target === null) return pieces;
+
+    const index = pieces.findIndex(p => p.type === "token" && !p.removed && Number(p.value) === target);
+    if(index < 0 || index === pieces.length - 1) return pieces;
+
+    // L'ordre des objets sur le plateau reste inchangé. On déplace seulement
+    // le terme à enlever à la fin de l'écriture algébrique :
+    // x + 5 = 5 + 45 devient x + 5 = 45 + 5.
+    const ordered = pieces.slice();
+    const [matchingToken] = ordered.splice(index, 1);
+    ordered.push(matchingToken);
+    return ordered;
   }
 
   function getInitialTokenCount(rng=Math.random){
@@ -1925,7 +1996,10 @@
   function renderPiecesForSide(side){ return shouldKeepRemovedPieces() ? state[side] : activePieces(side); }
 
   function sideExpression(side){
-    const pieces = activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const pieces = piecesForEquationDisplay(
+      side,
+      activePieces(side).filter(p => !(p.type === "token" && Number(p.value) === 0))
+    );
     const terms = [];
     const xPieces = pieces.filter(p => p.type === "x");
     const xSigns = Array.from(new Set(xPieces.map(p => xSign(p))));
@@ -1944,7 +2018,7 @@
           terms.push(formatEquationTerm(p.value));
         }
       }
-      return terms.length ? terms.join(" + ") : "0";
+      return joinEquationTerms(terms);
     }
 
     let i = 0;
@@ -1969,7 +2043,7 @@
         i++;
       }
     }
-    return terms.length ? terms.join(" + ") : "0";
+    return joinEquationTerms(terms);
   }
 
   function getSolvedValue(){
@@ -3307,6 +3381,7 @@
       if(!relative) oppositeXModeEl.value = "off";
     }
     if(oppositeXModeLabel) oppositeXModeLabel.style.opacity = relative ? "1" : ".45";
+    if(equationWritingModeWrap) equationWritingModeWrap.style.display = relative ? "" : "none";
 
     if(toolAddBoth){
       toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
@@ -3403,6 +3478,11 @@
   unknownDisplayModeEl.addEventListener("change", () => {
     if(state){ state.steps = [currentEquationString()]; render(); }
   });
+  if(equationWritingModeEl){
+    equationWritingModeEl.addEventListener("change", () => {
+      if(state){ state.steps = [currentEquationString()]; render(); }
+    });
+  }
   removedDisplayModeEl.addEventListener("change", render);
 
   document.addEventListener("keydown", (e) => {
