@@ -65,6 +65,35 @@
   }
   header h1{font-size:16px;margin:0;font-weight:900;letter-spacing:.2px}
   .headerTitle{display:flex;align-items:center;gap:10px}
+  .panelHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:0 0 12px;
+    padding:2px 0 12px;
+    border-bottom:1px solid rgba(17,24,39,.10);
+  }
+  .panelHeader h1{
+    font-size:17px;
+    line-height:1.12;
+    margin:0;
+    font-weight:950;
+    letter-spacing:-.01em;
+  }
+  .panelHeaderActions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+  .panelHeader .home{
+    width:42px;
+    height:42px;
+    box-shadow:0 6px 16px rgba(17,24,39,.08);
+  }
+  .panelHeader .home svg{width:19px;height:19px}
+  .panelHeader .helpBtn{font-size:22px}
 
   .home{
     display:inline-flex;
@@ -299,6 +328,7 @@
   }
 
   body.light header{border-bottom:1px solid rgba(0,0,0,0.08)}
+  body.light .panelHeader{border-bottom-color:rgba(0,0,0,.10)}
   body.light .panel{box-shadow:0 10px 30px rgba(0,0,0,0.06)}
   body.light .cardbox{border-color:rgba(0,0,0,0.10)}
   body.light .iconbtn{
@@ -536,18 +566,6 @@
 </head>
 
 <body class="light">
-<header>
-  <div class="headerTitle">
-    <h1>Splat! — Équations</h1>
-    <a class="home" href="./sheet_generator_schema_partie_tout.html" title="Retour au menu Schémas partie-tout" aria-label="Retour au menu Schémas partie-tout">
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
-      </svg>
-    </a>
-    <button class="home helpBtn" id="btnHelp" type="button" title="Aide et raccourcis" aria-label="Aide et raccourcis">?</button>
-  </div>
-</header>
-
 <div class="helpOverlay" id="helpOverlay" aria-hidden="true">
   <div class="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="helpModalHeader">
@@ -569,6 +587,18 @@
 
 <div class="wrap">
   <section class="panel">
+    <div class="panelHeader">
+      <h1>Splat! — Équations</h1>
+      <div class="panelHeaderActions">
+        <a class="home" href="./sheet_generator_schema_partie_tout.html" title="Retour au menu Schémas partie-tout" aria-label="Retour au menu Schémas partie-tout">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
+          </svg>
+        </a>
+        <button class="home helpBtn" id="btnHelp" type="button" title="Aide et raccourcis" aria-label="Aide et raccourcis">?</button>
+      </div>
+    </div>
+
     <label>Mode</label>
     <select id="activity">
       <option value="EQUNITSTEP" selected>Équation primaire — pas à pas</option>
@@ -1495,7 +1525,7 @@ function applyDefaultEquationStepDisplayForActivity(act){
   }else{
     if(act === "EQ"){
       equationStepView = "schema";
-    }else if(act === "EQSTEP" || act === "EQPMSTEP"){
+    }else if(act === "EQSTEP" || act === "EQPM" || act === "EQPMSTEP"){
       equationStepView = "equation";
     }
     if(eqUnknownDisplayModeEl) eqUnknownDisplayModeEl.value = "letter";
