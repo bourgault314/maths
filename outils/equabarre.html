@@ -1688,9 +1688,10 @@
       <input id="studentPath" type="hidden" value="axc" />
 
       <label>Affichage de l’inconnue</label>
-      <select id="unknownDisplayModeStudent" title="Affichage des inconnues dans le tableau">
-        <option value="letter" selected>Lettre</option>
-        <option value="question">Point d’interrogation</option>
+      <select id="unknownDisplayModeStudent" title="Affichage des inconnues et des multiples dans l’équation">
+        <option value="letter" selected>Lettre compacte : 4x</option>
+        <option value="letterTimes">Lettre détaillée : 4 × x</option>
+        <option value="question">Point d’interrogation : 4 × ?</option>
         <option value="splat">Splat</option>
       </select>
 
@@ -1699,6 +1700,7 @@
         <option value="show" selected>Oui</option>
         <option value="hide">Non</option>
       </select>
+
 
       <label>Taille en plein écran</label>
       <select id="fullscreenSizeModeStudent" title="Taille du tableau en mode plein écran">
@@ -1734,9 +1736,10 @@
     </select>
 
         <label>Affichage de l’inconnue</label>
-    <select id="unknownDisplayMode" title="Affichage des inconnues dans le tableau">
-      <option value="letter" selected>Lettre</option>
-      <option value="question">Point d’interrogation</option>
+    <select id="unknownDisplayMode" title="Affichage des inconnues et des multiples dans l’équation">
+      <option value="letter" selected>Lettre compacte : 4x</option>
+      <option value="letterTimes">Lettre détaillée : 4 × x</option>
+      <option value="question">Point d’interrogation : 4 × ?</option>
       <option value="splat">Splat</option>
     </select>
 
@@ -1745,6 +1748,7 @@
       <option value="show" selected>Oui</option>
       <option value="hide">Non</option>
     </select>
+
 
 <label>Taille en plein écran</label>
     <select id="fullscreenSizeMode" title="Taille du tableau en mode plein écran">
@@ -2028,11 +2032,13 @@
   }
 
   function unknownTerm(count){
+    const kind = unknownDisplayKind();
     const v = displayedUnknown();
     if(v === "?"){
       return count === 1 ? "?" : `${count} × ?`;
     }
-    return count === 1 ? v : `${count}${v}`;
+    if(count === 1) return v;
+    return kind === "letterTimes" ? `${count} × ${v}` : `${count}${v}`;
   }
 
   /* Splat : même logique de dessin que l’outil Splat!
