@@ -727,6 +727,12 @@
         <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
         <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
       </label>
+      <div id="signedWritingModeWrap" title="Choisir l’écriture des nombres négatifs dans l’équation" style="display:none; flex:0 0 126px; height:42px; min-width:0;">
+        <select id="signedWritingMode" aria-label="Écriture des nombres négatifs" style="height:42px; padding:7px 6px; font-size:11px; font-weight:750; border-radius:10px;">
+          <option value="simplified" selected>Écriture simplifiée</option>
+          <option value="parentheses">Écriture parenthèses</option>
+        </select>
+      </div>
     </div>
 
     <div class="row" style="margin-top:10px; align-items:flex-end">
@@ -1072,6 +1078,8 @@ const numOpposeModeWrapEl = document.getElementById("numOpposeModeWrap");
 const numOpposeModeEl = document.getElementById("numOpposeMode");
 const numColorModeWrapEl = document.getElementById("numColorModeWrap");
 const numColorModeEl = document.getElementById("numColorMode");
+const signedWritingModeWrapEl = document.getElementById("signedWritingModeWrap");
+const signedWritingModeEl = document.getElementById("signedWritingMode");
 const eqStepViewToggleEl = document.getElementById("eqStepViewToggle");
 const btnEqStepViewEquationEl = document.getElementById("btnEqStepViewEquation");
 const btnEqStepViewSchemaEl = document.getElementById("btnEqStepViewSchema");
@@ -1181,6 +1189,10 @@ function syncPrintModeUI(){
   if(!worksheetOpt) return;
   worksheetOpt.textContent = (activityEl && isSignedEquationModeValue(activityEl.value)) ? "Énoncé + aide" : "Tableau vide";
   sel.title = "Choisir le contenu à imprimer";
+}
+
+function getSignedWritingMode(){
+  return signedWritingModeEl && signedWritingModeEl.value === "parentheses" ? "parentheses" : "simplified";
 }
 
 
@@ -1356,6 +1368,7 @@ function buildEquationEquaSplatPayload(card, revealState = 0){
     unknownDisplay:shouldDisplayUnknownAsQuestion() ? "question" : "letter",
     universe:isSignedEquationFamily(card) ? "relative" : "positive",
     numberMode:unitConstants ? "unit" : "grouped",
+    signedWritingMode:isSignedEquationFamily(card) ? getSignedWritingMode() : "simplified",
     x:Number(eq.x),
     left:leftRow,
     right:rightRow,
@@ -1578,7 +1591,8 @@ function syncSettingsUI(){
       lastSignedModeSettings.EQPM = {
         absMax: String(numBeadAbsMaxEl.value),
         oppose: String(numOpposeModeEl.value),
-        color: numColorModeEl ? numColorModeEl.checked : true
+        color: numColorModeEl ? numColorModeEl.checked : true,
+        writing: getSignedWritingMode()
       };
     }
     if(isSignedEquationModeValue(act)){
@@ -1587,10 +1601,12 @@ function syncSettingsUI(){
         numBeadAbsMaxEl.value = saved.absMax;
         numOpposeModeEl.value = saved.oppose;
         if(numColorModeEl && saved.color !== undefined) numColorModeEl.checked = saved.color;
+        if(signedWritingModeEl) signedWritingModeEl.value = saved.writing === "parentheses" ? "parentheses" : "simplified";
       }else{
         numBeadAbsMaxEl.value = "30";
         numOpposeModeEl.value = "off";
         if(numColorModeEl) numColorModeEl.checked = true;
+        if(signedWritingModeEl) signedWritingModeEl.value = "simplified";
       }
     }
   }
@@ -1638,6 +1654,7 @@ function syncSettingsUI(){
   if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(numColorModeWrapEl) numColorModeWrapEl.style.display = isSignedEquationModeValue(act) ? "flex" : "none";
+  if(signedWritingModeWrapEl) signedWritingModeWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(isSignedEquationModeValue(act)) sanitizeBeadAbsMaxForBPM();
   syncEquationStepViewButton();
   lastActivityForBounds = act;
@@ -1689,7 +1706,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
 
 // Après le choix dans un menu déroulant, on rend le focus au plateau :
 // les flèches et la barre espace servent alors à naviguer, pas à changer le menu.
-[numOpposeModeEl, eqUnknownModeEl, printModeSelectEl, printCardsPerPageEl].forEach(el=>{
+[numOpposeModeEl, signedWritingModeEl, eqUnknownModeEl, printModeSelectEl, printCardsPerPageEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>{
     if(el === eqUnknownModeEl){
@@ -1708,6 +1725,14 @@ if(btnEqUnknownLetterEl){
 }
 if(btnEqUnknownQuestionMarkEl){
   btnEqUnknownQuestionMarkEl.addEventListener("click", ()=> setEquationUnknownDisplay(true));
+}
+
+if(signedWritingModeEl){
+  const rerenderSignedWritingMode = ()=>{
+    if(typeof updateUI === "function") updateUI();
+  };
+  signedWritingModeEl.addEventListener("input", rerenderSignedWritingMode);
+  signedWritingModeEl.addEventListener("change", rerenderSignedWritingMode);
 }
 
 {
@@ -3359,7 +3384,7 @@ function formatSignedCoeffLabel(coeff, varChar = xChar){
   return c < 0 ? `−${label}` : label;
 }
 
-function formatSignedLinearExpression(coeff, constant, varChar = xChar){
+function formatSignedLinearExpression(coeff, constant, varChar = xChar, opts = {}){
   let c = Number(coeff);
   let k = Number(constant);
   if(!Number.isFinite(c)) c = 0;
@@ -3377,17 +3402,7 @@ function formatSignedLinearExpression(coeff, constant, varChar = xChar){
   if(k !== 0){
     terms.push({ sign: k < 0 ? -1 : 1, text: String(Math.abs(k)) });
   }
-  if(!terms.length) return "0";
-
-  let out = "";
-  terms.forEach((term, idx)=>{
-    if(idx === 0){
-      out += term.sign < 0 ? `−${term.text}` : term.text;
-    }else{
-      out += term.sign < 0 ? ` − ${term.text}` : ` + ${term.text}`;
-    }
-  });
-  return out;
+  return joinSignedTerms(terms, opts);
 }
 
 
@@ -3457,17 +3472,20 @@ function formatSignedAbsIntegerLabel(value){
   return String(v);
 }
 
-function joinSignedTerms(terms){
+function joinSignedTerms(terms, opts = {}){
   const clean = (Array.isArray(terms) ? terms : []).filter(t => t && t.text !== "" && t.sign !== 0);
   if(!clean.length) return "0";
+  const mode = opts.mode || getSignedWritingMode();
   let out = "";
   clean.forEach((term, idx)=>{
     const sign = Number(term.sign) < 0 ? -1 : 1;
     const txt = String(term.text);
     if(idx === 0){
       out += sign < 0 ? `−${txt}` : txt;
+    }else if(sign < 0){
+      out += mode === "parentheses" ? ` + (−${txt})` : ` − ${txt}`;
     }else{
-      out += sign < 0 ? ` − ${txt}` : ` + ${txt}`;
+      out += ` + ${txt}`;
     }
   });
   return out;
@@ -3596,7 +3614,7 @@ function makeEquationSignedConstantParts(values, removedFlags = []){
   return out;
 }
 
-function formatSignedExpressionFromParts(coeff, constants, varChar = xChar){
+function formatSignedExpressionFromParts(coeff, constants, varChar = xChar, opts = {}){
   let c = Number(coeff);
   if(!Number.isFinite(c)) c = 0;
   if(Math.abs(c - Math.round(c)) < 1e-9) c = Math.round(c);
@@ -3615,16 +3633,10 @@ function formatSignedExpressionFromParts(coeff, constants, varChar = xChar){
     if(n !== 0) terms.push({ sign:n < 0 ? -1 : 1, text:String(Math.abs(n)) });
   });
 
-  if(!terms.length) return "0";
-  let out = "";
-  terms.forEach((term, idx)=>{
-    if(idx === 0) out += term.sign < 0 ? `−${term.text}` : term.text;
-    else out += term.sign < 0 ? ` − ${term.text}` : ` + ${term.text}`;
-  });
-  return out;
+  return joinSignedTerms(terms, opts);
 }
 
-function formatSignedExpressionWithAddedCoeff(baseCoeff, addedCoeff, constants, varChar = xChar){
+function formatSignedExpressionWithAddedCoeff(baseCoeff, addedCoeff, constants, varChar = xChar, opts = {}){
   function cleanInt(v){
     let n = Number(v);
     if(!Number.isFinite(n)) n = 0;
@@ -3645,7 +3657,7 @@ function formatSignedExpressionWithAddedCoeff(baseCoeff, addedCoeff, constants, 
     const n = cleanInt(v);
     if(n !== 0) terms.push({ sign:n < 0 ? -1 : 1, text:String(Math.abs(n)) });
   });
-  return joinSignedTerms(terms);
+  return joinSignedTerms(terms, opts);
 }
 
 
