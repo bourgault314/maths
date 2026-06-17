@@ -1903,7 +1903,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:eq.c,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      conclusionDone:false
     };
 
     if(selectedMode === "both"){
@@ -1971,7 +1972,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      conclusionDone:false
     };
 
     if(selectedMode === "both"){
@@ -2046,7 +2048,7 @@
     return joinEquationTerms(terms);
   }
 
-  function getSolvedValue(){
+  function getConclusionInfo(){
     const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
     const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
     if(left.length === 0 || right.length === 0) return null;
@@ -2054,17 +2056,78 @@
     const isAllX = arr => arr.every(p => p.type === "x");
     const allSameXSign = arr => isAllX(arr) && arr.length > 0 && arr.every(p => xSign(p) === xSign(arr[0]));
     const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
+
     // Avec les taches opposées, on évite le raccourci magique −x = n → x = −n.
     // L'élève devra d'abord utiliser l'action "opposé des deux membres" dans une étape suivante.
-    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0) return left[0].value;
-    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0) return right[0].value;
+    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0){
+      return {value:left[0].value, count:right.length, xSide:"right", tokenSide:"left"};
+    }
+    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0){
+      return {value:right[0].value, count:left.length, xSide:"left", tokenSide:"right"};
+    }
     return null;
   }
 
+  function getSolvedValue(){
+    const info = getConclusionInfo();
+    return info ? info.value : null;
+  }
+
+  function productExpressionForConclusion(info){
+    const factor = formatFusionTerm(info.value);
+    return `${info.count} × ${factor}`;
+  }
+
+  function equationBeforeConclusion(info){
+    const xTerm = formatXTerm(info.count);
+    const product = productExpressionForConclusion(info);
+    return info.xSide === "left" ? `${xTerm} = ${product}` : `${product} = ${xTerm}`;
+  }
+
+  function finalEquationForConclusion(info){
+    const unknown = displayedUnknown();
+    const value = formatSignedNumber(info.value);
+    return info.xSide === "left" ? `${unknown} = ${value}` : `${value} = ${unknown}`;
+  }
+
   function currentEquationString(){
-    const solved = getSolvedValue();
-    if(solved !== null) return `${displayedUnknown()} = ${solved}`;
+    const info = getConclusionInfo();
+    if(info && (info.count === 1 || (state && state.conclusionDone))) return finalEquationForConclusion(info);
+    if(info) return equationBeforeConclusion(info);
     return `${sideExpression("left")} = ${sideExpression("right")}`;
+  }
+
+  function simplifyPlateauForConclusion(info){
+    if(!state || !info) return;
+
+    // Au moment de conclure, on passe du modèle “autant de taches
+    // que de parts identiques” à la lecture finale : une tache vaut un jeton.
+    // On garde le côté où se trouvait l’inconnue pour ne pas inverser
+    // visuellement la situation que les élèves viennent de construire.
+    const finalX = makeX(1);
+    const finalToken = makeToken(info.value);
+
+    if(info.xSide === "left"){
+      state.left = [finalX];
+      state.right = [finalToken];
+    }else{
+      state.left = [finalToken];
+      state.right = [finalX];
+    }
+  }
+
+  function concludeSolution(){
+    if(!state) return;
+    const info = getConclusionInfo();
+    if(!info) return;
+    pushHistory();
+    simplifyPlateauForConclusion(info);
+    state.conclusionDone = true;
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep();
+    render();
   }
 
   function recordEquationStep(){
@@ -2088,7 +2151,7 @@
   function isSolvedEquationString(eq){
     const {lhs, rhs} = splitEquation(eq);
     const v = displayedUnknown();
-    return lhs === v && /^−?\d+$/.test(rhs);
+    return lhs === v && /^[−-]?\d+$/.test(rhs);
   }
 
   function splitEquation(eq){
@@ -3215,9 +3278,18 @@
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
 
-    const solved = getSolvedValue();
-    if(solved !== null){
-      setInstruction("");
+    const conclusionInfo = getConclusionInfo();
+    if(conclusionInfo){
+      if(conclusionInfo.count === 1 || (state && state.conclusionDone)){
+        setInstruction("");
+        return;
+      }
+      setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
+      const btn = document.createElement("button");
+      btn.className = "green";
+      btn.textContent = "Conclure";
+      btn.addEventListener("click", concludeSolution);
+      actionZone.appendChild(btn);
       return;
     }
 
@@ -3476,11 +3548,11 @@
     workUniverseEl.addEventListener("change", rebuildFromCurrentSettings);
   }
   unknownDisplayModeEl.addEventListener("change", () => {
-    if(state){ state.steps = [currentEquationString()]; render(); }
+    if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
   });
   if(equationWritingModeEl){
     equationWritingModeEl.addEventListener("change", () => {
-      if(state){ state.steps = [currentEquationString()]; render(); }
+      if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
     });
   }
   removedDisplayModeEl.addEventListener("change", render);
