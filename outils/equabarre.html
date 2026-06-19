@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Équabarre — constructeur d’équations v1.4</title>
+<title>ÉquaBarre — constructeur d’équations v2</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -1889,7 +1889,7 @@
 <body>
 <main id="appMain" class="startMode">
   <section class="panel">
-    <div class="appTitle">Équabarre</div>
+    <div class="appTitle">ÉquaBarre</div>
 
     <div class="profPanel" id="profPanel">
       <div class="creatorBlock" aria-label="Créer une équation">
@@ -1983,7 +1983,7 @@
       <div class="toolBarRow toolBarRowGlobal">
         <button class="toolBtn globalToolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
         <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
-        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au tableau importé de départ">↺ Recommencer</button>
+        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au schéma de départ">↺ Recommencer</button>
       </div>
     </div>
 
@@ -3307,7 +3307,7 @@
 
   function restartImportedEquation(){
     if(!initialImportState){
-      setStatus("Aucun tableau importé à recommencer");
+      setStatus("Aucun schéma à recommencer");
       return;
     }
     state = clone(initialImportState);
@@ -3349,10 +3349,12 @@
   }
 
 
-  /* CONSTRUCTEUR D'ÉQUATION V1.4
-     Objectif : écrire directement une équation additive à entiers positifs,
+  /* CONSTRUCTEUR D'ÉQUATION V2
+     Objectif : écrire directement une équation positive,
      puis construire le tableau dans la même page.
-     Règle validée : on respecte l'ordre tapé par le professeur. */
+     Règle validée : on respecte l'ordre développé par le professeur.
+     Nouveauté V2 : parenthèses et multiplications positives acceptées,
+     sans soustraction, sans fractions, sans négatifs, sans plusieurs lettres. */
   function setBuildError(text){
     if(!buildError) return;
     buildError.textContent = text || "";
@@ -3378,79 +3380,204 @@
     return map[ch] || String(letter || "𝑥");
   }
 
-  function parseEquationTerm(term, sideName, ctx){
-    const t = String(term || "").trim();
-    if(!t){
-      throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+  function makeParsedNumber(value){
+    const n = Number(value);
+    if(!Number.isSafeInteger(n) || n <= 0){
+      throw new Error("Les nombres doivent être des entiers strictement positifs.");
     }
-
-    if(/^\d+$/.test(t)){
-      const n = Number(t);
-      if(!Number.isSafeInteger(n) || n <= 0){
-        throw new Error("Les nombres doivent être des entiers strictement positifs.");
-      }
-      return {kind:"number", value:n, coef:0, constant:n};
-    }
-
-    let match = t.match(/^(\d+)?([a-zA-Z])$/);
-    if(!match){
-      match = t.match(/^(\d+)(?:\*|×)([a-zA-Z])$/);
-    }
-    if(!match){
-      match = t.match(/^([a-zA-Z])(?:\*|×)(\d+)$/);
-      if(match){
-        match = [match[0], match[2], match[1]];
-      }
-    }
-
-    if(match){
-      const coef = match[1] ? Number(match[1]) : 1;
-      const letter = String(match[2]).toLowerCase();
-      if(!Number.isSafeInteger(coef) || coef <= 0){
-        throw new Error("Les coefficients devant la lettre doivent être des entiers strictement positifs.");
-      }
-      if(!ctx.variable){
-        ctx.variable = letter;
-      }else if(ctx.variable !== letter){
-        throw new Error(`Une seule lettre est acceptée. Ici, il y a ${ctx.variable} et ${letter}.`);
-      }
-      return {kind:"x", value:letter, coef, constant:0};
-    }
-
-    throw new Error(`Je ne sais pas lire le terme « ${t} ». Pour l’instant : nombres, x, 2x ou 2*x.`);
+    return {pieces:[{type:"number", value:n}], coef:0, constant:n};
   }
 
-  function parseEquationSide(rawSide, sideName, ctx){
-    const raw = String(rawSide || "").trim();
-    if(!raw){
-      throw new Error(`Le membre ${sideName} est vide.`);
+  function makeParsedX(letter, ctx){
+    const cleanLetter = String(letter || "").toLowerCase();
+    if(!ctx.variable){
+      ctx.variable = cleanLetter;
+    }else if(ctx.variable !== cleanLetter){
+      throw new Error(`Une seule lettre est acceptée. Ici, il y a ${ctx.variable} et ${cleanLetter}.`);
     }
+    return {pieces:[{type:"x"}], coef:1, constant:0};
+  }
+
+  function combineAdd(left, right){
+    return {
+      pieces:left.pieces.concat(right.pieces),
+      coef:left.coef + right.coef,
+      constant:left.constant + right.constant
+    };
+  }
+
+  function cloneParsedPiece(piece){
+    return piece.type === "x" ? {type:"x"} : {type:"number", value:piece.value};
+  }
+
+  function repeatParsedExpression(expr, count){
+    if(!Number.isSafeInteger(count) || count <= 0){
+      throw new Error("Les multiplications doivent utiliser des entiers strictement positifs.");
+    }
+    const pieces = [];
+    for(let i=0; i<count; i++){
+      for(const piece of expr.pieces) pieces.push(cloneParsedPiece(piece));
+    }
+    return {
+      pieces,
+      coef:expr.coef * count,
+      constant:expr.constant * count
+    };
+  }
+
+  function combineMultiply(left, right){
+    const leftIsConstant = left.coef === 0;
+    const rightIsConstant = right.coef === 0;
+
+    if(leftIsConstant && rightIsConstant){
+      return makeParsedNumber(left.constant * right.constant);
+    }
+
+    if(leftIsConstant){
+      return repeatParsedExpression(right, left.constant);
+    }
+
+    if(rightIsConstant){
+      return repeatParsedExpression(left, right.constant);
+    }
+
+    throw new Error("On ne peut pas multiplier deux expressions qui contiennent l’inconnue.");
+  }
+
+  function tokenizePositiveExpression(raw, sideName){
     const compact = normalizeMathLetters(raw)
+      .toLowerCase()
       .replace(/\s+/g, "")
-      .replace(/[·]/g, "*")
-      .replace(/[X]/g, "x");
+      .replace(/[·×]/g, "*");
 
     if(!compact){
       throw new Error(`Le membre ${sideName} est vide.`);
     }
 
-    const terms = compact.split("+");
-    const pieces = [];
-    let coef = 0;
-    let constant = 0;
-
-    for(const rawTerm of terms){
-      const term = parseEquationTerm(rawTerm, sideName, ctx);
-      coef += term.coef;
-      constant += term.constant;
-      if(term.kind === "number"){
-        pieces.push({type:"number", value:term.value});
-      }else{
-        for(let i=0; i<term.coef; i++) pieces.push({type:"x"});
+    const tokens = [];
+    let i = 0;
+    while(i < compact.length){
+      const ch = compact[i];
+      if(/\d/.test(ch)){
+        let j = i + 1;
+        while(j < compact.length && /\d/.test(compact[j])) j++;
+        const n = Number(compact.slice(i,j));
+        if(!Number.isSafeInteger(n) || n <= 0){
+          throw new Error("Les nombres doivent être des entiers strictement positifs.");
+        }
+        tokens.push({type:"number", value:n});
+        i = j;
+        continue;
       }
+      if(/[a-z]/.test(ch)){
+        tokens.push({type:"letter", value:ch});
+        i++;
+        continue;
+      }
+      if(ch === "+" || ch === "*" || ch === "(" || ch === ")"){
+        tokens.push({type:ch, value:ch});
+        i++;
+        continue;
+      }
+      throw new Error(`Caractère non reconnu dans le membre ${sideName} : « ${ch} ».`);
+    }
+    return tokens;
+  }
+
+  function parsePositiveExpression(raw, sideName, ctx){
+    const tokens = tokenizePositiveExpression(raw, sideName);
+    let pos = 0;
+
+    function peek(){
+      return tokens[pos] || null;
     }
 
-    return {pieces, coef, constant};
+    function consume(type){
+      const token = peek();
+      if(token && token.type === type){
+        pos++;
+        return token;
+      }
+      return null;
+    }
+
+    function startsFactor(token){
+      return token && (token.type === "number" || token.type === "letter" || token.type === "(");
+    }
+
+    function parseFactor(){
+      const token = peek();
+      if(!token){
+        throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+      }
+      if(token.type === "number"){
+        pos++;
+        return makeParsedNumber(token.value);
+      }
+      if(token.type === "letter"){
+        pos++;
+        return makeParsedX(token.value, ctx);
+      }
+      if(token.type === "("){
+        pos++;
+        const expr = parseExpression();
+        if(!consume(")")){
+          throw new Error(`Il manque une parenthèse fermante dans le membre ${sideName}.`);
+        }
+        return expr;
+      }
+      if(token.type === ")"){
+        throw new Error(`Parenthèse fermante inattendue dans le membre ${sideName}.`);
+      }
+      throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+    }
+
+    function parseTerm(){
+      let result = parseFactor();
+      while(true){
+        const token = peek();
+        if(token && token.type === "*"){
+          pos++;
+          result = combineMultiply(result, parseFactor());
+          continue;
+        }
+        // Multiplication implicite : 2x, 2(x+3), (x+1)3, etc.
+        // Elle reste autorisée seulement si l'un des deux facteurs est constant.
+        if(startsFactor(token)){
+          result = combineMultiply(result, parseFactor());
+          continue;
+        }
+        break;
+      }
+      return result;
+    }
+
+    function parseExpression(){
+      let result = parseTerm();
+      while(consume("+")){
+        const next = peek();
+        if(!startsFactor(next)){
+          throw new Error(`Il manque un terme après un + dans le membre ${sideName}.`);
+        }
+        result = combineAdd(result, parseTerm());
+      }
+      return result;
+    }
+
+    const parsed = parseExpression();
+    if(pos !== tokens.length){
+      const token = tokens[pos];
+      throw new Error(`Expression non reconnue près de « ${token.value} » dans le membre ${sideName}.`);
+    }
+    return parsed;
+  }
+
+  function parseEquationSide(rawSide, sideName, ctx){
+    const parsed = parsePositiveExpression(rawSide, sideName, ctx);
+    if(!parsed.pieces.length){
+      throw new Error(`Le membre ${sideName} est vide.`);
+    }
+    return parsed;
   }
 
   function parseEquationToPayload(rawEquation){
@@ -3460,21 +3587,21 @@
     }
 
     if(/[\-–—−]/.test(original)){
-      throw new Error("Pour cette première version, les soustractions et les nombres négatifs ne sont pas encore acceptés.");
-    }
-    if(/[()\[\]{}]/.test(original)){
-      throw new Error("Les parenthèses ne sont pas encore acceptées dans cette version.");
+      throw new Error("Les soustractions et les nombres négatifs ne sont pas acceptés dans cet outil.");
     }
     if(/[\/]/.test(original)){
-      throw new Error("Les fractions ne sont pas encore acceptées dans cette version.");
+      throw new Error("Les fractions ne sont pas encore acceptées dans cet outil.");
     }
     if(/[.,;]/.test(original)){
       throw new Error("Les décimaux ne sont pas acceptés ici : utilise seulement des entiers positifs.");
     }
 
-    const normalized = normalizeMathLetters(original).replace(/=/g, "=");
-    if(!/^[0-9a-zA-Z+*=×·\s]+$/.test(normalized)){
-      throw new Error("Caractère non reconnu. Utilise seulement des nombres, une lettre, + et =.");
+    const normalized = normalizeMathLetters(original)
+      .replace(/[·×]/g, "*")
+      .replace(/=/g, "=");
+
+    if(!/^[0-9a-zA-Z+*=()\s]+$/.test(normalized)){
+      throw new Error("Caractère non reconnu. Utilise seulement des nombres, une lettre, +, ×, * et des parenthèses positives.");
     }
 
     const sides = normalized.split("=");
@@ -3488,6 +3615,10 @@
 
     if(!ctx.variable){
       throw new Error("Il faut une inconnue : par exemple x, n ou a.");
+    }
+
+    if(left.pieces.length > 80 || right.pieces.length > 80){
+      throw new Error("Cette équation crée trop de morceaux pour être lisible en schéma en barres.");
     }
 
     const denom = left.coef - right.coef;
@@ -3511,7 +3642,7 @@
     const unknownDisplay = (displayChoice === "question" || displayChoice === "splat") ? displayChoice : "letter";
 
     return {
-      source:"equabarre-builder-v1",
+      source:"equabarre-builder-v2",
       variable:toMathItalicLetter(ctx.variable),
       unknownDisplay,
       x:solution,
