@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PythaBarre — théorème de Pythagore v11</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#d8dee9;
+    --blue:#3b82f6;
+    --blue-soft:#dbeafe;
+    --green:#16a34a;
+    --green-soft:#dcfce7;
+    --orange:#f97316;
+    --orange-soft:#ffedd5;
+    --red:#ef4444;
+    --red-soft:#fee2e2;
+    --shadow:0 18px 50px rgba(15,23,42,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(59,130,246,.13), transparent 34rem),
+      radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+
+  main{
+    width:min(1240px, calc(100vw - 28px));
+    margin:18px auto 32px;
+    display:grid;
+    grid-template-columns:minmax(320px, 760px);
+    justify-content:center;
+    gap:18px;
+    align-items:start;
+  }
+
+  main.activeMode{grid-template-columns:minmax(0,1fr)}
+
+  .panel,.stage{
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(10px);
+  }
+
+  .panel{padding:24px 26px 26px}
+  main.activeMode .panel{display:none}
+
+  .appTitle{
+    text-align:center;
+    font-size:clamp(36px,5vw,54px);
+    line-height:.95;
+    letter-spacing:-.06em;
+    font-weight:950;
+    margin:0 0 8px;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--muted);
+    font-size:16px;
+    font-weight:750;
+    margin:0 0 22px;
+  }
+
+  .creatorBlock{
+    padding:22px 24px 24px;
+    margin:0 auto 18px;
+    max-width:680px;
+    border:1px solid rgba(59,130,246,.16);
+    background:rgba(239,246,255,.72);
+    border-radius:18px;
+  }
+
+  .creatorTitle{
+    text-align:center;
+    font-size:23px;
+    font-weight:950;
+    color:#1d4ed8;
+    margin-bottom:18px;
+  }
+
+  label{
+    display:block;
+    margin:13px 0 7px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    text-align:center;
+  }
+
+  input,select{
+    width:100%;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:14px;
+    padding:12px 13px;
+    background:white;
+    color:var(--ink);
+    font-size:16px;
+    font-weight:800;
+    outline:none;
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.55);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  .triangleName{
+    max-width:270px;
+    margin:0 auto;
+    text-align:center;
+    font-size:24px;
+    font-weight:950;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+
+  .settingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:end}
+  .lengthGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:2px}
+
+  .lengthBox{
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:16px;
+    padding:10px;
+  }
+
+  .lengthBox label{margin-top:0;margin-bottom:8px;color:#334155}
+  .lengthBox input{text-align:center;font-size:22px;font-weight:950;min-height:56px}
+
+  .displayBox{
+    margin-top:16px;
+    padding:14px;
+    background:rgba(255,255,255,.66);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:18px;
+  }
+
+  .displayTitle{
+    text-align:center;
+    font-size:13px;
+    color:#334155;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:11px;
+  }
+
+  .toggleGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .toggleItem{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    min-height:44px;
+    padding:9px 10px;
+    border-radius:14px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    color:#334155;
+    font-size:14px;
+    font-weight:900;
+    cursor:pointer;
+    text-align:center;
+  }
+
+  .toggleItem input{width:18px;height:18px;accent-color:#3b82f6;cursor:pointer}
+
+  .mini{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+    margin-top:12px;
+    font-weight:700;
+    text-align:center;
+  }
+
+  .creatorActions{display:flex;gap:12px;justify-content:center;align-items:stretch;margin-top:18px}
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:15px;
+    font-weight:950;
+    color:var(--ink);
+    background:#eef2f7;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+  }
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+  button.primary{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:white}
+  button.green{background:linear-gradient(180deg,#22c55e,#16a34a);color:white}
+  button.orange{background:linear-gradient(180deg,#fb923c,#f97316);color:white}
+  button.ghost{background:rgba(255,255,255,.78);border:1px solid rgba(15,23,42,.12)}
+
+  .diceBtn{
+    flex:0 0 58px;
+    width:58px;
+    min-height:58px;
+    padding:0;
+    font-size:25px;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+  }
+
+  .buildBtn{flex:0 1 360px;max-width:360px;min-height:58px;border-radius:18px;font-size:17px}
+
+  .buildError{
+    display:none;
+    margin-top:14px;
+    padding:11px 12px;
+    border-radius:14px;
+    background:#fef2f2;
+    border:1px solid rgba(239,68,68,.22);
+    color:#991b1b;
+    font-size:13px;
+    line-height:1.35;
+    font-weight:850;
+    text-align:center;
+  }
+  .buildError.show{display:block}
+
+  .stage{display:none;position:relative;padding:16px;min-height:660px}
+
+  main.activeMode .stage{
+    display:flex;
+    flex-direction:column;
+    height:calc(100vh - 36px);
+    min-height:650px;
+    overflow:hidden;
+  }
+
+  .stage:fullscreen{
+    background:var(--bg);
+    border-radius:0;
+    width:100vw;
+    height:100vh;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .stageQuickActions{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .quickBtn{
+    min-width:44px;
+    height:44px;
+    padding:0 12px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:15px;
+    line-height:1;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    backdrop-filter:blur(8px);
+  }
+
+  .quickIcon{font-size:22px;width:44px;padding:0}
+  .equationEyeBtn svg{width:23px;height:23px;display:block;opacity:.78}
+  .equationEyeBtn:hover svg{opacity:.95}
+  .equationEyeBtn.is-hidden{opacity:.72;background:#f8fafc}
+
+  .topbar{
+    flex:0 0 auto;
+    padding:3px 190px 6px 40px;
+    min-height:116px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .equationHistory{width:min(980px,100%);max-height:110px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(22px,2.5vw,36px);font-weight:950;line-height:1.18}
+  .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
+  .equationTable .lhs{text-align:right}
+  .equationTable .eq{text-align:center;color:#64748b;padding-left:14px;padding-right:14px}
+  .equationTable .rhs{text-align:left}
+  .equationTable tr.historyStep{color:#64748b;opacity:.82}
+  .equationTable tr.currentStep{color:#0f172a;opacity:1}
+  .equationTable tr.currentStep .eq{color:#3b82f6}
+
+  .relationEditor{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    font-size:clamp(26px,3vw,42px);
+    font-weight:950;
+  }
+
+  .slotBtn{
+    min-width:126px;
+    min-height:58px;
+    padding:8px 16px;
+    border-radius:16px;
+    background:#fff;
+    border:2px solid rgba(59,130,246,.26);
+    color:#1d4ed8;
+    font-size:inherit;
+    font-weight:950;
+    line-height:1;
+    box-shadow:0 8px 20px rgba(59,130,246,.08);
+  }
+  .slotBtn.empty{color:#94a3b8;border-style:dashed;background:#f8fafc}
+  .slotBtn.selected{background:#dbeafe;border-color:#2563eb;box-shadow:0 0 0 5px rgba(59,130,246,.15)}
+  .plusSign,.equalsSign{color:#64748b}
+
+  .instructionZone{
+    flex:0 0 auto;
+    margin:0 auto 8px;
+    width:min(980px,100%);
+    min-height:54px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:#334155;
+    font-size:clamp(18px,2vw,25px);
+    font-weight:850;
+    line-height:1.28;
+  }
+  .instructionZone strong{font-weight:950}
+
+  .sidePalette{
+    display:none;
+    flex:0 0 auto;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:-2px 0 8px;
+  }
+  .sidePalette.show{display:flex}
+  .sideChoice{
+    min-width:86px;
+    min-height:48px;
+    padding:10px 14px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.13);
+    color:#1d4ed8;
+    box-shadow:0 8px 20px rgba(15,23,42,.07);
+    font-size:21px;
+    font-weight:950;
+  }
+  .sideChoice:hover{background:#eff6ff}
+
+  .workArea{
+    flex:1 1 auto;
+    min-height:260px;
+    display:grid;
+    grid-template-columns:minmax(320px,.92fr) minmax(430px,1.08fr);
+    gap:16px;
+    overflow:hidden;
+  }
+
+  .workArea.onlyVisual{grid-template-columns:minmax(320px,760px);justify-content:center}
+  .workArea.onlyBars{grid-template-columns:minmax(430px,900px);justify-content:center}
+
+  .card{
+    min-height:0;
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.38));
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .visualCard{position:relative;overflow:hidden}
+  svg.triangleSvg{width:min(100%,610px);height:100%;min-height:360px;overflow:visible}
+  .squareShape{stroke:rgba(15,23,42,.22);stroke-width:2.5;stroke-linejoin:round}
+  .squareHyp{fill:rgba(34,197,94,.19)}
+  .squareLeg1{fill:rgba(59,130,246,.17)}
+  .squareLeg2{fill:rgba(249,115,22,.17)}
+  .triangleShape{fill:rgba(255,255,255,.88);stroke:#1d4ed8;stroke-width:5;stroke-linejoin:round}
+  .rightAngleMark{fill:none;stroke:#ef4444;stroke-width:4;stroke-linejoin:round}
+  .sideText,.squareText{
+    font-weight:950;
+    fill:#0f172a;
+    paint-order:stroke;
+    stroke:#fff;
+    stroke-width:7px;
+    stroke-linejoin:round;
+  }
+  .sideText{font-size:19px}
+  .squareText{font-size:25px}
+  .vertexText{
+    font-size:26px;
+    font-weight:950;
+    fill:#1d4ed8;
+    paint-order:stroke;
+    stroke:#fff;
+    stroke-width:7px;
+    stroke-linejoin:round;
+  }
+  .sideHit{
+    stroke:rgba(59,130,246,0);
+    stroke-width:34;
+    fill:none;
+    cursor:pointer;
+    pointer-events:stroke;
+  }
+  .sideHit:hover{stroke:rgba(59,130,246,.16)}
+  .sideHit.activePick{stroke:rgba(59,130,246,0)}
+
+  .barBoard{width:100%;min-height:100%;justify-content:center;gap:14px}
+  .barPair{width:100%;display:flex;flex-direction:column;gap:0;align-items:center}
+
+  .barLine{
+    --table-border:rgba(15,23,42,.36);
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:var(--cols,1fr);
+    align-items:stretch;
+    justify-content:start;
+    width:var(--lineWidth,96%);
+    max-width:980px;
+    min-height:98px;
+    background:#fff;
+    box-sizing:border-box;
+  }
+
+  .barLine.relationDraft{
+    width:min(640px,96%);
+    --table-border:rgba(59,130,246,.28);
+  }
+
+  .barLine.top{
+    border-top:2px solid var(--table-border);
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+  .barLine.bottom{
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+
+  .barPiece{
+    min-width:0;
+    width:100%;
+    min-height:98px;
+    border-right:2px solid var(--table-border);
+    display:grid;
+    place-items:center;
+    position:relative;
+    overflow:hidden;
+    user-select:none;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,#fff,#f8fafc);
+    cursor:default;
+  }
+  .barPiece:last-child{border-right:0}
+  .barPiece.unknown{background:linear-gradient(180deg,var(--blue-soft),#eff6ff)}
+  .barPiece.known{background:linear-gradient(180deg,#fff,#f8fafc)}
+  .barPiece.result{background:linear-gradient(180deg,var(--green-soft),#f0fdf4)}
+  .barPiece.decomposed{background:linear-gradient(180deg,#fff7ed,#ffffff)}
+  .barPiece.toCompute{
+    cursor:pointer;
+    background:
+      repeating-linear-gradient(135deg,rgba(59,130,246,.12) 0 8px,rgba(255,255,255,.62) 8px 15px),
+      linear-gradient(180deg,#fff,#eff6ff);
+    box-shadow:inset 0 0 0 3px rgba(59,130,246,.28);
+  }
+  .barPiece.removed{
+    opacity:.34;
+    background:
+      repeating-linear-gradient(135deg,rgba(249,115,22,.22) 0 8px,rgba(255,255,255,.52) 8px 15px),
+      linear-gradient(180deg,var(--orange-soft),#fff7ed);
+  }
+
+  .barSlot{
+    cursor:pointer;
+    background:
+      repeating-linear-gradient(135deg,rgba(59,130,246,.08) 0 8px,rgba(255,255,255,.78) 8px 15px),
+      linear-gradient(180deg,#ffffff,#f8fafc);
+    border-radius:0;
+  }
+  .barSlot.empty .pieceMain{color:#94a3b8}
+  .barSlot:hover{filter:brightness(.985)}
+  .barSlot.selected{box-shadow:inset 0 0 0 4px rgba(37,99,235,.40)}
+
+  .pieceContent{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;text-align:center}
+  .pieceMain{font-size:clamp(26px,3.2vw,42px);font-weight:950;letter-spacing:-.035em;line-height:1}
+
+  .solution{
+    flex:0 0 58px;
+    min-height:58px;
+    margin:5px 0 1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:clamp(30px,3.8vw,52px);
+    font-weight:950;
+    letter-spacing:-.05em;
+    color:#166534;
+    line-height:1;
+  }
+
+  .toolBar{flex:0 0 auto;margin:4px 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .toolBarRow{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+  .toolBtn{
+    min-height:56px;
+    padding:14px 19px;
+    border-radius:19px;
+    font-size:16px;
+    line-height:1.12;
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+  }
+  .toolBtn.active{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:rgba(37,99,235,.30);box-shadow:0 10px 24px rgba(59,130,246,.18)}
+  .toolBtn.done{background:#ecfdf5;border-color:rgba(22,163,74,.26);color:#166534}
+  .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .restartToolBtn{background:#eef2ff;border-color:rgba(99,102,241,.22);color:#3730a3}
+
+  .actionZone{flex:0 0 auto;min-height:34px;margin-top:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .note{color:#64748b;font-size:13px;font-weight:750;text-align:center;line-height:1.28}
+
+  .hideEquations .topbar{display:none}
+  .hideBars .barBoard{display:none}
+  .hideVisual .visualCard{display:none}
+
+  dialog{
+    width:min(640px, calc(100vw - 28px));
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:24px;
+    padding:0;
+    box-shadow:0 30px 100px rgba(15,23,42,.24);
+  }
+  dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
+  .dialogInner{padding:34px 38px 32px;text-align:center}
+  .dialogTitle{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:0 0 12px;text-align:center}
+  .dialogText{color:#475569;font-size:20px;font-weight:750;line-height:1.42;margin-bottom:18px;text-align:center}
+  #calcInput{text-align:center;font-size:32px;font-weight:950;min-height:68px;border-radius:18px;padding:18px 16px}
+  .dialogError{display:none;margin-top:12px;padding:10px 12px;border-radius:14px;background:#fef2f2;border:1px solid rgba(239,68,68,.22);color:#991b1b;font-weight:850;line-height:1.35}
+  .dialogError.show{display:block}
+  dialog .btnrow{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+  dialog button{min-height:52px;padding:14px 18px;border-radius:18px;font-size:16px;line-height:1.15}
+
+  @media (max-width:980px){
+    main.activeMode .stage{height:auto;min-height:650px;overflow:visible}
+    .workArea,.workArea.onlyVisual,.workArea.onlyBars{grid-template-columns:1fr;overflow:visible}
+    .topbar{padding-right:150px;padding-left:20px}
+    .lengthGrid,.settingsGrid,.toggleGrid{grid-template-columns:1fr}
+  }
+
+
+
+  /* PATCH V7 — dé rapide, couleurs coordonnées tableau/moulin, décomposition plus sobre. */
+  #btnStageRandom{
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+    font-size:22px;
+  }
+  .barPiece.barHyp{
+    background:linear-gradient(180deg,rgba(34,197,94,.20),#f0fdf4);
+  }
+  .barPiece.barLeg1{
+    background:linear-gradient(180deg,rgba(59,130,246,.18),#eff6ff);
+  }
+  .barPiece.barLeg2{
+    background:linear-gradient(180deg,rgba(249,115,22,.18),#fff7ed);
+  }
+  .barPiece.focusUnknown{
+    background:linear-gradient(180deg,var(--blue-soft),#eff6ff);
+    box-shadow:inset 0 0 0 3px rgba(59,130,246,.22);
+  }
+  .barPiece.neutralAfterDecompose{
+    background:linear-gradient(180deg,#fff,#f8fafc);
+  }
+  .barSlot.barHyp{
+    background:linear-gradient(180deg,rgba(34,197,94,.16),#f0fdf4);
+  }
+  .barSlot.barLeg1{
+    background:linear-gradient(180deg,rgba(59,130,246,.15),#eff6ff);
+  }
+  .barSlot.barLeg2{
+    background:linear-gradient(180deg,rgba(249,115,22,.15),#fff7ed);
+  }
+  .barPiece.toCompute.barHyp,
+  .barPiece.toCompute.barLeg1,
+  .barPiece.toCompute.barLeg2{
+    box-shadow:inset 0 0 0 3px rgba(59,130,246,.20);
+  }
+  .barPiece.removed{
+    opacity:.46;
+  }
+
+
+  /* PATCH V9 — relation/tableau synchronisés par clic sur les aires du moulin. */
+  .slotBtn.barHyp{
+    background:linear-gradient(180deg,rgba(34,197,94,.20),#f0fdf4);
+    border-color:rgba(22,163,74,.42);
+    color:#166534;
+  }
+  .slotBtn.barLeg1{
+    background:linear-gradient(180deg,rgba(59,130,246,.18),#eff6ff);
+    border-color:rgba(59,130,246,.42);
+    color:#1d4ed8;
+  }
+  .slotBtn.barLeg2{
+    background:linear-gradient(180deg,rgba(249,115,22,.18),#fff7ed);
+    border-color:rgba(249,115,22,.42);
+    color:#9a3412;
+  }
+  .slotBtn.empty{
+    background:#f8fafc;
+    border-color:rgba(148,163,184,.55);
+  }
+  .squarePick{
+    cursor:pointer;
+    pointer-events:all;
+  }
+  .squarePick:hover{
+    stroke:rgba(37,99,235,.70);
+    stroke-width:4;
+  }
+  .squareText{
+    pointer-events:none;
+  }
+  .sidePalette.show{
+    display:none;
+  }
+
+  @media (max-width:700px){
+    main{width:min(1000px, calc(100vw - 20px))}
+    .panel{padding:18px}
+    .creatorBlock{padding:18px}
+    .creatorActions{flex-direction:column}
+    .diceBtn,.buildBtn{width:100%;max-width:none;flex:1 1 auto}
+    .stage{padding:12px}
+    .stageQuickActions{position:static;justify-content:flex-end;margin-bottom:8px}
+    .topbar{padding:0;min-height:104px}
+    .equationTable{font-size:24px}
+    .slotBtn{min-width:104px;min-height:52px}
+    .toolBtn{flex:1 1 220px}
+    .dialogInner{padding:28px 22px 26px}
+    .dialogTitle{font-size:30px}
+    .dialogText{font-size:18px}
+  }
+
+  @media (max-height:760px){
+    main.activeMode .stage{min-height:570px}
+    .barLine,.barPiece{min-height:76px}
+    .solution{flex-basis:48px;min-height:48px;font-size:clamp(28px,3.6vw,48px)}
+    .toolBtn{min-height:50px;padding:12px 16px;font-size:15px}
+    .instructionZone{min-height:40px;font-size:clamp(17px,1.7vw,23px)}
+    .topbar{min-height:92px}
+    .equationHistory{max-height:88px}
+    svg.triangleSvg{min-height:300px}
+  }
+
+  /* PATCH V4 — menu plus compact, centré et sobre. */
+  main{
+    grid-template-columns:minmax(320px, 640px);
+    width:min(680px, calc(100vw - 28px));
+    margin:14px auto 26px;
+  }
+  main.activeMode{
+    grid-template-columns:minmax(0,1fr);
+    width:min(1240px, calc(100vw - 28px));
+  }
+  .panel{padding:18px 20px 20px}
+  .appTitle{font-size:clamp(34px,4.6vw,46px);margin:0 0 14px}
+  .creatorBlock{padding:16px 18px 18px;max-width:610px;margin-bottom:0}
+  .creatorTitle{font-size:20px;margin-bottom:12px}
+  label{margin:9px 0 5px;font-size:11px}
+  input,select{text-align:center;text-align-last:center;min-height:42px;padding:9px 11px;font-size:15px;border-radius:13px}
+  .triangleName{max-width:220px;font-size:22px;display:block;margin-left:auto;margin-right:auto}
+  .settingsGrid{gap:10px}
+  .lengthGrid{gap:9px}
+  .lengthBox{padding:8px;border-radius:14px}
+  .lengthBox input{font-size:20px;min-height:48px}
+  .displayBox{margin-top:12px;padding:11px;border-radius:16px}
+  .displayTitle{font-size:12px;margin-bottom:8px}
+  .toggleGrid{gap:8px}
+  .toggleItem{min-height:38px;padding:7px 8px;font-size:13px;border-radius:12px;text-transform:none;letter-spacing:0;margin:0}
+  .creatorActions{margin-top:13px;gap:10px}
+  .diceBtn{flex:0 0 48px;width:48px;min-height:48px}
+  .buildBtn{min-height:48px}
+  .sideChoice.usedChoice{display:none}
+  .solution{color:#dc2626}
+  .equationTable tr.currentStep.finalConclusion td{color:#dc2626}
+  .autoFillBtn{background:#fef3c7;border-color:rgba(245,158,11,.35);color:#92400e}
+
+
+  /* PATCH V9 — relation/tableau synchronisés par clic sur les aires du moulin. */
+  .slotBtn.barHyp{
+    background:linear-gradient(180deg,rgba(34,197,94,.20),#f0fdf4);
+    border-color:rgba(22,163,74,.42);
+    color:#166534;
+  }
+  .slotBtn.barLeg1{
+    background:linear-gradient(180deg,rgba(59,130,246,.18),#eff6ff);
+    border-color:rgba(59,130,246,.42);
+    color:#1d4ed8;
+  }
+  .slotBtn.barLeg2{
+    background:linear-gradient(180deg,rgba(249,115,22,.18),#fff7ed);
+    border-color:rgba(249,115,22,.42);
+    color:#9a3412;
+  }
+  .slotBtn.empty{
+    background:#f8fafc;
+    border-color:rgba(148,163,184,.55);
+  }
+  .squarePick{
+    cursor:pointer;
+    pointer-events:all;
+  }
+  .squarePick:hover{
+    stroke:rgba(37,99,235,.70);
+    stroke-width:4;
+  }
+  .squareText{
+    pointer-events:none;
+  }
+  .sidePalette.show{
+    display:none;
+  }
+
+  @media (max-width:700px){
+    main{width:min(1000px, calc(100vw - 20px))}
+    .panel{padding:16px}
+    .creatorBlock{padding:15px}
+  }
+
+
+  /* PATCH V6 — alignement menu, lisibilité des petites cases, suppression façon ÉquaBarre. */
+  .toggleGrid{
+    grid-template-columns:1fr 1fr;
+    align-items:stretch;
+  }
+  .toggleItem{
+    justify-content:flex-start;
+    text-align:left;
+    gap:10px;
+    padding-left:12px;
+    padding-right:12px;
+  }
+  .toggleItem input{
+    flex:0 0 18px;
+    margin:0;
+  }
+  .barLine{
+    overflow:visible;
+  }
+  .barPiece{
+    min-width:92px;
+  }
+  .barLine.relationDraft .barPiece{
+    min-width:120px;
+  }
+  .barPiece .pieceMain{
+    overflow:visible;
+    white-space:nowrap;
+  }
+  .barPiece.removed{
+    opacity:.42;
+    color:#64748b;
+    background:
+      repeating-linear-gradient(135deg,rgba(15,23,42,.26) 0 7px,rgba(255,255,255,.18) 7px 14px),
+      #e5e7eb;
+  }
+  .barPiece.solved .pieceMain{
+    color:#dc2626;
+  }
+  .finalSideText{
+    fill:#dc2626;
+    font-weight:950;
+  }
+  .actionZone{
+    min-height:42px;
+  }
+  .note{
+    min-height:20px;
+  }
+  .note.errorNote{
+    color:#b91c1c;
+    font-weight:900;
+  }
+
+  @media (max-width:700px){
+    .toggleGrid{grid-template-columns:1fr}
+  }
+
+
+  /* PATCH V11 — couleurs variables et historique plus confortable hors plein écran. */
+  .stage:not(:fullscreen) .topbar{
+    padding-right:250px;
+    padding-left:24px;
+  }
+  .stage:not(:fullscreen) .equationHistory{
+    width:min(1120px, calc(100% - 250px));
+  }
+  .stage:not(:fullscreen) .relationEditor{
+    gap:12px;
+  }
+  .stage:not(:fullscreen) .slotBtn{
+    min-width:148px;
+  }
+  .stage:fullscreen .slotBtn{
+    min-width:148px;
+  }
+
+  .slotBtn.barColor1,
+  .barPiece.barColor1,
+  .coloredTerm.barColor1{
+    background:linear-gradient(180deg,rgba(34,197,94,.19),#f0fdf4);
+    border-color:rgba(22,163,74,.42);
+    color:#166534;
+  }
+  .squareShape.barColor1{fill:rgba(34,197,94,.19)}
+
+  .slotBtn.barColor2,
+  .barPiece.barColor2,
+  .coloredTerm.barColor2{
+    background:linear-gradient(180deg,rgba(59,130,246,.17),#eff6ff);
+    border-color:rgba(59,130,246,.42);
+    color:#1d4ed8;
+  }
+  .squareShape.barColor2{fill:rgba(59,130,246,.17)}
+
+  .slotBtn.barColor3,
+  .barPiece.barColor3,
+  .coloredTerm.barColor3{
+    background:linear-gradient(180deg,rgba(249,115,22,.17),#fff7ed);
+    border-color:rgba(249,115,22,.42);
+    color:#9a3412;
+  }
+  .squareShape.barColor3{fill:rgba(249,115,22,.17)}
+
+  .slotBtn.barColor4,
+  .barPiece.barColor4,
+  .coloredTerm.barColor4{
+    background:linear-gradient(180deg,rgba(168,85,247,.15),#f5f3ff);
+    border-color:rgba(168,85,247,.40);
+    color:#6d28d9;
+  }
+  .squareShape.barColor4{fill:rgba(168,85,247,.16)}
+
+  .slotBtn.barColor5,
+  .barPiece.barColor5,
+  .coloredTerm.barColor5{
+    background:linear-gradient(180deg,rgba(236,72,153,.13),#fdf2f8);
+    border-color:rgba(236,72,153,.36);
+    color:#be185d;
+  }
+  .squareShape.barColor5{fill:rgba(236,72,153,.14)}
+
+  .coloredTerm{
+    display:inline-block;
+    padding:.05em .22em .08em;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:.36em;
+    line-height:1.02;
+    box-shadow:0 4px 12px rgba(15,23,42,.05);
+  }
+
+  .neutralAfterDecompose,
+  .barPiece.neutralAfterDecompose{
+    background:linear-gradient(180deg,#fff,#f8fafc);
+    border-color:rgba(15,23,42,.18);
+    color:#334155;
+  }
+  .barPiece.focusUnknown{
+    background:linear-gradient(180deg,#dbeafe,#eff6ff);
+    border-color:rgba(59,130,246,.32);
+    color:#1d4ed8;
+  }
+
+  @media (max-width:900px){
+    .stage:not(:fullscreen) .topbar{
+      padding-right:170px;
+      padding-left:12px;
+    }
+    .stage:not(:fullscreen) .equationHistory{
+      width:min(100%, calc(100% - 168px));
+    }
+    .stage:not(:fullscreen) .slotBtn{
+      min-width:118px;
+    }
+  }
+
+</style>
+</head>
+<body>
+<main id="appMain">
+  <section class="panel" id="panel">
+    <h1 class="appTitle">PythaBarre</h1>
+    <div class="creatorBlock" aria-label="Créer une situation de Pythagore">
+      <div class="creatorTitle">Créer une situation</div>
+
+      <label for="triangleNameInput">Nom du triangle</label>
+      <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+
+      <div class="settingsGrid">
+        <div>
+          <label for="rightAngleInput">Triangle rectangle en</label>
+          <select id="rightAngleInput">
+            <option value="A" selected>A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </div>
+        <div>
+          <label for="relationModeInput">Relation de Pythagore</label>
+          <select id="relationModeInput">
+            <option value="manual" selected>À compléter par clic</option>
+            <option value="auto">Automatique</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lengthGrid" aria-label="Longueurs du triangle">
+        <div class="lengthBox"><label id="labelSide01" for="side01Input">AB</label><input id="side01Input" type="text" autocomplete="off" value="3" /></div>
+        <div class="lengthBox"><label id="labelSide02" for="side02Input">AC</label><input id="side02Input" type="text" autocomplete="off" value="4" /></div>
+        <div class="lengthBox"><label id="labelSide12" for="side12Input">BC</label><input id="side12Input" type="text" autocomplete="off" value="?" /></div>
+      </div>
+
+
+      <div class="creatorActions">
+        <button class="ghost diceBtn" id="btnRandom" type="button" title="Générer un exemple" aria-label="Générer un exemple">🎲</button>
+        <button class="primary buildBtn" id="btnBuild" type="button">Construire</button>
+      </div>
+      <div class="buildError" id="buildError"></div>
+    </div>
+  </section>
+
+  <section class="stage" id="stage">
+    <div class="stageQuickActions" aria-label="Actions rapides">
+      <button class="ghost quickBtn" id="btnMenu" type="button">Menu</button>
+      <button class="ghost quickBtn quickIcon" id="btnStageRandom" type="button" title="Nouvel exemple" aria-label="Nouvel exemple">🎲</button>
+      <button class="ghost quickBtn quickIcon equationEyeBtn" id="btnToggleEq" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
+      <button class="ghost quickBtn quickIcon" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
+
+    <div class="topbar">
+      <div class="equationHistory" id="equationHistory"></div>
+    </div>
+
+    <div class="instructionZone" id="instructionZone"></div>
+    <div class="sidePalette" id="sidePalette"></div>
+
+    <div class="workArea" id="workArea">
+      <div class="card visualCard" id="visualCard">
+        <svg class="triangleSvg" id="triangleSvg" viewBox="0 -70 660 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Triangle et moulin de Pythagore"></svg>
+      </div>
+
+      <div class="card barBoard" id="barBoard">
+        <div class="barPair" id="barPair"></div>
+      </div>
+    </div>
+
+    <div class="solution" id="solution"></div>
+
+    <div class="toolBar" aria-label="Étapes">
+      <div class="toolBarRow" id="mainActions"></div>
+      <div class="toolBarRow">
+        <button class="toolBtn undoToolBtn" id="btnUndo" type="button">↶ Annuler</button>
+        <button class="toolBtn restartToolBtn" id="btnRestart" type="button">↺ Recommencer</button>
+        <button class="toolBtn" id="btnReveal" type="button">Tout dérouler</button>
+      </div>
+    </div>
+
+    <div class="actionZone" id="actionZone"></div>
+  </section>
+</main>
+
+<dialog id="calcDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle" id="calcDialogTitle">Calculer</h2>
+    <div class="dialogText" id="calcDialogText"></div>
+    <input id="calcInput" type="text" autocomplete="off" />
+    <div class="dialogError" id="calcError"></div>
+    <div class="btnrow">
+      <button class="ghost autoFillBtn" id="btnCalcAuto" type="button">Réponse</button>
+      <button class="primary" id="btnCalcApply" type="button">Valider</button>
+      <button class="ghost" id="btnCalcCancel" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const appMain = document.getElementById("appMain");
+  const stage = document.getElementById("stage");
+  const triangleNameInput = document.getElementById("triangleNameInput");
+  const rightAngleInput = document.getElementById("rightAngleInput");
+  const relationModeInput = document.getElementById("relationModeInput");
+  const side01Input = document.getElementById("side01Input");
+  const side02Input = document.getElementById("side02Input");
+  const side12Input = document.getElementById("side12Input");
+  const labelSide01 = document.getElementById("labelSide01");
+  const labelSide02 = document.getElementById("labelSide02");
+  const labelSide12 = document.getElementById("labelSide12");
+  const btnBuild = document.getElementById("btnBuild");
+  const btnRandom = document.getElementById("btnRandom");
+  const buildError = document.getElementById("buildError");
+  const btnMenu = document.getElementById("btnMenu");
+  const btnToggleEq = document.getElementById("btnToggleEq");
+  const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+  const equationHistory = document.getElementById("equationHistory");
+  const instructionZone = document.getElementById("instructionZone");
+  const sidePalette = document.getElementById("sidePalette");
+  const workArea = document.getElementById("workArea");
+  const triangleSvg = document.getElementById("triangleSvg");
+  const barPair = document.getElementById("barPair");
+  const solution = document.getElementById("solution");
+  const mainActions = document.getElementById("mainActions");
+  const actionZone = document.getElementById("actionZone");
+  const btnUndo = document.getElementById("btnUndo");
+  const btnRestart = document.getElementById("btnRestart");
+  const btnReveal = document.getElementById("btnReveal");
+
+  const calcDialog = document.getElementById("calcDialog");
+  const calcDialogTitle = document.getElementById("calcDialogTitle");
+  const calcDialogText = document.getElementById("calcDialogText");
+  const calcInput = document.getElementById("calcInput");
+  const calcError = document.getElementById("calcError");
+  const btnCalcApply = document.getElementById("btnCalcApply");
+  const btnCalcAuto = document.getElementById("btnCalcAuto");
+  const btnCalcCancel = document.getElementById("btnCalcCancel");
+
+  const labelEls = [labelSide01, labelSide02, labelSide12];
+  const inputEls = [side01Input, side02Input, side12Input];
+
+  let model = null;
+  let work = null;
+  let history = [];
+  let pendingDialog = null;
+  let selectedSlot = null;
+  let message = "";
+  let nextRotation = 0;
+  let display = {equation:true, bars:true, triangle:true, moulin:true};
+
+  const colorClassPool = ["barColor1", "barColor2", "barColor3", "barColor4", "barColor5"];
+
+  function makeColorMap(){
+    const shuffled = [...colorClassPool].sort(() => Math.random() - 0.5);
+    return {hyp:shuffled[0], leg1:shuffled[1], leg2:shuffled[2]};
+  }
+
+  const examples = [
+    {name:"ABC", right:"A", values:{AB:"3", AC:"4", BC:"?"}},
+    {name:"ABC", right:"A", values:{AB:"?", AC:"4", BC:"5"}},
+    {name:"ABC", right:"A", values:{AB:"3", AC:"?", BC:"5"}},
+    {name:"DEF", right:"D", values:{DE:"5", DF:"12", EF:"?"}},
+    {name:"DEF", right:"D", values:{DE:"?", DF:"12", EF:"13"}},
+    {name:"RST", right:"S", values:{RS:"6", ST:"8", RT:"?"}},
+    {name:"RST", right:"S", values:{RS:"?", ST:"8", RT:"10"}},
+    {name:"MNO", right:"N", values:{MN:"8", NO:"15", MO:"?"}},
+    {name:"MNO", right:"N", values:{MN:"?", NO:"15", MO:"17"}},
+    {name:"EFG", right:"F", values:{EF:"7", FG:"24", EG:"?"}},
+    {name:"EFG", right:"F", values:{EF:"?", FG:"24", EG:"25"}},
+    {name:"HIK", right:"I", values:{HI:"9", IK:"12", HK:"?"}},
+    {name:"HIK", right:"I", values:{HI:"9", IK:"?", HK:"15"}},
+    {name:"ABC", right:"B", values:{AB:"20", BC:"21", AC:"?"}},
+    {name:"ABC", right:"B", values:{AB:"?", BC:"21", AC:"29"}},
+    {name:"UVW", right:"V", values:{UV:"10", VW:"24", UW:"?"}},
+    {name:"UVW", right:"V", values:{UV:"10", VW:"?", UW:"26"}},
+    {name:"XYZ", right:"X", values:{XY:"12", XZ:"35", YZ:"?"}},
+    {name:"XYZ", right:"X", values:{XY:"?", XZ:"35", YZ:"37"}}
+  ];
+
+  function normalizeName(raw){
+    const clean = String(raw || "ABC").toUpperCase().replace(/[^A-ZÀ-ÖØ-Ý]/g, "");
+    const padded = (clean + "ABC").slice(0,3);
+    const arr = padded.split("");
+    if(new Set(arr).size !== 3) return ["A","B","C"];
+    return arr;
+  }
+
+  function updateSideLabels(){
+    const letters = normalizeName(triangleNameInput.value);
+    const names = sidesFromLetters(letters);
+    names.forEach((name,i) => labelEls[i].textContent = name);
+    [...rightAngleInput.options].forEach((opt,i) => { opt.textContent = letters[i]; opt.value = letters[i]; });
+    if(!letters.includes(rightAngleInput.value)) rightAngleInput.value = letters[0];
+  }
+
+  function parseLength(text){
+    const raw = String(text ?? "").trim().replace(",", ".");
+    if(raw === "" || raw === "?" || raw.toLowerCase() === "x") return {unknown:true, value:null};
+    const n = Number(raw);
+    if(!Number.isFinite(n) || n <= 0) return {error:true, raw};
+    return {unknown:false, value:n};
+  }
+
+  function parseAnswer(text){
+    const n = Number(String(text ?? "").trim().replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function parseDecomposeAnswer(text, h, k, expected){
+    let raw = String(text ?? "").trim().replace(/,/g, ".").replace(/×/g, "*").replace(/−/g, "-");
+    if(!raw) return null;
+    const direct = parseAnswer(raw);
+    if(direct !== null) return direct;
+    raw = raw.replace(/\s+/g, "");
+    const parts = raw.split("=");
+    const expr = parts.length === 2 ? parts[1] : parts[0];
+    const nums = expr.split("+").map(v => Number(v)).filter(Number.isFinite);
+    if(nums.length === 2){
+      const hasKnown = nums.some(n => approxEqual(n, k));
+      const comp = nums.find(n => !approxEqual(n, k));
+      if(hasKnown && Number.isFinite(comp)) return comp;
+      if(approxEqual(nums[0] + nums[1], h)) return nums.find(n => approxEqual(n, expected)) ?? null;
+    }
+    return null;
+  }
+
+  function approxEqual(a,b){ return Math.abs(a-b) < 1e-9; }
+  function square(n){ return Math.round(n*n*1000000000)/1000000000; }
+  function fmt(n){
+    if(!Number.isFinite(n)) return "";
+    if(Math.abs(n - Math.round(n)) < 1e-10) return String(Math.round(n));
+    return String(Math.round(n * 1000) / 1000).replace(".", ",");
+  }
+  function lengthAnswer(squareValue){
+    const r = Math.sqrt(squareValue);
+    if(Math.abs(r - Math.round(r)) < 1e-10) return fmt(r);
+    return `${fmt(r)} environ`;
+  }
+
+  function reverseSide(s){ return s.split("").reverse().join(""); }
+  function normalizeSideName(name){ return name.split("").sort().join(""); }
+  function sameSide(a,b){ return normalizeSideName(a) === normalizeSideName(b); }
+  function sidesFromLetters(letters){ return [letters[0]+letters[1], letters[0]+letters[2], letters[1]+letters[2]]; }
+  function hypotenuseForRightAngle(letters,right){ return letters.filter(l => l !== right).join(""); }
+  function otherLegs(letters,right){ return letters.filter(l => l !== right).map(l => right + l); }
+  function sideInInputOrder(side, sideNames){ return sideNames.find(s => sameSide(s, side)) || side; }
+  function plainSq(side){ return `${side}²`; }
+  function valueSq(value){ return `${fmt(value)}²`; }
+  function fmtOrRaw(v){ return typeof v === "number" ? fmt(v) : v; }
+
+  function sideValue(side){
+    const v = model.values[side] || model.values[reverseSide(side)];
+    return v && !v.unknown ? v.value : null;
+  }
+
+  function showError(message){ buildError.textContent = message; buildError.classList.add("show"); }
+  function hideError(){ buildError.classList.remove("show"); buildError.textContent = ""; }
+
+  function buildModel(){
+    hideError();
+    updateSideLabels();
+    const letters = normalizeName(triangleNameInput.value);
+    const right = rightAngleInput.value || letters[0];
+    const sideNames = sidesFromLetters(letters);
+    const values = {};
+    sideNames.forEach((s,i) => values[s] = parseLength(inputEls[i].value));
+
+    for(const s of sideNames){
+      if(values[s].error){
+        showError(`La longueur ${s} doit être un nombre positif, ou bien ? si elle est inconnue.`);
+        return null;
+      }
+    }
+
+    const unknownSides = sideNames.filter(s => values[s].unknown);
+    if(unknownSides.length !== 1){
+      showError("Il faut exactement une longueur inconnue : écris ? ou laisse une seule case vide.");
+      return null;
+    }
+
+    const hyp = sideInInputOrder(hypotenuseForRightAngle(letters,right), sideNames);
+    const legs = otherLegs(letters,right).map(s => sideInInputOrder(s, sideNames));
+    const unknown = unknownSides[0];
+    const unknownIsHyp = sameSide(unknown,hyp);
+
+    if(unknownIsHyp){
+      const leg1 = {side:legs[0], value:values[legs[0]]?.value ?? values[reverseSide(legs[0])]?.value};
+      const leg2 = {side:legs[1], value:values[legs[1]]?.value ?? values[reverseSide(legs[1])]?.value};
+      if(!Number.isFinite(leg1.value) || !Number.isFinite(leg2.value)){
+        showError("Si on cherche l’hypoténuse, les deux côtés de l’angle droit doivent être connus.");
+        return null;
+      }
+      return {letters,right,sideNames,values,hyp,legs,unknown,unknownIsHyp,leg1,leg2, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
+    }
+
+    const unknownLeg = legs.find(l => sameSide(l,unknown));
+    const knownLegName = legs.find(l => !sameSide(l,unknown));
+    const hypValue = values[hyp]?.value ?? values[reverseSide(hyp)]?.value;
+    const knownLegValue = values[knownLegName]?.value ?? values[reverseSide(knownLegName)]?.value;
+    if(!unknownLeg || !Number.isFinite(hypValue) || !Number.isFinite(knownLegValue)){
+      showError("Si on cherche un côté de l’angle droit, il faut connaître l’hypoténuse et l’autre côté de l’angle droit.");
+      return null;
+    }
+    if(square(hypValue) <= square(knownLegValue)){
+      showError("L’hypoténuse doit être la plus grande longueur. Ici, les données ne sont pas cohérentes pour un triangle rectangle.");
+      return null;
+    }
+    return {letters,right,sideNames,values,hyp,legs,unknown:unknownLeg,unknownIsHyp:false,knownHyp:{side:hyp,value:hypValue},knownLeg:{side:knownLegName,value:knownLegValue}, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
+  }
+
+  function correctSlots(){
+    if(model.unknownIsHyp){
+      return {lhs:model.hyp, rhs1:model.leg1.side, rhs2:model.leg2.side};
+    }
+    return {lhs:model.knownHyp.side, rhs1:model.knownLeg.side, rhs2:model.unknown};
+  }
+
+  function initialWork(){
+    const auto = model.relationMode === "auto";
+    const slots = auto ? correctSlots() : {lhs:null, rhs1:null, rhs2:null};
+    const w = {
+      relationComplete:auto,
+      relationSlots:slots,
+      replaced:false,
+      squares:{},
+      regrouped:false,
+      decomposed:false,
+      removed:false,
+      sqrt:false,
+      concluded:false,
+      result:null
+    };
+    if(model.unknownIsHyp){
+      w.result = square(model.leg1.value) + square(model.leg2.value);
+    }else{
+      w.result = square(model.knownHyp.value) - square(model.knownLeg.value);
+    }
+    return w;
+  }
+
+  function snapshot(){
+    history.push(JSON.stringify({work, selectedSlot, message}));
+    if(history.length > 50) history.shift();
+  }
+  function restore(){
+    if(!history.length) return;
+    const old = JSON.parse(history.pop());
+    work = old.work;
+    selectedSlot = old.selectedSlot;
+    message = old.message || "";
+    render();
+  }
+  function mutate(fn){ snapshot(); fn(); render(); }
+
+  function displaySettingsFromMenu(){
+    // Les éléments essentiels restent toujours affichés : triangle, moulin, équation et tableau.
+    // Seul l'œil peut masquer temporairement l'équation pendant la projection.
+    display = { equation:true, bars:true, triangle:true, moulin:true };
+  }
+
+  function relationRows(){
+    const rows = [];
+    if(!work.relationComplete) return rows;
+    if(model.unknownIsHyp){
+      const l1 = model.leg1, l2 = model.leg2;
+      rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, plainSq(l1.side))} + ${coloredTerm(l2.side, plainSq(l2.side))}`});
+      if(work.replaced) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, valueSq(l1.value))} + ${coloredTerm(l2.side, valueSq(l2.value))}`});
+      const a = work.squares[l1.side] ?? valueSq(l1.value);
+      const b = work.squares[l2.side] ?? valueSq(l2.value);
+      if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, fmtOrRaw(a))} + ${coloredTerm(l2.side, fmtOrRaw(b))}`});
+      if(work.regrouped) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:coloredTerm(model.hyp, fmt(work.result))});
+      if(work.sqrt) rows.push({lhs:model.hyp, rhs:`√${fmt(work.result)}`});
+      if(work.concluded) rows.push({lhs:model.hyp, rhs:lengthAnswer(work.result)});
+    }else{
+      const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
+      const useColor = !work.decomposed;
+      rows.push({lhs:maybeColoredTerm(h.side, plainSq(h.side), useColor), rhs:`${maybeColoredTerm(k.side, plainSq(k.side), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
+      if(work.replaced) rows.push({lhs:maybeColoredTerm(h.side, valueSq(h.value), useColor), rhs:`${maybeColoredTerm(k.side, valueSq(k.value), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
+      const hv = work.squares[h.side] ?? valueSq(h.value);
+      const kv = work.squares[k.side] ?? valueSq(k.value);
+      if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, fmtOrRaw(hv), useColor), rhs:`${maybeColoredTerm(k.side, fmtOrRaw(kv), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
+      if(work.decomposed) rows.push({lhs:`${fmt(kv)} + ${fmt(work.result)}`, rhs:`${fmt(kv)} + ${plainSq(u)}`});
+      if(work.removed) rows.push({lhs:fmt(work.result), rhs:plainSq(u)});
+      if(work.sqrt) rows.push({lhs:u, rhs:`√${fmt(work.result)}`});
+      if(work.concluded) rows.push({lhs:u, rhs:lengthAnswer(work.result)});
+    }
+    return rows;
+  }
+
+  function maybeColoredTerm(side, text, active){
+    return active ? coloredTerm(side, text) : text;
+  }
+
+  function coloredTerm(side, text){
+    const cls = sideColorClass(side);
+    if(!cls) return text;
+    return `<span class="coloredTerm ${cls}">${text}</span>`;
+  }
+
+  function currentInstruction(){
+    if(!work.relationComplete){
+      if(selectedSlot) return "Clique sur l’aire d’un carré du moulin.";
+      return "Complète la relation : clique sur une case, puis sur l’aire d’un carré.";
+    }
+    if(!work.replaced) return "Remplace les longueurs connues par leurs valeurs.";
+    const targets = squareTargets();
+    const missing = targets.filter(t => !work.squares[t.side]);
+    if(missing.length) return "Calcule les carrés connus.";
+    if(model.unknownIsHyp && !work.regrouped) return "Regroupe les deux carrés connus.";
+    if(!model.unknownIsHyp && !work.decomposed) return "Décompose le carré de l’hypoténuse.";
+    if(!model.unknownIsHyp && !work.removed) return "Enlève le carré connu dans chaque membre.";
+    if(!work.sqrt) return "Passe du carré à la longueur.";
+    if(!work.concluded) return "Conclue par la longueur cherchée.";
+    return "";
+  }
+
+  function render(){
+    if(!model || !work) return;
+    stage.classList.toggle("hideEquations", !display.equation);
+    stage.classList.remove("hideBars", "hideVisual");
+    workArea.classList.remove("onlyVisual", "onlyBars");
+    syncEyeButton();
+    renderEquations();
+    instructionZone.innerHTML = currentInstruction();
+    renderSidePalette();
+    renderTriangle();
+    renderBars();
+    renderActions();
+    solution.textContent = work.concluded ? finalSolutionText() : "";
+    actionZone.innerHTML = message ? `<div class="note${message.includes("correcte") ? " errorNote" : ""}">${message}</div>` : "";
+    setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
+  }
+
+  function renderEquations(){
+    if(!work.relationComplete){
+      equationHistory.innerHTML = relationEditorHtml();
+      bindRelationSlotButtons(equationHistory);
+      return;
+    }
+    const rows = relationRows();
+    let html = `<table class="equationTable" aria-label="Historique d'équations"><tbody>`;
+    rows.forEach((row,i) => {
+      const classes = [i === rows.length - 1 ? "currentStep" : "historyStep"];
+      if(work.concluded && i === rows.length - 1) classes.push("finalConclusion");
+      html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    equationHistory.innerHTML = html;
+  }
+
+  function relationEditorHtml(){
+    const s = work.relationSlots;
+    return `<div class="relationEditor" aria-label="Relation de Pythagore à compléter">
+      ${slotButton("lhs", s.lhs)}
+      <span class="equalsSign">=</span>
+      ${slotButton("rhs1", s.rhs1)}
+      <span class="plusSign">+</span>
+      ${slotButton("rhs2", s.rhs2)}
+    </div>`;
+  }
+
+  function slotButton(slot, side){
+    const label = side ? plainSq(side) : "…²";
+    const classes = ["slotBtn"];
+    if(!side) classes.push("empty");
+    if(side) classes.push(sideColorClass(side));
+    if(selectedSlot === slot) classes.push("selected");
+    return `<button type="button" class="${classes.join(" ")}" data-slot="${slot}">${label}</button>`;
+  }
+
+  function bindRelationSlotButtons(root){
+    root.querySelectorAll("[data-slot]").forEach(btn => {
+      btn.addEventListener("click", () => selectSlot(btn.dataset.slot));
+    });
+  }
+
+  function selectSlot(slot){
+    selectedSlot = slot;
+    message = "";
+    render();
+  }
+
+  function chooseSideForSlot(side){
+    if(!selectedSlot && !work.relationComplete){
+      const firstEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
+      selectedSlot = firstEmpty || "lhs";
+    }
+    if(!selectedSlot || work.relationComplete) return;
+    mutate(() => {
+      work.relationSlots[selectedSlot] = side;
+      const nextEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
+      selectedSlot = nextEmpty || null;
+      message = "";
+    });
+  }
+
+  function validateRelation(){
+    const s = work.relationSlots;
+    if(!s.lhs || !s.rhs1 || !s.rhs2){
+      message = "Il manque encore un côté.";
+      render();
+      return;
+    }
+    const good = sameSide(s.lhs, model.hyp)
+      && !sameSide(s.rhs1, s.rhs2)
+      && model.legs.some(l => sameSide(l, s.rhs1))
+      && model.legs.some(l => sameSide(l, s.rhs2));
+    if(!good){
+      message = "La relation n’est pas correcte.";
+      render();
+      return;
+    }
+    mutate(() => {
+      work.relationSlots = correctSlots();
+      work.relationComplete = true;
+      selectedSlot = null;
+      message = "";
+    });
+  }
+
+  function clearRelation(){
+    mutate(() => {
+      work.relationSlots = {lhs:null, rhs1:null, rhs2:null};
+      selectedSlot = null;
+      message = "";
+    });
+  }
+
+  function renderSidePalette(){
+    // V9 : on ne propose plus d’étiquettes sous la relation.
+    // L’élève clique directement sur les aires des carrés du moulin.
+    sidePalette.classList.remove("show");
+    sidePalette.innerHTML = "";
+  }
+
+  function renderBars(){
+    if(!display.bars){ barPair.innerHTML = ""; return; }
+    if(!work.relationComplete){
+      const s = work.relationSlots;
+      const top = [{slot:"lhs", side:s.lhs, main:s.lhs ? plainSq(s.lhs) : "…²"}];
+      const bottom = [
+        {slot:"rhs1", side:s.rhs1, main:s.rhs1 ? plainSq(s.rhs1) : "…²"},
+        {slot:"rhs2", side:s.rhs2, main:s.rhs2 ? plainSq(s.rhs2) : "…²"}
+      ];
+      barPair.innerHTML = renderBarLine(top,"top", true) + renderBarLine(bottom,"bottom", true);
+      bindRelationSlotButtons(barPair);
+      return;
+    }
+    const bar = model.unknownIsHyp ? hypBar() : legBar();
+    barPair.innerHTML = renderBarLine(bar.top,"top", false) + renderBarLine(bar.bottom,"bottom", false);
+    [...barPair.querySelectorAll("[data-compute]")].forEach(el => {
+      el.addEventListener("click", () => askSquare(el.dataset.compute));
+    });
+  }
+
+  function renderBarLine(pieces, pos, relationSlots=false){
+    const minCell = relationSlots ? 120 : 92;
+    const cols = pieces.map(p => `minmax(${minCell}px, ${Math.max(0.7, Number(p.weight) || 1)}fr)`).join(" ");
+    const draftClass = relationSlots ? " relationDraft" : "";
+    let html = `<div class="barLine ${pos}${draftClass}" style="--cols:${cols}">`;
+    pieces.forEach(p => {
+      if(relationSlots){
+        const classes = ["barPiece","barSlot"];
+        if(!p.side) classes.push("empty");
+        if(p.side) classes.push(sideColorClass(p.side));
+        if(selectedSlot === p.slot) classes.push("selected");
+        html += `<button type="button" class="${classes.join(" ")}" data-slot="${p.slot}"><span class="pieceMain">${p.main}</span></button>`;
+      }else{
+        const classes = ["barPiece", p.kind || "known"];
+        if(p.colorClass) classes.push(p.colorClass);
+        if(p.compute) classes.push("toCompute");
+        if(p.solved) classes.push("solved");
+        html += `<div class="${classes.join(" ")}" ${p.compute ? `data-compute="${p.compute}"` : ""}><div class="pieceContent"><div class="pieceMain">${p.main}</div></div></div>`;
+      }
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function piece(kind, main, extra={}){ return {kind, main, weight:1, ...extra}; }
+
+  function sideColorClass(side){
+    if(!model || !side) return "";
+    const map = model.colorMap || {hyp:"barColor1", leg1:"barColor2", leg2:"barColor3"};
+    if(sameSide(side, model.hyp)) return map.hyp || "barColor1";
+    if(sameSide(side, model.legs[0])) return map.leg1 || "barColor2";
+    if(sameSide(side, model.legs[1])) return map.leg2 || "barColor3";
+    return "";
+  }
+
+  function hypBar(){
+    const l1 = model.leg1, l2 = model.leg2;
+    const w1 = square(l1.value), w2 = square(l2.value);
+    const total = w1 + w2;
+    if(work.regrouped){
+      return {top:[piece("unknown", plainSq(model.hyp), {weight:total, colorClass:sideColorClass(model.hyp)})], bottom:[piece("result", fmt(work.result), {weight:total, colorClass:sideColorClass(model.hyp)})]};
+    }
+    return {
+      top:[piece("unknown", plainSq(model.hyp), {weight:total, colorClass:sideColorClass(model.hyp)})],
+      bottom:[squarePieceForKnown(l1.side, l1.value, w1), squarePieceForKnown(l2.side, l2.value, w2)]
+    };
+  }
+
+  function legBar(){
+    const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
+    const hSq = square(h.value);
+    const kSq = square(k.value);
+    const rest = work.result ?? (hSq - kSq);
+    if(work.removed){
+      return {
+        top:[piece("removed", fmt(kSq), {weight:kSq}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})],
+        bottom:[piece("removed", fmt(kSq), {weight:kSq}), piece("unknown", plainSq(u), {weight:rest, solved:work.concluded, colorClass:"focusUnknown"})]
+      };
+    }
+    if(work.decomposed){
+      return {
+        top:[piece("decomposed", fmt(kSq), {weight:kSq, colorClass:"neutralAfterDecompose"}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})],
+        bottom:[squarePieceForKnown(k.side, k.value, kSq, true), piece("unknown", plainSq(u), {weight:rest, colorClass:"focusUnknown"})]
+      };
+    }
+    return {
+      top:[squarePieceForKnown(h.side, h.value, hSq)],
+      bottom:[squarePieceForKnown(k.side, k.value, kSq), piece("unknown", plainSq(u), {weight:rest, colorClass:sideColorClass(u)})]
+    };
+  }
+
+  function squarePieceForKnown(side, value, weight=null, neutral=false){
+    const w = Number.isFinite(weight) ? weight : square(value);
+    const colorClass = neutral ? "neutralAfterDecompose" : sideColorClass(side);
+    if(!work.replaced) return piece("known", plainSq(side), {weight:w, colorClass});
+    if(work.squares[side]) return piece("known", fmt(work.squares[side]), {weight:w, colorClass});
+    return piece("known", valueSq(value), {compute:side, weight:w, colorClass});
+  }
+
+  function renderActions(){
+    mainActions.innerHTML = "";
+    const actions = [];
+    if(!work.relationComplete){
+      const filled = !!(work.relationSlots.lhs && work.relationSlots.rhs1 && work.relationSlots.rhs2);
+      actions.push({label:"Valider la relation", done:false, disabled:!filled, fn:validateRelation});
+      actions.push({label:"Effacer", done:false, disabled:!filled && !selectedSlot, fn:clearRelation});
+    }else{
+      actions.push({label:"Relation", done:true, disabled:true});
+      actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:() => mutate(() => { work.replaced = true; message = ""; })});
+      const targets = squareTargets();
+      targets.forEach(t => {
+        actions.push({label:`Calculer ${fmt(t.value)}²`, done:!!work.squares[t.side], disabled:!work.replaced || !!work.squares[t.side], fn:() => askSquare(t.side)});
+      });
+      if(model.unknownIsHyp){
+        actions.push({label:"Regrouper", done:work.regrouped, disabled:!allSquaresDone(targets) || work.regrouped, fn:askRegroup});
+      }else{
+        actions.push({label:"Décomposer", done:work.decomposed, disabled:!allSquaresDone(targets) || work.decomposed, fn:askDecomposeHypSquare});
+        actions.push({label:"Enlever dans chaque membre", done:work.removed, disabled:!work.decomposed || work.removed, fn:removeKnownSquareBothSides});
+      }
+      actions.push({label:"Racine carrée", done:work.sqrt, disabled:!(work.regrouped || work.removed) || work.sqrt, fn:() => mutate(() => { work.sqrt = true; message = ""; })});
+      actions.push({label:"Conclure", done:work.concluded, disabled:!work.sqrt || work.concluded, fn:() => mutate(() => { work.concluded = true; message = ""; })});
+    }
+
+    actions.forEach(a => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "toolBtn" + (a.done ? " done" : "") + (!a.done && !a.disabled ? " active" : "");
+      btn.textContent = a.label;
+      btn.disabled = !!a.disabled;
+      if(a.fn) btn.addEventListener("click", a.fn);
+      mainActions.appendChild(btn);
+    });
+  }
+
+  function squareTargets(){
+    return model.unknownIsHyp ? [model.leg1, model.leg2] : [model.knownHyp, model.knownLeg];
+  }
+  function allSquaresDone(targets){ return targets.every(t => !!work.squares[t.side]); }
+
+  function askSquare(side){
+    if(!work.replaced || work.squares[side]) return;
+    const value = sideValue(side);
+    openNumberDialog({
+      title:`Calculer ${fmt(value)}²`,
+      text:`Quelle est la valeur de <strong>${fmt(value)}²</strong> ?`,
+      expected:square(value),
+      error:`Ce n’est pas la valeur de ${fmt(value)}².`,
+      onValid:(answer) => mutate(() => { work.squares[side] = answer; message = ""; })
+    });
+  }
+
+  function askRegroup(){
+    const a = work.squares[model.leg1.side], b = work.squares[model.leg2.side];
+    openNumberDialog({
+      title:"Regrouper",
+      text:`Quelle est la somme ?<br><strong>${fmt(a)} + ${fmt(b)}</strong>`,
+      expected:a+b,
+      error:"Ce n’est pas la somme des deux carrés.",
+      onValid:(answer) => mutate(() => { work.result = answer; work.regrouped = true; message = ""; })
+    });
+  }
+
+  function askDecomposeHypSquare(){
+    const h = work.squares[model.knownHyp.side];
+    const k = work.squares[model.knownLeg.side];
+    openNumberDialog({
+      title:"Décomposer",
+      text:`Écris le complément ou la décomposition complète.<br><strong>${fmt(h)} = ${fmt(k)} + ?</strong>`,
+      expected:h-k,
+      mode:"decompose",
+      h,
+      k,
+      error:"Ce n’est pas la bonne décomposition.",
+      onValid:(answer) => mutate(() => { work.result = answer; work.decomposed = true; message = ""; })
+    });
+  }
+
+  function removeKnownSquareBothSides(){
+    if(!work.decomposed || work.removed) return;
+    mutate(() => { work.removed = true; message = ""; });
+  }
+
+  function openNumberDialog({title,text,expected,error,onValid,mode="number",h=null,k=null}){
+    pendingDialog = {expected,error,onValid,mode,h,k};
+    calcDialogTitle.innerHTML = title;
+    calcDialogText.innerHTML = text;
+    calcInput.value = "";
+    calcError.classList.remove("show");
+    calcError.textContent = "";
+    calcDialog.showModal();
+    setTimeout(() => calcInput.focus(), 60);
+  }
+
+  function validateDialog(){
+    if(!pendingDialog) return;
+    const answer = pendingDialog.mode === "decompose"
+      ? parseDecomposeAnswer(calcInput.value, pendingDialog.h, pendingDialog.k, pendingDialog.expected)
+      : parseAnswer(calcInput.value);
+    if(answer === null || !approxEqual(answer, pendingDialog.expected)){
+      calcError.textContent = pendingDialog.error;
+      calcError.classList.add("show");
+      return;
+    }
+    const fn = pendingDialog.onValid;
+    pendingDialog = null;
+    calcDialog.close();
+    fn(answer);
+  }
+
+  function finalSolutionText(){
+    const side = model.unknownIsHyp ? model.hyp : model.unknown;
+    return `${side} = ${lengthAnswer(work.result)}`;
+  }
+
+  function renderTriangle(){
+    if(!display.triangle && !display.moulin){ triangleSvg.innerHTML = ""; return; }
+    const coords = triangleCoordinates(model.letters, model.right);
+    const centroid = triangleCentroid(coords, model.letters);
+    const squareLabels = squareLabelsForTriangle();
+    let html = "";
+
+    if(display.moulin){
+      for(const side of model.sideNames){
+        const cls = sameSide(side, model.hyp) ? "squareHyp" : (sameSide(side, model.legs[0]) ? "squareLeg1" : "squareLeg2");
+        const colorCls = sideColorClass(side);
+        const sq = squarePolygon(coords[side[0]], coords[side[1]], centroid);
+        const label = squareLabels[side] ?? squareLabels[reverseSide(side)] ?? plainSq(side);
+        const pickClass = !work.relationComplete ? " squarePick" : "";
+        const pickAttr = !work.relationComplete ? ` data-square-side="${side}"` : "";
+        html += `<polygon class="squareShape ${cls} ${colorCls}${pickClass}" points="${sq.points}"${pickAttr}/>`;
+        html += `<text class="squareText" x="${sq.label.x}" y="${sq.label.y}" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
+      }
+    }
+
+    if(display.triangle){
+      const points = model.letters.map(l => `${coords[l].x},${coords[l].y}`).join(" ");
+      html += `<polygon class="triangleShape" points="${points}"/>`;
+      html += `<path class="rightAngleMark" d="${rightAnglePath(coords, model.right, model.letters)}"/>`;
+
+      const displayVals = displayValuesForTriangle();
+      for(const side of model.sideNames){
+        const a = side[0], b = side[1];
+        const mid = sideLabelPosition(coords[a], coords[b]);
+        const value = displayVals[side] ?? displayVals[reverseSide(side)] ?? "";
+        const finalCls = (model.values[side]?.unknown || model.values[reverseSide(side)]?.unknown) && work.concluded ? " sideText finalSideText" : "sideText";
+        html += `<text class="${finalCls}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${side} = ${value}</text>`;
+      }
+
+      for(const l of model.letters){
+        const p = coords[l];
+        const off = vertexOffset(coords,l);
+        html += `<circle cx="${p.x}" cy="${p.y}" r="7" fill="#1d4ed8"/>`;
+        html += `<text class="vertexText" x="${p.x+off.x}" y="${p.y+off.y}" text-anchor="middle" dominant-baseline="middle">${l}</text>`;
+      }
+    }
+
+    if(!display.moulin){
+      for(const side of model.sideNames){
+        const a = coords[side[0]], b = coords[side[1]];
+        html += `<line class="sideHit ${selectedSlot ? "activePick" : ""}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" data-side="${side}"/>`;
+      }
+    }
+    triangleSvg.innerHTML = html;
+    triangleSvg.querySelectorAll("[data-square-side]").forEach(el => {
+      el.addEventListener("click", () => chooseSideForSlot(el.dataset.squareSide));
+    });
+    triangleSvg.querySelectorAll("[data-side]").forEach(el => {
+      el.addEventListener("click", () => chooseSideForSlot(el.dataset.side));
+    });
+  }
+
+  function squareLabelsForTriangle(){
+    const labels = {};
+    for(const side of model.sideNames){
+      const parsed = model.values[side];
+      if(parsed.unknown){
+        labels[side] = (work.regrouped || work.removed || work.sqrt || work.concluded) ? fmt(work.result) : plainSq(side);
+      }else if(work.squares[side]){
+        labels[side] = fmt(work.squares[side]);
+      }else if(work.replaced){
+        labels[side] = valueSq(parsed.value);
+      }else{
+        labels[side] = plainSq(side);
+      }
+    }
+    return labels;
+  }
+
+  function triangleCoordinates(letters,right){
+    const base = {R:{x:240,y:360}, U:{x:240,y:190}, L:{x:450,y:360}};
+    const others = letters.filter(l => l !== right);
+    const raw = {[right]:base.R, [others[0]]:base.U, [others[1]]:base.L};
+    const rot = ((model && Number.isInteger(model.rotation)) ? model.rotation : 0) % 4;
+    if(rot === 0) return raw;
+    const center = {x:345,y:275};
+    const target = {x:345,y:285};
+    const rotated = {};
+    for(const l of letters){
+      const p = raw[l];
+      let x = p.x - center.x;
+      let y = p.y - center.y;
+      let rx = x, ry = y;
+      if(rot === 1){ rx = -y; ry = x; }
+      else if(rot === 2){ rx = -x; ry = -y; }
+      else if(rot === 3){ rx = y; ry = -x; }
+      rotated[l] = {x:target.x + rx, y:target.y + ry};
+    }
+    return rotated;
+  }
+
+  function triangleCentroid(coords, letters){
+    return {x:letters.reduce((s,l) => s + coords[l].x,0)/3, y:letters.reduce((s,l) => s + coords[l].y,0)/3};
+  }
+
+  function squarePolygon(a,b,centroid){
+    const dx = b.x-a.x, dy = b.y-a.y;
+    let n = {x:-dy, y:dx};
+    const mid = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+    const away = {x:mid.x-centroid.x, y:mid.y-centroid.y};
+    if(n.x*away.x + n.y*away.y < 0) n = {x:-n.x, y:-n.y};
+    const p3 = {x:b.x+n.x, y:b.y+n.y};
+    const p4 = {x:a.x+n.x, y:a.y+n.y};
+    const label = {x:mid.x+n.x/2, y:mid.y+n.y/2};
+    return {points:`${a.x},${a.y} ${b.x},${b.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`, label};
+  }
+
+  function rightAnglePath(coords,right,letters){
+    const p = coords[right];
+    const others = letters.filter(l => l !== right).map(l => coords[l]);
+    const size = 28;
+    const v1 = unitVector(p, others[0]);
+    const v2 = unitVector(p, others[1]);
+    const a = {x:p.x + v1.x*size, y:p.y + v1.y*size};
+    const b = {x:a.x + v2.x*size, y:a.y + v2.y*size};
+    const c = {x:p.x + v2.x*size, y:p.y + v2.y*size};
+    return `M ${a.x} ${a.y} L ${b.x} ${b.y} L ${c.x} ${c.y}`;
+  }
+
+  function unitVector(from,to){
+    const dx = to.x-from.x, dy = to.y-from.y, d = Math.hypot(dx,dy) || 1;
+    return {x:dx/d, y:dy/d};
+  }
+
+  function sideLabelPosition(a,b){
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+    const dx = b.x-a.x, dy = b.y-a.y, len = Math.hypot(dx,dy) || 1;
+    let nx = -dy/len, ny = dx/len;
+    if(my > 240 && ny > 0){ nx = -nx; ny = -ny; }
+    if(Math.abs(dx) < 10){ nx = 1; ny = 0; }
+    return {x:mx + nx*28, y:my + ny*28};
+  }
+
+  function vertexOffset(coords,l){
+    const p = coords[l];
+    if(p.x < 260 && p.y > 300) return {x:-26,y:26};
+    if(p.x < 260 && p.y < 230) return {x:-26,y:-26};
+    return {x:28,y:26};
+  }
+
+  function displayValuesForTriangle(){
+    const values = {};
+    for(const side of model.sideNames){
+      const parsed = model.values[side];
+      values[side] = parsed.unknown ? (work.concluded ? lengthAnswer(work.result) : "?") : fmt(parsed.value);
+    }
+    return values;
+  }
+
+  function eyeIconSvg(hidden=false){
+    if(hidden){
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10.7 5.2A9.4 9.4 0 0 1 12 5c5.2 0 8.7 4.5 9.7 6.1.2.3.2.7 0 1.1a16 16 0 0 1-2.6 3.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6.5 6.7A15.8 15.8 0 0 0 2.3 11c-.2.3-.2.7 0 1.1C3.3 13.7 6.8 18 12 18c1.3 0 2.5-.3 3.6-.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9.8 9.8a3.1 3.1 0 0 0 4.4 4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2.3 11.1C3.3 9.5 6.8 5 12 5s8.7 4.5 9.7 6.1c.2.3.2.7 0 1.1C20.7 13.8 17.2 18 12 18S3.3 13.8 2.3 12.2c-.2-.3-.2-.7 0-1.1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="11.7" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </svg>`;
+  }
+
+  function syncEyeButton(){
+    btnToggleEq.innerHTML = eyeIconSvg(!display.equation);
+    btnToggleEq.title = display.equation ? "Masquer l’équation" : "Afficher l’équation";
+    btnToggleEq.classList.toggle("is-hidden", !display.equation);
+  }
+
+  function start(){
+    displaySettingsFromMenu();
+    const built = buildModel();
+    if(!built) return;
+    model = built;
+    work = initialWork();
+    selectedSlot = null;
+    message = "";
+    history = [];
+    appMain.classList.add("activeMode");
+    render();
+  }
+
+  async function backToMenu(){
+    if(document.fullscreenElement){
+      try{ await document.exitFullscreen(); }catch(e){}
+    }
+    appMain.classList.remove("activeMode");
+  }
+
+  function applyRandom(){
+    const ex = examples[Math.floor(Math.random()*examples.length)];
+    nextRotation = Math.floor(Math.random()*4);
+    triangleNameInput.value = ex.name;
+    updateSideLabels();
+    rightAngleInput.value = ex.right;
+    const letters = normalizeName(ex.name);
+    const names = sidesFromLetters(letters);
+    inputEls.forEach((input,i) => {
+      const side = names[i];
+      input.value = ex.values[side] ?? ex.values[reverseSide(side)] ?? "?";
+    });
+  }
+
+  function revealAll(){
+    if(!model || !work) return;
+    mutate(() => {
+      work.relationSlots = correctSlots();
+      work.relationComplete = true;
+      work.replaced = true;
+      if(model.unknownIsHyp){
+        work.squares[model.leg1.side] = square(model.leg1.value);
+        work.squares[model.leg2.side] = square(model.leg2.value);
+        work.result = work.squares[model.leg1.side] + work.squares[model.leg2.side];
+        work.regrouped = true;
+      }else{
+        work.squares[model.knownHyp.side] = square(model.knownHyp.value);
+        work.squares[model.knownLeg.side] = square(model.knownLeg.value);
+        work.result = work.squares[model.knownHyp.side] - work.squares[model.knownLeg.side];
+        work.decomposed = true;
+        work.removed = true;
+      }
+      work.sqrt = true;
+      work.concluded = true;
+      selectedSlot = null;
+      message = "";
+    });
+  }
+
+  btnBuild.addEventListener("click", start);
+  btnRandom.addEventListener("click", applyRandom);
+  btnStageRandom.addEventListener("click", () => { applyRandom(); start(); });
+  triangleNameInput.addEventListener("input", updateSideLabels);
+  btnMenu.addEventListener("click", () => { backToMenu(); });
+  btnToggleEq.addEventListener("click", () => { display.equation = !display.equation; render(); });
+  btnFullscreen.addEventListener("click", async () => {
+    if(!document.fullscreenElement){ try{ await stage.requestFullscreen(); }catch(e){} }
+    else{ try{ await document.exitFullscreen(); }catch(e){} }
+  });
+  btnUndo.addEventListener("click", restore);
+  btnRestart.addEventListener("click", () => { if(model){ work = initialWork(); selectedSlot = null; message = ""; history = []; render(); } });
+  btnReveal.addEventListener("click", revealAll);
+  btnCalcApply.addEventListener("click", validateDialog);
+  btnCalcAuto.addEventListener("click", () => {
+    if(!pendingDialog) return;
+    if(pendingDialog.mode === "decompose" && Number.isFinite(pendingDialog.h) && Number.isFinite(pendingDialog.k)){
+      calcInput.value = `${fmt(pendingDialog.h)} = ${fmt(pendingDialog.k)} + ${fmt(pendingDialog.expected)}`;
+    }else{
+      calcInput.value = fmt(pendingDialog.expected);
+    }
+    calcInput.focus();
+  });
+  btnCalcCancel.addEventListener("click", () => { pendingDialog = null; calcDialog.close(); });
+  calcInput.addEventListener("keydown", (e) => { if(e.key === "Enter") validateDialog(); });
+
+  updateSideLabels();
+  syncEyeButton();
+})();
+</script>
+</body>
+</html>
