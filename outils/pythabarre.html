@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PythaBarre — théorème de Pythagore v11</title>
+<title>PythaBarre — théorème de Pythagore v19</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -295,15 +295,15 @@
 
   .topbar{
     flex:0 0 auto;
-    padding:3px 190px 6px 40px;
-    min-height:116px;
+    padding:4px 16px 6px;
+    min-height:144px;
     display:flex;
     align-items:center;
     justify-content:center;
     overflow:hidden;
   }
 
-  .equationHistory{width:min(980px,100%);max-height:110px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationHistory{width:min(980px,100%);max-height:138px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
   .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(22px,2.5vw,36px);font-weight:950;line-height:1.18}
   .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
   .equationTable .lhs{text-align:right}
@@ -382,10 +382,20 @@
 
   .workArea{
     flex:1 1 auto;
-    min-height:260px;
+    min-height:0;
     display:grid;
-    grid-template-columns:minmax(320px,.92fr) minmax(430px,1.08fr);
+    grid-template-columns:minmax(470px,1.08fr) minmax(360px,.92fr);
     gap:16px;
+    overflow:hidden;
+    align-items:stretch;
+  }
+
+  .leftWork{
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
     overflow:hidden;
   }
 
@@ -405,7 +415,7 @@
   }
 
   .visualCard{position:relative;overflow:hidden}
-  svg.triangleSvg{width:min(100%,610px);height:100%;min-height:360px;overflow:visible}
+  svg.triangleSvg{width:min(100%,610px);height:100%;min-height:390px;overflow:visible}
   .squareShape{stroke:rgba(15,23,42,.22);stroke-width:2.5;stroke-linejoin:round}
   .squareHyp{fill:rgba(34,197,94,.19)}
   .squareLeg1{fill:rgba(59,130,246,.17)}
@@ -441,7 +451,8 @@
   .sideHit:hover{stroke:rgba(59,130,246,.16)}
   .sideHit.activePick{stroke:rgba(59,130,246,0)}
 
-  .barBoard{width:100%;min-height:100%;justify-content:center;gap:14px}
+  .barBoard{width:100%;min-height:0;justify-content:center;gap:14px}
+  .leftWork .barBoard{flex:1 1 auto;min-height:270px}
   .barPair{width:100%;display:flex;flex-direction:column;gap:0;align-items:center}
 
   .barLine{
@@ -500,6 +511,17 @@
       repeating-linear-gradient(135deg,rgba(59,130,246,.12) 0 8px,rgba(255,255,255,.62) 8px 15px),
       linear-gradient(180deg,#fff,#eff6ff);
     box-shadow:inset 0 0 0 3px rgba(59,130,246,.28);
+  }
+  .barPiece.toReplace{
+    cursor:pointer;
+    background:
+      repeating-linear-gradient(135deg,rgba(249,115,22,.12) 0 8px,rgba(255,255,255,.66) 8px 15px),
+      linear-gradient(180deg,#fff,#fff7ed);
+    box-shadow:inset 0 0 0 3px rgba(249,115,22,.25);
+  }
+  .barPiece.selectedChoice{
+    box-shadow:inset 0 0 0 5px rgba(37,99,235,.45);
+    filter:brightness(.985);
   }
   .barPiece.removed{
     opacity:.34;
@@ -581,7 +603,10 @@
   @media (max-width:980px){
     main.activeMode .stage{height:auto;min-height:650px;overflow:visible}
     .workArea,.workArea.onlyVisual,.workArea.onlyBars{grid-template-columns:1fr;overflow:visible}
-    .topbar{padding-right:150px;padding-left:20px}
+    .leftWork{overflow:visible}
+    .topbar{padding:4px 20px 6px;min-height:128px}
+    .visualCard{min-height:380px}
+    .leftWork .barBoard{min-height:300px}
     .lengthGrid,.settingsGrid,.toggleGrid{grid-template-columns:1fr}
   }
 
@@ -718,6 +743,57 @@
   .creatorActions{margin-top:13px;gap:10px}
   .diceBtn{flex:0 0 48px;width:48px;min-height:48px}
   .buildBtn{min-height:48px}
+
+  /* PATCH V24 — banque d’exemples progressive au lieu d’un hasard pur. */
+  .exampleBlock{
+    margin-top:12px;
+    padding:12px;
+    border-radius:16px;
+    border:1px solid rgba(15,23,42,.08);
+    background:rgba(248,250,252,.78);
+  }
+  .exampleTitle{
+    text-align:center;
+    font-size:13px;
+    font-weight:950;
+    color:#334155;
+    margin-bottom:8px;
+  }
+  .exampleGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:8px;
+    align-items:end;
+  }
+  .exampleBlock label{
+    text-align:center;
+    margin-top:0;
+    font-size:10.5px;
+  }
+  .exampleBlock select{
+    min-height:38px;
+    padding:7px 9px;
+    font-size:13px;
+    border-radius:12px;
+  }
+  .exampleActions{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:10px;
+  }
+  .exampleNavBtn{
+    min-height:40px;
+    padding:9px 14px;
+    border-radius:13px;
+    font-size:13px;
+    font-weight:950;
+  }
+  @media (max-width:700px){
+    .exampleGrid{grid-template-columns:1fr;}
+    .exampleActions{flex-direction:column;}
+    .exampleNavBtn{width:100%;}
+  }
   .sideChoice.usedChoice{display:none}
   .solution{color:#dc2626}
   .equationTable tr.currentStep.finalConclusion td{color:#dc2626}
@@ -922,6 +998,593 @@
     }
   }
 
+
+  /* PATCH V15 — zone de propositions stable + retour visuel de clic. */
+  .barBoard .sidePalette{
+    display:flex;
+    width:100%;
+    justify-content:center;
+    align-items:flex-end;
+    gap:12px;
+    flex-wrap:wrap;
+    margin:22px 0 0;
+    min-height:72px;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  .barBoard .sidePalette.show{
+    visibility:visible;
+    pointer-events:auto;
+  }
+  .sideChoice.selectedChoiceToken{
+    background:#dbeafe;
+    border-color:rgba(37,99,235,.55);
+    box-shadow:0 0 0 5px rgba(59,130,246,.16), 0 8px 20px rgba(15,23,42,.07);
+  }
+  .barPiece.toReplace,
+  .barPiece.toCompute{
+    box-shadow:none !important;
+  }
+  .barPiece.clickFlash{
+    animation:cellFlash .55s ease-out 1;
+    box-shadow:inset 0 0 0 5px rgba(37,99,235,.58), 0 0 0 4px rgba(59,130,246,.16) !important;
+  }
+  .barPiece.clickWrong{
+    animation:cellWrong .45s ease-out 1;
+    box-shadow:inset 0 0 0 5px rgba(239,68,68,.60), 0 0 0 4px rgba(239,68,68,.13) !important;
+  }
+  @keyframes cellFlash{
+    0%{transform:scale(1);}
+    35%{transform:scale(1.025);}
+    100%{transform:scale(1);}
+  }
+  @keyframes cellWrong{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-4px);}
+    55%{transform:translateX(4px);}
+  }
+
+
+
+  /* PATCH V18 — layout grand écran : équation + tableau à gauche, moulin à droite.
+     On ne touche pas au moteur : uniquement placement visuel. */
+  @media (min-width:981px){
+    .stageQuickActions{right:18px;}
+    .workArea{padding-top:4px;}
+    .leftWork .instructionZone{margin-bottom:4px;}
+    .leftWork .barBoard{padding-top:18px;padding-bottom:18px;}
+    .visualCard{padding-top:22px;}
+    .stage:fullscreen .workArea{grid-template-columns:minmax(520px,1.12fr) minmax(390px,.88fr);gap:18px;}
+    .stage:fullscreen .topbar{min-height:158px;}
+    .stage:fullscreen .equationHistory{max-height:152px;}
+    .stage:fullscreen .leftWork .barBoard{min-height:300px;}
+    .stage:fullscreen svg.triangleSvg{min-height:430px;}
+  }
+
+
+  /* PATCH V19 — affinage du layout deux colonnes.
+     Base : v18. Objectif : descendre le tableau, réduire sa zone,
+     libérer davantage de hauteur pour l'équation et abaisser le moulin
+     pour qu'il ne soit pas gêné par les boutons rapides. */
+  @media (min-width:981px){
+    main.activeMode .stage:not(:fullscreen){
+      min-height:720px;
+      height:calc(100vh - 28px);
+      padding:14px 16px 12px;
+    }
+
+    .stage:not(:fullscreen) .workArea{
+      gap:18px;
+      padding-top:0;
+    }
+
+    .stage:not(:fullscreen) .leftWork{
+      gap:5px;
+    }
+
+    .stage:not(:fullscreen) .topbar{
+      min-height:168px;
+      padding-top:8px;
+      padding-bottom:2px;
+      padding-right:232px;
+      padding-left:20px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:162px;
+      width:min(1140px, calc(100% - 232px));
+    }
+
+    .stage:not(:fullscreen) .instructionZone{
+      min-height:42px;
+      margin-bottom:0;
+      font-size:clamp(17px,1.85vw,24px);
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex:0 0 315px;
+      min-height:315px;
+      padding:34px 14px 10px;
+      justify-content:flex-start;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:84px;
+    }
+
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      margin-top:24px;
+      min-height:64px;
+      align-items:flex-start;
+    }
+
+    .stage:not(:fullscreen) .visualCard{
+      justify-content:flex-start;
+      padding-top:62px;
+      padding-bottom:12px;
+    }
+
+    .stage:not(:fullscreen) svg.triangleSvg{
+      min-height:420px;
+    }
+
+    .stage:fullscreen .workArea{
+      gap:18px;
+      padding-top:0;
+    }
+
+    .stage:fullscreen .leftWork{
+      gap:5px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:176px;
+      padding-top:8px;
+      padding-bottom:2px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:170px;
+    }
+
+    .stage:fullscreen .instructionZone{
+      min-height:42px;
+      margin-bottom:0;
+      font-size:clamp(18px,1.9vw,24px);
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex:0 0 315px;
+      min-height:315px;
+      padding:34px 16px 10px;
+      justify-content:flex-start;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:84px;
+    }
+
+    .stage:fullscreen .barBoard .sidePalette{
+      margin-top:24px;
+      min-height:64px;
+      align-items:flex-start;
+    }
+
+    .stage:fullscreen .visualCard{
+      justify-content:flex-start;
+      padding-top:72px;
+      padding-bottom:12px;
+    }
+
+    .stage:fullscreen svg.triangleSvg{
+      min-height:430px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    main.activeMode .stage:not(:fullscreen){
+      min-height:640px;
+    }
+    .stage:not(:fullscreen) .topbar,
+    .stage:fullscreen .topbar{
+      min-height:150px;
+    }
+    .stage:not(:fullscreen) .equationHistory,
+    .stage:fullscreen .equationHistory{
+      max-height:144px;
+    }
+    .stage:not(:fullscreen) .leftWork .barBoard,
+    .stage:fullscreen .leftWork .barBoard{
+      flex-basis:286px;
+      min-height:286px;
+      padding-top:28px;
+    }
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece,
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:76px;
+    }
+    .stage:not(:fullscreen) .visualCard,
+    .stage:fullscreen .visualCard{
+      padding-top:58px;
+    }
+    .stage:not(:fullscreen) svg.triangleSvg,
+    .stage:fullscreen svg.triangleSvg{
+      min-height:360px;
+    }
+  }
+
+
+
+  /* PATCH V20 — réglage fin d'après captures.
+     Base : v19 layout deux colonnes.
+     Objectif :
+     - ne plus écraser la relation hors plein écran ;
+     - descendre le tableau et réduire sa carte ;
+     - abaisser la zone moulin pour que les boutons rapides ne semblent plus posés dessus ;
+     - garder le moteur intact. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:202px;
+      padding:16px 18px 4px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      width:min(1140px, 100%);
+      max-height:196px;
+    }
+
+    .stage:not(:fullscreen) .relationEditor{
+      max-width:100%;
+    }
+
+    .stage:not(:fullscreen) .instructionZone{
+      min-height:48px;
+      margin-bottom:6px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex:0 0 286px;
+      min-height:286px;
+      padding:28px 12px 8px;
+      justify-content:flex-start;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:78px;
+    }
+
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      margin-top:22px;
+      min-height:62px;
+    }
+
+    .stage:not(:fullscreen) .visualCard{
+      margin-top:46px;
+      padding-top:38px;
+      padding-bottom:10px;
+      justify-content:flex-start;
+    }
+
+    .stage:not(:fullscreen) svg.triangleSvg{
+      min-height:370px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:214px;
+      padding-top:12px;
+      padding-bottom:4px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      width:min(1160px, 100%);
+      max-height:208px;
+    }
+
+    .stage:fullscreen .instructionZone{
+      min-height:48px;
+      margin-bottom:6px;
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex:0 0 286px;
+      min-height:286px;
+      padding:28px 14px 8px;
+      justify-content:flex-start;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:78px;
+    }
+
+    .stage:fullscreen .barBoard .sidePalette{
+      margin-top:22px;
+      min-height:62px;
+    }
+
+    .stage:fullscreen .visualCard{
+      margin-top:44px;
+      padding-top:40px;
+      padding-bottom:10px;
+      justify-content:flex-start;
+    }
+
+    .stage:fullscreen svg.triangleSvg{
+      min-height:385px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar,
+    .stage:fullscreen .topbar{
+      min-height:180px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory,
+    .stage:fullscreen .equationHistory{
+      max-height:174px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard,
+    .stage:fullscreen .leftWork .barBoard{
+      flex-basis:260px;
+      min-height:260px;
+      padding-top:24px;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece,
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:72px;
+    }
+
+    .stage:not(:fullscreen) .visualCard,
+    .stage:fullscreen .visualCard{
+      margin-top:38px;
+      padding-top:32px;
+    }
+
+    .stage:not(:fullscreen) svg.triangleSvg,
+    .stage:fullscreen svg.triangleSvg{
+      min-height:340px;
+    }
+  }
+
+
+  /* PATCH V21 — réglage fin d'après capture v20.
+     On conserve le layout deux colonnes et le moteur.
+     Objectif : donner plus de hauteur à l'équation en abaissant la consigne
+     et le tableau ; abaisser légèrement le moulin hors plein écran seulement. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:258px;
+      padding-top:18px;
+      padding-bottom:6px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:252px;
+    }
+
+    .stage:not(:fullscreen) .instructionZone{
+      min-height:50px;
+      margin-top:0;
+      margin-bottom:8px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex:0 0 270px;
+      min-height:270px;
+      padding:26px 12px 8px;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:74px;
+    }
+
+    .stage:not(:fullscreen) .visualCard{
+      margin-top:66px;
+      padding-top:42px;
+    }
+
+    .stage:not(:fullscreen) svg.triangleSvg{
+      min-height:365px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:268px;
+      padding-top:14px;
+      padding-bottom:6px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:262px;
+    }
+
+    .stage:fullscreen .instructionZone{
+      min-height:50px;
+      margin-bottom:8px;
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex:0 0 270px;
+      min-height:270px;
+      padding:26px 14px 8px;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:74px;
+    }
+
+    .stage:fullscreen .visualCard{
+      margin-top:44px;
+      padding-top:40px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar,
+    .stage:fullscreen .topbar{
+      min-height:216px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory,
+    .stage:fullscreen .equationHistory{
+      max-height:210px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard,
+    .stage:fullscreen .leftWork .barBoard{
+      flex-basis:246px;
+      min-height:246px;
+      padding-top:22px;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece,
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:68px;
+    }
+
+    .stage:not(:fullscreen) .visualCard{
+      margin-top:54px;
+      padding-top:34px;
+    }
+  }
+
+
+
+  /* PATCH V22 — réglage final avec captures.
+     Plein écran : on agrandit vraiment la zone d'équation et on pousse
+     consigne + tableau plus bas.
+     Hors plein écran : on remonte un peu le tableau pour éviter qu'il soit coupé. */
+  @media (min-width:981px){
+    /* Hors plein écran : priorité à un rendu non coupé. */
+    .stage:not(:fullscreen) .topbar{
+      min-height:238px;
+      padding-top:14px;
+      padding-bottom:4px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:232px;
+    }
+
+    .stage:not(:fullscreen) .instructionZone{
+      min-height:44px;
+      margin-bottom:6px;
+      font-size:clamp(17px,1.8vw,23px);
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex:0 0 250px;
+      min-height:250px;
+      padding:22px 12px 8px;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:68px;
+    }
+
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      margin-top:18px;
+      min-height:58px;
+    }
+
+    .stage:not(:fullscreen) .visualCard{
+      margin-top:78px;
+      padding-top:36px;
+    }
+
+    .stage:not(:fullscreen) svg.triangleSvg{
+      min-height:350px;
+    }
+
+    /* Plein écran : priorité à voir davantage de lignes d'équation. */
+    .stage:fullscreen .topbar{
+      min-height:330px;
+      padding-top:16px;
+      padding-bottom:8px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:322px;
+    }
+
+    .stage:fullscreen .instructionZone{
+      min-height:52px;
+      margin-bottom:10px;
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex:0 0 270px;
+      min-height:270px;
+      padding:26px 14px 8px;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:74px;
+    }
+
+    .stage:fullscreen .visualCard{
+      margin-top:44px;
+      padding-top:40px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:210px;
+    }
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:204px;
+    }
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex-basis:232px;
+      min-height:232px;
+      padding-top:18px;
+    }
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:64px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:288px;
+    }
+    .stage:fullscreen .equationHistory{
+      max-height:280px;
+    }
+    .stage:fullscreen .leftWork .barBoard{
+      flex-basis:250px;
+      min-height:250px;
+      padding-top:22px;
+    }
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:68px;
+    }
+  }
+
+
+  /* PATCH V23 — micro-réglage : remonter légèrement les propositions
+     sous le tableau sans modifier la mise en page validée. */
+  .barBoard .sidePalette{
+    transform:translateY(-8px);
+  }
+
+
 </style>
 </head>
 <body>
@@ -958,9 +1621,33 @@
         <div class="lengthBox"><label id="labelSide12" for="side12Input">BC</label><input id="side12Input" type="text" autocomplete="off" value="?" /></div>
       </div>
 
+      <div class="exampleBlock" aria-label="Banque d’exemples">
+        <div class="exampleTitle">Banque d’exemples</div>
+        <div class="exampleGrid">
+          <div>
+            <label for="exampleCategoryInput">Niveau</label>
+            <select id="exampleCategoryInput"></select>
+          </div>
+          <div>
+            <label for="exampleIndexInput">Exemple</label>
+            <select id="exampleIndexInput"></select>
+          </div>
+          <div>
+            <label for="missingModeInput">À chercher</label>
+            <select id="missingModeInput">
+              <option value="mix" selected>Mélange</option>
+              <option value="hyp">Hypoténuse</option>
+              <option value="leg">Côté de l’angle droit</option>
+            </select>
+          </div>
+        </div>
+        <div class="exampleActions">
+          <button class="ghost exampleNavBtn" id="btnPrevExample" type="button">← Précédent</button>
+          <button class="ghost exampleNavBtn" id="btnRandom" type="button" title="Passer à l’exemple suivant" aria-label="Passer à l’exemple suivant">Suivant →</button>
+        </div>
+      </div>
 
       <div class="creatorActions">
-        <button class="ghost diceBtn" id="btnRandom" type="button" title="Générer un exemple" aria-label="Générer un exemple">🎲</button>
         <button class="primary buildBtn" id="btnBuild" type="button">Construire</button>
       </div>
       <div class="buildError" id="buildError"></div>
@@ -970,25 +1657,27 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn" id="btnMenu" type="button">Menu</button>
-      <button class="ghost quickBtn quickIcon" id="btnStageRandom" type="button" title="Nouvel exemple" aria-label="Nouvel exemple">🎲</button>
+      <button class="ghost quickBtn quickIcon" id="btnStageRandom" type="button" title="Exemple suivant" aria-label="Exemple suivant">▶</button>
       <button class="ghost quickBtn quickIcon equationEyeBtn" id="btnToggleEq" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn quickIcon" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
 
-    <div class="topbar">
-      <div class="equationHistory" id="equationHistory"></div>
-    </div>
-
-    <div class="instructionZone" id="instructionZone"></div>
-    <div class="sidePalette" id="sidePalette"></div>
-
     <div class="workArea" id="workArea">
-      <div class="card visualCard" id="visualCard">
-        <svg class="triangleSvg" id="triangleSvg" viewBox="0 -70 660 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Triangle et moulin de Pythagore"></svg>
+      <div class="leftWork">
+        <div class="topbar">
+          <div class="equationHistory" id="equationHistory"></div>
+        </div>
+
+        <div class="instructionZone" id="instructionZone"></div>
+
+        <div class="card barBoard" id="barBoard">
+          <div class="barPair" id="barPair"></div>
+          <div class="sidePalette" id="sidePalette"></div>
+        </div>
       </div>
 
-      <div class="card barBoard" id="barBoard">
-        <div class="barPair" id="barPair"></div>
+      <div class="card visualCard" id="visualCard">
+        <svg class="triangleSvg" id="triangleSvg" viewBox="0 -70 660 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Triangle et moulin de Pythagore"></svg>
       </div>
     </div>
 
@@ -1036,6 +1725,10 @@
   const labelSide12 = document.getElementById("labelSide12");
   const btnBuild = document.getElementById("btnBuild");
   const btnRandom = document.getElementById("btnRandom");
+  const btnPrevExample = document.getElementById("btnPrevExample");
+  const exampleCategoryInput = document.getElementById("exampleCategoryInput");
+  const exampleIndexInput = document.getElementById("exampleIndexInput");
+  const missingModeInput = document.getElementById("missingModeInput");
   const buildError = document.getElementById("buildError");
   const btnMenu = document.getElementById("btnMenu");
   const btnToggleEq = document.getElementById("btnToggleEq");
@@ -1071,6 +1764,10 @@
   let history = [];
   let pendingDialog = null;
   let selectedSlot = null;
+  let activeChoiceMode = null; // replace | calculate | regroup
+  let selectedChoiceSide = null; // proposition choisie pour Remplacer
+  let selectedCalcValue = null;  // proposition choisie pour Calculer
+  let flashCell = null;         // {side, kind:"ok"|"bad"}
   let message = "";
   let nextRotation = 0;
   let display = {equation:true, bars:true, triangle:true, moulin:true};
@@ -1082,27 +1779,120 @@
     return {hyp:shuffled[0], leg1:shuffled[1], leg2:shuffled[2]};
   }
 
-  const examples = [
-    {name:"ABC", right:"A", values:{AB:"3", AC:"4", BC:"?"}},
-    {name:"ABC", right:"A", values:{AB:"?", AC:"4", BC:"5"}},
-    {name:"ABC", right:"A", values:{AB:"3", AC:"?", BC:"5"}},
-    {name:"DEF", right:"D", values:{DE:"5", DF:"12", EF:"?"}},
-    {name:"DEF", right:"D", values:{DE:"?", DF:"12", EF:"13"}},
-    {name:"RST", right:"S", values:{RS:"6", ST:"8", RT:"?"}},
-    {name:"RST", right:"S", values:{RS:"?", ST:"8", RT:"10"}},
-    {name:"MNO", right:"N", values:{MN:"8", NO:"15", MO:"?"}},
-    {name:"MNO", right:"N", values:{MN:"?", NO:"15", MO:"17"}},
-    {name:"EFG", right:"F", values:{EF:"7", FG:"24", EG:"?"}},
-    {name:"EFG", right:"F", values:{EF:"?", FG:"24", EG:"25"}},
-    {name:"HIK", right:"I", values:{HI:"9", IK:"12", HK:"?"}},
-    {name:"HIK", right:"I", values:{HI:"9", IK:"?", HK:"15"}},
-    {name:"ABC", right:"B", values:{AB:"20", BC:"21", AC:"?"}},
-    {name:"ABC", right:"B", values:{AB:"?", BC:"21", AC:"29"}},
-    {name:"UVW", right:"V", values:{UV:"10", VW:"24", UW:"?"}},
-    {name:"UVW", right:"V", values:{UV:"10", VW:"?", UW:"26"}},
-    {name:"XYZ", right:"X", values:{XY:"12", XZ:"35", YZ:"?"}},
-    {name:"XYZ", right:"X", values:{XY:"?", XZ:"35", YZ:"37"}}
+  const tripletsPythagoreFaciles = [
+    [3, 4, 5], [5, 12, 13], [6, 8, 10], [7, 24, 25], [8, 15, 17],
+    [9, 12, 15], [10, 24, 26], [12, 16, 20], [12, 35, 37], [15, 20, 25],
+    [15, 36, 39], [16, 30, 34], [18, 24, 30], [20, 21, 29], [20, 48, 52],
+    [21, 28, 35], [24, 32, 40], [24, 45, 51], [27, 36, 45], [28, 45, 53],
+    [30, 40, 50], [33, 44, 55], [36, 48, 60], [39, 52, 65], [40, 42, 58],
+    [48, 55, 73], [51, 68, 85], [60, 63, 87], [65, 72, 97]
   ];
+
+  const exampleCategories = [
+    {
+      id:"entiers-simples",
+      label:"Entiers simples",
+      triplets:[[3,4,5],[6,8,10],[5,12,13],[9,12,15],[8,15,17],[12,16,20],[15,20,25],[10,24,26]],
+      coeffs:[1]
+    },
+    {
+      id:"entiers-varies",
+      label:"Entiers variés",
+      triplets:tripletsPythagoreFaciles,
+      coeffs:[1]
+    },
+    {
+      id:"decimaux-simples",
+      label:"Décimaux simples",
+      triplets:[[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15],[12,16,20],[15,20,25],[20,21,29],[24,32,40],[30,40,50]],
+      coeffs:[0.1]
+    },
+    {
+      id:"decimaux-avances",
+      label:"Décimaux avancés",
+      triplets:[[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15],[12,16,20],[15,20,25],[20,21,29]],
+      coeffs:[0.25]
+    },
+    {
+      id:"melange",
+      label:"Mélange",
+      triplets:[[3,4,5],[6,8,10],[5,12,13],[8,15,17],[7,24,25],[20,21,29],[15,20,25],[24,32,40]],
+      coeffs:[1,0.1,0.5,0.25]
+    }
+  ];
+
+  function examplesForCategory(category){
+    const out = [];
+    for(const coeff of category.coeffs){
+      for(const triplet of category.triplets){
+        out.push({triplet, coeff});
+      }
+    }
+    return out;
+  }
+
+  function currentExampleList(){
+    const cat = exampleCategories.find(c => c.id === exampleCategoryInput.value) || exampleCategories[0];
+    return examplesForCategory(cat);
+  }
+
+  function fmtExampleTriplet(ex){
+    return ex.triplet.map(n => fmt(n * ex.coeff)).join(" ; ");
+  }
+
+  function populateExampleCategories(){
+    exampleCategoryInput.innerHTML = exampleCategories.map(c => `<option value="${c.id}">${c.label}</option>`).join("");
+    exampleCategoryInput.value = "entiers-simples";
+    populateExampleIndexes();
+  }
+
+  function populateExampleIndexes(keepIndex=false){
+    const list = currentExampleList();
+    const oldIndex = keepIndex ? Number(exampleIndexInput.value || 0) : 0;
+    exampleIndexInput.innerHTML = list.map((ex,i) => `<option value="${i}">${i+1}/${list.length} — ${fmtExampleTriplet(ex)}</option>`).join("");
+    exampleIndexInput.value = String(Math.max(0, Math.min(list.length-1, oldIndex)));
+  }
+
+  function chooseMissingMode(exampleIndex){
+    const mode = missingModeInput.value;
+    if(mode === "hyp") return "hyp";
+    if(mode === "leg") return exampleIndex % 2 === 0 ? "leg1" : "leg2";
+    return ["hyp", "leg1", "leg2"][exampleIndex % 3];
+  }
+
+  function setSideInput(side, value, sideNames){
+    const index = sideNames.findIndex(s => sameSide(s, side));
+    if(index >= 0) inputEls[index].value = value;
+  }
+
+  function applySelectedExample(){
+    updateSideLabels();
+    const list = currentExampleList();
+    if(!list.length) return;
+    const idx = Math.max(0, Math.min(list.length-1, Number(exampleIndexInput.value || 0)));
+    const ex = list[idx];
+    const [a,b,c] = ex.triplet.map(n => n * ex.coeff);
+    const letters = normalizeName(triangleNameInput.value);
+    const right = rightAngleInput.value || letters[0];
+    const sideNames = sidesFromLetters(letters);
+    const hyp = sideInInputOrder(hypotenuseForRightAngle(letters,right), sideNames);
+    const legs = otherLegs(letters,right).map(s => sideInInputOrder(s, sideNames));
+    inputEls.forEach(input => input.value = "");
+    const missing = chooseMissingMode(idx);
+    setSideInput(legs[0], missing === "leg1" ? "?" : fmt(a), sideNames);
+    setSideInput(legs[1], missing === "leg2" ? "?" : fmt(b), sideNames);
+    setSideInput(hyp, missing === "hyp" ? "?" : fmt(c), sideNames);
+  }
+
+  function nextExample(step=1){
+    const list = currentExampleList();
+    if(!list.length) return;
+    const current = Number(exampleIndexInput.value || 0);
+    const next = (current + step + list.length) % list.length;
+    exampleIndexInput.value = String(next);
+    nextRotation = Math.floor(Math.random()*4);
+    applySelectedExample();
+  }
 
   function normalizeName(raw){
     const clean = String(raw || "ABC").toUpperCase().replace(/[^A-ZÀ-ÖØ-Ý]/g, "");
@@ -1249,6 +2039,7 @@
       relationComplete:auto,
       relationSlots:slots,
       replaced:false,
+      replacements:{},
       squares:{},
       regrouped:false,
       decomposed:false,
@@ -1266,7 +2057,7 @@
   }
 
   function snapshot(){
-    history.push(JSON.stringify({work, selectedSlot, message}));
+    history.push(JSON.stringify({work, selectedSlot, activeChoiceMode, selectedChoiceSide, selectedCalcValue, message}));
     if(history.length > 50) history.shift();
   }
   function restore(){
@@ -1274,6 +2065,10 @@
     const old = JSON.parse(history.pop());
     work = old.work;
     selectedSlot = old.selectedSlot;
+    activeChoiceMode = old.activeChoiceMode || null;
+    selectedChoiceSide = old.selectedChoiceSide || null;
+    selectedCalcValue = old.selectedCalcValue ?? null;
+    flashCell = null;
     message = old.message || "";
     render();
   }
@@ -1291,10 +2086,8 @@
     if(model.unknownIsHyp){
       const l1 = model.leg1, l2 = model.leg2;
       rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, plainSq(l1.side))} + ${coloredTerm(l2.side, plainSq(l2.side))}`});
-      if(work.replaced) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, valueSq(l1.value))} + ${coloredTerm(l2.side, valueSq(l2.value))}`});
-      const a = work.squares[l1.side] ?? valueSq(l1.value);
-      const b = work.squares[l2.side] ?? valueSq(l2.value);
-      if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, fmtOrRaw(a))} + ${coloredTerm(l2.side, fmtOrRaw(b))}`});
+      if(anyReplaced()) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, isReplaced(l1.side) ? valueSq(l1.value) : plainSq(l1.side))} + ${coloredTerm(l2.side, isReplaced(l2.side) ? valueSq(l2.value) : plainSq(l2.side))}`});
+      if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, displayKnownSquare(l1.side, l1.value))} + ${coloredTerm(l2.side, displayKnownSquare(l2.side, l2.value))}`});
       if(work.regrouped) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:coloredTerm(model.hyp, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:model.hyp, rhs:`√${fmt(work.result)}`});
       if(work.concluded) rows.push({lhs:model.hyp, rhs:lengthAnswer(work.result)});
@@ -1302,11 +2095,9 @@
       const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
       const useColor = !work.decomposed;
       rows.push({lhs:maybeColoredTerm(h.side, plainSq(h.side), useColor), rhs:`${maybeColoredTerm(k.side, plainSq(k.side), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      if(work.replaced) rows.push({lhs:maybeColoredTerm(h.side, valueSq(h.value), useColor), rhs:`${maybeColoredTerm(k.side, valueSq(k.value), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      const hv = work.squares[h.side] ?? valueSq(h.value);
-      const kv = work.squares[k.side] ?? valueSq(k.value);
-      if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, fmtOrRaw(hv), useColor), rhs:`${maybeColoredTerm(k.side, fmtOrRaw(kv), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      if(work.decomposed) rows.push({lhs:`${fmt(kv)} + ${fmt(work.result)}`, rhs:`${fmt(kv)} + ${plainSq(u)}`});
+      if(anyReplaced()) rows.push({lhs:maybeColoredTerm(h.side, isReplaced(h.side) ? valueSq(h.value) : plainSq(h.side), useColor), rhs:`${maybeColoredTerm(k.side, isReplaced(k.side) ? valueSq(k.value) : plainSq(k.side), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
+      if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, displayKnownSquare(h.side, h.value), useColor), rhs:`${maybeColoredTerm(k.side, displayKnownSquare(k.side, k.value), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
+      if(work.decomposed) rows.push({lhs:`${fmt(work.squares[k.side])} + ${fmt(work.result)}`, rhs:`${fmt(work.squares[k.side])} + ${plainSq(u)}`});
       if(work.removed) rows.push({lhs:fmt(work.result), rhs:plainSq(u)});
       if(work.sqrt) rows.push({lhs:u, rhs:`√${fmt(work.result)}`});
       if(work.concluded) rows.push({lhs:u, rhs:lengthAnswer(work.result)});
@@ -1324,16 +2115,68 @@
     return `<span class="coloredTerm ${cls}">${text}</span>`;
   }
 
+  function replaceTargets(){
+    return squareTargets();
+  }
+
+  function isReplaced(side){
+    if(!work) return false;
+    return !!work.replaced || !!(work.replacements && work.replacements[side]);
+  }
+
+  function anyReplaced(){
+    return replaceTargets().some(t => isReplaced(t.side));
+  }
+
+  function allReplaced(){
+    return replaceTargets().every(t => isReplaced(t.side));
+  }
+
+  function displayKnownSquare(side, value){
+    if(work.squares[side]) return fmt(work.squares[side]);
+    if(isReplaced(side)) return valueSq(value);
+    return plainSq(side);
+  }
+
+  function resetChoice(){
+    activeChoiceMode = null;
+    selectedChoiceSide = null;
+    selectedCalcValue = null;
+  }
+
+  function setChoiceMode(mode){
+    activeChoiceMode = mode;
+    selectedChoiceSide = null;
+    selectedCalcValue = null;
+    message = "";
+    render();
+  }
+
   function currentInstruction(){
     if(!work.relationComplete){
       if(selectedSlot) return "Clique sur l’aire d’un carré du moulin.";
       return "Complète la relation : clique sur une case, puis sur l’aire d’un carré.";
     }
-    if(!work.replaced) return "Remplace les longueurs connues par leurs valeurs.";
+    if(!work.replaced){
+      if(activeChoiceMode === "replace"){
+        if(selectedChoiceSide) return `Clique sur la case du tableau où placer ${valueSq(sideValue(selectedChoiceSide))}.`;
+        return "Choisis une valeur, puis clique sur sa case dans le tableau.";
+      }
+      return "Remplace les longueurs connues par leurs valeurs.";
+    }
     const targets = squareTargets();
     const missing = targets.filter(t => !work.squares[t.side]);
-    if(missing.length) return "Calcule les carrés connus.";
-    if(model.unknownIsHyp && !work.regrouped) return "Regroupe les deux carrés connus.";
+    if(missing.length){
+      if(activeChoiceMode === "calculate"){
+        if(selectedCalcValue !== null) return `Clique sur le carré qui vaut ${fmt(selectedCalcValue)}.`;
+        return "Choisis un résultat, puis clique sur le carré à calculer.";
+      }
+      return "Calcule les carrés connus.";
+    }
+    if(model.unknownIsHyp && !work.regrouped){
+      if(activeChoiceMode === "regroup") return "Choisis la somme des deux carrés.";
+      return "Regroupe les deux carrés connus.";
+    }
     if(!model.unknownIsHyp && !work.decomposed) return "Décompose le carré de l’hypoténuse.";
     if(!model.unknownIsHyp && !work.removed) return "Enlève le carré connu dans chaque membre.";
     if(!work.sqrt) return "Passe du carré à la longueur.";
@@ -1354,7 +2197,7 @@
     renderBars();
     renderActions();
     solution.textContent = work.concluded ? finalSolutionText() : "";
-    actionZone.innerHTML = message ? `<div class="note${message.includes("correcte") ? " errorNote" : ""}">${message}</div>` : "";
+    actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("n’est") ? " errorNote" : ""}">${message}</div>` : "";
     setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
   }
 
@@ -1441,6 +2284,7 @@
       work.relationSlots = correctSlots();
       work.relationComplete = true;
       selectedSlot = null;
+      resetChoice();
       message = "";
     });
   }
@@ -1449,15 +2293,62 @@
     mutate(() => {
       work.relationSlots = {lhs:null, rhs1:null, rhs2:null};
       selectedSlot = null;
+      resetChoice();
       message = "";
     });
   }
 
   function renderSidePalette(){
-    // V9 : on ne propose plus d’étiquettes sous la relation.
-    // L’élève clique directement sur les aires des carrés du moulin.
     sidePalette.classList.remove("show");
     sidePalette.innerHTML = "";
+    if(!work.relationComplete || !activeChoiceMode) return;
+
+    if(activeChoiceMode === "replace"){
+      const choices = replaceTargets()
+        .filter(t => !isReplaced(t.side))
+        .map(t => ({label:valueSq(t.value), side:t.side}));
+      sidePalette.innerHTML = choices.map(c => {
+        const selected = sameSide(c.side, selectedChoiceSide || "") ? " selectedChoiceToken" : "";
+        return `<button type="button" class="sideChoice ${sideColorClass(c.side)}${selected}" data-replace-choice="${c.side}">${c.label}</button>`;
+      }).join("");
+      sidePalette.classList.add("show");
+      sidePalette.querySelectorAll("[data-replace-choice]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedChoiceSide = btn.dataset.replaceChoice;
+          selectedCalcValue = null;
+          message = "";
+          render();
+        });
+      });
+      return;
+    }
+
+    if(activeChoiceMode === "calculate"){
+      const choices = globalSquareResultChoices();
+      sidePalette.innerHTML = choices.map(v => {
+        const selected = selectedCalcValue !== null && approxEqual(v, selectedCalcValue) ? " selectedChoiceToken" : "";
+        return `<button type="button" class="sideChoice${selected}" data-calc-choice="${v}">${fmt(v)}</button>`;
+      }).join("");
+      sidePalette.classList.add("show");
+      sidePalette.querySelectorAll("[data-calc-choice]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedCalcValue = Number(btn.dataset.calcChoice);
+          selectedChoiceSide = null;
+          message = "";
+          render();
+        });
+      });
+      return;
+    }
+
+    if(activeChoiceMode === "regroup"){
+      const choices = regroupChoices();
+      sidePalette.innerHTML = choices.map(v => `<button type="button" class="sideChoice" data-regroup-choice="${v}">${fmt(v)}</button>`).join("");
+      sidePalette.classList.add("show");
+      sidePalette.querySelectorAll("[data-regroup-choice]").forEach(btn => {
+        btn.addEventListener("click", () => applyRegroupChoice(Number(btn.dataset.regroupChoice)));
+      });
+    }
   }
 
   function renderBars(){
@@ -1475,8 +2366,11 @@
     }
     const bar = model.unknownIsHyp ? hypBar() : legBar();
     barPair.innerHTML = renderBarLine(bar.top,"top", false) + renderBarLine(bar.bottom,"bottom", false);
+    [...barPair.querySelectorAll("[data-replace]")].forEach(el => {
+      el.addEventListener("click", () => selectReplaceSide(el.dataset.replace));
+    });
     [...barPair.querySelectorAll("[data-compute]")].forEach(el => {
-      el.addEventListener("click", () => askSquare(el.dataset.compute));
+      el.addEventListener("click", () => selectComputeSide(el.dataset.compute));
     });
   }
 
@@ -1495,9 +2389,11 @@
       }else{
         const classes = ["barPiece", p.kind || "known"];
         if(p.colorClass) classes.push(p.colorClass);
-        if(p.compute) classes.push("toCompute");
+        const pSide = p.side || p.replace || p.compute || null;
+        if(flashCell && pSide && sameSide(flashCell.side, pSide)) classes.push(flashCell.kind === "bad" ? "clickWrong" : "clickFlash");
         if(p.solved) classes.push("solved");
-        html += `<div class="${classes.join(" ")}" ${p.compute ? `data-compute="${p.compute}"` : ""}><div class="pieceContent"><div class="pieceMain">${p.main}</div></div></div>`;
+        const attrs = `${p.replace ? ` data-replace="${p.replace}"` : ""}${p.compute ? ` data-compute="${p.compute}"` : ""}`;
+        html += `<div class="${classes.join(" ")}"${attrs}><div class="pieceContent"><div class="pieceMain">${p.main}</div></div></div>`;
       }
     });
     html += `</div>`;
@@ -1554,9 +2450,9 @@
   function squarePieceForKnown(side, value, weight=null, neutral=false){
     const w = Number.isFinite(weight) ? weight : square(value);
     const colorClass = neutral ? "neutralAfterDecompose" : sideColorClass(side);
-    if(!work.replaced) return piece("known", plainSq(side), {weight:w, colorClass});
-    if(work.squares[side]) return piece("known", fmt(work.squares[side]), {weight:w, colorClass});
-    return piece("known", valueSq(value), {compute:side, weight:w, colorClass});
+    if(!isReplaced(side)) return piece("known", plainSq(side), {side, replace:side, weight:w, colorClass});
+    if(work.squares[side]) return piece("known", fmt(work.squares[side]), {side, weight:w, colorClass});
+    return piece("known", valueSq(value), {side, compute:side, weight:w, colorClass});
   }
 
   function renderActions(){
@@ -1568,13 +2464,11 @@
       actions.push({label:"Effacer", done:false, disabled:!filled && !selectedSlot, fn:clearRelation});
     }else{
       actions.push({label:"Relation", done:true, disabled:true});
-      actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:() => mutate(() => { work.replaced = true; message = ""; })});
+      actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:() => setChoiceMode("replace")});
       const targets = squareTargets();
-      targets.forEach(t => {
-        actions.push({label:`Calculer ${fmt(t.value)}²`, done:!!work.squares[t.side], disabled:!work.replaced || !!work.squares[t.side], fn:() => askSquare(t.side)});
-      });
+      actions.push({label:"Calculer", done:allSquaresDone(targets), disabled:!work.replaced || allSquaresDone(targets), fn:() => setChoiceMode("calculate")});
       if(model.unknownIsHyp){
-        actions.push({label:"Regrouper", done:work.regrouped, disabled:!allSquaresDone(targets) || work.regrouped, fn:askRegroup});
+        actions.push({label:"Regrouper", done:work.regrouped, disabled:!allSquaresDone(targets) || work.regrouped, fn:() => setChoiceMode("regroup")});
       }else{
         actions.push({label:"Décomposer", done:work.decomposed, disabled:!allSquaresDone(targets) || work.decomposed, fn:askDecomposeHypSquare});
         actions.push({label:"Enlever dans chaque membre", done:work.removed, disabled:!work.decomposed || work.removed, fn:removeKnownSquareBothSides});
@@ -1599,16 +2493,161 @@
   }
   function allSquaresDone(targets){ return targets.every(t => !!work.squares[t.side]); }
 
-  function askSquare(side){
-    if(!work.replaced || work.squares[side]) return;
-    const value = sideValue(side);
-    openNumberDialog({
-      title:`Calculer ${fmt(value)}²`,
-      text:`Quelle est la valeur de <strong>${fmt(value)}²</strong> ?`,
-      expected:square(value),
-      error:`Ce n’est pas la valeur de ${fmt(value)}².`,
-      onValid:(answer) => mutate(() => { work.squares[side] = answer; message = ""; })
+  function flashTableCell(side, kind="ok"){
+    flashCell = {side, kind};
+    window.clearTimeout(flashTableCell._timer);
+    flashTableCell._timer = window.setTimeout(() => {
+      flashCell = null;
+      render();
+    }, 520);
+  }
+
+  function selectReplaceSide(side){
+    if(activeChoiceMode !== "replace") return;
+    if(work.replaced || !replaceTargets().some(t => sameSide(t.side, side))) return;
+    if(!selectedChoiceSide){
+      flashTableCell(side, "bad");
+      message = "Choisis d’abord une valeur.";
+      render();
+      return;
+    }
+    if(!sameSide(selectedChoiceSide, side)){
+      flashTableCell(side, "bad");
+      message = "Ce n’est pas la bonne case.";
+      render();
+      return;
+    }
+    flashTableCell(side, "ok");
+    mutate(() => {
+      work.replacements[side] = true;
+      work.replaced = allReplaced();
+      selectedChoiceSide = null;
+      selectedCalcValue = null;
+      if(work.replaced) activeChoiceMode = null;
+      message = "";
     });
+  }
+
+  function selectComputeSide(side){
+    if(activeChoiceMode !== "calculate") return;
+    if(!work.replaced || work.squares[side] || !squareTargets().some(t => sameSide(t.side, side))) return;
+    if(selectedCalcValue === null){
+      flashTableCell(side, "bad");
+      message = "Choisis d’abord un résultat.";
+      render();
+      return;
+    }
+    const expected = square(sideValue(side));
+    if(!approxEqual(selectedCalcValue, expected)){
+      flashTableCell(side, "bad");
+      message = "Ce n’est pas la bonne case.";
+      render();
+      return;
+    }
+    flashTableCell(side, "ok");
+    mutate(() => {
+      work.squares[side] = expected;
+      selectedCalcValue = null;
+      selectedChoiceSide = null;
+      if(allSquaresDone(squareTargets())) activeChoiceMode = null;
+      message = "";
+    });
+  }
+
+  function globalSquareResultChoices(){
+    const targets = squareTargets().filter(t => !work.squares[t.side]);
+    const choices = [];
+    function add(v){
+      if(Number.isFinite(v) && !choices.some(x => approxEqual(x, v))) choices.push(v);
+    }
+    function concatSquareConfusion(v){
+      if(Number.isInteger(v) && v >= 0 && v < 100){
+        return Number(String(Math.round(v)) + "2");
+      }
+      return NaN;
+    }
+    if(targets.length >= 2){
+      const a = targets[0].value;
+      const b = targets[1].value;
+      add(a * 2);
+      add(square(a));
+      add(concatSquareConfusion(a));
+      add(concatSquareConfusion(b));
+      add(square(b));
+      add(b * 2);
+      add(square(a) + a);
+      add(Math.max(0, square(b) - b));
+    }else if(targets.length === 1){
+      const a = targets[0].value;
+      const c = square(a);
+      add(a * 2);
+      add(c);
+      add(concatSquareConfusion(a));
+      add(c + a);
+      add(Math.max(0, c - a));
+      add(c + 2);
+    }
+    let guard = 1;
+    const base = targets[0] ? square(targets[0].value) : 0;
+    while(choices.length < 5 && guard < 20){
+      add(base + guard * 3);
+      guard++;
+    }
+    return choices.slice(0, 5);
+  }
+
+  function regroupChoices(){
+    const a = work.squares[model.leg1.side];
+    const b = work.squares[model.leg2.side];
+    const correct = a + b;
+    const choices = [];
+    function add(v){
+      if(Number.isFinite(v) && v >= 0 && !choices.some(x => approxEqual(x, v))) choices.push(v);
+    }
+    add(a + b - Math.min(a,b));
+    add(correct);
+    add(Number(String(Math.round(Math.sqrt(a))) + String(Math.round(Math.sqrt(b)))));
+    add(Math.abs(a - b));
+    add(a * b);
+    add(correct + Math.min(a,b));
+    return choices.slice(0, 4);
+  }
+
+  function applyRegroupChoice(choice){
+    if(activeChoiceMode !== "regroup") return;
+    const a = work.squares[model.leg1.side];
+    const b = work.squares[model.leg2.side];
+    const expected = a + b;
+    if(!approxEqual(choice, expected)){
+      message = "Ce n’est pas la bonne somme.";
+      render();
+      return;
+    }
+    mutate(() => {
+      work.result = expected;
+      work.regrouped = true;
+      resetChoice();
+      message = "";
+    });
+  }
+
+  function squareResultChoices(side){
+    const value = sideValue(side);
+    const correct = square(value);
+    const candidates = [];
+    function add(v){
+      if(Number.isFinite(v) && !candidates.some(x => approxEqual(x,v))) candidates.push(v);
+    }
+    add(value * 2);
+    add(correct);
+    if(Number.isInteger(value) && value >= 0 && value < 100){
+      add(Number(String(Math.round(value)) + "2"));
+    }
+    add(correct + value);
+    add(Math.max(0, correct - value));
+    const wrongs = candidates.filter(v => !approxEqual(v, correct)).slice(0,2);
+    const choices = [wrongs[0], correct, wrongs[1]].filter(v => Number.isFinite(v));
+    return choices;
   }
 
   function askRegroup(){
@@ -1856,6 +2895,7 @@
     model = built;
     work = initialWork();
     selectedSlot = null;
+    resetChoice();
     message = "";
     history = [];
     appMain.classList.add("activeMode");
@@ -1870,17 +2910,8 @@
   }
 
   function applyRandom(){
-    const ex = examples[Math.floor(Math.random()*examples.length)];
-    nextRotation = Math.floor(Math.random()*4);
-    triangleNameInput.value = ex.name;
-    updateSideLabels();
-    rightAngleInput.value = ex.right;
-    const letters = normalizeName(ex.name);
-    const names = sidesFromLetters(letters);
-    inputEls.forEach((input,i) => {
-      const side = names[i];
-      input.value = ex.values[side] ?? ex.values[reverseSide(side)] ?? "?";
-    });
+    // Ancien bouton hasard : il sert désormais à avancer dans la progression du niveau choisi.
+    nextExample(1);
   }
 
   function revealAll(){
@@ -1888,6 +2919,7 @@
     mutate(() => {
       work.relationSlots = correctSlots();
       work.relationComplete = true;
+      squareTargets().forEach(t => { work.replacements[t.side] = true; });
       work.replaced = true;
       if(model.unknownIsHyp){
         work.squares[model.leg1.side] = square(model.leg1.value);
@@ -1904,14 +2936,20 @@
       work.sqrt = true;
       work.concluded = true;
       selectedSlot = null;
+      resetChoice();
       message = "";
     });
   }
 
   btnBuild.addEventListener("click", start);
-  btnRandom.addEventListener("click", applyRandom);
-  btnStageRandom.addEventListener("click", () => { applyRandom(); start(); });
-  triangleNameInput.addEventListener("input", updateSideLabels);
+  btnRandom.addEventListener("click", () => { nextExample(1); });
+  btnPrevExample.addEventListener("click", () => { nextExample(-1); });
+  btnStageRandom.addEventListener("click", () => { nextExample(1); start(); });
+  exampleCategoryInput.addEventListener("change", () => { populateExampleIndexes(false); applySelectedExample(); });
+  exampleIndexInput.addEventListener("change", () => { applySelectedExample(); });
+  missingModeInput.addEventListener("change", () => { applySelectedExample(); });
+  triangleNameInput.addEventListener("input", () => { updateSideLabels(); applySelectedExample(); });
+  rightAngleInput.addEventListener("change", () => { applySelectedExample(); });
   btnMenu.addEventListener("click", () => { backToMenu(); });
   btnToggleEq.addEventListener("click", () => { display.equation = !display.equation; render(); });
   btnFullscreen.addEventListener("click", async () => {
@@ -1919,7 +2957,7 @@
     else{ try{ await document.exitFullscreen(); }catch(e){} }
   });
   btnUndo.addEventListener("click", restore);
-  btnRestart.addEventListener("click", () => { if(model){ work = initialWork(); selectedSlot = null; message = ""; history = []; render(); } });
+  btnRestart.addEventListener("click", () => { if(model){ work = initialWork(); selectedSlot = null; resetChoice(); message = ""; history = []; render(); } });
   btnReveal.addEventListener("click", revealAll);
   btnCalcApply.addEventListener("click", validateDialog);
   btnCalcAuto.addEventListener("click", () => {
@@ -1935,6 +2973,8 @@
   calcInput.addEventListener("keydown", (e) => { if(e.key === "Enter") validateDialog(); });
 
   updateSideLabels();
+  populateExampleCategories();
+  applySelectedExample();
   syncEyeButton();
 })();
 </script>
