@@ -1884,6 +1884,489 @@
     }
   }
 
+
+  /* PATCH CONSTRUCTEUR V2.2 — barre d’outils stable hors plein écran.
+     On repart de la V2 : pas de compression dynamique.
+     On remonte simplement la zone des boutons en réservant toujours
+     une vraie place sous la barre d’outils pour les boutons contextuels
+     (Valider / Effacer), afin que rien ne bouge quand ils apparaissent. */
+  .stage:not(:fullscreen):not(.emptyState) .toolBar{
+    margin:2px 0 0;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .actionZone{
+    flex:0 0 92px;
+    min-height:92px;
+    margin-top:4px;
+    padding-bottom:14px;
+    align-items:flex-start;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .board{
+    min-height:225px;
+  }
+
+  @media (max-height:720px){
+    .stage:not(:fullscreen):not(.emptyState) .actionZone{
+      flex-basis:82px;
+      min-height:82px;
+      padding-bottom:10px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBar{
+      margin-top:0;
+    }
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V2.3 — plein écran : boutons toujours dans l'écran.
+     Correction ciblée du mode fullscreen uniquement : la barre d'outils reste à sa place,
+     une zone fixe est réservée dessous pour les boutons contextuels, et le plateau absorbe
+     l'ajustement de hauteur. Rien ne bouge quand Valider / Effacer apparaissent. */
+  .stage.fullscreenCompact:fullscreen:not(.emptyState){
+    padding:18px 22px 12px;
+    overflow:hidden;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(22px,2.05vw,34px) * 1.18 + 3px);
+    flex:0 0 calc(var(--eq-row-h) * 3 + 10px);
+    height:calc(var(--eq-row-h) * 3 + 10px);
+    min-height:calc(var(--eq-row-h) * 3 + 10px);
+    padding-top:0;
+    padding-bottom:4px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    font-size:clamp(22px,2.05vw,34px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+    flex:0 0 auto;
+    min-height:40px;
+    margin:0 auto 7px;
+    font-size:clamp(18px,1.85vw,24px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+    flex:1 1 auto;
+    min-height:210px;
+    max-height:none;
+    padding:22px clamp(34px,4.5vw,76px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .piece{
+    height:clamp(72px,11.5vh,104px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .barLine{
+    min-height:clamp(72px,11.5vh,104px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .solution{
+    flex:0 0 54px;
+    min-height:54px;
+    height:54px;
+    margin:2px 0 0;
+    font-size:clamp(30px,3.6vw,50px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBar{
+    flex:0 0 auto;
+    margin:0;
+    gap:8px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBarRow{
+    gap:8px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBtn,
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .undoToolBtn{
+    min-height:50px;
+    padding:12px 18px;
+    border-radius:18px;
+    font-size:16px;
+    line-height:1.1;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone{
+    flex:0 0 70px;
+    min-height:70px;
+    margin-top:4px;
+    padding-bottom:6px;
+    align-items:flex-start;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone button{
+    min-height:52px;
+    padding:13px 18px;
+    border-radius:18px;
+    font-size:16px;
+  }
+
+  @media (max-height:760px){
+    .stage.fullscreenCompact:fullscreen:not(.emptyState){
+      padding-top:14px;
+      padding-bottom:8px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+      min-height:34px;
+      margin-bottom:4px;
+      font-size:clamp(17px,1.75vw,22px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+      min-height:180px;
+      padding-top:16px;
+      padding-bottom:16px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .piece{
+      height:clamp(62px,10vh,88px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .barLine{
+      min-height:clamp(62px,10vh,88px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .solution{
+      flex-basis:46px;
+      min-height:46px;
+      height:46px;
+      font-size:clamp(28px,3.2vw,44px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBtn,
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .undoToolBtn{
+      min-height:46px;
+      padding:10px 16px;
+      font-size:15px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone{
+      flex-basis:60px;
+      min-height:60px;
+      padding-bottom:4px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone button{
+      min-height:46px;
+      padding:10px 16px;
+      font-size:15px;
+    }
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V2.4 — plein écran : réduire le vide autour du schéma.
+     On ne touche pas au mode normal ni au moteur. La grande carte blanche du plateau
+     n'occupe plus toute la hauteur disponible : elle se limite au schéma + respiration.
+     Les boutons peuvent donc remonter et être légèrement agrandis, sans déplacement
+     dynamique quand les boutons contextuels apparaissent. */
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+    flex:0 0 auto;
+    min-height:0;
+    max-height:none;
+    padding:18px clamp(32px,4.2vw,72px);
+    margin:2px auto 10px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .solution{
+    flex:0 0 50px;
+    min-height:50px;
+    height:50px;
+    margin:0;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBar{
+    margin:0;
+    gap:10px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBarRow{
+    gap:10px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBtn,
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .undoToolBtn{
+    min-height:54px;
+    padding:13px 20px;
+    border-radius:19px;
+    font-size:17px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone{
+    flex:0 0 72px;
+    min-height:72px;
+    margin-top:5px;
+    padding-bottom:6px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone button{
+    min-height:54px;
+    padding:13px 20px;
+    border-radius:19px;
+    font-size:17px;
+  }
+
+  @media (max-height:760px){
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+      padding-top:12px;
+      padding-bottom:12px;
+      margin-bottom:6px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .solution{
+      flex-basis:44px;
+      min-height:44px;
+      height:44px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBtn,
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .undoToolBtn{
+      min-height:48px;
+      padding:10px 17px;
+      font-size:15.5px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone{
+      flex-basis:62px;
+      min-height:62px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .actionZone button{
+      min-height:48px;
+      padding:10px 17px;
+      font-size:15.5px;
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V2.5 — plein écran : utiliser le vide du bas.
+     On garde le mode normal intact. En plein écran, l'historique peut montrer
+     cinq lignes, ce qui descend naturellement le plateau. Les boutons et la zone
+     contextuelle restent fixes : rien ne bouge quand Valider / Effacer apparaissent. */
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(20px,1.75vw,30px) * 1.18 + 3px);
+    flex:0 0 calc(var(--eq-row-h) * 5 + 12px);
+    height:calc(var(--eq-row-h) * 5 + 12px);
+    min-height:calc(var(--eq-row-h) * 5 + 12px);
+    padding-top:0;
+    padding-bottom:6px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+    --eq-row-h: calc(clamp(20px,1.75vw,30px) * 1.18 + 3px);
+    height:calc(var(--eq-row-h) * 5);
+    max-height:calc(var(--eq-row-h) * 5);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    font-size:clamp(20px,1.75vw,30px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+    min-height:38px;
+    margin:0 auto 8px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+    margin-top:8px;
+    margin-bottom:10px;
+  }
+
+  @media (max-height:760px){
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+      --eq-row-h: calc(clamp(18px,1.55vw,26px) * 1.18 + 2px);
+      flex-basis:calc(var(--eq-row-h) * 5 + 10px);
+      height:calc(var(--eq-row-h) * 5 + 10px);
+      min-height:calc(var(--eq-row-h) * 5 + 10px);
+      padding-bottom:4px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+      --eq-row-h: calc(clamp(18px,1.55vw,26px) * 1.18 + 2px);
+      height:calc(var(--eq-row-h) * 5);
+      max-height:calc(var(--eq-row-h) * 5);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+      font-size:clamp(18px,1.55vw,26px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+      margin-top:6px;
+      margin-bottom:6px;
+    }
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V2.6 — plein écran : équations plus lisibles et scène mieux centrée verticalement.
+     On garde le mode normal intact. En plein écran, les 5 lignes d'historique sont conservées,
+     mais la police remonte vers une taille plus lisible ; cette réserve verticale descend
+     naturellement le plateau et les boutons en utilisant le vide disponible en bas. */
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(24px,2.15vw,38px) * 1.18 + 4px);
+    flex:0 0 calc(var(--eq-row-h) * 5 + 16px);
+    height:calc(var(--eq-row-h) * 5 + 16px);
+    min-height:calc(var(--eq-row-h) * 5 + 16px);
+    padding-top:2px;
+    padding-bottom:8px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+    --eq-row-h: calc(clamp(24px,2.15vw,38px) * 1.18 + 4px);
+    height:calc(var(--eq-row-h) * 5);
+    max-height:calc(var(--eq-row-h) * 5);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    font-size:clamp(24px,2.15vw,38px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+    min-height:42px;
+    margin:0 auto 10px;
+    font-size:clamp(19px,1.95vw,26px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+    margin-top:10px;
+    margin-bottom:14px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBar{
+    margin-top:4px;
+  }
+
+  @media (max-height:760px){
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+      --eq-row-h: calc(clamp(20px,1.75vw,30px) * 1.18 + 3px);
+      flex-basis:calc(var(--eq-row-h) * 5 + 12px);
+      height:calc(var(--eq-row-h) * 5 + 12px);
+      min-height:calc(var(--eq-row-h) * 5 + 12px);
+      padding-top:0;
+      padding-bottom:5px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+      --eq-row-h: calc(clamp(20px,1.75vw,30px) * 1.18 + 3px);
+      height:calc(var(--eq-row-h) * 5);
+      max-height:calc(var(--eq-row-h) * 5);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+      font-size:clamp(20px,1.75vw,30px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+      min-height:36px;
+      margin-bottom:6px;
+      font-size:clamp(18px,1.75vw,23px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+      margin-top:7px;
+      margin-bottom:8px;
+    }
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V2.7 — plein écran : équation plus grande et scène légèrement plus basse.
+     On garde 5 lignes, on ne touche pas au mode normal ni au moteur. */
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(28px,2.65vw,46px) * 1.18 + 5px);
+    flex:0 0 calc(var(--eq-row-h) * 5 + 18px);
+    height:calc(var(--eq-row-h) * 5 + 18px);
+    min-height:calc(var(--eq-row-h) * 5 + 18px);
+    padding-top:4px;
+    padding-bottom:9px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+    --eq-row-h: calc(clamp(28px,2.65vw,46px) * 1.18 + 5px);
+    height:calc(var(--eq-row-h) * 5);
+    max-height:calc(var(--eq-row-h) * 5);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    font-size:clamp(28px,2.65vw,46px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+    min-height:44px;
+    margin:0 auto 12px;
+    font-size:clamp(20px,2.05vw,28px);
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+    margin-top:14px;
+    margin-bottom:16px;
+  }
+
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .toolBar{
+    margin-top:6px;
+  }
+
+  @media (max-height:760px){
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .topbar{
+      --eq-row-h: calc(clamp(22px,2.05vw,34px) * 1.18 + 3px);
+      flex-basis:calc(var(--eq-row-h) * 5 + 13px);
+      height:calc(var(--eq-row-h) * 5 + 13px);
+      min-height:calc(var(--eq-row-h) * 5 + 13px);
+      padding-top:1px;
+      padding-bottom:5px;
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationHistory{
+      --eq-row-h: calc(clamp(22px,2.05vw,34px) * 1.18 + 3px);
+      height:calc(var(--eq-row-h) * 5);
+      max-height:calc(var(--eq-row-h) * 5);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+      font-size:clamp(22px,2.05vw,34px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .instructionZone{
+      min-height:38px;
+      margin-bottom:7px;
+      font-size:clamp(18px,1.85vw,24px);
+    }
+
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .board{
+      margin-top:9px;
+      margin-bottom:9px;
+    }
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V2.8 — mode normal : consigne stable sur deux lignes.
+     La zone de consigne garde toujours la hauteur nécessaire pour deux lignes,
+     afin que le plateau ne monte/descende plus selon la longueur du texte.
+     Le plein écran n'est pas touché. */
+  .stage:not(:fullscreen):not(.emptyState) .instructionZone{
+    min-height:72px;
+    height:72px;
+    margin:0 auto 8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  @media (max-height:720px){
+    .stage:not(:fullscreen):not(.emptyState) .instructionZone{
+      min-height:66px;
+      height:66px;
+    }
+  }
+
 </style>
 </head>
 <body>
