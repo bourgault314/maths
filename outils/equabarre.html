@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Équabarre — schémas en barres</title>
+<title>Équabarre — constructeur d’équations v1.4</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -234,6 +234,32 @@
     min-height:108px;
   }
 
+
+  /* PATCH v5b — plein écran : conserver les hachures et sélections.
+     Les règles .piece.number / .piece.x du mode compact écrasaient les backgrounds
+     des états selectedForDelete / selectedForAdd / removed. */
+  .stage.fullscreenCompact:fullscreen .piece.selectedForDelete{
+    background:
+      repeating-linear-gradient(135deg, rgba(249,115,22,.22) 0 8px, rgba(255,255,255,.52) 8px 15px),
+      linear-gradient(180deg,var(--orange-soft),#fff7ed);
+    box-shadow: inset 0 0 0 3px rgba(249,115,22,.42);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.selectedForAdd{
+    background:
+      repeating-linear-gradient(135deg, rgba(22,163,74,.16) 0 8px, rgba(255,255,255,.62) 8px 15px),
+      linear-gradient(180deg,#dcfce7,#f0fdf4);
+    box-shadow: inset 0 0 0 3px rgba(22,163,74,.42);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.removed{
+    opacity:.26;
+    background:
+      repeating-linear-gradient(135deg, rgba(15,23,42,.30) 0 7px, rgba(255,255,255,.1) 7px 14px),
+      #e5e7eb;
+    pointer-events:none;
+  }
+
   @media (max-width:900px){
     .panel{position:static}
   }
@@ -248,146 +274,8 @@
     letter-spacing:.06em;
   }
 
-  .modeSwitch{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin:12px 0 14px;
-  }
-
-  .modeBtn{
-    padding:10px 8px;
-    border-radius:14px;
-    border:1px solid rgba(15,23,42,.12);
-    background:#f8fafc;
-    color:#334155;
-    font-weight:950;
-  }
-
-  .modeBtn.active{
-    background:linear-gradient(180deg,#60a5fa,#3b82f6);
-    color:#fff;
-    border-color:rgba(37,99,235,.30);
-    box-shadow:0 10px 24px rgba(59,130,246,.16);
-  }
-
-  .studentPanel{
-    display:none;
-  }
-
-  .studentPanel.open{
-    display:block;
-  }
-
   .profPanel.hidden{
     display:none;
-  }
-
-  .studentProgress{
-    margin:10px 0 0;
-    padding:10px 12px;
-    border-radius:14px;
-    background:#f8fafc;
-    border:1px solid rgba(15,23,42,.08);
-    color:#334155;
-    font-size:14px;
-    font-weight:850;
-    text-align:center;
-  }
-
-  .studentProgress strong{
-    font-weight:950;
-  }
-
-  .worldGrid{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:10px;
-    margin:10px 0 12px;
-  }
-
-  .worldCard{
-    position:relative;
-    width:100%;
-    text-align:left;
-    padding:12px 12px;
-    border-radius:18px;
-    border:1px solid rgba(15,23,42,.12);
-    background:linear-gradient(180deg,#ffffff,#f8fafc);
-    color:#0f172a;
-    box-shadow:0 8px 20px rgba(15,23,42,.06);
-    cursor:pointer;
-  }
-
-  .worldCard:hover{
-    filter:brightness(.99);
-    transform:translateY(-1px);
-  }
-
-  .worldCard.active{
-    border-color:rgba(59,130,246,.52);
-    box-shadow:0 12px 26px rgba(59,130,246,.14);
-    background:linear-gradient(180deg,#eff6ff,#ffffff);
-  }
-
-  .worldCard.done{
-    border-color:rgba(22,163,74,.42);
-    background:linear-gradient(180deg,#dcfce7,#ffffff);
-  }
-
-  .worldTop{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-    margin-bottom:4px;
-  }
-
-  .worldName{
-    font-size:15px;
-    font-weight:950;
-    letter-spacing:-.02em;
-  }
-
-  .worldBadge{
-    flex:0 0 auto;
-    min-width:30px;
-    height:30px;
-    padding:0 8px;
-    display:inline-grid;
-    place-items:center;
-    border-radius:999px;
-    background:#e2e8f0;
-    color:#334155;
-    font-size:13px;
-    font-weight:950;
-  }
-
-  .worldCard.done .worldBadge{
-    background:#16a34a;
-    color:#fff;
-  }
-
-  .worldExample{
-    font-size:13px;
-    color:#64748b;
-    font-weight:850;
-  }
-
-  .worldCard.done::after{
-    content:"✓";
-    position:absolute;
-    right:12px;
-    bottom:9px;
-    width:24px;
-    height:24px;
-    border-radius:999px;
-    display:grid;
-    place-items:center;
-    background:#16a34a;
-    color:white;
-    font-weight:950;
-    font-size:15px;
   }
 
   input,select{
@@ -411,17 +299,6 @@
   /* PATCH v7 — menu prof : mots en capitales, lettres mathématiques en minuscules */
   .mathParamLabel{
     text-transform:uppercase;
-  }
-
-  .teacherParamGrid .mathParamLabel{
-    text-align:center;
-  }
-
-  .teacherParamGrid .mathParamLabel .mathLetter{
-    display:block;
-    margin-top:2px;
-    text-align:center;
-    font-size:18px;
   }
 
   .mathParamLabel .mathLetter{
@@ -448,28 +325,6 @@
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
-  }
-
-  .teacherParamGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    align-items:end;
-  }
-
-  .teacherParamGrid.three{
-    grid-template-columns:repeat(3,minmax(0,1fr));
-  }
-
-  .teacherParamGrid input{
-    padding-left:10px;
-    padding-right:10px;
-    text-align:center;
-    font-weight:850;
-  }
-
-  .teacherParamGrid .hiddenParam{
-    display:none;
   }
 
   .btnrow{
@@ -499,10 +354,6 @@
   }
 
   /* PATCH 1 — bouton Construire : bleu principal adouci sans modifier les autres boutons */
-  #btnBuild.primary{
-    background:linear-gradient(180deg,#93c5fd,#60a5fa);
-    color:white;
-  }
   button.green{
     background:linear-gradient(180deg,#22c55e,#16a34a);
     color:white;
@@ -549,65 +400,6 @@
     align-items:center;
   }
 
-  .stageStudentHud{
-    position:absolute;
-    top:14px;
-    left:14px;
-    z-index:5;
-    display:none;
-    align-items:center;
-    gap:10px;
-    padding:8px 10px;
-    border-radius:16px;
-    background:rgba(255,255,255,.94);
-    border:1px solid rgba(15,23,42,.12);
-    box-shadow:0 10px 24px rgba(15,23,42,.12);
-    backdrop-filter:blur(8px);
-    font-size:15px;
-    font-weight:900;
-    color:#334155;
-  }
-
-  .stageStudentHud.open{
-    display:flex;
-  }
-
-  .studentWaitingStage{
-    display:none;
-    min-height:520px;
-    border-radius:24px;
-    border:1px dashed rgba(15,23,42,.18);
-    background:rgba(255,255,255,.55);
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    text-align:center;
-    padding:32px;
-  }
-
-  .studentWaitingStage.open{
-    display:flex;
-  }
-
-  .waitingTitle{
-    font-size:clamp(34px,4vw,56px);
-    font-weight:950;
-    letter-spacing:-.05em;
-    color:#0f172a;
-  }
-
-  .waitingText{
-    margin-top:8px;
-    font-size:17px;
-    line-height:1.35;
-    font-weight:750;
-    color:#64748b;
-  }
-
-  .stageStudentHud strong{
-    color:#0f172a;
-    font-weight:950;
-  }
 
   .stageNextBtn{
     padding:8px 10px;
@@ -1341,7 +1133,6 @@
   }
 
 
-
   /* PATCH ERGONOMIE TABLETTE 2 — consignes plus lisibles, réponse finale remontée, bulles agrandies */
   .instructionZone{
     min-height:58px;
@@ -1400,243 +1191,7 @@
     }
   }
 
-
-
-  /* PATCH ÉLÈVE 01 — choix des mondes compact + progression plus visible */
-  .studentPanel label:first-child{
-    margin-top:6px;
-  }
-
-  .worldGrid{
-    grid-template-columns:repeat(5, minmax(0, 1fr));
-    gap:7px;
-    margin:8px 0 12px;
-  }
-
-  .worldCard{
-    min-height:76px;
-    padding:8px 5px 7px;
-    text-align:center;
-    border-radius:16px;
-    box-shadow:0 6px 16px rgba(15,23,42,.055);
-  }
-
-  .worldTop{
-    height:100%;
-    flex-direction:column-reverse;
-    justify-content:center;
-    gap:6px;
-    margin-bottom:0;
-  }
-
-  .worldName{
-    font-size:11px;
-    line-height:1.05;
-    letter-spacing:-.025em;
-  }
-
-  .worldBadge{
-    min-width:34px;
-    height:34px;
-    padding:0;
-    font-size:16px;
-    box-shadow:inset 0 -1px 0 rgba(15,23,42,.08);
-  }
-
-  .worldCard.done::after{
-    right:4px;
-    top:4px;
-    bottom:auto;
-    width:22px;
-    height:22px;
-    font-size:14px;
-    box-shadow:0 4px 10px rgba(22,163,74,.18);
-  }
-
-  .studentProgress{
-    padding:12px 12px;
-    border-radius:18px;
-    font-size:15px;
-    line-height:1.25;
-  }
-
-  .studentProgress .progressTitle{
-    display:block;
-    font-size:16px;
-    color:#0f172a;
-    font-weight:950;
-    margin-bottom:7px;
-  }
-
-  .studentProgress .progressLine{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .miniDots{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:5px;
-  }
-
-  .miniDot{
-    width:10px;
-    height:10px;
-    border-radius:999px;
-    background:#cbd5e1;
-    box-shadow:inset 0 0 0 1px rgba(15,23,42,.06);
-  }
-
-  .miniDot.done{
-    background:#16a34a;
-  }
-
-  .miniDot.current{
-    background:#3b82f6;
-    transform:scale(1.18);
-  }
-
-  .stageStudentHud{
-    top:12px;
-    left:12px;
-    gap:12px;
-    padding:10px 12px;
-    border-radius:20px;
-    font-size:16px;
-  }
-
-  .stageStudentProgressContent{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-
-  .hudWorld{
-    color:#0f172a;
-    font-weight:950;
-  }
-
-  .hudPill{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:34px;
-    padding:6px 11px;
-    border-radius:999px;
-    background:#eff6ff;
-    color:#1d4ed8;
-    font-weight:950;
-    border:1px solid rgba(59,130,246,.18);
-  }
-
-  .hudSuccess{
-    background:#dcfce7;
-    color:#166534;
-    border-color:rgba(22,163,74,.22);
-  }
-
-  .stageNextBtn{
-    min-height:38px;
-    padding:9px 15px;
-    border-radius:999px;
-    font-size:15px;
-    box-shadow:0 10px 22px rgba(22,163,74,.18);
-  }
-
-  .successCard{
-    margin:4px auto 0;
-    padding:12px 18px;
-    border-radius:22px;
-    background:linear-gradient(180deg,#dcfce7,#f0fdf4);
-    border:1px solid rgba(22,163,74,.22);
-    color:#166534;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    font-size:clamp(24px,2.5vw,34px);
-    font-weight:950;
-    box-shadow:0 14px 30px rgba(22,163,74,.13);
-  }
-
-  .successCard .successCheck{
-    width:42px;
-    height:42px;
-    display:inline-grid;
-    place-items:center;
-    border-radius:999px;
-    background:#16a34a;
-    color:#fff;
-    font-size:28px;
-    line-height:1;
-  }
-
-  @media (max-width:520px){
-    .worldGrid{
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-    }
-
-    .worldCard{
-      min-height:74px;
-    }
-
-    .stageStudentHud{
-      right:70px;
-      align-items:flex-start;
-    }
-
-    .stageStudentProgressContent{
-      gap:7px;
-    }
-  }
-
-
-  /* PATCH ÉLÈVE 02 — monde sélectionné plus lisible + contraste tablette */
-  .worldCard.active{
-    border-color:rgba(37,99,235,.88);
-    background:linear-gradient(180deg,#dbeafe,#eff6ff 58%,#ffffff);
-    box-shadow:0 12px 28px rgba(37,99,235,.24), inset 0 0 0 2px rgba(37,99,235,.16);
-    transform:translateY(-1px);
-  }
-
-  .worldCard.active .worldBadge{
-    background:linear-gradient(180deg,#3b82f6,#1d4ed8);
-    color:#ffffff;
-    box-shadow:0 8px 18px rgba(37,99,235,.28);
-  }
-
-  .worldCard.active .worldName{
-    color:#1e3a8a;
-    font-weight:950;
-  }
-
-  .worldCard.done.active{
-    border-color:rgba(37,99,235,.88);
-    background:linear-gradient(180deg,#dbeafe,#eff6ff 55%,#ffffff);
-  }
-
-
   /* PATCH 2D — retour menu prof sobre + signes + plus lisibles */
-  .teacherParamGrid .mathParamLabel{
-    text-align:left;
-  }
-
-  .teacherParamGrid .mathParamLabel .mathLetter{
-    display:inline;
-    margin-top:0;
-    text-align:inherit;
-    font-size:inherit;
-  }
-
-  .teacherParamGrid input{
-    text-align:left;
-    font-weight:700;
-  }
 
   .chip.mathChip{
     font-family:Arial, Helvetica, sans-serif;
@@ -1654,169 +1209,744 @@
     transform:translateY(-.02em);
   }
 
+
+  /* PATCH IMPORT SEUL — interface compacte pour l'appel depuis Splat.
+     Les contrôles de génération autonome ont été supprimés : il ne reste que les réglages utiles. */
+  main{
+    grid-template-columns:240px minmax(0,1fr);
+  }
+
+  .appTitle{
+    font-size:26px;
+    margin-bottom:12px;
+  }
+
+  .importOnlyControl{
+    display:block;
+  }
+
+  /* PATCH CONSTRUCTEUR V1 — menu autonome : écrire une équation puis ouvrir le tableau. */
+  .creatorBlock{
+    padding:12px;
+    margin-bottom:14px;
+    border:1px solid rgba(59,130,246,.16);
+    background:rgba(239,246,255,.72);
+    border-radius:18px;
+  }
+
+  .creatorTitle{
+    font-size:15px;
+    font-weight:950;
+    color:#1d4ed8;
+    margin-bottom:8px;
+  }
+
+  .equationInput{
+    font-size:17px;
+    font-weight:900;
+    font-family:Arial, Helvetica, sans-serif;
+  }
+
+  .buildHelp{
+    margin-top:8px;
+    color:#64748b;
+    font-size:12px;
+    line-height:1.35;
+    font-weight:700;
+  }
+
+  .buildError{
+    display:none;
+    margin-top:10px;
+    padding:9px 10px;
+    border-radius:13px;
+    background:#fef2f2;
+    border:1px solid rgba(239,68,68,.22);
+    color:#991b1b;
+    font-size:12px;
+    line-height:1.35;
+    font-weight:850;
+  }
+
+  .buildError.show{
+    display:block;
+  }
+
+  .creatorActions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  .creatorActions button{
+    width:100%;
+  }
+
+  .panelSeparator{
+    height:1px;
+    background:rgba(15,23,42,.10);
+    margin:14px 0 10px;
+  }
+
+  .stage.emptyState .board,
+  .stage.emptyState .toolBar,
+  .stage.emptyState .actionZone,
+  .stage.emptyState .solution{
+    display:none;
+  }
+
+  .stage.emptyState{
+    min-height:360px;
+  }
+
+  .stage.emptyState .instructionZone{
+    min-height:260px;
+    font-size:clamp(24px,3vw,42px);
+    color:#1d4ed8;
+  }
+
+  /* PATCH IMPORT ÉPURÉ 2 — deux étages d’outils :
+     actions sur morceaux au premier rang, action globale et utilitaires au second. */
+  .toolBar{
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  .toolBarRow{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .toolBarRowGlobal{
+    margin-top:2px;
+  }
+
+  .globalToolBtn{
+    background:#fff7ed;
+    border-color:rgba(249,115,22,.30);
+    color:#9a3412;
+  }
+
+  .globalToolBtn:hover{
+    background:#ffedd5;
+  }
+
+  .restartToolBtn{
+    background:#eef2ff;
+    border-color:rgba(99,102,241,.22);
+    color:#3730a3;
+  }
+
+  .restartToolBtn:hover{
+    background:#e0e7ff;
+  }
+
+  @media (max-width:900px){
+    main{grid-template-columns:1fr}
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.1 — menu seul au départ, construction dans la même page. */
+  main.startMode{
+    grid-template-columns:minmax(320px, 760px);
+    justify-content:center;
+    width:min(780px, calc(100vw - 28px));
+  }
+
+  main.startMode .panel{
+    position:static;
+    padding:22px;
+  }
+
+  main.startMode .appTitle{
+    font-size:34px;
+    margin-bottom:16px;
+  }
+
+  main.startMode .stage{
+    display:none;
+  }
+
+  main.activeMode{
+    grid-template-columns:270px minmax(0,1fr);
+  }
+
+  main.activeMode .panel{
+    position:sticky;
+    top:14px;
+  }
+
+  .creatorActions{
+    align-items:stretch;
+  }
+
+  .creatorActions .diceBtn{
+    flex:0 0 52px;
+    width:52px;
+    padding:0;
+    font-size:24px;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+  }
+
+  .creatorActions .buildBtn{
+    flex:1 1 auto;
+  }
+
+  .builderManageActions{
+    display:none;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  main.activeMode .builderManageActions{
+    display:flex;
+  }
+
+  .builderManageActions button{
+    width:100%;
+  }
+
+  main.startMode .importOnlyControl{
+    display:block;
+  }
+
+  main.startMode .panelSeparator{
+    margin:16px 0 12px;
+  }
+
+  main.startMode .creatorBlock{
+    padding:18px;
+  }
+
+  main.startMode .equationInput{
+    min-height:52px;
+    font-size:20px;
+  }
+
+  @media (max-width:900px){
+    main.startMode,
+    main.activeMode{
+      grid-template-columns:1fr;
+      width:min(1240px, calc(100vw - 28px));
+    }
+
+    main.activeMode .panel{
+      position:static;
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.2 — menu de départ plus compact et centré. */
+  main.startMode{
+    grid-template-columns:minmax(320px, 660px);
+    width:min(700px, calc(100vw - 28px));
+  }
+
+  main.startMode .panel{
+    padding:24px 26px 26px;
+  }
+
+  main.startMode .appTitle{
+    font-size:clamp(34px,5vw,48px);
+    margin-bottom:22px;
+  }
+
+  main.startMode .creatorBlock{
+    padding:22px 24px 24px;
+    margin:0 auto 18px;
+    max-width:590px;
+  }
+
+  main.startMode .creatorTitle{
+    text-align:center;
+    font-size:22px;
+    margin-bottom:18px;
+  }
+
+  main.startMode label{
+    text-align:center;
+    margin-top:16px;
+    margin-bottom:7px;
+  }
+
+  main.startMode .equationInput{
+    min-height:66px;
+    font-size:clamp(23px,3vw,30px);
+    text-align:center;
+    padding-left:18px;
+    padding-right:18px;
+  }
+
+  main.startMode select{
+    max-width:430px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+  }
+
+  main.startMode .creatorActions{
+    justify-content:center;
+    align-items:stretch;
+    gap:12px;
+    margin-top:18px;
+  }
+
+  main.startMode .creatorActions .diceBtn{
+    flex:0 0 58px;
+    width:58px;
+    min-height:58px;
+    border-radius:18px;
+    font-size:25px;
+  }
+
+  main.startMode .creatorActions .buildBtn{
+    flex:0 1 360px;
+    max-width:360px;
+    min-height:58px;
+    border-radius:18px;
+    font-size:17px;
+  }
+
+  .buildHelp{
+    display:none;
+  }
+
+  .settingsGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    align-items:end;
+  }
+
+  main.startMode .settingsGrid{
+    max-width:590px;
+    margin:0 auto;
+  }
+
+  main.startMode .settingsGrid select{
+    max-width:none;
+  }
+
+  main.activeMode .creatorTitle{
+    text-align:left;
+  }
+
+  main.activeMode .builderManageActions button{
+    font-size:13px;
+    padding:10px 11px;
+  }
+
+  @media (max-width:700px){
+    main.startMode{
+      width:min(1000px, calc(100vw - 20px));
+    }
+
+    main.startMode .panel{
+      padding:18px;
+    }
+
+    main.startMode .creatorBlock{
+      padding:18px;
+    }
+
+    main.startMode .creatorActions{
+      flex-direction:column;
+    }
+
+    main.startMode .creatorActions .diceBtn,
+    main.startMode .creatorActions .buildBtn{
+      width:100%;
+      max-width:none;
+      flex:1 1 auto;
+    }
+
+    .settingsGrid{
+      grid-template-columns:1fr;
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.3 — centrage du menu, retour visible, lettres mathématiques. */
+  main.startMode .creatorBlock > label,
+  main.startMode .creatorBlock > select{
+    text-align:center;
+  }
+
+  main.startMode .creatorBlock > select,
+  main.startMode .settingsGrid select{
+    display:block;
+    text-align:center;
+    text-align-last:center;
+    padding-left:18px;
+    padding-right:18px;
+  }
+
+  main.startMode #unknownDisplayInput{
+    max-width:390px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .menuQuickBtn{
+    width:auto;
+    min-width:58px;
+    padding:0 13px;
+    font-size:14px;
+    font-weight:950;
+  }
+
+  main.startMode .menuQuickBtn{
+    display:none;
+  }
+
+  main.activeMode .menuQuickBtn{
+    display:inline-grid;
+  }
+
+
+
+  /* PATCH CONSTRUCTEUR V1.4 — plateau seul + bouton Déplacer. */
+  main.activeMode{
+    grid-template-columns:minmax(0,1fr);
+    width:min(1240px, calc(100vw - 28px));
+  }
+
+  main.activeMode .panel{
+    display:none;
+  }
+
+  main.activeMode .stage{
+    min-height:660px;
+  }
+
+  .piece.selectedForMove{
+    background:
+      repeating-linear-gradient(135deg, rgba(59,130,246,.20) 0 8px, rgba(255,255,255,.62) 8px 15px),
+      linear-gradient(180deg,#dbeafe,#eff6ff);
+    box-shadow: inset 0 0 0 3px rgba(59,130,246,.48);
+  }
+
+  .stage.fullscreenCompact:fullscreen .piece.selectedForMove{
+    background:
+      repeating-linear-gradient(135deg, rgba(59,130,246,.20) 0 8px, rgba(255,255,255,.62) 8px 15px),
+      linear-gradient(180deg,#dbeafe,#eff6ff);
+    box-shadow: inset 0 0 0 3px rgba(59,130,246,.48);
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.5 — historique fixe + dialogues plus lisibles. */
+  .stage:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(24px,2.55vw,38px) * 1.18 + 4px);
+    height:calc(var(--eq-row-h) * 3 + 14px);
+    min-height:calc(var(--eq-row-h) * 3 + 14px);
+    padding:6px 86px 10px 18px;
+    flex-wrap:nowrap;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .stage:not(.emptyState) .equationHistory{
+    --eq-row-h: calc(clamp(24px,2.55vw,38px) * 1.18 + 4px);
+    display:block;
+    width:min(980px, calc(100% - 12px));
+    height:calc(var(--eq-row-h) * 3);
+    max-height:calc(var(--eq-row-h) * 3);
+    overflow-y:auto;
+    overflow-x:auto;
+    padding:2px 8px;
+    margin:0 auto;
+    scrollbar-width:thin;
+  }
+
+  .stage:not(.emptyState) .equationTable{
+    margin:0 auto;
+  }
+
+  .stage:not(.emptyState) .equationTable td{
+    padding-top:1px;
+    padding-bottom:1px;
+  }
+
+  .stage:fullscreen:not(.emptyState) .topbar{
+    --eq-row-h: calc(clamp(24px,2.35vw,38px) * 1.18 + 4px);
+    flex:0 0 calc(var(--eq-row-h) * 3 + 14px);
+    height:calc(var(--eq-row-h) * 3 + 14px);
+    min-height:calc(var(--eq-row-h) * 3 + 14px);
+  }
+
+  #addInput{
+    text-align:center;
+    font-size:32px;
+    font-weight:950;
+    min-height:68px;
+    border-radius:18px;
+    padding:18px 16px;
+  }
+
+  #addSuggestions,
+  #presetChips{
+    justify-content:center;
+    align-items:center;
+  }
+
+  #addSuggestions .chip.mathChip,
+  #presetChips .chip.mathChip{
+    min-height:64px;
+    padding:16px 26px;
+    font-size:26px;
+    font-weight:950;
+  }
+
+  #addDialog .dialogText,
+  #decomposeDialog .dialogText{
+    text-align:center;
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.6 — historique 3 lignes, plateau plus stable, boutons agrandis. */
+  .stage:not(.emptyState) .topbar{
+    padding-top:3px;
+    padding-bottom:7px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState){
+    height:calc(100vh - 36px);
+    min-height:620px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .topbar,
+  .stage:not(:fullscreen):not(.emptyState) .instructionZone,
+  .stage:not(:fullscreen):not(.emptyState) .toolBar,
+  .stage:not(:fullscreen):not(.emptyState) .actionZone,
+  .stage:not(:fullscreen):not(.emptyState) .solution{
+    flex:0 0 auto;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .instructionZone{
+    min-height:44px;
+    margin:0 auto 8px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .board{
+    --adaptive-piece-h:clamp(78px, 11.5vh, 108px);
+    flex:1 1 auto;
+    min-height:260px;
+    padding:22px clamp(22px,4vw,64px);
+    justify-content:center;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .piece{
+    height:var(--adaptive-piece-h);
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .barLine{
+    min-height:var(--adaptive-piece-h);
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .toolBar{
+    margin:10px 0 4px;
+    gap:12px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .toolBarRow{
+    gap:12px;
+  }
+
+  .stage:not(.emptyState) .toolBtn,
+  .stage:not(.emptyState) .undoToolBtn{
+    min-height:60px;
+    padding:16px 22px;
+    border-radius:20px;
+    font-size:18px;
+    line-height:1.12;
+  }
+
+  .stage:not(.emptyState) .actionZone button{
+    min-height:56px;
+    padding:15px 20px;
+    border-radius:18px;
+    font-size:17px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .actionZone{
+    min-height:48px;
+    margin-top:4px;
+  }
+
+  @media (max-height:720px){
+    .stage:not(:fullscreen):not(.emptyState){
+      min-height:560px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .board{
+      --adaptive-piece-h:clamp(64px, 10vh, 90px);
+      padding-top:16px;
+      padding-bottom:16px;
+    }
+
+    .stage:not(.emptyState) .toolBtn,
+    .stage:not(.emptyState) .undoToolBtn{
+      min-height:54px;
+      padding:13px 18px;
+      font-size:16px;
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.7 — historique hors plein écran dégagé du bouton Menu. */
+  .stage:not(:fullscreen):not(.emptyState) .topbar{
+    padding-right:210px;
+    padding-left:34px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+    width:min(980px, calc(100% - 220px));
+  }
+
+  @media (max-width:820px){
+    .stage:not(:fullscreen):not(.emptyState) .topbar{
+      padding-right:170px;
+      padding-left:16px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+      width:min(980px, calc(100% - 170px));
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.8 — solution finale entre le plateau et les boutons, sans déplacement de la barre d’outils. */
+  .stage:not(.emptyState) .solution{
+    min-height:64px;
+    height:64px;
+    margin:6px 0 2px;
+    transform:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(34px,4.2vw,58px);
+    line-height:1;
+    pointer-events:none;
+  }
+
+  .stage:not(.emptyState) .solution:empty::before{
+    content:"";
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .solution{
+    flex:0 0 64px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .toolBar{
+    margin-top:4px;
+  }
+
+  @media (max-height:720px){
+    .stage:not(.emptyState) .solution{
+      min-height:54px;
+      height:54px;
+      font-size:clamp(30px,3.8vw,50px);
+      margin:4px 0 1px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .solution{
+      flex-basis:54px;
+    }
+  }
+
+
+  /* PATCH CONSTRUCTEUR V1.9 — recentrage doux de l’historique hors plein écran.
+     On garde les boutons à droite, mais on corrige le décalage trop fort vers la gauche
+     introduit pour éviter le chevauchement avec Menu / œil / plein écran. */
+  .stage:not(:fullscreen):not(.emptyState) .topbar{
+    padding-right:176px;
+    padding-left:74px;
+  }
+
+  .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+    width:min(980px, calc(100% - 190px));
+  }
+
+  @media (max-width:820px){
+    .stage:not(:fullscreen):not(.emptyState) .topbar{
+      padding-right:152px;
+      padding-left:34px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+      width:min(980px, calc(100% - 158px));
+    }
+  }
+
 </style>
 </head>
 <body>
-<main>
+<main id="appMain" class="startMode">
   <section class="panel">
     <div class="appTitle">Équabarre</div>
-    
-    <div class="modeSwitch" aria-label="Choix du mode">
-      <button class="modeBtn active" id="btnTeacherMode" type="button">Prof</button>
-      <button class="modeBtn" id="btnStudentMode" type="button">Élève</button>
-    </div>
-
-    <div class="studentPanel" id="studentPanel">
-      <label>Choisis ton monde</label>
-      <div class="worldGrid" id="worldGrid">
-        <button class="worldCard active" type="button" data-path="axc" title="Monde 1 — Partage équitable">
-          <div class="worldTop"><span class="worldName">Partage</span><span class="worldBadge">1</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="xpb" title="Monde 2 — Une quantité à enlever">
-          <div class="worldTop"><span class="worldName">Enlever</span><span class="worldBadge">2</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="mix12" title="Monde 3 — Mélange de 1 et 2">
-          <div class="worldTop"><span class="worldName">Mix 1-2</span><span class="worldBadge">3</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="both" title="Monde 4 — Lettre inconnue des deux côtés">
-          <div class="worldTop"><span class="worldName">Deux côtés</span><span class="worldBadge">4</span></div>
-        </button>
-        <button class="worldCard" type="button" data-path="mix" title="Monde 5 — Défis mélange">
-          <div class="worldTop"><span class="worldName">Défis</span><span class="worldBadge">5</span></div>
-        </button>
-      </div>
-      <input id="studentPath" type="hidden" value="axc" />
-
-      <label>Affichage de l’inconnue</label>
-      <select id="unknownDisplayModeStudent" title="Affichage des inconnues et des multiples dans l’équation">
-        <option value="letter" selected>Lettre compacte : 4x</option>
-        <option value="letterTimes">Lettre détaillée : 4 × x</option>
-        <option value="question">Point d’interrogation : 4 × ?</option>
-        <option value="splat">Splat</option>
-      </select>
-
-      <label>Affichage de l’équation</label>
-      <select id="equationDisplayModeStudent" title="Afficher ou masquer l’équation au-dessus du tableau">
-        <option value="show" selected>Oui</option>
-        <option value="hide">Non</option>
-      </select>
-
-
-      <label>Taille en plein écran</label>
-      <select id="fullscreenSizeModeStudent" title="Taille du tableau en mode plein écran">
-        <option value="large" selected>Grande</option>
-        <option value="compact">Compacte</option>
-      </select>
-
-      <label>Nombre d’équations</label>
-      <select id="studentTotal">
-        <option value="3">3</option>
-        <option value="5" selected>5</option>
-        <option value="10">10</option>
-      </select>
-
-      <div class="btnrow">
-        <button class="primary" id="btnStartStudent" type="button">Commencer</button>
-        <button class="ghost" id="btnNextStudent" type="button" style="display:none">Exercice suivant</button>
-      </div>
-
-      <div class="studentProgress" id="studentProgress">
-        Choisis un monde.
-      </div>
-    </div>
 
     <div class="profPanel" id="profPanel">
-<label>Type d’équation</label>
-    <select id="mode">
-      <option value="xpb">x + b = c</option>
-      <option value="axc">ax = c</option>
-      <option value="axb" selected>ax + b = c</option>
-      <option value="both">ax + b = cx + d</option>
-      <option value="mix">Mélange</option>
-    </select>
+      <div class="creatorBlock" aria-label="Créer une équation">
+        <div class="creatorTitle">Créer un schéma en barre</div>
+
+        <label>Équation</label>
+        <input class="equationInput" id="equationInput" type="text" autocomplete="off" value="2 + 2x + 7 = 3x + 5 + 1" />
 
         <label>Affichage de l’inconnue</label>
-    <select id="unknownDisplayMode" title="Affichage des inconnues et des multiples dans l’équation">
-      <option value="letter" selected>Lettre compacte : 4x</option>
-      <option value="letterTimes">Lettre détaillée : 4 × x</option>
-      <option value="question">Point d’interrogation : 4 × ?</option>
-      <option value="splat">Splat</option>
-    </select>
+        <select id="unknownDisplayInput" title="Choisir l’affichage des morceaux inconnus dans le tableau">
+          <option value="letter" selected>Lettre tapée</option>
+          <option value="question">Point d’interrogation</option>
+          <option value="splat">Splat</option>
+        </select>
 
-<label>Affichage de l’équation</label>
-    <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
-      <option value="show" selected>Oui</option>
-      <option value="hide">Non</option>
-    </select>
+        <div class="creatorActions">
+          <button class="ghost diceBtn" id="btnRandomEquation" type="button" title="Générer une équation au hasard" aria-label="Générer une équation au hasard">🎲</button>
+          <button class="primary buildBtn" id="btnBuildEquation" type="button">Construire le schéma en barre</button>
+        </div>
 
+        <div class="builderManageActions" id="builderManageActions">
+          <button class="ghost" id="btnNewEquation" type="button">Revenir au menu de départ</button>
+        </div>
 
-<label>Taille en plein écran</label>
-    <select id="fullscreenSizeMode" title="Taille du tableau en mode plein écran">
-      <option value="large" selected>Grande</option>
-      <option value="compact">Compacte</option>
-    </select>
+        <div class="buildError" id="buildError"></div>
 
-<label>Après suppression</label>
-    <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
-      <option value="keep" selected>Garder hachuré</option>
-      <option value="hide">Masquer</option>
-    </select>
-
-    <div class="teacherParamGrid" id="teacherParamGrid">
-      <div id="coefAWrap">
-        <label class="mathParamLabel">Coefficient <span class="mathLetter">a</span></label>
-        <input id="coefA" type="number" min="1" max="20" value="2" />
       </div>
-      <div id="constBWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">b</span></label>
-        <input id="constB" type="number" min="0" max="999" value="4" />
-      </div>
-      <div id="coefCWrap">
-        <label class="mathParamLabel">Coefficient <span class="mathLetter">c</span></label>
-        <input id="coefC" type="number" min="1" max="20" value="1" />
-      </div>
-      <div id="constCWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">c</span></label>
-        <input id="constC" type="number" min="0" max="999" value="28" />
-      </div>
-      <div id="constDWrap">
-        <label class="mathParamLabel">Constante <span class="mathLetter">d</span></label>
-        <input id="constD" type="number" min="0" max="999" value="28" />
+
+      <div class="panelSeparator"></div>
+
+      <div class="settingsGrid">
+        <div class="importOnlyControl">
+          <label>Affichage de l’équation</label>
+          <select id="equationDisplayMode" title="Afficher ou masquer l’équation au-dessus du tableau">
+            <option value="show" selected>Oui</option>
+            <option value="hide">Non</option>
+          </select>
+        </div>
+
+        <div class="importOnlyControl">
+          <label>Après suppression</label>
+          <select id="removedDisplayMode" title="Affichage des morceaux supprimés">
+            <option value="keep" selected>Garder hachuré</option>
+            <option value="hide">Masquer</option>
+          </select>
+        </div>
       </div>
     </div>
-
-    <div class="studentProgress" id="profEquationInfo" style="display:none"></div>
-
-    <div class="btnrow">
-      <button class="primary" id="btnBuild">Construire</button>
-      <button id="btnRandom">Aléatoire</button>
-    </div>
-
-    <div class="btnrow">
-      <button class="ghost" id="btnReset">Recommencer</button>
-    </div>
-
-  
-    </div>
-</section>
+  </section>
 
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
-      <button class="ghost quickBtn randomQuickBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
       <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
-      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
-    <div class="stageStudentHud" id="stageStudentHud" aria-label="Progression élève">
-      <span id="stageStudentProgress">Exercice 1 / 5 · Réussites : 0</span>
-      <button class="stageNextBtn" id="btnStageNextStudent" type="button">Suivant</button>
-    </div>
-    <div class="studentWaitingStage" id="studentWaitingStage">
-      <div class="waitingTitle">Choisis un monde</div>
-      <div class="waitingText">Choisis un monde, sélectionne le nombre d’équations, puis clique sur <strong>Commencer</strong>.</div>
-    </div>
-
-    <div class="topbar">
+<div class="topbar">
       <div class="equationText" id="equationText"></div>
       <div class="equationHistory" id="equationHistory"></div>
       <div class="status" id="status">Prêt</div>
@@ -1841,16 +1971,23 @@
       </div>
     </div>
 
+    <div class="solution" id="solution"></div>
+
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
-      <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
-      <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
-      <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-      <button class="toolBtn" id="toolDelete" type="button">Supprimer dans chaque membre</button>
-      <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+      <div class="toolBarRow toolBarRowMain">
+        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+        <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
+        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+        <button class="toolBtn" id="toolMove" type="button">Déplacer</button>
+      </div>
+      <div class="toolBarRow toolBarRowGlobal">
+        <button class="toolBtn globalToolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au tableau importé de départ">↺ Recommencer</button>
+      </div>
     </div>
 
     <div class="actionZone" id="actionZone"></div>
-    <div class="solution" id="solution"></div>
     <div class="footerNote"></div>
   </section>
 </main>
@@ -1911,52 +2048,29 @@
   const equationText = document.getElementById("equationText");
   const equationHistory = document.getElementById("equationHistory");
   const statusEl = document.getElementById("status");
+  const appMain = document.getElementById("appMain");
   const stageEl = document.getElementById("stage");
   const btnFullscreen = document.getElementById("btnFullscreen");
-  const btnStageRandom = document.getElementById("btnStageRandom");
   const btnToggleEquation = document.getElementById("btnToggleEquation");
-  const btnStageUndo = document.getElementById("btnStageUndo");
+  const btnBackToMenu = document.getElementById("btnBackToMenu");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolAdd = document.getElementById("toolAdd");
   const toolShare = document.getElementById("toolShare");
+  const toolMove = document.getElementById("toolMove");
   const toolDelete = document.getElementById("toolDelete");
   const toolUndo = document.getElementById("toolUndo");
+  const toolRestart = document.getElementById("toolRestart");
+  const equationInput = document.getElementById("equationInput");
+  const unknownDisplayInput = document.getElementById("unknownDisplayInput");
+  const btnBuildEquation = document.getElementById("btnBuildEquation");
+  const btnRandomEquation = document.getElementById("btnRandomEquation");
+  const btnNewEquation = document.getElementById("btnNewEquation");
+  const buildError = document.getElementById("buildError");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
-  const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
-  const unknownDisplayModeStudentEl = document.getElementById("unknownDisplayModeStudent");
+  // Mémoire interne de l'affichage de l'inconnue : alimentée par l'import Splat ou par le constructeur.
+  let importedUnknownDisplayMode = "letter";
   const equationDisplayModeEl = document.getElementById("equationDisplayMode");
-  const equationDisplayModeStudentEl = document.getElementById("equationDisplayModeStudent");
-  const fullscreenSizeModeEl = document.getElementById("fullscreenSizeMode");
-  const fullscreenSizeModeStudentEl = document.getElementById("fullscreenSizeModeStudent");
 
-  const modeEl = document.getElementById("mode");
-
-  const btnTeacherMode = document.getElementById("btnTeacherMode");
-  const btnStudentMode = document.getElementById("btnStudentMode");
-  const profPanel = document.getElementById("profPanel");
-  const studentPanel = document.getElementById("studentPanel");
-  const studentPathEl = document.getElementById("studentPath");
-  const worldCards = Array.from(document.querySelectorAll(".worldCard"));
-  const studentTotalEl = document.getElementById("studentTotal");
-  const btnStartStudent = document.getElementById("btnStartStudent");
-  const btnNextStudent = document.getElementById("btnNextStudent");
-  const studentProgressEl = document.getElementById("studentProgress");
-  const stageStudentHud = document.getElementById("stageStudentHud");
-  const stageStudentProgress = document.getElementById("stageStudentProgress");
-  const btnStageNextStudent = document.getElementById("btnStageNextStudent");
-  const studentWaitingStage = document.getElementById("studentWaitingStage");
-  const coefAEl = document.getElementById("coefA");
-  const constBEl = document.getElementById("constB");
-  const coefCEl = document.getElementById("coefC");
-  const constCEl = document.getElementById("constC");
-  const constDEl = document.getElementById("constD");
-  const coefAWrap = document.getElementById("coefAWrap");
-  const constBWrap = document.getElementById("constBWrap");
-  const coefCWrap = document.getElementById("coefCWrap");
-  const constCWrap = document.getElementById("constCWrap");
-  const constDWrap = document.getElementById("constDWrap");
-  const teacherParamGrid = document.getElementById("teacherParamGrid");
-  const profEquationInfo = document.getElementById("profEquationInfo");
 
   const dialog = document.getElementById("decomposeDialog");
   const dialogText = document.getElementById("dialogText");
@@ -1979,32 +2093,26 @@
 
   let state = null;
   let history = [];
+  let initialImportState = null;
   let selectedPieceRef = null;
   let selectedShareRef = null;
   let pendingAddInfo = null;
   let deleteSelection = [];
   let addSelection = [];
-  let actionMode = "decompose"; // decompose | add | share | delete
-  let appMode = "teacher";
-  let studentSession = {
-    active:false,
-    path:"axc",
-    total:5,
-    index:0,
-    solved:0,
-    currentCounted:false
-  };
-  const completedWorlds = new Set();
+  let moveSelection = null;
+  let actionMode = "decompose"; // decompose | add | share | delete | move
 
   function setActionMode(mode){
     actionMode = mode;
     deleteSelection = [];
     addSelection = [];
+    moveSelection = null;
     pendingAddInfo = null;
-    [toolDecompose, toolAdd, toolShare, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    [toolDecompose, toolAdd, toolShare, toolMove, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
     if(mode === "decompose" && toolDecompose) toolDecompose.classList.add("active");
     if(mode === "add" && toolAdd) toolAdd.classList.add("active");
     if(mode === "share" && toolShare) toolShare.classList.add("active");
+    if(mode === "move" && toolMove) toolMove.classList.add("active");
     if(mode === "delete" && toolDelete) toolDelete.classList.add("active");
     render();
   }
@@ -2022,8 +2130,7 @@
   }
 
   function unknownDisplayKind(){
-    const el = appMode === "student" ? unknownDisplayModeStudentEl : unknownDisplayModeEl;
-    return el ? el.value : "letter";
+    return importedUnknownDisplayMode;
   }
 
   function displayedUnknown(){
@@ -2032,13 +2139,11 @@
   }
 
   function unknownTerm(count){
-    const kind = unknownDisplayKind();
     const v = displayedUnknown();
     if(v === "?"){
       return count === 1 ? "?" : `${count} × ?`;
     }
-    if(count === 1) return v;
-    return kind === "letterTimes" ? `${count} × ${v}` : `${count}${v}`;
+    return count === 1 ? v : `${count}${v}`;
   }
 
   /* Splat : même logique de dessin que l’outil Splat!
@@ -2082,8 +2187,7 @@
   }
 
   function equationDisplayEnabled(){
-    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
-    return !el || el.value !== "hide";
+    return !equationDisplayModeEl || equationDisplayModeEl.value !== "hide";
   }
 
 
@@ -2111,200 +2215,9 @@
   }
 
   function toggleEquationDisplay(){
-    const el = appMode === "student" ? equationDisplayModeStudentEl : equationDisplayModeEl;
-    if(!el) return;
-    el.value = el.value === "hide" ? "show" : "hide";
+    if(!equationDisplayModeEl) return;
+    equationDisplayModeEl.value = equationDisplayModeEl.value === "hide" ? "show" : "hide";
     render();
-  }
-
-  function getWorldName(path){
-    const names = {
-      axc:"Monde 1",
-      xpb:"Monde 2",
-      mix12:"Monde 3",
-      both:"Monde 4",
-      mix:"Monde 5"
-    };
-    return names[path] || "Monde";
-  }
-
-  function getWorldFullName(path){
-    const names = {
-      axc:"Monde 1 — Partage équitable",
-      xpb:"Monde 2 — Une quantité à enlever",
-      mix12:"Monde 3 — Mélange de 1 et 2",
-      both:"Monde 4 — Lettre inconnue des deux côtés",
-      mix:"Monde 5 — Défis mélange"
-    };
-    return names[path] || "Monde";
-  }
-
-  function renderProgressDots(index, total){
-    const safeTotal = Math.max(1, Number(total) || 1);
-    const safeIndex = Math.max(0, Number(index) || 0);
-    return `<span class="miniDots" aria-label="Progression">${Array.from({length:safeTotal}, (_, i) => {
-      const rank = i + 1;
-      const cls = rank < safeIndex ? "done" : (rank === safeIndex ? "current" : "");
-      return `<span class="miniDot ${cls}"></span>`;
-    }).join("")}</span>`;
-  }
-
-  function setStudentPath(path){
-    if(!studentPathEl) return;
-    studentPathEl.value = path;
-    worldCards.forEach(card => {
-      const isActive = card.dataset.path === path;
-      card.classList.toggle("active", isActive);
-    });
-    if(studentSession.active){
-      studentSession.active = false;
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    }
-    syncWorldCards();
-    updateStudentProgress();
-    syncStudentStageVisibility();
-    syncEquationToggleButton();
-  }
-
-  function syncWorldCards(){
-    worldCards.forEach(card => {
-      const path = card.dataset.path;
-      card.classList.toggle("done", completedWorlds.has(path));
-      card.classList.toggle("active", studentPathEl && studentPathEl.value === path);
-    });
-  }
-
-  function syncStudentStageVisibility(){
-    const waiting = appMode === "student" && !studentSession.active;
-    if(studentWaitingStage) studentWaitingStage.classList.toggle("open", waiting);
-
-    const selectors = [".topbar", ".instructionZone", ".board", ".toolBar", ".actionZone", ".solution", ".footerNote"];
-    selectors.forEach(sel => {
-      const el = stageEl ? stageEl.querySelector(sel) : null;
-      if(el) el.style.display = waiting ? "none" : "";
-    });
-  }
-
-  function syncAppModeUI(){
-    if(btnTeacherMode) btnTeacherMode.classList.toggle("active", appMode === "teacher");
-    if(btnStudentMode) btnStudentMode.classList.toggle("active", appMode === "student");
-    if(profPanel) profPanel.classList.toggle("hidden", appMode !== "teacher");
-    if(studentPanel) studentPanel.classList.toggle("open", appMode === "student");
-    if(btnStageRandom) btnStageRandom.style.display = appMode === "teacher" ? "grid" : "none";
-    updateStudentProgress();
-    syncStudentStageVisibility();
-  }
-
-  function setAppMode(mode){
-    appMode = mode === "student" ? "student" : "teacher";
-    syncTeacherEquationControls();
-    syncAppModeUI();
-    render();
-  }
-
-  function updateStudentProgress(){
-    const isStudent = appMode === "student";
-
-    if(stageStudentHud){
-      stageStudentHud.classList.toggle("open", isStudent && studentSession.active);
-    }
-
-    if(!isStudent){
-      if(studentProgressEl) studentProgressEl.textContent = "";
-      if(stageStudentProgress) stageStudentProgress.textContent = "";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      return;
-    }
-
-    if(!studentSession.active){
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<span class="progressTitle">Choisis un monde</span><span class="progressLine">Sélectionne un niveau puis clique sur <strong>Commencer</strong>.</span>`;
-      }
-      if(stageStudentProgress) stageStudentProgress.textContent = "";
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      return;
-    }
-
-    const dots = renderProgressDots(studentSession.index, studentSession.total);
-    const world = getWorldFullName(studentSession.path);
-
-    if(studentProgressEl){
-      studentProgressEl.innerHTML = `<span class="progressTitle">${world}</span><span class="progressLine">Exercice <strong>${studentSession.index}</strong> / ${studentSession.total} ${dots} <span>✓ <strong>${studentSession.solved}</strong></span></span>`;
-    }
-    if(stageStudentProgress){
-      stageStudentProgress.innerHTML = `<span class="stageStudentProgressContent"><span class="hudWorld">${getWorldName(studentSession.path)}</span><span class="hudPill">Exercice ${studentSession.index} / ${studentSession.total}</span><span class="hudPill hudSuccess">✓ ${studentSession.solved}</span>${dots}</span>`;
-    }
-  }
-
-  function startStudentSession(){
-    const path = studentPathEl ? studentPathEl.value : "axc";
-    const total = studentTotalEl ? Number(studentTotalEl.value) || 5 : 5;
-    studentSession = {
-      active:true,
-      path,
-      total,
-      index:0,
-      solved:0,
-      currentCounted:false
-    };
-    nextStudentExercise();
-    syncStudentStageVisibility();
-  }
-
-  function nextStudentExercise(){
-    if(!studentSession.active) return;
-    if(studentSession.index >= studentSession.total){
-      completedWorlds.add(studentSession.path);
-      syncWorldCards();
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<strong>${getWorldName(studentSession.path)} validé</strong> · Réussites : <strong>${studentSession.solved}</strong> / ${studentSession.total}`;
-      }
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-      setInstruction(`${getWorldName(studentSession.path)} validé.`);
-      return;
-    }
-
-    studentSession.index += 1;
-    studentSession.currentCounted = false;
-
-    let exercisePath = studentSession.path;
-    if(exercisePath === "mix12"){
-      exercisePath = Math.random() < 0.5 ? "axc" : "xpb";
-    }
-
-    if(modeEl){
-      modeEl.value = exercisePath;
-    }
-    randomExercise();
-
-    if(btnNextStudent) btnNextStudent.style.display = "none";
-    if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    updateStudentProgress();
-    syncStudentStageVisibility();
-  }
-
-  function onStudentSolved(){
-    if(appMode !== "student" || !studentSession.active || studentSession.currentCounted) return;
-    studentSession.currentCounted = true;
-    studentSession.solved += 1;
-    updateStudentProgress();
-
-    if(studentSession.index >= studentSession.total){
-      completedWorlds.add(studentSession.path);
-      syncWorldCards();
-      if(studentProgressEl){
-        studentProgressEl.innerHTML = `<span class="progressTitle">${getWorldName(studentSession.path)} validé</span><span class="progressLine">Parcours terminé · ✓ <strong>${studentSession.solved}</strong> / ${studentSession.total}</span>`;
-      }
-      setInstruction(`<strong>✓ Parcours terminé !</strong>`);
-      if(btnNextStudent) btnNextStudent.style.display = "none";
-      if(btnStageNextStudent) btnStageNextStudent.classList.remove("show");
-    }else{
-      if(btnNextStudent) btnNextStudent.style.display = "";
-      if(btnStageNextStudent) btnStageNextStudent.classList.add("show");
-    }
   }
 
   function uid(){
@@ -2367,12 +2280,54 @@
     return terms.length ? terms.join(" + ") : "0";
   }
 
+  function solvedEquationStringPreservingSides(solved){
+    const top = activePieces("top");
+    const bottom = activePieces("bottom");
+    const isAllNumbers = arr => arr.every(p => p.type === "number");
+    const isAllX = arr => arr.every(p => p.type === "x");
+    const allSameNumber = arr => isAllNumbers(arr) && arr.length > 0 && arr.every(p => p.value === arr[0].value);
+
+    let numberSide = null;
+    let xSide = null;
+    let value = solved;
+
+    if(allSameNumber(top) && isAllX(bottom) && top.length === bottom.length){
+      numberSide = "top";
+      xSide = "bottom";
+      value = top[0].value;
+    }else if(allSameNumber(bottom) && isAllX(top) && bottom.length === top.length){
+      numberSide = "bottom";
+      xSide = "top";
+      value = bottom[0].value;
+    }
+
+    if(numberSide && xSide){
+      const lhsSide = state && state.original ? state.original.lhsSide : "";
+      const left = lhsSide === xSide ? displayedUnknown() : String(value);
+      const right = lhsSide === xSide ? String(value) : displayedUnknown();
+      return `${left} = ${right}`;
+    }
+
+    return `${displayedUnknown()} = ${solved}`;
+  }
+
   function currentEquationString(){
     const solved = getSolvedValue();
     if(solved !== null){
-      return `${displayedUnknown()} = ${solved}`;
+      return solvedEquationStringPreservingSides(solved);
     }
-    // On écrit l'équation dans le sens algébrique : ligne du bas = ligne du haut.
+
+    // En import Splat, le sens de lecture doit venir de Splat lui-même.
+    // lhsSide indique quel plateau doit être écrit à gauche du signe égal.
+    const lhsSide = state && state.original ? state.original.lhsSide : "";
+    if(lhsSide === "top"){
+      return `${sideExpression("top")} = ${sideExpression("bottom")}`;
+    }
+    if(lhsSide === "bottom"){
+      return `${sideExpression("bottom")} = ${sideExpression("top")}`;
+    }
+
+    // Fallback si un ancien lien ne fournit pas lhsSide.
     return `${sideExpression("bottom")} = ${sideExpression("top")}`;
   }
 
@@ -2387,212 +2342,6 @@
     if(!state) return;
     state.steps = [currentEquationString()];
     render();
-  }
-
-  function getSelectedMode(){
-    const raw = modeEl ? modeEl.value : "axb";
-    if(raw === "mix"){
-      const modes = ["xpb", "axc", "axb", "both"];
-      return modes[Math.floor(Math.random() * modes.length)];
-    }
-    return raw;
-  }
-
-  function getModeLabel(mode){
-    if(mode === "xpb") return "x + b = c";
-    if(mode === "axc") return "ax = c";
-    if(mode === "both") return "ax + b = cx + d";
-    return "ax + b = c";
-  }
-
-  function syncTeacherEquationControls(){
-    if(!modeEl) return;
-    const mode = modeEl.value;
-
-    const show = (wrap, visible) => { if(wrap) wrap.classList.toggle("hiddenParam", !visible); };
-
-    show(coefAWrap, mode === "axc" || mode === "axb" || mode === "both");
-    show(constBWrap, mode === "xpb" || mode === "axb" || mode === "both");
-    show(coefCWrap, mode === "both");
-    show(constCWrap, mode === "xpb" || mode === "axc" || mode === "axb");
-    show(constDWrap, mode === "both");
-
-    if(teacherParamGrid){
-      teacherParamGrid.classList.toggle("three", mode === "axb");
-    }
-
-    updateProfEquationInfo();
-  }
-
-  function updateProfEquationInfo(){
-    if(!profEquationInfo) return;
-    profEquationInfo.style.display = "none";
-    profEquationInfo.innerHTML = "";
-  }
-
-  function readRounded(el, fallback, min=0, max=999){
-    const n = Math.round(numberOr(el && el.value, fallback));
-    return clamp(n, min, max);
-  }
-
-  function showBuildError(extra=""){
-    const text = extra || "Impossible avec ce schéma : la solution doit être un entier positif.";
-    setInstruction(`<strong>${text}</strong>`);
-    setStatus(text);
-  }
-
-  function resetAfterNewEquation(){
-    recordEquationStep();
-    history = [];
-    selectedPieceRef = null;
-    selectedShareRef = null;
-    pendingAddInfo = null;
-    deleteSelection = [];
-    addSelection = [];
-    actionMode = "decompose";
-    if(toolDecompose) toolDecompose.classList.add("active");
-    if(toolAdd) toolAdd.classList.remove("active");
-    if(toolShare) toolShare.classList.remove("active");
-    if(toolDelete) toolDelete.classList.remove("active");
-    render();
-    setStatus("");
-  }
-
-  function createEquationState(selectedMode, a, b, rightA, d, x, c, rng=Math.random){
-    const varChar = variableChars[Math.floor(rng() * variableChars.length)];
-    state = {
-      original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c,varChar},
-      top:[],
-      bottom:[],
-      hintCount:0,
-      steps:[]
-    };
-
-    if(selectedMode === "both"){
-      // Convention : le bas représente ax+b, le haut représente cx+d.
-      // L'équation affichée reste donc : bas = haut.
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-      state.top = [...Array(rightA)].map(makeX).concat(d > 0 ? [makeNumber(d)] : []);
-    }else{
-      state.top = [makeNumber(c)];
-      state.bottom = [...Array(a)].map(makeX).concat(b > 0 ? [makeNumber(b)] : []);
-    }
-
-    resetAfterNewEquation();
-  }
-
-  function buildFromInputs(){
-    if(modeEl && modeEl.value === "mix"){
-      randomExercise();
-      return;
-    }
-
-    const selectedMode = getSelectedMode();
-    let a = 1;
-    let b = 0;
-    let rightA = 0;
-    let d = 0;
-    let c = 0;
-    let x = null;
-
-    if(selectedMode === "xpb"){
-      b = readRounded(constBEl, 4, 0, 999);
-      c = readRounded(constCEl, 28, 0, 999);
-      x = c - b;
-    }else if(selectedMode === "axc"){
-      a = readRounded(coefAEl, 2, 1, 20);
-      b = 0;
-      c = readRounded(constCEl, 24, 0, 999);
-      if(a === 0) return showBuildError();
-      x = c / a;
-    }else if(selectedMode === "axb"){
-      a = readRounded(coefAEl, 2, 1, 20);
-      b = readRounded(constBEl, 4, 0, 999);
-      c = readRounded(constCEl, 28, 0, 999);
-      x = (c - b) / a;
-    }else if(selectedMode === "both"){
-      a = readRounded(coefAEl, 3, 1, 20);
-      b = readRounded(constBEl, 4, 0, 999);
-      rightA = readRounded(coefCEl, 1, 1, 20);
-      d = readRounded(constDEl, 28, 0, 999);
-      const denom = a - rightA;
-      if(denom === 0){
-        return showBuildError("Impossible avec ce schéma : les coefficients des inconnues ne doivent pas être égaux.");
-      }
-      x = (d - b) / denom;
-      c = a * x + b;
-    }
-
-    if(!Number.isInteger(x) || x <= 0 || !Number.isFinite(x)){
-      return showBuildError();
-    }
-
-    if(selectedMode !== "both"){
-      c = Math.round(c);
-    }else{
-      c = Math.round(c);
-    }
-
-    if(c <= 0){
-      return showBuildError();
-    }
-
-    if(coefAEl) coefAEl.value = a;
-    if(constBEl) constBEl.value = b;
-    if(coefCEl) coefCEl.value = rightA || 1;
-    if(constCEl && selectedMode !== "both") constCEl.value = c;
-    if(constDEl) constDEl.value = d;
-    updateProfEquationInfo();
-
-    createEquationState(selectedMode, a, b, rightA, d, x, c);
-  }
-
-  function mulberry32(a){
-    return function(){
-      let t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-  }
-
-  function randomInt(rng,a,b){
-    return a + Math.floor(rng()*(b-a+1));
-  }
-
-  function randomExercise(){
-    const rng = Math.random;
-
-    let selectedMode = modeEl ? modeEl.value : "axb";
-    if(selectedMode === "mix"){
-      const modes = ["xpb", "axc", "axb", "both"];
-      selectedMode = modes[randomInt(rng,0,modes.length-1)];
-    }
-
-    let a = selectedMode === "xpb" ? 1 : randomInt(rng,2,5);
-    const x = randomInt(rng,3,15);
-    let b = selectedMode === "axc" ? 0 : randomInt(rng,2,18);
-    let rightA = 0;
-    let d = 0;
-    let c = a*x + b;
-
-    if(selectedMode === "both"){
-      a = randomInt(rng,3,5);
-      rightA = randomInt(rng,1,a-1);
-      b = randomInt(rng,2,14);
-      d = (a - rightA) * x + b;
-      c = a*x + b;
-    }
-
-    if(coefAEl) coefAEl.value = Math.max(1, a);
-    if(constBEl) constBEl.value = Math.max(0, b);
-    if(coefCEl) coefCEl.value = rightA || 1;
-    if(constCEl) constCEl.value = selectedMode === "both" ? c : c;
-    if(constDEl) constDEl.value = d || Math.max(0, c);
-    updateProfEquationInfo();
-
-    // Construction directe pour éviter qu'un mode Mélange soit tiré une deuxième fois.
-    createEquationState(selectedMode, a, b, rightA, d, x, c, rng);
   }
 
   function activePieces(side){
@@ -2634,6 +2383,60 @@
       if(ref.side === "bottom") bottom.push(p);
     }
     return {top, bottom};
+  }
+
+  function selectedMoveIds(){
+    return new Set(moveSelection ? [moveSelection.id] : []);
+  }
+
+  function updateCurrentEquationStep(){
+    if(!state) return;
+    const eq = currentEquationString();
+    if(!state.steps) state.steps = [];
+    if(state.steps.length === 0){
+      state.steps.push(eq);
+    }else{
+      state.steps[state.steps.length - 1] = eq;
+    }
+  }
+
+  function selectForMove(side, id){
+    const piece = state[side].find(p => p.id === id);
+    if(!piece || piece.removed) return;
+
+    if(moveSelection && moveSelection.side === side && moveSelection.id === id){
+      moveSelection = null;
+      render();
+      return;
+    }
+
+    if(!moveSelection){
+      moveSelection = {side, id};
+      render();
+      return;
+    }
+
+    if(moveSelection.side !== side){
+      setStatus("On déplace seulement à l’intérieur d’un même membre.");
+      render();
+      return;
+    }
+
+    const arr = state[side];
+    const firstIndex = arr.findIndex(p => p.id === moveSelection.id);
+    const secondIndex = arr.findIndex(p => p.id === id);
+    if(firstIndex < 0 || secondIndex < 0) {
+      moveSelection = null;
+      render();
+      return;
+    }
+
+    pushHistory();
+    [arr[firstIndex], arr[secondIndex]] = [arr[secondIndex], arr[firstIndex]];
+    moveSelection = null;
+    recordEquationStep();
+    render();
+    setStatus("Cases échangées", true);
   }
 
 
@@ -2852,12 +2655,17 @@
     // Mais les cases restantes ne doivent pas être réduites une deuxième fois.
     // Donc on normalise les colonnes à l'intérieur de la largeur restante.
     const safeLineWidth = Math.max(0.0001, lineWidth);
-    const cols = widths.map(w => `${(w / safeLineWidth) * 100}%`).join(" ") || "1fr";
+    const safeNaturalWidth = Math.max(0.0001, naturalLineWidth);
+    // Les colonnes doivent être normalisées sur la largeur naturelle de la ligne,
+    // pas sur la largeur commune. Sinon, une ligne avec une seule case (ex. 92)
+    // n'occupe qu'une partie de la largeur commune et laisse une zone blanche vide.
+    const cols = widths.map(w => `${(w / safeNaturalWidth) * 100}%`).join(" ") || "1fr";
 
     host.style.setProperty("--cols", cols);
     host.style.setProperty("--lineWidth", `${Math.max(0, Math.min(100, lineWidth))}%`);
     selectedIds = selectedIds || new Set();
     const addIds = selectedAddIds();
+    const moveIds = selectedMoveIds();
     for(const piece of pieces){
       const el = document.createElement("div");
       el.className = `piece ${piece.type}`;
@@ -2865,6 +2673,9 @@
       if(selectedIds.has(piece.id)) el.classList.add("selectedForDelete");
       if(addIds.has(piece.id)){
         el.classList.add("selectedForAdd");
+      }
+      if(moveIds.has(piece.id)){
+        el.classList.add("selectedForMove");
       }
 
       const isSplatUnknown = piece.type === "x" && unknownDisplayKind() === "splat";
@@ -2901,6 +2712,11 @@
           return;
         }
 
+        if(actionMode === "move"){
+          selectForMove(side, piece.id);
+          return;
+        }
+
         if(actionMode === "delete"){
           selectForDeletion(side, piece.id);
           return;
@@ -2925,14 +2741,8 @@
     if(solved !== null){
       solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
       setStatus("Résolution terminée", true);
-      if(appMode === "student" && studentSession.active){
-        setInstruction(`<strong>✓ Réussi !</strong>`);
-        actionZone.innerHTML = `<div class="successCard"><span class="successCheck">✓</span><span>Réussi !</span></div>`;
-      }else{
-        setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
-        actionZone.innerHTML = "";
-      }
-      onStudentSolved();
+      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
+      actionZone.innerHTML = "";
       return;
     }
 
@@ -2994,6 +2804,25 @@
         setInstruction("Partage un nombre en parts égales.");
       }
       actionZone.innerHTML = "";
+      return;
+    }
+
+    if(actionMode === "move"){
+      if(!moveSelection){
+        setInstruction("Clique une case, puis une autre case du même membre pour les échanger.");
+        actionZone.innerHTML = "";
+        return;
+      }
+
+      setInstruction("Choisis la case avec laquelle l’échanger.");
+      const clear = document.createElement("button");
+      clear.className = "ghost";
+      clear.textContent = "Annuler le déplacement";
+      clear.addEventListener("click", () => {
+        moveSelection = null;
+        render();
+      });
+      actionZone.appendChild(clear);
       return;
     }
 
@@ -3084,29 +2913,28 @@
       return;
     }
     const steps = state.steps || [];
-    const shown = steps.slice(-6);
 
-    if(!shown.length){
+    if(!steps.length){
       equationHistory.innerHTML = "";
       syncEquationToggleButton();
       return;
     }
 
-    const rows = shown.map((eq, i) => {
+    const rows = steps.map((eq, i) => {
       const {lhs, rhs} = splitEquation(eq);
-      const cls = i === shown.length - 1 ? "currentStep" : "historyStep";
+      const cls = i === steps.length - 1 ? "currentStep" : "historyStep";
       return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
     }).join("");
 
     equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+    equationHistory.scrollTop = equationHistory.scrollHeight;
     syncEquationToggleButton();
   }
 
   function syncFullscreenSizeMode(){
     if(!stageEl) return;
-    const el = appMode === "student" ? fullscreenSizeModeStudentEl : fullscreenSizeModeEl;
-    const compact = el && el.value === "compact";
-    stageEl.classList.toggle("fullscreenCompact", compact);
+    // Version import : le plein écran est toujours compact.
+    stageEl.classList.add("fullscreenCompact");
   }
 
   function render(){
@@ -3216,14 +3044,17 @@
 
   function buildAddSuggestions(info){
     const correct = info.sum;
-    const candidates = [
-      correct,
+    const distractors = [
       correct + 1,
       Math.max(1, correct - 1),
       correct + 10,
-      Math.max(1, correct - 10)
-    ].filter((value, index, arr) => Number.isFinite(value) && value > 0 && arr.indexOf(value) === index);
-    return shuffle(candidates).slice(0, 4);
+      Math.max(1, correct - 10),
+      correct * 2
+    ].filter((value, index, arr) => Number.isFinite(value) && value > 0 && value !== correct && arr.indexOf(value) === index);
+
+    // La bonne réponse doit toujours être présente dans l'aide.
+    const selected = [correct, ...shuffle(distractors).slice(0, 3)];
+    return shuffle(selected);
   }
 
   function renderAddSuggestions(info){
@@ -3474,6 +3305,27 @@
     setStatus("Étape annulée");
   }
 
+  function restartImportedEquation(){
+    if(!initialImportState){
+      setStatus("Aucun tableau importé à recommencer");
+      return;
+    }
+    state = clone(initialImportState);
+    history = [];
+    selectedPieceRef = null;
+    selectedShareRef = null;
+    pendingAddInfo = null;
+    deleteSelection = [];
+    addSelection = [];
+    moveSelection = null;
+    actionMode = "decompose";
+    [toolDecompose, toolAdd, toolShare, toolMove, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
+    if(toolDecompose) toolDecompose.classList.add("active");
+    render();
+    setInstruction("");
+    setStatus("Tableau recommencé", true);
+  }
+
   function hint(){
     if(canDeleteMatchingNumbers()){
       setStatus("Indice : tu peux supprimer les quantités hachurées des deux côtés.");
@@ -3496,45 +3348,340 @@
     setStatus("Indice : cherche si tu peux décomposer le nombre, ou le diviser en parts égales.");
   }
 
+
+  /* CONSTRUCTEUR D'ÉQUATION V1.4
+     Objectif : écrire directement une équation additive à entiers positifs,
+     puis construire le tableau dans la même page.
+     Règle validée : on respecte l'ordre tapé par le professeur. */
+  function setBuildError(text){
+    if(!buildError) return;
+    buildError.textContent = text || "";
+    buildError.classList.toggle("show", Boolean(text));
+  }
+
+  function normalizeMathLetters(str){
+    const map = {
+      "𝑎":"a", "𝑏":"b", "𝑐":"c", "𝑑":"d", "𝑒":"e", "𝑓":"f", "𝑔":"g", "ℎ":"h", "𝑖":"i", "𝑗":"j", "𝑘":"k", "𝑙":"l", "𝑚":"m",
+      "𝑛":"n", "𝑜":"o", "𝑝":"p", "𝑞":"q", "𝑟":"r", "𝑠":"s", "𝑡":"t", "𝑢":"u", "𝑣":"v", "𝑤":"w", "𝑥":"x", "𝑦":"y", "𝑧":"z",
+      "𝐴":"a", "𝐵":"b", "𝐶":"c", "𝐷":"d", "𝐸":"e", "𝐹":"f", "𝐺":"g", "𝐻":"h", "𝐼":"i", "𝐽":"j", "𝐾":"k", "𝐿":"l", "𝑀":"m",
+      "𝑁":"n", "𝑂":"o", "𝑃":"p", "𝑄":"q", "𝑅":"r", "𝑆":"s", "𝑇":"t", "𝑈":"u", "𝑉":"v", "𝑊":"w", "𝑋":"x", "𝑌":"y", "𝑍":"z"
+    };
+    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/g, ch => map[ch] || ch);
+  }
+
+  function toMathItalicLetter(letter){
+    const map = {
+      a:"𝑎", b:"𝑏", c:"𝑐", d:"𝑑", e:"𝑒", f:"𝑓", g:"𝑔", h:"ℎ", i:"𝑖", j:"𝑗", k:"𝑘", l:"𝑙", m:"𝑚",
+      n:"𝑛", o:"𝑜", p:"𝑝", q:"𝑞", r:"𝑟", s:"𝑠", t:"𝑡", u:"𝑢", v:"𝑣", w:"𝑤", x:"𝑥", y:"𝑦", z:"𝑧"
+    };
+    const ch = String(letter || "").trim().toLowerCase();
+    return map[ch] || String(letter || "𝑥");
+  }
+
+  function parseEquationTerm(term, sideName, ctx){
+    const t = String(term || "").trim();
+    if(!t){
+      throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+    }
+
+    if(/^\d+$/.test(t)){
+      const n = Number(t);
+      if(!Number.isSafeInteger(n) || n <= 0){
+        throw new Error("Les nombres doivent être des entiers strictement positifs.");
+      }
+      return {kind:"number", value:n, coef:0, constant:n};
+    }
+
+    let match = t.match(/^(\d+)?([a-zA-Z])$/);
+    if(!match){
+      match = t.match(/^(\d+)(?:\*|×)([a-zA-Z])$/);
+    }
+    if(!match){
+      match = t.match(/^([a-zA-Z])(?:\*|×)(\d+)$/);
+      if(match){
+        match = [match[0], match[2], match[1]];
+      }
+    }
+
+    if(match){
+      const coef = match[1] ? Number(match[1]) : 1;
+      const letter = String(match[2]).toLowerCase();
+      if(!Number.isSafeInteger(coef) || coef <= 0){
+        throw new Error("Les coefficients devant la lettre doivent être des entiers strictement positifs.");
+      }
+      if(!ctx.variable){
+        ctx.variable = letter;
+      }else if(ctx.variable !== letter){
+        throw new Error(`Une seule lettre est acceptée. Ici, il y a ${ctx.variable} et ${letter}.`);
+      }
+      return {kind:"x", value:letter, coef, constant:0};
+    }
+
+    throw new Error(`Je ne sais pas lire le terme « ${t} ». Pour l’instant : nombres, x, 2x ou 2*x.`);
+  }
+
+  function parseEquationSide(rawSide, sideName, ctx){
+    const raw = String(rawSide || "").trim();
+    if(!raw){
+      throw new Error(`Le membre ${sideName} est vide.`);
+    }
+    const compact = normalizeMathLetters(raw)
+      .replace(/\s+/g, "")
+      .replace(/[·]/g, "*")
+      .replace(/[X]/g, "x");
+
+    if(!compact){
+      throw new Error(`Le membre ${sideName} est vide.`);
+    }
+
+    const terms = compact.split("+");
+    const pieces = [];
+    let coef = 0;
+    let constant = 0;
+
+    for(const rawTerm of terms){
+      const term = parseEquationTerm(rawTerm, sideName, ctx);
+      coef += term.coef;
+      constant += term.constant;
+      if(term.kind === "number"){
+        pieces.push({type:"number", value:term.value});
+      }else{
+        for(let i=0; i<term.coef; i++) pieces.push({type:"x"});
+      }
+    }
+
+    return {pieces, coef, constant};
+  }
+
+  function parseEquationToPayload(rawEquation){
+    const original = String(rawEquation || "").trim();
+    if(!original){
+      throw new Error("Écris une équation à construire.");
+    }
+
+    if(/[\-–—−]/.test(original)){
+      throw new Error("Pour cette première version, les soustractions et les nombres négatifs ne sont pas encore acceptés.");
+    }
+    if(/[()\[\]{}]/.test(original)){
+      throw new Error("Les parenthèses ne sont pas encore acceptées dans cette version.");
+    }
+    if(/[\/]/.test(original)){
+      throw new Error("Les fractions ne sont pas encore acceptées dans cette version.");
+    }
+    if(/[.,;]/.test(original)){
+      throw new Error("Les décimaux ne sont pas acceptés ici : utilise seulement des entiers positifs.");
+    }
+
+    const normalized = normalizeMathLetters(original).replace(/=/g, "=");
+    if(!/^[0-9a-zA-Z+*=×·\s]+$/.test(normalized)){
+      throw new Error("Caractère non reconnu. Utilise seulement des nombres, une lettre, + et =.");
+    }
+
+    const sides = normalized.split("=");
+    if(sides.length !== 2){
+      throw new Error("Il faut exactement un signe égal.");
+    }
+
+    const ctx = {variable:null};
+    const left = parseEquationSide(sides[0], "de gauche", ctx);
+    const right = parseEquationSide(sides[1], "de droite", ctx);
+
+    if(!ctx.variable){
+      throw new Error("Il faut une inconnue : par exemple x, n ou a.");
+    }
+
+    const denom = left.coef - right.coef;
+    const numerator = right.constant - left.constant;
+    if(denom === 0){
+      throw new Error("Cette équation ne permet pas d’obtenir une solution unique avec ce modèle.");
+    }
+
+    const solution = numerator / denom;
+    if(!Number.isFinite(solution) || !Number.isInteger(solution) || solution <= 0){
+      throw new Error("La solution doit être un entier strictement positif pour être représentée correctement en barres.");
+    }
+
+    const leftMeasure = left.coef * solution + left.constant;
+    const rightMeasure = right.coef * solution + right.constant;
+    if(leftMeasure <= 0 || rightMeasure <= 0 || leftMeasure !== rightMeasure){
+      throw new Error("Impossible de construire un tableau cohérent avec cette équation.");
+    }
+
+    const displayChoice = unknownDisplayInput ? unknownDisplayInput.value : "letter";
+    const unknownDisplay = (displayChoice === "question" || displayChoice === "splat") ? displayChoice : "letter";
+
+    return {
+      source:"equabarre-builder-v1",
+      variable:toMathItalicLetter(ctx.variable),
+      unknownDisplay,
+      x:solution,
+      c:leftMeasure,
+      lhsSide:"bottom",
+      bottom:left.pieces,
+      top:right.pieces
+    };
+  }
+
+  function encodeBase64Url(str){
+    const bytes = new TextEncoder().encode(String(str || ""));
+    let binary = "";
+    for(const b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function setBuilderLayout(mode){
+    if(!appMain) return;
+    appMain.classList.toggle("startMode", mode === "start");
+    appMain.classList.toggle("activeMode", mode === "active");
+  }
+
+  function buildPayloadInCurrentPage(payload){
+    const ok = createImportedEquationState(payload);
+    if(!ok){
+      throw new Error("Impossible de construire le tableau avec ces données.");
+    }
+    setBuilderLayout("active");
+    if(stageEl) stageEl.classList.remove("emptyState");
+    try{
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
+      window.history.replaceState(null, "", url.toString());
+    }catch(e){}
+  }
+
+  function buildEquationFromInput(){
+    try{
+      setBuildError("");
+      const payload = parseEquationToPayload(equationInput ? equationInput.value : "");
+      buildPayloadInCurrentPage(payload);
+    }catch(err){
+      setBuilderLayout("start");
+      if(stageEl) stageEl.classList.add("emptyState");
+      setBuildError(err && err.message ? err.message : "Équation impossible à construire.");
+    }
+  }
+
+  function randomInt(min, max){
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function splitPositiveConstant(n){
+    if(n <= 9 || Math.random() < 0.45) return [n];
+    const a = randomInt(1, n - 1);
+    return [a, n - a];
+  }
+
+  function shuffleTerms(terms){
+    const arr = terms.slice();
+    for(let i=arr.length-1; i>0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function coefTerm(coef, variable){
+    return coef === 1 ? variable : `${coef}${variable}`;
+  }
+
+  function makeRandomEquationText(){
+    const letters = ["x", "n", "a", "t", "m"];
+    for(let tries=0; tries<200; tries++){
+      const variable = letters[randomInt(0, letters.length - 1)];
+      const solution = randomInt(2, 12);
+      const leftCoef = randomInt(1, 5);
+      let rightCoef = randomInt(1, 5);
+      if(rightCoef === leftCoef) rightCoef = rightCoef === 5 ? 4 : rightCoef + 1;
+
+      const leftConst = randomInt(2, 24);
+      const rightConst = leftCoef * solution + leftConst - rightCoef * solution;
+      if(!Number.isSafeInteger(rightConst) || rightConst <= 0 || rightConst > 32) continue;
+
+      const leftTerms = [coefTerm(leftCoef, variable), ...splitPositiveConstant(leftConst).map(String)];
+      const rightTerms = [coefTerm(rightCoef, variable), ...splitPositiveConstant(rightConst).map(String)];
+      return `${shuffleTerms(leftTerms).join(" + ")} = ${shuffleTerms(rightTerms).join(" + ")}`;
+    }
+    return "2x + 7 = 15";
+  }
+
+  function fillRandomEquation(){
+    if(!equationInput) return;
+    equationInput.value = makeRandomEquationText();
+    setBuildError("");
+    equationInput.focus();
+    equationInput.select();
+  }
+
+  function handleUnknownDisplayChange(){
+    if(!unknownDisplayInput) return;
+    const wanted = unknownDisplayInput.value === "question" || unknownDisplayInput.value === "splat" ? unknownDisplayInput.value : "letter";
+    importedUnknownDisplayMode = wanted;
+    if(state){
+      refreshStepsForUnknownDisplay();
+    }
+  }
+
+  function resetToNewEquation(){
+    state = null;
+    history = [];
+    initialImportState = null;
+    selectedPieceRef = null;
+    selectedShareRef = null;
+    pendingAddInfo = null;
+    deleteSelection = [];
+    addSelection = [];
+    moveSelection = null;
+    actionMode = "decompose";
+    setBuilderLayout("start");
+    if(stageEl) stageEl.classList.add("emptyState");
+    if(equationHistory) equationHistory.innerHTML = "";
+    if(topLine) topLine.innerHTML = "";
+    if(bottomLine) bottomLine.innerHTML = "";
+    if(actionZone) actionZone.innerHTML = "";
+    if(solutionEl) solutionEl.textContent = "";
+    setInstruction("<strong>Écris une équation à gauche, puis construis le tableau.</strong>");
+    setStatus("Prêt à construire");
+    syncEquationToggleButton();
+    if(equationInput){
+      equationInput.focus();
+      equationInput.select();
+    }
+  }
+
   if(toolDecompose) toolDecompose.addEventListener("click", () => setActionMode("decompose"));
   if(toolAdd) toolAdd.addEventListener("click", () => setActionMode("add"));
   if(toolShare) toolShare.addEventListener("click", () => setActionMode("share"));
+  if(toolMove) toolMove.addEventListener("click", () => setActionMode("move"));
   if(toolDelete) toolDelete.addEventListener("click", () => setActionMode("delete"));
   if(toolUndo) toolUndo.addEventListener("click", undo);
+  if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   if(removedDisplayModeEl) removedDisplayModeEl.addEventListener("change", render);
-  if(unknownDisplayModeEl) unknownDisplayModeEl.addEventListener("change", refreshStepsForUnknownDisplay);
-  if(unknownDisplayModeStudentEl) unknownDisplayModeStudentEl.addEventListener("change", refreshStepsForUnknownDisplay);
   if(equationDisplayModeEl) equationDisplayModeEl.addEventListener("change", render);
-  if(equationDisplayModeStudentEl) equationDisplayModeStudentEl.addEventListener("change", render);
-  if(fullscreenSizeModeEl) fullscreenSizeModeEl.addEventListener("change", syncFullscreenSizeMode);
-  if(fullscreenSizeModeStudentEl) fullscreenSizeModeStudentEl.addEventListener("change", syncFullscreenSizeMode);
-
-  if(btnStageRandom) btnStageRandom.addEventListener("click", randomExercise);
-  if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
-  if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
-  if(btnTeacherMode) btnTeacherMode.addEventListener("click", () => setAppMode("teacher"));
-  if(btnStudentMode) btnStudentMode.addEventListener("click", () => setAppMode("student"));
-  worldCards.forEach(card => {
-    card.addEventListener("click", () => setStudentPath(card.dataset.path));
-  });
-  if(btnStartStudent) btnStartStudent.addEventListener("click", startStudentSession);
-  if(btnNextStudent) btnNextStudent.addEventListener("click", nextStudentExercise);
-  if(btnStageNextStudent) btnStageNextStudent.addEventListener("click", nextStudentExercise);
-  if(modeEl) modeEl.addEventListener("change", syncTeacherEquationControls);
-  [coefAEl, constBEl, coefCEl, constCEl, constDEl].forEach(el => {
-    if(el) {
-      el.addEventListener("input", updateProfEquationInfo);
-      el.addEventListener("change", updateProfEquationInfo);
+  if(btnBuildEquation) btnBuildEquation.addEventListener("click", buildEquationFromInput);
+  if(unknownDisplayInput) unknownDisplayInput.addEventListener("change", handleUnknownDisplayChange);
+  if(btnRandomEquation) btnRandomEquation.addEventListener("click", fillRandomEquation);
+  function openMenuFromStage(){
+    if(document.fullscreenElement){
+      const p = document.exitFullscreen();
+      if(p && typeof p.then === "function"){
+        p.then(resetToNewEquation).catch(resetToNewEquation);
+      }else{
+        setTimeout(resetToNewEquation, 0);
+      }
+      return;
     }
-  });
+    resetToNewEquation();
+  }
 
-  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
-  document.getElementById("btnRandom").addEventListener("click", randomExercise);
-  const btnUndoMenu = document.getElementById("btnUndo");
-  if(btnUndoMenu) btnUndoMenu.addEventListener("click", undo);
-  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
-  const btnHintMenu = document.getElementById("btnHint");
-  if(btnHintMenu) btnHintMenu.addEventListener("click", hint);
+  if(btnNewEquation) btnNewEquation.addEventListener("click", resetToNewEquation);
+  if(btnBackToMenu) btnBackToMenu.addEventListener("click", openMenuFromStage);
+  if(equationInput){
+    equationInput.addEventListener("keydown", e => {
+      if(e.key === "Enter") buildEquationFromInput();
+    });
+  }
+  if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
@@ -3574,10 +3721,6 @@
     if(e.key === "Escape") dialog.close();
   });
 
-  if(modeEl){
-    modeEl.addEventListener("change", randomExercise);
-  }
-
   if(btnFullscreen && stageEl){
     btnFullscreen.addEventListener("click", () => {
       if(document.fullscreenElement){
@@ -3588,16 +3731,215 @@
     });
   }
 
-  [coefAEl,constBEl,coefCEl,constCEl,constDEl].forEach(el => {
-    if(!el) return;
-    el.addEventListener("change", () => {
-      el.value = String(Math.round(numberOr(el.value, Number(el.min) || 0)));
-    });
-  });
 
-  randomExercise();
-  syncTeacherEquationControls();
-  syncAppModeUI();
+  /* IMPORT SPLAT -> ÉQUABARRE
+     Cette version peut recevoir un tableau réduit dans l'URL.
+     Format conseillé, encodé en base64url dans ?data=... ou #data=... :
+     {
+       "source":"splat",
+       "variable":"𝑥",
+       "unknownDisplay":"letter", // "letter", "question" ou "splat"
+       "fullscreenSize":"compact",
+       "x":20,
+       "top":[{"type":"number","value":50}],
+       "bottom":[{"type":"x"},{"type":"x"},{"type":"number","value":10}]
+     }
+  */
+  function decodeBase64Url(str){
+    const clean = String(str || "").trim().replace(/-/g, "+").replace(/_/g, "/");
+    const pad = clean.length % 4 ? "=".repeat(4 - (clean.length % 4)) : "";
+    return decodeURIComponent(escape(atob(clean + pad)));
+  }
+
+  function readImportRawPayload(){
+    const search = new URLSearchParams(window.location.search || "");
+    if(search.has("data")) return search.get("data");
+    if(search.has("eqb")) return search.get("eqb");
+
+    const hash = String(window.location.hash || "").replace(/^#/, "");
+    if(!hash) return "";
+    const hashParams = new URLSearchParams(hash);
+    if(hashParams.has("data")) return hashParams.get("data");
+    if(hashParams.has("eqb")) return hashParams.get("eqb");
+    return hash;
+  }
+
+  function parseImportedPayload(){
+    const raw = readImportRawPayload();
+    if(!raw) return null;
+
+    const candidates = [];
+    try{ candidates.push(decodeURIComponent(raw)); }catch(e){}
+    try{ candidates.push(decodeBase64Url(raw)); }catch(e){}
+    candidates.push(raw);
+
+    for(const candidate of candidates){
+      try{
+        const parsed = JSON.parse(candidate);
+        if(parsed && typeof parsed === "object") return parsed;
+      }catch(e){}
+    }
+    return null;
+  }
+
+  function normalizeImportedPiece(piece){
+    if(piece == null) return null;
+    if(typeof piece === "number") return makeNumber(piece);
+    if(typeof piece === "string"){
+      const s = piece.trim().toLowerCase();
+      if(s === "x" || s === "𝑥" || s === "?") return makeX();
+      const n = Number(s.replace(",", "."));
+      return Number.isFinite(n) ? makeNumber(n) : null;
+    }
+    if(typeof piece === "object"){
+      const type = String(piece.type || "").toLowerCase();
+      if(type === "x" || type === "unknown" || type === "variable") return makeX();
+      if(type === "number" || type === "const" || type === "constant"){
+        const n = Number(piece.value);
+        return Number.isFinite(n) ? makeNumber(n) : null;
+      }
+    }
+    return null;
+  }
+
+  function normalizeImportedSide(arr){
+    if(!Array.isArray(arr)) return [];
+    return arr.map(normalizeImportedPiece).filter(Boolean);
+  }
+
+  function importedSideMeasure(pieces, xValue){
+    return pieces.reduce((sum, p) => {
+      if(p.type === "x") return sum + Math.max(1, Number(xValue) || 1);
+      return sum + Math.max(1, Math.abs(Number(p.value) || 0));
+    }, 0);
+  }
+
+  function inferImportedX(topPieces, bottomPieces){
+    const countX = side => side.filter(p => p.type === "x").length;
+    const sumN = side => side.filter(p => p.type === "number").reduce((s,p)=>s + Number(p.value || 0), 0);
+    const aTop = countX(topPieces);
+    const aBottom = countX(bottomPieces);
+    const nTop = sumN(topPieces);
+    const nBottom = sumN(bottomPieces);
+    const denom = aBottom - aTop;
+    if(denom !== 0){
+      const x = (nTop - nBottom) / denom;
+      if(Number.isFinite(x) && x > 0) return x;
+    }
+    return 1;
+  }
+
+  function createImportedEquationState(payload){
+    if(!payload || typeof payload !== "object") return false;
+
+    const rawWantedVar = typeof payload.variable === "string" && payload.variable.trim() ? payload.variable.trim() : "𝑥";
+    const normalizedWantedVar = normalizeMathLetters(rawWantedVar);
+    const wantedVar = /^[a-zA-Z]$/.test(normalizedWantedVar) ? toMathItalicLetter(normalizedWantedVar) : rawWantedVar;
+    const rawDisplay = String(payload.unknownDisplay || payload.display || "letter").toLowerCase();
+    const wantedDisplay = (rawDisplay === "question" || rawDisplay === "?" || rawDisplay === "interrogation")
+      ? "question"
+      : (rawDisplay === "splat" ? "splat" : "letter");
+
+    state = {
+      original:{
+        mode:"import",
+        modeLabel:"Import Splat",
+        a:0,
+        b:0,
+        rightA:0,
+        d:0,
+        x:1,
+        c:1,
+        varChar:wantedVar,
+        lhsSide:"bottom"
+      },
+      top:[],
+      bottom:[],
+      hintCount:0,
+      steps:[]
+    };
+
+    const rawLhsSide = String(payload.lhsSide || payload.equationLhsSide || "").toLowerCase();
+    const wantedLhsSide = (rawLhsSide === "top" || rawLhsSide === "haut")
+      ? "top"
+      : ((rawLhsSide === "bottom" || rawLhsSide === "bas") ? "bottom" : "bottom");
+
+    const topPieces = normalizeImportedSide(payload.top || payload.haut || []);
+    const bottomPieces = normalizeImportedSide(payload.bottom || payload.bas || []);
+    if(!topPieces.length || !bottomPieces.length){
+      state = null;
+      return false;
+    }
+
+    const importedX = Number(payload.x);
+    const xValue = Number.isFinite(importedX) && importedX > 0 ? importedX : inferImportedX(topPieces, bottomPieces);
+    const totalMeasure = Math.max(
+      importedSideMeasure(topPieces, xValue),
+      importedSideMeasure(bottomPieces, xValue),
+      Number(payload.total) || 0,
+      Number(payload.c) || 0,
+      1
+    );
+
+    state.original.x = xValue;
+    state.original.lhsSide = wantedLhsSide;
+    state.original.c = totalMeasure;
+    state.original.a = bottomPieces.filter(p => p.type === "x").length;
+    state.original.b = bottomPieces.filter(p => p.type === "number").reduce((s,p)=>s + Number(p.value || 0), 0);
+    state.original.rightA = topPieces.filter(p => p.type === "x").length;
+    state.original.d = topPieces.filter(p => p.type === "number").reduce((s,p)=>s + Number(p.value || 0), 0);
+    state.top = topPieces;
+    state.bottom = bottomPieces;
+
+    importedUnknownDisplayMode = wantedDisplay;
+    if(unknownDisplayInput) unknownDisplayInput.value = wantedDisplay;
+    if(stageEl) stageEl.classList.remove("emptyState");
+    setBuilderLayout("active");
+
+    recordEquationStep();
+    initialImportState = clone(state);
+    history = [];
+    selectedPieceRef = null;
+    selectedShareRef = null;
+    pendingAddInfo = null;
+    deleteSelection = [];
+    addSelection = [];
+    moveSelection = null;
+    actionMode = "decompose";
+    if(toolDecompose) toolDecompose.classList.add("active");
+    if(toolAdd) toolAdd.classList.remove("active");
+    if(toolShare) toolShare.classList.remove("active");
+    if(toolMove) toolMove.classList.remove("active");
+    if(toolDelete) toolDelete.classList.remove("active");
+
+    render();
+    setInstruction("");
+    setStatus("Tableau prêt", true);
+    return true;
+  }
+
+  function tryImportFromUrl(){
+    const payload = parseImportedPayload();
+    if(!payload) return false;
+    const ok = createImportedEquationState(payload);
+    if(!ok){
+      setInstruction(`<strong>Impossible de lire le tableau importé.</strong>`);
+      setStatus("Import invalide");
+    }
+    return ok;
+  }
+
+
+  if(!tryImportFromUrl()){
+    setBuilderLayout("start");
+    if(stageEl) stageEl.classList.add("emptyState");
+    setInstruction("<strong>Écris une équation à gauche, puis construis le tableau.</strong>");
+    setStatus("Prêt à construire");
+    syncFullscreenSizeMode();
+    syncEquationToggleButton();
+  }else{
+    setBuilderLayout("active");
+  }
 })();
 </script>
 </body>
