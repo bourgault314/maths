@@ -312,6 +312,12 @@
   .equationTable tr.historyStep{color:#64748b;opacity:.82}
   .equationTable tr.currentStep{color:#0f172a;opacity:1}
   .equationTable tr.currentStep .eq{color:#3b82f6}
+  .equationTable tr.finalStatement td{
+    text-align:center;
+    color:#dc2626;
+    font-weight:950;
+    padding-top:6px;
+  }
 
   .relationEditor{
     display:flex;
@@ -2857,6 +2863,157 @@
     .menuPreviewSvg{height:140px;}
   }
 
+
+  /* PATCH V37 — clics possibles dans l'équation active + respiration du sélecteur initial. */
+  .equationHistory{
+    box-sizing:border-box;
+    padding-top:6px;
+    padding-bottom:4px;
+  }
+  .relationEditor{
+    padding:6px 0 4px;
+  }
+  .equationTable tr.currentStep [data-eq-replace],
+  .equationTable tr.currentStep [data-eq-compute]{
+    cursor:pointer;
+    box-shadow:0 0 0 3px rgba(59,130,246,.10);
+  }
+  .equationTable tr.currentStep [data-eq-replace]:hover,
+  .equationTable tr.currentStep [data-eq-compute]:hover{
+    filter:brightness(.985);
+    box-shadow:0 0 0 4px rgba(59,130,246,.18);
+  }
+
+
+  /* PATCH V43 — dernières finitions : propositions plus lisibles, sélection aire→case, couleurs soustraction. */
+  .leftWork > .sidePalette .sideChoice{
+    min-height:52px !important;
+    min-width:94px !important;
+    padding:11px 18px !important;
+    font-size:22px !important;
+    border-radius:999px !important;
+  }
+  .leftWork > .sidePalette .operationPrompt{
+    min-height:52px !important;
+    padding:11px 16px !important;
+    font-size:22px !important;
+    border-radius:15px !important;
+  }
+  .squareShape.selectedSquarePick{
+    stroke:#2563eb !important;
+    stroke-width:5 !important;
+    filter:brightness(.98);
+  }
+  .sideHit.selectedSquarePick{
+    stroke:rgba(37,99,235,.30) !important;
+  }
+  @media (min-width:981px) and (max-height:760px){
+    .leftWork > .sidePalette .sideChoice{
+      min-height:48px !important;
+      font-size:20px !important;
+      padding:9px 15px !important;
+    }
+    .leftWork > .sidePalette .operationPrompt{
+      min-height:48px !important;
+      font-size:20px !important;
+    }
+  }
+
+
+
+  /* PATCH V43 — menu final + mode pas à pas automatique.
+     Le menu distingue maintenant le mode d'usage de toute l'activité :
+     Interactif ou Pas à pas automatique. Le petit triangle reste simple,
+     mais ses longueurs sont plus lisibles. */
+  .menuHeaderV24{
+    grid-template-columns:minmax(300px, 1fr) minmax(190px, 235px) !important;
+    gap:16px !important;
+    align-items:center !important;
+  }
+  .menuHeaderV24 .creatorTitle{
+    text-align:center !important;
+    margin-bottom:10px !important;
+  }
+  .menuTopInputs{
+    display:grid;
+    grid-template-columns:minmax(150px, 1fr) minmax(126px, 150px);
+    gap:10px;
+    align-items:end;
+  }
+  .menuField label{
+    text-align:center !important;
+    margin-top:0 !important;
+    margin-bottom:5px !important;
+  }
+  .menuField input,
+  .menuField select{
+    text-align:center !important;
+    text-align-last:center !important;
+  }
+  .menuHeaderV24 .triangleName{
+    max-width:none !important;
+    width:100% !important;
+    margin:0 !important;
+  }
+  .rightAngleField select{
+    min-width:0 !important;
+    width:100% !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+    font-size:18px !important;
+    font-weight:950 !important;
+  }
+  .modeField{
+    margin-top:8px;
+  }
+  .modeField select{
+    min-height:40px !important;
+    font-size:14px !important;
+    font-weight:950 !important;
+  }
+  .menuHeaderV24 .menuPreviewSvg{
+    height:162px !important;
+  }
+  .previewSideText{
+    font-size:16px !important;
+    stroke-width:6px !important;
+  }
+  .previewVertexText{
+    font-size:21px !important;
+  }
+  .autoNextBtn{
+    min-width:180px !important;
+    min-height:48px !important;
+    padding:10px 22px !important;
+    font-size:18px !important;
+    border-radius:999px !important;
+    background:linear-gradient(180deg,#60a5fa,#3b82f6) !important;
+    color:#fff !important;
+    border:1px solid rgba(37,99,235,.35) !important;
+    box-shadow:0 10px 24px rgba(59,130,246,.18) !important;
+  }
+  .autoNextBtn.done{
+    background:#e2e8f0 !important;
+    color:#64748b !important;
+    box-shadow:none !important;
+  }
+  @media (max-width:700px){
+    .menuHeaderV24{
+      grid-template-columns:1fr !important;
+      gap:8px !important;
+    }
+    .menuTopInputs{
+      grid-template-columns:1fr 1fr;
+    }
+    .menuHeaderV24 .menuPreview{
+      max-width:260px !important;
+      margin:0 auto !important;
+    }
+    .menuHeaderV24 .menuPreviewSvg{
+      height:150px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2864,32 +3021,33 @@
   <section class="panel" id="panel">
     <h1 class="appTitle">Pythagore</h1>
     <div class="creatorBlock" aria-label="Créer une situation de Pythagore">
-      <div class="creatorHeader">
+      <div class="creatorHeader menuHeaderV24">
         <div class="creatorIntro">
           <div class="creatorTitle">Créer une situation</div>
-          <label for="triangleNameInput">Nom du triangle</label>
-          <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+          <div class="menuTopInputs">
+            <div class="menuField triangleField">
+              <label for="triangleNameInput">Nom du triangle</label>
+              <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+            </div>
+            <div class="menuField rightAngleField">
+              <label for="rightAngleInput">Triangle rectangle en</label>
+              <select id="rightAngleInput">
+                <option value="A" selected>A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+          </div>
+          <div class="menuField modeField">
+            <label for="relationModeInput">Mode de déroulé</label>
+            <select id="relationModeInput">
+              <option value="manual" selected>Interactif</option>
+              <option value="auto">Pas à pas automatique</option>
+            </select>
+          </div>
         </div>
         <div class="menuPreview" aria-label="Aperçu du triangle">
           <svg class="menuPreviewSvg" id="menuPreviewSvg" viewBox="0 0 280 190" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Aperçu du triangle saisi"></svg>
-        </div>
-      </div>
-
-      <div class="settingsGrid">
-        <div>
-          <label for="rightAngleInput">Triangle rectangle en</label>
-          <select id="rightAngleInput">
-            <option value="A" selected>A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-          </select>
-        </div>
-        <div>
-          <label for="relationModeInput">Relation de Pythagore</label>
-          <select id="relationModeInput">
-            <option value="manual" selected>À compléter par clic</option>
-            <option value="auto">Automatique</option>
-          </select>
         </div>
       </div>
 
@@ -3058,6 +3216,7 @@
   let history = [];
   let pendingDialog = null;
   let selectedSlot = null;
+  let selectedSquareSide = null; // aire du moulin choisie avant la case de la relation
   let activeChoiceMode = null; // replace | calculate | regroup
   let selectedChoiceSide = null; // proposition choisie pour Remplacer
   let selectedCalcValue = null;  // proposition choisie pour Calculer
@@ -3272,6 +3431,14 @@
       : `${answer}${suffix}`;
   }
 
+
+  function finalConclusionText(){
+    const side = model.unknownIsHyp ? model.hyp : model.unknown;
+    const suffix = unitSuffix();
+    if(!suffix) return "";
+    return `Donc ${side} = ${lengthAnswerWithUnit(work.result)}`;
+  }
+
   function reverseSide(s){ return s.split("").reverse().join(""); }
   function normalizeSideName(name){ return name.split("").sort().join(""); }
   function sameSide(a,b){ return normalizeSideName(a) === normalizeSideName(b); }
@@ -3382,7 +3549,7 @@
   }
 
   function snapshot(){
-    history.push(JSON.stringify({work, selectedSlot, activeChoiceMode, selectedChoiceSide, selectedCalcValue, message}));
+    history.push(JSON.stringify({work, selectedSlot, selectedSquareSide, activeChoiceMode, selectedChoiceSide, selectedCalcValue, message}));
     if(history.length > 50) history.shift();
   }
   function restore(){
@@ -3390,6 +3557,7 @@
     const old = JSON.parse(history.pop());
     work = old.work;
     selectedSlot = old.selectedSlot;
+    selectedSquareSide = old.selectedSquareSide || null;
     activeChoiceMode = old.activeChoiceMode || null;
     selectedChoiceSide = old.selectedChoiceSide || null;
     selectedCalcValue = old.selectedCalcValue ?? null;
@@ -3416,7 +3584,11 @@
       if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, displayKnownSquare(l1.side, l1.value))} + ${coloredTerm(l2.side, displayKnownSquare(l2.side, l2.value))}`});
       if(work.regrouped) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:coloredTerm(model.hyp, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:model.hyp, rhs:`√${fmt(work.result)}`});
-      if(work.concluded) rows.push({lhs:model.hyp, rhs:lengthAnswerWithUnit(work.result)});
+      if(work.concluded){
+        rows.push({lhs:model.hyp, rhs:lengthAnswer(work.result)});
+        const finalText = finalConclusionText();
+        if(finalText) rows.push({finalText});
+      }
     }else{
       const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
       const useColor = !work.operationChosen;
@@ -3434,10 +3606,14 @@
       rows.push({lhs:maybeColoredTerm(h.side, plainSq(h.side), useColor), rhs:`${rhsTerm(rhs1)} + ${rhsTerm(rhs2)}`});
       if(anyReplaced()) rows.push({lhs:maybeColoredTerm(h.side, isReplaced(h.side) ? valueSq(h.value) : plainSq(h.side), useColor), rhs:`${rhsReplaced(rhs1)} + ${rhsReplaced(rhs2)}`});
       if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, displayKnownSquare(h.side, h.value), useColor), rhs:`${rhsSquared(rhs1)} + ${rhsSquared(rhs2)}`});
-      if(work.operationChosen) rows.push({lhs:operationLabel(op), rhs:plainSq(u)});
-      if(work.decomposed) rows.push({lhs:plainSq(u), rhs:fmt(work.result)});
+      if(work.operationChosen) rows.push({lhs:coloredTerm(u, operationLabel(op)), rhs:coloredTerm(u, plainSq(u))});
+      if(work.decomposed) rows.push({lhs:coloredTerm(u, plainSq(u)), rhs:coloredTerm(u, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:u, rhs:`√${fmt(work.result)}`});
-      if(work.concluded) rows.push({lhs:u, rhs:lengthAnswerWithUnit(work.result)});
+      if(work.concluded){
+        rows.push({lhs:u, rhs:lengthAnswer(work.result)});
+        const finalText = finalConclusionText();
+        if(finalText) rows.push({finalText});
+      }
     }
     return rows;
   }
@@ -3449,7 +3625,34 @@
   function coloredTerm(side, text){
     const cls = sideColorClass(side);
     if(!cls) return text;
-    return `<span class="coloredTerm ${cls}">${text}</span>`;
+    const eqAttrs = equationTermAttrs(side);
+    return `<span class="coloredTerm ${cls}${eqAttrs.className}"${eqAttrs.attrs}>${text}</span>`;
+  }
+
+  function equationTermAttrs(side){
+    if(!work || !work.started || !work.relationComplete || !side) return {className:"", attrs:""};
+
+    if(activeChoiceMode === "replace"){
+      const target = replaceTargets().find(t => sameSide(t.side, side));
+      if(target && !isReplaced(target.side)){
+        return {
+          className:" eqClickableTerm",
+          attrs:` data-eq-replace="${escapeHtml(target.side)}" title="Cliquer pour placer cette valeur"`
+        };
+      }
+    }
+
+    if(activeChoiceMode === "calculate"){
+      const target = squareTargets().find(t => sameSide(t.side, side));
+      if(target && isReplaced(target.side) && !work.squares[target.side]){
+        return {
+          className:" eqClickableTerm",
+          attrs:` data-eq-compute="${escapeHtml(target.side)}" title="Cliquer pour calculer ce carré"`
+        };
+      }
+    }
+
+    return {className:"", attrs:""};
   }
 
   function replaceTargets(){
@@ -3520,6 +3723,14 @@
   }
 
   function syncGuidedMode(){
+    if(model && model.relationMode === "auto"){
+      if(activeChoiceMode !== null){
+        activeChoiceMode = null;
+        selectedChoiceSide = null;
+        selectedCalcValue = null;
+      }
+      return;
+    }
     const mode = guidedMode();
     if(activeChoiceMode === mode) return;
     activeChoiceMode = mode;
@@ -3534,9 +3745,11 @@
 
   function currentInstruction(){
     if(!work.started) return "";
+    if(model && model.relationMode === "auto") return currentAutoInstruction();
     if(!work.relationComplete){
       if(selectedSlot) return stepPrefix(1, "Clique sur l’aire d’un carré du moulin pour compléter la relation.");
-      return stepPrefix(1, "Complète la relation de Pythagore : clique sur une case, puis sur l’aire d’un carré.");
+      if(selectedSquareSide) return stepPrefix(1, "Clique sur la case de la relation où placer cette aire.");
+      return stepPrefix(1, "Complète la relation de Pythagore : clique sur une case puis sur une aire, ou sur une aire puis sur une case.");
     }
     if(!work.replaced){
       if(selectedChoiceSide) return stepPrefix(2, `Clique sur la case du tableau où placer ${valueSq(sideValue(selectedChoiceSide))}.`);
@@ -3551,6 +3764,17 @@
     if(!work.operationChosen) return stepPrefix(4, "Schéma partie-tout : choisis l’opération.");
     if(!work.operationComputed) return stepPrefix(5, "Calcule l’opération choisie.");
     if(!work.sqrt || !work.concluded) return stepPrefix(6, "Choisis le résultat de la racine carrée.");
+    return "";
+  }
+
+  function currentAutoInstruction(){
+    if(!work.relationComplete) return stepPrefix(1, "Clique sur Suivant pour afficher la relation de Pythagore.");
+    if(!work.replaced) return stepPrefix(2, "Clique sur Suivant pour remplacer les longueurs connues.");
+    const targets = squareTargets();
+    if(targets.some(t => !work.squares[t.side])) return stepPrefix(3, "Clique sur Suivant pour calculer les carrés connus.");
+    if(!work.operationChosen) return stepPrefix(4, "Clique sur Suivant pour afficher l’opération adaptée.");
+    if(!work.operationComputed) return stepPrefix(5, "Clique sur Suivant pour afficher le résultat de l’opération.");
+    if(!work.sqrt || !work.concluded) return stepPrefix(6, "Clique sur Suivant pour afficher la racine carrée et la conclusion.");
     return "";
   }
 
@@ -3591,10 +3815,16 @@
     rows.forEach((row,i) => {
       const classes = [i === rows.length - 1 ? "currentStep" : "historyStep"];
       if(work.concluded && i === rows.length - 1) classes.push("finalConclusion");
-      html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+      if(row.finalText){
+        classes.push("finalStatement");
+        html += `<tr class="${classes.join(" ")}"><td colspan="3">${row.finalText}</td></tr>`;
+      }else{
+        html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+      }
     });
     html += `</tbody></table>`;
     equationHistory.innerHTML = html;
+    bindEquationTermButtons(equationHistory);
   }
 
   function relationEditorHtml(){
@@ -3623,21 +3853,22 @@
     });
   }
 
-  function selectSlot(slot){
-    selectedSlot = slot;
-    message = "";
-    render();
+  function bindEquationTermButtons(root){
+    const current = root.querySelector("tr.currentStep");
+    if(!current) return;
+    current.querySelectorAll("[data-eq-replace]").forEach(el => {
+      el.addEventListener("click", () => selectReplaceSide(el.dataset.eqReplace));
+    });
+    current.querySelectorAll("[data-eq-compute]").forEach(el => {
+      el.addEventListener("click", () => selectComputeSide(el.dataset.eqCompute));
+    });
   }
 
-  function chooseSideForSlot(side){
-    if(!work.started) return;
-    if(!selectedSlot && !work.relationComplete){
-      const firstEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
-      selectedSlot = firstEmpty || "lhs";
-    }
-    if(!selectedSlot || work.relationComplete) return;
+  function fillRelationSlot(slot, side){
+    if(!slot || !side || work.relationComplete) return;
     mutate(() => {
-      work.relationSlots[selectedSlot] = side;
+      work.relationSlots[slot] = side;
+      selectedSquareSide = null;
       const filled = !!(work.relationSlots.lhs && work.relationSlots.rhs1 && work.relationSlots.rhs2);
       if(filled){
         if(relationSlotsAreCorrect(work.relationSlots)){
@@ -3655,6 +3886,28 @@
         message = "";
       }
     });
+  }
+
+  function selectSlot(slot){
+    if(!work.started || work.relationComplete) return;
+    if(selectedSquareSide){
+      fillRelationSlot(slot, selectedSquareSide);
+      return;
+    }
+    selectedSlot = slot;
+    message = "";
+    render();
+  }
+
+  function chooseSideForSlot(side){
+    if(!work.started || work.relationComplete) return;
+    if(!selectedSlot){
+      selectedSquareSide = side;
+      message = "";
+      render();
+      return;
+    }
+    fillRelationSlot(selectedSlot, side);
   }
 
   function relationSlotsAreCorrect(s){
@@ -3681,6 +3934,7 @@
     mutate(() => {
       work.relationComplete = true;
       selectedSlot = null;
+      selectedSquareSide = null;
       resetChoice();
       message = "";
     });
@@ -3690,8 +3944,78 @@
     mutate(() => {
       work.relationSlots = {lhs:null, rhs1:null, rhs2:null};
       selectedSlot = null;
+      selectedSquareSide = null;
       resetChoice();
       message = "";
+    });
+  }
+
+  function automaticNextLabel(){
+    if(!work.started) return "Suivant";
+    if(work.concluded) return "Terminé";
+    return "Suivant";
+  }
+
+  function applyAutomaticNext(){
+    if(!model || !work) return;
+    if(work.concluded) return;
+    mutate(() => {
+      selectedSlot = null;
+      selectedSquareSide = null;
+      selectedChoiceSide = null;
+      selectedCalcValue = null;
+      activeChoiceMode = null;
+      message = "";
+
+      if(!work.started){
+        work.started = true;
+        work.relationSlots = correctSlots();
+        work.relationComplete = true;
+        return;
+      }
+
+      if(!work.relationComplete){
+        work.relationSlots = correctSlots();
+        work.relationComplete = true;
+        return;
+      }
+
+      if(!work.replaced){
+        squareTargets().forEach(t => { work.replacements[t.side] = true; });
+        work.replaced = true;
+        return;
+      }
+
+      const targets = squareTargets();
+      if(!allSquaresDone(targets)){
+        targets.forEach(t => { work.squares[t.side] = square(t.value); });
+        return;
+      }
+
+      if(!work.operationChosen){
+        work.operation = correctPartWholeOperation();
+        work.operationChosen = true;
+        return;
+      }
+
+      if(!work.operationComputed){
+        const op = work.operation || correctPartWholeOperation();
+        work.operation = op;
+        work.result = op.result;
+        work.operationComputed = true;
+        if(model.unknownIsHyp){
+          work.regrouped = true;
+        }else{
+          work.decomposed = true;
+          work.removed = true;
+        }
+        return;
+      }
+
+      if(!work.sqrt || !work.concluded){
+        work.sqrt = true;
+        work.concluded = true;
+      }
     });
   }
 
@@ -3700,12 +4024,27 @@
     sidePalette.innerHTML = "";
 
     if(!work.started){
-      sidePalette.innerHTML = `<button type="button" class="startGuidedBtn" id="btnStartGuided">Commencer</button>`;
+      const isAuto = model && model.relationMode === "auto";
+      const label = isAuto ? "Suivant" : "Commencer";
+      const cls = isAuto ? "startGuidedBtn autoNextBtn" : "startGuidedBtn";
+      sidePalette.innerHTML = `<button type="button" class="${cls}" id="btnStartGuided">${label}</button>`;
       sidePalette.classList.add("show");
       const startBtn = sidePalette.querySelector("#btnStartGuided");
       if(startBtn){
-        startBtn.addEventListener("click", () => mutate(() => { work.started = true; message = ""; }));
+        if(isAuto) startBtn.addEventListener("click", applyAutomaticNext);
+        else startBtn.addEventListener("click", () => mutate(() => {
+          work.started = true;
+          message = "";
+        }));
       }
+      return;
+    }
+
+    if(model && model.relationMode === "auto"){
+      sidePalette.innerHTML = `<button type="button" class="sideChoice autoNextBtn${work.concluded ? " done" : ""}" id="btnAutoNext">${automaticNextLabel()}</button>`;
+      sidePalette.classList.add("show");
+      const btn = sidePalette.querySelector("#btnAutoNext");
+      if(btn) btn.addEventListener("click", applyAutomaticNext);
       return;
     }
 
@@ -4311,7 +4650,8 @@
 
   function finalSolutionText(){
     const side = model.unknownIsHyp ? model.hyp : model.unknown;
-    return `${side} = ${lengthAnswerWithUnit(work.result)}`;
+    const suffix = unitSuffix();
+    return suffix ? `Donc ${side} = ${lengthAnswerWithUnit(work.result)}` : `${side} = ${lengthAnswer(work.result)}`;
   }
 
 
@@ -4411,7 +4751,8 @@
         const sq = squarePolygon(coords[side[0]], coords[side[1]], centroid);
         const label = squareLabels[side] ?? squareLabels[reverseSide(side)] ?? plainSq(side);
         const canPickSquare = work.started && !work.relationComplete;
-        const pickClass = canPickSquare ? " squarePick" : "";
+        const isSelectedSquare = canPickSquare && selectedSquareSide && sameSide(selectedSquareSide, side);
+        const pickClass = canPickSquare ? ` squarePick${isSelectedSquare ? " selectedSquarePick" : ""}` : "";
         const pickAttr = canPickSquare ? ` data-square-side="${side}"` : "";
         html += `<polygon class="squareShape ${cls} ${colorCls}${pickClass}" points="${sq.points}"${pickAttr}/>`;
         html += `<text class="squareText" x="${sq.label.x}" y="${sq.label.y}" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
@@ -4443,7 +4784,8 @@
     if(!display.moulin){
       for(const side of model.sideNames){
         const a = coords[side[0]], b = coords[side[1]];
-        html += `<line class="sideHit ${selectedSlot ? "activePick" : ""}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" data-side="${side}"/>`;
+        const hitSelected = selectedSquareSide && sameSide(selectedSquareSide, side) ? " selectedSquarePick" : "";
+        html += `<line class="sideHit ${selectedSlot ? "activePick" : ""}${hitSelected}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" data-side="${side}"/>`;
       }
     }
     triangleSvg.innerHTML = html;
@@ -4580,6 +4922,7 @@
     model = built;
     work = initialWork();
     selectedSlot = null;
+    selectedSquareSide = null;
     resetChoice();
     message = "";
     history = [];
@@ -4628,6 +4971,7 @@
       work.sqrt = true;
       work.concluded = true;
       selectedSlot = null;
+      selectedSquareSide = null;
       resetChoice();
       message = "";
     });
@@ -4651,7 +4995,7 @@
     else{ try{ await document.exitFullscreen(); }catch(e){} }
   });
   btnUndo.addEventListener("click", restore);
-  btnRestart.addEventListener("click", () => { if(model){ work = initialWork(); selectedSlot = null; resetChoice(); message = ""; history = []; render(); } });
+  btnRestart.addEventListener("click", () => { if(model){ work = initialWork(); selectedSlot = null; selectedSquareSide = null; resetChoice(); message = ""; history = []; render(); } });
   btnReveal.addEventListener("click", revealAll);
   btnCalcApply.addEventListener("click", validateDialog);
   btnCalcAuto.addEventListener("click", () => {
