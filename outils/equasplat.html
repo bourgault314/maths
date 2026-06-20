@@ -1191,61 +1191,750 @@
   .equationRow.solvedStep{color:#166534;opacity:1}
   .equationRow.solvedStep .eq{color:#16a34a}
 
+
+  /* PATCH MENU ÉQUABARRE → ÉQUASPLAT — menu de départ séparé, moteur Splat conservé */
+  main.startMode{
+    grid-template-columns:minmax(320px, 680px);
+    justify-content:center;
+    width:min(720px, calc(100vw - 28px));
+  }
+
+  main.startMode .panel{
+    position:static;
+    padding:24px 26px 26px;
+  }
+
+  main.startMode .appTitle{
+    font-size:clamp(36px,5vw,50px);
+    margin:4px 0 24px;
+  }
+
+  main.startMode .stage{
+    display:none;
+  }
+
+  main.startMode label{
+    text-align:center;
+    margin-top:14px;
+    margin-bottom:7px;
+  }
+
+  main.startMode select,
+  main.startMode input{
+    display:block;
+    text-align:center;
+    text-align-last:center;
+    max-width:430px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  main.startMode .grid3{
+    max-width:590px;
+    margin:0 auto;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    align-items:end;
+  }
+
+  main.startMode .btnrow{
+    justify-content:center;
+    gap:12px;
+    margin-top:18px;
+  }
+
+  main.startMode .btnrow button{
+    min-height:56px;
+    border-radius:18px;
+    font-size:16px;
+    padding-left:20px;
+    padding-right:20px;
+  }
+
+  main.startMode #btnBuild{
+    min-width:min(360px,100%);
+  }
+
+  main.startMode #btnRandom{
+    min-width:58px;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+    font-size:0;
+  }
+
+  main.startMode #btnRandom::before{
+    content:"🎲";
+    font-size:25px;
+  }
+
+  main.startMode #btnReset{
+    display:none;
+  }
+
+  main.startMode .infoBox{
+    max-width:590px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  main.activeMode{
+    grid-template-columns:minmax(0,1fr);
+    width:min(1280px, calc(100vw - 24px));
+  }
+
+  main.activeMode .panel{
+    display:none;
+  }
+
+  main.activeMode .stage{
+    min-height:665px;
+  }
+
+  .menuQuickBtn,
+  .restartQuickBtn{
+    width:auto;
+    min-width:58px;
+    padding:0 13px;
+    font-size:14px;
+    font-weight:950;
+  }
+
+  .restartQuickBtn{
+    color:#3730a3;
+    background:#eef2ff;
+    border-color:rgba(99,102,241,.22);
+  }
+
+  .restartQuickBtn:hover{
+    background:#e0e7ff;
+  }
+
+  main.startMode .menuQuickBtn,
+  main.startMode .restartQuickBtn{
+    display:none;
+  }
+
+  @media (max-width:900px){
+    main.startMode,
+    main.activeMode{
+      grid-template-columns:1fr;
+      width:min(1000px, calc(100vw - 18px));
+    }
+
+    main.activeMode .panel{
+      position:static;
+    }
+  }
+
+  @media (max-width:700px){
+    main.startMode .panel{
+      padding:18px;
+    }
+
+    main.startMode .grid3{
+      grid-template-columns:1fr;
+    }
+
+    main.startMode .btnrow{
+      flex-direction:column;
+    }
+
+    main.startMode .btnrow button,
+    main.startMode #btnBuild{
+      width:100%;
+      min-width:0;
+    }
+  }
+
+
+  /* PATCH 2 — constructeur par équation + menu plus compact */
+  main.startMode{
+    grid-template-columns:minmax(320px, 610px);
+    width:min(650px, calc(100vw - 28px));
+  }
+
+  main.startMode .panel{
+    padding:20px 22px 22px;
+  }
+
+  main.startMode .appTitle{
+    font-size:clamp(34px,4.5vw,46px);
+    margin:2px 0 16px;
+  }
+
+  main.startMode select,
+  main.startMode input{
+    max-width:340px;
+    padding:9px 11px;
+  }
+
+  main.startMode label{
+    margin-top:10px;
+    margin-bottom:5px;
+  }
+
+  #abcGrid{
+    display:none !important;
+  }
+
+  .creatorBlock{
+    max-width:520px;
+    margin:16px auto 0;
+    padding:14px;
+    border:1px solid rgba(59,130,246,.16);
+    background:rgba(239,246,255,.72);
+    border-radius:18px;
+  }
+
+  .creatorTitle{
+    text-align:center;
+    font-size:16px;
+    font-weight:950;
+    color:#1d4ed8;
+    margin-bottom:8px;
+  }
+
+  .equationInput{
+    font-size:19px !important;
+    font-weight:950 !important;
+    font-family:Arial, Helvetica, sans-serif;
+    letter-spacing:.01em;
+  }
+
+  .exampleBlock{
+    margin-top:12px;
+  }
+
+  .exampleTitle{
+    text-align:center;
+    color:#64748b;
+    font-size:12px;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:8px;
+  }
+
+  .exampleChips{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .exampleChip{
+    border:1px solid rgba(15,23,42,.10);
+    background:white;
+    color:#334155;
+    border-radius:999px;
+    padding:8px 11px;
+    font-size:14px;
+    font-weight:900;
+    min-height:38px;
+  }
+
+  .exampleChip:hover{
+    background:#f8fafc;
+  }
+
+  .buildHelp{
+    max-width:460px;
+    margin:10px auto 0;
+    color:#64748b;
+    font-size:12px;
+    line-height:1.35;
+    font-weight:750;
+    text-align:center;
+  }
+
+  main.startMode .infoBox{
+    max-width:520px;
+  }
+
+  main.startMode .btnrow{
+    margin-top:14px;
+  }
+
+  /* Hors plein écran : plateau abaissé en hauteur pour laisser les boutons visibles. */
+  main.activeMode .stage:not(:fullscreen){
+    min-height:0;
+    padding:12px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .topbar{
+    /* Padding symétrique : l’historique reste centré avec le signe égal du plateau. */
+    padding:0 170px 5px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .equationHistory{
+    max-height:98px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .equationList{
+    font-size:clamp(22px,2.25vw,34px);
+  }
+
+  main.activeMode .stage:not(:fullscreen) .instructionZone{
+    min-height:36px;
+    margin:0 auto 7px;
+    font-size:16px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .board{
+    min-height:340px;
+    height:42vh;
+    max-height:390px;
+    padding:6px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) #splatSvg{
+    min-height:0;
+    height:100%;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .toolBar{
+    margin:8px auto 2px;
+    gap:6px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .toolRow{
+    gap:7px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .toolBtn{
+    min-height:42px;
+    padding:9px 12px;
+    border-radius:13px;
+    font-size:14px;
+  }
+
+  main.activeMode .stage:not(:fullscreen) .actionZone{
+    min-height:36px;
+    margin-top:5px;
+  }
+
+  @media (max-width:900px){
+    main.activeMode .stage:not(:fullscreen) .topbar{
+      padding-right:4px;
+      padding-top:48px;
+    }
+  }
+
+  @media (max-width:700px){
+    main.startMode .creatorBlock{
+      max-width:100%;
+    }
+  }
+
+
+
+  /* PATCH 3 — menu d’accueil compact : grille de réglages + équation sans liste d’exemples */
+  main.startMode{
+    grid-template-columns:minmax(520px, 860px);
+    width:min(900px, calc(100vw - 24px));
+    margin-top:10px;
+  }
+
+  main.startMode .panel{
+    padding:16px 18px 18px;
+  }
+
+  main.startMode .appTitle{
+    font-size:clamp(31px,4vw,42px);
+    margin:0 0 12px;
+  }
+
+  .menuCompactGrid{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(150px, 1fr));
+    gap:8px 10px;
+    align-items:end;
+  }
+
+  .menuField{
+    min-width:0;
+  }
+
+  main.startMode .menuField label{
+    text-align:left;
+    margin:0 0 4px;
+    font-size:10.5px;
+    letter-spacing:.05em;
+  }
+
+  main.startMode .menuField select,
+  main.startMode .menuField input{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:8px 9px;
+    min-height:38px;
+    border-radius:11px;
+    font-size:13.5px;
+    text-align:center;
+    text-align-last:center;
+  }
+
+  #oppositeXModeWrap{
+    display:none;
+  }
+
+  .equationWritingField{
+    grid-column:span 2;
+  }
+
+  .creatorBlock{
+    max-width:none;
+    margin:12px auto 0;
+    padding:11px 12px 12px;
+    border-radius:16px;
+  }
+
+  .creatorTitle{
+    font-size:15px;
+    margin-bottom:7px;
+  }
+
+  .equationInput{
+    width:100% !important;
+    max-width:none !important;
+    min-height:48px;
+    padding:11px 12px !important;
+    font-size:clamp(19px,2.5vw,26px) !important;
+    text-align:center !important;
+    text-align-last:center !important;
+  }
+
+  .exampleBlock,
+  .exampleChips,
+  .exampleTitle{
+    display:none !important;
+  }
+
+  .buildHelp{
+    max-width:none;
+    margin:7px auto 0;
+    font-size:11.5px;
+  }
+
+  main.startMode .infoBox{
+    max-width:none;
+    margin-top:8px;
+  }
+
+  main.startMode .btnrow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 58px;
+    gap:10px;
+    margin-top:10px;
+  }
+
+  main.startMode .btnrow button,
+  main.startMode #btnBuild{
+    min-width:0;
+    width:100%;
+    min-height:48px;
+    border-radius:15px;
+    font-size:15px;
+  }
+
+  main.startMode #btnRandom{
+    min-width:0;
+  }
+
+  @media (max-width:760px){
+    main.startMode{
+      grid-template-columns:1fr;
+      width:min(680px, calc(100vw - 18px));
+    }
+
+    .menuCompactGrid{
+      grid-template-columns:repeat(2, minmax(130px, 1fr));
+    }
+
+    .equationWritingField{
+      grid-column:span 2;
+    }
+  }
+
+  @media (max-width:520px){
+    .menuCompactGrid{
+      grid-template-columns:1fr;
+    }
+
+    .equationWritingField{
+      grid-column:auto;
+    }
+  }
+
+
+
+  /* PATCH 4 — accueil en lignes compactes, sans déplacement visuel */
+  main.startMode{
+    grid-template-columns:minmax(320px, 520px) !important;
+    width:min(540px, calc(100vw - 24px)) !important;
+    margin-top:12px !important;
+  }
+
+  main.startMode .panel{
+    padding:16px 18px 18px !important;
+  }
+
+  main.startMode .appTitle{
+    font-size:clamp(31px,4vw,42px) !important;
+    margin:0 0 14px !important;
+  }
+
+  .menuCompactGrid{
+    width:100% !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:7px !important;
+    align-items:center !important;
+  }
+
+  .menuField{
+    width:min(440px,100%) !important;
+    display:grid !important;
+    grid-template-columns:165px minmax(0,1fr) !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    min-width:0 !important;
+  }
+
+  main.startMode .menuField label{
+    margin:0 !important;
+    text-align:center !important;
+    font-size:10.5px !important;
+    line-height:1.05 !important;
+    letter-spacing:.045em !important;
+  }
+
+  main.startMode .menuField select,
+  main.startMode .menuField input{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    min-height:34px !important;
+    padding:6px 8px !important;
+    border-radius:10px !important;
+    font-size:13px !important;
+    text-align:center !important;
+    text-align-last:center !important;
+  }
+
+  #oppositeXModeWrap{
+    display:grid !important;
+  }
+
+  #oppositeXModeWrap.isDisabledSoft{
+    opacity:.42;
+  }
+
+  #oppositeXModeWrap.isDisabledSoft select{
+    pointer-events:none;
+    background:#f8fafc;
+  }
+
+  .equationWritingField{
+    grid-column:auto !important;
+  }
+
+  .creatorBlock{
+    width:min(440px,100%) !important;
+    max-width:none !important;
+    margin:12px auto 0 !important;
+    padding:10px 11px 11px !important;
+    border-radius:15px !important;
+  }
+
+  .creatorTitle{
+    font-size:14px !important;
+    margin-bottom:6px !important;
+  }
+
+  .equationInput{
+    width:100% !important;
+    min-height:42px !important;
+    padding:8px 10px !important;
+    font-size:clamp(18px,2.6vw,24px) !important;
+    border-radius:12px !important;
+  }
+
+  .buildHelp{
+    display:none !important;
+  }
+
+  main.startMode .infoBox{
+    width:min(440px,100%) !important;
+    max-width:none !important;
+    margin:8px auto 0 !important;
+    padding:8px 10px !important;
+    font-size:13px !important;
+  }
+
+  main.startMode .btnrow{
+    width:min(300px,100%) !important;
+    margin:10px auto 0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+  }
+
+  main.startMode .btnrow button,
+  main.startMode #btnBuild,
+  main.startMode #btnRandom{
+    width:100% !important;
+    min-width:0 !important;
+    min-height:42px !important;
+    border-radius:13px !important;
+    padding:8px 12px !important;
+    font-size:14px !important;
+  }
+
+  main.startMode #btnRandom{
+    font-size:0 !important;
+  }
+
+  main.startMode #btnRandom::before{
+    content:"🎲 Aléatoire" !important;
+    font-size:14px !important;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif !important;
+    font-weight:950 !important;
+  }
+
+
+  .restartToolBtn{
+    background:#eef2ff !important;
+    border-color:rgba(99,102,241,.22) !important;
+    color:#3730a3 !important;
+  }
+
+  .restartToolBtn:hover{
+    background:#e0e7ff !important;
+  }
+
+  .equationWritingField.isDisabledSoft{
+    opacity:.42;
+  }
+
+  .equationWritingField.isDisabledSoft select{
+    pointer-events:none;
+    background:#f8fafc;
+  }
+
+  @media (max-width:520px){
+    .menuField{
+      grid-template-columns:1fr !important;
+      row-gap:4px !important;
+    }
+  }
+
+
+  /* PATCH 8 — plein écran stable : réserver 5 lignes d’historique
+     Objectif : le plateau ne change plus de taille quand l’équation gagne des lignes. */
+  .stage:fullscreen .topbar{
+    flex:0 0 218px;
+    padding:2px 96px 8px;
+    justify-content:flex-start;
+  }
+
+  .stage:fullscreen .equationHistory{
+    height:200px;
+    max-height:200px;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+
+  .stage:fullscreen .equationList{
+    font-size:clamp(24px,2.35vw,36px);
+    line-height:1.08;
+  }
+
+  .stage:fullscreen .instructionZone{
+    flex:0 0 42px;
+    min-height:42px;
+    margin:0 auto 8px;
+  }
+
+  .stage:fullscreen .board{
+    flex:1 1 auto;
+    min-height:0;
+  }
+
+  .stage:fullscreen #splatSvg{
+    min-height:0;
+    height:100%;
+  }
+
 </style>
 </head>
 <body>
-<main>
+<main id="appMain" class="startMode">
   <section class="panel">
     <div class="appTitle">ÉquaSplat</div>
 
-    <label>Univers de travail</label>
-    <select id="workUniverse" title="Choisir le monde de manipulation">
-      <option value="positive" selected>Splat positif</option>
-      <option value="relative">Splat relatif</option>
-    </select>
+    <div class="menuCompactGrid" aria-label="Réglages de départ">
+      <div class="menuField menuFieldUniverse">
+        <label>Univers de travail</label>
+        <select id="workUniverse" title="Choisir le monde de manipulation">
+          <option value="positive" selected>Splat positif</option>
+          <option value="relative">Splat relatif</option>
+        </select>
+      </div>
 
-    <div id="equationWritingModeWrap">
-      <label>Écriture de l’équation</label>
-      <select id="equationWritingMode" title="Choisir l’écriture des nombres relatifs dans l’équation">
-        <option value="detailed" selected>Détaillée : x + (−4)</option>
-        <option value="simplified">Simplifiée : x − 4</option>
-      </select>
+      <div class="menuField" id="oppositeXModeWrap">
+        <label id="oppositeXModeLabel">Taches opposées</label>
+        <select id="oppositeXMode" title="Autoriser les taches −x en Splat relatif">
+          <option value="off" selected>Non</option>
+          <option value="on">Oui, niveau avancé</option>
+        </select>
+      </div>
+
+      <div class="menuField">
+        <label>Type d’équation</label>
+        <select id="mode">
+          <option value="xpb">x + b = c</option>
+          <option value="axc">ax = c</option>
+          <option value="axb">ax + b = c</option>
+          <option value="both">ax + b = mx + d</option>
+          <option value="mix" selected>Mélange</option>
+        </select>
+      </div>
+
+      <div class="menuField">
+        <label>Inconnue</label>
+        <select id="unknownDisplayMode" title="Affichage des inconnues sur les taches">
+          <option value="letter" selected>Lettre</option>
+          <option value="question">Point d’interrogation</option>
+        </select>
+      </div>
+
+      <div class="menuField">
+        <label>Après suppression</label>
+        <select id="removedDisplayMode" title="Affichage des éléments supprimés">
+          <option value="keep" selected>Garder hachuré</option>
+          <option value="hide">Masquer</option>
+        </select>
+      </div>
+
+      <div class="menuField">
+        <label>Jetons au départ</label>
+        <select id="initialTokenCount" title="Nombre de jetons visibles pour représenter chaque constante">
+          <option value="1" selected>1 jeton</option>
+          <option value="2">2 jetons</option>
+          <option value="3">3 jetons</option>
+          <option value="mix">Mélange</option>
+        </select>
+      </div>
+
+      <div class="menuField equationWritingField" id="equationWritingModeWrap">
+        <label>Écriture de l’équation</label>
+        <select id="equationWritingMode" title="Choisir l’écriture des nombres relatifs dans l’équation">
+          <option value="detailed" selected>Détaillée : x + (−4)</option>
+          <option value="simplified">Simplifiée : x − 4</option>
+        </select>
+      </div>
     </div>
-
-    <label id="oppositeXModeLabel">Taches opposées</label>
-    <select id="oppositeXMode" title="Autoriser les taches −x en Splat relatif">
-      <option value="off" selected>Non</option>
-      <option value="on">Oui, niveau avancé</option>
-    </select>
-
-    <label>Type d’équation</label>
-    <select id="mode">
-      <option value="xpb" selected>x + b = c</option>
-      <option value="axc">ax = c</option>
-      <option value="axb">ax + b = c</option>
-      <option value="both">ax + b = mx + d</option>
-      <option value="mix">Mélange</option>
-    </select>
-
-    <label>Affichage de l’inconnue</label>
-    <select id="unknownDisplayMode" title="Affichage des inconnues sur les taches">
-      <option value="letter" selected>Lettre</option>
-      <option value="question">Point d’interrogation</option>
-    </select>
-
-    <label>Après suppression</label>
-    <select id="removedDisplayMode" title="Affichage des éléments supprimés">
-      <option value="keep" selected>Garder hachuré</option>
-      <option value="hide">Masquer</option>
-    </select>
-
-    <label>Jetons numériques au départ</label>
-    <select id="initialTokenCount" title="Nombre de jetons visibles pour représenter chaque constante">
-      <option value="1" selected>1 jeton</option>
-      <option value="2">2 jetons</option>
-      <option value="3">3 jetons</option>
-      <option value="mix">Mélange</option>
-    </select>
 
     <div class="grid3" id="abcGrid">
       <div id="coefAWrap">
@@ -1270,11 +1959,16 @@
       </div>
     </div>
 
+    <div class="creatorBlock" aria-label="Créer une équation">
+      <div class="creatorTitle">Créer une équation</div>
+      <input class="equationInput" id="equationInput" type="text" autocomplete="off" value="3 + 2x + 4 = 18 + x" placeholder="Exemple : 3 + 2x + 4 = 18 + x" />
+      <div class="buildHelp"></div>
+    </div>
 
     <div class="infoBox" id="profEquationInfo"></div>
 
     <div class="btnrow">
-      <button class="primary" id="btnBuild" type="button">Créer</button>
+      <button class="primary" id="btnBuild" type="button">Construire ÉquaSplat</button>
       <button id="btnRandom" type="button">Aléatoire</button>
     </div>
 
@@ -1286,6 +1980,7 @@
 
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
+      <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -1313,6 +2008,7 @@
         <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
         <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
         <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+        <button class="toolBtn restartToolBtn" id="btnStageReset" type="button" title="Recommencer la même équation">Recommencer</button>
       </div>
     </div>
 
@@ -1403,6 +2099,7 @@
 <script>
 
 (() => {
+  const appMain = document.getElementById("appMain");
   const svg = document.getElementById("splatSvg");
   const equationHistory = document.getElementById("equationHistory");
   const instructionZone = document.getElementById("instructionZone");
@@ -1416,6 +2113,7 @@
   const equationWritingModeWrap = document.getElementById("equationWritingModeWrap");
   const equationWritingModeEl = document.getElementById("equationWritingMode");
   const oppositeXModeEl = document.getElementById("oppositeXMode");
+  const oppositeXModeWrap = document.getElementById("oppositeXModeWrap");
   const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
   const initialTokenCountEl = document.getElementById("initialTokenCount");
   const unknownDisplayModeEl = document.getElementById("unknownDisplayMode");
@@ -1425,6 +2123,8 @@
   const constCEl = document.getElementById("constC");
   const constDEl = document.getElementById("constD");
   const profEquationInfo = document.getElementById("profEquationInfo");
+  const equationInput = document.getElementById("equationInput");
+  const equationExamples = document.getElementById("equationExamples");
   const coefAWrap = document.getElementById("coefAWrap");
   const constBWrap = document.getElementById("constBWrap");
   const coefCWrap = document.getElementById("coefCWrap");
@@ -1440,6 +2140,8 @@
   const toolUndo = document.getElementById("toolUndo");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnStageReset = document.getElementById("btnStageReset");
+  const btnBackToMenu = document.getElementById("btnBackToMenu");
   const btnFullscreen = document.getElementById("btnFullscreen");
 
   const decomposeDialog = document.getElementById("decomposeDialog");
@@ -1473,7 +2175,9 @@
   const TOKEN_HIT_EXTRA = 32;
 
   let state = null;
+  let initialState = null;
   let history = [];
+  let appLayoutMode = "start";
   let actionMode = "decompose";
   let selectedPieceRef = null;
   let deleteSelection = [];
@@ -1481,6 +2185,56 @@
   let dragState = null;
   let suppressNextClickFor = null;
   let pendingFusion = null;
+
+
+  function setAppLayout(mode){
+    appLayoutMode = mode === "active" ? "active" : "start";
+    if(!appMain) return;
+    appMain.classList.toggle("startMode", appLayoutMode === "start");
+    appMain.classList.toggle("activeMode", appLayoutMode === "active");
+  }
+
+  function openStage(){
+    setAppLayout("active");
+    render();
+  }
+
+  function returnToStartMenu(){
+    if(document.fullscreenElement && document.exitFullscreen){
+      document.exitFullscreen().catch(() => {});
+    }
+    setAppLayout("start");
+  }
+
+  function resetCurrentExercise(){
+    if(!initialState){
+      buildAndOpen();
+      return;
+    }
+    state = clone(initialState);
+    history = [];
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    pendingFusion = null;
+    setActionMode("decompose");
+    openStage();
+  }
+
+  function buildAndOpen(){
+    const ok = equationInput ? buildFromEquationInput() : buildFromInputs();
+    if(ok && state) openStage();
+  }
+
+  function randomAndOpen(){
+    if(equationInput){
+      fillRandomEquationInput({build:true});
+      if(state) openStage();
+      return;
+    }
+    randomExercise();
+    if(state) openStage();
+  }
 
   function uid(){ return Math.random().toString(36).slice(2, 9); }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -1735,6 +2489,384 @@
     return "ax + b = c";
   }
 
+
+  function normalizeMathLetters(str){
+    const map = {
+      "𝑎":"a","𝑏":"b","𝑐":"c","𝑑":"d","𝑒":"e","𝑓":"f","𝑔":"g","ℎ":"h","𝑖":"i","𝑗":"j","𝑘":"k","𝑙":"l","𝑚":"m","𝑛":"n","𝑜":"o","𝑝":"p","𝑞":"q","𝑟":"r","𝑠":"s","𝑡":"t","𝑢":"u","𝑣":"v","𝑤":"w","𝑥":"x","𝑦":"y","𝑧":"z",
+      "𝐴":"A","𝐵":"B","𝐶":"C","𝐷":"D","𝐸":"E","𝐹":"F","𝐺":"G","𝐻":"H","𝐼":"I","𝐽":"J","𝐾":"K","𝐿":"L","𝑀":"M","𝑁":"N","𝑂":"O","𝑃":"P","𝑄":"Q","𝑅":"R","𝑆":"S","𝑇":"T","𝑈":"U","𝑉":"V","𝑊":"W","𝑋":"X","𝑌":"Y","𝑍":"Z"
+    };
+    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/g, ch => map[ch] || ch);
+  }
+
+  function toMathItalicLetter(letter){
+    const lower = String(letter || "x").trim().toLowerCase()[0] || "x";
+    const map = {a:"𝑎",b:"𝑏",c:"𝑐",d:"𝑑",e:"𝑒",f:"𝑓",g:"𝑔",h:"ℎ",i:"𝑖",j:"𝑗",k:"𝑘",l:"𝑙",m:"𝑚",n:"𝑛",o:"𝑜",p:"𝑝",q:"𝑞",r:"𝑟",s:"𝑠",t:"𝑡",u:"𝑢",v:"𝑣",w:"𝑤",x:"𝑥",y:"𝑦",z:"𝑧"};
+    return map[lower] || "𝑥";
+  }
+
+  function parseEquationSideForSplat(rawSide, sideName, ctx){
+    let compact = normalizeMathLetters(rawSide)
+      .replace(/[×·]/g, "*")
+      .replace(/[−–—]/g, "-")
+      .replace(/\s+/g, "");
+
+    if(!compact){
+      throw new Error(`Le membre ${sideName} est vide.`);
+    }
+    if(/[(),;]/.test(compact) || /[\/]/.test(compact)){
+      throw new Error("Utilise seulement des sommes simples : par exemple 2x + 4 = 18.");
+    }
+    if(/[.]/.test(compact)){
+      throw new Error("Les décimaux ne sont pas acceptés ici : utilise seulement des entiers.");
+    }
+    if(!/^[0-9a-zA-Z+*\-]+$/.test(compact)){
+      throw new Error("Caractère non reconnu. Utilise des entiers, une lettre, +, − et ×.");
+    }
+    if(!/^[+-]/.test(compact)) compact = "+" + compact;
+
+    const matches = [...compact.matchAll(/([+-])([^+-]+)/g)];
+    if(!matches.length || matches.map(m => m[0]).join("") !== compact){
+      throw new Error(`Expression non reconnue dans le membre ${sideName}.`);
+    }
+
+    let coef = 0;
+    let constant = 0;
+    const pieces = [];
+
+    for(const m of matches){
+      const sign = m[1] === "-" ? -1 : 1;
+      let term = m[2];
+      if(!term){
+        throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+      }
+      const letters = term.match(/[a-zA-Z]/g) || [];
+      if(letters.length > 1){
+        throw new Error("Un terme ne doit contenir qu’une seule inconnue.");
+      }
+
+      if(letters.length === 1){
+        const variable = letters[0].toLowerCase();
+        if(ctx.variable && ctx.variable !== variable){
+          throw new Error("Utilise une seule lettre inconnue dans toute l’équation.");
+        }
+        ctx.variable = variable;
+        let rawCoef = term.replace(/[a-zA-Z]/g, "");
+        rawCoef = rawCoef.replace(/\*/g, "");
+        const n = rawCoef === "" ? 1 : Number(rawCoef);
+        if(!Number.isInteger(n)){
+          throw new Error(`Coefficient non reconnu dans le membre ${sideName}.`);
+        }
+        const signedCoef = sign * n;
+        coef += signedCoef;
+        if(signedCoef !== 0) pieces.push({type:"x", coef:signedCoef});
+      }else{
+        if(term.includes("*")){
+          throw new Error(`Produit numérique inutile dans le membre ${sideName}. Écris directement le résultat.`);
+        }
+        const n = Number(term);
+        if(!Number.isInteger(n)){
+          throw new Error(`Nombre non reconnu dans le membre ${sideName}.`);
+        }
+        const signed = sign * n;
+        constant += signed;
+        if(signed !== 0) pieces.push({type:"token", value:signed});
+      }
+    }
+
+    return {coef, constant, pieces};
+  }
+
+  function inferModeFromParsedEquation(left, right){
+    const leftHasX = left.coef !== 0;
+    const rightHasX = right.coef !== 0;
+    const leftHasB = left.constant !== 0;
+    if(leftHasX && rightHasX) return "both";
+    if(leftHasX && !leftHasB) return "axc";
+    if(Math.abs(left.coef) === 1 && leftHasB) return "xpb";
+    return "axb";
+  }
+
+  function parseEquationInputToModel(rawEquation){
+    const original = String(rawEquation || "").trim();
+    if(!original){
+      throw new Error("Écris une équation à construire.");
+    }
+
+    const normalized = normalizeMathLetters(original).replace(/[−–—]/g, "-");
+    const sides = normalized.split("=");
+    if(sides.length !== 2){
+      throw new Error("Il faut exactement un signe égal.");
+    }
+
+    const ctx = {variable:null};
+    const left = parseEquationSideForSplat(sides[0], "de gauche", ctx);
+    const right = parseEquationSideForSplat(sides[1], "de droite", ctx);
+    if(!ctx.variable){
+      throw new Error("Il faut une inconnue : par exemple x, n ou a.");
+    }
+
+    const relative = isRelativeUniverse();
+    const allowOppositeX = oppositeXEnabled();
+    if(!relative && (left.constant < 0 || right.constant < 0)){
+      throw new Error("En Splat positif, les constantes doivent rester positives. Passe en Splat relatif pour utiliser des nombres négatifs.");
+    }
+    if(!allowOppositeX && (left.coef < 0 || right.coef < 0)){
+      throw new Error("Pour construire une équation avec −x, choisis Splat relatif puis active les taches opposées.");
+    }
+    if(Math.abs(left.coef) + Math.abs(right.coef) > 16){
+      throw new Error("Cette équation crée trop de taches pour rester lisible.");
+    }
+    if(left.pieces.length + right.pieces.length > 80){
+      throw new Error("Cette équation crée trop d’objets pour rester lisible.");
+    }
+
+    const denominator = left.coef - right.coef;
+    const numerator = right.constant - left.constant;
+    if(denominator === 0){
+      throw new Error("Cette équation ne donne pas une solution unique utilisable ici.");
+    }
+    if(numerator % denominator !== 0){
+      throw new Error("Équation refusée : la solution n’est pas un nombre entier.");
+    }
+    const x = numerator / denominator;
+    if(x === 0){
+      throw new Error("Équation refusée : la solution 0 n’est pas prise en charge dans cette version.");
+    }
+    if(!relative && x < 0){
+      throw new Error("En Splat positif, la solution doit être positive. Passe en Splat relatif pour une solution négative.");
+    }
+
+    return {
+      left,
+      right,
+      x,
+      variable:toMathItalicLetter(ctx.variable),
+      mode:inferModeFromParsedEquation(left, right)
+    };
+  }
+
+  function piecesFromParsedSide(parsedSide, options={}){
+    const preserveWrittenTokens = options.preserveWrittenTokens === true;
+    const pieces = [];
+    for(const item of parsedSide.pieces){
+      if(item.type === "x"){
+        pieces.push(...makeXPieces(item.coef));
+      }else if(item.type === "token" && item.value !== 0){
+        // Quand l'équation est écrite dans le champ, une somme comme
+        // 3 + 4 doit vraiment créer deux jetons 3 et 4.
+        // Sinon, avec le réglage « 2 jetons », chaque terme serait redécoupé
+        // et on obtiendrait trop de jetons sur le plateau.
+        if(preserveWrittenTokens) pieces.push(makeToken(item.value));
+        else pieces.push(...makeInitialTokens(item.value));
+      }
+    }
+    return pieces;
+  }
+
+  function buildFromEquationInput(){
+    state = null;
+    initialState = null;
+    try{
+      const model = parseEquationInputToModel(equationInput ? equationInput.value : "");
+      if(modeEl && modeEl.value !== "mix") modeEl.value = model.mode;
+      syncTeacherControls({validate:false});
+      state = {
+        original:{
+          mode:model.mode,
+          modeLabel:getModeLabel(model.mode),
+          a:model.left.coef,
+          b:model.left.constant,
+          rightA:model.right.coef,
+          d:model.right.constant,
+          x:model.x,
+          c:model.left.coef * model.x + model.left.constant,
+          varChar:model.variable
+        },
+        left:piecesFromParsedSide(model.left, {preserveWrittenTokens:true}),
+        right:piecesFromParsedSide(model.right, {preserveWrittenTokens:true}),
+        steps:[],
+        conclusionDone:false
+      };
+      recordEquationStep();
+      history = [];
+      selectedPieceRef = null;
+      deleteSelection = [];
+      groupSelection = [];
+      pendingFusion = null;
+      initialState = clone(state);
+      setActionMode("decompose");
+      clearTeacherInfo();
+      return true;
+    }catch(err){
+      setTeacherInfo(false, err && err.message ? err.message : "Équation impossible à construire.");
+      return false;
+    }
+  }
+
+  function coefText(coef, variable){
+    if(coef === 1) return variable;
+    if(coef === -1) return `-${variable}`;
+    return `${coef}${variable}`;
+  }
+
+  function joinInputTerms(terms){
+    if(!terms.length) return "0";
+    let out = "";
+    for(const raw of terms){
+      const term = String(raw);
+      if(!out){
+        out = term.startsWith("-") ? `−${term.slice(1)}` : term;
+      }else if(term.startsWith("-")){
+        out += ` − ${term.slice(1)}`;
+      }else{
+        out += ` + ${term}`;
+      }
+    }
+    return out;
+  }
+
+  function sideInputText(coef, constant, variable){
+    const terms = [];
+    if(coef !== 0) terms.push(coefText(coef, variable));
+    if(constant !== 0) terms.push(String(constant));
+    return joinInputTerms(terms);
+  }
+
+  function selectedEquationTokenCount(rng=Math.random){
+    const raw = initialTokenCountEl ? initialTokenCountEl.value : "1";
+    if(raw === "mix") return randomInt(rng, 1, 3);
+    return clamp(Math.round(numberOr(raw, 1)), 1, 3);
+  }
+
+  function splitValueForEquationWriting(value, count, rng=Math.random){
+    value = Math.round(Number(value) || 0);
+    count = clamp(Math.round(Number(count) || 1), 1, 3);
+    if(value === 0) return [];
+    if(count <= 1) return [value];
+
+    const parts = splitValueForInitialTokens(value, count, rng).filter(v => v !== 0);
+    if(parts.length === count && parts.reduce((sum, v) => sum + v, 0) === value){
+      return parts;
+    }
+    return [value];
+  }
+
+  function sideInputTextWithTokenWriting(coef, constant, variable, tokenCount, rng=Math.random){
+    const xTerm = coef !== 0 ? coefText(coef, variable) : null;
+    const numberTerms = splitValueForEquationWriting(constant, tokenCount, rng).map(v => String(v));
+
+    if(!xTerm) return joinInputTerms(numberTerms);
+    if(!numberTerms.length) return joinInputTerms([xTerm]);
+
+    // Pour rendre visible la décomposition en jetons, on place parfois
+    // une partie numérique avant la lettre et le reste après :
+    // 3 + 2x + 4 = ... au lieu de seulement 2x + 7 = ...
+    if(numberTerms.length >= 2){
+      const cut = randomInt(rng, 1, numberTerms.length - 1);
+      return joinInputTerms([...numberTerms.slice(0, cut), xTerm, ...numberTerms.slice(cut)]);
+    }
+
+    return rng() < .5 ? joinInputTerms([xTerm, ...numberTerms]) : joinInputTerms([...numberTerms, xTerm]);
+  }
+
+  function makeEquationTextFromParts(leftCoef, leftConst, rightCoef, rightConst, variable, options={}){
+    const rng = options.rng || Math.random;
+    const tokenCount = options.tokenCount || 1;
+    return `${sideInputTextWithTokenWriting(leftCoef, leftConst, variable, tokenCount, rng)} = ${sideInputTextWithTokenWriting(rightCoef, rightConst, variable, tokenCount, rng)}`;
+  }
+
+  function currentExampleList(){
+    const relative = isRelativeUniverse();
+    const allowOppositeX = oppositeXEnabled();
+    const mode = modeEl ? modeEl.value : "axb";
+    if(relative && allowOppositeX){
+      return ["2x − 5 = 9", "3x + 4 = x − 8", "−x + 6 = −3", "2x − 7 = −x + 8"];
+    }
+    if(relative){
+      return ["2x − 5 = 9", "x + 7 = −4", "3x − 6 = 12", "4x + 5 = −7"];
+    }
+    if(mode === "xpb") return ["x + 4 = 18", "7 + x = 20", "x + 9 = 12"];
+    if(mode === "axc") return ["3x = 24", "5x = 45", "2x = 18"];
+    if(mode === "both") return ["3x + 5 = x + 17", "4x + 2 = 2x + 18", "5x + 1 = 2x + 22"];
+    return ["2x + 4 = 18", "3x + 6 = 27", "4x + 5 = 17"];
+  }
+
+  function renderEquationExamples(){
+    if(!equationExamples) return;
+    equationExamples.innerHTML = "";
+    for(const text of currentExampleList()){
+      const btn = document.createElement("button");
+      btn.className = "exampleChip";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", () => {
+        if(equationInput){
+          equationInput.value = text;
+          clearTeacherInfo();
+          equationInput.focus();
+          equationInput.select();
+        }
+      });
+      equationExamples.appendChild(btn);
+    }
+  }
+
+  function makeRandomEquationText(guard=0){
+    const rng = Math.random;
+    const relative = isRelativeUniverse();
+    const allowOppositeX = oppositeXEnabled();
+    const tokenCount = selectedEquationTokenCount(rng);
+    const modeRaw = modeEl ? modeEl.value : "axb";
+    const modes = ["xpb", "axc", "axb", "both"];
+    const mode = modeRaw === "mix" ? modes[randomInt(rng,0,modes.length-1)] : modeRaw;
+    const letters = ["x","n","a","t","m"];
+    const variable = letters[randomInt(rng,0,letters.length-1)];
+    const x = relative ? randomNonZeroInt(rng,-10,10) : randomInt(rng,2,12);
+    const coef = (min,max) => {
+      const v = randomInt(rng,min,max);
+      return allowOppositeX && rng() < .35 ? -v : v;
+    };
+    const positiveConst = (min,max) => randomInt(rng, Math.max(min, tokenCount), Math.max(max, tokenCount));
+
+    let leftCoef = mode === "xpb" ? 1 : coef(2,5);
+    let leftConst = mode === "axc" ? 0 : (relative ? randomNonZeroInt(rng,-12,12) : positiveConst(2,18));
+    let rightCoef = 0;
+    let rightConst = leftCoef * x + leftConst;
+
+    if(mode === "both"){
+      leftCoef = coef(3,5);
+      do{ rightCoef = coef(1,4); }while(rightCoef === leftCoef);
+      leftConst = relative ? randomNonZeroInt(rng,-12,12) : positiveConst(2,14);
+      rightConst = (leftCoef - rightCoef) * x + leftConst;
+      if(!relative && rightConst < tokenCount && guard < 200) return makeRandomEquationText(guard + 1);
+      if(relative && rightConst === 0 && guard < 200) return makeRandomEquationText(guard + 1);
+    }
+
+    if(!relative && rightConst < tokenCount && guard < 200) return makeRandomEquationText(guard + 1);
+    if(!relative && rightConst <= 0 && guard < 200) return makeRandomEquationText(guard + 1);
+
+    return makeEquationTextFromParts(leftCoef, leftConst, rightCoef, rightConst, variable, {tokenCount, rng});
+  }
+
+  function fillRandomEquationInput(options={build:false, focus:true, select:true}){
+    if(!equationInput) return false;
+    equationInput.value = makeRandomEquationText();
+    clearTeacherInfo();
+    if(options.build) return buildFromEquationInput();
+    if(options.focus !== false) equationInput.focus();
+    if(options.select !== false) equationInput.select();
+    renderEquationExamples();
+    return true;
+  }
+
+  function refreshEquationProposalFromMenus(){
+    // Dans le menu d'accueil, la proposition du champ « Créer une équation »
+    // doit suivre immédiatement les réglages : univers, type, jetons, taches opposées...
+    // On ne prend pas le focus pour éviter un saut visuel quand l'utilisateur manipule les menus.
+    if(appLayoutMode !== "start") return false;
+    return fillRandomEquationInput({build:false, focus:false, select:false});
+  }
+
   function syncTeacherControls(options={validate:false}){
     const mode = modeEl ? modeEl.value : "axb";
     const showA = !(mode === "xpb");
@@ -1878,10 +3010,12 @@
   }
 
   function buildFromInputs(){
+    state = null;
+    initialState = null;
     const eq = computeTeacherEquation();
     if(!eq.ok){
       setTeacherInfo(false, eq.message);
-      return;
+      return false;
     }
 
     const selectedMode = eq.mode;
@@ -1922,7 +3056,10 @@
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
+    pendingFusion = null;
+    initialState = clone(state);
     setActionMode("decompose");
+    return true;
   }
 
   function randomExercise(){
@@ -1991,7 +3128,10 @@
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
+    pendingFusion = null;
+    initialState = clone(state);
     setActionMode("decompose");
+    return true;
   }
 
   function activePieces(side){ return state[side].filter(p => !p.removed); }
@@ -3452,8 +4592,10 @@
       oppositeXModeEl.disabled = !relative;
       if(!relative) oppositeXModeEl.value = "off";
     }
-    if(oppositeXModeLabel) oppositeXModeLabel.style.opacity = relative ? "1" : ".45";
-    if(equationWritingModeWrap) equationWritingModeWrap.style.display = relative ? "" : "none";
+    if(oppositeXModeWrap) oppositeXModeWrap.classList.toggle("isDisabledSoft", !relative);
+    if(oppositeXModeLabel) oppositeXModeLabel.style.opacity = "1";
+    if(equationWritingModeWrap) equationWritingModeWrap.classList.toggle("isDisabledSoft", !relative);
+    if(equationWritingModeEl) equationWritingModeEl.disabled = !relative;
 
     if(toolAddBoth){
       toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
@@ -3482,10 +4624,12 @@
     if(options.validate !== false) updateProfEquationInfo();
   }
 
-  document.getElementById("btnBuild").addEventListener("click", buildFromInputs);
-  document.getElementById("btnRandom").addEventListener("click", randomExercise);
-  document.getElementById("btnReset").addEventListener("click", buildFromInputs);
-  btnStageRandom.addEventListener("click", randomExercise);
+  document.getElementById("btnBuild").addEventListener("click", buildAndOpen);
+  document.getElementById("btnRandom").addEventListener("click", () => fillRandomEquationInput({build:false}));
+  document.getElementById("btnReset").addEventListener("click", resetCurrentExercise);
+  if(btnBackToMenu) btnBackToMenu.addEventListener("click", returnToStartMenu);
+  if(btnStageReset) btnStageReset.addEventListener("click", resetCurrentExercise);
+  btnStageRandom.addEventListener("click", randomAndOpen);
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
   toolGroup.addEventListener("click", () => setActionMode("group"));
   toolShare.addEventListener("click", () => setActionMode("share"));
@@ -3524,13 +4668,17 @@
   // Les champs numériques (coefficients et constantes) redeviennent manuels :
   // on peut les effacer/taper tranquillement, puis cliquer sur Créer ou 🎲.
   function rebuildFromCurrentSettings(){
-    // Les menus pédagogiques ne recyclent pas l’équation courante :
-    // ils déclenchent une nouvelle équation aléatoire, toujours valide
-    // pour le nouvel univers / type / réglage choisi.
+    // Dans le menu de départ, les réglages changent maintenant directement
+    // la proposition d'équation affichée en bas, sans construire le plateau.
     clearTeacherInfo();
     syncUniverseUI();
     syncTeacherControls();
-    randomExercise();
+    renderEquationExamples();
+    if(appLayoutMode === "active"){
+      randomAndOpen();
+      return;
+    }
+    refreshEquationProposalFromMenus();
   }
 
   [modeEl, initialTokenCountEl, oppositeXModeEl].forEach(el => {
@@ -3548,14 +4696,22 @@
     workUniverseEl.addEventListener("change", rebuildFromCurrentSettings);
   }
   unknownDisplayModeEl.addEventListener("change", () => {
+    if(appLayoutMode === "start"){ refreshEquationProposalFromMenus(); return; }
     if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
   });
   if(equationWritingModeEl){
     equationWritingModeEl.addEventListener("change", () => {
+      if(appLayoutMode === "start"){ refreshEquationProposalFromMenus(); return; }
       if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
     });
   }
   removedDisplayModeEl.addEventListener("change", render);
+  if(equationInput){
+    equationInput.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){ e.preventDefault(); buildAndOpen(); }
+    });
+    equationInput.addEventListener("input", clearTeacherInfo);
+  }
 
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape") return;
@@ -3567,7 +4723,9 @@
 
   syncUniverseUI();
   syncTeacherControls();
-  buildFromInputs();
+  renderEquationExamples();
+  setAppLayout("start");
+  refreshEquationProposalFromMenus();
 })();
 
 </script>
