@@ -3014,6 +3014,10 @@
     }
   }
 
+
+
+  /* PATCH V25 — racines approximatives : utiliser ≈ pour le résultat numérique. */
+
 </style>
 </head>
 <body>
@@ -3403,10 +3407,24 @@
     if(Math.abs(n - Math.round(n)) < 1e-10) return String(Math.round(n));
     return String(Math.round(n * 1000) / 1000).replace(".", ",");
   }
+  function sqrtDisplayValue(squareValue){
+    return Math.sqrt(squareValue);
+  }
+
+  function sqrtIsExactForDisplay(squareValue){
+    const r = sqrtDisplayValue(squareValue);
+    if(!Number.isFinite(r)) return false;
+    const displayed = Number(fmt(r).replace(",", "."));
+    if(!Number.isFinite(displayed)) return false;
+    return approxEqual(square(displayed), squareValue);
+  }
+
+  function sqrtEqSymbol(squareValue){
+    return sqrtIsExactForDisplay(squareValue) ? "=" : "≈";
+  }
+
   function lengthAnswer(squareValue){
-    const r = Math.sqrt(squareValue);
-    if(Math.abs(r - Math.round(r)) < 1e-10) return fmt(r);
-    return `${fmt(r)} environ`;
+    return fmt(sqrtDisplayValue(squareValue));
   }
 
   function normalizeUnit(raw){
@@ -3423,12 +3441,7 @@
   }
 
   function lengthAnswerWithUnit(squareValue){
-    const answer = lengthAnswer(squareValue);
-    const suffix = unitSuffix();
-    if(!suffix) return answer;
-    return answer.endsWith(" environ")
-      ? `${answer.slice(0, -8)}${suffix} environ`
-      : `${answer}${suffix}`;
+    return `${lengthAnswer(squareValue)}${unitSuffix()}`;
   }
 
 
@@ -3436,7 +3449,7 @@
     const side = model.unknownIsHyp ? model.hyp : model.unknown;
     const suffix = unitSuffix();
     if(!suffix) return "";
-    return `Donc ${side} = ${lengthAnswerWithUnit(work.result)}`;
+    return `Donc ${side} ${sqrtEqSymbol(work.result)} ${lengthAnswerWithUnit(work.result)}`;
   }
 
   function reverseSide(s){ return s.split("").reverse().join(""); }
@@ -3585,7 +3598,7 @@
       if(work.regrouped) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:coloredTerm(model.hyp, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:model.hyp, rhs:`√${fmt(work.result)}`});
       if(work.concluded){
-        rows.push({lhs:model.hyp, rhs:lengthAnswer(work.result)});
+        rows.push({lhs:model.hyp, eq:sqrtEqSymbol(work.result), rhs:lengthAnswer(work.result)});
         const finalText = finalConclusionText();
         if(finalText) rows.push({finalText});
       }
@@ -3610,7 +3623,7 @@
       if(work.decomposed) rows.push({lhs:coloredTerm(u, plainSq(u)), rhs:coloredTerm(u, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:u, rhs:`√${fmt(work.result)}`});
       if(work.concluded){
-        rows.push({lhs:u, rhs:lengthAnswer(work.result)});
+        rows.push({lhs:u, eq:sqrtEqSymbol(work.result), rhs:lengthAnswer(work.result)});
         const finalText = finalConclusionText();
         if(finalText) rows.push({finalText});
       }
@@ -3819,7 +3832,7 @@
         classes.push("finalStatement");
         html += `<tr class="${classes.join(" ")}"><td colspan="3">${row.finalText}</td></tr>`;
       }else{
-        html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+        html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">${row.eq || "="}</td><td class="rhs">${row.rhs}</td></tr>`;
       }
     });
     html += `</tbody></table>`;
@@ -4113,7 +4126,7 @@
     if(activeChoiceMode === "sqrt"){
       const rootText = `√${fmt(work.result)}`;
       const choices = sqrtResultChoices();
-      sidePalette.innerHTML = `<div class="operationPrompt">${rootText} =</div>` + choices.map(v => {
+      sidePalette.innerHTML = `<div class="operationPrompt">${rootText} ${sqrtEqSymbol(work.result)}</div>` + choices.map(v => {
         const label = sqrtChoiceLabel(v);
         return `<button type="button" class="sideChoice" data-sqrt-choice="${v}">${label}</button>`;
       }).join("");
@@ -4769,8 +4782,10 @@
         const a = side[0], b = side[1];
         const mid = sideLabelPosition(coords[a], coords[b]);
         const value = displayVals[side] ?? displayVals[reverseSide(side)] ?? "";
-        const finalCls = (model.values[side]?.unknown || model.values[reverseSide(side)]?.unknown) && work.concluded ? " sideText finalSideText" : "sideText";
-        html += `<text class="${finalCls}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${side} = ${value}</text>`;
+        const isUnknownSide = model.values[side]?.unknown || model.values[reverseSide(side)]?.unknown;
+        const finalCls = isUnknownSide && work.concluded ? " sideText finalSideText" : "sideText";
+        const eqSym = isUnknownSide && work.concluded ? sqrtEqSymbol(work.result) : "=";
+        html += `<text class="${finalCls}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${side} ${eqSym} ${value}</text>`;
       }
 
       for(const l of model.letters){
